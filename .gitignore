@@ -1,0 +1,27 @@
+# Simulation and Verification outputs
+sim/csrc/
+sim/simv*
+sim/*.log
+sim/*.fsdb
+sim/*.vdb
+sim/cov*/
+rtl/csrc/
+tb/cpu_test/csrc/
+tb/soc_test/csrc/
+
+# VCS objects and temporaries
+*._*
+*.o
+*.so
+ucli.key
+vc_hdrs.h
+.interfacedeps
+
+# Verdi and tool outputs
+verdiLog/
+novas.conf
+novas.rc
+*.daidir/
+
+# Temporary patch files
+patch_soc.py

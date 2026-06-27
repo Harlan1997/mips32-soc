@@ -1,0 +1,95 @@
+# =============================================================================
+# File Name: Makefile
+# Design:    MIPS32 Stage Verification Simulation Makefile
+# Author:    Antigravity
+# Description:
+#   Makefile for compiling, simulating, and debugging block-level verification
+#   environments using VCS and Verdi. Supports EX, ID, and IF stages.
+# =============================================================================
+
+# Tool environment initialization wrapper
+ENV_LOAD = . /etc/profile.d/modules.sh && module load vcs verdi
+
+VERDI_HOME = /tool/verdi/verdi/X-2025.06-SP1
+
+# Directories
+RTL_DIR = ../rtl/cpu
+SIM_DIR = .
+
+# Select Stage: ex, id, or if
+STAGE ?= ex
+
+ifeq ($(STAGE), ex)
+    RTL_FILES = $(RTL_DIR)/mips_alu.v \
+                $(RTL_DIR)/mips_mdu.v \
+                $(RTL_DIR)/mips_ex_stage.v
+    TB_DIR    = ../tb/ex_stage
+    TB_FILES  = $(TB_DIR)/mips_ex_stage_if.sv \
+                $(TB_DIR)/mips_ex_stage_pkg.sv \
+                $(TB_DIR)/mips_ex_stage_tb_top.sv
+    TEST      = mixed_test
+else ifeq ($(STAGE), id)
+    RTL_FILES = $(RTL_DIR)/mips_regfile.v \
+                $(RTL_DIR)/mips_control.v \
+                $(RTL_DIR)/mips_id_stage.v
+    TB_DIR    = ../tb/id_stage
+    TB_FILES  = $(TB_DIR)/mips_id_stage_if.sv \
+                $(TB_DIR)/mips_id_stage_pkg.sv \
+                $(TB_DIR)/mips_id_stage_tb_top.sv
+    TEST      = id_test
+else ifeq ($(STAGE), if)
+    RTL_FILES = $(RTL_DIR)/mips_if_stage.v
+    TB_DIR    = ../tb/if_stage
+    TB_FILES  = $(TB_DIR)/mips_if_stage_if.sv \
+                $(TB_DIR)/mips_if_stage_pkg.sv \
+                $(TB_DIR)/mips_if_stage_tb_top.sv
+    TEST      = if_test
+else ifeq ($(STAGE), mem)
+    RTL_FILES = $(RTL_DIR)/mips_mem_stage.v
+    TB_DIR    = ../tb/mem_stage
+    TB_FILES  = $(TB_DIR)/mips_mem_stage_if.sv \
+                $(TB_DIR)/mips_mem_stage_pkg.sv \
+                $(TB_DIR)/mips_mem_stage_tb_top.sv
+    TEST      = mem_test
+endif
+
+# Compiler & Simulator Options
+VCS_OPTS = -full64 \
+           -sverilog \
+           -ntb_opts uvm-1.2 \
+           -timescale=1ns/1ps \
+           -debug_access+all \
+           -kdb \
+           -P $(VERDI_HOME)/share/PLI/VCS/linux64/novas.tab $(VERDI_HOME)/share/PLI/VCS/linux64/pli.a \
+           -l compile.log \
+           +incdir+$(TB_DIR)
+
+SIM_OPTS = +UVM_NO_RELNOTES \
+           +UVM_VERBOSITY=UVM_LOW \
+           +DUMP_FSDB \
+           -l sim.log
+
+# Coverage Options
+COV_OPTS = -cm line+cond+fsm+tgl+branch -cm_dir ./cov_dir
+
+.PHONY: all compile sim cov verdi clean
+
+all: compile sim
+
+compile:
+	mkdir -p $(SIM_DIR)
+	$(ENV_LOAD) && vcs $(VCS_OPTS) $(COV_OPTS) $(RTL_FILES) $(TB_FILES)
+
+sim:
+	$(ENV_LOAD) && ./simv $(SIM_OPTS) $(COV_OPTS) +UVM_TESTNAME=$(TEST)
+
+cov:
+	$(ENV_LOAD) && urg -dir ./cov_dir.vdb -format both -report cov_html
+	@echo "Coverage report generated in: cov_html/dashboard.html"
+
+verdi:
+	$(ENV_LOAD) && verdi -dbdir ./simv.daidir -ssf novas.fsdb &
+
+clean:
+	rm -rf simv simv.daidir csrc ucli.key compile.log sim.log novas.fsdb novas.conf verdiLog
+	rm -rf cov_dir.vdb cov_html urgReport
