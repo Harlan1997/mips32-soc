@@ -1,0 +1,512 @@
+// =============================================================================
+// File Name: mips_cpu.v
+// Design:    MIPS32 CPU Core Pipeline Integration (Full)
+// Author:    Antigravity
+// =============================================================================
+
+module mips_cpu (
+    input  wire        clk,
+    input  wire        rst_n,
+    
+    // Instruction Cache Interface (to be connected to icache)
+    output wire        inst_req,
+    output wire [31:0] inst_addr,
+    input  wire        inst_addr_ok,
+    input  wire        inst_data_ok,
+    input  wire [31:0] inst_rdata,
+    
+    // Data Cache Interface (to be connected to dcache)
+    output wire        data_req,
+    output wire        data_we,
+    output wire [31:0] data_addr,
+    output wire [31:0] data_wdata,
+    output wire [3:0]  data_be,
+    input  wire        data_addr_ok,
+    input  wire        data_data_ok,
+    input  wire [31:0] data_rdata,
+    
+    // Pipeline controls
+    output wire        debug_stall,
+    output wire        debug_flush
+);
+
+    // =========================================================================
+    // Pipeline Control Signals
+    // =========================================================================
+    wire stall_req_if;
+    wire stall_req_id;
+    wire stall_req_mem;
+    wire mdu_ready;
+    
+    // Global stall if IF, MEM, or MDU stalls
+    wire global_stall = stall_req_if | stall_req_mem | ~mdu_ready;
+    
+    // Exceptions
+    wire wb_except_req;
+    wire wb_is_eret;
+    wire [31:0] epc_out;
+    
+    // Exception PC redirection
+    wire exception_flush = wb_except_req | wb_is_eret;
+    wire [31:0] exception_vector = wb_is_eret ? epc_out : 32'hBFC00380;
+    
+    // ID stage outputs (for flush logic)
+    wire        id_branch_taken;
+    wire [31:0] id_branch_target;
+    wire        id_jump_taken;
+    wire [31:0] id_jump_target;
+    
+    // WB stage signals (for ID regfile write)
+    wire [4:0]  wb_waddr;
+    wire [31:0] wb_wdata;
+    
+    // PC and IF/ID stall if global_stall or load-use hazard
+    wire stall_pc = global_stall | stall_req_id;
+    
+    // IF flush on exception/eret
+    wire if_flush = exception_flush;
+    
+    // IF/ID flush on branch/jump or exception
+    wire if_id_flush = (id_branch_taken | id_jump_taken) | exception_flush;
+    
+    // ID/EX flushes (inserts bubble) if load-use hazard occurs without global stall, or on exception
+    wire flush_id_ex = (stall_req_id & ~global_stall) | exception_flush;
+    
+    // EX/MEM and MEM/WB flush on exception
+    wire flush_ex_mem = exception_flush;
+    wire flush_mem_wb = exception_flush;
+    
+    assign debug_stall = global_stall;
+    assign debug_flush = if_id_flush;
+
+    // IF stage outputs
+    wire [31:0] if_pc_plus_4;
+    wire        if_adel_exception;
+    
+    // =========================================================================
+    // IF Stage
+    // =========================================================================
+    mips_if_stage u_mips_if_stage (
+        .clk              (clk),
+        .rst_n            (rst_n),
+        .stall            (stall_pc),
+        .branch_taken     (id_branch_taken),
+        .branch_target    (id_branch_target),
+        .jump_taken       (id_jump_taken),
+        .jump_target      (id_jump_target),
+        .exception_req    (exception_flush),
+        .exception_vector (exception_vector),
+        
+        .inst_req         (inst_req),
+        .inst_addr        (inst_addr),
+        .inst_addr_ok     (inst_addr_ok),
+        .inst_data_ok     (inst_data_ok),
+        
+        .stall_req_if     (stall_req_if),
+        
+        .pc               (),
+        .pc_plus_4        (if_pc_plus_4),
+        .adel_exception   (if_adel_exception)
+    );
+    
+    // =========================================================================
+    // IF/ID Pipeline Register
+    // =========================================================================
+    wire [31:0] id_pc_plus_4;
+    wire [31:0] id_inst;
+    wire        id_except_req_in;
+    wire [4:0]  id_except_code_in;
+    
+    mips_if_id_reg u_mips_if_id_reg (
+        .clk          (clk),
+        .rst_n        (rst_n),
+        .stall        (stall_pc),
+        .flush        (if_id_flush),
+        .if_pc_plus_4 (if_pc_plus_4),
+        .if_inst      (inst_rdata),
+        .if_except_req  (if_adel_exception),
+        .if_except_code (5'h04), // AdEL
+        .id_pc_plus_4 (id_pc_plus_4),
+        .id_inst      (id_inst),
+        .id_except_req  (id_except_req_in),
+        .id_except_code (id_except_code_in)
+    );
+    
+    // PC+8 calculation for link instructions
+    wire [31:0] id_pc_plus_8 = id_pc_plus_4 + 32'd4;
+    
+    // =========================================================================
+    // ID Stage
+    // =========================================================================
+    wire [31:0] id_val_rs;
+    wire [31:0] id_val_rt;
+    wire [31:0] id_imm_ext;
+    wire [4:0]  id_waddr;
+    wire [4:0]  id_sa;
+    
+    wire [3:0]  id_alu_op;
+    wire [2:0]  id_mdu_op;
+    wire        id_mdu_start;
+    wire        id_sel_mdu_out;
+    wire        id_alu_src;
+    wire        id_reg_write;
+    wire        id_mem_read;
+    wire        id_mem_write;
+    wire [2:0]  id_mem_op;
+
+    wire        id_illegal_inst;
+    wire        id_cp0_we;
+    wire        id_is_eret;
+    
+    wire [4:0]  id_rs_addr;
+    wire [4:0]  id_rt_addr;
+    wire [4:0]  id_rd_addr;
+    
+    // Pipeline outputs for forwarding and hazard
+    wire        ex_reg_write;
+    wire [4:0]  ex_waddr;
+    wire [31:0] ex_out; // from EX stage output
+    wire        ex_mem_read;
+    
+    wire        mem_reg_write;
+    wire        mem_cp0_we;
+    wire        mem_is_eret;
+    wire        mem_except_req;
+    wire [4:0]  mem_except_code;
+    wire [4:0]  mem_waddr;
+    wire [31:0] mem_ex_out;
+    wire        mem_mem_read;
+    
+    wire        wb_reg_write;
+    wire        wb_cp0_we;
+    wire [4:0]  wb_except_code;
+    wire [1:0]  wb_mem_to_reg;
+    wire [1:0]  id_mem_to_reg;
+    
+    wire        ex_illegal_inst;
+    wire        ex_except_req;
+    wire [4:0]  ex_except_code;
+    wire        ex_cp0_we;
+    wire        ex_is_eret;
+    
+    mips_id_stage u_mips_id_stage (
+        .clk           (clk),
+        .rst_n         (rst_n),
+        .inst          (id_inst),
+        .pc_plus_4     (id_pc_plus_4),
+        
+        // Writeback port
+        .rf_waddr      (wb_waddr),
+        .rf_wdata      (wb_wdata),
+        .rf_we         (wb_reg_write),
+        
+        // Forwarding
+        .fw_ex_we      (ex_reg_write),
+        .fw_ex_waddr   (ex_waddr),
+        .fw_ex_val     (ex_out),
+        .fw_mem_we     (mem_reg_write),
+        .fw_mem_waddr  (mem_waddr),
+        .fw_mem_val    (mem_ex_out),
+        .fw_wb_we      (wb_reg_write),
+        .fw_wb_waddr   (wb_waddr),
+        .fw_wb_val     (wb_wdata),
+        
+        // Hazard detection
+        .ex_mem_read   (ex_mem_read),
+        .ex_waddr      (ex_waddr),
+        .mem_mem_read  (mem_mem_read),
+        .stall_req     (stall_req_id),
+        
+        // Branch & Jump
+        .branch_taken  (id_branch_taken),
+        .branch_target (id_branch_target),
+        .jump_taken    (id_jump_taken),
+        .jump_target   (id_jump_target),
+        
+        // Outputs to ID/EX
+        .val_rs        (id_val_rs),
+        .val_rt        (id_val_rt),
+        .imm_ext       (id_imm_ext),
+        .waddr_out     (id_waddr),
+        .sa_out        (id_sa),
+        .rs_addr       (id_rs_addr),
+        .rt_addr       (id_rt_addr),
+        .rd_addr       (id_rd_addr),
+        
+        // Controls to ID/EX
+        .alu_op        (id_alu_op),
+        .mdu_op        (id_mdu_op),
+        .mdu_start     (id_mdu_start),
+        .sel_mdu_out   (id_sel_mdu_out),
+        .alu_src       (id_alu_src),
+        .reg_write     (id_reg_write),
+        .mem_read      (id_mem_read),
+        .mem_write     (id_mem_write),
+        .mem_op        (id_mem_op),
+
+        .illegal_inst  (id_illegal_inst),
+        .cp0_we        (id_cp0_we),
+        .is_eret       (id_is_eret)
+    );
+    
+    wire id_except_req_out = id_except_req_in | id_illegal_inst;
+    wire [4:0] id_except_code_out = id_except_req_in ? id_except_code_in : (id_illegal_inst ? 5'h0A : 5'h00);
+    
+    // =========================================================================
+    // ID/EX Pipeline Register
+    // =========================================================================
+    wire [31:0] ex_val_rs;
+    wire [31:0] ex_val_rt;
+    wire [31:0] ex_imm_ext;
+    wire [31:0] ex_pc_plus_8;
+    wire [4:0]  ex_sa;
+    
+    wire [3:0]  ex_alu_op;
+    wire [2:0]  ex_mdu_op;
+    wire        ex_mdu_start;
+    wire        ex_sel_mdu_out;
+    wire        ex_alu_src;
+    wire        ex_mem_write;
+    wire [2:0]  ex_mem_op;
+    wire [1:0]  ex_mem_to_reg;
+    
+    mips_id_ex_reg u_mips_id_ex_reg (
+        .clk            (clk),
+        .rst_n          (rst_n),
+        .stall          (global_stall),
+        .flush          (flush_id_ex), // bubble
+        
+        .id_val_rs      (id_val_rs),
+        .id_val_rt      (id_val_rt),
+        .id_imm_ext     (id_imm_ext),
+        .id_pc_plus_8   (id_pc_plus_8),
+        .id_waddr       (id_waddr),
+        .id_sa          (id_sa),
+        .id_alu_op      (id_alu_op),
+        .id_mdu_op      (id_mdu_op),
+        .id_mdu_start   (id_mdu_start),
+        .id_illegal_inst(id_illegal_inst),
+        .id_except_req  (id_except_req_out),
+        .id_except_code (id_except_code_out),
+        .id_cp0_we      (id_cp0_we),
+        .id_is_eret     (id_is_eret),
+        .id_sel_mdu_out (id_sel_mdu_out),
+        .id_alu_src     (id_alu_src),
+        .id_reg_write   (id_reg_write),
+        .id_mem_read    (id_mem_read),
+        .id_mem_write   (id_mem_write),
+        .id_mem_op      (id_mem_op),
+        .id_mem_to_reg  (id_mem_to_reg),
+        
+        .ex_val_rs      (ex_val_rs),
+        .ex_val_rt      (ex_val_rt),
+        .ex_imm_ext     (ex_imm_ext),
+        .ex_pc_plus_8   (ex_pc_plus_8),
+        .ex_waddr       (ex_waddr),
+        .ex_sa          (ex_sa),
+        .ex_alu_op      (ex_alu_op),
+        .ex_mdu_op      (ex_mdu_op),
+        .ex_mdu_start   (ex_mdu_start),
+        .ex_illegal_inst(ex_illegal_inst),
+        .ex_except_req  (ex_except_req),
+        .ex_except_code (ex_except_code),
+        .ex_cp0_we      (ex_cp0_we),
+        .ex_is_eret     (ex_is_eret),
+        .ex_sel_mdu_out (ex_sel_mdu_out),
+        .ex_alu_src     (ex_alu_src),
+        .ex_reg_write   (ex_reg_write),
+        .ex_mem_read    (ex_mem_read),
+        .ex_mem_write   (ex_mem_write),
+        .ex_mem_op      (ex_mem_op),
+        .ex_mem_to_reg  (ex_mem_to_reg)
+    );
+    
+    // =========================================================================
+    // EX Stage
+    // =========================================================================
+    wire [31:0] ex_op_a = ex_val_rs;
+    wire [31:0] ex_op_b = ex_alu_src ? ex_imm_ext : ex_val_rt;
+    
+    wire        ex_overflow;
+    wire        ex_zero;
+    wire [31:0] ex_hi_val;
+    wire [31:0] ex_lo_val;
+    
+    mips_ex_stage u_mips_ex_stage (
+        .clk         (clk),
+        .rst_n       (rst_n),
+        .op_a        (ex_op_a),
+        .op_b        (ex_op_b),
+        .sa          (ex_sa),
+        .alu_op      (ex_alu_op),
+        .mdu_op      (ex_mdu_op),
+        .mdu_start   (ex_mdu_start),
+        .sel_mdu_out (ex_sel_mdu_out),
+        
+        .ex_out      (ex_out),
+        .overflow    (ex_overflow),
+        .zero        (ex_zero),
+        .mdu_ready   (mdu_ready),
+        .hi_val      (ex_hi_val),
+        .lo_val      (ex_lo_val)
+    );
+    
+    // =========================================================================
+    // EX/MEM Pipeline Register
+    // =========================================================================
+    wire [31:0] mem_val_rt;
+    wire [31:0] mem_pc_plus_8;
+    wire        mem_mem_write;
+    wire [2:0]  mem_mem_op;
+    wire [1:0]  mem_mem_to_reg;
+    wire        mem_done;
+    
+    mips_ex_mem_reg u_mips_ex_mem_reg (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .stall           (global_stall),
+        .flush           (flush_ex_mem),
+        .dmem_data_ok    (data_data_ok),
+        
+        .ex_out          (ex_out),
+        .ex_val_rt       (ex_val_rt),
+        .ex_pc_plus_8    (ex_pc_plus_8),
+        .ex_waddr        (ex_waddr),
+        .ex_reg_write    (ex_reg_write),
+        .ex_cp0_we       (ex_cp0_we),
+        .ex_is_eret      (ex_is_eret),
+        .ex_except_req   (ex_except_req),
+        .ex_except_code  (ex_except_code),
+        .ex_mem_read     (ex_mem_read),
+        .ex_mem_write    (ex_mem_write),
+        .ex_mem_op       (ex_mem_op),
+        .ex_mem_to_reg   (ex_mem_to_reg),
+        
+        .mem_ex_out      (mem_ex_out),
+        .mem_val_rt      (mem_val_rt),
+        .mem_pc_plus_8   (mem_pc_plus_8),
+        .mem_waddr       (mem_waddr),
+        .mem_reg_write   (mem_reg_write),
+        .mem_cp0_we      (mem_cp0_we),
+        .mem_is_eret     (mem_is_eret),
+        .mem_except_req  (mem_except_req),
+        .mem_except_code (mem_except_code),
+        .mem_mem_read    (mem_mem_read),
+        .mem_mem_write   (mem_mem_write),
+        .mem_mem_op      (mem_mem_op),
+        .mem_mem_to_reg  (mem_mem_to_reg),
+        .mem_done        (mem_done)
+    );
+    
+    // =========================================================================
+    // MEM Stage
+    // =========================================================================
+    wire [31:0] mem_rdata_fmt;
+    wire        mem_adel_exception;
+    wire        mem_ades_exception;
+    
+    mips_mem_stage u_mips_mem_stage (
+        .mem_ex_out      (mem_ex_out),
+        .mem_val_rt      (mem_val_rt),
+        .mem_read        (mem_mem_read),
+        .mem_write       (mem_mem_write),
+        .mem_op          (mem_mem_op),
+        .mem_done        (mem_done),
+        
+        .dmem_rdata      (data_rdata),
+        .dmem_addr       (data_addr),
+        .dmem_wdata      (data_wdata),
+        .dmem_we         (data_we),
+        .dmem_be         (data_be),
+        .dmem_en         (data_req),
+        .dmem_addr_ok    (data_addr_ok),
+        .dmem_data_ok    (data_data_ok),
+        
+        .stall_req_mem   (stall_req_mem),
+        
+        .mem_rdata_ext   (mem_rdata_fmt),
+        .adel_exception  (mem_adel_exception),
+        .ades_exception  (mem_ades_exception)
+    );
+    
+    wire mem_except_req_out = mem_except_req | mem_adel_exception | mem_ades_exception;
+    wire [4:0] mem_except_code_out = mem_except_req ? mem_except_code : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'h00));
+    
+    // =========================================================================
+    // MEM/WB Pipeline Register
+    // =========================================================================
+    wire [31:0] wb_rdata_fmt;
+    wire [31:0] wb_ex_out;
+    wire [31:0] wb_pc_plus_8;
+    
+    mips_mem_wb_reg u_mips_mem_wb_reg (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .stall           (global_stall),
+        .flush           (flush_mem_wb),
+        
+        .mem_rdata_fmt   (mem_rdata_fmt),
+        .mem_ex_out      (mem_ex_out),
+        .mem_pc_plus_8   (mem_pc_plus_8),
+        .mem_waddr       (mem_waddr),
+        
+        .mem_reg_write   (mem_reg_write),
+        .mem_cp0_we      (mem_cp0_we),
+        .mem_is_eret     (mem_is_eret),
+        .mem_except_req  (mem_except_req_out),
+        .mem_except_code (mem_except_code_out),
+        .mem_mem_to_reg  (mem_mem_to_reg),
+        
+        .wb_rdata_fmt    (wb_rdata_fmt),
+        .wb_ex_out       (wb_ex_out),
+        .wb_pc_plus_8    (wb_pc_plus_8),
+        .wb_waddr        (wb_waddr),
+        
+        .wb_reg_write    (wb_reg_write),
+        .wb_cp0_we       (wb_cp0_we),
+        .wb_is_eret      (wb_is_eret),
+        .wb_except_req   (wb_except_req),
+        .wb_except_code  (wb_except_code),
+        .wb_mem_to_reg   (wb_mem_to_reg)
+    );
+    
+    // =========================================================================
+    // Write Back (WB) Stage
+    // =========================================================================
+    wire [31:0] cp0_rdata;
+    
+    mips_wb_stage u_mips_wb_stage (
+        .mem_rdata_fmt (wb_rdata_fmt),
+        .ex_out      (wb_ex_out),
+        .pc_plus_8   (wb_pc_plus_8),
+        .mem_to_reg  (wb_mem_to_reg),
+        .cp0_data    (cp0_rdata),
+        
+        .wb_wdata    (wb_wdata)
+    );
+    
+    // =========================================================================
+    // Coprocessor 0
+    // =========================================================================
+    wire intr_req;
+    wire [31:0] except_pc = wb_pc_plus_8 - 32'd8; // PC of the retiring instruction
+    
+    mips_cp0 u_mips_cp0 (
+        .clk          (clk),
+        .rst_n        (rst_n),
+        .hw_int       (6'd0), // Placeholder for hardware interrupts
+        .we           (wb_cp0_we),
+        .waddr        (wb_waddr),
+        .wdata        (wb_ex_out),
+        .raddr        (wb_waddr),
+        .rdata        (cp0_rdata),
+        .except_req   (wb_except_req | intr_req),
+        .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
+        .except_pc    (except_pc),
+        .except_bd    (1'b0),
+        .eret         (wb_is_eret),
+        .epc_out      (epc_out),
+        .intr_req     (intr_req)
+    );
+
+endmodule
