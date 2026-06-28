@@ -48,12 +48,12 @@ module mips_if_stage #(
     always @(*) begin
         if (exception_req) begin
             next_pc = exception_vector;
+        end else if (stall) begin
+            next_pc = pc;
         end else if (branch_taken) begin
             next_pc = branch_target;
         end else if (jump_taken) begin
             next_pc = jump_target;
-        end else if (stall) begin
-            next_pc = pc;
         end else begin
             next_pc = pc + 32'd4;
         end

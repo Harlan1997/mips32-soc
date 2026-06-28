@@ -105,7 +105,7 @@ module axi_sram #(
                         s_rid     <= s_arid;
                         s_rresp   <= 2'b00; // OKAY
                         // Provide first data
-                        s_rdata   <= ram[s_araddr[31:2]];
+                        s_rdata   <= ram[s_araddr[15:2]];
                     end
                 end
                 R_BURST: begin
@@ -122,7 +122,7 @@ module axi_sram #(
                             r_len     <= r_len - 1'b1;
                             
                             s_rlast   <= (r_len == 8'd1);
-                            s_rdata   <= ram[(r_addr + 32'd4) >> 2];
+                            s_rdata   <= ram[(r_addr[15:0] + 16'd4) >> 2];
                         end
                     end
                 end
@@ -171,10 +171,10 @@ module axi_sram #(
                 W_DATA: begin
                     if (s_wvalid && s_wready) begin
                         // Perform write
-                        if (s_wstrb[0]) ram[w_addr[31:2]][7:0]   <= s_wdata[7:0];
-                        if (s_wstrb[1]) ram[w_addr[31:2]][15:8]  <= s_wdata[15:8];
-                        if (s_wstrb[2]) ram[w_addr[31:2]][23:16] <= s_wdata[23:16];
-                        if (s_wstrb[3]) ram[w_addr[31:2]][31:24] <= s_wdata[31:24];
+                        if (s_wstrb[0]) ram[w_addr[15:2]][7:0]   <= s_wdata[7:0];
+                        if (s_wstrb[1]) ram[w_addr[15:2]][15:8]  <= s_wdata[15:8];
+                        if (s_wstrb[2]) ram[w_addr[15:2]][23:16] <= s_wdata[23:16];
+                        if (s_wstrb[3]) ram[w_addr[15:2]][31:24] <= s_wdata[31:24];
 
                         if (s_wlast) begin
                             s_wready <= 1'b0;

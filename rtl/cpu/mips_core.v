@@ -7,6 +7,7 @@
 module mips_core (
     input  wire        clk,
     input  wire        rst_n,
+    input  wire [5:0]  ext_int,
     
     // AXI4 Master Interface (Instruction Cache)
     output wire [3:0]  inst_awid,
@@ -126,6 +127,7 @@ module mips_core (
         .data_req        (cpu_data_req),
         .data_we         (cpu_data_we),
         .data_addr       (cpu_data_addr),
+        .ext_int         (ext_int),
         .data_wdata      (cpu_data_wdata),
         .data_be         (cpu_data_be),
         .data_addr_ok    (cpu_data_addr_ok),

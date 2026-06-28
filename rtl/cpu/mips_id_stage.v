@@ -38,6 +38,8 @@ module mips_id_stage (
     input  wire        ex_mem_read,  // EX stage instruction is a Load
     input  wire [4:0]  ex_waddr,     // EX stage write register address
     input  wire        mem_mem_read, // MEM stage instruction is a Load
+    input  wire [1:0]  ex_mem_to_reg, // EX stage mem_to_reg
+    input  wire [1:0]  mem_mem_to_reg, // MEM stage mem_to_reg
     
     // Outputs to Pipeline Control / Hazard Unit
     output wire        stall_req,    // Stall request due to load-use hazard
@@ -73,7 +75,8 @@ module mips_id_stage (
     // CP0 and Exceptions
     output wire        cp0_we,
     output wire        is_eret,
-    output wire        illegal_inst
+    output wire        illegal_inst,
+    output wire        is_syscall
 );
 
     // Register File Address Extraction
@@ -157,6 +160,7 @@ module mips_id_stage (
     wire is_jump   = (jump_op != 2'b00);
     
     assign branch_taken = br_taken & ~stall_req;
+
     assign jump_taken   = is_jump & ~stall_req;
 
     // Direct / Register Jump Resolution
@@ -186,10 +190,11 @@ module mips_id_stage (
     wire reads_rt = (opcode == 6'b000000) ? (func != 6'b001000 && func != 6'b001001 && func != 6'b010000 && func != 6'b010001 && func != 6'b010010 && func != 6'b010011) :
                     (opcode == 6'b101011 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101);
 
-    wire load_use_hazard = (ex_mem_read && (ex_waddr != 5'd0) && 
+
+    wire load_use_hazard = ((ex_mem_read || ex_mem_to_reg == 2'b11) && (ex_waddr != 5'd0) && 
                            ((reads_rs && (ex_waddr == rs_addr)) || 
                             (reads_rt && (ex_waddr == rt_addr)))) ||
-                           (is_branch && mem_mem_read && (fw_mem_waddr != 5'd0) &&
+                           ((mem_mem_read || mem_mem_to_reg == 2'b11) && (fw_mem_waddr != 5'd0) &&
                            ((reads_rs && (fw_mem_waddr == rs_addr)) || 
                             (reads_rt && (fw_mem_waddr == rt_addr))));
 

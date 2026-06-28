@@ -64,7 +64,7 @@ module axi2apb_bridge (
     input  wire        pslverr
 );
 
-    localparam IDLE   = 3'd0;
+    localparam IDLE    = 3'd0;
     localparam W_SETUP = 3'd1;
     localparam W_ENABLE= 3'd2;
     localparam W_RESP  = 3'd3;
@@ -73,8 +73,21 @@ module axi2apb_bridge (
     
     reg [2:0] state, next_state;
     
-    reg [3:0] awid_latch;
-    reg [3:0] arid_latch;
+    reg aw_received;
+    reg w_received;
+    reg [31:0] awaddr_latch;
+    reg [31:0] wdata_latch;
+    reg [3:0]  wstrb_latch;
+    reg [31:0] araddr_latch;
+    reg [3:0]  awid_latch;
+    reg [3:0]  arid_latch;
+    
+    assign s_awready = (state == IDLE && !aw_received);
+    assign s_wready  = (state == IDLE && !w_received);
+    assign s_arready = (state == IDLE && !s_awvalid && !aw_received && !w_received);
+    
+    wire aw_done = aw_received || (s_awvalid && s_awready);
+    wire w_done  = w_received || (s_wvalid && s_wready);
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) state <= IDLE;
@@ -85,8 +98,8 @@ module axi2apb_bridge (
         next_state = state;
         case (state)
             IDLE: begin
-                if (s_awvalid && s_wvalid) next_state = W_SETUP;
-                else if (s_arvalid) next_state = R_SETUP;
+                if (aw_done && w_done) next_state = W_SETUP;
+                else if (s_arvalid && s_arready) next_state = R_SETUP;
             end
             
             W_SETUP: begin
@@ -111,11 +124,37 @@ module axi2apb_bridge (
         endcase
     end
     
-    // AXI outputs
-    assign s_awready = (state == IDLE && s_awvalid && s_wvalid);
-    assign s_wready  = (state == IDLE && s_awvalid && s_wvalid);
-    
-    assign s_arready = (state == IDLE && !s_awvalid && s_arvalid);
+    // Latch AW and W channels independently
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aw_received <= 1'b0;
+            w_received <= 1'b0;
+            awaddr_latch <= 32'd0;
+            awid_latch <= 4'd0;
+            wdata_latch <= 32'd0;
+            wstrb_latch <= 4'd0;
+            arid_latch <= 4'd0;
+        end else begin
+            if (state == IDLE) begin
+                if (s_awvalid && s_awready) begin
+                    aw_received <= 1'b1;
+                    awaddr_latch <= s_awaddr;
+                    awid_latch <= s_awid;
+                end
+                if (s_wvalid && s_wready) begin
+                    w_received <= 1'b1;
+                    wdata_latch <= s_wdata;
+                    wstrb_latch <= s_wstrb;
+                end
+                if (s_arvalid && s_arready) begin
+                    arid_latch <= s_arid;
+                end
+            end else if (state == W_RESP && s_bready) begin
+                aw_received <= 1'b0;
+                w_received <= 1'b0;
+            end
+        end
+    end
     
     assign s_bvalid  = (state == W_RESP);
     assign s_bresp   = 2'b00;
@@ -126,17 +165,6 @@ module axi2apb_bridge (
     assign s_rresp   = 2'b00;
     assign s_rlast   = 1'b1;
     assign s_rid     = arid_latch;
-    
-    // Latch IDs
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            awid_latch <= 4'd0;
-            arid_latch <= 4'd0;
-        end else begin
-            if (s_awready && s_awvalid) awid_latch <= s_awid;
-            if (s_arready && s_arvalid) arid_latch <= s_arid;
-        end
-    end
     
     // APB Outputs
     always @(posedge clk or negedge rst_n) begin
@@ -158,9 +186,9 @@ module axi2apb_bridge (
                     psel    <= 1'b1;
                     penable <= 1'b0;
                     pwrite  <= 1'b1;
-                    paddr   <= s_awaddr;
-                    pwdata  <= s_wdata;
-                    pstrb   <= s_wstrb;
+                    paddr   <= (state == IDLE) ? (s_awvalid ? s_awaddr : awaddr_latch) : awaddr_latch;
+                    pwdata  <= (state == IDLE) ? (s_wvalid ? s_wdata : wdata_latch) : wdata_latch;
+                    pstrb   <= (state == IDLE) ? (s_wvalid ? s_wstrb : wstrb_latch) : wstrb_latch;
                 end
                 
                 W_ENABLE: begin
@@ -171,7 +199,7 @@ module axi2apb_bridge (
                     psel    <= 1'b1;
                     penable <= 1'b0;
                     pwrite  <= 1'b0;
-                    paddr   <= s_araddr;
+                    paddr   <= (state == IDLE) ? s_araddr : araddr_latch;
                 end
                 
                 R_ENABLE: begin
@@ -185,5 +213,12 @@ module axi2apb_bridge (
             endcase
         end
     end
+    
 
+
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) araddr_latch <= 32'd0;
+        else if (s_arvalid && s_arready) araddr_latch <= s_araddr;
+    end
 endmodule

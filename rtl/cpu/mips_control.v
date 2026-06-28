@@ -318,6 +318,26 @@ module mips_control (
                 mem_to_reg = 2'b01;
                 imm_signed = 1'b1;
             end
+            6'b100010: begin // LWL
+                alu_op     = 4'b0001;
+                alu_src    = 1'b1;
+                reg_write  = 1'b1;
+                reg_dst    = 2'b00;
+                mem_read   = 1'b1;
+                mem_op     = 3'b101; // WL
+                mem_to_reg = 2'b01;
+                imm_signed = 1'b1;
+            end
+            6'b100110: begin // LWR
+                alu_op     = 4'b0001;
+                alu_src    = 1'b1;
+                reg_write  = 1'b1;
+                reg_dst    = 2'b00;
+                mem_read   = 1'b1;
+                mem_op     = 3'b110; // WR
+                mem_to_reg = 2'b01;
+                imm_signed = 1'b1;
+            end
             6'b101011: begin // SW
                 alu_op     = 4'b0001;
                 alu_src    = 1'b1;
@@ -337,6 +357,20 @@ module mips_control (
                 alu_src    = 1'b1;
                 mem_write  = 1'b1;
                 mem_op     = 3'b010;
+                imm_signed = 1'b1;
+            end
+            6'b101010: begin // SWL
+                alu_op     = 4'b0001;
+                alu_src    = 1'b1;
+                mem_write  = 1'b1;
+                mem_op     = 3'b101; // WL
+                imm_signed = 1'b1;
+            end
+            6'b101110: begin // SWR
+                alu_op     = 4'b0001;
+                alu_src    = 1'b1;
+                mem_write  = 1'b1;
+                mem_op     = 3'b110; // WR
                 imm_signed = 1'b1;
             end
             
@@ -378,6 +412,20 @@ module mips_control (
                         branch_op  = 3'b110;
                         imm_signed = 1'b1;
                     end
+                    5'b10000: begin // BLTZAL
+                        branch_op  = 3'b101;
+                        imm_signed = 1'b1;
+                        reg_write  = 1'b1;
+                        reg_dst    = 2'b10; // $ra
+                        mem_to_reg = 2'b10; // PC+8
+                    end
+                    5'b10001: begin // BGEZAL
+                        branch_op  = 3'b110;
+                        imm_signed = 1'b1;
+                        reg_write  = 1'b1;
+                        reg_dst    = 2'b10; // $ra
+                        mem_to_reg = 2'b10; // PC+8
+                    end
                     default: begin
                         illegal_inst = 1'b1;
                     end
@@ -393,6 +441,10 @@ module mips_control (
                     end
                     5'b00100: begin // MTC0
                         cp0_we = 1'b1;
+                        reg_dst = 2'b01; // Use rd as CP0 register index
+                        alu_op = 4'b1000; // SLL
+                        use_sa = 1'b1;    // use sa (which is 0 for MTC0 because bits 10:6 are 0)
+                        alu_src = 1'b0;   // op_b = rt
                     end
                     5'b10000: begin // CO
                         if (func == 6'b011000) begin // ERET
