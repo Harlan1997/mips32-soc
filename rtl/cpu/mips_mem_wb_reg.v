@@ -17,6 +17,7 @@ module mips_mem_wb_reg (
     input  wire [31:0] mem_ex_out,
     input  wire [31:0] mem_pc_plus_8,
     input  wire [4:0]  mem_waddr,
+    input  wire [4:0]  mem_rd_addr,
     
     // Control Inputs from MEM
     input  wire        mem_reg_write,
@@ -35,6 +36,7 @@ module mips_mem_wb_reg (
     output reg  [31:0] wb_ex_out,
     output reg  [31:0] wb_pc_plus_8,
     output reg  [4:0]  wb_waddr,
+    output reg  [4:0]  wb_rd_addr,
     
     // Control Outputs to WB
     output reg         wb_reg_write,
@@ -79,6 +81,7 @@ module mips_mem_wb_reg (
             wb_ex_out      <= mem_ex_out;
             wb_pc_plus_8   <= mem_pc_plus_8;
             wb_waddr       <= mem_waddr;
+            wb_rd_addr     <= mem_rd_addr;
             
             wb_reg_write   <= mem_reg_write;
             wb_cp0_we      <= mem_cp0_we;

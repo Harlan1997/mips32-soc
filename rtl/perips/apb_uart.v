@@ -51,8 +51,8 @@ module apb_uart (
                 if (paddr[7:0] == 8'h00) begin
                     // Write to TX Data
                     $write("%c", pwdata[7:0]);
+                    $display("[%t] UART WRITE: %c", $time, pwdata[7:0]);
                     // Flush standard output if newline
-                    // Note: Modelsim/VCS might buffer otherwise, $fflush is not strictly standard but often supported, or just wait.
                 end
             end
         end

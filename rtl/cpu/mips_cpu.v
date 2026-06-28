@@ -25,6 +25,8 @@ module mips_cpu (
     input  wire        data_data_ok,
     input  wire [31:0] data_rdata,
     
+    input  wire [5:0]  ext_int,
+    
     // Pipeline controls
     output wire        debug_stall,
     output wire        debug_flush
@@ -44,11 +46,12 @@ module mips_cpu (
     // Exceptions
     wire wb_except_req;
     wire wb_is_eret;
+    wire        intr_req;
     wire [31:0] epc_out;
     
     // Exception PC redirection
-    wire exception_flush = wb_except_req | wb_is_eret;
-    wire [31:0] exception_vector = wb_is_eret ? epc_out : 32'hBFC00380;
+    wire exception_flush = wb_except_req | wb_is_eret | intr_req;
+    wire [31:0] exception_vector = wb_is_eret ? epc_out : 32'h00000180;
     
     // ID stage outputs (for flush logic)
     wire        id_branch_taken;
@@ -58,6 +61,7 @@ module mips_cpu (
     
     // WB stage signals (for ID regfile write)
     wire [4:0]  wb_waddr;
+    wire [4:0]  wb_rd_addr;
     wire [31:0] wb_wdata;
     
     // PC and IF/ID stall if global_stall or load-use hazard
@@ -66,8 +70,8 @@ module mips_cpu (
     // IF flush on exception/eret
     wire if_flush = exception_flush;
     
-    // IF/ID flush on branch/jump or exception
-    wire if_id_flush = (id_branch_taken | id_jump_taken) | exception_flush;
+    // IF/ID flush on exception only (MIPS has branch delay slots, so we DO NOT flush on branch/jump)
+    wire if_id_flush = exception_flush;
     
     // ID/EX flushes (inserts bubble) if load-use hazard occurs without global stall, or on exception
     wire flush_id_ex = (stall_req_id & ~global_stall) | exception_flush;
@@ -157,6 +161,7 @@ module mips_cpu (
     wire        id_illegal_inst;
     wire        id_cp0_we;
     wire        id_is_eret;
+    wire        id_is_syscall;
     
     wire [4:0]  id_rs_addr;
     wire [4:0]  id_rt_addr;
@@ -188,6 +193,8 @@ module mips_cpu (
     wire [4:0]  ex_except_code;
     wire        ex_cp0_we;
     wire        ex_is_eret;
+    wire [1:0]  ex_mem_to_reg;
+    wire [1:0]  mem_mem_to_reg;
     
     mips_id_stage u_mips_id_stage (
         .clk           (clk),
@@ -215,6 +222,8 @@ module mips_cpu (
         .ex_mem_read   (ex_mem_read),
         .ex_waddr      (ex_waddr),
         .mem_mem_read  (mem_mem_read),
+        .ex_mem_to_reg (ex_mem_to_reg),
+        .mem_mem_to_reg(mem_mem_to_reg),
         .stall_req     (stall_req_id),
         
         // Branch & Jump
@@ -243,14 +252,18 @@ module mips_cpu (
         .mem_read      (id_mem_read),
         .mem_write     (id_mem_write),
         .mem_op        (id_mem_op),
+        .mem_to_reg    (id_mem_to_reg),
 
         .illegal_inst  (id_illegal_inst),
         .cp0_we        (id_cp0_we),
-        .is_eret       (id_is_eret)
+        .is_eret       (id_is_eret),
+        .is_syscall    (id_is_syscall)
     );
     
-    wire id_except_req_out = id_except_req_in | id_illegal_inst;
-    wire [4:0] id_except_code_out = id_except_req_in ? id_except_code_in : (id_illegal_inst ? 5'h0A : 5'h00);
+    wire id_except_req_out = id_except_req_in | id_illegal_inst | id_is_syscall;
+    wire [4:0] id_except_code_out = id_except_req_in ? id_except_code_in : 
+                                    (id_is_syscall ? 5'h08 : 
+                                     (id_illegal_inst ? 5'h0A : 5'h00));
     
     // =========================================================================
     // ID/EX Pipeline Register
@@ -259,6 +272,7 @@ module mips_cpu (
     wire [31:0] ex_val_rt;
     wire [31:0] ex_imm_ext;
     wire [31:0] ex_pc_plus_8;
+    wire [4:0]  ex_rd_addr;
     wire [4:0]  ex_sa;
     
     wire [3:0]  ex_alu_op;
@@ -268,7 +282,6 @@ module mips_cpu (
     wire        ex_alu_src;
     wire        ex_mem_write;
     wire [2:0]  ex_mem_op;
-    wire [1:0]  ex_mem_to_reg;
     
     mips_id_ex_reg u_mips_id_ex_reg (
         .clk            (clk),
@@ -281,6 +294,7 @@ module mips_cpu (
         .id_imm_ext     (id_imm_ext),
         .id_pc_plus_8   (id_pc_plus_8),
         .id_waddr       (id_waddr),
+        .id_rd_addr     (id_rd_addr),
         .id_sa          (id_sa),
         .id_alu_op      (id_alu_op),
         .id_mdu_op      (id_mdu_op),
@@ -303,6 +317,7 @@ module mips_cpu (
         .ex_imm_ext     (ex_imm_ext),
         .ex_pc_plus_8   (ex_pc_plus_8),
         .ex_waddr       (ex_waddr),
+        .ex_rd_addr     (ex_rd_addr),
         .ex_sa          (ex_sa),
         .ex_alu_op      (ex_alu_op),
         .ex_mdu_op      (ex_mdu_op),
@@ -358,7 +373,7 @@ module mips_cpu (
     wire [31:0] mem_pc_plus_8;
     wire        mem_mem_write;
     wire [2:0]  mem_mem_op;
-    wire [1:0]  mem_mem_to_reg;
+    wire [4:0]  mem_rd_addr;
     wire        mem_done;
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
@@ -372,6 +387,7 @@ module mips_cpu (
         .ex_val_rt       (ex_val_rt),
         .ex_pc_plus_8    (ex_pc_plus_8),
         .ex_waddr        (ex_waddr),
+        .ex_rd_addr      (ex_rd_addr),
         .ex_reg_write    (ex_reg_write),
         .ex_cp0_we       (ex_cp0_we),
         .ex_is_eret      (ex_is_eret),
@@ -386,6 +402,7 @@ module mips_cpu (
         .mem_val_rt      (mem_val_rt),
         .mem_pc_plus_8   (mem_pc_plus_8),
         .mem_waddr       (mem_waddr),
+        .mem_rd_addr     (mem_rd_addr),
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
         .mem_is_eret     (mem_is_eret),
@@ -449,6 +466,7 @@ module mips_cpu (
         .mem_ex_out      (mem_ex_out),
         .mem_pc_plus_8   (mem_pc_plus_8),
         .mem_waddr       (mem_waddr),
+        .mem_rd_addr     (mem_rd_addr),
         
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
@@ -461,6 +479,7 @@ module mips_cpu (
         .wb_ex_out       (wb_ex_out),
         .wb_pc_plus_8    (wb_pc_plus_8),
         .wb_waddr        (wb_waddr),
+        .wb_rd_addr      (wb_rd_addr),
         
         .wb_reg_write    (wb_reg_write),
         .wb_cp0_we       (wb_cp0_we),
@@ -488,17 +507,27 @@ module mips_cpu (
     // =========================================================================
     // Coprocessor 0
     // =========================================================================
-    wire intr_req;
-    wire [31:0] except_pc = wb_pc_plus_8 - 32'd8; // PC of the retiring instruction
+
+    wire [31:0] id_pc  = id_pc_plus_4 - 32'd4;
+    wire [31:0] ex_pc  = ex_pc_plus_8 - 32'd8;
+    wire [31:0] mem_pc = mem_pc_plus_8 - 32'd8;
+    wire [31:0] wb_pc  = wb_pc_plus_8 - 32'd8;
     
+    wire [31:0] oldest_flushed_pc = 
+        (mem_pc_plus_8 != 32'd0) ? mem_pc :
+        (ex_pc_plus_8  != 32'd0) ? ex_pc :
+        (id_pc_plus_4  != 32'd0) ? id_pc :
+        if_pc_plus_4 - 32'd4;
+        
+    wire [31:0] except_pc = wb_except_req ? wb_pc : oldest_flushed_pc;
     mips_cp0 u_mips_cp0 (
         .clk          (clk),
         .rst_n        (rst_n),
-        .hw_int       (6'd0), // Placeholder for hardware interrupts
+        .hw_int       (ext_int), // Connect hardware interrupt
         .we           (wb_cp0_we),
-        .waddr        (wb_waddr),
+        .waddr        (wb_rd_addr),
         .wdata        (wb_ex_out),
-        .raddr        (wb_waddr),
+        .raddr        (wb_rd_addr),
         .rdata        (cp0_rdata),
         .except_req   (wb_except_req | intr_req),
         .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT

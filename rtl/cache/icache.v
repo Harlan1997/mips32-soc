@@ -95,13 +95,6 @@ module icache (
             tag_rdata  <= tag_ram[sram_addr];
             data_rdata <= data_ram[sram_addr];
         end
-        if (sram_write_en) begin
-            // Update tag and data RAM on the last beat of refill
-            tag_ram[sram_addr] <= {1'b1, req_buf_addr[31:13]};
-            // Merge the last beat into the refill buffer to write at once
-            // Actually, we must construct the full 256-bit line
-            data_ram[sram_addr] <= refill_buf; // We need to handle the last beat correctly in logic below
-        end
     end
 
     // Hit detection

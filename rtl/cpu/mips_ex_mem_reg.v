@@ -18,7 +18,8 @@ module mips_ex_mem_reg (
     input  wire [31:0] ex_out,         // ALU or MDU result (used as memory address or reg data)
     input  wire [31:0] ex_val_rt,      // Data to be written to memory
     input  wire [31:0] ex_pc_plus_8,
-    input  wire [4:0]  ex_waddr,       // Destination register
+    input  wire [4:0]  ex_waddr,
+    input  wire [4:0]  ex_rd_addr,       // Destination register
     
     input  wire        ex_reg_write,
     
@@ -39,6 +40,7 @@ module mips_ex_mem_reg (
     output reg  [31:0] mem_val_rt,
     output reg  [31:0] mem_pc_plus_8,
     output reg  [4:0]  mem_waddr,
+    output reg  [4:0]  mem_rd_addr,
     
     output reg         mem_reg_write,
     
@@ -94,6 +96,7 @@ module mips_ex_mem_reg (
             mem_val_rt     <= ex_val_rt;
             mem_pc_plus_8  <= ex_pc_plus_8;
             mem_waddr      <= ex_waddr;
+            mem_rd_addr    <= ex_rd_addr;
             
             mem_reg_write  <= ex_reg_write;
             mem_cp0_we     <= ex_cp0_we;

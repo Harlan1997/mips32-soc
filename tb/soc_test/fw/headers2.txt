@@ -1,0 +1,21 @@
+
+firmware.elf:     file format elf32-tradlittlemips
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text.init    00000024  00000000  00000000  00010000  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .except       00000050  00000024  00000024  00010024  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .text         00000404  00000080  00000080  00010080  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  3 .rodata       00000168  00000484  00000484  00010484  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .bss          00000010  000005f0  000005f0  000105ec  2**4
+                  ALLOC
+  5 .pdr          00000080  00000000  00000000  000105ec  2**2
+                  CONTENTS, READONLY
+  6 .gnu.attributes 00000010  00000000  00000000  0001066c  2**0
+                  CONTENTS, READONLY
+  7 .comment      00000034  00000000  00000000  0001067c  2**0
+                  CONTENTS, READONLY

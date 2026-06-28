@@ -18,7 +18,7 @@ module mips_mdu (
     input  wire        start,     // Start multi-cycle operation
     output reg  [31:0] hi,        // HI Register output
     output reg  [31:0] lo,        // LO Register output
-    output reg         ready,     // Operation complete
+    output wire        ready,     // Operation complete
     output reg  [31:0] mdu_out    // Combinational read output for MFHI/MFLO
 );
 
@@ -59,8 +59,8 @@ module mips_mdu (
     wire [63:0] mult_prod_signed   = $signed(mult_a_reg) * $signed(mult_b_reg);
     wire [63:0] mult_prod_unsigned = mult_a_reg * mult_b_reg;
     wire [63:0] mult_prod          = mult_signed_reg ? mult_prod_signed : mult_prod_unsigned;
-    reg  [31:0] final_quot;
-    reg  [31:0] final_rem;
+    wire [31:0] final_quot = div_rem_quot[31:0];
+    wire [31:0] final_rem  = div_rem_quot[63:32];
 
     assign next_rem_quot = {div_rem_quot[62:0], 1'b0};
     assign sub_res       = {1'b0, next_rem_quot[63:32]} - {1'b0, div_divisor};
@@ -74,6 +74,10 @@ module mips_mdu (
         endcase
     end
 
+    assign ready = (state == STATE_IDLE) ||
+                   (state == STATE_MULT && !mult_active) ||
+                   (state == STATE_DIV && count == 6'd33);
+
     // MDU Control FSM and Operation Logic
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -81,7 +85,6 @@ module mips_mdu (
             lo              <= 32'd0;
             state           <= STATE_IDLE;
             count           <= 6'd0;
-            ready           <= 1'b1;
             mult_active     <= 1'b0;
             div_active      <= 1'b0;
             mult_a_reg      <= 32'd0;
@@ -91,17 +94,13 @@ module mips_mdu (
             div_rem_quot    <= 64'd0;
             div_sign_quot   <= 1'b0;
             div_sign_rem    <= 1'b0;
-            final_quot      <= 32'd0;
-            final_rem       <= 32'd0;
         end else begin
             case (state)
                 STATE_IDLE: begin
-                    ready <= 1'b1;
                     if (start) begin
                         case (mdu_op)
                             OP_MULT, OP_MULTU: begin
                                 state           <= STATE_MULT;
-                                ready           <= 1'b0;
                                 mult_a_reg      <= op_a;
                                 mult_b_reg      <= op_b;
                                 mult_signed_reg <= (mdu_op == OP_MULT);
@@ -109,7 +108,6 @@ module mips_mdu (
                             end
                             OP_DIV, OP_DIVU: begin
                                 state <= STATE_DIV;
-                                ready <= 1'b0;
                                 count <= 6'd0;
                                 
                                 // Sign preprocessing
@@ -139,12 +137,11 @@ module mips_mdu (
 
                 STATE_MULT: begin
                     // Multiplication is completed in 2 cycles total
-                    // This is the 2nd cycle of multiplication
                     if (mult_active) begin
                         hi          <= mult_prod[63:32];
                         lo          <= mult_prod[31:0];
-                        ready       <= 1'b1;
                         mult_active <= 1'b0;
+                    end else begin
                         state       <= STATE_IDLE;
                     end
                 end
@@ -161,11 +158,8 @@ module mips_mdu (
                             div_rem_quot <= {next_rem_quot[63:32], next_rem_quot[31:1], 1'b0};
                         end
                         count <= count + 6'd1;
-                    end else begin
+                    end else if (count == 6'd32) begin
                         // Post-processing and writeback
-                        final_quot = div_rem_quot[31:0];
-                        final_rem  = div_rem_quot[63:32];
-
                         // division by zero check (avoid hang, return undefined values)
                         if (div_divisor == 32'd0) begin
                             hi <= 32'd0;
@@ -185,7 +179,8 @@ module mips_mdu (
                             end
                         end
                         
-                        ready <= 1'b1;
+                        count <= count + 6'd1;
+                    end else begin
                         state <= STATE_IDLE;
                     end
                 end

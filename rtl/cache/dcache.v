@@ -120,7 +120,7 @@ module dcache (
     wire [19:0] lookup_tag   = req_buf_addr[31:12];
     wire [2:0]  lookup_word  = req_buf_addr[4:2];
     
-    assign uncacheable = (req_buf_valid ? req_buf_addr[31:28] == 4'h4 : cpu_addr[31:28] == 4'h4);
+    assign uncacheable = (req_buf_valid ? (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA) : (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA));
 
     // SRAM arrays
     reg [21:0]  tag_ram_0 [0:127]; // [21]: valid, [20]: dirty, [19:0]: tag
@@ -181,8 +181,7 @@ module dcache (
             end
             COMPARE: begin
                 if (cache_hit) begin
-                    if (!cpu_req) next_state = IDLE;
-                    else if (uncacheable) next_state = UC_REQ; // Next is uncacheable
+                    next_state = IDLE;
                 end else begin
                     if (victim_dirty) next_state = WRITEBACK_REQ;
                     else next_state = REFILL_REQ;
@@ -363,15 +362,8 @@ module dcache (
                             end
                         end
                         
-                        // Buffer next request if pipelined
-                        if (cpu_req) begin
-                            req_buf_we    <= cpu_we;
-                            req_buf_addr  <= cpu_addr;
-                            req_buf_wdata <= cpu_wdata;
-                            req_buf_be    <= cpu_be;
-                        end else begin
-                            req_buf_valid <= 1'b0;
-                        end
+                        // Request is satisfied, return to IDLE
+                        req_buf_valid <= 1'b0;
                     end else begin
                         // Miss
                         if (victim_dirty) begin

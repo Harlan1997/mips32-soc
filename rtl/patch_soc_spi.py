@@ -9,19 +9,16 @@ module mips_soc (
     input  wire rst_n,
     
     // External GPIO Pins
+    
+    // External GPIO Pins
     inout  wire [31:0] gpio_pins,
     
-    // SPI Flash Interface
+    // SPI Flash Ports
     output wire        spi_sclk,
     output wire        spi_cs_n,
     output wire        spi_mosi,
-    input  wire        spi_miso,
-    
-    // JTAG Interface
-    input  wire        tck,
-    input  wire        tms,
-    input  wire        tdi,
-    output wire        tdo
+    input  wire        spi_miso
+
 );
 
     // =========================================================================
@@ -256,80 +253,46 @@ module mips_soc (
     wire        axim2_rlast;
     wire        axim2_rvalid;
     wire        axim2_rready;
-    
-    // AXI Master 3 (Output of Arbiter 3)
-    wire [3:0]  axim3_awid;
-    wire [31:0] axim3_awaddr;
-    wire [7:0]  axim3_awlen;
-    wire [2:0]  axim3_awsize;
-    wire [1:0]  axim3_awburst;
-    wire [1:0]  axim3_awlock;
-    wire [3:0]  axim3_awcache;
-    wire [2:0]  axim3_awprot;
-    wire        axim3_awvalid;
-    wire        axim3_awready;
-    wire [31:0] axim3_wdata;
-    wire [3:0]  axim3_wstrb;
-    wire        axim3_wlast;
-    wire        axim3_wvalid;
-    wire        axim3_wready;
-    wire [3:0]  axim3_bid;
-    wire [1:0]  axim3_bresp;
-    wire        axim3_bvalid;
-    wire        axim3_bready;
-    wire [3:0]  axim3_arid;
-    wire [31:0] axim3_araddr;
-    wire [7:0]  axim3_arlen;
-    wire [2:0]  axim3_arsize;
-    wire [1:0]  axim3_arburst;
-    wire [1:0]  axim3_arlock;
-    wire [3:0]  axim3_arcache;
-    wire [2:0]  axim3_arprot;
-    wire        axim3_arvalid;
-    wire        axim3_arready;
-    wire [3:0]  axim3_rid;
-    wire [31:0] axim3_rdata;
-    wire [1:0]  axim3_rresp;
-    wire        axim3_rlast;
-    wire        axim3_rvalid;
-    wire        axim3_rready;
+    // =========================================================================
+    // SPI Flash AXI4 Slave Interface (S2)
+    // =========================================================================
+    wire [3:0]  s2_awid;
+    wire [31:0] s2_awaddr;
+    wire [7:0]  s2_awlen;
+    wire [2:0]  s2_awsize;
+    wire [1:0]  s2_awburst;
+    wire [1:0]  s2_awlock;
+    wire [3:0]  s2_awcache;
+    wire [2:0]  s2_awprot;
+    wire        s2_awvalid;
+    wire        s2_awready;
+    wire [31:0] s2_wdata;
+    wire [3:0]  s2_wstrb;
+    wire        s2_wlast;
+    wire        s2_wvalid;
+    wire        s2_wready;
+    wire [3:0]  s2_bid;
+    wire [1:0]  s2_bresp;
+    wire        s2_bvalid;
+    wire        s2_bready;
+    wire [3:0]  s2_arid;
+    wire [31:0] s2_araddr;
+    wire [7:0]  s2_arlen;
+    wire [2:0]  s2_arsize;
+    wire [1:0]  s2_arburst;
+    wire [1:0]  s2_arlock;
+    wire [3:0]  s2_arcache;
+    wire [2:0]  s2_arprot;
+    wire        s2_arvalid;
+    wire        s2_arready;
+    wire [3:0]  s2_rid;
+    wire [31:0] s2_rdata;
+    wire [1:0]  s2_rresp;
+    wire        s2_rlast;
+    wire        s2_rvalid;
+    wire        s2_rready;
 
-    // JTAG AXI Master
-    wire [3:0]  jtag_awid;
-    wire [31:0] jtag_awaddr;
-    wire [7:0]  jtag_awlen;
-    wire [2:0]  jtag_awsize;
-    wire [1:0]  jtag_awburst;
-    wire [1:0]  jtag_awlock;
-    wire [3:0]  jtag_awcache;
-    wire [2:0]  jtag_awprot;
-    wire        jtag_awvalid;
-    wire        jtag_awready;
-    wire [31:0] jtag_wdata;
-    wire [3:0]  jtag_wstrb;
-    wire        jtag_wlast;
-    wire        jtag_wvalid;
-    wire        jtag_wready;
-    wire [3:0]  jtag_bid;
-    wire [1:0]  jtag_bresp;
-    wire        jtag_bvalid;
-    wire        jtag_bready;
-    wire [3:0]  jtag_arid;
-    wire [31:0] jtag_araddr;
-    wire [7:0]  jtag_arlen;
-    wire [2:0]  jtag_arsize;
-    wire [1:0]  jtag_arburst;
-    wire [1:0]  jtag_arlock;
-    wire [3:0]  jtag_arcache;
-    wire [2:0]  jtag_arprot;
-    wire        jtag_arvalid;
-    wire        jtag_arready;
-    wire [3:0]  jtag_rid;
-    wire [31:0] jtag_rdata;
-    wire [1:0]  jtag_rresp;
-    wire        jtag_rlast;
-    wire        jtag_rvalid;
-    wire        jtag_rready;
+
 
     // =========================================================================
     // APB AXI4 Slave Interface (S1)
@@ -371,95 +334,7 @@ module mips_soc (
     wire        s1_rready;
 
     // =========================================================================
-    // AXI SPI Flash Controller (0x2000_0000)
-    // =========================================================================
-    
-    // SPI Flash AXI Interface
-    wire [3:0]  s2_awid;
-    wire [31:0] s2_awaddr;
-    wire [7:0]  s2_awlen;
-    wire [2:0]  s2_awsize;
-    wire [1:0]  s2_awburst;
-    wire [1:0]  s2_awlock;
-    wire [3:0]  s2_awcache;
-    wire [2:0]  s2_awprot;
-    wire        s2_awvalid;
-    wire        s2_awready;
-    wire [31:0] s2_wdata;
-    wire [3:0]  s2_wstrb;
-    wire        s2_wlast;
-    wire        s2_wvalid;
-    wire        s2_wready;
-    wire [3:0]  s2_bid;
-    wire [1:0]  s2_bresp;
-    wire        s2_bvalid;
-    wire        s2_bready;
-    wire [3:0]  s2_arid;
-    wire [31:0] s2_araddr;
-    wire [7:0]  s2_arlen;
-    wire [2:0]  s2_arsize;
-    wire [1:0]  s2_arburst;
-    wire [1:0]  s2_arlock;
-    wire [3:0]  s2_arcache;
-    wire [2:0]  s2_arprot;
-    wire        s2_arvalid;
-    wire        s2_arready;
-    wire [3:0]  s2_rid;
-    wire [31:0] s2_rdata;
-    wire [1:0]  s2_rresp;
-    wire        s2_rlast;
-    wire        s2_rvalid;
-    wire        s2_rready;
-
-    axi_spi_flash u_axi_spi_flash (
-        .clk             (clk),
-        .rst_n           (rst_n),
-        
-        .s_awid          (s2_awid),
-        .s_awaddr        (s2_awaddr),
-        .s_awlen         (s2_awlen),
-        .s_awsize        (s2_awsize),
-        .s_awburst       (s2_awburst),
-        .s_awlock        (s2_awlock),
-        .s_awcache       (s2_awcache),
-        .s_awprot        (s2_awprot),
-        .s_awvalid       (s2_awvalid),
-        .s_awready       (s2_awready),
-        .s_wdata         (s2_wdata),
-        .s_wstrb         (s2_wstrb),
-        .s_wlast         (s2_wlast),
-        .s_wvalid        (s2_wvalid),
-        .s_wready        (s2_wready),
-        .s_bid           (s2_bid),
-        .s_bresp         (s2_bresp),
-        .s_bvalid        (s2_bvalid),
-        .s_bready        (s2_bready),
-        
-        .s_arid          (s2_arid),
-        .s_araddr        (s2_araddr),
-        .s_arlen         (s2_arlen),
-        .s_arsize        (s2_arsize),
-        .s_arburst       (s2_arburst),
-        .s_arlock        (s2_arlock),
-        .s_arcache       (s2_arcache),
-        .s_arprot        (s2_arprot),
-        .s_arvalid       (s2_arvalid),
-        .s_arready       (s2_arready),
-        .s_rid           (s2_rid),
-        .s_rdata         (s2_rdata),
-        .s_rresp         (s2_rresp),
-        .s_rlast         (s2_rlast),
-        .s_rvalid        (s2_rvalid),
-        .s_rready        (s2_rready),
-        
-        .spi_sclk        (spi_sclk),
-        .spi_cs_n        (spi_cs_n),
-        .spi_mosi        (spi_mosi),
-        .spi_miso        (spi_miso)
-    );
-
-    // =========================================================================
-    // APB Bridge and Peripherals
+    // APB Master Interface
     // =========================================================================
     wire [31:0] apb_paddr;
     wire        apb_psel;
@@ -478,7 +353,6 @@ module mips_soc (
     mips_core u_core (
         .clk             (clk),
         .rst_n           (rst_n),
-        .ext_int         ({5'd0, cpu_int}), // Map PIC interrupt to HW interrupt 0
         
         .inst_awid       (m0_awid),
         .inst_awaddr     (m0_awaddr),
@@ -763,166 +637,45 @@ module mips_soc (
         .s0_rvalid       (axim2_rvalid),
         .s0_rready       (axim2_rready)
     );
-
-    axi_arbiter_2x1_full u_axi_arbiter_3 (
-        .clk             (clk),
-        .rst_n           (rst_n),
-        
-        .m0_arid         (axim2_arid),
-        .m0_araddr       (axim2_araddr),
-        .m0_arlen        (axim2_arlen),
-        .m0_arsize       (axim2_arsize),
-        .m0_arburst      (axim2_arburst),
-        .m0_arlock       (axim2_arlock),
-        .m0_arcache      (axim2_arcache),
-        .m0_arprot       (axim2_arprot),
-        .m0_arvalid      (axim2_arvalid),
-        .m0_arready      (axim2_arready),
-        .m0_rid          (axim2_rid),
-        .m0_rdata        (axim2_rdata),
-        .m0_rresp        (axim2_rresp),
-        .m0_rlast        (axim2_rlast),
-        .m0_rvalid       (axim2_rvalid),
-        .m0_rready       (axim2_rready),
-        
-        .m0_awid         (axim2_awid),
-        .m0_awaddr       (axim2_awaddr),
-        .m0_awlen        (axim2_awlen),
-        .m0_awsize       (axim2_awsize),
-        .m0_awburst      (axim2_awburst),
-        .m0_awlock       (axim2_awlock),
-        .m0_awcache      (axim2_awcache),
-        .m0_awprot       (axim2_awprot),
-        .m0_awvalid      (axim2_awvalid),
-        .m0_awready      (axim2_awready),
-        .m0_wdata        (axim2_wdata),
-        .m0_wstrb        (axim2_wstrb),
-        .m0_wlast        (axim2_wlast),
-        .m0_wvalid       (axim2_wvalid),
-        .m0_wready       (axim2_wready),
-        .m0_bid          (axim2_bid),
-        .m0_bresp        (axim2_bresp),
-        .m0_bvalid       (axim2_bvalid),
-        .m0_bready       (axim2_bready),
-        
-        .m1_arid         (jtag_arid),
-        .m1_araddr       (jtag_araddr),
-        .m1_arlen        (jtag_arlen),
-        .m1_arsize       (jtag_arsize),
-        .m1_arburst      (jtag_arburst),
-        .m1_arlock       (jtag_arlock),
-        .m1_arcache      (jtag_arcache),
-        .m1_arprot       (jtag_arprot),
-        .m1_arvalid      (jtag_arvalid),
-        .m1_arready      (jtag_arready),
-        .m1_rid          (jtag_rid),
-        .m1_rdata        (jtag_rdata),
-        .m1_rresp        (jtag_rresp),
-        .m1_rlast        (jtag_rlast),
-        .m1_rvalid       (jtag_rvalid),
-        .m1_rready       (jtag_rready),
-        
-        .m1_awid         (jtag_awid),
-        .m1_awaddr       (jtag_awaddr),
-        .m1_awlen        (jtag_awlen),
-        .m1_awsize       (jtag_awsize),
-        .m1_awburst      (jtag_awburst),
-        .m1_awlock       (jtag_awlock),
-        .m1_awcache      (jtag_awcache),
-        .m1_awprot       (jtag_awprot),
-        .m1_awvalid      (jtag_awvalid),
-        .m1_awready      (jtag_awready),
-        .m1_wdata        (jtag_wdata),
-        .m1_wstrb        (jtag_wstrb),
-        .m1_wlast        (jtag_wlast),
-        .m1_wvalid       (jtag_wvalid),
-        .m1_wready       (jtag_wready),
-        .m1_bid          (jtag_bid),
-        .m1_bresp        (jtag_bresp),
-        .m1_bvalid       (jtag_bvalid),
-        .m1_bready       (jtag_bready),
-        
-        .s0_awid         (axim3_awid),
-        .s0_awaddr       (axim3_awaddr),
-        .s0_awlen        (axim3_awlen),
-        .s0_awsize       (axim3_awsize),
-        .s0_awburst      (axim3_awburst),
-        .s0_awlock       (axim3_awlock),
-        .s0_awcache      (axim3_awcache),
-        .s0_awprot       (axim3_awprot),
-        .s0_awvalid      (axim3_awvalid),
-        .s0_awready      (axim3_awready),
-        .s0_wdata        (axim3_wdata),
-        .s0_wstrb        (axim3_wstrb),
-        .s0_wlast        (axim3_wlast),
-        .s0_wvalid       (axim3_wvalid),
-        .s0_wready       (axim3_wready),
-        .s0_bid          (axim3_bid),
-        .s0_bresp        (axim3_bresp),
-        .s0_bvalid       (axim3_bvalid),
-        .s0_bready       (axim3_bready),
-        .s0_arid         (axim3_arid),
-        .s0_araddr       (axim3_araddr),
-        .s0_arlen        (axim3_arlen),
-        .s0_arsize       (axim3_arsize),
-        .s0_arburst      (axim3_arburst),
-        .s0_arlock       (axim3_arlock),
-        .s0_arcache      (axim3_arcache),
-        .s0_arprot       (axim3_arprot),
-        .s0_arvalid      (axim3_arvalid),
-        .s0_arready      (axim3_arready),
-        .s0_rid          (axim3_rid),
-        .s0_rdata        (axim3_rdata),
-        .s0_rresp        (axim3_rresp),
-        .s0_rlast        (axim3_rlast),
-        .s0_rvalid       (axim3_rvalid),
-        .s0_rready       (axim3_rready)
-    );
-
-    // 1x3 Decoder
-    // Slave 0: Boot ROM / SRAM (0x0000_0000 - 0x1FFF_FFFF)
-    // Slave 1: APB Peripherals (0x4000_0000 - 0x4FFF_FFFF)
-    // Slave 2: SPI Flash       (0x2000_0000 - 0x3FFF_FFFF)
-    
     axi_decoder_1x3 u_axi_decoder (
         .clk             (clk),
         .rst_n           (rst_n),
         
-        .m_awid          (axim3_awid),
-        .m_awaddr        (axim3_awaddr),
-        .m_awlen         (axim3_awlen),
-        .m_awsize        (axim3_awsize),
-        .m_awburst       (axim3_awburst),
-        .m_awlock        (axim3_awlock),
-        .m_awcache       (axim3_awcache),
-        .m_awprot        (axim3_awprot),
-        .m_awvalid       (axim3_awvalid),
-        .m_awready       (axim3_awready),
-        .m_wdata         (axim3_wdata),
-        .m_wstrb         (axim3_wstrb),
-        .m_wlast         (axim3_wlast),
-        .m_wvalid        (axim3_wvalid),
-        .m_wready        (axim3_wready),
-        .m_bid           (axim3_bid),
-        .m_bresp         (axim3_bresp),
-        .m_bvalid        (axim3_bvalid),
-        .m_bready        (axim3_bready),
-        .m_arid          (axim3_arid),
-        .m_araddr        (axim3_araddr),
-        .m_arlen         (axim3_arlen),
-        .m_arsize        (axim3_arsize),
-        .m_arburst       (axim3_arburst),
-        .m_arlock        (axim3_arlock),
-        .m_arcache       (axim3_arcache),
-        .m_arprot        (axim3_arprot),
-        .m_arvalid       (axim3_arvalid),
-        .m_arready       (axim3_arready),
-        .m_rid           (axim3_rid),
-        .m_rdata         (axim3_rdata),
-        .m_rresp         (axim3_rresp),
-        .m_rlast         (axim3_rlast),
-        .m_rvalid        (axim3_rvalid),
-        .m_rready        (axim3_rready),
+        .m_awid          (axim2_awid),
+        .m_awaddr        (axim2_awaddr),
+        .m_awlen         (axim2_awlen),
+        .m_awsize        (axim2_awsize),
+        .m_awburst       (axim2_awburst),
+        .m_awlock        (axim2_awlock),
+        .m_awcache       (axim2_awcache),
+        .m_awprot        (axim2_awprot),
+        .m_awvalid       (axim2_awvalid),
+        .m_awready       (axim2_awready),
+        .m_wdata         (axim2_wdata),
+        .m_wstrb         (axim2_wstrb),
+        .m_wlast         (axim2_wlast),
+        .m_wvalid        (axim2_wvalid),
+        .m_wready        (axim2_wready),
+        .m_bid           (axim2_bid),
+        .m_bresp         (axim2_bresp),
+        .m_bvalid        (axim2_bvalid),
+        .m_bready        (axim2_bready),
+        .m_arid          (axim2_arid),
+        .m_araddr        (axim2_araddr),
+        .m_arlen         (axim2_arlen),
+        .m_arsize        (axim2_arsize),
+        .m_arburst       (axim2_arburst),
+        .m_arlock        (axim2_arlock),
+        .m_arcache       (axim2_arcache),
+        .m_arprot        (axim2_arprot),
+        .m_arvalid       (axim2_arvalid),
+        .m_arready       (axim2_arready),
+        .m_rid           (axim2_rid),
+        .m_rdata         (axim2_rdata),
+        .m_rresp         (axim2_rresp),
+        .m_rlast         (axim2_rlast),
+        .m_rvalid        (axim2_rvalid),
+        .m_rready        (axim2_rready),
         
         .s0_awid         (s0_awid),
         .s0_awaddr       (s0_awaddr),
@@ -1032,6 +785,7 @@ module mips_soc (
         .s2_rvalid       (s2_rvalid),
         .s2_rready       (s2_rready)
     );
+
     
     axi_sram #(
         .MEM_DEPTH_WORDS (16384) // 64KB
@@ -1126,27 +880,23 @@ module mips_soc (
     wire timer_sel = apb_psel & (apb_paddr[15:12] == 4'h1); // 0x4000_1000
     wire gpio_sel  = apb_psel & (apb_paddr[15:12] == 4'h2); // 0x4000_2000
     wire dma_sel   = apb_psel & (apb_paddr[15:12] == 4'h3); // 0x4000_3000
-    wire pic_sel   = apb_psel & (apb_paddr[15:12] == 4'h4); // 0x4000_4000
     
-    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata;
-    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready;
-    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr;
+    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata;
+    wire uart_pready, timer_pready, gpio_pready, dma_pready;
+    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr;
     
     assign apb_prdata  = uart_sel ? uart_prdata :
                          timer_sel ? timer_prdata :
                          gpio_sel ? gpio_prdata : 
-                         dma_sel ? dma_prdata :
-                         pic_sel ? pic_prdata : 32'd0;
+                         dma_sel ? dma_prdata : 32'd0;
     assign apb_pready  = uart_sel ? uart_pready :
                          timer_sel ? timer_pready :
                          gpio_sel ? gpio_pready : 
-                         dma_sel ? dma_pready :
-                         pic_sel ? pic_pready : 1'b1;
+                         dma_sel ? dma_pready : 1'b1;
     assign apb_pslverr = uart_sel ? uart_pslverr :
                          timer_sel ? timer_pslverr :
                          gpio_sel ? gpio_pslverr : 
-                         dma_sel ? dma_pslverr :
-                         pic_sel ? pic_pslverr : 1'b0;
+                         dma_sel ? dma_pslverr : 1'b0;
 
     
     apb_uart u_apb_uart (
@@ -1197,55 +947,6 @@ module mips_soc (
         .gpio_pins       (gpio_pins)
     );
 
-    // =========================================================================
-    // JTAG Debug Top
-    // =========================================================================
-    jtag_debug_top u_jtag_debug_top (
-        .clk          (clk),
-        .rst_n        (rst_n),
-        .tck          (tck),
-        .trst_n       (rst_n),
-        .tms          (tms),
-        .tdi          (tdi),
-        .tdo          (tdo),
-        
-        .m_awid       (jtag_awid),
-        .m_awaddr     (jtag_awaddr),
-        .m_awlen      (jtag_awlen),
-        .m_awsize     (jtag_awsize),
-        .m_awburst    (jtag_awburst),
-        .m_awlock     (jtag_awlock),
-        .m_awcache    (jtag_awcache),
-        .m_awprot     (jtag_awprot),
-        .m_awvalid    (jtag_awvalid),
-        .m_awready    (jtag_awready),
-        .m_wdata      (jtag_wdata),
-        .m_wstrb      (jtag_wstrb),
-        .m_wlast      (jtag_wlast),
-        .m_wvalid     (jtag_wvalid),
-        .m_wready     (jtag_wready),
-        .m_bid        (jtag_bid),
-        .m_bresp      (jtag_bresp),
-        .m_bvalid     (jtag_bvalid),
-        .m_bready     (jtag_bready),
-        
-        .m_arid       (jtag_arid),
-        .m_araddr     (jtag_araddr),
-        .m_arlen      (jtag_arlen),
-        .m_arsize     (jtag_arsize),
-        .m_arburst    (jtag_arburst),
-        .m_arlock     (jtag_arlock),
-        .m_arcache    (jtag_arcache),
-        .m_arprot     (jtag_arprot),
-        .m_arvalid    (jtag_arvalid),
-        .m_arready    (jtag_arready),
-        .m_rid        (jtag_rid),
-        .m_rdata      (jtag_rdata),
-        .m_rresp      (jtag_rresp),
-        .m_rlast      (jtag_rlast),
-        .m_rvalid     (jtag_rvalid),
-        .m_rready     (jtag_rready)
-    );
 
     wire dma_int;
     apb_axi_dma u_apb_dma (
@@ -1300,27 +1001,52 @@ module mips_soc (
         .dma_int         (dma_int)
     );
 
-    // =========================================================================
-    // Programmable Interrupt Controller (PIC)
-    // =========================================================================
 
-    wire uart_tx_int = 1'b0;
-    wire uart_rx_int = 1'b0;
-    wire [31:0] irq_sources = {28'd0, dma_int, timer_int, uart_tx_int, uart_rx_int};
-    
-    apb_pic u_apb_pic (
-        .pclk            (clk),
-        .presetn         (rst_n),
-        .paddr           (apb_paddr[11:0]),
-        .psel            (pic_sel),
-        .penable         (apb_penable),
-        .pwrite          (apb_pwrite),
-        .pwdata          (apb_pwdata),
-        .pready          (pic_pready),
-        .prdata          (pic_prdata),
-        .pslverr         (pic_pslverr),
-        .irq_sources     (irq_sources),
-        .cpu_int         (cpu_int)
+    axi_spi_flash u_spi_flash (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        
+        .s_arid          (s2_arid),
+        .s_araddr        (s2_araddr),
+        .s_arlen         (s2_arlen),
+        .s_arsize        (s2_arsize),
+        .s_arburst       (s2_arburst),
+        .s_arlock        (s2_arlock),
+        .s_arcache       (s2_arcache),
+        .s_arprot        (s2_arprot),
+        .s_arvalid       (s2_arvalid),
+        .s_arready       (s2_arready),
+        .s_rid           (s2_rid),
+        .s_rdata         (s2_rdata),
+        .s_rresp         (s2_rresp),
+        .s_rlast         (s2_rlast),
+        .s_rvalid        (s2_rvalid),
+        .s_rready        (s2_rready),
+        
+        .s_awid          (s2_awid),
+        .s_awaddr        (s2_awaddr),
+        .s_awlen         (s2_awlen),
+        .s_awsize        (s2_awsize),
+        .s_awburst       (s2_awburst),
+        .s_awlock        (s2_awlock),
+        .s_awcache       (s2_awcache),
+        .s_awprot        (s2_awprot),
+        .s_awvalid       (s2_awvalid),
+        .s_awready       (s2_awready),
+        .s_wdata         (s2_wdata),
+        .s_wstrb         (s2_wstrb),
+        .s_wlast         (s2_wlast),
+        .s_wvalid        (s2_wvalid),
+        .s_wready        (s2_wready),
+        .s_bid           (s2_bid),
+        .s_bresp         (s2_bresp),
+        .s_bvalid        (s2_bvalid),
+        .s_bready        (s2_bready),
+        
+        .spi_sclk        (spi_sclk),
+        .spi_cs_n        (spi_cs_n),
+        .spi_mosi        (spi_mosi),
+        .spi_miso        (spi_miso)
     );
 
 endmodule

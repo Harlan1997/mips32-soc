@@ -76,6 +76,7 @@ module mips_cp0 (
             
             if (except_req && !cp0_status[1]) begin
                 // Handle Exception (only if not already in exception level)
+                $display("[%t] EXCEPTION TAKEN! cause=%h, epc=%h, intr_req=%b, hw_int=%b", $time, except_code, except_pc, intr_req, hw_int);
                 cp0_status[1]  <= 1'b1; // Set EXL
                 cp0_cause[6:2] <= except_code;
                 cp0_cause[31]  <= except_bd;

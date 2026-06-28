@@ -80,6 +80,22 @@ module mips_mem_stage (
                     wdata_aligned = mem_val_rt;
                     we_aligned    = 4'b1111;
                 end
+                3'b101: begin // SWL (Little Endian)
+                    case (addr_align)
+                        2'b00: begin we_aligned = 4'b0001; wdata_aligned = {24'd0, mem_val_rt[31:24]}; end
+                        2'b01: begin we_aligned = 4'b0011; wdata_aligned = {16'd0, mem_val_rt[31:16]}; end
+                        2'b10: begin we_aligned = 4'b0111; wdata_aligned = {8'd0, mem_val_rt[31:8]}; end
+                        2'b11: begin we_aligned = 4'b1111; wdata_aligned = mem_val_rt; end
+                    endcase
+                end
+                3'b110: begin // SWR (Little Endian)
+                    case (addr_align)
+                        2'b00: begin we_aligned = 4'b1111; wdata_aligned = mem_val_rt; end
+                        2'b01: begin we_aligned = 4'b1110; wdata_aligned = {mem_val_rt[23:0], 8'd0}; end
+                        2'b10: begin we_aligned = 4'b1100; wdata_aligned = {mem_val_rt[15:0], 16'd0}; end
+                        2'b11: begin we_aligned = 4'b1000; wdata_aligned = {mem_val_rt[7:0], 24'd0}; end
+                    endcase
+                end
                 default: begin
                     wdata_aligned = 32'd0;
                     we_aligned    = 4'b0000;
@@ -127,6 +143,22 @@ module mips_mem_stage (
                 end
                 3'b100: begin // LW: Load Word
                     mem_rdata_ext = dmem_rdata;
+                end
+                3'b101: begin // LWL (Little Endian)
+                    case (addr_align)
+                        2'b00: mem_rdata_ext = {dmem_rdata[7:0], mem_val_rt[23:0]};
+                        2'b01: mem_rdata_ext = {dmem_rdata[15:0], mem_val_rt[15:0]};
+                        2'b10: mem_rdata_ext = {dmem_rdata[23:0], mem_val_rt[7:0]};
+                        2'b11: mem_rdata_ext = dmem_rdata;
+                    endcase
+                end
+                3'b110: begin // LWR (Little Endian)
+                    case (addr_align)
+                        2'b00: mem_rdata_ext = dmem_rdata;
+                        2'b01: mem_rdata_ext = {mem_val_rt[31:24], dmem_rdata[31:8]};
+                        2'b10: mem_rdata_ext = {mem_val_rt[31:16], dmem_rdata[31:16]};
+                        2'b11: mem_rdata_ext = {mem_val_rt[31:8], dmem_rdata[31:24]};
+                    endcase
                 end
                 default: begin
                     mem_rdata_ext = dmem_rdata;
