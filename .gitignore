@@ -1,27 +1,50 @@
-# Simulation and Verification outputs
-sim/csrc/
-sim/simv*
-sim/*.log
-sim/*.fsdb
-sim/*.vdb
-sim/cov*/
-rtl/csrc/
-tb/cpu_test/csrc/
-tb/soc_test/csrc/
+# Simulation executables
+simv
+simv.daidir/
 
-# VCS objects and temporaries
-*._*
+# Simulation logs
+*.log
+*.fsdb
+*.vdb
+dump.txt
+
+# Coverage and reports
+cov*/
+*coverage_report*/
+*Report*/
+*ReportExclude*/
+textReport*/
+urgReport*/
+*_report/
+
+# VCS / compilation artifacts
+csrc/
 *.o
 *.so
+*._*
+._*
 ucli.key
 vc_hdrs.h
 .interfacedeps
 
-# Verdi and tool outputs
+# Verdi / tool outputs
 verdiLog/
 novas.conf
 novas.rc
 *.daidir/
 
-# Temporary patch files
-patch_soc.py
+# Firmware / hex outputs in tb
+firmware.hex
+*.elf
+
+# Temp / helper scripts
+patch_*.py
+gen_el.py
+run_regression.py
+temp_*.txt
+urg_help*.txt
+cov.cfg
+cm.log
+*.el
+fullexclude*
+test.el
