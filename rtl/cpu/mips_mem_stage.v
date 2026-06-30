@@ -67,6 +67,9 @@ module mips_mem_stage (
                         2'b01: we_aligned = 4'b0010;
                         2'b10: we_aligned = 4'b0100;
                         2'b11: we_aligned = 4'b1000;
+                        // VCS coverage off
+                        default: we_aligned = 4'b0000;
+                        // VCS coverage on
                     endcase
                 end
                 3'b010: begin // SH: Store Halfword
@@ -74,6 +77,9 @@ module mips_mem_stage (
                     case (addr_align[1])
                         1'b0: we_aligned = 4'b0011;
                         1'b1: we_aligned = 4'b1100;
+                        // VCS coverage off
+                        default: we_aligned = 4'b0000;
+                        // VCS coverage on
                     endcase
                 end
                 3'b100: begin // SW: Store Word
@@ -86,6 +92,9 @@ module mips_mem_stage (
                         2'b01: begin we_aligned = 4'b0011; wdata_aligned = {16'd0, mem_val_rt[31:16]}; end
                         2'b10: begin we_aligned = 4'b0111; wdata_aligned = {8'd0, mem_val_rt[31:8]}; end
                         2'b11: begin we_aligned = 4'b1111; wdata_aligned = mem_val_rt; end
+                        // VCS coverage off
+                        default: begin we_aligned = 4'b0000; wdata_aligned = 32'd0; end
+                        // VCS coverage on
                     endcase
                 end
                 3'b110: begin // SWR (Little Endian)
@@ -94,6 +103,9 @@ module mips_mem_stage (
                         2'b01: begin we_aligned = 4'b1110; wdata_aligned = {mem_val_rt[23:0], 8'd0}; end
                         2'b10: begin we_aligned = 4'b1100; wdata_aligned = {mem_val_rt[15:0], 16'd0}; end
                         2'b11: begin we_aligned = 4'b1000; wdata_aligned = {mem_val_rt[7:0], 24'd0}; end
+                        // VCS coverage off
+                        default: begin we_aligned = 4'b0000; wdata_aligned = 32'd0; end
+                        // VCS coverage on
                     endcase
                 end
                 default: begin
@@ -119,6 +131,9 @@ module mips_mem_stage (
                         2'b01: mem_rdata_ext = { {24{dmem_rdata[15]}}, dmem_rdata[15:8] };
                         2'b10: mem_rdata_ext = { {24{dmem_rdata[23]}}, dmem_rdata[23:16] };
                         2'b11: mem_rdata_ext = { {24{dmem_rdata[31]}}, dmem_rdata[31:24] };
+                        // VCS coverage off
+                        default: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage on
                     endcase
                 end
                 3'b001: begin // LBU: Load Byte Unsigned
@@ -127,18 +142,27 @@ module mips_mem_stage (
                         2'b01: mem_rdata_ext = { 24'd0, dmem_rdata[15:8] };
                         2'b10: mem_rdata_ext = { 24'd0, dmem_rdata[23:16] };
                         2'b11: mem_rdata_ext = { 24'd0, dmem_rdata[31:24] };
+                        // VCS coverage off
+                        default: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage on
                     endcase
                 end
                 3'b010: begin // LH: Load Halfword Signed
                     case (addr_align[1])
                         1'b0: mem_rdata_ext = { {16{dmem_rdata[15]}}, dmem_rdata[15:0] };
                         1'b1: mem_rdata_ext = { {16{dmem_rdata[31]}}, dmem_rdata[31:16] };
+                        // VCS coverage off
+                        default: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage on
                     endcase
                 end
                 3'b011: begin // LHU: Load Halfword Unsigned
                     case (addr_align[1])
                         1'b0: mem_rdata_ext = { 16'd0, dmem_rdata[15:0] };
                         1'b1: mem_rdata_ext = { 16'd0, dmem_rdata[31:16] };
+                        // VCS coverage off
+                        default: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage on
                     endcase
                 end
                 3'b100: begin // LW: Load Word
@@ -150,6 +174,9 @@ module mips_mem_stage (
                         2'b01: mem_rdata_ext = {dmem_rdata[15:0], mem_val_rt[15:0]};
                         2'b10: mem_rdata_ext = {dmem_rdata[23:0], mem_val_rt[7:0]};
                         2'b11: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage off
+                        default: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage on
                     endcase
                 end
                 3'b110: begin // LWR (Little Endian)
@@ -158,6 +185,9 @@ module mips_mem_stage (
                         2'b01: mem_rdata_ext = {mem_val_rt[31:24], dmem_rdata[31:8]};
                         2'b10: mem_rdata_ext = {mem_val_rt[31:16], dmem_rdata[31:16]};
                         2'b11: mem_rdata_ext = {mem_val_rt[31:8], dmem_rdata[31:24]};
+                        // VCS coverage off
+                        default: mem_rdata_ext = dmem_rdata;
+                        // VCS coverage on
                     endcase
                 end
                 default: begin

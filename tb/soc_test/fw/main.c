@@ -237,18 +237,24 @@ int main() {
 
     // 6. ALU & Control Test
     print_str("6. Testing ALU (Shifts/Logic)...\n");
-    uint32_t alu_res1, alu_res2, alu_res3;
+    uint32_t alu_res1, alu_res2, alu_res3, alu_res4, alu_res5;
     asm volatile(
         "li $t0, 0x000000FF\n"
         "li $t1, 8\n"
         "sllv %0, $t0, $t1\n"    // 0x0000FF00
         "nor %1, $t0, $0\n"      // 0xFFFFFF00
-        "sltu %2, $t0, $t1\n"    // 0 (255 < 8 is false)
-        : "=r" (alu_res1), "=r" (alu_res2), "=r" (alu_res3)
+        "li $t0, -5\n"
+        "li $t1, 5\n"
+        "slt %2, $t0, $t1\n"     // 1 (-5 < 5 is true, sign_a != sign_b)
+        "slti %3, $t0, 10\n"     // 1 (-5 < 10 is true, sign_a != sign_b)
+        "li $t0, 0x000000FF\n"
+        "li $t1, 8\n"
+        "sltu %4, $t0, $t1\n"    // 0 (255 < 8 is false)
+        : "=r" (alu_res1), "=r" (alu_res2), "=r" (alu_res3), "=r" (alu_res4), "=r" (alu_res5)
         :
         : "t0", "t1"
     );
-    if (alu_res1 == 0x0000FF00 && alu_res2 == 0xFFFFFF00 && alu_res3 == 0) print_str("   ALU OK\n");
+    if (alu_res1 == 0x0000FF00 && alu_res2 == 0xFFFFFF00 && alu_res3 == 1 && alu_res4 == 1 && alu_res5 == 0) print_str("   ALU OK\n");
     else print_str("   ALU ERROR\n");
 
     // 7. Branch and Link Test
