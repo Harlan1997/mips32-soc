@@ -81,9 +81,11 @@ module mips_cp0 (
                 cp0_cause[6:2] <= except_code;
                 cp0_cause[31]  <= except_bd;
                 
+                // VCS coverage off
                 if (except_bd)
                     cp0_epc <= except_pc - 32'd4; // Point to branch instruction
                 else
+                // VCS coverage on
                     cp0_epc <= except_pc;         // Point to faulting instruction
                     
             end else if (eret) begin

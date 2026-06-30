@@ -1,0 +1,32 @@
+<session version="1.1" release="X-2025.06" timestp="2026-06-28 18:45:03 GMT">
+  <info>
+    <attr name="datetime" value="Mon Jun 29 02:45:04 2026
+"/>
+    <attr name="command" value="urg -dir simv.vdb -report textReportFinal -format text"/>
+    <attr name="top_instance" value="axi_decoder_1x2,tb_mips_soc"/>
+  </info>
+  <hvp>
+    <datadef>
+      <metdef name="Line" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="Cond" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="Toggle" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="FSM" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="Branch" type="ratio" aggregator="average" builtin="1" />
+    </datadef>
+  </hvp>
+  <old_coverage>
+  <scope type="top" name="top">
+    <metric name="Line" value="1005/1358" />
+    <metric name="Cond" value="1193/1876" />
+    <metric name="Toggle" value="17687/34852" />
+    <metric name="FSM" value="49/116" />
+    <metric name="Branch" value="677/1113" />
+  </scope>
+  <scope type="instance" name="top">
+  </scope>
+  <scope type="group" name="top">
+  </scope>
+  <scope type="assert" name="Statistics">
+  </scope>
+  </old_coverage>
+</session>

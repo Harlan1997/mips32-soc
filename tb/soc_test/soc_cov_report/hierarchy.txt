@@ -1,0 +1,66 @@
+Design Hierarchy
+
+
+----------------
+SCORE  LINE   COND   TOGGLE FSM    BRANCH                 
+  9.46  18.18   7.14   0.00 --      12.50 apb_pic         
+  3.22   0.00  12.87   0.00 --       0.00 axi_decoder_1x3 
+  4.39   7.14  11.48   0.00   0.00   3.33 axi_spi_flash   
+  2.97   5.26   7.07   0.00   0.00   2.53 jtag_debug_top  
+ 47.83  58.48  62.84  33.32  30.51  53.98 tb_mips_soc     
+  
+  ----------------
+  SCORE  LINE   COND   TOGGLE FSM    BRANCH       
+   47.59  57.69  62.68  33.39  30.51  53.69 u_soc 
+    
+    ----------------
+    SCORE  LINE   COND   TOGGLE FSM    BRANCH                 
+     17.96  38.71  20.90   7.68   0.00  22.50 u_apb_dma       
+     47.51  64.71  48.53  26.81 --      50.00 u_apb_gpio      
+     24.69  44.83  25.00   3.95 --      25.00 u_apb_timer     
+     44.74  66.67  45.45   9.71 --      57.14 u_apb_uart      
+     48.11  79.17  44.12  14.29  40.00  62.96 u_axi2apb       
+     80.72 100.00  96.49  34.10 --      92.31 u_axi_arbiter   
+     56.76  78.57  63.87  26.82 --      57.78 u_axi_arbiter_2 
+     67.96 100.00  67.19  25.36 --      79.31 u_axi_decoder   
+     33.00  64.94  42.86  28.06   0.00  29.17 u_axi_sram      
+     51.74  55.57  67.46  40.80  41.18  53.69 u_core          
+      
+      ----------------
+      SCORE  LINE   COND   TOGGLE FSM    BRANCH       
+       38.89  46.47  64.25  43.98   0.00  39.74 u_cpu 
+        
+        ----------------
+        SCORE  LINE   COND   TOGGLE FSM    BRANCH                   
+         27.94  42.31  14.29  24.40 --      30.77 u_mips_cp0        
+         56.79  68.09 --      42.29 --      60.00 u_mips_ex_mem_reg 
+         22.54  31.82  31.34  25.09   0.00  24.44 u_mips_ex_stage   
+          
+          ----------------
+          SCORE  LINE   COND   TOGGLE FSM    BRANCH            
+           42.77  26.67  39.53  73.30 --      31.58 u_mips_alu 
+           14.12  32.88  13.64   7.43   0.00  16.67 u_mips_mdu 
+        
+        ----------------
+        SCORE  LINE   COND   TOGGLE FSM    BRANCH                  
+         84.78 100.00 --      54.34 --     100.00 u_mips_id_ex_reg 
+         51.77  26.92  75.42  63.32 --      41.41 u_mips_id_stage  
+          
+          ----------------
+          SCORE  LINE   COND   TOGGLE FSM    BRANCH                
+           30.20  24.89   0.00  82.35 --      13.56 u_mips_control 
+           87.78 100.00  96.30  54.82 --     100.00 u_mips_regfile 
+        
+        ----------------
+        SCORE  LINE   COND   TOGGLE FSM    BRANCH                   
+         67.04  73.33 --      52.78 --      75.00 u_mips_if_id_reg  
+         65.25  91.67  60.00  23.62 --      85.71 u_mips_if_stage   
+         45.82  35.90  69.23  54.80 --      23.33 u_mips_mem_stage  
+         67.02  69.70 --      56.36 --      75.00 u_mips_mem_wb_reg 
+         57.65  66.67 --      46.30 --      60.00 u_mips_wb_stage   
+      
+      ----------------
+      SCORE  LINE   COND   TOGGLE FSM    BRANCH          
+       54.38  68.42  65.77  35.39  41.67  60.67 u_dcache 
+       74.64  97.18  85.71  38.33  66.67  85.29 u_icache 
+

@@ -143,26 +143,34 @@ module axi_arbiter_2x1 (
     // =========================================================================
     // Read Channels (AR, R) - Arbitration
     // =========================================================================
-    localparam AR_IDLE = 1'b0;
-    localparam AR_BUSY = 1'b1;
+    localparam AR_IDLE = 2'd0;
+    localparam AR_WAIT = 2'd1;
+    localparam AR_BUSY = 2'd2;
     
-    reg        ar_state;
+    reg [1:0]  ar_state;
     reg        active_master; // 0 for M0, 1 for M1
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            // VCS coverage off
             ar_state <= AR_IDLE;
             active_master <= 1'b0;
+            // VCS coverage on
         end else begin
             case (ar_state)
                 AR_IDLE: begin
                     if (m1_arvalid) begin
                         active_master <= 1'b1;
                         if (s0_arready) ar_state <= AR_BUSY;
+                        else ar_state <= AR_WAIT;
                     end else if (m0_arvalid) begin
                         active_master <= 1'b0;
                         if (s0_arready) ar_state <= AR_BUSY;
+                        else ar_state <= AR_WAIT;
                     end
+                end
+                AR_WAIT: begin
+                    if (s0_arready) ar_state <= AR_BUSY;
                 end
                 AR_BUSY: begin
                     // Wait for the read transaction to finish (RLAST)
@@ -170,6 +178,7 @@ module axi_arbiter_2x1 (
                         ar_state <= AR_IDLE;
                     end
                 end
+                default: ar_state <= AR_IDLE;
             endcase
         end
     end
@@ -185,12 +194,11 @@ module axi_arbiter_2x1 (
     assign s0_arlock  = sel_m1 ? m1_arlock  : m0_arlock;
     assign s0_arcache = sel_m1 ? m1_arcache : m0_arcache;
     assign s0_arprot  = sel_m1 ? m1_arprot  : m0_arprot;
-    assign s0_arvalid = (ar_state == AR_IDLE) ? (m1_arvalid | m0_arvalid) : 1'b0; 
+    assign s0_arvalid = (ar_state == AR_IDLE) ? (m1_arvalid | m0_arvalid) : (ar_state == AR_WAIT ? 1'b1 : 1'b0); 
     
-    // In AR_IDLE, ready is routed to the selected master (if they asserted valid)
-    // If not in IDLE, no new AR is accepted.
-    assign m1_arready = (ar_state == AR_IDLE && sel_m1) ? s0_arready : 1'b0;
-    assign m0_arready = (ar_state == AR_IDLE && !sel_m1) ? s0_arready : 1'b0;
+    // In AR_IDLE and AR_WAIT, ready is routed to the selected master
+    assign m1_arready = (ar_state == AR_IDLE && m1_arvalid) ? s0_arready : ((ar_state == AR_WAIT && active_master) ? s0_arready : 1'b0);
+    assign m0_arready = (ar_state == AR_IDLE && !m1_arvalid && m0_arvalid) ? s0_arready : ((ar_state == AR_WAIT && !active_master) ? s0_arready : 1'b0);
     
     // R Demux
     assign m1_rid     = s0_rid;

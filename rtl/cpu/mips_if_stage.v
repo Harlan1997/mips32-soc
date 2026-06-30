@@ -74,7 +74,7 @@ module mips_if_stage #(
     assign pc_plus_4 = pc + 32'd4;
     
     // Stall if data is not ready
-    assign stall_req_if = inst_req & ~inst_data_ok;
+    assign stall_req_if = ~inst_data_ok;
 
     // Address Error on Instruction Fetch (AdEL): PC must be word-aligned
     assign adel_exception = (pc[1:0] != 2'b00);

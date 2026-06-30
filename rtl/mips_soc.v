@@ -21,7 +21,44 @@ module mips_soc (
     input  wire        tck,
     input  wire        tms,
     input  wire        tdi,
-    output wire        tdo
+    output wire        tdo,
+    
+    // External UVM AXI Master for Stress Testing
+    input  wire [3:0]  ext_awid,
+    input  wire [31:0] ext_awaddr,
+    input  wire [7:0]  ext_awlen,
+    input  wire [2:0]  ext_awsize,
+    input  wire [1:0]  ext_awburst,
+    input  wire [1:0]  ext_awlock,
+    input  wire [3:0]  ext_awcache,
+    input  wire [2:0]  ext_awprot,
+    input  wire        ext_awvalid,
+    output wire        ext_awready,
+    input  wire [31:0] ext_wdata,
+    input  wire [3:0]  ext_wstrb,
+    input  wire        ext_wlast,
+    input  wire        ext_wvalid,
+    output wire        ext_wready,
+    output wire [3:0]  ext_bid,
+    output wire [1:0]  ext_bresp,
+    output wire        ext_bvalid,
+    input  wire        ext_bready,
+    input  wire [3:0]  ext_arid,
+    input  wire [31:0] ext_araddr,
+    input  wire [7:0]  ext_arlen,
+    input  wire [2:0]  ext_arsize,
+    input  wire [1:0]  ext_arburst,
+    input  wire [1:0]  ext_arlock,
+    input  wire [3:0]  ext_arcache,
+    input  wire [2:0]  ext_arprot,
+    input  wire        ext_arvalid,
+    output wire        ext_arready,
+    output wire [3:0]  ext_rid,
+    output wire [31:0] ext_rdata,
+    output wire [1:0]  ext_rresp,
+    output wire        ext_rlast,
+    output wire        ext_rvalid,
+    input  wire        ext_rready
 );
 
     // =========================================================================
@@ -371,7 +408,46 @@ module mips_soc (
     wire        s1_rready;
 
     // =========================================================================
-    // AXI SPI Flash Controller (0x2000_0000)
+    // AXI Master 4 (Output of Arbiter 4, combined with external UVM master)
+    // =========================================================================
+    wire [3:0]  axim4_awid;
+    wire [31:0] axim4_awaddr;
+    wire [7:0]  axim4_awlen;
+    wire [2:0]  axim4_awsize;
+    wire [1:0]  axim4_awburst;
+    wire [1:0]  axim4_awlock;
+    wire [3:0]  axim4_awcache;
+    wire [2:0]  axim4_awprot;
+    wire        axim4_awvalid;
+    wire        axim4_awready;
+    wire [31:0] axim4_wdata;
+    wire [3:0]  axim4_wstrb;
+    wire        axim4_wlast;
+    wire        axim4_wvalid;
+    wire        axim4_wready;
+    wire [3:0]  axim4_bid;
+    wire [1:0]  axim4_bresp;
+    wire        axim4_bvalid;
+    wire        axim4_bready;
+    wire [3:0]  axim4_arid;
+    wire [31:0] axim4_araddr;
+    wire [7:0]  axim4_arlen;
+    wire [2:0]  axim4_arsize;
+    wire [1:0]  axim4_arburst;
+    wire [1:0]  axim4_arlock;
+    wire [3:0]  axim4_arcache;
+    wire [2:0]  axim4_arprot;
+    wire        axim4_arvalid;
+    wire        axim4_arready;
+    wire [3:0]  axim4_rid;
+    wire [31:0] axim4_rdata;
+    wire [1:0]  axim4_rresp;
+    wire        axim4_rlast;
+    wire        axim4_rvalid;
+    wire        axim4_rready;
+
+    // =========================================================================
+    // AXI Slave 0 (SRAM)Flash Controller (0x2000_0000)
     // =========================================================================
     
     // SPI Flash AXI Interface
@@ -441,7 +517,7 @@ module mips_soc (
         .s_arsize        (s2_arsize),
         .s_arburst       (s2_arburst),
         .s_arlock        (s2_arlock),
-        .s_arcache       (s2_arcache),
+        .s_arcache      (s2_arcache),
         .s_arprot        (s2_arprot),
         .s_arvalid       (s2_arvalid),
         .s_arready       (s2_arready),
@@ -879,6 +955,121 @@ module mips_soc (
         .s0_rready       (axim3_rready)
     );
 
+    axi_arbiter_2x1_full u_axi_arbiter_4 (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        
+        .m0_arid         (axim3_arid),
+        .m0_araddr       (axim3_araddr),
+        .m0_arlen        (axim3_arlen),
+        .m0_arsize       (axim3_arsize),
+        .m0_arburst      (axim3_arburst),
+        .m0_arlock       (axim3_arlock),
+        .m0_arcache      (axim3_arcache),
+        .m0_arprot       (axim3_arprot),
+        .m0_arvalid      (axim3_arvalid),
+        .m0_arready      (axim3_arready),
+        .m0_rid          (axim3_rid),
+        .m0_rdata        (axim3_rdata),
+        .m0_rresp        (axim3_rresp),
+        .m0_rlast        (axim3_rlast),
+        .m0_rvalid       (axim3_rvalid),
+        .m0_rready       (axim3_rready),
+        
+        .m0_awid         (axim3_awid),
+        .m0_awaddr       (axim3_awaddr),
+        .m0_awlen        (axim3_awlen),
+        .m0_awsize       (axim3_awsize),
+        .m0_awburst      (axim3_awburst),
+        .m0_awlock       (axim3_awlock),
+        .m0_awcache      (axim3_awcache),
+        .m0_awprot       (axim3_awprot),
+        .m0_awvalid      (axim3_awvalid),
+        .m0_awready      (axim3_awready),
+        .m0_wdata        (axim3_wdata),
+        .m0_wstrb        (axim3_wstrb),
+        .m0_wlast        (axim3_wlast),
+        .m0_wvalid       (axim3_wvalid),
+        .m0_wready       (axim3_wready),
+        .m0_bid          (axim3_bid),
+        .m0_bresp        (axim3_bresp),
+        .m0_bvalid       (axim3_bvalid),
+        .m0_bready       (axim3_bready),
+        
+        .m1_arid         (ext_arid),
+        .m1_araddr       (ext_araddr),
+        .m1_arlen        (ext_arlen),
+        .m1_arsize       (ext_arsize),
+        .m1_arburst      (ext_arburst),
+        .m1_arlock       (ext_arlock),
+        .m1_arcache      (ext_arcache),
+        .m1_arprot       (ext_arprot),
+        .m1_arvalid      (ext_arvalid),
+        .m1_arready      (ext_arready),
+        .m1_rid          (ext_rid),
+        .m1_rdata        (ext_rdata),
+        .m1_rresp        (ext_rresp),
+        .m1_rlast        (ext_rlast),
+        .m1_rvalid       (ext_rvalid),
+        .m1_rready       (ext_rready),
+        
+        .m1_awid         (ext_awid),
+        .m1_awaddr       (ext_awaddr),
+        .m1_awlen        (ext_awlen),
+        .m1_awsize       (ext_awsize),
+        .m1_awburst      (ext_awburst),
+        .m1_awlock       (ext_awlock),
+        .m1_awcache      (ext_awcache),
+        .m1_awprot       (ext_awprot),
+        .m1_awvalid      (ext_awvalid),
+        .m1_awready      (ext_awready),
+        .m1_wdata        (ext_wdata),
+        .m1_wstrb        (ext_wstrb),
+        .m1_wlast        (ext_wlast),
+        .m1_wvalid       (ext_wvalid),
+        .m1_wready       (ext_wready),
+        .m1_bid          (ext_bid),
+        .m1_bresp        (ext_bresp),
+        .m1_bvalid       (ext_bvalid),
+        .m1_bready       (ext_bready),
+        
+        .s0_awid         (axim4_awid),
+        .s0_awaddr       (axim4_awaddr),
+        .s0_awlen        (axim4_awlen),
+        .s0_awsize       (axim4_awsize),
+        .s0_awburst      (axim4_awburst),
+        .s0_awlock       (axim4_awlock),
+        .s0_awcache      (axim4_awcache),
+        .s0_awprot       (axim4_awprot),
+        .s0_awvalid      (axim4_awvalid),
+        .s0_awready      (axim4_awready),
+        .s0_wdata        (axim4_wdata),
+        .s0_wstrb        (axim4_wstrb),
+        .s0_wlast        (axim4_wlast),
+        .s0_wvalid       (axim4_wvalid),
+        .s0_wready       (axim4_wready),
+        .s0_bid          (axim4_bid),
+        .s0_bresp        (axim4_bresp),
+        .s0_bvalid       (axim4_bvalid),
+        .s0_bready       (axim4_bready),
+        .s0_arid         (axim4_arid),
+        .s0_araddr       (axim4_araddr),
+        .s0_arlen        (axim4_arlen),
+        .s0_arsize       (axim4_arsize),
+        .s0_arburst      (axim4_arburst),
+        .s0_arlock       (axim4_arlock),
+        .s0_arcache      (axim4_arcache),
+        .s0_arprot       (axim4_arprot),
+        .s0_arvalid      (axim4_arvalid),
+        .s0_arready      (axim4_arready),
+        .s0_rid          (axim4_rid),
+        .s0_rdata        (axim4_rdata),
+        .s0_rresp        (axim4_rresp),
+        .s0_rlast        (axim4_rlast),
+        .s0_rvalid       (axim4_rvalid),
+        .s0_rready       (axim4_rready)
+    );
+
     // 1x3 Decoder
     // Slave 0: Boot ROM / SRAM (0x0000_0000 - 0x1FFF_FFFF)
     // Slave 1: APB Peripherals (0x4000_0000 - 0x4FFF_FFFF)
@@ -888,41 +1079,41 @@ module mips_soc (
         .clk             (clk),
         .rst_n           (rst_n),
         
-        .m_awid          (axim3_awid),
-        .m_awaddr        (axim3_awaddr),
-        .m_awlen         (axim3_awlen),
-        .m_awsize        (axim3_awsize),
-        .m_awburst       (axim3_awburst),
-        .m_awlock        (axim3_awlock),
-        .m_awcache       (axim3_awcache),
-        .m_awprot        (axim3_awprot),
-        .m_awvalid       (axim3_awvalid),
-        .m_awready       (axim3_awready),
-        .m_wdata         (axim3_wdata),
-        .m_wstrb         (axim3_wstrb),
-        .m_wlast         (axim3_wlast),
-        .m_wvalid        (axim3_wvalid),
-        .m_wready        (axim3_wready),
-        .m_bid           (axim3_bid),
-        .m_bresp         (axim3_bresp),
-        .m_bvalid        (axim3_bvalid),
-        .m_bready        (axim3_bready),
-        .m_arid          (axim3_arid),
-        .m_araddr        (axim3_araddr),
-        .m_arlen         (axim3_arlen),
-        .m_arsize        (axim3_arsize),
-        .m_arburst       (axim3_arburst),
-        .m_arlock        (axim3_arlock),
-        .m_arcache       (axim3_arcache),
-        .m_arprot        (axim3_arprot),
-        .m_arvalid       (axim3_arvalid),
-        .m_arready       (axim3_arready),
-        .m_rid           (axim3_rid),
-        .m_rdata         (axim3_rdata),
-        .m_rresp         (axim3_rresp),
-        .m_rlast         (axim3_rlast),
-        .m_rvalid        (axim3_rvalid),
-        .m_rready        (axim3_rready),
+        .m_awid          (axim4_awid),
+        .m_awaddr        (axim4_awaddr),
+        .m_awlen         (axim4_awlen),
+        .m_awsize        (axim4_awsize),
+        .m_awburst       (axim4_awburst),
+        .m_awlock        (axim4_awlock),
+        .m_awcache       (axim4_awcache),
+        .m_awprot        (axim4_awprot),
+        .m_awvalid       (axim4_awvalid),
+        .m_awready       (axim4_awready),
+        .m_wdata         (axim4_wdata),
+        .m_wstrb         (axim4_wstrb),
+        .m_wlast         (axim4_wlast),
+        .m_wvalid        (axim4_wvalid),
+        .m_wready        (axim4_wready),
+        .m_bid           (axim4_bid),
+        .m_bresp         (axim4_bresp),
+        .m_bvalid        (axim4_bvalid),
+        .m_bready        (axim4_bready),
+        .m_arid          (axim4_arid),
+        .m_araddr        (axim4_araddr),
+        .m_arlen         (axim4_arlen),
+        .m_arsize        (axim4_arsize),
+        .m_arburst       (axim4_arburst),
+        .m_arlock        (axim4_arlock),
+        .m_arcache       (axim4_arcache),
+        .m_arprot        (axim4_arprot),
+        .m_arvalid       (axim4_arvalid),
+        .m_arready       (axim4_arready),
+        .m_rid           (axim4_rid),
+        .m_rdata         (axim4_rdata),
+        .m_rresp         (axim4_rresp),
+        .m_rlast         (axim4_rlast),
+        .m_rvalid        (axim4_rvalid),
+        .m_rready        (axim4_rready),
         
         .s0_awid         (s0_awid),
         .s0_awaddr       (s0_awaddr),
@@ -1033,8 +1224,8 @@ module mips_soc (
         .s2_rready       (s2_rready)
     );
     
-    axi_sram #(
-        .MEM_DEPTH_WORDS (16384) // 64KB
+    axi_ddr_model #(
+        .MEM_DEPTH_WORDS (32768) // e.g. 128KB or keep default
     ) u_axi_sram (
         .clk             (clk),
         .rst_n           (rst_n),

@@ -62,6 +62,7 @@ module mips_cpu (
     // WB stage signals (for ID regfile write)
     wire [4:0]  wb_waddr;
     wire [4:0]  wb_rd_addr;
+    wire [4:0]  wb_cp0_raddr;
     wire [31:0] wb_wdata;
     
     // PC and IF/ID stall if global_stall or load-use hazard
@@ -166,6 +167,7 @@ module mips_cpu (
     wire [4:0]  id_rs_addr;
     wire [4:0]  id_rt_addr;
     wire [4:0]  id_rd_addr;
+    wire [4:0]  id_cp0_raddr;
     
     // Pipeline outputs for forwarding and hazard
     wire        ex_reg_write;
@@ -241,6 +243,7 @@ module mips_cpu (
         .rs_addr       (id_rs_addr),
         .rt_addr       (id_rt_addr),
         .rd_addr       (id_rd_addr),
+        .id_cp0_raddr  (id_cp0_raddr),
         
         // Controls to ID/EX
         .alu_op        (id_alu_op),
@@ -273,6 +276,7 @@ module mips_cpu (
     wire [31:0] ex_imm_ext;
     wire [31:0] ex_pc_plus_8;
     wire [4:0]  ex_rd_addr;
+    wire [4:0]  ex_cp0_raddr;
     wire [4:0]  ex_sa;
     
     wire [3:0]  ex_alu_op;
@@ -295,6 +299,7 @@ module mips_cpu (
         .id_pc_plus_8   (id_pc_plus_8),
         .id_waddr       (id_waddr),
         .id_rd_addr     (id_rd_addr),
+        .id_cp0_raddr   (id_cp0_raddr),
         .id_sa          (id_sa),
         .id_alu_op      (id_alu_op),
         .id_mdu_op      (id_mdu_op),
@@ -318,6 +323,7 @@ module mips_cpu (
         .ex_pc_plus_8   (ex_pc_plus_8),
         .ex_waddr       (ex_waddr),
         .ex_rd_addr     (ex_rd_addr),
+        .ex_cp0_raddr   (ex_cp0_raddr),
         .ex_sa          (ex_sa),
         .ex_alu_op      (ex_alu_op),
         .ex_mdu_op      (ex_mdu_op),
@@ -374,6 +380,7 @@ module mips_cpu (
     wire        mem_mem_write;
     wire [2:0]  mem_mem_op;
     wire [4:0]  mem_rd_addr;
+    wire [4:0]  mem_cp0_raddr;
     wire        mem_done;
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
@@ -388,6 +395,7 @@ module mips_cpu (
         .ex_pc_plus_8    (ex_pc_plus_8),
         .ex_waddr        (ex_waddr),
         .ex_rd_addr      (ex_rd_addr),
+        .ex_cp0_raddr    (ex_cp0_raddr),
         .ex_reg_write    (ex_reg_write),
         .ex_cp0_we       (ex_cp0_we),
         .ex_is_eret      (ex_is_eret),
@@ -403,6 +411,7 @@ module mips_cpu (
         .mem_pc_plus_8   (mem_pc_plus_8),
         .mem_waddr       (mem_waddr),
         .mem_rd_addr     (mem_rd_addr),
+        .mem_cp0_raddr   (mem_cp0_raddr),
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
         .mem_is_eret     (mem_is_eret),
@@ -467,6 +476,7 @@ module mips_cpu (
         .mem_pc_plus_8   (mem_pc_plus_8),
         .mem_waddr       (mem_waddr),
         .mem_rd_addr     (mem_rd_addr),
+        .mem_cp0_raddr   (mem_cp0_raddr),
         
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
@@ -480,6 +490,7 @@ module mips_cpu (
         .wb_pc_plus_8    (wb_pc_plus_8),
         .wb_waddr        (wb_waddr),
         .wb_rd_addr      (wb_rd_addr),
+        .wb_cp0_raddr    (wb_cp0_raddr),
         
         .wb_reg_write    (wb_reg_write),
         .wb_cp0_we       (wb_cp0_we),
@@ -527,7 +538,7 @@ module mips_cpu (
         .we           (wb_cp0_we),
         .waddr        (wb_rd_addr),
         .wdata        (wb_ex_out),
-        .raddr        (wb_rd_addr),
+        .raddr        (wb_cp0_raddr),
         .rdata        (cp0_rdata),
         .except_req   (wb_except_req | intr_req),
         .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
@@ -538,4 +549,19 @@ module mips_cpu (
         .intr_req     (intr_req)
     );
 
+    always @(posedge clk) begin
+        if ($time > 324400 && $time < 324600) begin
+            $display("[%t] PIPE: IF=%x ID=%x EX=%x MEM=%x WB=%x | stall_if=%b stall_mem=%b mdu_ready=%b global_stall=%b", 
+                     $time,
+                     if_pc_plus_4 - 32'd4,
+                     id_pc,
+                     ex_pc,
+                     mem_pc,
+                     wb_pc,
+                     stall_req_if,
+                     stall_req_mem,
+                     mdu_ready,
+                     global_stall);
+        end
+    end
 endmodule

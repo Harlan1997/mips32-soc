@@ -1,0 +1,241 @@
+Note: Bumping stack limit from 8192 to unlimited Kbytes.
+URG Version X-2025.06                     Copyright (c) 1991 - 2025 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+
+Note : Usage:  urg  -dir dir1 [dir2 ...]  [-dir dir3 ...] [-report dir] [-parallel ...]
+	     [-metric [+]line+fsm+cond+tgl+branch+assert+group]
+	     [-log file] [-warn no<ID>,...,no<ID>] [-warn none] [-warn none,<ID>,...,<ID>]
+	     [-split N] [-split metric] [-tests file] [-format text] [-format both]
+	     [-show tests] [-show maxtests N] [-show legalonly] [-show testrecords]
+	     [-fsm disable_sequence+disable_loop+state+transition]
+	     [-cond ids] [-scorefile file] [-version] [-vercheck [on|off]]
+	     [-line nocasedef] [-tgl portsonly] [-assert minimal] [-low  N] [-high N] [-ID]
+	     [-show availabletests] [-show fullhier] [-show brief [line+...]] [-show summary [N]] [-show sdcpath]
+	     [-show ratios] [-show constvalues] [-show hvpfullhier] [-show hvpprob] [-show hvpcompfeat] [-show history]
+	     [-group maxmissing N] [-group ratio] [-group merge_across_scopes]
+	     [-group instcov_for_score] [-group instcov_for_cp_score]  [-group show_bin_values]
+	     [-group flex_merge_drop]  [-group db_edit_file file]
+	     [-group show_lpgroups_only] [-group show_usergroups_only]
+	     [-group show_in_design] [-group expand_bins] [-group suppress_implicit_cps] [-nomdacmp]
+	     [-flex_merge drop] [-flex_merge reference] [-flex_merge union] [-flex_merge drop_dup_cginst] [-flex_merge tgl] [-flex_merge modules] [-flex_merge code_union]
+	     [-sdc level N]
+	     [-lpcov]
+	     [-cdc]
+	     [-dbname name] [-dbname_opt] [-reset_coverage] [-noreport] [-f file] [+urg+lic+wait] [-hier <file>]
+	     [-diff]  [-map <mod>] [-mapfile <file>]
+	     [-elfile <file>] [-elfilelist <file>] [-excl_bypass_checks] [-excl_strict] [-excl_embed] [-excl_append_annotation]
+	     [-dump full_exclusions [line+fsm+cond+tgl+branch+group+assert]]
+	     [-plan file [-mod filter.file mod.file ] ] [-xmlplan]
+	     [-xml_advanced]
+	     [-xml_verbose]
+	     [-hvp_score_missing] [-hvp_no_score_missing] [-hvp_score_missing_for_source_keywords]
+	     [-hvp_default_first_enum_value] [hvp_no_default_first_enum_value]
+	     [-hvp_agg_ratio] [-hvp_test_loc] [-hvp_report_hier_level N]
+	     [-hvp_server server_name:port] [-hvp_proj project_name]
+	     [-hvp_attributes [attribute_name+...]] [-hvp_attributes_file file]
+	     [-hvp_no_def_for_test_unknown]
+	     [-hvp_feature_vertical_aggregation]
+	     [-featurefile file]
+	     [-legacy [batch_hier+batch_list+batch_test]]
+	     [-attribute [file]] [-plan_columns file] [-annotation file]
+	     [-userdata file] [-userdatafile file]
+	     [-grade [help] [... other grading options ...]]
+	     [-ccex [help] [... other ccex options ...]]
+	     [-compress_rca [help] [... other ccex options ...]]
+	     [-ccex_excl_const_driver [help] [... other ccex options ...]]
+	     [-trend [help] [... other trend options ...]]
+	     [-parallel [... other parallel options ...]]
+	     [-covg_lightweight_checksum]
+	     [-pathmap <file>] [-mode64 | -full64] [-h | -help] [-lca] [-nofastmatch] [-strict]
+	     [-ccex_bin_compress_above <value>]
+	     [-no_ccex_merge]
+
+-dir <dir>               Use <dir> as directory for source data.  Multiple -dir
+                         arguments may be given.  See user manual for how data
+                         from multiple directories is combined into unified
+                         tests.
+-report <dir>            Generate report in <dir> instead of default directory.
+                         Default report directory is 'urgReport'.
+-log <file>              Send diagnostics to given file as well as stdout/stderr.
+-warn no<ID>,...,no<ID>  Suppress warning messages that are specified by the ID list.
+-warn none               Suppress all warning messages.
+-warn none,<ID>,...,<ID> Suppress all warning messages with the exceptions specified by the ID list.
+-metric line             Report line coverage.
+-metric fsm              Report fsm coverage.
+-metric cond             Report cond coverage.
+-metric tgl              Report tgl coverage.
+-metric branch           Report branch coverage.
+-metric assert           Report coverage for monitored cover directives, events and assertions.
+-metric group            Report testbench coverage (Vera or NTB coverage groups).
+-line nocasedef          Exclude case default lines in line coverage.
+-fsm disable_sequence    Do not report sequences in FSM coverage.
+-fsm disable_loop        Do not report loops in FSM coverage.
+-fsm state               Report states in FSM coverage.
+-fsm transition          Report transitions in FSM coverage.
+-tgl portsonly           Only report ports in toggle coverage.
+-assert minimal          Only report modules and instances which have assertion in assertion coverage.
+                         Code coverage database can not be loaded with this option.
+-format text             Generate text report instead of HTML.
+-elfile <file>           Exclude coverable objects specified in <file> for code/assertion/group coverage.
+-elfilelist <file>       A <file> containing exclusion file names to be loaded.
+-excl_bypass_checks      Bypass checks when loading exclusion files.
+-excl_append_annotation  Keep multiple exclusion annotations for same object.
+-excl_strict             Do not allow covered objects to be excluded.
+                         '-elfile <file>' must be given when this option is used.
+-excl_embed              Embed exlusions from elfile into VDB.
+-excl_propagation        The option to propagate exclusions from line metric to condition and branch metric.
+-dump full_exclusions    Dump separate exclude files for all the metrics that URG willgenerate reports for.
+-dump full_exclusions line            Dump separate exclusion file for line coverage.
+-dump full_exclusions fsm             Dump separate exclusion file for fsm coverage.
+-dump full_exclusions cond            Dump separate exclusion file for cond coverage.
+-dump full_exclusions tgl             Dump separate exclusion file for tgl coverage.
+-dump full_exclusions branch          Dump separate exclusion file for branch coverage.
+-dump full_exclusions group           Dump separate exclusion file for testbench coverage.
+-dump full_exclusions assert          Dump separate exclusion file for assertion coverage.
+-hier <file>             Specify the module definitions, instances, hierarchies, and source files
+                         you want to exclude or include for report.
+-format both             Generate both HTML and text reports.
+-show tests              Show which tests covered a given object. See
+                         -grade help for a description of the test
+                         records shown when -show tests is given.
+-show maxtests N         Upper limit for number of tests reported for each
+                         object using -show tests. Default is 3 tests.
+-show legalonly          Suppress showing illegal bins for a covergroup in group coverage report.
+-show testrecords        Show the test record for each simulation run contained in the input vdbs.
+-show availabletests     List all available tests names under the specified toplevel directories. Exit without generating reports.
+-show fullhier           Show full hierarchy, including instances that have a hierarchical coverable count of zero.
+-show brief [line+...]   Show uncovered data only. An optional metric list can be added to enable metric selection.
+-show summary [N]        Only show summary report files. N is optional, and specifies how many levels of hierarchy to show. 
+-show ratios             Show number of covered objects and total number of objects with each score.
+-show constvalues        Show the fixed values for unreachable signals.
+-show sdcpath            Show associated paths for each of commands under detailed command summary in SDC coverage report.
+-show history            Show all the compile and URG merge commands used to produce the VDB.
+-group maxmissing N      Show at most N uncovered bins for any coverpoint or cross. Default value is 256.
+-group ratio             Compute covergroup scores and overall group score as a simple ratio of covered divided by coverable.
+-group merge_across_scopes Merge covergroups across module scopes and hierarchy.
+-group instcov_for_score Enable computing scores using coverage of each instance for covergroup.
+-group instcov_for_cp_score Enable computing scores using coverage of each instance for covergroup, coverpoint/cross and bin.
+-group show_bin_values   Display bin definitions of coverpoints. Requires -covg_dump_range at run time.
+-group flex_merge_drop   Enable flexible merging for covergroups.
+-group db_edit_file file Specify the filename for editing database.
+-group show_lpgroups_only       Skip user written covergroups and show only Low Power covergroups.
+-group show_usergroups_only     Skip Low Power covergroups and show only user written covergroups.
+-group show_in_design    Show the group coverage in design hierarchy.
+-group lrm_bin_name      Show covergroup bin name in LRM style.
+-group expand_bins       Decompress uncovered group bins in text report. Only work with '-show brief group'.
+-group suppress_implicit_cps    Skip the implicitly created coverpoints.
+-nomdacmp                Expand toggle MDA reports.
+-flex_merge drop         Enable drop mode of flexible merging for covergroups.
+-flex_merge drop_dup_cginst         Enable drop mode of flexible merging for covergroups wherein duplicate instances of variants of a covergroup are also dropped.
+-flex_merge reference    Enable reference mode of flexible merging for covergroups and assertions.
+-flex_merge union        Enable union mode of flexible merging for covergroups.
+-flex_merge tgl          Enable reference merging for toggle coverage metric.
+-flex_merge modules      Enable merging of code coverage metrics across different design hierarchy.
+-flex_merge code_union   Enable union mode of flexible merging for code coverage.
+-sdc level N             Generate SDC report at different levels. Currently level 1, 2 and 3 are supported.
+                         level 1 : Command based coverage.
+                         level 2 : Destination based coverage.
+                         level 3 : Source-Destination pair based coverage.
+-lpcov                   Report Low Power covergroups in a separate hierarchy page.
+-cdc                     Report cdc coverage in a separate hierarchy page.
+-split N                 Split pages that are more than N kbytes long.
+-split metric            Split all module and instance reports by metric.
+-low N                   Show any coverage number below N percent in red.
+-high N                  Show any coverage number above N percent in green.
+-grade                   Grade tests.  For details do 'urg -grade help'.
+-ccex                    Generate ccex report.  For details do 'urg -ccex help'.
+-compress_rca            compress bin table rca in ccex report.
+-ccex_bin_compress_above <value>  compress bin ranges which are above <value in the bin table for ccex.
+-ccex_rcastat    <dir> Generate statistical analysis report.
+-ccex_excl_const_driver  Considers constant driver as illegal bin and add them in exclusion file.
+-no_ccex_merge           Disable ccex data merging happenning by default for vdbs with ccex data it it.
+-echo                     Echo bias file generation. For details do 'urg -echo help'.
+-scorefile file          Use weights specified in file for metrics. By default,
+                         all metrics are weighted evenly to compute the score.
+-version                 Display tool version and CovDB version.
+-vercheck [on|off]       Enable/disable CovDB version check (default is off).
+-dbname dirname          Create a merged database in directory 'dirname.vdb'.
+                         The name of the merged test will be 'test' by default.
+-dbname dirname/testname Create a merged database in directory 'dirname.vdb'.
+                         The name of the merged test will be 'testname'.
+-dbname_opt              Decompile toggle exclusions in the merged VDB for better performance. 
+-reset_coverage          Reset the scores of all coverable objects.  Must be used in conjunction with -dbname.
+-db_max_tests <number>   Set max number of tests to be stored for each object.
+-excl_no_cgdef_update    Don't update the group definition score after excluding its instance(s).
+-noreport                ONLY generate the merged files but not generate the HTML reports.
+-f file                  Specify multiple directories for source data in a file.
+-tests file              Specify a file containing names of tests to report from specified directories.
+-ID                      Display the hostid or dongle ID for your machine.
++urg+lic+wait            Wait for network license if none is available when the job starts.
+-lca                     Enable limited customer availability features and print warning message.
+-mode64 | -full64        Use 64 bit URG.
+-pathmap <file>          Relocate source files with mapping rules in <file>.
+-diff                    Diff two databases and generate a diff report. Only
+                         supported for assertion and testbench coverage.
+-map <mod>               Report on merging mapped modules coverage.
+-mapfile <file>          Report on merging mapped modules coverage given in <file>.
+-plan file               Report for the Hierarchical Verification Plan given in 'file'.
+-mod file                Read filtered/overridden HVP data from 'file'. The -plan option must also be given.
+-xmlplan                 Also report HVP in the XML format.
+-hvp_score_missing       Enable unmatched coverage sources to affect plan scores. Unmatched coverage source will be scored as zero. This is in default.
+-hvp_no_score_missing    Disable unmatched coverage sources to affect plan scores. No score for unmatched coverage source.
+-hvp_score_missing_for_source_keywords  Add 0 score to ONLY matched metrics of current measure by source type keyword.
+-hvp_default_first_enum_value     Use the first enum value as default value when no default defined in enum metric definition.
+-hvp_no_default_first_enum_value  Do not set any default value when no default defined in enum metric definition. No score will be added for unmatched coverage source.
+-hvp_agg_ratio           Compute ratio average score for the aggregate metric with ratio type sub-metrics.
+-hvp_test_loc            Use the test location as the coverage source.
+-hvp_report_hier_level   Control the plan tree levels in the HVP hierarchy page.
+-hvp_server <server_name>:<port>      Specify the address of the HVP web server.
+-hvp_proj <project_name>              Specify the name of the project which the plan belongs to.
+-hvp_attributes [attribute_name+...]  Show hvp hierarchy with the specified attributes.
+-hvp_attributes_file file             Show hvp hierarchy with the specified attributes defined in the file.
+-hvp_no_def_for_test_unknown          Do not provide default score for test.unknown.
+-hvp_feature_vertical_aggregation     Compute user-defined aggregate metric score by vertical propagation from feature level.
+-featurefile file        Specify a file containing feature names which will be grouped together with coverage database directories.
+-legacy                  Generate the legacy format URG report.
+-legacy batch_hier       Generate Instance/HVP/Problem/LP hierarchy page with the legacy format(flat table with indentation).
+-legacy batch_list       Generate the module list page and group list page without the page splitting.
+-legacy batch_test       Generate the test page without the page splitting.
+-attribute [file]        Show hvp hierarchy with the specified attributes. If the 'file' is not given, it will show all the attributes. The -plan option must also be given.
+-plan_columns file       Specify a file containing names of metrics and attributes to report.  The -plan option must also be given.
+-annotation file         Specify a file containing annotations.
+-userdata file           Read HVP data for annotation from 'file'.  The -plan option must also be given.
+-userdatafile file       Specify a file containing HVP data files names for annotation.  The -plan option must also be given.
+-show hvpfullhier        Show full hvp hierarchy, including all the features which are filtered out.
+-show hvpprob            Show problem hvp hierarchy only.
+-show hvpcompfeat        Show HVP feature in compressed mode if only 1 source 1 measure in this feature.
+-show stats              Show statistics report, including diagnostic information, highlighting possible problems in the plan.
+-trend                   Generate trend charts by existing multiple urgReports.  For details do 'urg -trend help'.
+-cond ids                Show the expression and vector IDs in condition coverage report.
+-parallel                Parallel mode.  For details do 'urg -help -parallel'.
+-strict                  Strict mode. URG will terminate at the first corrupted VDB and no report will be generated.
+-merge_across_libs       Merge module across different libraries.
+-skip_failed_test        Do not use coverage data from failed tests.
+-merge_strict            Check if instances belong to the same compilation object while merging.
+-covg_lightweight_checksum            Merge coverage using lightweight checksums for improved compatibility with imported covergroup coverage.
+-xml_advanced            Included exclusion counts in session.xml and plan.xml files
+-xml_verbose             Dump detailed code/functional coverage information into xml
+-h | -help               Print this message.
+
+
+Summary report files generated in -report directory:
+   dashboard.html        Overview of coverage for design/testbench.
+   hierarchy.html        Hierarchical coverage for each instance in design.
+   modlist.html          Coverage for each module in design.
+   groups.html           Information for each coverage group.
+   tests.html            Test information.
+
+

@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="<username>"> <meta name="GENERATOR" content="urg/version [en] (platform name) [urg]">
+<title>Unified Coverage Report :: Module :: mips_mem_stage</title>
+<link type="text/css" rel="stylesheet" href="css/.urg.css">
+<link type="text/css" rel="stylesheet" href="css/.layout.css">
+<link type="text/css" rel="stylesheet" href="css/.breadcrumb.css">
+<script type="text/javascript" src="js/.jquery.js"></script>
+<script type="text/javascript" src="js/.jquery-ui.js"></script>
+<script type="text/javascript" src="js/.sortable.js"></script>
+<script type="text/javascript" src="js/.layout.js"></script>
+<script type="text/javascript" src="js/.breadcrumb.js"></script>
+<script type="text/javascript">
+var layout, westLayout, centerLayout;
+$(document).ready(function () {
+  if ($("#north-bread-crumb")) {
+    $("#north-bread-crumb").jBreadCrumb({easing:'swing'})
+  }
+  layout = $("body").layout({ 
+    resizable: true,
+    spacing_open: 4,
+    spacing_closed: 4,
+    north: {
+      size: 76
+    },
+    south: {
+      size: 45,
+      initClosed: true
+    },
+    west: {
+      size: 500,
+      resizable: true,
+      initClosed: false
+    }
+  });
+  centerLayout = $('div.ui-layout-center').layout({
+    north__paneSelector: ".ui-layout-center-inner-north",
+    center__paneSelector: ".ui-layout-center-inner-center", 
+    north__size: 50,
+    spacing_open: 4,
+    spacing_closed: 4
+  });
+});
+</script>
+</head>
+<body onLoad="initPage();"><div class="ui-layout-north">
+<div class="logo"></div>
+<center class="pagetitle">Module Definition</center>
+<div align="center"><a href="dashboard.html" ><b>dashboard</b></a> | <a href="hierarchy.html" ><b>hierarchy</b></a> | <a href="modlist.html" ><b>modlist</b></a> | groups | <a href="tests.html" ><b>tests</b></a> | asserts</div>
+
+</div>
+<div class="ui-layout-west">
+<div name='tag_mips_mem_stage'>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module : <a href="#"  onclick="showContent('tag_mips_mem_stage')">mips_mem_stage</a></span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s3 cl rt"> 30.26</td>
+<td class="s2 cl rt"><a href="mod29.html#Line" > 20.51</a></td>
+<td class="s6 cl rt"><a href="mod29.html#Cond" > 61.54</a></td>
+<td class="s2 cl rt"><a href="mod29.html#Toggle" > 29.00</a></td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"><a href="mod29.html#Branch" > 10.00</a></td>
+</tr></table><br clear=all>
+<span class=repname>Source File(s) : </span>
+<br clear=all>
+<a href="javascript:void(0);"  onclick="openSrcFile('/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_mem_stage.v')">/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_mem_stage.v</a><br clear=all>
+<br clear=all>
+<span class=repname>Module self-instances :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="wht cl wordwrap"><a href="mod29.html#inst_tag_29"  onclick="showContent('inst_tag_29')">tb_mips_soc.u_soc.u_core.u_cpu.u_mips_mem_stage</a></td>
+<td class="s3 cl rt"> 30.26</td>
+<td class="s2 cl rt"><a href="mod29.html#Line" > 20.51</a></td>
+<td class="s6 cl rt"><a href="mod29.html#Cond" > 61.54</a></td>
+<td class="s2 cl rt"><a href="mod29.html#Toggle" > 29.00</a></td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"><a href="mod29.html#Branch" > 10.00</a></td>
+</tr></table></div>
+</div>
+<br clear=all>
+<div name='tag_mips_mem_stage'>
+<hr>
+<a name="inst_tag_29"></a>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module Instance : <a href="hierarchy.html#tag_urg_inst_29" >tb_mips_soc.u_soc.u_core.u_cpu.u_mips_mem_stage</a></span>
+<br clear=all>
+<br clear=all>
+<span class=repname>Instance :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s3 cl rt"> 30.26</td>
+<td class="s2 cl rt"><a href="mod29.html#Line" > 20.51</a></td>
+<td class="s6 cl rt"><a href="mod29.html#Cond" > 61.54</a></td>
+<td class="s2 cl rt"><a href="mod29.html#Toggle" > 29.00</a></td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"><a href="mod29.html#Branch" > 10.00</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Instance's subtree :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s3 cl rt"> 30.26</td>
+<td class="s2 cl rt"> 20.51</td>
+<td class="s6 cl rt"> 61.54</td>
+<td class="s2 cl rt"> 29.00</td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"> 10.00</td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Parent : </span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td><td class="alfsrt">NAME</td></tr><tr>
+<td class="s4 cl rt"> 47.32</td>
+<td class="wht cl rt"></td>
+<td class="s5 cl rt"> 57.14</td>
+<td class="s3 cl rt"> 38.65</td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"> 46.15</td>
+<td><a href="mod8.html#inst_tag_8" >u_cpu</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Subtrees :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td colspan=7>no children</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<hr>
+Since this is the module's only instance, the coverage report is the same as for the module.</div>
+<div class="ui-layout-center">
+<div class="ui-layout-center-inner-center">
+<div name='tag_mips_mem_stage'>
+<a name="Line"></a>
+Line Coverage for Module : <a href="mod29.html" >mips_mem_stage</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="4" width="82">
+<tr><th></th><th>Line No.</th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s2"><td class="lf">TOTAL</td><td></td><td>39</td><td>8</td><td>20.51</td></tr>
+<tr class="s3"><td class="lf">ALWAYS</td><td>58</td><td>18</td><td>6</td><td>33.33</td></tr>
+<tr class="s0"><td class="lf">ALWAYS</td><td>96</td><td>21</td><td>2</td><td>9.52</td></tr>
+</table>
+<pre class="code"><br clear=all>
+57                          always @(*) begin
+58         1/1                  wdata_aligned = 32'd0;
+59         1/1                  we_aligned    = 4'b0000;
+60                              
+61         1/1                  if (mem_write) begin
+62         1/1                      case (mem_op)
+63                                      3'b000: begin // SB: Store Byte
+64         <font color = "red">0/1     ==>                      wdata_aligned = {4{mem_val_rt[7:0]}}; // Duplicate across all bytes</font>
+65         <font color = "red">0/1     ==>                      case (addr_align)</font>
+66         <font color = "red">0/1     ==>                          2'b00: we_aligned = 4'b0001;</font>
+67         <font color = "red">0/1     ==>                          2'b01: we_aligned = 4'b0010;</font>
+68         <font color = "red">0/1     ==>                          2'b10: we_aligned = 4'b0100;</font>
+69         <font color = "red">0/1     ==>                          2'b11: we_aligned = 4'b1000;</font>
+                   <font color = "red">==>  MISSING_DEFAULT</font>
+70                                          endcase
+71                                      end
+72                                      3'b010: begin // SH: Store Halfword
+73         <font color = "red">0/1     ==>                      wdata_aligned = {2{mem_val_rt[15:0]}}; // Duplicate across both halfwords</font>
+74         <font color = "red">0/1     ==>                      case (addr_align[1])</font>
+75         <font color = "red">0/1     ==>                          1'b0: we_aligned = 4'b0011;</font>
+76         <font color = "red">0/1     ==>                          1'b1: we_aligned = 4'b1100;</font>
+                   <font color = "red">==>  MISSING_DEFAULT</font>
+77                                          endcase
+78                                      end
+79                                      3'b100: begin // SW: Store Word
+80         1/1                              wdata_aligned = mem_val_rt;
+81         1/1                              we_aligned    = 4'b1111;
+82                                      end
+83                                      default: begin
+84         <font color = "red">0/1     ==>                      wdata_aligned = 32'd0;</font>
+85         <font color = "red">0/1     ==>                      we_aligned    = 4'b0000;</font>
+86                                      end
+87                                  endcase
+88                              end
+                        MISSING_ELSE
+89                          end
+90                          
+91                          assign dmem_wdata = wdata_aligned;
+92                          assign dmem_be    = we_aligned;
+93                      
+94                          // Load data formatting &amp; extension
+95                          always @(*) begin
+96         1/1                  mem_rdata_ext = dmem_rdata; // default (e.g. LW)
+97                              
+98         1/1                  if (mem_read) begin
+99         <font color = "red">0/1     ==>              case (mem_op)</font>
+100                                     3'b000: begin // LB: Load Byte Signed
+101        <font color = "red">0/1     ==>                      case (addr_align)</font>
+102        <font color = "red">0/1     ==>                          2'b00: mem_rdata_ext = { {24{dmem_rdata[7]}},  dmem_rdata[7:0] };</font>
+103        <font color = "red">0/1     ==>                          2'b01: mem_rdata_ext = { {24{dmem_rdata[15]}}, dmem_rdata[15:8] };</font>
+104        <font color = "red">0/1     ==>                          2'b10: mem_rdata_ext = { {24{dmem_rdata[23]}}, dmem_rdata[23:16] };</font>
+105        <font color = "red">0/1     ==>                          2'b11: mem_rdata_ext = { {24{dmem_rdata[31]}}, dmem_rdata[31:24] };</font>
+                   <font color = "red">==>  MISSING_DEFAULT</font>
+106                                         endcase
+107                                     end
+108                                     3'b001: begin // LBU: Load Byte Unsigned
+109        <font color = "red">0/1     ==>                      case (addr_align)</font>
+110        <font color = "red">0/1     ==>                          2'b00: mem_rdata_ext = { 24'd0, dmem_rdata[7:0] };</font>
+111        <font color = "red">0/1     ==>                          2'b01: mem_rdata_ext = { 24'd0, dmem_rdata[15:8] };</font>
+112        <font color = "red">0/1     ==>                          2'b10: mem_rdata_ext = { 24'd0, dmem_rdata[23:16] };</font>
+113        <font color = "red">0/1     ==>                          2'b11: mem_rdata_ext = { 24'd0, dmem_rdata[31:24] };</font>
+                   <font color = "red">==>  MISSING_DEFAULT</font>
+114                                         endcase
+115                                     end
+116                                     3'b010: begin // LH: Load Halfword Signed
+117        <font color = "red">0/1     ==>                      case (addr_align[1])</font>
+118        <font color = "red">0/1     ==>                          1'b0: mem_rdata_ext = { {16{dmem_rdata[15]}}, dmem_rdata[15:0] };</font>
+119        <font color = "red">0/1     ==>                          1'b1: mem_rdata_ext = { {16{dmem_rdata[31]}}, dmem_rdata[31:16] };</font>
+                   <font color = "red">==>  MISSING_DEFAULT</font>
+120                                         endcase
+121                                     end
+122                                     3'b011: begin // LHU: Load Halfword Unsigned
+123        <font color = "red">0/1     ==>                      case (addr_align[1])</font>
+124        <font color = "red">0/1     ==>                          1'b0: mem_rdata_ext = { 16'd0, dmem_rdata[15:0] };</font>
+125        <font color = "red">0/1     ==>                          1'b1: mem_rdata_ext = { 16'd0, dmem_rdata[31:16] };</font>
+                   <font color = "red">==>  MISSING_DEFAULT</font>
+126                                         endcase
+127                                     end
+128                                     3'b100: begin // LW: Load Word
+129        <font color = "red">0/1     ==>                      mem_rdata_ext = dmem_rdata;</font>
+130                                     end
+131                                     default: begin
+132        <font color = "red">0/1     ==>                      mem_rdata_ext = dmem_rdata;</font>
+133                                     end
+134                                 endcase
+135                             end
+                        MISSING_ELSE
+</pre>
+<hr>
+<a name="Cond"></a>
+Cond Coverage for Module : <a href="mod29.html" >mips_mem_stage</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="3" width="82">
+<tr><th></th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s6"><td class="lf">Conditions</td><td>39</td><td>24</td><td>61.54</td></tr>
+<tr class="s6"><td class="lf">Logical</td><td>39</td><td>24</td><td>61.54</td></tr>
+<tr class="wht"><td class="lf">Non-Logical</td><td>0</td><td>0</td><td></td></tr>
+<tr class="wht"><td class="lf">Event</td><td>0</td><td>0</td><td></td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       45
+ EXPRESSION ((mem_read | mem_write) &amp; ((~adel_exception)) &amp; ((~ades_exception)) &amp; ((~mem_done)))
+             -----------1----------   ---------2---------   ---------3---------   ------4------
+</pre>
+<table class="noborder">
+<col span="4" width="40">
+<tr><th>-1-</th><th>-2-</th><th>-3-</th><th>-4-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td>1</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uGreen"><td>1</td><td>1</td><td>1</td><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       45
+ SUB-EXPRESSION (mem_read | mem_write)
+                 ----1---   ----2----
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       49
+ EXPRESSION (dmem_en &amp; ((~dmem_data_ok)))
+             ---1---   --------2--------
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       139
+ EXPRESSION (((mem_op == 3'b010) || (mem_op == 3'b011)) &amp;&amp; (addr_align[0] != 1'b0))
+             ---------------------1--------------------    -----------2-----------
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       139
+ SUB-EXPRESSION ((mem_op == 3'b010) || (mem_op == 3'b011))
+                 ---------1--------    ---------2--------
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       139
+ SUB-EXPRESSION (mem_op == 3'b010)
+                ---------1--------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       139
+ SUB-EXPRESSION (mem_op == 3'b011)
+                ---------1--------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       139
+ SUB-EXPRESSION (addr_align[0] != 1'b0)
+                -----------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       140
+ EXPRESSION ((mem_op == 3'b100) &amp;&amp; (addr_align != 2'b0))
+             ---------1--------    ----------2---------
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uGreen"><td>1</td><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       140
+ SUB-EXPRESSION (mem_op == 3'b100)
+                ---------1--------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       140
+ SUB-EXPRESSION (addr_align != 2'b0)
+                ----------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       142
+ EXPRESSION (bad_align_h | bad_align_w)
+             -----1-----   -----2-----
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       144
+ EXPRESSION (mem_read &amp; bad_align)
+             ----1---   ----2----
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       145
+ EXPRESSION (mem_write &amp; bad_align)
+             ----1----   ----2----
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uGreen"><td>1</td><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<hr>
+<a name="Toggle"></a>
+Toggle Coverage for Module : <a href="mod29.html" >mips_mem_stage</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s4">
+<td>Totals</td>
+<td class="rt">24</td>
+<td class="rt">11</td>
+<td class="rt">45.83 </td>
+</tr><tr class="s2">
+<td>Total Bits</td>
+<td class="rt">500</td>
+<td class="rt">145</td>
+<td class="rt">29.00 </td>
+</tr><tr class="s3">
+<td nowrap>Total Bits 0->1</td>
+<td class="rt">250</td>
+<td class="rt">76</td>
+<td class="rt">30.40 </td>
+</tr><tr class="s2">
+<td nowrap>Total Bits 1->0</td>
+<td class="rt">250</td>
+<td class="rt">69</td>
+<td class="rt">27.60 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s3">
+<td>Ports</td>
+<td class="rt">18</td>
+<td class="rt">7</td>
+<td class="rt">38.89 </td>
+</tr><tr class="s2">
+<td>Port Bits</td>
+<td class="rt">418</td>
+<td class="rt">123</td>
+<td class="rt">29.43 </td>
+</tr><tr class="s3">
+<td nowrap>Port Bits 0->1</td>
+<td class="rt">209</td>
+<td class="rt">64</td>
+<td class="rt">30.62 </td>
+</tr><tr class="s2">
+<td nowrap>Port Bits 1->0</td>
+<td class="rt">209</td>
+<td class="rt">59</td>
+<td class="rt">28.23 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s6">
+<td>Signals</td>
+<td class="rt">6</td>
+<td class="rt">4</td>
+<td class="rt">66.67 </td>
+</tr><tr class="s2">
+<td>Signal Bits</td>
+<td class="rt">82</td>
+<td class="rt">22</td>
+<td class="rt">26.83 </td>
+</tr><tr class="s2">
+<td nowrap>Signal Bits 0->1</td>
+<td class="rt">41</td>
+<td class="rt">12</td>
+<td class="rt">29.27 </td>
+</tr><tr class="s2">
+<td nowrap>Signal Bits 1->0</td>
+<td class="rt">41</td>
+<td class="rt">10</td>
+<td class="rt">24.39 </td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Port Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td><td class="alfsrt">Direction</td></tr><tr>
+<td>mem_ex_out[16:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_ex_out[27:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_ex_out[28]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_ex_out[29]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_ex_out[30]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_ex_out[31]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[3]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[4]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[7:6]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[8]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[9]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[15:10]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[16]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[27:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[28]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_val_rt[31:29]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_read</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_op[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_op[2]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mem_done</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_rdata[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_rdata[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_rdata[3]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_rdata[4]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_rdata[31:5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_addr[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr[16:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr[27:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr[28]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr[29]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr[30]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr[31]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_wdata[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_wdata[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_wdata[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_wdata[3]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_wdata[4]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_wdata[31:5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_we</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_be[3:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_en</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>dmem_addr_ok</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>dmem_data_ok</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>stall_req_mem</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_rdata_ext[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_rdata_ext[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_rdata_ext[3]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_rdata_ext[4]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_rdata_ext[31:5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>adel_exception</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ades_exception</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Signal Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td></tr><tr>
+<td>addr_align[1:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>wdata_aligned[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>wdata_aligned[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>wdata_aligned[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>wdata_aligned[3]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>wdata_aligned[4]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>wdata_aligned[31:5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>we_aligned[3:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>bad_align_h</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>bad_align_w</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>bad_align</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr></table><br clear=all>
+<hr>
+<a name="Branch"></a>
+Branch Coverage for Module : <a href="mod29.html" >mips_mem_stage</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Line No.</th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s1">
+<td>Branches</td>
+<td></td>
+<td class="rt">30</td>
+<td class="rt">3</td>
+<td class="rt">10.00 </td>
+</tr><tr class="s1">
+<td>IF</td>
+<td class="rt">61</td>
+<td class="rt">11</td>
+<td class="rt">2</td>
+<td class="rt">18.18 </td>
+</tr><tr class="s0">
+<td>IF</td>
+<td class="rt">98</td>
+<td class="rt">19</td>
+<td class="rt">1</td>
+<td class="rt">5.26  </td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+61                 if (mem_write) begin
+                   <font color = "green">-1-</font>  
+62                     case (mem_op)
+                       <font color = "red">-2-</font>  
+63                         3'b000: begin // SB: Store Byte
+64                             wdata_aligned = {4{mem_val_rt[7:0]}}; // Duplicate across all bytes
+65                             case (addr_align)
+                               <font color = "red">-3-</font>  
+66                                 2'b00: we_aligned = 4'b0001;
+           <font color = "red">                        ==></font>
+67                                 2'b01: we_aligned = 4'b0010;
+           <font color = "red">                        ==></font>
+68                                 2'b10: we_aligned = 4'b0100;
+           <font color = "red">                        ==></font>
+69                                 2'b11: we_aligned = 4'b1000;
+           <font color = "red">                        ==></font>
+                                   MISSING_DEFAULT
+           <font color = "red">                        ==></font>
+70                             endcase
+71                         end
+72                         3'b010: begin // SH: Store Halfword
+73                             wdata_aligned = {2{mem_val_rt[15:0]}}; // Duplicate across both halfwords
+74                             case (addr_align[1])
+                               <font color = "red">-4-</font>  
+75                                 1'b0: we_aligned = 4'b0011;
+           <font color = "red">                        ==></font>
+76                                 1'b1: we_aligned = 4'b1100;
+           <font color = "red">                        ==></font>
+                                   MISSING_DEFAULT
+           <font color = "red">                        ==></font>
+77                             endcase
+78                         end
+79                         3'b100: begin // SW: Store Word
+80                             wdata_aligned = mem_val_rt;
+           <font color = "green">                    ==></font>
+81                             we_aligned    = 4'b1111;
+82                         end
+83                         default: begin
+84                             wdata_aligned = 32'd0;
+           <font color = "red">                    ==></font>
+85                             we_aligned    = 4'b0000;
+86                         end
+87                     endcase
+88                 end
+                   MISSING_ELSE
+           <font color = "green">        ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b00 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b01 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b10 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b11 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>MISSING_DEFAULT</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b010 </td>
+<td align=center nowrap>-</td>
+<td align=center>1'b0 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b010 </td>
+<td align=center nowrap>-</td>
+<td align=center>1'b1 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b010 </td>
+<td align=center nowrap>-</td>
+<td align=center>MISSING_DEFAULT</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center>3'b100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+98                 if (mem_read) begin
+                   <font color = "red">-1-</font>  
+99                     case (mem_op)
+                       <font color = "red">-2-</font>  
+100                        3'b000: begin // LB: Load Byte Signed
+101                            case (addr_align)
+                               <font color = "red">-3-</font>  
+102                                2'b00: mem_rdata_ext = { {24{dmem_rdata[7]}},  dmem_rdata[7:0] };
+           <font color = "red">                        ==></font>
+103                                2'b01: mem_rdata_ext = { {24{dmem_rdata[15]}}, dmem_rdata[15:8] };
+           <font color = "red">                        ==></font>
+104                                2'b10: mem_rdata_ext = { {24{dmem_rdata[23]}}, dmem_rdata[23:16] };
+           <font color = "red">                        ==></font>
+105                                2'b11: mem_rdata_ext = { {24{dmem_rdata[31]}}, dmem_rdata[31:24] };
+           <font color = "red">                        ==></font>
+                                   MISSING_DEFAULT
+           <font color = "red">                        ==></font>
+106                            endcase
+107                        end
+108                        3'b001: begin // LBU: Load Byte Unsigned
+109                            case (addr_align)
+                               <font color = "red">-4-</font>  
+110                                2'b00: mem_rdata_ext = { 24'd0, dmem_rdata[7:0] };
+           <font color = "red">                        ==></font>
+111                                2'b01: mem_rdata_ext = { 24'd0, dmem_rdata[15:8] };
+           <font color = "red">                        ==></font>
+112                                2'b10: mem_rdata_ext = { 24'd0, dmem_rdata[23:16] };
+           <font color = "red">                        ==></font>
+113                                2'b11: mem_rdata_ext = { 24'd0, dmem_rdata[31:24] };
+           <font color = "red">                        ==></font>
+                                   MISSING_DEFAULT
+           <font color = "red">                        ==></font>
+114                            endcase
+115                        end
+116                        3'b010: begin // LH: Load Halfword Signed
+117                            case (addr_align[1])
+                               <font color = "red">-5-</font>  
+118                                1'b0: mem_rdata_ext = { {16{dmem_rdata[15]}}, dmem_rdata[15:0] };
+           <font color = "red">                        ==></font>
+119                                1'b1: mem_rdata_ext = { {16{dmem_rdata[31]}}, dmem_rdata[31:16] };
+           <font color = "red">                        ==></font>
+                                   MISSING_DEFAULT
+           <font color = "red">                        ==></font>
+120                            endcase
+121                        end
+122                        3'b011: begin // LHU: Load Halfword Unsigned
+123                            case (addr_align[1])
+                               <font color = "red">-6-</font>  
+124                                1'b0: mem_rdata_ext = { 16'd0, dmem_rdata[15:0] };
+           <font color = "red">                        ==></font>
+125                                1'b1: mem_rdata_ext = { 16'd0, dmem_rdata[31:16] };
+           <font color = "red">                        ==></font>
+                                   MISSING_DEFAULT
+           <font color = "red">                        ==></font>
+126                            endcase
+127                        end
+128                        3'b100: begin // LW: Load Word
+129                            mem_rdata_ext = dmem_rdata;
+           <font color = "red">                    ==></font>
+130                        end
+131                        default: begin
+132                            mem_rdata_ext = dmem_rdata;
+           <font color = "red">                    ==></font>
+133                        end
+134                    endcase
+135                end
+                   MISSING_ELSE
+           <font color = "green">        ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>-6-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b00 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b01 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b10 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>2'b11 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b000 </td>
+<td align=center>MISSING_DEFAULT</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b001 </td>
+<td align=center nowrap>-</td>
+<td align=center>2'b00 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b001 </td>
+<td align=center nowrap>-</td>
+<td align=center>2'b01 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b001 </td>
+<td align=center nowrap>-</td>
+<td align=center>2'b10 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b001 </td>
+<td align=center nowrap>-</td>
+<td align=center>2'b11 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b001 </td>
+<td align=center nowrap>-</td>
+<td align=center>MISSING_DEFAULT</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1'b0 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1'b1 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>MISSING_DEFAULT</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1'b0 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1'b1 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>MISSING_DEFAULT</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>3'b100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>1</td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<div class="ui-layout-center-inner-north">
+<div id="center-bread-crumb" class="breadCrumb module urg-margin-bottom">
+  <ul name="inst_tag_29">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+  <ul name="tag_mips_mem_stage">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="ui-layout-south">
+<table align=center><tr><td class="s0 cl">0%</td>
+<td class="s1 cl">10%</td>
+<td class="s2 cl">20%</td>
+<td class="s3 cl">30%</td>
+<td class="s4 cl">40%</td>
+<td class="s5 cl">50%</td>
+<td class="s6 cl">60%</td>
+<td class="s7 cl">70%</td>
+<td class="s8 cl">80%</td>
+<td class="s9 cl">90%</td>
+<td class="s10 cl">100%</td></tr></table></div>
+</body>
+</html>

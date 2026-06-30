@@ -19,7 +19,8 @@ module mips_ex_mem_reg (
     input  wire [31:0] ex_val_rt,      // Data to be written to memory
     input  wire [31:0] ex_pc_plus_8,
     input  wire [4:0]  ex_waddr,
-    input  wire [4:0]  ex_rd_addr,       // Destination register
+    input  wire [4:0]  ex_rd_addr,
+    input  wire [4:0]  ex_cp0_raddr,       // Destination register
     
     input  wire        ex_reg_write,
     
@@ -41,6 +42,7 @@ module mips_ex_mem_reg (
     output reg  [31:0] mem_pc_plus_8,
     output reg  [4:0]  mem_waddr,
     output reg  [4:0]  mem_rd_addr,
+    output reg  [4:0]  mem_cp0_raddr,
     
     output reg         mem_reg_write,
     
@@ -64,6 +66,8 @@ module mips_ex_mem_reg (
             mem_val_rt     <= 32'd0;
             mem_pc_plus_8  <= 32'd0;
             mem_waddr      <= 5'd0;
+            mem_rd_addr    <= 5'd0;
+            mem_cp0_raddr  <= 5'd0;
             
             mem_reg_write  <= 1'b0;
             mem_mem_read   <= 1'b0;
@@ -80,6 +84,8 @@ module mips_ex_mem_reg (
             mem_val_rt     <= 32'd0;
             mem_pc_plus_8  <= 32'd0;
             mem_waddr      <= 5'd0;
+            mem_rd_addr    <= 5'd0;
+            mem_cp0_raddr  <= 5'd0;
             
             mem_reg_write  <= 1'b0;
             mem_mem_read   <= 1'b0;
@@ -97,6 +103,7 @@ module mips_ex_mem_reg (
             mem_pc_plus_8  <= ex_pc_plus_8;
             mem_waddr      <= ex_waddr;
             mem_rd_addr    <= ex_rd_addr;
+            mem_cp0_raddr  <= ex_cp0_raddr;
             
             mem_reg_write  <= ex_reg_write;
             mem_cp0_we     <= ex_cp0_we;

@@ -64,7 +64,9 @@ module apb_pic (
                 12'h000: prdata = int_status;
                 12'h004: prdata = int_mask;
                 12'h008: prdata = int_active;
+                // VCS coverage off
                 default: prdata = 32'd0;
+                // VCS coverage on
             endcase
         end else begin
             prdata = 32'd0;

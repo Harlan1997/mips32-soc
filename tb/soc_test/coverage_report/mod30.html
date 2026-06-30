@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="<username>"> <meta name="GENERATOR" content="urg/version [en] (platform name) [urg]">
+<title>Unified Coverage Report :: Module :: mips_id_ex_reg</title>
+<link type="text/css" rel="stylesheet" href="css/.urg.css">
+<link type="text/css" rel="stylesheet" href="css/.layout.css">
+<link type="text/css" rel="stylesheet" href="css/.breadcrumb.css">
+<script type="text/javascript" src="js/.jquery.js"></script>
+<script type="text/javascript" src="js/.jquery-ui.js"></script>
+<script type="text/javascript" src="js/.sortable.js"></script>
+<script type="text/javascript" src="js/.layout.js"></script>
+<script type="text/javascript" src="js/.breadcrumb.js"></script>
+<script type="text/javascript">
+var layout, westLayout, centerLayout;
+$(document).ready(function () {
+  if ($("#north-bread-crumb")) {
+    $("#north-bread-crumb").jBreadCrumb({easing:'swing'})
+  }
+  layout = $("body").layout({ 
+    resizable: true,
+    spacing_open: 4,
+    spacing_closed: 4,
+    north: {
+      size: 76
+    },
+    south: {
+      size: 45,
+      initClosed: true
+    },
+    west: {
+      size: 500,
+      resizable: true,
+      initClosed: false
+    }
+  });
+  centerLayout = $('div.ui-layout-center').layout({
+    north__paneSelector: ".ui-layout-center-inner-north",
+    center__paneSelector: ".ui-layout-center-inner-center", 
+    north__size: 50,
+    spacing_open: 4,
+    spacing_closed: 4
+  });
+});
+</script>
+</head>
+<body onLoad="initPage();"><div class="ui-layout-north">
+<div class="logo"></div>
+<center class="pagetitle">Module Definition</center>
+<div align="center"><a href="dashboard.html" ><b>dashboard</b></a> | <a href="hierarchy.html" ><b>hierarchy</b></a> | <a href="modlist.html" ><b>modlist</b></a> | groups | <a href="tests.html" ><b>tests</b></a> | asserts</div>
+
+</div>
+<div class="ui-layout-west">
+<div name='tag_mips_id_ex_reg'>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module : <a href="#"  onclick="showContent('tag_mips_id_ex_reg')">mips_id_ex_reg</a></span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s6 cl rt"> 64.14</td>
+<td class="s6 cl rt"><a href="mod30.html#Line" > 68.18</a></td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"><a href="mod30.html#Toggle" > 49.25</a></td>
+<td class="wht cl rt"></td>
+<td class="s7 cl rt"><a href="mod30.html#Branch" > 75.00</a></td>
+</tr></table><br clear=all>
+<span class=repname>Source File(s) : </span>
+<br clear=all>
+<a href="javascript:void(0);"  onclick="openSrcFile('/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_id_ex_reg.v')">/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_id_ex_reg.v</a><br clear=all>
+<br clear=all>
+<span class=repname>Module self-instances :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="wht cl wordwrap"><a href="mod30.html#inst_tag_30"  onclick="showContent('inst_tag_30')">tb_mips_soc.u_soc.u_core.u_cpu.u_mips_id_ex_reg</a></td>
+<td class="s6 cl rt"> 64.14</td>
+<td class="s6 cl rt"><a href="mod30.html#Line" > 68.18</a></td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"><a href="mod30.html#Toggle" > 49.25</a></td>
+<td class="wht cl rt"></td>
+<td class="s7 cl rt"><a href="mod30.html#Branch" > 75.00</a></td>
+</tr></table></div>
+</div>
+<br clear=all>
+<div name='tag_mips_id_ex_reg'>
+<hr>
+<a name="inst_tag_30"></a>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module Instance : <a href="hierarchy.html#tag_urg_inst_30" >tb_mips_soc.u_soc.u_core.u_cpu.u_mips_id_ex_reg</a></span>
+<br clear=all>
+<br clear=all>
+<span class=repname>Instance :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s6 cl rt"> 64.14</td>
+<td class="s6 cl rt"><a href="mod30.html#Line" > 68.18</a></td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"><a href="mod30.html#Toggle" > 49.25</a></td>
+<td class="wht cl rt"></td>
+<td class="s7 cl rt"><a href="mod30.html#Branch" > 75.00</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Instance's subtree :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s6 cl rt"> 64.14</td>
+<td class="s6 cl rt"> 68.18</td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"> 49.25</td>
+<td class="wht cl rt"></td>
+<td class="s7 cl rt"> 75.00</td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Parent : </span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td><td class="alfsrt">NAME</td></tr><tr>
+<td class="s4 cl rt"> 47.32</td>
+<td class="wht cl rt"></td>
+<td class="s5 cl rt"> 57.14</td>
+<td class="s3 cl rt"> 38.65</td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"> 46.15</td>
+<td><a href="mod8.html#inst_tag_8" >u_cpu</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Subtrees :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td colspan=7>no children</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<hr>
+Since this is the module's only instance, the coverage report is the same as for the module.</div>
+<div class="ui-layout-center">
+<div class="ui-layout-center-inner-center">
+<div name='tag_mips_id_ex_reg'>
+<a name="Line"></a>
+Line Coverage for Module : <a href="mod30.html" >mips_id_ex_reg</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="4" width="82">
+<tr><th></th><th>Line No.</th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s6"><td class="lf">TOTAL</td><td></td><td>66</td><td>45</td><td>68.18</td></tr>
+<tr class="s6"><td class="lf">ALWAYS</td><td>68</td><td>66</td><td>45</td><td>68.18</td></tr>
+</table>
+<pre class="code"><br clear=all>
+67                          always @(posedge clk or negedge rst_n) begin
+68         1/1                  if (!rst_n) begin
+69         1/1                      ex_val_rs      &lt;= 32'd0;
+70         1/1                      ex_val_rt      &lt;= 32'd0;
+71         1/1                      ex_imm_ext     &lt;= 32'd0;
+72         1/1                      ex_pc_plus_8   &lt;= 32'd0;
+73         1/1                      ex_waddr       &lt;= 5'd0;
+74         1/1                      ex_sa          &lt;= 5'd0;
+75                                  
+76         1/1                      ex_alu_op      &lt;= 4'd0;
+77         1/1                      ex_mdu_op      &lt;= 3'd0;
+78         1/1                      ex_mdu_start   &lt;= 1'b0;
+79         1/1                      ex_illegal_inst&lt;= 1'b0;
+80         1/1                      ex_except_req  &lt;= 1'b0;
+81         1/1                      ex_except_code &lt;= 5'd0;
+82         1/1                      ex_cp0_we      &lt;= 1'b0;
+83         1/1                      ex_is_eret     &lt;= 1'b0;
+84         1/1                      ex_sel_mdu_out &lt;= 1'b0;
+85         1/1                      ex_alu_src     &lt;= 1'b0;
+86         1/1                      ex_reg_write   &lt;= 1'b0;
+87         1/1                      ex_mem_read    &lt;= 1'b0;
+88         1/1                      ex_mem_write   &lt;= 1'b0;
+89         1/1                      ex_mem_op      &lt;= 3'd0;
+90         1/1                      ex_mem_to_reg  &lt;= 2'd0;
+91         1/1                  end else if (flush) begin
+92         <font color = "red">0/1     ==>              ex_val_rs      &lt;= 32'd0;</font>
+93         <font color = "red">0/1     ==>              ex_val_rt      &lt;= 32'd0;</font>
+94         <font color = "red">0/1     ==>              ex_imm_ext     &lt;= 32'd0;</font>
+95         <font color = "red">0/1     ==>              ex_pc_plus_8   &lt;= 32'd0;</font>
+96         <font color = "red">0/1     ==>              ex_waddr       &lt;= 5'd0;</font>
+97         <font color = "red">0/1     ==>              ex_sa          &lt;= 5'd0;</font>
+98                                  
+99         <font color = "red">0/1     ==>              ex_alu_op      &lt;= 4'd0;</font>
+100        <font color = "red">0/1     ==>              ex_mdu_op      &lt;= 3'd0;</font>
+101        <font color = "red">0/1     ==>              ex_mdu_start   &lt;= 1'b0;</font>
+102        <font color = "red">0/1     ==>              ex_illegal_inst&lt;= 1'b0;</font>
+103        <font color = "red">0/1     ==>              ex_except_req  &lt;= 1'b0;</font>
+104        <font color = "red">0/1     ==>              ex_except_code &lt;= 5'd0;</font>
+105        <font color = "red">0/1     ==>              ex_cp0_we      &lt;= 1'b0;</font>
+106        <font color = "red">0/1     ==>              ex_is_eret     &lt;= 1'b0;</font>
+107        <font color = "red">0/1     ==>              ex_sel_mdu_out &lt;= 1'b0;</font>
+108        <font color = "red">0/1     ==>              ex_alu_src     &lt;= 1'b0;</font>
+109        <font color = "red">0/1     ==>              ex_reg_write   &lt;= 1'b0;</font>
+110        <font color = "red">0/1     ==>              ex_mem_read    &lt;= 1'b0;</font>
+111        <font color = "red">0/1     ==>              ex_mem_write   &lt;= 1'b0;</font>
+112        <font color = "red">0/1     ==>              ex_mem_op      &lt;= 3'd0;</font>
+113        <font color = "red">0/1     ==>              ex_mem_to_reg  &lt;= 2'd0;</font>
+114        1/1                  end else if (!stall) begin
+115        1/1                      ex_val_rs      &lt;= id_val_rs;
+116        1/1                      ex_val_rt      &lt;= id_val_rt;
+117        1/1                      ex_imm_ext     &lt;= id_imm_ext;
+118        1/1                      ex_pc_plus_8   &lt;= id_pc_plus_8;
+119        1/1                      ex_waddr       &lt;= id_waddr;
+120        1/1                      ex_sa          &lt;= id_sa;
+121                                 
+122        1/1                      ex_alu_op      &lt;= id_alu_op;
+123        1/1                      ex_mdu_op      &lt;= id_mdu_op;
+124        1/1                      ex_mdu_start   &lt;= id_mdu_start;
+125        1/1                      ex_illegal_inst&lt;= id_illegal_inst;
+126        1/1                      ex_except_req  &lt;= id_except_req;
+127        1/1                      ex_except_code &lt;= id_except_code;
+128        1/1                      ex_cp0_we      &lt;= id_cp0_we;
+129        1/1                      ex_is_eret     &lt;= id_is_eret;
+130        1/1                      ex_sel_mdu_out &lt;= id_sel_mdu_out;
+131        1/1                      ex_alu_src     &lt;= id_alu_src;
+132        1/1                      ex_reg_write   &lt;= id_reg_write;
+133        1/1                      ex_mem_read    &lt;= id_mem_read;
+134        1/1                      ex_mem_write   &lt;= id_mem_write;
+135        1/1                      ex_mem_op      &lt;= id_mem_op;
+136        1/1                      ex_mem_to_reg  &lt;= id_mem_to_reg;
+137                             end
+                        MISSING_ELSE
+</pre>
+<hr>
+<a name="Toggle"></a>
+Toggle Coverage for Module : <a href="mod30.html" >mips_id_ex_reg</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s3">
+<td>Totals</td>
+<td class="rt">46</td>
+<td class="rt">18</td>
+<td class="rt">39.13 </td>
+</tr><tr class="s4">
+<td>Total Bits</td>
+<td class="rt">668</td>
+<td class="rt">329</td>
+<td class="rt">49.25 </td>
+</tr><tr class="s5">
+<td nowrap>Total Bits 0->1</td>
+<td class="rt">334</td>
+<td class="rt">171</td>
+<td class="rt">51.20 </td>
+</tr><tr class="s4">
+<td nowrap>Total Bits 1->0</td>
+<td class="rt">334</td>
+<td class="rt">158</td>
+<td class="rt">47.31 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s3">
+<td>Ports</td>
+<td class="rt">46</td>
+<td class="rt">18</td>
+<td class="rt">39.13 </td>
+</tr><tr class="s4">
+<td>Port Bits</td>
+<td class="rt">668</td>
+<td class="rt">329</td>
+<td class="rt">49.25 </td>
+</tr><tr class="s5">
+<td nowrap>Port Bits 0->1</td>
+<td class="rt">334</td>
+<td class="rt">171</td>
+<td class="rt">51.20 </td>
+</tr><tr class="s4">
+<td nowrap>Port Bits 1->0</td>
+<td class="rt">334</td>
+<td class="rt">158</td>
+<td class="rt">47.31 </td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Port Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td><td class="alfsrt">Direction</td></tr><tr>
+<td>clk</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>rst_n</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>stall</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>flush</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[3:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[4]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[16:5]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[29:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[30]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rs[31]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[4:1]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[7:6]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[8]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[9]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[15:10]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[16]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[27:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[28]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_val_rt[31:29]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_imm_ext[31:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_pc_plus_8[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_pc_plus_8[4:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_pc_plus_8[7:5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_pc_plus_8[31:8]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_waddr[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_sa[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_alu_op[0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_alu_op[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_alu_op[3:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mdu_op[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mdu_start</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_illegal_inst</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_except_req</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_except_code[4:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_cp0_we</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_is_eret</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_sel_mdu_out</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_alu_src</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_reg_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mem_read</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mem_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mem_op[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mem_op[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>id_mem_to_reg[1:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>ex_val_rs[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[3:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[4]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[16:5]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[29:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[30]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rs[31]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[3]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[4]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[7:6]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[8]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[9]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[15:10]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[16]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[27:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[28]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_val_rt[31:29]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_imm_ext[31:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_pc_plus_8[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_pc_plus_8[4:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_pc_plus_8[7:5]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_pc_plus_8[31:8]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_waddr[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_sa[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_alu_op[0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_alu_op[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_alu_op[3:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mdu_op[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mdu_start</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_illegal_inst</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_except_req</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_except_code[4:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_cp0_we</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_is_eret</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_sel_mdu_out</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_alu_src</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_reg_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mem_read</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mem_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mem_op[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mem_op[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mem_to_reg[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ex_mem_to_reg[1]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr></table><br clear=all>
+<hr>
+<a name="Branch"></a>
+Branch Coverage for Module : <a href="mod30.html" >mips_id_ex_reg</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Line No.</th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s7">
+<td>Branches</td>
+<td></td>
+<td class="rt">4</td>
+<td class="rt">3</td>
+<td class="rt">75.00 </td>
+</tr><tr class="s7">
+<td>IF</td>
+<td class="rt">68</td>
+<td class="rt">4</td>
+<td class="rt">3</td>
+<td class="rt">75.00 </td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+68                 if (!rst_n) begin
+                   <font color = "green">-1-</font>  
+69                     ex_val_rs      <= 32'd0;
+           <font color = "green">            ==></font>
+70                     ex_val_rt      <= 32'd0;
+71                     ex_imm_ext     <= 32'd0;
+72                     ex_pc_plus_8   <= 32'd0;
+73                     ex_waddr       <= 5'd0;
+74                     ex_sa          <= 5'd0;
+75                     
+76                     ex_alu_op      <= 4'd0;
+77                     ex_mdu_op      <= 3'd0;
+78                     ex_mdu_start   <= 1'b0;
+79                     ex_illegal_inst<= 1'b0;
+80                     ex_except_req  <= 1'b0;
+81                     ex_except_code <= 5'd0;
+82                     ex_cp0_we      <= 1'b0;
+83                     ex_is_eret     <= 1'b0;
+84                     ex_sel_mdu_out <= 1'b0;
+85                     ex_alu_src     <= 1'b0;
+86                     ex_reg_write   <= 1'b0;
+87                     ex_mem_read    <= 1'b0;
+88                     ex_mem_write   <= 1'b0;
+89                     ex_mem_op      <= 3'd0;
+90                     ex_mem_to_reg  <= 2'd0;
+91                 end else if (flush) begin
+                            <font color = "red">-2-</font>  
+92                     ex_val_rs      <= 32'd0;
+           <font color = "red">            ==></font>
+93                     ex_val_rt      <= 32'd0;
+94                     ex_imm_ext     <= 32'd0;
+95                     ex_pc_plus_8   <= 32'd0;
+96                     ex_waddr       <= 5'd0;
+97                     ex_sa          <= 5'd0;
+98                     
+99                     ex_alu_op      <= 4'd0;
+100                    ex_mdu_op      <= 3'd0;
+101                    ex_mdu_start   <= 1'b0;
+102                    ex_illegal_inst<= 1'b0;
+103                    ex_except_req  <= 1'b0;
+104                    ex_except_code <= 5'd0;
+105                    ex_cp0_we      <= 1'b0;
+106                    ex_is_eret     <= 1'b0;
+107                    ex_sel_mdu_out <= 1'b0;
+108                    ex_alu_src     <= 1'b0;
+109                    ex_reg_write   <= 1'b0;
+110                    ex_mem_read    <= 1'b0;
+111                    ex_mem_write   <= 1'b0;
+112                    ex_mem_op      <= 3'd0;
+113                    ex_mem_to_reg  <= 2'd0;
+114                end else if (!stall) begin
+                            <font color = "green">-3-</font>  
+115                    ex_val_rs      <= id_val_rs;
+           <font color = "green">            ==></font>
+116                    ex_val_rt      <= id_val_rt;
+117                    ex_imm_ext     <= id_imm_ext;
+118                    ex_pc_plus_8   <= id_pc_plus_8;
+119                    ex_waddr       <= id_waddr;
+120                    ex_sa          <= id_sa;
+121                    
+122                    ex_alu_op      <= id_alu_op;
+123                    ex_mdu_op      <= id_mdu_op;
+124                    ex_mdu_start   <= id_mdu_start;
+125                    ex_illegal_inst<= id_illegal_inst;
+126                    ex_except_req  <= id_except_req;
+127                    ex_except_code <= id_except_code;
+128                    ex_cp0_we      <= id_cp0_we;
+129                    ex_is_eret     <= id_is_eret;
+130                    ex_sel_mdu_out <= id_sel_mdu_out;
+131                    ex_alu_src     <= id_alu_src;
+132                    ex_reg_write   <= id_reg_write;
+133                    ex_mem_read    <= id_mem_read;
+134                    ex_mem_write   <= id_mem_write;
+135                    ex_mem_op      <= id_mem_op;
+136                    ex_mem_to_reg  <= id_mem_to_reg;
+137                end
+                   MISSING_ELSE
+           <font color = "green">        ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td>Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<div class="ui-layout-center-inner-north">
+<div id="center-bread-crumb" class="breadCrumb module urg-margin-bottom">
+  <ul name="inst_tag_30">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+  <ul name="tag_mips_id_ex_reg">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="ui-layout-south">
+<table align=center><tr><td class="s0 cl">0%</td>
+<td class="s1 cl">10%</td>
+<td class="s2 cl">20%</td>
+<td class="s3 cl">30%</td>
+<td class="s4 cl">40%</td>
+<td class="s5 cl">50%</td>
+<td class="s6 cl">60%</td>
+<td class="s7 cl">70%</td>
+<td class="s8 cl">80%</td>
+<td class="s9 cl">90%</td>
+<td class="s10 cl">100%</td></tr></table></div>
+</body>
+</html>

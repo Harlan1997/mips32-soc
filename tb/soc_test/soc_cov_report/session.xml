@@ -1,0 +1,32 @@
+<session version="1.1" release="X-2025.06" timestp="2026-06-27 19:38:46 GMT">
+  <info>
+    <attr name="datetime" value="Sun Jun 28 03:38:47 2026
+"/>
+    <attr name="command" value="urg -dir soc_cov.vdb -report soc_cov_report -format text"/>
+    <attr name="top_instance" value="axi_decoder_1x3,jtag_debug_top,apb_pic,axi_spi_flash,tb_mips_soc"/>
+  </info>
+  <hvp>
+    <datadef>
+      <metdef name="Line" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="Cond" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="Toggle" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="FSM" type="ratio" aggregator="average" builtin="1" />
+      <metdef name="Branch" type="ratio" aggregator="average" builtin="1" />
+    </datadef>
+  </hvp>
+  <old_coverage>
+  <scope type="top" name="top">
+    <metric name="Line" value="665/1276" />
+    <metric name="Cond" value="864/1661" />
+    <metric name="Toggle" value="9270/31610" />
+    <metric name="FSM" value="18/117" />
+    <metric name="Branch" value="445/977" />
+  </scope>
+  <scope type="instance" name="top">
+  </scope>
+  <scope type="group" name="top">
+  </scope>
+  <scope type="assert" name="Statistics">
+  </scope>
+  </old_coverage>
+</session>

@@ -1,0 +1,79 @@
+<Command name="schRTLInfo"  delimiter="."  >
+<RTLBlock >
+<RTLInfo   name="ar_state_0"  type="2"  fileName="../../rtl/axi/axi_arbiter_2x1.v"  >
+    <Seg beginLine="164"  endLine="178"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_axi_arbiter"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_1"  type="2"  fileName="../../rtl/cpu/mips_mdu.v"  >
+    <Seg beginLine="86"  endLine="110"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="w_state_2"  type="2"  fileName="../../rtl/perips/axi_sram.v"  >
+    <Seg beginLine="170"  endLine="199"  />
+  </RTLInfo>
+ <Instance name="axi_sram"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="tap_state_3"  type="2"  fileName="../../rtl/perips/jtag_debug_top.v"  >
+    <Seg beginLine="98"  endLine="111"  />
+  </RTLInfo>
+ <RTLInfo   name="axi_state_4"  type="2"  fileName="../../rtl/perips/jtag_debug_top.v"  >
+    <Seg beginLine="255"  endLine="261"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_jtag_debug_top"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_5"  type="2"  fileName="../../rtl/cache/dcache.v"  >
+    <Seg beginLine="178"  endLine="213"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_core.u_dcache"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_6"  type="2"  fileName="../../rtl/cache/icache.v"  >
+    <Seg beginLine="112"  endLine="127"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_core.u_icache"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_7"  type="2"  fileName="../../rtl/perips/apb_axi_dma.v"  >
+    <Seg beginLine="167"  endLine="183"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_apb_dma"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_8"  type="2"  fileName="../../rtl/perips/axi_spi_flash.v"  >
+    <Seg beginLine="104"  endLine="108"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_axi_spi_flash"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="r_state_9"  type="2"  fileName="../../rtl/perips/axi_ddr_model.v"  >
+    <Seg beginLine="119"  endLine="150"  />
+  </RTLInfo>
+ <RTLInfo   name="w_state_10"  type="2"  fileName="../../rtl/perips/axi_ddr_model.v"  >
+    <Seg beginLine="204"  endLine="250"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_axi_sram"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_11"  type="2"  fileName="../../rtl/axi/axi2apb_bridge.v"  >
+    <Seg beginLine="107"  endLine="124"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_axi2apb"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="ar_state_12"  type="2"  fileName="../../rtl/axi/axi_arbiter_2x1_full.v"  >
+    <Seg beginLine="151"  endLine="159"  />
+  </RTLInfo>
+ <RTLInfo   name="aw_state_13"  type="2"  fileName="../../rtl/axi/axi_arbiter_2x1_full.v"  >
+    <Seg beginLine="221"  endLine="229"  />
+  </RTLInfo>
+ <Instance name="tb_top.u_soc.u_axi_arbiter_2"  />
+<Instance name="tb_top.u_soc.u_axi_arbiter_3"  />
+<Instance name="tb_top.u_soc.u_axi_arbiter_4"  />
+</RTLBlock>
+ </Command>

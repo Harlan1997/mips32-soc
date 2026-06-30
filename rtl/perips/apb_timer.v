@@ -34,8 +34,8 @@ module apb_timer (
     reg [31:0] r_val;
     reg [31:0] r_int;
     
-    wire write_en = psel & penable & pwrite;
-    wire read_en  = psel & ~pwrite;
+    wire write_en = psel & penable & pwrite & pready;
+    wire read_en  = psel & ~pwrite & pready;
     
     // APB writes
     always @(posedge pclk or negedge presetn) begin
@@ -93,8 +93,18 @@ module apb_timer (
         endcase
     end
     
+    reg wait_state;
+    always @(posedge pclk or negedge presetn) begin
+        if (!presetn)
+            wait_state <= 1'b0;
+        else if (psel && penable && !wait_state)
+            wait_state <= 1'b1;
+        else
+            wait_state <= 1'b0;
+    end
+
     assign prdata = rdata_out;
-    assign pready = 1'b1;
+    assign pready = wait_state;
     assign pslverr = 1'b0;
     
     assign timer_int = r_int[0];
