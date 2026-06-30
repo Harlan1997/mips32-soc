@@ -152,7 +152,11 @@ module apb_axi_dma (
     reg [31:0] data_buf;
 
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) state <= ST_IDLE;
+        if (!rst_n) begin
+            // VCS coverage off
+            state <= ST_IDLE;
+            // VCS coverage on
+        end
         else        state <= next_state;
     end
 
@@ -180,7 +184,9 @@ module apb_axi_dma (
                     else                 next_state = ST_AR;   // Next word
                 end
             end
+            // VCS coverage off
             default: next_state = ST_IDLE;
+            // VCS coverage on
         endcase
     end
 

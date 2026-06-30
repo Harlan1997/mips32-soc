@@ -139,88 +139,102 @@ module axi_arbiter_2x1_full (
     // =========================================================================
     // Read Channels (AR, R) - Arbitration
     // =========================================================================
-    localparam AR_IDLE = 1'b0;
-    localparam AR_BUSY = 1'b1;
+    localparam AR_IDLE = 2'd0;
+    localparam AR_WAIT = 2'd1;
+    localparam AR_BUSY = 2'd2;
     
-    reg        ar_state;
-    reg        active_ar_master;
+    reg [1:0]  ar_state;
+    reg        active_r_master; // 0 for M0, 1 for M1
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ar_state <= AR_IDLE;
-            active_ar_master <= 1'b0;
+            active_r_master <= 1'b0;
         end else begin
             case (ar_state)
                 AR_IDLE: begin
                     if (m1_arvalid) begin
-                        active_ar_master <= 1'b1;
+                        active_r_master <= 1'b1;
                         if (s0_arready) ar_state <= AR_BUSY;
+                        else ar_state <= AR_WAIT;
                     end else if (m0_arvalid) begin
-                        active_ar_master <= 1'b0;
+                        active_r_master <= 1'b0;
                         if (s0_arready) ar_state <= AR_BUSY;
+                        else ar_state <= AR_WAIT;
                     end
+                end
+                AR_WAIT: begin
+                    if (s0_arready) ar_state <= AR_BUSY;
                 end
                 AR_BUSY: begin
                     if (s0_rvalid && s0_rready && s0_rlast) begin
                         ar_state <= AR_IDLE;
                     end
                 end
+                default: ar_state <= AR_IDLE;
             endcase
         end
     end
     
-    wire sel_ar_m1 = (ar_state == AR_IDLE) ? m1_arvalid : active_ar_master;
+    // AR Mux
+    wire sel_r_m1 = (ar_state == AR_IDLE) ? m1_arvalid : active_r_master;
     
-    assign s0_arid    = sel_ar_m1 ? m1_arid    : m0_arid;
-    assign s0_araddr  = sel_ar_m1 ? m1_araddr  : m0_araddr;
-    assign s0_arlen   = sel_ar_m1 ? m1_arlen   : m0_arlen;
-    assign s0_arsize  = sel_ar_m1 ? m1_arsize  : m0_arsize;
-    assign s0_arburst = sel_ar_m1 ? m1_arburst : m0_arburst;
-    assign s0_arlock  = sel_ar_m1 ? m1_arlock  : m0_arlock;
-    assign s0_arcache = sel_ar_m1 ? m1_arcache : m0_arcache;
-    assign s0_arprot  = sel_ar_m1 ? m1_arprot  : m0_arprot;
-    assign s0_arvalid = (ar_state == AR_IDLE) ? (m1_arvalid | m0_arvalid) : 1'b0; 
+    assign s0_arid    = sel_r_m1 ? m1_arid    : m0_arid;
+    assign s0_araddr  = sel_r_m1 ? m1_araddr  : m0_araddr;
+    assign s0_arlen   = sel_r_m1 ? m1_arlen   : m0_arlen;
+    assign s0_arsize  = sel_r_m1 ? m1_arsize  : m0_arsize;
+    assign s0_arburst = sel_r_m1 ? m1_arburst : m0_arburst;
+    assign s0_arlock  = sel_r_m1 ? m1_arlock  : m0_arlock;
+    assign s0_arcache = sel_r_m1 ? m1_arcache : m0_arcache;
+    assign s0_arprot  = sel_r_m1 ? m1_arprot  : m0_arprot;
+    assign s0_arvalid = (ar_state == AR_IDLE) ? (m1_arvalid | m0_arvalid) : (ar_state == AR_WAIT ? 1'b1 : 1'b0); 
     
-    assign m1_arready = (ar_state == AR_IDLE && sel_ar_m1) ? s0_arready : 1'b0;
-    assign m0_arready = (ar_state == AR_IDLE && !sel_ar_m1) ? s0_arready : 1'b0;
+    assign m1_arready = (ar_state == AR_IDLE && m1_arvalid) ? s0_arready : ((ar_state == AR_WAIT && active_r_master) ? s0_arready : 1'b0);
+    assign m0_arready = (ar_state == AR_IDLE && !m1_arvalid && m0_arvalid) ? s0_arready : ((ar_state == AR_WAIT && !active_r_master) ? s0_arready : 1'b0);
     
     assign m1_rid     = s0_rid;
     assign m1_rdata   = s0_rdata;
     assign m1_rresp   = s0_rresp;
     assign m1_rlast   = s0_rlast;
-    assign m1_rvalid  = (active_ar_master == 1'b1) ? s0_rvalid : 1'b0;
+    assign m1_rvalid  = (active_r_master == 1'b1) ? s0_rvalid : 1'b0;
     
     assign m0_rid     = s0_rid;
     assign m0_rdata   = s0_rdata;
     assign m0_rresp   = s0_rresp;
     assign m0_rlast   = s0_rlast;
-    assign m0_rvalid  = (active_ar_master == 1'b0) ? s0_rvalid : 1'b0;
+    assign m0_rvalid  = (active_r_master == 1'b0) ? s0_rvalid : 1'b0;
     
-    assign s0_rready  = (active_ar_master == 1'b1) ? m1_rready : m0_rready;
+    assign s0_rready  = (active_r_master == 1'b1) ? m1_rready : m0_rready;
 
     // =========================================================================
     // Write Channels (AW, W, B) - Arbitration
     // =========================================================================
-    localparam AW_IDLE = 1'b0;
-    localparam AW_BUSY = 1'b1;
+    localparam AW_IDLE = 2'd0;
+    localparam AW_WAIT = 2'd1;
+    localparam AW_BUSY = 2'd2;
     
-    reg        aw_state;
-    reg        active_aw_master;
+    reg [1:0]  aw_state;
+    reg        active_w_master; // 0 for M0, 1 for M1
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             aw_state <= AW_IDLE;
-            active_aw_master <= 1'b0;
+            active_w_master <= 1'b0;
         end else begin
             case (aw_state)
                 AW_IDLE: begin
                     if (m1_awvalid) begin
-                        active_aw_master <= 1'b1;
+                        active_w_master <= 1'b1;
                         if (s0_awready) aw_state <= AW_BUSY;
+                        else aw_state <= AW_WAIT;
                     end else if (m0_awvalid) begin
-                        active_aw_master <= 1'b0;
+                        active_w_master <= 1'b0;
                         if (s0_awready) aw_state <= AW_BUSY;
+                        else aw_state <= AW_WAIT;
                     end
+                end
+                AW_WAIT: begin
+                    if (s0_awready) aw_state <= AW_BUSY;
                 end
                 AW_BUSY: begin
                     // Wait for BVALID (response) to finish the whole transaction
@@ -228,11 +242,13 @@ module axi_arbiter_2x1_full (
                         aw_state <= AW_IDLE;
                     end
                 end
+                default: aw_state <= AW_IDLE;
             endcase
         end
     end
     
-    wire sel_aw_m1 = (aw_state == AW_IDLE) ? m1_awvalid : active_aw_master;
+    // AW Mux
+    wire sel_aw_m1 = (aw_state == AW_IDLE) ? m1_awvalid : active_w_master;
     
     assign s0_awid    = sel_aw_m1 ? m1_awid    : m0_awid;
     assign s0_awaddr  = sel_aw_m1 ? m1_awaddr  : m0_awaddr;
@@ -242,29 +258,29 @@ module axi_arbiter_2x1_full (
     assign s0_awlock  = sel_aw_m1 ? m1_awlock  : m0_awlock;
     assign s0_awcache = sel_aw_m1 ? m1_awcache : m0_awcache;
     assign s0_awprot  = sel_aw_m1 ? m1_awprot  : m0_awprot;
-    assign s0_awvalid = (aw_state == AW_IDLE) ? (m1_awvalid | m0_awvalid) : 1'b0;
+    assign s0_awvalid = (aw_state == AW_IDLE) ? (m1_awvalid | m0_awvalid) : (aw_state == AW_WAIT ? 1'b1 : 1'b0);
     
-    assign m1_awready = (aw_state == AW_IDLE && sel_aw_m1) ? s0_awready : 1'b0;
-    assign m0_awready = (aw_state == AW_IDLE && !sel_aw_m1) ? s0_awready : 1'b0;
+    assign m1_awready = (aw_state == AW_IDLE && m1_awvalid) ? s0_awready : ((aw_state == AW_WAIT && active_w_master) ? s0_awready : 1'b0);
+    assign m0_awready = (aw_state == AW_IDLE && !m1_awvalid && m0_awvalid) ? s0_awready : ((aw_state == AW_WAIT && !active_w_master) ? s0_awready : 1'b0);
     
-    // Route W channel based on active_aw_master
-    assign s0_wdata   = active_aw_master ? m1_wdata  : m0_wdata;
-    assign s0_wstrb   = active_aw_master ? m1_wstrb  : m0_wstrb;
-    assign s0_wlast   = active_aw_master ? m1_wlast  : m0_wlast;
-    assign s0_wvalid  = active_aw_master ? m1_wvalid : m0_wvalid;
+    // Route W channel based on active_w_master
+    assign s0_wdata   = active_w_master ? m1_wdata  : m0_wdata;
+    assign s0_wstrb   = active_w_master ? m1_wstrb  : m0_wstrb;
+    assign s0_wlast   = active_w_master ? m1_wlast  : m0_wlast;
+    assign s0_wvalid  = active_w_master ? m1_wvalid : m0_wvalid;
     
-    assign m1_wready  = active_aw_master ? s0_wready : 1'b0;
-    assign m0_wready  = !active_aw_master ? s0_wready : 1'b0;
+    assign m1_wready  = active_w_master ? s0_wready : 1'b0;
+    assign m0_wready  = !active_w_master ? s0_wready : 1'b0;
     
-    // Route B channel based on active_aw_master
+    // Route B channel based on active_w_master
     assign m1_bid     = s0_bid;
     assign m1_bresp   = s0_bresp;
-    assign m1_bvalid  = active_aw_master ? s0_bvalid : 1'b0;
+    assign m1_bvalid  = active_w_master ? s0_bvalid : 1'b0;
     
     assign m0_bid     = s0_bid;
     assign m0_bresp   = s0_bresp;
-    assign m0_bvalid  = !active_aw_master ? s0_bvalid : 1'b0;
+    assign m0_bvalid  = !active_w_master ? s0_bvalid : 1'b0;
     
-    assign s0_bready  = active_aw_master ? m1_bready : m0_bready;
+    assign s0_bready  = active_w_master ? m1_bready : m0_bready;
 
 endmodule

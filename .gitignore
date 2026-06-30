@@ -1,50 +1,24 @@
-# Simulation executables
 simv
 simv.daidir/
-
-# Simulation logs
-*.log
-*.fsdb
-*.vdb
-dump.txt
-
-# Coverage and reports
-cov*/
-*coverage_report*/
-*Report*/
-*ReportExclude*/
-textReport*/
-urgReport*/
-*_report/
-
-# VCS / compilation artifacts
 csrc/
-*.o
-*.so
-*._*
-._*
+*.log
+regression.vdb/
+urgReport/
 ucli.key
 vc_hdrs.h
-.interfacedeps
-
-# Verdi / tool outputs
-verdiLog/
-novas.conf
-novas.rc
-*.daidir/
-
-# Firmware / hex outputs in tb
-firmware.hex
-*.elf
-
-# Temp / helper scripts
-patch_*.py
-gen_el.py
-run_regression.py
-temp_*.txt
-urg_help*.txt
-cov.cfg
+tb/uvm_tb/firmware.hex
 cm.log
-*.el
-fullexclude*
-test.el
+regression_logs/
+sim/firmware.hex
+sim/.fsm.sch.verilog.xml
+tb/soc_test/.fsm.sch.verilog.xml
+tb/soc_test/fw.asm
+tb/soc_test/fw/firmware.bin
+tb/soc_test/fw/firmware.elf
+tb/soc_test/fw/firmware.hex
+tb/soc_test/fw/firmware.map
+*.o
+*.a
+*.so
+*.db
+

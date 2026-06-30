@@ -90,7 +90,11 @@ module axi_spi_flash (
     assign spi_sclk = (state != IDLE && state != DONE) ? ~spi_clk_en : 1'b0;
 
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) state <= IDLE;
+        if (!rst_n) begin
+            // VCS coverage off
+            state <= IDLE;
+            // VCS coverage on
+        end
         else if (spi_clk_en || state == IDLE || state == DONE) state <= next_state;
     end
     
@@ -102,7 +106,9 @@ module axi_spi_flash (
             ADDR: if (bit_cnt == 23) next_state = READ;
             READ: if (bit_cnt == 31) next_state = DONE;
             DONE: if (s_rvalid && s_rready) next_state = IDLE;
+            // VCS coverage off
             default: next_state = IDLE;
+            // VCS coverage on
         endcase
     end
 

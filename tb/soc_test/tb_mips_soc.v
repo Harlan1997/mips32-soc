@@ -69,6 +69,24 @@ module tb_mips_soc;
         $finish;
     end
     
+    // Mailbox Monitor for Regression Tests
+    always @(posedge clk) begin
+        if (u_soc.u_core.u_cpu.data_req && u_soc.u_core.u_cpu.data_we && u_soc.u_core.u_cpu.data_addr == 32'ha000fffc) begin
+            if (u_soc.u_core.u_cpu.data_wdata == 32'hdeadbeef) begin
+                $display("REGRESSION_TEST_SUCCESS");
+                $finish;
+            end else if (u_soc.u_core.u_cpu.data_wdata == 32'hdeaddead) begin
+                $display("REGRESSION_TEST_FAILED");
+                $finish;
+            end
+        end
+        
+        // Debug PC Trace
+        if ($time % 5000000 == 0) begin
+            $display("Time=%0t PC=%h", $time, u_soc.u_core.u_cpu.u_mips_if_stage.pc);
+        end
+    end
+    
     always @(posedge clk) begin
         if (u_soc.u_apb_uart.psel && u_soc.u_apb_uart.penable && u_soc.u_apb_uart.pwrite && u_soc.u_apb_uart.paddr[7:0] == 8'h00) begin
             $write("%c", u_soc.u_apb_uart.pwdata[7:0]);

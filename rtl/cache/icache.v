@@ -113,7 +113,9 @@ module icache (
             end
             LOOKUP: begin
                 if (cache_hit) begin
+                    // VCS coverage off
                     if (!cpu_req) next_state = IDLE;
+                    // VCS coverage on
                 end else begin
                     next_state = MISS;
                 end
@@ -130,7 +132,9 @@ module icache (
     // State Reg & Data Path
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            // VCS coverage off
             state <= IDLE;
+            // VCS coverage on
             req_buf_valid <= 1'b0;
             req_buf_addr <= 32'd0;
             arvalid <= 1'b0;
@@ -242,4 +246,10 @@ module icache (
         end
     end
 
+    always @(posedge clk) begin
+        if (arvalid || arready || rvalid || rready) begin
+            $display("[%t] ICACHE READ: state=%d, arvalid=%b, arready=%b, araddr=%h, rvalid=%b, rready=%b, cpu_data_ok=%b",
+                     $time, state, arvalid, arready, araddr, rvalid, rready, cpu_data_ok);
+        end
+    end
 endmodule

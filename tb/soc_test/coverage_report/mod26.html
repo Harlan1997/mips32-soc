@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="<username>"> <meta name="GENERATOR" content="urg/version [en] (platform name) [urg]">
+<title>Unified Coverage Report :: Module :: mips_control</title>
+<link type="text/css" rel="stylesheet" href="css/.urg.css">
+<link type="text/css" rel="stylesheet" href="css/.layout.css">
+<link type="text/css" rel="stylesheet" href="css/.breadcrumb.css">
+<script type="text/javascript" src="js/.jquery.js"></script>
+<script type="text/javascript" src="js/.jquery-ui.js"></script>
+<script type="text/javascript" src="js/.sortable.js"></script>
+<script type="text/javascript" src="js/.layout.js"></script>
+<script type="text/javascript" src="js/.breadcrumb.js"></script>
+<script type="text/javascript">
+var layout, westLayout, centerLayout;
+$(document).ready(function () {
+  if ($("#north-bread-crumb")) {
+    $("#north-bread-crumb").jBreadCrumb({easing:'swing'})
+  }
+  layout = $("body").layout({ 
+    resizable: true,
+    spacing_open: 4,
+    spacing_closed: 4,
+    north: {
+      size: 76
+    },
+    south: {
+      size: 45,
+      initClosed: true
+    },
+    west: {
+      size: 500,
+      resizable: true,
+      initClosed: false
+    }
+  });
+  centerLayout = $('div.ui-layout-center').layout({
+    north__paneSelector: ".ui-layout-center-inner-north",
+    center__paneSelector: ".ui-layout-center-inner-center", 
+    north__size: 50,
+    spacing_open: 4,
+    spacing_closed: 4
+  });
+});
+</script>
+</head>
+<body onLoad="initPage();"><div class="ui-layout-north">
+<div class="logo"></div>
+<center class="pagetitle">Module Definition</center>
+<div align="center"><a href="dashboard.html" ><b>dashboard</b></a> | <a href="hierarchy.html" ><b>hierarchy</b></a> | <a href="modlist.html" ><b>modlist</b></a> | groups | <a href="tests.html" ><b>tests</b></a> | asserts</div>
+
+</div>
+<div class="ui-layout-west">
+<div name='tag_mips_control'>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module : <a href="#"  onclick="showContent('tag_mips_control')">mips_control</a></span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s3 cl rt"> 30.05</td>
+<td class="s2 cl rt"><a href="mod26.html#Line" > 24.89</a></td>
+<td class="s0 cl rt"><a href="mod26.html#Cond" >  0.00</a></td>
+<td class="s8 cl rt"><a href="mod26.html#Toggle" > 81.76</a></td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"><a href="mod26.html#Branch" > 13.56</a></td>
+</tr></table><br clear=all>
+<span class=repname>Source File(s) : </span>
+<br clear=all>
+<a href="javascript:void(0);"  onclick="openSrcFile('/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_control.v')">/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_control.v</a><br clear=all>
+<br clear=all>
+<span class=repname>Module self-instances :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="wht cl wordwrap"><a href="mod26.html#inst_tag_26"  onclick="showContent('inst_tag_26')">tb_mips_soc.u_soc.u_core.u_cpu.u_mips_id_stage.u_mips_control</a></td>
+<td class="s3 cl rt"> 30.05</td>
+<td class="s2 cl rt"><a href="mod26.html#Line" > 24.89</a></td>
+<td class="s0 cl rt"><a href="mod26.html#Cond" >  0.00</a></td>
+<td class="s8 cl rt"><a href="mod26.html#Toggle" > 81.76</a></td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"><a href="mod26.html#Branch" > 13.56</a></td>
+</tr></table></div>
+</div>
+<br clear=all>
+<div name='tag_mips_control'>
+<hr>
+<a name="inst_tag_26"></a>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module Instance : <a href="hierarchy.html#tag_urg_inst_26" >tb_mips_soc.u_soc.u_core.u_cpu.u_mips_id_stage.u_mips_control</a></span>
+<br clear=all>
+<br clear=all>
+<span class=repname>Instance :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s3 cl rt"> 30.05</td>
+<td class="s2 cl rt"><a href="mod26.html#Line" > 24.89</a></td>
+<td class="s0 cl rt"><a href="mod26.html#Cond" >  0.00</a></td>
+<td class="s8 cl rt"><a href="mod26.html#Toggle" > 81.76</a></td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"><a href="mod26.html#Branch" > 13.56</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Instance's subtree :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s3 cl rt"> 30.05</td>
+<td class="s2 cl rt"> 24.89</td>
+<td class="s0 cl rt">  0.00</td>
+<td class="s8 cl rt"> 81.76</td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"> 13.56</td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Parent : </span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td><td class="alfsrt">NAME</td></tr><tr>
+<td class="s6 cl rt"> 61.30</td>
+<td class="s3 cl rt"> 37.50</td>
+<td class="s7 cl rt"> 72.04</td>
+<td class="s5 cl rt"> 58.26</td>
+<td class="wht cl rt"></td>
+<td class="s7 cl rt"> 77.42</td>
+<td><a href="mod2.html#inst_tag_2" >u_mips_id_stage</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Subtrees :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td colspan=7>no children</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<hr>
+Since this is the module's only instance, the coverage report is the same as for the module.</div>
+<div class="ui-layout-center">
+<div class="ui-layout-center-inner-center">
+<div name='tag_mips_control'>
+<a name="Line"></a>
+Line Coverage for Module : <a href="mod26.html" >mips_control</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="4" width="82">
+<tr><th></th><th>Line No.</th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s2"><td class="lf">TOTAL</td><td></td><td>221</td><td>55</td><td>24.89</td></tr>
+<tr class="s2"><td class="lf">ALWAYS</td><td>57</td><td>221</td><td>55</td><td>24.89</td></tr>
+</table>
+<pre class="code"><br clear=all>
+56                              // Default assignments to prevent latches
+57         1/1                  alu_op       = 4'b0000;
+58         1/1                  mdu_op       = 3'b000;
+59         1/1                  mdu_start    = 1'b0;
+60         1/1                  sel_mdu_out  = 1'b0;
+61         1/1                  alu_src      = 1'b0;
+62         1/1                  reg_write    = 1'b0;
+63         1/1                  reg_dst      = 2'b00;
+64         1/1                  imm_signed   = 1'b1;
+65         1/1                  use_sa       = 1'b1;
+66         1/1                  mem_read     = 1'b0;
+67         1/1                  mem_write    = 1'b0;
+68         1/1                  mem_op       = 3'b100; // Word by default
+69         1/1                  mem_to_reg   = 2'b00;
+70         1/1                  branch_op    = 3'b000;
+71         1/1                  jump_op      = 2'b00;
+72         1/1                  illegal_inst = 1'b0;
+73         1/1                  cp0_we       = 1'b0;
+74         1/1                  is_eret      = 1'b0;
+75         1/1                  is_syscall   = 1'b0;
+76                      
+77         1/1                  case (opcode)
+78                                  6'b000000: begin // SPECIAL (R-type)
+79         1/1                          case (func)
+80                                          6'b100000: begin // ADD
+81         <font color = "red">0/1     ==>                          alu_op    = 4'b0000;</font>
+82         <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+83         <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+84                                          end
+85                                          6'b100001: begin // ADDU
+86         <font color = "red">0/1     ==>                          alu_op    = 4'b0001;</font>
+87         <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+88         <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+89                                          end
+90                                          6'b100010: begin // SUB
+91         <font color = "red">0/1     ==>                          alu_op    = 4'b0010;</font>
+92         <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+93         <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+94                                          end
+95                                          6'b100011: begin // SUBU
+96         <font color = "red">0/1     ==>                          alu_op    = 4'b0011;</font>
+97         <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+98         <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+99                                          end
+100                                         6'b100100: begin // AND
+101        <font color = "red">0/1     ==>                          alu_op    = 4'b0100;</font>
+102        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+103        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+104                                         end
+105                                         6'b100101: begin // OR
+106        <font color = "red">0/1     ==>                          alu_op    = 4'b0101;</font>
+107        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+108        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+109                                         end
+110                                         6'b100110: begin // XOR
+111        <font color = "red">0/1     ==>                          alu_op    = 4'b0110;</font>
+112        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+113        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+114                                         end
+115                                         6'b100111: begin // NOR
+116        <font color = "red">0/1     ==>                          alu_op    = 4'b0111;</font>
+117        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+118        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+119                                         end
+120                                         6'b001100: begin // SYSCALL
+121        <font color = "red">0/1     ==>                          is_syscall = 1'b1;</font>
+122                                         end
+123                                         6'b000000: begin // SLL
+124        1/1                                  alu_op    = 4'b1000;
+125        1/1                                  reg_write = 1'b1;
+126        1/1                                  reg_dst   = 2'b01;
+127                                         end
+128                                         6'b000010: begin // SRL
+129        <font color = "red">0/1     ==>                          alu_op    = 4'b1001;</font>
+130        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+131        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+132                                         end
+133                                         6'b000011: begin // SRA
+134        <font color = "red">0/1     ==>                          alu_op    = 4'b1010;</font>
+135        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+136        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+137                                         end
+138                                         6'b000100: begin // SLLV
+139        <font color = "red">0/1     ==>                          alu_op    = 4'b1000;</font>
+140        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+141        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+142        <font color = "red">0/1     ==>                          use_sa    = 1'b0; // shift amount from rs</font>
+143                                         end
+144                                         6'b000110: begin // SRLV
+145        <font color = "red">0/1     ==>                          alu_op    = 4'b1001;</font>
+146        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+147        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+148        <font color = "red">0/1     ==>                          use_sa    = 1'b0; // shift amount from rs</font>
+149                                         end
+150                                         6'b000111: begin // SRAV
+151        <font color = "red">0/1     ==>                          alu_op    = 4'b1010;</font>
+152        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+153        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+154        <font color = "red">0/1     ==>                          use_sa    = 1'b0; // shift amount from rs</font>
+155                                         end
+156                                         6'b101010: begin // SLT
+157        <font color = "red">0/1     ==>                          alu_op    = 4'b1011;</font>
+158        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+159        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+160                                         end
+161                                         6'b101011: begin // SLTU
+162        <font color = "red">0/1     ==>                          alu_op    = 4'b1100;</font>
+163        <font color = "red">0/1     ==>                          reg_write = 1'b1;</font>
+164        <font color = "red">0/1     ==>                          reg_dst   = 2'b01;</font>
+165                                         end
+166                                         6'b001000: begin // JR
+167        <font color = "red">0/1     ==>                          jump_op   = 2'b10;</font>
+168                                         end
+169                                         6'b001001: begin // JALR
+170        <font color = "red">0/1     ==>                          reg_write  = 1'b1;</font>
+171        <font color = "red">0/1     ==>                          reg_dst    = 2'b01; // writes link address to rd</font>
+172        <font color = "red">0/1     ==>                          mem_to_reg = 2'b10;</font>
+173        <font color = "red">0/1     ==>                          jump_op    = 2'b10;</font>
+174                                         end
+175                                         6'b010000: begin // MFHI
+176        <font color = "red">0/1     ==>                          mdu_op      = 3'b110;</font>
+177        <font color = "red">0/1     ==>                          sel_mdu_out = 1'b1;</font>
+178        <font color = "red">0/1     ==>                          reg_write   = 1'b1;</font>
+179        <font color = "red">0/1     ==>                          reg_dst     = 2'b01;</font>
+180                                         end
+181                                         6'b010010: begin // MFLO
+182        <font color = "red">0/1     ==>                          mdu_op      = 3'b111;</font>
+183        <font color = "red">0/1     ==>                          sel_mdu_out = 1'b1;</font>
+184        <font color = "red">0/1     ==>                          reg_write   = 1'b1;</font>
+185        <font color = "red">0/1     ==>                          reg_dst     = 2'b01;</font>
+186                                         end
+187                                         6'b010001: begin // MTHI
+188        <font color = "red">0/1     ==>                          mdu_op    = 3'b100;</font>
+189                                         end
+190                                         6'b010011: begin // MTLO
+191        <font color = "red">0/1     ==>                          mdu_op    = 3'b101;</font>
+192                                         end
+193                                         6'b011000: begin // MULT
+194        <font color = "red">0/1     ==>                          mdu_op    = 3'b000;</font>
+195        <font color = "red">0/1     ==>                          mdu_start = 1'b1;</font>
+196                                         end
+197                                         6'b011001: begin // MULTU
+198        <font color = "red">0/1     ==>                          mdu_op    = 3'b001;</font>
+199        <font color = "red">0/1     ==>                          mdu_start = 1'b1;</font>
+200                                         end
+201                                         6'b011010: begin // DIV
+202        <font color = "red">0/1     ==>                          mdu_op    = 3'b010;</font>
+203        <font color = "red">0/1     ==>                          mdu_start = 1'b1;</font>
+204                                         end
+205                                         6'b011011: begin // DIVU
+206        <font color = "red">0/1     ==>                          mdu_op    = 3'b011;</font>
+207        <font color = "red">0/1     ==>                          mdu_start = 1'b1;</font>
+208                                         end
+209                                         default: begin
+210        <font color = "red">0/1     ==>                          illegal_inst = 1'b1;</font>
+211                                         end
+212                                     endcase
+213                                 end
+214                                 
+215                                 6'b001000: begin // ADDI
+216        <font color = "red">0/1     ==>                  alu_op     = 4'b0000;</font>
+217        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+218        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+219        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+220        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+221                                 end
+222                                 6'b001001: begin // ADDIU
+223        1/1                          alu_op     = 4'b0001;
+224        1/1                          alu_src    = 1'b1;
+225        1/1                          reg_write  = 1'b1;
+226        1/1                          reg_dst    = 2'b00;
+227        1/1                          imm_signed = 1'b1;
+228                                 end
+229                                 6'b001010: begin // SLTI
+230        <font color = "red">0/1     ==>                  alu_op     = 4'b1011;</font>
+231        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+232        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+233        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+234        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+235                                 end
+236                                 6'b001011: begin // SLTIU
+237        <font color = "red">0/1     ==>                  alu_op     = 4'b1100;</font>
+238        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+239        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+240        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+241        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+242                                 end
+243                                 6'b001100: begin // ANDI
+244        <font color = "red">0/1     ==>                  alu_op     = 4'b0100;</font>
+245        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+246        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+247        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+248        <font color = "red">0/1     ==>                  imm_signed = 1'b0; // Zero extended</font>
+249                                 end
+250                                 6'b001101: begin // ORI
+251        <font color = "red">0/1     ==>                  alu_op     = 4'b0101;</font>
+252        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+253        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+254        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+255        <font color = "red">0/1     ==>                  imm_signed = 1'b0; // Zero extended</font>
+256                                 end
+257                                 6'b001110: begin // XORI
+258        <font color = "red">0/1     ==>                  alu_op     = 4'b0110;</font>
+259        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+260        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+261        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+262        <font color = "red">0/1     ==>                  imm_signed = 1'b0; // Zero extended</font>
+263                                 end
+264                                 6'b001111: begin // LUI
+265        1/1                          alu_op     = 4'b1101;
+266        1/1                          alu_src    = 1'b1;
+267        1/1                          reg_write  = 1'b1;
+268        1/1                          reg_dst    = 2'b00;
+269        1/1                          imm_signed = 1'b0;
+270                                 end
+271                                 6'b100011: begin // LW
+272        <font color = "red">0/1     ==>                  alu_op     = 4'b0001; // address = rs + sign_extend(offset)</font>
+273        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+274        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+275        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+276        <font color = "red">0/1     ==>                  mem_read   = 1'b1;</font>
+277        <font color = "red">0/1     ==>                  mem_op     = 3'b100;</font>
+278        <font color = "red">0/1     ==>                  mem_to_reg = 2'b01;</font>
+279        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+280                                 end
+281                                 6'b100000: begin // LB
+282        1/1                          alu_op     = 4'b0001;
+283        1/1                          alu_src    = 1'b1;
+284        1/1                          reg_write  = 1'b1;
+285        1/1                          reg_dst    = 2'b00;
+286        1/1                          mem_read   = 1'b1;
+287        1/1                          mem_op     = 3'b000;
+288        1/1                          mem_to_reg = 2'b01;
+289        1/1                          imm_signed = 1'b1;
+290                                 end
+291                                 6'b100100: begin // LBU
+292        <font color = "red">0/1     ==>                  alu_op     = 4'b0001;</font>
+293        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+294        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+295        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+296        <font color = "red">0/1     ==>                  mem_read   = 1'b1;</font>
+297        <font color = "red">0/1     ==>                  mem_op     = 3'b001;</font>
+298        <font color = "red">0/1     ==>                  mem_to_reg = 2'b01;</font>
+299        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+300                                 end
+301                                 6'b100001: begin // LH
+302        <font color = "red">0/1     ==>                  alu_op     = 4'b0001;</font>
+303        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+304        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+305        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+306        <font color = "red">0/1     ==>                  mem_read   = 1'b1;</font>
+307        <font color = "red">0/1     ==>                  mem_op     = 3'b010;</font>
+308        <font color = "red">0/1     ==>                  mem_to_reg = 2'b01;</font>
+309        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+310                                 end
+311                                 6'b100101: begin // LHU
+312        <font color = "red">0/1     ==>                  alu_op     = 4'b0001;</font>
+313        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+314        <font color = "red">0/1     ==>                  reg_write  = 1'b1;</font>
+315        <font color = "red">0/1     ==>                  reg_dst    = 2'b00;</font>
+316        <font color = "red">0/1     ==>                  mem_read   = 1'b1;</font>
+317        <font color = "red">0/1     ==>                  mem_op     = 3'b011;</font>
+318        <font color = "red">0/1     ==>                  mem_to_reg = 2'b01;</font>
+319        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+320                                 end
+321                                 6'b101011: begin // SW
+322        1/1                          alu_op     = 4'b0001;
+323        1/1                          alu_src    = 1'b1;
+324        1/1                          mem_write  = 1'b1;
+325        1/1                          mem_op     = 3'b100;
+326        1/1                          imm_signed = 1'b1;
+327                                 end
+328                                 6'b101000: begin // SB
+329        <font color = "red">0/1     ==>                  alu_op     = 4'b0001;</font>
+330        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+331        <font color = "red">0/1     ==>                  mem_write  = 1'b1;</font>
+332        <font color = "red">0/1     ==>                  mem_op     = 3'b000;</font>
+333        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+334                                 end
+335                                 6'b101001: begin // SH
+336        <font color = "red">0/1     ==>                  alu_op     = 4'b0001;</font>
+337        <font color = "red">0/1     ==>                  alu_src    = 1'b1;</font>
+338        <font color = "red">0/1     ==>                  mem_write  = 1'b1;</font>
+339        <font color = "red">0/1     ==>                  mem_op     = 3'b010;</font>
+340        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+341                                 end
+342                                 
+343                                 // Jumps
+344                                 6'b000010: begin // J
+345        <font color = "red">0/1     ==>                  jump_op = 2'b01;</font>
+346                                 end
+347                                 6'b000011: begin // JAL
+348        1/1                          reg_write  = 1'b1;
+349        1/1                          reg_dst    = 2'b10; // $ra (31)
+350        1/1                          mem_to_reg = 2'b10; // PC+8 (link)
+351        1/1                          jump_op    = 2'b01;
+352                                 end
+353                                 
+354                                 // Branches
+355                                 6'b000100: begin // BEQ
+356        <font color = "red">0/1     ==>                  branch_op  = 3'b001;</font>
+357        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+358                                 end
+359                                 6'b000101: begin // BNE
+360        1/1                          branch_op  = 3'b010;
+361        1/1                          imm_signed = 1'b1;
+362                                 end
+363                                 6'b000110: begin // BLEZ
+364        <font color = "red">0/1     ==>                  branch_op  = 3'b011;</font>
+365        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+366                                 end
+367                                 6'b000111: begin // BGTZ
+368        <font color = "red">0/1     ==>                  branch_op  = 3'b100;</font>
+369        <font color = "red">0/1     ==>                  imm_signed = 1'b1;</font>
+370                                 end
+371                                 6'b000001: begin // REGIMM (BLTZ, BGEZ)
+372        <font color = "red">0/1     ==>                  case (rt)</font>
+373                                         5'b00000: begin // BLTZ
+374        <font color = "red">0/1     ==>                          branch_op  = 3'b101;</font>
+375        <font color = "red">0/1     ==>                          imm_signed = 1'b1;</font>
+376                                         end
+377                                         5'b00001: begin // BGEZ
+378        <font color = "red">0/1     ==>                          branch_op  = 3'b110;</font>
+379        <font color = "red">0/1     ==>                          imm_signed = 1'b1;</font>
+380                                         end
+381                                         default: begin
+382        <font color = "red">0/1     ==>                          illegal_inst = 1'b1;</font>
+383                                         end
+384                                     endcase
+385                                 end
+386                                 
+387                                 6'b010000: begin // COP0
+388        1/1                          case (rs)
+389                                         5'b00000: begin // MFC0
+390        <font color = "red">0/1     ==>                          reg_write  = 1'b1;</font>
+391        <font color = "red">0/1     ==>                          reg_dst    = 2'b00; // rt</font>
+392        <font color = "red">0/1     ==>                          mem_to_reg = 2'b11; // Data from CP0</font>
+393                                         end
+394                                         5'b00100: begin // MTC0
+395        1/1                                  cp0_we = 1'b1;
+396                                         end
+397                                         5'b10000: begin // CO
+398        <font color = "red">0/1     ==>                          if (func == 6'b011000) begin // ERET</font>
+399        <font color = "red">0/1     ==>                              is_eret = 1'b1;</font>
+400                                             end else begin
+401        <font color = "red">0/1     ==>                              illegal_inst = 1'b1;</font>
+402                                             end
+403                                         end
+404                                         default: begin
+405        <font color = "red">0/1     ==>                          illegal_inst = 1'b1;</font>
+406                                         end
+407                                     endcase
+408                                 end
+409                                 default: begin
+410        <font color = "red">0/1     ==>                  illegal_inst = 1'b1;</font>
+</pre>
+<hr>
+<a name="Cond"></a>
+Cond Coverage for Module : <a href="mod26.html" >mips_control</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="3" width="82">
+<tr><th></th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s0"><td class="lf">Conditions</td><td>2</td><td>0</td><td>0.00</td></tr>
+<tr class="s0"><td class="lf">Logical</td><td>2</td><td>0</td><td>0.00</td></tr>
+<tr class="wht"><td class="lf">Non-Logical</td><td>0</td><td>0</td><td></td></tr>
+<tr class="wht"><td class="lf">Event</td><td>0</td><td>0</td><td></td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       398
+ EXPRESSION (func == 6'b011000)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<hr>
+<a name="Toggle"></a>
+Toggle Coverage for Module : <a href="mod26.html" >mips_control</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s5">
+<td>Totals</td>
+<td class="rt">24</td>
+<td class="rt">13</td>
+<td class="rt">54.17 </td>
+</tr><tr class="s8">
+<td>Total Bits</td>
+<td class="rt">170</td>
+<td class="rt">139</td>
+<td class="rt">81.76 </td>
+</tr><tr class="s8">
+<td nowrap>Total Bits 0->1</td>
+<td class="rt">85</td>
+<td class="rt">70</td>
+<td class="rt">82.35 </td>
+</tr><tr class="s8">
+<td nowrap>Total Bits 1->0</td>
+<td class="rt">85</td>
+<td class="rt">69</td>
+<td class="rt">81.18 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s4">
+<td>Ports</td>
+<td class="rt">20</td>
+<td class="rt">9</td>
+<td class="rt">45.00 </td>
+</tr><tr class="s7">
+<td>Port Bits</td>
+<td class="rt">126</td>
+<td class="rt">95</td>
+<td class="rt">75.40 </td>
+</tr><tr class="s7">
+<td nowrap>Port Bits 0->1</td>
+<td class="rt">63</td>
+<td class="rt">48</td>
+<td class="rt">76.19 </td>
+</tr><tr class="s7">
+<td nowrap>Port Bits 1->0</td>
+<td class="rt">63</td>
+<td class="rt">47</td>
+<td class="rt">74.60 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s10">
+<td>Signals</td>
+<td class="rt">4</td>
+<td class="rt">4</td>
+<td class="rt">100.00</td>
+</tr><tr class="s10">
+<td>Signal Bits</td>
+<td class="rt">44</td>
+<td class="rt">44</td>
+<td class="rt">100.00</td>
+</tr><tr class="s10">
+<td nowrap>Signal Bits 0->1</td>
+<td class="rt">22</td>
+<td class="rt">22</td>
+<td class="rt">100.00</td>
+</tr><tr class="s10">
+<td nowrap>Signal Bits 1->0</td>
+<td class="rt">22</td>
+<td class="rt">22</td>
+<td class="rt">100.00</td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Port Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td><td class="alfsrt">Direction</td></tr><tr>
+<td>inst[31:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>alu_op[0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>alu_op[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>alu_op[3:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mdu_op[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mdu_start</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>sel_mdu_out</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>alu_src</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>reg_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>reg_dst[1:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>imm_signed</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>use_sa</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_read</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_write</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_op[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_op[2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mem_to_reg[1:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>branch_op[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>branch_op[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>branch_op[2]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>jump_op[0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>jump_op[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>illegal_inst</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>cp0_we</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>is_eret</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>is_syscall</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Signal Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td></tr><tr>
+<td>opcode[5:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>rs[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>rt[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr><tr>
+<td>func[5:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+</tr></table><br clear=all>
+<hr>
+<a name="Branch"></a>
+Branch Coverage for Module : <a href="mod26.html" >mips_control</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Line No.</th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s1">
+<td>Branches</td>
+<td></td>
+<td class="rt">59</td>
+<td class="rt">8</td>
+<td class="rt">13.56 </td>
+</tr><tr class="s1">
+<td>CASE</td>
+<td class="rt">77</td>
+<td class="rt">59</td>
+<td class="rt">8</td>
+<td class="rt">13.56 </td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+77                 case (opcode)
+                   <font color = "red">-1-</font>  
+78                     6'b000000: begin // SPECIAL (R-type)
+79                         case (func)
+                           <font color = "red">-2-</font>  
+80                             6'b100000: begin // ADD
+81                                 alu_op    = 4'b0000;
+           <font color = "red">                        ==></font>
+82                                 reg_write = 1'b1;
+83                                 reg_dst   = 2'b01;
+84                             end
+85                             6'b100001: begin // ADDU
+86                                 alu_op    = 4'b0001;
+           <font color = "red">                        ==></font>
+87                                 reg_write = 1'b1;
+88                                 reg_dst   = 2'b01;
+89                             end
+90                             6'b100010: begin // SUB
+91                                 alu_op    = 4'b0010;
+           <font color = "red">                        ==></font>
+92                                 reg_write = 1'b1;
+93                                 reg_dst   = 2'b01;
+94                             end
+95                             6'b100011: begin // SUBU
+96                                 alu_op    = 4'b0011;
+           <font color = "red">                        ==></font>
+97                                 reg_write = 1'b1;
+98                                 reg_dst   = 2'b01;
+99                             end
+100                            6'b100100: begin // AND
+101                                alu_op    = 4'b0100;
+           <font color = "red">                        ==></font>
+102                                reg_write = 1'b1;
+103                                reg_dst   = 2'b01;
+104                            end
+105                            6'b100101: begin // OR
+106                                alu_op    = 4'b0101;
+           <font color = "red">                        ==></font>
+107                                reg_write = 1'b1;
+108                                reg_dst   = 2'b01;
+109                            end
+110                            6'b100110: begin // XOR
+111                                alu_op    = 4'b0110;
+           <font color = "red">                        ==></font>
+112                                reg_write = 1'b1;
+113                                reg_dst   = 2'b01;
+114                            end
+115                            6'b100111: begin // NOR
+116                                alu_op    = 4'b0111;
+           <font color = "red">                        ==></font>
+117                                reg_write = 1'b1;
+118                                reg_dst   = 2'b01;
+119                            end
+120                            6'b001100: begin // SYSCALL
+121                                is_syscall = 1'b1;
+           <font color = "red">                        ==></font>
+122                            end
+123                            6'b000000: begin // SLL
+124                                alu_op    = 4'b1000;
+           <font color = "green">                        ==></font>
+125                                reg_write = 1'b1;
+126                                reg_dst   = 2'b01;
+127                            end
+128                            6'b000010: begin // SRL
+129                                alu_op    = 4'b1001;
+           <font color = "red">                        ==></font>
+130                                reg_write = 1'b1;
+131                                reg_dst   = 2'b01;
+132                            end
+133                            6'b000011: begin // SRA
+134                                alu_op    = 4'b1010;
+           <font color = "red">                        ==></font>
+135                                reg_write = 1'b1;
+136                                reg_dst   = 2'b01;
+137                            end
+138                            6'b000100: begin // SLLV
+139                                alu_op    = 4'b1000;
+           <font color = "red">                        ==></font>
+140                                reg_write = 1'b1;
+141                                reg_dst   = 2'b01;
+142                                use_sa    = 1'b0; // shift amount from rs
+143                            end
+144                            6'b000110: begin // SRLV
+145                                alu_op    = 4'b1001;
+           <font color = "red">                        ==></font>
+146                                reg_write = 1'b1;
+147                                reg_dst   = 2'b01;
+148                                use_sa    = 1'b0; // shift amount from rs
+149                            end
+150                            6'b000111: begin // SRAV
+151                                alu_op    = 4'b1010;
+           <font color = "red">                        ==></font>
+152                                reg_write = 1'b1;
+153                                reg_dst   = 2'b01;
+154                                use_sa    = 1'b0; // shift amount from rs
+155                            end
+156                            6'b101010: begin // SLT
+157                                alu_op    = 4'b1011;
+           <font color = "red">                        ==></font>
+158                                reg_write = 1'b1;
+159                                reg_dst   = 2'b01;
+160                            end
+161                            6'b101011: begin // SLTU
+162                                alu_op    = 4'b1100;
+           <font color = "red">                        ==></font>
+163                                reg_write = 1'b1;
+164                                reg_dst   = 2'b01;
+165                            end
+166                            6'b001000: begin // JR
+167                                jump_op   = 2'b10;
+           <font color = "red">                        ==></font>
+168                            end
+169                            6'b001001: begin // JALR
+170                                reg_write  = 1'b1;
+           <font color = "red">                        ==></font>
+171                                reg_dst    = 2'b01; // writes link address to rd
+172                                mem_to_reg = 2'b10;
+173                                jump_op    = 2'b10;
+174                            end
+175                            6'b010000: begin // MFHI
+176                                mdu_op      = 3'b110;
+           <font color = "red">                        ==></font>
+177                                sel_mdu_out = 1'b1;
+178                                reg_write   = 1'b1;
+179                                reg_dst     = 2'b01;
+180                            end
+181                            6'b010010: begin // MFLO
+182                                mdu_op      = 3'b111;
+           <font color = "red">                        ==></font>
+183                                sel_mdu_out = 1'b1;
+184                                reg_write   = 1'b1;
+185                                reg_dst     = 2'b01;
+186                            end
+187                            6'b010001: begin // MTHI
+188                                mdu_op    = 3'b100;
+           <font color = "red">                        ==></font>
+189                            end
+190                            6'b010011: begin // MTLO
+191                                mdu_op    = 3'b101;
+           <font color = "red">                        ==></font>
+192                            end
+193                            6'b011000: begin // MULT
+194                                mdu_op    = 3'b000;
+           <font color = "red">                        ==></font>
+195                                mdu_start = 1'b1;
+196                            end
+197                            6'b011001: begin // MULTU
+198                                mdu_op    = 3'b001;
+           <font color = "red">                        ==></font>
+199                                mdu_start = 1'b1;
+200                            end
+201                            6'b011010: begin // DIV
+202                                mdu_op    = 3'b010;
+           <font color = "red">                        ==></font>
+203                                mdu_start = 1'b1;
+204                            end
+205                            6'b011011: begin // DIVU
+206                                mdu_op    = 3'b011;
+           <font color = "red">                        ==></font>
+207                                mdu_start = 1'b1;
+208                            end
+209                            default: begin
+210                                illegal_inst = 1'b1;
+           <font color = "red">                        ==></font>
+211                            end
+212                        endcase
+213                    end
+214                    
+215                    6'b001000: begin // ADDI
+216                        alu_op     = 4'b0000;
+           <font color = "red">                ==></font>
+217                        alu_src    = 1'b1;
+218                        reg_write  = 1'b1;
+219                        reg_dst    = 2'b00;
+220                        imm_signed = 1'b1;
+221                    end
+222                    6'b001001: begin // ADDIU
+223                        alu_op     = 4'b0001;
+           <font color = "green">                ==></font>
+224                        alu_src    = 1'b1;
+225                        reg_write  = 1'b1;
+226                        reg_dst    = 2'b00;
+227                        imm_signed = 1'b1;
+228                    end
+229                    6'b001010: begin // SLTI
+230                        alu_op     = 4'b1011;
+           <font color = "red">                ==></font>
+231                        alu_src    = 1'b1;
+232                        reg_write  = 1'b1;
+233                        reg_dst    = 2'b00;
+234                        imm_signed = 1'b1;
+235                    end
+236                    6'b001011: begin // SLTIU
+237                        alu_op     = 4'b1100;
+           <font color = "red">                ==></font>
+238                        alu_src    = 1'b1;
+239                        reg_write  = 1'b1;
+240                        reg_dst    = 2'b00;
+241                        imm_signed = 1'b1;
+242                    end
+243                    6'b001100: begin // ANDI
+244                        alu_op     = 4'b0100;
+           <font color = "red">                ==></font>
+245                        alu_src    = 1'b1;
+246                        reg_write  = 1'b1;
+247                        reg_dst    = 2'b00;
+248                        imm_signed = 1'b0; // Zero extended
+249                    end
+250                    6'b001101: begin // ORI
+251                        alu_op     = 4'b0101;
+           <font color = "red">                ==></font>
+252                        alu_src    = 1'b1;
+253                        reg_write  = 1'b1;
+254                        reg_dst    = 2'b00;
+255                        imm_signed = 1'b0; // Zero extended
+256                    end
+257                    6'b001110: begin // XORI
+258                        alu_op     = 4'b0110;
+           <font color = "red">                ==></font>
+259                        alu_src    = 1'b1;
+260                        reg_write  = 1'b1;
+261                        reg_dst    = 2'b00;
+262                        imm_signed = 1'b0; // Zero extended
+263                    end
+264                    6'b001111: begin // LUI
+265                        alu_op     = 4'b1101;
+           <font color = "green">                ==></font>
+266                        alu_src    = 1'b1;
+267                        reg_write  = 1'b1;
+268                        reg_dst    = 2'b00;
+269                        imm_signed = 1'b0;
+270                    end
+271                    6'b100011: begin // LW
+272                        alu_op     = 4'b0001; // address = rs + sign_extend(offset)
+           <font color = "red">                ==></font>
+273                        alu_src    = 1'b1;
+274                        reg_write  = 1'b1;
+275                        reg_dst    = 2'b00;
+276                        mem_read   = 1'b1;
+277                        mem_op     = 3'b100;
+278                        mem_to_reg = 2'b01;
+279                        imm_signed = 1'b1;
+280                    end
+281                    6'b100000: begin // LB
+282                        alu_op     = 4'b0001;
+           <font color = "green">                ==></font>
+283                        alu_src    = 1'b1;
+284                        reg_write  = 1'b1;
+285                        reg_dst    = 2'b00;
+286                        mem_read   = 1'b1;
+287                        mem_op     = 3'b000;
+288                        mem_to_reg = 2'b01;
+289                        imm_signed = 1'b1;
+290                    end
+291                    6'b100100: begin // LBU
+292                        alu_op     = 4'b0001;
+           <font color = "red">                ==></font>
+293                        alu_src    = 1'b1;
+294                        reg_write  = 1'b1;
+295                        reg_dst    = 2'b00;
+296                        mem_read   = 1'b1;
+297                        mem_op     = 3'b001;
+298                        mem_to_reg = 2'b01;
+299                        imm_signed = 1'b1;
+300                    end
+301                    6'b100001: begin // LH
+302                        alu_op     = 4'b0001;
+           <font color = "red">                ==></font>
+303                        alu_src    = 1'b1;
+304                        reg_write  = 1'b1;
+305                        reg_dst    = 2'b00;
+306                        mem_read   = 1'b1;
+307                        mem_op     = 3'b010;
+308                        mem_to_reg = 2'b01;
+309                        imm_signed = 1'b1;
+310                    end
+311                    6'b100101: begin // LHU
+312                        alu_op     = 4'b0001;
+           <font color = "red">                ==></font>
+313                        alu_src    = 1'b1;
+314                        reg_write  = 1'b1;
+315                        reg_dst    = 2'b00;
+316                        mem_read   = 1'b1;
+317                        mem_op     = 3'b011;
+318                        mem_to_reg = 2'b01;
+319                        imm_signed = 1'b1;
+320                    end
+321                    6'b101011: begin // SW
+322                        alu_op     = 4'b0001;
+           <font color = "green">                ==></font>
+323                        alu_src    = 1'b1;
+324                        mem_write  = 1'b1;
+325                        mem_op     = 3'b100;
+326                        imm_signed = 1'b1;
+327                    end
+328                    6'b101000: begin // SB
+329                        alu_op     = 4'b0001;
+           <font color = "red">                ==></font>
+330                        alu_src    = 1'b1;
+331                        mem_write  = 1'b1;
+332                        mem_op     = 3'b000;
+333                        imm_signed = 1'b1;
+334                    end
+335                    6'b101001: begin // SH
+336                        alu_op     = 4'b0001;
+           <font color = "red">                ==></font>
+337                        alu_src    = 1'b1;
+338                        mem_write  = 1'b1;
+339                        mem_op     = 3'b010;
+340                        imm_signed = 1'b1;
+341                    end
+342                    
+343                    // Jumps
+344                    6'b000010: begin // J
+345                        jump_op = 2'b01;
+           <font color = "red">                ==></font>
+346                    end
+347                    6'b000011: begin // JAL
+348                        reg_write  = 1'b1;
+           <font color = "green">                ==></font>
+349                        reg_dst    = 2'b10; // $ra (31)
+350                        mem_to_reg = 2'b10; // PC+8 (link)
+351                        jump_op    = 2'b01;
+352                    end
+353                    
+354                    // Branches
+355                    6'b000100: begin // BEQ
+356                        branch_op  = 3'b001;
+           <font color = "red">                ==></font>
+357                        imm_signed = 1'b1;
+358                    end
+359                    6'b000101: begin // BNE
+360                        branch_op  = 3'b010;
+           <font color = "green">                ==></font>
+361                        imm_signed = 1'b1;
+362                    end
+363                    6'b000110: begin // BLEZ
+364                        branch_op  = 3'b011;
+           <font color = "red">                ==></font>
+365                        imm_signed = 1'b1;
+366                    end
+367                    6'b000111: begin // BGTZ
+368                        branch_op  = 3'b100;
+           <font color = "red">                ==></font>
+369                        imm_signed = 1'b1;
+370                    end
+371                    6'b000001: begin // REGIMM (BLTZ, BGEZ)
+372                        case (rt)
+                           <font color = "red">-3-</font>  
+373                            5'b00000: begin // BLTZ
+374                                branch_op  = 3'b101;
+           <font color = "red">                        ==></font>
+375                                imm_signed = 1'b1;
+376                            end
+377                            5'b00001: begin // BGEZ
+378                                branch_op  = 3'b110;
+           <font color = "red">                        ==></font>
+379                                imm_signed = 1'b1;
+380                            end
+381                            default: begin
+382                                illegal_inst = 1'b1;
+           <font color = "red">                        ==></font>
+383                            end
+384                        endcase
+385                    end
+386                    
+387                    6'b010000: begin // COP0
+388                        case (rs)
+                           <font color = "red">-4-</font>  
+389                            5'b00000: begin // MFC0
+390                                reg_write  = 1'b1;
+           <font color = "red">                        ==></font>
+391                                reg_dst    = 2'b00; // rt
+392                                mem_to_reg = 2'b11; // Data from CP0
+393                            end
+394                            5'b00100: begin // MTC0
+395                                cp0_we = 1'b1;
+           <font color = "green">                        ==></font>
+396                            end
+397                            5'b10000: begin // CO
+398                                if (func == 6'b011000) begin // ERET
+                                   <font color = "red">-5-</font>  
+399                                    is_eret = 1'b1;
+           <font color = "red">                            ==></font>
+400                                end else begin
+401                                    illegal_inst = 1'b1;
+           <font color = "red">                            ==></font>
+402                                end
+403                            end
+404                            default: begin
+405                                illegal_inst = 1'b1;
+           <font color = "red">                        ==></font>
+406                            end
+407                        endcase
+408                    end
+409                    default: begin
+410                        illegal_inst = 1'b1;
+           <font color = "red">                ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100101 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100110 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b100111 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b001100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b000000 </td>
+<td align=center>6'b000000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b000010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b000011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b000100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b000110 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b000111 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b101010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b101011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b001000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b001001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b010000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b010010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b010001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b010011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b011000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b011001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b011010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>6'b011011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000000 </td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b001000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b001001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b001010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b001011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b001100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b001101 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b001110 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b001111 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b100011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b100000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b100100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b100001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b100101 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b101011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b101000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b101001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000010 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b000011 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000100 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b000101 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000110 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000111 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000001 </td>
+<td align=center nowrap>-</td>
+<td align=center>5'b00000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000001 </td>
+<td align=center nowrap>-</td>
+<td align=center>5'b00001 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b000001 </td>
+<td align=center nowrap>-</td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b010000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>5'b00000 </td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>6'b010000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>5'b00100 </td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b010000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>5'b10000 </td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b010000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>5'b10000 </td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>6'b010000 </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<div class="ui-layout-center-inner-north">
+<div id="center-bread-crumb" class="breadCrumb module urg-margin-bottom">
+  <ul name="inst_tag_26">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+  <ul name="tag_mips_control">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="ui-layout-south">
+<table align=center><tr><td class="s0 cl">0%</td>
+<td class="s1 cl">10%</td>
+<td class="s2 cl">20%</td>
+<td class="s3 cl">30%</td>
+<td class="s4 cl">40%</td>
+<td class="s5 cl">50%</td>
+<td class="s6 cl">60%</td>
+<td class="s7 cl">70%</td>
+<td class="s8 cl">80%</td>
+<td class="s9 cl">90%</td>
+<td class="s10 cl">100%</td></tr></table></div>
+</body>
+</html>

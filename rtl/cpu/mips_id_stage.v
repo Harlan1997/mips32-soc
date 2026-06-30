@@ -49,6 +49,7 @@ module mips_id_stage (
     output wire [31:0] branch_target,// Calculated branch target address
     output wire        jump_taken,   // 1: Jump instruction detected
     output wire [31:0] jump_target,   // Calculated jump target address
+    output wire [4:0]  id_cp0_raddr,
     
     // Decoded Outputs to ID/EX Pipeline Register
     output wire [31:0] val_rs,       // rs register value (with forwarding)
@@ -199,5 +200,7 @@ module mips_id_stage (
                             (reads_rt && (fw_mem_waddr == rt_addr))));
 
     assign stall_req = load_use_hazard;
+    
+    assign id_cp0_raddr = inst[15:11]; // CP0 register address is in rd for MFC0
 
 endmodule

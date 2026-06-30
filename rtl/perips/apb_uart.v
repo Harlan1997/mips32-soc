@@ -51,7 +51,7 @@ module apb_uart (
                 if (paddr[7:0] == 8'h00) begin
                     // Write to TX Data
                     $write("%c", pwdata[7:0]);
-                    $display("[%t] UART WRITE: %c", $time, pwdata[7:0]);
+                    $display("[%t] UART WRITE: '%c' (0x%h)", $time, pwdata[7:0], pwdata[7:0]);
                     // Flush standard output if newline
                 end
             end

@@ -1,0 +1,484 @@
+Line Coverage for Module : mips_control
+
+             Line No.   Total   Covered  Percent
+TOTAL                      261      248    95.02
+ALWAYS             57      261      248    95.02
+
+56                              // Default assignments to prevent latches
+57         1/1                  alu_op       = 4'b0000;
+58         1/1                  mdu_op       = 3'b000;
+59         1/1                  mdu_start    = 1'b0;
+60         1/1                  sel_mdu_out  = 1'b0;
+61         1/1                  alu_src      = 1'b0;
+62         1/1                  reg_write    = 1'b0;
+63         1/1                  reg_dst      = 2'b00;
+64         1/1                  imm_signed   = 1'b1;
+65         1/1                  use_sa       = 1'b1;
+66         1/1                  mem_read     = 1'b0;
+67         1/1                  mem_write    = 1'b0;
+68         1/1                  mem_op       = 3'b100; // Word by default
+69         1/1                  mem_to_reg   = 2'b00;
+70         1/1                  branch_op    = 3'b000;
+71         1/1                  jump_op      = 2'b00;
+72         1/1                  illegal_inst = 1'b0;
+73         1/1                  cp0_we       = 1'b0;
+74         1/1                  is_eret      = 1'b0;
+75         1/1                  is_syscall   = 1'b0;
+76                      
+77         1/1                  case (opcode)
+78                                  6'b000000: begin // SPECIAL (R-type)
+79         1/1                          case (func)
+80                                          6'b100000: begin // ADD
+81         1/1                                  alu_op    = 4'b0000;
+82         1/1                                  reg_write = 1'b1;
+83         1/1                                  reg_dst   = 2'b01;
+84                                          end
+85                                          6'b100001: begin // ADDU
+86         1/1                                  alu_op    = 4'b0001;
+87         1/1                                  reg_write = 1'b1;
+88         1/1                                  reg_dst   = 2'b01;
+89                                          end
+90                                          6'b100010: begin // SUB
+91         1/1                                  alu_op    = 4'b0010;
+92         1/1                                  reg_write = 1'b1;
+93         1/1                                  reg_dst   = 2'b01;
+94                                          end
+95                                          6'b100011: begin // SUBU
+96         1/1                                  alu_op    = 4'b0011;
+97         1/1                                  reg_write = 1'b1;
+98         1/1                                  reg_dst   = 2'b01;
+99                                          end
+100                                         6'b100100: begin // AND
+101        1/1                                  alu_op    = 4'b0100;
+102        1/1                                  reg_write = 1'b1;
+103        1/1                                  reg_dst   = 2'b01;
+104                                         end
+105                                         6'b100101: begin // OR
+106        1/1                                  alu_op    = 4'b0101;
+107        1/1                                  reg_write = 1'b1;
+108        1/1                                  reg_dst   = 2'b01;
+109                                         end
+110                                         6'b100110: begin // XOR
+111        1/1                                  alu_op    = 4'b0110;
+112        1/1                                  reg_write = 1'b1;
+113        1/1                                  reg_dst   = 2'b01;
+114                                         end
+115                                         6'b100111: begin // NOR
+116        1/1                                  alu_op    = 4'b0111;
+117        1/1                                  reg_write = 1'b1;
+118        1/1                                  reg_dst   = 2'b01;
+119                                         end
+120                                         6'b001100: begin // SYSCALL
+121        1/1                                  is_syscall = 1'b1;
+122                                         end
+123                                         6'b000000: begin // SLL
+124        1/1                                  alu_op    = 4'b1000;
+125        1/1                                  reg_write = 1'b1;
+126        1/1                                  reg_dst   = 2'b01;
+127                                         end
+128                                         6'b000010: begin // SRL
+129        1/1                                  alu_op    = 4'b1001;
+130        1/1                                  reg_write = 1'b1;
+131        1/1                                  reg_dst   = 2'b01;
+132                                         end
+133                                         6'b000011: begin // SRA
+134        1/1                                  alu_op    = 4'b1010;
+135        1/1                                  reg_write = 1'b1;
+136        1/1                                  reg_dst   = 2'b01;
+137                                         end
+138                                         6'b000100: begin // SLLV
+139        1/1                                  alu_op    = 4'b1000;
+140        1/1                                  reg_write = 1'b1;
+141        1/1                                  reg_dst   = 2'b01;
+142        1/1                                  use_sa    = 1'b0; // shift amount from rs
+143                                         end
+144                                         6'b000110: begin // SRLV
+145        1/1                                  alu_op    = 4'b1001;
+146        1/1                                  reg_write = 1'b1;
+147        1/1                                  reg_dst   = 2'b01;
+148        1/1                                  use_sa    = 1'b0; // shift amount from rs
+149                                         end
+150                                         6'b000111: begin // SRAV
+151        1/1                                  alu_op    = 4'b1010;
+152        1/1                                  reg_write = 1'b1;
+153        1/1                                  reg_dst   = 2'b01;
+154        1/1                                  use_sa    = 1'b0; // shift amount from rs
+155                                         end
+156                                         6'b101010: begin // SLT
+157        1/1                                  alu_op    = 4'b1011;
+158        1/1                                  reg_write = 1'b1;
+159        1/1                                  reg_dst   = 2'b01;
+160                                         end
+161                                         6'b101011: begin // SLTU
+162        1/1                                  alu_op    = 4'b1100;
+163        1/1                                  reg_write = 1'b1;
+164        1/1                                  reg_dst   = 2'b01;
+165                                         end
+166                                         6'b001000: begin // JR
+167        1/1                                  jump_op   = 2'b10;
+168                                         end
+169                                         6'b001001: begin // JALR
+170        1/1                                  reg_write  = 1'b1;
+171        1/1                                  reg_dst    = 2'b01; // writes link address to rd
+172        1/1                                  mem_to_reg = 2'b10;
+173        1/1                                  jump_op    = 2'b10;
+174                                         end
+175                                         6'b010000: begin // MFHI
+176        1/1                                  mdu_op      = 3'b110;
+177        1/1                                  sel_mdu_out = 1'b1;
+178        1/1                                  reg_write   = 1'b1;
+179        1/1                                  reg_dst     = 2'b01;
+180                                         end
+181                                         6'b010010: begin // MFLO
+182        1/1                                  mdu_op      = 3'b111;
+183        1/1                                  sel_mdu_out = 1'b1;
+184        1/1                                  reg_write   = 1'b1;
+185        1/1                                  reg_dst     = 2'b01;
+186                                         end
+187                                         6'b010001: begin // MTHI
+188        1/1                                  mdu_op    = 3'b100;
+189                                         end
+190                                         6'b010011: begin // MTLO
+191        1/1                                  mdu_op    = 3'b101;
+192                                         end
+193                                         6'b011000: begin // MULT
+194        1/1                                  mdu_op    = 3'b000;
+195        1/1                                  mdu_start = 1'b1;
+196                                         end
+197                                         6'b011001: begin // MULTU
+198        1/1                                  mdu_op    = 3'b001;
+199        1/1                                  mdu_start = 1'b1;
+200                                         end
+201                                         6'b011010: begin // DIV
+202        1/1                                  mdu_op    = 3'b010;
+203        1/1                                  mdu_start = 1'b1;
+204                                         end
+205                                         6'b011011: begin // DIVU
+206        1/1                                  mdu_op    = 3'b011;
+207        1/1                                  mdu_start = 1'b1;
+208                                         end
+209                                         default: begin
+210        0/1     ==>                          illegal_inst = 1'b1;
+211                                         end
+212                                     endcase
+213                                 end
+214                                 
+215                                 6'b001000: begin // ADDI
+216        1/1                          alu_op     = 4'b0000;
+217        1/1                          alu_src    = 1'b1;
+218        1/1                          reg_write  = 1'b1;
+219        1/1                          reg_dst    = 2'b00;
+220        1/1                          imm_signed = 1'b1;
+221                                 end
+222                                 6'b001001: begin // ADDIU
+223        1/1                          alu_op     = 4'b0001;
+224        1/1                          alu_src    = 1'b1;
+225        1/1                          reg_write  = 1'b1;
+226        1/1                          reg_dst    = 2'b00;
+227        1/1                          imm_signed = 1'b1;
+228                                 end
+229                                 6'b001010: begin // SLTI
+230        1/1                          alu_op     = 4'b1011;
+231        1/1                          alu_src    = 1'b1;
+232        1/1                          reg_write  = 1'b1;
+233        1/1                          reg_dst    = 2'b00;
+234        1/1                          imm_signed = 1'b1;
+235                                 end
+236                                 6'b001011: begin // SLTIU
+237        1/1                          alu_op     = 4'b1100;
+238        1/1                          alu_src    = 1'b1;
+239        1/1                          reg_write  = 1'b1;
+240        1/1                          reg_dst    = 2'b00;
+241        1/1                          imm_signed = 1'b1;
+242                                 end
+243                                 6'b001100: begin // ANDI
+244        1/1                          alu_op     = 4'b0100;
+245        1/1                          alu_src    = 1'b1;
+246        1/1                          reg_write  = 1'b1;
+247        1/1                          reg_dst    = 2'b00;
+248        1/1                          imm_signed = 1'b0; // Zero extended
+249                                 end
+250                                 6'b001101: begin // ORI
+251        1/1                          alu_op     = 4'b0101;
+252        1/1                          alu_src    = 1'b1;
+253        1/1                          reg_write  = 1'b1;
+254        1/1                          reg_dst    = 2'b00;
+255        1/1                          imm_signed = 1'b0; // Zero extended
+256                                 end
+257                                 6'b001110: begin // XORI
+258        1/1                          alu_op     = 4'b0110;
+259        1/1                          alu_src    = 1'b1;
+260        1/1                          reg_write  = 1'b1;
+261        1/1                          reg_dst    = 2'b00;
+262        1/1                          imm_signed = 1'b0; // Zero extended
+263                                 end
+264                                 6'b001111: begin // LUI
+265        1/1                          alu_op     = 4'b1101;
+266        1/1                          alu_src    = 1'b1;
+267        1/1                          reg_write  = 1'b1;
+268        1/1                          reg_dst    = 2'b00;
+269        1/1                          imm_signed = 1'b0;
+270                                 end
+271                                 6'b100011: begin // LW
+272        1/1                          alu_op     = 4'b0001; // address = rs + sign_extend(offset)
+273        1/1                          alu_src    = 1'b1;
+274        1/1                          reg_write  = 1'b1;
+275        1/1                          reg_dst    = 2'b00;
+276        1/1                          mem_read   = 1'b1;
+277        1/1                          mem_op     = 3'b100;
+278        1/1                          mem_to_reg = 2'b01;
+279        1/1                          imm_signed = 1'b1;
+280                                 end
+281                                 6'b100000: begin // LB
+282        1/1                          alu_op     = 4'b0001;
+283        1/1                          alu_src    = 1'b1;
+284        1/1                          reg_write  = 1'b1;
+285        1/1                          reg_dst    = 2'b00;
+286        1/1                          mem_read   = 1'b1;
+287        1/1                          mem_op     = 3'b000;
+288        1/1                          mem_to_reg = 2'b01;
+289        1/1                          imm_signed = 1'b1;
+290                                 end
+291                                 6'b100100: begin // LBU
+292        1/1                          alu_op     = 4'b0001;
+293        1/1                          alu_src    = 1'b1;
+294        1/1                          reg_write  = 1'b1;
+295        1/1                          reg_dst    = 2'b00;
+296        1/1                          mem_read   = 1'b1;
+297        1/1                          mem_op     = 3'b001;
+298        1/1                          mem_to_reg = 2'b01;
+299        1/1                          imm_signed = 1'b1;
+300                                 end
+301                                 6'b100001: begin // LH
+302        1/1                          alu_op     = 4'b0001;
+303        1/1                          alu_src    = 1'b1;
+304        1/1                          reg_write  = 1'b1;
+305        1/1                          reg_dst    = 2'b00;
+306        1/1                          mem_read   = 1'b1;
+307        1/1                          mem_op     = 3'b010;
+308        1/1                          mem_to_reg = 2'b01;
+309        1/1                          imm_signed = 1'b1;
+310                                 end
+311                                 6'b100101: begin // LHU
+312        1/1                          alu_op     = 4'b0001;
+313        1/1                          alu_src    = 1'b1;
+314        1/1                          reg_write  = 1'b1;
+315        1/1                          reg_dst    = 2'b00;
+316        1/1                          mem_read   = 1'b1;
+317        1/1                          mem_op     = 3'b011;
+318        1/1                          mem_to_reg = 2'b01;
+319        1/1                          imm_signed = 1'b1;
+320                                 end
+321                                 6'b100010: begin // LWL
+322        1/1                          alu_op     = 4'b0001;
+323        1/1                          alu_src    = 1'b1;
+324        1/1                          reg_write  = 1'b1;
+325        1/1                          reg_dst    = 2'b00;
+326        1/1                          mem_read   = 1'b1;
+327        1/1                          mem_op     = 3'b101; // WL
+328        1/1                          mem_to_reg = 2'b01;
+329        1/1                          imm_signed = 1'b1;
+330                                 end
+331                                 6'b100110: begin // LWR
+332        1/1                          alu_op     = 4'b0001;
+333        1/1                          alu_src    = 1'b1;
+334        1/1                          reg_write  = 1'b1;
+335        1/1                          reg_dst    = 2'b00;
+336        1/1                          mem_read   = 1'b1;
+337        1/1                          mem_op     = 3'b110; // WR
+338        1/1                          mem_to_reg = 2'b01;
+339        1/1                          imm_signed = 1'b1;
+340                                 end
+341                                 6'b101011: begin // SW
+342        1/1                          alu_op     = 4'b0001;
+343        1/1                          alu_src    = 1'b1;
+344        1/1                          mem_write  = 1'b1;
+345        1/1                          mem_op     = 3'b100;
+346        1/1                          imm_signed = 1'b1;
+347                                 end
+348                                 6'b101000: begin // SB
+349        1/1                          alu_op     = 4'b0001;
+350        1/1                          alu_src    = 1'b1;
+351        1/1                          mem_write  = 1'b1;
+352        1/1                          mem_op     = 3'b000;
+353        1/1                          imm_signed = 1'b1;
+354                                 end
+355                                 6'b101001: begin // SH
+356        1/1                          alu_op     = 4'b0001;
+357        1/1                          alu_src    = 1'b1;
+358        1/1                          mem_write  = 1'b1;
+359        1/1                          mem_op     = 3'b010;
+360        1/1                          imm_signed = 1'b1;
+361                                 end
+362                                 6'b101010: begin // SWL
+363        1/1                          alu_op     = 4'b0001;
+364        1/1                          alu_src    = 1'b1;
+365        1/1                          mem_write  = 1'b1;
+366        1/1                          mem_op     = 3'b101; // WL
+367        1/1                          imm_signed = 1'b1;
+368                                 end
+369                                 6'b101110: begin // SWR
+370        1/1                          alu_op     = 4'b0001;
+371        1/1                          alu_src    = 1'b1;
+372        1/1                          mem_write  = 1'b1;
+373        1/1                          mem_op     = 3'b110; // WR
+374        1/1                          imm_signed = 1'b1;
+375                                 end
+376                                 
+377                                 // Jumps
+378                                 6'b000010: begin // J
+379        0/1     ==>                  jump_op = 2'b01;
+380                                 end
+381                                 6'b000011: begin // JAL
+382        1/1                          reg_write  = 1'b1;
+383        1/1                          reg_dst    = 2'b10; // $ra (31)
+384        1/1                          mem_to_reg = 2'b10; // PC+8 (link)
+385        1/1                          jump_op    = 2'b01;
+386                                 end
+387                                 
+388                                 // Branches
+389                                 6'b000100: begin // BEQ
+390        1/1                          branch_op  = 3'b001;
+391        1/1                          imm_signed = 1'b1;
+392                                 end
+393                                 6'b000101: begin // BNE
+394        1/1                          branch_op  = 3'b010;
+395        1/1                          imm_signed = 1'b1;
+396                                 end
+397                                 6'b000110: begin // BLEZ
+398        0/1     ==>                  branch_op  = 3'b011;
+399        0/1     ==>                  imm_signed = 1'b1;
+400                                 end
+401                                 6'b000111: begin // BGTZ
+402        0/1     ==>                  branch_op  = 3'b100;
+403        0/1     ==>                  imm_signed = 1'b1;
+404                                 end
+405                                 6'b000001: begin // REGIMM (BLTZ, BGEZ)
+406        1/1                          case (rt)
+407                                         5'b00000: begin // BLTZ
+408        0/1     ==>                          branch_op  = 3'b101;
+409        0/1     ==>                          imm_signed = 1'b1;
+410                                         end
+411                                         5'b00001: begin // BGEZ
+412        0/1     ==>                          branch_op  = 3'b110;
+413        0/1     ==>                          imm_signed = 1'b1;
+414                                         end
+415                                         5'b10000: begin // BLTZAL
+416        1/1                                  branch_op  = 3'b101;
+417        1/1                                  imm_signed = 1'b1;
+418        1/1                                  reg_write  = 1'b1;
+419        1/1                                  reg_dst    = 2'b10; // $ra
+420        1/1                                  mem_to_reg = 2'b10; // PC+8
+421                                         end
+422                                         5'b10001: begin // BGEZAL
+423        1/1                                  branch_op  = 3'b110;
+424        1/1                                  imm_signed = 1'b1;
+425        1/1                                  reg_write  = 1'b1;
+426        1/1                                  reg_dst    = 2'b10; // $ra
+427        1/1                                  mem_to_reg = 2'b10; // PC+8
+428                                         end
+429                                         default: begin
+430        0/1     ==>                          illegal_inst = 1'b1;
+431                                         end
+432                                     endcase
+433                                 end
+434                                 
+435                                 6'b010000: begin // COP0
+436        1/1                          case (rs)
+437                                         5'b00000: begin // MFC0
+438        1/1                                  reg_write  = 1'b1;
+439        1/1                                  reg_dst    = 2'b00; // rt
+440        1/1                                  mem_to_reg = 2'b11; // Data from CP0
+441                                         end
+442                                         5'b00100: begin // MTC0
+443        1/1                                  cp0_we = 1'b1;
+444        1/1                                  reg_dst = 2'b01; // Use rd as CP0 register index
+445        1/1                                  alu_op = 4'b1000; // SLL
+446        1/1                                  use_sa = 1'b1;    // use sa (which is 0 for MTC0 because bits 10:6 are 0)
+447        1/1                                  alu_src = 1'b0;   // op_b = rt
+448                                         end
+449                                         5'b10000: begin // CO
+450        1/1                                  if (func == 6'b011000) begin // ERET
+451        1/1                                      is_eret = 1'b1;
+452                                             end else begin
+453        0/1     ==>                              illegal_inst = 1'b1;
+454                                             end
+455                                         end
+456                                         default: begin
+457        0/1     ==>                          illegal_inst = 1'b1;
+458                                         end
+459                                     endcase
+460                                 end
+461                                 default: begin
+462        1/1                          illegal_inst = 1'b1;
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : mips_control
+
+               Total   Covered  Percent
+Conditions          2        1    50.00
+Logical             2        1    50.00
+Non-Logical         0        0
+Event               0        0
+
+ LINE       450
+ EXPRESSION (func == 6'b011000)
+            ---------1---------
+
+-1- Status
+ 0  Not Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : mips_control
+                Total Covered Percent 
+Totals          24    24      100.00  
+Total Bits      170   170     100.00  
+Total Bits 0->1 85    85      100.00  
+Total Bits 1->0 85    85      100.00  
+
+                              
+Ports          20  20  100.00 
+Port Bits      126 126 100.00 
+Port Bits 0->1 63  63  100.00 
+Port Bits 1->0 63  63  100.00 
+
+                              
+Signals          4  4  100.00 
+Signal Bits      44 44 100.00 
+Signal Bits 0->1 22 22 100.00 
+Signal Bits 1->0 22 22 100.00 
+
+Port Details
+                Toggle Toggle 1->0 Toggle 0->1 Direction 
+inst[31:0]      Yes    Yes         Yes         INPUT     
+alu_op[3:0]     Yes    Yes         Yes         OUTPUT    
+mdu_op[2:0]     Yes    Yes         Yes         OUTPUT    
+mdu_start       Yes    Yes         Yes         OUTPUT    
+sel_mdu_out     Yes    Yes         Yes         OUTPUT    
+alu_src         Yes    Yes         Yes         OUTPUT    
+reg_write       Yes    Yes         Yes         OUTPUT    
+reg_dst[1:0]    Yes    Yes         Yes         OUTPUT    
+imm_signed      Yes    Yes         Yes         OUTPUT    
+use_sa          Yes    Yes         Yes         OUTPUT    
+mem_read        Yes    Yes         Yes         OUTPUT    
+mem_write       Yes    Yes         Yes         OUTPUT    
+mem_op[2:0]     Yes    Yes         Yes         OUTPUT    
+mem_to_reg[1:0] Yes    Yes         Yes         OUTPUT    
+branch_op[2:0]  Yes    Yes         Yes         OUTPUT    
+jump_op[1:0]    Yes    Yes         Yes         OUTPUT    
+illegal_inst    Yes    Yes         Yes         OUTPUT    
+cp0_we          Yes    Yes         Yes         OUTPUT    
+is_eret         Yes    Yes         Yes         OUTPUT    
+is_syscall      Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+            Toggle Toggle 1->0 Toggle 0->1 
+opcode[5:0] Yes    Yes         Yes         
+rs[4:0]     Yes    Yes         Yes         
+rt[4:0]     Yes    Yes         Yes         
+func[5:0]   Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : mips_control

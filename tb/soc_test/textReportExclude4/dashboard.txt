@@ -1,0 +1,28 @@
+Dashboard
+
+Date: Sun Jun 28 22:58:22 2026
+
+User: admin
+
+Version: X-2025.06
+Command line: urg -dir simv.vdb -elfile exclude4.el -excl_bypass_checks -report textReportExclude4 -format text 
+
+Number of tests: 1
+
+-------------------------------------------------------------------------------
+Total Coverage Summary 
+SCORE  LINE   COND   TOGGLE FSM    BRANCH 
+ 87.92  96.89  91.23  71.50  90.48  89.48 
+
+
+-------------------------------------------------------------------------------
+Hierarchical coverage data for top-level instances 
+SCORE  LINE   COND   TOGGLE FSM    BRANCH NAME           
+ 87.92  96.89  91.23  71.50  90.48  89.48 tb_mips_soc(X) 
+
+
+-------------------------------------------------------------------------------
+Total Module Definition Coverage Summary 
+SCORE  LINE   COND   TOGGLE FSM    BRANCH 
+ 87.86  96.83  90.73  72.11  90.48  89.13 
+

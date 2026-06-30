@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="<username>"> <meta name="GENERATOR" content="urg/version [en] (platform name) [urg]">
+<title>Unified Coverage Report :: Module :: mips_cp0</title>
+<link type="text/css" rel="stylesheet" href="css/.urg.css">
+<link type="text/css" rel="stylesheet" href="css/.layout.css">
+<link type="text/css" rel="stylesheet" href="css/.breadcrumb.css">
+<script type="text/javascript" src="js/.jquery.js"></script>
+<script type="text/javascript" src="js/.jquery-ui.js"></script>
+<script type="text/javascript" src="js/.sortable.js"></script>
+<script type="text/javascript" src="js/.layout.js"></script>
+<script type="text/javascript" src="js/.breadcrumb.js"></script>
+<script type="text/javascript">
+var layout, westLayout, centerLayout;
+$(document).ready(function () {
+  if ($("#north-bread-crumb")) {
+    $("#north-bread-crumb").jBreadCrumb({easing:'swing'})
+  }
+  layout = $("body").layout({ 
+    resizable: true,
+    spacing_open: 4,
+    spacing_closed: 4,
+    north: {
+      size: 76
+    },
+    south: {
+      size: 45,
+      initClosed: true
+    },
+    west: {
+      size: 500,
+      resizable: true,
+      initClosed: false
+    }
+  });
+  centerLayout = $('div.ui-layout-center').layout({
+    north__paneSelector: ".ui-layout-center-inner-north",
+    center__paneSelector: ".ui-layout-center-inner-center", 
+    north__size: 50,
+    spacing_open: 4,
+    spacing_closed: 4
+  });
+});
+</script>
+</head>
+<body onLoad="initPage();"><div class="ui-layout-north">
+<div class="logo"></div>
+<center class="pagetitle">Module Definition</center>
+<div align="center"><a href="dashboard.html" ><b>dashboard</b></a> | <a href="hierarchy.html" ><b>hierarchy</b></a> | <a href="modlist.html" ><b>modlist</b></a> | groups | <a href="tests.html" ><b>tests</b></a> | asserts</div>
+
+</div>
+<div class="ui-layout-west">
+<div name='tag_mips_cp0'>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module : <a href="#"  onclick="showContent('tag_mips_cp0')">mips_cp0</a></span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s2 cl rt"> 26.70</td>
+<td class="s4 cl rt"><a href="mod12.html#Line" > 42.31</a></td>
+<td class="s1 cl rt"><a href="mod12.html#Cond" > 14.29</a></td>
+<td class="s1 cl rt"><a href="mod12.html#Toggle" > 19.44</a></td>
+<td class="wht cl rt"></td>
+<td class="s3 cl rt"><a href="mod12.html#Branch" > 30.77</a></td>
+</tr></table><br clear=all>
+<span class=repname>Source File(s) : </span>
+<br clear=all>
+<a href="javascript:void(0);"  onclick="openSrcFile('/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_cp0.v')">/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_cp0.v</a><br clear=all>
+<br clear=all>
+<span class=repname>Module self-instances :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="wht cl wordwrap"><a href="mod12.html#inst_tag_12"  onclick="showContent('inst_tag_12')">tb_mips_soc.u_soc.u_core.u_cpu.u_mips_cp0</a></td>
+<td class="s2 cl rt"> 26.70</td>
+<td class="s4 cl rt"><a href="mod12.html#Line" > 42.31</a></td>
+<td class="s1 cl rt"><a href="mod12.html#Cond" > 14.29</a></td>
+<td class="s1 cl rt"><a href="mod12.html#Toggle" > 19.44</a></td>
+<td class="wht cl rt"></td>
+<td class="s3 cl rt"><a href="mod12.html#Branch" > 30.77</a></td>
+</tr></table></div>
+</div>
+<br clear=all>
+<div name='tag_mips_cp0'>
+<hr>
+<a name="inst_tag_12"></a>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module Instance : <a href="hierarchy.html#tag_urg_inst_12" >tb_mips_soc.u_soc.u_core.u_cpu.u_mips_cp0</a></span>
+<br clear=all>
+<br clear=all>
+<span class=repname>Instance :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s2 cl rt"> 26.70</td>
+<td class="s4 cl rt"><a href="mod12.html#Line" > 42.31</a></td>
+<td class="s1 cl rt"><a href="mod12.html#Cond" > 14.29</a></td>
+<td class="s1 cl rt"><a href="mod12.html#Toggle" > 19.44</a></td>
+<td class="wht cl rt"></td>
+<td class="s3 cl rt"><a href="mod12.html#Branch" > 30.77</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Instance's subtree :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s2 cl rt"> 26.70</td>
+<td class="s4 cl rt"> 42.31</td>
+<td class="s1 cl rt"> 14.29</td>
+<td class="s1 cl rt"> 19.44</td>
+<td class="wht cl rt"></td>
+<td class="s3 cl rt"> 30.77</td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Parent : </span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td><td class="alfsrt">NAME</td></tr><tr>
+<td class="s4 cl rt"> 47.32</td>
+<td class="wht cl rt"></td>
+<td class="s5 cl rt"> 57.14</td>
+<td class="s3 cl rt"> 38.65</td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"> 46.15</td>
+<td><a href="mod8.html#inst_tag_8" >u_cpu</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Subtrees :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td colspan=7>no children</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<hr>
+Since this is the module's only instance, the coverage report is the same as for the module.</div>
+<div class="ui-layout-center">
+<div class="ui-layout-center-inner-center">
+<div name='tag_mips_cp0'>
+<a name="Line"></a>
+Line Coverage for Module : <a href="mod12.html" >mips_cp0</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="4" width="82">
+<tr><th></th><th>Line No.</th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s4"><td class="lf">TOTAL</td><td></td><td>26</td><td>11</td><td>42.31</td></tr>
+<tr class="s4"><td class="lf">ALWAYS</td><td>58</td><td>5</td><td>2</td><td>40.00</td></tr>
+<tr class="s4"><td class="lf">ALWAYS</td><td>68</td><td>21</td><td>9</td><td>42.86</td></tr>
+</table>
+<pre class="code"><br clear=all>
+57                          always @(*) begin
+58         1/1                  case (raddr)
+59         <font color = "red">0/1     ==>              5'd12: rdata = cp0_status;</font>
+60         <font color = "red">0/1     ==>              5'd13: rdata = cp0_cause;</font>
+61         <font color = "red">0/1     ==>              5'd14: rdata = cp0_epc;</font>
+62         1/1                      default: rdata = 32'd0;
+63                              endcase
+64                          end
+65                      
+66                          // CP0 Write and Exception Update Logic
+67                          always @(posedge clk or negedge rst_n) begin
+68         1/1                  if (!rst_n) begin
+69                                  // Initial Status: EXL=0, IE=0, IM=0 (All interrupts masked, disabled)
+70         1/1                      cp0_status &lt;= 32'h00000000;
+71         1/1                      cp0_cause  &lt;= 32'h00000000;
+72         1/1                      cp0_epc    &lt;= 32'h00000000;
+73                              end else begin
+74                                  // Update Hardware Interrupt Pending bits continuously
+75         1/1                      cp0_cause[15:10] &lt;= hw_int;
+76                                  
+77         1/1                      if (except_req &amp;&amp; !cp0_status[1]) begin
+78                                      // Handle Exception (only if not already in exception level)
+79         <font color = "red">0/1     ==>                  cp0_status[1]  &lt;= 1'b1; // Set EXL</font>
+80         <font color = "red">0/1     ==>                  cp0_cause[6:2] &lt;= except_code;</font>
+81         <font color = "red">0/1     ==>                  cp0_cause[31]  &lt;= except_bd;</font>
+82                                      
+83         <font color = "red">0/1     ==>                  if (except_bd)</font>
+84         <font color = "red">0/1     ==>                      cp0_epc &lt;= except_pc - 32'd4; // Point to branch instruction</font>
+85                                      else
+86         <font color = "red">0/1     ==>                      cp0_epc &lt;= except_pc;         // Point to faulting instruction</font>
+87                                          
+88         1/1                      end else if (eret) begin
+89                                      // Handle ERET
+90         <font color = "red">0/1     ==>                  cp0_status[1] &lt;= 1'b0; // Clear EXL</font>
+91                                      
+92         1/1                      end else if (we) begin
+93                                      // Handle MTC0
+94         1/1                          case (waddr)
+95                                          5'd12: begin
+96         <font color = "red">0/1     ==>                          cp0_status[15:8] &lt;= wdata[15:8]; // IM</font>
+97         <font color = "red">0/1     ==>                          cp0_status[1]    &lt;= wdata[1];    // EXL</font>
+98         <font color = "red">0/1     ==>                          cp0_status[0]    &lt;= wdata[0];    // IE</font>
+99                                          end
+100                                         5'd13: begin
+101        <font color = "red">0/1     ==>                          cp0_cause[9:8] &lt;= wdata[9:8];    // Software interrupts</font>
+102                                         end
+103                                         5'd14: begin
+104        <font color = "red">0/1     ==>                          cp0_epc &lt;= wdata;</font>
+105                                         end
+                        MISSING_DEFAULT
+106                                     endcase
+107                                 end
+                        MISSING_ELSE
+</pre>
+<hr>
+<a name="Cond"></a>
+Cond Coverage for Module : <a href="mod12.html" >mips_cp0</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="3" width="82">
+<tr><th></th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s1"><td class="lf">Conditions</td><td>7</td><td>1</td><td>14.29</td></tr>
+<tr class="s1"><td class="lf">Logical</td><td>7</td><td>1</td><td>14.29</td></tr>
+<tr class="wht"><td class="lf">Non-Logical</td><td>0</td><td>0</td><td></td></tr>
+<tr class="wht"><td class="lf">Event</td><td>0</td><td>0</td><td></td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       52
+ EXPRESSION (cp0_status[0] &amp;&amp; ((!cp0_status[1])) &amp;&amp; ((|(cp0_cause[15:8] &amp; cp0_status[15:8]))))
+             ------1------    ---------2--------    --------------------3--------------------
+</pre>
+<table class="noborder">
+<col span="3" width="40">
+<tr><th>-1-</th><th>-2-</th><th>-3-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       77
+ EXPRESSION (except_req &amp;&amp; ((!cp0_status[1])))
+             -----1----    ---------2--------
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td>1</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<hr>
+<a name="Toggle"></a>
+Toggle Coverage for Module : <a href="mod12.html" >mips_cp0</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s2">
+<td>Totals</td>
+<td class="rt">18</td>
+<td class="rt">4</td>
+<td class="rt">22.22 </td>
+</tr><tr class="s1">
+<td>Total Bits</td>
+<td class="rt">504</td>
+<td class="rt">98</td>
+<td class="rt">19.44 </td>
+</tr><tr class="s1">
+<td nowrap>Total Bits 0->1</td>
+<td class="rt">252</td>
+<td class="rt">38</td>
+<td class="rt">15.08 </td>
+</tr><tr class="s2">
+<td nowrap>Total Bits 1->0</td>
+<td class="rt">252</td>
+<td class="rt">60</td>
+<td class="rt">23.81 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s2">
+<td>Ports</td>
+<td class="rt">15</td>
+<td class="rt">4</td>
+<td class="rt">26.67 </td>
+</tr><tr class="s3">
+<td>Port Bits</td>
+<td class="rt">312</td>
+<td class="rt">98</td>
+<td class="rt">31.41 </td>
+</tr><tr class="s2">
+<td nowrap>Port Bits 0->1</td>
+<td class="rt">156</td>
+<td class="rt">38</td>
+<td class="rt">24.36 </td>
+</tr><tr class="s3">
+<td nowrap>Port Bits 1->0</td>
+<td class="rt">156</td>
+<td class="rt">60</td>
+<td class="rt">38.46 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s0">
+<td>Signals</td>
+<td class="rt">3</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td>Signal Bits</td>
+<td class="rt">192</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td nowrap>Signal Bits 0->1</td>
+<td class="rt">96</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td nowrap>Signal Bits 1->0</td>
+<td class="rt">96</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Port Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td><td class="alfsrt">Direction</td></tr><tr>
+<td>clk</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>rst_n</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>hw_int[5:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>we</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>waddr[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[16:1]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[27:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[28]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[29]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[30]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>wdata[31]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>raddr[4:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>rdata[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>except_req</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>except_code[4:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>except_pc[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>except_pc[7:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>except_pc[31:8]</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>except_bd</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>eret</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>epc_out[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>intr_req</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Signal Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td></tr><tr>
+<td>cp0_status[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>cp0_cause[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>cp0_epc[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr></table><br clear=all>
+<hr>
+<a name="Branch"></a>
+Branch Coverage for Module : <a href="mod12.html" >mips_cp0</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Line No.</th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s3">
+<td>Branches</td>
+<td></td>
+<td class="rt">13</td>
+<td class="rt">4</td>
+<td class="rt">30.77 </td>
+</tr><tr class="s2">
+<td>CASE</td>
+<td class="rt">58</td>
+<td class="rt">4</td>
+<td class="rt">1</td>
+<td class="rt">25.00 </td>
+</tr><tr class="s3">
+<td>IF</td>
+<td class="rt">68</td>
+<td class="rt">9</td>
+<td class="rt">3</td>
+<td class="rt">33.33 </td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+58                 case (raddr)
+                   <font color = "red">-1-</font>  
+59                     5'd12: rdata = cp0_status;
+           <font color = "red">            ==></font>
+60                     5'd13: rdata = cp0_cause;
+           <font color = "red">            ==></font>
+61                     5'd14: rdata = cp0_epc;
+           <font color = "red">            ==></font>
+62                     default: rdata = 32'd0;
+           <font color = "green">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>5'd12 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>5'd13 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>5'd14 </td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>default</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+68                 if (!rst_n) begin
+                   <font color = "green">-1-</font>  
+69                     // Initial Status: EXL=0, IE=0, IM=0 (All interrupts masked, disabled)
+70                     cp0_status <= 32'h00000000;
+           <font color = "green">            ==></font>
+71                     cp0_cause  <= 32'h00000000;
+72                     cp0_epc    <= 32'h00000000;
+73                 end else begin
+74                     // Update Hardware Interrupt Pending bits continuously
+75                     cp0_cause[15:10] <= hw_int;
+76                     
+77                     if (except_req && !cp0_status[1]) begin
+                       <font color = "red">-2-</font>  
+78                         // Handle Exception (only if not already in exception level)
+79                         cp0_status[1]  <= 1'b1; // Set EXL
+80                         cp0_cause[6:2] <= except_code;
+81                         cp0_cause[31]  <= except_bd;
+82                         
+83                         if (except_bd)
+                           <font color = "red">-3-</font>  
+84                             cp0_epc <= except_pc - 32'd4; // Point to branch instruction
+           <font color = "red">                    ==></font>
+85                         else
+86                             cp0_epc <= except_pc;         // Point to faulting instruction
+           <font color = "red">                    ==></font>
+87                             
+88                     end else if (eret) begin
+                                <font color = "red">-4-</font>  
+89                         // Handle ERET
+90                         cp0_status[1] <= 1'b0; // Clear EXL
+           <font color = "red">                ==></font>
+91                         
+92                     end else if (we) begin
+                                <font color = "green">-5-</font>  
+93                         // Handle MTC0
+94                         case (waddr)
+                           <font color = "red">-6-</font>  
+95                             5'd12: begin
+96                                 cp0_status[15:8] <= wdata[15:8]; // IM
+           <font color = "red">                        ==></font>
+97                                 cp0_status[1]    <= wdata[1];    // EXL
+98                                 cp0_status[0]    <= wdata[0];    // IE
+99                             end
+100                            5'd13: begin
+101                                cp0_cause[9:8] <= wdata[9:8];    // Software interrupts
+           <font color = "red">                        ==></font>
+102                            end
+103                            5'd14: begin
+104                                cp0_epc <= wdata;
+           <font color = "red">                        ==></font>
+105                            end
+                               MISSING_DEFAULT
+           <font color = "green">                    ==></font>
+106                        endcase
+107                    end
+                       MISSING_ELSE
+           <font color = "green">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>-6-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>5'd12 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>5'd13 </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>5'd14 </td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>MISSING_DEFAULT</td>
+<td>Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<div class="ui-layout-center-inner-north">
+<div id="center-bread-crumb" class="breadCrumb module urg-margin-bottom">
+  <ul name="inst_tag_12">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+  <ul name="tag_mips_cp0">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="ui-layout-south">
+<table align=center><tr><td class="s0 cl">0%</td>
+<td class="s1 cl">10%</td>
+<td class="s2 cl">20%</td>
+<td class="s3 cl">30%</td>
+<td class="s4 cl">40%</td>
+<td class="s5 cl">50%</td>
+<td class="s6 cl">60%</td>
+<td class="s7 cl">70%</td>
+<td class="s8 cl">80%</td>
+<td class="s9 cl">90%</td>
+<td class="s10 cl">100%</td></tr></table></div>
+</body>
+</html>

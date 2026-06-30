@@ -1,0 +1,3093 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="<username>"> <meta name="GENERATOR" content="urg/version [en] (platform name) [urg]">
+<title>Unified Coverage Report :: Module :: jtag_debug_top</title>
+<link type="text/css" rel="stylesheet" href="css/.urg.css">
+<link type="text/css" rel="stylesheet" href="css/.layout.css">
+<link type="text/css" rel="stylesheet" href="css/.breadcrumb.css">
+<script type="text/javascript" src="js/.jquery.js"></script>
+<script type="text/javascript" src="js/.jquery-ui.js"></script>
+<script type="text/javascript" src="js/.sortable.js"></script>
+<script type="text/javascript" src="js/.layout.js"></script>
+<script type="text/javascript" src="js/.breadcrumb.js"></script>
+<script type="text/javascript">
+var layout, westLayout, centerLayout;
+$(document).ready(function () {
+  if ($("#north-bread-crumb")) {
+    $("#north-bread-crumb").jBreadCrumb({easing:'swing'})
+  }
+  layout = $("body").layout({ 
+    resizable: true,
+    spacing_open: 4,
+    spacing_closed: 4,
+    north: {
+      size: 76
+    },
+    south: {
+      size: 45,
+      initClosed: true
+    },
+    west: {
+      size: 500,
+      resizable: true,
+      initClosed: false
+    }
+  });
+  centerLayout = $('div.ui-layout-center').layout({
+    north__paneSelector: ".ui-layout-center-inner-north",
+    center__paneSelector: ".ui-layout-center-inner-center", 
+    north__size: 50,
+    spacing_open: 4,
+    spacing_closed: 4
+  });
+});
+</script>
+</head>
+<body onLoad="initPage();"><div class="ui-layout-north">
+<div class="logo"></div>
+<center class="pagetitle">Module Definition</center>
+<div align="center"><a href="dashboard.html" ><b>dashboard</b></a> | <a href="hierarchy.html" ><b>hierarchy</b></a> | <a href="modlist.html" ><b>modlist</b></a> | groups | <a href="tests.html" ><b>tests</b></a> | asserts</div>
+
+</div>
+<div class="ui-layout-west">
+<div name='tag_jtag_debug_top'>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module : <a href="#"  onclick="showContent('tag_jtag_debug_top')">jtag_debug_top</a></span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s1 cl rt"> 11.76</td>
+<td class="s3 cl rt"><a href="mod9.html#Line" > 31.58</a></td>
+<td class="s0 cl rt"><a href="mod9.html#Cond" >  9.09</a></td>
+<td class="s0 cl rt"><a href="mod9.html#Toggle" >  0.40</a></td>
+<td class="s0 cl rt"><a href="mod9.html#FSM" >  0.00</a></td>
+<td class="s1 cl rt"><a href="mod9.html#Branch" > 17.72</a></td>
+</tr></table><br clear=all>
+<span class=repname>Source File(s) : </span>
+<br clear=all>
+<a href="javascript:void(0);"  onclick="openSrcFile('/home/admin/iccode/tb/soc_test/../../rtl/perips/jtag_debug_top.v')">/home/admin/iccode/tb/soc_test/../../rtl/perips/jtag_debug_top.v</a><br clear=all>
+<br clear=all>
+<span class=repname>Module self-instances :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="wht cl wordwrap"><a href="mod9.html#inst_tag_9"  onclick="showContent('inst_tag_9')">tb_mips_soc.u_soc.u_jtag_debug_top</a></td>
+<td class="s1 cl rt"> 11.76</td>
+<td class="s3 cl rt"><a href="mod9.html#Line" > 31.58</a></td>
+<td class="s0 cl rt"><a href="mod9.html#Cond" >  9.09</a></td>
+<td class="s0 cl rt"><a href="mod9.html#Toggle" >  0.40</a></td>
+<td class="s0 cl rt"><a href="mod9.html#FSM" >  0.00</a></td>
+<td class="s1 cl rt"><a href="mod9.html#Branch" > 17.72</a></td>
+</tr></table></div>
+</div>
+<br clear=all>
+<div name='tag_jtag_debug_top'>
+<hr>
+<a name="inst_tag_9"></a>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module Instance : <a href="hierarchy.html#tag_urg_inst_9" >tb_mips_soc.u_soc.u_jtag_debug_top</a></span>
+<br clear=all>
+<br clear=all>
+<span class=repname>Instance :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s1 cl rt"> 11.76</td>
+<td class="s3 cl rt"><a href="mod9.html#Line" > 31.58</a></td>
+<td class="s0 cl rt"><a href="mod9.html#Cond" >  9.09</a></td>
+<td class="s0 cl rt"><a href="mod9.html#Toggle" >  0.40</a></td>
+<td class="s0 cl rt"><a href="mod9.html#FSM" >  0.00</a></td>
+<td class="s1 cl rt"><a href="mod9.html#Branch" > 17.72</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Instance's subtree :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s1 cl rt"> 11.76</td>
+<td class="s3 cl rt"> 31.58</td>
+<td class="s0 cl rt">  9.09</td>
+<td class="s0 cl rt">  0.40</td>
+<td class="s0 cl rt">  0.00</td>
+<td class="s1 cl rt"> 17.72</td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Parent : </span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td><td class="alfsrt">NAME</td></tr><tr>
+<td class="s2 cl rt"> 24.53</td>
+<td class="wht cl rt"></td>
+<td class="s4 cl rt"> 40.00</td>
+<td class="s1 cl rt"> 16.93</td>
+<td class="wht cl rt"></td>
+<td class="s1 cl rt"> 16.67</td>
+<td><a href="mod21.html#inst_tag_21" >u_soc</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Subtrees :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td colspan=7>no children</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<hr>
+Since this is the module's only instance, the coverage report is the same as for the module.</div>
+<div class="ui-layout-center">
+<div class="ui-layout-center-inner-center">
+<div name='tag_jtag_debug_top'>
+<a name="Line"></a>
+Line Coverage for Module : <a href="mod9.html" >jtag_debug_top</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="4" width="82">
+<tr><th></th><th>Line No.</th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s3"><td class="lf">TOTAL</td><td></td><td>95</td><td>30</td><td>31.58</td></tr>
+<tr class="s6"><td class="lf">ALWAYS</td><td>88</td><td>3</td><td>2</td><td>66.67</td></tr>
+<tr class="s1"><td class="lf">ALWAYS</td><td>93</td><td>18</td><td>3</td><td>16.67</td></tr>
+<tr class="s2"><td class="lf">ALWAYS</td><td>124</td><td>11</td><td>3</td><td>27.27</td></tr>
+<tr class="s1"><td class="lf">ALWAYS</td><td>156</td><td>23</td><td>4</td><td>17.39</td></tr>
+<tr class="s1"><td class="lf">ALWAYS</td><td>187</td><td>11</td><td>2</td><td>18.18</td></tr>
+<tr class="s10"><td class="lf">ALWAYS</td><td>211</td><td>5</td><td>5</td><td>100.00</td></tr>
+<tr class="s10"><td class="lf">ALWAYS</td><td>237</td><td>3</td><td>3</td><td>100.00</td></tr>
+<tr class="s2"><td class="lf">ALWAYS</td><td>242</td><td>17</td><td>5</td><td>29.41</td></tr>
+<tr class="s7"><td class="lf">ALWAYS</td><td>258</td><td>4</td><td>3</td><td>75.00</td></tr>
+</table>
+<pre class="code"><br clear=all>
+87                          always @(posedge tck or negedge trst_n) begin
+88         2/2                  if (!trst_n) tap_state &lt;= TEST_LOGIC_RESET;
+89         <font color = "red">0/1     ==>          else         tap_state &lt;= next_tap_state;</font>
+90                          end
+91                      
+92                          always @(*) begin
+93         1/1                  case (tap_state)
+94         1/1                      TEST_LOGIC_RESET: next_tap_state = tms ? TEST_LOGIC_RESET : RUN_TEST_IDLE;
+95         <font color = "red">0/1     ==>              RUN_TEST_IDLE:    next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;</font>
+96         <font color = "red">0/1     ==>              SELECT_DR_SCAN:   next_tap_state = tms ? SELECT_IR_SCAN   : CAPTURE_DR;</font>
+97         <font color = "red">0/1     ==>              CAPTURE_DR:       next_tap_state = tms ? EXIT1_DR         : SHIFT_DR;</font>
+98         <font color = "red">0/1     ==>              SHIFT_DR:         next_tap_state = tms ? EXIT1_DR         : SHIFT_DR;</font>
+99         <font color = "red">0/1     ==>              EXIT1_DR:         next_tap_state = tms ? UPDATE_DR        : PAUSE_DR;</font>
+100        <font color = "red">0/1     ==>              PAUSE_DR:         next_tap_state = tms ? EXIT2_DR         : PAUSE_DR;</font>
+101        <font color = "red">0/1     ==>              EXIT2_DR:         next_tap_state = tms ? UPDATE_DR        : SHIFT_DR;</font>
+102        <font color = "red">0/1     ==>              UPDATE_DR:        next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;</font>
+103        <font color = "red">0/1     ==>              SELECT_IR_SCAN:   next_tap_state = tms ? TEST_LOGIC_RESET : CAPTURE_IR;</font>
+104        <font color = "red">0/1     ==>              CAPTURE_IR:       next_tap_state = tms ? EXIT1_IR         : SHIFT_IR;</font>
+105        <font color = "red">0/1     ==>              SHIFT_IR:         next_tap_state = tms ? EXIT1_IR         : SHIFT_IR;</font>
+106        <font color = "red">0/1     ==>              EXIT1_IR:         next_tap_state = tms ? UPDATE_IR        : PAUSE_IR;</font>
+107        <font color = "red">0/1     ==>              PAUSE_IR:         next_tap_state = tms ? EXIT2_IR         : PAUSE_IR;</font>
+108        <font color = "red">0/1     ==>              EXIT2_IR:         next_tap_state = tms ? UPDATE_IR        : SHIFT_IR;</font>
+109        <font color = "red">0/1     ==>              UPDATE_IR:        next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;</font>
+110        1/1                      default:          next_tap_state = TEST_LOGIC_RESET;
+111                             endcase
+112                         end
+113                     
+114                         // Instruction Register (4 bits)
+115                         reg [3:0] ir_reg;
+116                         reg [3:0] ir_shift;
+117                         
+118                         localparam IR_IDCODE = 4'h1;
+119                         localparam IR_AXI_CMD = 4'h8;
+120                         localparam IR_AXI_DAT = 4'h9;
+121                         localparam IR_BYPASS = 4'hF;
+122                     
+123                         always @(posedge tck or negedge trst_n) begin
+124        1/1                  if (!trst_n) begin
+125        1/1                      ir_reg &lt;= IR_IDCODE;
+126        1/1                      ir_shift &lt;= 4'h0;
+127                             end else begin
+128        <font color = "red">0/1     ==>              if (tap_state == TEST_LOGIC_RESET) begin</font>
+129        <font color = "red">0/1     ==>                  ir_reg &lt;= IR_IDCODE;</font>
+130        <font color = "red">0/1     ==>              end else if (tap_state == CAPTURE_IR) begin</font>
+131        <font color = "red">0/1     ==>                  ir_shift &lt;= 4'b0101; // JTAG spec requires 01 on LSBs</font>
+132        <font color = "red">0/1     ==>              end else if (tap_state == SHIFT_IR) begin</font>
+133        <font color = "red">0/1     ==>                  ir_shift &lt;= {tdi, ir_shift[3:1]};</font>
+134        <font color = "red">0/1     ==>              end else if (tap_state == UPDATE_IR) begin</font>
+135        <font color = "red">0/1     ==>                  ir_reg &lt;= ir_shift;</font>
+136                                 end
+                   <font color = "red">==>  MISSING_ELSE</font>
+137                             end
+138                         end
+139                     
+140                         // Data Registers
+141                         reg [31:0] idcode_reg = 32'h1000_A001; // Dummy IDCODE
+142                         reg [31:0] bypass_reg;
+143                         
+144                         // Custom AXI Debug Registers (in TCK domain)
+145                         // CMD format: [31] Write/Read, [30:0] Address
+146                         reg [64:0] axi_cmd_shift; // 65-bit shift (1-bit Write, 32-bit Addr, 32-bit Data)
+147                         reg [31:0] axi_addr;
+148                         reg [31:0] axi_wdata;
+149                         reg        axi_do_write;
+150                         reg        axi_do_read;
+151                         
+152                         wire [31:0] axi_rdata_sync; // From AXI domain
+153                         wire        axi_rvalid_sync;
+154                     
+155                         always @(posedge tck or negedge trst_n) begin
+156        1/1                  if (!trst_n) begin
+157        1/1                      axi_cmd_shift &lt;= 65'd0;
+158        1/1                      axi_do_write  &lt;= 1'b0;
+159        1/1                      axi_do_read   &lt;= 1'b0;
+160                             end else begin
+161        <font color = "red">0/1     ==>              axi_do_write &lt;= 1'b0;</font>
+162        <font color = "red">0/1     ==>              axi_do_read  &lt;= 1'b0;</font>
+163                                 
+164        <font color = "red">0/1     ==>              if (tap_state == CAPTURE_DR) begin</font>
+165        <font color = "red">0/1     ==>                  if (ir_reg == IR_IDCODE)</font>
+166        <font color = "red">0/1     ==>                      axi_cmd_shift[31:0] &lt;= idcode_reg;</font>
+167        <font color = "red">0/1     ==>                  else if (ir_reg == IR_AXI_CMD)</font>
+168        <font color = "red">0/1     ==>                      axi_cmd_shift &lt;= {1'b0, axi_addr, axi_rdata_sync};</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+169        <font color = "red">0/1     ==>              end else if (tap_state == SHIFT_DR) begin</font>
+170        <font color = "red">0/1     ==>                  if (ir_reg == IR_IDCODE)</font>
+171        <font color = "red">0/1     ==>                      axi_cmd_shift[31:0] &lt;= {tdi, axi_cmd_shift[31:1]};</font>
+172        <font color = "red">0/1     ==>                  else if (ir_reg == IR_AXI_CMD)</font>
+173        <font color = "red">0/1     ==>                      axi_cmd_shift &lt;= {tdi, axi_cmd_shift[64:1]};</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+174        <font color = "red">0/1     ==>              end else if (tap_state == UPDATE_DR) begin</font>
+175        <font color = "red">0/1     ==>                  if (ir_reg == IR_AXI_CMD) begin</font>
+176        <font color = "red">0/1     ==>                      axi_addr &lt;= axi_cmd_shift[63:32];</font>
+177        <font color = "red">0/1     ==>                      axi_wdata &lt;= axi_cmd_shift[31:0];</font>
+178        <font color = "red">0/2     ==>                      if (axi_cmd_shift[64]) axi_do_write &lt;= 1'b1;</font>
+179        <font color = "red">0/1     ==>                      else                   axi_do_read  &lt;= 1'b1;</font>
+180                                     end
+                   <font color = "red">==>  MISSING_ELSE</font>
+181                                 end
+                   <font color = "red">==>  MISSING_ELSE</font>
+182                             end
+183                         end
+184                     
+185                         // TDO Output (falling edge)
+186                         always @(negedge tck or negedge trst_n) begin
+187        2/2                  if (!trst_n) tdo &lt;= 1'b0;
+188                             else begin
+189        <font color = "red">0/1     ==>              if (tap_state == SHIFT_IR)</font>
+190        <font color = "red">0/1     ==>                  tdo &lt;= ir_shift[0];</font>
+191        <font color = "red">0/1     ==>              else if (tap_state == SHIFT_DR) begin</font>
+192        <font color = "red">0/1     ==>                  if (ir_reg == IR_IDCODE)</font>
+193        <font color = "red">0/1     ==>                      tdo &lt;= axi_cmd_shift[0];</font>
+194        <font color = "red">0/1     ==>                  else if (ir_reg == IR_AXI_CMD)</font>
+195        <font color = "red">0/1     ==>                      tdo &lt;= axi_cmd_shift[0];</font>
+196                                     else
+197        <font color = "red">0/1     ==>                      tdo &lt;= bypass_reg[0];</font>
+198                                 end else
+199        <font color = "red">0/1     ==>                  tdo &lt;= 1'b0;</font>
+200                             end
+201                         end
+202                     
+203                         // =========================================================================
+204                         // Clock Domain Crossing (TCK -&gt; System Clock)
+205                         // =========================================================================
+206                         // Very simple CDC for demonstration (real JTAG needs proper async FIFOs)
+207                         reg [2:0] write_req_sync;
+208                         reg [2:0] read_req_sync;
+209                         
+210                         always @(posedge clk or negedge rst_n) begin
+211        1/1                  if (!rst_n) begin
+212        1/1                      write_req_sync &lt;= 3'd0;
+213        1/1                      read_req_sync  &lt;= 3'd0;
+214                             end else begin
+215        1/1                      write_req_sync &lt;= {write_req_sync[1:0], axi_do_write};
+216        1/1                      read_req_sync  &lt;= {read_req_sync[1:0], axi_do_read};
+217                             end
+218                         end
+219                         
+220                         wire start_axi_write = (write_req_sync[2:1] == 2'b01);
+221                         wire start_axi_read  = (read_req_sync[2:1] == 2'b01);
+222                     
+223                         // =========================================================================
+224                         // AXI4 Master State Machine (System Clock Domain)
+225                         // =========================================================================
+226                         localparam ST_IDLE = 3'd0;
+227                         localparam ST_AW   = 3'd1;
+228                         localparam ST_W    = 3'd2;
+229                         localparam ST_B    = 3'd3;
+230                         localparam ST_AR   = 3'd4;
+231                         localparam ST_R    = 3'd5;
+232                         
+233                         reg [2:0] axi_state, next_axi_state;
+234                         reg [31:0] captured_rdata;
+235                         
+236                         always @(posedge clk or negedge rst_n) begin
+237        2/2                  if (!rst_n) axi_state &lt;= ST_IDLE;
+238        1/1                  else        axi_state &lt;= next_axi_state;
+239                         end
+240                         
+241                         always @(*) begin
+242        1/1                  next_axi_state = axi_state;
+243        1/1                  case (axi_state)
+244                                 ST_IDLE: begin
+245        <font color = "red">1/2     ==>                  if (start_axi_write) next_axi_state = ST_AW;</font>
+246        <font color = "red">1/2     ==>                  else if (start_axi_read) next_axi_state = ST_AR;</font>
+                        MISSING_ELSE
+247                                 end
+248        <font color = "red">0/2     ==>              ST_AW: if (m_awvalid &amp;&amp; m_awready) next_axi_state = ST_W;</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+249        <font color = "red">0/2     ==>              ST_W:  if (m_wvalid &amp;&amp; m_wready)   next_axi_state = ST_B;</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+250        <font color = "red">0/2     ==>              ST_B:  if (m_bvalid &amp;&amp; m_bready)   next_axi_state = ST_IDLE;</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+251        <font color = "red">0/2     ==>              ST_AR: if (m_arvalid &amp;&amp; m_arready) next_axi_state = ST_R;</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+252        <font color = "red">0/2     ==>              ST_R:  if (m_rvalid &amp;&amp; m_rready)   next_axi_state = ST_IDLE;</font>
+                   <font color = "red">==>  MISSING_ELSE</font>
+253        1/1                      default: next_axi_state = ST_IDLE;
+254                             endcase
+255                         end
+256                         
+257                         always @(posedge clk or negedge rst_n) begin
+258        2/2                  if (!rst_n) captured_rdata &lt;= 32'd0;
+259        <font color = "red">1/2     ==>          else if (axi_state == ST_R &amp;&amp; m_rvalid &amp;&amp; m_rready) captured_rdata &lt;= m_rdata;</font>
+                        MISSING_ELSE
+</pre>
+<hr>
+<a name="Cond"></a>
+Cond Coverage for Module : <a href="mod9.html" >jtag_debug_top</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="3" width="82">
+<tr><th></th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s0"><td class="lf">Conditions</td><td>99</td><td>9</td><td>9.09</td></tr>
+<tr class="s0"><td class="lf">Logical</td><td>99</td><td>9</td><td>9.09</td></tr>
+<tr class="wht"><td class="lf">Non-Logical</td><td>0</td><td>0</td><td></td></tr>
+<tr class="wht"><td class="lf">Event</td><td>0</td><td>0</td><td></td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       94
+ EXPRESSION (tms ? TEST_LOGIC_RESET : RUN_TEST_IDLE)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uGreen"><td>1</td><td class="lf">Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       95
+ EXPRESSION (tms ? SELECT_DR_SCAN : RUN_TEST_IDLE)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       96
+ EXPRESSION (tms ? SELECT_IR_SCAN : CAPTURE_DR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       97
+ EXPRESSION (tms ? EXIT1_DR : SHIFT_DR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       98
+ EXPRESSION (tms ? EXIT1_DR : SHIFT_DR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       99
+ EXPRESSION (tms ? UPDATE_DR : PAUSE_DR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       100
+ EXPRESSION (tms ? EXIT2_DR : PAUSE_DR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       101
+ EXPRESSION (tms ? UPDATE_DR : SHIFT_DR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       102
+ EXPRESSION (tms ? SELECT_DR_SCAN : RUN_TEST_IDLE)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       103
+ EXPRESSION (tms ? TEST_LOGIC_RESET : CAPTURE_IR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       104
+ EXPRESSION (tms ? EXIT1_IR : SHIFT_IR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       105
+ EXPRESSION (tms ? EXIT1_IR : SHIFT_IR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       106
+ EXPRESSION (tms ? UPDATE_IR : PAUSE_IR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       107
+ EXPRESSION (tms ? EXIT2_IR : PAUSE_IR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       108
+ EXPRESSION (tms ? UPDATE_IR : SHIFT_IR)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       109
+ EXPRESSION (tms ? SELECT_DR_SCAN : RUN_TEST_IDLE)
+             -1-
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       128
+ EXPRESSION (tap_state == TEST_LOGIC_RESET)
+            ---------------1---------------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       130
+ EXPRESSION (tap_state == CAPTURE_IR)
+            ------------1------------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       132
+ EXPRESSION (tap_state == SHIFT_IR)
+            -----------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       134
+ EXPRESSION (tap_state == UPDATE_IR)
+            ------------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       164
+ EXPRESSION (tap_state == CAPTURE_DR)
+            ------------1------------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       165
+ EXPRESSION (ir_reg == IR_IDCODE)
+            ----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       167
+ EXPRESSION (ir_reg == IR_AXI_CMD)
+            -----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       169
+ EXPRESSION (tap_state == SHIFT_DR)
+            -----------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       170
+ EXPRESSION (ir_reg == IR_IDCODE)
+            ----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       172
+ EXPRESSION (ir_reg == IR_AXI_CMD)
+            -----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       174
+ EXPRESSION (tap_state == UPDATE_DR)
+            ------------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       175
+ EXPRESSION (ir_reg == IR_AXI_CMD)
+            -----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       189
+ EXPRESSION (tap_state == SHIFT_IR)
+            -----------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       191
+ EXPRESSION (tap_state == SHIFT_DR)
+            -----------1-----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       192
+ EXPRESSION (ir_reg == IR_IDCODE)
+            ----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       194
+ EXPRESSION (ir_reg == IR_AXI_CMD)
+            -----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       220
+ EXPRESSION (write_req_sync[2:1] == 2'b1)
+            --------------1--------------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       221
+ EXPRESSION (read_req_sync[2:1] == 2'b1)
+            --------------1-------------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       248
+ EXPRESSION (m_awvalid &amp;&amp; m_awready)
+             ----1----    ----2----
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       249
+ EXPRESSION (m_wvalid &amp;&amp; m_wready)
+             ----1---    ----2---
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       250
+ EXPRESSION (m_bvalid &amp;&amp; m_bready)
+             ----1---    ----2---
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       251
+ EXPRESSION (m_arvalid &amp;&amp; m_arready)
+             ----1----    ----2----
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       252
+ EXPRESSION (m_rvalid &amp;&amp; m_rready)
+             ----1---    ----2---
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       259
+ EXPRESSION ((axi_state == ST_R) &amp;&amp; m_rvalid &amp;&amp; m_rready)
+             ---------1---------    ----2---    ----3---
+</pre>
+<table class="noborder">
+<col span="3" width="40">
+<tr><th>-1-</th><th>-2-</th><th>-3-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       259
+ SUB-EXPRESSION (axi_state == ST_R)
+                ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       273
+ EXPRESSION (axi_state == ST_AW)
+            ----------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       278
+ EXPRESSION (axi_state == ST_W)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       279
+ EXPRESSION (axi_state == ST_B)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       289
+ EXPRESSION (axi_state == ST_AR)
+            ----------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       290
+ EXPRESSION (axi_state == ST_R)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<hr>
+<a name="Toggle"></a>
+Toggle Coverage for Module : <a href="mod9.html" >jtag_debug_top</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s0">
+<td>Totals</td>
+<td class="rt">62</td>
+<td class="rt">1</td>
+<td class="rt">1.61  </td>
+</tr><tr class="s0">
+<td>Total Bits</td>
+<td class="rt">1010</td>
+<td class="rt">4</td>
+<td class="rt">0.40  </td>
+</tr><tr class="s0">
+<td nowrap>Total Bits 0->1</td>
+<td class="rt">505</td>
+<td class="rt">3</td>
+<td class="rt">0.59  </td>
+</tr><tr class="s0">
+<td nowrap>Total Bits 1->0</td>
+<td class="rt">505</td>
+<td class="rt">1</td>
+<td class="rt">0.20  </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s0">
+<td>Ports</td>
+<td class="rt">42</td>
+<td class="rt">1</td>
+<td class="rt">2.38  </td>
+</tr><tr class="s0">
+<td>Port Bits</td>
+<td class="rt">430</td>
+<td class="rt">4</td>
+<td class="rt">0.93  </td>
+</tr><tr class="s0">
+<td nowrap>Port Bits 0->1</td>
+<td class="rt">215</td>
+<td class="rt">3</td>
+<td class="rt">1.40  </td>
+</tr><tr class="s0">
+<td nowrap>Port Bits 1->0</td>
+<td class="rt">215</td>
+<td class="rt">1</td>
+<td class="rt">0.47  </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s0">
+<td>Signals</td>
+<td class="rt">20</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td>Signal Bits</td>
+<td class="rt">580</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td nowrap>Signal Bits 0->1</td>
+<td class="rt">290</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td nowrap>Signal Bits 1->0</td>
+<td class="rt">290</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Port Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td><td class="alfsrt">Direction</td></tr><tr>
+<td>clk</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>rst_n</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>tck</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>trst_n</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>tms</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>tdi</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>tdo</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awid[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awaddr[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awlen[7:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awsize[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awburst[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awlock[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awcache[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awprot[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awvalid</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_awready</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_wdata[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_wstrb[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_wlast</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_wvalid</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_wready</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_bid[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_bresp[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_bvalid</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_bready</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arid[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_araddr[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arlen[7:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arsize[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arburst[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arlock[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arcache[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arprot[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arvalid</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>m_arready</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_rid[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_rdata[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_rresp[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_rlast</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_rvalid</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>m_rready</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Signal Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td></tr><tr>
+<td>tap_state[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>next_tap_state[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>ir_reg[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>ir_shift[3:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>idcode_reg[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>bypass_reg[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_cmd_shift[64:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_addr[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_wdata[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_do_write</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_do_read</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_rdata_sync[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_rvalid_sync</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>write_req_sync[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>read_req_sync[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>start_axi_write</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>start_axi_read</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>axi_state[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>next_axi_state[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>captured_rdata[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr></table><br clear=all>
+<hr>
+<a name="FSM"></a>
+FSM Coverage for Module : <a href="mod9.html" >jtag_debug_top</a><br clear=all>
+<table align=left class="noborder">
+<caption><b>Summary for FSM :: tap_state</b></caption>
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th><th nowrap width=200></th></tr><tr class="wht">
+<td>States</td>
+<td class="rt">16</td>
+<td class="rt">1</td>
+<td class="rt">6.25  </td>
+<td>(Not included in score)</td>
+</tr><tr class="s0">
+<td>Transitions</td>
+<td class="rt">40</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+<td></td>
+</tr><tr class="wht">
+<td>Sequences</td>
+<td class="rt">0</td>
+<td class="rt">0</td>
+<td></td>
+<td></td>
+</tr></table><br clear=all>
+<b>State, Transition and Sequence Details for FSM :: tap_state</b><hr>
+<table align=left class="sortable noborder">
+<tr class="sortablehead">
+<td class="alfsrt">states</td><td>Line No.</td><td class="alfsrt">Covered</td></tr><tr class="uRed">
+<td nowrap>CAPTURE_DR</td>
+<td class="rt">96</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>CAPTURE_IR</td>
+<td class="rt">103</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_DR</td>
+<td class="rt">97</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_IR</td>
+<td class="rt">104</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_DR</td>
+<td class="rt">100</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_IR</td>
+<td class="rt">107</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>PAUSE_DR</td>
+<td class="rt">99</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>PAUSE_IR</td>
+<td class="rt">106</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>RUN_TEST_IDLE</td>
+<td class="rt">94</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_DR_SCAN</td>
+<td class="rt">95</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_IR_SCAN</td>
+<td class="rt">96</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SHIFT_DR</td>
+<td class="rt">97</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SHIFT_IR</td>
+<td class="rt">104</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uGreen">
+<td nowrap>TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_DR</td>
+<td class="rt">99</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_IR</td>
+<td class="rt">106</td>
+<td>Not&nbsp;Covered</td>
+</tr></table><br clear=all>
+<br clear=all>
+<table align=left class="sortable noborder">
+<tr class="sortablehead">
+<td class="alfsrt">transitions</td><td>Line No.</td><td class="alfsrt">Covered</td></tr><tr class="uRed">
+<td nowrap>CAPTURE_DR->EXIT1_DR</td>
+<td class="rt">97</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>CAPTURE_DR->SHIFT_DR</td>
+<td class="rt">97</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>CAPTURE_DR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>CAPTURE_IR->EXIT1_IR</td>
+<td class="rt">104</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>CAPTURE_IR->SHIFT_IR</td>
+<td class="rt">104</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>CAPTURE_IR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_DR->PAUSE_DR</td>
+<td class="rt">99</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_DR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_DR->UPDATE_DR</td>
+<td class="rt">99</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_IR->PAUSE_IR</td>
+<td class="rt">106</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_IR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT1_IR->UPDATE_IR</td>
+<td class="rt">106</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_DR->SHIFT_DR</td>
+<td class="rt">101</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_DR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_DR->UPDATE_DR</td>
+<td class="rt">101</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_IR->SHIFT_IR</td>
+<td class="rt">108</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_IR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>EXIT2_IR->UPDATE_IR</td>
+<td class="rt">108</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>PAUSE_DR->EXIT2_DR</td>
+<td class="rt">100</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>PAUSE_DR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>PAUSE_IR->EXIT2_IR</td>
+<td class="rt">107</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>PAUSE_IR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>RUN_TEST_IDLE->SELECT_DR_SCAN</td>
+<td class="rt">95</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>RUN_TEST_IDLE->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_DR_SCAN->CAPTURE_DR</td>
+<td class="rt">96</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_DR_SCAN->SELECT_IR_SCAN</td>
+<td class="rt">96</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_DR_SCAN->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_IR_SCAN->CAPTURE_IR</td>
+<td class="rt">103</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SELECT_IR_SCAN->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SHIFT_DR->EXIT1_DR</td>
+<td class="rt">98</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SHIFT_DR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SHIFT_IR->EXIT1_IR</td>
+<td class="rt">105</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>SHIFT_IR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>TEST_LOGIC_RESET->RUN_TEST_IDLE</td>
+<td class="rt">94</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_DR->RUN_TEST_IDLE</td>
+<td class="rt">102</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_DR->SELECT_DR_SCAN</td>
+<td class="rt">102</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_DR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_IR->RUN_TEST_IDLE</td>
+<td class="rt">109</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_IR->SELECT_DR_SCAN</td>
+<td class="rt">109</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>UPDATE_IR->TEST_LOGIC_RESET</td>
+<td class="rt">88</td>
+<td>Not&nbsp;Covered</td>
+</tr></table><br clear=all>
+<br clear=all>
+<table align=left class="noborder">
+<caption><b>Summary for FSM :: axi_state</b></caption>
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th><th nowrap width=200></th></tr><tr class="wht">
+<td>States</td>
+<td class="rt">6</td>
+<td class="rt">1</td>
+<td class="rt">16.67 </td>
+<td>(Not included in score)</td>
+</tr><tr class="s0">
+<td>Transitions</td>
+<td class="rt">10</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+<td></td>
+</tr><tr class="wht">
+<td>Sequences</td>
+<td class="rt">0</td>
+<td class="rt">0</td>
+<td></td>
+<td></td>
+</tr></table><br clear=all>
+<b>State, Transition and Sequence Details for FSM :: axi_state</b><hr>
+<table align=left class="sortable noborder">
+<tr class="sortablehead">
+<td class="alfsrt">states</td><td>Line No.</td><td class="alfsrt">Covered</td></tr><tr class="uRed">
+<td nowrap>ST_AR</td>
+<td class="rt">246</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_AW</td>
+<td class="rt">245</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_B</td>
+<td class="rt">249</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uGreen">
+<td nowrap>ST_IDLE</td>
+<td class="rt">237</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_R</td>
+<td class="rt">251</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_W</td>
+<td class="rt">248</td>
+<td>Not&nbsp;Covered</td>
+</tr></table><br clear=all>
+<br clear=all>
+<table align=left class="sortable noborder">
+<tr class="sortablehead">
+<td class="alfsrt">transitions</td><td>Line No.</td><td class="alfsrt">Covered</td></tr><tr class="uRed">
+<td nowrap>ST_AR->ST_IDLE</td>
+<td class="rt">237</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_AR->ST_R</td>
+<td class="rt">251</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_AW->ST_IDLE</td>
+<td class="rt">237</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_AW->ST_W</td>
+<td class="rt">248</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_B->ST_IDLE</td>
+<td class="rt">237</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_IDLE->ST_AR</td>
+<td class="rt">246</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_IDLE->ST_AW</td>
+<td class="rt">245</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_R->ST_IDLE</td>
+<td class="rt">237</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_W->ST_B</td>
+<td class="rt">249</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>ST_W->ST_IDLE</td>
+<td class="rt">237</td>
+<td>Not&nbsp;Covered</td>
+</tr></table><br clear=all>
+<br clear=all>
+<hr>
+<a name="Branch"></a>
+Branch Coverage for Module : <a href="mod9.html" >jtag_debug_top</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Line No.</th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s1">
+<td>Branches</td>
+<td></td>
+<td class="rt">79</td>
+<td class="rt">14</td>
+<td class="rt">17.72 </td>
+</tr><tr class="s5">
+<td>IF</td>
+<td class="rt">88</td>
+<td class="rt">2</td>
+<td class="rt">1</td>
+<td class="rt">50.00 </td>
+</tr><tr class="s0">
+<td>CASE</td>
+<td class="rt">93</td>
+<td class="rt">33</td>
+<td class="rt">2</td>
+<td class="rt">6.06  </td>
+</tr><tr class="s1">
+<td>IF</td>
+<td class="rt">124</td>
+<td class="rt">6</td>
+<td class="rt">1</td>
+<td class="rt">16.67 </td>
+</tr><tr class="s0">
+<td>IF</td>
+<td class="rt">156</td>
+<td class="rt">11</td>
+<td class="rt">1</td>
+<td class="rt">9.09  </td>
+</tr><tr class="s1">
+<td>IF</td>
+<td class="rt">187</td>
+<td class="rt">6</td>
+<td class="rt">1</td>
+<td class="rt">16.67 </td>
+</tr><tr class="s10">
+<td>IF</td>
+<td class="rt">211</td>
+<td class="rt">2</td>
+<td class="rt">2</td>
+<td class="rt">100.00</td>
+</tr><tr class="s10">
+<td>IF</td>
+<td class="rt">237</td>
+<td class="rt">2</td>
+<td class="rt">2</td>
+<td class="rt">100.00</td>
+</tr><tr class="s1">
+<td>CASE</td>
+<td class="rt">243</td>
+<td class="rt">14</td>
+<td class="rt">2</td>
+<td class="rt">14.29 </td>
+</tr><tr class="s6">
+<td>IF</td>
+<td class="rt">258</td>
+<td class="rt">3</td>
+<td class="rt">2</td>
+<td class="rt">66.67 </td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+88                 if (!trst_n) tap_state <= TEST_LOGIC_RESET;
+                   <font color = "red">-1-</font>  
+           <font color = "green">        ==></font>
+89                 else         tap_state <= next_tap_state;
+           <font color = "red">        ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+93                 case (tap_state)
+                   <font color = "red">-1-</font>  
+94                     TEST_LOGIC_RESET: next_tap_state = tms ? TEST_LOGIC_RESET : RUN_TEST_IDLE;
+                                                              <font color = "red">-2-</font>  
+                                                              <font color = "green">==></font>  
+                                                              <font color = "red">==></font>  
+95                     RUN_TEST_IDLE:    next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;
+                                                              <font color = "red">-3-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+96                     SELECT_DR_SCAN:   next_tap_state = tms ? SELECT_IR_SCAN   : CAPTURE_DR;
+                                                              <font color = "red">-4-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+97                     CAPTURE_DR:       next_tap_state = tms ? EXIT1_DR         : SHIFT_DR;
+                                                              <font color = "red">-5-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+98                     SHIFT_DR:         next_tap_state = tms ? EXIT1_DR         : SHIFT_DR;
+                                                              <font color = "red">-6-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+99                     EXIT1_DR:         next_tap_state = tms ? UPDATE_DR        : PAUSE_DR;
+                                                              <font color = "red">-7-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+100                    PAUSE_DR:         next_tap_state = tms ? EXIT2_DR         : PAUSE_DR;
+                                                              <font color = "red">-8-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+101                    EXIT2_DR:         next_tap_state = tms ? UPDATE_DR        : SHIFT_DR;
+                                                              <font color = "red">-9-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+102                    UPDATE_DR:        next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;
+                                                              <font color = "red">-10-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+103                    SELECT_IR_SCAN:   next_tap_state = tms ? TEST_LOGIC_RESET : CAPTURE_IR;
+                                                              <font color = "red">-11-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+104                    CAPTURE_IR:       next_tap_state = tms ? EXIT1_IR         : SHIFT_IR;
+                                                              <font color = "red">-12-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+105                    SHIFT_IR:         next_tap_state = tms ? EXIT1_IR         : SHIFT_IR;
+                                                              <font color = "red">-13-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+106                    EXIT1_IR:         next_tap_state = tms ? UPDATE_IR        : PAUSE_IR;
+                                                              <font color = "red">-14-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+107                    PAUSE_IR:         next_tap_state = tms ? EXIT2_IR         : PAUSE_IR;
+                                                              <font color = "red">-15-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+108                    EXIT2_IR:         next_tap_state = tms ? UPDATE_IR        : SHIFT_IR;
+                                                              <font color = "red">-16-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+109                    UPDATE_IR:        next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;
+                                                              <font color = "red">-17-</font>  
+                                                              <font color = "red">==></font>  
+                                                              <font color = "red">==></font>  
+110                    default:          next_tap_state = TEST_LOGIC_RESET;
+           <font color = "green">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>-6-</th><th nowrap width=80>-7-</th><th nowrap width=80>-8-</th><th nowrap width=80>-9-</th><th nowrap width=80>-10-</th><th nowrap width=80>-11-</th><th nowrap width=80>-12-</th><th nowrap width=80>-13-</th><th nowrap width=80>-14-</th><th nowrap width=80>-15-</th><th nowrap width=80>-16-</th><th nowrap width=80>-17-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>TEST_LOGIC_RESET </td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>TEST_LOGIC_RESET </td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>RUN_TEST_IDLE </td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>RUN_TEST_IDLE </td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SELECT_DR_SCAN </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SELECT_DR_SCAN </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>CAPTURE_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>CAPTURE_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SHIFT_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SHIFT_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT1_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT1_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>PAUSE_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>PAUSE_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT2_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT2_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>UPDATE_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>UPDATE_DR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SELECT_IR_SCAN </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SELECT_IR_SCAN </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>CAPTURE_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>CAPTURE_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SHIFT_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>SHIFT_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT1_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT1_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>PAUSE_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>PAUSE_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT2_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>EXIT2_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>UPDATE_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>UPDATE_IR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+124                if (!trst_n) begin
+                   <font color = "red">-1-</font>  
+125                    ir_reg <= IR_IDCODE;
+           <font color = "green">            ==></font>
+126                    ir_shift <= 4'h0;
+127                end else begin
+128                    if (tap_state == TEST_LOGIC_RESET) begin
+                       <font color = "red">-2-</font>  
+129                        ir_reg <= IR_IDCODE;
+           <font color = "red">                ==></font>
+130                    end else if (tap_state == CAPTURE_IR) begin
+                                <font color = "red">-3-</font>  
+131                        ir_shift <= 4'b0101; // JTAG spec requires 01 on LSBs
+           <font color = "red">                ==></font>
+132                    end else if (tap_state == SHIFT_IR) begin
+                                <font color = "red">-4-</font>  
+133                        ir_shift <= {tdi, ir_shift[3:1]};
+           <font color = "red">                ==></font>
+134                    end else if (tap_state == UPDATE_IR) begin
+                                <font color = "red">-5-</font>  
+135                        ir_reg <= ir_shift;
+           <font color = "red">                ==></font>
+136                    end
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+156                if (!trst_n) begin
+                   <font color = "red">-1-</font>  
+157                    axi_cmd_shift <= 65'd0;
+           <font color = "green">            ==></font>
+158                    axi_do_write  <= 1'b0;
+159                    axi_do_read   <= 1'b0;
+160                end else begin
+161                    axi_do_write <= 1'b0;
+162                    axi_do_read  <= 1'b0;
+163                    
+164                    if (tap_state == CAPTURE_DR) begin
+                       <font color = "red">-2-</font>  
+165                        if (ir_reg == IR_IDCODE)
+                           <font color = "red">-3-</font>  
+166                            axi_cmd_shift[31:0] <= idcode_reg;
+           <font color = "red">                    ==></font>
+167                        else if (ir_reg == IR_AXI_CMD)
+                                <font color = "red">-4-</font>  
+168                            axi_cmd_shift <= {1'b0, axi_addr, axi_rdata_sync};
+           <font color = "red">                    ==></font>
+                               MISSING_ELSE
+           <font color = "red">                    ==></font>
+169                    end else if (tap_state == SHIFT_DR) begin
+                                <font color = "red">-5-</font>  
+170                        if (ir_reg == IR_IDCODE)
+                           <font color = "red">-6-</font>  
+171                            axi_cmd_shift[31:0] <= {tdi, axi_cmd_shift[31:1]};
+           <font color = "red">                    ==></font>
+172                        else if (ir_reg == IR_AXI_CMD)
+                                <font color = "red">-7-</font>  
+173                            axi_cmd_shift <= {tdi, axi_cmd_shift[64:1]};
+           <font color = "red">                    ==></font>
+                               MISSING_ELSE
+           <font color = "red">                    ==></font>
+174                    end else if (tap_state == UPDATE_DR) begin
+                                <font color = "red">-8-</font>  
+175                        if (ir_reg == IR_AXI_CMD) begin
+                           <font color = "red">-9-</font>  
+176                            axi_addr <= axi_cmd_shift[63:32];
+177                            axi_wdata <= axi_cmd_shift[31:0];
+178                            if (axi_cmd_shift[64]) axi_do_write <= 1'b1;
+                               <font color = "red">-10-</font>              
+           <font color = "red">                    ==></font>
+179                            else                   axi_do_read  <= 1'b1;
+           <font color = "red">                    ==></font>
+180                        end
+                           MISSING_ELSE
+           <font color = "red">                ==></font>
+181                    end
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>-6-</th><th nowrap width=80>-7-</th><th nowrap width=80>-8-</th><th nowrap width=80>-9-</th><th nowrap width=80>-10-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+187                if (!trst_n) tdo <= 1'b0;
+                   <font color = "red">-1-</font>  
+           <font color = "green">        ==></font>
+188                else begin
+189                    if (tap_state == SHIFT_IR)
+                       <font color = "red">-2-</font>  
+190                        tdo <= ir_shift[0];
+           <font color = "red">                ==></font>
+191                    else if (tap_state == SHIFT_DR) begin
+                            <font color = "red">-3-</font>  
+192                        if (ir_reg == IR_IDCODE)
+                           <font color = "red">-4-</font>  
+193                            tdo <= axi_cmd_shift[0];
+           <font color = "red">                    ==></font>
+194                        else if (ir_reg == IR_AXI_CMD)
+                                <font color = "red">-5-</font>  
+195                            tdo <= axi_cmd_shift[0];
+           <font color = "red">                    ==></font>
+196                        else
+197                            tdo <= bypass_reg[0];
+           <font color = "red">                    ==></font>
+198                    end else
+199                        tdo <= 1'b0;
+           <font color = "red">                ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+211                if (!rst_n) begin
+                   <font color = "green">-1-</font>  
+212                    write_req_sync <= 3'd0;
+           <font color = "green">            ==></font>
+213                    read_req_sync  <= 3'd0;
+214                end else begin
+215                    write_req_sync <= {write_req_sync[1:0], axi_do_write};
+           <font color = "green">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td>Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+237                if (!rst_n) axi_state <= ST_IDLE;
+                   <font color = "green">-1-</font>  
+           <font color = "green">        ==></font>
+238                else        axi_state <= next_axi_state;
+           <font color = "green">        ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td>Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+243                case (axi_state)
+                   <font color = "red">-1-</font>  
+244                    ST_IDLE: begin
+245                        if (start_axi_write) next_axi_state = ST_AW;
+                           <font color = "red">-2-</font>  
+           <font color = "red">                ==></font>
+246                        else if (start_axi_read) next_axi_state = ST_AR;
+                                <font color = "red">-3-</font>  
+           <font color = "red">                ==></font>
+                           MISSING_ELSE
+           <font color = "green">                ==></font>
+247                    end
+248                    ST_AW: if (m_awvalid && m_awready) next_axi_state = ST_W;
+                              <font color = "red">-4-</font>  
+           <font color = "red">            ==></font>
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+249                    ST_W:  if (m_wvalid && m_wready)   next_axi_state = ST_B;
+                              <font color = "red">-5-</font>  
+           <font color = "red">            ==></font>
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+250                    ST_B:  if (m_bvalid && m_bready)   next_axi_state = ST_IDLE;
+                              <font color = "red">-6-</font>  
+           <font color = "red">            ==></font>
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+251                    ST_AR: if (m_arvalid && m_arready) next_axi_state = ST_R;
+                              <font color = "red">-7-</font>  
+           <font color = "red">            ==></font>
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+252                    ST_R:  if (m_rvalid && m_rready)   next_axi_state = ST_IDLE;
+                              <font color = "red">-8-</font>  
+           <font color = "red">            ==></font>
+                       MISSING_ELSE
+           <font color = "red">            ==></font>
+253                    default: next_axi_state = ST_IDLE;
+           <font color = "green">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>-6-</th><th nowrap width=80>-7-</th><th nowrap width=80>-8-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>ST_IDLE </td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_IDLE </td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>ST_IDLE </td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_AW </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_AW </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_W </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_W </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_B </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_B </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_AR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_AR </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_R </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>ST_R </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+258                if (!rst_n) captured_rdata <= 32'd0;
+                   <font color = "green">-1-</font>  
+           <font color = "green">        ==></font>
+259                else if (axi_state == ST_R && m_rvalid && m_rready) captured_rdata <= m_rdata;
+                        <font color = "red">-2-</font>  
+           <font color = "red">        ==></font>
+                   MISSING_ELSE
+           <font color = "green">        ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center>0</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<div class="ui-layout-center-inner-north">
+<div id="center-bread-crumb" class="breadCrumb module urg-margin-bottom">
+  <ul name="inst_tag_9">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#FSM">FSM</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+  <ul name="tag_jtag_debug_top">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#FSM">FSM</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="ui-layout-south">
+<table align=center><tr><td class="s0 cl">0%</td>
+<td class="s1 cl">10%</td>
+<td class="s2 cl">20%</td>
+<td class="s3 cl">30%</td>
+<td class="s4 cl">40%</td>
+<td class="s5 cl">50%</td>
+<td class="s6 cl">60%</td>
+<td class="s7 cl">70%</td>
+<td class="s8 cl">80%</td>
+<td class="s9 cl">90%</td>
+<td class="s10 cl">100%</td></tr></table></div>
+</body>
+</html>

@@ -19,6 +19,7 @@ module mips_id_ex_reg (
     input  wire [31:0] id_pc_plus_8,
     input  wire [4:0]  id_waddr,
     input  wire [4:0]  id_rd_addr,
+    input  wire [4:0]  id_cp0_raddr,
     input  wire [4:0]  id_sa,
     
     // Control Inputs from ID
@@ -46,6 +47,7 @@ module mips_id_ex_reg (
     output reg  [31:0] ex_pc_plus_8,
     output reg  [4:0]  ex_waddr,
     output reg  [4:0]  ex_rd_addr,
+    output reg  [4:0]  ex_cp0_raddr,
     output reg  [4:0]  ex_sa,
     
     // Control Outputs to EX
@@ -74,6 +76,7 @@ module mips_id_ex_reg (
             ex_pc_plus_8   <= 32'd0;
             ex_waddr       <= 5'd0;
             ex_rd_addr     <= 5'd0;
+            ex_cp0_raddr   <= 5'd0;
             ex_sa          <= 5'd0;
             
             ex_alu_op      <= 4'd0;
@@ -98,6 +101,7 @@ module mips_id_ex_reg (
             ex_pc_plus_8   <= 32'd0;
             ex_waddr       <= 5'd0;
             ex_rd_addr     <= 5'd0;
+            ex_cp0_raddr   <= 5'd0;
             ex_sa          <= 5'd0;
             
             ex_alu_op      <= 4'd0;
@@ -122,6 +126,7 @@ module mips_id_ex_reg (
             ex_pc_plus_8   <= id_pc_plus_8;
             ex_waddr       <= id_waddr;
             ex_rd_addr     <= id_rd_addr;
+            ex_cp0_raddr   <= id_cp0_raddr;
             ex_sa          <= id_sa;
             
             ex_alu_op      <= id_alu_op;

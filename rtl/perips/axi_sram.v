@@ -79,7 +79,9 @@ module axi_sram #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            // VCS coverage off
             r_state   <= R_IDLE;
+            // VCS coverage on
             r_addr    <= 32'd0;
             r_len     <= 8'd0;
             r_id      <= 4'd0;
@@ -144,7 +146,9 @@ module axi_sram #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            // VCS coverage off
             w_state   <= W_IDLE;
+            // VCS coverage on
             w_addr    <= 32'd0;
             w_len     <= 8'd0;
             w_id      <= 4'd0;

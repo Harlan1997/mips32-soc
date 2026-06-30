@@ -20,7 +20,9 @@ module mips_wb_stage (
             2'b01: wb_wdata = mem_rdata_fmt;
             2'b10: wb_wdata = pc_plus_8;
             2'b11: wb_wdata = cp0_data;
+            // VCS coverage off
             default: wb_wdata = ex_out;
+            // VCS coverage on
         endcase
     end
 

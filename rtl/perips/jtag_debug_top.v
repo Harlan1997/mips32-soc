@@ -85,7 +85,11 @@ module jtag_debug_top (
     reg [3:0] tap_state, next_tap_state;
     
     always @(posedge tck or negedge trst_n) begin
-        if (!trst_n) tap_state <= TEST_LOGIC_RESET;
+        if (!trst_n) begin
+            // VCS coverage off
+            tap_state <= TEST_LOGIC_RESET;
+            // VCS coverage on
+        end
         else         tap_state <= next_tap_state;
     end
 
@@ -107,7 +111,9 @@ module jtag_debug_top (
             PAUSE_IR:         next_tap_state = tms ? EXIT2_IR         : PAUSE_IR;
             EXIT2_IR:         next_tap_state = tms ? UPDATE_IR        : SHIFT_IR;
             UPDATE_IR:        next_tap_state = tms ? SELECT_DR_SCAN   : RUN_TEST_IDLE;
+            // VCS coverage off
             default:          next_tap_state = TEST_LOGIC_RESET;
+            // VCS coverage on
         endcase
     end
 
@@ -234,7 +240,11 @@ module jtag_debug_top (
     reg [31:0] captured_rdata;
     
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) axi_state <= ST_IDLE;
+        if (!rst_n) begin
+            // VCS coverage off
+            axi_state <= ST_IDLE;
+            // VCS coverage on
+        end
         else        axi_state <= next_axi_state;
     end
     
@@ -250,7 +260,9 @@ module jtag_debug_top (
             ST_B:  if (m_bvalid && m_bready)   next_axi_state = ST_IDLE;
             ST_AR: if (m_arvalid && m_arready) next_axi_state = ST_R;
             ST_R:  if (m_rvalid && m_rready)   next_axi_state = ST_IDLE;
+            // VCS coverage off
             default: next_axi_state = ST_IDLE;
+            // VCS coverage on
         endcase
     end
     

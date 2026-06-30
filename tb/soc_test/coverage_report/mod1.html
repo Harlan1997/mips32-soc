@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="<username>"> <meta name="GENERATOR" content="urg/version [en] (platform name) [urg]">
+<title>Unified Coverage Report :: Module :: mips_mdu</title>
+<link type="text/css" rel="stylesheet" href="css/.urg.css">
+<link type="text/css" rel="stylesheet" href="css/.layout.css">
+<link type="text/css" rel="stylesheet" href="css/.breadcrumb.css">
+<script type="text/javascript" src="js/.jquery.js"></script>
+<script type="text/javascript" src="js/.jquery-ui.js"></script>
+<script type="text/javascript" src="js/.sortable.js"></script>
+<script type="text/javascript" src="js/.layout.js"></script>
+<script type="text/javascript" src="js/.breadcrumb.js"></script>
+<script type="text/javascript">
+var layout, westLayout, centerLayout;
+$(document).ready(function () {
+  if ($("#north-bread-crumb")) {
+    $("#north-bread-crumb").jBreadCrumb({easing:'swing'})
+  }
+  layout = $("body").layout({ 
+    resizable: true,
+    spacing_open: 4,
+    spacing_closed: 4,
+    north: {
+      size: 76
+    },
+    south: {
+      size: 45,
+      initClosed: true
+    },
+    west: {
+      size: 500,
+      resizable: true,
+      initClosed: false
+    }
+  });
+  centerLayout = $('div.ui-layout-center').layout({
+    north__paneSelector: ".ui-layout-center-inner-north",
+    center__paneSelector: ".ui-layout-center-inner-center", 
+    north__size: 50,
+    spacing_open: 4,
+    spacing_closed: 4
+  });
+});
+</script>
+</head>
+<body onLoad="initPage();"><div class="ui-layout-north">
+<div class="logo"></div>
+<center class="pagetitle">Module Definition</center>
+<div align="center"><a href="dashboard.html" ><b>dashboard</b></a> | <a href="hierarchy.html" ><b>hierarchy</b></a> | <a href="modlist.html" ><b>modlist</b></a> | groups | <a href="tests.html" ><b>tests</b></a> | asserts</div>
+
+</div>
+<div class="ui-layout-west">
+<div name='tag_mips_mdu'>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module : <a href="#"  onclick="showContent('tag_mips_mdu')">mips_mdu</a></span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s1 cl rt"> 14.05</td>
+<td class="s3 cl rt"><a href="mod1.html#Line" > 32.88</a></td>
+<td class="s1 cl rt"><a href="mod1.html#Cond" > 13.64</a></td>
+<td class="s0 cl rt"><a href="mod1.html#Toggle" >  7.07</a></td>
+<td class="s0 cl rt"><a href="mod1.html#FSM" >  0.00</a></td>
+<td class="s1 cl rt"><a href="mod1.html#Branch" > 16.67</a></td>
+</tr></table><br clear=all>
+<span class=repname>Source File(s) : </span>
+<br clear=all>
+<a href="javascript:void(0);"  onclick="openSrcFile('/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_mdu.v')">/home/admin/iccode/tb/soc_test/../../rtl/cpu/mips_mdu.v</a><br clear=all>
+<br clear=all>
+<span class=repname>Module self-instances :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="wht cl wordwrap"><a href="mod1.html#inst_tag_1"  onclick="showContent('inst_tag_1')">tb_mips_soc.u_soc.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu</a></td>
+<td class="s1 cl rt"> 14.05</td>
+<td class="s3 cl rt"><a href="mod1.html#Line" > 32.88</a></td>
+<td class="s1 cl rt"><a href="mod1.html#Cond" > 13.64</a></td>
+<td class="s0 cl rt"><a href="mod1.html#Toggle" >  7.07</a></td>
+<td class="s0 cl rt"><a href="mod1.html#FSM" >  0.00</a></td>
+<td class="s1 cl rt"><a href="mod1.html#Branch" > 16.67</a></td>
+</tr></table></div>
+</div>
+<br clear=all>
+<div name='tag_mips_mdu'>
+<hr>
+<a name="inst_tag_1"></a>
+<div class=modhdr>
+<br clear=all>
+<span class=titlename>Module Instance : <a href="hierarchy.html#tag_urg_inst_1" >tb_mips_soc.u_soc.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu</a></span>
+<br clear=all>
+<br clear=all>
+<span class=repname>Instance :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s1 cl rt"> 14.05</td>
+<td class="s3 cl rt"><a href="mod1.html#Line" > 32.88</a></td>
+<td class="s1 cl rt"><a href="mod1.html#Cond" > 13.64</a></td>
+<td class="s0 cl rt"><a href="mod1.html#Toggle" >  7.07</a></td>
+<td class="s0 cl rt"><a href="mod1.html#FSM" >  0.00</a></td>
+<td class="s1 cl rt"><a href="mod1.html#Branch" > 16.67</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Instance's subtree :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td class="s1 cl rt"> 14.05</td>
+<td class="s3 cl rt"> 32.88</td>
+<td class="s1 cl rt"> 13.64</td>
+<td class="s0 cl rt">  7.07</td>
+<td class="s0 cl rt">  0.00</td>
+<td class="s1 cl rt"> 16.67</td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Parent : </span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td><td class="alfsrt">NAME</td></tr><tr>
+<td class="s4 cl rt"> 46.50</td>
+<td class="wht cl rt"></td>
+<td class="s5 cl rt"> 50.00</td>
+<td class="s3 cl rt"> 39.51</td>
+<td class="wht cl rt"></td>
+<td class="s5 cl rt"> 50.00</td>
+<td><a href="mod20.html#inst_tag_20" >u_mips_ex_stage</a></td>
+</tr></table><br clear=all>
+<br clear=all>
+<span class=repname>Subtrees :</span>
+<br clear=all>
+<table align=left>
+<tr class="sortablehead">
+<td class="alfsrt">NAME</td><td>SCORE</td><td>LINE</td><td>COND</td><td>TOGGLE</td><td>FSM</td><td>BRANCH</td></tr><tr>
+<td colspan=7>no children</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<hr>
+Since this is the module's only instance, the coverage report is the same as for the module.</div>
+<div class="ui-layout-center">
+<div class="ui-layout-center-inner-center">
+<div name='tag_mips_mdu'>
+<a name="Line"></a>
+Line Coverage for Module : <a href="mod1.html" >mips_mdu</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="4" width="82">
+<tr><th></th><th>Line No.</th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s3"><td class="lf">TOTAL</td><td></td><td>73</td><td>24</td><td>32.88</td></tr>
+<tr class="s5"><td class="lf">ALWAYS</td><td>70</td><td>4</td><td>2</td><td>50.00</td></tr>
+<tr class="s3"><td class="lf">ALWAYS</td><td>79</td><td>69</td><td>22</td><td>31.88</td></tr>
+</table>
+<pre class="code"><br clear=all>
+69                          always @(*) begin
+70         1/1                  case (mdu_op)
+71         <font color = "red">0/1     ==>              OP_MFHI: mdu_out = hi;</font>
+72         <font color = "red">0/1     ==>              OP_MFLO: mdu_out = lo;</font>
+73         1/1                      default: mdu_out = 32'd0;
+74                              endcase
+75                          end
+76                      
+77                          // MDU Control FSM and Operation Logic
+78                          always @(posedge clk or negedge rst_n) begin
+79         1/1                  if (!rst_n) begin
+80         1/1                      hi              &lt;= 32'd0;
+81         1/1                      lo              &lt;= 32'd0;
+82         1/1                      state           &lt;= STATE_IDLE;
+83         1/1                      count           &lt;= 6'd0;
+84         1/1                      ready           &lt;= 1'b1;
+85         1/1                      mult_active     &lt;= 1'b0;
+86         1/1                      div_active      &lt;= 1'b0;
+87         1/1                      mult_a_reg      &lt;= 32'd0;
+88         1/1                      mult_b_reg      &lt;= 32'd0;
+89         1/1                      mult_signed_reg &lt;= 1'b0;
+90         1/1                      div_divisor     &lt;= 32'd0;
+91         1/1                      div_rem_quot    &lt;= 64'd0;
+92         1/1                      div_sign_quot   &lt;= 1'b0;
+93         1/1                      div_sign_rem    &lt;= 1'b0;
+94         1/1                      final_quot      &lt;= 32'd0;
+95         1/1                      final_rem       &lt;= 32'd0;
+96                              end else begin
+97         1/1                      case (state)
+98                                      STATE_IDLE: begin
+99         1/1                              ready &lt;= 1'b1;
+100        1/1                              if (start) begin
+101        <font color = "red">0/1     ==>                          case (mdu_op)</font>
+102                                                 OP_MULT, OP_MULTU: begin
+103        <font color = "red">0/1     ==>                                  state           &lt;= STATE_MULT;</font>
+104        <font color = "red">0/1     ==>                                  ready           &lt;= 1'b0;</font>
+105        <font color = "red">0/1     ==>                                  mult_a_reg      &lt;= op_a;</font>
+106        <font color = "red">0/1     ==>                                  mult_b_reg      &lt;= op_b;</font>
+107        <font color = "red">0/1     ==>                                  mult_signed_reg &lt;= (mdu_op == OP_MULT);</font>
+108        <font color = "red">0/1     ==>                                  mult_active     &lt;= 1'b1;</font>
+109                                                 end
+110                                                 OP_DIV, OP_DIVU: begin
+111        <font color = "red">0/1     ==>                                  state &lt;= STATE_DIV;</font>
+112        <font color = "red">0/1     ==>                                  ready &lt;= 1'b0;</font>
+113        <font color = "red">0/1     ==>                                  count &lt;= 6'd0;</font>
+114                                                     
+115                                                     // Sign preprocessing
+116        <font color = "red">0/1     ==>                                  if (mdu_op == OP_DIV) begin</font>
+117        <font color = "red">0/1     ==>                                      div_sign_quot &lt;= op_a[31] ^ op_b[31];</font>
+118        <font color = "red">0/1     ==>                                      div_sign_rem  &lt;= op_a[31];</font>
+119        <font color = "red">0/1     ==>                                      div_divisor   &lt;= op_b[31] ? (~op_b + 32'd1) : op_b;</font>
+120        <font color = "red">0/1     ==>                                      div_rem_quot  &lt;= {32'd0, op_a[31] ? (~op_a + 32'd1) : op_a};</font>
+121                                                     end else begin
+122        <font color = "red">0/1     ==>                                      div_sign_quot &lt;= 1'b0;</font>
+123        <font color = "red">0/1     ==>                                      div_sign_rem  &lt;= 1'b0;</font>
+124        <font color = "red">0/1     ==>                                      div_divisor   &lt;= op_b;</font>
+125        <font color = "red">0/1     ==>                                      div_rem_quot  &lt;= {32'd0, op_a};</font>
+126                                                     end
+127                                                 end
+128        <font color = "red">0/1     ==>                              default: ;</font>
+129                                             endcase
+130                                         end else begin
+131                                             // Single-cycle register writes
+132        1/1                                  if (mdu_op == OP_MTHI) begin
+133        <font color = "red">0/1     ==>                              hi &lt;= op_a;</font>
+134        1/1                                  end else if (mdu_op == OP_MTLO) begin
+135        <font color = "red">0/1     ==>                              lo &lt;= op_a;</font>
+136                                             end
+                        MISSING_ELSE
+137                                         end
+138                                     end
+139                     
+140                                     STATE_MULT: begin
+141                                         // Multiplication is completed in 2 cycles total
+142                                         // This is the 2nd cycle of multiplication
+143        <font color = "red">0/1     ==>                      if (mult_active) begin</font>
+144        <font color = "red">0/1     ==>                          hi          &lt;= mult_prod[63:32];</font>
+145        <font color = "red">0/1     ==>                          lo          &lt;= mult_prod[31:0];</font>
+146        <font color = "red">0/1     ==>                          ready       &lt;= 1'b1;</font>
+147        <font color = "red">0/1     ==>                          mult_active &lt;= 1'b0;</font>
+148        <font color = "red">0/1     ==>                          state       &lt;= STATE_IDLE;</font>
+149                                         end
+                   <font color = "red">==>  MISSING_ELSE</font>
+150                                     end
+151                     
+152                                     STATE_DIV: begin
+153        <font color = "red">0/1     ==>                      if (count &lt; 6'd32) begin</font>
+154                                             // Shift left and subtract
+155                                             // div_rem_quot is shifted left by 1, and the next subtraction is checked
+156        <font color = "red">0/1     ==>                          if (sub_res[32] == 1'b0) begin</font>
+157                                                 // Subtraction succeeded (remainder is &gt;= divisor)
+158        <font color = "red">0/1     ==>                              div_rem_quot &lt;= {sub_res[31:0], next_rem_quot[31:1], 1'b1};</font>
+159                                             end else begin
+160                                                 // Subtraction failed (remainder is &lt; divisor)
+161        <font color = "red">0/1     ==>                              div_rem_quot &lt;= {next_rem_quot[63:32], next_rem_quot[31:1], 1'b0};</font>
+162                                             end
+163        <font color = "red">0/1     ==>                          count &lt;= count + 6'd1;</font>
+164                                         end else begin
+165                                             // Post-processing and writeback
+166        <font color = "red">0/1     ==>                          final_quot = div_rem_quot[31:0];</font>
+167        <font color = "red">0/1     ==>                          final_rem  = div_rem_quot[63:32];</font>
+168                     
+169                                             // division by zero check (avoid hang, return undefined values)
+170        <font color = "red">0/1     ==>                          if (div_divisor == 32'd0) begin</font>
+171        <font color = "red">0/1     ==>                              hi &lt;= 32'd0;</font>
+172        <font color = "red">0/1     ==>                              lo &lt;= 32'd0;</font>
+173                                             end else begin
+174                                                 // Handle signed adjustments
+175        <font color = "red">0/1     ==>                              if (div_sign_quot) begin</font>
+176        <font color = "red">0/1     ==>                                  lo &lt;= ~final_quot + 32'd1;</font>
+177                                                 end else begin
+178        <font color = "red">0/1     ==>                                  lo &lt;= final_quot;</font>
+179                                                 end
+180                                                 
+181        <font color = "red">0/1     ==>                              if (div_sign_rem) begin</font>
+182        <font color = "red">0/1     ==>                                  hi &lt;= ~final_rem + 32'd1;</font>
+183                                                 end else begin
+184        <font color = "red">0/1     ==>                                  hi &lt;= final_rem;</font>
+185                                                 end
+186                                             end
+187                                             
+188        <font color = "red">0/1     ==>                          ready &lt;= 1'b1;</font>
+189        <font color = "red">0/1     ==>                          state &lt;= STATE_IDLE;</font>
+190                                         end
+191                                     end
+192                     
+193        <font color = "red">0/1     ==>                  default: state &lt;= STATE_IDLE;</font>
+</pre>
+<hr>
+<a name="Cond"></a>
+Cond Coverage for Module : <a href="mod1.html" >mips_mdu</a><br clear=all>
+<table class="noborder">
+<col width="122">
+<col span="3" width="82">
+<tr><th></th><th>Total</th><th>Covered</th><th>Percent</th></tr>
+<tr class="s1"><td class="lf">Conditions</td><td>22</td><td>3</td><td>13.64</td></tr>
+<tr class="s1"><td class="lf">Logical</td><td>22</td><td>3</td><td>13.64</td></tr>
+<tr class="wht"><td class="lf">Non-Logical</td><td>0</td><td>0</td><td></td></tr>
+<tr class="wht"><td class="lf">Event</td><td>0</td><td>0</td><td></td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       61
+ EXPRESSION (mult_signed_reg ? mult_prod_signed : mult_prod_unsigned)
+             -------1-------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       107
+ EXPRESSION (mdu_op == OP_MULT)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       116
+ EXPRESSION (mdu_op == OP_DIV)
+            ---------1--------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       117
+ EXPRESSION (op_a[31] ^ op_b[31])
+             ----1---   ----2---
+</pre>
+<table class="noborder">
+<col span="2" width="40">
+<tr><th>-1-</th><th>-2-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>0</td><td>1</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       119
+ EXPRESSION (op_b[31] ? (((~op_b) + 32'b1)) : op_b)
+             ----1---
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       120
+ SUB-EXPRESSION (op_a[31] ? (((~op_a) + 32'b1)) : op_a)
+                 ----1---
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       132
+ EXPRESSION (mdu_op == OP_MTHI)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       134
+ EXPRESSION (mdu_op == OP_MTLO)
+            ---------1---------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uGreen"><td>0</td><td class="lf">Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       156
+ EXPRESSION (sub_res[32] == 1'b0)
+            ----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<br clear=all>
+<pre class="code"> LINE       170
+ EXPRESSION (div_divisor == 32'b0)
+            -----------1----------
+</pre>
+<table class="noborder">
+<col width="40">
+<tr><th>-1-</th><th>Status</th></tr>
+<tr class="uRed"><td>0</td><td class="lf">Not Covered</td></tr>
+<tr class="uRed"><td>1</td><td class="lf">Not Covered</td></tr>
+</table>
+<hr>
+<a name="Toggle"></a>
+Toggle Coverage for Module : <a href="mod1.html" >mips_mdu</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s0">
+<td>Totals</td>
+<td class="rt">28</td>
+<td class="rt">2</td>
+<td class="rt">7.14  </td>
+</tr><tr class="s0">
+<td>Total Bits</td>
+<td class="rt">1386</td>
+<td class="rt">98</td>
+<td class="rt">7.07  </td>
+</tr><tr class="s0">
+<td nowrap>Total Bits 0->1</td>
+<td class="rt">693</td>
+<td class="rt">50</td>
+<td class="rt">7.22  </td>
+</tr><tr class="s0">
+<td nowrap>Total Bits 1->0</td>
+<td class="rt">693</td>
+<td class="rt">48</td>
+<td class="rt">6.93  </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s2">
+<td>Ports</td>
+<td class="rt">10</td>
+<td class="rt">2</td>
+<td class="rt">20.00 </td>
+</tr><tr class="s2">
+<td>Port Bits</td>
+<td class="rt">334</td>
+<td class="rt">98</td>
+<td class="rt">29.34 </td>
+</tr><tr class="s2">
+<td nowrap>Port Bits 0->1</td>
+<td class="rt">167</td>
+<td class="rt">50</td>
+<td class="rt">29.94 </td>
+</tr><tr class="s2">
+<td nowrap>Port Bits 1->0</td>
+<td class="rt">167</td>
+<td class="rt">48</td>
+<td class="rt">28.74 </td>
+</tr></table><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80></th><th nowrap width=80></th><th nowrap width=80></th></tr><tr class="s0">
+<td>Signals</td>
+<td class="rt">18</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td>Signal Bits</td>
+<td class="rt">1052</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td nowrap>Signal Bits 0->1</td>
+<td class="rt">526</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr><tr class="s0">
+<td nowrap>Signal Bits 1->0</td>
+<td class="rt">526</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Port Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td><td class="alfsrt">Direction</td></tr><tr>
+<td>clk</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>rst_n</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[1]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[3:2]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[4]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[16:5]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[29:17]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[30]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_a[31]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>op_b[31:0]</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td class="s9 cl">Yes</td>
+<td>INPUT</td>
+</tr><tr>
+<td>mdu_op[2:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>start</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>INPUT</td>
+</tr><tr>
+<td>hi[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>lo[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>ready</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr><tr>
+<td>mdu_out[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td>OUTPUT</td>
+</tr></table><br clear=all>
+<table align=left class="sortable noborder">
+<caption><b>Signal Details</b></caption>
+<tr class="sortablehead">
+<td class="alfsrt">Name</td><td class="alfsrt">Toggle</td><td class="alfsrt">Toggle 1->0</td><td class="alfsrt">Toggle 0->1</td></tr><tr>
+<td>state[1:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>count[5:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_a_reg[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_b_reg[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_signed_reg</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_active</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>div_divisor[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>div_rem_quot[63:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>div_sign_quot</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>div_sign_rem</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>div_active</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>next_rem_quot[63:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>sub_res[32:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_prod_signed[63:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_prod_unsigned[63:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>mult_prod[63:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>final_quot[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr><tr>
+<td>final_rem[31:0]</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+<td class="s3 cl">No</td>
+</tr></table><br clear=all>
+<hr>
+<a name="FSM"></a>
+FSM Coverage for Module : <a href="mod1.html" >mips_mdu</a><br clear=all>
+<table align=left class="noborder">
+<caption><b>Summary for FSM :: state</b></caption>
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th><th nowrap width=200></th></tr><tr class="wht">
+<td>States</td>
+<td class="rt">3</td>
+<td class="rt">1</td>
+<td class="rt">33.33 </td>
+<td>(Not included in score)</td>
+</tr><tr class="s0">
+<td>Transitions</td>
+<td class="rt">4</td>
+<td class="rt">0</td>
+<td class="rt">0.00  </td>
+<td></td>
+</tr><tr class="wht">
+<td>Sequences</td>
+<td class="rt">0</td>
+<td class="rt">0</td>
+<td></td>
+<td></td>
+</tr></table><br clear=all>
+<b>State, Transition and Sequence Details for FSM :: state</b><hr>
+<table align=left class="sortable noborder">
+<tr class="sortablehead">
+<td class="alfsrt">states</td><td>Line No.</td><td class="alfsrt">Covered</td></tr><tr class="uRed">
+<td nowrap>STATE_DIV</td>
+<td class="rt">111</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uGreen">
+<td nowrap>STATE_IDLE</td>
+<td class="rt">82</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td nowrap>STATE_MULT</td>
+<td class="rt">103</td>
+<td>Not&nbsp;Covered</td>
+</tr></table><br clear=all>
+<br clear=all>
+<table align=left class="sortable noborder">
+<tr class="sortablehead">
+<td class="alfsrt">transitions</td><td>Line No.</td><td class="alfsrt">Covered</td></tr><tr class="uRed">
+<td nowrap>STATE_DIV->STATE_IDLE</td>
+<td class="rt">82</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>STATE_IDLE->STATE_DIV</td>
+<td class="rt">111</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>STATE_IDLE->STATE_MULT</td>
+<td class="rt">103</td>
+<td>Not&nbsp;Covered</td>
+</tr><tr class="uRed">
+<td nowrap>STATE_MULT->STATE_IDLE</td>
+<td class="rt">82</td>
+<td>Not&nbsp;Covered</td>
+</tr></table><br clear=all>
+<br clear=all>
+<hr>
+<a name="Branch"></a>
+Branch Coverage for Module : <a href="mod1.html" >mips_mdu</a><br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=120></th><th nowrap width=80>Line No.</th><th nowrap width=80>Total</th><th nowrap width=80>Covered</th><th nowrap width=80>Percent</th></tr><tr class="s1">
+<td>Branches</td>
+<td></td>
+<td class="rt">24</td>
+<td class="rt">4</td>
+<td class="rt">16.67 </td>
+</tr><tr class="s5">
+<td>TERNARY</td>
+<td class="rt">61</td>
+<td class="rt">2</td>
+<td class="rt">1</td>
+<td class="rt">50.00 </td>
+</tr><tr class="s3">
+<td>CASE</td>
+<td class="rt">70</td>
+<td class="rt">3</td>
+<td class="rt">1</td>
+<td class="rt">33.33 </td>
+</tr><tr class="s1">
+<td>IF</td>
+<td class="rt">79</td>
+<td class="rt">19</td>
+<td class="rt">2</td>
+<td class="rt">10.53 </td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+61             wire [63:0] mult_prod          = mult_signed_reg ? mult_prod_signed : mult_prod_unsigned;
+                                                                <font color = "red">-1-</font>  
+                                                                <font color = "red">==></font>  
+                                                                <font color = "green">==></font>  
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+70                 case (mdu_op)
+                   <font color = "red">-1-</font>  
+71                     OP_MFHI: mdu_out = hi;
+           <font color = "red">            ==></font>
+72                     OP_MFLO: mdu_out = lo;
+           <font color = "red">            ==></font>
+73                     default: mdu_out = 32'd0;
+           <font color = "green">            ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>Status</th></tr><tr class="uRed">
+<td align=center>OP_MFHI </td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>OP_MFLO </td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>default</td>
+<td>Covered</td>
+</tr></table><br clear=all>
+<pre class="code"><br clear=all>
+79                 if (!rst_n) begin
+                   <font color = "green">-1-</font>  
+80                     hi              <= 32'd0;
+           <font color = "green">            ==></font>
+81                     lo              <= 32'd0;
+82                     state           <= STATE_IDLE;
+83                     count           <= 6'd0;
+84                     ready           <= 1'b1;
+85                     mult_active     <= 1'b0;
+86                     div_active      <= 1'b0;
+87                     mult_a_reg      <= 32'd0;
+88                     mult_b_reg      <= 32'd0;
+89                     mult_signed_reg <= 1'b0;
+90                     div_divisor     <= 32'd0;
+91                     div_rem_quot    <= 64'd0;
+92                     div_sign_quot   <= 1'b0;
+93                     div_sign_rem    <= 1'b0;
+94                     final_quot      <= 32'd0;
+95                     final_rem       <= 32'd0;
+96                 end else begin
+97                     case (state)
+                       <font color = "red">-2-</font>  
+98                         STATE_IDLE: begin
+99                             ready <= 1'b1;
+100                            if (start) begin
+                               <font color = "red">-3-</font>  
+101                                case (mdu_op)
+                                   <font color = "red">-4-</font>  
+102                                    OP_MULT, OP_MULTU: begin
+103                                        state           <= STATE_MULT;
+           <font color = "red">                                ==></font>
+104                                        ready           <= 1'b0;
+105                                        mult_a_reg      <= op_a;
+106                                        mult_b_reg      <= op_b;
+107                                        mult_signed_reg <= (mdu_op == OP_MULT);
+108                                        mult_active     <= 1'b1;
+109                                    end
+110                                    OP_DIV, OP_DIVU: begin
+111                                        state <= STATE_DIV;
+112                                        ready <= 1'b0;
+113                                        count <= 6'd0;
+114                                        
+115                                        // Sign preprocessing
+116                                        if (mdu_op == OP_DIV) begin
+                                           <font color = "red">-5-</font>  
+117                                            div_sign_quot <= op_a[31] ^ op_b[31];
+118                                            div_sign_rem  <= op_a[31];
+119                                            div_divisor   <= op_b[31] ? (~op_b + 32'd1) : op_b;
+                                                                         <font color = "red">-6-</font>  
+                                                                         <font color = "red">==></font>  
+                                                                         <font color = "red">==></font>  
+120                                            div_rem_quot  <= {32'd0, op_a[31] ? (~op_a + 32'd1) : op_a};
+121                                        end else begin
+122                                            div_sign_quot <= 1'b0;
+           <font color = "red">                                    ==></font>
+123                                            div_sign_rem  <= 1'b0;
+124                                            div_divisor   <= op_b;
+125                                            div_rem_quot  <= {32'd0, op_a};
+126                                        end
+127                                    end
+128                                    default: ;
+           <font color = "red">                            ==></font>
+129                                endcase
+130                            end else begin
+131                                // Single-cycle register writes
+132                                if (mdu_op == OP_MTHI) begin
+                                   <font color = "red">-7-</font>  
+133                                    hi <= op_a;
+           <font color = "red">                            ==></font>
+134                                end else if (mdu_op == OP_MTLO) begin
+                                            <font color = "red">-8-</font>  
+135                                    lo <= op_a;
+           <font color = "red">                            ==></font>
+136                                end
+                                   MISSING_ELSE
+           <font color = "green">                        ==></font>
+137                            end
+138                        end
+139        
+140                        STATE_MULT: begin
+141                            // Multiplication is completed in 2 cycles total
+142                            // This is the 2nd cycle of multiplication
+143                            if (mult_active) begin
+                               <font color = "red">-9-</font>  
+144                                hi          <= mult_prod[63:32];
+           <font color = "red">                        ==></font>
+145                                lo          <= mult_prod[31:0];
+146                                ready       <= 1'b1;
+147                                mult_active <= 1'b0;
+148                                state       <= STATE_IDLE;
+149                            end
+                               MISSING_ELSE
+           <font color = "red">                    ==></font>
+150                        end
+151        
+152                        STATE_DIV: begin
+153                            if (count < 6'd32) begin
+                               <font color = "red">-10-</font>  
+154                                // Shift left and subtract
+155                                // div_rem_quot is shifted left by 1, and the next subtraction is checked
+156                                if (sub_res[32] == 1'b0) begin
+                                   <font color = "red">-11-</font>  
+157                                    // Subtraction succeeded (remainder is >= divisor)
+158                                    div_rem_quot <= {sub_res[31:0], next_rem_quot[31:1], 1'b1};
+           <font color = "red">                            ==></font>
+159                                end else begin
+160                                    // Subtraction failed (remainder is < divisor)
+161                                    div_rem_quot <= {next_rem_quot[63:32], next_rem_quot[31:1], 1'b0};
+           <font color = "red">                            ==></font>
+162                                end
+163                                count <= count + 6'd1;
+164                            end else begin
+165                                // Post-processing and writeback
+166                                final_quot = div_rem_quot[31:0];
+167                                final_rem  = div_rem_quot[63:32];
+168        
+169                                // division by zero check (avoid hang, return undefined values)
+170                                if (div_divisor == 32'd0) begin
+                                   <font color = "red">-12-</font>  
+171                                    hi <= 32'd0;
+           <font color = "red">                            ==></font>
+172                                    lo <= 32'd0;
+173                                end else begin
+174                                    // Handle signed adjustments
+175                                    if (div_sign_quot) begin
+                                       <font color = "red">-13-</font>  
+176                                        lo <= ~final_quot + 32'd1;
+           <font color = "red">                                ==></font>
+177                                    end else begin
+178                                        lo <= final_quot;
+           <font color = "red">                                ==></font>
+179                                    end
+180                                    
+181                                    if (div_sign_rem) begin
+                                       <font color = "red">-14-</font>  
+182                                        hi <= ~final_rem + 32'd1;
+           <font color = "red">                                ==></font>
+183                                    end else begin
+184                                        hi <= final_rem;
+           <font color = "red">                                ==></font>
+185                                    end
+186                                end
+187                                
+188                                ready <= 1'b1;
+189                                state <= STATE_IDLE;
+190                            end
+191                        end
+192        
+193                        default: state <= STATE_IDLE;
+           <font color = "red">                ==></font>
+</pre>
+<br clear=all>
+<span class=repname>Branches:</span>
+<br clear=all>
+<table align=left class="noborder">
+<tr>
+<th nowrap width=80>-1-</th><th nowrap width=80>-2-</th><th nowrap width=80>-3-</th><th nowrap width=80>-4-</th><th nowrap width=80>-5-</th><th nowrap width=80>-6-</th><th nowrap width=80>-7-</th><th nowrap width=80>-8-</th><th nowrap width=80>-9-</th><th nowrap width=80>-10-</th><th nowrap width=80>-11-</th><th nowrap width=80>-12-</th><th nowrap width=80>-13-</th><th nowrap width=80>-14-</th><th nowrap width=80>Status</th></tr><tr class="uGreen">
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>1</td>
+<td align=center>OP_MULT OP_MULTU </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>1</td>
+<td align=center>OP_DIV OP_DIVU </td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>1</td>
+<td align=center>OP_DIV OP_DIVU </td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>1</td>
+<td align=center>OP_DIV OP_DIVU </td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>1</td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uGreen">
+<td align=center>0</td>
+<td align=center>STATE_IDLE </td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_MULT </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_MULT </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>1</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>1</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>STATE_DIV </td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td align=center nowrap>-</td>
+<td align=center>0</td>
+<td>Not Covered</td>
+</tr><tr class="uRed">
+<td align=center>0</td>
+<td align=center>default</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td align=center nowrap>-</td>
+<td>Not Covered</td>
+</tr></table><br clear=all>
+</div>
+</div>
+<div class="ui-layout-center-inner-north">
+<div id="center-bread-crumb" class="breadCrumb module urg-margin-bottom">
+  <ul name="inst_tag_1">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#FSM">FSM</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+  <ul name="tag_mips_mdu">
+    <li>
+      <a href="#Line">Line</a>    </li>
+    <li>
+      <a href="#Cond">Cond</a>    </li>
+    <li>
+      <a href="#Toggle">Toggle</a>    </li>
+    <li>
+      <a href="#FSM">FSM</a>    </li>
+    <li>
+      <a href="#Branch">Branch</a>    </li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="ui-layout-south">
+<table align=center><tr><td class="s0 cl">0%</td>
+<td class="s1 cl">10%</td>
+<td class="s2 cl">20%</td>
+<td class="s3 cl">30%</td>
+<td class="s4 cl">40%</td>
+<td class="s5 cl">50%</td>
+<td class="s6 cl">60%</td>
+<td class="s7 cl">70%</td>
+<td class="s8 cl">80%</td>
+<td class="s9 cl">90%</td>
+<td class="s10 cl">100%</td></tr></table></div>
+</body>
+</html>

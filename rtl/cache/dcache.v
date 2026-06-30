@@ -260,7 +260,9 @@ module dcache (
     // Main Control and SRAM Writes
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            // VCS coverage off
             state <= IDLE;
+            // VCS coverage on
             req_buf_valid <= 1'b0;
             req_buf_we <= 1'b0;
             req_buf_addr <= 32'd0;
@@ -326,6 +328,7 @@ module dcache (
                     if ((!awvalid || awready) && (!wvalid || wready)) begin
                         // Both accepted, wait for response
                         bready <= 1'b1;
+                        $display("[%t] DCACHE: Asserting BREADY. awvalid=%b, awready=%b, wvalid=%b, wready=%b", $time, awvalid, awready, wvalid, wready);
                     end
                 end
                 

@@ -1,0 +1,32 @@
+Dashboard
+
+Date: Sun Jun 28 03:38:47 2026
+
+User: admin
+
+Version: X-2025.06
+Command line: urg -dir soc_cov.vdb -report soc_cov_report -format text 
+
+Number of tests: 1
+
+-------------------------------------------------------------------------------
+Total Coverage Summary 
+SCORE  LINE   COND   TOGGLE FSM    BRANCH 
+ 38.88  52.12  52.02  29.33  15.38  45.55 
+
+
+-------------------------------------------------------------------------------
+Hierarchical coverage data for top-level instances 
+SCORE  LINE   COND   TOGGLE FSM    BRANCH NAME            
+  9.46  18.18   7.14   0.00 --      12.50 apb_pic         
+  3.22   0.00  12.87   0.00 --       0.00 axi_decoder_1x3 
+  4.39   7.14  11.48   0.00   0.00   3.33 axi_spi_flash   
+  2.97   5.26   7.07   0.00   0.00   2.53 jtag_debug_top  
+ 47.83  58.48  62.84  33.32  30.51  53.98 tb_mips_soc     
+
+
+-------------------------------------------------------------------------------
+Total Module Definition Coverage Summary 
+SCORE  LINE   COND   TOGGLE FSM    BRANCH 
+ 38.88  52.12  52.02  29.33  15.38  45.55 
+
