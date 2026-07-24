@@ -3,12 +3,13 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
+`include "axi_slave_if.sv"
 `include "axi_transaction.sv"
 
 class axi_driver extends uvm_driver #(axi_transaction);
     `uvm_component_utils(axi_driver)
 
-    virtual axi_if vif;
+    virtual axi_slave_if vif;
     
     // Memory array for slave mode emulation
     logic [7:0] mem[longint];
@@ -19,7 +20,7 @@ class axi_driver extends uvm_driver #(axi_transaction);
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if(!uvm_config_db#(virtual axi_if)::get(this, "", "vif", vif))
+        if(!uvm_config_db#(virtual axi_slave_if)::get(this, "", "vif", vif))
             `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
             
         // Load firmware into mem
@@ -51,17 +52,17 @@ class axi_driver extends uvm_driver #(axi_transaction);
     endfunction
 
     task run_phase(uvm_phase phase);
-        vif.awready <= 0;
-        vif.wready <= 0;
-        vif.bvalid <= 0;
-        vif.bresp <= 0;
-        vif.bid <= 0;
-        vif.arready <= 0;
-        vif.rvalid <= 0;
-        vif.rdata <= 0;
-        vif.rresp <= 0;
-        vif.rlast <= 0;
-        vif.rid <= 0;
+        vif.cb.awready <= 0;
+        vif.cb.wready  <= 0;
+        vif.cb.bvalid  <= 0;
+        vif.cb.bresp   <= 0;
+        vif.cb.bid     <= 0;
+        vif.cb.arready <= 0;
+        vif.cb.rvalid  <= 0;
+        vif.cb.rdata   <= 0;
+        vif.cb.rresp   <= 0;
+        vif.cb.rlast   <= 0;
+        vif.cb.rid     <= 0;
         
         wait(vif.rst_n);
         
@@ -136,9 +137,9 @@ class axi_driver extends uvm_driver #(axi_transaction);
     
     task handle_read_channels();
         axi_transaction req = new();
-        logic [31:0] saved_arid;
+        logic [3:0]  saved_arid;
         logic [31:0] saved_araddr;
-        logic [3:0]  saved_arlen;
+        logic [7:0]  saved_arlen;
         
         forever begin
             while(vif.cb.arvalid !== 1'b1) @(vif.cb);

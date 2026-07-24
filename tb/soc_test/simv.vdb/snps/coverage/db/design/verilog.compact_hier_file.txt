@@ -1,4 +1,0 @@
-\$unit::../../rtl/axi/axi2apb_bridge.v::../../rtl/axi/axi_arbiter_2x1.v...@403706988 00
-axi_monitor00
-tb_mips_soc00
-tb_mips_soc.u_soc2790

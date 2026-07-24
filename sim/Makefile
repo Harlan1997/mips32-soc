@@ -8,9 +8,9 @@
 # =============================================================================
 
 # Tool environment initialization wrapper
-ENV_LOAD = . /etc/profile.d/modules.sh && module load vcs verdi
+ENV_LOAD = export PATH=/home/admin/.local/bin:$$PATH MODULES_PAGER=cat PAGER=cat TERM=dumb && . /etc/profile.d/modules.sh && module use /tool/module && module load vcs verdi
 
-VERDI_HOME = /tool/verdi/verdi/X-2025.06-SP1
+VERDI_HOME ?= /data/disk/verdi/verdi/X-2025.06-SP1
 
 # Directories
 RTL_DIR = ../rtl/cpu

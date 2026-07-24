@@ -1,8 +1,0 @@
-<Command name="schRTLInfo"  delimiter="."  >
-<RTLBlock >
-<RTLInfo   name="state_0"  type="2"  fileName="../rtl/cpu/mips_mdu.v"  >
-    <Seg beginLine="82"  endLine="111"  />
-  </RTLInfo>
- <Instance name="tb_mips_cpu.u_cpu.u_mips_ex_stage.u_mips_mdu"  />
-</RTLBlock>
- </Command>

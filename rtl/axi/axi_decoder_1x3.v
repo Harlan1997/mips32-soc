@@ -4,10 +4,13 @@
 // Author:    Antigravity
 // Description:
 //   Decodes addresses from 1 Master to 3 Slaves:
-//     S0: 0x0000_0000 - 0x0000_FFFF (SRAM)
-//     S1: 0x4000_0000 - 0x4000_FFFF (APB Bridge)
-//     S2: 0x1000_0000 - 0x1FFF_FFFF (SPI Flash)
+//     S0: 0x0000_0000 and 0xA000_0000 windows (SRAM)
+//     S1: 0x4000_0000 window (APB Bridge)
+//     S2: 0x1000_0000 window (SPI Flash)
+//   Unmapped addresses are completed internally with AXI DECERR.
 // =============================================================================
+
+`include "soc_config.vh"
 
 module axi_decoder_1x3 (
     input  wire        clk,
@@ -163,13 +166,43 @@ module axi_decoder_1x3 (
     output wire        s2_rready
 );
 
-    wire sel_s1_aw = (m_awaddr[31:28] == 4'h4);
-    wire sel_s2_aw = (m_awaddr[31:28] == 4'h1);
-    wire sel_s0_aw = !sel_s1_aw && !sel_s2_aw;
+    localparam [1:0] SEL_SRAM  = 2'b00;
+    localparam [1:0] SEL_APB   = 2'b01;
+    localparam [1:0] SEL_FLASH = 2'b10;
+    localparam [1:0] SEL_ERR   = 2'b11;
 
-    wire sel_s1_ar = (m_araddr[31:28] == 4'h4);
-    wire sel_s2_ar = (m_araddr[31:28] == 4'h1);
-    wire sel_s0_ar = !sel_s1_ar && !sel_s2_ar;
+    wire sel_s0_aw = ((m_awaddr & `SOC_64KB_REGION_MASK) == `SOC_BOOT_BASE) ||
+                     ((m_awaddr & `SOC_64KB_REGION_MASK) == `SOC_SRAM_ALIAS_BASE);
+    wire sel_s1_aw = ((m_awaddr & `SOC_64KB_REGION_MASK) == `SOC_APB_BASE);
+    wire sel_s2_aw = ((m_awaddr & `SOC_256MB_REGION_MASK) == `SOC_FLASH_BASE);
+    wire sel_err_aw = !sel_s0_aw && !sel_s1_aw && !sel_s2_aw;
+
+    wire sel_s0_ar = ((m_araddr & `SOC_64KB_REGION_MASK) == `SOC_BOOT_BASE) ||
+                     ((m_araddr & `SOC_64KB_REGION_MASK) == `SOC_SRAM_ALIAS_BASE);
+    wire sel_s1_ar = ((m_araddr & `SOC_64KB_REGION_MASK) == `SOC_APB_BASE);
+    wire sel_s2_ar = ((m_araddr & `SOC_256MB_REGION_MASK) == `SOC_FLASH_BASE);
+    wire sel_err_ar = !sel_s0_ar && !sel_s1_ar && !sel_s2_ar;
+
+    wire [1:0] aw_sel = sel_s1_aw ? SEL_APB :
+                        sel_s2_aw ? SEL_FLASH :
+                        sel_err_aw ? SEL_ERR : SEL_SRAM;
+    wire [1:0] ar_sel = sel_s1_ar ? SEL_APB :
+                        sel_s2_ar ? SEL_FLASH :
+                        sel_err_ar ? SEL_ERR : SEL_SRAM;
+
+    reg        write_busy;
+    reg [1:0]  act_w_sel;
+    reg [3:0]  err_bid;
+    reg        err_bvalid;
+
+    reg        read_busy;
+    reg [1:0]  act_r_sel;
+    reg [3:0]  err_rid;
+    reg [7:0]  err_rlen;
+    reg [7:0]  err_rbeat;
+
+    wire write_resp_fire = m_bvalid && m_bready;
+    wire read_resp_fire  = m_rvalid && m_rready && m_rlast;
     
     // Address Channels Demux
     assign s0_awid    = m_awid;
@@ -180,7 +213,7 @@ module axi_decoder_1x3 (
     assign s0_awlock  = m_awlock;
     assign s0_awcache = m_awcache;
     assign s0_awprot  = m_awprot;
-    assign s0_awvalid = m_awvalid & sel_s0_aw;
+    assign s0_awvalid = m_awvalid & !write_busy & sel_s0_aw;
     
     assign s1_awid    = m_awid;
     assign s1_awaddr  = m_awaddr;
@@ -190,7 +223,7 @@ module axi_decoder_1x3 (
     assign s1_awlock  = m_awlock;
     assign s1_awcache = m_awcache;
     assign s1_awprot  = m_awprot;
-    assign s1_awvalid = m_awvalid & sel_s1_aw;
+    assign s1_awvalid = m_awvalid & !write_busy & sel_s1_aw;
 
     assign s2_awid    = m_awid;
     assign s2_awaddr  = m_awaddr;
@@ -200,44 +233,77 @@ module axi_decoder_1x3 (
     assign s2_awlock  = m_awlock;
     assign s2_awcache = m_awcache;
     assign s2_awprot  = m_awprot;
-    assign s2_awvalid = m_awvalid & sel_s2_aw;
+    assign s2_awvalid = m_awvalid & !write_busy & sel_s2_aw;
 
-    assign m_awready  = sel_s1_aw ? s1_awready : sel_s2_aw ? s2_awready : s0_awready;
+    assign m_awready  = !write_busy &
+                        (sel_s1_aw ? s1_awready :
+                         sel_s2_aw ? s2_awready :
+                         sel_err_aw ? 1'b1 : s0_awready);
 
     // Write Data Demux (requires tracking active write channel)
-    reg [1:0] act_w_sel;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) act_w_sel <= 2'b00;
-        else if (m_awvalid && m_awready) act_w_sel <= sel_s1_aw ? 2'b01 : (sel_s2_aw ? 2'b10 : 2'b00);
+        if (!rst_n) begin
+            write_busy <= 1'b0;
+            act_w_sel  <= SEL_SRAM;
+            err_bid    <= 4'h0;
+            err_bvalid <= 1'b0;
+        end else begin
+            if (m_awvalid && m_awready) begin
+                write_busy <= 1'b1;
+                act_w_sel  <= aw_sel;
+                if (sel_err_aw) begin
+                    err_bid <= m_awid;
+                end
+            end else if (write_resp_fire) begin
+                write_busy <= 1'b0;
+            end
+
+            if (err_bvalid && m_bready) begin
+                err_bvalid <= 1'b0;
+            end
+
+            if ((act_w_sel == SEL_ERR) && write_busy && m_wvalid && m_wready && m_wlast) begin
+                err_bvalid <= 1'b1;
+            end
+        end
     end
     
-    wire [1:0] cur_w_sel = m_awvalid ? (sel_s1_aw ? 2'b01 : (sel_s2_aw ? 2'b10 : 2'b00)) : act_w_sel;
+    wire [1:0] cur_w_sel = write_busy ? act_w_sel : aw_sel;
 
-    assign s0_wvalid = m_wvalid & (cur_w_sel == 2'b00);
+    assign s0_wvalid = m_wvalid & (cur_w_sel == SEL_SRAM);
     assign s0_wdata  = m_wdata;
     assign s0_wstrb  = m_wstrb;
     assign s0_wlast  = m_wlast;
 
-    assign s1_wvalid = m_wvalid & (cur_w_sel == 2'b01);
+    assign s1_wvalid = m_wvalid & (cur_w_sel == SEL_APB);
     assign s1_wdata  = m_wdata;
     assign s1_wstrb  = m_wstrb;
     assign s1_wlast  = m_wlast;
 
-    assign s2_wvalid = m_wvalid & (cur_w_sel == 2'b10);
+    assign s2_wvalid = m_wvalid & (cur_w_sel == SEL_FLASH);
     assign s2_wdata  = m_wdata;
     assign s2_wstrb  = m_wstrb;
     assign s2_wlast  = m_wlast;
 
-    assign m_wready  = (cur_w_sel == 2'b01) ? s1_wready : (cur_w_sel == 2'b10) ? s2_wready : s0_wready;
+    assign m_wready  = (cur_w_sel == SEL_APB)   ? s1_wready :
+                       (cur_w_sel == SEL_FLASH) ? s2_wready :
+                       (cur_w_sel == SEL_ERR)   ? (write_busy && !err_bvalid) : s0_wready;
 
     // Write Response Mux
-    assign m_bid    = (act_w_sel == 2'b01) ? s1_bid : (act_w_sel == 2'b10) ? s2_bid : s0_bid;
-    assign m_bresp  = (act_w_sel == 2'b01) ? s1_bresp : (act_w_sel == 2'b10) ? s2_bresp : s0_bresp;
-    assign m_bvalid = (act_w_sel == 2'b01) ? s1_bvalid : (act_w_sel == 2'b10) ? s2_bvalid : s0_bvalid;
+    assign m_bid    = (act_w_sel == SEL_APB)   ? s1_bid :
+                      (act_w_sel == SEL_FLASH) ? s2_bid :
+                      (act_w_sel == SEL_ERR)   ? err_bid : s0_bid;
+    assign m_bresp  = (act_w_sel == SEL_APB)   ? s1_bresp :
+                      (act_w_sel == SEL_FLASH) ? s2_bresp :
+                      (act_w_sel == SEL_ERR)   ? `SOC_AXI_RESP_DECERR : s0_bresp;
+    assign m_bvalid = write_busy &
+                      ((act_w_sel == SEL_APB)   ? s1_bvalid :
+                       (act_w_sel == SEL_FLASH) ? s2_bvalid :
+                       (act_w_sel == SEL_ERR)   ? err_bvalid : s0_bvalid);
     
-    assign s0_bready = m_bready & (act_w_sel == 2'b00);
-    assign s1_bready = m_bready & (act_w_sel == 2'b01);
-    assign s2_bready = m_bready & (act_w_sel == 2'b10);
+    assign s0_bready = m_bready & write_busy & (act_w_sel == SEL_SRAM);
+    assign s1_bready = m_bready & write_busy & (act_w_sel == SEL_APB);
+    assign s2_bready = m_bready & write_busy & (act_w_sel == SEL_FLASH);
 
     // Read Address Demux
     assign s0_arid    = m_arid;
@@ -248,7 +314,7 @@ module axi_decoder_1x3 (
     assign s0_arlock  = m_arlock;
     assign s0_arcache = m_arcache;
     assign s0_arprot  = m_arprot;
-    assign s0_arvalid = m_arvalid & sel_s0_ar;
+    assign s0_arvalid = m_arvalid & !read_busy & sel_s0_ar;
     
     assign s1_arid    = m_arid;
     assign s1_araddr  = m_araddr;
@@ -258,7 +324,7 @@ module axi_decoder_1x3 (
     assign s1_arlock  = m_arlock;
     assign s1_arcache = m_arcache;
     assign s1_arprot  = m_arprot;
-    assign s1_arvalid = m_arvalid & sel_s1_ar;
+    assign s1_arvalid = m_arvalid & !read_busy & sel_s1_ar;
 
     assign s2_arid    = m_arid;
     assign s2_araddr  = m_araddr;
@@ -268,25 +334,59 @@ module axi_decoder_1x3 (
     assign s2_arlock  = m_arlock;
     assign s2_arcache = m_arcache;
     assign s2_arprot  = m_arprot;
-    assign s2_arvalid = m_arvalid & sel_s2_ar;
+    assign s2_arvalid = m_arvalid & !read_busy & sel_s2_ar;
 
-    assign m_arready  = sel_s1_ar ? s1_arready : sel_s2_ar ? s2_arready : s0_arready;
+    assign m_arready  = !read_busy &
+                        (sel_s1_ar ? s1_arready :
+                         sel_s2_ar ? s2_arready :
+                         sel_err_ar ? 1'b1 : s0_arready);
 
     // Read Data Mux
-    reg [1:0] act_r_sel;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) act_r_sel <= 2'b00;
-        else if (m_arvalid && m_arready) act_r_sel <= sel_s1_ar ? 2'b01 : (sel_s2_ar ? 2'b10 : 2'b00);
+        if (!rst_n) begin
+            read_busy <= 1'b0;
+            act_r_sel  <= SEL_SRAM;
+            err_rid    <= 4'h0;
+            err_rlen   <= 8'h00;
+            err_rbeat  <= 8'h00;
+        end else begin
+            if (m_arvalid && m_arready) begin
+                read_busy <= 1'b1;
+                act_r_sel <= ar_sel;
+                if (sel_err_ar) begin
+                    err_rid   <= m_arid;
+                    err_rlen  <= m_arlen;
+                    err_rbeat <= 8'h00;
+                end
+            end else if (read_resp_fire) begin
+                read_busy <= 1'b0;
+            end
+
+            if ((act_r_sel == SEL_ERR) && read_busy && m_rvalid && m_rready && !m_rlast) begin
+                err_rbeat <= err_rbeat + 8'h01;
+            end
+        end
     end
 
-    assign m_rid    = (act_r_sel == 2'b01) ? s1_rid : (act_r_sel == 2'b10) ? s2_rid : s0_rid;
-    assign m_rdata  = (act_r_sel == 2'b01) ? s1_rdata : (act_r_sel == 2'b10) ? s2_rdata : s0_rdata;
-    assign m_rresp  = (act_r_sel == 2'b01) ? s1_rresp : (act_r_sel == 2'b10) ? s2_rresp : s0_rresp;
-    assign m_rlast  = (act_r_sel == 2'b01) ? s1_rlast : (act_r_sel == 2'b10) ? s2_rlast : s0_rlast;
-    assign m_rvalid = (act_r_sel == 2'b01) ? s1_rvalid : (act_r_sel == 2'b10) ? s2_rvalid : s0_rvalid;
+    assign m_rid    = (act_r_sel == SEL_APB)   ? s1_rid :
+                      (act_r_sel == SEL_FLASH) ? s2_rid :
+                      (act_r_sel == SEL_ERR)   ? err_rid : s0_rid;
+    assign m_rdata  = (act_r_sel == SEL_APB)   ? s1_rdata :
+                      (act_r_sel == SEL_FLASH) ? s2_rdata :
+                      (act_r_sel == SEL_ERR)   ? 32'h0000_0000 : s0_rdata;
+    assign m_rresp  = (act_r_sel == SEL_APB)   ? s1_rresp :
+                      (act_r_sel == SEL_FLASH) ? s2_rresp :
+                      (act_r_sel == SEL_ERR)   ? `SOC_AXI_RESP_DECERR : s0_rresp;
+    assign m_rlast  = (act_r_sel == SEL_APB)   ? s1_rlast :
+                      (act_r_sel == SEL_FLASH) ? s2_rlast :
+                      (act_r_sel == SEL_ERR)   ? (err_rbeat == err_rlen) : s0_rlast;
+    assign m_rvalid = read_busy &
+                      ((act_r_sel == SEL_APB)   ? s1_rvalid :
+                       (act_r_sel == SEL_FLASH) ? s2_rvalid :
+                       (act_r_sel == SEL_ERR)   ? 1'b1 : s0_rvalid);
 
-    assign s0_rready = m_rready & (act_r_sel == 2'b00);
-    assign s1_rready = m_rready & (act_r_sel == 2'b01);
-    assign s2_rready = m_rready & (act_r_sel == 2'b10);
+    assign s0_rready = m_rready & read_busy & (act_r_sel == SEL_SRAM);
+    assign s1_rready = m_rready & read_busy & (act_r_sel == SEL_APB);
+    assign s2_rready = m_rready & read_busy & (act_r_sel == SEL_FLASH);
 
 endmodule

@@ -1,24 +1,47 @@
+# EDA simulator build outputs
 simv
 simv.daidir/
 csrc/
-*.log
-regression.vdb/
-urgReport/
+DVEfiles/
 ucli.key
 vc_hdrs.h
-tb/uvm_tb/firmware.hex
+
+# Logs and temporary simulator metadata
+*.log
 cm.log
+*.key
+*.vpd
+*.vcd
+*.fsdb
+*.daidir/
+*.vdb/
+.fsm.sch.verilog.xml
+
+# Coverage and report outputs
+regression.vdb/
+urgReport/
+textReportFinal/
+cov_dir.vdb/
 regression_logs/
+
+# Generated firmware images
 sim/firmware.hex
 sim/.fsm.sch.verilog.xml
+tb/uvm_tb/firmware.hex
+tb/soc_test/firmware.hex
 tb/soc_test/.fsm.sch.verilog.xml
 tb/soc_test/fw.asm
 tb/soc_test/fw/firmware.bin
 tb/soc_test/fw/firmware.elf
 tb/soc_test/fw/firmware.hex
 tb/soc_test/fw/firmware.map
+
+# Native build artifacts
 *.o
 *.a
 *.so
 *.db
 
+# Python caches
+__pycache__/
+*.pyc
