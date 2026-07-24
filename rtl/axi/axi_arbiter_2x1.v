@@ -4,7 +4,7 @@
 // Author:    Antigravity
 // Description:
 //   Connects M0 (I-Cache, Read Only) and M1 (D-Cache, R/W) to S0 (SRAM).
-//   Simple arbitration: M1 has priority over M0.
+//   Read arbitration is single-outstanding round-robin.
 //   AW/W/B channels: Directly passed from M1 to S0.
 //   AR/R channels: Arbitrated between M0 and M1.
 // =============================================================================
@@ -149,31 +149,61 @@ module axi_arbiter_2x1 (
     
     reg [1:0]  ar_state;
     reg        active_master; // 0 for M0, 1 for M1
+    reg        rr_next_master; // preferred master when both request
+    reg [3:0]  arid_latch;
+    reg [31:0] araddr_latch;
+    reg [7:0]  arlen_latch;
+    reg [2:0]  arsize_latch;
+    reg [1:0]  arburst_latch;
+    reg [1:0]  arlock_latch;
+    reg [3:0]  arcache_latch;
+    reg [2:0]  arprot_latch;
+
+    wire choose_m1_ar = m1_arvalid && (!m0_arvalid || rr_next_master);
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             // VCS coverage off
             ar_state <= AR_IDLE;
             active_master <= 1'b0;
+            rr_next_master <= 1'b1;
+            arid_latch <= 4'h0;
+            araddr_latch <= 32'h0;
+            arlen_latch <= 8'h0;
+            arsize_latch <= 3'h0;
+            arburst_latch <= 2'h0;
+            arlock_latch <= 2'h0;
+            arcache_latch <= 4'h0;
+            arprot_latch <= 3'h0;
             // VCS coverage on
         end else begin
             case (ar_state)
                 AR_IDLE: begin
-                    if (m1_arvalid) begin
-                        active_master <= 1'b1;
-                        if (s0_arready) ar_state <= AR_BUSY;
-                        else ar_state <= AR_WAIT;
-                    end else if (m0_arvalid) begin
-                        active_master <= 1'b0;
-                        if (s0_arready) ar_state <= AR_BUSY;
-                        else ar_state <= AR_WAIT;
+                    if (m0_arvalid || m1_arvalid) begin
+                        active_master <= choose_m1_ar;
+                        arid_latch    <= choose_m1_ar ? m1_arid    : m0_arid;
+                        araddr_latch  <= choose_m1_ar ? m1_araddr  : m0_araddr;
+                        arlen_latch   <= choose_m1_ar ? m1_arlen   : m0_arlen;
+                        arsize_latch  <= choose_m1_ar ? m1_arsize  : m0_arsize;
+                        arburst_latch <= choose_m1_ar ? m1_arburst : m0_arburst;
+                        arlock_latch  <= choose_m1_ar ? m1_arlock  : m0_arlock;
+                        arcache_latch <= choose_m1_ar ? m1_arcache : m0_arcache;
+                        arprot_latch  <= choose_m1_ar ? m1_arprot  : m0_arprot;
+                        if (s0_arready) begin
+                            ar_state <= AR_BUSY;
+                            rr_next_master <= !choose_m1_ar;
+                        end else begin
+                            ar_state <= AR_WAIT;
+                        end
                     end
                 end
                 AR_WAIT: begin
-                    if (s0_arready) ar_state <= AR_BUSY;
+                    if (s0_arready) begin
+                        ar_state <= AR_BUSY;
+                        rr_next_master <= !active_master;
+                    end
                 end
                 AR_BUSY: begin
-                    // Wait for the read transaction to finish (RLAST)
                     if (s0_rvalid && s0_rready && s0_rlast) begin
                         ar_state <= AR_IDLE;
                     end
@@ -184,35 +214,35 @@ module axi_arbiter_2x1 (
     end
     
     // AR Mux
-    wire sel_m1 = (ar_state == AR_IDLE) ? m1_arvalid : active_master;
-    
-    assign s0_arid    = sel_m1 ? m1_arid    : m0_arid;
-    assign s0_araddr  = sel_m1 ? m1_araddr  : m0_araddr;
-    assign s0_arlen   = sel_m1 ? m1_arlen   : m0_arlen;
-    assign s0_arsize  = sel_m1 ? m1_arsize  : m0_arsize;
-    assign s0_arburst = sel_m1 ? m1_arburst : m0_arburst;
-    assign s0_arlock  = sel_m1 ? m1_arlock  : m0_arlock;
-    assign s0_arcache = sel_m1 ? m1_arcache : m0_arcache;
-    assign s0_arprot  = sel_m1 ? m1_arprot  : m0_arprot;
+    wire sel_m1 = (ar_state == AR_IDLE) ? choose_m1_ar : active_master;
+    wire ar_waiting = (ar_state == AR_WAIT);
+
+    assign s0_arid    = ar_waiting ? arid_latch    : (sel_m1 ? m1_arid    : m0_arid);
+    assign s0_araddr  = ar_waiting ? araddr_latch  : (sel_m1 ? m1_araddr  : m0_araddr);
+    assign s0_arlen   = ar_waiting ? arlen_latch   : (sel_m1 ? m1_arlen   : m0_arlen);
+    assign s0_arsize  = ar_waiting ? arsize_latch  : (sel_m1 ? m1_arsize  : m0_arsize);
+    assign s0_arburst = ar_waiting ? arburst_latch : (sel_m1 ? m1_arburst : m0_arburst);
+    assign s0_arlock  = ar_waiting ? arlock_latch  : (sel_m1 ? m1_arlock  : m0_arlock);
+    assign s0_arcache = ar_waiting ? arcache_latch : (sel_m1 ? m1_arcache : m0_arcache);
+    assign s0_arprot  = ar_waiting ? arprot_latch  : (sel_m1 ? m1_arprot  : m0_arprot);
     assign s0_arvalid = (ar_state == AR_IDLE) ? (m1_arvalid | m0_arvalid) : (ar_state == AR_WAIT ? 1'b1 : 1'b0); 
     
-    // In AR_IDLE and AR_WAIT, ready is routed to the selected master
-    assign m1_arready = (ar_state == AR_IDLE && m1_arvalid) ? s0_arready : ((ar_state == AR_WAIT && active_master) ? s0_arready : 1'b0);
-    assign m0_arready = (ar_state == AR_IDLE && !m1_arvalid && m0_arvalid) ? s0_arready : ((ar_state == AR_WAIT && !active_master) ? s0_arready : 1'b0);
+    assign m1_arready = (ar_state == AR_IDLE && choose_m1_ar) ? s0_arready : ((ar_state == AR_WAIT && active_master) ? s0_arready : 1'b0);
+    assign m0_arready = (ar_state == AR_IDLE && !choose_m1_ar && m0_arvalid) ? s0_arready : ((ar_state == AR_WAIT && !active_master) ? s0_arready : 1'b0);
     
     // R Demux
     assign m1_rid     = s0_rid;
     assign m1_rdata   = s0_rdata;
     assign m1_rresp   = s0_rresp;
     assign m1_rlast   = s0_rlast;
-    assign m1_rvalid  = (active_master == 1'b1) ? s0_rvalid : 1'b0;
+    assign m1_rvalid  = (ar_state == AR_BUSY && active_master == 1'b1) ? s0_rvalid : 1'b0;
     
     assign m0_rid     = s0_rid;
     assign m0_rdata   = s0_rdata;
     assign m0_rresp   = s0_rresp;
     assign m0_rlast   = s0_rlast;
-    assign m0_rvalid  = (active_master == 1'b0) ? s0_rvalid : 1'b0;
+    assign m0_rvalid  = (ar_state == AR_BUSY && active_master == 1'b0) ? s0_rvalid : 1'b0;
     
-    assign s0_rready  = (active_master == 1'b1) ? m1_rready : m0_rready;
+    assign s0_rready  = (ar_state == AR_BUSY) ? (active_master ? m1_rready : m0_rready) : 1'b0;
 
 endmodule

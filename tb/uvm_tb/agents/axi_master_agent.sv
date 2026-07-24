@@ -6,14 +6,14 @@ import uvm_pkg::*;
 `include "axi_transaction.sv"
 `include "axi_sequencer.sv"
 `include "axi_master_driver.sv"
-`include "axi_monitor.sv"
+`include "axi_master_monitor.sv"
 
 class axi_master_agent extends uvm_agent;
     `uvm_component_utils(axi_master_agent)
     
     axi_sequencer sqr;
     axi_master_driver drv;
-    axi_monitor mon;
+    axi_master_monitor mon;
     
     function new(string name, uvm_component parent);
         super.new(name, parent);
@@ -21,7 +21,7 @@ class axi_master_agent extends uvm_agent;
     
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        mon = axi_monitor::type_id::create("mon", this);
+        mon = axi_master_monitor::type_id::create("mon", this);
         if (get_is_active() == UVM_ACTIVE) begin
             sqr = axi_sequencer::type_id::create("sqr", this);
             drv = axi_master_driver::type_id::create("drv", this);

@@ -56,7 +56,7 @@ module tb_mips_soc;
         // Program: Print "Hi!\n" to UART at 0x4000_0000
         
         // Initialize memory with firmware.hex
-        $readmemh("firmware.hex", u_soc.u_axi_sram.ram);
+        $readmemh("firmware.hex", u_soc.u_impl.u_axi_sram.ram);
         
         // We need to wait enough cycles for instruction fetch, cache miss, uncacheable writes
     end
@@ -71,11 +71,11 @@ module tb_mips_soc;
     
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
-        if (u_soc.u_core.u_cpu.data_req && u_soc.u_core.u_cpu.data_we && u_soc.u_core.u_cpu.data_addr == 32'ha000fffc) begin
-            if (u_soc.u_core.u_cpu.data_wdata == 32'hdeadbeef) begin
+        if (u_soc.u_impl.u_core.u_cpu.data_req && u_soc.u_impl.u_core.u_cpu.data_we && u_soc.u_impl.u_core.u_cpu.data_addr == 32'ha000fffc) begin
+            if (u_soc.u_impl.u_core.u_cpu.data_wdata == 32'hdeadbeef) begin
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
-            end else if (u_soc.u_core.u_cpu.data_wdata == 32'hdeaddead) begin
+            end else if (u_soc.u_impl.u_core.u_cpu.data_wdata == 32'hdeaddead) begin
                 $display("REGRESSION_TEST_FAILED");
                 $finish;
             end
@@ -83,18 +83,18 @@ module tb_mips_soc;
         
         // Debug PC Trace
         if ($time % 5000000 == 0) begin
-            $display("Time=%0t PC=%h", $time, u_soc.u_core.u_cpu.u_mips_if_stage.pc);
+            $display("Time=%0t PC=%h", $time, u_soc.u_impl.u_core.u_cpu.u_mips_if_stage.pc);
         end
     end
     
     always @(posedge clk) begin
-        if (u_soc.u_apb_uart.psel && u_soc.u_apb_uart.penable && u_soc.u_apb_uart.pwrite && u_soc.u_apb_uart.paddr[7:0] == 8'h00) begin
-            $write("%c", u_soc.u_apb_uart.pwdata[7:0]);
+        if (u_soc.u_impl.u_apb_uart.psel && u_soc.u_impl.u_apb_uart.penable && u_soc.u_impl.u_apb_uart.pwrite && u_soc.u_impl.u_apb_uart.paddr[7:0] == 8'h00) begin
+            $write("%c", u_soc.u_impl.u_apb_uart.pwdata[7:0]);
             $fflush();
         end
-        if (rst_n && u_soc.u_core.u_cpu.global_stall && $time > 20900000) begin
+        if (rst_n && u_soc.u_impl.u_core.u_cpu.global_stall && $time > 20900000) begin
             $display("Time=%0t DCACHE: state=%0d next_state=%0d req_buf_addr=%x req_buf_we=%b uc_req=%b awv=%b wv=%b bready=%b", 
-                $time, u_soc.u_core.u_dcache.state, u_soc.u_core.u_dcache.next_state, u_soc.u_core.u_dcache.req_buf_addr, u_soc.u_core.u_dcache.req_buf_we, u_soc.u_core.u_dcache.uncacheable, u_soc.u_core.u_dcache.awvalid, u_soc.u_core.u_dcache.wvalid, u_soc.u_core.u_dcache.bready);
+                $time, u_soc.u_impl.u_core.u_dcache.state, u_soc.u_impl.u_core.u_dcache.next_state, u_soc.u_impl.u_core.u_dcache.req_buf_addr, u_soc.u_impl.u_core.u_dcache.req_buf_we, u_soc.u_impl.u_core.u_dcache.uncacheable, u_soc.u_impl.u_core.u_dcache.awvalid, u_soc.u_impl.u_core.u_dcache.wvalid, u_soc.u_impl.u_core.u_dcache.bready);
         end
     end
 
@@ -208,18 +208,23 @@ module tb_mips_soc;
         jtag_shift_ir(4'h1); // IDCODE
         jtag_shift_dr(32'h00000000); // shift out IDCODE (dummy shift)
         
-        // JTAG AXI Write to GPIO (0x2000_0000)
+        // JTAG AXI Write to GPIO direction register (0x4000_2004)
         jtag_shift_ir(4'h8); // IR_AXI_CMD
-        // CMD: Write (1) | Addr (0x2000_0000) | Data (0xDEADBEEF)
-        jtag_shift_dr_65({1'b1, 32'h20000000, 32'hDEADBEEF});
+        // CMD: Write (1) | Addr (0x4000_2004) | Data (0xFFFF_FFFF)
+        jtag_shift_dr_65({1'b1, 32'h40002004, 32'hFFFFFFFF});
+        #100; // wait for AXI transaction
+
+        // JTAG AXI Write to GPIO data register (0x4000_2000)
+        // CMD: Write (1) | Addr (0x4000_2000) | Data (0xDEADBEEF)
+        jtag_shift_dr_65({1'b1, 32'h40002000, 32'hDEADBEEF});
         #100; // wait for AXI transaction
         
-        // JTAG AXI Read from GPIO (0x2000_0000)
-        // CMD: Read (0) | Addr (0x2000_0000) | Data (0x0)
-        jtag_shift_dr_65({1'b0, 32'h20000000, 32'h00000000});
+        // JTAG AXI Read from GPIO data register (0x4000_2000)
+        // CMD: Read (0) | Addr (0x4000_2000) | Data (0x0)
+        jtag_shift_dr_65({1'b0, 32'h40002000, 32'h00000000});
         #100; // wait for AXI transaction
         // Read out the result (shift again to capture)
-        jtag_shift_dr_65({1'b0, 32'h20000000, 32'h00000000});
+        jtag_shift_dr_65({1'b0, 32'h40002000, 32'h00000000});
         
         // JTAG Toggle Coverage Boost
         $display("Testing JTAG Toggle Coverage...");

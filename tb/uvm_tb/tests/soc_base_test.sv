@@ -12,15 +12,14 @@ class soc_base_test extends uvm_test;
     endfunction
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
+        uvm_config_db#(uvm_active_passive_enum)::set(this, "env.m_axi_agent", "is_active", UVM_PASSIVE);
+        uvm_config_db#(uvm_active_passive_enum)::set(this, "env.m_axi_master_agent", "is_active", UVM_ACTIVE);
         env = soc_env::type_id::create("env", this);
     endfunction
     
     task run_phase(uvm_phase phase);
         phase.raise_objection(this);
-        uvm_config_db#(int)::set(this, "env.m_axi_agent.seqr", "enable_backpressure", 0);
-        `uvm_info("TEST", "Running UVM Backpressure Random Test...", UVM_LOW)
-        // Since driver is autonomous slave, we just let it run.
-        // We will wait 500,000,000 time units
+        `uvm_info("TEST", "Running firmware and passive fabric observation test...", UVM_LOW)
         // Timeout watchdog
         fork
             begin

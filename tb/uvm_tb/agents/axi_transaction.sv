@@ -13,7 +13,7 @@ class axi_transaction extends uvm_sequence_item;
     // Address Channel
     rand logic [3:0]  id;
     rand logic [31:0] addr;
-    rand logic [3:0]  len;
+    rand logic [7:0]  len;
     rand logic [2:0]  size;
     rand logic [1:0]  burst;
 

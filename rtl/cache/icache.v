@@ -247,9 +247,9 @@ module icache (
     end
 
     always @(posedge clk) begin
-        if (arvalid || arready || rvalid || rready) begin
-            $display("[%t] ICACHE READ: state=%d, arvalid=%b, arready=%b, araddr=%h, rvalid=%b, rready=%b, cpu_data_ok=%b",
-                     $time, state, arvalid, arready, araddr, rvalid, rready, cpu_data_ok);
-        end
+//        if (arvalid || arready || rvalid || rready) begin
+//            $display("[%t] ICACHE READ: state=%d, arvalid=%b, arready=%b, araddr=%h, rvalid=%b, rready=%b, cpu_data_ok=%b",
+//                     $time, state, arvalid, arready, araddr, rvalid, rready, cpu_data_ok);
+//        end
     end
 endmodule
