@@ -10,7 +10,7 @@ FLASH_IMAGE=${FLASH_IMAGE:-"${SCRIPT_DIR}/data/flash_xip_image.hex"}
 
 DIRECTED_DIR="${RUN_ROOT}/directed"
 COV_DIR="${RUN_ROOT}/directed_cov"
-CPU_CP0_DIR="${ROOT_DIR}/build/soc_test/cpu_cp0_gate"
+CPU_CP0_DIR=${CPU_CP0_DIR:-"${RUN_ROOT}/cpu_cp0_gate"}
 REPORT="${RUN_ROOT}/phase3_completion_report.md"
 
 ERROR_RE='^(Error:|Error-\[|Fatal:|Fatal-\[)|^UVM_(ERROR|FATAL)[[:space:]]+(@|/)|fabric_axim|Cannot connect to the license server|COVERAGE REPORT GENERATION FAILED|DIRECTED TESTLIST FAILED'

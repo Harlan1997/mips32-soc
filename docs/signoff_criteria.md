@@ -39,6 +39,16 @@
   `make phase3b-complete` passes and writes a clean completion report
 - Phase 3C PIC mask arbitration closure is claimed only after
   `make phase3c-complete` passes and writes a clean completion report
+- Current RTL contract full-chip sign-off is claimed only after
+  `make current-contract-signoff` passes, merges all compatible UVM VDBs into
+  `build/signoff/current_contract/coverage/merged.vdb`, meets all 15 required
+  functional coverage groups (100.00%) and UVM/product module-definition code
+  coverage thresholds, and writes a clean `current_contract_signoff_report.md`.
+  Approved merged UVM code coverage defaults: Score >= 75.00%, Line >= 70.00%,
+  Condition >= 80.00%, Toggle >= 60.00%, FSM >= 85.00%, Branch >= 70.00%.
+  Approved product-top CPU/CP0 code coverage defaults: Score >= 80.00%, Line >= 70.00%,
+  Condition >= 85.00%, Toggle >= 55.00%, FSM >= 90.00%, Branch >= 90.00%. All 15 required
+  functional groups must hit 100.00%.
 - directed interrupt tests cover at least DMA/PIC, timer/PIC, and timer+DMA
   combined PIC assertion/deassertion before CPU-level interrupt signoff is
   claimed

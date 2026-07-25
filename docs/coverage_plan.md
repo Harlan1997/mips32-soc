@@ -300,6 +300,13 @@ scans logs, and writes
 `build/uvm/phase3c_complete/phase3c_completion_report.md`. The latest run passed
 1/1 directed and 1/1 coverage.
 
+`make current-contract-signoff` is the unified entry point for current RTL contract
+full-chip sign-off. It executes Phase 2, Phase 3A, Phase 3B, Phase 3C, and a 10-seed
+reproducible UVM stress regression under `build/signoff/current_contract`, merges
+all compatible UVM VDBs into `build/signoff/current_contract/coverage/merged.vdb`,
+verifies all 15 required functional coverage groups at 100.00%, checks code coverage
+thresholds (merged UVM: Score 75.00%, Line 70.00%, Condition 80.00%, Toggle 60.00%, FSM 85.00%, Branch 70.00%; product-top CPU/CP0: Score 80.00%, Line 70.00%, Condition 85.00%, Toggle 55.00%, FSM 90.00%, Branch 90.00%), scans logs, and generates `current_contract_signoff_report.md`.
+
 ## Deferred Beyond Phase 2
 
 - AXI ID coverage is started with directed traffic and an overlap-generation

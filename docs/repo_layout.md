@@ -37,6 +37,9 @@ images, logs, coverage reports, or waveform dumps during normal runs.
   gate output.
 - `build/uvm/phase3c_complete/`: Phase 3C PIC mask arbitration closure output,
   including non-coverage run, coverage run, error scan, and completion report.
+- `build/signoff/current_contract/`: current RTL contract full-chip sign-off output,
+  including all Phase 2/3A/3B/3C gates, multi-seed stress regression, merged VDB,
+  and sign-off report.
 - `build/uvm/<custom>/`: caller-selected UVM run directories through
   `UVM_RUN_DIR`, `UVM_REG_DIR`, or `UVM_DIRECTED_DIR`.
 - `build/soc_test/smoke/`: legacy SoC smoke compile, simulation, and coverage
@@ -89,6 +92,10 @@ Current Phase 2 baselines are kept as named disposable run directories:
   gate in `build/uvm/phase3c_complete/`, including non-coverage regression,
   coverage regression, error scan, required group checks, and a completion
   report.
+- `make current-contract-signoff`: runs the full current RTL contract full-chip
+  sign-off flow in `build/signoff/current_contract/`, including Phase 2, Phase 3A,
+  Phase 3B, Phase 3C, multi-seed stress regression, merged coverage check, and
+  sign-off report generation.
 - `make soc-smoke`: runs the legacy SoC smoke test in `build/soc_test/smoke/`.
 - `make cpu-cp0-gate`: runs the CPU/CP0 firmware smoke gate in
   `build/soc_test/cpu_cp0_gate/`.
