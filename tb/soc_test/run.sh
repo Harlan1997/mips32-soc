@@ -1,18 +1,49 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
+RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/soc_test/smoke"}
+FW_HEX=${FW_HEX:-"${ROOT_DIR}/build/firmware/soc_smoke/firmware.hex"}
+
+if [ ! -f "$FW_HEX" ]; then
+    echo "ERROR: FW_HEX does not exist: $FW_HEX"
+    echo "Build it with: make firmware"
+    exit 1
+fi
+
+FW_HEX_ABS=$(realpath "$FW_HEX")
+mkdir -p "$RUN_DIR"
+cd "$RUN_DIR"
+
+echo "Run directory: $RUN_DIR"
+echo "Firmware: $FW_HEX_ABS"
+echo "Firmware SHA256: $(sha256sum "$FW_HEX_ABS" | awk '{print $1}')"
+
 export MODULES_PAGER=cat PAGER=cat TERM=dumb
-. /etc/profile.d/modules.sh
-module use /tool/module
+source /etc/profile.d/modules.sh
+if [ -d /tool/module ]; then
+    module use /tool/module
+fi
 module load vcs
-vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl +incdir+../../rtl/include +incdir+../../rtl/cpu \
-+incdir+../../rtl/axi +incdir+../../rtl/perips ../../rtl/cpu/mips_alu.v ../../rtl/cpu/mips_control.v \
-../../rtl/cpu/mips_core.v ../../rtl/cpu/mips_cp0.v ../../rtl/cpu/mips_cpu.v ../../rtl/cpu/mips_ex_mem_reg.v \
-../../rtl/cpu/mips_ex_stage.v ../../rtl/cpu/mips_id_ex_reg.v ../../rtl/cpu/mips_id_stage.v \
-../../rtl/cpu/mips_if_id_reg.v ../../rtl/cpu/mips_if_stage.v ../../rtl/cpu/mips_mdu.v \
-../../rtl/cpu/mips_mem_stage.v ../../rtl/cpu/mips_mem_wb_reg.v ../../rtl/cpu/mips_regfile.v \
-../../rtl/cpu/mips_wb_stage.v ../../rtl/axi/axi2apb_bridge.v ../../rtl/axi/axi_arbiter_2x1_full.v \
-../../rtl/axi/axi_arbiter_2x1.v ../../rtl/axi/axi_decoder_1x3.v \
-../../rtl/perips/apb_axi_dma.v ../../rtl/perips/apb_gpio.v ../../rtl/perips/apb_pic.v \
-../../rtl/perips/apb_timer.v ../../rtl/perips/apb_uart.v ../../rtl/perips/axi_spi_flash.v \
-../../rtl/perips/axi_sram.v ../../rtl/perips/axi_ddr_model.v ../../rtl/perips/jtag_debug_top.v ../../rtl/cache/dcache.v \
-../../rtl/cache/icache.v ../../rtl/soc_fabric.v ../../rtl/mips_soc_impl.v ../../rtl/mips_soc.v ../../rtl/soc_top.v tb_mips_soc.v -l vcs.log
-./simv -cm line+cond+fsm+branch+tgl -l sim.log
-urg -dir simv.vdb -elfile exclude5.el -excl_bypass_checks -report textReportFinal -format text
+
+vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
+    +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
+    +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
+    +incdir+"${SCRIPT_DIR}" \
+    "${ROOT_DIR}"/rtl/cpu/mips_alu.v "${ROOT_DIR}"/rtl/cpu/mips_control.v \
+    "${ROOT_DIR}"/rtl/cpu/mips_core.v "${ROOT_DIR}"/rtl/cpu/mips_cp0.v "${ROOT_DIR}"/rtl/cpu/mips_cpu.v "${ROOT_DIR}"/rtl/cpu/mips_ex_mem_reg.v \
+    "${ROOT_DIR}"/rtl/cpu/mips_ex_stage.v "${ROOT_DIR}"/rtl/cpu/mips_id_ex_reg.v "${ROOT_DIR}"/rtl/cpu/mips_id_stage.v \
+    "${ROOT_DIR}"/rtl/cpu/mips_if_id_reg.v "${ROOT_DIR}"/rtl/cpu/mips_if_stage.v "${ROOT_DIR}"/rtl/cpu/mips_mdu.v \
+    "${ROOT_DIR}"/rtl/cpu/mips_mem_stage.v "${ROOT_DIR}"/rtl/cpu/mips_mem_wb_reg.v "${ROOT_DIR}"/rtl/cpu/mips_regfile.v \
+    "${ROOT_DIR}"/rtl/cpu/mips_wb_stage.v "${ROOT_DIR}"/rtl/axi/axi2apb_bridge.v "${ROOT_DIR}"/rtl/axi/axi_arbiter_2x1_full.v \
+    "${ROOT_DIR}"/rtl/axi/axi_arbiter_2x1.v "${ROOT_DIR}"/rtl/axi/axi_decoder_1x3.v \
+    "${ROOT_DIR}"/rtl/perips/apb_axi_dma.v "${ROOT_DIR}"/rtl/perips/apb_gpio.v "${ROOT_DIR}"/rtl/perips/apb_pic.v \
+    "${ROOT_DIR}"/rtl/perips/apb_timer.v "${ROOT_DIR}"/rtl/perips/apb_uart.v "${ROOT_DIR}"/rtl/perips/axi_spi_flash.v "${ROOT_DIR}"/rtl/perips/axi_flash_image_model.v \
+    "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
+    "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v \
+    "${ROOT_DIR}"/rtl/soc_fabric.v "${ROOT_DIR}"/rtl/soc_core_subsystem.v "${ROOT_DIR}"/rtl/soc_memory_subsystem.v "${ROOT_DIR}"/rtl/soc_peripheral_subsystem.v "${ROOT_DIR}"/rtl/soc_debug_subsystem.v "${ROOT_DIR}"/rtl/mips_soc_impl.v "${ROOT_DIR}"/rtl/mips_soc.v "${ROOT_DIR}"/rtl/soc_top.v \
+    "${SCRIPT_DIR}"/tb_mips_soc.v -l vcs.log
+
+./simv +FW_HEX="$FW_HEX_ABS" -cm line+cond+fsm+branch+tgl -l sim.log
+urg -dir simv.vdb -elfile "${SCRIPT_DIR}/exclude5.el" -excl_bypass_checks -report textReportFinal -format text

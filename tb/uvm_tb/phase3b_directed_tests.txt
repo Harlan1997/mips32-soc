@@ -1,0 +1,2 @@
+# Phase 3B CPU/CP0 UVM-visible closure tests
+soc_cpu_cp0_exception_test 1

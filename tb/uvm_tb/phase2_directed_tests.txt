@@ -1,0 +1,18 @@
+# Phase 2 directed verification gate.
+# Format: <UVM_TESTNAME> [seed]
+soc_dma_irq_test 1
+soc_timer_irq_test 1
+soc_pic_combined_irq_test 1
+soc_dma_copy_test 1
+soc_apb_reg_model_test 1
+soc_apb_burst_stress_test 1
+soc_gpio_reg_model_test 1
+soc_sram_data_integrity_test 1
+soc_axi_id_sweep_test 1
+soc_axi_overlap_probe_test 1
+soc_jtag_reset_recovery_test 1
+soc_fabric_contract_test 1
+soc_unmapped_error_test 1
+soc_flash_write_error_test 1
+soc_bus_stress_test 1
+soc_base_test 1

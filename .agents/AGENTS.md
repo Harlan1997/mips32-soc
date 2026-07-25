@@ -1,4 +1,10 @@
 # Project Rules
 
 - **EDA Environment Initialization**: When running or invoking any EDA tool (like `vcs`, `verdi`, or Cadence Virtuoso `ic231`), you must first initialize the module environment by sourcing `/etc/profile.d/modules.sh` and then load the respective tool using the `module load <tool_name>` command.
-- **Reference**: For more details, refer to the [eda-env skill](file:///home/admin/iccode/.agents/skills/eda-env/SKILL.md).
+- **Sandbox and License Limitation**: VCS uses `SNPSLMD_LICENSE_FILE=2700@localhost` in this environment. Codex sandbox runs may use an isolated network namespace, so sandbox-local `localhost` cannot always reach the host license server. If VCS or Verdi fails only with a license connection error inside the sandbox, rerun the same command outside the sandbox before debugging RTL or scripts.
+- **Run Outside Sandbox for EDA Regression**: Run VCS/Verdi-dependent commands outside the sandbox, including `make uvm`, `make uvm-regression`, `make regression`, `make phase2-complete`, `make phase3-complete`, `make phase3b-complete`, `make phase3c-complete`, `make cpu-cp0-gate`, and direct `vcs`/`verdi` invocations. Firmware-only `make firmware` can run normally as long as the MIPS cross toolchain is installed.
+- **Firmware Artifact Policy**: UVM runs must consume an explicit firmware artifact through `FW_HEX` and pass it to simulation as `+FW_HEX=...`; do not restore the old implicit copy of `../soc_test/fw/firmware.hex`.
+- **Phase 3A Closure**: `make phase3-complete` gates UART TX IRQ, APB wait/PSLVERR stress, loadable flash-image reads, and CPU/CP0 firmware smoke. It writes `build/uvm/phase3_complete/phase3_completion_report.md`.
+- **Phase 3B CPU/CP0 UVM Coverage**: `make phase3b-complete` gates UVM-visible CPU exception-entry/return coverage. It writes `build/uvm/phase3b_complete/phase3b_completion_report.md`.
+- **Phase 3C PIC Mask Arbitration**: `make phase3c-complete` gates UART/timer/DMA multi-source PIC mask arbitration. It writes `build/uvm/phase3c_complete/phase3c_completion_report.md`.
+- **Reference**: For more details, refer to the [eda-env skill](file:///home/admin/mips32-soc/.agents/skills/eda-env/SKILL.md).

@@ -24,12 +24,28 @@ class axi_monitor extends uvm_monitor;
             `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
     endfunction
 
+    function void flush_pending_transactions();
+        write_addr_q.delete();
+        write_beat_q.delete();
+
+        for (int unsigned id = 0; id < 16; id++) begin
+            write_done_by_id[id].delete();
+            read_by_id[id].delete();
+            read_beat_by_id[id].delete();
+        end
+    endfunction
+
     task run_phase(uvm_phase phase);
-        wait(vif.rst_n);
-        fork
-            collect_write_channels();
-            collect_read_channels();
-        join
+        forever begin
+            wait(vif.rst_n);
+            fork
+                collect_write_channels();
+                collect_read_channels();
+                wait(!vif.rst_n);
+            join_any
+            disable fork;
+            flush_pending_transactions();
+        end
     endtask
 
     function axi_transaction create_write_transaction();

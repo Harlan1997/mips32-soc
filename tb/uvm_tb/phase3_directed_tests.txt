@@ -1,0 +1,4 @@
+# Phase 3A deferred-feature closure tests
+soc_uart_irq_test 1
+soc_apb_fault_stress_test 1
+soc_flash_image_test 1

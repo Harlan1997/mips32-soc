@@ -1,0 +1,2 @@
+# Phase 3C PIC mask arbitration closure tests
+soc_pic_mask_arbitration_test 1
