@@ -29,11 +29,14 @@ class axi_driver extends uvm_driver #(axi_transaction);
 
     function void load_firmware();
         int fd;
+        string firmware_hex;
         string line;
         int addr = 32'h00000000; // Boot address (aliased)
         logic [31:0] word;
         
-        fd = $fopen("firmware.hex", "r");
+        firmware_hex = "firmware.hex";
+        void'($value$plusargs("FW_HEX=%s", firmware_hex));
+        fd = $fopen(firmware_hex, "r");
         if (fd) begin
             while (!$feof(fd)) begin
                 if ($fscanf(fd, "%h\n", word) == 1) begin
@@ -45,9 +48,9 @@ class axi_driver extends uvm_driver #(axi_transaction);
                 end
             end
             $fclose(fd);
-            `uvm_info("DRIVER", "Firmware loaded successfully.", UVM_LOW)
+            `uvm_info("DRIVER", $sformatf("Firmware loaded successfully from %0s.", firmware_hex), UVM_LOW)
         end else begin
-            `uvm_warning("DRIVER", "Failed to open firmware.hex")
+            `uvm_warning("DRIVER", $sformatf("Failed to open firmware image %0s", firmware_hex))
         end
     endfunction
 

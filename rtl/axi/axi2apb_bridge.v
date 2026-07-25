@@ -3,8 +3,9 @@
 // Design:    AXI4 Lite to APB Bridge
 // Author:    Antigravity
 // Description:
-//   Converts simple single-beat AXI4 (or AXI-Lite) to APB.
-//   Assumes burst length = 0 (1 beat).
+//   Converts simple AXI4 accesses to APB.
+//   Writes are accepted as a single APB transfer. Reads complete all requested
+//   AXI beats by issuing one APB read per beat.
 // =============================================================================
 
 module axi2apb_bridge (
@@ -70,6 +71,7 @@ module axi2apb_bridge (
     localparam W_RESP  = 3'd3;
     localparam R_SETUP = 3'd4;
     localparam R_ENABLE= 3'd5;
+    localparam R_RESP  = 3'd6;
     
     reg [2:0] state, next_state;
     
@@ -81,6 +83,14 @@ module axi2apb_bridge (
     reg [31:0] araddr_latch;
     reg [3:0]  awid_latch;
     reg [3:0]  arid_latch;
+    reg [7:0]  arlen_latch;
+    reg [2:0]  arsize_latch;
+    reg [1:0]  arburst_latch;
+    reg [7:0]  rbeat_latch;
+    reg [31:0] rdata_latch;
+    reg [1:0]  rresp_latch;
+    reg        rlast_latch;
+    reg [1:0]  bresp_latch;
     
     // VCS coverage off
     assign s_awready = (state == IDLE && !aw_received);
@@ -125,7 +135,14 @@ module axi2apb_bridge (
             end
             
             R_ENABLE: begin
-                if (pready) next_state = IDLE;
+                if (pready) next_state = R_RESP;
+            end
+
+            R_RESP: begin
+                if (s_rready) begin
+                    if (rlast_latch) next_state = IDLE;
+                    else             next_state = R_SETUP;
+                end
             end
             
             // VCS coverage off
@@ -144,6 +161,15 @@ module axi2apb_bridge (
             wdata_latch <= 32'd0;
             wstrb_latch <= 4'd0;
             arid_latch <= 4'd0;
+            araddr_latch <= 32'd0;
+            arlen_latch <= 8'd0;
+            arsize_latch <= 3'd2;
+            arburst_latch <= 2'b01;
+            rbeat_latch <= 8'd0;
+            rdata_latch <= 32'd0;
+            rresp_latch <= 2'b00;
+            rlast_latch <= 1'b0;
+            bresp_latch <= 2'b00;
         end else begin
             if (state == IDLE) begin
                 if (s_awvalid && s_awready) begin
@@ -158,23 +184,48 @@ module axi2apb_bridge (
                 end
                 if (s_arvalid && s_arready) begin
                     arid_latch <= s_arid;
+                    araddr_latch <= s_araddr;
+                    arlen_latch <= s_arlen;
+                    arsize_latch <= s_arsize;
+                    arburst_latch <= s_arburst;
+                    rbeat_latch <= 8'd0;
                 end
             end else if (state == W_RESP && s_bready) begin
                 aw_received <= 1'b0;
                 w_received <= 1'b0;
             end
+
+            if (state == R_ENABLE && pready) begin
+                rdata_latch <= prdata;
+                rresp_latch <= pslverr ? 2'b10 : 2'b00;
+                rlast_latch <= (rbeat_latch == arlen_latch);
+            end
+
+            if (state == W_ENABLE && pready) begin
+                bresp_latch <= pslverr ? 2'b10 : 2'b00;
+            end
+
+            if (state == R_RESP && s_rready && !rlast_latch) begin
+                rbeat_latch <= rbeat_latch + 8'd1;
+            end
         end
     end
     
     assign s_bvalid  = (state == W_RESP);
-    assign s_bresp   = 2'b00;
+    assign s_bresp   = bresp_latch;
     assign s_bid     = awid_latch;
     
-    assign s_rvalid  = (state == R_ENABLE && pready);
-    assign s_rdata   = prdata;
-    assign s_rresp   = 2'b00;
-    assign s_rlast   = 1'b1;
+    assign s_rvalid  = (state == R_RESP);
+    assign s_rdata   = rdata_latch;
+    assign s_rresp   = rresp_latch;
+    assign s_rlast   = rlast_latch;
     assign s_rid     = arid_latch;
+
+    wire [7:0]  read_setup_beat = (state == R_RESP && s_rready && !rlast_latch) ?
+                                   (rbeat_latch + 8'd1) : rbeat_latch;
+    wire [31:0] read_setup_addr = (arburst_latch == 2'b01) ?
+                                  (araddr_latch + ({24'd0, read_setup_beat} << arsize_latch)) :
+                                  araddr_latch;
     
     // APB Outputs
     always @(posedge clk or negedge rst_n) begin
@@ -209,7 +260,7 @@ module axi2apb_bridge (
                     psel    <= 1'b1;
                     penable <= 1'b0;
                     pwrite  <= 1'b0;
-                    paddr   <= (state == IDLE) ? s_araddr : araddr_latch;
+                    paddr   <= (state == IDLE) ? s_araddr : read_setup_addr;
                 end
                 
                 R_ENABLE: begin
@@ -217,6 +268,11 @@ module axi2apb_bridge (
                 end
                 
                 W_RESP: begin
+                    psel    <= 1'b0;
+                    penable <= 1'b0;
+                end
+
+                R_RESP: begin
                     psel    <= 1'b0;
                     penable <= 1'b0;
                 end
@@ -229,13 +285,5 @@ module axi2apb_bridge (
                 // VCS coverage on
             endcase
         end
-    end
-    
-
-
-
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) araddr_latch <= 32'd0;
-        else if (s_arvalid && s_arready) araddr_latch <= s_araddr;
     end
 endmodule

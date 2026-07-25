@@ -33,7 +33,9 @@ module mips_soc (
     wire        ext_rvalid;
 
     mips_soc_impl #(
-        .ENABLE_EXT_AXI_MASTER (1'b0)
+        .ENABLE_EXT_AXI_MASTER     (1'b0),
+        .ENABLE_APB_FAULT_INJECTOR (1'b0),
+        .ENABLE_FLASH_IMAGE_MODEL  (1'b0)
     ) u_impl (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -86,5 +88,14 @@ module mips_soc (
         .ext_rvalid   (ext_rvalid),
         .ext_rready   (1'b1)
     );
+
+    // synopsys translate_off
+    task preload_sram_hex;
+        input [1023:0] hex_path;
+        begin
+            u_impl.preload_sram_hex(hex_path);
+        end
+    endtask
+    // synopsys translate_on
 
 endmodule

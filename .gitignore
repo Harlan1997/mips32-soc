@@ -18,11 +18,17 @@ cm.log
 .fsm.sch.verilog.xml
 
 # Coverage and report outputs
+build/
 regression.vdb/
 urgReport/
 textReportFinal/
 cov_dir.vdb/
 regression_logs/
+cov_html/
+textReport/
+textReportExclude*/
+coverage_report/
+soc_cov_report/
 
 # Generated firmware images
 sim/firmware.hex
@@ -35,6 +41,31 @@ tb/soc_test/fw/firmware.bin
 tb/soc_test/fw/firmware.elf
 tb/soc_test/fw/firmware.hex
 tb/soc_test/fw/firmware.map
+tb/soc_test/fw/firmware.manifest
+tb/soc_test/fw/firmware.objdump
+tb/soc_test/fw/rand_test.s
+
+# Legacy source-tree artifacts kept out of source control during migration
+sim/compile.log
+sim/firmware.hex
+sim/novas.conf
+sim/novas.fsdb
+sim/verdiLog/
+sim/vc_hdrs.h
+tb/soc_test/cm.log
+tb/soc_test/firmware.hex
+tb/soc_test/sim.log
+tb/soc_test/ucli.key
+tb/soc_test/vcs.log
+tb/soc_test/simv
+tb/soc_test/simv.daidir/
+tb/soc_test/simv.vdb/
+tb/soc_test/csrc/
+tb/soc_test/coverage_report/
+tb/soc_test/soc_cov_report/
+tb/soc_test/textReport/
+tb/soc_test/textReportExclude*/
+tb/soc_test/textReportFinal/
 
 # Native build artifacts
 *.o

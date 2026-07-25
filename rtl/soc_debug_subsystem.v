@@ -1,0 +1,100 @@
+// =============================================================================
+// File Name: soc_debug_subsystem.v
+// Design:    SoC debug subsystem integration
+// =============================================================================
+
+module soc_debug_subsystem (
+    input  wire        clk,
+    input  wire        rst_n,
+
+    input  wire        tck,
+    input  wire        tms,
+    input  wire        tdi,
+    output wire        tdo,
+
+    output wire [3:0]  m_awid,
+    output wire [31:0] m_awaddr,
+    output wire [7:0]  m_awlen,
+    output wire [2:0]  m_awsize,
+    output wire [1:0]  m_awburst,
+    output wire [1:0]  m_awlock,
+    output wire [3:0]  m_awcache,
+    output wire [2:0]  m_awprot,
+    output wire        m_awvalid,
+    input  wire        m_awready,
+    output wire [31:0] m_wdata,
+    output wire [3:0]  m_wstrb,
+    output wire        m_wlast,
+    output wire        m_wvalid,
+    input  wire        m_wready,
+    input  wire [3:0]  m_bid,
+    input  wire [1:0]  m_bresp,
+    input  wire        m_bvalid,
+    output wire        m_bready,
+
+    output wire [3:0]  m_arid,
+    output wire [31:0] m_araddr,
+    output wire [7:0]  m_arlen,
+    output wire [2:0]  m_arsize,
+    output wire [1:0]  m_arburst,
+    output wire [1:0]  m_arlock,
+    output wire [3:0]  m_arcache,
+    output wire [2:0]  m_arprot,
+    output wire        m_arvalid,
+    input  wire        m_arready,
+    input  wire [3:0]  m_rid,
+    input  wire [31:0] m_rdata,
+    input  wire [1:0]  m_rresp,
+    input  wire        m_rlast,
+    input  wire        m_rvalid,
+    output wire        m_rready
+);
+
+    jtag_debug_top u_jtag_debug_top (
+        .clk          (clk),
+        .rst_n        (rst_n),
+        .tck          (tck),
+        .trst_n       (rst_n),
+        .tms          (tms),
+        .tdi          (tdi),
+        .tdo          (tdo),
+
+        .m_awid       (m_awid),
+        .m_awaddr     (m_awaddr),
+        .m_awlen      (m_awlen),
+        .m_awsize     (m_awsize),
+        .m_awburst    (m_awburst),
+        .m_awlock     (m_awlock),
+        .m_awcache    (m_awcache),
+        .m_awprot     (m_awprot),
+        .m_awvalid    (m_awvalid),
+        .m_awready    (m_awready),
+        .m_wdata      (m_wdata),
+        .m_wstrb      (m_wstrb),
+        .m_wlast      (m_wlast),
+        .m_wvalid     (m_wvalid),
+        .m_wready     (m_wready),
+        .m_bid        (m_bid),
+        .m_bresp      (m_bresp),
+        .m_bvalid     (m_bvalid),
+        .m_bready     (m_bready),
+
+        .m_arid       (m_arid),
+        .m_araddr     (m_araddr),
+        .m_arlen      (m_arlen),
+        .m_arsize     (m_arsize),
+        .m_arburst    (m_arburst),
+        .m_arlock     (m_arlock),
+        .m_arcache    (m_arcache),
+        .m_arprot     (m_arprot),
+        .m_arvalid    (m_arvalid),
+        .m_arready    (m_arready),
+        .m_rid        (m_rid),
+        .m_rdata      (m_rdata),
+        .m_rresp      (m_rresp),
+        .m_rlast      (m_rlast),
+        .m_rvalid     (m_rvalid),
+        .m_rready     (m_rready)
+    );
+
+endmodule

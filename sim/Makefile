@@ -13,8 +13,10 @@ ENV_LOAD = export PATH=/home/admin/.local/bin:$$PATH MODULES_PAGER=cat PAGER=cat
 VERDI_HOME ?= /data/disk/verdi/verdi/X-2025.06-SP1
 
 # Directories
-RTL_DIR = ../rtl/cpu
-SIM_DIR = .
+ROOT_DIR := $(abspath ..)
+BUILD_DIR ?= $(ROOT_DIR)/build
+RUN_DIR ?= $(BUILD_DIR)/stage/$(STAGE)
+RTL_DIR = $(ROOT_DIR)/rtl/cpu
 
 # Select Stage: ex, id, or if
 STAGE ?= ex
@@ -23,7 +25,7 @@ ifeq ($(STAGE), ex)
     RTL_FILES = $(RTL_DIR)/mips_alu.v \
                 $(RTL_DIR)/mips_mdu.v \
                 $(RTL_DIR)/mips_ex_stage.v
-    TB_DIR    = ../tb/ex_stage
+    TB_DIR    = $(ROOT_DIR)/tb/ex_stage
     TB_FILES  = $(TB_DIR)/mips_ex_stage_if.sv \
                 $(TB_DIR)/mips_ex_stage_pkg.sv \
                 $(TB_DIR)/mips_ex_stage_tb_top.sv
@@ -32,21 +34,21 @@ else ifeq ($(STAGE), id)
     RTL_FILES = $(RTL_DIR)/mips_regfile.v \
                 $(RTL_DIR)/mips_control.v \
                 $(RTL_DIR)/mips_id_stage.v
-    TB_DIR    = ../tb/id_stage
+    TB_DIR    = $(ROOT_DIR)/tb/id_stage
     TB_FILES  = $(TB_DIR)/mips_id_stage_if.sv \
                 $(TB_DIR)/mips_id_stage_pkg.sv \
                 $(TB_DIR)/mips_id_stage_tb_top.sv
     TEST      = id_test
 else ifeq ($(STAGE), if)
     RTL_FILES = $(RTL_DIR)/mips_if_stage.v
-    TB_DIR    = ../tb/if_stage
+    TB_DIR    = $(ROOT_DIR)/tb/if_stage
     TB_FILES  = $(TB_DIR)/mips_if_stage_if.sv \
                 $(TB_DIR)/mips_if_stage_pkg.sv \
                 $(TB_DIR)/mips_if_stage_tb_top.sv
     TEST      = if_test
 else ifeq ($(STAGE), mem)
     RTL_FILES = $(RTL_DIR)/mips_mem_stage.v
-    TB_DIR    = ../tb/mem_stage
+    TB_DIR    = $(ROOT_DIR)/tb/mem_stage
     TB_FILES  = $(TB_DIR)/mips_mem_stage_if.sv \
                 $(TB_DIR)/mips_mem_stage_pkg.sv \
                 $(TB_DIR)/mips_mem_stage_tb_top.sv
@@ -77,19 +79,18 @@ COV_OPTS = -cm line+cond+fsm+tgl+branch -cm_dir ./cov_dir
 all: compile sim
 
 compile:
-	mkdir -p $(SIM_DIR)
-	$(ENV_LOAD) && vcs $(VCS_OPTS) $(COV_OPTS) $(RTL_FILES) $(TB_FILES)
+	mkdir -p $(RUN_DIR)
+	cd $(RUN_DIR) && $(ENV_LOAD) && vcs $(VCS_OPTS) $(COV_OPTS) $(RTL_FILES) $(TB_FILES)
 
 sim:
-	$(ENV_LOAD) && ./simv $(SIM_OPTS) $(COV_OPTS) +UVM_TESTNAME=$(TEST)
+	cd $(RUN_DIR) && $(ENV_LOAD) && ./simv $(SIM_OPTS) $(COV_OPTS) +UVM_TESTNAME=$(TEST)
 
 cov:
-	$(ENV_LOAD) && urg -dir ./cov_dir.vdb -format both -report cov_html
-	@echo "Coverage report generated in: cov_html/dashboard.html"
+	cd $(RUN_DIR) && $(ENV_LOAD) && urg -dir ./cov_dir.vdb -format both -report cov_html
+	@echo "Coverage report generated in: $(RUN_DIR)/cov_html/dashboard.html"
 
 verdi:
-	$(ENV_LOAD) && verdi -dbdir ./simv.daidir -ssf novas.fsdb &
+	cd $(RUN_DIR) && $(ENV_LOAD) && verdi -dbdir ./simv.daidir -ssf novas.fsdb &
 
 clean:
-	rm -rf simv simv.daidir csrc ucli.key compile.log sim.log novas.fsdb novas.conf verdiLog
-	rm -rf cov_dir.vdb cov_html urgReport
+	rm -rf $(RUN_DIR)

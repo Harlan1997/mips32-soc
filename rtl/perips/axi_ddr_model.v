@@ -55,12 +55,28 @@ module axi_ddr_model #(
 
     // Initialize with 0
     integer i;
+    reg [1023:0] firmware_hex;
     initial begin
         for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1) begin
             ram[i] = 32'd0;
         end
-        $readmemh("firmware.hex", ram);
+        firmware_hex = "firmware.hex";
+        if ($value$plusargs("FW_HEX=%s", firmware_hex)) begin
+            $display("axi_ddr_model: loading firmware from %0s", firmware_hex);
+        end else begin
+            $display("axi_ddr_model: loading default firmware.hex");
+        end
+        load_hex(firmware_hex);
     end
+
+    // synopsys translate_off
+    task load_hex;
+        input [1023:0] hex_path;
+        begin
+            $readmemh(hex_path, ram);
+        end
+    endtask
+    // synopsys translate_on
 
     // Simple 16-bit LFSR for pseudo-random delays
     reg [15:0] lfsr;

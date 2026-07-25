@@ -5,6 +5,8 @@
 // =============================================================================
 
 `timescale 1ns/1ps
+`include "soc_legacy_observation_if.sv"
+`include "soc_legacy_observation_bind.sv"
 
 module tb_mips_soc;
 
@@ -13,9 +15,19 @@ module tb_mips_soc;
     reg tms_r = 1;
     reg tdi_r = 0;
     wire tdo;
+    wire spi_sclk;
+    wire spi_cs_n;
+    wire spi_mosi;
 
     reg clk;
     reg rst_n;
+    soc_legacy_observation_if legacy_obs_if(clk, rst_n);
+    reg [1023:0] firmware_hex;
+    integer cp0_interrupt_count;
+    integer cp0_syscall_count;
+    integer cp0_ri_count;
+    integer cp0_adel_count;
+    integer cp0_eret_count;
     
     wire [31:0] gpio_pins;
     
@@ -31,12 +43,35 @@ module tb_mips_soc;
         .clk        (clk),
         .rst_n      (rst_n),
         .gpio_pins  (gpio_pins),
+        .spi_sclk   (spi_sclk),
+        .spi_cs_n   (spi_cs_n),
+        .spi_mosi   (spi_mosi),
         .spi_miso   (1'b0),
         .tck        (tck_r),
         .tms        (tms_r),
         .tdi        (tdi_r),
         .tdo        (tdo)
     );
+
+    wire        legacy_mailbox_valid = legacy_obs_if.mailbox_valid;
+    wire [31:0] legacy_mailbox_wdata = legacy_obs_if.mailbox_wdata;
+    wire [31:0] legacy_trace_pc = legacy_obs_if.trace_pc;
+    wire        legacy_cp0_except_req = legacy_obs_if.cp0_except_req;
+    wire [4:0]  legacy_cp0_except_code = legacy_obs_if.cp0_except_code;
+    wire        legacy_cp0_intr_req = legacy_obs_if.cp0_intr_req;
+    wire        legacy_cp0_exl = legacy_obs_if.cp0_exl;
+    wire        legacy_cp0_eret = legacy_obs_if.cp0_eret;
+    wire        legacy_uart_tx_valid = legacy_obs_if.uart_tx_valid;
+    wire [7:0]  legacy_uart_tx_data = legacy_obs_if.uart_tx_data;
+    wire        legacy_core_global_stall = legacy_obs_if.core_global_stall;
+    wire [3:0]  legacy_dcache_state = legacy_obs_if.dcache_state;
+    wire [3:0]  legacy_dcache_next_state = legacy_obs_if.dcache_next_state;
+    wire [31:0] legacy_dcache_req_buf_addr = legacy_obs_if.dcache_req_buf_addr;
+    wire        legacy_dcache_req_buf_we = legacy_obs_if.dcache_req_buf_we;
+    wire        legacy_dcache_uncacheable = legacy_obs_if.dcache_uncacheable;
+    wire        legacy_dcache_awvalid = legacy_obs_if.dcache_awvalid;
+    wire        legacy_dcache_wvalid = legacy_obs_if.dcache_wvalid;
+    wire        legacy_dcache_bready = legacy_obs_if.dcache_bready;
     
     // Clock Generation
     initial begin
@@ -47,16 +82,24 @@ module tb_mips_soc;
     // Test Sequence
     initial begin
         rst_n = 0;
-        
+        cp0_interrupt_count = 0;
+        cp0_syscall_count = 0;
+        cp0_ri_count = 0;
+        cp0_adel_count = 0;
+        cp0_eret_count = 0;
+
+        // Initialize memory with an explicit firmware artifact before reset release.
+        firmware_hex = "firmware.hex";
+        if ($value$plusargs("FW_HEX=%s", firmware_hex)) begin
+            $display("tb_mips_soc: loading firmware from %0s", firmware_hex);
+        end else begin
+            $display("tb_mips_soc: loading default firmware.hex");
+        end
+        u_soc.preload_sram_hex(firmware_hex);
+
         // Wait a few cycles
         #25;
         rst_n = 1;
-        
-        // Pre-load SRAM (Memory address is byte-aligned, ram[] is word-aligned)
-        // Program: Print "Hi!\n" to UART at 0x4000_0000
-        
-        // Initialize memory with firmware.hex
-        $readmemh("firmware.hex", u_soc.u_impl.u_axi_sram.ram);
         
         // We need to wait enough cycles for instruction fetch, cache miss, uncacheable writes
     end
@@ -71,11 +114,13 @@ module tb_mips_soc;
     
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
-        if (u_soc.u_impl.u_core.u_cpu.data_req && u_soc.u_impl.u_core.u_cpu.data_we && u_soc.u_impl.u_core.u_cpu.data_addr == 32'ha000fffc) begin
-            if (u_soc.u_impl.u_core.u_cpu.data_wdata == 32'hdeadbeef) begin
+        if (legacy_mailbox_valid) begin
+            $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
+                     cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
+            if (legacy_mailbox_wdata == 32'hdeadbeef) begin
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
-            end else if (u_soc.u_impl.u_core.u_cpu.data_wdata == 32'hdeaddead) begin
+            end else if (legacy_mailbox_wdata == 32'hdeaddead) begin
                 $display("REGRESSION_TEST_FAILED");
                 $finish;
             end
@@ -83,18 +128,44 @@ module tb_mips_soc;
         
         // Debug PC Trace
         if ($time % 5000000 == 0) begin
-            $display("Time=%0t PC=%h", $time, u_soc.u_impl.u_core.u_cpu.u_mips_if_stage.pc);
+            $display("Time=%0t PC=%h", $time, legacy_trace_pc);
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cp0_interrupt_count <= 0;
+            cp0_syscall_count <= 0;
+            cp0_ri_count <= 0;
+            cp0_adel_count <= 0;
+            cp0_eret_count <= 0;
+        end else begin
+            if (legacy_cp0_except_req && !legacy_cp0_exl) begin
+                if (legacy_cp0_intr_req) begin
+                    cp0_interrupt_count <= cp0_interrupt_count + 1;
+                end else begin
+                    case (legacy_cp0_except_code)
+                        5'h08: cp0_syscall_count <= cp0_syscall_count + 1;
+                        5'h0a: cp0_ri_count <= cp0_ri_count + 1;
+                        5'h04: cp0_adel_count <= cp0_adel_count + 1;
+                    endcase
+                end
+            end
+
+            if (legacy_cp0_eret) begin
+                cp0_eret_count <= cp0_eret_count + 1;
+            end
         end
     end
     
     always @(posedge clk) begin
-        if (u_soc.u_impl.u_apb_uart.psel && u_soc.u_impl.u_apb_uart.penable && u_soc.u_impl.u_apb_uart.pwrite && u_soc.u_impl.u_apb_uart.paddr[7:0] == 8'h00) begin
-            $write("%c", u_soc.u_impl.u_apb_uart.pwdata[7:0]);
+        if (legacy_uart_tx_valid) begin
+            $write("%c", legacy_uart_tx_data);
             $fflush();
         end
-        if (rst_n && u_soc.u_impl.u_core.u_cpu.global_stall && $time > 20900000) begin
+        if (rst_n && legacy_core_global_stall && $time > 20900000) begin
             $display("Time=%0t DCACHE: state=%0d next_state=%0d req_buf_addr=%x req_buf_we=%b uc_req=%b awv=%b wv=%b bready=%b", 
-                $time, u_soc.u_impl.u_core.u_dcache.state, u_soc.u_impl.u_core.u_dcache.next_state, u_soc.u_impl.u_core.u_dcache.req_buf_addr, u_soc.u_impl.u_core.u_dcache.req_buf_we, u_soc.u_impl.u_core.u_dcache.uncacheable, u_soc.u_impl.u_core.u_dcache.awvalid, u_soc.u_impl.u_core.u_dcache.wvalid, u_soc.u_impl.u_core.u_dcache.bready);
+                $time, legacy_dcache_state, legacy_dcache_next_state, legacy_dcache_req_buf_addr, legacy_dcache_req_buf_we, legacy_dcache_uncacheable, legacy_dcache_awvalid, legacy_dcache_wvalid, legacy_dcache_bready);
         end
     end
 
@@ -452,3 +523,31 @@ module tb_mips_soc;
     end
 
 endmodule
+
+bind tb_mips_soc soc_legacy_observation_bind u_soc_legacy_observation_bind (
+    .obs_if              (legacy_obs_if),
+    .mailbox_valid       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
+                          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'ha000fffc)),
+    .mailbox_wdata       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata),
+    .trace_pc            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc),
+    .cp0_except_req      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req),
+    .cp0_except_code     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code),
+    .cp0_intr_req        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req),
+    .cp0_exl             (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[1]),
+    .cp0_eret            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret),
+    .uart_tx_valid       (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.psel &&
+                          u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.penable &&
+                          u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwrite &&
+                          (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr[7:0] == 8'h00)),
+    .uart_tx_data        (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwdata[7:0]),
+    .core_global_stall   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall),
+    .dcache_state        (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.state),
+    .dcache_next_state   (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.next_state),
+    .dcache_req_buf_addr (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.req_buf_addr),
+    .dcache_req_buf_we   (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.req_buf_we),
+    .dcache_uncacheable  (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.uncacheable),
+    .dcache_awvalid      (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.awvalid),
+    .dcache_wvalid       (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.wvalid),
+    .dcache_bready       (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.bready)
+);
