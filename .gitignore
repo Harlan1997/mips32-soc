@@ -76,3 +76,6 @@ tb/soc_test/textReportFinal/
 # Python caches
 __pycache__/
 *.pyc
+
+# Agent locks
+.agent/run.lock

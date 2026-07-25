@@ -147,4 +147,8 @@ make regression
 
 # 5. 执行 Phase 3 完整门限 Check
 make phase3-complete
+
+# 6. 执行当前 RTL 契约全芯片 Sign-off 统一门限
+make current-contract-signoff
 ```
+`make current-contract-signoff` 将依次运行 Phase 2、Phase 3A、Phase 3B、Phase 3C 门限与多 Seed UVM Stress 回归，自动合并覆盖率数据库并校验 15 个功能覆盖率 Group (100.00%) 及模块代码覆盖率门限，最终在 `build/signoff/current_contract/current_contract_signoff_report.md` 生成完整 Sign-off 报告。
