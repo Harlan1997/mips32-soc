@@ -53,14 +53,15 @@ echo "======================================================================"
 echo " Scanning logs"
 echo "======================================================================"
 scan_tmp="${RUN_ROOT}/phase3b_error_scan.txt.tmp"
+scan_err="${RUN_ROOT}/phase3b_error_scan_err.txt"
 if command -v rg >/dev/null 2>&1; then
     set +e
-    rg -n "$ERROR_RE" "$DIRECTED_DIR" "$COV_DIR" > "$scan_tmp"
+    rg -n "$ERROR_RE" "$DIRECTED_DIR" "$COV_DIR" > "$scan_tmp" 2> "$scan_err"
     scan_status=$?
     set -e
 else
     set +e
-    grep -RInE "$ERROR_RE" "$DIRECTED_DIR" "$COV_DIR" > "$scan_tmp"
+    grep -RInE --exclude-dir=csrc --exclude-dir=simv.daidir --exclude-dir=urgReport --exclude="*.so" --exclude="*.o" "$ERROR_RE" "$DIRECTED_DIR" "$COV_DIR" > "$scan_tmp" 2> "$scan_err"
     scan_status=$?
     set -e
 fi
@@ -68,13 +69,15 @@ fi
 if [ "$scan_status" -eq 0 ]; then
     mv "$scan_tmp" "${RUN_ROOT}/phase3b_error_scan.txt"
     echo "ERROR: Phase 3B error scan found failures. See ${RUN_ROOT}/phase3b_error_scan.txt"
+    [ -s "$scan_err" ] && cat "$scan_err"
     exit 1
 elif [ "$scan_status" -eq 1 ]; then
     : > "${RUN_ROOT}/phase3b_error_scan.txt"
-    rm -f "$scan_tmp"
+    rm -f "$scan_tmp" "$scan_err"
 else
     rm -f "$scan_tmp"
-    echo "ERROR: Phase 3B error scan failed"
+    echo "ERROR: Phase 3B error scan failed:"
+    [ -f "$scan_err" ] && cat "$scan_err"
     exit 1
 fi
 
