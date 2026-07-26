@@ -33,11 +33,24 @@
 **已知教训**（本 session 抓到）：APB peripheral 有 side-effect (GPIO DATA readback 依赖 DIR，Timer LOAD 会启动计数等)，seq 写模式前需先设置模式位。见 `axi_apb_bit_pattern_sweep_seq` GPIO DIR pre-config。
 
 ### 2c. Coverage threshold < 99%
-所有 gate 都过后，`COVERAGE_THRESHOLDS` 检查失败。历史观察 (`.agent/review.md`)：
-- UVM 域：Score 93.9 / Cond 97.4 / Toggle 79.1 / FSM 98.9 / Branch 94.1
-- Product 域：Score 88.4 / Line 78.2 / Toggle 75.9 / FSM 94.3 / Branch 93.5
+所有 gate 都过后，`COVERAGE_THRESHOLDS` 检查失败。**2026-07-26 session 后**（Phase B + 2 新 stimulus 后）实测：
 
-**主要 gap**：TOGGLE 覆盖率（79/76），因为 register 位模式 sweep 不够；Line/Branch 因 firmware 未穷举 ISA。
+| 指标 | UVM actual | UVM Δ vs review | Product actual | Product Δ vs review |
+|---|---|---|---|---|
+| SCORE  | 92.71 | ↓1.19 | 87.46 | ↓0.91 |
+| LINE   | **100.00 ✓** | 达标 | 79.70 | ↑1.54 |
+| COND   | 97.93 | ↑0.53 | **100.00 ✓** | 达标 |
+| TOGGLE | 78.70 | ↓0.44 | 75.45 | ↓0.46 |
+| FSM    | 98.85 | 0      | 94.29 | 0     |
+| BRANCH | 88.07 | **↓6.05** | 87.88 | **↓5.60** |
+
+**主要 gap**：
+- **BRANCH 双域 ~88%**（Phase B 加大量 decode/MMU/BPU 分支，firmware/UVM stimulus 覆盖不到新增指令，特别是 ROTR/WSBH/MOVN 等 firmware 未发射的 R2 指令）
+- **TOGGLE 双域 ~76-79%**（register 位模式 sweep 不足 —— 本 session 的 APB bit pattern sweep 是首个针对性解决，覆盖 GPIO/Timer/DMA/PIC；CPU/cache/fabric 内部信号 toggle 未系统覆盖）
+- **Product LINE 79.70%**（firmware 未穷举 ISA + 未系统触发 cache 状态）
+- **Product FSM 94.29%**（部分 FSM 状态过渡未触发，特别是 AXI arbiter 争抢场景、cache miss/refill 序列）
+
+**规律**：Phase B 系列引入的新 RTL（新指令 decoder / MMU / BPU）扩大了 coverage denominator 比 stimulus 增量快，短期 BRANCH/SCORE 下滑是正常的。真正闭合需要 stimulus 与 RTL 增长同步。
 
 ---
 
@@ -70,11 +83,16 @@
 
 按预期收益排序（每加一批 stimulus → 跑一次 signoff → 看 numeric 变化）：
 
-### 4.1 短期（下一 session）
-1. **CPU firmware ISA sweep** — 在 `tb/soc_test/fw/` 加一段 C/asm 遍历所有 R1/R2 ALU 指令 + 各种 branch + load/store 变体。会显著提升 Product Line/Branch 覆盖率。
-2. **Cache miss/hit variation** — 现有 firmware 触发 dcache 状态较少；加一段刻意跨越 cache line 的 memcpy 强制多次 refill/eviction。提升 dcache FSM。
-3. **Fabric backpressure sweep** — 慢 slave 响应场景压 axi_arbiter FSM 少见状态。
-4. **APB register additional patterns** — 若 signoff 报告显示某些 APB 寄存器仍未 100% toggle，加针对该寄存器的 seq。
+### 4.1 短期（下一 session）—— 按数据决定的优先级
+1. **CPU firmware ISA sweep（最高优先）** — 是当前 BRANCH ↓6% 的直接原因。在 `tb/soc_test/fw/` 加 asm 或 C-with-inline-asm 序列，显式发射：
+   - R2 新增：CLZ / CLO / SEB / SEH / WSBH / ROTR / ROTRV / MOVN / MOVZ
+   - R1 尚未完全覆盖的：所有 branch 变体 (BEQ/BNE/BLEZ/BGTZ/BLTZ/BGEZ + AL 变体) taken 和 not-taken
+   - Load/Store 全组合：LB/LBU/LH/LHU/LW + SB/SH/SW，跨越对齐边界
+   - MDU: MULT / MULTU / DIV / DIVU + 各种 corner (0/负/最大)
+   会显著提升 Product Line/Branch 覆盖率 + UVM decoder BRANCH 覆盖率。**必须先 rebuild firmware.hex 才生效**。
+2. **Cache miss/hit variation** — 现有 firmware 触发 dcache 状态较少；加一段刻意跨越 cache line 的 memcpy 强制多次 refill/eviction。提升 dcache FSM 覆盖率。
+3. **Fabric backpressure sweep** — 慢 slave 响应场景压 axi_arbiter FSM 少见状态。提升 axi_arbiter_2x1_full FSM。
+4. **APB register additional patterns** — 若 signoff 报告显示 UART_TX / PIC STATUS 等仍未 100% toggle，加针对该寄存器的 seq。（当前 apb_bit_pattern_sweep 覆盖 GPIO/Timer/DMA/PIC.MASK，不含 UART）
 
 ### 4.2 中期
 5. **Object-level exclusion refactor** — 拆除 `product_exclusions.el` / `uvm_exclusions.el` 里 review 明确禁的 module/all-metric exclusion，改成 object-level + spec-category evidence。这是 spec 强制要求且 AGY 之前都在这里失败。
