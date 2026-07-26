@@ -87,31 +87,50 @@ class axi_apb_bit_pattern_sweep_seq extends uvm_sequence#(axi_transaction);
 
     // Walk a 32-bit pattern generator through the standard set:
     //   0, all-ones, 32 walking-1s, 32 walking-0s, 0xAAAA_AAAA, 0x5555_5555.
+    // If `dir_addr` != 0, forcibly re-writes DIR = ~0 before each readback so
+    // concurrent CPU firmware writes to GPIO_DIR can't cause spurious X reads
+    // on the input-pin side of the data mux.
     task walk_patterns(string reg_tag,
                        logic [31:0] addr,
-                       logic [31:0] readback_mask);
+                       logic [31:0] readback_mask,
+                       logic [31:0] dir_addr = 32'h0);
         int i;
         logic [31:0] pat;
+
+        `define REFRESH_DIR(tag_str) \
+            if (dir_addr != 32'h0) begin \
+                apb_write($sformatf("%s_dir_refresh_%s", reg_tag, tag_str), \
+                          dir_addr, 32'hFFFF_FFFF); \
+            end
+
+        `REFRESH_DIR("zero")
         apb_write($sformatf("%s_zero",  reg_tag), addr, 32'h0000_0000);
         apb_read_check($sformatf("%s_zero_rb", reg_tag), addr, 32'h0000_0000, readback_mask);
+        `REFRESH_DIR("ones")
         apb_write($sformatf("%s_ones",  reg_tag), addr, 32'hFFFF_FFFF);
         apb_read_check($sformatf("%s_ones_rb", reg_tag), addr, 32'hFFFF_FFFF, readback_mask);
         for (i = 0; i < 32; i = i + 1) begin
             pat = 32'h0000_0001 << i;
+            `REFRESH_DIR($sformatf("w1_%0d", i))
             apb_write($sformatf("%s_walk1_%0d", reg_tag, i), addr, pat);
             apb_read_check($sformatf("%s_walk1_rb_%0d", reg_tag, i), addr, pat, readback_mask);
         end
         for (i = 0; i < 32; i = i + 1) begin
             pat = ~(32'h0000_0001 << i);
+            `REFRESH_DIR($sformatf("w0_%0d", i))
             apb_write($sformatf("%s_walk0_%0d", reg_tag, i), addr, pat);
             apb_read_check($sformatf("%s_walk0_rb_%0d", reg_tag, i), addr, pat, readback_mask);
         end
+        `REFRESH_DIR("a5")
         apb_write($sformatf("%s_alt_a5", reg_tag), addr, 32'hAAAA_AAAA);
         apb_read_check($sformatf("%s_alt_a5_rb", reg_tag), addr, 32'hAAAA_AAAA, readback_mask);
+        `REFRESH_DIR("5a")
         apb_write($sformatf("%s_alt_5a", reg_tag), addr, 32'h5555_5555);
         apb_read_check($sformatf("%s_alt_5a_rb", reg_tag), addr, 32'h5555_5555, readback_mask);
         // Restore zero so we leave state clean for subsequent tests
         apb_write($sformatf("%s_final_zero", reg_tag), addr, 32'h0000_0000);
+
+        `undef REFRESH_DIR
     endtask
 
     task body();
@@ -123,9 +142,13 @@ class axi_apb_bit_pattern_sweep_seq extends uvm_sequence#(axi_transaction);
         apb_write("gpio_dir_all_out_pre",
                   `SOC_APB_BASE + `SOC_APB_GPIO_OFFSET + `SOC_GPIO_DIR_OFFSET,
                   32'hFFFF_FFFF);
+        // Pass dir_addr so walk_patterns re-writes DIR=~0 before every DATA
+        // readback. Without this, concurrent CPU firmware writes to GPIO_DIR
+        // during boot can flip DIR bits to input and cause DATA readback X's.
         walk_patterns("gpio_data",
                       `SOC_APB_BASE + `SOC_APB_GPIO_OFFSET + `SOC_GPIO_DATA_OFFSET,
-                      32'hFFFF_FFFF);
+                      32'hFFFF_FFFF,
+                      `SOC_APB_BASE + `SOC_APB_GPIO_OFFSET + `SOC_GPIO_DIR_OFFSET);
         // Restore DIR sweep. Note: while DIR toggles inputs may bleed X into
         // DATA readback but we only compare DIR readback here.
         walk_patterns("gpio_dir",
