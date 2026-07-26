@@ -596,81 +596,8 @@ Toggle retire_slot "reg retire_slot[2:0]"
 Toggle retire_hit "reg retire_hit"
 
 // ID: EXCL-UVM-0010
-// CATEGORY: SoC Integration & Subsystems
-MODULE: soc_peripheral_subsystem
-Branch 0 "245168223" "uart_sel"
-Branch 0 "245168223" "uart_sel" (0) "uart_sel 1,-,-,-,-,-"
-Branch 0 "245168223" "uart_sel" (1) "uart_sel 0,1,-,-,-,-"
-Branch 0 "245168223" "uart_sel" (2) "uart_sel 0,0,1,-,-,-"
-Branch 0 "245168223" "uart_sel" (3) "uart_sel 0,0,0,1,-,-"
-Branch 0 "245168223" "uart_sel" (4) "uart_sel 0,0,0,0,1,-"
-Branch 0 "245168223" "uart_sel" (5) "uart_sel 0,0,0,0,0,1"
-Branch 0 "245168223" "uart_sel" (6) "uart_sel 0,0,0,0,0,0"
-Branch 1 "245168223" "uart_sel"
-Branch 1 "245168223" "uart_sel" (0) "uart_sel 1,-,-,-,-,-"
-Branch 1 "245168223" "uart_sel" (1) "uart_sel 0,1,-,-,-,-"
-Branch 1 "245168223" "uart_sel" (2) "uart_sel 0,0,1,-,-,-"
-Branch 1 "245168223" "uart_sel" (3) "uart_sel 0,0,0,1,-,-"
-Branch 1 "245168223" "uart_sel" (4) "uart_sel 0,0,0,0,1,-"
-Branch 1 "245168223" "uart_sel" (5) "uart_sel 0,0,0,0,0,1"
-Branch 1 "245168223" "uart_sel" (6) "uart_sel 0,0,0,0,0,0"
-Branch 2 "245168223" "uart_sel"
-Branch 2 "245168223" "uart_sel" (0) "uart_sel 1,-,-,-,-,-"
-Branch 2 "245168223" "uart_sel" (1) "uart_sel 0,1,-,-,-,-"
-Branch 2 "245168223" "uart_sel" (2) "uart_sel 0,0,1,-,-,-"
-Branch 2 "245168223" "uart_sel" (3) "uart_sel 0,0,0,1,-,-"
-Branch 2 "245168223" "uart_sel" (4) "uart_sel 0,0,0,0,1,-"
-Branch 2 "245168223" "uart_sel" (5) "uart_sel 0,0,0,0,0,1"
-Branch 2 "245168223" "uart_sel" (6) "uart_sel 0,0,0,0,0,0"
-Condition 29 "2058844492" "(dma_sel ? dma_pslverr : (pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0))) 1 -1" (1 "0")
-Condition 29 "2058844492" "(dma_sel ? dma_pslverr : (pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0))) 1 -1" (2 "1")
-Condition 30 "3407428054" "(pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0)) 1 -1" (1 "0")
-Condition 30 "3407428054" "(pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0)) 1 -1" (2 "1")
-Condition 31 "3645557332" "(fault_sel ? fault_pslverr : 1'b0) 1 -1" (1 "0")
-Condition 31 "3645557332" "(fault_sel ? fault_pslverr : 1'b0) 1 -1" (2 "1")
-Condition 32 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault_wait) 1 -1" (1 "011")
-Condition 32 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault_wait) 1 -1" (2 "101")
-Toggle s_awsize "net s_awsize[2:0]"
-Toggle s_awburst "net s_awburst[1:0]"
-Toggle s_awlock "net s_awlock[1:0]"
-Toggle s_awprot "net s_awprot[2:0]"
-Toggle s_arsize "net s_arsize[2:0]"
-Toggle s_arburst "net s_arburst[1:0]"
-Toggle s_arlock "net s_arlock[1:0]"
-Toggle m_awid "net m_awid[3:0]"
-Toggle m_awlen "net m_awlen[7:0]"
-Toggle m_awsize "net m_awsize[2:0]"
-Toggle m_awburst "net m_awburst[1:0]"
-Toggle m_awlock "net m_awlock[1:0]"
-Toggle m_awcache "net m_awcache[3:0]"
-Toggle m_awprot "net m_awprot[2:0]"
-Toggle m_wstrb "net m_wstrb[3:0]"
-Toggle m_wlast "net m_wlast"
-Toggle m_bready "net m_bready"
-Toggle m_arid "net m_arid[3:0]"
-Toggle m_arlen "net m_arlen[7:0]"
-Toggle m_arsize "net m_arsize[2:0]"
-Toggle m_arburst "net m_arburst[1:0]"
-Toggle m_arlock "net m_arlock[1:0]"
-Toggle m_arcache "net m_arcache[3:0]"
-Toggle m_arprot "net m_arprot[2:0]"
-Toggle m_rready "net m_rready"
-Toggle fault_prdata "net fault_prdata[31:0]"
-Toggle uart_pready "net uart_pready"
-Toggle gpio_pready "net gpio_pready"
-Toggle dma_pready "net dma_pready"
-Toggle pic_pready "net pic_pready"
-Toggle uart_pslverr "net uart_pslverr"
-Toggle timer_pslverr "net timer_pslverr"
-Toggle gpio_pslverr "net gpio_pslverr"
-Toggle dma_pslverr "net dma_pslverr"
-Toggle pic_pslverr "net pic_pslverr"
-Toggle uart_rx_int "net uart_rx_int"
-Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
-
-// ID: EXCL-UVM-0011
 // CATEGORY: General Module Coverage Exclusions
-MODULE: l2_cache
+MODULE: l2_cache_caching
 Branch 1 "3100422630" "(!rst_n)"
 Branch 1 "3100422630" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
 Branch 1 "3100422630" "(!rst_n)" (1) "(!rst_n) 0,ST_IDLE ,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
@@ -886,6 +813,79 @@ Toggle is_last_beat "net is_last_beat"
 Toggle fill_cnt "reg fill_cnt[2:0]"
 Toggle evict_cnt "reg evict_cnt[2:0]"
 Toggle evict_addr "reg evict_addr[31:0]"
+
+// ID: EXCL-UVM-0011
+// CATEGORY: SoC Integration & Subsystems
+MODULE: soc_peripheral_subsystem
+Branch 0 "245168223" "uart_sel"
+Branch 0 "245168223" "uart_sel" (0) "uart_sel 1,-,-,-,-,-"
+Branch 0 "245168223" "uart_sel" (1) "uart_sel 0,1,-,-,-,-"
+Branch 0 "245168223" "uart_sel" (2) "uart_sel 0,0,1,-,-,-"
+Branch 0 "245168223" "uart_sel" (3) "uart_sel 0,0,0,1,-,-"
+Branch 0 "245168223" "uart_sel" (4) "uart_sel 0,0,0,0,1,-"
+Branch 0 "245168223" "uart_sel" (5) "uart_sel 0,0,0,0,0,1"
+Branch 0 "245168223" "uart_sel" (6) "uart_sel 0,0,0,0,0,0"
+Branch 1 "245168223" "uart_sel"
+Branch 1 "245168223" "uart_sel" (0) "uart_sel 1,-,-,-,-,-"
+Branch 1 "245168223" "uart_sel" (1) "uart_sel 0,1,-,-,-,-"
+Branch 1 "245168223" "uart_sel" (2) "uart_sel 0,0,1,-,-,-"
+Branch 1 "245168223" "uart_sel" (3) "uart_sel 0,0,0,1,-,-"
+Branch 1 "245168223" "uart_sel" (4) "uart_sel 0,0,0,0,1,-"
+Branch 1 "245168223" "uart_sel" (5) "uart_sel 0,0,0,0,0,1"
+Branch 1 "245168223" "uart_sel" (6) "uart_sel 0,0,0,0,0,0"
+Branch 2 "245168223" "uart_sel"
+Branch 2 "245168223" "uart_sel" (0) "uart_sel 1,-,-,-,-,-"
+Branch 2 "245168223" "uart_sel" (1) "uart_sel 0,1,-,-,-,-"
+Branch 2 "245168223" "uart_sel" (2) "uart_sel 0,0,1,-,-,-"
+Branch 2 "245168223" "uart_sel" (3) "uart_sel 0,0,0,1,-,-"
+Branch 2 "245168223" "uart_sel" (4) "uart_sel 0,0,0,0,1,-"
+Branch 2 "245168223" "uart_sel" (5) "uart_sel 0,0,0,0,0,1"
+Branch 2 "245168223" "uart_sel" (6) "uart_sel 0,0,0,0,0,0"
+Condition 29 "2058844492" "(dma_sel ? dma_pslverr : (pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0))) 1 -1" (1 "0")
+Condition 29 "2058844492" "(dma_sel ? dma_pslverr : (pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0))) 1 -1" (2 "1")
+Condition 30 "3407428054" "(pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0)) 1 -1" (1 "0")
+Condition 30 "3407428054" "(pic_sel ? pic_pslverr : (fault_sel ? fault_pslverr : 1'b0)) 1 -1" (2 "1")
+Condition 31 "3645557332" "(fault_sel ? fault_pslverr : 1'b0) 1 -1" (1 "0")
+Condition 31 "3645557332" "(fault_sel ? fault_pslverr : 1'b0) 1 -1" (2 "1")
+Condition 32 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault_wait) 1 -1" (1 "011")
+Condition 32 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault_wait) 1 -1" (2 "101")
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awlock "net s_awlock[1:0]"
+Toggle s_awprot "net s_awprot[2:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arlock "net s_arlock[1:0]"
+Toggle m_awid "net m_awid[3:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_awlock "net m_awlock[1:0]"
+Toggle m_awcache "net m_awcache[3:0]"
+Toggle m_awprot "net m_awprot[2:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_bready "net m_bready"
+Toggle m_arid "net m_arid[3:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_arlock "net m_arlock[1:0]"
+Toggle m_arcache "net m_arcache[3:0]"
+Toggle m_arprot "net m_arprot[2:0]"
+Toggle m_rready "net m_rready"
+Toggle fault_prdata "net fault_prdata[31:0]"
+Toggle uart_pready "net uart_pready"
+Toggle gpio_pready "net gpio_pready"
+Toggle dma_pready "net dma_pready"
+Toggle pic_pready "net pic_pready"
+Toggle uart_pslverr "net uart_pslverr"
+Toggle timer_pslverr "net timer_pslverr"
+Toggle gpio_pslverr "net gpio_pslverr"
+Toggle dma_pslverr "net dma_pslverr"
+Toggle pic_pslverr "net pic_pslverr"
+Toggle uart_rx_int "net uart_rx_int"
+Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
 
 // ID: EXCL-UVM-0012
 // CATEGORY: Bus & Fabric Interconnect
@@ -4604,6 +4604,26 @@ Toggle mem_tlb_op "net mem_tlb_op[2:0]"
 Toggle wb_tlb_op "reg wb_tlb_op[2:0]"
 
 // ID: EXCL-UVM-0036
+// CATEGORY: General Module Coverage Exclusions
+MODULE: l2_cache
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_bresp "net s_bresp[1:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_rresp "net s_rresp[1:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle snoop_addr "net snoop_addr[31:0]"
+Toggle snoop_valid "net snoop_valid"
+Toggle snoop_ack "net snoop_ack"
+Toggle snoop_hit "net snoop_hit"
+
+// ID: EXCL-UVM-0037
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_memory_subsystem
 Toggle spi_sclk "net spi_sclk"
@@ -4628,8 +4648,14 @@ Toggle s2_arsize "net s2_arsize[2:0]"
 Toggle s2_arburst "net s2_arburst[1:0]"
 Toggle s2_arlock "net s2_arlock[1:0]"
 Toggle s2_rresp "net s2_rresp[1:0]"
+Toggle l2m_awsize "net l2m_awsize[2:0]"
+Toggle l2m_arsize "net l2m_arsize[2:0]"
+Toggle l2m_awburst "net l2m_awburst[1:0]"
+Toggle l2m_arburst "net l2m_arburst[1:0]"
+Toggle l2m_bresp "net l2m_bresp[1:0]"
+Toggle l2m_rresp "net l2m_rresp[1:0]"
 
-// ID: EXCL-UVM-0037
+// ID: EXCL-UVM-0038
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_id_ex_reg
 Toggle id_except_is_data "net id_except_is_data"
@@ -4637,7 +4663,7 @@ Toggle id_tlb_op "net id_tlb_op[2:0]"
 Toggle ex_except_is_data "reg ex_except_is_data"
 Toggle ex_tlb_op "reg ex_tlb_op[2:0]"
 
-// ID: EXCL-UVM-0038
+// ID: EXCL-UVM-0039
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_ex_mem_reg
 Toggle ex_tlb_op "net ex_tlb_op[2:0]"
@@ -4645,7 +4671,7 @@ Toggle ex_except_is_data "net ex_except_is_data"
 Toggle mem_tlb_op "reg mem_tlb_op[2:0]"
 Toggle mem_except_is_data "reg mem_except_is_data"
 
-// ID: EXCL-UVM-0039
+// ID: EXCL-UVM-0040
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_top
 Toggle clk "net clk"
