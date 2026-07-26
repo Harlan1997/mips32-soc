@@ -137,4 +137,15 @@
 // online (see mmu_tlb_spec.md §8).
 `define SOC_MMU_ENABLE             0
 
+// -----------------------------------------------------------------------------
+// Branch Predictor (Phase B.6 series). See docs/block_specs/bpu_spec.md.
+// -----------------------------------------------------------------------------
+`define SOC_BPU_ENABLE             0            // 1 = drive IF next_pc from BPU
+`define SOC_BTB_ENTRIES            256
+`define SOC_BTB_INDEX_BITS         8            // log2(256)
+`define SOC_BHT_ENTRIES            256
+`define SOC_BHT_INDEX_BITS         8
+`define SOC_RAS_DEPTH              8
+`define SOC_RAS_DEPTH_BITS         3            // log2(8)
+
 `endif
