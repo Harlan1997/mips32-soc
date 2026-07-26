@@ -143,7 +143,9 @@ module apb_axi_dma_v2 #(
     reg [3:0] ch_state [N_CHANNELS-1:0];
     reg [31:0] read_buf [N_CHANNELS-1:0];  // buffer between R and W
     reg        wait_r   [N_CHANNELS-1:0];  // AR fired, waiting for R
-    reg        wait_b   [N_CHANNELS-1:0];  // AW+W fired, waiting for B
+    reg        wait_aw  [N_CHANNELS-1:0];  // AW fired, waiting for W handshake
+    reg        wait_w   [N_CHANNELS-1:0];  // W fired,  waiting for B
+    reg        wait_b   [N_CHANNELS-1:0];  // both AW+W done, waiting for BVALID
 
     // Arbiter: pick lowest-numbered busy channel
     reg [CH_W-1:0] act_ch;
@@ -178,10 +180,12 @@ module apb_axi_dma_v2 #(
                 ST_LOAD_NEXT: begin m_araddr = desc_ptr_r[act_ch] + 32'hC;  m_arvalid = ~wait_r[act_ch]; end
                 ST_EXEC_R:    begin m_araddr = cur_src_r[act_ch];           m_arvalid = ~wait_r[act_ch]; end
                 ST_EXEC_W:    begin
+                    // Separate wait flags for AW vs W so we don't re-drive
+                    // AWVALID after handshake (AXI protocol violation).
                     m_awaddr  = cur_dst_r[act_ch];
-                    m_awvalid = ~wait_b[act_ch];
+                    m_awvalid = ~wait_aw[act_ch] & ~wait_b[act_ch];
                     m_wdata   = read_buf[act_ch];
-                    m_wvalid  = ~wait_b[act_ch];
+                    m_wvalid  = ~wait_w[act_ch] & ~wait_b[act_ch];
                 end
                 default: ;
             endcase
@@ -231,6 +235,8 @@ module apb_axi_dma_v2 #(
                 desc_ptr_r[c] <= 32'h0;
                 read_buf[c]   <= 32'h0;
                 wait_r[c]     <= 1'b0;
+                wait_aw[c]    <= 1'b0;
+                wait_w[c]     <= 1'b0;
                 wait_b[c]     <= 1'b0;
             end
         end else begin
@@ -256,8 +262,12 @@ module apb_axi_dma_v2 #(
                     if (m_arvalid && m_arready) begin
                         wait_r[c] <= 1'b1;
                     end
-                    // Capture AW+W handshake
-                    if (m_awvalid && m_awready && m_wvalid && m_wready) begin
+                    // Independent AW / W handshake capture. Once both done
+                    // → wait_b (waiting for BVALID).
+                    if (m_awvalid && m_awready) wait_aw[c] <= 1'b1;
+                    if (m_wvalid  && m_wready)  wait_w[c]  <= 1'b1;
+                    if ((wait_aw[c] || (m_awvalid && m_awready)) &&
+                        (wait_w[c]  || (m_wvalid  && m_wready))) begin
                         wait_b[c] <= 1'b1;
                     end
 
@@ -281,9 +291,11 @@ module apb_axi_dma_v2 #(
                         endcase
                     end
 
-                    // B response arrival — clears wait_b and advances EXEC_W
+                    // B response arrival — clears all write flags, advances EXEC_W
                     if (m_bvalid && wait_b[c] && ch_state[c] == ST_EXEC_W) begin
-                        wait_b[c] <= 1'b0;
+                        wait_aw[c] <= 1'b0;
+                        wait_w[c]  <= 1'b0;
+                        wait_b[c]  <= 1'b0;
                         if (m_bresp != 2'b00) err_r[c] <= 1'b1;
                         cur_src_r[c] <= cur_src_r[c] + 32'd4;
                         cur_dst_r[c] <= cur_dst_r[c] + 32'd4;

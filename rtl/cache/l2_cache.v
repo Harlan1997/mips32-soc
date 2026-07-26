@@ -287,6 +287,11 @@ module l2_cache #(
                 end
 
                 ST_HIT_W: begin
+                    // Accept W beats one at a time; merge each into the
+                    // cache immediately, advance beat_cnt, stay here until
+                    // wlast. This handles both single-beat writes (wlast=1
+                    // on first beat) and multi-beat write bursts without
+                    // asserting BVALID early.
                     if (s_wvalid) begin
                         req_wdata <= s_wdata;
                         req_wstrb <= s_wstrb;

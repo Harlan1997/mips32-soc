@@ -17,13 +17,10 @@
                                  // "BVALID with no completed write" — needs
                                  // wlast-tracking and multi-outstanding
                                  // support in slave FSM.
-// `define SOC_USE_UART_16550 1  // rtl/perips/apb_uart_16550.v — v2 spec-
-                                  // complete; enable after Phase 3C
-                                  // pic_mask_arbitration seq is redesigned to
-                                  // use INTR_SOFT as a stable IRQ source
-                                  // (v2 fires transient IRQ, auto-clears on
-                                  // IIR read → doesn't match v1 arbitration
-                                  // test's stable-level assumption).
+`define SOC_USE_UART_16550   1   // rtl/perips/apb_uart_16550.v — v2 in DUT.
+                                  // pic_mask_arbitration seq uses VIC INTR_SOFT
+                                  // for the UART bit when v2 is active (stable
+                                  // level source, matches v1 stub semantics).
 
 // AXI/APB interface contract
 `define SOC_AXI_ID_WIDTH      4
