@@ -30,6 +30,7 @@ module mips_mmu (
     // CP0 state
     input  wire [7:0]  asid,
     input  wire [2:0]  config_k0,
+    input  wire        is_kernel,   // Phase B.4: 1 = current effective mode is kernel
 
     // TLB lookup port (from mips_cp0 pass-through to mips_tlb)
     output wire [31:0] tlb_lookup_va,
@@ -109,6 +110,12 @@ module mips_mmu (
 
         if (!req_valid) begin
             // Idle: leave defaults
+        end else if (!is_kernel && req_va[31]) begin
+            // Phase B.4: user-mode access to any kernel segment (kseg0/1/2/3)
+            // is unconditional AdEL/AdES per MIPS Vol III §4. Independent of
+            // SOC_MMU_ENABLE — the segmentation rule is architectural.
+            ok_r    = 1'b0;
+            fault_r = req_is_store ? 3'b101 : 3'b100;    // AdES / AdEL
         end else if (`SOC_MMU_ENABLE == 0) begin
             // Compatibility mode: identity map for every segment. See comment
             // above for the fabric-alias rationale.

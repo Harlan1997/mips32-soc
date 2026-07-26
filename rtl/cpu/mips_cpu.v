@@ -105,6 +105,9 @@ module mips_cpu (
     wire [2:0]  mmu_d_fault_type;
     wire [7:0]  cp0_asid;
     wire [2:0]  cp0_config_k0;
+    // Phase B.4: effective privilege from CP0 (combinational readback)
+    wire        cpu_kernel_mode;
+    wire        cpu_cu0;
     wire [31:0] mmu_ilookup_va;
     wire        mmu_ilookup_hit;
     wire        mmu_ilookup_v;
@@ -152,13 +155,17 @@ module mips_cpu (
     wire        id_except_req_in;
     wire [4:0]  id_except_code_in;
     
-    // Phase B.3.d: fold MMU I-side fault into the IF-stage exception path.
-    // AdEL (misaligned PC) still wins over MMU-TLBL because misalignment is
-    // detected before translation would run in a real pipeline. Under
-    // SOC_MMU_ENABLE=0 mmu_i_ok is always 1 → this reduces to the pre-B.3.d
-    // AdEL-only behaviour and no regression is possible.
+    // Phase B.3.d + B.4: fold MMU I-side fault into the IF-stage exception path.
+    // AdEL (misaligned PC) wins over MMU-TLBL because misalignment is detected
+    // before translation would run in a real pipeline. MMU can additionally
+    // report AdEL when a user-mode fetch hits kseg (Phase B.4). Under
+    // SOC_MMU_ENABLE=0 with kernel-mode default, mmu_i_ok is always 1 → this
+    // reduces to the pre-B.3.d AdEL-only behaviour and no regression is
+    // possible.
     wire        if_fault_req  = if_adel_exception | (~mmu_i_ok & inst_req);
-    wire [4:0]  if_fault_code = if_adel_exception ? 5'h04 : 5'h02;  // AdEL / TLBL
+    wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
+                                (mmu_i_fault_type == 3'b100) ? 5'h04 :  // AdEL from MMU
+                                                                5'h02;  // TLBL default
 
     mips_if_id_reg u_mips_if_id_reg (
         .clk          (clk),
@@ -199,6 +206,7 @@ module mips_cpu (
 
     wire        id_illegal_inst;
     wire        id_cp0_we;
+    wire        id_is_mfc0;
     wire        id_is_eret;
     wire        id_is_syscall;
     
@@ -315,15 +323,26 @@ module mips_cpu (
 
         .illegal_inst  (id_illegal_inst),
         .cp0_we        (id_cp0_we),
+        .is_mfc0       (id_is_mfc0),
         .is_eret       (id_is_eret),
         .is_syscall    (id_is_syscall),
         .tlb_op        (id_tlb_op)
     );
     
-    wire id_except_req_out = id_except_req_in | id_illegal_inst | id_is_syscall;
+    // Phase B.4: privileged instruction detection + CU0 gate. If the current
+    // ID instruction is MTC0/MFC0/ERET/TLB* and the effective mode is user-mode
+    // without Status.CU0 override, raise Coprocessor Unusable (ExcCode 11).
+    wire id_is_priv     = id_cp0_we | id_is_mfc0 | id_is_eret | (|id_tlb_op);
+    wire id_cpu_unusable = id_is_priv & ~cpu_kernel_mode & ~cpu_cu0;
+
+    // Exception priority at ID: upstream (IF-origin) > CpU > SYSCALL > RI.
+    wire id_except_req_out = id_except_req_in | id_illegal_inst | id_is_syscall
+                           | id_cpu_unusable;
     wire [4:0] id_except_code_out = id_except_req_in ? id_except_code_in :
-                                    (id_is_syscall ? 5'h08 :
-                                     (id_illegal_inst ? 5'h0A : 5'h00));
+                                    id_cpu_unusable  ? 5'h0B :   // CpU
+                                    id_is_syscall    ? 5'h08 :   // Sys
+                                    id_illegal_inst  ? 5'h0A :   // RI
+                                                        5'h00;
 
     // Phase B.5: delay-slot detector. The current ID-stage instruction is in a
     // delay slot iff the *previous* cycle's ID decoded a branch or jump (both
@@ -551,6 +570,8 @@ module mips_cpu (
     wire        mem_mmu_fault      = ~mmu_d_ok & data_req;
     wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
+                                     (mmu_d_fault_type == 3'b100) ? 5'h04 :  // AdEL (user kseg)
+                                     (mmu_d_fault_type == 3'b101) ? 5'h05 :  // AdES (user kseg)
                                                                      5'h02;  // TLBL
     wire mem_except_req_out  = mem_except_req | mem_mmu_fault
                              | mem_adel_exception | mem_ades_exception;
@@ -669,6 +690,8 @@ module mips_cpu (
         .epc_out      (epc_out),
         .ebase_out    (ebase_out),
         .intr_req     (intr_req),
+        .kernel_mode  (cpu_kernel_mode),
+        .cu0_enable   (cpu_cu0),
 
         // MMU pass-through
         .cp0_asid_out       (cp0_asid),
@@ -702,6 +725,7 @@ module mips_cpu (
         .req_is_fetch    (1'b1),
         .asid            (cp0_asid),
         .config_k0       (cp0_config_k0),
+        .is_kernel       (cpu_kernel_mode),
         .tlb_lookup_va   (mmu_ilookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_ilookup_hit),
@@ -722,6 +746,7 @@ module mips_cpu (
         .req_is_fetch    (1'b0),
         .asid            (cp0_asid),
         .config_k0       (cp0_config_k0),
+        .is_kernel       (cpu_kernel_mode),
         .tlb_lookup_va   (mmu_dlookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_dlookup_hit),

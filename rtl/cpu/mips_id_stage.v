@@ -76,6 +76,7 @@ module mips_id_stage (
     
     // CP0 and Exceptions
     output wire        cp0_we,
+    output wire        is_mfc0,
     output wire        is_eret,
     output wire        illegal_inst,
     output wire        is_syscall,
@@ -132,6 +133,7 @@ module mips_id_stage (
         .jump_op     (jump_op),
         .illegal_inst(illegal_inst),
         .cp0_we      (cp0_we),
+        .is_mfc0     (is_mfc0),
         .is_eret     (is_eret),
         .is_syscall  (is_syscall),
         .tlb_op      (tlb_op)

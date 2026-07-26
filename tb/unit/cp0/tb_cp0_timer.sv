@@ -30,6 +30,11 @@ module tb_cp0_timer;
     reg         eret = 0;
     reg  [31:0] bad_vaddr = 0;
 
+    // Phase B.4 CP0 privilege exports (unused checks in this timer/TLB tb but
+    // required for `.*` wildcard connectivity).
+    wire        kernel_mode;
+    wire        cu0_enable;
+
     // Phase B.3.c MMU pass-through signals (unused inside this timer/TLB tb but
     // required for `.*` wildcard connectivity to mips_cp0's post-B.3.c ports).
     wire [7:0]  cp0_asid_out;
@@ -384,6 +389,41 @@ module tb_cp0_timer;
         @(posedge clk);
         mfc0(5'd12, 3'd0, rd);
         check("ERET with EXL=1 clears EXL",    rd[1] == 1'b0);
+
+        // -----------------------------------------------------------------
+        // Phase B.4: KSU + CU0 writability, kernel_mode / cu0_enable outputs.
+        // -----------------------------------------------------------------
+        // Start: default reset → KSU=0, CU0=0, EXL/ERL=0 → kernel_mode=1
+        mtc0(5'd12, 3'd0, 32'd0);
+        @(posedge clk);
+        check("Default mode: kernel_mode=1", kernel_mode == 1'b1);
+        check("Default mode: cu0_enable=0",  cu0_enable  == 1'b0);
+
+        // Write KSU=10 (user), CU0=0, EXL=0, ERL=0 → user mode
+        mtc0(5'd12, 3'd0, 32'h0000_0010);   // bit 4 = 1 (KSU=10)
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("KSU=10 readback",             rd[4:3] == 2'b10);
+        check("User mode: kernel_mode=0",    kernel_mode == 1'b0);
+
+        // EXL=1 forces kernel mode regardless of KSU
+        mtc0(5'd12, 3'd0, 32'h0000_0012);   // EXL=1 + KSU=10
+        @(posedge clk);
+        check("EXL=1 forces kernel_mode=1",  kernel_mode == 1'b1);
+
+        // ERL=1 forces kernel mode regardless of KSU
+        mtc0(5'd12, 3'd0, 32'h0000_0014);   // ERL=1 + KSU=10, EXL=0
+        @(posedge clk);
+        check("ERL=1 forces kernel_mode=1",  kernel_mode == 1'b1);
+
+        // Set CU0=1 (allow user-mode CP0 access), user mode active
+        mtc0(5'd12, 3'd0, 32'h1000_0010);   // CU0=1, KSU=10, EXL=ERL=0
+        @(posedge clk);
+        check("CU0 readback = 1",            cu0_enable  == 1'b1);
+        check("User mode with CU0=1",        kernel_mode == 1'b0);
+
+        // Restore kernel mode for subsequent state
+        mtc0(5'd12, 3'd0, 32'd0);
 
         // Summary
         if (errors == 0)
