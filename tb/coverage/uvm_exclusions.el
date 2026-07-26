@@ -37,6 +37,7 @@ Branch 8 "573179229" "ar_waiting" (0) "ar_waiting 1,-"
 Branch 8 "573179229" "ar_waiting" (1) "ar_waiting 0,1"
 Branch 8 "573179229" "ar_waiting" (2) "ar_waiting 0,0"
 Condition 10 "3770152654" "(s0_rvalid && s0_rready && s0_rlast) 1 -1" (2 "101")
+Condition 11 "708236085" "(m1_arvalid && (((!m0_arvalid)) || rr_next_master)) 1 -1" (2 "10")
 Condition 44 "4062523118" "((ar_state == AR_IDLE) && ((!choose_m1_ar)) && m0_arvalid) 1 -1" (2 "101")
 Block 2 "3892497837" "ar_state <= AR_IDLE;"
 Block 15 "2205236837" "ar_state <= AR_IDLE;"
@@ -71,6 +72,144 @@ Toggle arlock_latch "reg arlock_latch[1:0]"
 
 // ID: EXCL-UVM-0002
 // CATEGORY: CPU Core & Pipeline
+MODULE: mips_mdu
+Branch 0 "1787082843" "mult_signed_reg"
+Branch 0 "1787082843" "mult_signed_reg" (0) "mult_signed_reg 1"
+Branch 0 "1787082843" "mult_signed_reg" (1) "mult_signed_reg 0"
+Branch 2 "2134880272" "(!rst_n)"
+Branch 2 "2134880272" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (1) "(!rst_n) 0,STATE_IDLE ,1,OP_MULT OP_MULTU ,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (2) "(!rst_n) 0,STATE_IDLE ,1,OP_DIV OP_DIVU ,1,1,-,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (3) "(!rst_n) 0,STATE_IDLE ,1,OP_DIV OP_DIVU ,1,0,-,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (4) "(!rst_n) 0,STATE_IDLE ,1,OP_DIV OP_DIVU ,0,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (5) "(!rst_n) 0,STATE_IDLE ,1,default,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (6) "(!rst_n) 0,STATE_IDLE ,0,-,-,-,1,-,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (7) "(!rst_n) 0,STATE_IDLE ,0,-,-,-,0,1,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (8) "(!rst_n) 0,STATE_IDLE ,0,-,-,-,0,0,-,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (9) "(!rst_n) 0,STATE_MULT ,-,-,-,-,-,-,1,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (10) "(!rst_n) 0,STATE_MULT ,-,-,-,-,-,-,0,-,-,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (11) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,1,1,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (12) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,1,0,-,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (13) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,0,-,1,1,-,-"
+Branch 2 "2134880272" "(!rst_n)" (14) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,0,-,1,0,1,-"
+Branch 2 "2134880272" "(!rst_n)" (15) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,0,-,1,0,0,-"
+Branch 2 "2134880272" "(!rst_n)" (16) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,0,-,1,0,-,1"
+Branch 2 "2134880272" "(!rst_n)" (17) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,0,-,1,0,-,0"
+Branch 2 "2134880272" "(!rst_n)" (18) "(!rst_n) 0,STATE_DIV ,-,-,-,-,-,-,-,0,-,0,-,-,-"
+Branch 2 "2134880272" "(!rst_n)" (19) "(!rst_n) 0,default,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Condition 1 "444375593" "(mdu_op == OP_MULT) 1 -1" (1 "0")
+Condition 1 "444375593" "(mdu_op == OP_MULT) 1 -1" (2 "1")
+Condition 2 "2646245566" "(mdu_op == OP_DIV) 1 -1" (1 "0")
+Condition 2 "2646245566" "(mdu_op == OP_DIV) 1 -1" (2 "1")
+Condition 3 "1157410967" "(op_a[31] ^ op_b[31]) 1 -1" (1 "00")
+Condition 3 "1157410967" "(op_a[31] ^ op_b[31]) 1 -1" (2 "01")
+Condition 3 "1157410967" "(op_a[31] ^ op_b[31]) 1 -1" (3 "10")
+Condition 3 "1157410967" "(op_a[31] ^ op_b[31]) 1 -1" (4 "11")
+Condition 4 "1500770305" "(op_b[31] ? (((~op_b) + 32'b1)) : op_b) 1 -1" (1 "0")
+Condition 4 "1500770305" "(op_b[31] ? (((~op_b) + 32'b1)) : op_b) 1 -1" (2 "1")
+Condition 6 "1240947428" "(op_a[31] ? (((~op_a) + 32'b1)) : op_a) 1 -1" (1 "0")
+Condition 6 "1240947428" "(op_a[31] ? (((~op_a) + 32'b1)) : op_a) 1 -1" (2 "1")
+Condition 7 "1291073778" "(mdu_op == OP_MTHI) 1 -1" (1 "0")
+Condition 7 "1291073778" "(mdu_op == OP_MTHI) 1 -1" (2 "1")
+Condition 8 "1281857860" "(mdu_op == OP_MTLO) 1 -1" (1 "0")
+Condition 8 "1281857860" "(mdu_op == OP_MTLO) 1 -1" (2 "1")
+Condition 9 "2406147145" "(sub_res[32] == 1'b0) 1 -1" (1 "0")
+Condition 9 "2406147145" "(sub_res[32] == 1'b0) 1 -1" (2 "1")
+Condition 10 "211211230" "(count == 6'd32) 1 -1" (1 "0")
+Condition 10 "211211230" "(count == 6'd32) 1 -1" (2 "1")
+Condition 11 "3102827975" "(div_divisor == 32'b0) 1 -1" (1 "0")
+Condition 11 "3102827975" "(div_divisor == 32'b0) 1 -1" (2 "1")
+Condition 12 "654117872" "(mult_signed_reg ? mult_prod_signed : mult_prod_unsigned) 1 -1" (1 "0")
+Condition 12 "654117872" "(mult_signed_reg ? mult_prod_signed : mult_prod_unsigned) 1 -1" (2 "1")
+Condition 13 "658134038" "((state == STATE_IDLE) || ((state == STATE_MULT) && ((!mult_active))) || ((state == STATE_DIV) && (count == 6'd33))) 1 -1" (1 "000")
+Condition 13 "658134038" "((state == STATE_IDLE) || ((state == STATE_MULT) && ((!mult_active))) || ((state == STATE_DIV) && (count == 6'd33))) 1 -1" (2 "001")
+Condition 13 "658134038" "((state == STATE_IDLE) || ((state == STATE_MULT) && ((!mult_active))) || ((state == STATE_DIV) && (count == 6'd33))) 1 -1" (3 "010")
+Condition 13 "658134038" "((state == STATE_IDLE) || ((state == STATE_MULT) && ((!mult_active))) || ((state == STATE_DIV) && (count == 6'd33))) 1 -1" (4 "100")
+Condition 14 "1976780089" "(state == STATE_IDLE) 1 -1" (2 "1")
+Condition 15 "3577784138" "((state == STATE_MULT) && ((!mult_active))) 1 -1" (1 "01")
+Condition 15 "3577784138" "((state == STATE_MULT) && ((!mult_active))) 1 -1" (2 "10")
+Condition 15 "3577784138" "((state == STATE_MULT) && ((!mult_active))) 1 -1" (3 "11")
+Condition 16 "3481348388" "(state == STATE_MULT) 1 -1" (2 "1")
+Condition 17 "3817452907" "((state == STATE_DIV) && (count == 6'd33)) 1 -1" (1 "01")
+Condition 17 "3817452907" "((state == STATE_DIV) && (count == 6'd33)) 1 -1" (2 "10")
+Condition 17 "3817452907" "((state == STATE_DIV) && (count == 6'd33)) 1 -1" (3 "11")
+Condition 18 "2575618096" "(state == STATE_DIV) 1 -1" (2 "1")
+Condition 19 "2291392415" "(count == 6'd33) 1 -1" (2 "1")
+Fsm state "337146826"
+State STATE_DIV "2"
+State STATE_IDLE "0"
+State STATE_MULT "1"
+Transition STATE_DIV->STATE_IDLE "2->0"
+Transition STATE_IDLE->STATE_DIV "0->2"
+Transition STATE_IDLE->STATE_MULT "0->1"
+Transition STATE_MULT->STATE_IDLE "1->0"
+Block 2 "3860183630" "mdu_out = hi;"
+Block 3 "4122875419" "mdu_out = lo;"
+Block 5 "1335899302" "if ((!rst_n))"
+Block 6 "3847044519" "hi <= 32'b0;"
+Block 7 "4239173900" "case (state)"
+Block 8 "163984701" "if (start)"
+Block 9 "3304261223" "case (mdu_op)"
+Block 10 "3967101230" "state <= STATE_MULT;"
+Block 11 "394374242" "state <= STATE_DIV;"
+Block 12 "2132538075" "div_sign_quot <= (op_a[31] ^ op_b[31]);"
+Block 13 "2085905877" "div_sign_quot <= 1'b0;"
+Block 14 "2745457819" ";"
+Block 15 "2750666403" "if ((mdu_op == OP_MTHI))"
+Block 16 "1728580030" "hi <= op_a;"
+Block 17 "706464740" "if ((mdu_op == OP_MTLO))"
+Block 18 "3318760720" "lo <= op_a;"
+Block 20 "3588853313" "if (mult_active)"
+Block 21 "2926601717" "hi <= mult_prod[63:32];"
+Block 22 "2107790370" "state <= STATE_IDLE;"
+Block 23 "123445621" "if ((count < 6'd32))"
+Block 24 "3623527984" "if ((sub_res[32] == 1'b0))"
+Block 25 "4174096545" "div_rem_quot <= {sub_res[31:0], next_rem_quot[31:1], 1'b1};"
+Block 26 "416031103" "div_rem_quot <= {next_rem_quot[63:32], next_rem_quot[31:1], 1'b0};"
+Block 27 "4285538369" "count <= (count + 6'b1);"
+Block 28 "2898151190" "if ((count == 6'd32))"
+Block 29 "1595901312" "if ((div_divisor == 32'b0))"
+Block 30 "2401679015" "hi <= 32'b0;"
+Block 31 "529947590" "if (div_sign_quot)"
+Block 32 "3479386531" "lo <= ((~final_quot) + 32'b1);"
+Block 33 "4119102600" "lo <= final_quot;"
+Block 34 "548158769" "if (div_sign_rem)"
+Block 35 "899996884" "hi <= ((~final_rem) + 32'b1);"
+Block 36 "3847754894" "hi <= final_rem;"
+Block 37 "2448662380" "count <= (count + 6'b1);"
+Block 38 "4084155728" "state <= STATE_IDLE;"
+Block 39 "3609964673" "state <= STATE_IDLE;"
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle op_a "net op_a[31:0]"
+Toggle op_b "net op_b[31:0]"
+Toggle mdu_op "net mdu_op[2:0]"
+Toggle start "net start"
+Toggle hi "reg hi[31:0]"
+Toggle lo "reg lo[31:0]"
+Toggle ready "net ready"
+Toggle mdu_out "reg mdu_out[31:0]"
+Toggle state "reg state[1:0]"
+Toggle count "reg count[5:0]"
+Toggle mult_a_reg "reg mult_a_reg[31:0]"
+Toggle mult_b_reg "reg mult_b_reg[31:0]"
+Toggle mult_signed_reg "reg mult_signed_reg"
+Toggle mult_active "reg mult_active"
+Toggle div_divisor "reg div_divisor[31:0]"
+Toggle div_rem_quot "reg div_rem_quot[63:0]"
+Toggle div_sign_quot "reg div_sign_quot"
+Toggle div_sign_rem "reg div_sign_rem"
+Toggle div_active "reg div_active"
+Toggle next_rem_quot "net next_rem_quot[63:0]"
+Toggle sub_res "net sub_res[32:0]"
+Toggle mult_prod_signed "net mult_prod_signed[63:0]"
+Toggle mult_prod_unsigned "net mult_prod_unsigned[63:0]"
+Toggle mult_prod "net mult_prod[63:0]"
+Toggle final_quot "net final_quot[31:0]"
+Toggle final_rem "net final_rem[31:0]"
+
+// ID: EXCL-UVM-0003
+// CATEGORY: CPU Core & Pipeline
 MODULE: mips_id_stage
 Branch 8 "3654256095" "(opcode == 6'b0)"
 Branch 8 "3654256095" "(opcode == 6'b0)" (0) "(opcode == 6'b0) 1"
@@ -81,16 +220,11 @@ Branch 9 "3654256095" "(opcode == 6'b0)" (1) "(opcode == 6'b0) 0"
 Condition 28 "2003565877" "(is_jump & ((~stall_req))) 1 -1" (2 "10")
 Condition 36 "1275648394" "((reg_dst == 2'b10) ? 5'd31 : 5'b0) 1 -1" (1 "0")
 Condition 37 "1660560331" "(reg_dst == 2'b10) 1 -1" (1 "0")
-Condition 39 "1043316241" "(val_rt != 32'b0) 1 -1" (2 "1")
-Condition 40 "2660945122" "(cond_move_is_movz ? (val_rt == 32'b0) : 1'b1) 1 -1" (2 "1")
-Condition 41 "1460911690" "(val_rt == 32'b0) 1 -1" (1 "0")
-Condition 41 "1460911690" "(val_rt == 32'b0) 1 -1" (2 "1")
 Condition 72 "3988973416" "((ex_mem_read || (ex_mem_to_reg == 2'b11)) && (ex_waddr != 5'b0) && ((reads_rs && (ex_waddr == rs_addr)) || (reads_rt && (ex_waddr == rt_addr)))) 1 -1" (2 "101")
 Condition 81 "2892226172" "((mem_mem_read || (mem_mem_to_reg == 2'b11)) && (fw_mem_waddr != 5'b0) && ((reads_rs && (fw_mem_waddr == rs_addr)) || (reads_rt && (fw_mem_waddr == rt_addr)))) 1 -1" (2 "101")
 Toggle tlb_op "net tlb_op[2:0]"
-Toggle cond_move_is_movz "net cond_move_is_movz"
 
-// ID: EXCL-UVM-0003
+// ID: EXCL-UVM-0004
 // CATEGORY: Bus & Fabric Interconnect
 MODULE: axi_decoder_1x3
 Branch 4 "1633826230" "(act_w_sel == SEL_APB)"
@@ -170,7 +304,7 @@ Toggle s2_arburst "net s2_arburst[1:0]"
 Toggle s2_arlock "net s2_arlock[1:0]"
 Toggle s2_rresp "net s2_rresp[1:0]"
 
-// ID: EXCL-UVM-0004
+// ID: EXCL-UVM-0005
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_cpu
 Branch 8 "3278491209" "wb_except_req"
@@ -245,7 +379,7 @@ Toggle _mmu_unused "net _mmu_unused"
 Toggle bpu_resolve_taken "net bpu_resolve_taken"
 Toggle _bpu_unused "net _bpu_unused"
 
-// ID: EXCL-UVM-0005
+// ID: EXCL-UVM-0006
 // CATEGORY: Debug & Observability
 MODULE: jtag_debug_top
 Branch 5 "152886533" "(!rst_n)"
@@ -295,7 +429,538 @@ Toggle idcode_reg "reg idcode_reg[31:0]"
 Toggle bypass_reg "reg bypass_reg[31:0]"
 Toggle axi_rvalid_sync "net axi_rvalid_sync"
 
-// ID: EXCL-UVM-0006
+// ID: EXCL-UVM-0007
+// CATEGORY: General Module Coverage Exclusions
+MODULE: apb_uart_16550
+Branch 0 "3207899612" "({dlm_r, dll_r} == 16'b0)"
+Branch 0 "3207899612" "({dlm_r, dll_r} == 16'b0)" (0) "({dlm_r, dll_r} == 16'b0) 1"
+Branch 0 "3207899612" "({dlm_r, dll_r} == 16'b0)" (1) "({dlm_r, dll_r} == 16'b0) 0"
+Branch 1 "4025010454" "mcr_r[4]"
+Branch 1 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 1 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 2 "4025010454" "mcr_r[4]"
+Branch 2 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 2 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 3 "4025010454" "mcr_r[4]"
+Branch 3 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 3 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 4 "4025010454" "mcr_r[4]"
+Branch 4 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 4 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 5 "4025010454" "mcr_r[4]"
+Branch 5 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 5 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 6 "3063898988" "rx_empty"
+Branch 6 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 6 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 7 "3063898988" "rx_empty"
+Branch 7 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 7 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 8 "3063898988" "rx_empty"
+Branch 8 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 8 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 9 "3063898988" "rx_empty"
+Branch 9 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 9 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 10 "3215736223" "rx_line_err_int"
+Branch 10 "3215736223" "rx_line_err_int" (0) "rx_line_err_int 1,-,-,-"
+Branch 10 "3215736223" "rx_line_err_int" (1) "rx_line_err_int 0,1,-,-"
+Branch 10 "3215736223" "rx_line_err_int" (2) "rx_line_err_int 0,0,1,-"
+Branch 10 "3215736223" "rx_line_err_int" (3) "rx_line_err_int 0,0,0,1"
+Branch 10 "3215736223" "rx_line_err_int" (4) "rx_line_err_int 0,0,0,0"
+Branch 11 "414418287" "rx_trigger"
+Branch 11 "414418287" "rx_trigger" (0) "rx_trigger 2'b00 "
+Branch 11 "414418287" "rx_trigger" (1) "rx_trigger 2'b01 "
+Branch 11 "414418287" "rx_trigger" (2) "rx_trigger 2'b10 "
+Branch 11 "414418287" "rx_trigger" (3) "rx_trigger 2'b11 "
+Branch 11 "414418287" "rx_trigger" (4) "rx_trigger MISSING_DEFAULT"
+Branch 12 "475126351" "(!rst_n)"
+Branch 12 "475126351" "(!rst_n)" (0) "(!rst_n) 1,-"
+Branch 12 "475126351" "(!rst_n)" (1) "(!rst_n) 0,1"
+Branch 12 "475126351" "(!rst_n)" (2) "(!rst_n) 0,0"
+Branch 13 "2454824233" "wls"
+Branch 13 "2454824233" "wls" (0) "wls 2'b00 "
+Branch 13 "2454824233" "wls" (1) "wls 2'b01 "
+Branch 13 "2454824233" "wls" (2) "wls 2'b10 "
+Branch 13 "2454824233" "wls" (3) "wls 2'b11 "
+Branch 13 "2454824233" "wls" (4) "wls MISSING_DEFAULT"
+Branch 14 "130191872" "(!rst_n)"
+Branch 14 "130191872" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (1) "(!rst_n) 0,1,-,-,-,-,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (2) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (3) "(!rst_n) 0,-,1,1,-,-,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (4) "(!rst_n) 0,-,1,0,-,-,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (5) "(!rst_n) 0,-,1,-,1,1,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (6) "(!rst_n) 0,-,1,-,1,0,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (7) "(!rst_n) 0,-,1,-,0,-,-,-,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (8) "(!rst_n) 0,-,0,-,-,-,1,1,TX_START ,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (9) "(!rst_n) 0,-,0,-,-,-,1,1,TX_DATA ,1,-,-"
+Branch 14 "130191872" "(!rst_n)" (10) "(!rst_n) 0,-,0,-,-,-,1,1,TX_DATA ,0,1,-"
+Branch 14 "130191872" "(!rst_n)" (11) "(!rst_n) 0,-,0,-,-,-,1,1,TX_DATA ,0,0,-"
+Branch 14 "130191872" "(!rst_n)" (12) "(!rst_n) 0,-,0,-,-,-,1,1,TX_PARITY ,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (13) "(!rst_n) 0,-,0,-,-,-,1,1,TX_STOP1 ,-,-,1"
+Branch 14 "130191872" "(!rst_n)" (14) "(!rst_n) 0,-,0,-,-,-,1,1,TX_STOP1 ,-,-,0"
+Branch 14 "130191872" "(!rst_n)" (15) "(!rst_n) 0,-,0,-,-,-,1,1,TX_STOP2 ,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (16) "(!rst_n) 0,-,0,-,-,-,1,1,default,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (17) "(!rst_n) 0,-,0,-,-,-,1,0,-,-,-,-"
+Branch 14 "130191872" "(!rst_n)" (18) "(!rst_n) 0,-,0,-,-,-,0,-,-,-,-,-"
+Branch 15 "152886533" "(!rst_n)"
+Branch 15 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 15 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+Branch 16 "1810158637" "(!rst_n)"
+Branch 16 "1810158637" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (1) "(!rst_n) 0,RX_IDLE ,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (2) "(!rst_n) 0,RX_IDLE ,0,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (3) "(!rst_n) 0,default,-,1,1,RX_START ,1,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (4) "(!rst_n) 0,default,-,1,1,RX_START ,0,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (5) "(!rst_n) 0,default,-,1,1,RX_DATA ,-,1,1,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (6) "(!rst_n) 0,default,-,1,1,RX_DATA ,-,1,0,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (7) "(!rst_n) 0,default,-,1,1,RX_DATA ,-,0,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (8) "(!rst_n) 0,default,-,1,1,RX_PARITY ,-,-,-,1,1,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (9) "(!rst_n) 0,default,-,1,1,RX_PARITY ,-,-,-,1,0,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (10) "(!rst_n) 0,default,-,1,1,RX_PARITY ,-,-,-,0,-,1,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (11) "(!rst_n) 0,default,-,1,1,RX_PARITY ,-,-,-,0,-,0,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (12) "(!rst_n) 0,default,-,1,1,RX_STOP ,-,-,-,-,-,-,1,-,-"
+Branch 16 "1810158637" "(!rst_n)" (13) "(!rst_n) 0,default,-,1,1,RX_STOP ,-,-,-,-,-,-,0,-,-"
+Branch 16 "1810158637" "(!rst_n)" (14) "(!rst_n) 0,default,-,1,1,RX_STOP ,-,-,-,-,-,-,-,1,-"
+Branch 16 "1810158637" "(!rst_n)" (15) "(!rst_n) 0,default,-,1,1,RX_STOP ,-,-,-,-,-,-,-,0,-"
+Branch 16 "1810158637" "(!rst_n)" (16) "(!rst_n) 0,default,-,1,1,RX_STOP ,-,-,-,-,-,-,-,-,1"
+Branch 16 "1810158637" "(!rst_n)" (17) "(!rst_n) 0,default,-,1,1,RX_STOP ,-,-,-,-,-,-,-,-,0"
+Branch 16 "1810158637" "(!rst_n)" (18) "(!rst_n) 0,default,-,1,1,default,-,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (19) "(!rst_n) 0,default,-,1,0,-,-,-,-,-,-,-,-,-,-"
+Branch 16 "1810158637" "(!rst_n)" (20) "(!rst_n) 0,default,-,0,-,-,-,-,-,-,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)"
+Branch 17 "2154559572" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (1) "(!rst_n) 0,1,3'b000 ,1,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (2) "(!rst_n) 0,1,3'b000 ,0,1,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (3) "(!rst_n) 0,1,3'b000 ,0,0,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (4) "(!rst_n) 0,1,3'b001 ,-,-,1,-,-"
+Branch 17 "2154559572" "(!rst_n)" (5) "(!rst_n) 0,1,3'b001 ,-,-,0,-,-"
+Branch 17 "2154559572" "(!rst_n)" (6) "(!rst_n) 0,1,3'b010 ,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (7) "(!rst_n) 0,1,3'b011 ,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (8) "(!rst_n) 0,1,3'b100 ,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (9) "(!rst_n) 0,1,3'b111 ,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (10) "(!rst_n) 0,1,default,-,-,-,-,-"
+Branch 17 "2154559572" "(!rst_n)" (11) "(!rst_n) 0,1,-,-,-,-,1,-"
+Branch 17 "2154559572" "(!rst_n)" (12) "(!rst_n) 0,1,-,-,-,-,0,-"
+Branch 17 "2154559572" "(!rst_n)" (13) "(!rst_n) 0,1,-,-,-,-,-,1"
+Branch 17 "2154559572" "(!rst_n)" (14) "(!rst_n) 0,1,-,-,-,-,-,0"
+Branch 17 "2154559572" "(!rst_n)" (15) "(!rst_n) 0,0,-,-,-,-,-,-"
+Branch 18 "3498818381" "(!rst_n)"
+Branch 18 "3498818381" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-"
+Branch 18 "3498818381" "(!rst_n)" (1) "(!rst_n) 0,1,-,-,-,-"
+Branch 18 "3498818381" "(!rst_n)" (2) "(!rst_n) 0,0,-,-,-,-"
+Branch 18 "3498818381" "(!rst_n)" (3) "(!rst_n) 0,-,1,-,-,-"
+Branch 18 "3498818381" "(!rst_n)" (4) "(!rst_n) 0,-,0,-,-,-"
+Branch 18 "3498818381" "(!rst_n)" (5) "(!rst_n) 0,-,-,1,-,-"
+Branch 18 "3498818381" "(!rst_n)" (6) "(!rst_n) 0,-,-,0,-,-"
+Branch 18 "3498818381" "(!rst_n)" (7) "(!rst_n) 0,-,-,-,1,-"
+Branch 18 "3498818381" "(!rst_n)" (8) "(!rst_n) 0,-,-,-,0,-"
+Branch 18 "3498818381" "(!rst_n)" (9) "(!rst_n) 0,-,-,-,-,1"
+Branch 18 "3498818381" "(!rst_n)" (10) "(!rst_n) 0,-,-,-,-,0"
+Branch 19 "537430471" "(!rst_n)"
+Branch 19 "537430471" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-"
+Branch 19 "537430471" "(!rst_n)" (1) "(!rst_n) 0,1,3'b000 ,1,-"
+Branch 19 "537430471" "(!rst_n)" (2) "(!rst_n) 0,1,3'b000 ,0,1"
+Branch 19 "537430471" "(!rst_n)" (3) "(!rst_n) 0,1,3'b000 ,0,0"
+Branch 19 "537430471" "(!rst_n)" (4) "(!rst_n) 0,1,3'b001 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (5) "(!rst_n) 0,1,3'b010 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (6) "(!rst_n) 0,1,3'b011 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (7) "(!rst_n) 0,1,3'b100 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (8) "(!rst_n) 0,1,3'b101 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (9) "(!rst_n) 0,1,3'b110 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (10) "(!rst_n) 0,1,3'b111 ,-,-"
+Branch 19 "537430471" "(!rst_n)" (11) "(!rst_n) 0,1,default,-,-"
+Branch 19 "537430471" "(!rst_n)" (12) "(!rst_n) 0,0,-,-,-"
+Condition 1 "1806891920" "(tx_state == TX_IDLE) 1 -1" (1 "0")
+Condition 1 "1806891920" "(tx_state == TX_IDLE) 1 -1" (2 "1")
+Condition 2 "2804257405" "(((!tx_empty)) && ((!brk_send))) 1 -1" (1 "01")
+Condition 2 "2804257405" "(((!tx_empty)) && ((!brk_send))) 1 -1" (2 "10")
+Condition 2 "2804257405" "(((!tx_empty)) && ((!brk_send))) 1 -1" (3 "11")
+Condition 3 "942812939" "(tx_bit_ctr == 4'd15) 1 -1" (1 "0")
+Condition 3 "942812939" "(tx_bit_ctr == 4'd15) 1 -1" (2 "1")
+Condition 4 "1169498421" "(rx_bit_ctr == 4'd15) 1 -1" (1 "0")
+Condition 4 "1169498421" "(rx_bit_ctr == 4'd15) 1 -1" (2 "1")
+Condition 5 "2480485997" "(rx_bit_idx == (data_bits - 1)) 1 -1" (1 "0")
+Condition 5 "2480485997" "(rx_bit_idx == (data_bits - 1)) 1 -1" (2 "1")
+Condition 6 "557103939" "(rx_sync2 != (~eps)) 1 -1" (1 "0")
+Condition 6 "557103939" "(rx_sync2 != (~eps)) 1 -1" (2 "1")
+Condition 7 "1101945564" "((rx_shift == 8'b0) && rx_err_fram) 1 -1" (1 "01")
+Condition 7 "1101945564" "((rx_shift == 8'b0) && rx_err_fram) 1 -1" (2 "10")
+Condition 7 "1101945564" "((rx_shift == 8'b0) && rx_err_fram) 1 -1" (3 "11")
+Condition 8 "4038216416" "(rx_shift == 8'b0) 1 -1" (1 "0")
+Condition 8 "4038216416" "(rx_shift == 8'b0) 1 -1" (2 "1")
+Condition 9 "3070515988" "((paddr[4:2] == 3'b010) && pwdata[1]) 1 -1" (1 "01")
+Condition 9 "3070515988" "((paddr[4:2] == 3'b010) && pwdata[1]) 1 -1" (2 "10")
+Condition 9 "3070515988" "((paddr[4:2] == 3'b010) && pwdata[1]) 1 -1" (3 "11")
+Condition 10 "3100311897" "(paddr[4:2] == 3'b010) 1 -1" (1 "0")
+Condition 10 "3100311897" "(paddr[4:2] == 3'b010) 1 -1" (2 "1")
+Condition 11 "3188433781" "((paddr[4:2] == 3'b010) && pwdata[2]) 1 -1" (1 "01")
+Condition 11 "3188433781" "((paddr[4:2] == 3'b010) && pwdata[2]) 1 -1" (2 "10")
+Condition 11 "3188433781" "((paddr[4:2] == 3'b010) && pwdata[2]) 1 -1" (3 "11")
+Condition 12 "1201054170" "(paddr[4:2] == 3'b010) 1 -1" (1 "0")
+Condition 12 "1201054170" "(paddr[4:2] == 3'b010) 1 -1" (2 "1")
+Condition 13 "1462303205" "(cts_n_int != cts_n_prev) 1 -1" (1 "0")
+Condition 13 "1462303205" "(cts_n_int != cts_n_prev) 1 -1" (2 "1")
+Condition 14 "724420376" "(dsr_n_int != dsr_n_prev) 1 -1" (1 "0")
+Condition 14 "724420376" "(dsr_n_int != dsr_n_prev) 1 -1" (2 "1")
+Condition 15 "2146528716" "(dcd_n_int != dcd_n_prev) 1 -1" (1 "0")
+Condition 15 "2146528716" "(dcd_n_int != dcd_n_prev) 1 -1" (2 "1")
+Condition 16 "3720853931" "(((~ri_n_int)) & ri_n_prev) 1 -1" (1 "01")
+Condition 16 "3720853931" "(((~ri_n_int)) & ri_n_prev) 1 -1" (2 "10")
+Condition 16 "3720853931" "(((~ri_n_int)) & ri_n_prev) 1 -1" (3 "11")
+Condition 17 "1295869727" "(rd_stb && (paddr[4:2] == 3'b110)) 1 -1" (1 "01")
+Condition 17 "1295869727" "(rd_stb && (paddr[4:2] == 3'b110)) 1 -1" (2 "10")
+Condition 17 "1295869727" "(rd_stb && (paddr[4:2] == 3'b110)) 1 -1" (3 "11")
+Condition 18 "1767035954" "(paddr[4:2] == 3'b110) 1 -1" (1 "0")
+Condition 18 "1767035954" "(paddr[4:2] == 3'b110) 1 -1" (2 "1")
+Condition 20 "2378034198" "(dlab ? dlm_r : ier_r) 1 -1" (1 "0")
+Condition 20 "2378034198" "(dlab ? dlm_r : ier_r) 1 -1" (2 "1")
+Condition 21 "309735636" "(psel & penable & pwrite) 1 -1" (1 "011")
+Condition 21 "309735636" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 21 "309735636" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 21 "309735636" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 22 "1528312807" "(psel & penable & ((~pwrite))) 1 -1" (1 "011")
+Condition 22 "1528312807" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 22 "1528312807" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 22 "1528312807" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Condition 23 "3996082851" "(tx_wr == tx_rd) 1 -1" (2 "1")
+Condition 24 "3359938887" "((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) 1 -1" (1 "01")
+Condition 24 "3359938887" "((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) 1 -1" (2 "10")
+Condition 24 "3359938887" "((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) 1 -1" (3 "11")
+Condition 25 "3718420549" "(tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) 1 -1" (2 "1")
+Condition 26 "654808057" "(tx_wr[TX_AW] != tx_rd[TX_AW]) 1 -1" (2 "1")
+Condition 27 "3013586155" "(rx_wr == rx_rd) 1 -1" (2 "1")
+Condition 28 "1075042385" "((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) 1 -1" (1 "01")
+Condition 28 "1075042385" "((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) 1 -1" (2 "10")
+Condition 28 "1075042385" "((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) 1 -1" (3 "11")
+Condition 29 "309960018" "(rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) 1 -1" (2 "1")
+Condition 30 "1746393998" "(rx_wr[RX_AW] != rx_rd[RX_AW]) 1 -1" (2 "1")
+Condition 31 "2010771938" "(({dlm_r, dll_r} == 16'b0) ? 16'b1 : ({dlm_r, dll_r})) 1 -1" (1 "0")
+Condition 31 "2010771938" "(({dlm_r, dll_r} == 16'b0) ? 16'b1 : ({dlm_r, dll_r})) 1 -1" (2 "1")
+Condition 32 "138311712" "({dlm_r, dll_r} == 16'b0) 1 -1" (2 "1")
+Condition 33 "410531244" "(mcr_r[4] ? tx_line : uart_rx) 1 -1" (1 "0")
+Condition 33 "410531244" "(mcr_r[4] ? tx_line : uart_rx) 1 -1" (2 "1")
+Condition 34 "2396073676" "(mcr_r[4] ? ((~mcr_r[1])) : uart_cts_n) 1 -1" (1 "0")
+Condition 34 "2396073676" "(mcr_r[4] ? ((~mcr_r[1])) : uart_cts_n) 1 -1" (2 "1")
+Condition 35 "1753956575" "(mcr_r[4] ? ((~mcr_r[0])) : uart_dsr_n) 1 -1" (1 "0")
+Condition 35 "1753956575" "(mcr_r[4] ? ((~mcr_r[0])) : uart_dsr_n) 1 -1" (2 "1")
+Condition 36 "814278875" "(mcr_r[4] ? ((~mcr_r[3])) : uart_dcd_n) 1 -1" (1 "0")
+Condition 36 "814278875" "(mcr_r[4] ? ((~mcr_r[3])) : uart_dcd_n) 1 -1" (2 "1")
+Condition 37 "2195228125" "(mcr_r[4] ? ((~mcr_r[2])) : uart_ri_n) 1 -1" (1 "0")
+Condition 37 "2195228125" "(mcr_r[4] ? ((~mcr_r[2])) : uart_ri_n) 1 -1" (2 "1")
+Condition 38 "170505504" "(rx_empty ? 8'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][7:0]) 1 -1" (1 "0")
+Condition 38 "170505504" "(rx_empty ? 8'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][7:0]) 1 -1" (2 "1")
+Condition 39 "1995520776" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][10]) 1 -1" (1 "0")
+Condition 39 "1995520776" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][10]) 1 -1" (2 "1")
+Condition 40 "3448720848" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][9]) 1 -1" (1 "0")
+Condition 40 "3448720848" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][9]) 1 -1" (2 "1")
+Condition 41 "3434722890" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][8]) 1 -1" (1 "0")
+Condition 41 "3434722890" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][8]) 1 -1" (2 "1")
+Condition 43 "658440879" "(tx_empty && (tx_state == TX_IDLE)) 1 -1" (1 "01")
+Condition 43 "658440879" "(tx_empty && (tx_state == TX_IDLE)) 1 -1" (2 "10")
+Condition 43 "658440879" "(tx_empty && (tx_state == TX_IDLE)) 1 -1" (3 "11")
+Condition 44 "4258665974" "(tx_state == TX_IDLE) 1 -1" (2 "1")
+Condition 45 "2820082545" "(ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r)) 1 -1" (1 "01")
+Condition 45 "2820082545" "(ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r)) 1 -1" (2 "10")
+Condition 45 "2820082545" "(ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r)) 1 -1" (3 "11")
+Condition 46 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (1 "0000")
+Condition 46 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (2 "0001")
+Condition 46 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (3 "0010")
+Condition 46 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (4 "0100")
+Condition 46 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (5 "1000")
+Condition 47 "52315175" "(ier_r[0] & (rx_count >= {{((RX_AW + 1) - 4) {1'b0}}, rx_trig_level})) 1 -1" (1 "01")
+Condition 47 "52315175" "(ier_r[0] & (rx_count >= {{((RX_AW + 1) - 4) {1'b0}}, rx_trig_level})) 1 -1" (2 "10")
+Condition 47 "52315175" "(ier_r[0] & (rx_count >= {{((RX_AW + 1) - 4) {1'b0}}, rx_trig_level})) 1 -1" (3 "11")
+Condition 48 "1510732136" "(ier_r[1] & tx_empty) 1 -1" (1 "01")
+Condition 48 "1510732136" "(ier_r[1] & tx_empty) 1 -1" (2 "10")
+Condition 48 "1510732136" "(ier_r[1] & tx_empty) 1 -1" (3 "11")
+Condition 49 "366302998" "(ier_r[3] & (d_cts | d_dsr | d_dcd | d_ri)) 1 -1" (1 "01")
+Condition 49 "366302998" "(ier_r[3] & (d_cts | d_dsr | d_dcd | d_ri)) 1 -1" (2 "10")
+Condition 49 "366302998" "(ier_r[3] & (d_cts | d_dsr | d_dcd | d_ri)) 1 -1" (3 "11")
+Condition 50 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (1 "0000")
+Condition 50 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (2 "0001")
+Condition 50 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (3 "0010")
+Condition 50 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (4 "0100")
+Condition 50 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (5 "1000")
+Condition 51 "1285680113" "(rx_line_err_int ? 8'hc6 : (rx_data_int ? 8'hc4 : (tx_empty_int ? 8'hc2 : (modem_int ? 8'hc0 : 8'hc1)))) 1 -1" (1 "0")
+Condition 51 "1285680113" "(rx_line_err_int ? 8'hc6 : (rx_data_int ? 8'hc4 : (tx_empty_int ? 8'hc2 : (modem_int ? 8'hc0 : 8'hc1)))) 1 -1" (2 "1")
+Condition 52 "919157225" "(rx_data_int ? 8'hc4 : (tx_empty_int ? 8'hc2 : (modem_int ? 8'hc0 : 8'hc1))) 1 -1" (1 "0")
+Condition 52 "919157225" "(rx_data_int ? 8'hc4 : (tx_empty_int ? 8'hc2 : (modem_int ? 8'hc0 : 8'hc1))) 1 -1" (2 "1")
+Condition 53 "325101430" "(tx_empty_int ? 8'hc2 : (modem_int ? 8'hc0 : 8'hc1)) 1 -1" (1 "0")
+Condition 53 "325101430" "(tx_empty_int ? 8'hc2 : (modem_int ? 8'hc0 : 8'hc1)) 1 -1" (2 "1")
+Condition 54 "1453105091" "(modem_int ? 8'hc0 : 8'hc1) 1 -1" (1 "0")
+Condition 54 "1453105091" "(modem_int ? 8'hc0 : 8'hc1) 1 -1" (2 "1")
+Condition 55 "4174550956" "(rx_line_err_int | rx_data_int | tx_empty_int | modem_int) 1 -1" (1 "0000")
+Condition 55 "4174550956" "(rx_line_err_int | rx_data_int | tx_empty_int | modem_int) 1 -1" (2 "0001")
+Condition 55 "4174550956" "(rx_line_err_int | rx_data_int | tx_empty_int | modem_int) 1 -1" (3 "0010")
+Condition 55 "4174550956" "(rx_line_err_int | rx_data_int | tx_empty_int | modem_int) 1 -1" (4 "0100")
+Condition 55 "4174550956" "(rx_line_err_int | rx_data_int | tx_empty_int | modem_int) 1 -1" (5 "1000")
+Condition 56 "3199762684" "(mcr_r[5] & (rx_count >= {{((RX_AW + 1) - 4) {1'b0}}, rx_trig_level})) 1 -1" (1 "01")
+Condition 56 "3199762684" "(mcr_r[5] & (rx_count >= {{((RX_AW + 1) - 4) {1'b0}}, rx_trig_level})) 1 -1" (2 "10")
+Condition 56 "3199762684" "(mcr_r[5] & (rx_count >= {{((RX_AW + 1) - 4) {1'b0}}, rx_trig_level})) 1 -1" (3 "11")
+Condition 57 "2152693204" "(((~mcr_r[1])) | auto_rts_deassert) 1 -1" (1 "00")
+Condition 57 "2152693204" "(((~mcr_r[1])) | auto_rts_deassert) 1 -1" (2 "01")
+Condition 57 "2152693204" "(((~mcr_r[1])) | auto_rts_deassert) 1 -1" (3 "10")
+Fsm tx_state "2914867485"
+State TX_DATA "2"
+State TX_IDLE "0"
+State TX_PARITY "3"
+State TX_START "1"
+State TX_STOP1 "4"
+State TX_STOP2 "5"
+Transition TX_DATA->TX_IDLE "2->0"
+Transition TX_DATA->TX_PARITY "2->3"
+Transition TX_DATA->TX_STOP1 "2->4"
+Transition TX_IDLE->TX_START "0->1"
+Transition TX_PARITY->TX_IDLE "3->0"
+Transition TX_PARITY->TX_STOP1 "3->4"
+Transition TX_START->TX_DATA "1->2"
+Transition TX_START->TX_IDLE "1->0"
+Transition TX_STOP1->TX_IDLE "4->0"
+Transition TX_STOP1->TX_STOP2 "4->5"
+Transition TX_STOP2->TX_IDLE "5->0"
+Fsm rx_state "734953100"
+State RX_DATA "2"
+State RX_IDLE "0"
+State RX_PARITY "3"
+State RX_START "1"
+State RX_STOP "4"
+Transition RX_DATA->RX_IDLE "2->0"
+Transition RX_DATA->RX_PARITY "2->3"
+Transition RX_DATA->RX_STOP "2->4"
+Transition RX_IDLE->RX_START "0->1"
+Transition RX_PARITY->RX_IDLE "3->0"
+Transition RX_PARITY->RX_STOP "3->4"
+Transition RX_START->RX_DATA "1->2"
+Transition RX_START->RX_IDLE "1->0"
+Transition RX_STOP->RX_IDLE "4->0"
+Block 1 "1165551717" "case (rx_trigger)"
+Block 2 "3082843036" "rx_trig_level = 4'b1;"
+Block 3 "1662809449" "rx_trig_level = 4'd4;"
+Block 4 "4188537298" "rx_trig_level = 4'd8;"
+Block 5 "3820269612" "rx_trig_level = 4'd14;"
+Block 7 "1335899302" "if ((!rst_n))"
+Block 8 "3296332861" "baud_cnt <= 16'b0;"
+Block 9 "1409947580" "if ((baud_cnt >= (divisor - 1)))"
+Block 10 "253986733" "baud_cnt <= 16'b0;"
+Block 11 "4236159950" "baud_cnt <= (baud_cnt + 1'b1);"
+Block 12 "1509234073" "case (wls)"
+Block 13 "75855768" "data_bits = 4'd5;"
+Block 14 "757197616" "data_bits = 4'd6;"
+Block 15 "260144471" "data_bits = 4'd7;"
+Block 16 "1349775386" "data_bits = 4'd8;"
+Block 18 "2090888212" "p = 1'b0;"
+Block 19 "1849679265" "if ((k < width))"
+Block 20 "1547851122" "p = (p ^ data[k]);"
+Block 22 "4166518715" "pop_parity = p;"
+Block 23 "1335899302" "if ((!rst_n))"
+Block 24 "3790705702" "tx_state <= TX_IDLE;"
+Block 25 "1657115312" "if (brk_send)"
+Block 26 "4284004398" "tx_line <= 1'b0;"
+Block 28 "1509794618" "if ((tx_state == TX_IDLE))"
+Block 29 "2502848912" "if ((!brk_send))"
+Block 30 "4163879316" "tx_line <= 1'b1;"
+Block 32 "132914830" "if (((!tx_empty) && (!brk_send)))"
+Block 33 "2149392808" "tx_shift <= tx_fifo[tx_rd[(TX_AW - 1):0]];"
+Block 34 "4192121666" "tx_parity_bit <= (~eps);"
+Block 35 "1610882951" "tx_parity_bit <= (pop_parity(tx_fifo[tx_rd[(TX_AW - 1):0]], data_bits) ^ (~eps));"
+Block 37 "1452223780" "if (baud16_tick)"
+Block 38 "3348556632" "if ((tx_bit_ctr == 4'd15))"
+Block 39 "1893103442" "tx_bit_ctr <= 4'b0;"
+Block 40 "3280237184" "tx_line <= tx_shift[0];"
+Block 41 "1196016454" "if ((tx_bit_idx < data_bits))"
+Block 42 "597225548" "tx_line <= tx_shift[tx_bit_idx];"
+Block 43 "2004575096" "if (pen)"
+Block 44 "1464926216" "tx_line <= tx_parity_bit;"
+Block 45 "86640135" "tx_line <= 1'b1;"
+Block 46 "869592158" "tx_line <= 1'b1;"
+Block 47 "2688032633" "if (stb2)"
+Block 48 "3674869664" "tx_line <= 1'b1;"
+Block 49 "1470050722" "tx_state <= TX_IDLE;"
+Block 50 "109881582" "tx_state <= TX_IDLE;"
+Block 51 "3619857455" "tx_state <= TX_IDLE;"
+Block 52 "689748439" "tx_bit_ctr <= (tx_bit_ctr + 1'b1);"
+Block 54 "1335899302" "if ((!rst_n))"
+Block 55 "2609983684" "rx_sync1 <= 1'b1;"
+Block 56 "2997988297" "rx_sync1 <= rx_pin;"
+Block 57 "1335899302" "if ((!rst_n))"
+Block 58 "622488562" "rx_state <= RX_IDLE;"
+Block 59 "4115701953" "case (rx_state)"
+Block 60 "77995159" "if ((!rx_sync2))"
+Block 61 "1232660909" "rx_state <= RX_START;"
+Block 63 "2742660289" "if (baud16_tick)"
+Block 64 "3525458413" "if ((rx_bit_ctr == 4'd15))"
+Block 65 "369314377" "rx_bit_ctr <= 4'b0;"
+Block 66 "3952831000" "if ((!rx_sync2))"
+Block 67 "1110333998" "rx_state <= RX_DATA;"
+Block 68 "554134609" "rx_state <= RX_IDLE;"
+Block 69 "3717330738" "rx_shift[rx_bit_idx] <= rx_sync2;"
+Block 70 "2871019509" "rx_parity_r <= 1'b0;"
+Block 71 "4250431504" "rx_state <= RX_PARITY;"
+Block 72 "2447679569" "rx_state <= RX_STOP;"
+Block 73 "3989272265" "rx_bit_idx <= (rx_bit_idx + 1'b1);"
+Block 74 "4248160322" "if (sp)"
+Block 75 "22593399" "if ((rx_sync2 != (~eps)))"
+Block 76 "3361518746" "rx_err_par <= 1'b1;"
+Block 78 "4056311802" "if ((rx_sync2 != (pop_parity(rx_shift, data_bits) ^ (~eps))))"
+Block 79 "4202313455" "rx_err_par <= 1'b1;"
+Block 81 "1864349508" "rx_state <= RX_STOP;"
+Block 82 "3887622806" "if ((!rx_sync2))"
+Block 83 "2349529438" "rx_err_fram <= 1'b1;"
+Block 85 "2343897173" "if (((rx_shift == 8'b0) && rx_err_fram))"
+Block 86 "444029548" "rx_brk <= 1'b1;"
+Block 88 "3925788535" "if ((!rx_full))"
+Block 89 "80444708" "rx_fifo[rx_wr[(RX_AW - 1):0]] <= {rx_err_par, rx_err_fram, rx_brk, rx_shift};"
+Block 90 "785167153" "overrun_r <= 1'b1;"
+Block 91 "3187409861" "rx_state <= RX_IDLE;"
+Block 92 "1605659839" "rx_state <= RX_IDLE;"
+Block 93 "3591821069" "rx_bit_ctr <= (rx_bit_ctr + 1'b1);"
+Block 95 "1335899302" "if ((!rst_n))"
+Block 96 "2709467825" "tx_wr <= 0;"
+Block 97 "2057661986" "if (wr_stb)"
+Block 98 "976729612" "case (paddr[4:2])"
+Block 99 "821752476" "if (dlab)"
+Block 100 "593728117" "dll_r <= pwdata[7:0];"
+Block 101 "2003311082" "if ((!tx_full))"
+Block 102 "3000552697" "tx_fifo[tx_wr[(TX_AW - 1):0]] <= pwdata[7:0];"
+Block 104 "2959758075" "if (dlab)"
+Block 105 "50247876" "dlm_r <= pwdata[7:0];"
+Block 106 "2589770897" "ier_r <= pwdata[7:0];"
+Block 107 "631633462" "fcr_r <= pwdata[7:0];"
+Block 108 "3632911684" "lcr_r <= pwdata[7:0];"
+Block 109 "943951597" "mcr_r <= pwdata[7:0];"
+Block 110 "451678050" "scr_r <= pwdata[7:0];"
+Block 111 "3591090589" ";"
+Block 112 "1110847178" "if (((paddr[4:2] == 3'b010) && pwdata[1]))"
+Block 113 "2195731097" "rx_wr <= rx_rd;"
+Block 115 "3662221817" "if (((paddr[4:2] == 3'b010) && pwdata[2]))"
+Block 116 "1801309969" "tx_wr <= tx_rd;"
+Block 119 "1335899302" "if ((!rst_n))"
+Block 120 "3995602195" "cts_n_prev <= 1'b1;"
+Block 121 "2469577762" "cts_n_prev <= cts_n_int;"
+Block 122 "2134134973" "d_cts <= 1'b1;"
+Block 124 "962677077" "if ((dsr_n_int != dsr_n_prev))"
+Block 125 "1742113200" "d_dsr <= 1'b1;"
+Block 127 "2735820590" "if ((dcd_n_int != dcd_n_prev))"
+Block 128 "931222245" "d_dcd <= 1'b1;"
+Block 130 "3139379133" "if (((~ri_n_int) & ri_n_prev))"
+Block 131 "2505717080" "d_ri <= 1'b1;"
+Block 133 "1363441641" "if ((rd_stb && (paddr[4:2] == 3'b110)))"
+Block 134 "2231907994" "d_cts <= 1'b0;"
+Block 136 "1335899302" "if ((!rst_n))"
+Block 137 "4108562248" "rx_rd <= 0;"
+Block 138 "888482051" "if (rd_stb)"
+Block 139 "457621093" "case (paddr[4:2])"
+Block 140 "2634245411" "if (dlab)"
+Block 141 "2690115356" "prdata <= {24'b0, dll_r};"
+Block 142 "1882732925" "prdata <= {24'b0, rx_head};"
+Block 143 "2552804059" "rx_rd <= (rx_rd + 1'b1);"
+Block 145 "740618449" "prdata <= {24'b0, (dlab ? dlm_r : ier_r)};"
+Block 146 "2536678443" "prdata <= {24'b0, iir};"
+Block 147 "1863555175" "prdata <= {24'b0, lcr_r};"
+Block 148 "3945051461" "prdata <= {24'b0, mcr_r};"
+Block 149 "2270064321" "prdata <= {24'b0, lsr};"
+Block 150 "3049863565" "prdata <= {24'b0, (~dcd_n_int), (~ri_n_int), (~dsr_n_int), (~cts_n_int), d_dcd, d_ri, d_dsr, d_cts};"
+Block 151 "2696312651" "prdata <= {24'b0, scr_r};"
+Block 152 "3631425752" "prdata <= 32'b0;"
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle psel "net psel"
+Toggle penable "net penable"
+Toggle pwrite "net pwrite"
+Toggle paddr "net paddr[4:0]"
+Toggle pstrb "net pstrb[3:0]"
+Toggle pwdata "net pwdata[31:0]"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle uart_tx "net uart_tx"
+Toggle uart_rx "net uart_rx"
+Toggle uart_rts_n "net uart_rts_n"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+Toggle irq "net irq"
+Toggle wr_stb "net wr_stb"
+Toggle rd_stb "net rd_stb"
+Toggle ier_r "reg ier_r[7:0]"
+Toggle fcr_r "reg fcr_r[7:0]"
+Toggle lcr_r "reg lcr_r[7:0]"
+Toggle mcr_r "reg mcr_r[7:0]"
+Toggle scr_r "reg scr_r[7:0]"
+Toggle dll_r "reg dll_r[7:0]"
+Toggle dlm_r "reg dlm_r[7:0]"
+Toggle dlab "net dlab"
+Toggle wls "net wls[1:0]"
+Toggle stb2 "net stb2"
+Toggle pen "net pen"
+Toggle eps "net eps"
+Toggle sp "net sp"
+Toggle brk_send "net brk_send"
+Toggle fifo_en "net fifo_en"
+Toggle rx_trigger "net rx_trigger[1:0]"
+Toggle tx_wr "reg tx_wr[4:0]"
+Toggle tx_rd "reg tx_rd[4:0]"
+Toggle tx_empty "net tx_empty"
+Toggle tx_full "net tx_full"
+Toggle tx_count "net tx_count[4:0]"
+Toggle rx_wr "reg rx_wr[4:0]"
+Toggle rx_rd "reg rx_rd[4:0]"
+Toggle rx_empty "net rx_empty"
+Toggle rx_full "net rx_full"
+Toggle rx_count "net rx_count[4:0]"
+Toggle overrun_r "reg overrun_r"
+Toggle rx_trig_level "reg rx_trig_level[3:0]"
+Toggle divisor "net divisor[15:0]"
+Toggle baud_cnt "reg baud_cnt[15:0]"
+Toggle baud16_tick "reg baud16_tick"
+Toggle data_bits "reg data_bits[3:0]"
+Toggle tx_state "reg tx_state[2:0]"
+Toggle tx_shift "reg tx_shift[7:0]"
+Toggle tx_bit_ctr "reg tx_bit_ctr[3:0]"
+Toggle tx_bit_idx "reg tx_bit_idx[3:0]"
+Toggle tx_line "reg tx_line"
+Toggle tx_parity_bit "reg tx_parity_bit"
+Toggle rx_pin "net rx_pin"
+Toggle cts_n_int "net cts_n_int"
+Toggle dsr_n_int "net dsr_n_int"
+Toggle dcd_n_int "net dcd_n_int"
+Toggle ri_n_int "net ri_n_int"
+Toggle rx_sync1 "reg rx_sync1"
+Toggle rx_sync2 "reg rx_sync2"
+Toggle rx_state "reg rx_state[2:0]"
+Toggle rx_shift "reg rx_shift[7:0]"
+Toggle rx_bit_ctr "reg rx_bit_ctr[3:0]"
+Toggle rx_bit_idx "reg rx_bit_idx[3:0]"
+Toggle rx_parity_r "reg rx_parity_r"
+Toggle rx_err_par "reg rx_err_par"
+Toggle rx_err_fram "reg rx_err_fram"
+Toggle rx_brk "reg rx_brk"
+Toggle brk_counter "reg brk_counter[15:0]"
+Toggle rx_head "net rx_head[7:0]"
+Toggle rx_head_par "net rx_head_par"
+Toggle rx_head_fram "net rx_head_fram"
+Toggle rx_head_brk "net rx_head_brk"
+Toggle lsr "net lsr[7:0]"
+Toggle rx_line_err_int "net rx_line_err_int"
+Toggle rx_data_int "net rx_data_int"
+Toggle tx_empty_int "net tx_empty_int"
+Toggle cts_n_prev "reg cts_n_prev"
+Toggle dsr_n_prev "reg dsr_n_prev"
+Toggle dcd_n_prev "reg dcd_n_prev"
+Toggle ri_n_prev "reg ri_n_prev"
+Toggle d_cts "reg d_cts"
+Toggle d_dsr "reg d_dsr"
+Toggle d_dcd "reg d_dcd"
+Toggle d_ri "reg d_ri"
+Toggle modem_int "net modem_int"
+Toggle iir "net iir[7:0]"
+Toggle auto_rts_deassert "net auto_rts_deassert"
+
+// ID: EXCL-UVM-0008
 // CATEGORY: Cache & Memory Subsystem
 MODULE: dcache
 Branch 0 "3296479826" "uncacheable"
@@ -317,7 +982,6 @@ Branch 5 "42587939" "req_buf_valid"
 Branch 5 "42587939" "req_buf_valid" (0) "req_buf_valid 1"
 Branch 5 "42587939" "req_buf_valid" (1) "req_buf_valid 0"
 Condition 4 "2670946741" "(awready && awvalid) 1 -1" (2 "10")
-Condition 5 "3133837065" "(wready && wvalid && wlast) 1 -1" (1 "011")
 Condition 5 "3133837065" "(wready && wvalid && wlast) 1 -1" (2 "101")
 Condition 6 "2855174950" "(bready && bvalid) 1 -1" (1 "01")
 Condition 7 "1369460935" "(arready && arvalid) 1 -1" (2 "10")
@@ -332,14 +996,12 @@ Condition 19 "3670118411" "(((!wvalid)) || wready) 1 -1" (3 "10")
 Condition 20 "3428064681" "(bready && bvalid) 1 -1" (1 "01")
 Condition 21 "3291719706" "(rready && rvalid) 1 -1" (1 "01")
 Condition 22 "2380975339" "(arready && arvalid) 1 -1" (2 "10")
-Condition 24 "505111255" "(awready && awvalid) 1 -1" (1 "01")
 Condition 24 "505111255" "(awready && awvalid) 1 -1" (2 "10")
 Condition 26 "4175703244" "(wready && wvalid) 1 -1" (2 "10")
 Condition 35 "4024966271" "(bready && bvalid) 1 -1" (1 "01")
 Condition 35 "4024966271" "(bready && bvalid) 1 -1" (2 "10")
 Condition 36 "2087181251" "(arready && arvalid) 1 -1" (2 "10")
 Condition 37 "87587153" "(rready && rvalid) 1 -1" (1 "01")
-Condition 50 "3061863677" "(tag_rdata_0[21] && (tag_rdata_0[19:0] == lookup_tag)) 1 -1" (1 "01")
 Condition 56 "3830219016" "(victim_tag[21] && victim_tag[20]) 1 -1" (1 "01")
 Condition 60 "1050247511" "((state == COMPARE) && cache_hit && cpu_req && cpu_addr_ok && ((!uncacheable))) 1 -1" (3 "11011")
 Condition 60 "1050247511" "((state == COMPARE) && cache_hit && cpu_req && cpu_addr_ok && ((!uncacheable))) 1 -1" (5 "11110")
@@ -358,7 +1020,420 @@ Toggle arburst "net arburst[1:0]"
 Toggle arlock "net arlock[1:0]"
 Toggle arprot "net arprot[2:0]"
 
-// ID: EXCL-UVM-0007
+// ID: EXCL-UVM-0009
+// CATEGORY: General Module Coverage Exclusions
+MODULE: apb_wdt
+Branch 0 "2361421784" "(!rst_n)"
+Branch 0 "2361421784" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (1) "(!rst_n) 0,1,1,-,-,-,-,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (2) "(!rst_n) 0,1,0,-,-,-,-,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (3) "(!rst_n) 0,0,-,-,-,-,-,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (4) "(!rst_n) 0,-,-,1,3'b000 ,1,1,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (5) "(!rst_n) 0,-,-,1,3'b000 ,1,0,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (6) "(!rst_n) 0,-,-,1,3'b000 ,0,-,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (7) "(!rst_n) 0,-,-,1,3'b001 ,-,-,1,-,-"
+Branch 0 "2361421784" "(!rst_n)" (8) "(!rst_n) 0,-,-,1,3'b001 ,-,-,0,-,-"
+Branch 0 "2361421784" "(!rst_n)" (9) "(!rst_n) 0,-,-,1,3'b011 ,-,-,-,1,-"
+Branch 0 "2361421784" "(!rst_n)" (10) "(!rst_n) 0,-,-,1,3'b011 ,-,-,-,0,-"
+Branch 0 "2361421784" "(!rst_n)" (11) "(!rst_n) 0,-,-,1,3'b100 ,-,-,-,-,1"
+Branch 0 "2361421784" "(!rst_n)" (12) "(!rst_n) 0,-,-,1,3'b100 ,-,-,-,-,0"
+Branch 0 "2361421784" "(!rst_n)" (13) "(!rst_n) 0,-,-,1,default,-,-,-,-,-"
+Branch 0 "2361421784" "(!rst_n)" (14) "(!rst_n) 0,-,-,0,-,-,-,-,-,-"
+Condition 1 "1348641391" "(val_r == 32'b0) 1 -1" (1 "0")
+Condition 1 "1348641391" "(val_r == 32'b0) 1 -1" (2 "1")
+Condition 2 "1661640642" "(pwdata == PETVAL) 1 -1" (1 "0")
+Condition 2 "1661640642" "(pwdata == PETVAL) 1 -1" (2 "1")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (1 "011")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (1 "011")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Block 1 "1335899302" "if ((!rst_n))"
+Block 2 "2600463009" "load_r <= 32'hffffffff;"
+Block 3 "745077011" "wdt_reset <= expired_r;"
+Block 4 "3653785959" "if ((val_r == 32'b0))"
+Block 5 "1106111982" "expired_r <= 1'b1;"
+Block 6 "3228753957" "val_r <= (val_r - 1'b1);"
+Block 8 "887224439" "if (wr)"
+Block 9 "3006980858" "case (paddr[4:2])"
+Block 10 "2949458704" "if ((!ctrl_lock))"
+Block 11 "2157809358" "ctrl_en <= pwdata[0];"
+Block 12 "3424692555" "val_r <= load_r;"
+Block 15 "794659703" "if ((!ctrl_lock))"
+Block 16 "2467709564" "load_r <= pwdata;"
+Block 18 "751927470" "if ((pwdata == PETVAL))"
+Block 19 "2733397894" "val_r <= load_r;"
+Block 21 "1048512973" "if (pwdata[0])"
+Block 22 "3892528766" "expired_r <= 1'b0;"
+Block 24 "1719022400" ";"
+Block 27 "3658667393" "case (paddr[4:2])"
+Block 28 "3242253756" "prdata = {30'b0, ctrl_lock, ctrl_en};"
+Block 29 "1147034353" "prdata = load_r;"
+Block 30 "3581517181" "prdata = val_r;"
+Block 31 "1198742539" "prdata = {31'b0, expired_r};"
+Block 32 "2419579025" "prdata = 32'b0;"
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle psel "net psel"
+Toggle penable "net penable"
+Toggle pwrite "net pwrite"
+Toggle paddr "net paddr[4:0]"
+Toggle pwdata "net pwdata[31:0]"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle wdt_reset "reg wdt_reset"
+Toggle load_r "reg load_r[31:0]"
+Toggle val_r "reg val_r[31:0]"
+Toggle ctrl_en "reg ctrl_en"
+Toggle ctrl_lock "reg ctrl_lock"
+Toggle expired_r "reg expired_r"
+Toggle wr "net wr"
+Toggle rd "net rd"
+
+// ID: EXCL-UVM-0010
+// CATEGORY: General Module Coverage Exclusions
+MODULE: axi_id_tracker
+Branch 0 "1067463515" "(!rst_n)"
+Branch 0 "1067463515" "(!rst_n)" (0) "(!rst_n) 1,-,-"
+Branch 0 "1067463515" "(!rst_n)" (1) "(!rst_n) 0,1,-"
+Branch 0 "1067463515" "(!rst_n)" (2) "(!rst_n) 0,0,-"
+Branch 0 "1067463515" "(!rst_n)" (3) "(!rst_n) 0,-,1"
+Branch 0 "1067463515" "(!rst_n)" (4) "(!rst_n) 0,-,0"
+Condition 1 "329919956" "(issue_valid && issue_ready) 1 -1" (1 "01")
+Condition 1 "329919956" "(issue_valid && issue_ready) 1 -1" (2 "10")
+Condition 1 "329919956" "(issue_valid && issue_ready) 1 -1" (3 "11")
+Condition 2 "861807295" "(retire_valid && retire_hit) 1 -1" (1 "01")
+Condition 2 "861807295" "(retire_valid && retire_hit) 1 -1" (2 "10")
+Condition 2 "861807295" "(retire_valid && retire_hit) 1 -1" (3 "11")
+Block 1 "504940174" "free_slot = '0;"
+Block 2 "31917704" "if (((!slot_valid_r[i]) && (!free_found)))"
+Block 3 "4214827150" "free_slot = i[($clog2((N_OUTSTANDING + 1)) - 1):0];"
+Block 7 "2349777861" "retire_slot = i[($clog2((N_OUTSTANDING + 1)) - 1):0];"
+Block 9 "1335899302" "if ((!rst_n))"
+Block 10 "2482744519" "slot_valid_r <= {N_OUTSTANDING {1'b0}};"
+Block 11 "3221564836" "slot_id_r[i] <= {ID_WIDTH {1'b0}};"
+Block 12 "509351897" "if ((issue_valid && issue_ready))"
+Block 13 "1044229404" "slot_valid_r[free_slot] <= 1'b1;"
+Block 15 "2871568938" "if ((retire_valid && retire_hit))"
+Block 16 "4071890092" "slot_valid_r[retire_slot] <= 1'b0;"
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle issue_valid "net issue_valid"
+Toggle issue_id "net issue_id[3:0]"
+Toggle issue_addr "net issue_addr[31:0]"
+Toggle issue_is_write "net issue_is_write"
+Toggle issue_ready "net issue_ready"
+Toggle retire_valid "net retire_valid"
+Toggle retire_id "net retire_id[3:0]"
+Toggle retire_is_write "net retire_is_write"
+Toggle slot_valid "net slot_valid[3:0]"
+Toggle slot_id "net [3:0][3:0]slot_id"
+Toggle any_free "net any_free"
+Toggle slot_valid_r "reg slot_valid_r[3:0]"
+Toggle slot_write_r "reg slot_write_r[3:0]"
+Toggle free_slot "reg free_slot[2:0]"
+Toggle free_found "reg free_found"
+Toggle retire_slot "reg retire_slot[2:0]"
+Toggle retire_hit "reg retire_hit"
+
+// ID: EXCL-UVM-0011
+// CATEGORY: Peripherals & Subsystems
+MODULE: apb_pic
+Branch 0 "2160621672" "(!presetn)"
+Branch 0 "2160621672" "(!presetn)" (0) "(!presetn) 1,-"
+Branch 0 "2160621672" "(!presetn)" (1) "(!presetn) 0,1"
+Branch 0 "2160621672" "(!presetn)" (2) "(!presetn) 0,0"
+Condition 1 "654671847" "(apb_write && (paddr == 12'h004)) 1 -1" (1 "01")
+Condition 1 "654671847" "(apb_write && (paddr == 12'h004)) 1 -1" (2 "10")
+Condition 1 "654671847" "(apb_write && (paddr == 12'h004)) 1 -1" (3 "11")
+Condition 2 "2144665520" "(paddr == 12'h004) 1 -1" (1 "0")
+Condition 2 "2144665520" "(paddr == 12'h004) 1 -1" (2 "1")
+Condition 3 "2595053514" "(int_active != 32'b0) 1 -1" (2 "1")
+Condition 4 "516185849" "(psel & penable & pwrite) 1 -1" (1 "011")
+Condition 4 "516185849" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 4 "516185849" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 4 "516185849" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 5 "3981448646" "(psel & ((~pwrite))) 1 -1" (1 "01")
+Condition 5 "3981448646" "(psel & ((~pwrite))) 1 -1" (2 "10")
+Condition 5 "3981448646" "(psel & ((~pwrite))) 1 -1" (3 "11")
+Block 1 "3323447681" "if ((!presetn))"
+Block 2 "3956528265" "int_mask <= 32'b0;"
+Block 3 "4040782070" "if ((apb_write && (paddr == 12'h004)))"
+Block 4 "1680119108" "int_mask <= pwdata;"
+Block 7 "1003349512" "case (paddr)"
+Block 8 "3483533274" "prdata = int_status;"
+Block 9 "1258684279" "prdata = int_mask;"
+Block 10 "629143962" "prdata = int_active;"
+Block 11 "759850825" "prdata = 32'b0;"
+Toggle pclk "net pclk"
+Toggle presetn "net presetn"
+Toggle paddr "net paddr[11:0]"
+Toggle psel "net psel"
+Toggle penable "net penable"
+Toggle pwrite "net pwrite"
+Toggle pwdata "net pwdata[31:0]"
+Toggle pready "net pready"
+Toggle prdata "reg prdata[31:0]"
+Toggle pslverr "net pslverr"
+Toggle irq_sources "net irq_sources[31:0]"
+Toggle cpu_int "net cpu_int"
+Toggle int_mask "reg int_mask[31:0]"
+Toggle int_status "net int_status[31:0]"
+Toggle int_active "net int_active[31:0]"
+Toggle apb_write "net apb_write"
+Toggle apb_read "net apb_read"
+
+// ID: EXCL-UVM-0012
+// CATEGORY: General Module Coverage Exclusions
+MODULE: apb_axi_dma_v2
+Branch 0 "312223207" "(paddr[11:6] == 6'b0)"
+Branch 0 "312223207" "(paddr[11:6] == 6'b0)" (0) "(paddr[11:6] == 6'b0) 1"
+Branch 0 "312223207" "(paddr[11:6] == 6'b0)" (1) "(paddr[11:6] == 6'b0) 0"
+Branch 1 "2312332905" "(!rst_n)"
+Branch 1 "2312332905" "(!rst_n)" (0) "(!rst_n) 1,-"
+Branch 1 "2312332905" "(!rst_n)" (1) "(!rst_n) 0,1"
+Branch 1 "2312332905" "(!rst_n)" (2) "(!rst_n) 0,0"
+Branch 2 "2719682962" "act_valid"
+Branch 2 "2719682962" "act_valid" (0) "act_valid 1,ST_LOAD_SRC "
+Branch 2 "2719682962" "act_valid" (1) "act_valid 1,ST_LOAD_DST "
+Branch 2 "2719682962" "act_valid" (2) "act_valid 1,ST_LOAD_LEN "
+Branch 2 "2719682962" "act_valid" (3) "act_valid 1,ST_LOAD_NEXT "
+Branch 2 "2719682962" "act_valid" (4) "act_valid 1,ST_EXEC_R "
+Branch 2 "2719682962" "act_valid" (5) "act_valid 1,ST_EXEC_W "
+Branch 2 "2719682962" "act_valid" (6) "act_valid 1,default"
+Branch 2 "2719682962" "act_valid" (7) "act_valid 0,-"
+Branch 3 "1376666528" "(!rst_n)"
+Branch 3 "1376666528" "(!rst_n)" (0) "(!rst_n) 1,-,-"
+Branch 3 "1376666528" "(!rst_n)" (1) "(!rst_n) 0,1,4'h0 "
+Branch 3 "1376666528" "(!rst_n)" (2) "(!rst_n) 0,1,4'h1 "
+Branch 3 "1376666528" "(!rst_n)" (3) "(!rst_n) 0,1,4'h2 "
+Branch 3 "1376666528" "(!rst_n)" (4) "(!rst_n) 0,1,4'h3 "
+Branch 3 "1376666528" "(!rst_n)" (5) "(!rst_n) 0,1,4'h4 "
+Branch 3 "1376666528" "(!rst_n)" (6) "(!rst_n) 0,1,default"
+Branch 3 "1376666528" "(!rst_n)" (7) "(!rst_n) 0,0,-"
+Branch 4 "152886533" "(!rst_n)"
+Branch 4 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 4 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+Condition 1 "729993039" "(wr && (paddr[11:0] == 12'b0)) 1 -1" (1 "01")
+Condition 1 "729993039" "(wr && (paddr[11:0] == 12'b0)) 1 -1" (2 "10")
+Condition 1 "729993039" "(wr && (paddr[11:0] == 12'b0)) 1 -1" (3 "11")
+Condition 2 "906424889" "(paddr[11:0] == 12'b0) 1 -1" (1 "0")
+Condition 2 "906424889" "(paddr[11:0] == 12'b0) 1 -1" (2 "1")
+Condition 3 "365598848" "(wr && apb_ch_valid) 1 -1" (1 "01")
+Condition 3 "365598848" "(wr && apb_ch_valid) 1 -1" (2 "10")
+Condition 3 "365598848" "(wr && apb_ch_valid) 1 -1" (3 "11")
+Condition 4 "333944863" "(paddr[11:6] == 6'b0) 1 -1" (1 "0")
+Condition 4 "333944863" "(paddr[11:6] == 6'b0) 1 -1" (2 "1")
+Condition 5 "2862330562" "(psel & penable & pwrite) 1 -1" (1 "011")
+Condition 5 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 5 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 5 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 6 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (1 "011")
+Condition 6 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 6 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 6 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Condition 7 "2981878453" "((paddr[11:6] == 6'b0) ? 8'hff : ((paddr[11:6] - 8'b1))) 1 -1" (1 "0")
+Condition 7 "2981878453" "((paddr[11:6] == 6'b0) ? 8'hff : ((paddr[11:6] - 8'b1))) 1 -1" (2 "1")
+Condition 8 "658082137" "(paddr[11:6] == 6'b0) 1 -1" (2 "1")
+Condition 9 "2988177430" "((paddr[11:6] != 6'b0) && (apb_ch < N_CHANNELS[7:0])) 1 -1" (1 "01")
+Condition 9 "2988177430" "((paddr[11:6] != 6'b0) && (apb_ch < N_CHANNELS[7:0])) 1 -1" (2 "10")
+Condition 9 "2988177430" "((paddr[11:6] != 6'b0) && (apb_ch < N_CHANNELS[7:0])) 1 -1" (3 "11")
+Condition 10 "3129882584" "(paddr[11:6] != 6'b0) 1 -1" (2 "1")
+Condition 11 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (1 "01")
+Condition 11 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (2 "10")
+Condition 11 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (3 "11")
+Condition 12 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (1 "00")
+Condition 12 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (2 "01")
+Condition 12 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (3 "10")
+Condition 13 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (1 "01")
+Condition 13 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (2 "10")
+Condition 13 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (3 "11")
+Condition 14 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (1 "00")
+Condition 14 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (2 "01")
+Condition 14 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (3 "10")
+Condition 15 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (1 "01")
+Condition 15 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (2 "10")
+Condition 15 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (3 "11")
+Condition 16 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (1 "00")
+Condition 16 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (2 "01")
+Condition 16 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (3 "10")
+Condition 17 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (1 "01")
+Condition 17 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (2 "10")
+Condition 17 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (3 "11")
+Condition 18 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (1 "00")
+Condition 18 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (2 "01")
+Condition 18 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (3 "10")
+Fsm ch_state_0 "2822229711"
+State ST_DONE "8"
+State ST_EXEC_R "5"
+State ST_EXEC_W "6"
+State ST_IDLE "0"
+State ST_LOAD_DST "2"
+State ST_LOAD_LEN "3"
+State ST_LOAD_NEXT "4"
+State ST_LOAD_SRC "1"
+State ST_NEXT_CHK "7"
+Transition ST_DONE->ST_IDLE "8->0"
+Transition ST_EXEC_R->ST_EXEC_W "5->6"
+Transition ST_EXEC_R->ST_IDLE "5->0"
+Transition ST_EXEC_W->ST_EXEC_R "6->5"
+Transition ST_EXEC_W->ST_IDLE "6->0"
+Transition ST_EXEC_W->ST_NEXT_CHK "6->7"
+Transition ST_IDLE->ST_DONE "0->8"
+Transition ST_IDLE->ST_EXEC_R "0->5"
+Transition ST_IDLE->ST_LOAD_SRC "0->1"
+Transition ST_LOAD_DST->ST_IDLE "2->0"
+Transition ST_LOAD_DST->ST_LOAD_LEN "2->3"
+Transition ST_LOAD_LEN->ST_IDLE "3->0"
+Transition ST_LOAD_LEN->ST_LOAD_NEXT "3->4"
+Transition ST_LOAD_NEXT->ST_EXEC_R "4->5"
+Transition ST_LOAD_NEXT->ST_IDLE "4->0"
+Transition ST_LOAD_NEXT->ST_NEXT_CHK "4->7"
+Transition ST_LOAD_SRC->ST_IDLE "1->0"
+Transition ST_LOAD_SRC->ST_LOAD_DST "1->2"
+Transition ST_NEXT_CHK->ST_DONE "7->8"
+Transition ST_NEXT_CHK->ST_IDLE "7->0"
+Transition ST_NEXT_CHK->ST_LOAD_SRC "7->1"
+Fsm ch_state_1 "1183581210"
+Fsm ch_state_2 "1904297682"
+Fsm ch_state_3 "2671414279"
+Block 1 "1335899302" "if ((!rst_n))"
+Block 2 "1362421402" "global_en <= 1'b0;"
+Block 3 "4166427366" "if ((wr && (paddr[11:0] == 12'b0)))"
+Block 4 "2672816907" "global_en <= pwdata[0];"
+Block 6 "2212788840" "act_ch = {CH_W {1'b0}};"
+Block 7 "2838703587" "if ((busy_r[k] && (!act_valid)))"
+Block 8 "3801876926" "act_ch = k[(CH_W - 1):0];"
+Block 10 "962092304" "m_arid = 4'h5;"
+Block 11 "765285949" "case (ch_state[act_ch])"
+Block 12 "2840707112" "m_araddr = (desc_ptr_r[act_ch] + 32'b0);"
+Block 13 "726454809" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000004);"
+Block 14 "3859914874" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000008);"
+Block 15 "3217726767" "m_araddr = (desc_ptr_r[act_ch] + 32'h0000000c);"
+Block 16 "3150310026" "m_araddr = cur_src_r[act_ch];"
+Block 17 "1839650325" "m_awaddr = cur_dst_r[act_ch];"
+Block 18 "858682371" ";"
+Block 20 "1335899302" "if ((!rst_n))"
+Block 21 "3536534519" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
+Block 22 "2383896306" "src_r[c] <= 32'b0;"
+Block 23 "3799740136" "if ((wr && apb_ch_valid))"
+Block 24 "3369626882" "case (paddr[5:2])"
+Block 25 "2313247545" "en_r[apb_ch] <= pwdata[0];"
+Block 26 "598037929" "src_r[apb_ch] <= pwdata;"
+Block 27 "3778572690" "dst_r[apb_ch] <= pwdata;"
+Block 28 "711602617" "len_r[apb_ch] <= pwdata;"
+Block 29 "2829172953" "desc_head_r[apb_ch] <= pwdata;"
+Block 30 "1900593769" ";"
+Block 32 "1335899302" "if ((!rst_n))"
+Block 33 "3536534519" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
+Block 34 "1539538" "ch_state[c] <= ST_IDLE;"
+Block 35 "3553152258" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
+Block 36 "1556212163" "if ((((((ch_state[c] == ST_IDLE) && en_r[c]) && global_en) && (!done_r[c])) && (!busy_r[c])))"
+Block 37 "2802338972" "busy_r[c] <= 1'b1;"
+Block 38 "2171467140" "desc_ptr_r[c] <= desc_head_r[c];"
+Block 39 "4187066297" "cur_src_r[c] <= src_r[c];"
+Block 41 "1253509599" "if ((act_valid && (act_ch[(CH_W - 1):0] == c[(CH_W - 1):0])))"
+Block 42 "72269459" "if ((m_arvalid && m_arready))"
+Block 43 "2624300833" "wait_r[c] <= 1'b1;"
+Block 45 "3725890918" "if ((((m_awvalid && m_awready) && m_wvalid) && m_wready))"
+Block 46 "2096705430" "wait_b[c] <= 1'b1;"
+Block 48 "988438894" "if ((m_rvalid && wait_r[c]))"
+Block 49 "1121600855" "wait_r[c] <= 1'b0;"
+Block 50 "41434018" "cur_src_r[c] <= m_rdata;"
+Block 51 "2024010702" "cur_dst_r[c] <= m_rdata;"
+Block 52 "1783883276" "cur_len_r[c] <= m_rdata;"
+Block 53 "336678704" "cur_next_r[c] <= m_rdata;"
+Block 54 "2425298115" "read_buf[c] <= m_rdata;"
+Block 55 "2986408247" "err_r[c] <= 1'b1;"
+Block 57 "3514727845" "ch_state[c] <= ST_EXEC_W;"
+Block 58 "2124473719" ";"
+Block 60 "2489768418" "if (((m_bvalid && wait_b[c]) && (ch_state[c] == ST_EXEC_W)))"
+Block 61 "2112765951" "wait_b[c] <= 1'b0;"
+Block 62 "136069502" "err_r[c] <= 1'b1;"
+Block 64 "3979134295" "cur_src_r[c] <= (cur_src_r[c] + 32'd4);"
+Block 65 "3614253322" "ch_state[c] <= ST_NEXT_CHK;"
+Block 66 "810529062" "cur_len_r[c] <= (cur_len_r[c] - 32'd4);"
+Block 68 "192309904" "if ((ch_state[c] == ST_NEXT_CHK))"
+Block 69 "20019160" "if ((sg_mode_r[c] && (cur_next_r[c] != 32'b0)))"
+Block 70 "4046768285" "desc_ptr_r[c] <= cur_next_r[c];"
+Block 71 "2250496937" "ch_state[c] <= ST_DONE;"
+Block 73 "167847874" "if ((ch_state[c] == ST_DONE))"
+Block 74 "1289758624" "busy_r[c] <= 1'b0;"
+Block 77 "3478762270" "if ((((wr && apb_ch_valid) && (apb_ch == c)) && (paddr[5:2] == 4'b0)))"
+Block 78 "721325452" "if (pwdata[3])"
+Block 79 "1491673549" "done_r[c] <= 1'b0;"
+Block 81 "253444014" "if (pwdata[4])"
+Block 82 "2674730638" "err_r[c] <= 1'b0;"
+Block 86 "2933711229" "if ((paddr[11:6] == 6'b0))"
+Block 87 "3964125824" "case (paddr[5:2])"
+Block 88 "1481916910" "prdata = {31'b0, global_en};"
+Block 89 "2817332124" "prdata = 32'b0;"
+Block 90 "2502782395" "prdata[c] = (int_en_r[c] & done_r[c]);"
+Block 91 "2890133009" "prdata = 32'b0;"
+Block 92 "1922451528" "if (apb_ch_valid)"
+Block 93 "104631278" "case (paddr[5:2])"
+Block 94 "2051565830" "prdata = {27'b0, err_r[apb_ch], done_r[apb_ch], int_en_r[apb_ch], sg_mode_r[apb_ch], en_r[apb_ch]};"
+Block 95 "1603545703" "prdata = src_r[apb_ch];"
+Block 96 "402674965" "prdata = dst_r[apb_ch];"
+Block 97 "3628025844" "prdata = len_r[apb_ch];"
+Block 98 "728762855" "prdata = desc_head_r[apb_ch];"
+Block 99 "1282133427" "prdata = {29'b0, err_r[apb_ch], done_r[apb_ch], busy_r[apb_ch]};"
+Block 100 "69365573" "prdata = cur_src_r[apb_ch];"
+Block 101 "4109740451" "prdata = cur_dst_r[apb_ch];"
+Block 102 "3334981061" "prdata = 32'b0;"
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle paddr "net paddr[11:0]"
+Toggle psel "net psel"
+Toggle penable "net penable"
+Toggle pwrite "net pwrite"
+Toggle pwdata "net pwdata[31:0]"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle m_awid "reg m_awid[3:0]"
+Toggle m_awaddr "reg m_awaddr[31:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_awvalid "reg m_awvalid"
+Toggle m_awready "net m_awready"
+Toggle m_wdata "reg m_wdata[31:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_wvalid "reg m_wvalid"
+Toggle m_wready "net m_wready"
+Toggle m_bid "net m_bid[3:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bvalid "net m_bvalid"
+Toggle m_bready "net m_bready"
+Toggle m_arid "reg m_arid[3:0]"
+Toggle m_araddr "reg m_araddr[31:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_arvalid "reg m_arvalid"
+Toggle m_arready "net m_arready"
+Toggle m_rid "net m_rid[3:0]"
+Toggle m_rdata "net m_rdata[31:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle m_rlast "net m_rlast"
+Toggle m_rvalid "net m_rvalid"
+Toggle m_rready "net m_rready"
+Toggle ch_int "net ch_int[3:0]"
+Toggle wr "net wr"
+Toggle rd "net rd"
+Toggle global_en "reg global_en"
+Toggle apb_ch "net apb_ch[7:0]"
+Toggle apb_ch_valid "net apb_ch_valid"
+Toggle act_ch "reg act_ch[1:0]"
+Toggle act_valid "reg act_valid"
+
+// ID: EXCL-UVM-0013
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_peripheral_subsystem
 Branch 0 "245168223" "uart_sel"
@@ -427,8 +1502,219 @@ Toggle gpio_pslverr "net gpio_pslverr"
 Toggle dma_pslverr "net dma_pslverr"
 Toggle pic_pslverr "net pic_pslverr"
 Toggle uart_rx_int "net uart_rx_int"
+Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
 
-// ID: EXCL-UVM-0008
+// ID: EXCL-UVM-0014
+// CATEGORY: General Module Coverage Exclusions
+MODULE: l2_cache
+Branch 1 "1372996306" "(!rst_n)"
+Branch 1 "1372996306" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (1) "(!rst_n) 0,ST_IDLE ,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (2) "(!rst_n) 0,ST_IDLE ,0,1,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (3) "(!rst_n) 0,ST_IDLE ,0,0,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (4) "(!rst_n) 0,ST_HIT_W ,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (5) "(!rst_n) 0,ST_HIT_W ,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (6) "(!rst_n) 0,ST_LOOKUP ,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (7) "(!rst_n) 0,ST_LOOKUP ,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (8) "(!rst_n) 0,ST_LOOKUP ,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (9) "(!rst_n) 0,ST_HIT_R ,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (10) "(!rst_n) 0,ST_HIT_R ,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (11) "(!rst_n) 0,ST_RESP_W ,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (12) "(!rst_n) 0,ST_RESP_W ,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (13) "(!rst_n) 0,ST_MISS_ALLOC ,-,-,-,-,-,-,-,1,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (14) "(!rst_n) 0,ST_MISS_ALLOC ,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (15) "(!rst_n) 0,ST_EVICT_AW ,-,-,-,-,-,-,-,-,1,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (16) "(!rst_n) 0,ST_EVICT_AW ,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (17) "(!rst_n) 0,ST_EVICT_W ,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (18) "(!rst_n) 0,ST_EVICT_W ,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (19) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,1,1,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (20) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (21) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-"
+Branch 1 "1372996306" "(!rst_n)" (22) "(!rst_n) 0,ST_REFILL_AR ,-,-,-,-,-,-,-,-,-,-,-,-,1,-,-"
+Branch 1 "1372996306" "(!rst_n)" (23) "(!rst_n) 0,ST_REFILL_AR ,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-"
+Branch 1 "1372996306" "(!rst_n)" (24) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1"
+Branch 1 "1372996306" "(!rst_n)" (25) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0"
+Branch 1 "1372996306" "(!rst_n)" (26) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-"
+Branch 1 "1372996306" "(!rst_n)" (27) "(!rst_n) 0,default,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Condition 2 "1558613147" "(req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][req_wordoff][31:24]) 1 -1" (1 "0")
+Condition 2 "1558613147" "(req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][req_wordoff][31:24]) 1 -1" (2 "1")
+Condition 3 "104491351" "(req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][req_wordoff][23:16]) 1 -1" (1 "0")
+Condition 3 "104491351" "(req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][req_wordoff][23:16]) 1 -1" (2 "1")
+Condition 4 "14951183" "(req_wstrb[1] ? req_wdata[15:8] : data_ram[req_index][req_wordoff][15:8]) 1 -1" (1 "0")
+Condition 4 "14951183" "(req_wstrb[1] ? req_wdata[15:8] : data_ram[req_index][req_wordoff][15:8]) 1 -1" (2 "1")
+Condition 5 "3648543428" "(req_wstrb[0] ? req_wdata[7:0] : data_ram[req_index][req_wordoff][7:0]) 1 -1" (1 "0")
+Condition 5 "3648543428" "(req_wstrb[0] ? req_wdata[7:0] : data_ram[req_index][req_wordoff][7:0]) 1 -1" (2 "1")
+Condition 6 "1263489410" "(valid_ram[req_index] && dirty_ram[req_index]) 1 -1" (1 "01")
+Condition 6 "1263489410" "(valid_ram[req_index] && dirty_ram[req_index]) 1 -1" (2 "10")
+Condition 6 "1263489410" "(valid_ram[req_index] && dirty_ram[req_index]) 1 -1" (3 "11")
+Condition 7 "2637641535" "(evict_cnt == (WORDS_PER_LN - 1)) 1 -1" (1 "0")
+Condition 7 "2637641535" "(evict_cnt == (WORDS_PER_LN - 1)) 1 -1" (2 "1")
+Condition 8 "564174397" "(fill_cnt == (WORDS_PER_LN - 1)) 1 -1" (1 "0")
+Condition 8 "564174397" "(fill_cnt == (WORDS_PER_LN - 1)) 1 -1" (2 "1")
+Condition 9 "2105411178" "(valid_ram[req_index] && (tag_ram[req_index] == req_tag)) 1 -1" (1 "01")
+Condition 9 "2105411178" "(valid_ram[req_index] && (tag_ram[req_index] == req_tag)) 1 -1" (2 "10")
+Condition 9 "2105411178" "(valid_ram[req_index] && (tag_ram[req_index] == req_tag)) 1 -1" (3 "11")
+Condition 10 "2995542995" "(tag_ram[req_index] == req_tag) 1 -1" (2 "1")
+Fsm state "3738006088"
+State ST_EVICT_AW "5"
+State ST_EVICT_B "7"
+State ST_EVICT_W "6"
+State ST_HIT_R "2"
+State ST_HIT_W "3"
+State ST_IDLE "0"
+State ST_LOOKUP "1"
+State ST_MISS_ALLOC "4"
+State ST_REFILL_AR "8"
+State ST_REFILL_R "9"
+State ST_RESP_W "10"
+Transition ST_EVICT_AW->ST_EVICT_W "5->6"
+Transition ST_EVICT_AW->ST_IDLE "5->0"
+Transition ST_EVICT_B->ST_EVICT_AW "7->5"
+Transition ST_EVICT_B->ST_IDLE "7->0"
+Transition ST_EVICT_B->ST_REFILL_AR "7->8"
+Transition ST_EVICT_W->ST_EVICT_B "6->7"
+Transition ST_EVICT_W->ST_IDLE "6->0"
+Transition ST_HIT_R->ST_IDLE "2->0"
+Transition ST_HIT_W->ST_IDLE "3->0"
+Transition ST_HIT_W->ST_LOOKUP "3->1"
+Transition ST_IDLE->ST_HIT_W "0->3"
+Transition ST_IDLE->ST_LOOKUP "0->1"
+Transition ST_LOOKUP->ST_HIT_R "1->2"
+Transition ST_LOOKUP->ST_IDLE "1->0"
+Transition ST_LOOKUP->ST_MISS_ALLOC "1->4"
+Transition ST_LOOKUP->ST_RESP_W "1->10"
+Transition ST_MISS_ALLOC->ST_EVICT_AW "4->5"
+Transition ST_MISS_ALLOC->ST_IDLE "4->0"
+Transition ST_MISS_ALLOC->ST_REFILL_AR "4->8"
+Transition ST_REFILL_AR->ST_IDLE "8->0"
+Transition ST_REFILL_AR->ST_REFILL_R "8->9"
+Transition ST_REFILL_R->ST_IDLE "9->0"
+Transition ST_REFILL_R->ST_LOOKUP "9->1"
+Transition ST_REFILL_R->ST_REFILL_AR "9->8"
+Transition ST_RESP_W->ST_IDLE "10->0"
+Block 5 "4188849239" "s_awready = 1'b1;"
+Block 6 "3285162931" "s_rvalid = 1'b1;"
+Block 7 "1948906205" "s_wready = 1'b1;"
+Block 8 "1267841024" "s_bvalid = 1'b1;"
+Block 9 "4279390346" "m_awvalid = 1'b1;"
+Block 10 "3921368998" "m_wvalid = 1'b1;"
+Block 11 "3163377689" "m_arvalid = 1'b1;"
+Block 13 "1335899302" "if ((!rst_n))"
+Block 14 "4113858184" "state <= ST_IDLE;"
+Block 15 "434108981" "valid_ram[i] <= 1'b0;"
+Block 16 "4239173900" "case (state)"
+Block 17 "1452212316" "if (s_awvalid)"
+Block 18 "1714020509" "req_is_write <= 1'b1;"
+Block 19 "1011102359" "if (s_arvalid)"
+Block 20 "1951597525" "req_is_write <= 1'b0;"
+Block 22 "3220109369" "if (s_wvalid)"
+Block 23 "2493813188" "req_wdata <= s_wdata;"
+Block 25 "2643286264" "if (hit)"
+Block 26 "3481815777" "if (req_is_write)"
+Block 27 "529150668" "data_ram[req_index][req_wordoff] <= {(req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][req_wordoff][31:24]), (req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][req_wordoff][23:16]), (req_wstrb[1] ? req_wdata[15:8] : data_ram[req_index][req_wordoff][15:8]), (req_wstrb[0] ? req_wdata[7:0] : data_ram[req_index][req_wordoff][7:0])};"
+Block 28 "645213902" "state <= ST_HIT_R;"
+Block 29 "3826844108" "state <= ST_MISS_ALLOC;"
+Block 30 "1057596217" "if (s_rready)"
+Block 31 "3084925936" "state <= ST_IDLE;"
+Block 33 "2964441485" "if (s_bready)"
+Block 34 "2036973190" "state <= ST_IDLE;"
+Block 36 "1798958790" "if ((valid_ram[req_index] && dirty_ram[req_index]))"
+Block 37 "3348109227" "evict_addr <= {tag_ram[req_index], req_index, {OFFSET_BITS {1'b0}}};"
+Block 38 "2206982262" "state <= ST_REFILL_AR;"
+Block 39 "2189806129" "if (m_awready)"
+Block 40 "417791440" "state <= ST_EVICT_W;"
+Block 42 "3797670462" "if (m_wready)"
+Block 43 "987143866" "state <= ST_EVICT_B;"
+Block 45 "14426218" "if (m_bvalid)"
+Block 46 "4252339960" "if ((evict_cnt == (WORDS_PER_LN - 1)))"
+Block 47 "3834907038" "evict_cnt <= {WORD_BITS {1'b0}};"
+Block 48 "3404715575" "evict_cnt <= (evict_cnt + 1'b1);"
+Block 50 "3266935954" "if (m_arready)"
+Block 51 "1435754894" "state <= ST_REFILL_R;"
+Block 53 "2270772504" "if (m_rvalid)"
+Block 54 "482055021" "data_ram[req_index][fill_cnt] <= m_rdata;"
+Block 55 "2800680661" "tag_ram[req_index] <= req_tag;"
+Block 56 "3594396400" "fill_cnt <= (fill_cnt + 1'b1);"
+Block 58 "113343392" "state <= ST_IDLE;"
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_awready "reg s_awready"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "reg s_wready"
+Toggle s_bid "reg s_bid[3:0]"
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_bvalid "reg s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_araddr "net s_araddr[31:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arvalid "net s_arvalid"
+Toggle s_arready "reg s_arready"
+Toggle s_rid "reg s_rid[3:0]"
+Toggle s_rdata "reg s_rdata[31:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle s_rlast "reg s_rlast"
+Toggle s_rvalid "reg s_rvalid"
+Toggle s_rready "net s_rready"
+Toggle m_awid "reg m_awid[3:0]"
+Toggle m_awaddr "reg m_awaddr[31:0]"
+Toggle m_awlen "reg m_awlen[7:0]"
+Toggle m_awsize "reg m_awsize[2:0]"
+Toggle m_awburst "reg m_awburst[1:0]"
+Toggle m_awvalid "reg m_awvalid"
+Toggle m_awready "net m_awready"
+Toggle m_wdata "reg m_wdata[31:0]"
+Toggle m_wstrb "reg m_wstrb[3:0]"
+Toggle m_wlast "reg m_wlast"
+Toggle m_wvalid "reg m_wvalid"
+Toggle m_wready "net m_wready"
+Toggle m_bid "net m_bid[3:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bvalid "net m_bvalid"
+Toggle m_bready "reg m_bready"
+Toggle m_arid "reg m_arid[3:0]"
+Toggle m_araddr "reg m_araddr[31:0]"
+Toggle m_arlen "reg m_arlen[7:0]"
+Toggle m_arsize "reg m_arsize[2:0]"
+Toggle m_arburst "reg m_arburst[1:0]"
+Toggle m_arvalid "reg m_arvalid"
+Toggle m_arready "net m_arready"
+Toggle m_rid "net m_rid[3:0]"
+Toggle m_rdata "net m_rdata[31:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle m_rlast "net m_rlast"
+Toggle m_rvalid "net m_rvalid"
+Toggle m_rready "reg m_rready"
+Toggle snoop_addr "net snoop_addr[31:0]"
+Toggle snoop_valid "net snoop_valid"
+Toggle snoop_ack "net snoop_ack"
+Toggle snoop_hit "net snoop_hit"
+Toggle state "reg state[3:0]"
+Toggle req_is_write "reg req_is_write"
+Toggle req_id "reg req_id[3:0]"
+Toggle req_addr "reg req_addr[31:0]"
+Toggle req_wdata "reg req_wdata[31:0]"
+Toggle req_wstrb "reg req_wstrb[3:0]"
+Toggle req_index "net req_index[9:0]"
+Toggle req_tag "net req_tag[16:0]"
+Toggle req_wordoff "net req_wordoff[2:0]"
+Toggle hit "net hit"
+Toggle fill_cnt "reg fill_cnt[2:0]"
+Toggle evict_cnt "reg evict_cnt[2:0]"
+Toggle evict_addr "reg evict_addr[31:0]"
+
+// ID: EXCL-UVM-0015
 // CATEGORY: Bus & Fabric Interconnect
 MODULE: axi_arbiter_2x1_full
 Branch 1 "597278086" "ar_waiting"
@@ -558,16 +1844,7 @@ Toggle arlock_latch "reg arlock_latch[1:0]"
 Toggle awlock_latch "reg awlock_latch[1:0]"
 Toggle awprot_latch "reg awprot_latch[2:0]"
 
-// ID: EXCL-UVM-0009
-// CATEGORY: CPU Core & Pipeline
-MODULE: mips_mdu
-Condition 2 "2646245566" "(mdu_op == OP_DIV) 1 -1" (1 "0")
-Block 13 "2085905877" "div_sign_quot <= 1'b0;"
-Block 14 "2745457819" ";"
-Block 39 "3609964673" "state <= STATE_IDLE;"
-Toggle div_active "reg div_active"
-
-// ID: EXCL-UVM-0010
+// ID: EXCL-UVM-0016
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_mmu
 Condition 1 "1517026254" "(((!is_kernel)) && req_va[31]) 1 -1" (2 "10")
@@ -615,7 +1892,56 @@ Toggle ok_r "reg ok_r"
 Toggle fault_r "reg fault_r[2:0]"
 Toggle _unused_ok "net _unused_ok"
 
-// ID: EXCL-UVM-0011
+// ID: EXCL-UVM-0017
+// CATEGORY: General Module Coverage Exclusions
+MODULE: mips_mdu_v2
+Condition 1 "3760466763" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (2 "01")
+Condition 1 "3760466763" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (3 "10")
+Condition 2 "1313514431" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 3 "2891274725" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 4 "1918885001" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 7 "2695379212" "(rs_val[31] ^ rt_val[31]) 1 -1" (2 "01")
+Condition 7 "2695379212" "(rs_val[31] ^ rt_val[31]) 1 -1" (3 "10")
+Condition 8 "289735736" "((op == OP_MADDU) || (op == OP_MSUBU)) 1 -1" (2 "01")
+Condition 8 "289735736" "((op == OP_MADDU) || (op == OP_MSUBU)) 1 -1" (3 "10")
+Condition 9 "148386520" "(op == OP_MADDU) 1 -1" (2 "1")
+Condition 10 "801433559" "(op == OP_MSUBU) 1 -1" (2 "1")
+Condition 11 "2565121587" "(op == OP_MSUBU) 1 -1" (2 "1")
+Condition 17 "3890455887" "(rs_val[31] ^ rt_val[31]) 1 -1" (3 "10")
+Condition 18 "2138301687" "(rt_val == 32'b0) 1 -1" (2 "1")
+Condition 20 "1458660232" "((mul_a[31:16] == 16'b0) && (mul_b[31:16] == 16'b0)) 1 -1" (1 "01")
+Condition 20 "1458660232" "((mul_a[31:16] == 16'b0) && (mul_b[31:16] == 16'b0)) 1 -1" (2 "10")
+Condition 24 "746016551" "(op_r == OP_MUL) 1 -1" (2 "1")
+Condition 25 "159728158" "(result_neg_mul ? (((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0))) : mul_prod[63:32]) 1 -1" (1 "0")
+Condition 25 "159728158" "(result_neg_mul ? (((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0))) : mul_prod[63:32]) 1 -1" (2 "1")
+Condition 26 "842780212" "(result_neg_mul ? (((~mul_prod[31:0]) + 1'b1)) : mul_prod[31:0]) 1 -1" (1 "0")
+Condition 26 "842780212" "(result_neg_mul ? (((~mul_prod[31:0]) + 1'b1)) : mul_prod[31:0]) 1 -1" (2 "1")
+Condition 27 "4008594144" "(result_neg_mul ? (((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0))) : mul_prod[63:32]) 1 -1" (2 "1")
+Condition 28 "3578840778" "(result_neg_mul ? (((~mul_prod[31:0]) + 1'b1)) : mul_prod[31:0]) 1 -1" (2 "1")
+Condition 29 "3303244070" "((div_ctr == 6'd32) && (div_divisor > div_dividend_orig)) 1 -1" (1 "01")
+Condition 29 "3303244070" "((div_ctr == 6'd32) && (div_divisor > div_dividend_orig)) 1 -1" (3 "11")
+Condition 31 "2708500458" "(result_neg_rem ? (((~div_dividend_orig) + 1'b1)) : div_dividend_orig) 1 -1" (1 "0")
+Condition 31 "2708500458" "(result_neg_rem ? (((~div_dividend_orig) + 1'b1)) : div_dividend_orig) 1 -1" (2 "1")
+Block 6 "1958727147" "state <= ST_DONE;"
+Block 7 "879700167" "hi_r <= rs_val;"
+Block 8 "4215080138" "lo_r <= rs_val;"
+Block 15 "2429047421" "lo_r <= 32'hffffffff;"
+Block 17 "1833136726" "state <= ST_DONE;"
+Block 26 "2711352201" "mul_prod <= ((~mul_prod) + 64'b1);"
+Block 29 "1119584673" "state <= ST_ACC;"
+Block 31 "1883466471" "hi_r <= (result_neg_mul ? ((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0)) : mul_prod[63:32]);"
+Block 33 "229068887" "acc_tmp = {hi_r, lo_r};"
+Block 34 "3194429762" "acc_tmp = (acc_tmp - (result_neg_mul ? ((~mul_prod) + 64'b1) : mul_prod));"
+Block 35 "529993185" "acc_tmp = (acc_tmp + (result_neg_mul ? ((~mul_prod) + 64'b1) : mul_prod));"
+Block 36 "3729800990" "{hi_r, lo_r} <= acc_tmp;"
+Block 38 "133893227" "lo_r <= 32'b0;"
+Block 50 "113343392" "state <= ST_IDLE;"
+Toggle is_accsub "reg is_accsub"
+Toggle is_acc "reg is_acc"
+Toggle result_neg_mul "reg result_neg_mul"
+Toggle acc_tmp "reg acc_tmp[63:0]"
+
+// ID: EXCL-UVM-0018
 // CATEGORY: Peripherals & Subsystems
 MODULE: apb_timer
 Condition 9 "3412772268" "(psel & penable & pwrite & pready) 1 -1" (1 "0111")
@@ -626,7 +1952,7 @@ Block 16 "3323447681" "if ((!presetn))"
 Block 33 "3323447681" "if ((!presetn))"
 Toggle pslverr "net pslverr"
 
-// ID: EXCL-UVM-0012
+// ID: EXCL-UVM-0019
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_alu
 Condition 16 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (1 "01")
@@ -634,20 +1960,12 @@ Condition 16 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (2 "1
 Condition 16 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (3 "11")
 Condition 17 "2041577695" "(sign_a != sign_b) 1 -1" (2 "1")
 Condition 18 "1025947488" "(sign_r != sign_a) 1 -1" (2 "1")
-Block 22 "264403933" "alu_out = {26'b0, clz_result};"
-Block 23 "879279428" "alu_out = {26'b0, clo_result};"
-Block 24 "4083160595" "alu_out = {{24 {op_b[7]}}, op_b[7:0]};"
-Block 25 "478882245" "alu_out = {{16 {op_b[15]}}, op_b[15:0]};"
-Block 26 "3063467322" "alu_out = {op_b[23:16], op_b[31:24], op_b[7:0], op_b[15:8]};"
-Block 27 "3607081244" "alu_out = (({op_b, op_b} >> sa) & 32'hffffffff);"
 Block 29 "422754686" "alu_out = 32'b0;"
 
-// ID: EXCL-UVM-0013
+// ID: EXCL-UVM-0020
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_cp0
-Condition 3 "4262283065" "(we && ({waddr, wsel} == {5'd9, 3'b0})) 1 -1" (1 "01")
 Condition 3 "4262283065" "(we && ({waddr, wsel} == {5'd9, 3'b0})) 1 -1" (3 "11")
-Condition 4 "2479611433" "({waddr, wsel} == {5'd9, 3'b0}) 1 -1" (2 "1")
 Condition 6 "3354819029" "(we && ({waddr, wsel} == {5'd6, 3'b0})) 1 -1" (3 "11")
 Condition 9 "4052534559" "((except_code == 5'b1) || (except_code == 5'h02) || (except_code == 5'h03) || (except_code == 5'h04) || (except_code == 5'h05)) 1 -1" (2 "00001")
 Condition 9 "4052534559" "((except_code == 5'b1) || (except_code == 5'h02) || (except_code == 5'h03) || (except_code == 5'h04) || (except_code == 5'h05)) 1 -1" (4 "00100")
@@ -683,13 +2001,7 @@ Condition 32 "544802014" "(tlb_wr_en_raw && tlb_wr_gate) 1 -1" (2 "10")
 Condition 32 "544802014" "(tlb_wr_en_raw && tlb_wr_gate) 1 -1" (3 "11")
 Condition 33 "1063768504" "((tlb_op == 3'b010) ? cp0_index : cp0_random) 1 -1" (2 "1")
 Condition 34 "1765597107" "(tlb_op == 3'b010) 1 -1" (2 "1")
-Block 11 "2320650721" "rdata = cp0_count;"
 Block 15 "3093343542" "rdata = intctl_val;"
-Block 18 "3680471322" "rdata = prid_val;"
-Block 19 "2101989669" "rdata = ebase_val;"
-Block 21 "3925337843" "rdata = config1_val;"
-Block 22 "4004027652" "rdata = config2_val;"
-Block 23 "3965864873" "rdata = config3_val;"
 Block 31 "1303214116" "cp0_cause[30] <= 1'b1;"
 Block 34 "3870470318" "cp0_count <= wdata;"
 Block 41 "2043654175" "cp0_random <= 6'd63;"
@@ -711,7 +2023,6 @@ Block 72 "897928260" "cp0_intctl_ipti <= wdata[31:29];"
 Block 76 "149643550" "if (((cp0_status[1] == 1'b0) && (cp0_status[22] == 1'b0)))"
 Block 77 "2255664351" "cp0_ebase_hi <= wdata[29:12];"
 Block 79 "4206348950" "cp0_config_k0 <= wdata[2:0];"
-Block 80 "670861655" "cp0_errorepc <= wdata;"
 Block 81 "2611963979" ";"
 Toggle tlb_op "net tlb_op[2:0]"
 Toggle ebase_out "net ebase_out[31:0]"
@@ -728,7 +2039,6 @@ Toggle mmu_dlookup_v "net mmu_dlookup_v"
 Toggle mmu_dlookup_d "net mmu_dlookup_d"
 Toggle mmu_dlookup_c "net mmu_dlookup_c[2:0]"
 Toggle mmu_dlookup_pfn "net mmu_dlookup_pfn[19:0]"
-Toggle cp0_errorepc "reg cp0_errorepc[31:0]"
 Toggle cp0_ebase_hi "reg cp0_ebase_hi[17:0]"
 Toggle cp0_hwrena "reg cp0_hwrena[31:0]"
 Toggle cp0_config_k0 "reg cp0_config_k0[2:0]"
@@ -768,7 +2078,7 @@ Toggle cnt_eq_cmp "net cnt_eq_cmp"
 Toggle tlb_wr_en_raw "net tlb_wr_en_raw"
 Toggle tlb_wr_en "net tlb_wr_en"
 
-// ID: EXCL-UVM-0014
+// ID: EXCL-UVM-0021
 // CATEGORY: Cache & Memory Subsystem
 MODULE: icache
 Condition 2 "1341696682" "(arready && arvalid) 1 -1" (2 "10")
@@ -789,7 +2099,7 @@ Toggle arlock "net arlock[1:0]"
 Toggle arcache "net arcache[3:0]"
 Toggle arprot "net arprot[2:0]"
 
-// ID: EXCL-UVM-0015
+// ID: EXCL-UVM-0022
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_bpu
 Condition 3 "2447782862" "((bht_ctr[upd_bht_idx] == 2'b0) ? 2'b0 : ((bht_ctr[upd_bht_idx] - 2'b1))) 1 -1" (1 "0")
@@ -819,7 +2129,7 @@ Toggle ras_top "reg ras_top[2:0]"
 Toggle ras_valid "reg ras_valid"
 Toggle _unused_ok "net _unused_ok"
 
-// ID: EXCL-UVM-0016
+// ID: EXCL-UVM-0023
 // CATEGORY: Peripherals & Subsystems
 MODULE: apb_axi_dma
 Condition 2 "2539168442" "(m_arvalid && m_arready) 1 -1" (1 "01")
@@ -859,7 +2169,7 @@ Toggle m_arlock "net m_arlock[1:0]"
 Toggle m_arcache "net m_arcache[3:0]"
 Toggle m_arprot "net m_arprot[2:0]"
 
-// ID: EXCL-UVM-0017
+// ID: EXCL-UVM-0024
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_tlb
 Condition 1 "1817497898" "(wr_entrylo0[0] & wr_entrylo1[0]) 1 -1" (1 "01")
@@ -3597,7 +4907,7 @@ Toggle g_lookup1[63].cmp1_mask "net g_lookup1[63].cmp1_mask[18:0]"
 Toggle g_lookup1[63].vpn2_match1 "net g_lookup1[63].vpn2_match1"
 Toggle g_lookup1[63].asid_match1 "net g_lookup1[63].asid_match1"
 
-// ID: EXCL-UVM-0018
+// ID: EXCL-UVM-0025
 // CATEGORY: Bus & Fabric Interconnect
 MODULE: axi2apb_bridge
 Condition 1 "493857619" "(aw_done && w_done) 1 -1" (1 "01")
@@ -3634,31 +4944,7 @@ Toggle arburst_latch "reg arburst_latch[1:0]"
 Toggle aw_done "net aw_done"
 Toggle w_done "net w_done"
 
-// ID: EXCL-UVM-0019
-// CATEGORY: CPU Core & Pipeline
-MODULE: mips_control
-Condition 1 "2443873458" "(rs[0] ? 5'b10101 : 5'b01001) 1 -1" (2 "1")
-Condition 2 "1256615539" "(inst[6] ? 5'b10101 : 5'b01001) 1 -1" (2 "1")
-Block 12 "2194106752" "alu_op = 5'b10110;"
-Block 65 "3479738885" "case (func)"
-Block 66 "1191037540" "alu_op = 5'b10000;"
-Block 67 "2741220862" "alu_op = 5'b10001;"
-Block 68 "3677819716" "illegal_inst = 1'b1;"
-Block 69 "3346251535" "case (func)"
-Block 70 "4065167534" "case (inst[10:6])"
-Block 71 "254301099" "alu_op = 5'b10100;"
-Block 72 "2259938342" "alu_op = 5'b10010;"
-Block 73 "378415167" "alu_op = 5'b10011;"
-Block 74 "721656188" "illegal_inst = 1'b1;"
-Block 75 "3306916783" "illegal_inst = 1'b1;"
-Block 81 "2973935529" "tlb_op = 3'b1;"
-Block 82 "2355516314" "tlb_op = 3'b010;"
-Block 83 "677563964" "tlb_op = 3'b011;"
-Block 84 "3574445826" "tlb_op = 3'b100;"
-Toggle tlb_op "reg tlb_op[2:0]"
-Toggle is_movz "reg is_movz"
-
-// ID: EXCL-UVM-0020
+// ID: EXCL-UVM-0026
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_mem_stage
 Condition 4 "1223484174" "(((mem_op == 3'b010) || (mem_op == 3'b011)) && (addr_align[0] != 1'b0)) 1 -1" (3 "11")
@@ -3679,7 +4965,56 @@ Toggle adel_exception "net adel_exception"
 Toggle ades_exception "net ades_exception"
 Toggle bad_align_h "net bad_align_h"
 
-// ID: EXCL-UVM-0021
+// ID: EXCL-UVM-0027
+// CATEGORY: General Module Coverage Exclusions
+MODULE: apb_vic
+Condition 1 "1173968958" "(paddr[11:8] == 4'b1) 1 -1" (2 "1")
+Condition 2 "3385016385" "(rd && (paddr[11:2] == 10'h080) && any_pend_r && irq) 1 -1" (3 "1101")
+Condition 2 "3385016385" "(rd && (paddr[11:2] == 10'h080) && any_pend_r && irq) 1 -1" (4 "1110")
+Condition 2 "3385016385" "(rd && (paddr[11:2] == 10'h080) && any_pend_r && irq) 1 -1" (5 "1111")
+Condition 4 "3122550722" "(paddr[11:8] == 4'b1) 1 -1" (1 "0")
+Condition 4 "3122550722" "(paddr[11:8] == 4'b1) 1 -1" (2 "1")
+Condition 7 "796496142" "(any_pend_r && (((!any_active_r)) || (best_pri_r > running_prio_r))) 1 -1" (2 "10")
+Condition 8 "3151458438" "(((!any_active_r)) || (best_pri_r > running_prio_r)) 1 -1" (1 "00")
+Condition 8 "3151458438" "(((!any_active_r)) || (best_pri_r > running_prio_r)) 1 -1" (2 "01")
+Block 1 "1335899302" "if ((!rst_n))"
+Block 5 "496809538" "edge_pending_r[i] <= 1'b1;"
+Block 7 "1335899302" "if ((!rst_n))"
+Block 13 "3746002267" "enable_r <= (enable_r | pwdata[(NUM_SOURCES - 1):0]);"
+Block 14 "1869116815" "enable_r <= (enable_r & (~pwdata[(NUM_SOURCES - 1):0]));"
+Block 15 "3264570745" "type_r <= pwdata[(NUM_SOURCES - 1):0];"
+Block 16 "3533652458" "polarity_r <= pwdata[(NUM_SOURCES - 1):0];"
+Block 17 "1523582678" "soft_r <= (soft_r | pwdata[(NUM_SOURCES - 1):0]);"
+Block 18 "456377158" "soft_r <= (soft_r & (~pwdata[(NUM_SOURCES - 1):0]));"
+Block 19 "3357813928" "for (i = 0; (i < NUM_SOURCES); i = (i + 1))"
+Block 20 "3622764246" "if (pwdata[i])"
+Block 21 "2215908813" "active_r[i] <= 1'b0;"
+Block 24 "2915040853" "prio_r[paddr[7:2]] <= pwdata[3:0];"
+Block 33 "2899029846" "running_prio_r = prio_r[i];"
+Block 35 "1335899302" "if ((!rst_n))"
+Block 37 "2714134009" "active_r[best_id_r[($clog2(NUM_SOURCES) - 1):0]] <= 1'b1;"
+Block 44 "276328143" "prdata = {{(32 - NUM_SOURCES) {1'b0}}, type_r};"
+Block 45 "2653828468" "prdata = {{(32 - NUM_SOURCES) {1'b0}}, polarity_r};"
+Block 46 "1385042007" "prdata = {{(32 - NUM_SOURCES) {1'b0}}, soft_r};"
+Block 47 "190408852" "prdata = {24'b0, best_id_r};"
+Block 48 "1466571044" "prdata = {28'b0, best_pri_r};"
+Block 49 "2759499175" "prdata = {{(32 - NUM_SOURCES) {1'b0}}, active_r};"
+Block 50 "1487133630" "prdata = {28'b0, running_prio_r};"
+Block 51 "806256715" "if ((paddr[11:8] == 4'b1))"
+Block 52 "3299512304" "prdata = {28'b0, prio_r[paddr[7:2]]};"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle vec_prio "net vec_prio[3:0]"
+Toggle type_r "reg type_r[31:0]"
+Toggle polarity_r "reg polarity_r[31:0]"
+Toggle soft_r "reg soft_r[31:0]"
+Toggle edge_pending_r "reg edge_pending_r[31:0]"
+Toggle active_r "reg active_r[31:0]"
+Toggle best_pri_r "reg best_pri_r[3:0]"
+Toggle running_prio_r "reg running_prio_r[3:0]"
+Toggle any_active_r "reg any_active_r"
+
+// ID: EXCL-UVM-0028
 // CATEGORY: Peripherals & Subsystems
 MODULE: apb_gpio
 Block 1 "3323447681" "if ((!presetn))"
@@ -3688,24 +5023,36 @@ Block 9 "3323447681" "if ((!presetn))"
 Toggle pready "net pready"
 Toggle pslverr "net pslverr"
 
-// ID: EXCL-UVM-0022
-// CATEGORY: Peripherals & Subsystems
-MODULE: apb_pic
-Block 11 "759850825" "prdata = 32'b0;"
-Toggle pready "net pready"
-Toggle pslverr "net pslverr"
-
-// ID: EXCL-UVM-0023
+// ID: EXCL-UVM-0029
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_wb_stage
 Block 6 "470869113" "wb_wdata = ex_out;"
 
-// ID: EXCL-UVM-0024
+// ID: EXCL-UVM-0030
+// CATEGORY: CPU Core & Pipeline
+MODULE: mips_ex_stage
+Block 1 "4034936954" "case (mdu_op)"
+Block 10 "1739623138" "mdu_v2_op = 4'b0;"
+Block 11 "4034936954" "case (mdu_op)"
+
+// ID: EXCL-UVM-0031
+// CATEGORY: CPU Core & Pipeline
+MODULE: mips_control
+Block 68 "3677819716" "illegal_inst = 1'b1;"
+Block 74 "721656188" "illegal_inst = 1'b1;"
+Block 75 "3306916783" "illegal_inst = 1'b1;"
+Block 81 "2973935529" "tlb_op = 3'b1;"
+Block 82 "2355516314" "tlb_op = 3'b010;"
+Block 83 "677563964" "tlb_op = 3'b011;"
+Block 84 "3574445826" "tlb_op = 3'b100;"
+Toggle tlb_op "reg tlb_op[2:0]"
+
+// ID: EXCL-UVM-0032
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_if_stage
 Toggle inst_req "net inst_req"
 
-// ID: EXCL-UVM-0025
+// ID: EXCL-UVM-0033
 // CATEGORY: General Module Coverage Exclusions
 MODULE: soc_fabric
 Toggle m0_arid "net m0_arid[3:0]"
@@ -3823,7 +5170,7 @@ Toggle axim4_arsize "net axim4_arsize[2:0]"
 Toggle axim4_arburst "net axim4_arburst[1:0]"
 Toggle axim4_arlock "net axim4_arlock[1:0]"
 
-// ID: EXCL-UVM-0026
+// ID: EXCL-UVM-0034
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_soc_impl
 Toggle spi_sclk "net spi_sclk"
@@ -3934,7 +5281,7 @@ Toggle s2_arburst "net s2_arburst[1:0]"
 Toggle s2_arlock "net s2_arlock[1:0]"
 Toggle s2_rresp "net s2_rresp[1:0]"
 
-// ID: EXCL-UVM-0027
+// ID: EXCL-UVM-0035
 // CATEGORY: Debug & Observability
 MODULE: soc_debug_subsystem
 Toggle m_awid "net m_awid[3:0]"
@@ -3954,7 +5301,7 @@ Toggle m_arlock "net m_arlock[1:0]"
 Toggle m_arcache "net m_arcache[3:0]"
 Toggle m_arprot "net m_arprot[2:0]"
 
-// ID: EXCL-UVM-0028
+// ID: EXCL-UVM-0036
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_soc
 Toggle clk "net clk"
@@ -3980,7 +5327,7 @@ Toggle ext_rresp "net ext_rresp[1:0]"
 Toggle ext_rlast "net ext_rlast"
 Toggle ext_rvalid "net ext_rvalid"
 
-// ID: EXCL-UVM-0029
+// ID: EXCL-UVM-0037
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_core_subsystem
 Toggle inst_awid "net inst_awid[3:0]"
@@ -4020,20 +5367,20 @@ Toggle data_arburst "net data_arburst[1:0]"
 Toggle data_arlock "net data_arlock[1:0]"
 Toggle data_arprot "net data_arprot[2:0]"
 
-// ID: EXCL-UVM-0030
+// ID: EXCL-UVM-0038
 // CATEGORY: Peripherals & Subsystems
 MODULE: apb_uart
 Toggle pready "net pready"
 Toggle pslverr "net pslverr"
 Toggle rx_int "net rx_int"
 
-// ID: EXCL-UVM-0031
+// ID: EXCL-UVM-0039
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_mem_wb_reg
 Toggle mem_tlb_op "net mem_tlb_op[2:0]"
 Toggle wb_tlb_op "reg wb_tlb_op[2:0]"
 
-// ID: EXCL-UVM-0032
+// ID: EXCL-UVM-0040
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_memory_subsystem
 Toggle spi_sclk "net spi_sclk"
@@ -4059,7 +5406,7 @@ Toggle s2_arburst "net s2_arburst[1:0]"
 Toggle s2_arlock "net s2_arlock[1:0]"
 Toggle s2_rresp "net s2_rresp[1:0]"
 
-// ID: EXCL-UVM-0033
+// ID: EXCL-UVM-0041
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_id_ex_reg
 Toggle id_except_is_data "net id_except_is_data"
@@ -4067,7 +5414,7 @@ Toggle id_tlb_op "net id_tlb_op[2:0]"
 Toggle ex_except_is_data "reg ex_except_is_data"
 Toggle ex_tlb_op "reg ex_tlb_op[2:0]"
 
-// ID: EXCL-UVM-0034
+// ID: EXCL-UVM-0042
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_ex_mem_reg
 Toggle ex_tlb_op "net ex_tlb_op[2:0]"
@@ -4075,7 +5422,7 @@ Toggle ex_except_is_data "net ex_except_is_data"
 Toggle mem_tlb_op "reg mem_tlb_op[2:0]"
 Toggle mem_except_is_data "reg mem_except_is_data"
 
-// ID: EXCL-UVM-0035
+// ID: EXCL-UVM-0043
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_top
 Toggle clk "net clk"

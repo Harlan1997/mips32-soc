@@ -7,19 +7,20 @@
 `define SOC_CONFIG_VH
 
 // ---------------------------------------------------------------------------
-// v2 cutover flags — enable freshly-verified replacement modules.
-// Comment out any of these to fall back to the v1 predecessor immediately.
+// v2 cutover flags — only for pending integrations (v2 core spec-complete
+// but downstream UVM/firmware coordination still open). MDU v2 and VIC are
+// already the DUT baseline (v1 files deleted after signoff #12).
 // ---------------------------------------------------------------------------
-`define SOC_USE_MDU_V2      1   // rtl/cpu/mips_mdu_v2.v (verified: tb/unit/mdu_v2/)
-`define SOC_USE_VIC         1   // rtl/perips/apb_vic.v  (verified: tb/unit/vic/)
-// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — upstream masters
-                                 // (L1 D-cache) issue burst refill; L2 slave FSM
-                                 // currently returns single R beat → rlast mismatch.
-                                 // Needs bidirectional burst handling in L2 slave.
-// `define SOC_USE_UART_16550  1   // rtl/perips/apb_uart_16550.v — real 16550;
-                                    // v1 apb_uart kept in DUT for sim visibility
-                                    // ($write stub); enable when Linux boot needs
-                                    // a real 8250 driver target.
+// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — needs bidirectional
+                                 // burst handling in slave FSM before enabling.
+                                 // Phase C work item.
+// `define SOC_USE_UART_16550 1  // rtl/perips/apb_uart_16550.v — v2 spec-
+                                  // complete; enable after Phase 3C
+                                  // pic_mask_arbitration seq is redesigned to
+                                  // use INTR_SOFT as a stable IRQ source
+                                  // (v2 fires transient IRQ, auto-clears on
+                                  // IIR read → doesn't match v1 arbitration
+                                  // test's stable-level assumption).
 
 // AXI/APB interface contract
 `define SOC_AXI_ID_WIDTH      4
