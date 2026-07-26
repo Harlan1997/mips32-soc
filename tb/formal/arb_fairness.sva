@@ -1,0 +1,33 @@
+// =============================================================================
+// Formal property scaffold — AXI arbiter fairness
+// Author:    Antigravity — Phase F
+// Purpose:
+//   Bounded fairness property for axi_arbiter_2x1_full. If M0 continuously
+//   asserts arvalid and M1 stays idle, M0 must receive arready within
+//   FAIRNESS_WINDOW cycles. Real proof needs downstream assumes on s0_arready.
+// =============================================================================
+
+`ifdef FORMAL_ENABLE
+module arb_fairness_props #(
+    parameter FAIRNESS_WINDOW = 32
+) (
+    input logic clk,
+    input logic rst_n,
+    input logic m0_arvalid,
+    input logic m0_arready,
+    input logic m1_arvalid
+);
+    default clocking cb @(posedge clk); endclocking
+    default disable iff (!rst_n);
+
+    // If M0 has continuously requested while M1 is idle, M0 must get
+    // arready within a bounded window.
+    property p_m0_fair;
+        (m0_arvalid && !m1_arvalid) [*FAIRNESS_WINDOW] |->
+            ##[0:FAIRNESS_WINDOW] m0_arready;
+    endproperty
+    M0_FAIR: assert property (p_m0_fair)
+        else $error("arbiter: M0 starved for %0d cycles while M1 idle", FAIRNESS_WINDOW);
+
+endmodule
+`endif
