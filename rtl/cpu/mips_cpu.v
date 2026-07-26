@@ -242,6 +242,12 @@ module mips_cpu (
     wire        ex_except_is_data;    // Phase B.3.d
     wire        mem_except_is_data;
     wire        wb_except_is_data;
+    // Phase B.5: delay-slot marker propagated with each instruction so an
+    // exception on a delay-slot instruction can drive Cause.BD=1 and EPC=PC-4.
+    wire        id_bd;
+    wire        ex_bd;
+    wire        mem_bd;
+    wire        wb_bd;
     wire        ex_cp0_we;
     wire        ex_is_eret;
     wire [1:0]  ex_mem_to_reg;
@@ -315,9 +321,24 @@ module mips_cpu (
     );
     
     wire id_except_req_out = id_except_req_in | id_illegal_inst | id_is_syscall;
-    wire [4:0] id_except_code_out = id_except_req_in ? id_except_code_in : 
-                                    (id_is_syscall ? 5'h08 : 
+    wire [4:0] id_except_code_out = id_except_req_in ? id_except_code_in :
+                                    (id_is_syscall ? 5'h08 :
                                      (id_illegal_inst ? 5'h0A : 5'h00));
+
+    // Phase B.5: delay-slot detector. The current ID-stage instruction is in a
+    // delay slot iff the *previous* cycle's ID decoded a branch or jump (both
+    // conditional branches and jumps require the following instruction to be
+    // executed per MIPS ISA). The pipeline advances when !global_stall.
+    reg id_bd_r;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            id_bd_r <= 1'b0;
+        else if (if_id_flush)
+            id_bd_r <= 1'b0;
+        else if (!global_stall)
+            id_bd_r <= id_branch_taken | id_jump_taken;
+    end
+    assign id_bd = id_bd_r;
     
     // =========================================================================
     // ID/EX Pipeline Register
@@ -360,6 +381,7 @@ module mips_cpu (
         .id_except_req  (id_except_req_out),
         .id_except_code (id_except_code_out),
         .id_except_is_data (1'b0),  // IF-origin faults + ID-added (RI/SYS) are never MEM-side
+        .id_bd          (id_bd),
         .id_cp0_we      (id_cp0_we),
         .id_is_eret     (id_is_eret),
         .id_tlb_op      (id_tlb_op),
@@ -387,6 +409,7 @@ module mips_cpu (
         .ex_except_req  (ex_except_req),
         .ex_except_code (ex_except_code),
         .ex_except_is_data (ex_except_is_data),
+        .ex_bd          (ex_bd),
         .ex_cp0_we      (ex_cp0_we),
         .ex_is_eret     (ex_is_eret),
         .ex_tlb_op      (ex_tlb_op),
@@ -461,6 +484,7 @@ module mips_cpu (
         .ex_except_req   (ex_except_req),
         .ex_except_code  (ex_except_code),
         .ex_except_is_data (ex_except_is_data),
+        .ex_bd           (ex_bd),
         .ex_mem_read     (ex_mem_read),
         .ex_mem_write    (ex_mem_write),
         .ex_mem_op       (ex_mem_op),
@@ -480,6 +504,7 @@ module mips_cpu (
         .mem_except_req  (mem_except_req),
         .mem_except_code (mem_except_code),
         .mem_except_is_data (mem_except_is_data),
+        .mem_bd          (mem_bd),
         .mem_mem_read    (mem_mem_read),
         .mem_mem_write   (mem_mem_write),
         .mem_mem_op      (mem_mem_op),
@@ -566,6 +591,7 @@ module mips_cpu (
         .mem_except_req  (mem_except_req_out),
         .mem_except_code (mem_except_code_out),
         .mem_except_is_data (mem_except_is_data_out),
+        .mem_bd          (mem_bd),
         .mem_mem_to_reg  (mem_mem_to_reg),
         
         .wb_rdata_fmt    (wb_rdata_fmt),
@@ -583,6 +609,7 @@ module mips_cpu (
         .wb_except_req   (wb_except_req),
         .wb_except_code  (wb_except_code),
         .wb_except_is_data (wb_except_is_data),
+        .wb_bd           (wb_bd),
         .wb_mem_to_reg   (wb_mem_to_reg)
     );
     
@@ -636,7 +663,7 @@ module mips_cpu (
         .except_req   (wb_except_req | intr_req),
         .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
         .except_pc    (except_pc),
-        .except_bd    (1'b0),
+        .except_bd    (wb_bd),
         .eret         (wb_is_eret),
         .bad_vaddr    (bad_vaddr),
         .epc_out      (epc_out),

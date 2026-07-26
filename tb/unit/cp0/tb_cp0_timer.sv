@@ -327,6 +327,64 @@ module tb_cp0_timer;
         mfc0(5'd8, 3'd0, rd);
         check("BadVAddr NOT touched by SYSCALL", rd == 32'h0008_1000);  // Prior TLBL value
 
+        // -----------------------------------------------------------------
+        // Phase B.5: BD-bit in Cause, EPC adjustment, ERL/ErrorEPC semantics.
+        // -----------------------------------------------------------------
+        // Clear EXL for fresh state
+        mtc0(5'd12, 3'd0, 32'd0);
+        // Fire exception with except_bd=1 → Cause.BD should be 1 and
+        //   EPC = except_pc - 4 (branch instruction, not the delay slot).
+        @(posedge clk);
+        except_req  <= 1'b1;
+        except_code <= 5'h0A;                  // RI (non-address, safe)
+        except_pc   <= 32'h0000_1004;          // delay-slot PC (branch was at 0x1000)
+        except_bd   <= 1'b1;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        except_bd   <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd13, 3'd0, rd); check("Cause.BD=1 latched",       rd[31] == 1'b1);
+        mfc0(5'd14, 3'd0, rd); check("EPC = delay-slot PC - 4",  rd == 32'h0000_1000);
+
+        // Non-BD exception: EPC = exact fault PC
+        mtc0(5'd12, 3'd0, 32'd0);              // clear EXL
+        @(posedge clk);
+        except_req  <= 1'b1;
+        except_code <= 5'h0A;
+        except_pc   <= 32'h2000_0000;
+        except_bd   <= 1'b0;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd13, 3'd0, rd); check("Cause.BD=0 when except_bd=0",  rd[31] == 1'b0);
+        mfc0(5'd14, 3'd0, rd); check("EPC = fault PC (no BD adjust)", rd == 32'h2000_0000);
+
+        // ErrorEPC + ERL semantics: set ERL=1, write ErrorEPC, ERET must return
+        //   via ErrorEPC and clear ERL (not EXL).
+        mtc0(5'd12, 3'd0, 32'h0000_0004);      // Status.ERL=1
+        mtc0(5'd30, 3'd0, 32'hABCD_0000);      // ErrorEPC
+        mfc0(5'd12, 3'd0, rd); check("Status.ERL latches to 1",   rd[2] == 1'b1);
+        mfc0(5'd30, 3'd0, rd); check("ErrorEPC readback",          rd == 32'hABCD_0000);
+        // Fire ERET
+        @(posedge clk);
+        eret <= 1'b1;
+        @(posedge clk);
+        eret <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("ERET with ERL=1 clears ERL",    rd[2] == 1'b0);
+        check("ERET with ERL=1 leaves EXL=0",  rd[1] == 1'b0);
+
+        // Standard ERET path (ERL=0, EXL=1): must clear EXL
+        mtc0(5'd12, 3'd0, 32'h0000_0002);      // EXL=1, ERL=0
+        @(posedge clk);
+        eret <= 1'b1;
+        @(posedge clk);
+        eret <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("ERET with EXL=1 clears EXL",    rd[1] == 1'b0);
+
         // Summary
         if (errors == 0)
             $display("TB PASS (0 errors)");

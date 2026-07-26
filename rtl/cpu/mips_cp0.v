@@ -258,14 +258,14 @@ module mips_cp0 (
     // Status (12,0) read-back: assemble writable+reserved bits.
     // Layout: [31:23]=9b (CU/RP/FR/RE/MX/PX), [22]=BEV, [21:16]=6b (TS/SR/NMI/impl),
     //         [15:8]=IM, [7:5]=3b, [4:3]=KSU, [2]=ERL, [1]=EXL, [0]=IE.
-    // Only IM/EXL/IE/BEV are writable in Phase B.1; the rest read 0.
+    // IM/EXL/IE/BEV writable since B.1; ERL added Phase B.5. KSU/CU deferred B.4.
     wire [31:0] status_val = { 9'b0,                  // [31:23]
                                cp0_status[22],        // [22] BEV
                                6'b0,                  // [21:16]
                                cp0_status[15:8],      // [15:8]  IM
                                3'b0,                  // [7:5]
                                2'b0,                  // [4:3]   KSU (Phase B.4)
-                               1'b0,                  // [2]     ERL (Phase B.5)
+                               cp0_status[2],         // [2]     ERL  (Phase B.5)
                                cp0_status[1],         // [1]     EXL
                                cp0_status[0] };       // [0]     IE
 
@@ -284,11 +284,14 @@ module mips_cp0 (
     // -------------------------------------------------------------------------
     // Interrupt Request
     // -------------------------------------------------------------------------
-    // Same policy as v0: IE && !EXL && any (IM & IP) hardware bit set.
+    // Spec: IE && !EXL && !ERL && any (IM & IP) hardware bit set.
     // IP field in cp0_cause is refreshed each cycle with combined_ip_hw below.
-    assign intr_req = cp0_status[0] && !cp0_status[1] && (|(cp0_cause[15:8] & cp0_status[15:8]));
+    assign intr_req = cp0_status[0] && !cp0_status[1] && !cp0_status[2]
+                      && (|(cp0_cause[15:8] & cp0_status[15:8]));
 
-    assign epc_out = cp0_epc;
+    // Phase B.5: ERET target selection — ERL=1 → ErrorEPC (Reset/NMI/CacheErr
+    // return path); else EPC (ordinary exception return).
+    assign epc_out = cp0_status[2] ? cp0_errorepc : cp0_epc;
 
     // -------------------------------------------------------------------------
     // CP0 Read Mux (MFC0)
@@ -437,8 +440,13 @@ module mips_cp0 (
                 end
 
             end else if (eret) begin
-                // ERET: clear EXL (ErrorEPC path via ERL comes in Phase B.5)
-                cp0_status[1] <= 1'b0;
+                // Phase B.5: ERL priority per MIPS spec — if ERL=1, clear it
+                // (returned from Reset/NMI/CacheErr via ErrorEPC); else clear
+                // EXL (returned from ordinary exception via EPC).
+                if (cp0_status[2])
+                    cp0_status[2] <= 1'b0;
+                else
+                    cp0_status[1] <= 1'b0;
 
             end else if (|tlb_op) begin
                 case (tlb_op)
@@ -503,6 +511,7 @@ module mips_cp0 (
                     {5'd12, 3'd0}: begin
                         cp0_status[22]   <= wdata[22];    // BEV
                         cp0_status[15:8] <= wdata[15:8];  // IM
+                        cp0_status[2]    <= wdata[2];     // ERL (Phase B.5)
                         cp0_status[1]    <= wdata[1];     // EXL
                         cp0_status[0]    <= wdata[0];     // IE
                     end
