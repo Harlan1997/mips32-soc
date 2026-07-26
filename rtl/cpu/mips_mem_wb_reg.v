@@ -19,7 +19,8 @@ module mips_mem_wb_reg (
     input  wire [4:0]  mem_waddr,
     input  wire [4:0]  mem_rd_addr,
     input  wire [4:0]  mem_cp0_raddr,
-    
+    input  wire [2:0]  mem_cp0_sel,
+
     // Control Inputs from MEM
     input  wire        mem_reg_write,
     
@@ -39,7 +40,8 @@ module mips_mem_wb_reg (
     output reg  [4:0]  wb_waddr,
     output reg  [4:0]  wb_rd_addr,
     output reg  [4:0]  wb_cp0_raddr,
-    
+    output reg  [2:0]  wb_cp0_sel,
+
     // Control Outputs to WB
     output reg         wb_reg_write,
     
@@ -61,7 +63,8 @@ module mips_mem_wb_reg (
             wb_waddr       <= 5'd0;
             wb_rd_addr     <= 5'd0;
             wb_cp0_raddr   <= 5'd0;
-            
+            wb_cp0_sel     <= 3'd0;
+
             wb_reg_write   <= 1'b0;
             wb_mem_to_reg  <= 2'd0;
             wb_cp0_we      <= 1'b0;
@@ -75,7 +78,8 @@ module mips_mem_wb_reg (
             wb_waddr       <= 5'd0;
             wb_rd_addr     <= 5'd0;
             wb_cp0_raddr   <= 5'd0;
-            
+            wb_cp0_sel     <= 3'd0;
+
             wb_reg_write   <= 1'b0;
             wb_mem_to_reg  <= 2'd0;
             wb_cp0_we      <= 1'b0;
@@ -89,7 +93,8 @@ module mips_mem_wb_reg (
             wb_waddr       <= mem_waddr;
             wb_rd_addr     <= mem_rd_addr;
             wb_cp0_raddr   <= mem_cp0_raddr;
-            
+            wb_cp0_sel     <= mem_cp0_sel;
+
             wb_reg_write   <= mem_reg_write;
             wb_cp0_we      <= mem_cp0_we;
             wb_is_eret     <= mem_is_eret;

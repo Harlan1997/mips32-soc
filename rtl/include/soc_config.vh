@@ -73,4 +73,42 @@
 `define SOC_PIC_MASK_OFFSET    12'h004
 `define SOC_PIC_ACTIVE_OFFSET  12'h008
 
+// -----------------------------------------------------------------------------
+// CP0 Configuration (Phase B.1 — static register extension)
+// -----------------------------------------------------------------------------
+// PRId (reg 15, sel 0)  layout: {CompanyOptions[7:0], CompanyID[7:0], ProcID[7:0], Revision[7:0]}
+`define SOC_CP0_PRID_COMPANY_OPTS  8'h00
+`define SOC_CP0_PRID_COMPANY_ID    8'h00
+`define SOC_CP0_PRID_PROCESSOR_ID  8'h80   // custom "AP-lite"
+`define SOC_CP0_PRID_REVISION      8'h10
+
+// EBase (reg 15, sel 1) reset. Full reg = {2'b10, EBase[29:12], 2'b00, CPUNum[9:0]}.
+// Bits [31:30] hardware-forced 10. To preserve legacy vector at 0x00000180
+// (current firmware exception handler), reset EBase[29:12] = 0.
+`define SOC_CP0_EBASE_RESET_HI     18'h00000
+`define SOC_CP0_CPUNUM             10'd0
+
+// TLB size (reported in Config1.MMUSize as N-1). Phase B.3 populates real TLB.
+`define SOC_CP0_TLB_ENTRIES        64
+
+// Cache geometry as of Phase B.1 (Phase C will update for 4-way L1 + L2).
+//   IS = log2(sets/64), IL = log2(line/2)+1, IA = ways-1
+// Current I-cache: 8KB / 1-way / 32B line / 256 sets  → IS=2, IL=5, IA=0
+// Current D-cache: 8KB / 2-way / 32B line / 128 sets  → DS=1, DL=5, DA=1
+`define SOC_CP0_CONFIG1_IS         3'd2
+`define SOC_CP0_CONFIG1_IL         3'd5
+`define SOC_CP0_CONFIG1_IA         3'd0
+`define SOC_CP0_CONFIG1_DS         3'd1
+`define SOC_CP0_CONFIG1_DL         3'd5
+`define SOC_CP0_CONFIG1_DA         3'd1
+
+// Config (reg 16, sel 0) bit K0 (kseg0 cache attr): 011 = cacheable write-back
+`define SOC_CP0_CONFIG_K0_RESET    3'b011
+
+// Status.BEV reset. Strict MIPS spec = 1'b1 (vector base 0xBFC00380 at reset).
+// Deviation: current test firmware installs handler at .except_vector linked to
+// 0x00000180 and does not clear BEV; keep BEV=0 at reset until Phase F introduces
+// a real 0xBFC00000 boot ROM. Documented in cp0_spec.md v1 pending update.
+`define SOC_CP0_STATUS_BEV_RESET   1'b0
+
 `endif
