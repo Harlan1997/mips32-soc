@@ -43,8 +43,10 @@
 1. 该 sweep 修改的所有寄存器**必须在 return 前 restore 到 reset 值**
 2. 该 sweep 触发的所有异常路径**必须能自然 resolve**（handler advance EPC 或不重触发）
 3. 该 sweep 对 SRAM / 外设 / cache 状态的持久修改**不能影响后续 UVM tests**（UVM tests 与 firmware 并行跑）
-4. **每次加 sweep 后先 `make uvm UVM_TEST=soc_bus_stress_test`** 独立验证，再 `make uvm UVM_TEST=soc_base_test`，再全 signoff。这两个 test 对 firmware 副作用最敏感
+4. **每次加 sweep 后先 `make uvm UVM_TEST=soc_bus_stress_test`** 独立验证，再 `make uvm UVM_TEST=soc_base_test`，再 `make uvm UVM_TEST=soc_apb_bit_pattern_sweep_test`，再全 signoff。这三个 test 对 firmware 副作用最敏感（apb_bit_pattern 依赖 CPU 不与 UVM 争抢 GPIO_DIR 写窗口，firmware 启动时序偏移 50-100 cycles 就能让它 fail — 见 signoff #8 教训）
 5. `cp0_sweep` 里 MMU register 写（Index/EntryHi/EntryLo0/1/PageMask/Wired/Context）**必须彻底 restore**；HWREna 也 restore；IntCtl 也 restore；Compare 也 restore
+
+**Signoff #8 教训（2026-07-26）**：即使不改 cp0 register，只是**在 firmware main() 开头加 cp0_sweep_v2()（纯 MFC0 read + 立即 restore 的 ErrorEPC/Compare）**，就让 `soc_apb_bit_pattern_sweep_test` 在 isolated 和 signoff 里都 fail —— DATA readback 全 X，只有前 4 个 walk-0 iteration。Root cause: 加 sweep 让 firmware 到达 `GPIO_DIR = 0xFFFFFFFF`（section 1）的时间**推迟了 ~1 μs**，恰好落在 UVM apb_bit_pattern seq 的 walk-0 窗口内。修法两选一：(a) 硬化 seq —— 每次 DATA readback 前 refresh DIR=~0（本 session commit `<TBD>` 已做，即 `walk_patterns` 新增 `dir_addr` 参数）；(b) 把 firmware sweep 挪到 GPIO section 之后。已选择 (a) 因为它同时提升 DIR 写路径 toggle。
 
 ### 2c. Coverage threshold < 99%
 所有 gate 都过后，`COVERAGE_THRESHOLDS` 检查失败。**2026-07-26 session 后**（Phase B + 2 新 stimulus 后）实测：
