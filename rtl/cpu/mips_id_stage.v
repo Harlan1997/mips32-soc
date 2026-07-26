@@ -63,7 +63,7 @@ module mips_id_stage (
     output wire [4:0]  rd_addr,      // rd register address
     
     // Control Signals to ID/EX Pipeline Register
-    output wire [3:0]  alu_op,
+    output wire [4:0]  alu_op,
     output wire [2:0]  mdu_op,
     output wire        mdu_start,
     output wire        sel_mdu_out,

@@ -24,7 +24,7 @@ module mips_id_ex_reg (
     input  wire [4:0]  id_sa,
     
     // Control Inputs from ID
-    input  wire [3:0]  id_alu_op,
+    input  wire [4:0]  id_alu_op,
     input  wire [2:0]  id_mdu_op,
     input  wire        id_mdu_start,
     input  wire        id_illegal_inst,
@@ -56,7 +56,7 @@ module mips_id_ex_reg (
     output reg  [4:0]  ex_sa,
     
     // Control Outputs to EX
-    output reg  [3:0]  ex_alu_op,
+    output reg  [4:0]  ex_alu_op,
     output reg  [2:0]  ex_mdu_op,
     output reg         ex_mdu_start,
     output reg         ex_illegal_inst,
@@ -88,7 +88,7 @@ module mips_id_ex_reg (
             ex_cp0_sel     <= 3'd0;
             ex_sa          <= 5'd0;
 
-            ex_alu_op      <= 4'd0;
+            ex_alu_op      <= 5'd0;
             ex_mdu_op      <= 3'd0;
             ex_mdu_start   <= 1'b0;
             ex_illegal_inst<= 1'b0;
@@ -117,7 +117,7 @@ module mips_id_ex_reg (
             ex_cp0_sel     <= 3'd0;
             ex_sa          <= 5'd0;
 
-            ex_alu_op      <= 4'd0;
+            ex_alu_op      <= 5'd0;
             ex_mdu_op      <= 3'd0;
             ex_mdu_start   <= 1'b0;
             ex_illegal_inst<= 1'b0;

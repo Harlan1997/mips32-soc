@@ -11,27 +11,32 @@ module mips_alu (
     input  wire [31:0] op_a,      // Operand A
     input  wire [31:0] op_b,      // Operand B
     input  wire [4:0]  sa,        // Shift amount (from instruction[10:6])
-    input  wire [3:0]  alu_op,    // ALU operation control
+    input  wire [4:0]  alu_op,    // ALU operation control (Phase B ISA R2: 5-bit)
     output reg  [31:0] alu_out,   // ALU result output
     output wire        overflow,  // Signed overflow flag
     output wire        zero       // Zero flag (for branches)
 );
 
-    // ALU Operation Codes
-    localparam OP_ADD  = 4'b0000;
-    localparam OP_ADDU = 4'b0001;
-    localparam OP_SUB  = 4'b0010;
-    localparam OP_SUBU = 4'b0011;
-    localparam OP_AND  = 4'b0100;
-    localparam OP_OR   = 4'b0101;
-    localparam OP_XOR  = 4'b0110;
-    localparam OP_NOR  = 4'b0111;
-    localparam OP_SLL  = 4'b1000;
-    localparam OP_SRL  = 4'b1001;
-    localparam OP_SRA  = 4'b1010;
-    localparam OP_SLT  = 4'b1011;
-    localparam OP_SLTU = 4'b1100;
-    localparam OP_LUI  = 4'b1101;
+    // ALU Operation Codes (Phase B ISA R2: extended to 5-bit)
+    localparam OP_ADD  = 5'b00000;
+    localparam OP_ADDU = 5'b00001;
+    localparam OP_SUB  = 5'b00010;
+    localparam OP_SUBU = 5'b00011;
+    localparam OP_AND  = 5'b00100;
+    localparam OP_OR   = 5'b00101;
+    localparam OP_XOR  = 5'b00110;
+    localparam OP_NOR  = 5'b00111;
+    localparam OP_SLL  = 5'b01000;
+    localparam OP_SRL  = 5'b01001;
+    localparam OP_SRA  = 5'b01010;
+    localparam OP_SLT  = 5'b01011;
+    localparam OP_SLTU = 5'b01100;
+    localparam OP_LUI  = 5'b01101;
+    // Phase B ISA R2 additions
+    localparam OP_CLZ  = 5'b10000;   // Count leading zeros of op_a
+    localparam OP_CLO  = 5'b10001;   // Count leading ones of op_a
+    localparam OP_SEB  = 5'b10010;   // Sign-extend byte from op_b[7:0]
+    localparam OP_SEH  = 5'b10011;   // Sign-extend halfword from op_b[15:0]
 
     // Internal signals for adder/subtractor and overflow detection
     wire [31:0] sub_b;
@@ -51,6 +56,21 @@ module mips_alu (
     
     assign overflow = (alu_op == OP_ADD) ? ((sign_a == sign_b) && (sign_r != sign_a)) :
                       (alu_op == OP_SUB) ? ((sign_a != sign_b) && (sign_r != sign_a)) : 1'b0;
+
+    // Phase B ISA R2 helpers — CLZ / CLO: parametric priority encoder.
+    reg [5:0] clz_result;
+    reg [5:0] clo_result;
+    integer   ci;
+    always @(*) begin
+        clz_result = 6'd32;   // all zeros → 32
+        clo_result = 6'd32;   // all ones  → 32
+        for (ci = 31; ci >= 0; ci = ci - 1) begin
+            if (op_a[ci] == 1'b1 && clz_result == 6'd32)
+                clz_result = 6'd31 - ci[5:0];
+            if (op_a[ci] == 1'b0 && clo_result == 6'd32)
+                clo_result = 6'd31 - ci[5:0];
+        end
+    end
 
     // Zero detection
     assign zero = (alu_out == 32'd0);
@@ -98,6 +118,18 @@ module mips_alu (
             end
             OP_LUI: begin
                 alu_out = {op_b[15:0], 16'd0};
+            end
+            OP_CLZ: begin
+                alu_out = { 26'd0, clz_result };
+            end
+            OP_CLO: begin
+                alu_out = { 26'd0, clo_result };
+            end
+            OP_SEB: begin
+                alu_out = { {24{op_b[7]}}, op_b[7:0] };
+            end
+            OP_SEH: begin
+                alu_out = { {16{op_b[15]}}, op_b[15:0] };
             end
             default: begin
                 alu_out = 32'd0;
