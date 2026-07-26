@@ -387,6 +387,13 @@ class soc_scoreboard extends uvm_scoreboard;
     endfunction
 
     function void check_apb_uart_read(axi_transaction tr);
+`ifndef SOC_USE_UART_16550
+        // v1 apb_uart checker. Disabled when v2 apb_uart_16550 is in DUT
+        // — 16550 uses IER/IIR/LSR at these addresses with fundamentally
+        // different semantics (auto-clear on IIR read, LSR bit 5 = THRE,
+        // etc.). The v2 sequence axi_uart_irq_seq.sv exercises those
+        // directly; scoreboard modeling for v2 will land alongside the
+        // 16550 UVM env (future).
         logic [31:0] beat_addr;
 
         if (tr.data.size() < 1) begin
@@ -415,6 +422,7 @@ class soc_scoreboard extends uvm_scoreboard;
                 end
             end
         end
+`endif
     endfunction
 
     function void update_apb_timer_model(axi_transaction tr);

@@ -214,7 +214,17 @@ class axi_pic_mask_arbitration_seq extends uvm_sequence#(axi_transaction);
 
     task body();
         do_write_word("pic_mask_init_zero", PIC_MASK_ADDR, 32'h0000_0000);
+`ifdef SOC_USE_UART_16550
+        // v2 16550: TX write only fires IRQ when IER bit 1 (TX-empty) is
+        // enabled. v1 apb_uart raised the IRQ automatically on any TX
+        // write (sim-stub shortcut). Enable IER here so the arbitration
+        // test still sees a UART IRQ source.
+        do_write_word("pic_mask_uart_ier_tx",
+                      `SOC_APB_BASE + `SOC_APB_UART_OFFSET + 32'h04,
+                      32'h0000_0002);
+`else
         do_write_word("pic_mask_uart_clear_initial", UART_IRQ_CLEAR_ADDR, UART_IRQ_MASK);
+`endif
         do_write_word("pic_mask_timer_disable", TIMER_CTRL_ADDR, 32'h0000_0000);
         do_write_word("pic_mask_timer_clear_initial", TIMER_INT_ADDR, 32'h0000_0001);
         do_write_word("pic_mask_dma_clear_initial", DMA_CTRL_ADDR, 32'h0000_0004);
@@ -247,7 +257,13 @@ class axi_pic_mask_arbitration_seq extends uvm_sequence#(axi_transaction);
 
         do_write_word("pic_mask_restore_zero", PIC_MASK_ADDR, 32'h0000_0000);
         sample_event(EV_RESTORE);
+`ifdef SOC_USE_UART_16550
+        do_write_word("pic_mask_uart_ier_restore",
+                      `SOC_APB_BASE + `SOC_APB_UART_OFFSET + 32'h04,
+                      32'h0000_0000);
+`else
         do_write_word("pic_mask_uart_clear_restore", UART_IRQ_CLEAR_ADDR, UART_IRQ_MASK);
+`endif
         do_write_word("pic_mask_timer_disable_restore", TIMER_CTRL_ADDR, 32'h0000_0000);
         do_write_word("pic_mask_timer_clear_restore", TIMER_INT_ADDR, 32'h0000_0001);
         do_write_word("pic_mask_dma_clear_restore", DMA_CTRL_ADDR, 32'h0000_0004);

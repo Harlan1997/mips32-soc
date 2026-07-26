@@ -342,13 +342,11 @@ module soc_peripheral_subsystem #(
     wire [31:0] irq_sources = {28'd0, dma_int, timer_int, uart_tx_int, uart_rx_int};
 
     // -----------------------------------------------------------------------
-    // VIC cutover: apb_vic supersedes apb_pic. Registers 0x0/0x4/0x8 are
-    // v1-compatible (STATUS/MASK/ACTIVE == RAW/ENABLE/MASKED). Extra v2
-    // features (edge trigger, per-source priority, ACTIVE tracking, soft
-    // trigger, VEC_ID) available at higher offsets. Fallback wrapper in
-    // soc_config.vh: comment out SOC_USE_VIC to revert to apb_pic.
+    // Interrupt controller: apb_vic. Registers 0x0/0x4/0x8 v1-compatible
+    // (STATUS/MASK/ACTIVE == RAW/ENABLE/MASKED). Extra features (edge
+    // trigger, priority, nesting, VEC_ID) at higher offsets. v1 apb_pic
+    // was deleted after signoff #12 validated this cutover.
     // -----------------------------------------------------------------------
-`ifdef SOC_USE_VIC
     wire [7:0] vic_vec_id_unused;
     wire [3:0] vic_vec_prio_unused;
     apb_vic #(.NUM_SOURCES(32)) u_apb_pic (
@@ -367,21 +365,5 @@ module soc_peripheral_subsystem #(
         .vec_id          (vic_vec_id_unused),
         .vec_prio        (vic_vec_prio_unused)
     );
-`else
-    apb_pic u_apb_pic (
-        .pclk            (clk),
-        .presetn         (rst_n),
-        .paddr           (apb_paddr[11:0]),
-        .psel            (pic_sel),
-        .penable         (apb_penable),
-        .pwrite          (apb_pwrite),
-        .pwdata          (apb_pwdata),
-        .pready          (pic_pready),
-        .prdata          (pic_prdata),
-        .pslverr         (pic_pslverr),
-        .irq_sources     (irq_sources),
-        .cpu_int         (cpu_int)
-    );
-`endif
 
 endmodule

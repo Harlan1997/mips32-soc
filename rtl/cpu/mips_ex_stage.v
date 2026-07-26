@@ -45,10 +45,10 @@ module mips_ex_stage (
         .zero    (zero)
     );
 
-`ifdef SOC_USE_MDU_V2
     // ------------------------------------------------------------------
-    // MDU v2 cutover: adapt 3-bit v1 op → 4-bit v2 op, mux MFHI/MFLO out.
-    // See docs/block_specs/mdu_spec.md; commit rtl(cpu) — MDU v2 impl.
+    // MDU v2: adapts 3-bit legacy op → 4-bit mips_mdu_v2 op, muxes
+    // MFHI/MFLO output. v1 mips_mdu was deleted after signoff #12
+    // validated the cutover.
     // ------------------------------------------------------------------
     reg [3:0] mdu_v2_op;
     always @(*) begin
@@ -87,21 +87,6 @@ module mips_ex_stage (
         endcase
     end
     assign mdu_out = mdu_out_r;
-`else
-    // Instantiate Multiplier-Divider Unit (MDU) v1
-    mips_mdu u_mips_mdu (
-        .clk    (clk),
-        .rst_n  (rst_n),
-        .op_a   (op_a),
-        .op_b   (op_b),
-        .mdu_op (mdu_op),
-        .start  (mdu_start),
-        .hi     (hi_val),
-        .lo     (lo_val),
-        .ready  (mdu_ready),
-        .mdu_out(mdu_out)
-    );
-`endif
 
     // Output Selection: ALU vs MDU
     assign ex_out = sel_mdu_out ? mdu_out : alu_out;

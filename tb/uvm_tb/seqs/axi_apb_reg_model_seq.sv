@@ -120,7 +120,15 @@ class axi_apb_reg_model_seq extends uvm_sequence#(axi_transaction);
         logic [31:0] timer_burst_expected[];
 
         do_read_word("uart_tx_reset_read", UART_TX_ADDR, 32'h0000_0000, 32'hFFFF_FFFF);
+`ifdef SOC_USE_UART_16550
+        // v2 16550: 0x04 is IER (post-reset = 0), not a "ready-bit STATUS".
+        // LSR at 0x14 carries THRE(5)/TEMT(6); at boot both high → 0x60.
+        do_read_word("uart_lsr_reset_read",
+                     `SOC_APB_BASE + `SOC_APB_UART_OFFSET + 32'h14,
+                     32'h0000_0060, 32'h0000_0060);
+`else
         do_read_word("uart_status_ready_read", UART_STATUS_ADDR, 32'h0000_0001, 32'hFFFF_FFFF);
+`endif
         do_write_word("uart_tx_write_A", UART_TX_ADDR, 32'h0000_0041);
 
         do_write_word("timer_ctrl_disable", TIMER_CTRL_ADDR, 32'h0000_0000);

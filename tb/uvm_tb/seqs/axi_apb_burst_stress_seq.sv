@@ -151,7 +151,12 @@ class axi_apb_burst_stress_seq extends uvm_sequence#(axi_transaction);
 
         expected = new[2];
         expected[0] = 32'h0000_0000;
+`ifdef SOC_USE_UART_16550
+        // v2 16550: 0x04 is IER (reset = 0), not STATUS/ready-bit.
+        expected[1] = 32'h0000_0000;
+`else
         expected[1] = 32'h0000_0001;
+`endif
         do_read_burst("apb_uart_tx_status_burst", UART_TX_ADDR, WINDOW_UART, expected);
 
         expected = new[4];

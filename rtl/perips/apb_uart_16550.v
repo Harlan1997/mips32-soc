@@ -98,6 +98,7 @@ module apb_uart_16550 #(
                      (rx_wr[RX_AW] != rx_rd[RX_AW]));
     wire [RX_AW:0] rx_count = rx_wr - rx_rd;
     reg  overrun_r;
+    wire lsr_read_pulse;   // fwd decl; assigned below
 
     // Trigger threshold value based on FCR
     reg [3:0] rx_trig_level;
@@ -334,6 +335,8 @@ module apb_uart_16550 #(
                     end
                 end
             endcase
+            // LSR-read clears overrun (16550 spec).
+            if (lsr_read_pulse) overrun_r <= 1'b0;
         end
     end
 
@@ -422,33 +425,36 @@ module apb_uart_16550 #(
 
     assign irq = rx_line_err_int | rx_data_int | tx_empty_int | modem_int;
 
+    // Combinational APB read (v1 compatibility — APB expects same-cycle
+    // response). Side-effecting reads (RX FIFO pop, overrun clear) still
+    // sequential in the block below.
+    always @(*) begin
+        prdata = 32'h0;
+        if (rd_stb) begin
+            case (paddr[4:2])
+                3'b000: prdata = {24'h0, dlab ? dll_r : rx_head};
+                3'b001: prdata = {24'h0, dlab ? dlm_r : ier_r};
+                3'b010: prdata = {24'h0, iir};
+                3'b011: prdata = {24'h0, lcr_r};
+                3'b100: prdata = {24'h0, mcr_r};
+                3'b101: prdata = {24'h0, lsr};
+                3'b110: prdata = {24'h0,
+                                  ~dcd_n_int, ~ri_n_int, ~dsr_n_int, ~cts_n_int,
+                                  d_dcd, d_ri, d_dsr, d_cts};
+                3'b111: prdata = {24'h0, scr_r};
+                default: prdata = 32'h0;
+            endcase
+        end
+    end
+
+    // Sequential side effects on reads: RX FIFO pop. Overrun LSR-read clear
+    // is folded into the RX shifter block (single driver).
+    assign lsr_read_pulse = rd_stb && (paddr[4:2] == 3'b101);
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rx_rd  <= 0;
-            prdata <= 32'h0;
-        end else if (rd_stb) begin
-            case (paddr[4:2])
-                3'b000: begin
-                    if (dlab) prdata <= {24'h0, dll_r};
-                    else begin
-                        prdata <= {24'h0, rx_head};
-                        if (!rx_empty) rx_rd <= rx_rd + 1'b1;
-                    end
-                end
-                3'b001: prdata <= {24'h0, dlab ? dlm_r : ier_r};
-                3'b010: prdata <= {24'h0, iir};
-                3'b011: prdata <= {24'h0, lcr_r};
-                3'b100: prdata <= {24'h0, mcr_r};
-                3'b101: begin
-                    prdata <= {24'h0, lsr};
-                    overrun_r <= 1'b0;
-                end
-                3'b110: prdata <= {24'h0,
-                                   ~dcd_n_int, ~ri_n_int, ~dsr_n_int, ~cts_n_int,
-                                   d_dcd, d_ri, d_dsr, d_cts};
-                3'b111: prdata <= {24'h0, scr_r};
-                default: prdata <= 32'h0;
-            endcase
+            rx_rd <= 0;
+        end else if (rd_stb && paddr[4:2] == 3'b000 && !dlab && !rx_empty) begin
+            rx_rd <= rx_rd + 1'b1;
         end
     end
 
