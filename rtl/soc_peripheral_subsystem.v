@@ -267,9 +267,10 @@ module soc_peripheral_subsystem #(
         .gpio_pins       (gpio_pins)
     );
 
-    // DMA v1 kept in DUT. DMA v2 (apb_axi_dma_v2) stays in tree; cutover
-    // requires coordinated UVM sequence rewrite (register map + CTRL W1C
-    // vs v1 self-clearing) that fell outside this session's scope.
+    // DMA: v1 apb_axi_dma. DMA v2 (apb_axi_dma_v2) has v1-alias at 0x00
+    // but integration into DUT hangs firmware boot (bug in fw+DMA v2
+    // interaction still under investigation). v2 stays in tree for the
+    // future integration pass.
     wire dma_int;
     apb_axi_dma u_apb_dma (
         .clk             (clk),
