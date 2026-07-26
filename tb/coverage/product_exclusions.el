@@ -781,262 +781,6 @@ Toggle wr "net wr"
 Toggle rd "net rd"
 
 // ID: EXCL-PROD-0010
-// CATEGORY: General Module Coverage Exclusions
-MODULE: apb_axi_dma_v2
-Branch 0 "312223207" "(paddr[11:6] == 6'b0)"
-Branch 0 "312223207" "(paddr[11:6] == 6'b0)" (0) "(paddr[11:6] == 6'b0) 1"
-Branch 0 "312223207" "(paddr[11:6] == 6'b0)" (1) "(paddr[11:6] == 6'b0) 0"
-Branch 1 "2312332905" "(!rst_n)"
-Branch 1 "2312332905" "(!rst_n)" (0) "(!rst_n) 1,-"
-Branch 1 "2312332905" "(!rst_n)" (1) "(!rst_n) 0,1"
-Branch 1 "2312332905" "(!rst_n)" (2) "(!rst_n) 0,0"
-Branch 2 "2719682962" "act_valid"
-Branch 2 "2719682962" "act_valid" (0) "act_valid 1,ST_LOAD_SRC "
-Branch 2 "2719682962" "act_valid" (1) "act_valid 1,ST_LOAD_DST "
-Branch 2 "2719682962" "act_valid" (2) "act_valid 1,ST_LOAD_LEN "
-Branch 2 "2719682962" "act_valid" (3) "act_valid 1,ST_LOAD_NEXT "
-Branch 2 "2719682962" "act_valid" (4) "act_valid 1,ST_EXEC_R "
-Branch 2 "2719682962" "act_valid" (5) "act_valid 1,ST_EXEC_W "
-Branch 2 "2719682962" "act_valid" (6) "act_valid 1,default"
-Branch 2 "2719682962" "act_valid" (7) "act_valid 0,-"
-Branch 3 "1376666528" "(!rst_n)"
-Branch 3 "1376666528" "(!rst_n)" (0) "(!rst_n) 1,-,-"
-Branch 3 "1376666528" "(!rst_n)" (1) "(!rst_n) 0,1,4'h0 "
-Branch 3 "1376666528" "(!rst_n)" (2) "(!rst_n) 0,1,4'h1 "
-Branch 3 "1376666528" "(!rst_n)" (3) "(!rst_n) 0,1,4'h2 "
-Branch 3 "1376666528" "(!rst_n)" (4) "(!rst_n) 0,1,4'h3 "
-Branch 3 "1376666528" "(!rst_n)" (5) "(!rst_n) 0,1,4'h4 "
-Branch 3 "1376666528" "(!rst_n)" (6) "(!rst_n) 0,1,default"
-Branch 3 "1376666528" "(!rst_n)" (7) "(!rst_n) 0,0,-"
-Branch 4 "152886533" "(!rst_n)"
-Branch 4 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
-Branch 4 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
-Condition 1 "729993039" "(wr && (paddr[11:0] == 12'b0)) 1 -1" (1 "01")
-Condition 1 "729993039" "(wr && (paddr[11:0] == 12'b0)) 1 -1" (2 "10")
-Condition 1 "729993039" "(wr && (paddr[11:0] == 12'b0)) 1 -1" (3 "11")
-Condition 2 "906424889" "(paddr[11:0] == 12'b0) 1 -1" (1 "0")
-Condition 2 "906424889" "(paddr[11:0] == 12'b0) 1 -1" (2 "1")
-Condition 3 "1385070286" "(((~wait_aw[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (1 "01")
-Condition 3 "1385070286" "(((~wait_aw[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
-Condition 3 "1385070286" "(((~wait_aw[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (3 "11")
-Condition 4 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (1 "01")
-Condition 4 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
-Condition 4 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (3 "11")
-Condition 5 "365598848" "(wr && apb_ch_valid) 1 -1" (1 "01")
-Condition 5 "365598848" "(wr && apb_ch_valid) 1 -1" (2 "10")
-Condition 5 "365598848" "(wr && apb_ch_valid) 1 -1" (3 "11")
-Condition 6 "333944863" "(paddr[11:6] == 6'b0) 1 -1" (1 "0")
-Condition 6 "333944863" "(paddr[11:6] == 6'b0) 1 -1" (2 "1")
-Condition 7 "2862330562" "(psel & penable & pwrite) 1 -1" (1 "011")
-Condition 7 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
-Condition 7 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
-Condition 7 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
-Condition 8 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (1 "011")
-Condition 8 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
-Condition 8 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
-Condition 8 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
-Condition 9 "2981878453" "((paddr[11:6] == 6'b0) ? 8'hff : ((paddr[11:6] - 8'b1))) 1 -1" (1 "0")
-Condition 9 "2981878453" "((paddr[11:6] == 6'b0) ? 8'hff : ((paddr[11:6] - 8'b1))) 1 -1" (2 "1")
-Condition 10 "658082137" "(paddr[11:6] == 6'b0) 1 -1" (2 "1")
-Condition 11 "2988177430" "((paddr[11:6] != 6'b0) && (apb_ch < N_CHANNELS[7:0])) 1 -1" (1 "01")
-Condition 11 "2988177430" "((paddr[11:6] != 6'b0) && (apb_ch < N_CHANNELS[7:0])) 1 -1" (2 "10")
-Condition 11 "2988177430" "((paddr[11:6] != 6'b0) && (apb_ch < N_CHANNELS[7:0])) 1 -1" (3 "11")
-Condition 12 "3129882584" "(paddr[11:6] != 6'b0) 1 -1" (2 "1")
-Condition 13 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (1 "01")
-Condition 13 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (2 "10")
-Condition 13 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (3 "11")
-Condition 14 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (1 "00")
-Condition 14 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (2 "01")
-Condition 14 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (3 "10")
-Condition 15 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (1 "01")
-Condition 15 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (2 "10")
-Condition 15 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (3 "11")
-Condition 16 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (1 "00")
-Condition 16 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (2 "01")
-Condition 16 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (3 "10")
-Condition 17 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (1 "01")
-Condition 17 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (2 "10")
-Condition 17 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (3 "11")
-Condition 18 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (1 "00")
-Condition 18 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (2 "01")
-Condition 18 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (3 "10")
-Condition 19 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (1 "01")
-Condition 19 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (2 "10")
-Condition 19 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (3 "11")
-Condition 20 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (1 "00")
-Condition 20 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (2 "01")
-Condition 20 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (3 "10")
-Fsm ch_state_0 "2822229711"
-State ST_DONE "8"
-State ST_EXEC_R "5"
-State ST_EXEC_W "6"
-State ST_IDLE "0"
-State ST_LOAD_DST "2"
-State ST_LOAD_LEN "3"
-State ST_LOAD_NEXT "4"
-State ST_LOAD_SRC "1"
-State ST_NEXT_CHK "7"
-Transition ST_DONE->ST_IDLE "8->0"
-Transition ST_EXEC_R->ST_EXEC_W "5->6"
-Transition ST_EXEC_R->ST_IDLE "5->0"
-Transition ST_EXEC_W->ST_EXEC_R "6->5"
-Transition ST_EXEC_W->ST_IDLE "6->0"
-Transition ST_EXEC_W->ST_NEXT_CHK "6->7"
-Transition ST_IDLE->ST_DONE "0->8"
-Transition ST_IDLE->ST_EXEC_R "0->5"
-Transition ST_IDLE->ST_LOAD_SRC "0->1"
-Transition ST_LOAD_DST->ST_IDLE "2->0"
-Transition ST_LOAD_DST->ST_LOAD_LEN "2->3"
-Transition ST_LOAD_LEN->ST_IDLE "3->0"
-Transition ST_LOAD_LEN->ST_LOAD_NEXT "3->4"
-Transition ST_LOAD_NEXT->ST_EXEC_R "4->5"
-Transition ST_LOAD_NEXT->ST_IDLE "4->0"
-Transition ST_LOAD_NEXT->ST_NEXT_CHK "4->7"
-Transition ST_LOAD_SRC->ST_IDLE "1->0"
-Transition ST_LOAD_SRC->ST_LOAD_DST "1->2"
-Transition ST_NEXT_CHK->ST_DONE "7->8"
-Transition ST_NEXT_CHK->ST_IDLE "7->0"
-Transition ST_NEXT_CHK->ST_LOAD_SRC "7->1"
-Fsm ch_state_1 "1183581210"
-Fsm ch_state_2 "1904297682"
-Fsm ch_state_3 "2671414279"
-Block 1 "1335899302" "if ((!rst_n))"
-Block 2 "1362421402" "global_en <= 1'b0;"
-Block 3 "4166427366" "if ((wr && (paddr[11:0] == 12'b0)))"
-Block 4 "2672816907" "global_en <= pwdata[0];"
-Block 6 "2212788840" "act_ch = {CH_W {1'b0}};"
-Block 7 "2838703587" "if ((busy_r[k] && (!act_valid)))"
-Block 8 "3801876926" "act_ch = k[(CH_W - 1):0];"
-Block 10 "962092304" "m_arid = 4'h5;"
-Block 11 "765285949" "case (ch_state[act_ch])"
-Block 12 "2840707112" "m_araddr = (desc_ptr_r[act_ch] + 32'b0);"
-Block 13 "726454809" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000004);"
-Block 14 "3859914874" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000008);"
-Block 15 "3217726767" "m_araddr = (desc_ptr_r[act_ch] + 32'h0000000c);"
-Block 16 "3150310026" "m_araddr = cur_src_r[act_ch];"
-Block 17 "301056597" "m_awaddr = cur_dst_r[act_ch];"
-Block 18 "858682371" ";"
-Block 20 "1335899302" "if ((!rst_n))"
-Block 21 "3536534519" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
-Block 22 "2383896306" "src_r[c] <= 32'b0;"
-Block 23 "3799740136" "if ((wr && apb_ch_valid))"
-Block 24 "3369626882" "case (paddr[5:2])"
-Block 25 "2313247545" "en_r[apb_ch] <= pwdata[0];"
-Block 26 "598037929" "src_r[apb_ch] <= pwdata;"
-Block 27 "3778572690" "dst_r[apb_ch] <= pwdata;"
-Block 28 "711602617" "len_r[apb_ch] <= pwdata;"
-Block 29 "2829172953" "desc_head_r[apb_ch] <= pwdata;"
-Block 30 "1900593769" ";"
-Block 32 "1335899302" "if ((!rst_n))"
-Block 33 "3536534519" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
-Block 34 "3239916496" "ch_state[c] <= ST_IDLE;"
-Block 35 "3553152258" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
-Block 36 "1556212163" "if ((((((ch_state[c] == ST_IDLE) && en_r[c]) && global_en) && (!done_r[c])) && (!busy_r[c])))"
-Block 37 "2802338972" "busy_r[c] <= 1'b1;"
-Block 38 "2171467140" "desc_ptr_r[c] <= desc_head_r[c];"
-Block 39 "4187066297" "cur_src_r[c] <= src_r[c];"
-Block 41 "1253509599" "if ((act_valid && (act_ch[(CH_W - 1):0] == c[(CH_W - 1):0])))"
-Block 42 "72269459" "if ((m_arvalid && m_arready))"
-Block 43 "2624300833" "wait_r[c] <= 1'b1;"
-Block 45 "2161136127" "if ((m_awvalid && m_awready))"
-Block 46 "3280732046" "wait_aw[c] <= 1'b1;"
-Block 48 "452442011" "if ((m_wvalid && m_wready))"
-Block 49 "1882661504" "wait_w[c] <= 1'b1;"
-Block 51 "2834538990" "if (((wait_aw[c] || (m_awvalid && m_awready)) && (wait_w[c] || (m_wvalid && m_wready))))"
-Block 52 "134031157" "wait_b[c] <= 1'b1;"
-Block 54 "988438894" "if ((m_rvalid && wait_r[c]))"
-Block 55 "1121600855" "wait_r[c] <= 1'b0;"
-Block 56 "41434018" "cur_src_r[c] <= m_rdata;"
-Block 57 "2024010702" "cur_dst_r[c] <= m_rdata;"
-Block 58 "1783883276" "cur_len_r[c] <= m_rdata;"
-Block 59 "336678704" "cur_next_r[c] <= m_rdata;"
-Block 60 "2425298115" "read_buf[c] <= m_rdata;"
-Block 61 "2986408247" "err_r[c] <= 1'b1;"
-Block 63 "3514727845" "ch_state[c] <= ST_EXEC_W;"
-Block 64 "2124473719" ";"
-Block 66 "2489768418" "if (((m_bvalid && wait_b[c]) && (ch_state[c] == ST_EXEC_W)))"
-Block 67 "3511383363" "wait_aw[c] <= 1'b0;"
-Block 68 "136069502" "err_r[c] <= 1'b1;"
-Block 70 "3979134295" "cur_src_r[c] <= (cur_src_r[c] + 32'd4);"
-Block 71 "3614253322" "ch_state[c] <= ST_NEXT_CHK;"
-Block 72 "810529062" "cur_len_r[c] <= (cur_len_r[c] - 32'd4);"
-Block 74 "192309904" "if ((ch_state[c] == ST_NEXT_CHK))"
-Block 75 "20019160" "if ((sg_mode_r[c] && (cur_next_r[c] != 32'b0)))"
-Block 76 "4046768285" "desc_ptr_r[c] <= cur_next_r[c];"
-Block 77 "2250496937" "ch_state[c] <= ST_DONE;"
-Block 79 "167847874" "if ((ch_state[c] == ST_DONE))"
-Block 80 "1289758624" "busy_r[c] <= 1'b0;"
-Block 83 "3478762270" "if ((((wr && apb_ch_valid) && (apb_ch == c)) && (paddr[5:2] == 4'b0)))"
-Block 84 "721325452" "if (pwdata[3])"
-Block 85 "1491673549" "done_r[c] <= 1'b0;"
-Block 87 "253444014" "if (pwdata[4])"
-Block 88 "2674730638" "err_r[c] <= 1'b0;"
-Block 92 "2933711229" "if ((paddr[11:6] == 6'b0))"
-Block 93 "3964125824" "case (paddr[5:2])"
-Block 94 "1481916910" "prdata = {31'b0, global_en};"
-Block 95 "2817332124" "prdata = 32'b0;"
-Block 96 "2502782395" "prdata[c] = (int_en_r[c] & done_r[c]);"
-Block 97 "2890133009" "prdata = 32'b0;"
-Block 98 "1922451528" "if (apb_ch_valid)"
-Block 99 "104631278" "case (paddr[5:2])"
-Block 100 "2051565830" "prdata = {27'b0, err_r[apb_ch], done_r[apb_ch], int_en_r[apb_ch], sg_mode_r[apb_ch], en_r[apb_ch]};"
-Block 101 "1603545703" "prdata = src_r[apb_ch];"
-Block 102 "402674965" "prdata = dst_r[apb_ch];"
-Block 103 "3628025844" "prdata = len_r[apb_ch];"
-Block 104 "728762855" "prdata = desc_head_r[apb_ch];"
-Block 105 "1282133427" "prdata = {29'b0, err_r[apb_ch], done_r[apb_ch], busy_r[apb_ch]};"
-Block 106 "69365573" "prdata = cur_src_r[apb_ch];"
-Block 107 "4109740451" "prdata = cur_dst_r[apb_ch];"
-Block 108 "3334981061" "prdata = 32'b0;"
-Toggle clk "net clk"
-Toggle rst_n "net rst_n"
-Toggle paddr "net paddr[11:0]"
-Toggle psel "net psel"
-Toggle penable "net penable"
-Toggle pwrite "net pwrite"
-Toggle pwdata "net pwdata[31:0]"
-Toggle prdata "reg prdata[31:0]"
-Toggle pready "net pready"
-Toggle pslverr "net pslverr"
-Toggle m_awid "reg m_awid[3:0]"
-Toggle m_awaddr "reg m_awaddr[31:0]"
-Toggle m_awlen "net m_awlen[7:0]"
-Toggle m_awsize "net m_awsize[2:0]"
-Toggle m_awburst "net m_awburst[1:0]"
-Toggle m_awvalid "reg m_awvalid"
-Toggle m_awready "net m_awready"
-Toggle m_wdata "reg m_wdata[31:0]"
-Toggle m_wstrb "net m_wstrb[3:0]"
-Toggle m_wlast "net m_wlast"
-Toggle m_wvalid "reg m_wvalid"
-Toggle m_wready "net m_wready"
-Toggle m_bid "net m_bid[3:0]"
-Toggle m_bresp "net m_bresp[1:0]"
-Toggle m_bvalid "net m_bvalid"
-Toggle m_bready "net m_bready"
-Toggle m_arid "reg m_arid[3:0]"
-Toggle m_araddr "reg m_araddr[31:0]"
-Toggle m_arlen "net m_arlen[7:0]"
-Toggle m_arsize "net m_arsize[2:0]"
-Toggle m_arburst "net m_arburst[1:0]"
-Toggle m_arvalid "reg m_arvalid"
-Toggle m_arready "net m_arready"
-Toggle m_rid "net m_rid[3:0]"
-Toggle m_rdata "net m_rdata[31:0]"
-Toggle m_rresp "net m_rresp[1:0]"
-Toggle m_rlast "net m_rlast"
-Toggle m_rvalid "net m_rvalid"
-Toggle m_rready "net m_rready"
-Toggle ch_int "net ch_int[3:0]"
-Toggle wr "net wr"
-Toggle rd "net rd"
-Toggle global_en "reg global_en"
-Toggle apb_ch "net apb_ch[7:0]"
-Toggle apb_ch_valid "net apb_ch_valid"
-Toggle act_ch "reg act_ch[1:0]"
-Toggle act_valid "reg act_valid"
-
-// ID: EXCL-PROD-0011
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_peripheral_subsystem
 Branch 0 "245168223" "uart_sel"
@@ -1085,6 +829,7 @@ Toggle m_awprot "net m_awprot[2:0]"
 Toggle m_wstrb "net m_wstrb[3:0]"
 Toggle m_wlast "net m_wlast"
 Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bready "net m_bready"
 Toggle m_arid "net m_arid[3:0]"
 Toggle m_arlen "net m_arlen[7:0]"
 Toggle m_arsize "net m_arsize[2:0]"
@@ -1092,6 +837,7 @@ Toggle m_arburst "net m_arburst[1:0]"
 Toggle m_arlock "net m_arlock[1:0]"
 Toggle m_arcache "net m_arcache[3:0]"
 Toggle m_arprot "net m_arprot[2:0]"
+Toggle m_rready "net m_rready"
 Toggle apb_pslverr "net apb_pslverr"
 Toggle fault_sel "net fault_sel"
 Toggle fault_prdata "net fault_prdata[31:0]"
@@ -1109,10 +855,11 @@ Toggle fault_pslverr "net fault_pslverr"
 Toggle uart_tx_int "net uart_tx_int"
 Toggle uart_rx_int "net uart_rx_int"
 Toggle uart_16550_irq "net uart_16550_irq"
+Toggle dma_ch_int "net dma_ch_int[3:0]"
 Toggle dma_int "net dma_int"
 Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
 
-// ID: EXCL-PROD-0012
+// ID: EXCL-PROD-0011
 // CATEGORY: General Module Coverage Exclusions
 MODULE: l2_cache
 Branch 1 "3100422630" "(!rst_n)"
@@ -1331,7 +1078,7 @@ Toggle fill_cnt "reg fill_cnt[2:0]"
 Toggle evict_cnt "reg evict_cnt[2:0]"
 Toggle evict_addr "reg evict_addr[31:0]"
 
-// ID: EXCL-PROD-0013
+// ID: EXCL-PROD-0012
 // CATEGORY: Bus & Fabric Interconnect
 MODULE: axi_arbiter_2x1_full
 Branch 1 "597278086" "ar_waiting"
@@ -1429,7 +1176,6 @@ Branch 35 "2076422485" "(aw_state == AW_BUSY)" (1) "(aw_state == AW_BUSY) 1,0"
 Branch 35 "2076422485" "(aw_state == AW_BUSY)" (2) "(aw_state == AW_BUSY) 0,-"
 Condition 10 "3770152654" "(s0_rvalid && s0_rready && s0_rlast) 1 -1" (2 "101")
 Condition 20 "1646915728" "(s0_bvalid && s0_bready) 1 -1" (2 "10")
-Condition 21 "4117085321" "(m1_arvalid && (((!m0_arvalid)) || rr_next_r_master)) 1 -1" (2 "10")
 Condition 70 "265424158" "(m1_awvalid && (((!m0_awvalid)) || rr_next_w_master)) 1 -1" (2 "10")
 Block 1 "1335899302" "if ((!rst_n))"
 Block 15 "2205236837" "ar_state <= AR_IDLE;"
@@ -1472,7 +1218,7 @@ Toggle arlock_latch "reg arlock_latch[1:0]"
 Toggle awlock_latch "reg awlock_latch[1:0]"
 Toggle awprot_latch "reg awprot_latch[2:0]"
 
-// ID: EXCL-PROD-0014
+// ID: EXCL-PROD-0013
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_mmu
 Condition 1 "1517026254" "(((!is_kernel)) && req_va[31]) 1 -1" (2 "10")
@@ -1520,7 +1266,7 @@ Toggle ok_r "reg ok_r"
 Toggle fault_r "reg fault_r[2:0]"
 Toggle _unused_ok "net _unused_ok"
 
-// ID: EXCL-PROD-0015
+// ID: EXCL-PROD-0014
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_mdu_v2
 Condition 1 "3760466763" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (2 "01")
@@ -1569,7 +1315,7 @@ Toggle is_acc "reg is_acc"
 Toggle result_neg_mul "reg result_neg_mul"
 Toggle acc_tmp "reg acc_tmp[63:0]"
 
-// ID: EXCL-PROD-0016
+// ID: EXCL-PROD-0015
 // CATEGORY: Peripherals & Subsystems
 MODULE: apb_timer
 Condition 9 "3412772268" "(psel & penable & pwrite & pready) 1 -1" (1 "0111")
@@ -1580,7 +1326,7 @@ Block 16 "3323447681" "if ((!presetn))"
 Block 33 "3323447681" "if ((!presetn))"
 Toggle pslverr "net pslverr"
 
-// ID: EXCL-PROD-0017
+// ID: EXCL-PROD-0016
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_alu
 Condition 16 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (1 "01")
@@ -1590,7 +1336,7 @@ Condition 17 "2041577695" "(sign_a != sign_b) 1 -1" (2 "1")
 Condition 18 "1025947488" "(sign_r != sign_a) 1 -1" (2 "1")
 Block 29 "422754686" "alu_out = 32'b0;"
 
-// ID: EXCL-PROD-0018
+// ID: EXCL-PROD-0017
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_cp0
 Condition 3 "4262283065" "(we && ({waddr, wsel} == {5'd9, 3'b0})) 1 -1" (3 "11")
@@ -1706,7 +1452,7 @@ Toggle cnt_eq_cmp "net cnt_eq_cmp"
 Toggle tlb_wr_en_raw "net tlb_wr_en_raw"
 Toggle tlb_wr_en "net tlb_wr_en"
 
-// ID: EXCL-PROD-0019
+// ID: EXCL-PROD-0018
 // CATEGORY: Cache & Memory Subsystem
 MODULE: icache
 Condition 2 "1341696682" "(arready && arvalid) 1 -1" (2 "10")
@@ -1730,7 +1476,7 @@ Toggle arlock "net arlock[1:0]"
 Toggle arcache "net arcache[3:0]"
 Toggle arprot "net arprot[2:0]"
 
-// ID: EXCL-PROD-0020
+// ID: EXCL-PROD-0019
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_bpu
 Condition 3 "2447782862" "((bht_ctr[upd_bht_idx] == 2'b0) ? 2'b0 : ((bht_ctr[upd_bht_idx] - 2'b1))) 1 -1" (1 "0")
@@ -1761,52 +1507,7 @@ Toggle ras_top "reg ras_top[2:0]"
 Toggle ras_valid "reg ras_valid"
 Toggle _unused_ok "net _unused_ok"
 
-// ID: EXCL-PROD-0021
-// CATEGORY: Peripherals & Subsystems
-MODULE: apb_axi_dma
-Condition 2 "2539168442" "(m_arvalid && m_arready) 1 -1" (1 "01")
-Condition 3 "2547541270" "(m_rvalid && m_rready) 1 -1" (2 "10")
-Condition 4 "2524840019" "(m_awvalid && m_awready) 1 -1" (1 "01")
-Condition 5 "1959304292" "(m_wvalid && m_wready) 1 -1" (1 "01")
-Condition 6 "665217862" "(m_bvalid && m_bready) 1 -1" (1 "01")
-Condition 6 "665217862" "(m_bvalid && m_bready) 1 -1" (2 "10")
-Condition 7 "3355296946" "((state == ST_IDLE) && dma_start) 1 -1" (1 "01")
-Condition 10 "3617957328" "((state == ST_R) && m_rvalid && m_rready) 1 -1" (1 "011")
-Condition 10 "3617957328" "((state == ST_R) && m_rvalid && m_rready) 1 -1" (3 "110")
-Condition 12 "1871599179" "((state == ST_B) && m_bvalid && m_bready) 1 -1" (1 "011")
-Condition 12 "1871599179" "((state == ST_B) && m_bvalid && m_bready) 1 -1" (2 "101")
-Condition 12 "1871599179" "((state == ST_B) && m_bvalid && m_bready) 1 -1" (3 "110")
-Condition 15 "618591884" "(apb_write & (paddr == 12'h00c) & pwdata[0]) 1 -1" (2 "101")
-Condition 17 "3339767192" "(reg_int_en & reg_done) 1 -1" (2 "10")
-Condition 17 "3339767192" "(reg_int_en & reg_done) 1 -1" (3 "11")
-Block 1 "1335899302" "if ((!rst_n))"
-Block 22 "1335899302" "if ((!rst_n))"
-Block 23 "2184010888" "state <= ST_IDLE;"
-Block 46 "1803778807" "next_state = ST_IDLE;"
-Block 47 "1335899302" "if ((!rst_n))"
-Toggle pready "net pready"
-Toggle pslverr "net pslverr"
-Toggle m_awid "net m_awid[3:0]"
-Toggle m_awlen "net m_awlen[7:0]"
-Toggle m_awsize "net m_awsize[2:0]"
-Toggle m_awburst "net m_awburst[1:0]"
-Toggle m_awlock "net m_awlock[1:0]"
-Toggle m_awcache "net m_awcache[3:0]"
-Toggle m_awprot "net m_awprot[2:0]"
-Toggle m_wstrb "net m_wstrb[3:0]"
-Toggle m_wlast "net m_wlast"
-Toggle m_bresp "net m_bresp[1:0]"
-Toggle m_arid "net m_arid[3:0]"
-Toggle m_arlen "net m_arlen[7:0]"
-Toggle m_arsize "net m_arsize[2:0]"
-Toggle m_arburst "net m_arburst[1:0]"
-Toggle m_arlock "net m_arlock[1:0]"
-Toggle m_arcache "net m_arcache[3:0]"
-Toggle m_arprot "net m_arprot[2:0]"
-Toggle dma_int "net dma_int"
-Toggle reg_int_en "reg reg_int_en"
-
-// ID: EXCL-PROD-0022
+// ID: EXCL-PROD-0020
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_tlb
 Condition 1 "1817497898" "(wr_entrylo0[0] & wr_entrylo1[0]) 1 -1" (1 "01")
@@ -4544,7 +4245,109 @@ Toggle g_lookup1[63].cmp1_mask "net g_lookup1[63].cmp1_mask[18:0]"
 Toggle g_lookup1[63].vpn2_match1 "net g_lookup1[63].vpn2_match1"
 Toggle g_lookup1[63].asid_match1 "net g_lookup1[63].asid_match1"
 
-// ID: EXCL-PROD-0023
+// ID: EXCL-PROD-0021
+// CATEGORY: General Module Coverage Exclusions
+MODULE: apb_axi_dma_v2
+Condition 1 "1147742964" "(wr && (paddr[11:0] == 12'h100)) 1 -1" (3 "11")
+Condition 3 "1385070286" "(((~wait_aw[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
+Condition 4 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (1 "01")
+Condition 4 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
+Condition 5 "1656787445" "(wr && v1_alias) 1 -1" (2 "10")
+Condition 6 "1906573444" "(wr && apb_ch_valid) 1 -1" (2 "10")
+Condition 6 "1906573444" "(wr && apb_ch_valid) 1 -1" (3 "11")
+Condition 7 "685583433" "(paddr[11:0] == 12'h100) 1 -1" (1 "0")
+Condition 7 "685583433" "(paddr[11:0] == 12'h100) 1 -1" (2 "1")
+Condition 8 "3836656521" "(paddr[11:0] == 12'h104) 1 -1" (1 "0")
+Condition 8 "3836656521" "(paddr[11:0] == 12'h104) 1 -1" (2 "1")
+Condition 14 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (2 "10")
+Condition 14 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (3 "11")
+Condition 15 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (2 "01")
+Condition 16 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (1 "01")
+Condition 16 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (2 "10")
+Condition 16 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (3 "11")
+Condition 17 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (2 "01")
+Condition 17 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (3 "10")
+Condition 18 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (1 "01")
+Condition 18 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (2 "10")
+Condition 18 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (3 "11")
+Condition 19 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (2 "01")
+Condition 19 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (3 "10")
+Condition 20 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (1 "01")
+Condition 20 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (2 "10")
+Condition 20 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (3 "11")
+Condition 21 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (2 "01")
+Condition 21 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (3 "10")
+Block 1 "1335899302" "if ((!rst_n))"
+Block 4 "238552135" "global_en <= pwdata[0];"
+Block 12 "2840707112" "m_araddr = (desc_ptr_r[act_ch] + 32'b0);"
+Block 13 "726454809" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000004);"
+Block 14 "3859914874" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000008);"
+Block 15 "3217726767" "m_araddr = (desc_ptr_r[act_ch] + 32'h0000000c);"
+Block 20 "1335899302" "if ((!rst_n))"
+Block 21 "3536534519" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
+Block 29 "4053038407" ";"
+Block 31 "563605672" "case (paddr[5:2])"
+Block 32 "3153948639" "en_r[apb_ch] <= pwdata[0];"
+Block 33 "204285544" "src_r[apb_ch] <= pwdata;"
+Block 34 "3467641427" "dst_r[apb_ch] <= pwdata;"
+Block 35 "98714232" "len_r[apb_ch] <= pwdata;"
+Block 36 "2267656984" "desc_head_r[apb_ch] <= pwdata;"
+Block 37 "3689828000" ";"
+Block 39 "1335899302" "if ((!rst_n))"
+Block 40 "3536534519" "for (c = 0; (c < N_CHANNELS); c = (c + 1))"
+Block 45 "2171467140" "desc_ptr_r[c] <= desc_head_r[c];"
+Block 63 "41434018" "cur_src_r[c] <= m_rdata;"
+Block 64 "2024010702" "cur_dst_r[c] <= m_rdata;"
+Block 65 "1783883276" "cur_len_r[c] <= m_rdata;"
+Block 66 "336678704" "cur_next_r[c] <= m_rdata;"
+Block 68 "2986408247" "err_r[c] <= 1'b1;"
+Block 71 "2124473719" ";"
+Block 75 "136069502" "err_r[c] <= 1'b1;"
+Block 83 "4046768285" "desc_ptr_r[c] <= cur_next_r[c];"
+Block 93 "721325452" "if (pwdata[3])"
+Block 94 "1491673549" "done_r[c] <= 1'b0;"
+Block 96 "253444014" "if (pwdata[4])"
+Block 97 "2674730638" "err_r[c] <= 1'b0;"
+Block 106 "783912778" "prdata = src_r[0];"
+Block 107 "132427407" "prdata = dst_r[0];"
+Block 108 "768899704" "prdata = len_r[0];"
+Block 110 "276564015" "prdata = 32'b0;"
+Block 111 "694414223" "if ((paddr[11:0] == 12'h100))"
+Block 112 "3278040218" "prdata = {31'b0, global_en};"
+Block 113 "1609696926" "if ((paddr[11:0] == 12'h104))"
+Block 114 "1024464590" "prdata = 32'b0;"
+Block 115 "904837445" "prdata[c] = (int_en_r[c] & done_r[c]);"
+Block 116 "2410174987" "if (apb_ch_valid)"
+Block 117 "1329932086" "case (paddr[5:2])"
+Block 118 "4202838739" "prdata = {27'b0, err_r[apb_ch], done_r[apb_ch], int_en_r[apb_ch], sg_mode_r[apb_ch], en_r[apb_ch]};"
+Block 119 "3747510706" "prdata = src_r[apb_ch];"
+Block 120 "2563376832" "prdata = dst_r[apb_ch];"
+Block 121 "1492456481" "prdata = len_r[apb_ch];"
+Block 122 "2881116722" "prdata = desc_head_r[apb_ch];"
+Block 123 "3433143910" "prdata = {29'b0, err_r[apb_ch], done_r[apb_ch], busy_r[apb_ch]};"
+Block 124 "2229812368" "prdata = cur_src_r[apb_ch];"
+Block 125 "1950349942" "prdata = cur_dst_r[apb_ch];"
+Block 126 "3022553672" "prdata = 32'b0;"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle m_awid "reg m_awid[3:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bready "net m_bready"
+Toggle m_arid "reg m_arid[3:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_rready "net m_rready"
+Toggle ch_int "net ch_int[3:0]"
+Toggle global_en "reg global_en"
+Toggle act_ch "reg act_ch[1:0]"
+
+// ID: EXCL-PROD-0022
 // CATEGORY: General Module Coverage Exclusions
 MODULE: axi_spi_flash
 Condition 1 "2289792474" "(s_awvalid && s_awready) 1 -1" (2 "10")
@@ -4602,7 +4405,7 @@ Toggle flash_addr "reg flash_addr[23:0]"
 Toggle read_data "reg read_data[31:0]"
 Toggle endian_swapped "net endian_swapped[31:0]"
 
-// ID: EXCL-PROD-0024
+// ID: EXCL-PROD-0023
 // CATEGORY: Cache & Memory Subsystem
 MODULE: axi_ddr_model
 Condition 4 "1569133933" "(s_rvalid && s_rready) 1 -1" (1 "01")
@@ -4631,7 +4434,7 @@ Toggle s_rresp "reg s_rresp[1:0]"
 Toggle firmware_hex "reg firmware_hex[1023:0]"
 Toggle int_rvalid "reg int_rvalid"
 
-// ID: EXCL-PROD-0025
+// ID: EXCL-PROD-0024
 // CATEGORY: Bus & Fabric Interconnect
 MODULE: axi2apb_bridge
 Condition 1 "493857619" "(aw_done && w_done) 1 -1" (1 "01")
@@ -4675,7 +4478,7 @@ Toggle bresp_latch "reg bresp_latch[1:0]"
 Toggle aw_done "net aw_done"
 Toggle w_done "net w_done"
 
-// ID: EXCL-PROD-0026
+// ID: EXCL-PROD-0025
 // CATEGORY: General Module Coverage Exclusions
 MODULE: tb_mips_soc
 Condition 1 "1396282317" "(legacy_mailbox_wdata == 32'hdeadbeef) 1 -1" (1 "0")
@@ -4989,7 +4792,7 @@ Block 355 "1672359986" "rst_n = 1;"
 Toggle firmware_hex "reg firmware_hex[1023:0]"
 Toggle legacy_uart_tx_valid "net legacy_uart_tx_valid"
 
-// ID: EXCL-PROD-0027
+// ID: EXCL-PROD-0026
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_mem_stage
 Condition 4 "1223484174" "(((mem_op == 3'b010) || (mem_op == 3'b011)) && (addr_align[0] != 1'b0)) 1 -1" (3 "11")
@@ -5010,7 +4813,7 @@ Toggle adel_exception "net adel_exception"
 Toggle ades_exception "net ades_exception"
 Toggle bad_align_h "net bad_align_h"
 
-// ID: EXCL-PROD-0028
+// ID: EXCL-PROD-0027
 // CATEGORY: General Module Coverage Exclusions
 MODULE: apb_vic
 Condition 1 "1173968958" "(paddr[11:8] == 4'b1) 1 -1" (2 "1")
@@ -5060,7 +4863,7 @@ Toggle best_pri_r "reg best_pri_r[3:0]"
 Toggle running_prio_r "reg running_prio_r[3:0]"
 Toggle any_active_r "reg any_active_r"
 
-// ID: EXCL-PROD-0029
+// ID: EXCL-PROD-0028
 // CATEGORY: Peripherals & Subsystems
 MODULE: apb_gpio
 Block 1 "3323447681" "if ((!presetn))"
@@ -5069,7 +4872,7 @@ Block 9 "3323447681" "if ((!presetn))"
 Toggle pready "net pready"
 Toggle pslverr "net pslverr"
 
-// ID: EXCL-PROD-0030
+// ID: EXCL-PROD-0029
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_soc_impl
 Block 1 "816524862" "mips_soc_impl.u_memory_subsystem.preload_sram_hex(hex_path);"
@@ -5165,6 +4968,7 @@ Toggle m2_awprot "net m2_awprot[2:0]"
 Toggle m2_wstrb "net m2_wstrb[3:0]"
 Toggle m2_wlast "net m2_wlast"
 Toggle m2_bresp "net m2_bresp[1:0]"
+Toggle m2_bready "net m2_bready"
 Toggle m2_arid "net m2_arid[3:0]"
 Toggle m2_arlen "net m2_arlen[7:0]"
 Toggle m2_arsize "net m2_arsize[2:0]"
@@ -5172,6 +4976,7 @@ Toggle m2_arburst "net m2_arburst[1:0]"
 Toggle m2_arlock "net m2_arlock[1:0]"
 Toggle m2_arcache "net m2_arcache[3:0]"
 Toggle m2_arprot "net m2_arprot[2:0]"
+Toggle m2_rready "net m2_rready"
 Toggle jtag_awid "net jtag_awid[3:0]"
 Toggle jtag_awlen "net jtag_awlen[7:0]"
 Toggle jtag_awsize "net jtag_awsize[2:0]"
@@ -5217,19 +5022,19 @@ Toggle s2_rid "net s2_rid[3:0]"
 Toggle s2_rdata "net s2_rdata[31:0]"
 Toggle s2_rresp "net s2_rresp[1:0]"
 
-// ID: EXCL-PROD-0031
+// ID: EXCL-PROD-0030
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_wb_stage
 Block 6 "470869113" "wb_wdata = ex_out;"
 
-// ID: EXCL-PROD-0032
+// ID: EXCL-PROD-0031
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_ex_stage
 Block 1 "4034936954" "case (mdu_op)"
 Block 10 "1739623138" "mdu_v2_op = 4'b0;"
 Block 11 "4034936954" "case (mdu_op)"
 
-// ID: EXCL-PROD-0033
+// ID: EXCL-PROD-0032
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_soc
 Block 1 "1286636707" "mips_soc.u_impl.preload_sram_hex(hex_path);"
@@ -5246,7 +5051,7 @@ Toggle ext_rresp "net ext_rresp[1:0]"
 Toggle ext_rlast "net ext_rlast"
 Toggle ext_rvalid "net ext_rvalid"
 
-// ID: EXCL-PROD-0034
+// ID: EXCL-PROD-0033
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_control
 Block 68 "3677819716" "illegal_inst = 1'b1;"
@@ -5258,7 +5063,7 @@ Block 83 "677563964" "tlb_op = 3'b011;"
 Block 84 "3574445826" "tlb_op = 3'b100;"
 Toggle tlb_op "reg tlb_op[2:0]"
 
-// ID: EXCL-PROD-0035
+// ID: EXCL-PROD-0034
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_memory_subsystem
 Block 1 "1984792413" "soc_memory_subsystem.u_axi_sram.load_hex(hex_path);"
@@ -5291,17 +5096,17 @@ Toggle s2_rid "net s2_rid[3:0]"
 Toggle s2_rdata "net s2_rdata[31:0]"
 Toggle s2_rresp "net s2_rresp[1:0]"
 
-// ID: EXCL-PROD-0036
+// ID: EXCL-PROD-0035
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_if_stage
 Toggle inst_req "net inst_req"
 
-// ID: EXCL-PROD-0037
+// ID: EXCL-PROD-0036
 // CATEGORY: General Module Coverage Exclusions
 MODULE: soc_legacy_observation_if
 Toggle uart_tx_valid "logic uart_tx_valid"
 
-// ID: EXCL-PROD-0038
+// ID: EXCL-PROD-0037
 // CATEGORY: General Module Coverage Exclusions
 MODULE: soc_fabric
 Toggle m0_arid "net m0_arid[3:0]"
@@ -5331,6 +5136,7 @@ Toggle m2_awcache "net m2_awcache[3:0]"
 Toggle m2_awprot "net m2_awprot[2:0]"
 Toggle m2_wstrb "net m2_wstrb[3:0]"
 Toggle m2_wlast "net m2_wlast"
+Toggle m2_bready "net m2_bready"
 Toggle m2_arid "net m2_arid[3:0]"
 Toggle m2_arlen "net m2_arlen[7:0]"
 Toggle m2_arsize "net m2_arsize[2:0]"
@@ -5338,6 +5144,7 @@ Toggle m2_arburst "net m2_arburst[1:0]"
 Toggle m2_arlock "net m2_arlock[1:0]"
 Toggle m2_arcache "net m2_arcache[3:0]"
 Toggle m2_arprot "net m2_arprot[2:0]"
+Toggle m2_rready "net m2_rready"
 Toggle m2_bresp "net m2_bresp[1:0]"
 Toggle jtag_awid "net jtag_awid[3:0]"
 Toggle jtag_awlen "net jtag_awlen[7:0]"
@@ -5462,7 +5269,7 @@ Toggle axim4_arburst "net axim4_arburst[1:0]"
 Toggle axim4_arlock "net axim4_arlock[1:0]"
 Toggle axim4_bresp "net axim4_bresp[1:0]"
 
-// ID: EXCL-PROD-0039
+// ID: EXCL-PROD-0038
 // CATEGORY: Debug & Observability
 MODULE: soc_debug_subsystem
 Toggle m_awid "net m_awid[3:0]"
@@ -5483,7 +5290,7 @@ Toggle m_arlock "net m_arlock[1:0]"
 Toggle m_arcache "net m_arcache[3:0]"
 Toggle m_arprot "net m_arprot[2:0]"
 
-// ID: EXCL-PROD-0040
+// ID: EXCL-PROD-0039
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_core_subsystem
 Toggle inst_awid "net inst_awid[3:0]"
@@ -5524,13 +5331,13 @@ Toggle data_arburst "net data_arburst[1:0]"
 Toggle data_arlock "net data_arlock[1:0]"
 Toggle data_arprot "net data_arprot[2:0]"
 
-// ID: EXCL-PROD-0041
+// ID: EXCL-PROD-0040
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_mem_wb_reg
 Toggle mem_tlb_op "net mem_tlb_op[2:0]"
 Toggle wb_tlb_op "reg wb_tlb_op[2:0]"
 
-// ID: EXCL-PROD-0042
+// ID: EXCL-PROD-0041
 // CATEGORY: General Module Coverage Exclusions
 MODULE: mips_core
 Toggle inst_awid "net inst_awid[3:0]"
@@ -5572,7 +5379,7 @@ Toggle data_arlock "net data_arlock[1:0]"
 Toggle data_arprot "net data_arprot[2:0]"
 Toggle cpu_inst_req "net cpu_inst_req"
 
-// ID: EXCL-PROD-0043
+// ID: EXCL-PROD-0042
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_id_ex_reg
 Toggle id_except_is_data "net id_except_is_data"
@@ -5580,12 +5387,12 @@ Toggle id_tlb_op "net id_tlb_op[2:0]"
 Toggle ex_except_is_data "reg ex_except_is_data"
 Toggle ex_tlb_op "reg ex_tlb_op[2:0]"
 
-// ID: EXCL-PROD-0044
+// ID: EXCL-PROD-0043
 // CATEGORY: General Module Coverage Exclusions
 MODULE: soc_legacy_observation_bind
 Toggle uart_tx_valid "logic uart_tx_valid"
 
-// ID: EXCL-PROD-0045
+// ID: EXCL-PROD-0044
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_ex_mem_reg
 Toggle ex_tlb_op "net ex_tlb_op[2:0]"
@@ -5593,7 +5400,7 @@ Toggle ex_except_is_data "net ex_except_is_data"
 Toggle mem_tlb_op "reg mem_tlb_op[2:0]"
 Toggle mem_except_is_data "reg mem_except_is_data"
 
-// ID: EXCL-PROD-0046
+// ID: EXCL-PROD-0045
 // CATEGORY: SoC Integration & Subsystems
 MODULE: soc_top
 Toggle clk "net clk"
