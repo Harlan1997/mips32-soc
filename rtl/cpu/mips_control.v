@@ -43,6 +43,7 @@ module mips_control (
     
     // Coprocessor 0
     output reg         cp0_we,       // CP0 write enable (MTC0)
+    output reg         is_mfc0,      // MFC0 (Phase B.4: for CU0 privilege check)
     output reg         is_eret,      // Exception Return (ERET)
     output reg         is_syscall,   // SYSCALL instruction
 
@@ -76,6 +77,7 @@ module mips_control (
         jump_op      = 2'b00;
         illegal_inst = 1'b0;
         cp0_we       = 1'b0;
+        is_mfc0      = 1'b0;
         is_eret      = 1'b0;
         is_syscall   = 1'b0;
         tlb_op       = 3'b000;
@@ -444,6 +446,7 @@ module mips_control (
                         reg_write  = 1'b1;
                         reg_dst    = 2'b00; // rt
                         mem_to_reg = 2'b11; // Data from CP0
+                        is_mfc0    = 1'b1;
                     end
                     5'b00100: begin // MTC0
                         cp0_we = 1'b1;

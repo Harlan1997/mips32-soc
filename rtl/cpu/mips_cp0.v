@@ -80,6 +80,9 @@ module mips_cp0 (
     output wire [31:0] epc_out,      // EPC register value (used by ERET)
     output wire [31:0] ebase_out,    // Full EBase register value (for vector gen)
     output wire        intr_req,     // Interrupt request to CPU (if enabled)
+    // Phase B.4: effective privilege exports
+    output wire        kernel_mode,  // 1 = current instruction executes in kernel mode
+    output wire        cu0_enable,   // Status.CU0 (allows user-mode CP0 access)
 
     // Phase B.3.c: MMU translation pass-through. Two TLB lookup ports (I / D)
     // and CP0-owned globals the MMU needs (ASID, Config.K0). These are pure
@@ -256,18 +259,27 @@ module mips_cp0 (
     wire [31:0] entryhi_val  = { cp0_entryhi_vpn2, 5'b0, cp0_entryhi_asid };
 
     // Status (12,0) read-back: assemble writable+reserved bits.
-    // Layout: [31:23]=9b (CU/RP/FR/RE/MX/PX), [22]=BEV, [21:16]=6b (TS/SR/NMI/impl),
-    //         [15:8]=IM, [7:5]=3b, [4:3]=KSU, [2]=ERL, [1]=EXL, [0]=IE.
-    // IM/EXL/IE/BEV writable since B.1; ERL added Phase B.5. KSU/CU deferred B.4.
-    wire [31:0] status_val = { 9'b0,                  // [31:23]
+    // Layout: [31:23]=9b (CU3/CU2/CU1/CU0/RP/FR/RE/MX/PX), [22]=BEV,
+    //         [21:16]=6b (TS/SR/NMI/impl), [15:8]=IM, [7:5]=3b, [4:3]=KSU,
+    //         [2]=ERL, [1]=EXL, [0]=IE.
+    // Phase B.4: KSU[4:3] and CU0[28] added to the writable set. Other CU bits
+    // (CU1/CU2/CU3) stay tied 0 until FPU / CP2 land.
+    wire [31:0] status_val = { 3'b0,                  // [31:29] CU3..CU1
+                               cp0_status[28],        // [28] CU0
+                               5'b0,                  // [27:23]
                                cp0_status[22],        // [22] BEV
                                6'b0,                  // [21:16]
                                cp0_status[15:8],      // [15:8]  IM
                                3'b0,                  // [7:5]
-                               2'b0,                  // [4:3]   KSU (Phase B.4)
+                               cp0_status[4:3],       // [4:3]   KSU (Phase B.4)
                                cp0_status[2],         // [2]     ERL  (Phase B.5)
                                cp0_status[1],         // [1]     EXL
                                cp0_status[0] };       // [0]     IE
+
+    // Phase B.4: effective privilege mode. Kernel iff ERL, EXL, or KSU != 2'b10
+    // (10 = user). Supervisor (01) currently folds into kernel per B.1 note.
+    assign kernel_mode = cp0_status[2] | cp0_status[1] | (cp0_status[4:3] != 2'b10);
+    assign cu0_enable  = cp0_status[28];
 
     // -------------------------------------------------------------------------
     // Timer Interrupt Routing (Phase B.2)
@@ -509,8 +521,10 @@ module mips_cp0 (
                         cp0_entryhi_asid <= wdata[7:0];
                     end
                     {5'd12, 3'd0}: begin
+                        cp0_status[28]   <= wdata[28];    // CU0 (Phase B.4)
                         cp0_status[22]   <= wdata[22];    // BEV
                         cp0_status[15:8] <= wdata[15:8];  // IM
+                        cp0_status[4:3]  <= wdata[4:3];   // KSU (Phase B.4)
                         cp0_status[2]    <= wdata[2];     // ERL (Phase B.5)
                         cp0_status[1]    <= wdata[1];     // EXL
                         cp0_status[0]    <= wdata[0];     // IE
