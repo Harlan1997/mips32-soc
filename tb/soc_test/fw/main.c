@@ -165,6 +165,81 @@ static uint32_t isa_r2_sweep(void) {
          ^ prid_v ^ cfg0_v ^ cfg1_v ^ ebase_v;
 }
 
+// -----------------------------------------------------------------------------
+// cache_sweep() — Phase A coverage-closure helper for L1 I/D caches + fabric.
+// Cache geometry: 8 KB / 32 B line = 256 lines total.
+//   I-cache: 1-way direct-mapped → 256 sets
+//   D-cache: 2-way              → 128 sets
+// Strategy:
+//   1) Read+write a scratch region larger than the cache → forces every set
+//      through refill + eviction + dirty-writeback on both ways.
+//   2) Access same physical SRAM through the kseg1 alias (0xA000_0000) which
+//      the D-cache treats as uncached → hits the uncacheable state machine
+//      arms (UC_REQ / UC_WDATA / UC_WRESP / UC_RDATA) that regular firmware
+//      does not visit.
+//   3) Deliberately alternate between cached (0x0000) and uncached (0xA000)
+//      access of the same line to also exercise the state-machine crossover.
+// -----------------------------------------------------------------------------
+static uint32_t cache_sweep(void) {
+    // Scratch region 0x8000-0xBFFC (16 KB) — 2× cache size, guarantees eviction.
+    volatile uint32_t *scratch  = (volatile uint32_t *)0x00008000U;
+    volatile uint32_t *uncached = (volatile uint32_t *)0xA0008000U; // same PA
+    const uint32_t N = 1024; // 4 KB / 4 bytes per word
+    uint32_t sum = 0;
+
+    // Phase 1 — cached write walk. 1024 words @ 4 B stride = 4 KB. Distinct
+    // cache lines: 4096 / 32 = 128. Fills every D-cache set on both ways
+    // (write-allocate causes refill).
+    for (uint32_t i = 0; i < N; i++) {
+        scratch[i] = i * 0x01010101U;
+    }
+
+    // Phase 2 — cached read walk to force line reload from previously
+    // written state (already resident, so tests hit path + read data mux).
+    for (uint32_t i = 0; i < N; i += 8) {  // every 8 words = 32 B = 1 line
+        sum ^= scratch[i];
+    }
+
+    // Phase 3 — stride-N access to alternate cache lines and force
+    // conflict-driven eviction on 2-way D-cache. Stride 65 words = 260 B →
+    // maps to different sets each iteration.
+    for (uint32_t i = 0; i < N; i += 65) {
+        sum ^= scratch[i];
+        scratch[i] = sum;
+    }
+
+    // Phase 4 — uncached access via kseg1 alias. Exercises D-cache's
+    // uncached state machine (UC_REQ/UC_WDATA/UC_WRESP/UC_RDATA).
+    for (uint32_t i = 0; i < 16; i++) {
+        uncached[i] = i ^ 0xA5A5A5A5U;
+    }
+    for (uint32_t i = 0; i < 16; i++) {
+        sum ^= uncached[i];
+    }
+
+    // Phase 5 — alternate cached / uncached hits on the same line to
+    // exercise cache-state-machine crossover paths.
+    for (uint32_t i = 0; i < 8; i++) {
+        scratch [i * 8] = i;
+        sum ^= uncached[i * 8];
+        uncached[i * 8] = i * 2;
+        sum ^= scratch [i * 8];
+    }
+
+    // Phase 6 — byte-strobe variation. LB/LBU/LH/LHU/SB/SH toggle sub-word
+    // BE (byte-enable) coverage on D-cache write path.
+    volatile uint8_t  *b = (volatile uint8_t  *)scratch;
+    volatile uint16_t *h = (volatile uint16_t *)scratch;
+    for (uint32_t i = 0; i < 16; i++) {
+        b[i]        = (uint8_t) (0x11U * i);
+        sum ^= b[i];
+        h[i]        = (uint16_t)(0x2222U * i);
+        sum ^= h[i];
+    }
+
+    return sum;
+}
+
 int main() {
     print_str("\n--- Comprehensive SoC Test Start ---\n");
 
@@ -173,6 +248,11 @@ int main() {
     // dead-strip the sweep.
     print_str("0. ISA R2 sweep: ");
     print_hex(isa_r2_sweep());
+
+    // Phase A coverage-closure: exercise D-cache miss/hit/eviction, uncached
+    // state machine, and byte/half strobe paths.
+    print_str("0. Cache sweep: ");
+    print_hex(cache_sweep());
 
     // 1. GPIO Test
     print_str("1. Testing GPIO...\n");
