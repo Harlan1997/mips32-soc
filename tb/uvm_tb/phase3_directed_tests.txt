@@ -3,3 +3,4 @@ soc_uart_irq_test 1
 soc_apb_fault_stress_test 1
 soc_flash_image_test 1
 soc_axi_attribute_cross_sweep_test 1
+soc_apb_bit_pattern_sweep_test 1

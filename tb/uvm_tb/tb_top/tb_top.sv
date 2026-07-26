@@ -24,6 +24,7 @@ import uvm_pkg::*;
 `include "../tests/soc_sram_data_integrity_test.sv"
 `include "../tests/soc_axi_id_sweep_test.sv"
 `include "../tests/soc_axi_attribute_cross_sweep_test.sv"
+`include "../tests/soc_apb_bit_pattern_sweep_test.sv"
 `include "../tests/soc_axi_overlap_probe_test.sv"
 `include "../tests/soc_jtag_reset_recovery_test.sv"
 `include "../tests/soc_cpu_cp0_exception_test.sv"
