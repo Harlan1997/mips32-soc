@@ -50,6 +50,7 @@ module mips_id_stage (
     output wire        jump_taken,   // 1: Jump instruction detected
     output wire [31:0] jump_target,   // Calculated jump target address
     output wire [4:0]  id_cp0_raddr,
+    output wire [2:0]  id_cp0_sel,   // CP0 register sub-select field (MIPS32 R2)
     
     // Decoded Outputs to ID/EX Pipeline Register
     output wire [31:0] val_rs,       // rs register value (with forwarding)
@@ -202,5 +203,6 @@ module mips_id_stage (
     assign stall_req = load_use_hazard;
     
     assign id_cp0_raddr = inst[15:11]; // CP0 register address is in rd for MFC0
+    assign id_cp0_sel   = inst[2:0];   // CP0 sub-select in low 3 bits (MIPS32 R2)
 
 endmodule

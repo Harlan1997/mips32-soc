@@ -51,6 +51,11 @@ module mips_cpu (
     
     // Exception PC redirection
     wire exception_flush = wb_except_req | wb_is_eret | intr_req;
+    // Phase B.1: keep literal 0x00000180 vector (matches firmware .except_vector
+    // link address). EBase-driven vector selection is deferred to Phase B.5 so
+    // that BEV / kseg address rules can be resolved together with precise-exception
+    // pipeline changes. ebase_out is exposed for observability but not consumed here.
+    wire [31:0] ebase_out;
     wire [31:0] exception_vector = wb_is_eret ? epc_out : 32'h00000180;
     
     // ID stage outputs (for flush logic)
@@ -168,6 +173,10 @@ module mips_cpu (
     wire [4:0]  id_rt_addr;
     wire [4:0]  id_rd_addr;
     wire [4:0]  id_cp0_raddr;
+    wire [2:0]  id_cp0_sel;
+    wire [2:0]  ex_cp0_sel;
+    wire [2:0]  mem_cp0_sel;
+    wire [2:0]  wb_cp0_sel;
     
     // Pipeline outputs for forwarding and hazard
     wire        ex_reg_write;
@@ -244,6 +253,7 @@ module mips_cpu (
         .rt_addr       (id_rt_addr),
         .rd_addr       (id_rd_addr),
         .id_cp0_raddr  (id_cp0_raddr),
+        .id_cp0_sel    (id_cp0_sel),
         
         // Controls to ID/EX
         .alu_op        (id_alu_op),
@@ -300,6 +310,7 @@ module mips_cpu (
         .id_waddr       (id_waddr),
         .id_rd_addr     (id_rd_addr),
         .id_cp0_raddr   (id_cp0_raddr),
+        .id_cp0_sel     (id_cp0_sel),
         .id_sa          (id_sa),
         .id_alu_op      (id_alu_op),
         .id_mdu_op      (id_mdu_op),
@@ -324,6 +335,7 @@ module mips_cpu (
         .ex_waddr       (ex_waddr),
         .ex_rd_addr     (ex_rd_addr),
         .ex_cp0_raddr   (ex_cp0_raddr),
+        .ex_cp0_sel     (ex_cp0_sel),
         .ex_sa          (ex_sa),
         .ex_alu_op      (ex_alu_op),
         .ex_mdu_op      (ex_mdu_op),
@@ -396,6 +408,7 @@ module mips_cpu (
         .ex_waddr        (ex_waddr),
         .ex_rd_addr      (ex_rd_addr),
         .ex_cp0_raddr    (ex_cp0_raddr),
+        .ex_cp0_sel      (ex_cp0_sel),
         .ex_reg_write    (ex_reg_write),
         .ex_cp0_we       (ex_cp0_we),
         .ex_is_eret      (ex_is_eret),
@@ -412,6 +425,7 @@ module mips_cpu (
         .mem_waddr       (mem_waddr),
         .mem_rd_addr     (mem_rd_addr),
         .mem_cp0_raddr   (mem_cp0_raddr),
+        .mem_cp0_sel     (mem_cp0_sel),
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
         .mem_is_eret     (mem_is_eret),
@@ -477,7 +491,8 @@ module mips_cpu (
         .mem_waddr       (mem_waddr),
         .mem_rd_addr     (mem_rd_addr),
         .mem_cp0_raddr   (mem_cp0_raddr),
-        
+        .mem_cp0_sel     (mem_cp0_sel),
+
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
         .mem_is_eret     (mem_is_eret),
@@ -491,7 +506,8 @@ module mips_cpu (
         .wb_waddr        (wb_waddr),
         .wb_rd_addr      (wb_rd_addr),
         .wb_cp0_raddr    (wb_cp0_raddr),
-        
+        .wb_cp0_sel      (wb_cp0_sel),
+
         .wb_reg_write    (wb_reg_write),
         .wb_cp0_we       (wb_cp0_we),
         .wb_is_eret      (wb_is_eret),
@@ -537,8 +553,10 @@ module mips_cpu (
         .hw_int       (ext_int), // Connect hardware interrupt
         .we           (wb_cp0_we),
         .waddr        (wb_rd_addr),
+        .wsel         (wb_cp0_sel),
         .wdata        (wb_ex_out),
         .raddr        (wb_cp0_raddr),
+        .rsel         (wb_cp0_sel),
         .rdata        (cp0_rdata),
         .except_req   (wb_except_req | intr_req),
         .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
@@ -546,6 +564,7 @@ module mips_cpu (
         .except_bd    (1'b0),
         .eret         (wb_is_eret),
         .epc_out      (epc_out),
+        .ebase_out    (ebase_out),
         .intr_req     (intr_req)
     );
 

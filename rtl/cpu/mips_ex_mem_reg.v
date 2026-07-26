@@ -21,7 +21,8 @@ module mips_ex_mem_reg (
     input  wire [4:0]  ex_waddr,
     input  wire [4:0]  ex_rd_addr,
     input  wire [4:0]  ex_cp0_raddr,       // Destination register
-    
+    input  wire [2:0]  ex_cp0_sel,
+
     input  wire        ex_reg_write,
     
     // CP0
@@ -43,7 +44,8 @@ module mips_ex_mem_reg (
     output reg  [4:0]  mem_waddr,
     output reg  [4:0]  mem_rd_addr,
     output reg  [4:0]  mem_cp0_raddr,
-    
+    output reg  [2:0]  mem_cp0_sel,
+
     output reg         mem_reg_write,
     
     // CP0
@@ -68,7 +70,8 @@ module mips_ex_mem_reg (
             mem_waddr      <= 5'd0;
             mem_rd_addr    <= 5'd0;
             mem_cp0_raddr  <= 5'd0;
-            
+            mem_cp0_sel    <= 3'd0;
+
             mem_reg_write  <= 1'b0;
             mem_mem_read   <= 1'b0;
             mem_mem_write  <= 1'b0;
@@ -86,7 +89,8 @@ module mips_ex_mem_reg (
             mem_waddr      <= 5'd0;
             mem_rd_addr    <= 5'd0;
             mem_cp0_raddr  <= 5'd0;
-            
+            mem_cp0_sel    <= 3'd0;
+
             mem_reg_write  <= 1'b0;
             mem_mem_read   <= 1'b0;
             mem_mem_write  <= 1'b0;
@@ -104,7 +108,8 @@ module mips_ex_mem_reg (
             mem_waddr      <= ex_waddr;
             mem_rd_addr    <= ex_rd_addr;
             mem_cp0_raddr  <= ex_cp0_raddr;
-            
+            mem_cp0_sel    <= ex_cp0_sel;
+
             mem_reg_write  <= ex_reg_write;
             mem_cp0_we     <= ex_cp0_we;
             mem_is_eret    <= ex_is_eret;
