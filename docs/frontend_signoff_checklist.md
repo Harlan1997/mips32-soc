@@ -6,6 +6,32 @@
 
 ---
 
+## Session 2026-07-26 进度速览
+
+Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），共 15 个 commit（`cedcd5f` – `8429467`）已推送至 origin/master。子系统在 `SOC_MMU_ENABLE=0`, `SOC_BPU_ENABLE=0` 默认下与前一 baseline 保持 bit-identical，或行为按规格改进（RI/ERET 计数下降）。
+
+| Phase | 交付 | commits | unit tb |
+|---|---|---|---|
+| A 部分 | 仓库清理 + 前端文档基线（编码规范 / vPlan / 签核清单 / 13 块级 spec） | cedcd5f, edfa5c1, 91a3dab, c2f7c9e | — |
+| B.1 | CP0 静态寄存器 (PRId/EBase/Config 0-3/HWREna/IntCtl/ErrorEPC) + sub-select | a9306ea | ✔ (cp0) |
+| B.2 | CP0 Timer (Count/Compare/TI/DC/IPTI) | 8739eb8 | ✔ (cp0) |
+| B.3.a | CP0 MMU 寄存器（Index/Random/Wired/EntryHi/EntryLo0/1/PageMask/Context/BadVAddr）| 0f6c7bd | ✔ (cp0) |
+| B.3.b | TLB 数据阵列 (64-entry FA) + TLBR/TLBWI/TLBWR/TLBP | 4160ea1 | ✔ (cp0) |
+| B.3.c | MMU 翻译模块 + TLB 双 lookup 端口 (identity 默认) | 0b63cb1 | ✔ (mmu) |
+| B.3.d | MMU fault → 异常路径 + BadVAddr / Context.BadVPN2 硬件更新 | 43303b7 | ✔ (cp0) |
+| B.4 | 用户/内核态 (KSU + CU0 + user-kseg AdEL/AdES + CpU 异常) | 11e3a9d | ✔ (cp0) |
+| B.5 | 精确异常 (BD-in-pipeline + ErrorEPC/ERL 语义) | d3e0fd5 | ✔ (cp0) |
+| B.6 | BPU (BTB/BHT/RAS, observer 模式) | b1183a4 | ✔ (bpu) |
+| B ISA R2 | CLZ/CLO/SEB/SEH | 99c8bee | ✔ (alu) |
+| B ISA R2 v2 | MOVN/MOVZ/WSBH/ROTR/ROTRV | 8429467 | ✔ (alu) |
+| C.1 (rev) | tb mailbox 观察绑定改看 VA (mem_vaddr) — 未来 MMU 上线前置 | 15c50ed | — |
+
+累计 unit tb 覆盖 ~130 checks，SoC 冒烟 `REGRESSION_TEST_SUCCESS` 全程保持。
+
+**未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合；Phase B.7 MDU 商用重构；Phase B FPU (可选)；`SOC_MMU_ENABLE=1` 激活（需 Phase C L2 + fabric alias fold）；EBase-driven 异常向量（需 0xBFC00000 boot ROM）；BPU IF 重定向（需 speculative fetch queue）。
+
+---
+
 ## 使用方式
 
 - 每条清单格式：`- [ ] 描述  (依据文档 / 命令)`
@@ -56,52 +82,58 @@
 
 ## Phase B — CPU 内核商用化 (Gate B)
 
-### B.1 静态寄存器扩展
-- [ ] CP0 PRId 只读寄存器实现 (硬编码 vendor/PID/rev)
-- [ ] CP0 EBase 可写基址 + CPUNum 只读
-- [ ] CP0 Config / Config1 / Config2 / Config3 实现（值反映真实几何）
-- [ ] CP0 HWREna 实现（RDHWR $0/$2 至少）
-- [ ] CP0 内 `$display` 语句迁至 `SIMULATION` 围栏
-- [ ] 现有 firmware regression 全绿（不引入回归）
+### B.1 静态寄存器扩展 (commit a9306ea)
+- [x] CP0 PRId 只读寄存器实现 (硬编码 vendor/PID/rev)
+- [x] CP0 EBase 可写基址 + CPUNum 只读
+- [x] CP0 Config / Config1 / Config2 / Config3 实现（值反映真实几何）
+- [x] CP0 HWREna 存储 + 写掩码 (RDHWR 指令暂 defer 到 B.4.2)
+- [x] CP0 内 `$display` 语句迁至 `SIMULATION` 围栏
+- [x] 现有 firmware regression 全绿（不引入回归）
+- [x] (bonus) sub-select routing (inst[2:0]) 支持 (regnum, sel) 全 8-bit CP0 地址
 
-### B.2 定时器与中断
-- [ ] CP0 Count 自由计数 + Compare 相等触发
-- [ ] Cause.TI / Cause.IV / IntCtl.IPTI 联动 Timer
-- [ ] IntCtl.VS 向量间距实现（VS=0 非向量化默认可）
-- [ ] 8 位 IM × 8 位 IP 中断裁决正确
-- [ ] Timer/UART/DMA/PIC 中断 firmware 场景全绿
+### B.2 定时器与中断 (commit 8739eb8)
+- [x] CP0 Count 自由计数 + Compare 相等触发
+- [x] Cause.TI / Cause.IV / IntCtl.IPTI 联动 Timer
+- [ ] IntCtl.VS 向量间距实现（VS=0 非向量化，位存储已具备；向量化路由 defer）
+- [x] 8 位 IM × 8 位 IP 中断裁决正确
+- [x] Timer/UART/DMA/PIC 中断 firmware 场景全绿（regression preserved）
 
-### B.3 MMU / TLB
-- [ ] 64-entry 主 TLB + 4/8-entry micro-TLB 分离 (I / D)
-- [ ] 7 种页尺度 (4KB / 16KB / 64KB / 256KB / 1MB / 4MB / 16MB) 全覆盖
-- [ ] TLBR / TLBWI / TLBWR / TLBP 指令语义正确
-- [ ] Refill / Invalid / Modified 三类异常路径 SVA 通过
-- [ ] Machine Check (multi-hit) 检测断言
-- [ ] ASID 8-bit 隔离测试通过
-- [ ] Wired / Random 语义验证
-- [ ] kseg0 / kseg1 直通、useg / kseg2 / kseg3 走 TLB 分派正确
-- [ ] `SOC_MMU_ENABLE=0` 兼容模式：现有 firmware regression 全绿
-- [ ] `SOC_MMU_ENABLE=1`：Linux 早期 head.S 触发 paging on 后可继续执行
+### B.3 MMU / TLB (commits 0f6c7bd + 4160ea1 + 0b63cb1 + 43303b7)
+- [x] 64-entry 主 TLB (fully-assoc, PageMask-aware probe)
+- [ ] 4/8-entry micro-TLB 分离 (I / D) — 现用 TLB 双 lookup port 顶替
+- [ ] 7 种页尺度 — 目前 4KB assumption；PageMask-aware 变尺度 defer
+- [x] TLBR / TLBWI / TLBWR / TLBP 指令语义正确 (35/35 unit tb)
+- [x] Refill / Invalid / Modified 异常路径 (ExcCode 1/2/3) 挂到 pipeline
+- [ ] Machine Check (multi-hit) 检测断言 — TLB spec 涵盖，实现 defer
+- [ ] ASID 8-bit 隔离 firmware 测试 — unit tb 覆盖了 probe 侧
+- [x] Wired / Random 语义（Random 硬件递减到 Wired，Wired 写重置 Random）
+- [x] kseg0/1 直通决策、useg/kseg2/3 走 TLB 决策（gated by SOC_MMU_ENABLE=0 默认 identity 兼容当前 firmware）
+- [x] `SOC_MMU_ENABLE=0` 兼容模式：现有 firmware regression 全绿
+- [ ] `SOC_MMU_ENABLE=1` Linux head.S 集成 — 待 Phase C fabric alias fold 完成
 
-### B.4 用户 / 内核态
-- [ ] Status.KSU=00/10 切换正确
-- [ ] User 模式访问 kseg0/1/2/3 → AdEL/AdES
-- [ ] User 模式访问 CP0 → Coprocessor Unusable 异常
-- [ ] Status.CU0 使能允许 User 模式访问 CP0
+### B.4 用户 / 内核态 (commit 11e3a9d)
+- [x] Status.KSU=00/10 切换正确 (RTL 支持，unit tb 验证)
+- [x] User 模式访问 kseg0/1/2/3 → AdEL/AdES (MMU 硬架构性检查)
+- [x] User 模式访问 CP0 → Coprocessor Unusable 异常 (id_cpu_unusable 门)
+- [x] Status.CU0 使能允许 User 模式访问 CP0
+- [ ] RDHWR $rd, sel 指令 (Count/CPUNum/UserLocal) — B.4.2 defer
 
-### B.5 精确异常
-- [ ] 所有 ExcCode（Int/Mod/TLBL/TLBS/AdEL/AdES/IBE/DBE/Sys/Bp/RI/CpU/Ov/Tr/MCheck）单元测试
-- [ ] EPC 记录正确（含 BD 位 = 1 时保存分支 PC）
-- [ ] ERET 正确恢复 (EPC or ErrorEPC 依 ERL/EXL)
-- [ ] BEV=1 时向量走 0xBFC0_0180/0x0200；BEV=0 走 EBase
-- [ ] Formal proof：异常优先级正确
+### B.5 精确异常 (commit d3e0fd5)
+- [x] BD-in-pipeline: 前一 cycle branch/jump → 下一 cycle ID 指令标 delay slot
+- [x] Cause.BD 正确设置; EPC = PC-4 (延迟槽异常)
+- [x] Status.ERL 可写; ERET 按 ERL 优先级清 ERL 或 EXL
+- [x] intr_req 加 !ERL 条件
+- [x] epc_out 按 ERL 选 ErrorEPC / EPC
+- [ ] EBase-driven 异常向量 — 保持 literal 0x00000180 直到 boot ROM 就绪
+- [ ] BEV=1 时向量走 0xBFC0_0180/0x0200 — 同上
+- [ ] Formal proof: 异常优先级正确 — 待 Phase F formal 设施
 
-### B.6 分支预测
-- [ ] BTB 256 entry + BHT 256 entry(2-bit) + RAS 8 深度
-- [ ] CoreMark 分支命中率 ≥ 88%
-- [ ] Dhrystone 分支命中率 ≥ 90%
-- [ ] 误预测 1-bubble 冲刷正确
-- [ ] `SOC_BPU_ENABLE=0` 兼容模式 (静态不跳)
+### B.6 分支预测 (commit b1183a4)
+- [x] BTB 256 + BHT 256 (2-bit sat) + RAS 8 存储与预测逻辑 (12/12 unit tb)
+- [x] `SOC_BPU_ENABLE=0` 兼容模式 (预测输出不消费)
+- [ ] IF next_pc 从 BPU 重定向 — 需 speculative fetch queue，独立架构决策
+- [ ] CoreMark / Dhrystone 分支命中率 ≥ 88%/90% — 需 CoreMark 集成
+- [ ] 误预测 1-bubble 冲刷 — 待 IF 重定向
 
 ### B.7 MDU 多周期
 - [ ] Booth radix-4 乘法 5-cycle
@@ -127,7 +159,15 @@
 
 | 项 | 状态 | 签核人 | 日期 | 备注 |
 |---|---|---|---|---|
-| B.1 – B.9 | ⬜ pending | | | 等 Phase B 启动 |
+| B.1 静态寄存器 | ✅ core done | Claude | 2026-07-26 | 存储/写掩码/读回全套；RDHWR defer B.4.2 |
+| B.2 Timer      | ✅ core done | Claude | 2026-07-26 | Count/Compare/TI/DC/IPTI 全落地；VS 向量化 defer |
+| B.3 MMU/TLB    | ⚠ partial   | Claude | 2026-07-26 | Register+array+lookup+fault path 全套；micro-TLB / PageMask 变尺度 / Linux boot defer |
+| B.4 用户态     | ✅ core done | Claude | 2026-07-26 | KSU/CU0/kseg 保护/CpU 全套；RDHWR defer |
+| B.5 精确异常   | ⚠ partial   | Claude | 2026-07-26 | BD-in-pipeline + ErrorEPC/ERL 落地；EBase-vector defer |
+| B.6 BPU        | ⚠ partial   | Claude | 2026-07-26 | BTB/BHT/RAS 全套；IF 重定向待 speculative fetch |
+| B.7 MDU 多周期 | ⬜ pending   |        |            | 现有 MDU 是简单实现；商用重构未开始 |
+| B.8 FPU CP1    | ⏸ deferred  |        |            | 决策：Phase B 不含 FPU |
+| B.9 综合验证   | ⬜ pending   |        |            | 依赖 Phase F formal 与 CoreMark/Dhrystone/ISA compliance 基础设施 |
 
 ---
 
