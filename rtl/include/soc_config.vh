@@ -10,7 +10,16 @@
 // v2 cutover flags — enable freshly-verified replacement modules.
 // Comment out any of these to fall back to the v1 predecessor immediately.
 // ---------------------------------------------------------------------------
-`define SOC_USE_MDU_V2   1   // rtl/cpu/mips_mdu_v2.v (verified: tb/unit/mdu_v2/)
+`define SOC_USE_MDU_V2      1   // rtl/cpu/mips_mdu_v2.v (verified: tb/unit/mdu_v2/)
+`define SOC_USE_VIC         1   // rtl/perips/apb_vic.v  (verified: tb/unit/vic/)
+// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — issues 8-beat AXI
+                                 // bursts; current fabric is single-beat/single-
+                                 // outstanding → deadlock. Enable after Phase C
+                                 // multi-outstanding AXI cutover.
+// `define SOC_USE_UART_16550  1   // rtl/perips/apb_uart_16550.v — real 16550;
+                                    // v1 apb_uart kept in DUT for sim visibility
+                                    // ($write stub); enable when Linux boot needs
+                                    // a real 8250 driver target.
 
 // AXI/APB interface contract
 `define SOC_AXI_ID_WIDTH      4
