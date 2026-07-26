@@ -124,4 +124,17 @@
 // firmware that never writes Compare must not see a spurious timer IRQ latched.
 `define SOC_CP0_COMPARE_RESET      32'hFFFF_FFFF
 
+// -----------------------------------------------------------------------------
+// MMU / TLB (Phase B.3 series)
+// -----------------------------------------------------------------------------
+// log2(TLB_ENTRIES). Config1.MMUSize is TLB_ENTRIES-1, sized to fit.
+`define SOC_CP0_TLB_INDEX_BITS     6                  // log2(64)
+`define SOC_CP0_TLB_INDEX_MAX      6'd63              // TLB_ENTRIES-1
+
+// Address translation enable. Phase B.3.a introduces only CP0 register storage;
+// leave translation path off so kseg0/1 direct-map + useg-untranslated flow of
+// existing firmware is preserved. Phase B.3.c will bring the actual lookup path
+// online (see mmu_tlb_spec.md §8).
+`define SOC_MMU_ENABLE             0
+
 `endif
