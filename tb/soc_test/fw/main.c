@@ -829,6 +829,39 @@ int main() {
         print_str("    QUICKSORT ERROR\n");
     }
 
+    // Phase A coverage-closure: CP0 MFC0 sub-select decode + safe MTC0 pokes.
+    // Placed here (near end of main, after all peripheral tests + quicksort)
+    // so it does NOT delay early boot timing. Signoff #8 showed that adding
+    // this at boot destabilizes UVM apb_bit_pattern seq via CPU-vs-UVM race
+    // on GPIO_DIR. Running at end avoids that race entirely.
+    {
+        uint32_t v = 0;
+        uint32_t tmp, save_compare;
+        asm volatile("mfc0 %0, $11, 0" : "=r"(save_compare));
+        asm volatile("mfc0 %0, $15, 0" : "=r"(tmp)); v ^= tmp;  // PRId
+        asm volatile("mfc0 %0, $8,  0" : "=r"(tmp)); v ^= tmp;  // BadVAddr
+        asm volatile("mfc0 %0, $1,  0" : "=r"(tmp)); v ^= tmp;  // Random
+        asm volatile("mfc0 %0, $4,  0" : "=r"(tmp)); v ^= tmp;  // Context
+        asm volatile(".set push; .set mips32r2; mfc0 %0, $15, 1; .set pop"
+                     : "=r"(tmp)); v ^= tmp;  // EBase
+        asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 0; .set pop"
+                     : "=r"(tmp)); v ^= tmp;
+        asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 1; .set pop"
+                     : "=r"(tmp)); v ^= tmp;
+        asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 2; .set pop"
+                     : "=r"(tmp)); v ^= tmp;
+        asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 3; .set pop"
+                     : "=r"(tmp)); v ^= tmp;
+        asm volatile("mtc0 %0, $30, 0" :: "r"(0xABCD1234U));
+        asm volatile("mfc0 %0, $30, 0" : "=r"(tmp)); v ^= tmp;
+        asm volatile("mtc0 %0, $30, 0" :: "r"(0));
+        asm volatile("mtc0 %0, $11, 0" :: "r"(0x0000FFFFU));
+        asm volatile("mfc0 %0, $11, 0" : "=r"(tmp)); v ^= tmp;
+        asm volatile("mtc0 %0, $11, 0" :: "r"(save_compare));
+        print_str("15. CP0 sweep: ");
+        print_hex(v);
+    }
+
     print_str("--- Triggering AdEL Exception ---\n");
     uint32_t unaligned_target = 0x40000001;
     asm volatile(
