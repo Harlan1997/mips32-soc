@@ -196,21 +196,23 @@ module l2_cache #(
         s_rresp   = 2'b00;
         s_bresp   = 2'b00;
 
+        // Single-beat refill/evict to match single-outstanding fabric contract.
         m_awvalid = 1'b0;
         m_awid    = req_id;
-        m_awaddr  = evict_addr;
-        m_awlen   = WORDS_PER_LN - 1;
+        m_awaddr  = evict_addr + (evict_cnt << 2);
+        m_awlen   = 8'd0;
         m_awsize  = 3'b010;
         m_awburst = 2'b01;
         m_wvalid  = 1'b0;
         m_wdata   = data_ram[req_index][evict_cnt];
         m_wstrb   = 4'hF;
-        m_wlast   = (evict_cnt == WORDS_PER_LN - 1);
+        m_wlast   = 1'b1;
         m_bready  = 1'b1;
         m_arvalid = 1'b0;
         m_arid    = req_id;
-        m_araddr  = {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
-        m_arlen   = WORDS_PER_LN - 1;
+        m_araddr  = {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {(OFFSET_BITS-2){1'b0}}, 2'b00}
+                    + (fill_cnt << 2);
+        m_arlen   = 8'd0;
         m_arsize  = 3'b010;
         m_arburst = 2'b01;
         m_rready  = 1'b1;
@@ -325,36 +327,37 @@ module l2_cache #(
                 end
 
                 ST_EVICT_W: begin
-                    if (m_wready) begin
+                    if (m_wready) state <= ST_EVICT_B;
+                end
+
+                ST_EVICT_B: begin
+                    if (m_bvalid) begin
                         if (evict_cnt == WORDS_PER_LN - 1) begin
-                            state <= ST_EVICT_B;
+                            evict_cnt <= {WORD_BITS{1'b0}};
+                            state     <= ST_REFILL_AR;
                         end else begin
                             evict_cnt <= evict_cnt + 1'b1;
+                            state     <= ST_EVICT_AW;
                         end
                     end
                 end
 
-                ST_EVICT_B: begin
-                    if (m_bvalid) state <= ST_REFILL_AR;
-                end
-
                 ST_REFILL_AR: begin
-                    if (m_arready) begin
-                        fill_cnt <= {WORD_BITS{1'b0}};
-                        state    <= ST_REFILL_R;
-                    end
+                    if (m_arready) state <= ST_REFILL_R;
                 end
 
                 ST_REFILL_R: begin
                     if (m_rvalid) begin
                         data_ram[req_index][fill_cnt] <= m_rdata;
-                        if (m_rlast) begin
+                        if (fill_cnt == WORDS_PER_LN - 1) begin
                             tag_ram[req_index]   <= req_tag;
                             valid_ram[req_index] <= 1'b1;
                             dirty_ram[req_index] <= 1'b0;
-                            state <= ST_LOOKUP;
+                            fill_cnt             <= {WORD_BITS{1'b0}};
+                            state                <= ST_LOOKUP;
                         end else begin
                             fill_cnt <= fill_cnt + 1'b1;
+                            state    <= ST_REFILL_AR;   // issue next single-beat AR
                         end
                     end
                 end
