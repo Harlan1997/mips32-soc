@@ -83,8 +83,96 @@ void c_interrupt_handler() {
     }
 }
 
+// -----------------------------------------------------------------------------
+// isa_r2_sweep() — Phase A coverage-closure helper.
+// Emits the MIPS32 R2 instructions and R1 opcode variants that neither
+// main.c's functional tests nor rand_test.s currently exercise, so the
+// corresponding CPU/ALU/decoder BRANCH coverage bins get hit at least once.
+// Uses .set mips32r2 blocks so the assembler accepts R2 mnemonics regardless
+// of CFLAGS. Result XOR'd back into main() so the compiler cannot dead-code it.
+// -----------------------------------------------------------------------------
+static uint32_t isa_r2_sweep(void) {
+    uint32_t clz_r, clo_r, seb_r, seh_r, wsbh_r, rotr_r, rotrv_r;
+    uint32_t movn_r, movz_r;
+    uint32_t bal_r = 0;
+    uint32_t rs = 0x12345678, rt15 = 0xFU, rt0 = 0;
+
+    // R2: CLZ / CLO
+    asm volatile(".set push; .set mips32r2; clz %0, %1; .set pop"
+                 : "=r"(clz_r) : "r"(rs));
+    asm volatile(".set push; .set mips32r2; clo %0, %1; .set pop"
+                 : "=r"(clo_r) : "r"(0xFFFF0000U));
+
+    // R2: SEB / SEH
+    asm volatile(".set push; .set mips32r2; seb %0, %1; .set pop"
+                 : "=r"(seb_r) : "r"(0x80U));
+    asm volatile(".set push; .set mips32r2; seh %0, %1; .set pop"
+                 : "=r"(seh_r) : "r"(0x8000U));
+
+    // R2: WSBH
+    asm volatile(".set push; .set mips32r2; wsbh %0, %1; .set pop"
+                 : "=r"(wsbh_r) : "r"(rs));
+
+    // R2: ROTR (immediate rotate) and ROTRV (register rotate)
+    asm volatile(".set push; .set mips32r2; rotr %0, %1, 8; .set pop"
+                 : "=r"(rotr_r) : "r"(rs));
+    asm volatile(".set push; .set mips32r2; rotrv %0, %1, %2; .set pop"
+                 : "=r"(rotrv_r) : "r"(rs), "r"(rt15));
+
+    // R2: MOVN (rt != 0 → move) and MOVZ (rt == 0 → move)
+    movn_r = 0xDEAD;
+    asm volatile("movn %0, %1, %2" : "+r"(movn_r) : "r"(rs), "r"(rt15));
+    movz_r = 0xBEEF;
+    asm volatile("movz %0, %1, %2" : "+r"(movz_r) : "r"(rs), "r"(rt0));
+
+    // R1: BLTZAL and BGEZAL branch-and-link variants — rarely emitted by GCC
+    // for common C code. Guarantee both taken and not-taken paths execute.
+    asm volatile(
+        ".set push; .set noreorder\n"
+        "  li      $t0, -1\n"
+        "  bltzal  $t0, 1f       # taken   → link ra\n"
+        "  nop\n"
+        "  li      %0, 0xB17ADA1F\n"
+        "1:\n"
+        "  li      $t0, 1\n"
+        "  bltzal  $t0, 2f       # not taken\n"
+        "  nop\n"
+        "  ori     %0, %0, 0x2\n"
+        "2:\n"
+        "  li      $t0, 1\n"
+        "  bgezal  $t0, 3f       # taken\n"
+        "  nop\n"
+        "  ori     %0, %0, 0x4\n"
+        "3:\n"
+        "  li      $t0, -1\n"
+        "  bgezal  $t0, 4f       # not taken\n"
+        "  nop\n"
+        "  ori     %0, %0, 0x8\n"
+        "4:\n"
+        ".set pop\n"
+        : "+r"(bal_r) :: "t0", "ra", "memory");
+
+    // R2 CP0 readbacks that main.c does not touch (PRId=15,0; Config=16,0;
+    // Config1=16,1; EBase=15,1). Exercises MFC0 sub-select decode paths.
+    uint32_t prid_v, cfg0_v, cfg1_v, ebase_v;
+    asm volatile("mfc0 %0, $15, 0" : "=r"(prid_v));
+    asm volatile("mfc0 %0, $16, 0" : "=r"(cfg0_v));
+    asm volatile("mfc0 %0, $16, 1" : "=r"(cfg1_v));
+    asm volatile("mfc0 %0, $15, 1" : "=r"(ebase_v));
+
+    return clz_r ^ clo_r ^ seb_r ^ seh_r ^ wsbh_r ^ rotr_r ^ rotrv_r
+         ^ movn_r ^ movz_r ^ bal_r
+         ^ prid_v ^ cfg0_v ^ cfg1_v ^ ebase_v;
+}
+
 int main() {
     print_str("\n--- Comprehensive SoC Test Start ---\n");
+
+    // Phase A coverage-closure: exercise R2 additions + rare R1 forms.
+    // Print the XOR result so it appears in trace and the compiler cannot
+    // dead-strip the sweep.
+    print_str("0. ISA R2 sweep: ");
+    print_hex(isa_r2_sweep());
 
     // 1. GPIO Test
     print_str("1. Testing GPIO...\n");
