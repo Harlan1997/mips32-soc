@@ -1,38 +1,32 @@
 // =============================================================================
 // File Name: apb_axi_dma_v2.v
-// Design:    Multi-channel Scatter-Gather DMA (Phase D scaffold)
+// Design:    Multi-channel Scatter-Gather DMA — full implementation
 // Author:    Antigravity — Phase D
 // Description:
-//   Multi-channel DMA replacing the single-channel apb_axi_dma.v. Each
-//   channel supports either simple block transfer (LEN bytes contiguous)
-//   or scatter-gather via a linked descriptor list in memory. A fixed-
-//   priority arbiter (ch0 = highest) shares one AXI master port across
-//   channels. Existing single-channel DMA is kept until block-level UVM
-//   verification of v2 is complete.
+//   Replaces the scaffold with a working multi-channel DMA. AXI transfer
+//   engine, scatter-gather descriptor chain load, and channel arbitration
+//   all functional. Not yet integrated (apb_axi_dma.v remains in DUT).
 //
-//   Descriptor format (16 B, next=0 marks list end):
-//     +0x0  SRC   (32b)
-//     +0x4  DST   (32b)
-//     +0x8  LEN   (32b, bytes; must be multiple of 4)
-//     +0xC  NEXT  (32b, phys addr of next descriptor, 0 = terminate)
+//   Data movement: single-beat word transfers on shared AXI master (matches
+//   current single-outstanding fabric contract). Burst-mode upgrade tracked
+//   in Phase C multi-outstanding work.
 //
-//   Per-channel register block (each channel at 0x40 offset, N ≤ 8):
-//     +0x00 CTRL       [0]=EN, [1]=SG_MODE, [2]=INT_EN
-//                      [3]=DONE (W1C), [4]=ERR (W1C)
-//     +0x04 SRC_ADDR   (used when SG_MODE=0)
-//     +0x08 DST_ADDR
-//     +0x0C LEN
-//     +0x10 DESC_HEAD  (SG_MODE=1: first descriptor addr)
-//     +0x14 STATUS     RO: [0]=busy, [1]=done, [2]=err
-//     +0x18 CUR_SRC    RO: currently executing src
-//     +0x1C CUR_DST    RO: currently executing dst
+//   Descriptor format in memory (16 B, little-endian, word-aligned):
+//     +0x0  SRC (32b)
+//     +0x4  DST (32b)
+//     +0x8  LEN (32b, bytes; multiple of 4)
+//     +0xC  NEXT (32b, phys addr of next descriptor, 0 = terminate)
 //
-//   Global regs at 0x000:
-//     +0x00 GLOBAL_CTRL  [0]=EN_ALL
-//     +0x04 GLOBAL_INT   RO bitmap of channel-level INT_EN & done
-//
-//   AXI data path: single-beat word transfers initially (matches current
-//   single-outstanding fabric contract). Burst mode = Phase C+ upgrade.
+//   FSM per channel:
+//     IDLE            → wait for enable
+//     LOAD_SRC        → AR to descriptor+0x0
+//     LOAD_DST        → AR to descriptor+0x4
+//     LOAD_LEN        → AR to descriptor+0x8
+//     LOAD_NEXT       → AR to descriptor+0xC
+//     EXEC_R          → AR to cur_src, wait rvalid
+//     EXEC_W          → AW+W to cur_dst, wait bvalid
+//     NEXT_CHECK      → if SG && cur_next != 0 → LOAD_SRC; else DONE
+//     DONE            → set done_r, IDLE
 // =============================================================================
 
 module apb_axi_dma_v2 #(
@@ -42,7 +36,6 @@ module apb_axi_dma_v2 #(
     input  wire        clk,
     input  wire        rst_n,
 
-    // APB slave (channels laid out on 0x40 stride starting from 0x40)
     input  wire [11:0] paddr,
     input  wire        psel,
     input  wire        penable,
@@ -52,19 +45,18 @@ module apb_axi_dma_v2 #(
     output wire        pready,
     output wire        pslverr,
 
-    // AXI master (shared across channels)
     output reg  [ID_WIDTH-1:0] m_awid,
     output reg  [31:0]         m_awaddr,
     output wire [7:0]          m_awlen,
     output wire [2:0]          m_awsize,
     output wire [1:0]          m_awburst,
-    output wire                m_awvalid,
+    output reg                 m_awvalid,
     input  wire                m_awready,
 
     output reg  [31:0]         m_wdata,
     output wire [3:0]          m_wstrb,
     output wire                m_wlast,
-    output wire                m_wvalid,
+    output reg                 m_wvalid,
     input  wire                m_wready,
 
     input  wire [ID_WIDTH-1:0] m_bid,
@@ -77,7 +69,7 @@ module apb_axi_dma_v2 #(
     output wire [7:0]          m_arlen,
     output wire [2:0]          m_arsize,
     output wire [1:0]          m_arburst,
-    output wire                m_arvalid,
+    output reg                 m_arvalid,
     input  wire                m_arready,
 
     input  wire [ID_WIDTH-1:0] m_rid,
@@ -87,12 +79,13 @@ module apb_axi_dma_v2 #(
     input  wire                m_rvalid,
     output wire                m_rready,
 
-    // Per-channel interrupts (OR-ed downstream to VIC)
     output wire [N_CHANNELS-1:0] ch_int
 );
 
-    assign pready  = 1'b1;
-    assign pslverr = 1'b0;
+    localparam CH_W = $clog2(N_CHANNELS);
+
+    assign pready    = 1'b1;
+    assign pslverr   = 1'b0;
     assign m_awlen   = 8'd0;
     assign m_awsize  = 3'b010;
     assign m_awburst = 2'b01;
@@ -101,18 +94,20 @@ module apb_axi_dma_v2 #(
     assign m_arlen   = 8'd0;
     assign m_arsize  = 3'b010;
     assign m_arburst = 2'b01;
+    assign m_bready  = 1'b1;
+    assign m_rready  = 1'b1;
 
     wire wr = psel & penable & pwrite;
     wire rd = psel & penable & ~pwrite;
 
-    // ---------------- Global regs ----------------
+    // Global
     reg global_en;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)                              global_en <= 1'b0;
-        else if (wr && paddr[11:0] == 12'h000)   global_en <= pwdata[0];
+        if (!rst_n)                            global_en <= 1'b0;
+        else if (wr && paddr[11:0] == 12'h0)   global_en <= pwdata[0];
     end
 
-    // ---------------- Per-channel register file ----------------
+    // Per-channel CSRs
     reg [31:0] src_r      [N_CHANNELS-1:0];
     reg [31:0] dst_r      [N_CHANNELS-1:0];
     reg [31:0] len_r      [N_CHANNELS-1:0];
@@ -127,13 +122,73 @@ module apb_axi_dma_v2 #(
     reg [31:0] cur_dst_r  [N_CHANNELS-1:0];
     reg [31:0] cur_len_r  [N_CHANNELS-1:0];
     reg [31:0] cur_next_r [N_CHANNELS-1:0];
+    reg [31:0] desc_ptr_r [N_CHANNELS-1:0];  // current descriptor base addr
 
     integer c;
 
-    // APB write decode: channel index = paddr[11:6] - 1  (ch0 starts at 0x40)
     wire [7:0] apb_ch = (paddr[11:6] == 6'h0) ? 8'hFF : (paddr[11:6] - 8'd1);
     wire       apb_ch_valid = (paddr[11:6] != 6'h0) && (apb_ch < N_CHANNELS[7:0]);
 
+    // Channel state
+    localparam ST_IDLE      = 4'd0;
+    localparam ST_LOAD_SRC  = 4'd1;
+    localparam ST_LOAD_DST  = 4'd2;
+    localparam ST_LOAD_LEN  = 4'd3;
+    localparam ST_LOAD_NEXT = 4'd4;
+    localparam ST_EXEC_R    = 4'd5;
+    localparam ST_EXEC_W    = 4'd6;
+    localparam ST_NEXT_CHK  = 4'd7;
+    localparam ST_DONE      = 4'd8;
+
+    reg [3:0] ch_state [N_CHANNELS-1:0];
+    reg [31:0] read_buf [N_CHANNELS-1:0];  // buffer between R and W
+    reg        wait_r   [N_CHANNELS-1:0];  // AR fired, waiting for R
+    reg        wait_b   [N_CHANNELS-1:0];  // AW+W fired, waiting for B
+
+    // Arbiter: pick lowest-numbered busy channel
+    reg [CH_W-1:0] act_ch;
+    reg            act_valid;
+    integer k;
+    always @(*) begin
+        act_ch    = {CH_W{1'b0}};
+        act_valid = 1'b0;
+        for (k = 0; k < N_CHANNELS; k = k + 1) begin
+            if (busy_r[k] && !act_valid) begin
+                act_ch    = k[CH_W-1:0];
+                act_valid = 1'b1;
+            end
+        end
+    end
+
+    // AXI master mux: driven by active channel's state
+    always @(*) begin
+        m_arid    = 4'h5;
+        m_araddr  = 32'h0;
+        m_arvalid = 1'b0;
+        m_awid    = 4'h5;
+        m_awaddr  = 32'h0;
+        m_awvalid = 1'b0;
+        m_wvalid  = 1'b0;
+        m_wdata   = 32'h0;
+        if (act_valid) begin
+            case (ch_state[act_ch])
+                ST_LOAD_SRC:  begin m_araddr = desc_ptr_r[act_ch] + 32'h0;  m_arvalid = ~wait_r[act_ch]; end
+                ST_LOAD_DST:  begin m_araddr = desc_ptr_r[act_ch] + 32'h4;  m_arvalid = ~wait_r[act_ch]; end
+                ST_LOAD_LEN:  begin m_araddr = desc_ptr_r[act_ch] + 32'h8;  m_arvalid = ~wait_r[act_ch]; end
+                ST_LOAD_NEXT: begin m_araddr = desc_ptr_r[act_ch] + 32'hC;  m_arvalid = ~wait_r[act_ch]; end
+                ST_EXEC_R:    begin m_araddr = cur_src_r[act_ch];           m_arvalid = ~wait_r[act_ch]; end
+                ST_EXEC_W:    begin
+                    m_awaddr  = cur_dst_r[act_ch];
+                    m_awvalid = ~wait_b[act_ch];
+                    m_wdata   = read_buf[act_ch];
+                    m_wvalid  = ~wait_b[act_ch];
+                end
+                default: ;
+            endcase
+        end
+    end
+
+    // Config write from APB
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             for (c = 0; c < N_CHANNELS; c = c + 1) begin
@@ -147,7 +202,7 @@ module apb_axi_dma_v2 #(
             end
         end else if (wr && apb_ch_valid) begin
             case (paddr[5:2])
-                4'h0: begin // CTRL
+                4'h0: begin
                     en_r[apb_ch]      <= pwdata[0];
                     sg_mode_r[apb_ch] <= pwdata[1];
                     int_en_r[apb_ch]  <= pwdata[2];
@@ -161,123 +216,102 @@ module apb_axi_dma_v2 #(
         end
     end
 
-    // ---------------- Fixed-priority arbiter (ch0 highest) ----------------
-    reg  [$clog2(N_CHANNELS+1)-1:0] active_ch;
-    reg                              active_ch_valid;
-    reg [N_CHANNELS-1:0]             req_pending;
-
-    // Request = channel enabled + not busy + not done
-    integer k;
-    always @(*) begin
-        req_pending = {N_CHANNELS{1'b0}};
-        for (k = 0; k < N_CHANNELS; k = k + 1) begin
-            req_pending[k] = en_r[k] & ~busy_r[k] & ~done_r[k] & global_en;
-        end
-    end
-
-    // ---------------- Per-channel FSM ----------------
-    // Simplified: LOAD_DESC (SG only) → EXEC (word-by-word) → NEXT/DONE
-    localparam ST_IDLE      = 3'd0;
-    localparam ST_LOAD_DESC = 3'd1;
-    localparam ST_EXEC_R    = 3'd2;
-    localparam ST_EXEC_W    = 3'd3;
-    localparam ST_NEXT      = 3'd4;
-    localparam ST_DONE      = 3'd5;
-
-    reg [2:0]  ch_state [N_CHANNELS-1:0];
-    reg [1:0]  desc_word_ctr [N_CHANNELS-1:0]; // scatter-gather desc load progress
-    reg [31:0] read_word_buf [N_CHANNELS-1:0];
-
-    // AXI issue: only one channel drives at a time
-    // Skeleton: this arbiter picks first pending channel each cycle
-    always @(*) begin
-        active_ch       = {$clog2(N_CHANNELS+1){1'b0}};
-        active_ch_valid = 1'b0;
-        for (k = 0; k < N_CHANNELS; k = k + 1) begin
-            if (busy_r[k] && !active_ch_valid) begin
-                active_ch       = k[$clog2(N_CHANNELS+1)-1:0];
-                active_ch_valid = 1'b1;
-            end
-        end
-    end
-
-    // AXI master mux (skeleton: not fully wired to per-channel FSM state; a
-    // future integration pass will drive m_arvalid / m_awvalid from
-    // ch_state[active_ch] transitions).
-    assign m_arvalid = 1'b0;
-    assign m_awvalid = 1'b0;
-    assign m_wvalid  = 1'b0;
-    assign m_bready  = 1'b1;
-    assign m_rready  = 1'b1;
-
-    always @(*) begin
-        m_arid   = 4'h5;
-        m_araddr = 32'h0;
-        m_awid   = 4'h5;
-        m_awaddr = 32'h0;
-        m_wdata  = 32'h0;
-        if (active_ch_valid) begin
-            m_araddr = cur_src_r[active_ch];
-            m_awaddr = cur_dst_r[active_ch];
-        end
-    end
-
-    // ---------------- Per-channel state advance (skeleton) ----------------
+    // Channel FSM + AXI handshake tracking
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             for (c = 0; c < N_CHANNELS; c = c + 1) begin
-                ch_state[c]      <= ST_IDLE;
-                busy_r[c]        <= 1'b0;
-                done_r[c]        <= 1'b0;
-                err_r[c]         <= 1'b0;
-                cur_src_r[c]     <= 32'h0;
-                cur_dst_r[c]     <= 32'h0;
-                cur_len_r[c]     <= 32'h0;
-                cur_next_r[c]    <= 32'h0;
-                desc_word_ctr[c] <= 2'h0;
-                read_word_buf[c] <= 32'h0;
+                ch_state[c]   <= ST_IDLE;
+                busy_r[c]     <= 1'b0;
+                done_r[c]     <= 1'b0;
+                err_r[c]      <= 1'b0;
+                cur_src_r[c]  <= 32'h0;
+                cur_dst_r[c]  <= 32'h0;
+                cur_len_r[c]  <= 32'h0;
+                cur_next_r[c] <= 32'h0;
+                desc_ptr_r[c] <= 32'h0;
+                read_buf[c]   <= 32'h0;
+                wait_r[c]     <= 1'b0;
+                wait_b[c]     <= 1'b0;
             end
         end else begin
             for (c = 0; c < N_CHANNELS; c = c + 1) begin
-                case (ch_state[c])
-                    ST_IDLE: begin
-                        if (req_pending[c]) begin
-                            busy_r[c] <= 1'b1;
-                            if (sg_mode_r[c]) begin
-                                cur_next_r[c]    <= desc_head_r[c];
-                                desc_word_ctr[c] <= 2'h0;
-                                ch_state[c]      <= ST_LOAD_DESC;
-                            end else begin
-                                cur_src_r[c] <= src_r[c];
-                                cur_dst_r[c] <= dst_r[c];
-                                cur_len_r[c] <= len_r[c];
-                                ch_state[c]  <= ST_EXEC_R;
+                // Start
+                if (ch_state[c] == ST_IDLE && en_r[c] && global_en && !done_r[c] && !busy_r[c]) begin
+                    busy_r[c] <= 1'b1;
+                    if (sg_mode_r[c]) begin
+                        desc_ptr_r[c] <= desc_head_r[c];
+                        ch_state[c]   <= ST_LOAD_SRC;
+                    end else begin
+                        cur_src_r[c]  <= src_r[c];
+                        cur_dst_r[c]  <= dst_r[c];
+                        cur_len_r[c]  <= len_r[c];
+                        cur_next_r[c] <= 32'h0;
+                        ch_state[c]   <= (len_r[c] == 32'h0) ? ST_DONE : ST_EXEC_R;
+                    end
+                end
+
+                // Only the active channel drives AXI, so only it advances on handshakes
+                if (act_valid && (act_ch[CH_W-1:0] == c[CH_W-1:0])) begin
+                    // Capture AR handshake (set wait_r so m_arvalid drops next cycle)
+                    if (m_arvalid && m_arready) begin
+                        wait_r[c] <= 1'b1;
+                    end
+                    // Capture AW+W handshake
+                    if (m_awvalid && m_awready && m_wvalid && m_wready) begin
+                        wait_b[c] <= 1'b1;
+                    end
+
+                    // R data arrival — clears wait_r and advances state
+                    if (m_rvalid && wait_r[c]) begin
+                        wait_r[c] <= 1'b0;
+                        case (ch_state[c])
+                            ST_LOAD_SRC:  begin cur_src_r[c]  <= m_rdata; ch_state[c] <= ST_LOAD_DST; end
+                            ST_LOAD_DST:  begin cur_dst_r[c]  <= m_rdata; ch_state[c] <= ST_LOAD_LEN; end
+                            ST_LOAD_LEN:  begin cur_len_r[c]  <= m_rdata; ch_state[c] <= ST_LOAD_NEXT; end
+                            ST_LOAD_NEXT: begin
+                                cur_next_r[c] <= m_rdata;
+                                ch_state[c]   <= (cur_len_r[c] == 32'h0) ? ST_NEXT_CHK : ST_EXEC_R;
                             end
+                            ST_EXEC_R: begin
+                                read_buf[c] <= m_rdata;
+                                if (m_rresp != 2'b00) err_r[c] <= 1'b1;
+                                ch_state[c] <= ST_EXEC_W;
+                            end
+                            default: ;
+                        endcase
+                    end
+
+                    // B response arrival — clears wait_b and advances EXEC_W
+                    if (m_bvalid && wait_b[c] && ch_state[c] == ST_EXEC_W) begin
+                        wait_b[c] <= 1'b0;
+                        if (m_bresp != 2'b00) err_r[c] <= 1'b1;
+                        cur_src_r[c] <= cur_src_r[c] + 32'd4;
+                        cur_dst_r[c] <= cur_dst_r[c] + 32'd4;
+                        if (cur_len_r[c] <= 32'd4) begin
+                            ch_state[c] <= ST_NEXT_CHK;
+                        end else begin
+                            cur_len_r[c] <= cur_len_r[c] - 32'd4;
+                            ch_state[c]  <= ST_EXEC_R;
                         end
                     end
-                    // The following states will drive the AXI master port
-                    // once the integration pass wires them up. Currently
-                    // they are placeholder transitions to keep FSM well
-                    // formed and lint-clean.
-                    ST_LOAD_DESC: ch_state[c] <= ST_EXEC_R;
-                    ST_EXEC_R:    ch_state[c] <= ST_EXEC_W;
-                    ST_EXEC_W:    ch_state[c] <= ST_NEXT;
-                    ST_NEXT: begin
+
+                    if (ch_state[c] == ST_NEXT_CHK) begin
                         if (sg_mode_r[c] && cur_next_r[c] != 32'h0) begin
-                            ch_state[c] <= ST_LOAD_DESC;
+                            desc_ptr_r[c] <= cur_next_r[c];
+                            ch_state[c]   <= ST_LOAD_SRC;
                         end else begin
                             ch_state[c] <= ST_DONE;
                         end
                     end
-                    ST_DONE: begin
+
+                    if (ch_state[c] == ST_DONE) begin
                         busy_r[c]   <= 1'b0;
                         done_r[c]   <= 1'b1;
                         ch_state[c] <= ST_IDLE;
                     end
-                    default: ch_state[c] <= ST_IDLE;
-                endcase
+                end
 
-                // W1C on done/err
+                // APB write-1-clear on done / err
                 if (wr && apb_ch_valid && apb_ch == c && paddr[5:2] == 4'h0) begin
                     if (pwdata[3]) done_r[c] <= 1'b0;
                     if (pwdata[4]) err_r[c]  <= 1'b0;
@@ -286,7 +320,7 @@ module apb_axi_dma_v2 #(
         end
     end
 
-    // ---------------- Interrupt ----------------
+    // Interrupts
     genvar g;
     generate
         for (g = 0; g < N_CHANNELS; g = g + 1) begin: g_int
@@ -294,7 +328,7 @@ module apb_axi_dma_v2 #(
         end
     endgenerate
 
-    // ---------------- APB read ----------------
+    // APB read
     always @(*) begin
         prdata = 32'h0;
         if (rd) begin
@@ -310,7 +344,8 @@ module apb_axi_dma_v2 #(
                 endcase
             end else if (apb_ch_valid) begin
                 case (paddr[5:2])
-                    4'h0: prdata = {27'h0, err_r[apb_ch], done_r[apb_ch], int_en_r[apb_ch], sg_mode_r[apb_ch], en_r[apb_ch]};
+                    4'h0: prdata = {27'h0, err_r[apb_ch], done_r[apb_ch],
+                                    int_en_r[apb_ch], sg_mode_r[apb_ch], en_r[apb_ch]};
                     4'h1: prdata = src_r[apb_ch];
                     4'h2: prdata = dst_r[apb_ch];
                     4'h3: prdata = len_r[apb_ch];
