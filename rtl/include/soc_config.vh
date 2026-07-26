@@ -11,9 +11,12 @@
 // but downstream UVM/firmware coordination still open). MDU v2 and VIC are
 // already the DUT baseline (v1 files deleted after signoff #12).
 // ---------------------------------------------------------------------------
-// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — needs bidirectional
-                                 // burst handling in slave FSM before enabling.
-                                 // Phase C work item.
+// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — bidirectional burst
+                                 // read added (HIT_R loops arlen+1 beats).
+                                 // Integration still hits protocol checker
+                                 // "BVALID with no completed write" — needs
+                                 // wlast-tracking and multi-outstanding
+                                 // support in slave FSM.
 // `define SOC_USE_UART_16550 1  // rtl/perips/apb_uart_16550.v — v2 spec-
                                   // complete; enable after Phase 3C
                                   // pic_mask_arbitration seq is redesigned to
