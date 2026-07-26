@@ -29,7 +29,15 @@ MAP         = $(OUT_DIR)/$(FW_BASE).map
 OBJDUMP_OUT = $(OUT_DIR)/$(FW_BASE).objdump
 MANIFEST    = $(OUT_DIR)/$(FW_BASE).manifest
 
+# LEGACY_MONOLITHIC=1 → keep test's own inline helpers, only link boot.s from
+# common. Preserves pre-split link layout so soc_smoke's CPU boot timing
+# exactly matches the signoff #12 baseline that current UVM tests were
+# validated against.
+ifeq ($(LEGACY_MONOLITHIC),1)
+COMMON_SOURCES = $(COMMON_DIR)/boot.s
+else
 COMMON_SOURCES = $(COMMON_DIR)/boot.s $(COMMON_DIR)/print.c $(COMMON_DIR)/excpt.c
+endif
 ALL_SOURCES    = $(COMMON_SOURCES) $(TEST_SOURCES)
 
 .PHONY: all toolchain-check clean
