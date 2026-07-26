@@ -1,63 +1,38 @@
-CROSS_COMPILE ?= mips64-linux-gnu-
-CC      = $(CROSS_COMPILE)gcc
-OBJCOPY = $(CROSS_COMPILE)objcopy
-OBJDUMP = $(CROSS_COMPILE)objdump
-CFLAGS  = -mabi=32 -mips32 -EL -O2 -ffreestanding -nostdlib -G 0 -mno-abicalls -fno-pic
-LDFLAGS = -T link.ld -nostdlib
+# =============================================================================
+# tb/soc_test/fw/Makefile — multi-firmware build orchestrator.
+#
+# Each subdirectory under tests/ is a self-contained firmware. Common assets
+# (boot.s, link.ld, print/excpt helpers, address defines) live in common/.
+#
+# Usage (backward-compatible with the pre-split single-firmware layout):
+#   make                       # builds soc_smoke (default), out to OUT_DIR
+#   make FW_NAME=isa_r2_sweep  # builds a specific test firmware
+#   make all-firmwares         # builds every test under tests/
+#
+# The top-level Makefile in the repo root still invokes:
+#   $(MAKE) -C tb/soc_test/fw OUT_DIR=<dir> FW_BASE=firmware all
+# which forwards to the default test's Makefile.
+# =============================================================================
+
+FW_NAME ?= soc_smoke
 OUT_DIR ?= .
 FW_BASE ?= firmware
 
-ELF      = $(OUT_DIR)/$(FW_BASE).elf
-BIN      = $(OUT_DIR)/$(FW_BASE).bin
-HEX      = $(OUT_DIR)/$(FW_BASE).hex
-MAP      = $(OUT_DIR)/$(FW_BASE).map
-OBJDUMP_OUT = $(OUT_DIR)/$(FW_BASE).objdump
-MANIFEST = $(OUT_DIR)/$(FW_BASE).manifest
-SOURCES  = boot.s main.c link.ld
+TEST_DIRS := $(wildcard tests/*)
 
-.PHONY: all toolchain-check clean
+.PHONY: all all-firmwares clean
 
-all: toolchain-check $(HEX) $(OBJDUMP_OUT) $(MANIFEST)
+all:
+	$(MAKE) -C tests/$(FW_NAME) OUT_DIR=$(abspath $(OUT_DIR)) FW_BASE=$(FW_BASE)
 
-toolchain-check:
-	@command -v $(CC) >/dev/null || { \
-		echo "ERROR: missing MIPS32 cross compiler: $(CC)"; \
-		echo "Set CROSS_COMPILE=<prefix> or CC/OBJCOPY/OBJDUMP to the installed toolchain."; \
-		exit 1; \
-	}
-	@command -v $(OBJCOPY) >/dev/null || { \
-		echo "ERROR: missing MIPS objcopy: $(OBJCOPY)"; \
-		exit 1; \
-	}
-	@command -v $(OBJDUMP) >/dev/null || { \
-		echo "ERROR: missing MIPS objdump: $(OBJDUMP)"; \
-		exit 1; \
-	}
-
-$(OUT_DIR):
-	mkdir -p $(OUT_DIR)
-
-$(ELF): $(SOURCES) | $(OUT_DIR)
-	$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-Map,$(MAP) boot.s main.c -o $(ELF)
-
-$(BIN): $(ELF)
-	$(OBJCOPY) -O binary $(ELF) $(BIN)
-
-$(HEX): $(BIN)
-	python3 elf2hex.py $(BIN) $(HEX)
-
-$(OBJDUMP_OUT): $(ELF)
-	$(OBJDUMP) -d -S $(ELF) > $(OBJDUMP_OUT)
-
-$(MANIFEST): $(HEX) $(OBJDUMP_OUT)
-	@{ \
-		echo "fw_base=$(FW_BASE)"; \
-		echo "out_dir=$(OUT_DIR)"; \
-		echo "cc=$$($(CC) --version | head -n 1)"; \
-		echo "objcopy=$$($(OBJCOPY) --version | head -n 1)"; \
-		echo "objdump=$$($(OBJDUMP) --version | head -n 1)"; \
-		sha256sum $(SOURCES) $(ELF) $(BIN) $(HEX) $(MAP) $(OBJDUMP_OUT); \
-	} > $(MANIFEST)
+all-firmwares:
+	@for d in $(TEST_DIRS); do \
+		name=$$(basename $$d); \
+		echo "==> building firmware: $$name"; \
+		$(MAKE) -C $$d OUT_DIR=$(abspath $(OUT_DIR))/$$name FW_BASE=firmware || exit 1; \
+	done
 
 clean:
-	rm -f $(ELF) $(BIN) $(HEX) $(MAP) $(OBJDUMP_OUT) $(MANIFEST)
+	@for d in $(TEST_DIRS); do \
+		$(MAKE) -C $$d clean; \
+	done

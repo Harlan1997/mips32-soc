@@ -1,0 +1,67 @@
+# ------------------------------------------------------------------------------
+# Common Makefile rules shared by every firmware variant under tests/*/.
+#
+# A test-specific Makefile sets:
+#   TEST_NAME    — output basename (e.g. "soc_smoke")
+#   TEST_SOURCES — .c/.s files relative to the test dir
+#   FW_TOP_DIR   — path back to tb/soc_test/fw/
+# ...then includes this file.
+# ------------------------------------------------------------------------------
+
+FW_TOP_DIR   ?= ../..
+COMMON_DIR   := $(FW_TOP_DIR)/common
+CROSS_COMPILE ?= mips64-linux-gnu-
+CC            = $(CROSS_COMPILE)gcc
+OBJCOPY       = $(CROSS_COMPILE)objcopy
+OBJDUMP       = $(CROSS_COMPILE)objdump
+
+CFLAGS  = -mabi=32 -mips32 -EL -O2 -ffreestanding -nostdlib -G 0 \
+          -mno-abicalls -fno-pic -I$(COMMON_DIR)
+LDFLAGS = -T $(COMMON_DIR)/link.ld -nostdlib
+
+OUT_DIR ?= .
+FW_BASE ?= firmware
+
+ELF         = $(OUT_DIR)/$(FW_BASE).elf
+BIN         = $(OUT_DIR)/$(FW_BASE).bin
+HEX         = $(OUT_DIR)/$(FW_BASE).hex
+MAP         = $(OUT_DIR)/$(FW_BASE).map
+OBJDUMP_OUT = $(OUT_DIR)/$(FW_BASE).objdump
+MANIFEST    = $(OUT_DIR)/$(FW_BASE).manifest
+
+COMMON_SOURCES = $(COMMON_DIR)/boot.s $(COMMON_DIR)/print.c $(COMMON_DIR)/excpt.c
+ALL_SOURCES    = $(COMMON_SOURCES) $(TEST_SOURCES)
+
+.PHONY: all toolchain-check clean
+
+all: toolchain-check $(HEX) $(OBJDUMP_OUT) $(MANIFEST)
+
+toolchain-check:
+	@command -v $(CC) >/dev/null || { \
+		echo "ERROR: missing MIPS32 cross compiler: $(CC)"; exit 1; }
+
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
+
+$(ELF): $(ALL_SOURCES) $(COMMON_DIR)/link.ld | $(OUT_DIR)
+	$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-Map,$(MAP) $(ALL_SOURCES) -o $(ELF)
+
+$(BIN): $(ELF)
+	$(OBJCOPY) -O binary $(ELF) $(BIN)
+
+$(HEX): $(BIN)
+	python3 $(COMMON_DIR)/elf2hex.py $(BIN) $(HEX)
+
+$(OBJDUMP_OUT): $(ELF)
+	$(OBJDUMP) -d -S $(ELF) > $(OBJDUMP_OUT)
+
+$(MANIFEST): $(HEX) $(OBJDUMP_OUT)
+	@{ \
+		echo "test_name=$(TEST_NAME)"; \
+		echo "fw_base=$(FW_BASE)"; \
+		echo "out_dir=$(OUT_DIR)"; \
+		sha256sum $(ALL_SOURCES) $(ELF) $(BIN) $(HEX) $(MAP) $(OBJDUMP_OUT); \
+	} > $(MANIFEST)
+
+clean:
+	rm -f $(ELF) $(BIN) $(HEX) $(MAP) $(OBJDUMP_OUT) $(MANIFEST)

@@ -1,35 +1,8 @@
 #include <stdint.h>
-
-#define UART_TX_DATA   (*(volatile uint32_t*)0x40000000)
-#define TIMER_CTRL     (*(volatile uint32_t*)0x40001000)
-#define TIMER_LOAD     (*(volatile uint32_t*)0x40001004)
-#define TIMER_VAL      (*(volatile uint32_t*)0x40001008)
-#define TIMER_INTCLR   (*(volatile uint32_t*)0x4000100C)
-#define GPIO_DATA      (*(volatile uint32_t*)0x40002000)
-#define GPIO_DIR       (*(volatile uint32_t*)0x40002004)
-#define DMA_SRC        (*(volatile uint32_t*)0x40003000)
-#define DMA_DST        (*(volatile uint32_t*)0x40003004)
-#define DMA_LEN        (*(volatile uint32_t*)0x40003008)
-#define DMA_CTRL       (*(volatile uint32_t*)0x4000300C)
-#define PIC_STATUS     (*(volatile uint32_t*)0x40004000)
-#define PIC_MASK       (*(volatile uint32_t*)0x40004004)
-#define PIC_ACTIVE     (*(volatile uint32_t*)0x40004008)
+#include "soc_addr.h"
+#include "print.h"
 
 volatile uint32_t irq_count = 0;
-
-void print_str(const char *str) {
-    while (*str) {
-        UART_TX_DATA = *str++;
-    }
-}
-
-void print_hex(uint32_t val) {
-    const char hex_chars[] = "0123456789ABCDEF";
-    for (int i = 28; i >= 0; i -= 4) {
-        UART_TX_DATA = hex_chars[(val >> i) & 0xF];
-    }
-    UART_TX_DATA = '\n';
-}
 
 void c_interrupt_handler() {
     // Basic interrupt handler
