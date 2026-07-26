@@ -82,9 +82,11 @@ import uvm_pkg::*;
 
 bind soc_verif_top soc_observation_bind u_soc_observation_bind (
     .obs_if               (obs_if),
+    // Phase B.3.c + Phase C.1: watch VA (mem_vaddr) rather than post-MMU PA
+    // (data_addr). See tb/soc_test/tb_mips_soc.v for rationale.
     .mailbox_valid        (u_dut.u_core_subsystem.u_core.u_cpu.data_req &&
                            u_dut.u_core_subsystem.u_core.u_cpu.data_we &&
-                           (u_dut.u_core_subsystem.u_core.u_cpu.data_addr == 32'ha000_fffc)),
+                           (u_dut.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'ha000_fffc)),
     .mailbox_wdata        (u_dut.u_core_subsystem.u_core.u_cpu.data_wdata),
     .ex_reg_write         (u_dut.u_core_subsystem.u_core.u_cpu.ex_reg_write),
     .ex_pc                (u_dut.u_core_subsystem.u_core.u_cpu.ex_pc_plus_8 - 32'd8),
