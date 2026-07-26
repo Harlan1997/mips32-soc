@@ -1,10 +1,10 @@
 {
-  "run_id": "RUN-CURRENT-CONTRACT-SIGNOFF-001",
+  "run_id": "RUN-CURRENT-CONTRACT-COVERAGE-99-002",
   "project_name": "mips32-soc",
-  "current_stage": "CLOSED",
-  "attempt": 3,
-  "max_attempts": 3,
-  "base_commit": "b8336560efc85208f5b6f169e170babfafe19c97",
+  "current_stage": "FAILED",
+  "attempt": 5,
+  "max_attempts": 5,
+  "base_commit": "86ea0ec6b2774ded1c0d2c8c4e28ee412d360193",
   "allowed_paths": [
     "Makefile",
     ".gitignore",
@@ -12,13 +12,36 @@
     "docs/coverage_plan.md",
     "docs/signoff_criteria.md",
     "docs/repo_layout.md",
+    "tb/coverage/**",
+    "tb/uvm_tb/cov.cfg",
+    "tb/uvm_tb/data/**",
+    "tb/uvm_tb/agents/**",
+    "tb/uvm_tb/checkers/**",
+    "tb/uvm_tb/env/**",
+    "tb/uvm_tb/seqs/**",
+    "tb/uvm_tb/tests/**",
+    "tb/uvm_tb/tb_top/**",
+    "tb/uvm_tb/*_directed_tests.txt",
     "tb/uvm_tb/run_current_contract_signoff.sh",
-    "tb/uvm_tb/run_regression.sh",
+    "tb/uvm_tb/run_phase2_complete.sh",
     "tb/uvm_tb/run_phase3_complete.sh",
+    "tb/uvm_tb/run_phase3b_complete.sh",
+    "tb/uvm_tb/run_phase3c_complete.sh",
+    "tb/uvm_tb/run_regression.sh",
+    "tb/uvm_tb/run_testlist.sh",
+    "tb/uvm_tb/run_uvm.sh",
+    "tb/soc_test/cov.cfg",
+    "tb/soc_test/run.sh",
+    "tb/soc_test/run_cpu_cp0_gate.sh",
+    "tb/soc_test/tb_mips_soc.v",
+    "tb/soc_test/axi_monitor.v",
+    "tb/soc_test/soc_legacy_observation_bind.sv",
+    "tb/soc_test/soc_legacy_observation_if.sv",
+    "tb/soc_test/fw/**",
     ".agent/test_report.md",
     ".agent/result.json"
   ],
-  "test_cmd": "bash -n tb/uvm_tb/run_current_contract_signoff.sh && bash -n tb/uvm_tb/run_regression.sh && bash -n tb/uvm_tb/run_phase3_complete.sh && make -n current-contract-signoff && make firmware",
+  "test_cmd": "bash -n tb/uvm_tb/run_current_contract_signoff.sh && bash -n tb/uvm_tb/run_regression.sh && bash -n tb/uvm_tb/run_testlist.sh && bash -n tb/soc_test/run.sh && bash -n tb/soc_test/run_cpu_cp0_gate.sh && make -n current-contract-signoff && make firmware && make current-contract-signoff && git diff --check",
   "lead_agent": "codex",
   "worker_agent": "agy",
   "tasks": [
@@ -27,8 +50,16 @@
       "title": "Implement current-contract full-chip sign-off and merged coverage flow",
       "assigned_to": "agy",
       "status": "completed",
+      "spec_ref": "git:86ea0ec:.agent/spec.md",
+      "summary": "Implemented and independently verified the initial unified current-contract sign-off gate."
+    },
+    {
+      "id": "TASK-002",
+      "title": "Close audited current-contract code coverage to 99 percent",
+      "assigned_to": "agy",
+      "status": "in_progress",
       "spec_ref": ".agent/spec.md",
-      "summary": "Implemented and independently verified the unified current-contract sign-off gate; all regressions, functional coverage, code coverage, and error-scan gates passed."
+      "summary": "Add reachable stimulus first, strictly audit justified EL exclusions, report raw and adjusted coverage, and gate every UVM/product metric at 99 percent."
     }
   ]
 }

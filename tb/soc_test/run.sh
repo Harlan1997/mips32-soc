@@ -46,4 +46,5 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${SCRIPT_DIR}"/tb_mips_soc.v -l vcs.log
 
 ./simv +FW_HEX="$FW_HEX_ABS" -cm line+cond+fsm+branch+tgl -l sim.log
-urg -dir simv.vdb -elfile "${SCRIPT_DIR}/exclude5.el" -excl_bypass_checks -report textReportFinal -format text
+urg -dir simv.vdb -report textReportRaw -format text
+urg -dir simv.vdb -elfile "${ROOT_DIR}/tb/coverage/product_exclusions.el" -excl_strict -report textReportFinal -format text

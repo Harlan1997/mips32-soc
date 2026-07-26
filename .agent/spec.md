@@ -1,211 +1,247 @@
-# Current RTL Contract Full-Chip Sign-off Spec
+# Current RTL Contract 99% Coverage Closure Spec
 
 > Lead agent: Codex
 > Worker agent: AGY
-> Status: COMPLETED - independently verified 2026-07-26
-> Scope decision: current RTL contract sign-off (user selected option 1)
+> Status: APPROVED - user confirmed 2026-07-26
+> Scope: current documented RTL contract only; not tapeout sign-off
 
 ## 1. Objective
 
-Create and execute one auditable full-chip verification entry point for the
-repository's currently documented RTL contract. The flow must run all existing
-Phase 2, Phase 3A, Phase 3B, and Phase 3C closure gates, add reproducible
-multi-seed UVM stress, merge compatible UVM coverage databases, validate
-coverage thresholds, and generate a single Markdown sign-off report.
+Raise the auditable full-chip coverage gate to at least 99.00% for every
+reported code-coverage metric while preserving all functional and regression
+gates from the existing current-contract sign-off flow.
 
-The final claim is limited to the current product contract. It is not tapeout
-sign-off and must not claim closure for features that the current RTL does not
-implement.
+The 99% target applies independently to both:
 
-## 2. Explicit Scope Boundary
+1. The merged UVM module-definition report.
+2. The product-top CPU/CP0 module-definition report.
 
-In scope:
+For each report, `SCORE`, `LINE`, `COND`, `TOGGLE`, `FSM`, and `BRANCH` must
+each be at least 99.00% after reviewed exclusions. Functional coverage remains
+15/15 required groups at exactly 100.00%.
 
-- Single-outstanding AXI fabric contract.
-- Existing AXI/APB/SRAM/flash-XIP, DMA, GPIO, UART TX, timer, PIC, JTAG, CPU,
-  CP0, checker, scoreboard, and documented exception/interrupt behavior.
-- Loadable AXI flash-image/XIP verification model.
-- Product-top firmware/CPU/CP0 smoke coverage.
-- Current verification-only hook containment and current generated-artifact
-  policy.
+## 2. Coverage Closure Policy
 
-Explicitly out of scope and listed as unclosed in the final report:
+### 2.1 Test before exclude
 
-- RTL multi-outstanding and response reordering.
-- UART RX datapath and UART RX interrupt.
-- SPI-serial protocol timing and real boot-from-flash.
-- PIC priority encoding/order; current PIC only implements masked active bits
-  and an OR-reduced CPU interrupt.
-- New synthesis, STA, DFT, formal, lint, CDC, or RDC claims.
-- Foundry/tapeout sign-off.
+- First cover every legally reachable current-contract behavior with directed
+  or constrained-random stimulus.
+- Add focused tests/sequences/firmware for reachable holes and keep them in the
+  normal sign-off regression.
+- Do not exclude an object merely because it is difficult, slow, or currently
+  uncovered.
+- Do not modify RTL behavior to manufacture coverage. If a reachable hole
+  cannot be covered without an RTL or architecture change, report `FAILED`
+  with evidence for Codex review.
 
-## 3. Required Implementation
+### 2.2 Permitted exclusion categories
 
-### 3.1 Unified entry point
+An `.el` rule is permitted only when the exact coverage object is proven to be:
 
-- Add `make current-contract-signoff`.
-- Add `tb/uvm_tb/run_current_contract_signoff.sh` as the implementation entry.
-- Default output root:
-  `build/signoff/current_contract` (overridable through a Make variable).
-- Rebuild firmware through the Make dependency and consume the explicit
-  `FW_HEX` artifact. Never copy firmware implicitly into a run directory.
-- Load VCS/URG through environment modules in every script that invokes them.
+- `UNREACHABLE_CURRENT_CONTRACT`: impossible under the documented
+  single-outstanding/current-feature contract.
+- `STATIC_TIEOFF_RESERVED`: a constant/tied-off or reserved field with no
+  legal transition in the selected configuration.
+- `UNINSTANTIATED_CONFIGURATION`: an alternate parameterization/top/module not
+  instantiated in either signed-off product configuration.
+- `DEFENSIVE_ILLEGAL_STATE`: recovery/default behavior reachable only through
+  an illegal/X-corrupted state outside the verification contract.
+- `NON_PRODUCT_VERIFICATION`: verification-only instrumentation, bind wrappers,
+  or tool-generated recording logic that is not product RTL.
+- `OUT_OF_SCOPE_FEATURE`: logic solely for a feature explicitly outside the
+  current RTL contract, such as UART RX or real SPI-serial flash behavior.
 
-### 3.2 Mandatory gates
+No other category is accepted without a new human-approved Spec.
 
-Run fresh artifacts under the unified output root:
+### 2.3 Exclusion provenance and enforcement
 
-1. Phase 2 complete: directed and coverage testlists, 16/16 each.
-2. Phase 3A complete: directed and coverage testlists, 3/3 each, plus the
-   product-top CPU/CP0 firmware gate.
-3. Phase 3B complete: directed and coverage testlists, 1/1 each.
-4. Phase 3C complete: directed and coverage testlists, 1/1 each.
-5. Reproducible UVM `soc_bus_stress_test`: 10 deterministic seeds by default.
+- Generate exclusion candidates from fresh `urg -dump full_exclusions` output
+  produced from the exact VDBs used by this sign-off run. Never reuse stale
+  checksums or hierarchy paths.
+- Store source-controlled UVM and product exclusion files under
+  `tb/coverage/` and keep them separate when their hierarchy/checksums differ.
+- Every active excluded object or explicitly documented group of equivalent
+  objects must have a stable unique ID, category, source/module/object,
+  rationale, and concrete reachability evidence in a machine-readable manifest.
+- Add an automated audit that fails for an active `.el` record without a valid
+  manifest entry, duplicate IDs, unknown categories, missing evidence, stale or
+  unmatched rules, malformed files, or manifest entries with no active rule.
+- Apply exclusions with `-excl_strict`. `-excl_bypass_checks` is forbidden.
+- Treat exclusion-related URG warnings/errors, checksum mismatches, covered
+  object exclusion attempts, and zero-match exclusion rules as sign-off
+  failures.
+- Do not add new hidden object-level coverage omissions in `cov.cfg`. Migrate
+  existing object-level `-node` toggle omissions to reviewed `.el` rules when
+  still justified. `cov.cfg` may retain module-level removal of non-product
+  testbench/tool instrumentation only when that scope is explicit in the final
+  report.
+- Blanket exclusion of instantiated product modules is forbidden.
 
-`run_phase3_complete.sh` must allow its CPU/CP0 run directory to be overridden
-so all sign-off artifacts remain beneath the unified output root.
+## 3. Raw and Adjusted Reporting
 
-### 3.3 Stress regression hardening
+The flow must generate both raw and exclusion-adjusted reports from the same
+fresh coverage databases:
 
-Harden `tb/uvm_tb/run_regression.sh` without breaking its existing Make entry:
+- Merged UVM raw report: `coverage/raw_urgReport/`.
+- Merged UVM adjusted report: `coverage/urgReport/`.
+- Product CPU/CP0 raw report: `phase3_complete/cpu_cp0_gate/textReportRaw/`.
+- Product CPU/CP0 adjusted report:
+  `phase3_complete/cpu_cp0_gate/textReportFinal/`.
 
-- Replace shell `$RANDOM` seed selection with reproducible seeds derived from
-  `SEED_BASE` (default 1) and the test index.
-- Remove stale simulator, log, and coverage artifacts before a run.
-- Treat nonzero simulator status, SystemVerilog/VCS Error/Fatal diagnostics,
-  direct UVM error/fatal records, nonzero UVM summary counts, and missing
-  `REGRESSION_TEST_SUCCESS` as failures.
-- Continue long enough to write a complete pass/fail table, but return nonzero
-  if any test fails.
-- Record every seed and log path in a machine-readable/plain-text summary.
-- Generate URG text and HTML coverage reports and fail if report generation or
-  required report artifacts are missing.
+Raw reports must not load any `.el` file. Adjusted reports must use only the
+reviewed source-controlled `.el` files and strict exclusion validation.
 
-### 3.4 Coverage merge and gates
+The final Markdown report and a machine-readable JSON summary must include:
 
-Merge the compatible UVM VDBs from Phase 2/3A/3B/3C coverage runs and the
-multi-seed UVM stress run into:
+- Raw and adjusted values for all six metrics for both report domains.
+- Required threshold and PASS/FAIL for each adjusted metric.
+- Active exclusion counts by domain, metric, category, and manifest ID.
+- Paths and SHA256 hashes for each `.el` file and its manifest.
+- URG commands/options and proof that strict exclusion checking was enabled.
+- Counts of tests and functional groups, all subordinate gate results, seeds,
+  tool versions, Git provenance, and clean error scan.
+- A prominent statement that adjusted coverage includes justified exclusions
+  and is not the same as raw stimulus coverage.
+- The unchanged current-contract/tapeout scope limitations.
 
-- `build/signoff/current_contract/coverage/merged.vdb`
-- `build/signoff/current_contract/coverage/urgReport/`
-- `build/signoff/current_contract/coverage/urg.log`
+Stale raw, adjusted, full-exclusion dump, and audit artifacts must be removed
+before each run. Missing or empty text/HTML/JSON artifacts fail closed.
 
-Use strict URG failure handling. The flow must fail for corrupt/missing VDBs,
-merge/report errors, or missing dashboard/groups reports.
+## 4. Mandatory 99% Gates
 
-All 15 required functional coverage groups from the existing four completion
-gates must be present and exactly 100.00% in the merged report.
-
-Minimum merged UVM module-definition coverage thresholds:
+Default adjusted thresholds for both merged UVM and product CPU/CP0 reports:
 
 | Metric | Minimum |
 | --- | ---: |
-| Score | 75.00% |
-| Line | 70.00% |
-| Condition | 80.00% |
-| Toggle | 60.00% |
-| FSM | 85.00% |
-| Branch | 70.00% |
+| Score | 99.00% |
+| Line | 99.00% |
+| Condition | 99.00% |
+| Toggle | 99.00% |
+| FSM | 99.00% |
+| Branch | 99.00% |
 
-The product-top CPU/CP0 smoke uses a different coverage hierarchy and must be
-reported separately rather than merged with the UVM database. Minimum product
-module-definition thresholds:
+Threshold overrides may only make a run stricter. The sign-off script must
+reject environment or Make overrides below 99.00%, nonnumeric values, NaN,
+infinity, duplicates, missing fields, and values above 100.00%.
 
-| Metric | Minimum |
-| --- | ---: |
-| Score | 80.00% |
-| Line | 70.00% |
-| Condition | 85.00% |
-| Toggle | 55.00% |
-| FSM | 90.00% |
-| Branch | 90.00% |
+The following existing gates remain mandatory and must not be weakened:
 
-Thresholds may be exposed as environment/Make overrides, but the defaults above
-are mandatory and the effective values must appear in the report. Numeric
-comparisons must be robust decimal comparisons, not lexicographic comparisons.
+- Phase 2 directed and coverage: 16/16 each.
+- Phase 3A directed and coverage: 3/3 each.
+- Product CPU/CP0 firmware gate: 1/1.
+- Phase 3B directed and coverage: 1/1 each.
+- Phase 3C directed and coverage: 1/1 each.
+- Deterministic stress regression: at least 10/10.
+- Merged UVM test count: expected coverage-run cardinality, currently 31 with
+  default tests/seeds; update the exact expected count if new retained coverage
+  tests are added.
+- Required functional groups: 15/15 at 100.00%.
+- Project error/fatal/license/exclusion-warning scan: clean.
 
-### 3.5 Final report and provenance
+Any new test must check its intended behavior, return nonzero on failure, and
+be included in both the applicable directed and coverage regression paths.
 
-Generate
-`build/signoff/current_contract/current_contract_signoff_report.md` containing:
+## 5. Baseline and Scope Integrity
 
-- Overall `PASS` only when every mandatory gate and threshold passes.
-- Date/time, host, VCS/URG version, Git HEAD, worktree status, firmware path and
-  SHA256, flash-image path and SHA256, testlists, deterministic stress seeds,
-  and output paths.
-- Gate table with total/passed/failed counts and links/paths to each subordinate
-  completion report and stress summary.
-- Merged UVM and product-top code coverage actuals versus thresholds.
-- All required functional group names and actual scores.
-- Clean project error-scan result.
-- Exact scope limitations listed in section 2.
-- Clear wording: `PASS for the current documented RTL contract`; never
-  `tapeout sign-off` or an unqualified production-final claim.
+The prior adjusted baseline was:
 
-On failure, return nonzero and leave a failure report/status artifact identifying
-the failed stage. Stale PASS reports must be removed or overwritten before a
-new run begins.
+| Domain | Score | Line | Cond | Toggle | FSM | Branch |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Merged UVM | 77.78 | 73.26 | 83.51 | 67.39 | 88.89 | 75.85 |
+| Product CPU/CP0 | 81.40 | 74.20 | 90.31 | 59.27 | 91.67 | 91.54 |
 
-## 4. Documentation
+These values used historical coverage scoping and are recorded only as
+provenance. After migrating hidden object omissions, the new raw denominator
+may increase and the raw percentage may decrease. That is acceptable only when
+the final report explains the scope change and the adjusted result is backed by
+the audited manifest.
 
-Update the Make target documentation and the relevant repository/coverage/
-sign-off documents so users know:
+The signed-off contract remains:
 
-- how to run `make current-contract-signoff`;
-- where the report and merged coverage are written;
-- which checks are hard gates;
-- which product features and physical/static sign-off domains remain open.
+- Single-outstanding AXI; no multi-outstanding/reordering claim.
+- UART TX only; UART RX remains open.
+- AXI flash-image/XIP verification model; no SPI timing or real flash boot.
+- PIC mask arbitration without priority encoding.
+- No synthesis, STA, DFT, formal, lint, CDC, RDC, physical-design, foundry, or
+  tapeout sign-off claim.
 
-Do not rewrite historical Phase 2/3A/3B/3C results as if the new flow has passed
-until Codex independently runs it successfully.
-
-## 5. Allowed Paths and Single-Writer Rules
+## 6. Allowed Paths and Single-Writer Rules
 
 AGY may modify only:
 
 - `Makefile`
-- `.gitignore` (only to ignore `.agent/run.lock`)
+- `.gitignore`
 - `README.md`
 - `docs/coverage_plan.md`
 - `docs/signoff_criteria.md`
 - `docs/repo_layout.md`
+- `tb/coverage/**`
+- `tb/uvm_tb/cov.cfg`
+- `tb/uvm_tb/data/**`
+- `tb/uvm_tb/agents/**`
+- `tb/uvm_tb/checkers/**`
+- `tb/uvm_tb/env/**`
+- `tb/uvm_tb/seqs/**`
+- `tb/uvm_tb/tests/**`
+- `tb/uvm_tb/tb_top/**`
+- `tb/uvm_tb/*_directed_tests.txt`
 - `tb/uvm_tb/run_current_contract_signoff.sh`
-- `tb/uvm_tb/run_regression.sh`
+- `tb/uvm_tb/run_phase2_complete.sh`
 - `tb/uvm_tb/run_phase3_complete.sh`
+- `tb/uvm_tb/run_phase3b_complete.sh`
+- `tb/uvm_tb/run_phase3c_complete.sh`
+- `tb/uvm_tb/run_regression.sh`
+- `tb/uvm_tb/run_testlist.sh`
+- `tb/uvm_tb/run_uvm.sh`
+- `tb/soc_test/cov.cfg`
+- `tb/soc_test/run.sh`
+- `tb/soc_test/run_cpu_cp0_gate.sh`
+- `tb/soc_test/tb_mips_soc.v`
+- `tb/soc_test/axi_monitor.v`
+- `tb/soc_test/soc_legacy_observation_bind.sv`
+- `tb/soc_test/soc_legacy_observation_if.sv`
+- `tb/soc_test/fw/**`
 - `.agent/test_report.md`
 - `.agent/result.json`
 
-AGY must not modify RTL, UVM components/sequences/tests, firmware sources,
-testlists, `.agent/tasks.json`, `.agent/spec.md`, `.agent/review.md`, or
-`.agent/run_agent_flow.sh`.
+AGY must not modify RTL, architecture/source specifications, existing legacy
+`.el`/`fullexclude.*` artifacts under `tb/soc_test/`, `.agent/tasks.json`,
+`.agent/spec.md`, `.agent/review.md`, or `.agent/run_agent_flow.sh`.
 
-## 6. Acceptance Tests
+## 7. Acceptance Tests
 
-AGY must run and report at least:
+AGY must run and record at least:
 
 ```bash
 bash -n tb/uvm_tb/run_current_contract_signoff.sh
 bash -n tb/uvm_tb/run_regression.sh
-bash -n tb/uvm_tb/run_phase3_complete.sh
+bash -n tb/uvm_tb/run_testlist.sh
+bash -n tb/soc_test/run.sh
+bash -n tb/soc_test/run_cpu_cp0_gate.sh
 make -n current-contract-signoff
 make firmware
+make current-contract-signoff
+git diff --check
 ```
 
-Codex will independently:
+Also run the exclusion-audit tool directly against positive and deliberately
+malformed fixtures. The negative cases must fail for missing evidence, stale or
+unmatched rules, forbidden category, duplicate ID, and attempts to lower any
+threshold below 99.00%.
 
-1. Review every diff and verify allowed-path compliance.
-2. Re-run syntax/dry-run/firmware checks.
-3. Initialize modules with `source /etc/profile.d/modules.sh` and load VCS.
-4. Run the full `make current-contract-signoff` gate outside any isolated
-   network sandbox.
-5. Inspect logs, subordinate reports, merged URG output, group coverage,
-   numeric thresholds, provenance, and dirty-tree effects.
-6. Reject the implementation if the flow can emit PASS with a missing/failed
-   gate, stale artifact, malformed metric, or scope overclaim.
+Codex will independently review every diff, verify allowed-path compliance,
+inspect every active exclusion and its evidence, rerun lightweight checks, and
+run the full `make current-contract-signoff` flow with VCS/URG loaded through
+environment modules.
 
-## 7. Completion Criteria
+## 8. Completion Criteria
 
-The task is complete only when Codex's independent full run exits zero, the
-final report says PASS for the current documented RTL contract, all coverage
-and functional gates meet the defaults, review is APPROVED, `.agent/tasks.json`
-is set to CLOSED/completed, and the reviewed changes are committed to Git.
+The task is complete only when:
+
+- All mandatory regression/functional gates pass.
+- All six adjusted metrics are at least 99.00% in both coverage domains.
+- Raw and adjusted reports are present and consistent.
+- Every exclusion passes the manifest audit and strict URG application.
+- The error scan is clean and the final report makes no scope overclaim.
+- Codex independently approves the implementation.
+- `.agent/tasks.json` is `CLOSED` with TASK-002 `completed` before Git commit.

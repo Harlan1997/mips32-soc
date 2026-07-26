@@ -17,6 +17,7 @@ SPEC_FILE="$AGENT_DIR/spec.md"
 REVIEW_FILE="$AGENT_DIR/review.md"
 RESULT_FILE="$AGENT_DIR/result.json"
 TEST_REPORT_FILE="$AGENT_DIR/test_report.md"
+AGY_PRINT_TIMEOUT="${AGY_PRINT_TIMEOUT:-2h}"
 
 update_json_stage() {
     local new_stage="$1"
@@ -63,6 +64,8 @@ AGY_PROMPT="$AGY_PROMPT
 3. 修改代码后，运行测试命令。
 4. 将测试结果和详细堆栈写入: .agent/test_report.md
 5. 在 .agent/result.json 写入运行总结: {\"status\": \"SUCCESS\"|\"FAILED\", \"summary\": \"...\"}
+6. 必须同步运行验证命令或显式等待 PID 并采集退出码；禁止仅启动后台任务后返回。
+7. 即使验证失败，也必须写入 .agent/test_report.md 和 .agent/result.json 后再退出。
 "
 
 rm -f "$RESULT_FILE" "$TEST_REPORT_FILE"
@@ -71,7 +74,7 @@ set +e
 agy --print "$AGY_PROMPT" \
     --mode accept-edits \
     --dangerously-skip-permissions \
-    --print-timeout 30m \
+    --print-timeout "$AGY_PRINT_TIMEOUT" \
     --add-dir "$PROJECT_ROOT"
 AGY_EXIT_CODE=$?
 set -e

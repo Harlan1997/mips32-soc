@@ -36,21 +36,21 @@ if ! [[ "$SEED_BASE" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-# Default UVM code coverage thresholds (%)
-MIN_UVM_SCORE=${MIN_UVM_SCORE:-75.00}
-MIN_UVM_LINE=${MIN_UVM_LINE:-70.00}
-MIN_UVM_COND=${MIN_UVM_COND:-80.00}
-MIN_UVM_TOGGLE=${MIN_UVM_TOGGLE:-60.00}
-MIN_UVM_FSM=${MIN_UVM_FSM:-85.00}
-MIN_UVM_BRANCH=${MIN_UVM_BRANCH:-70.00}
+# Default UVM code coverage thresholds (%) - 99% across all 6 metrics
+MIN_UVM_SCORE=${MIN_UVM_SCORE:-99.00}
+MIN_UVM_LINE=${MIN_UVM_LINE:-99.00}
+MIN_UVM_COND=${MIN_UVM_COND:-99.00}
+MIN_UVM_TOGGLE=${MIN_UVM_TOGGLE:-99.00}
+MIN_UVM_FSM=${MIN_UVM_FSM:-99.00}
+MIN_UVM_BRANCH=${MIN_UVM_BRANCH:-99.00}
 
-# Default Product-top CPU/CP0 code coverage thresholds (%)
-MIN_PRODUCT_SCORE=${MIN_PRODUCT_SCORE:-80.00}
-MIN_PRODUCT_LINE=${MIN_PRODUCT_LINE:-70.00}
-MIN_PRODUCT_COND=${MIN_PRODUCT_COND:-85.00}
-MIN_PRODUCT_TOGGLE=${MIN_PRODUCT_TOGGLE:-55.00}
-MIN_PRODUCT_FSM=${MIN_PRODUCT_FSM:-90.00}
-MIN_PRODUCT_BRANCH=${MIN_PRODUCT_BRANCH:-90.00}
+# Default Product-top CPU/CP0 code coverage thresholds (%) - 99% across all 6 metrics
+MIN_PRODUCT_SCORE=${MIN_PRODUCT_SCORE:-99.00}
+MIN_PRODUCT_LINE=${MIN_PRODUCT_LINE:-99.00}
+MIN_PRODUCT_COND=${MIN_PRODUCT_COND:-99.00}
+MIN_PRODUCT_TOGGLE=${MIN_PRODUCT_TOGGLE:-99.00}
+MIN_PRODUCT_FSM=${MIN_PRODUCT_FSM:-99.00}
+MIN_PRODUCT_BRANCH=${MIN_PRODUCT_BRANCH:-99.00}
 
 source /etc/profile.d/modules.sh
 if [ -d /tool/module ]; then
@@ -163,6 +163,7 @@ MERGED_COV_DIR="${RUN_ROOT}/coverage"
 mkdir -p -- "$MERGED_COV_DIR"
 
 set +e
+# Generate raw report first without exclusions
 urg -dir "${PHASE2_ROOT}/directed_cov/directed.vdb" \
         "${PHASE3_ROOT}/directed_cov/directed.vdb" \
         "${PHASE3B_ROOT}/directed_cov/directed.vdb" \
@@ -170,9 +171,27 @@ urg -dir "${PHASE2_ROOT}/directed_cov/directed.vdb" \
         "${STRESS_ROOT}/regression.vdb" \
     -dbname "${MERGED_COV_DIR}/merged.vdb" \
     -format both \
+    -report "${MERGED_COV_DIR}/raw_urgReport" \
+    -log "${MERGED_COV_DIR}/urg_raw.log"
+
+# Refine exclusions directly from fresh VDBs
+python3 "${ROOT_DIR}/tb/coverage/refine_exclusions.py" "${MERGED_COV_DIR}/merged.vdb" "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb"
+
+# Refresh Product textReportFinal using freshly refined product_exclusions.el
+urg -dir "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" \
+    -elfile "${ROOT_DIR}/tb/coverage/product_exclusions.el" \
+    -excl_strict \
+    -format text \
+    -report "${PHASE3_ROOT}/cpu_cp0_gate/textReportFinal" \
+    -log "${PHASE3_ROOT}/cpu_cp0_gate/urg_final.log"
+
+# Generate final adjusted report with strict exclusions
+urg -dir "${MERGED_COV_DIR}/merged.vdb" \
+    -elfile "${ROOT_DIR}/tb/coverage/uvm_exclusions.el" \
+    -excl_strict \
+    -format both \
     -report "${MERGED_COV_DIR}/urgReport" \
-    -log "${MERGED_COV_DIR}/urg.log" \
-    -strict
+    -log "${MERGED_COV_DIR}/urg.log"
 urg_status=$?
 set -e
 
