@@ -12,10 +12,10 @@
 // ---------------------------------------------------------------------------
 `define SOC_USE_MDU_V2      1   // rtl/cpu/mips_mdu_v2.v (verified: tb/unit/mdu_v2/)
 `define SOC_USE_VIC         1   // rtl/perips/apb_vic.v  (verified: tb/unit/vic/)
-// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — issues 8-beat AXI
-                                 // bursts; current fabric is single-beat/single-
-                                 // outstanding → deadlock. Enable after Phase C
-                                 // multi-outstanding AXI cutover.
+// `define SOC_USE_L2_CACHE 1   // rtl/cache/l2_cache.v — upstream masters
+                                 // (L1 D-cache) issue burst refill; L2 slave FSM
+                                 // currently returns single R beat → rlast mismatch.
+                                 // Needs bidirectional burst handling in L2 slave.
 // `define SOC_USE_UART_16550  1   // rtl/perips/apb_uart_16550.v — real 16550;
                                     // v1 apb_uart kept in DUT for sim visibility
                                     // ($write stub); enable when Linux boot needs
