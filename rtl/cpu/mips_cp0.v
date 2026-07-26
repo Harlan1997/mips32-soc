@@ -76,7 +76,27 @@ module mips_cp0 (
     // Outputs to CPU pipeline
     output wire [31:0] epc_out,      // EPC register value (used by ERET)
     output wire [31:0] ebase_out,    // Full EBase register value (for vector gen)
-    output wire        intr_req      // Interrupt request to CPU (if enabled)
+    output wire        intr_req,     // Interrupt request to CPU (if enabled)
+
+    // Phase B.3.c: MMU translation pass-through. Two TLB lookup ports (I / D)
+    // and CP0-owned globals the MMU needs (ASID, Config.K0). These are pure
+    // combinational fanout; mips_cp0 does not consume them.
+    output wire [7:0]  cp0_asid_out,
+    output wire [2:0]  cp0_config_k0_out,
+
+    input  wire [31:0] mmu_ilookup_va,
+    output wire        mmu_ilookup_hit,
+    output wire        mmu_ilookup_v,
+    output wire        mmu_ilookup_d,
+    output wire [2:0]  mmu_ilookup_c,
+    output wire [19:0] mmu_ilookup_pfn,
+
+    input  wire [31:0] mmu_dlookup_va,
+    output wire        mmu_dlookup_hit,
+    output wire        mmu_dlookup_v,
+    output wire        mmu_dlookup_d,
+    output wire [2:0]  mmu_dlookup_c,
+    output wire [19:0] mmu_dlookup_pfn
 );
 
     // -------------------------------------------------------------------------
@@ -547,7 +567,27 @@ module mips_cp0 (
         .probe_vpn2  (cp0_entryhi_vpn2),
         .probe_asid  (cp0_entryhi_asid),
         .probe_hit   (tlb_probe_hit),
-        .probe_index (tlb_probe_index)
+        .probe_index (tlb_probe_index),
+
+        // Phase B.3.c dual lookup ports (fanned to MMU I / D)
+        .lookup0_va  (mmu_ilookup_va),
+        .lookup0_asid(cp0_entryhi_asid),
+        .lookup0_hit (mmu_ilookup_hit),
+        .lookup0_v   (mmu_ilookup_v),
+        .lookup0_d   (mmu_ilookup_d),
+        .lookup0_c   (mmu_ilookup_c),
+        .lookup0_pfn (mmu_ilookup_pfn),
+
+        .lookup1_va  (mmu_dlookup_va),
+        .lookup1_asid(cp0_entryhi_asid),
+        .lookup1_hit (mmu_dlookup_hit),
+        .lookup1_v   (mmu_dlookup_v),
+        .lookup1_d   (mmu_dlookup_d),
+        .lookup1_c   (mmu_dlookup_c),
+        .lookup1_pfn (mmu_dlookup_pfn)
     );
+
+    assign cp0_asid_out      = cp0_entryhi_asid;
+    assign cp0_config_k0_out = cp0_config_k0;
 
 endmodule

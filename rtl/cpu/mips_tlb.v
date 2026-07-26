@@ -49,7 +49,29 @@ module mips_tlb #(
     input  wire [18:0]           probe_vpn2,
     input  wire [7:0]            probe_asid,
     output wire                  probe_hit,
-    output wire [INDEX_BITS-1:0] probe_index
+    output wire [INDEX_BITS-1:0] probe_index,
+
+    // Address-translation lookup ports (Phase B.3.c). Combinational.
+    // Two ports (I-fetch + D-load/store) let both pipeline sides translate in
+    // the same cycle. Callers (mips_mmu) supply the full VA and gate the port
+    // to only useg/kseg2/kseg3 accesses; kseg0/kseg1 direct-map does not touch
+    // the TLB. Sub-page selection uses VA[12] (4KB-page assumption; variable
+    // page sizes land with Phase B.3.d).
+    input  wire [31:0]           lookup0_va,
+    input  wire [7:0]            lookup0_asid,
+    output wire                  lookup0_hit,
+    output wire                  lookup0_v,
+    output wire                  lookup0_d,
+    output wire [2:0]            lookup0_c,
+    output wire [19:0]           lookup0_pfn,
+
+    input  wire [31:0]           lookup1_va,
+    input  wire [7:0]            lookup1_asid,
+    output wire                  lookup1_hit,
+    output wire                  lookup1_v,
+    output wire                  lookup1_d,
+    output wire [2:0]            lookup1_c,
+    output wire [19:0]           lookup1_pfn
 );
 
     // -------------------------------------------------------------------------
@@ -114,6 +136,82 @@ module mips_tlb #(
     end
     assign probe_hit   = probe_hit_r;
     assign probe_index = probe_index_r;
+
+    // -------------------------------------------------------------------------
+    // Lookup ports (Phase B.3.c): combinational address translation.
+    // Two parallel ports (0 = I-side, 1 = D-side) share the same TLB storage.
+    // Each uses the probe match rule and additionally selects even/odd sub-page
+    // via VA[12] to expose V/D/C/PFN. 4KB-page assumption; PageMask-aware
+    // sub-page selection is a B.3.d follow-up.
+    // -------------------------------------------------------------------------
+
+    // Port 0 (I-side)
+    wire [18:0] lookup0_vpn2 = lookup0_va[31:13];
+    wire        lookup0_odd  = lookup0_va[12];
+    wire [TLB_ENTRIES-1:0] lookup0_hit_vec;
+    generate
+        for (gi = 0; gi < TLB_ENTRIES; gi = gi + 1) begin : g_lookup0
+            wire [18:0] cmp0_mask = { 3'b111, ~tlb_mask[gi] };
+            wire vpn2_match0 = tlb_valid[gi] &&
+                               (((tlb_vpn2[gi] ^ lookup0_vpn2) & cmp0_mask) == 19'b0);
+            wire asid_match0 = tlb_g[gi] || (tlb_asid[gi] == lookup0_asid);
+            assign lookup0_hit_vec[gi] = vpn2_match0 && asid_match0;
+        end
+    endgenerate
+    reg [INDEX_BITS-1:0] lookup0_hit_index_r;
+    reg                  lookup0_hit_r;
+    integer m0;
+    always @(*) begin
+        lookup0_hit_r       = 1'b0;
+        lookup0_hit_index_r = {INDEX_BITS{1'b0}};
+        for (m0 = TLB_ENTRIES - 1; m0 >= 0; m0 = m0 - 1) begin
+            if (lookup0_hit_vec[m0]) begin
+                lookup0_hit_r       = 1'b1;
+                lookup0_hit_index_r = m0[INDEX_BITS-1:0];
+            end
+        end
+    end
+    assign lookup0_hit = lookup0_hit_r;
+    wire [31:0] sel_lo0 = lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r]
+                                      : tlb_entrylo0[lookup0_hit_index_r];
+    assign lookup0_v   = sel_lo0[1];
+    assign lookup0_d   = sel_lo0[2];
+    assign lookup0_c   = sel_lo0[5:3];
+    assign lookup0_pfn = sel_lo0[25:6];
+
+    // Port 1 (D-side)
+    wire [18:0] lookup1_vpn2 = lookup1_va[31:13];
+    wire        lookup1_odd  = lookup1_va[12];
+    wire [TLB_ENTRIES-1:0] lookup1_hit_vec;
+    generate
+        for (gi = 0; gi < TLB_ENTRIES; gi = gi + 1) begin : g_lookup1
+            wire [18:0] cmp1_mask = { 3'b111, ~tlb_mask[gi] };
+            wire vpn2_match1 = tlb_valid[gi] &&
+                               (((tlb_vpn2[gi] ^ lookup1_vpn2) & cmp1_mask) == 19'b0);
+            wire asid_match1 = tlb_g[gi] || (tlb_asid[gi] == lookup1_asid);
+            assign lookup1_hit_vec[gi] = vpn2_match1 && asid_match1;
+        end
+    endgenerate
+    reg [INDEX_BITS-1:0] lookup1_hit_index_r;
+    reg                  lookup1_hit_r;
+    integer m1;
+    always @(*) begin
+        lookup1_hit_r       = 1'b0;
+        lookup1_hit_index_r = {INDEX_BITS{1'b0}};
+        for (m1 = TLB_ENTRIES - 1; m1 >= 0; m1 = m1 - 1) begin
+            if (lookup1_hit_vec[m1]) begin
+                lookup1_hit_r       = 1'b1;
+                lookup1_hit_index_r = m1[INDEX_BITS-1:0];
+            end
+        end
+    end
+    assign lookup1_hit = lookup1_hit_r;
+    wire [31:0] sel_lo1 = lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r]
+                                      : tlb_entrylo0[lookup1_hit_index_r];
+    assign lookup1_v   = sel_lo1[1];
+    assign lookup1_d   = sel_lo1[2];
+    assign lookup1_c   = sel_lo1[5:3];
+    assign lookup1_pfn = sel_lo1[25:6];
 
     // -------------------------------------------------------------------------
     // Write (TLBWI / TLBWR): synchronous, one entry per cycle.
