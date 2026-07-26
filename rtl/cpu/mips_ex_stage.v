@@ -7,6 +7,8 @@
 //   Exposes status flags and arbitration for pipeline stalling.
 // =============================================================================
 
+`include "soc_config.vh"
+
 module mips_ex_stage (
     input  wire        clk,
     input  wire        rst_n,
@@ -43,7 +45,50 @@ module mips_ex_stage (
         .zero    (zero)
     );
 
-    // Instantiate Multiplier-Divider Unit (MDU)
+`ifdef SOC_USE_MDU_V2
+    // ------------------------------------------------------------------
+    // MDU v2 cutover: adapt 3-bit v1 op → 4-bit v2 op, mux MFHI/MFLO out.
+    // See docs/block_specs/mdu_spec.md; commit rtl(cpu) — MDU v2 impl.
+    // ------------------------------------------------------------------
+    reg [3:0] mdu_v2_op;
+    always @(*) begin
+        case (mdu_op)
+            3'b000: mdu_v2_op = 4'd0;  // MULT
+            3'b001: mdu_v2_op = 4'd1;  // MULTU
+            3'b010: mdu_v2_op = 4'd2;  // DIV
+            3'b011: mdu_v2_op = 4'd3;  // DIVU
+            3'b100: mdu_v2_op = 4'd6;  // MTHI
+            3'b101: mdu_v2_op = 4'd7;  // MTLO
+            3'b110: mdu_v2_op = 4'd4;  // MFHI
+            3'b111: mdu_v2_op = 4'd5;  // MFLO
+            default: mdu_v2_op = 4'd0;
+        endcase
+    end
+    wire mdu_v2_busy, mdu_v2_done;
+    mips_mdu_v2 u_mips_mdu (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .issue_valid(mdu_start),
+        .op         (mdu_v2_op),
+        .rs_val     (op_a),
+        .rt_val     (op_b),
+        .hi_out     (hi_val),
+        .lo_out     (lo_val),
+        .busy       (mdu_v2_busy),
+        .done_pulse (mdu_v2_done)
+    );
+    assign mdu_ready = ~mdu_v2_busy;
+    reg [31:0] mdu_out_r;
+    always @(*) begin
+        case (mdu_op)
+            3'b110:  mdu_out_r = hi_val;
+            3'b111:  mdu_out_r = lo_val;
+            default: mdu_out_r = 32'd0;
+        endcase
+    end
+    assign mdu_out = mdu_out_r;
+`else
+    // Instantiate Multiplier-Divider Unit (MDU) v1
     mips_mdu u_mips_mdu (
         .clk    (clk),
         .rst_n  (rst_n),
@@ -56,6 +101,7 @@ module mips_ex_stage (
         .ready  (mdu_ready),
         .mdu_out(mdu_out)
     );
+`endif
 
     // Output Selection: ALU vs MDU
     assign ex_out = sel_mdu_out ? mdu_out : alu_out;

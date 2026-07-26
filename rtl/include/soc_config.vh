@@ -6,6 +6,12 @@
 `ifndef SOC_CONFIG_VH
 `define SOC_CONFIG_VH
 
+// ---------------------------------------------------------------------------
+// v2 cutover flags — enable freshly-verified replacement modules.
+// Comment out any of these to fall back to the v1 predecessor immediately.
+// ---------------------------------------------------------------------------
+`define SOC_USE_MDU_V2   1   // rtl/cpu/mips_mdu_v2.v (verified: tb/unit/mdu_v2/)
+
 // AXI/APB interface contract
 `define SOC_AXI_ID_WIDTH      4
 `define SOC_AXI_ADDR_WIDTH    32

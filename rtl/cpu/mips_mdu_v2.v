@@ -137,11 +137,8 @@ module mips_mdu_v2 (
                         rs_r <= rs_val;
                         rt_r <= rt_val;
                         case (op)
-                            OP_MFHI: begin
-                                lo_r  <= hi_r;   // caller reads lo_out; wrapper decides which
-                                state <= ST_DONE;
-                            end
-                            OP_MFLO: begin
+                            OP_MFHI, OP_MFLO: begin
+                                // hi_out/lo_out are always live; caller selects
                                 state <= ST_DONE;
                             end
                             OP_MTHI: begin
