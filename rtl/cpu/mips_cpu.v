@@ -92,6 +92,31 @@ module mips_cpu (
     // IF stage outputs
     wire [31:0] if_pc_plus_4;
     wire        if_adel_exception;
+
+    // Phase B.3.c: MMU translation intermediate wires. Stages drive VA; MMU
+    // combinationally translates to the PA that leaves the CPU boundary.
+    wire [31:0] if_vaddr;
+    wire [31:0] mem_vaddr;
+    wire [2:0]  mmu_i_cache_attr;
+    wire [2:0]  mmu_d_cache_attr;
+    wire        mmu_i_ok;
+    wire        mmu_d_ok;
+    wire [2:0]  mmu_i_fault_type;
+    wire [2:0]  mmu_d_fault_type;
+    wire [7:0]  cp0_asid;
+    wire [2:0]  cp0_config_k0;
+    wire [31:0] mmu_ilookup_va;
+    wire        mmu_ilookup_hit;
+    wire        mmu_ilookup_v;
+    wire        mmu_ilookup_d;
+    wire [2:0]  mmu_ilookup_c;
+    wire [19:0] mmu_ilookup_pfn;
+    wire [31:0] mmu_dlookup_va;
+    wire        mmu_dlookup_hit;
+    wire        mmu_dlookup_v;
+    wire        mmu_dlookup_d;
+    wire [2:0]  mmu_dlookup_c;
+    wire [19:0] mmu_dlookup_pfn;
     
     // =========================================================================
     // IF Stage
@@ -108,7 +133,7 @@ module mips_cpu (
         .exception_vector (exception_vector),
         
         .inst_req         (inst_req),
-        .inst_addr        (inst_addr),
+        .inst_addr        (if_vaddr),
         .inst_addr_ok     (inst_addr_ok),
         .inst_data_ok     (inst_data_ok),
         
@@ -463,7 +488,7 @@ module mips_cpu (
         .mem_done        (mem_done),
         
         .dmem_rdata      (data_rdata),
-        .dmem_addr       (data_addr),
+        .dmem_addr       (mem_vaddr),
         .dmem_wdata      (data_wdata),
         .dmem_we         (data_we),
         .dmem_be         (data_be),
@@ -577,8 +602,79 @@ module mips_cpu (
         .eret         (wb_is_eret),
         .epc_out      (epc_out),
         .ebase_out    (ebase_out),
-        .intr_req     (intr_req)
+        .intr_req     (intr_req),
+
+        // MMU pass-through
+        .cp0_asid_out       (cp0_asid),
+        .cp0_config_k0_out  (cp0_config_k0),
+        .mmu_ilookup_va     (mmu_ilookup_va),
+        .mmu_ilookup_hit    (mmu_ilookup_hit),
+        .mmu_ilookup_v      (mmu_ilookup_v),
+        .mmu_ilookup_d      (mmu_ilookup_d),
+        .mmu_ilookup_c      (mmu_ilookup_c),
+        .mmu_ilookup_pfn    (mmu_ilookup_pfn),
+        .mmu_dlookup_va     (mmu_dlookup_va),
+        .mmu_dlookup_hit    (mmu_dlookup_hit),
+        .mmu_dlookup_v      (mmu_dlookup_v),
+        .mmu_dlookup_d      (mmu_dlookup_d),
+        .mmu_dlookup_c      (mmu_dlookup_c),
+        .mmu_dlookup_pfn    (mmu_dlookup_pfn)
     );
+
+    // -------------------------------------------------------------------------
+    // Phase B.3.c: address translation for I-fetch and D-load/store.
+    // With SOC_MMU_ENABLE=0 (default) both MMUs act as identity translators —
+    // the CPU output PA equals the pipeline VA and downstream caches are
+    // completely unaffected. When MMU is enabled, kseg0/1 direct-map is
+    // active and useg/kseg2/kseg3 consult the CP0 TLB via the dual lookup
+    // ports above.
+    // -------------------------------------------------------------------------
+    mips_mmu u_mmu_i (
+        .req_valid       (inst_req),
+        .req_va          (if_vaddr),
+        .req_is_store    (1'b0),
+        .req_is_fetch    (1'b1),
+        .asid            (cp0_asid),
+        .config_k0       (cp0_config_k0),
+        .tlb_lookup_va   (mmu_ilookup_va),
+        .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
+        .tlb_lookup_hit  (mmu_ilookup_hit),
+        .tlb_lookup_v    (mmu_ilookup_v),
+        .tlb_lookup_d    (mmu_ilookup_d),
+        .tlb_lookup_c    (mmu_ilookup_c),
+        .tlb_lookup_pfn  (mmu_ilookup_pfn),
+        .pa              (inst_addr),
+        .cache_attr      (mmu_i_cache_attr),
+        .translation_ok  (mmu_i_ok),
+        .fault_type      (mmu_i_fault_type)
+    );
+
+    mips_mmu u_mmu_d (
+        .req_valid       (data_req),
+        .req_va          (mem_vaddr),
+        .req_is_store    (data_we),
+        .req_is_fetch    (1'b0),
+        .asid            (cp0_asid),
+        .config_k0       (cp0_config_k0),
+        .tlb_lookup_va   (mmu_dlookup_va),
+        .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
+        .tlb_lookup_hit  (mmu_dlookup_hit),
+        .tlb_lookup_v    (mmu_dlookup_v),
+        .tlb_lookup_d    (mmu_dlookup_d),
+        .tlb_lookup_c    (mmu_dlookup_c),
+        .tlb_lookup_pfn  (mmu_dlookup_pfn),
+        .pa              (data_addr),
+        .cache_attr      (mmu_d_cache_attr),
+        .translation_ok  (mmu_d_ok),
+        .fault_type      (mmu_d_fault_type)
+    );
+
+    // MMU cache_attr and fault outputs are declared for observability and for
+    // Phase B.3.c.2 (cache attr routing) / Phase B.3.d (exception path). They
+    // are intentionally unconsumed here.
+    wire _mmu_unused = &{1'b0, mmu_i_cache_attr, mmu_d_cache_attr,
+                              mmu_i_ok, mmu_d_ok,
+                              mmu_i_fault_type, mmu_d_fault_type};
 
     always @(posedge clk) begin
         if ($time > 324400 && $time < 324600) begin
