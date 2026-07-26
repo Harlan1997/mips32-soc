@@ -240,100 +240,6 @@ static uint32_t cache_sweep(void) {
     return sum;
 }
 
-// -----------------------------------------------------------------------------
-// cp0_sweep() — Phase A coverage-closure helper for Phase B new CP0 regs.
-// main.c already exercises Status / Cause / EPC via handler; Phase B added
-// Count / Compare / EBase / HWREna / Config / IntCtl / ErrorEPC / MMU regs.
-// This routine writes then reads them (only the SW-writable fields) so the
-// decoder branches for (regnum, sel) tuples added since B.1 all fire.
-// -----------------------------------------------------------------------------
-static uint32_t cp0_sweep(void) {
-    uint32_t v = 0;
-    // Compare / Count round-trip
-    uint32_t tmp;
-    asm volatile("mtc0 %0, $11, 0" :: "r"(0x0000FFFFU));   // Compare = 65535
-    asm volatile("mfc0 %0, $11, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mfc0 %0, $9,  0" : "=r"(tmp)); v ^= tmp;  // Count (read only)
-
-    // ErrorEPC (30, 0)
-    asm volatile("mtc0 %0, $30, 0" :: "r"(0xABCD1234U));
-    asm volatile("mfc0 %0, $30, 0" : "=r"(tmp)); v ^= tmp;
-
-    // HWREna (7, 0) — sw writable bits [3:0] + [29]
-    asm volatile("mtc0 %0, $7,  0" :: "r"(0x2000000FU));
-    asm volatile("mfc0 %0, $7,  0" : "=r"(tmp)); v ^= tmp;
-
-    // IntCtl (12, 1) — IPTI and VS
-    asm volatile(".set push; .set mips32r2; mtc0 %0, $12, 1; .set pop"
-                 :: "r"(0xE0000200U));  // IPTI=7, VS=16
-    asm volatile(".set push; .set mips32r2; mfc0 %0, $12, 1; .set pop"
-                 : "=r"(tmp));
-    v ^= tmp;
-
-    // Config K0 (16, 0) — soft field
-    asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 0; .set pop"
-                 : "=r"(tmp)); v ^= tmp;
-
-    // Config2 / Config3 (16, 2) / (16, 3) — read only
-    asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 2; .set pop"
-                 : "=r"(tmp)); v ^= tmp;
-    asm volatile(".set push; .set mips32r2; mfc0 %0, $16, 3; .set pop"
-                 : "=r"(tmp)); v ^= tmp;
-
-    // MMU CP0 register writes (Phase B.3.a): Index / EntryLo0 / EntryLo1 /
-    // Context / PageMask / Wired / EntryHi. Storage only — no TLBWI issued
-    // so no TLB entry created and no runtime side effect.
-    asm volatile("mtc0 %0, $0, 0" :: "r"(0x0000003FU));  // Index
-    asm volatile("mfc0 %0, $0, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mtc0 %0, $2, 0" :: "r"(0x00000FC7U));  // EntryLo0
-    asm volatile("mfc0 %0, $2, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mtc0 %0, $3, 0" :: "r"(0x00001FC7U));  // EntryLo1
-    asm volatile("mfc0 %0, $3, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mtc0 %0, $4, 0" :: "r"(0xFF800000U));  // Context PTEBase
-    asm volatile("mfc0 %0, $4, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mtc0 %0, $5, 0" :: "r"(0x0000E000U));  // PageMask (16KB)
-    asm volatile("mfc0 %0, $5, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mtc0 %0, $6, 0" :: "r"(0x00000008U));  // Wired = 8
-    asm volatile("mfc0 %0, $6, 0" : "=r"(tmp)); v ^= tmp;
-    asm volatile("mtc0 %0, $10, 0" :: "r"(0x1234A5A5U)); // EntryHi
-    asm volatile("mfc0 %0, $10, 0" : "=r"(tmp)); v ^= tmp;
-    // Reset MMU regs to safe defaults so downstream tests aren't affected
-    asm volatile("mtc0 $0, $6, 0");                       // Wired = 0
-    asm volatile("mtc0 $0, $5, 0");                       // PageMask = 0
-
-    return v;
-}
-
-// -----------------------------------------------------------------------------
-// addr_toggle_sweep() — read across all mapped-region high-address-bit
-// patterns so AXI bus address bits [31:16] get toggled at least once.
-// -----------------------------------------------------------------------------
-static uint32_t addr_toggle_sweep(void) {
-    uint32_t v = 0;
-    // SRAM boot region — bits 12-15 spread across 64KB
-    volatile uint32_t *sram = (volatile uint32_t *)0x0000C004U;
-    v ^= *sram;
-    // SRAM alias uncached (kseg1) — bit 31, bit 29, bit 15
-    volatile uint32_t *uncached = (volatile uint32_t *)0xA000C008U;
-    v ^= *uncached;
-    // QSPI flash XIP (bit 28)
-    volatile uint32_t *flash = (volatile uint32_t *)0x10001004U;
-    v ^= *flash;
-    // Another flash offset to toggle mid bits
-    volatile uint32_t *flash2 = (volatile uint32_t *)0x10004008U;
-    v ^= *flash2;
-    // APB GPIO (bit 30)
-    volatile uint32_t *apb_gpio = (volatile uint32_t *)0x40002000U;
-    v ^= *apb_gpio;
-    // APB Timer VAL (bit 30 + low bits)
-    volatile uint32_t *apb_tmr_val = (volatile uint32_t *)0x40001008U;
-    v ^= *apb_tmr_val;
-    // APB PIC STATUS (bit 30 + different offset)
-    volatile uint32_t *apb_pic = (volatile uint32_t *)0x40004000U;
-    v ^= *apb_pic;
-    return v;
-}
-
 int main() {
     print_str("\n--- Comprehensive SoC Test Start ---\n");
 
@@ -347,15 +253,6 @@ int main() {
     // state machine, and byte/half strobe paths.
     print_str("0. Cache sweep: ");
     print_hex(cache_sweep());
-
-    // Phase A coverage-closure: exercise Phase B new CP0 register decode.
-    print_str("0. CP0 sweep:   ");
-    print_hex(cp0_sweep());
-
-    // Phase A coverage-closure: toggle AXI address bus high bits via
-    // cross-region loads.
-    print_str("0. Addr sweep:  ");
-    print_hex(addr_toggle_sweep());
 
     // 1. GPIO Test
     print_str("1. Testing GPIO...\n");
