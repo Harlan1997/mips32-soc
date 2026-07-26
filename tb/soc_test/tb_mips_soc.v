@@ -526,9 +526,14 @@ endmodule
 
 bind tb_mips_soc soc_legacy_observation_bind u_soc_legacy_observation_bind (
     .obs_if              (legacy_obs_if),
+    // Phase B.3.c + Phase C.1 note: watch the pre-MMU virtual address
+    // (mem_vaddr) rather than the post-translation PA (data_addr). Firmware
+    // always writes the mailbox as VA 0xA000FFFC (kseg1 alias); the MMU may
+    // later translate this to PA 0x0000FFFC once SOC_MMU_ENABLE=1 flips,
+    // which would silently break the observation if we watched data_addr.
     .mailbox_valid       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
-                          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'ha000fffc)),
+                          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'ha000fffc)),
     .mailbox_wdata       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata),
     .trace_pc            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc),
     .cp0_except_req      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req),
