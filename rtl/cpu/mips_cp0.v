@@ -8,23 +8,38 @@
 // Phase B.1: PRId / EBase / Config[0..3] / HWREna / IntCtl / ErrorEPC storage
 // with (regnum, sel) sub-select decoding; ebase_out exposed; $display guarded.
 //
-// Phase B.2 (this file): CP0 Timer
+// Phase B.2: CP0 Timer
 //   - Count (9,0)   : 32-bit free-running counter, prescaled by SOC_CP0_COUNT_DIV,
 //                     paused while Cause.DC=1
 //   - Compare (11,0): 32-bit software match value; writing it also clears Cause.TI
 //   - Cause.TI (30) : latched, set when Count == Compare, cleared on Compare write
 //   - Cause.DC (27) : software-writable Count-disable
-//   - Cause.IV (23) : software-writable (already available since B.1)
 //   - IntCtl.IPTI[31:29]: selects which Cause.IP bit receives TI (default 7)
-//   - Combined IP field  Cause.IP[7:2] = hw_int | (timer_ip << IPTI)
+//   - Combined IP field  Cause.IP[7:2] = hw_int | (timer_ip << (IPTI-2))
 //
-// Regression preservation: Compare resets to SOC_CP0_COMPARE_RESET (all-1s) so
-// TI is not asserted when firmware boots at Count=0 without ever touching Compare.
+// Phase B.3.a (this file): MMU CP0 register storage only
+//   - Index (0,0)     : [31]=P (probe fail), [log2(N)-1:0]=index
+//   - Random (1,0)    : hardware-decrementing 6-bit counter, wraps N-1 → Wired
+//   - EntryLo0 (2,0)  : PFN + Cache attr + D + V + G
+//   - EntryLo1 (3,0)  : PFN + Cache attr + D + V + G
+//   - Context (4,0)   : PTEBase (SW writable) + BadVPN2 (HW updated in B.3.d)
+//   - PageMask (5,0)  : Mask field (variable page-size selector)
+//   - Wired (6,0)     : software lower bound of Random; writing it also resets Random
+//   - BadVAddr (8,0)  : read-only; hardware update deferred to B.3.d
+//   - EntryHi (10,0)  : VPN2 + ASID (both software writable)
+//
+// Regression preservation for B.3.a:
+//   - No TLB data array, no TLB instructions, no lookup path yet: firmware that
+//     never touches MMU sees no behavior change. SOC_MMU_ENABLE stays 0.
 //
 // Deferred to later Phase B sub-steps:
+//   - TLB data array + TLBR/TLBWI/TLBWR/TLBP instructions (B.3.b)
+//   - micro-TLB (I/D) + kseg0/1/2/3 + useg translation path (B.3.c)
+//   - TLB Refill / Invalid / Modified / MCheck exception paths + BadVAddr /
+//     Context.BadVPN2 hardware update (B.3.d)
+//   - Linux head.S paging-on integration (B.3.e)
 //   - RDHWR $2 → Count (needs Phase B.4 user mode + instruction decode)
 //   - KSU / User mode enforcement (B.4)
-//   - MMU/TLB registers (B.3, see mmu_tlb_spec.md)
 //   - Precise exception refinement + BD-in-pipeline plumbing (B.5)
 //   - EBase-driven exception vector (B.5)
 // =============================================================================
@@ -65,8 +80,17 @@ module mips_cp0 (
     // -------------------------------------------------------------------------
     //   Reg  Sel  Name       Notes
     //   ---  ---  ---------  --------------------------------------------------
+    //   0    0    Index      [31]=P, [5:0]=index (log2 TLB_ENTRIES)  (Phase B.3.a)
+    //   1    0    Random     [5:0] hardware counter, wraps N-1→Wired (Phase B.3.a)
+    //   2    0    EntryLo0   [25:6]=PFN, [5:3]=C, [2]=D, [1]=V, [0]=G (Phase B.3.a)
+    //   3    0    EntryLo1   same layout as EntryLo0                   (Phase B.3.a)
+    //   4    0    Context    [31:23]=PTEBase (SW), [22:4]=BadVPN2 (HW, B.3.d)
+    //   5    0    PageMask   [28:13]=Mask                              (Phase B.3.a)
+    //   6    0    Wired      [5:0] software lower bound on Random      (Phase B.3.a)
     //   7    0    HWREna     User RDHWR enable mask
+    //   8    0    BadVAddr   read-only; HW update deferred to B.3.d
     //   9    0    Count      Free-running counter (Phase B.2)
+    //   10   0    EntryHi    [31:13]=VPN2, [7:0]=ASID                 (Phase B.3.a)
     //   11   0    Compare    Timer match value (Phase B.2)
     //   12   0    Status     [22]=BEV, [15:8]=IM, [1]=EXL, [0]=IE  (extended)
     //   12   1    IntCtl     [31:29]=IPTI, [9:5]=VS
@@ -95,6 +119,22 @@ module mips_cp0 (
     reg [31:0] cp0_count;
     reg [31:0] cp0_compare;
     reg [3:0]  cp0_count_prescale; // Supports SOC_CP0_COUNT_DIV up to 16
+
+    // Phase B.3.a MMU register storage. Lookup / TLB array / exception plumbing
+    // are added in later B.3 substeps; here we only hold values so software can
+    // MFC0/MTC0 the standard MIPS32 privileged register set without spurious RI.
+    localparam TLB_IDX_BITS = `SOC_CP0_TLB_INDEX_BITS;
+    reg                       cp0_index_p;              // Index[31] probe-fail
+    reg [TLB_IDX_BITS-1:0]    cp0_index;                // Index[log2(N)-1:0]
+    reg [TLB_IDX_BITS-1:0]    cp0_random;               // free-running downcounter
+    reg [TLB_IDX_BITS-1:0]    cp0_wired;                // lower bound for Random
+    reg [31:0]                cp0_entrylo0;
+    reg [31:0]                cp0_entrylo1;
+    reg [8:0]                 cp0_context_ptebase;      // Context[31:23]
+    reg [15:0]                cp0_pagemask_mask;        // PageMask[28:13]
+    reg [31:0]                cp0_badvaddr;             // updated by HW in B.3.d
+    reg [18:0]                cp0_entryhi_vpn2;         // EntryHi[31:13]
+    reg [7:0]                 cp0_entryhi_asid;         // EntryHi[7:0]
 
     // -------------------------------------------------------------------------
     // Static reads (hardcoded constants from soc_config.vh)
@@ -166,6 +206,16 @@ module mips_cp0 (
                                16'b0,
                                cp0_intctl_vs, 5'b0 };
 
+    // MMU register read-back assembly (Phase B.3.a)
+    wire [31:0] index_val    = { cp0_index_p, {(31-TLB_IDX_BITS){1'b0}}, cp0_index };
+    wire [31:0] random_val   = { {(32-TLB_IDX_BITS){1'b0}}, cp0_random };
+    wire [31:0] wired_val    = { {(32-TLB_IDX_BITS){1'b0}}, cp0_wired };
+    // Context: [31:23]=PTEBase (SW), [22:4]=BadVPN2 (HW, 0 for now), [3:0]=rsv
+    wire [31:0] context_val  = { cp0_context_ptebase, 19'b0, 4'b0 };
+    // PageMask: [28:13]=Mask, everything else 0
+    wire [31:0] pagemask_val = { 3'b0, cp0_pagemask_mask, 13'b0 };
+    wire [31:0] entryhi_val  = { cp0_entryhi_vpn2, 5'b0, cp0_entryhi_asid };
+
     // Status (12,0) read-back: assemble writable+reserved bits.
     // Layout: [31:23]=9b (CU/RP/FR/RE/MX/PX), [22]=BEV, [21:16]=6b (TS/SR/NMI/impl),
     //         [15:8]=IM, [7:5]=3b, [4:3]=KSU, [2]=ERL, [1]=EXL, [0]=IE.
@@ -208,8 +258,17 @@ module mips_cp0 (
     always @(*) begin
         rdata = 32'd0;
         case ({raddr, rsel})
+            {5'd0,  3'd0}: rdata = index_val;
+            {5'd1,  3'd0}: rdata = random_val;
+            {5'd2,  3'd0}: rdata = cp0_entrylo0;
+            {5'd3,  3'd0}: rdata = cp0_entrylo1;
+            {5'd4,  3'd0}: rdata = context_val;
+            {5'd5,  3'd0}: rdata = pagemask_val;
+            {5'd6,  3'd0}: rdata = wired_val;
             {5'd7,  3'd0}: rdata = cp0_hwrena;
+            {5'd8,  3'd0}: rdata = cp0_badvaddr;
             {5'd9,  3'd0}: rdata = cp0_count;
+            {5'd10, 3'd0}: rdata = entryhi_val;
             {5'd11, 3'd0}: rdata = cp0_compare;
             {5'd12, 3'd0}: rdata = status_val;
             {5'd12, 3'd1}: rdata = intctl_val;
@@ -252,6 +311,19 @@ module mips_cp0 (
             cp0_count           <= 32'd0;
             cp0_compare         <= `SOC_CP0_COMPARE_RESET; // All-1s avoids boot-time TI
             cp0_count_prescale  <= 4'd0;
+
+            // Phase B.3.a MMU register reset
+            cp0_index_p         <= 1'b0;
+            cp0_index           <= {TLB_IDX_BITS{1'b0}};
+            cp0_random          <= `SOC_CP0_TLB_INDEX_MAX;
+            cp0_wired           <= {TLB_IDX_BITS{1'b0}};
+            cp0_entrylo0        <= 32'd0;
+            cp0_entrylo1        <= 32'd0;
+            cp0_context_ptebase <= 9'd0;
+            cp0_pagemask_mask   <= 16'd0;
+            cp0_badvaddr        <= 32'd0;
+            cp0_entryhi_vpn2    <= 19'd0;
+            cp0_entryhi_asid    <= 8'd0;
         end else begin
             // -----------------------------------------------------------------
             // Cause.IP[7:2] update every cycle: mirror hw_int OR timer routing.
@@ -284,6 +356,17 @@ module mips_cp0 (
                 end
             end
 
+            // -----------------------------------------------------------------
+            // Random hardware downcounter (Phase B.3.a). Runs every cycle; wraps
+            // to TLB_INDEX_MAX whenever it hits Wired or Wired is written.
+            // -----------------------------------------------------------------
+            if (we && ({waddr, wsel} == {5'd6, 3'd0}))
+                cp0_random <= `SOC_CP0_TLB_INDEX_MAX;
+            else if (cp0_random <= cp0_wired)
+                cp0_random <= `SOC_CP0_TLB_INDEX_MAX;
+            else
+                cp0_random <= cp0_random - {{(TLB_IDX_BITS-1){1'b0}}, 1'b1};
+
             if (except_req && !cp0_status[1]) begin
                 // Take exception (only if not already in exception level)
                 // synopsys translate_off
@@ -309,10 +392,46 @@ module mips_cp0 (
 
             end else if (we) begin
                 case ({waddr, wsel})
+                    {5'd0, 3'd0}: begin
+                        // Index: writable bits are P (31) and index[log2(N)-1:0].
+                        // Software rarely writes P (usually cleared by TLBP hw),
+                        // but spec allows it.
+                        cp0_index_p      <= wdata[31];
+                        cp0_index        <= wdata[TLB_IDX_BITS-1:0];
+                    end
+                    {5'd2, 3'd0}: begin
+                        // EntryLo0: all 32 bits software-writable (spec leaves
+                        // high bits reserved; keep as-written for MTC0/MFC0
+                        // symmetry, later TLBWI will only pick meaningful bits).
+                        cp0_entrylo0     <= wdata;
+                    end
+                    {5'd3, 3'd0}: begin
+                        cp0_entrylo1     <= wdata;
+                    end
+                    {5'd4, 3'd0}: begin
+                        // Context: only PTEBase[31:23] is software-writable;
+                        // BadVPN2[22:4] is HW-updated (deferred to B.3.d).
+                        cp0_context_ptebase <= wdata[31:23];
+                    end
+                    {5'd5, 3'd0}: begin
+                        // PageMask: [28:13] is Mask; other bits reserved.
+                        cp0_pagemask_mask <= wdata[28:13];
+                    end
+                    {5'd6, 3'd0}: begin
+                        // Wired: only low log2(N) bits meaningful.
+                        cp0_wired        <= wdata[TLB_IDX_BITS-1:0];
+                        // Random reset side-effect is handled outside this
+                        // chain to remain uniform across exception/eret cycles.
+                    end
                     {5'd7, 3'd0}: begin
                         // HWREna: only bits [3:0] (CPUNum/SYNCI_Step/CC/CCRes)
                         // and [29] (ULR) are defined in R2; keep others 0.
                         cp0_hwrena       <= { 2'b0, wdata[29], 25'b0, wdata[3:0] };
+                    end
+                    {5'd10, 3'd0}: begin
+                        // EntryHi: [31:13]=VPN2, [7:0]=ASID; middle 5 bits rsv.
+                        cp0_entryhi_vpn2 <= wdata[31:13];
+                        cp0_entryhi_asid <= wdata[7:0];
                     end
                     {5'd12, 3'd0}: begin
                         cp0_status[22]   <= wdata[22];    // BEV

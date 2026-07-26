@@ -140,6 +140,54 @@ module tb_cp0_timer;
               rd[15] == 1'b1 && rd[30] == 1'b1);
         hw_int = 6'b000000;
 
+        // -----------------------------------------------------------------
+        // Phase B.3.a MMU register sanity: read reset values, write/readback,
+        // Random downcounter, Wired reset side-effect.
+        // -----------------------------------------------------------------
+        mfc0(5'd0,  3'd0, rd); check("Index reset = 0",           rd == 32'd0);
+        mfc0(5'd6,  3'd0, rd); check("Wired reset = 0",           rd == 32'd0);
+        mfc0(5'd2,  3'd0, rd); check("EntryLo0 reset = 0",        rd == 32'd0);
+        mfc0(5'd3,  3'd0, rd); check("EntryLo1 reset = 0",        rd == 32'd0);
+        mfc0(5'd10, 3'd0, rd); check("EntryHi reset = 0",         rd == 32'd0);
+        mfc0(5'd5,  3'd0, rd); check("PageMask reset = 0",        rd == 32'd0);
+        mfc0(5'd4,  3'd0, rd); check("Context reset = 0",         rd == 32'd0);
+        mfc0(5'd8,  3'd0, rd); check("BadVAddr reset = 0",        rd == 32'd0);
+
+        // Random is a running downcounter starting at TLB_INDEX_MAX (63)
+        mfc0(5'd1, 3'd0, rd);  check("Random <= 63",              rd[5:0] <= 6'd63);
+        // After many cycles it wraps back to 63 whenever it hits Wired (=0)
+        repeat (200) @(posedge clk);
+        mfc0(5'd1, 3'd0, rd);  check("Random still in [0,63]",    rd[5:0] <= 6'd63);
+
+        // Write/readback Index, EntryLo0/1, EntryHi, PageMask
+        mtc0(5'd0,  3'd0, 32'h8000_0003);            // P=1, index=3
+        mfc0(5'd0,  3'd0, rd); check("Index P=1 index=3",         rd == {1'b1, 25'b0, 6'd3});
+        mtc0(5'd2,  3'd0, 32'hDEAD_BEEF);
+        mfc0(5'd2,  3'd0, rd); check("EntryLo0 writeback",        rd == 32'hDEAD_BEEF);
+        mtc0(5'd3,  3'd0, 32'hCAFE_F00D);
+        mfc0(5'd3,  3'd0, rd); check("EntryLo1 writeback",        rd == 32'hCAFE_F00D);
+        mtc0(5'd10, 3'd0, 32'hABCD_00FF);            // VPN2=0xABCD_0, ASID=0xFF
+        mfc0(5'd10, 3'd0, rd); check("EntryHi VPN2+ASID readback",
+                                     rd == {19'h55E68, 5'b0, 8'hFF});
+        mtc0(5'd5,  3'd0, 32'h001F_E000);            // Mask[28:13]=0x00FF (16KB)
+        mfc0(5'd5,  3'd0, rd); check("PageMask Mask readback",    rd == 32'h001F_E000);
+
+        // Wired write → Random resets to TLB_INDEX_MAX; the following read
+        // happens a handful of cycles later so Random will have decremented
+        // some. The critical invariant is that it stayed high (well above the
+        // new lower bound), not that it's exactly max.
+        mtc0(5'd6,  3'd0, 32'd8);
+        mfc0(5'd1,  3'd0, rd); check("Random near top after Wired write",
+                                     rd[5:0] >= 6'd50);
+        // Wired lower bound now 8 → Random must not go below 8 long term
+        repeat (300) @(posedge clk);
+        mfc0(5'd1,  3'd0, rd); check("Random floor >= Wired(8)", rd[5:0] >= 6'd8);
+
+        // Context PTEBase write, BadVPN2 stays 0 (HW update deferred to B.3.d)
+        mtc0(5'd4,  3'd0, 32'hFF80_0000);            // PTEBase = 0x1FF
+        mfc0(5'd4,  3'd0, rd); check("Context PTEBase readback",
+                                     rd == {9'h1FF, 23'b0});
+
         // Summary
         if (errors == 0)
             $display("TB PASS (0 errors)");
