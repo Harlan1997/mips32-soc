@@ -194,7 +194,7 @@ module mips_cpu (
     wire [4:0]  id_waddr;
     wire [4:0]  id_sa;
     
-    wire [3:0]  id_alu_op;
+    wire [4:0]  id_alu_op;
     wire [2:0]  id_mdu_op;
     wire        id_mdu_start;
     wire        id_sel_mdu_out;
@@ -370,7 +370,7 @@ module mips_cpu (
     wire [4:0]  ex_cp0_raddr;
     wire [4:0]  ex_sa;
     
-    wire [3:0]  ex_alu_op;
+    wire [4:0]  ex_alu_op;
     wire [2:0]  ex_mdu_op;
     wire        ex_mdu_start;
     wire        ex_sel_mdu_out;
