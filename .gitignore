@@ -30,6 +30,23 @@ textReportExclude*/
 coverage_report/
 soc_cov_report/
 
+# URG full-exclusion dumps (regenerated per run; belong under build/ if needed)
+/fullexclude.line
+/fullexclude.cond
+/fullexclude.branch
+/fullexclude.fsm
+/fullexclude.tgl
+/fullexclude.tb_inst
+/fullexclude.tb_def
+/fullexclude_module.line
+/fullexclude_module.cond
+/fullexclude_module.branch
+/fullexclude_module.fsm
+/fullexclude_module.tgl
+
+# Scratch / exploratory scripts and dumps (not source-controlled)
+/scratch/
+
 # Generated firmware images
 sim/firmware.hex
 sim/.fsm.sch.verilog.xml
