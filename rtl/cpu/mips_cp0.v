@@ -72,6 +72,9 @@ module mips_cp0 (
     input  wire [31:0] except_pc,
     input  wire        except_bd,
     input  wire        eret,
+    // Phase B.3.d: faulting virtual address for BadVAddr / Context.BadVPN2
+    // Latched only when except_code is address-related (1/2/3/4/5).
+    input  wire [31:0] bad_vaddr,
 
     // Outputs to CPU pipeline
     output wire [31:0] epc_out,      // EPC register value (used by ERET)
@@ -166,6 +169,7 @@ module mips_cp0 (
     reg [31:0]                cp0_entrylo0;
     reg [31:0]                cp0_entrylo1;
     reg [8:0]                 cp0_context_ptebase;      // Context[31:23]
+    reg [18:0]                cp0_context_badvpn2;      // Context[22:4] (Phase B.3.d, hw-updated)
     reg [15:0]                cp0_pagemask_mask;        // PageMask[28:13]
     reg [31:0]                cp0_badvaddr;             // updated by HW in B.3.d
     reg [18:0]                cp0_entryhi_vpn2;         // EntryHi[31:13]
@@ -245,8 +249,8 @@ module mips_cp0 (
     wire [31:0] index_val    = { cp0_index_p, {(31-TLB_IDX_BITS){1'b0}}, cp0_index };
     wire [31:0] random_val   = { {(32-TLB_IDX_BITS){1'b0}}, cp0_random };
     wire [31:0] wired_val    = { {(32-TLB_IDX_BITS){1'b0}}, cp0_wired };
-    // Context: [31:23]=PTEBase (SW), [22:4]=BadVPN2 (HW, 0 for now), [3:0]=rsv
-    wire [31:0] context_val  = { cp0_context_ptebase, 19'b0, 4'b0 };
+    // Context: [31:23]=PTEBase (SW), [22:4]=BadVPN2 (HW updated by B.3.d), [3:0]=rsv
+    wire [31:0] context_val  = { cp0_context_ptebase, cp0_context_badvpn2, 4'b0 };
     // PageMask: [28:13]=Mask, everything else 0
     wire [31:0] pagemask_val = { 3'b0, cp0_pagemask_mask, 13'b0 };
     wire [31:0] entryhi_val  = { cp0_entryhi_vpn2, 5'b0, cp0_entryhi_asid };
@@ -355,6 +359,7 @@ module mips_cp0 (
             cp0_entrylo0        <= 32'd0;
             cp0_entrylo1        <= 32'd0;
             cp0_context_ptebase <= 9'd0;
+            cp0_context_badvpn2 <= 19'd0;
             cp0_pagemask_mask   <= 16'd0;
             cp0_badvaddr        <= 32'd0;
             cp0_entryhi_vpn2    <= 19'd0;
@@ -420,6 +425,16 @@ module mips_cp0 (
                 else
                 // synopsys translate_on
                     cp0_epc <= except_pc;           // Point to faulting instruction
+
+                // Phase B.3.d: address-related exceptions (Mod=1, TLBL=2, TLBS=3,
+                // AdEL=4, AdES=5) also latch BadVAddr and Context.BadVPN2 per
+                // MIPS Vol III §6.6 / §6.8.
+                if (except_code == 5'h01 || except_code == 5'h02 ||
+                    except_code == 5'h03 || except_code == 5'h04 ||
+                    except_code == 5'h05) begin
+                    cp0_badvaddr        <= bad_vaddr;
+                    cp0_context_badvpn2 <= bad_vaddr[31:13];
+                end
 
             end else if (eret) begin
                 // ERET: clear EXL (ErrorEPC path via ERL comes in Phase B.5)

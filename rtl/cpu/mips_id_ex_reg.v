@@ -30,6 +30,7 @@ module mips_id_ex_reg (
     input  wire        id_illegal_inst,
     input  wire        id_except_req,
     input  wire [4:0]  id_except_code,
+    input  wire        id_except_is_data,   // Phase B.3.d: mark MEM-side origin
     input  wire        id_cp0_we,
     input  wire        id_is_eret,
     input  wire [2:0]  id_tlb_op,
@@ -60,6 +61,7 @@ module mips_id_ex_reg (
     output reg         ex_illegal_inst,
     output reg         ex_except_req,
     output reg  [4:0]  ex_except_code,
+    output reg         ex_except_is_data,
     output reg         ex_cp0_we,
     output reg         ex_is_eret,
     output reg  [2:0]  ex_tlb_op,
@@ -90,6 +92,7 @@ module mips_id_ex_reg (
             ex_illegal_inst<= 1'b0;
             ex_except_req  <= 1'b0;
             ex_except_code <= 5'd0;
+            ex_except_is_data <= 1'b0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
             ex_tlb_op      <= 3'd0;
@@ -117,6 +120,7 @@ module mips_id_ex_reg (
             ex_illegal_inst<= 1'b0;
             ex_except_req  <= 1'b0;
             ex_except_code <= 5'd0;
+            ex_except_is_data <= 1'b0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
             ex_tlb_op      <= 3'd0;
@@ -144,6 +148,7 @@ module mips_id_ex_reg (
             ex_illegal_inst<= id_illegal_inst;
             ex_except_req  <= id_except_req;
             ex_except_code <= id_except_code;
+            ex_except_is_data <= id_except_is_data;
             ex_cp0_we      <= id_cp0_we;
             ex_is_eret     <= id_is_eret;
             ex_tlb_op      <= id_tlb_op;
