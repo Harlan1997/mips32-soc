@@ -131,19 +131,39 @@ log_summary "===================================================================
 log_summary " Starting Directed Testlist"
 log_summary "======================================================================"
 
-while read -r test_name seed _; do
+FW_ROOT_DIR=${FW_ROOT_DIR:-"${ROOT_DIR}/build/firmware"}
+
+# Testlist entry format (whitespace-separated):
+#   <test_name> [seed] [fw_variant]
+# fw_variant is optional; when present, firmware hex is looked up at
+# $FW_ROOT_DIR/<fw_variant>/firmware.hex. When absent, the caller-supplied
+# $FW_HEX is used (backward-compatible).
+while read -r test_name seed fw_variant _; do
     if [ -z "${test_name:-}" ] || [[ "$test_name" == \#* ]]; then
         continue
     fi
 
     seed=${seed:-1}
+    if [ -n "${fw_variant:-}" ] && [[ "$fw_variant" != \#* ]]; then
+        test_fw_hex="${FW_ROOT_DIR}/${fw_variant}/firmware.hex"
+        if [ ! -f "$test_fw_hex" ]; then
+            echo "ERROR: firmware for variant '${fw_variant}' not built: $test_fw_hex" >&2
+            echo "       run: make -C tb/soc_test/fw all-firmwares OUT_DIR=${FW_ROOT_DIR}" >&2
+            exit 1
+        fi
+        test_fw_hex_abs=$(realpath "$test_fw_hex")
+    else
+        test_fw_hex_abs=$FW_HEX_ABS
+        fw_variant=default
+    fi
+
     TOTAL_COUNT=$((TOTAL_COUNT + 1))
     log_file="test_logs/${TOTAL_COUNT}_${test_name}_seed_${seed}.log"
 
-    printf "Running %s seed=%s... " "$test_name" "$seed"
+    printf "Running %s seed=%s fw=%s... " "$test_name" "$seed" "$fw_variant"
 
     set +e
-    sim_args=(+UVM_TESTNAME="$test_name" +ntb_random_seed="$seed" +FW_HEX="$FW_HEX_ABS")
+    sim_args=(+UVM_TESTNAME="$test_name" +ntb_random_seed="$seed" +FW_HEX="$test_fw_hex_abs")
     if [ -n "$FLASH_IMAGE_ABS" ]; then
         sim_args+=(+FLASH_IMAGE="$FLASH_IMAGE_ABS")
     fi
@@ -157,11 +177,11 @@ while read -r test_name seed _; do
 
     if check_log_pass "$log_file" "$sim_status"; then
         echo "PASS"
-        log_summary "${test_name} seed=${seed} PASS log=${log_file}"
+        log_summary "${test_name} seed=${seed} fw=${fw_variant} PASS log=${log_file}"
         PASS_COUNT=$((PASS_COUNT + 1))
     else
         echo "FAIL (status=$sim_status log=$log_file)"
-        log_summary "${test_name} seed=${seed} FAIL status=${sim_status} log=${log_file}"
+        log_summary "${test_name} seed=${seed} fw=${fw_variant} FAIL status=${sim_status} log=${log_file}"
         FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
 done < "$TESTLIST_ABS"

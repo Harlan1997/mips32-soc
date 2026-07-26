@@ -46,13 +46,13 @@ echo "Testlist: $TESTLIST"
 echo "======================================================================"
 echo " Running no-coverage directed gate"
 echo "======================================================================"
-FW_HEX="$FW_HEX" TESTLIST="$TESTLIST" RUN_DIR="$DIRECTED_DIR" ENABLE_COV=0 \
+FW_HEX="$FW_HEX" FW_ROOT_DIR="${FW_ROOT_DIR:-}" TESTLIST="$TESTLIST" RUN_DIR="$DIRECTED_DIR" ENABLE_COV=0 \
     "${SCRIPT_DIR}/run_testlist.sh"
 
 echo "======================================================================"
 echo " Running coverage directed gate"
 echo "======================================================================"
-FW_HEX="$FW_HEX" TESTLIST="$TESTLIST" RUN_DIR="$COV_DIR" ENABLE_COV=1 \
+FW_HEX="$FW_HEX" FW_ROOT_DIR="${FW_ROOT_DIR:-}" TESTLIST="$TESTLIST" RUN_DIR="$COV_DIR" ENABLE_COV=1 \
     "${SCRIPT_DIR}/run_testlist.sh"
 
 echo "======================================================================"
