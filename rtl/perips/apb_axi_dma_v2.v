@@ -223,10 +223,18 @@ module apb_axi_dma_v2 #(
                     en_r[0]      <= pwdata[0];   // 1 → start; auto-clears on done
                     int_en_r[0]  <= pwdata[1];
                     sg_mode_r[0] <= 1'b0;        // v1 has no SG mode
-                    // pwdata[2] = W1C DONE handled in FSM block below
+                    // pwdata[2] = W1C DONE handled in FSM block below.
+                    // v1 semantics: writing CTRL[0]=1 (start) also implicitly
+                    // clears previous DONE so channel can re-arm without an
+                    // explicit W1C between back-to-back transfers.
+                    // (done_r cleared in FSM block via v1-alias W1C below,
+                    // triggered when pwdata[0]=1)
                 end
                 default: ;
             endcase
+`ifdef DMA_V2_DEBUG
+            $display("[%0t] DMA v1-alias WR paddr[3:2]=%h pwdata=%08h", $time, paddr[3:2], pwdata);
+`endif
         end else if (wr && apb_ch_valid) begin
             case (paddr[5:2])
                 4'h0: begin
@@ -277,7 +285,15 @@ module apb_axi_dma_v2 #(
                         cur_next_r[c] <= 32'h0;
                         ch_state[c]   <= (len_r[c] == 32'h0) ? ST_DONE : ST_EXEC_R;
                     end
+`ifdef DMA_V2_DEBUG
+                    $display("[%0t] DMA ch%0d START src=%h dst=%h len=%h", $time, c, src_r[c], dst_r[c], len_r[c]);
+`endif
                 end
+`ifdef DMA_V2_DEBUG
+                if (ch_state[c] == ST_DONE) begin
+                    $display("[%0t] DMA ch%0d DONE (en will auto-clear)", $time, c);
+                end
+`endif
 
                 // Only the active channel drives AXI, so only it advances on handshakes
                 if (act_valid && (act_ch[CH_W-1:0] == c[CH_W-1:0])) begin
@@ -353,8 +369,11 @@ module apb_axi_dma_v2 #(
                     if (pwdata[3]) done_r[c] <= 1'b0;
                     if (pwdata[4]) err_r[c]  <= 1'b0;
                 end
-                // v1-compat W1C on ch0 CTRL[2] (v1 DONE bit position)
-                if (wr && v1_alias && paddr[3:2] == 2'h3 && c == 0 && pwdata[2]) begin
+                // v1-compat CTRL W1C on bit 2 (v1 DONE bit) — either
+                // explicit W1C by software OR implicit clear when software
+                // writes CTRL[0]=1 to start a new transfer.
+                if (wr && v1_alias && paddr[3:2] == 2'h3 && c == 0 &&
+                    (pwdata[2] || pwdata[0])) begin
                     done_r[0] <= 1'b0;
                 end
             end

@@ -267,12 +267,17 @@ module soc_peripheral_subsystem #(
         .gpio_pins       (gpio_pins)
     );
 
-    // DMA: v1 apb_axi_dma. DMA v2 (apb_axi_dma_v2) has v1-alias at 0x00
-    // but integration into DUT hangs firmware boot (bug in fw+DMA v2
-    // interaction still under investigation). v2 stays in tree for the
-    // future integration pass.
-    wire dma_int;
-    apb_axi_dma u_apb_dma (
+    // DMA v2 (attempting integration — debug pass)
+    wire [3:0] dma_ch_int;
+    wire       dma_int = |dma_ch_int;
+    assign m_awlock  = 2'h0;
+    assign m_awcache = 4'h0;
+    assign m_awprot  = 3'h0;
+    assign m_arlock  = 2'h0;
+    assign m_arcache = 4'h0;
+    assign m_arprot  = 3'h0;
+
+    apb_axi_dma_v2 #(.N_CHANNELS(4)) u_apb_dma (
         .clk             (clk),
         .rst_n           (rst_n),
 
@@ -290,9 +295,6 @@ module soc_peripheral_subsystem #(
         .m_awlen         (m_awlen),
         .m_awsize        (m_awsize),
         .m_awburst       (m_awburst),
-        .m_awlock        (m_awlock),
-        .m_awcache       (m_awcache),
-        .m_awprot        (m_awprot),
         .m_awvalid       (m_awvalid),
         .m_awready       (m_awready),
         .m_wdata         (m_wdata),
@@ -309,9 +311,6 @@ module soc_peripheral_subsystem #(
         .m_arlen         (m_arlen),
         .m_arsize        (m_arsize),
         .m_arburst       (m_arburst),
-        .m_arlock        (m_arlock),
-        .m_arcache       (m_arcache),
-        .m_arprot        (m_arprot),
         .m_arvalid       (m_arvalid),
         .m_arready       (m_arready),
         .m_rid           (m_rid),
@@ -321,7 +320,7 @@ module soc_peripheral_subsystem #(
         .m_rvalid        (m_rvalid),
         .m_rready        (m_rready),
 
-        .dma_int         (dma_int)
+        .ch_int          (dma_ch_int)
     );
 
     wire [31:0] irq_sources = {28'd0, dma_int, timer_int, uart_tx_int, uart_rx_int};
