@@ -28,6 +28,24 @@ module tb_cp0_timer;
     reg  [31:0] except_pc = 0;
     reg         except_bd = 0;
     reg         eret = 0;
+    reg  [31:0] bad_vaddr = 0;
+
+    // Phase B.3.c MMU pass-through signals (unused inside this timer/TLB tb but
+    // required for `.*` wildcard connectivity to mips_cp0's post-B.3.c ports).
+    wire [7:0]  cp0_asid_out;
+    wire [2:0]  cp0_config_k0_out;
+    reg  [31:0] mmu_ilookup_va = 0;
+    wire        mmu_ilookup_hit;
+    wire        mmu_ilookup_v;
+    wire        mmu_ilookup_d;
+    wire [2:0]  mmu_ilookup_c;
+    wire [19:0] mmu_ilookup_pfn;
+    reg  [31:0] mmu_dlookup_va = 0;
+    wire        mmu_dlookup_hit;
+    wire        mmu_dlookup_v;
+    wire        mmu_dlookup_d;
+    wire [2:0]  mmu_dlookup_c;
+    wire [19:0] mmu_dlookup_pfn;
     wire [31:0] epc_out;
     wire [31:0] ebase_out;
     wire        intr_req;
@@ -263,6 +281,51 @@ module tb_cp0_timer;
         @(posedge clk);
         mfc0(5'd0, 3'd0, rd); check("TLBP miss (ASID mismatch, G=0) sets P=1",
                                      rd[31] == 1'b1);
+
+        // -----------------------------------------------------------------
+        // Phase B.3.d: BadVAddr + Context.BadVPN2 hardware update on
+        // address-related exceptions (Mod=1, TLBL=2, TLBS=3, AdEL=4, AdES=5).
+        // -----------------------------------------------------------------
+        // Fire an AdES (5) exception with bad_vaddr = 0xCAFEBABE
+        @(posedge clk);
+        except_req  <= 1'b1;
+        except_code <= 5'h05;
+        except_pc   <= 32'h1000_0000;
+        bad_vaddr   <= 32'hCAFE_BABE;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd8,  3'd0, rd); check("BadVAddr latched on AdES",  rd == 32'hCAFE_BABE);
+        mfc0(5'd4,  3'd0, rd);
+        // Context = { PTEBase (from earlier write 0x1FF), BadVPN2 = 0xCAFEBABE[31:13] = 0x65F5D, 4'b0 }
+        check("Context.BadVPN2 updated on AdES", rd[22:4] == 32'hCAFE_BABE >> 13);
+
+        // Reset EXL for next scenario
+        mtc0(5'd12, 3'd0, 32'd0);
+
+        // Fire a TLBL (2) exception with bad_vaddr = 0x00081000 → BadVPN2=0x40
+        @(posedge clk);
+        except_req  <= 1'b1;
+        except_code <= 5'h02;
+        bad_vaddr   <= 32'h0008_1000;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd8, 3'd0, rd); check("BadVAddr latched on TLBL", rd == 32'h0008_1000);
+        mfc0(5'd4, 3'd0, rd); check("Context.BadVPN2 updated on TLBL",
+                                     rd[22:4] == 32'h0008_1000 >> 13);
+
+        // Reset EXL, then fire a NON-address exception (SYSCALL=8): BadVAddr must NOT change
+        mtc0(5'd12, 3'd0, 32'd0);
+        @(posedge clk);
+        except_req  <= 1'b1;
+        except_code <= 5'h08;
+        bad_vaddr   <= 32'hDEAD_DEAD;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd8, 3'd0, rd);
+        check("BadVAddr NOT touched by SYSCALL", rd == 32'h0008_1000);  // Prior TLBL value
 
         // Summary
         if (errors == 0)

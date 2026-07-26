@@ -152,6 +152,14 @@ module mips_cpu (
     wire        id_except_req_in;
     wire [4:0]  id_except_code_in;
     
+    // Phase B.3.d: fold MMU I-side fault into the IF-stage exception path.
+    // AdEL (misaligned PC) still wins over MMU-TLBL because misalignment is
+    // detected before translation would run in a real pipeline. Under
+    // SOC_MMU_ENABLE=0 mmu_i_ok is always 1 → this reduces to the pre-B.3.d
+    // AdEL-only behaviour and no regression is possible.
+    wire        if_fault_req  = if_adel_exception | (~mmu_i_ok & inst_req);
+    wire [4:0]  if_fault_code = if_adel_exception ? 5'h04 : 5'h02;  // AdEL / TLBL
+
     mips_if_id_reg u_mips_if_id_reg (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -159,8 +167,8 @@ module mips_cpu (
         .flush        (if_id_flush),
         .if_pc_plus_4 (if_pc_plus_4),
         .if_inst      (inst_rdata),
-        .if_except_req  (if_adel_exception),
-        .if_except_code (5'h04), // AdEL
+        .if_except_req  (if_fault_req),
+        .if_except_code (if_fault_code),
         .id_pc_plus_4 (id_pc_plus_4),
         .id_inst      (id_inst),
         .id_except_req  (id_except_req_in),
@@ -231,6 +239,9 @@ module mips_cpu (
     wire        ex_illegal_inst;
     wire        ex_except_req;
     wire [4:0]  ex_except_code;
+    wire        ex_except_is_data;    // Phase B.3.d
+    wire        mem_except_is_data;
+    wire        wb_except_is_data;
     wire        ex_cp0_we;
     wire        ex_is_eret;
     wire [1:0]  ex_mem_to_reg;
@@ -348,6 +359,7 @@ module mips_cpu (
         .id_illegal_inst(id_illegal_inst),
         .id_except_req  (id_except_req_out),
         .id_except_code (id_except_code_out),
+        .id_except_is_data (1'b0),  // IF-origin faults + ID-added (RI/SYS) are never MEM-side
         .id_cp0_we      (id_cp0_we),
         .id_is_eret     (id_is_eret),
         .id_tlb_op      (id_tlb_op),
@@ -374,6 +386,7 @@ module mips_cpu (
         .ex_illegal_inst(ex_illegal_inst),
         .ex_except_req  (ex_except_req),
         .ex_except_code (ex_except_code),
+        .ex_except_is_data (ex_except_is_data),
         .ex_cp0_we      (ex_cp0_we),
         .ex_is_eret     (ex_is_eret),
         .ex_tlb_op      (ex_tlb_op),
@@ -447,6 +460,7 @@ module mips_cpu (
         .ex_tlb_op       (ex_tlb_op),
         .ex_except_req   (ex_except_req),
         .ex_except_code  (ex_except_code),
+        .ex_except_is_data (ex_except_is_data),
         .ex_mem_read     (ex_mem_read),
         .ex_mem_write    (ex_mem_write),
         .ex_mem_op       (ex_mem_op),
@@ -465,6 +479,7 @@ module mips_cpu (
         .mem_tlb_op      (mem_tlb_op),
         .mem_except_req  (mem_except_req),
         .mem_except_code (mem_except_code),
+        .mem_except_is_data (mem_except_is_data),
         .mem_mem_read    (mem_mem_read),
         .mem_mem_write   (mem_mem_write),
         .mem_mem_op      (mem_mem_op),
@@ -503,8 +518,25 @@ module mips_cpu (
         .ades_exception  (mem_ades_exception)
     );
     
-    wire mem_except_req_out = mem_except_req | mem_adel_exception | mem_ades_exception;
-    wire [4:0] mem_except_code_out = mem_except_req ? mem_except_code : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'h00));
+    // Phase B.3.d: fold MMU D-side fault into MEM-stage exception path.
+    // Priority within MEM stage: upstream (mem_except_req) > MMU fault >
+    // AdEL/AdES. Under SOC_MMU_ENABLE=0 mmu_d_ok is always 1 → this reduces
+    // to the pre-B.3.d AdEL/AdES-only behaviour.
+    //   MMU fault_type encoding: 010=TLBS, 011=Mod, else (001) → TLBL.
+    wire        mem_mmu_fault      = ~mmu_d_ok & data_req;
+    wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
+                                     (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
+                                                                     5'h02;  // TLBL
+    wire mem_except_req_out  = mem_except_req | mem_mmu_fault
+                             | mem_adel_exception | mem_ades_exception;
+    wire [4:0] mem_except_code_out = mem_except_req      ? mem_except_code
+                                   : mem_mmu_fault       ? mem_mmu_fault_code
+                                   : mem_adel_exception  ? 5'h04
+                                   : mem_ades_exception  ? 5'h05
+                                                          : 5'h00;
+    // Upstream (IF-origin) faults keep their is_data (=0); any fault added at
+    // MEM stage is MEM-origin (data-address related), so is_data becomes 1.
+    wire mem_except_is_data_out = mem_except_req ? mem_except_is_data : 1'b1;
     
     // =========================================================================
     // MEM/WB Pipeline Register
@@ -533,6 +565,7 @@ module mips_cpu (
         .mem_tlb_op      (mem_tlb_op),
         .mem_except_req  (mem_except_req_out),
         .mem_except_code (mem_except_code_out),
+        .mem_except_is_data (mem_except_is_data_out),
         .mem_mem_to_reg  (mem_mem_to_reg),
         
         .wb_rdata_fmt    (wb_rdata_fmt),
@@ -549,6 +582,7 @@ module mips_cpu (
         .wb_tlb_op       (wb_tlb_op),
         .wb_except_req   (wb_except_req),
         .wb_except_code  (wb_except_code),
+        .wb_except_is_data (wb_except_is_data),
         .wb_mem_to_reg   (wb_mem_to_reg)
     );
     
@@ -583,6 +617,10 @@ module mips_cpu (
         if_pc_plus_4 - 32'd4;
         
     wire [31:0] except_pc = wb_except_req ? wb_pc : oldest_flushed_pc;
+    // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
+    // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
+    // faults latch the faulting fetch PC.
+    wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out : except_pc;
     mips_cp0 u_mips_cp0 (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -600,6 +638,7 @@ module mips_cpu (
         .except_pc    (except_pc),
         .except_bd    (1'b0),
         .eret         (wb_is_eret),
+        .bad_vaddr    (bad_vaddr),
         .epc_out      (epc_out),
         .ebase_out    (ebase_out),
         .intr_req     (intr_req),
