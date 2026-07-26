@@ -168,14 +168,19 @@ module l2_cache #(
     reg                    req_is_write;
     reg [ID_WIDTH-1:0]     req_id;
     reg [ADDR_WIDTH-1:0]   req_addr;
+    reg [7:0]              req_len;         // arlen / awlen (0-based)
+    reg [7:0]              beat_cnt;        // current beat within burst
     reg [DATA_WIDTH-1:0]   req_wdata;
     reg [3:0]              req_wstrb;
 
-    wire [INDEX_BITS-1:0]  req_index  = req_addr[OFFSET_BITS +: INDEX_BITS];
-    wire [TAG_BITS-1:0]    req_tag    = req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
-    wire [WORD_BITS-1:0]   req_wordoff = req_addr[OFFSET_BITS-1:2];
+    // beat_addr updates as burst progresses (INCR type, +4 per beat)
+    wire [ADDR_WIDTH-1:0] beat_addr = req_addr + (beat_cnt << 2);
+    wire [INDEX_BITS-1:0] req_index  = beat_addr[OFFSET_BITS +: INDEX_BITS];
+    wire [TAG_BITS-1:0]   req_tag    = beat_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    wire [WORD_BITS-1:0]  req_wordoff = beat_addr[OFFSET_BITS-1:2];
 
     wire hit = valid_ram[req_index] && (tag_ram[req_index] == req_tag);
+    wire is_last_beat = (beat_cnt == req_len);
 
     // -------- Refill counters --------
     reg [WORD_BITS-1:0] fill_cnt;
@@ -224,7 +229,7 @@ module l2_cache #(
             end
             ST_HIT_R: begin
                 s_rvalid = 1'b1;
-                s_rlast  = 1'b1;
+                s_rlast  = is_last_beat;
             end
             ST_HIT_W: begin
                 s_wready = 1'b1;
@@ -251,6 +256,8 @@ module l2_cache #(
             req_is_write  <= 1'b0;
             req_id        <= {ID_WIDTH{1'b0}};
             req_addr      <= {ADDR_WIDTH{1'b0}};
+            req_len       <= 8'h0;
+            beat_cnt      <= 8'h0;
             req_wdata     <= {DATA_WIDTH{1'b0}};
             req_wstrb     <= 4'hF;
             fill_cnt      <= {WORD_BITS{1'b0}};
@@ -263,15 +270,18 @@ module l2_cache #(
         end else begin
             case (state)
                 ST_IDLE: begin
+                    beat_cnt <= 8'h0;
                     if (s_awvalid) begin
                         req_is_write <= 1'b1;
                         req_id       <= s_awid;
                         req_addr     <= s_awaddr;
-                        state        <= ST_HIT_W; // wait for W beat
+                        req_len      <= s_awlen;
+                        state        <= ST_HIT_W;
                     end else if (s_arvalid) begin
                         req_is_write <= 1'b0;
                         req_id       <= s_arid;
                         req_addr     <= s_araddr;
+                        req_len      <= s_arlen;
                         state        <= ST_LOOKUP;
                     end
                 end
@@ -305,11 +315,29 @@ module l2_cache #(
                 end
 
                 ST_HIT_R: begin
-                    if (s_rready) state <= ST_IDLE;
+                    if (s_rready) begin
+                        if (is_last_beat) begin
+                            state    <= ST_IDLE;
+                            beat_cnt <= 8'h0;
+                        end else begin
+                            beat_cnt <= beat_cnt + 1'b1;
+                            // If the next beat lives in a different cache
+                            // line (rare — L1 refill is usually line-sized
+                            // and aligned) go re-lookup.
+                            state <= ST_LOOKUP;
+                        end
+                    end
                 end
 
                 ST_RESP_W: begin
-                    if (s_bready) state <= ST_IDLE;
+                    // Single B response for the entire write burst per AXI
+                    // spec. Multi-beat write bursts across cache lines are
+                    // not exercised in the current single-outstanding
+                    // fabric contract; extend here when they land.
+                    if (s_bready) begin
+                        state    <= ST_IDLE;
+                        beat_cnt <= 8'h0;
+                    end
                 end
 
                 ST_MISS_ALLOC: begin
