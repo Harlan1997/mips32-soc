@@ -1,25 +1,32 @@
 // =============================================================================
 // File Name : mips_cp0.v
 // Module    : mips_cp0
-// Design    : MIPS32 R2 Coprocessor 0 (Phase B.1 baseline)
+// Design    : MIPS32 R2 Coprocessor 0 (Phase B.1 + B.2 baseline)
 // Standard  : Verilog-2001 (synthesizable)
 // Reset     : posedge clk / negedge rst_n (project convention)
 //
-// Phase B.1 scope (see docs/block_specs/cp0_spec.md):
-//   - Preserve existing Status/Cause/EPC/ERET behavior (regression-safe)
-//   - Add PRId (15,0), EBase (15,1), Config[0..3] (16,{0..3}), HWREna (7,0),
-//     IntCtl (12,1), ErrorEPC (30,0) as static/near-static registers
-//   - Introduce sub-select (`wsel`/`rsel`) so multi-register slots decode by
-//     the MIPS32 R2 (rd, sel) tuple
-//   - Expose ebase_out to CPU for exception vector generation
-//   - Guard $display behind SIMULATION so RTL is synthesis-clean
+// Phase B.1: PRId / EBase / Config[0..3] / HWREna / IntCtl / ErrorEPC storage
+// with (regnum, sel) sub-select decoding; ebase_out exposed; $display guarded.
+//
+// Phase B.2 (this file): CP0 Timer
+//   - Count (9,0)   : 32-bit free-running counter, prescaled by SOC_CP0_COUNT_DIV,
+//                     paused while Cause.DC=1
+//   - Compare (11,0): 32-bit software match value; writing it also clears Cause.TI
+//   - Cause.TI (30) : latched, set when Count == Compare, cleared on Compare write
+//   - Cause.DC (27) : software-writable Count-disable
+//   - Cause.IV (23) : software-writable (already available since B.1)
+//   - IntCtl.IPTI[31:29]: selects which Cause.IP bit receives TI (default 7)
+//   - Combined IP field  Cause.IP[7:2] = hw_int | (timer_ip << IPTI)
+//
+// Regression preservation: Compare resets to SOC_CP0_COMPARE_RESET (all-1s) so
+// TI is not asserted when firmware boots at Count=0 without ever touching Compare.
 //
 // Deferred to later Phase B sub-steps:
+//   - RDHWR $2 → Count (needs Phase B.4 user mode + instruction decode)
 //   - KSU / User mode enforcement (B.4)
-//   - MMU/TLB registers (Index/Random/Wired/EntryHi/EntryLo/PageMask/Context/
-//     BadVAddr) (B.3, see mmu_tlb_spec.md)
+//   - MMU/TLB registers (B.3, see mmu_tlb_spec.md)
 //   - Precise exception refinement + BD-in-pipeline plumbing (B.5)
-//   - Count/Compare timer (B.2)
+//   - EBase-driven exception vector (B.5)
 // =============================================================================
 
 `include "soc_config.vh"
@@ -59,9 +66,11 @@ module mips_cp0 (
     //   Reg  Sel  Name       Notes
     //   ---  ---  ---------  --------------------------------------------------
     //   7    0    HWREna     User RDHWR enable mask
+    //   9    0    Count      Free-running counter (Phase B.2)
+    //   11   0    Compare    Timer match value (Phase B.2)
     //   12   0    Status     [22]=BEV, [15:8]=IM, [1]=EXL, [0]=IE  (extended)
-    //   12   1    IntCtl     [31:29]=IPTI, [9:5]=VS (Phase B.2 uses)
-    //   13   0    Cause      [31]=BD, [23]=IV, [15:8]=IP, [6:2]=ExcCode
+    //   12   1    IntCtl     [31:29]=IPTI, [9:5]=VS
+    //   13   0    Cause      [31]=BD, [30]=TI, [27]=DC, [23]=IV, [15:8]=IP, [6:2]=ExcCode
     //   14   0    EPC
     //   15   0    PRId       Read-only, hardcoded via soc_config.vh
     //   15   1    EBase      [31:30]=10 (hw), [29:12]=writable, [9:0]=CPUNum
@@ -81,6 +90,11 @@ module mips_cp0 (
     reg [2:0]  cp0_config_k0;
     reg [2:0]  cp0_intctl_ipti;
     reg [4:0]  cp0_intctl_vs;
+
+    // Phase B.2 timer storage
+    reg [31:0] cp0_count;
+    reg [31:0] cp0_compare;
+    reg [3:0]  cp0_count_prescale; // Supports SOC_CP0_COUNT_DIV up to 16
 
     // -------------------------------------------------------------------------
     // Static reads (hardcoded constants from soc_config.vh)
@@ -167,9 +181,22 @@ module mips_cp0 (
                                cp0_status[0] };       // [0]     IE
 
     // -------------------------------------------------------------------------
+    // Timer Interrupt Routing (Phase B.2)
+    // -------------------------------------------------------------------------
+    // TI held in cp0_cause[30]; suppressed while DC=1 or when TI is not latched.
+    // IPTI selects which Cause.IP bit receives the timer request. Combined IP
+    // OR-merges hw_int (external sources) with the timer bit so both channels
+    // remain observable when they collide on the same IP index.
+    wire        timer_ip_active = cp0_cause[30] && !cp0_cause[27];
+    wire [7:0]  ip_from_timer   = timer_ip_active ? (8'd1 << cp0_intctl_ipti) : 8'd0;
+    wire [5:0]  combined_ip_hw  = hw_int | ip_from_timer[7:2];
+    wire        cnt_eq_cmp      = (cp0_count == cp0_compare);
+
+    // -------------------------------------------------------------------------
     // Interrupt Request
     // -------------------------------------------------------------------------
     // Same policy as v0: IE && !EXL && any (IM & IP) hardware bit set.
+    // IP field in cp0_cause is refreshed each cycle with combined_ip_hw below.
     assign intr_req = cp0_status[0] && !cp0_status[1] && (|(cp0_cause[15:8] & cp0_status[15:8]));
 
     assign epc_out = cp0_epc;
@@ -182,6 +209,8 @@ module mips_cp0 (
         rdata = 32'd0;
         case ({raddr, rsel})
             {5'd7,  3'd0}: rdata = cp0_hwrena;
+            {5'd9,  3'd0}: rdata = cp0_count;
+            {5'd11, 3'd0}: rdata = cp0_compare;
             {5'd12, 3'd0}: rdata = status_val;
             {5'd12, 3'd1}: rdata = intctl_val;
             {5'd13, 3'd0}: rdata = cp0_cause;
@@ -218,11 +247,42 @@ module mips_cp0 (
             cp0_ebase_hi    <= `SOC_CP0_EBASE_RESET_HI;
             cp0_hwrena      <= 32'd0;
             cp0_config_k0   <= `SOC_CP0_CONFIG_K0_RESET;
-            cp0_intctl_ipti <= 3'd7;   // Timer int mapped to IP7 by default
-            cp0_intctl_vs   <= 5'd0;   // Non-vectored default
+            cp0_intctl_ipti <= 3'd7;                       // Timer int mapped to IP7 by default
+            cp0_intctl_vs   <= 5'd0;                       // Non-vectored default
+            cp0_count           <= 32'd0;
+            cp0_compare         <= `SOC_CP0_COMPARE_RESET; // All-1s avoids boot-time TI
+            cp0_count_prescale  <= 4'd0;
         end else begin
-            // Continuously mirror hw_int into Cause.IP[7:2] (5 hw sources + timer bit)
-            cp0_cause[15:10] <= hw_int;
+            // -----------------------------------------------------------------
+            // Cause.IP[7:2] update every cycle: mirror hw_int OR timer routing.
+            // -----------------------------------------------------------------
+            cp0_cause[15:10] <= combined_ip_hw;
+
+            // -----------------------------------------------------------------
+            // TI (Cause[30]) latch: software writing Compare clears; matching
+            // Count sets. Software write wins in the same cycle.
+            // -----------------------------------------------------------------
+            if (we && ({waddr, wsel} == {5'd11, 3'd0}))
+                cp0_cause[30] <= 1'b0;
+            else if (cnt_eq_cmp)
+                cp0_cause[30] <= 1'b1;
+
+            // -----------------------------------------------------------------
+            // Count prescaler and increment (paused while Cause.DC=1).
+            // Software writes to Count reset the prescaler for deterministic
+            // step alignment.
+            // -----------------------------------------------------------------
+            if (we && ({waddr, wsel} == {5'd9, 3'd0})) begin
+                cp0_count           <= wdata;
+                cp0_count_prescale  <= 4'd0;
+            end else if (!cp0_cause[27]) begin
+                if (cp0_count_prescale == (`SOC_CP0_COUNT_DIV - 1)) begin
+                    cp0_count_prescale <= 4'd0;
+                    cp0_count          <= cp0_count + 32'd1;
+                end else begin
+                    cp0_count_prescale <= cp0_count_prescale + 4'd1;
+                end
+            end
 
             if (except_req && !cp0_status[1]) begin
                 // Take exception (only if not already in exception level)
@@ -264,7 +324,13 @@ module mips_cp0 (
                         cp0_intctl_ipti  <= wdata[31:29];
                         cp0_intctl_vs    <= wdata[9:5];
                     end
+                    {5'd11, 3'd0}: begin
+                        // Compare: sets timer match value; TI clear handled
+                        // above (outside the mutually-exclusive if-chain).
+                        cp0_compare      <= wdata;
+                    end
                     {5'd13, 3'd0}: begin
+                        cp0_cause[27]    <= wdata[27];    // DC (Count disable)
                         cp0_cause[23]    <= wdata[23];    // IV
                         cp0_cause[9:8]   <= wdata[9:8];   // SW interrupts
                     end

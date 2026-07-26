@@ -111,4 +111,17 @@
 // a real 0xBFC00000 boot ROM. Documented in cp0_spec.md v1 pending update.
 `define SOC_CP0_STATUS_BEV_RESET   1'b0
 
+// -----------------------------------------------------------------------------
+// CP0 Timer (Phase B.2 — Count/Compare)
+// -----------------------------------------------------------------------------
+// Count prescaler: Count increments once every SOC_CP0_COUNT_DIV cpu cycles.
+// Traditional MIPS 24Kc runs Count at pipeline_clk/2 → COUNT_DIV=2. Value must
+// be a positive integer; 1 = every cycle.
+`define SOC_CP0_COUNT_DIV          2
+
+// Compare reset value. Spec leaves this UNDEFINED at reset. Reset to all-1s so
+// that TI (Cause[30]) is NOT asserted immediately after Count=0 boot; existing
+// firmware that never writes Compare must not see a spurious timer IRQ latched.
+`define SOC_CP0_COMPARE_RESET      32'hFFFF_FFFF
+
 `endif

@@ -1,0 +1,156 @@
+// =============================================================================
+// File Name : tb_cp0_timer.sv
+// Module    : tb_cp0_timer
+// Purpose   : Block-level sanity test for Phase B.2 CP0 timer (Count/Compare/
+//             Cause.TI/DC + IntCtl.IPTI routing). Not a full UVM env; intended
+//             as a fast pre-commit sanity check for future CP0 timer changes.
+//             See docs/block_specs/cp0_spec.md §9 for register semantics.
+// Standard  : SystemVerilog-2012 (task/module only, synthesizable subset avoided)
+// Run       : ./run.sh (in this directory)
+// =============================================================================
+
+`timescale 1ns/1ps
+
+module tb_cp0_timer;
+    reg         clk = 0;
+    reg         rst_n = 0;
+    reg  [5:0]  hw_int = 0;
+    reg         we = 0;
+    reg  [4:0]  waddr = 0;
+    reg  [2:0]  wsel  = 0;
+    reg  [31:0] wdata = 0;
+    reg  [4:0]  raddr = 0;
+    reg  [2:0]  rsel  = 0;
+    wire [31:0] rdata;
+    reg         except_req = 0;
+    reg  [4:0]  except_code = 0;
+    reg  [31:0] except_pc = 0;
+    reg         except_bd = 0;
+    reg         eret = 0;
+    wire [31:0] epc_out;
+    wire [31:0] ebase_out;
+    wire        intr_req;
+
+    integer errors = 0;
+
+    mips_cp0 dut (.*);
+
+    always #5 clk = ~clk;
+
+    task automatic mtc0(input [4:0] a, input [2:0] s, input [31:0] d);
+        begin
+            @(posedge clk);
+            we <= 1; waddr <= a; wsel <= s; wdata <= d;
+            @(posedge clk);
+            we <= 0;
+        end
+    endtask
+
+    task automatic mfc0(input [4:0] a, input [2:0] s, output [31:0] d);
+        begin
+            @(negedge clk);
+            raddr = a; rsel = s;
+            @(negedge clk);
+            d = rdata;
+        end
+    endtask
+
+    task automatic check(input [255:0] name, input cond);
+        begin
+            if (!cond) begin
+                $display("[FAIL] %0s", name);
+                errors = errors + 1;
+            end else begin
+                $display("[PASS] %0s", name);
+            end
+        end
+    endtask
+
+    reg [31:0] rd;
+    initial begin
+        // Reset window
+        #12 rst_n = 1;
+        @(posedge clk);
+
+        // 1) Count starts small (< 10) after reset release + a few sampling
+        // cycles. Spec says reset = 0; we allow a small window because the
+        // test bench inserts a couple of cycles for sync/access before sampling.
+        mfc0(5'd9, 3'd0, rd);
+        check("Count small (<10) shortly after reset", rd < 32'd10);
+
+        // 2) Count advances at COUNT_DIV rate (=2 cpu cycles per tick)
+        begin : rate_check
+            reg [31:0] c1; reg [31:0] c2;
+            mfc0(5'd9, 3'd0, c1);
+            repeat (20) @(posedge clk);
+            mfc0(5'd9, 3'd0, c2);
+            check("Count increments ~10 in 20 cpu cycles", (c2 - c1) inside {[9:11]});
+        end
+
+        // 3) Compare reset value = all-1s → no boot-time TI
+        mfc0(5'd11, 3'd0, rd);
+        check("Compare reset = 0xFFFFFFFF", rd == 32'hFFFF_FFFF);
+        mfc0(5'd13, 3'd0, rd);
+        check("Cause.TI=0 at boot", rd[30] == 1'b0);
+
+        // 4) Set Compare = Count + 20 → wait → TI latches on match
+        mfc0(5'd9, 3'd0, rd);
+        mtc0(5'd11, 3'd0, rd + 32'd20);
+        repeat (80) @(posedge clk);
+        mfc0(5'd13, 3'd0, rd);
+        check("Cause.TI=1 after Count reaches Compare", rd[30] == 1'b1);
+
+        // 5) IPTI default 7 → TI routes to Cause.IP7 (bit 15)
+        check("Cause.IP7 asserted from timer (IPTI=7)", rd[15] == 1'b1);
+
+        // 6) Writing Compare clears TI latch
+        mtc0(5'd11, 3'd0, 32'hFFFF_FFFF);
+        @(posedge clk);
+        mfc0(5'd13, 3'd0, rd);
+        check("Cause.TI=0 after writing Compare", rd[30] == 1'b0);
+
+        // 7) Cause.DC=1 pauses Count
+        mtc0(5'd13, 3'd0, 32'h0800_0000); // DC bit 27
+        begin : dc_check
+            reg [31:0] c1; reg [31:0] c2;
+            mfc0(5'd9, 3'd0, c1);
+            repeat (20) @(posedge clk);
+            mfc0(5'd9, 3'd0, c2);
+            check("Count paused with DC=1", c1 == c2);
+        end
+
+        // 8) Change IPTI to 2 → TI routes to Cause.IP2 (bit 10)
+        mtc0(5'd13, 3'd0, 32'h0000_0000); // clear DC
+        mtc0(5'd12, 3'd1, 32'h4000_0000); // IntCtl.IPTI = 3'b010 (2)
+        mtc0(5'd9,  3'd0, 32'd0);          // reset Count
+        mtc0(5'd11, 3'd0, 32'd10);         // Compare = 10
+        repeat (40) @(posedge clk);
+        mfc0(5'd13, 3'd0, rd);
+        check("With IPTI=2, TI routes to Cause.IP2", rd[10] == 1'b1);
+        check("With IPTI=2, Cause.IP7 not driven by timer", rd[15] == 1'b0);
+
+        // 9) External hw_int and timer OR into same IP field when overlapping.
+        hw_int = 6'b100000; // hw_int[5] → Cause.IP7
+        mtc0(5'd12, 3'd1, 32'hE000_0000); // IPTI back to 7
+        mtc0(5'd11, 3'd0, 32'd0);          // Compare = 0 (TI still cleared)
+        mtc0(5'd11, 3'd0, 32'h0000_0020);  // Compare = 32
+        repeat (80) @(posedge clk);
+        mfc0(5'd13, 3'd0, rd);
+        check("hw_int[5] OR timer TI both drive Cause.IP7",
+              rd[15] == 1'b1 && rd[30] == 1'b1);
+        hw_int = 6'b000000;
+
+        // Summary
+        if (errors == 0)
+            $display("TB PASS (0 errors)");
+        else
+            $display("TB FAIL (%0d errors)", errors);
+        $finish;
+    end
+
+    initial begin
+        #200000;
+        $display("TB TIMEOUT");
+        $finish;
+    end
+endmodule
