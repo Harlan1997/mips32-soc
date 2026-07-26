@@ -1,4 +1,0 @@
-{
-  "status": "SUCCESS",
-  "summary": "Fixed duplicate summary field extractor logic in run_current_contract_signoff.sh to strictly reject multiple or missing matches via nonnumeric sentinels. Validated extractor with non-EDA unit tests. Successfully executed make current-contract-signoff outside sandbox with 10/10 mandatory gates passing, 15/15 functional coverage groups at 100.00%, code coverage thresholds passing, clean log scan, and accurate test report generated."
-}
