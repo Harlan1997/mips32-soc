@@ -31,6 +31,7 @@ def vcs_file_list():
         "rtl/cpu/mips_cp0.v",
         "rtl/cpu/mips_tlb.v",
         "rtl/cpu/mips_mmu.v",
+        "rtl/cpu/mips_bpu.v",
         "rtl/cpu/mips_cpu.v",
         "rtl/cpu/mips_ex_mem_reg.v",
         "rtl/cpu/mips_ex_stage.v",

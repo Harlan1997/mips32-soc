@@ -767,6 +767,63 @@ module mips_cpu (
                               mmu_i_ok, mmu_d_ok,
                               mmu_i_fault_type, mmu_d_fault_type};
 
+    // -------------------------------------------------------------------------
+    // Phase B.6 — Branch Prediction Unit
+    // -------------------------------------------------------------------------
+    // Instantiated as an observation-side predictor: it maintains BTB/BHT/RAS
+    // state driven by ID-stage resolution and produces per-fetch predictions.
+    // The predictions are NOT routed into mips_if_stage.next_pc yet because
+    // the current 5-stage pipeline already resolves branches in ID for zero
+    // taken-branch penalty. A future phase that adds a fetch queue or moves
+    // branch resolution later can flip SOC_BPU_ENABLE=1 and wire
+    // predict_target into IF.
+    wire        bpu_predict_hit;
+    wire        bpu_predict_taken;
+    wire [31:0] bpu_predict_target;
+    wire [1:0]  bpu_predict_type;
+
+    // Resolve interface: fire whenever ID resolves a branch or jump (not on
+    // stalled cycles). Encoded BTB type follows the mips_bpu spec:
+    //   00 conditional, 01 direct jump (J/JAL), 10 register jump (JR),
+    //   11 register-and-link (JALR).
+    // The decoder does not currently distinguish JAL from J or JALR from JR
+    // at ID output, so we approximate:
+    //   - Any conditional (branch_op != 0) → type 00
+    //   - jump_op == 01 (direct J or JAL) → type 01
+    //   - jump_op == 10 (JR or JALR)      → type 10 (return heuristic)
+    // This is coarse but adequate for BPU state maintenance; refinement lands
+    // when a JAL/JALR-specific decode bit is added.
+    wire        bpu_id_is_cond   = id_branch_taken | ((~global_stall) & 1'b0);  // taken cond branch
+    wire        bpu_id_is_jump   = id_jump_taken;
+    wire        bpu_resolve_v    = (id_branch_taken | id_jump_taken) & ~global_stall;
+    wire [1:0]  bpu_resolve_type = id_branch_taken ? 2'b00 :
+                                   /*id_jump_taken*/ 2'b01;  // JR heuristic subsumed for now
+    wire [31:0] bpu_resolve_pc   = id_pc;
+    wire [31:0] bpu_resolve_tgt  = id_branch_taken ? id_branch_target : id_jump_target;
+    wire        bpu_resolve_taken = 1'b1;   // only firing on taken cases (see above)
+
+    mips_bpu u_mips_bpu (
+        .clk               (clk),
+        .rst_n             (rst_n),
+        .if_valid          (inst_req),
+        .if_pc             (if_vaddr),
+        .predict_hit       (bpu_predict_hit),
+        .predict_taken     (bpu_predict_taken),
+        .predict_target    (bpu_predict_target),
+        .predict_type      (bpu_predict_type),
+        .resolve_valid     (bpu_resolve_v),
+        .resolve_pc        (bpu_resolve_pc),
+        .resolve_taken     (bpu_resolve_taken),
+        .resolve_target    (bpu_resolve_tgt),
+        .resolve_type      (bpu_resolve_type),
+        .resolve_mispredict(1'b0)
+    );
+
+    // BPU outputs currently observability-only; suppress unused lint.
+    wire _bpu_unused = &{1'b0, bpu_predict_hit, bpu_predict_taken,
+                               bpu_predict_target, bpu_predict_type,
+                               bpu_id_is_cond, bpu_id_is_jump};
+
     always @(posedge clk) begin
         if ($time > 324400 && $time < 324600) begin
             $display("[%t] PIPE: IF=%x ID=%x EX=%x MEM=%x WB=%x | stall_if=%b stall_mem=%b mdu_ready=%b global_stall=%b", 
