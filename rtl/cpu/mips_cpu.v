@@ -177,6 +177,10 @@ module mips_cpu (
     wire [2:0]  ex_cp0_sel;
     wire [2:0]  mem_cp0_sel;
     wire [2:0]  wb_cp0_sel;
+    wire [2:0]  id_tlb_op;
+    wire [2:0]  ex_tlb_op;
+    wire [2:0]  mem_tlb_op;
+    wire [2:0]  wb_tlb_op;
     
     // Pipeline outputs for forwarding and hazard
     wire        ex_reg_write;
@@ -270,7 +274,8 @@ module mips_cpu (
         .illegal_inst  (id_illegal_inst),
         .cp0_we        (id_cp0_we),
         .is_eret       (id_is_eret),
-        .is_syscall    (id_is_syscall)
+        .is_syscall    (id_is_syscall),
+        .tlb_op        (id_tlb_op)
     );
     
     wire id_except_req_out = id_except_req_in | id_illegal_inst | id_is_syscall;
@@ -320,6 +325,7 @@ module mips_cpu (
         .id_except_code (id_except_code_out),
         .id_cp0_we      (id_cp0_we),
         .id_is_eret     (id_is_eret),
+        .id_tlb_op      (id_tlb_op),
         .id_sel_mdu_out (id_sel_mdu_out),
         .id_alu_src     (id_alu_src),
         .id_reg_write   (id_reg_write),
@@ -345,6 +351,7 @@ module mips_cpu (
         .ex_except_code (ex_except_code),
         .ex_cp0_we      (ex_cp0_we),
         .ex_is_eret     (ex_is_eret),
+        .ex_tlb_op      (ex_tlb_op),
         .ex_sel_mdu_out (ex_sel_mdu_out),
         .ex_alu_src     (ex_alu_src),
         .ex_reg_write   (ex_reg_write),
@@ -412,6 +419,7 @@ module mips_cpu (
         .ex_reg_write    (ex_reg_write),
         .ex_cp0_we       (ex_cp0_we),
         .ex_is_eret      (ex_is_eret),
+        .ex_tlb_op       (ex_tlb_op),
         .ex_except_req   (ex_except_req),
         .ex_except_code  (ex_except_code),
         .ex_mem_read     (ex_mem_read),
@@ -429,6 +437,7 @@ module mips_cpu (
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
         .mem_is_eret     (mem_is_eret),
+        .mem_tlb_op      (mem_tlb_op),
         .mem_except_req  (mem_except_req),
         .mem_except_code (mem_except_code),
         .mem_mem_read    (mem_mem_read),
@@ -496,6 +505,7 @@ module mips_cpu (
         .mem_reg_write   (mem_reg_write),
         .mem_cp0_we      (mem_cp0_we),
         .mem_is_eret     (mem_is_eret),
+        .mem_tlb_op      (mem_tlb_op),
         .mem_except_req  (mem_except_req_out),
         .mem_except_code (mem_except_code_out),
         .mem_mem_to_reg  (mem_mem_to_reg),
@@ -511,6 +521,7 @@ module mips_cpu (
         .wb_reg_write    (wb_reg_write),
         .wb_cp0_we       (wb_cp0_we),
         .wb_is_eret      (wb_is_eret),
+        .wb_tlb_op       (wb_tlb_op),
         .wb_except_req   (wb_except_req),
         .wb_except_code  (wb_except_code),
         .wb_mem_to_reg   (wb_mem_to_reg)
@@ -558,6 +569,7 @@ module mips_cpu (
         .raddr        (wb_cp0_raddr),
         .rsel         (wb_cp0_sel),
         .rdata        (cp0_rdata),
+        .tlb_op       (wb_tlb_op),
         .except_req   (wb_except_req | intr_req),
         .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
         .except_pc    (except_pc),

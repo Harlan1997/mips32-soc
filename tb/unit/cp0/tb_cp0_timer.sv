@@ -22,6 +22,7 @@ module tb_cp0_timer;
     reg  [4:0]  raddr = 0;
     reg  [2:0]  rsel  = 0;
     wire [31:0] rdata;
+    reg  [2:0]  tlb_op = 3'b000;
     reg         except_req = 0;
     reg  [4:0]  except_code = 0;
     reg  [31:0] except_pc = 0;
@@ -187,6 +188,81 @@ module tb_cp0_timer;
         mtc0(5'd4,  3'd0, 32'hFF80_0000);            // PTEBase = 0x1FF
         mfc0(5'd4,  3'd0, rd); check("Context PTEBase readback",
                                      rd == {9'h1FF, 23'b0});
+
+        // -----------------------------------------------------------------
+        // Phase B.3.b TLB instruction round-trip
+        //  1) Load EntryHi/Lo0/Lo1/PageMask/Index → TLBWI → clear working set
+        //     → TLBR → readback must equal original values.
+        //  2) TLBP with matching EntryHi should return the written index.
+        //  3) TLBP with mismatched EntryHi should set Index.P=1.
+        // -----------------------------------------------------------------
+        // 1) Write TLB[5] with a 4KB entry
+        mtc0(5'd10, 3'd0, 32'h0002_A007);            // VPN2=0x00015, ASID=0x07
+        mtc0(5'd2,  3'd0, 32'h0000_0007);            // Lo0: PFN=0, C=001, D=0, V=1, G=1
+        mtc0(5'd3,  3'd0, 32'h0000_0107);            // Lo1: PFN=1, C=001, D=0, V=1, G=1
+        mtc0(5'd5,  3'd0, 32'h0000_0000);            // PageMask = 0 (4KB)
+        mtc0(5'd0,  3'd0, 32'h0000_0005);            // Index = 5, P=0
+        // TLBWI: opcode 010000 rs=10000 func=000010 → 0x42000002
+        @(posedge clk);
+        tlb_op <= 3'b010;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        @(posedge clk);
+
+        // Corrupt working set so TLBR must actually pull from TLB[5]
+        mtc0(5'd10, 3'd0, 32'hDEAD_BEEF);
+        mtc0(5'd2,  3'd0, 32'hAAAA_5555);
+        mtc0(5'd3,  3'd0, 32'h5555_AAAA);
+        mtc0(5'd5,  3'd0, 32'h001F_E000);
+        // Re-arm Index=5 for TLBR
+        mtc0(5'd0,  3'd0, 32'h0000_0005);
+        // Issue TLBR
+        @(posedge clk);
+        tlb_op <= 3'b001;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        @(posedge clk);
+        // Verify readback matches originally-written values
+        mfc0(5'd10, 3'd0, rd); check("TLBR EntryHi readback",
+                                     rd == {19'h00015, 5'b0, 8'h07});
+        mfc0(5'd2,  3'd0, rd); check("TLBR EntryLo0 readback (G reconstructed)",
+                                     rd == 32'h0000_0007);
+        mfc0(5'd3,  3'd0, rd); check("TLBR EntryLo1 readback",
+                                     rd == 32'h0000_0107);
+        mfc0(5'd5,  3'd0, rd); check("TLBR PageMask readback = 0",
+                                     rd == 32'd0);
+
+        // 2) TLBP with matching EntryHi
+        mtc0(5'd10, 3'd0, 32'h0002_A007);            // Same VPN2/ASID as written
+        @(posedge clk);
+        tlb_op <= 3'b100;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        @(posedge clk);
+        mfc0(5'd0, 3'd0, rd); check("TLBP hit returns Index=5, P=0",
+                                     rd == 32'h0000_0005);
+
+        // 3) TLBP with mismatched ASID and non-global entry
+        //    First write a non-global TLB[6] with distinctive VPN2/ASID
+        mtc0(5'd10, 3'd0, 32'h0004_A008);            // VPN2=0x00025, ASID=0x08
+        mtc0(5'd2,  3'd0, 32'h0000_0006);            // Lo0: V=1, G=0
+        mtc0(5'd3,  3'd0, 32'h0000_0106);            // Lo1: V=1, G=0
+        mtc0(5'd5,  3'd0, 32'h0000_0000);
+        mtc0(5'd0,  3'd0, 32'h0000_0006);
+        @(posedge clk);
+        tlb_op <= 3'b010;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        @(posedge clk);
+        // Now probe with SAME VPN2 but different ASID
+        mtc0(5'd10, 3'd0, 32'h0004_A099);            // Same VPN2, ASID=0x99
+        @(posedge clk);
+        tlb_op <= 3'b100;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        @(posedge clk);
+        mfc0(5'd0, 3'd0, rd); check("TLBP miss (ASID mismatch, G=0) sets P=1",
+                                     rd[31] == 1'b1);
 
         // Summary
         if (errors == 0)

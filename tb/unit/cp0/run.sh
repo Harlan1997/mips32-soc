@@ -19,6 +19,7 @@ module load vcs
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +incdir+"${ROOT_DIR}/rtl/include" \
     "${ROOT_DIR}/rtl/cpu/mips_cp0.v" \
+    "${ROOT_DIR}/rtl/cpu/mips_tlb.v" \
     "${SCRIPT_DIR}/tb_cp0_timer.sv" \
     -top tb_cp0_timer -l vcs.log > /dev/null
 

@@ -78,7 +78,10 @@ module mips_id_stage (
     output wire        cp0_we,
     output wire        is_eret,
     output wire        illegal_inst,
-    output wire        is_syscall
+    output wire        is_syscall,
+
+    // TLB instruction op (see mips_control.v encoding)
+    output wire [2:0]  tlb_op
 );
 
     // Register File Address Extraction
@@ -130,7 +133,8 @@ module mips_id_stage (
         .illegal_inst(illegal_inst),
         .cp0_we      (cp0_we),
         .is_eret     (is_eret),
-        .is_syscall  (is_syscall)
+        .is_syscall  (is_syscall),
+        .tlb_op      (tlb_op)
     );
 
     // Forwarding logic to resolve raw dependencies for ID-stage branch comparator

@@ -44,7 +44,12 @@ module mips_control (
     // Coprocessor 0
     output reg         cp0_we,       // CP0 write enable (MTC0)
     output reg         is_eret,      // Exception Return (ERET)
-    output reg         is_syscall    // SYSCALL instruction
+    output reg         is_syscall,   // SYSCALL instruction
+
+    // TLB instructions (Phase B.3.b). Encoding:
+    //   000 = no TLB op   001 = TLBR    010 = TLBWI
+    //   011 = TLBWR       100 = TLBP    others = reserved
+    output reg  [2:0]  tlb_op
 );
 
     wire [5:0] opcode = inst[31:26];
@@ -73,6 +78,7 @@ module mips_control (
         cp0_we       = 1'b0;
         is_eret      = 1'b0;
         is_syscall   = 1'b0;
+        tlb_op       = 3'b000;
 
         case (opcode)
             6'b000000: begin // SPECIAL (R-type)
@@ -446,12 +452,15 @@ module mips_control (
                         use_sa = 1'b1;    // use sa (which is 0 for MTC0 because bits 10:6 are 0)
                         alu_src = 1'b0;   // op_b = rt
                     end
-                    5'b10000: begin // CO
-                        if (func == 6'b011000) begin // ERET
-                            is_eret = 1'b1;
-                        end else begin
-                            illegal_inst = 1'b1;
-                        end
+                    5'b10000: begin // CO — CP0 privileged ops
+                        case (func)
+                            6'b011000: is_eret = 1'b1;      // ERET
+                            6'b000001: tlb_op  = 3'b001;    // TLBR
+                            6'b000010: tlb_op  = 3'b010;    // TLBWI
+                            6'b000110: tlb_op  = 3'b011;    // TLBWR
+                            6'b001000: tlb_op  = 3'b100;    // TLBP
+                            default:   illegal_inst = 1'b1;
+                        endcase
                     end
                     default: begin
                         illegal_inst = 1'b1;
