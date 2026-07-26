@@ -300,6 +300,10 @@ static uint32_t cp0_sweep(void) {
     // Reset MMU regs to safe defaults so downstream tests aren't affected
     asm volatile("mtc0 $0, $6, 0");                       // Wired = 0
     asm volatile("mtc0 $0, $5, 0");                       // PageMask = 0
+    // CRITICAL: restore Compare to all-ones so Timer IRQ does not saturate
+    // downstream firmware and cause AXI monitor "extra W beat" complaints
+    // from the pipelined interrupt handler writes.
+    asm volatile("mtc0 %0, $11, 0" :: "r"(0xFFFFFFFFU));
 
     return v;
 }
