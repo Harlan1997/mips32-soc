@@ -27,7 +27,8 @@ module mips_mem_wb_reg (
     // CP0
     input  wire        mem_cp0_we,
     input  wire        mem_is_eret,
-    
+    input  wire [2:0]  mem_tlb_op,
+
     // Exceptions
     input  wire        mem_except_req,
     input  wire [4:0]  mem_except_code,
@@ -48,7 +49,8 @@ module mips_mem_wb_reg (
     // CP0
     output reg         wb_cp0_we,
     output reg         wb_is_eret,
-    
+    output reg  [2:0]  wb_tlb_op,
+
     // Exceptions
     output reg         wb_except_req,
     output reg  [4:0]  wb_except_code,
@@ -69,6 +71,7 @@ module mips_mem_wb_reg (
             wb_mem_to_reg  <= 2'd0;
             wb_cp0_we      <= 1'b0;
             wb_is_eret     <= 1'b0;
+            wb_tlb_op      <= 3'd0;
             wb_except_req  <= 1'b0;
             wb_except_code <= 5'd0;
         end else if (flush) begin
@@ -84,6 +87,7 @@ module mips_mem_wb_reg (
             wb_mem_to_reg  <= 2'd0;
             wb_cp0_we      <= 1'b0;
             wb_is_eret     <= 1'b0;
+            wb_tlb_op      <= 3'd0;
             wb_except_req  <= 1'b0;
             wb_except_code <= 5'd0;
         end else if (!stall) begin
@@ -98,6 +102,7 @@ module mips_mem_wb_reg (
             wb_reg_write   <= mem_reg_write;
             wb_cp0_we      <= mem_cp0_we;
             wb_is_eret     <= mem_is_eret;
+            wb_tlb_op      <= mem_tlb_op;
             wb_except_req  <= mem_except_req;
             wb_except_code <= mem_except_code;
             wb_mem_to_reg  <= mem_mem_to_reg;

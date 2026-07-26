@@ -32,6 +32,7 @@ module mips_id_ex_reg (
     input  wire [4:0]  id_except_code,
     input  wire        id_cp0_we,
     input  wire        id_is_eret,
+    input  wire [2:0]  id_tlb_op,
     input  wire        id_sel_mdu_out,
     input  wire        id_alu_src,
 
@@ -61,6 +62,7 @@ module mips_id_ex_reg (
     output reg  [4:0]  ex_except_code,
     output reg         ex_cp0_we,
     output reg         ex_is_eret,
+    output reg  [2:0]  ex_tlb_op,
     output reg         ex_sel_mdu_out,
     output reg         ex_alu_src,
     output reg         ex_reg_write,
@@ -90,6 +92,7 @@ module mips_id_ex_reg (
             ex_except_code <= 5'd0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
+            ex_tlb_op      <= 3'd0;
             ex_sel_mdu_out <= 1'b0;
             ex_alu_src     <= 1'b0;
             ex_reg_write   <= 1'b0;
@@ -116,6 +119,7 @@ module mips_id_ex_reg (
             ex_except_code <= 5'd0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
+            ex_tlb_op      <= 3'd0;
             ex_sel_mdu_out <= 1'b0;
             ex_alu_src     <= 1'b0;
             ex_reg_write   <= 1'b0;
@@ -142,6 +146,7 @@ module mips_id_ex_reg (
             ex_except_code <= id_except_code;
             ex_cp0_we      <= id_cp0_we;
             ex_is_eret     <= id_is_eret;
+            ex_tlb_op      <= id_tlb_op;
             ex_sel_mdu_out <= id_sel_mdu_out;
             ex_alu_src     <= id_alu_src;
             ex_reg_write   <= id_reg_write;

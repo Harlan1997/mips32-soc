@@ -62,6 +62,10 @@ module mips_cp0 (
     input  wire [2:0]  rsel,         // CP0 sub-select for read
     output reg  [31:0] rdata,
 
+    // TLB instruction op (Phase B.3.b, see mips_control.v encoding):
+    //   000 = none, 001 = TLBR, 010 = TLBWI, 011 = TLBWR, 100 = TLBP
+    input  wire [2:0]  tlb_op,
+
     // Exception Interface (from WB stage)
     input  wire        except_req,
     input  wire [4:0]  except_code,
@@ -124,6 +128,17 @@ module mips_cp0 (
     // are added in later B.3 substeps; here we only hold values so software can
     // MFC0/MTC0 the standard MIPS32 privileged register set without spurious RI.
     localparam TLB_IDX_BITS = `SOC_CP0_TLB_INDEX_BITS;
+
+    // Phase B.3.b: forward-declared TLB combinational read/probe outputs so the
+    // main always block can consume them for TLBR / TLBP register updates. The
+    // producing mips_tlb instantiation lives at module bottom.
+    wire [18:0]              tlb_rd_vpn2;
+    wire [7:0]               tlb_rd_asid;
+    wire [15:0]              tlb_rd_mask;
+    wire [31:0]              tlb_rd_entrylo0;
+    wire [31:0]              tlb_rd_entrylo1;
+    wire                     tlb_probe_hit;
+    wire [TLB_IDX_BITS-1:0]  tlb_probe_index;
     reg                       cp0_index_p;              // Index[31] probe-fail
     reg [TLB_IDX_BITS-1:0]    cp0_index;                // Index[log2(N)-1:0]
     reg [TLB_IDX_BITS-1:0]    cp0_random;               // free-running downcounter
@@ -390,6 +405,23 @@ module mips_cp0 (
                 // ERET: clear EXL (ErrorEPC path via ERL comes in Phase B.5)
                 cp0_status[1] <= 1'b0;
 
+            end else if (|tlb_op) begin
+                case (tlb_op)
+                    3'b001: begin // TLBR: TLB[Index] → EntryHi / EntryLo0 / EntryLo1 / PageMask
+                        cp0_entryhi_vpn2  <= tlb_rd_vpn2;
+                        cp0_entryhi_asid  <= tlb_rd_asid;
+                        cp0_pagemask_mask <= tlb_rd_mask;
+                        cp0_entrylo0      <= tlb_rd_entrylo0;
+                        cp0_entrylo1      <= tlb_rd_entrylo1;
+                    end
+                    3'b100: begin // TLBP: probe → Index[31]=~hit, Index[low]=hit_index or 0
+                        cp0_index_p <= ~tlb_probe_hit;
+                        cp0_index   <= tlb_probe_hit ? tlb_probe_index : {TLB_IDX_BITS{1'b0}};
+                    end
+                    // TLBWI (010) and TLBWR (011) write TLB array via mips_tlb
+                    // instantiation below; they do not modify CP0 register state.
+                    default: ;
+                endcase
             end else if (we) begin
                 case ({waddr, wsel})
                     {5'd0, 3'd0}: begin
@@ -475,5 +507,47 @@ module mips_cp0 (
             end
         end
     end
+
+    // -------------------------------------------------------------------------
+    // TLB data array (Phase B.3.b)
+    // -------------------------------------------------------------------------
+    // TLBR / TLBP outputs are combinational; consumed by the always-block above
+    // to schedule CP0 register updates. TLBWI / TLBWR drive wr_en synchronously.
+    wire        tlb_wr_en_raw = (tlb_op == 3'b010) || (tlb_op == 3'b011);
+    // Gate TLB writes with the same conditions that inhibit MTC0: exception on
+    // the same instruction (not taken here because tlb_op traps to RI in user
+    // mode when B.4 lands) or ERET must not commit a partial TLB write.
+    wire        tlb_wr_gate   = !(except_req && !cp0_status[1]) && !eret;
+    wire        tlb_wr_en     = tlb_wr_en_raw && tlb_wr_gate;
+    wire [TLB_IDX_BITS-1:0] tlb_wr_index = (tlb_op == 3'b010) ? cp0_index
+                                                              : cp0_random;
+
+    mips_tlb #(
+        .TLB_ENTRIES (`SOC_CP0_TLB_ENTRIES),
+        .INDEX_BITS  (TLB_IDX_BITS)
+    ) u_mips_tlb (
+        .clk         (clk),
+        .rst_n       (rst_n),
+
+        .wr_en       (tlb_wr_en),
+        .wr_index    (tlb_wr_index),
+        .wr_vpn2     (cp0_entryhi_vpn2),
+        .wr_asid     (cp0_entryhi_asid),
+        .wr_mask     (cp0_pagemask_mask),
+        .wr_entrylo0 (cp0_entrylo0),
+        .wr_entrylo1 (cp0_entrylo1),
+
+        .rd_index    (cp0_index),
+        .rd_vpn2     (tlb_rd_vpn2),
+        .rd_asid     (tlb_rd_asid),
+        .rd_mask     (tlb_rd_mask),
+        .rd_entrylo0 (tlb_rd_entrylo0),
+        .rd_entrylo1 (tlb_rd_entrylo1),
+
+        .probe_vpn2  (cp0_entryhi_vpn2),
+        .probe_asid  (cp0_entryhi_asid),
+        .probe_hit   (tlb_probe_hit),
+        .probe_index (tlb_probe_index)
+    );
 
 endmodule

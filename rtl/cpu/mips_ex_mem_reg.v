@@ -28,7 +28,8 @@ module mips_ex_mem_reg (
     // CP0
     input  wire        ex_cp0_we,
     input  wire        ex_is_eret,
-    
+    input  wire [2:0]  ex_tlb_op,
+
     // Exceptions
     input  wire        ex_except_req,
     input  wire [4:0]  ex_except_code,
@@ -51,7 +52,8 @@ module mips_ex_mem_reg (
     // CP0
     output reg         mem_cp0_we,
     output reg         mem_is_eret,
-    
+    output reg  [2:0]  mem_tlb_op,
+
     // Exceptions
     output reg         mem_except_req,
     output reg  [4:0]  mem_except_code,
@@ -79,6 +81,7 @@ module mips_ex_mem_reg (
             mem_mem_to_reg <= 2'd0;
             mem_cp0_we     <= 1'b0;
             mem_is_eret    <= 1'b0;
+            mem_tlb_op     <= 3'd0;
             mem_except_req <= 1'b0;
             mem_except_code<= 5'd0;
             mem_done       <= 1'b0;
@@ -98,6 +101,7 @@ module mips_ex_mem_reg (
             mem_mem_to_reg <= 2'd0;
             mem_cp0_we     <= 1'b0;
             mem_is_eret    <= 1'b0;
+            mem_tlb_op     <= 3'd0;
             mem_except_req <= 1'b0;
             mem_except_code<= 5'd0;
             mem_done       <= 1'b0;
@@ -113,6 +117,7 @@ module mips_ex_mem_reg (
             mem_reg_write  <= ex_reg_write;
             mem_cp0_we     <= ex_cp0_we;
             mem_is_eret    <= ex_is_eret;
+            mem_tlb_op     <= ex_tlb_op;
             mem_except_req <= ex_except_req;
             mem_except_code<= ex_except_code;
             mem_mem_read   <= ex_mem_read;
