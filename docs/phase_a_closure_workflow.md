@@ -30,7 +30,24 @@
 ### 2b. UVM_ERROR in new test
 新增 test 内的断言失败 → gate fail。**避免方式**：新增 sequence 必须先 `make uvm UVM_TEST=xxx` 独立跑通 REGRESSION_TEST_SUCCESS + 0 UVM_ERROR 才纳入 phase testlist。
 
-**已知教训**（本 session 抓到）：APB peripheral 有 side-effect (GPIO DATA readback 依赖 DIR，Timer LOAD 会启动计数等)，seq 写模式前需先设置模式位。见 `axi_apb_bit_pattern_sweep_seq` GPIO DIR pre-config。
+**已知教训**（本 session 抓到）：
+- APB peripheral 有 side-effect (GPIO DATA readback 依赖 DIR，Timer LOAD 会启动计数等)，seq 写模式前需先设置模式位。见 `axi_apb_bit_pattern_sweep_seq` GPIO DIR pre-config。
+
+### 2d. Firmware sweep 的 CP0 / 中断 / TLB side-effect (信号 #5/#6 教训 2026-07-26)
+新增 `cp0_sweep` firmware 例程扫 CP0 寄存器 → signoff #5 Phase 2 gate FAIL；`soc_bus_stress_test` + `soc_base_test` 在 sim time ~362 ms 触发大量 `[AXI_MON] SRAM monitor observed extra W beat` UVM_ERROR + `axim3/axim4 protocol_checker BVALID asserted with no completed write data`。**错误诊断**：初以为是 Compare 未 restore → Timer IRQ storm；signoff #6 加了 Compare=0xFFFF_FFFF restore 后**依旧同一位置同一错**。实际 root cause 更深，可能之一：
+- 写 EntryHi / Wired / PageMask 后 TLB 状态污染（虽然 SOC_MMU_ENABLE=0 但内部信号可能被观察）
+- 写 HWREna=0x2000000F 影响 RDHWR 路径
+- 写 IntCtl.IPTI / VS 改变中断 vector 位置
+
+**Firmware sweep 编写清单**（每加一条 sweep 必查）：
+1. 该 sweep 修改的所有寄存器**必须在 return 前 restore 到 reset 值**
+2. 该 sweep 触发的所有异常路径**必须能自然 resolve**（handler advance EPC 或不重触发）
+3. 该 sweep 对 SRAM / 外设 / cache 状态的持久修改**不能影响后续 UVM tests**（UVM tests 与 firmware 并行跑）
+4. **每次加 sweep 后先 `make uvm UVM_TEST=soc_bus_stress_test`** 独立验证，再 `make uvm UVM_TEST=soc_base_test`，再全 signoff。这两个 test 对 firmware 副作用最敏感
+5. `cp0_sweep` 里 MMU register 写（Index/EntryHi/EntryLo0/1/PageMask/Wired/Context）**必须彻底 restore**；HWREna 也 restore；IntCtl 也 restore；Compare 也 restore
+
+### 2c. Coverage threshold < 99%
+所有 gate 都过后，`COVERAGE_THRESHOLDS` 检查失败。**2026-07-26 session 后**（Phase B + 2 新 stimulus 后）实测：
 
 ### 2c. Coverage threshold < 99%
 所有 gate 都过后，`COVERAGE_THRESHOLDS` 检查失败。**2026-07-26 session 后**（Phase B + 2 新 stimulus 后）实测：
