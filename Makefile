@@ -29,10 +29,13 @@ STAGE ?= ex
 NUM_TESTS ?= 10
 SEED_BASE ?= 1
 
-.PHONY: firmware uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate soc-random-regression stage-sim project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate soc-random-regression stage-sim project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 firmware:
 	$(MAKE) -C tb/soc_test/fw OUT_DIR=$(FW_BUILD_DIR) FW_BASE=firmware all
+
+firmwares:
+	$(MAKE) -C tb/soc_test/fw all-firmwares OUT_DIR=$(BUILD_DIR)/firmware
 
 uvm:
 	FW_HEX=$(FW_HEX) FLASH_IMAGE=$(UVM_FLASH_IMAGE) TESTNAME=$(UVM_TEST) SEED=$(UVM_SEED) RUN_DIR=$(UVM_RUN_DIR) tb/uvm_tb/run_uvm.sh
@@ -68,8 +71,8 @@ phase3c-regression: firmware
 phase3c-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_PHASE3C_TESTLIST) RUN_ROOT=$(UVM_PHASE3C_COMPLETE_DIR) tb/uvm_tb/run_phase3c_complete.sh
 
-current-contract-signoff: firmware
-	FW_HEX=$(FW_HEX) RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) tb/uvm_tb/run_current_contract_signoff.sh
+current-contract-signoff: firmware firmwares
+	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) tb/uvm_tb/run_current_contract_signoff.sh
 
 soc-smoke: firmware
 	FW_HEX=$(FW_HEX) RUN_DIR=$(SOC_TEST_RUN_DIR) tb/soc_test/run.sh

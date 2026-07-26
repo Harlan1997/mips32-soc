@@ -113,7 +113,7 @@ echo "======================================================================"
 
 echo "[Stage 1/5] Running Phase 2 Complete Gate..."
 set +e
-FW_HEX="$FW_HEX_ABS" RUN_ROOT="$PHASE2_ROOT" "${SCRIPT_DIR}/run_phase2_complete.sh"
+FW_HEX="$FW_HEX_ABS" FW_ROOT_DIR="${FW_ROOT_DIR:-}" RUN_ROOT="$PHASE2_ROOT" "${SCRIPT_DIR}/run_phase2_complete.sh"
 p2_status=$?
 set -e
 if [ "$p2_status" -ne 0 ]; then
@@ -122,7 +122,7 @@ fi
 
 echo "[Stage 2/5] Running Phase 3A Complete Gate..."
 set +e
-FW_HEX="$FW_HEX_ABS" FLASH_IMAGE="$FLASH_IMAGE_ABS" RUN_ROOT="$PHASE3_ROOT" CPU_CP0_DIR="${PHASE3_ROOT}/cpu_cp0_gate" "${SCRIPT_DIR}/run_phase3_complete.sh"
+FW_HEX="$FW_HEX_ABS" FW_ROOT_DIR="${FW_ROOT_DIR:-}" FLASH_IMAGE="$FLASH_IMAGE_ABS" RUN_ROOT="$PHASE3_ROOT" CPU_CP0_DIR="${PHASE3_ROOT}/cpu_cp0_gate" "${SCRIPT_DIR}/run_phase3_complete.sh"
 p3a_status=$?
 set -e
 if [ "$p3a_status" -ne 0 ]; then
@@ -477,11 +477,11 @@ fi
 if [ "$p2_cov_tot" -ne 16 ] || [ "$p2_cov_pass" -ne 16 ] || [ "$p2_cov_fail" -ne 0 ]; then
     fail_signoff "REGRESSION_CARDINALITY" "Phase 2 coverage gate cardinality mismatch: total=$p2_cov_tot (expected 16), passed=$p2_cov_pass (expected 16), failed=$p2_cov_fail (expected 0)"
 fi
-if [ "$p3a_dir_tot" -ne 5 ] || [ "$p3a_dir_pass" -ne 5 ] || [ "$p3a_dir_fail" -ne 0 ]; then
-    fail_signoff "REGRESSION_CARDINALITY" "Phase 3A directed gate cardinality mismatch: total=$p3a_dir_tot (expected 5), passed=$p3a_dir_pass (expected 5), failed=$p3a_dir_fail (expected 0)"
+if [ "$p3a_dir_tot" -ne 8 ] || [ "$p3a_dir_pass" -ne 8 ] || [ "$p3a_dir_fail" -ne 0 ]; then
+    fail_signoff "REGRESSION_CARDINALITY" "Phase 3A directed gate cardinality mismatch: total=$p3a_dir_tot (expected 8), passed=$p3a_dir_pass (expected 8), failed=$p3a_dir_fail (expected 0)"
 fi
-if [ "$p3a_cov_tot" -ne 5 ] || [ "$p3a_cov_pass" -ne 5 ] || [ "$p3a_cov_fail" -ne 0 ]; then
-    fail_signoff "REGRESSION_CARDINALITY" "Phase 3A coverage gate cardinality mismatch: total=$p3a_cov_tot (expected 5), passed=$p3a_cov_pass (expected 5), failed=$p3a_cov_fail (expected 0)"
+if [ "$p3a_cov_tot" -ne 8 ] || [ "$p3a_cov_pass" -ne 8 ] || [ "$p3a_cov_fail" -ne 0 ]; then
+    fail_signoff "REGRESSION_CARDINALITY" "Phase 3A coverage gate cardinality mismatch: total=$p3a_cov_tot (expected 8), passed=$p3a_cov_pass (expected 8), failed=$p3a_cov_fail (expected 0)"
 fi
 if [ "$p3b_dir_tot" -ne 1 ] || [ "$p3b_dir_pass" -ne 1 ] || [ "$p3b_dir_fail" -ne 0 ]; then
     fail_signoff "REGRESSION_CARDINALITY" "Phase 3B directed gate cardinality mismatch: total=$p3b_dir_tot (expected 1), passed=$p3b_dir_pass (expected 1), failed=$p3b_dir_fail (expected 0)"

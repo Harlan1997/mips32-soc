@@ -1,6 +1,16 @@
 # Phase 3A deferred-feature closure tests
+# Columns: <test_name> <seed> [fw_variant]
+#   fw_variant is optional; defaults to caller-supplied FW_HEX (soc_smoke).
+#   Named variants map to build/firmware/<variant>/firmware.hex — see
+#   tb/soc_test/fw/tests/ for available variants.
 soc_uart_irq_test 1
 soc_apb_fault_stress_test 1
 soc_flash_image_test 1
 soc_axi_attribute_cross_sweep_test 1
 soc_apb_bit_pattern_sweep_test 1
+# Isolated per-firmware CPU-only exercises. Each uses soc_base_test as a
+# boot harness and loads its own dedicated firmware — no coexistence with
+# UVM peripheral traffic, so no boot-timing race (see signoff #8 lesson).
+soc_base_test 1 isa_r2_sweep
+soc_base_test 2 cache_sweep
+soc_base_test 3 cp0_sweep
