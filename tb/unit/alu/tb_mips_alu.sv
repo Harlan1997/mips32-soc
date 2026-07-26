@@ -64,6 +64,31 @@ module tb_mips_alu;
         alu_op = 5'b00001;    op_a = 32'd10; op_b = 32'd25; #1;
         check("ADDU(10, 25) = 35 (regression check)", 32'd35);
 
+        // ----- WSBH (5'b10100) — byte-swap within each halfword of op_b -----
+        alu_op = 5'b10100;
+        op_b   = 32'h1122_3344;  #1; check("WSBH(0x11223344) = 0x22114433", 32'h2211_4433);
+        op_b   = 32'hAABB_CCDD;  #1; check("WSBH(0xAABBCCDD) = 0xBBAADDCC", 32'hBBAA_DDCC);
+        op_b   = 32'h0000_0000;  #1; check("WSBH(0) = 0",                    32'h0000_0000);
+        op_b   = 32'hFFFF_FFFF;  #1; check("WSBH(-1) = -1",                  32'hFFFF_FFFF);
+
+        // ----- ROTR (5'b10101) — rotate op_b right by sa -----
+        alu_op = 5'b10101;
+        op_b   = 32'h1234_5678; sa = 5'd0;  #1; check("ROTR(_,0) = original", 32'h1234_5678);
+        op_b   = 32'h1234_5678; sa = 5'd4;  #1; check("ROTR(0x12345678,4)",   32'h8123_4567);
+        op_b   = 32'h1234_5678; sa = 5'd8;  #1; check("ROTR(0x12345678,8)",   32'h7812_3456);
+        op_b   = 32'h1234_5678; sa = 5'd16; #1; check("ROTR(0x12345678,16)",  32'h5678_1234);
+        op_b   = 32'h1234_5678; sa = 5'd31; #1; check("ROTR(0x12345678,31)",
+                                                       32'h2468_ACF0);   // = original << 1 wrap
+        // sanity: ROTR(0, sa) always 0
+        op_b   = 32'h0000_0000; sa = 5'd7;  #1; check("ROTR(0,7) = 0", 32'h0000_0000);
+
+        // ----- MOV_PASS (5'b10110) — passes op_a through -----
+        alu_op = 5'b10110;
+        op_a   = 32'hCAFE_BABE; op_b = 32'h0; #1;
+        check("MOV_PASS = op_a", 32'hCAFE_BABE);
+        op_a   = 32'h1234_5678; op_b = 32'hFFFF_FFFF; #1;
+        check("MOV_PASS ignores op_b", 32'h1234_5678);
+
         if (errors == 0) $display("TB PASS (0 errors)");
         else             $display("TB FAIL (%0d errors)", errors);
         $finish;

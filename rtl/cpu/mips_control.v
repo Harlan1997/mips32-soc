@@ -50,7 +50,11 @@ module mips_control (
     // TLB instructions (Phase B.3.b). Encoding:
     //   000 = no TLB op   001 = TLBR    010 = TLBWI
     //   011 = TLBWR       100 = TLBP    others = reserved
-    output reg  [2:0]  tlb_op
+    output reg  [2:0]  tlb_op,
+
+    // MOVN/MOVZ (Phase B ISA R2): tell id_stage to gate waddr by val_rt.
+    output reg         is_movn,
+    output reg         is_movz
 );
 
     wire [5:0] opcode = inst[31:26];
@@ -81,6 +85,8 @@ module mips_control (
         is_eret      = 1'b0;
         is_syscall   = 1'b0;
         tlb_op       = 3'b000;
+        is_movn      = 1'b0;
+        is_movz      = 1'b0;
 
         case (opcode)
             6'b000000: begin // SPECIAL (R-type)
@@ -128,13 +134,25 @@ module mips_control (
                     6'b001100: begin // SYSCALL
                         is_syscall = 1'b1;
                     end
+                    6'b001010: begin // MOVZ rd, rs, rt (R2)
+                        alu_op    = 5'b10110;  // OP_MOV_PASS (rd = rs)
+                        reg_write = 1'b1;
+                        reg_dst   = 2'b01;
+                        is_movz   = 1'b1;      // id_stage gates waddr on val_rt==0
+                    end
+                    6'b001011: begin // MOVN rd, rs, rt (R2)
+                        alu_op    = 5'b10110;
+                        reg_write = 1'b1;
+                        reg_dst   = 2'b01;
+                        is_movn   = 1'b1;
+                    end
                     6'b000000: begin // SLL
                         alu_op    = 5'b01000;
                         reg_write = 1'b1;
                         reg_dst   = 2'b01;
                     end
-                    6'b000010: begin // SRL
-                        alu_op    = 5'b01001;
+                    6'b000010: begin // SRL / ROTR (R2: rs[0]=1 → ROTR)
+                        alu_op    = (rs[0]) ? 5'b10101 : 5'b01001;  // OP_ROTR : OP_SRL
                         reg_write = 1'b1;
                         reg_dst   = 2'b01;
                     end
@@ -149,8 +167,8 @@ module mips_control (
                         reg_dst   = 2'b01;
                         use_sa    = 1'b0; // shift amount from rs
                     end
-                    6'b000110: begin // SRLV
-                        alu_op    = 5'b01001;
+                    6'b000110: begin // SRLV / ROTRV (R2: inst[6]=1 → ROTRV)
+                        alu_op    = (inst[6]) ? 5'b10101 : 5'b01001;  // OP_ROTR : OP_SRL
                         reg_write = 1'b1;
                         reg_dst   = 2'b01;
                         use_sa    = 1'b0; // shift amount from rs
@@ -462,6 +480,12 @@ module mips_control (
                 case (func)
                     6'b100000: begin  // BSHFL family — sub-op in sa field (bits 10:6)
                         case (inst[10:6])
+                            5'b00010: begin  // WSBH rd, rt (R2)
+                                alu_op    = 5'b10100;  // OP_WSBH
+                                reg_write = 1'b1;
+                                reg_dst   = 2'b01;
+                                alu_src   = 1'b0;     // op_b = rt
+                            end
                             5'b10000: begin  // SEB rd, rt
                                 alu_op    = 5'b10010;  // OP_SEB
                                 reg_write = 1'b1;
