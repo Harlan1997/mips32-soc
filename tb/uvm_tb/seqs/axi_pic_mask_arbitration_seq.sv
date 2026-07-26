@@ -215,20 +215,24 @@ class axi_pic_mask_arbitration_seq extends uvm_sequence#(axi_transaction);
     task body();
         do_write_word("pic_mask_init_zero", PIC_MASK_ADDR, 32'h0000_0000);
 `ifdef SOC_USE_UART_16550
-        // v2 16550: TX write only fires IRQ when IER bit 1 (TX-empty) is
-        // enabled. v1 apb_uart raised the IRQ automatically on any TX
-        // write (sim-stub shortcut). Enable IER here so the arbitration
-        // test still sees a UART IRQ source.
-        do_write_word("pic_mask_uart_ier_tx",
-                      `SOC_APB_BASE + `SOC_APB_UART_OFFSET + 32'h04,
-                      32'h0000_0002);
+        // v2 UART fires only transient TX-empty IRQ (auto-clears on IIR
+        // read) — no stable-level IRQ for arbitration to check. Use VIC's
+        // INTR_SOFT register to force UART bit (source 1) permanently
+        // asserted; this is stable and W1C-controlled. Semantically
+        // identical to v1 apb_uart's "always pending after write" stub.
+        // VIC INTR_SOFT is at PIC_BASE + 0x1C.
+        do_write_word("pic_mask_soft_uart_bit",
+                      `SOC_APB_BASE + `SOC_APB_PIC_OFFSET + 32'h1C,
+                      UART_IRQ_MASK);
 `else
         do_write_word("pic_mask_uart_clear_initial", UART_IRQ_CLEAR_ADDR, UART_IRQ_MASK);
 `endif
         do_write_word("pic_mask_timer_disable", TIMER_CTRL_ADDR, 32'h0000_0000);
         do_write_word("pic_mask_timer_clear_initial", TIMER_INT_ADDR, 32'h0000_0001);
         do_write_word("pic_mask_dma_clear_initial", DMA_CTRL_ADDR, 32'h0000_0004);
+`ifndef SOC_USE_UART_16550
         poll_status_bits("pic_mask_initial_clear", 32'h0000_0000);
+`endif
 
         do_write_word("pic_mask_uart_tx_pending", UART_TX_ADDR, 32'h0000_0050);
         do_write_word("pic_mask_timer_load", TIMER_LOAD_ADDR, 32'h0000_0003);
@@ -258,9 +262,10 @@ class axi_pic_mask_arbitration_seq extends uvm_sequence#(axi_transaction);
         do_write_word("pic_mask_restore_zero", PIC_MASK_ADDR, 32'h0000_0000);
         sample_event(EV_RESTORE);
 `ifdef SOC_USE_UART_16550
-        do_write_word("pic_mask_uart_ier_restore",
-                      `SOC_APB_BASE + `SOC_APB_UART_OFFSET + 32'h04,
-                      32'h0000_0000);
+        // Clear the software-triggered UART bit (VIC INTR_SOFT_CLR @ 0x20).
+        do_write_word("pic_mask_soft_uart_clear",
+                      `SOC_APB_BASE + `SOC_APB_PIC_OFFSET + 32'h20,
+                      UART_IRQ_MASK);
 `else
         do_write_word("pic_mask_uart_clear_restore", UART_IRQ_CLEAR_ADDR, UART_IRQ_MASK);
 `endif

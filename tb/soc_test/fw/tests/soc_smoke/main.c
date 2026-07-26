@@ -292,7 +292,7 @@ int main() {
     DMA_DST  = (uint32_t)sram_dst;
     DMA_LEN  = 16; // 16 bytes = 4 words
     DMA_CTRL = 1;  // Start DMA
-    
+
     // Wait for DMA completion
     while (DMA_CTRL & 1) {}
     
@@ -752,7 +752,7 @@ int main() {
         DMA_CTRL = 4; // Clear DONE bit to hit coverage
     }
     print_str("    TOGGLE TEST OK\n");
-    
+
     // Zero-length DMA transfer to hit (reg_length > 0) false branch (do it once safely)
     DMA_LEN = 0;
     DMA_CTRL = 1;

@@ -181,10 +181,9 @@ module soc_peripheral_subsystem #(
 
     wire uart_tx_int;
     wire uart_rx_int;
-`ifdef SOC_USE_UART_16550
-    // v1 apb_uart was $write-based sim stub; v2 apb_uart_16550 is a real
-    // controller. TX write @ 0x00 is API-compatible (firmware just writes
-    // chars). Serial line is tied off; loopback disabled by default.
+    // UART: apb_uart_16550 (real PC16550D). v1 apb_uart deleted after
+    // signoff #19 validated the cutover. Serial line tied off in DUT;
+    // loopback available via MCR[4] for verification.
     wire uart_16550_irq;
     assign uart_tx_int = uart_16550_irq;
     assign uart_rx_int = 1'b0;
@@ -210,24 +209,6 @@ module soc_peripheral_subsystem #(
         .uart_ri_n  (1'b1),
         .irq        (uart_16550_irq)
     );
-`else
-    apb_uart u_apb_uart (
-        .clk             (clk),
-        .rst_n           (rst_n),
-
-        .paddr           (apb_paddr),
-        .psel            (uart_sel),
-        .penable         (apb_penable),
-        .pwrite          (apb_pwrite),
-        .pwdata          (apb_pwdata),
-        .pstrb           (apb_pstrb),
-        .pready          (uart_pready),
-        .prdata          (uart_prdata),
-        .pslverr         (uart_pslverr),
-        .tx_int          (uart_tx_int),
-        .rx_int          (uart_rx_int)
-    );
-`endif
 
     generate
     if (ENABLE_APB_FAULT_INJECTOR) begin : g_apb_fault_injector
@@ -286,6 +267,9 @@ module soc_peripheral_subsystem #(
         .gpio_pins       (gpio_pins)
     );
 
+    // DMA v1 kept in DUT. DMA v2 (apb_axi_dma_v2) stays in tree; cutover
+    // requires coordinated UVM sequence rewrite (register map + CTRL W1C
+    // vs v1 self-clearing) that fell outside this session's scope.
     wire dma_int;
     apb_axi_dma u_apb_dma (
         .clk             (clk),

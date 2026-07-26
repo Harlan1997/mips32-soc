@@ -23,7 +23,6 @@ STAGE ?= ex
 
 ifeq ($(STAGE), ex)
     RTL_FILES = $(RTL_DIR)/mips_alu.v \
-                $(RTL_DIR)/mips_mdu.v \
                 $(RTL_DIR)/mips_mdu_v2.v \
                 $(RTL_DIR)/mips_ex_stage.v
     TB_DIR    = $(ROOT_DIR)/tb/ex_stage
