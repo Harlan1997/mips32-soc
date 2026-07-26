@@ -100,11 +100,17 @@ module apb_axi_dma_v2 #(
     wire wr = psel & penable & pwrite;
     wire rd = psel & penable & ~pwrite;
 
-    // Global
+    // v1-compat alias: channel 0 accessible at 0x00-0x0C with v1 register
+    // order (SRC/DST/LEN/CTRL) and self-clearing CTRL[0]. v2 channels
+    // continue at 0x40+. This lets existing v1 firmware and UVM
+    // sequences target ch0 without change.
+    wire v1_alias = (paddr[11:4] == 8'h0);
+
+    // Global CTRL moved to 0x100 to free 0x00 range for v1 alias.
     reg global_en;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)                            global_en <= 1'b0;
-        else if (wr && paddr[11:0] == 12'h0)   global_en <= pwdata[0];
+        if (!rst_n)                             global_en <= 1'b1;   // default on (v1 legacy)
+        else if (wr && paddr[11:0] == 12'h100)  global_en <= pwdata[0];
     end
 
     // Per-channel CSRs
@@ -126,8 +132,10 @@ module apb_axi_dma_v2 #(
 
     integer c;
 
-    wire [7:0] apb_ch = (paddr[11:6] == 6'h0) ? 8'hFF : (paddr[11:6] - 8'd1);
-    wire       apb_ch_valid = (paddr[11:6] != 6'h0) && (apb_ch < N_CHANNELS[7:0]);
+    // v2 channels: ch1 at 0x80, ch2 at 0xC0, etc. (0x00-0x3F is v1 alias
+    // for ch0, 0x40-0x7F is v2 ch0, 0x100 is global CTRL.)
+    wire [7:0] apb_ch       = (paddr[11:6] < 6'h1) ? 8'hFF : (paddr[11:6] - 8'd1);
+    wire       apb_ch_valid = (paddr[11:6] >= 6'h1) && (paddr[11:6] < 6'h1 + N_CHANNELS[5:0]);
 
     // Channel state
     localparam ST_IDLE      = 4'd0;
@@ -204,6 +212,21 @@ module apb_axi_dma_v2 #(
                 sg_mode_r[c]   <= 1'b0;
                 int_en_r[c]    <= 1'b0;
             end
+        end else if (wr && v1_alias) begin
+            // v1 alias: ch0 CSRs at 0x00-0x0C, v1 register order and
+            // CTRL semantics (bit0 EN, bit1 INT_EN, bit2 DONE W1C).
+            case (paddr[3:2])
+                2'h0: src_r[0]     <= pwdata;
+                2'h1: dst_r[0]     <= pwdata;
+                2'h2: len_r[0]     <= pwdata;
+                2'h3: begin
+                    en_r[0]      <= pwdata[0];   // 1 → start; auto-clears on done
+                    int_en_r[0]  <= pwdata[1];
+                    sg_mode_r[0] <= 1'b0;        // v1 has no SG mode
+                    // pwdata[2] = W1C DONE handled in FSM block below
+                end
+                default: ;
+            endcase
         end else if (wr && apb_ch_valid) begin
             case (paddr[5:2])
                 4'h0: begin
@@ -320,13 +343,19 @@ module apb_axi_dma_v2 #(
                         busy_r[c]   <= 1'b0;
                         done_r[c]   <= 1'b1;
                         ch_state[c] <= ST_IDLE;
+                        // v1-compat: ch0 EN self-clears on done.
+                        if (c == 0) en_r[0] <= 1'b0;
                     end
                 end
 
-                // APB write-1-clear on done / err
+                // v2 APB W1C on done / err via ch CTRL[3]/[4]
                 if (wr && apb_ch_valid && apb_ch == c && paddr[5:2] == 4'h0) begin
                     if (pwdata[3]) done_r[c] <= 1'b0;
                     if (pwdata[4]) err_r[c]  <= 1'b0;
+                end
+                // v1-compat W1C on ch0 CTRL[2] (v1 DONE bit position)
+                if (wr && v1_alias && paddr[3:2] == 2'h3 && c == 0 && pwdata[2]) begin
+                    done_r[0] <= 1'b0;
                 end
             end
         end
@@ -344,16 +373,22 @@ module apb_axi_dma_v2 #(
     always @(*) begin
         prdata = 32'h0;
         if (rd) begin
-            if (paddr[11:6] == 6'h0) begin
-                case (paddr[5:2])
-                    4'h0: prdata = {31'h0, global_en};
-                    4'h1: begin
-                        prdata = 32'h0;
-                        for (c = 0; c < N_CHANNELS; c = c + 1)
-                            prdata[c] = int_en_r[c] & done_r[c];
-                    end
+            if (v1_alias) begin
+                // v1 alias: ch0 CSRs at 0x00-0x0C, v1 register order and
+                // CTRL bit map (bit0 EN, bit1 INT_EN, bit2 DONE).
+                case (paddr[3:2])
+                    2'h0: prdata = src_r[0];
+                    2'h1: prdata = dst_r[0];
+                    2'h2: prdata = len_r[0];
+                    2'h3: prdata = {29'h0, done_r[0], int_en_r[0], en_r[0]};
                     default: prdata = 32'h0;
                 endcase
+            end else if (paddr[11:0] == 12'h100) begin
+                prdata = {31'h0, global_en};
+            end else if (paddr[11:0] == 12'h104) begin
+                prdata = 32'h0;
+                for (c = 0; c < N_CHANNELS; c = c + 1)
+                    prdata[c] = int_en_r[c] & done_r[c];
             end else if (apb_ch_valid) begin
                 case (paddr[5:2])
                     4'h0: prdata = {27'h0, err_r[apb_ch], done_r[apb_ch],
