@@ -33,10 +33,13 @@ module mips_alu (
     localparam OP_SLTU = 5'b01100;
     localparam OP_LUI  = 5'b01101;
     // Phase B ISA R2 additions
-    localparam OP_CLZ  = 5'b10000;   // Count leading zeros of op_a
-    localparam OP_CLO  = 5'b10001;   // Count leading ones of op_a
-    localparam OP_SEB  = 5'b10010;   // Sign-extend byte from op_b[7:0]
-    localparam OP_SEH  = 5'b10011;   // Sign-extend halfword from op_b[15:0]
+    localparam OP_CLZ      = 5'b10000; // Count leading zeros of op_a
+    localparam OP_CLO      = 5'b10001; // Count leading ones of op_a
+    localparam OP_SEB      = 5'b10010; // Sign-extend byte from op_b[7:0]
+    localparam OP_SEH      = 5'b10011; // Sign-extend halfword from op_b[15:0]
+    localparam OP_WSBH     = 5'b10100; // Word swap bytes within halfwords (op_b)
+    localparam OP_ROTR     = 5'b10101; // Rotate right op_b by sa
+    localparam OP_MOV_PASS = 5'b10110; // Pass op_a (for MOVN/MOVZ; write gate in id_stage)
 
     // Internal signals for adder/subtractor and overflow detection
     wire [31:0] sub_b;
@@ -130,6 +133,18 @@ module mips_alu (
             end
             OP_SEH: begin
                 alu_out = { {16{op_b[15]}}, op_b[15:0] };
+            end
+            OP_WSBH: begin
+                // Swap byte order within each halfword of op_b
+                alu_out = { op_b[23:16], op_b[31:24], op_b[7:0], op_b[15:8] };
+            end
+            OP_ROTR: begin
+                // Rotate-right op_b by sa via double-word right shift trick.
+                // Guarantees correct behaviour at sa=0 (which << 32 would break).
+                alu_out = ({op_b, op_b} >> sa) & 32'hFFFF_FFFF;
+            end
+            OP_MOV_PASS: begin
+                alu_out = op_a;
             end
             default: begin
                 alu_out = 32'd0;

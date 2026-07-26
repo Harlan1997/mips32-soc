@@ -114,6 +114,10 @@ module mips_id_stage (
     wire       use_sa;
     wire [1:0] reg_dst;
 
+    // Phase B ISA R2: MOVN/MOVZ conditional-write gate (local to id_stage).
+    wire cond_move_is_movn;
+    wire cond_move_is_movz;
+
     mips_control u_mips_control (
         .inst        (inst),
         .alu_op      (alu_op),
@@ -136,7 +140,9 @@ module mips_id_stage (
         .is_mfc0     (is_mfc0),
         .is_eret     (is_eret),
         .is_syscall  (is_syscall),
-        .tlb_op      (tlb_op)
+        .tlb_op      (tlb_op),
+        .is_movn     (cond_move_is_movn),
+        .is_movz     (cond_move_is_movz)
     );
 
     // Forwarding logic to resolve raw dependencies for ID-stage branch comparator
@@ -181,9 +187,14 @@ module mips_id_stage (
     assign branch_target = pc_plus_4 + { {14{inst[15]}}, inst[15:0], 2'b00 };
 
     // Register Destination Multiplexer
-    assign waddr_out = (reg_dst == 2'b00) ? rt_addr :
-                       (reg_dst == 2'b01) ? rd_addr :
-                       (reg_dst == 2'b10) ? 5'd31    : 5'd0;
+    wire [4:0] waddr_raw = (reg_dst == 2'b00) ? rt_addr :
+                           (reg_dst == 2'b01) ? rd_addr :
+                           (reg_dst == 2'b10) ? 5'd31    : 5'd0;
+    // Phase B ISA R2 MOVN/MOVZ: if the condition on val_rt fails, redirect
+    // waddr to r0 so the RF write becomes a nop (spec-defined behaviour).
+    wire cond_move_ok = cond_move_is_movn ? (val_rt != 32'd0) :
+                        cond_move_is_movz ? (val_rt == 32'd0) : 1'b1;
+    assign waddr_out = cond_move_ok ? waddr_raw : 5'd0;
 
     // Shift Amount Multiplexer
     assign sa_out = use_sa ? inst[10:6] : val_rs[4:0];
