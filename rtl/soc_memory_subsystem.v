@@ -3,6 +3,8 @@
 // Design:    SoC memory subsystem integration
 // =============================================================================
 
+`include "soc_config.vh"
+
 module soc_memory_subsystem #(
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
     parameter SRAM_DEPTH_WORDS = 32768
@@ -88,6 +90,87 @@ module soc_memory_subsystem #(
     input  wire        s2_rready
 );
 
+`ifdef SOC_USE_L2_CACHE
+    // ---- L2 cache in-line between fabric and axi_ddr_model backing store ----
+    wire [3:0]  l2m_awid, l2m_arid, l2m_bid, l2m_rid;
+    wire [31:0] l2m_awaddr, l2m_araddr, l2m_wdata, l2m_rdata;
+    wire [7:0]  l2m_awlen, l2m_arlen;
+    wire [2:0]  l2m_awsize, l2m_arsize;
+    wire [1:0]  l2m_awburst, l2m_arburst, l2m_bresp, l2m_rresp;
+    wire        l2m_awvalid, l2m_awready, l2m_wvalid, l2m_wready, l2m_wlast;
+    wire        l2m_bvalid, l2m_bready, l2m_arvalid, l2m_arready;
+    wire        l2m_rvalid, l2m_rready, l2m_rlast;
+    wire [3:0]  l2m_wstrb;
+
+    l2_cache #(
+        .SIZE_BYTES(32768), .LINE_BYTES(32),
+        .ID_WIDTH(4), .ADDR_WIDTH(32), .DATA_WIDTH(32)
+    ) u_l2_cache (
+        .clk(clk), .rst_n(rst_n),
+        // Upstream slave = original s0 (from fabric)
+        .s_awid(s0_awid), .s_awaddr(s0_awaddr), .s_awlen(s0_awlen),
+        .s_awsize(s0_awsize), .s_awburst(s0_awburst),
+        .s_awvalid(s0_awvalid), .s_awready(s0_awready),
+        .s_wdata(s0_wdata), .s_wstrb(s0_wstrb), .s_wlast(s0_wlast),
+        .s_wvalid(s0_wvalid), .s_wready(s0_wready),
+        .s_bid(s0_bid), .s_bresp(s0_bresp), .s_bvalid(s0_bvalid), .s_bready(s0_bready),
+        .s_arid(s0_arid), .s_araddr(s0_araddr), .s_arlen(s0_arlen),
+        .s_arsize(s0_arsize), .s_arburst(s0_arburst),
+        .s_arvalid(s0_arvalid), .s_arready(s0_arready),
+        .s_rid(s0_rid), .s_rdata(s0_rdata), .s_rresp(s0_rresp),
+        .s_rlast(s0_rlast), .s_rvalid(s0_rvalid), .s_rready(s0_rready),
+        // Downstream master = new axi_ddr_model
+        .m_awid(l2m_awid), .m_awaddr(l2m_awaddr), .m_awlen(l2m_awlen),
+        .m_awsize(l2m_awsize), .m_awburst(l2m_awburst),
+        .m_awvalid(l2m_awvalid), .m_awready(l2m_awready),
+        .m_wdata(l2m_wdata), .m_wstrb(l2m_wstrb), .m_wlast(l2m_wlast),
+        .m_wvalid(l2m_wvalid), .m_wready(l2m_wready),
+        .m_bid(l2m_bid), .m_bresp(l2m_bresp), .m_bvalid(l2m_bvalid), .m_bready(l2m_bready),
+        .m_arid(l2m_arid), .m_araddr(l2m_araddr), .m_arlen(l2m_arlen),
+        .m_arsize(l2m_arsize), .m_arburst(l2m_arburst),
+        .m_arvalid(l2m_arvalid), .m_arready(l2m_arready),
+        .m_rid(l2m_rid), .m_rdata(l2m_rdata), .m_rresp(l2m_rresp),
+        .m_rlast(l2m_rlast), .m_rvalid(l2m_rvalid), .m_rready(l2m_rready),
+        .snoop_addr(32'h0), .snoop_valid(1'b0),
+        .snoop_ack(), .snoop_hit()
+    );
+
+    axi_ddr_model #(
+        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS)
+    ) u_axi_sram (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .s_awid          (l2m_awid),
+        .s_awaddr        (l2m_awaddr),
+        .s_awlen         (l2m_awlen),
+        .s_awsize        (l2m_awsize),
+        .s_awburst       (l2m_awburst),
+        .s_awvalid       (l2m_awvalid),
+        .s_awready       (l2m_awready),
+        .s_wdata         (l2m_wdata),
+        .s_wstrb         (l2m_wstrb),
+        .s_wlast         (l2m_wlast),
+        .s_wvalid        (l2m_wvalid),
+        .s_wready        (l2m_wready),
+        .s_bid           (l2m_bid),
+        .s_bresp         (l2m_bresp),
+        .s_bvalid        (l2m_bvalid),
+        .s_bready        (l2m_bready),
+        .s_arid          (l2m_arid),
+        .s_araddr        (l2m_araddr),
+        .s_arlen         (l2m_arlen),
+        .s_arsize        (l2m_arsize),
+        .s_arburst       (l2m_arburst),
+        .s_arvalid       (l2m_arvalid),
+        .s_arready       (l2m_arready),
+        .s_rid           (l2m_rid),
+        .s_rdata         (l2m_rdata),
+        .s_rresp         (l2m_rresp),
+        .s_rlast         (l2m_rlast),
+        .s_rvalid        (l2m_rvalid),
+        .s_rready        (l2m_rready)
+    );
+`else
     axi_ddr_model #(
         .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS)
     ) u_axi_sram (
@@ -124,6 +207,7 @@ module soc_memory_subsystem #(
         .s_rvalid        (s0_rvalid),
         .s_rready        (s0_rready)
     );
+`endif
 
     // synopsys translate_off
     task preload_sram_hex;

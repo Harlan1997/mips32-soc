@@ -18,10 +18,12 @@
 //     * Combined irq → CPU (level), only asserted when highest-pending
 //       priority strictly exceeds RUNNING_PRIO (nesting rule)
 //
-//   Register map (all addresses byte-offset):
-//     0x000 INTR_RAW      RO  raw synchronized inputs (post edge-detect)
-//     0x004 INTR_MASKED   RO  raw & enable
-//     0x008 INTR_ENABLE   RW  per-source mask
+//   Register map (all addresses byte-offset).  0x0/0x4/0x8 layout kept
+//   v1-compatible (apb_pic) so existing firmware / UVM sequences hit the
+//   same semantics without change:
+//     0x000 INTR_RAW      RO  raw synchronized inputs (v1 STATUS)
+//     0x004 INTR_ENABLE   RW  per-source enable (v1 MASK, same "1=allow")
+//     0x008 INTR_MASKED   RO  raw & enable (v1 ACTIVE)
 //     0x00C INTR_ENABLE_SET  W1S
 //     0x010 INTR_ENABLE_CLR  W1C
 //     0x014 INTR_TYPE     RW  0=level 1=edge
@@ -119,9 +121,9 @@ module apb_vic #(
             for (i = 0; i < NUM_SOURCES; i = i + 1) prio_r[i] <= 4'h0;
         end else if (wr) begin
             case (paddr[11:2])
-                10'h002: enable_r   <= pwdata[NUM_SOURCES-1:0];              // ENABLE
-                10'h003: enable_r   <= enable_r   |  pwdata[NUM_SOURCES-1:0];// SET
-                10'h004: enable_r   <= enable_r   & ~pwdata[NUM_SOURCES-1:0];// CLR
+                10'h001: enable_r   <= pwdata[NUM_SOURCES-1:0];              // 0x004 ENABLE (v1 MASK)
+                10'h003: enable_r   <= enable_r   |  pwdata[NUM_SOURCES-1:0];// 0x00C SET
+                10'h004: enable_r   <= enable_r   & ~pwdata[NUM_SOURCES-1:0];// 0x010 CLR
                 10'h005: type_r     <= pwdata[NUM_SOURCES-1:0];              // TYPE
                 10'h006: polarity_r <= pwdata[NUM_SOURCES-1:0];              // POLARITY
                 10'h007: soft_r     <= soft_r     |  pwdata[NUM_SOURCES-1:0];// SOFT
@@ -215,9 +217,9 @@ module apb_vic #(
         prdata = 32'h0;
         if (rd) begin
             case (paddr[11:2])
-                10'h000: prdata = {{(32-NUM_SOURCES){1'b0}}, raw};
-                10'h001: prdata = {{(32-NUM_SOURCES){1'b0}}, pending};
-                10'h002: prdata = {{(32-NUM_SOURCES){1'b0}}, enable_r};
+                10'h000: prdata = {{(32-NUM_SOURCES){1'b0}}, raw};       // v1 STATUS
+                10'h001: prdata = {{(32-NUM_SOURCES){1'b0}}, enable_r};  // 0x004 ENABLE (v1 MASK)
+                10'h002: prdata = {{(32-NUM_SOURCES){1'b0}}, pending};   // 0x008 MASKED (v1 ACTIVE)
                 10'h005: prdata = {{(32-NUM_SOURCES){1'b0}}, type_r};
                 10'h006: prdata = {{(32-NUM_SOURCES){1'b0}}, polarity_r};
                 10'h007: prdata = {{(32-NUM_SOURCES){1'b0}}, soft_r};

@@ -3,6 +3,8 @@
 // Design:    SoC peripheral subsystem integration
 // =============================================================================
 
+`include "soc_config.vh"
+
 module soc_peripheral_subsystem #(
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0
 ) (
@@ -179,6 +181,36 @@ module soc_peripheral_subsystem #(
 
     wire uart_tx_int;
     wire uart_rx_int;
+`ifdef SOC_USE_UART_16550
+    // v1 apb_uart was $write-based sim stub; v2 apb_uart_16550 is a real
+    // controller. TX write @ 0x00 is API-compatible (firmware just writes
+    // chars). Serial line is tied off; loopback disabled by default.
+    wire uart_16550_irq;
+    assign uart_tx_int = uart_16550_irq;
+    assign uart_rx_int = 1'b0;
+    apb_uart_16550 #(.TX_FIFO_DEPTH(16), .RX_FIFO_DEPTH(16)) u_apb_uart (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .psel       (uart_sel),
+        .penable    (apb_penable),
+        .pwrite     (apb_pwrite),
+        .paddr      (apb_paddr[4:0]),
+        .pstrb      (apb_pstrb),
+        .pwdata     (apb_pwdata),
+        .prdata     (uart_prdata),
+        .pready     (uart_pready),
+        .pslverr    (uart_pslverr),
+        .uart_tx    (),
+        .uart_rx    (1'b1),
+        .uart_rts_n (),
+        .uart_cts_n (1'b0),
+        .uart_dtr_n (),
+        .uart_dsr_n (1'b0),
+        .uart_dcd_n (1'b0),
+        .uart_ri_n  (1'b1),
+        .irq        (uart_16550_irq)
+    );
+`else
     apb_uart u_apb_uart (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -195,6 +227,7 @@ module soc_peripheral_subsystem #(
         .tx_int          (uart_tx_int),
         .rx_int          (uart_rx_int)
     );
+`endif
 
     generate
     if (ENABLE_APB_FAULT_INJECTOR) begin : g_apb_fault_injector
@@ -308,6 +341,33 @@ module soc_peripheral_subsystem #(
 
     wire [31:0] irq_sources = {28'd0, dma_int, timer_int, uart_tx_int, uart_rx_int};
 
+    // -----------------------------------------------------------------------
+    // VIC cutover: apb_vic supersedes apb_pic. Registers 0x0/0x4/0x8 are
+    // v1-compatible (STATUS/MASK/ACTIVE == RAW/ENABLE/MASKED). Extra v2
+    // features (edge trigger, per-source priority, ACTIVE tracking, soft
+    // trigger, VEC_ID) available at higher offsets. Fallback wrapper in
+    // soc_config.vh: comment out SOC_USE_VIC to revert to apb_pic.
+    // -----------------------------------------------------------------------
+`ifdef SOC_USE_VIC
+    wire [7:0] vic_vec_id_unused;
+    wire [3:0] vic_vec_prio_unused;
+    apb_vic #(.NUM_SOURCES(32)) u_apb_pic (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .psel            (pic_sel),
+        .penable         (apb_penable),
+        .pwrite          (apb_pwrite),
+        .paddr           (apb_paddr[11:0]),
+        .pwdata          (apb_pwdata),
+        .prdata          (pic_prdata),
+        .pready          (pic_pready),
+        .pslverr         (pic_pslverr),
+        .src_in          (irq_sources),
+        .irq             (cpu_int),
+        .vec_id          (vic_vec_id_unused),
+        .vec_prio        (vic_vec_prio_unused)
+    );
+`else
     apb_pic u_apb_pic (
         .pclk            (clk),
         .presetn         (rst_n),
@@ -322,5 +382,6 @@ module soc_peripheral_subsystem #(
         .irq_sources     (irq_sources),
         .cpu_int         (cpu_int)
     );
+`endif
 
 endmodule

@@ -54,7 +54,7 @@ module tb_vic;
         @(negedge clk);
 
         // ---- Setup: enable src 3 and src 7 as level, priority 3 and 5 ----
-        apb_write(12'h008, 32'h0000_0088);       // enable src[3] and src[7]
+        apb_write(12'h004, 32'h0000_0088);       // enable src[3] and src[7] (0x004 ENABLE)
         apb_write(12'h100 + 4*3, 32'h3);         // prio[3] = 3
         apb_write(12'h100 + 4*7, 32'h5);         // prio[7] = 5
         apb_write(12'h014, 32'h0);               // all level
@@ -97,7 +97,7 @@ module tb_vic;
 
         // ---- Edge trigger test on src 10 ----
         apb_write(12'h014, 32'h0000_0400);       // type[10] = edge
-        apb_write(12'h008, 32'h0000_0400);       // enable only src 10
+        apb_write(12'h004, 32'h0000_0400);       // enable only src 10
         apb_write(12'h100 + 4*10, 32'h7);        // prio[10] = 7
         src_in = 32'h0;                          // drop src 3 too
         @(negedge clk);
@@ -115,7 +115,7 @@ module tb_vic;
         if (irq) begin $display("FAIL: edge irq should clear after ack"); errs=errs+1; end
 
         // ---- Soft trigger on src 1 ----
-        apb_write(12'h008, 32'h0000_0002);
+        apb_write(12'h004, 32'h0000_0002);
         apb_write(12'h100 + 4*1, 32'h9);
         apb_write(12'h01C, 32'h0000_0002);       // soft trigger src 1
         repeat (3) @(negedge clk);
