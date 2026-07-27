@@ -18,9 +18,9 @@ module mips_ex_stage (
     input  wire [31:0] op_b,        // Operand B
     input  wire [4:0]  sa,          // Shift amount
     input  wire [4:0]  alu_op,      // ALU control (Phase B ISA R2: 5-bit)
-    input  wire [2:0]  mdu_op,      // MDU control
+    input  wire [3:0]  mdu_op,      // MDU control (Phase 4B: 4-bit)
     input  wire        mdu_start,   // Start multi-cycle MDU op
-    input  wire        sel_mdu_out, // 1: Output MDU read data (MFHI/MFLO); 0: Output ALU result
+    input  wire        sel_mdu_out, // 1: Output MDU read data (MFHI/MFLO/MUL); 0: Output ALU result
     
     // Outputs
     output wire [31:0] ex_out,      // EX stage output result
@@ -46,43 +46,30 @@ module mips_ex_stage (
     );
 
     // ------------------------------------------------------------------
-    // MDU v2: adapts 3-bit legacy op → 4-bit mips_mdu_v2 op, muxes
-    // MFHI/MFLO output. v1 mips_mdu was deleted after signoff #12
-    // validated the cutover.
+    // MDU: receives a one-cycle issue pulse. The wrapper reports not-ready
+    // during the launch cycle so GPR-writing MUL cannot leave EX before LO is
+    // updated.
     // ------------------------------------------------------------------
-    reg [3:0] mdu_v2_op;
-    always @(*) begin
-        case (mdu_op)
-            3'b000: mdu_v2_op = 4'd0;  // MULT
-            3'b001: mdu_v2_op = 4'd1;  // MULTU
-            3'b010: mdu_v2_op = 4'd2;  // DIV
-            3'b011: mdu_v2_op = 4'd3;  // DIVU
-            3'b100: mdu_v2_op = 4'd6;  // MTHI
-            3'b101: mdu_v2_op = 4'd7;  // MTLO
-            3'b110: mdu_v2_op = 4'd4;  // MFHI
-            3'b111: mdu_v2_op = 4'd5;  // MFLO
-            default: mdu_v2_op = 4'd0;
-        endcase
-    end
-    wire mdu_v2_busy, mdu_v2_done;
-    mips_mdu_v2 u_mips_mdu (
+    wire mdu_busy, mdu_done;
+    mips_mdu u_mips_mdu (
         .clk        (clk),
         .rst_n      (rst_n),
         .issue_valid(mdu_start),
-        .op         (mdu_v2_op),
+        .op         (mdu_op),
         .rs_val     (op_a),
         .rt_val     (op_b),
         .hi_out     (hi_val),
         .lo_out     (lo_val),
-        .busy       (mdu_v2_busy),
-        .done_pulse (mdu_v2_done)
+        .busy       (mdu_busy),
+        .done_pulse (mdu_done)
     );
-    assign mdu_ready = ~mdu_v2_busy;
+    assign mdu_ready = ~(mdu_busy | mdu_start);
     reg [31:0] mdu_out_r;
     always @(*) begin
         case (mdu_op)
-            3'b110:  mdu_out_r = hi_val;
-            3'b111:  mdu_out_r = lo_val;
+            4'd4:    mdu_out_r = hi_val; // MFHI
+            4'd5:    mdu_out_r = lo_val; // MFLO
+            4'd12:   mdu_out_r = lo_val; // MUL (low 32 bits)
             default: mdu_out_r = 32'd0;
         endcase
     end

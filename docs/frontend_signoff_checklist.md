@@ -136,6 +136,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] 误预测 1-bubble 冲刷 — 待 IF 重定向
 
 ### B.7 MDU 多周期
+- [ ] DUT 合入后的功能完备性复审：详见 `docs/refactor_roadmap.md`
+  "Post-rename DUT integration completeness audit"
 - [ ] Booth radix-4 乘法 5-cycle
 - [ ] Radix-2 除法 18-cycle，早退出到 3 cycle
 - [ ] MADD/MADDU/MSUB/MSUBU + CLO/CLZ 实现
@@ -181,6 +183,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] AXI 8-beat burst 正确
 
 ### C.2 L2 新增
+- [ ] DUT wrapper/pass-through 与真实 caching enablement 分开签核：详见
+  `docs/refactor_roadmap.md` "Post-rename DUT integration completeness audit"
 - [ ] 128 KB 8-way NINE + 8 MSHR + 4 WB buffer
 - [ ] Snoop 端口 tie-off 且无副作用
 - [ ] L1→L2→DDR 三级 miss 端到端通
@@ -205,6 +209,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ## Phase D — 外设商用化 (Gate D)
 
 ### D.1 UART 16550
+- [ ] DUT 合入后的功能完备性复审：详见 `docs/refactor_roadmap.md`
+  "Post-rename DUT integration completeness audit"
 - [ ] 波特率 115200 @ 48MHz APB clock 精度 ≤ 3%
 - [ ] 帧格式全组合 (5-8 位 × 1/1.5/2 stop × 5 种 parity)
 - [ ] FIFO 64 深度 + 阈值中断
@@ -227,10 +233,14 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] Linux 引导 kernel 加载到 DDR
 
 ### D.4 VIC
+- [ ] DUT 合入后的功能完备性复审：详见 `docs/refactor_roadmap.md`
+  "Post-rename DUT integration completeness audit"
 - [ ] 32 源 × 4-bit 优先级 + 嵌套 + 软触发
 - [ ] Formal：优先级编码器 max 正确性 proven
 
 ### D.5 其他外设（SD/eMMC, GMAC, USB, I2C/SPI, WDT/PWM, DMA, GPIO, eFuse）
+- [ ] `apb_axi_dma` DUT 合入后的功能完备性复审：详见
+  `docs/refactor_roadmap.md` "Post-rename DUT integration completeness audit"
 - 每外设完成时逐条添加子清单，本 v0 不展开
 
 ### Gate D Sign-off

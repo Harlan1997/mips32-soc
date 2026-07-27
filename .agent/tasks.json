@@ -1,65 +1,97 @@
 {
-  "run_id": "RUN-CURRENT-CONTRACT-COVERAGE-99-002",
+  "run_id": "RUN-L2-COMMERCIAL-CLOSURE-001",
   "project_name": "mips32-soc",
-  "current_stage": "FAILED",
-  "attempt": 5,
+  "current_stage": "COMPLETED",
+  "attempt": 3,
   "max_attempts": 5,
-  "base_commit": "86ea0ec6b2774ded1c0d2c8c4e28ee412d360193",
+  "base_commit": "81c06030f33c3c5387f43935feada35674c8de2e",
   "allowed_paths": [
     "Makefile",
-    ".gitignore",
-    "README.md",
-    "docs/coverage_plan.md",
-    "docs/signoff_criteria.md",
-    "docs/repo_layout.md",
-    "tb/coverage/**",
-    "tb/uvm_tb/cov.cfg",
-    "tb/uvm_tb/data/**",
-    "tb/uvm_tb/agents/**",
-    "tb/uvm_tb/checkers/**",
-    "tb/uvm_tb/env/**",
-    "tb/uvm_tb/seqs/**",
-    "tb/uvm_tb/tests/**",
-    "tb/uvm_tb/tb_top/**",
-    "tb/uvm_tb/*_directed_tests.txt",
-    "tb/uvm_tb/run_current_contract_signoff.sh",
-    "tb/uvm_tb/run_phase2_complete.sh",
-    "tb/uvm_tb/run_phase3_complete.sh",
-    "tb/uvm_tb/run_phase3b_complete.sh",
-    "tb/uvm_tb/run_phase3c_complete.sh",
-    "tb/uvm_tb/run_regression.sh",
-    "tb/uvm_tb/run_testlist.sh",
-    "tb/uvm_tb/run_uvm.sh",
-    "tb/soc_test/cov.cfg",
-    "tb/soc_test/run.sh",
-    "tb/soc_test/run_cpu_cp0_gate.sh",
-    "tb/soc_test/tb_mips_soc.v",
-    "tb/soc_test/axi_monitor.v",
-    "tb/soc_test/soc_legacy_observation_bind.sv",
-    "tb/soc_test/soc_legacy_observation_if.sv",
-    "tb/soc_test/fw/**",
+    "rtl/cache/l2_cache.v",
+    "rtl/cache/l2_cache_caching.v",
+    "rtl/soc_memory_subsystem.v",
+    "docs/refactor_roadmap.md",
+    "docs/commercial_dut_block_readiness_plan.md",
+    "docs/block_specs/l2_spec.md",
+    "tb/unit/l2/tb_l2.v",
+    "tb/unit/run_dut_block_unit_gate.sh",
+    "tb/soc_test/run_l2_cpu_gate.sh",
+    "tb/soc_test/fw/Makefile",
+    "tb/soc_test/fw/tests/l2_cpu/**",
     ".agent/test_report.md",
     ".agent/result.json"
   ],
-  "test_cmd": "bash -n tb/uvm_tb/run_current_contract_signoff.sh && bash -n tb/uvm_tb/run_regression.sh && bash -n tb/uvm_tb/run_testlist.sh && bash -n tb/soc_test/run.sh && bash -n tb/soc_test/run_cpu_cp0_gate.sh && make -n current-contract-signoff && make firmware && make current-contract-signoff && git diff --check",
+  "test_cmd": "make dut-block-unit-gate && make l2-cpu-gate && make firmware && make uvm && RUN_DIR=build/soc_test/phase4f_l2_cpu FW_HEX=build/firmware/soc_smoke/firmware.hex tb/soc_test/run.sh && git diff --check",
   "lead_agent": "codex",
   "worker_agent": "agy",
   "tasks": [
     {
       "id": "TASK-001",
-      "title": "Implement current-contract full-chip sign-off and merged coverage flow",
-      "assigned_to": "agy",
+      "title": "Create commercial refactor roadmap and baseline documentation",
+      "assigned_to": "codex",
       "status": "completed",
-      "spec_ref": "git:86ea0ec:.agent/spec.md",
-      "summary": "Implemented and independently verified the initial unified current-contract sign-off gate."
+      "summary": "Architecture/readiness plans and commercial closure roadmap established under docs/."
     },
     {
       "id": "TASK-002",
       "title": "Close audited current-contract code coverage to 99 percent",
       "assigned_to": "agy",
-      "status": "in_progress",
+      "status": "cancelled",
+      "summary": "Cancelled by user before completion; historical URG exclusion regeneration remains a residual coverage-maintenance task."
+    },
+    {
+      "id": "TASK-003",
+      "title": "Phase 3 CPU/CP0/PIC closure",
+      "assigned_to": "agy",
+      "status": "completed",
+      "summary": "Phase 3 CPU/CP0 exception and PIC directed gates were integrated and reviewed in earlier C2A cycles."
+    },
+    {
+      "id": "TASK-004",
+      "title": "Phase 4A DUT block readiness rename and MDU signed accumulate closure",
+      "assigned_to": "agy",
+      "status": "completed",
+      "summary": "Renamed merged DUT blocks, removed public _v2 module names, and closed MDU signed accumulate unit behavior."
+    },
+    {
+      "id": "TASK-005",
+      "title": "Phase 4B MDU CPU ISA closure",
+      "assigned_to": "agy",
+      "status": "completed",
       "spec_ref": ".agent/spec.md",
-      "summary": "Add reachable stimulus first, strictly audit justified EL exclusions, report raw and adjusted coverage, and gate every UVM/product metric at 99 percent."
+      "summary": "Expose MIPS32 R2 MADD/MADDU/MSUB/MSUBU/MUL through CPU decode/writeback and verify with a focused product firmware gate."
+    },
+    {
+      "id": "TASK-006",
+      "title": "Phase 4C DMA commercial closure",
+      "assigned_to": "agy",
+      "status": "completed",
+      "spec_ref": ".agent/spec.md",
+      "summary": "DMA direct/SG/error/busy/W1C/IRQ behavior closed under the single-outstanding AXI contract with unit, dma_cpu firmware, UVM smoke, and product smoke gates passing."
+    },
+    {
+      "id": "TASK-007",
+      "title": "Phase 4D VIC commercial closure",
+      "assigned_to": "agy",
+      "status": "completed",
+      "spec_ref": ".agent/spec.md",
+      "summary": "Close current single-line IRQ plus APB-dispatch VIC contract with deterministic RTL ownership, expanded unit coverage, vic_cpu product gate, and corrected documentation."
+    },
+    {
+      "id": "TASK-008",
+      "title": "Phase 4E UART 16550 commercial closure",
+      "assigned_to": "agy",
+      "status": "completed",
+      "spec_ref": ".agent/spec.md",
+      "summary": "Close current PC16550D-compatible UART contract with APB byte-lane semantics, FIFO enabled/disabled behavior, RX timeout/IIR priority, expanded unit coverage, uart_cpu product gate, and corrected documentation."
+    },
+    {
+      "id": "TASK-009",
+      "title": "Phase 4F L2 current-contract commercial closure",
+      "assigned_to": "agy",
+      "status": "completed",
+      "spec_ref": ".agent/spec.md",
+      "summary": "Closed the integrated 128KB 8-way WB/WA NINE single-outstanding L2 contract. Fixed a per-cycle debug $display in l2_cache_caching and a WLAST sample/drive race in tb_l2.v cache_write_raw that stalled the line-crossing write test. Full acceptance passed: dut-block-unit-gate 5/5, l2-cpu-gate, firmware, make uvm (0 UVM_ERROR/0 SB_RESP), soc_test run.sh, git diff --check. The prior reported SB_RESP UVM regression did not reproduce on the current tree."
     }
   ]
 }

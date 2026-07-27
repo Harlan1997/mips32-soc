@@ -1,12 +1,18 @@
 // =============================================================================
-// File Name: mips_mdu_v2.v
-// Design:    Multi-Cycle MDU — full functional implementation
+// File Name: mips_mdu.v
+// Design:    Multi-Cycle MDU — current DUT baseline
 // Author:    Antigravity — Phase B.7
 // Description:
 //   Multi-cycle FSM MDU. Runs in parallel with the main pipeline; EX only
 //   stalls on true HI/LO write-after-write / read-after-write hazards.
-//   Replaces the single-cycle mips_mdu.v after block-level verification.
+//   Current baseline MDU (the earlier single-cycle implementation was
+//   retired after block-level verification of this one).
 //   See docs/block_specs/mdu_spec.md.
+//
+//   Block RTL supports 4-bit ops (0..12), including MADD/MADDU/MSUB/MSUBU/MUL.
+//   CPU pipeline integration in mips_ex_stage exposes the full Phase 4B
+//   CPU-visible MDU operation path. MADD/MADDU/MSUB/MSUBU update HI/LO, and
+//   MUL returns the low word through the normal GPR writeback path.
 //
 //   Instruction set (op[3:0]):
 //     0 MULT   signed 32×32 → 64  (HI:LO)
@@ -31,7 +37,7 @@
 //   in unsigned magnitude we skip iteration and return LO=0/HI=dividend.
 // =============================================================================
 
-module mips_mdu_v2 (
+module mips_mdu (
     input  wire        clk,
     input  wire        rst_n,
 
@@ -247,10 +253,11 @@ module mips_mdu_v2 (
 
                 //=============================================================
                 ST_ACC: begin
-                    // MADD / MSUB accumulate: current {HI, LO} +/- signed mul_prod
+                    // MADD / MSUB accumulate: current {HI, LO} +/- signed mul_prod.
+                    // mul_prod was negated in ST_MUL if result_neg_mul was set.
                     acc_tmp = {hi_r, lo_r};
-                    if (is_accsub) acc_tmp = acc_tmp - (result_neg_mul ? (~mul_prod + 64'd1) : mul_prod);
-                    else           acc_tmp = acc_tmp + (result_neg_mul ? (~mul_prod + 64'd1) : mul_prod);
+                    if (is_accsub) acc_tmp = acc_tmp - mul_prod;
+                    else           acc_tmp = acc_tmp + mul_prod;
                     {hi_r, lo_r} <= acc_tmp;
                     state <= ST_DONE;
                 end

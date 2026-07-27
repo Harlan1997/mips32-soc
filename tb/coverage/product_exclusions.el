@@ -1049,7 +1049,7 @@ Toggle _unused_ok "net _unused_ok"
 
 // ID: EXCL-PROD-0013
 // CATEGORY: General Module Coverage Exclusions
-MODULE: mips_mdu_v2
+MODULE: mips_mdu
 Condition 1 "3760466763" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (2 "01")
 Condition 1 "3760466763" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (3 "10")
 Condition 2 "1313514431" "(op == OP_MADD) 1 -1" (2 "1")
@@ -4028,7 +4028,7 @@ Toggle g_lookup1[63].asid_match1 "net g_lookup1[63].asid_match1"
 
 // ID: EXCL-PROD-0020
 // CATEGORY: General Module Coverage Exclusions
-MODULE: apb_axi_dma_v2
+MODULE: apb_axi_dma
 Condition 1 "1147742964" "(wr && (paddr[11:0] == 12'h100)) 1 -1" (3 "11")
 Condition 3 "1385070286" "(((~wait_aw[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
 Condition 4 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (1 "01")
@@ -4812,7 +4812,7 @@ Block 6 "470869113" "wb_wdata = ex_out;"
 // CATEGORY: CPU Core & Pipeline
 MODULE: mips_ex_stage
 Block 1 "4034936954" "case (mdu_op)"
-Block 10 "1739623138" "mdu_v2_op = 4'b0;"
+Block 10 "1334838383" "mdu_op4b = 4'b0;"
 Block 11 "4034936954" "case (mdu_op)"
 
 // ID: EXCL-PROD-0031
@@ -5221,4 +5221,3 @@ Toggle tck "net tck"
 Toggle tms "net tms"
 Toggle tdi "net tdi"
 Toggle tdo "net tdo"
-

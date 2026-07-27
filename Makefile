@@ -28,8 +28,52 @@ SIGNOFF_DIR ?= $(BUILD_DIR)/signoff/current_contract
 STAGE ?= ex
 NUM_TESTS ?= 10
 SEED_BASE ?= 1
+DUT_BLOCK_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/dut_block_readiness
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate soc-random-regression stage-sim project-tree clean-firmware clean-build clean-legacy-artifacts clean
+SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
+MDU_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/mdu_cpu
+MDU_CPU_FW_HEX ?= $(MDU_CPU_FW_DIR)/firmware.hex
+
+SOC_TEST_DMA_CPU_DIR ?= $(BUILD_DIR)/soc_test/dma_cpu_gate
+DMA_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/dma_cpu
+DMA_CPU_FW_HEX ?= $(DMA_CPU_FW_DIR)/firmware.hex
+
+SOC_TEST_VIC_CPU_DIR ?= $(BUILD_DIR)/soc_test/vic_cpu_gate
+VIC_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/vic_cpu
+VIC_CPU_FW_HEX ?= $(VIC_CPU_FW_DIR)/firmware.hex
+
+SOC_TEST_UART_CPU_DIR ?= $(BUILD_DIR)/soc_test/uart_cpu_gate
+UART_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/uart_cpu
+UART_CPU_FW_HEX ?= $(UART_CPU_FW_DIR)/firmware.hex
+
+SOC_TEST_L2_CPU_DIR ?= $(BUILD_DIR)/soc_test/l2_cpu_gate
+L2_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/l2_cpu
+L2_CPU_FW_HEX ?= $(L2_CPU_FW_DIR)/firmware.hex
+
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+
+mdu-cpu-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(MDU_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_MDU_CPU_DIR) tb/soc_test/run_mdu_cpu_gate.sh
+
+dma-cpu-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=dma_cpu OUT_DIR=$(DMA_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(DMA_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_DMA_CPU_DIR) tb/soc_test/run_dma_cpu_gate.sh
+
+vic-cpu-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=vic_cpu OUT_DIR=$(VIC_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(VIC_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_VIC_CPU_DIR) tb/soc_test/run_vic_cpu_gate.sh
+
+uart-cpu-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=uart_cpu OUT_DIR=$(UART_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(UART_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_UART_CPU_DIR) tb/soc_test/run_uart_cpu_gate.sh
+
+l2-cpu-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=l2_cpu OUT_DIR=$(L2_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(L2_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_L2_CPU_DIR) tb/soc_test/run_l2_cpu_gate.sh
+
+dut-block-unit-gate:
+	RUN_ROOT=$(DUT_BLOCK_UNIT_DIR) tb/unit/run_dut_block_unit_gate.sh
 
 firmware:
 	$(MAKE) -C tb/soc_test/fw OUT_DIR=$(FW_BUILD_DIR) FW_BASE=firmware all

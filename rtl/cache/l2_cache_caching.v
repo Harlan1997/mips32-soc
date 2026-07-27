@@ -1,42 +1,29 @@
 // =============================================================================
-// File Name: l2_cache.v
-// Design:    L2 Unified Cache — direct-mapped functional implementation
-// Author:    Antigravity — Phase C
+// File Name: l2_cache_caching.v
+// Design:    L2 Unified Cache — 8-way set-associative write-back write-allocate
+// Author:    Antigravity — Phase C / TASK-003
 // Description:
-//   Working L2 cache. This impl uses direct-mapped organization (1-way) as
-//   a first-pass; the 8-way pseudo-LRU per spec §2.1 is a follow-up. The
-//   external port set matches the scaffold so integration is drop-in.
+//   Commercial-grade 128KB 8-way set-associative L2 cache with Pseudo-LRU
+//   replacement, write-back and write-allocate policy, and AXI4 slave/master
+//   interfaces adhering to the single-outstanding external fabric contract.
 //
-//   Geometry (parameterized; defaults match spec §1 modulo way count):
-//     * SIZE_BYTES = 32 KB (direct-mapped keeps the same 512 sets × 8 way
-//       structural budget by using 1024 sets × 1 way for this pass)
-//     * LINE_BYTES = 32
-//     * INDEX_BITS = 10 (1024 sets)
-//     * OFFSET_BITS = 5
-//     * TAG_BITS = 17
-//     * WORD_BITS = 3 (8 words per line)
-//   Policy: Write-back + write-allocate, blocking (no MSHR).
+//   Geometry (default parameters):
+//     * SIZE_BYTES = 131072 (128 KB)
+//     * LINE_BYTES = 32 (32-byte cache line)
+//     * WAYS       = 8 (8-way set associative)
+//     * NUM_SETS   = 512 sets
+//     * OFFSET_BITS= 5, WORD_BITS = 3, INDEX_BITS = 9, TAG_BITS = 18
 //
-//   FSM:
-//     ST_IDLE     — wait for slave request
-//     ST_LOOKUP   — tag compare
-//     ST_HIT_R    — return read data from array
-//     ST_HIT_W    — update data + dirty
-//     ST_MISS_ALLOC — dirty check
-//     ST_EVICT_AW / ST_EVICT_W — write dirty line back to downstream
-//     ST_REFILL_AR / ST_REFILL_R — fetch new line from downstream
-//     ST_REFILL_DONE — update tag/valid/data, return to service
-//
-//   Deferred:
-//     * 8-way associative with pseudo-LRU (real spec)
-//     * Non-blocking MSHR array
-//     * Multi-outstanding downstream transactions
-//     * Snoop (upstream coherence — port still tied off)
+//   Coherence / Snoop:
+//     * Snoop port is tied off (snoop_ack = snoop_valid, snoop_hit = 0).
 // =============================================================================
 
+`include "soc_config.vh"
+
 module l2_cache_caching #(
-    parameter SIZE_BYTES = 32768,
+    parameter SIZE_BYTES = 131072,
     parameter LINE_BYTES = 32,
+    parameter WAYS       = 8,
     parameter ID_WIDTH   = 4,
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32
@@ -44,7 +31,7 @@ module l2_cache_caching #(
     input  wire clk,
     input  wire rst_n,
 
-    // Upstream slave
+    // Upstream slave interface
     input  wire [ID_WIDTH-1:0]   s_awid,
     input  wire [ADDR_WIDTH-1:0] s_awaddr,
     input  wire [7:0]            s_awlen,
@@ -79,7 +66,7 @@ module l2_cache_caching #(
     output reg                   s_rvalid,
     input  wire                  s_rready,
 
-    // Downstream master
+    // Downstream master interface
     output reg  [ID_WIDTH-1:0]   m_awid,
     output reg  [ADDR_WIDTH-1:0] m_awaddr,
     output reg  [7:0]            m_awlen,
@@ -114,80 +101,170 @@ module l2_cache_caching #(
     input  wire                  m_rvalid,
     output reg                   m_rready,
 
-    // Snoop (tied off — future coherence)
+    // Snoop port (tied off)
     input  wire [ADDR_WIDTH-1:0] snoop_addr,
     input  wire                  snoop_valid,
     output wire                  snoop_ack,
     output wire                  snoop_hit
 );
 
-    localparam OFFSET_BITS  = 5;              // 32 B line → 5 bits
-    localparam WORD_BITS    = OFFSET_BITS-2;  // 3 words-in-line index bits
-    localparam WORDS_PER_LN = (1 << WORD_BITS);
-    localparam INDEX_BITS   = $clog2(SIZE_BYTES / LINE_BYTES);   // 10 for 32 KB
-    localparam NUM_SETS     = (1 << INDEX_BITS);
-    localparam TAG_BITS     = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS;
-
+    // Reserved snoop tie-off
     assign snoop_ack = snoop_valid;
     assign snoop_hit = 1'b0;
 
-    // -------- Cache arrays --------
-    reg [TAG_BITS-1:0]   tag_ram   [NUM_SETS-1:0];
-    reg                  valid_ram [NUM_SETS-1:0];
-    reg                  dirty_ram [NUM_SETS-1:0];
-    reg [DATA_WIDTH-1:0] data_ram  [NUM_SETS-1:0][WORDS_PER_LN-1:0];
+    // Derived geometry parameters
+    localparam OFFSET_BITS  = 5;                                      // 32-byte line -> 5 bits
+    localparam WORDS_PER_LN = LINE_BYTES / (DATA_WIDTH / 8);          // 8 words per line
+    localparam WORD_BITS    = 3;                                      // 3 bits word offset
+    localparam NUM_SETS     = SIZE_BYTES / (LINE_BYTES * WAYS);      // 512 sets for 128KB 8-way
+    localparam INDEX_BITS   = $clog2(NUM_SETS);                       // 9 bits
+    localparam PA_WIDTH     = 29;                                      // MIPS 29-bit physical address space
+    localparam TAG_BITS     = PA_WIDTH - INDEX_BITS - OFFSET_BITS;    // 15 bits
 
-    integer i, j;
-    initial begin
-        for (i = 0; i < NUM_SETS; i = i + 1) begin
-            valid_ram[i] = 1'b0;
-            dirty_ram[i] = 1'b0;
-            tag_ram[i]   = {TAG_BITS{1'b0}};
-            for (j = 0; j < WORDS_PER_LN; j = j + 1)
-                data_ram[i][j] = 32'h0;
-        end
-    end
+    // Unsupported upstream request checks
+    wire is_unsupported_aw = (s_awsize != 3'b010) ||
+                             (s_awaddr[1:0] != 2'b00) ||
+                             (s_awburst != 2'b01) ||
+                             (s_awlen > 8'd7);
 
-    // -------- FSM --------
-    localparam ST_IDLE       = 4'd0;
-    localparam ST_LOOKUP     = 4'd1;
-    localparam ST_HIT_R      = 4'd2;
-    localparam ST_HIT_W      = 4'd3;
-    localparam ST_MISS_ALLOC = 4'd4;
-    localparam ST_EVICT_AW   = 4'd5;
-    localparam ST_EVICT_W    = 4'd6;
-    localparam ST_EVICT_B    = 4'd7;
-    localparam ST_REFILL_AR  = 4'd8;
-    localparam ST_REFILL_R   = 4'd9;
-    localparam ST_RESP_W     = 4'd10;
-    localparam ST_RESP_R     = 4'd11;
+    wire is_unsupported_ar = (s_arsize != 3'b010) ||
+                             (s_araddr[1:0] != 2'b00) ||
+                             (s_arburst != 2'b01) ||
+                             (s_arlen > 8'd7);
+
+    // Cache Storage Arrays
+    reg [TAG_BITS-1:0]   tag_ram   [0:NUM_SETS-1][0:WAYS-1];
+    reg                  valid_ram [0:NUM_SETS-1][0:WAYS-1];
+    reg                  dirty_ram [0:NUM_SETS-1][0:WAYS-1];
+    reg [DATA_WIDTH-1:0] data_ram  [0:NUM_SETS-1][0:WAYS-1][0:WORDS_PER_LN-1];
+    reg [6:0]            plru_ram  [0:NUM_SETS-1];
+
+    // FSM States
+    localparam ST_IDLE        = 4'd0;
+    localparam ST_W_ACCEPT    = 4'd1;
+    localparam ST_LOOKUP      = 4'd2;
+    localparam ST_R_HIT_BURST = 4'd3;
+    localparam ST_W_HIT_MERGE = 4'd4;
+    localparam ST_MISS_ALLOC  = 4'd5;
+    localparam ST_EVICT_AW    = 4'd6;
+    localparam ST_EVICT_W     = 4'd7;
+    localparam ST_EVICT_B     = 4'd8;
+    localparam ST_REFILL_AR   = 4'd9;
+    localparam ST_REFILL_R    = 4'd10;
+    localparam ST_W_RESP      = 4'd11;
+    localparam ST_ERR_RESP_R  = 4'd12;
+    localparam ST_ERR_RESP_B  = 4'd13;
+    localparam ST_W_DRAIN_ERR = 4'd14;
 
     reg [3:0] state;
 
-    // -------- Request latch --------
+    // Latched request variables
     reg                    req_is_write;
     reg [ID_WIDTH-1:0]     req_id;
     reg [ADDR_WIDTH-1:0]   req_addr;
-    reg [7:0]              req_len;         // arlen / awlen (0-based)
-    reg [7:0]              beat_cnt;        // current beat within burst
+    reg [7:0]              req_len;
+    reg [2:0]              req_size;
+    reg [1:0]              req_burst;
+    reg [7:0]              beat_cnt;
+    reg [1:0]              resp_err;
+
+    // Latched W beat data
     reg [DATA_WIDTH-1:0]   req_wdata;
     reg [3:0]              req_wstrb;
+    reg                    req_wlast;
 
-    // beat_addr updates as burst progresses (INCR type, +4 per beat)
-    wire [ADDR_WIDTH-1:0] beat_addr = req_addr + (beat_cnt << 2);
-    wire [INDEX_BITS-1:0] req_index  = beat_addr[OFFSET_BITS +: INDEX_BITS];
-    wire [TAG_BITS-1:0]   req_tag    = beat_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
-    wire [WORD_BITS-1:0]  req_wordoff = beat_addr[OFFSET_BITS-1:2];
+    // Allocated way and eviction counter / refill counter
+    reg [2:0]              alloc_way;
+    reg [2:0]              fill_cnt;
+    reg [2:0]              evict_cnt;
+    reg [ADDR_WIDTH-1:0]   evict_addr;
 
-    wire hit = valid_ram[req_index] && (tag_ram[req_index] == req_tag);
-    wire is_last_beat = (beat_cnt == req_len);
+    // Helper functions for Pseudo-LRU
+    function [2:0] get_plru_victim;
+        input [6:0] p;
+        begin
+            if (p[0] == 1'b0) begin
+                if (p[2] == 1'b0)
+                    get_plru_victim = (p[6] == 1'b0) ? 3'd7 : 3'd6;
+                else
+                    get_plru_victim = (p[5] == 1'b0) ? 3'd5 : 3'd4;
+            end else begin
+                if (p[1] == 1'b0)
+                    get_plru_victim = (p[4] == 1'b0) ? 3'd3 : 3'd2;
+                else
+                    get_plru_victim = (p[3] == 1'b0) ? 3'd1 : 3'd0;
+            end
+        end
+    endfunction
 
-    // -------- Refill counters --------
-    reg [WORD_BITS-1:0] fill_cnt;
-    reg [WORD_BITS-1:0] evict_cnt;
-    reg [ADDR_WIDTH-1:0] evict_addr;
+    function [2:0] get_victim_way;
+        input [WAYS-1:0] valids;
+        input [6:0] p;
+        begin
+            if (!valids[0])      get_victim_way = 3'd0;
+            else if (!valids[1]) get_victim_way = 3'd1;
+            else if (!valids[2]) get_victim_way = 3'd2;
+            else if (!valids[3]) get_victim_way = 3'd3;
+            else if (!valids[4]) get_victim_way = 3'd4;
+            else if (!valids[5]) get_victim_way = 3'd5;
+            else if (!valids[6]) get_victim_way = 3'd6;
+            else if (!valids[7]) get_victim_way = 3'd7;
+            else                 get_victim_way = get_plru_victim(p);
+        end
+    endfunction
 
-    // -------- Default AXI drives --------
+    function [6:0] update_plru;
+        input [6:0] p;
+        input [2:0] w;
+        reg [6:0] p_next;
+        begin
+            p_next = p;
+            p_next[0] = (w < 4) ? 1'b1 : 1'b0;
+            if (w < 4) begin
+                p_next[1] = (w < 2) ? 1'b1 : 1'b0;
+                if (w < 2)
+                    p_next[3] = (w == 0) ? 1'b1 : 1'b0;
+                else
+                    p_next[4] = (w == 2) ? 1'b1 : 1'b0;
+            end else begin
+                p_next[2] = (w < 6) ? 1'b1 : 1'b0;
+                if (w < 6)
+                    p_next[5] = (w == 4) ? 1'b1 : 1'b0;
+                else
+                    p_next[6] = (w == 6) ? 1'b1 : 1'b0;
+            end
+            update_plru = p_next;
+        end
+    endfunction
+
+    // Address breakdown for current beat (using 29-bit physical address space)
+    wire [PA_WIDTH-1:0]   current_beat_pa   = req_addr[28:0] + (beat_cnt << 2);
+    wire [INDEX_BITS-1:0] req_index         = current_beat_pa[OFFSET_BITS +: INDEX_BITS];
+    wire [TAG_BITS-1:0]   req_tag           = current_beat_pa[PA_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    wire [WORD_BITS-1:0]  req_wordoff       = current_beat_pa[OFFSET_BITS-1:2];
+
+    // Tag matching across ways
+    reg [WAYS-1:0] way_hit;
+    reg [WAYS-1:0] valids_of_index;
+    integer i;
+    always @(*) begin
+        for (i = 0; i < WAYS; i = i + 1) begin
+            valids_of_index[i] = valid_ram[req_index][i];
+            way_hit[i]         = valid_ram[req_index][i] && (tag_ram[req_index][i] == req_tag);
+        end
+    end
+
+    wire hit = |way_hit;
+
+    reg [2:0] hit_way;
+    always @(*) begin
+        hit_way = 3'd0;
+        for (i = 0; i < WAYS; i = i + 1) begin
+            if (way_hit[i]) hit_way = i[2:0];
+        end
+    end
+
+    // Default AXI output drives
     always @(*) begin
         s_awready = 1'b0;
         s_wready  = 1'b0;
@@ -197,201 +274,338 @@ module l2_cache_caching #(
         s_rlast   = 1'b0;
         s_bid     = req_id;
         s_rid     = req_id;
-        s_rdata   = data_ram[req_index][req_wordoff];
+        s_rdata   = data_ram[req_index][hit_way][req_wordoff];
         s_rresp   = 2'b00;
         s_bresp   = 2'b00;
 
-        // Single-beat refill/evict to match single-outstanding fabric contract.
         m_awvalid = 1'b0;
         m_awid    = req_id;
-        m_awaddr  = evict_addr + (evict_cnt << 2);
-        m_awlen   = 8'd0;
+        m_awaddr  = evict_addr;
+        m_awlen   = 8'd7;
         m_awsize  = 3'b010;
         m_awburst = 2'b01;
+
         m_wvalid  = 1'b0;
-        m_wdata   = data_ram[req_index][evict_cnt];
+        m_wdata   = data_ram[req_index][alloc_way][evict_cnt];
         m_wstrb   = 4'hF;
-        m_wlast   = 1'b1;
-        m_bready  = 1'b1;
+        m_wlast   = (evict_cnt == 3'd7);
+
+        m_bready  = 1'b0;
+
         m_arvalid = 1'b0;
         m_arid    = req_id;
-        m_araddr  = {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {(OFFSET_BITS-2){1'b0}}, 2'b00}
-                    + (fill_cnt << 2);
-        m_arlen   = 8'd0;
+        m_araddr  = {3'b000, current_beat_pa[28:5], 5'b00000};
+        m_arlen   = 8'd7;
         m_arsize  = 3'b010;
         m_arburst = 2'b01;
-        m_rready  = 1'b1;
+
+        m_rready  = 1'b0;
 
         case (state)
             ST_IDLE: begin
                 s_awready = 1'b1;
                 s_arready = ~s_awvalid;
             end
-            ST_HIT_R: begin
-                s_rvalid = 1'b1;
-                s_rlast  = is_last_beat;
-            end
-            ST_HIT_W: begin
+
+            ST_W_ACCEPT: begin
                 s_wready = 1'b1;
             end
-            ST_RESP_W: begin
+
+            ST_R_HIT_BURST: begin
+                s_rvalid = hit;
+                s_rlast  = hit && (beat_cnt == req_len);
+            end
+
+            ST_W_RESP: begin
                 s_bvalid = 1'b1;
             end
+
             ST_EVICT_AW: begin
                 m_awvalid = 1'b1;
             end
+
             ST_EVICT_W: begin
                 m_wvalid = 1'b1;
             end
+
+            ST_EVICT_B: begin
+                m_bready = 1'b1;
+            end
+
             ST_REFILL_AR: begin
                 m_arvalid = 1'b1;
             end
+
+            ST_REFILL_R: begin
+                m_rready = 1'b1;
+            end
+
+            ST_ERR_RESP_R: begin
+                s_rvalid = 1'b1;
+                s_rresp  = resp_err;
+                s_rdata  = {DATA_WIDTH{1'b0}};
+                s_rlast  = (beat_cnt == req_len);
+            end
+
+            ST_ERR_RESP_B: begin
+                s_bvalid = 1'b1;
+                s_bresp  = resp_err;
+            end
+
+            ST_W_DRAIN_ERR: begin
+                s_wready = 1'b1;
+            end
+
             default: ;
         endcase
     end
 
+    // Sequential FSM & Cache Array Updates
+    integer s, w_idx;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state         <= ST_IDLE;
-            req_is_write  <= 1'b0;
-            req_id        <= {ID_WIDTH{1'b0}};
-            req_addr      <= {ADDR_WIDTH{1'b0}};
-            req_len       <= 8'h0;
-            beat_cnt      <= 8'h0;
-            req_wdata     <= {DATA_WIDTH{1'b0}};
-            req_wstrb     <= 4'hF;
-            fill_cnt      <= {WORD_BITS{1'b0}};
-            evict_cnt     <= {WORD_BITS{1'b0}};
-            evict_addr    <= {ADDR_WIDTH{1'b0}};
-            for (i = 0; i < NUM_SETS; i = i + 1) begin
-                valid_ram[i] <= 1'b0;
-                dirty_ram[i] <= 1'b0;
+            state        <= ST_IDLE;
+            req_is_write <= 1'b0;
+            req_id       <= {ID_WIDTH{1'b0}};
+            req_addr     <= {ADDR_WIDTH{1'b0}};
+            req_len      <= 8'd0;
+            req_size     <= 3'd0;
+            req_burst    <= 2'd0;
+            beat_cnt     <= 8'd0;
+
+            req_wdata    <= {DATA_WIDTH{1'b0}};
+            req_wstrb    <= 4'h0;
+            req_wlast    <= 1'b0;
+
+            alloc_way    <= 3'd0;
+            fill_cnt     <= 3'd0;
+            evict_cnt    <= 3'd0;
+            evict_addr   <= {ADDR_WIDTH{1'b0}};
+            resp_err     <= 2'b00;
+
+            for (s = 0; s < NUM_SETS; s = s + 1) begin
+                plru_ram[s] <= 7'd0;
+                for (w_idx = 0; w_idx < WAYS; w_idx = w_idx + 1) begin
+                    valid_ram[s][w_idx] <= 1'b0;
+                    dirty_ram[s][w_idx] <= 1'b0;
+                end
             end
         end else begin
+`ifdef L2_TRACE
+            $display("[L2 t=%0t] st=%0d beat=%0d hit=%0b hw=%0d idx=%0d woff=%0d pa=0x%0h wlast=%0b s_wv=%0b s_wr=%0b s_bv=%0b", $time, state, beat_cnt, hit, hit_way, req_index, req_wordoff, current_beat_pa, req_wlast, s_wvalid, s_wready, s_bvalid);
+`endif
             case (state)
                 ST_IDLE: begin
-                    beat_cnt <= 8'h0;
+                    beat_cnt <= 8'd0;
+                    resp_err <= 2'b00;
                     if (s_awvalid) begin
                         req_is_write <= 1'b1;
                         req_id       <= s_awid;
                         req_addr     <= s_awaddr;
                         req_len      <= s_awlen;
-                        state        <= ST_HIT_W;
+                        req_size     <= s_awsize;
+                        req_burst    <= s_awburst;
+                        if (is_unsupported_aw) begin
+                            resp_err <= 2'b10; // SLVERR
+                        end
+                        state <= ST_W_ACCEPT;
                     end else if (s_arvalid) begin
                         req_is_write <= 1'b0;
                         req_id       <= s_arid;
                         req_addr     <= s_araddr;
                         req_len      <= s_arlen;
-                        state        <= ST_LOOKUP;
+                        req_size     <= s_arsize;
+                        req_burst    <= s_arburst;
+                        if (is_unsupported_ar) begin
+                            resp_err <= 2'b10; // SLVERR
+                            state    <= ST_ERR_RESP_R;
+                        end else begin
+                            state    <= ST_LOOKUP;
+                        end
                     end
                 end
 
-                ST_HIT_W: begin
-                    // Accept W beats one at a time; merge each into the
-                    // cache immediately, advance beat_cnt, stay here until
-                    // wlast. This handles both single-beat writes (wlast=1
-                    // on first beat) and multi-beat write bursts without
-                    // asserting BVALID early.
-                    if (s_wvalid) begin
+                ST_W_ACCEPT: begin
+                    if (s_wvalid && s_wready) begin
                         req_wdata <= s_wdata;
                         req_wstrb <= s_wstrb;
-                        state     <= ST_LOOKUP;
+                        req_wlast <= s_wlast;
+                        if (resp_err != 2'b00) begin
+                            if (s_wlast)
+                                state <= ST_ERR_RESP_B;
+                            else
+                                state <= ST_W_DRAIN_ERR;
+                        end else begin
+                            state <= ST_LOOKUP;
+                        end
                     end
                 end
 
                 ST_LOOKUP: begin
                     if (hit) begin
                         if (req_is_write) begin
-                            // Byte-strobe merge
-                            data_ram[req_index][req_wordoff] <= {
-                                req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][req_wordoff][31:24],
-                                req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][req_wordoff][23:16],
-                                req_wstrb[1] ? req_wdata[15:8]  : data_ram[req_index][req_wordoff][15:8],
-                                req_wstrb[0] ? req_wdata[7:0]   : data_ram[req_index][req_wordoff][7:0]
-                            };
-                            dirty_ram[req_index] <= 1'b1;
-                            state <= ST_RESP_W;
+                            state <= ST_W_HIT_MERGE;
                         end else begin
-                            state <= ST_HIT_R;
+                            plru_ram[req_index] <= update_plru(plru_ram[req_index], hit_way);
+                            state <= ST_R_HIT_BURST;
                         end
                     end else begin
                         state <= ST_MISS_ALLOC;
                     end
                 end
 
-                ST_HIT_R: begin
-                    if (s_rready) begin
-                        if (is_last_beat) begin
-                            state    <= ST_IDLE;
-                            beat_cnt <= 8'h0;
-                        end else begin
-                            beat_cnt <= beat_cnt + 1'b1;
-                            // If the next beat lives in a different cache
-                            // line (rare — L1 refill is usually line-sized
-                            // and aligned) go re-lookup.
-                            state <= ST_LOOKUP;
-                        end
+                ST_W_HIT_MERGE: begin
+                    data_ram[req_index][hit_way][req_wordoff] <= {
+                        req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][hit_way][req_wordoff][31:24],
+                        req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][hit_way][req_wordoff][23:16],
+                        req_wstrb[1] ? req_wdata[15:8]  : data_ram[req_index][hit_way][req_wordoff][15:8],
+                        req_wstrb[0] ? req_wdata[7:0]   : data_ram[req_index][hit_way][req_wordoff][7:0]
+                    };
+                    dirty_ram[req_index][hit_way] <= 1'b1;
+                    plru_ram[req_index] <= update_plru(plru_ram[req_index], hit_way);
+
+                    if (req_wlast) begin
+                        state <= ST_W_RESP;
+                    end else begin
+                        beat_cnt <= beat_cnt + 1'b1;
+                        state    <= ST_W_ACCEPT;
                     end
                 end
 
-                ST_RESP_W: begin
-                    // Single B response for the entire write burst per AXI
-                    // spec. Multi-beat write bursts across cache lines are
-                    // not exercised in the current single-outstanding
-                    // fabric contract; extend here when they land.
+                ST_R_HIT_BURST: begin
+                    if (hit) begin
+                        if (s_rready) begin
+                            plru_ram[req_index] <= update_plru(plru_ram[req_index], hit_way);
+                            if (beat_cnt == req_len) begin
+                                beat_cnt <= 8'd0;
+                                state    <= ST_IDLE;
+                            end else begin
+                                beat_cnt <= beat_cnt + 1'b1;
+                            end
+                        end
+                    end else begin
+                        state <= ST_MISS_ALLOC;
+                    end
+                end
+
+                ST_W_RESP: begin
                     if (s_bready) begin
+                        beat_cnt <= 8'd0;
                         state    <= ST_IDLE;
-                        beat_cnt <= 8'h0;
                     end
                 end
 
                 ST_MISS_ALLOC: begin
-                    if (valid_ram[req_index] && dirty_ram[req_index]) begin
-                        evict_addr <= {tag_ram[req_index], req_index, {OFFSET_BITS{1'b0}}};
-                        evict_cnt  <= {WORD_BITS{1'b0}};
+                    alloc_way <= get_victim_way(valids_of_index, plru_ram[req_index]);
+                    if (valid_ram[req_index][get_victim_way(valids_of_index, plru_ram[req_index])] &&
+                        dirty_ram[req_index][get_victim_way(valids_of_index, plru_ram[req_index])]) begin
+                        evict_addr <= {3'b000, tag_ram[req_index][get_victim_way(valids_of_index, plru_ram[req_index])],
+                                       req_index, {OFFSET_BITS{1'b0}}};
+                        evict_cnt  <= 3'd0;
                         state      <= ST_EVICT_AW;
                     end else begin
-                        state <= ST_REFILL_AR;
+                        state      <= ST_REFILL_AR;
                     end
                 end
 
                 ST_EVICT_AW: begin
-                    if (m_awready) state <= ST_EVICT_W;
+                    if (m_awready) begin
+                        evict_cnt <= 3'd0;
+                        state     <= ST_EVICT_W;
+                    end
                 end
 
                 ST_EVICT_W: begin
-                    if (m_wready) state <= ST_EVICT_B;
+                    if (m_wready) begin
+                        if (evict_cnt == 3'd7) begin
+                            state <= ST_EVICT_B;
+                        end else begin
+                            evict_cnt <= evict_cnt + 1'b1;
+                        end
+                    end
                 end
 
                 ST_EVICT_B: begin
                     if (m_bvalid) begin
-                        if (evict_cnt == WORDS_PER_LN - 1) begin
-                            evict_cnt <= {WORD_BITS{1'b0}};
-                            state     <= ST_REFILL_AR;
+                        if (m_bresp != 2'b00) begin
+                            resp_err <= m_bresp;
+                            if (req_is_write) begin
+                                if (req_wlast)
+                                    state <= ST_ERR_RESP_B;
+                                else
+                                    state <= ST_W_DRAIN_ERR;
+                            end else begin
+                                state <= ST_ERR_RESP_R;
+                            end
                         end else begin
-                            evict_cnt <= evict_cnt + 1'b1;
-                            state     <= ST_EVICT_AW;
+                            state <= ST_REFILL_AR;
                         end
                     end
                 end
 
                 ST_REFILL_AR: begin
-                    if (m_arready) state <= ST_REFILL_R;
+                    if (m_arready) begin
+                        fill_cnt <= 3'd0;
+                        resp_err <= 2'b00;
+                        state    <= ST_REFILL_R;
+                    end
                 end
 
                 ST_REFILL_R: begin
                     if (m_rvalid) begin
-                        data_ram[req_index][fill_cnt] <= m_rdata;
-                        if (fill_cnt == WORDS_PER_LN - 1) begin
-                            tag_ram[req_index]   <= req_tag;
-                            valid_ram[req_index] <= 1'b1;
-                            dirty_ram[req_index] <= 1'b0;
-                            fill_cnt             <= {WORD_BITS{1'b0}};
-                            state                <= ST_LOOKUP;
+                        data_ram[req_index][alloc_way][fill_cnt] <= m_rdata;
+                        if (m_rresp != 2'b00 && resp_err == 2'b00) begin
+                            resp_err <= m_rresp;
+                        end
+                        if (m_rlast || (fill_cnt == 3'd7)) begin
+                            fill_cnt <= 3'd0;
+                            if (resp_err != 2'b00 || m_rresp != 2'b00) begin
+                                valid_ram[req_index][alloc_way] <= 1'b0;
+                                dirty_ram[req_index][alloc_way] <= 1'b0;
+                                resp_err <= (resp_err != 2'b00) ? resp_err : m_rresp;
+                                if (req_is_write) begin
+                                    if (req_wlast)
+                                        state <= ST_ERR_RESP_B;
+                                    else
+                                        state <= ST_W_DRAIN_ERR;
+                                end else begin
+                                    state <= ST_ERR_RESP_R;
+                                end
+                            end else begin
+                                tag_ram[req_index][alloc_way]   <= req_tag;
+                                valid_ram[req_index][alloc_way] <= 1'b1;
+                                dirty_ram[req_index][alloc_way] <= 1'b0;
+                                state                           <= ST_LOOKUP;
+                            end
                         end else begin
                             fill_cnt <= fill_cnt + 1'b1;
-                            state    <= ST_REFILL_AR;   // issue next single-beat AR
                         end
+                    end
+                end
+
+                ST_W_DRAIN_ERR: begin
+                    if (s_wvalid && s_wready) begin
+                        if (s_wlast) begin
+                            state <= ST_ERR_RESP_B;
+                        end
+                    end
+                end
+
+                ST_ERR_RESP_R: begin
+                    if (s_rready) begin
+                        if (beat_cnt == req_len) begin
+                            beat_cnt <= 8'd0;
+                            state    <= ST_IDLE;
+                        end else begin
+                            beat_cnt <= beat_cnt + 1'b1;
+                        end
+                    end
+                end
+
+                ST_ERR_RESP_B: begin
+                    if (s_bready) begin
+                        beat_cnt <= 8'd0;
+                        state    <= ST_IDLE;
                     end
                 end
 

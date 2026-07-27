@@ -1,247 +1,193 @@
-# Current RTL Contract 99% Coverage Closure Spec
+# TASK-009 Spec: Phase 4F L2 Current-Contract Commercial Closure
 
-> Lead agent: Codex
-> Worker agent: AGY
-> Status: APPROVED - user confirmed 2026-07-26
-> Scope: current documented RTL contract only; not tapeout sign-off
+## Objective
 
-## 1. Objective
+Harden the already-integrated `l2_cache` DUT block into a commercial-quality
+current-contract L2 cache baseline for this SoC.
 
-Raise the auditable full-chip coverage gate to at least 99.00% for every
-reported code-coverage metric while preserving all functional and regression
-gates from the existing current-contract sign-off flow.
+This task must close the RTL-visible and product-testable contract of the
+current 128 KB, 8-way, 32-byte-line, write-back/write-allocate, NINE,
+single-outstanding blocking L2 cache.
 
-The 99% target applies independently to both:
+Do not claim non-blocking L2, 8-entry MSHR, multi-outstanding AXI, coherent
+snoop/directory protocol, ECC/SECDED, synthesis/timing, formal proof, or
+board-level performance signoff in this task unless the required fabric/L1/SoC
+contracts and verification are also implemented. Those remain future Phase 4G+
+architecture extensions.
 
-1. The merged UVM module-definition report.
-2. The product-top CPU/CP0 module-definition report.
+## Required RTL Contract
 
-For each report, `SCORE`, `LINE`, `COND`, `TOGGLE`, `FSM`, and `BRANCH` must
-each be at least 99.00% after reviewed exclusions. Functional coverage remains
-15/15 required groups at exactly 100.00%.
+Keep the current external module interfaces and SoC integration stable unless a
+change is strictly required for a bug fix and is fully propagated:
 
-## 2. Coverage Closure Policy
+- `rtl/cache/l2_cache.v`
+- `rtl/cache/l2_cache_caching.v`
+- `rtl/soc_memory_subsystem.v` only if an integration bug requires it
 
-### 2.1 Test before exclude
+Required current-contract behavior:
 
-- First cover every legally reachable current-contract behavior with directed
-  or constrained-random stimulus.
-- Add focused tests/sequences/firmware for reachable holes and keep them in the
-  normal sign-off regression.
-- Do not exclude an object merely because it is difficult, slow, or currently
-  uncovered.
-- Do not modify RTL behavior to manufacture coverage. If a reachable hole
-  cannot be covered without an RTL or architecture change, report `FAILED`
-  with evidence for Codex review.
+- Geometry and policy:
+  - default 128 KB capacity, 8 ways, 32 B line, 8 32-bit words per line.
+  - write-back and write-allocate.
+  - pseudo-LRU replacement.
+  - NINE single-core policy; no reverse L1 invalidation claim.
+- AXI upstream contract:
+  - single slave-side request accepted at a time.
+  - accept aligned 32-bit INCR bursts that do not cross a 32 B L2 line.
+  - reject or return deterministic `SLVERR` for unsupported burst type, size,
+    length, unaligned address, or line-crossing burst instead of silently
+    corrupting cache state.
+  - hold response valid until upstream ready.
+  - keep IDs deterministic for accepted requests.
+- AXI downstream contract:
+  - issue only one downstream transaction at a time.
+  - refill and dirty eviction use 8-beat 32-bit INCR line transactions
+    (`ARLEN/AWLEN=7`, `ARSIZE/AWSIZE=2`, `BURST=INCR`).
+  - propagate downstream `RRESP`/`BRESP` errors to upstream.
+  - on refill error, do not install a valid line.
+  - on dirty eviction error, preserve the dirty victim and do not overwrite it
+    with the new line.
+- Hit/miss behavior:
+  - cold miss refills a line and returns the requested beat.
+  - same-line read hit must not issue a downstream AR.
+  - write hit merges byte strobes and marks dirty.
+  - write miss refills then merges write data and marks dirty.
+  - clean victim replacement must not issue downstream writeback.
+  - dirty victim replacement must write back the old line before refill.
+  - multi-beat read and write bursts within one line must return/merge all
+    beats correctly, including backpressure.
+- Reset and tie-offs:
+  - reset clears valid/dirty state and returns the FSM to idle.
+  - snoop port remains an explicit tie-off in current contract:
+    `snoop_ack = snoop_valid`, `snoop_hit = 0`, and snoop must not perturb the
+    cache FSM or arrays.
 
-### 2.2 Permitted exclusion categories
+Optional but preferred if it can be done without interface churn:
 
-An `.el` rule is permitted only when the exact coverage object is proven to be:
+- Lightweight internal debug counters under `translate_off` or unit-test-only
+  observability for hits, misses, dirty writebacks, and error responses. Do not
+  expose a new architectural CSR unless the SoC memory map and firmware gate
+  are updated coherently.
 
-- `UNREACHABLE_CURRENT_CONTRACT`: impossible under the documented
-  single-outstanding/current-feature contract.
-- `STATIC_TIEOFF_RESERVED`: a constant/tied-off or reserved field with no
-  legal transition in the selected configuration.
-- `UNINSTANTIATED_CONFIGURATION`: an alternate parameterization/top/module not
-  instantiated in either signed-off product configuration.
-- `DEFENSIVE_ILLEGAL_STATE`: recovery/default behavior reachable only through
-  an illegal/X-corrupted state outside the verification contract.
-- `NON_PRODUCT_VERIFICATION`: verification-only instrumentation, bind wrappers,
-  or tool-generated recording logic that is not product RTL.
-- `OUT_OF_SCOPE_FEATURE`: logic solely for a feature explicitly outside the
-  current RTL contract, such as UART RX or real SPI-serial flash behavior.
+## Required Unit Verification
 
-No other category is accepted without a new human-approved Spec.
+Extend `tb/unit/l2/tb_l2.v` into an explicit commercial unit gate. It must fail
+loudly with `FAIL` output and finish with `REGRESSION_TEST_SUCCESS l2_cache`
+only when all checks pass.
 
-### 2.3 Exclusion provenance and enforcement
+Cover at least:
 
-- Generate exclusion candidates from fresh `urg -dump full_exclusions` output
-  produced from the exact VDBs used by this sign-off run. Never reuse stale
-  checksums or hierarchy paths.
-- Store source-controlled UVM and product exclusion files under
-  `tb/coverage/` and keep them separate when their hierarchy/checksums differ.
-- Every active excluded object or explicitly documented group of equivalent
-  objects must have a stable unique ID, category, source/module/object,
-  rationale, and concrete reachability evidence in a machine-readable manifest.
-- Add an automated audit that fails for an active `.el` record without a valid
-  manifest entry, duplicate IDs, unknown categories, missing evidence, stale or
-  unmatched rules, malformed files, or manifest entries with no active rule.
-- Apply exclusions with `-excl_strict`. `-excl_bypass_checks` is forbidden.
-- Treat exclusion-related URG warnings/errors, checksum mismatches, covered
-  object exclusion attempts, and zero-match exclusion rules as sign-off
-  failures.
-- Do not add new hidden object-level coverage omissions in `cov.cfg`. Migrate
-  existing object-level `-node` toggle omissions to reviewed `.el` rules when
-  still justified. `cov.cfg` may retain module-level removal of non-product
-  testbench/tool instrumentation only when that scope is explicit in the final
-  report.
-- Blanket exclusion of instantiated product modules is forbidden.
+- reset defaults and first cold miss.
+- read miss/refill and same-line read hit with no downstream AR.
+- write hit byte-strobe merge and dirty marking.
+- write miss allocate/merge/readback.
+- multi-beat read burst fully inside one line.
+- multi-beat write burst fully inside one line with byte strobes.
+- unsupported upstream requests:
+  - unaligned address,
+  - unsupported size,
+  - non-INCR burst,
+  - line-crossing burst,
+  - unsupported length.
+  Each must return deterministic error and must not install or corrupt a line.
+- upstream read backpressure and write-response backpressure.
+- downstream AR/R backpressure and AW/W/B backpressure.
+- 8-way fill and pseudo-LRU/victim rotation sufficient to force replacement.
+- clean victim replacement without writeback.
+- dirty victim replacement with full 8-beat writeback.
+- downstream refill error propagation and no invalid line install.
+- downstream dirty eviction `BRESP` error propagation and dirty victim
+  preservation.
+- snoop tie-off and no side effects during active/idle cache states.
+- single-outstanding rejection/backpressure: a second AR/AW must not be
+  accepted while a request is active.
 
-## 3. Raw and Adjusted Reporting
+The existing `make dut-block-unit-gate` must keep all five DUT block unit tests
+passing.
 
-The flow must generate both raw and exclusion-adjusted reports from the same
-fresh coverage databases:
+## Required Product Firmware Gate
 
-- Merged UVM raw report: `coverage/raw_urgReport/`.
-- Merged UVM adjusted report: `coverage/urgReport/`.
-- Product CPU/CP0 raw report: `phase3_complete/cpu_cp0_gate/textReportRaw/`.
-- Product CPU/CP0 adjusted report:
-  `phase3_complete/cpu_cp0_gate/textReportFinal/`.
+Add a focused product-level L2 gate:
 
-Raw reports must not load any `.el` file. Adjusted reports must use only the
-reviewed source-controlled `.el` files and strict exclusion validation.
+- firmware under `tb/soc_test/fw/tests/l2_cpu/`
+- script `tb/soc_test/run_l2_cpu_gate.sh`
+- top-level Makefile target `make l2-cpu-gate`
 
-The final Markdown report and a machine-readable JSON summary must include:
+Firmware should verify the SoC-visible L2 path without relying on private
+testbench hierarchy:
 
-- Raw and adjusted values for all six metrics for both report domains.
-- Required threshold and PASS/FAIL for each adjusted metric.
-- Active exclusion counts by domain, metric, category, and manifest ID.
-- Paths and SHA256 hashes for each `.el` file and its manifest.
-- URG commands/options and proof that strict exclusion checking was enabled.
-- Counts of tests and functional groups, all subordinate gate results, seeds,
-  tool versions, Git provenance, and clean error scan.
-- A prominent statement that adjusted coverage includes justified exclusions
-  and is not the same as raw stimulus coverage.
-- The unchanged current-contract/tapeout scope limitations.
+- cached memory read/write data integrity over a region larger than L1 D-cache
+  and spanning enough lines to exercise L2 refill/hit behavior.
+- byte/half/word store merge correctness as observed by CPU loads.
+- conflict/eviction-style sweep that stresses multiple addresses mapping to
+  the same L2 set when practical.
+- cached and uncached alias interactions must be documented carefully. If the
+  CPU/L1 cache hierarchy lacks architectural flush/invalidate support for a
+  fully deterministic alias coherency test, do not overclaim it; keep the
+  firmware gate to CPU-visible data integrity and stress.
 
-Stale raw, adjusted, full-exclusion dump, and audit artifacts must be removed
-before each run. Missing or empty text/HTML/JSON artifacts fail closed.
+Failure must write product failure magic `0xDEADDEAD` or otherwise cause
+`REGRESSION_TEST_FAILED`. Gate scripts must reject false passes by checking:
 
-## 4. Mandatory 99% Gates
+- no `REGRESSION_TEST_FAILED`
+- no `FAIL:`
+- required `REGRESSION_TEST_SUCCESS`
+- zero simulator exit status
 
-Default adjusted thresholds for both merged UVM and product CPU/CP0 reports:
+## Documentation Requirements
 
-| Metric | Minimum |
-| --- | ---: |
-| Score | 99.00% |
-| Line | 99.00% |
-| Condition | 99.00% |
-| Toggle | 99.00% |
-| FSM | 99.00% |
-| Branch | 99.00% |
+Update:
 
-Threshold overrides may only make a run stricter. The sign-off script must
-reject environment or Make overrides below 99.00%, nonnumeric values, NaN,
-infinity, duplicates, missing fields, and values above 100.00%.
+- `docs/block_specs/l2_spec.md`
+- `docs/commercial_dut_block_readiness_plan.md`
+- `docs/refactor_roadmap.md`
 
-The following existing gates remain mandatory and must not be weakened:
+Documentation must clearly distinguish:
 
-- Phase 2 directed and coverage: 16/16 each.
-- Phase 3A directed and coverage: 3/3 each.
-- Product CPU/CP0 firmware gate: 1/1.
-- Phase 3B directed and coverage: 1/1 each.
-- Phase 3C directed and coverage: 1/1 each.
-- Deterministic stress regression: at least 10/10.
-- Merged UVM test count: expected coverage-run cardinality, currently 31 with
-  default tests/seeds; update the exact expected count if new retained coverage
-  tests are added.
-- Required functional groups: 15/15 at 100.00%.
-- Project error/fatal/license/exclusion-warning scan: clean.
+- Phase 4F closed current single-outstanding blocking L2 contract.
+- exact unsupported request/error policy.
+- dirty eviction/refill error preservation semantics.
+- product firmware gate scope.
+- future work: MSHR, writeback buffer, coherent snoop/directory, ECC/SECDED,
+  performance counters/CSRs, formal proof, synthesis/timing, and coverage
+  exclusion maintenance.
 
-Any new test must check its intended behavior, return nonzero on failure, and
-be included in both the applicable directed and coverage regression paths.
+Do not modify coverage exclusion files in this task.
 
-## 5. Baseline and Scope Integrity
+## Allowed Paths
 
-The prior adjusted baseline was:
-
-| Domain | Score | Line | Cond | Toggle | FSM | Branch |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Merged UVM | 77.78 | 73.26 | 83.51 | 67.39 | 88.89 | 75.85 |
-| Product CPU/CP0 | 81.40 | 74.20 | 90.31 | 59.27 | 91.67 | 91.54 |
-
-These values used historical coverage scoping and are recorded only as
-provenance. After migrating hidden object omissions, the new raw denominator
-may increase and the raw percentage may decrease. That is acceptable only when
-the final report explains the scope change and the adjusted result is backed by
-the audited manifest.
-
-The signed-off contract remains:
-
-- Single-outstanding AXI; no multi-outstanding/reordering claim.
-- UART TX only; UART RX remains open.
-- AXI flash-image/XIP verification model; no SPI timing or real flash boot.
-- PIC mask arbitration without priority encoding.
-- No synthesis, STA, DFT, formal, lint, CDC, RDC, physical-design, foundry, or
-  tapeout sign-off claim.
-
-## 6. Allowed Paths and Single-Writer Rules
-
-AGY may modify only:
+AGY may edit only:
 
 - `Makefile`
-- `.gitignore`
-- `README.md`
-- `docs/coverage_plan.md`
-- `docs/signoff_criteria.md`
-- `docs/repo_layout.md`
-- `tb/coverage/**`
-- `tb/uvm_tb/cov.cfg`
-- `tb/uvm_tb/data/**`
-- `tb/uvm_tb/agents/**`
-- `tb/uvm_tb/checkers/**`
-- `tb/uvm_tb/env/**`
-- `tb/uvm_tb/seqs/**`
-- `tb/uvm_tb/tests/**`
-- `tb/uvm_tb/tb_top/**`
-- `tb/uvm_tb/*_directed_tests.txt`
-- `tb/uvm_tb/run_current_contract_signoff.sh`
-- `tb/uvm_tb/run_phase2_complete.sh`
-- `tb/uvm_tb/run_phase3_complete.sh`
-- `tb/uvm_tb/run_phase3b_complete.sh`
-- `tb/uvm_tb/run_phase3c_complete.sh`
-- `tb/uvm_tb/run_regression.sh`
-- `tb/uvm_tb/run_testlist.sh`
-- `tb/uvm_tb/run_uvm.sh`
-- `tb/soc_test/cov.cfg`
-- `tb/soc_test/run.sh`
-- `tb/soc_test/run_cpu_cp0_gate.sh`
-- `tb/soc_test/tb_mips_soc.v`
-- `tb/soc_test/axi_monitor.v`
-- `tb/soc_test/soc_legacy_observation_bind.sv`
-- `tb/soc_test/soc_legacy_observation_if.sv`
-- `tb/soc_test/fw/**`
+- `rtl/cache/l2_cache.v`
+- `rtl/cache/l2_cache_caching.v`
+- `rtl/soc_memory_subsystem.v`
+- `docs/block_specs/l2_spec.md`
+- `docs/commercial_dut_block_readiness_plan.md`
+- `docs/refactor_roadmap.md`
+- `tb/unit/l2/tb_l2.v`
+- `tb/unit/run_dut_block_unit_gate.sh`
+- `tb/soc_test/run_l2_cpu_gate.sh`
+- `tb/soc_test/fw/Makefile`
+- `tb/soc_test/fw/tests/l2_cpu/**`
 - `.agent/test_report.md`
 - `.agent/result.json`
 
-AGY must not modify RTL, architecture/source specifications, existing legacy
-`.el`/`fullexclude.*` artifacts under `tb/soc_test/`, `.agent/tasks.json`,
-`.agent/spec.md`, `.agent/review.md`, or `.agent/run_agent_flow.sh`.
+AGY must not edit `.agent/tasks.json`, coverage exclusion files, unrelated CPU,
+L1 cache, fabric, peripheral RTL, UVM infrastructure, or generated/historical
+run artifacts.
 
-## 7. Acceptance Tests
+## Acceptance Commands
 
-AGY must run and record at least:
+AGY must run and report:
 
 ```bash
-bash -n tb/uvm_tb/run_current_contract_signoff.sh
-bash -n tb/uvm_tb/run_regression.sh
-bash -n tb/uvm_tb/run_testlist.sh
-bash -n tb/soc_test/run.sh
-bash -n tb/soc_test/run_cpu_cp0_gate.sh
-make -n current-contract-signoff
+make dut-block-unit-gate
+make l2-cpu-gate
 make firmware
-make current-contract-signoff
+make uvm
+RUN_DIR=build/soc_test/phase4f_l2_cpu \
+  FW_HEX=build/firmware/soc_smoke/firmware.hex \
+  tb/soc_test/run.sh
 git diff --check
 ```
-
-Also run the exclusion-audit tool directly against positive and deliberately
-malformed fixtures. The negative cases must fail for missing evidence, stale or
-unmatched rules, forbidden category, duplicate ID, and attempts to lower any
-threshold below 99.00%.
-
-Codex will independently review every diff, verify allowed-path compliance,
-inspect every active exclusion and its evidence, rerun lightweight checks, and
-run the full `make current-contract-signoff` flow with VCS/URG loaded through
-environment modules.
-
-## 8. Completion Criteria
-
-The task is complete only when:
-
-- All mandatory regression/functional gates pass.
-- All six adjusted metrics are at least 99.00% in both coverage domains.
-- Raw and adjusted reports are present and consistent.
-- Every exclusion passes the manifest audit and strict URG application.
-- The error scan is clean and the final report makes no scope overclaim.
-- Codex independently approves the implementation.
-- `.agent/tasks.json` is `CLOSED` with TASK-002 `completed` before Git commit.

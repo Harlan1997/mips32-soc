@@ -13,7 +13,7 @@ module mips_control (
     
     // EX Stage Control
     output reg  [4:0]  alu_op,       // ALU operation select (Phase B ISA R2: 5-bit)
-    output reg  [2:0]  mdu_op,       // MDU operation select
+    output reg  [3:0]  mdu_op,       // MDU operation select (Phase 4B: 4-bit)
     output reg         mdu_start,    // Start multi-cycle MDU op
     output reg         sel_mdu_out,  // Select MDU read data as EX result
     output reg         alu_src,      // 0: reg rdata2, 1: immediate
@@ -64,8 +64,8 @@ module mips_control (
 
     always @(*) begin
         // Default assignments to prevent latches
-        alu_op    = 5'b00000;
-        mdu_op       = 3'b000;
+        alu_op       = 5'b00000;
+        mdu_op       = 4'b0000;
         mdu_start    = 1'b0;
         sel_mdu_out  = 1'b0;
         alu_src      = 1'b0;
@@ -199,37 +199,39 @@ module mips_control (
                         jump_op    = 2'b10;
                     end
                     6'b010000: begin // MFHI
-                        mdu_op      = 3'b110;
+                        mdu_op      = 4'd4;
                         sel_mdu_out = 1'b1;
                         reg_write   = 1'b1;
                         reg_dst     = 2'b01;
                     end
                     6'b010010: begin // MFLO
-                        mdu_op      = 3'b111;
+                        mdu_op      = 4'd5;
                         sel_mdu_out = 1'b1;
                         reg_write   = 1'b1;
                         reg_dst     = 2'b01;
                     end
                     6'b010001: begin // MTHI
-                        mdu_op    = 3'b100;
+                        mdu_op    = 4'd6;
+                        mdu_start = 1'b1;
                     end
                     6'b010011: begin // MTLO
-                        mdu_op    = 3'b101;
+                        mdu_op    = 4'd7;
+                        mdu_start = 1'b1;
                     end
                     6'b011000: begin // MULT
-                        mdu_op    = 3'b000;
+                        mdu_op    = 4'd0;
                         mdu_start = 1'b1;
                     end
                     6'b011001: begin // MULTU
-                        mdu_op    = 3'b001;
+                        mdu_op    = 4'd1;
                         mdu_start = 1'b1;
                     end
                     6'b011010: begin // DIV
-                        mdu_op    = 3'b010;
+                        mdu_op    = 4'd2;
                         mdu_start = 1'b1;
                     end
                     6'b011011: begin // DIVU
-                        mdu_op    = 3'b011;
+                        mdu_op    = 4'd3;
                         mdu_start = 1'b1;
                     end
                     default: begin
@@ -458,8 +460,31 @@ module mips_control (
                 endcase
             end
             
-            6'b011100: begin // SPECIAL2 (Phase B ISA R2: CLZ / CLO)
+            6'b011100: begin // SPECIAL2 (MIPS32 R2: MADD/MADDU/MUL/MSUB/MSUBU/CLZ/CLO)
                 case (func)
+                    6'b000000: begin // MADD rs, rt
+                        mdu_op    = 4'd8;
+                        mdu_start = 1'b1;
+                    end
+                    6'b000001: begin // MADDU rs, rt
+                        mdu_op    = 4'd9;
+                        mdu_start = 1'b1;
+                    end
+                    6'b000010: begin // MUL rd, rs, rt (R2)
+                        mdu_op      = 4'd12;
+                        mdu_start   = 1'b1;
+                        sel_mdu_out = 1'b1;
+                        reg_write   = 1'b1;
+                        reg_dst     = 2'b01;
+                    end
+                    6'b000100: begin // MSUB rs, rt
+                        mdu_op    = 4'd10;
+                        mdu_start = 1'b1;
+                    end
+                    6'b000101: begin // MSUBU rs, rt
+                        mdu_op    = 4'd11;
+                        mdu_start = 1'b1;
+                    end
                     6'b100000: begin  // CLZ rd, rs
                         alu_op    = 5'b10000;  // OP_CLZ
                         reg_write = 1'b1;

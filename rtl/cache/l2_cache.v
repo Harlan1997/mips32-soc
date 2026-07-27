@@ -4,8 +4,8 @@
 // Author:    Antigravity — Phase C
 // Description:
 //   Wrapper around L2 impl variants. Selected at compile time:
-//     * SOC_L2_CACHING defined → real caching (l2_cache_wt, write-through
-//       no-write-allocate, direct-mapped, burst-aware slave FSM)
+//     * SOC_L2_CACHING defined → real caching (l2_cache_caching, 128KB 8-way
+//       write-back write-allocate set-associative with PLRU replacement)
 //     * default             → transparent pass-through (AXI wire)
 //   Wrapper keeps soc_memory_subsystem wiring stable while L2 evolves.
 // =============================================================================
@@ -13,8 +13,9 @@
 `include "soc_config.vh"
 
 module l2_cache #(
-    parameter SIZE_BYTES = 32768,
+    parameter SIZE_BYTES = 131072,
     parameter LINE_BYTES = 32,
+    parameter WAYS       = 8,
     parameter ID_WIDTH   = 4,
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32
@@ -89,8 +90,8 @@ module l2_cache #(
 );
 
 `ifdef SOC_L2_CACHING
-    l2_cache_wt #(
-        .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES),
+    l2_cache_caching #(
+        .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES), .WAYS(WAYS),
         .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)
     ) u_impl (
         .clk(clk), .rst_n(rst_n),

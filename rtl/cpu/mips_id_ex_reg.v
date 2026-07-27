@@ -25,7 +25,7 @@ module mips_id_ex_reg (
     
     // Control Inputs from ID
     input  wire [4:0]  id_alu_op,
-    input  wire [2:0]  id_mdu_op,
+    input  wire [3:0]  id_mdu_op,
     input  wire        id_mdu_start,
     input  wire        id_illegal_inst,
     input  wire        id_except_req,
@@ -57,7 +57,7 @@ module mips_id_ex_reg (
     
     // Control Outputs to EX
     output reg  [4:0]  ex_alu_op,
-    output reg  [2:0]  ex_mdu_op,
+    output reg  [3:0]  ex_mdu_op,
     output reg         ex_mdu_start,
     output reg         ex_illegal_inst,
     output reg         ex_except_req,
@@ -89,7 +89,7 @@ module mips_id_ex_reg (
             ex_sa          <= 5'd0;
 
             ex_alu_op      <= 5'd0;
-            ex_mdu_op      <= 3'd0;
+            ex_mdu_op      <= 4'd0;
             ex_mdu_start   <= 1'b0;
             ex_illegal_inst<= 1'b0;
             ex_except_req  <= 1'b0;
@@ -118,7 +118,7 @@ module mips_id_ex_reg (
             ex_sa          <= 5'd0;
 
             ex_alu_op      <= 5'd0;
-            ex_mdu_op      <= 3'd0;
+            ex_mdu_op      <= 4'd0;
             ex_mdu_start   <= 1'b0;
             ex_illegal_inst<= 1'b0;
             ex_except_req  <= 1'b0;
@@ -135,7 +135,12 @@ module mips_id_ex_reg (
             ex_mem_write   <= 1'b0;
             ex_mem_op      <= 3'd0;
             ex_mem_to_reg  <= 2'd0;
-        end else if (!stall) begin
+        end else if (stall) begin
+            // Convert held multi-cycle MDU instructions into a single issue
+            // pulse while preserving the rest of the EX-stage instruction until
+            // the MDU result is ready.
+            ex_mdu_start <= 1'b0;
+        end else begin
             ex_val_rs      <= id_val_rs;
             ex_val_rt      <= id_val_rt;
             ex_imm_ext     <= id_imm_ext;
