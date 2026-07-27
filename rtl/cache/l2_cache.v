@@ -1,23 +1,16 @@
 // =============================================================================
 // File Name: l2_cache.v
-// Design:    L2 unified cache — pass-through pre-caching skeleton
+// Design:    L2 unified cache — top wrapper (pass-through or caching)
 // Author:    Antigravity — Phase C
 // Description:
-//   Currently a transparent pass-through: upstream slave port wires
-//   directly to downstream master port. Purpose is to have L2 present
-//   in the DUT (memory subsystem) so future incremental caching logic
-//   (tag/data arrays, MSHR, LRU) can be added behind this stable
-//   interface without changing integration each time.
-//
-//   The caching implementation with tag/data/dirty/refill FSM lives in
-//   rtl/cache/l2_cache_caching.v as l2_cache_caching (not currently
-//   instantiated). It needs upstream burst handling (rlast/wlast tracking
-//   across arlen+1 beats) before it can safely replace this pass-through
-//   in DUT.
-//
-//   Port list matches docs/block_specs/l2_spec.md §7 so future upgrade
-//   is drop-in.
+//   Wrapper around L2 impl variants. Selected at compile time:
+//     * SOC_L2_CACHING defined → real caching (l2_cache_wt, write-through
+//       no-write-allocate, direct-mapped, burst-aware slave FSM)
+//     * default             → transparent pass-through (AXI wire)
+//   Wrapper keeps soc_memory_subsystem wiring stable while L2 evolves.
 // =============================================================================
+
+`include "soc_config.vh"
 
 module l2_cache #(
     parameter SIZE_BYTES = 32768,
@@ -29,7 +22,6 @@ module l2_cache #(
     input  wire clk,
     input  wire rst_n,
 
-    // Upstream slave
     input  wire [ID_WIDTH-1:0]   s_awid,
     input  wire [ADDR_WIDTH-1:0] s_awaddr,
     input  wire [7:0]            s_awlen,
@@ -60,7 +52,6 @@ module l2_cache #(
     output wire                  s_rvalid,
     input  wire                  s_rready,
 
-    // Downstream master
     output wire [ID_WIDTH-1:0]   m_awid,
     output wire [ADDR_WIDTH-1:0] m_awaddr,
     output wire [7:0]            m_awlen,
@@ -91,14 +82,45 @@ module l2_cache #(
     input  wire                  m_rvalid,
     output wire                  m_rready,
 
-    // Snoop port (tied off)
     input  wire [ADDR_WIDTH-1:0] snoop_addr,
     input  wire                  snoop_valid,
     output wire                  snoop_ack,
     output wire                  snoop_hit
 );
 
-    // ---- Pure pass-through wiring ----
+`ifdef SOC_L2_CACHING
+    l2_cache_wt #(
+        .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES),
+        .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)
+    ) u_impl (
+        .clk(clk), .rst_n(rst_n),
+        .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen),
+        .s_awsize(s_awsize), .s_awburst(s_awburst),
+        .s_awvalid(s_awvalid), .s_awready(s_awready),
+        .s_wdata(s_wdata), .s_wstrb(s_wstrb), .s_wlast(s_wlast),
+        .s_wvalid(s_wvalid), .s_wready(s_wready),
+        .s_bid(s_bid), .s_bresp(s_bresp), .s_bvalid(s_bvalid), .s_bready(s_bready),
+        .s_arid(s_arid), .s_araddr(s_araddr), .s_arlen(s_arlen),
+        .s_arsize(s_arsize), .s_arburst(s_arburst),
+        .s_arvalid(s_arvalid), .s_arready(s_arready),
+        .s_rid(s_rid), .s_rdata(s_rdata), .s_rresp(s_rresp),
+        .s_rlast(s_rlast), .s_rvalid(s_rvalid), .s_rready(s_rready),
+        .m_awid(m_awid), .m_awaddr(m_awaddr), .m_awlen(m_awlen),
+        .m_awsize(m_awsize), .m_awburst(m_awburst),
+        .m_awvalid(m_awvalid), .m_awready(m_awready),
+        .m_wdata(m_wdata), .m_wstrb(m_wstrb), .m_wlast(m_wlast),
+        .m_wvalid(m_wvalid), .m_wready(m_wready),
+        .m_bid(m_bid), .m_bresp(m_bresp), .m_bvalid(m_bvalid), .m_bready(m_bready),
+        .m_arid(m_arid), .m_araddr(m_araddr), .m_arlen(m_arlen),
+        .m_arsize(m_arsize), .m_arburst(m_arburst),
+        .m_arvalid(m_arvalid), .m_arready(m_arready),
+        .m_rid(m_rid), .m_rdata(m_rdata), .m_rresp(m_rresp),
+        .m_rlast(m_rlast), .m_rvalid(m_rvalid), .m_rready(m_rready),
+        .snoop_addr(snoop_addr), .snoop_valid(snoop_valid),
+        .snoop_ack(snoop_ack), .snoop_hit(snoop_hit)
+    );
+`else
+    // ---- Pure pass-through ----
     assign m_awid    = s_awid;
     assign m_awaddr  = s_awaddr;
     assign m_awlen   = s_awlen;
@@ -135,5 +157,6 @@ module l2_cache #(
 
     assign snoop_ack = snoop_valid;
     assign snoop_hit = 1'b0;
+`endif
 
 endmodule

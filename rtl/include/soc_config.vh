@@ -11,11 +11,13 @@
 // but downstream UVM/firmware coordination still open). MDU v2 and VIC are
 // already the DUT baseline (v1 files deleted after signoff #12).
 // ---------------------------------------------------------------------------
-`define SOC_USE_L2_CACHE   1   // rtl/cache/l2_cache.v — currently pass-
-                                // through (transparent AXI wire). Enables L2
-                                // presence in DUT so future caching FSM
-                                // (l2_cache_caching.v) can be added
-                                // behind stable interface.
+`define SOC_USE_L2_CACHE   1   // rtl/cache/l2_cache.v — L2 in DUT.
+// `define SOC_L2_CACHING 1    // Enable real caching (l2_cache_wt.v, write-
+                                // through). Firmware runs 5000× longer than
+                                // pass-through — FSM overhead + burst
+                                // interaction with fabric checker. Needs
+                                // waveform-level rework. Currently disabled;
+                                // L2 stays as pass-through in DUT.
 `define SOC_USE_UART_16550   1   // rtl/perips/apb_uart_16550.v — v2 in DUT.
                                   // pic_mask_arbitration seq uses VIC INTR_SOFT
                                   // for the UART bit when v2 is active (stable
