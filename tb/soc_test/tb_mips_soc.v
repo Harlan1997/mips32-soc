@@ -544,7 +544,7 @@ bind tb_mips_soc soc_legacy_observation_bind u_soc_legacy_observation_bind (
     .uart_tx_valid       (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.psel &&
                           u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.penable &&
                           u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwrite &&
-                          (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr[7:0] == 8'h00)),
+                          (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr[4:0] == 5'h00)),
     .uart_tx_data        (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwdata[7:0]),
     .core_global_stall   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall),
     .dcache_state        (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.state),

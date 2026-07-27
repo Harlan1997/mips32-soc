@@ -1,16 +1,18 @@
-# 乘除单元 (MDU) 微架构规格 (v0)
+# 乘除单元 (MDU) 微架构规格 (v1.1)
 
-> 状态：v0 草案。作为 Phase B **重构 `rtl/cpu/mips_mdu.v`** 的实施基线。现状 MDU 阻塞 EX 阶段直到完成，本规格把它改为独立多周期 FSM，与 pipeline 解耦，含早退出优化。
+> 状态：v1.1 Phase 4B 已闭合。`rtl/cpu/mips_mdu.v` 作为多周期 MDU
+> 已完全闭合 CPU-visible MDU ISA Gap，支持 `MULT/MULTU/DIV/DIVU/MFHI/MFLO/MTHI/MTLO`
+> 及 `MADD/MADDU/MSUB/MSUBU` 和 `MUL rd, rs, rt` 的 CPU 解码与写回。
 
 ---
 
 ## 0. 目标
 
-- 覆盖 MIPS32 R2 整数 M-单元指令：`MULT / MULTU / MUL / DIV / DIVU / MADD / MADDU / MSUB / MSUBU / MFHI / MFLO / MTHI / MTLO / CLO / CLZ`。
-- **乘法**：3-5 cycle（可参数化，24Kc 目标 ≤ 5）。
-- **除法**：radix-2 或 radix-4，18 或 9 cycle for 32-bit。
-- **早退出**：MULT 若高 16 位相同（sign extension）→ 短路 2-cycle；DIV 若除数覆盖高位为 0/1 → 提前退出。
-- **独立于 EX**：MDU FSM 与主流水线并行，写回 HI/LO；EX 只在 MFHI/MFLO/MADD 等需要 HI/LO 结果时才 stall（写后读依赖）。
+- CPU 已支持指令：`MULT / MULTU / DIV / DIVU / MFHI / MFLO / MTHI / MTLO`，`MADD / MADDU / MSUB / MSUBU`，`MUL rd, rs, rt`。
+- `CLO / CLZ` 不属于 MDU block 合同（属于 EX / ALU 路径）。
+- **乘法**：behavioral 32x32 乘法器，3-cycle 模型；小操作数早退出。
+- **除法**：32-cycle restoring radix-2，含确定性除零行为。
+- **流水线合同**：MDU FSM 与主流水线并行；EX 通过 HI/LO hazard 与 busy 状态 stall。
 
 **不做**：
 - 硬件浮点（在 FPU/CP1 单元中）
@@ -28,7 +30,7 @@
 
 `{HI, LO} = unsigned(rs) * unsigned(rt)`。
 
-### 1.3 32-bit 乘 `MUL rd, rs, rt`（R2 新增）
+### 1.3 32-bit 乘 `MUL rd, rs, rt`（MIPS32 R2，CPU-visible）
 
 `rd = (rs * rt)[31:0]`；**HI/LO 不定**（spec 允许乱刷，但保守做法保持 HI/LO 不变或写入低 32 位）。3-5 cycle。
 
@@ -42,7 +44,7 @@
 
 类似 DIV。除 0：`LO = 32'hFFFF_FFFF, HI = rs`。
 
-### 1.6 乘加乘减 `MADD / MADDU / MSUB / MSUBU`（R2）
+### 1.6 乘加乘减 `MADD / MADDU / MSUB / MSUBU`（MIPS32 R2，CPU-visible）
 
 - `MADD rs, rt`：`{HI, LO} += signed(rs) * signed(rt)`（有符号）
 - `MADDU`：无符号
@@ -59,9 +61,8 @@
 
 ### 1.8 前导 0/1 计数 `CLZ rd, rs` / `CLO rd, rs`（R2）
 
-- `CLZ`：rs 前导 0 的个数 (0-32)
-- `CLO`：rs 前导 1 的个数
-- **1-cycle 组合**（可放 EX 阶段完成，不占 MDU FSM）。
+- 不在当前 MDU block 中实现。
+- 后续 CPU ISA 完备性阶段应作为 EX/ALU 组合路径或独立单元处理，并添加 firmware/UVM 场景。
 
 ---
 
@@ -71,9 +72,9 @@
 
 ```
 ST_IDLE  → 空闲
-ST_MUL   → 乘法 3-5 cycle iterations (Booth radix-4 或 shift-add)
-ST_DIV   → 除法迭代
-ST_MADD  → 乘 + 加/减
+ST_MUL   → behavioral 乘法 3-cycle 模型或小数早退出
+ST_DIV   → 32-cycle radix-2 除法迭代
+ST_ACC   → 乘加/乘减累加
 ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 ```
 
@@ -85,18 +86,18 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 | **B. Booth radix-4, 5-cycle** | 中 | 5 cycle | 24Kc 常见选择 |
 | C. Wallace tree pipelined 3-stage | 大 | 3 cycle (throughput 1/cycle) | 面积换性能 |
 
-**Phase B 默认**：B (Booth radix-4)，`parameter MUL_LATENCY = 5`；提供 A/C 参数化开关备将来切换。
+**当前 RTL**：使用 Verilog `*` 的 behavioral 乘法，配 3-cycle latency
+模型。Booth/radix-4、Wallace tree 或综合定制乘法器是后续 PPA/综合阶段任务。
 
 ### 2.3 除法器实现
 
-**Radix-2 恢复余数除法**：18 cycles = 1 (setup) + 32 (iterate 1 bit/cycle) - early exit + 1 (writeback)。
+**Radix-2 恢复余数除法**：最多 32 次 1-bit 迭代，加 setup/fixup/done 状态。
 
 **早退出**：
 - 检查 |rs| < |rt| → 商 = 0, 余数 = rs → 3 cycle 完成。
-- 检查 rt 高 16 位 = 0 且 rs 高 16 位 = 0 → 16 iter 而非 32。
 - 计数除数前导 0，跳过对应 iter。
 
-**Radix-4** (可选)：每 cycle 2 bit → 9 cycle。综合面积代价约 +30%。Phase B 默认 radix-2；`parameter DIV_RADIX = 2` 可切 4。
+**Radix-4**：不在当前 RTL 合同内，作为后续性能增强项。
 
 ### 2.4 早退出乘法 (符号 extension)
 
@@ -112,7 +113,7 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 ### 3.1 发射 (Issue)
 
 - ID 阶段解码 MDU 指令 → 若 MDU busy → **stall ID 与 IF**（保守，避免多 outstanding hazard）。
-- MDU idle → 接收操作数，FSM 转 ST_MUL/DIV/MADD；ID 与 IF 可继续（后续指令不等 MDU 完成，除非再遇 MDU 或 MFHI/MFLO）。
+- MDU idle → EX 发出单周期 issue pulse；流水线在 launch/busy 期间保持该 EX 指令，直到结果/HI/LO 更新完成。
 
 ### 3.2 依赖 stall
 
@@ -128,9 +129,8 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 ### 3.4 异常与冲刷
 
 - 无异常（MIPS spec 定义除 0 不异常）。
-- 流水线冲刷（异常/mispredict）时：
-  - 未完成的 MDU 操作**继续运行**（结果虽然可能被 kill 的指令产生，但架构 spec 允许 HI/LO 结果无关软件顺序）。可选保守：flush MDU → ST_IDLE。
-  - **Phase B 决策**：Flush MDU 到 IDLE，简化 hazard。代价 <5% 性能（异常/mispredict 罕见）。
+- 流水线冲刷（异常/mispredict）下的精确取消语义不是 Phase 4A 已闭合项；
+  后续 CPU/异常完备性阶段需要用 firmware/UVM 明确定义 kill 后 HI/LO 是否更新。
 
 ---
 
@@ -181,11 +181,11 @@ module mips_mdu #(
 **块级** (`tb/uvm_tb/mdu/`)：
 
 - 每指令类型 × 边界值 (0, 1, -1, MAX_INT, MIN_INT, 除 0) 全组合。
-- Radix-2 除法：8 种前导 0/1 组合覆盖早退出路径。
-- 早退出乘法：sign-extension short mult 命中/未命中。
+- Radix-2 除法：除 0、`MIN_INT`、符号修正、余数符号、早退出路径。
+- 早退出乘法：小操作数命中/未命中。
 - MADD/MSUB 覆盖 HI/LO 初值 0 与非 0。
 - MFHI/MFLO 遇 busy stall 循环。
-- Flush during MDU busy：FSM 回 IDLE，无残留输出。
+- Flush during MDU busy：后续 CPU 精确异常/flush 合同闭合项。
 
 **SoC 级 firmware**：
 
@@ -205,11 +205,15 @@ module mips_mdu #(
 - 除 0 行为确定性（LO=-1, HI=rs 恒立）。
 
 **性能门槛**：
-- CoreMark 中 MULT/DIV 平均延迟测量与目标 (5 / 18 cycle) 一致。
+- CoreMark 中 MULT/DIV 平均延迟测量与当前 RTL latency 合同一致。
 - MDU stall 占总执行时间 < 5%（正常 workload）。
 
 ---
 
 ## 版本记录
 
+- v1.1 (2026-07-27)：Phase 4B CPU-visible MDU ISA 闭合，解禁 MADD/MADDU/MSUB/MSUBU/MUL 的 CPU 译码与写回，增加 mdu_cpu 固件门禁。
+- v1 (2026-07-27)：更新为当时 DUT 基线；CPU 仅暴露 legacy HI/LO
+  MDU op，MADD/MADDU/MSUB/MSUBU/MUL 当时标为块级已实现、CPU 集成待闭合，CLO/CLZ
+  移出 MDU 当前合同，乘除 latency 与 flush 语义按当前 RTL 重述。
 - v0 (2026-07-26)：初版规格，Booth radix-4 乘法 5-cycle + radix-2 除法 18-cycle + 早退出 + Flush-to-IDLE。等待 Phase B 启动评审。

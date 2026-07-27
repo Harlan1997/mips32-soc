@@ -1,25 +1,25 @@
 // =============================================================================
 // File Name: apb_uart_16550.v
-// Design:    PC16550D-compatible UART — full implementation
-// Author:    Antigravity — Phase D
+// Design:    PC16550D-compatible UART — current DUT baseline
+// Author:    Antigravity — Phase 4E Commercial Hardening
 // Description:
-//   Complete PC16550D per docs/block_specs/uart_16550_spec.md. Replaces the
-//   earlier 8N1-only scaffold. Not yet integrated (apb_uart.v remains in DUT).
+//   PC16550D-compatible UART baseline per docs/block_specs/uart_16550_spec.md.
+//   Integrated in soc_peripheral_subsystem.v.
 //
 //   Features:
-//     * Standard 16550 register map + DLAB latch
-//     * TX/RX FIFOs (parameterized, default 16 entries)
+//     * Standard 16550 register map + DLAB divisor access
+//     * TX/RX FIFOs (parameterized depth, default 16 entries)
 //     * 16× oversampled baud rate generator (16-bit divisor)
-//     * Word length 5/6/7/8 (LCR[1:0])
-//     * 1 / 1.5-2 stop bits (LCR[2])
-//     * Parity: none / odd / even / mark / space (LCR[5:3])
-//     * Break send (LCR[6]) — TX line held low
-//     * Parity / framing / break detect (LSR[2:4]) + character error bits
+//     * Word length 5/6/7/8 (LCR[1:0]), Stop bits 1/1.5-2 (LCR[2]), Parity (LCR[5:3])
+//     * Break send (LCR[6]) & Parity / framing / break detect (LSR[2:4])
 //     * FIFO trigger levels: 1 / 4 / 8 / 14 chars (FCR[7:6])
-//     * Auto-RTS: MCR[5]=1 asserts RTS_n high (deassert) when RX FIFO > trigger
-//     * Modem status delta bits (MSR[3:0]) — cleared on MSR read
-//     * Loopback (MCR[4]): TX→RX, DTR→DSR, RTS→CTS, OUT1→RI, OUT2→DCD
-//     * Interrupt priority per spec (RX line status > RX data > TX empty > Modem)
+//     * FIFO disabled (single-byte) compatibility mode
+//     * RX character timeout interrupt when below threshold
+//     * Auto-RTS (MCR[5]) & Modem status delta bits (MSR[3:0]) cleared on MSR read
+//     * Loopback mode (MCR[4]): TX→RX, DTR→DSR, RTS→CTS, OUT1→RI, OUT2→DCD
+//     * Interrupt priority: RX line status > RX data/timeout > TX empty > Modem
+//     * Byte strobe handling: pstrb[0..3] byte lane selection
+//     * pready=1, pslverr=0, unsupported reads return zero
 // =============================================================================
 
 module apb_uart_16550 #(
@@ -57,48 +57,55 @@ module apb_uart_16550 #(
 
     assign pready  = 1'b1;
     assign pslverr = 1'b0;
-    wire wr_stb = psel & penable & pwrite;
+
+    wire [7:0] write_data = pstrb[0] ? pwdata[7:0]   :
+                            pstrb[1] ? pwdata[15:8]  :
+                            pstrb[2] ? pwdata[23:16] :
+                            pstrb[3] ? pwdata[31:24] : pwdata[7:0];
+
+    wire wr_stb = psel & penable & pwrite & (|pstrb);
     wire rd_stb = psel & penable & ~pwrite;
 
     // ================= registers =================
     reg [7:0] ier_r;
-    reg [7:0] fcr_r;    // W-only in real 16550; we hold state
+    reg [7:0] fcr_r;
     reg [7:0] lcr_r;
     reg [7:0] mcr_r;
     reg [7:0] scr_r;
     reg [7:0] dll_r, dlm_r;
+
     wire dlab = lcr_r[7];
 
     // LCR fields
-    wire [1:0] wls   = lcr_r[1:0];        // 00=5, 01=6, 10=7, 11=8 bits
-    wire       stb2  = lcr_r[2];          // 1.5/2 stops when 1
-    wire       pen   = lcr_r[3];
-    wire       eps   = lcr_r[4];
-    wire       sp    = lcr_r[5];          // stick parity
+    wire [1:0] wls      = lcr_r[1:0];        // 00=5, 01=6, 10=7, 11=8 bits
+    wire       stb2     = lcr_r[2];          // 1.5/2 stops when 1
+    wire       pen      = lcr_r[3];
+    wire       eps      = lcr_r[4];
+    wire       sp       = lcr_r[5];          // stick parity
     wire       brk_send = lcr_r[6];
 
     // FCR fields
     wire       fifo_en    = fcr_r[0];
     wire [1:0] rx_trigger = fcr_r[7:6];   // 00=1, 01=4, 10=8, 11=14 (16-FIFO)
 
-    // ================= TX FIFO =================
+    // ================= TX FIFO / Holding =================
     reg  [7:0] tx_fifo [TX_FIFO_DEPTH-1:0];
     reg  [TX_AW:0] tx_wr, tx_rd;
     wire tx_empty = (tx_wr == tx_rd);
-    wire tx_full  = ((tx_wr[TX_AW-1:0] == tx_rd[TX_AW-1:0]) &&
-                     (tx_wr[TX_AW] != tx_rd[TX_AW]));
     wire [TX_AW:0] tx_count = tx_wr - tx_rd;
+    wire tx_full  = fifo_en ? ((tx_wr[TX_AW-1:0] == tx_rd[TX_AW-1:0]) && (tx_wr[TX_AW] != tx_rd[TX_AW]))
+                            : (tx_count >= 1);
 
-    // ================= RX FIFO (data + error flags) =================
+    // ================= RX FIFO / Holding (data + error flags) =================
     // Each entry: {parity_err, framing_err, break, 8-bit data}
     reg [10:0] rx_fifo [RX_FIFO_DEPTH-1:0];
     reg  [RX_AW:0] rx_wr, rx_rd;
     wire rx_empty = (rx_wr == rx_rd);
-    wire rx_full  = ((rx_wr[RX_AW-1:0] == rx_rd[RX_AW-1:0]) &&
-                     (rx_wr[RX_AW] != rx_rd[RX_AW]));
     wire [RX_AW:0] rx_count = rx_wr - rx_rd;
+    wire rx_full  = fifo_en ? ((rx_wr[RX_AW-1:0] == rx_rd[RX_AW-1:0]) && (rx_wr[RX_AW] != rx_rd[RX_AW]))
+                            : (rx_count >= 1);
     reg  overrun_r;
-    wire lsr_read_pulse;   // fwd decl; assigned below
+    wire lsr_read_pulse;
 
     // Trigger threshold value based on FCR
     reg [3:0] rx_trig_level;
@@ -128,15 +135,15 @@ module apb_uart_16550 #(
     // Width in bits per char, based on WLS
     reg [3:0] data_bits;
     always @(*) begin
-        case (wls) 2'b00: data_bits = 4'd5;
-                   2'b01: data_bits = 4'd6;
-                   2'b10: data_bits = 4'd7;
-                   2'b11: data_bits = 4'd8;
+        case (wls)
+            2'b00: data_bits = 4'd5;
+            2'b01: data_bits = 4'd6;
+            2'b10: data_bits = 4'd7;
+            2'b11: data_bits = 4'd8;
         endcase
     end
 
-    // ================= TX shifter with variable format =================
-    // States: IDLE, START, DATA(N), PARITY(opt), STOP1, STOP2(opt)
+    // ================= TX shifter =================
     localparam TX_IDLE   = 3'd0;
     localparam TX_START  = 3'd1;
     localparam TX_DATA   = 3'd2;
@@ -146,43 +153,41 @@ module apb_uart_16550 #(
 
     reg [2:0]  tx_state;
     reg [7:0]  tx_shift;
-    reg [3:0]  tx_bit_ctr;      // within a 16-bit-time
-    reg [3:0]  tx_bit_idx;      // which data bit
+    reg [3:0]  tx_bit_ctr;
+    reg [3:0]  tx_bit_idx;
     reg        tx_line;
     reg        tx_parity_bit;
 
     function automatic pop_parity(input [7:0] data, input [3:0] width);
         integer k; reg p;
-        begin p = 1'b0;
-              for (k = 0; k < 8; k = k + 1) if (k < width) p = p ^ data[k];
-              pop_parity = p;
+        begin
+            p = 1'b0;
+            for (k = 0; k < 8; k = k + 1)
+                if (k < width) p = p ^ data[k];
+            pop_parity = p;
         end
     endfunction
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            tx_state <= TX_IDLE;
-            tx_shift <= 8'h0;
-            tx_bit_ctr <= 4'h0;
-            tx_bit_idx <= 4'h0;
-            tx_line <= 1'b1;
+            tx_state      <= TX_IDLE;
+            tx_shift      <= 8'h0;
+            tx_bit_ctr    <= 4'h0;
+            tx_bit_idx    <= 4'h0;
+            tx_line       <= 1'b1;
             tx_parity_bit <= 1'b0;
-            tx_rd <= 0;
         end else begin
-            // Break send overrides
             if (brk_send) tx_line <= 1'b0;
 
             if (tx_state == TX_IDLE) begin
                 if (!brk_send) tx_line <= 1'b1;
                 if (!tx_empty && !brk_send) begin
                     tx_shift   <= tx_fifo[tx_rd[TX_AW-1:0]];
-                    tx_rd      <= tx_rd + 1'b1;
                     tx_state   <= TX_START;
                     tx_bit_ctr <= 4'h0;
                     tx_bit_idx <= 4'h0;
                     tx_line    <= 1'b0;  // start bit
-                    // Compute parity per LCR bits
-                    if (sp) tx_parity_bit <= ~eps;         // stick: mark(0)/space(1) — 16550 spec
+                    if (sp) tx_parity_bit <= ~eps;
                     else    tx_parity_bit <= pop_parity(tx_fifo[tx_rd[TX_AW-1:0]], data_bits) ^ ~eps;
                 end
             end else if (baud16_tick) begin
@@ -233,8 +238,29 @@ module apb_uart_16550 #(
     end
     assign uart_tx = tx_line;
 
-    // ================= RX shifter with parity/framing/break detect =================
-    // Loopback: RX line taken from internal TX line
+    // ================= TX FIFO Pointers =================
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            tx_wr <= 0;
+        end else if (wr_stb && paddr[4:2] == 3'b010 && write_data[2]) begin
+            tx_wr <= 0;
+        end else if (wr_stb && paddr[4:2] == 3'b000 && !dlab && !tx_full) begin
+            tx_fifo[tx_wr[TX_AW-1:0]] <= write_data;
+            tx_wr <= tx_wr + 1'b1;
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            tx_rd <= 0;
+        end else if (wr_stb && paddr[4:2] == 3'b010 && write_data[2]) begin
+            tx_rd <= 0;
+        end else if (tx_state == TX_IDLE && !tx_empty && !brk_send) begin
+            tx_rd <= tx_rd + 1'b1;
+        end
+    end
+
+    // ================= RX shifter & FIFO Write =================
     wire rx_pin      = mcr_r[4] ? tx_line   : uart_rx;
     wire cts_n_int   = mcr_r[4] ? ~mcr_r[1] : uart_cts_n;
     wire dsr_n_int   = mcr_r[4] ? ~mcr_r[0] : uart_dsr_n;
@@ -259,7 +285,6 @@ module apb_uart_16550 #(
     reg [3:0] rx_bit_idx;
     reg       rx_parity_r;
     reg       rx_err_par, rx_err_fram, rx_brk;
-    reg [15:0] brk_counter;   // sample 0 for 1 char time → break
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -273,18 +298,21 @@ module apb_uart_16550 #(
             rx_err_par  <= 1'b0;
             rx_err_fram <= 1'b0;
             rx_brk      <= 1'b0;
-            brk_counter <= 16'h0;
+        end else if (wr_stb && paddr[4:2] == 3'b010 && write_data[1]) begin
+            rx_wr     <= 0;
+            overrun_r <= 1'b0;
         end else begin
+            if (lsr_read_pulse) overrun_r <= 1'b0;
+
             case (rx_state)
                 RX_IDLE: begin
                     if (!rx_sync2) begin
-                        rx_state   <= RX_START;
-                        rx_bit_ctr <= 4'd8;
-                        rx_bit_idx <= 4'd0;
-                        rx_err_par <= 1'b0;
-                        rx_err_fram<= 1'b0;
-                        rx_brk     <= 1'b0;
-                        brk_counter <= 16'h0;
+                        rx_state    <= RX_START;
+                        rx_bit_ctr  <= 4'd8;
+                        rx_bit_idx  <= 4'd0;
+                        rx_err_par  <= 1'b0;
+                        rx_err_fram <= 1'b0;
+                        rx_brk      <= 1'b0;
                     end
                 end
                 default: if (baud16_tick) begin
@@ -295,13 +323,13 @@ module apb_uart_16550 #(
                                 if (!rx_sync2) begin
                                     rx_state <= RX_DATA;
                                 end else begin
-                                    rx_state <= RX_IDLE; // false start
+                                    rx_state <= RX_IDLE;
                                 end
                             end
                             RX_DATA: begin
                                 rx_shift[rx_bit_idx] <= rx_sync2;
                                 if (rx_bit_idx == data_bits - 1) begin
-                                    rx_parity_r <= 1'b0; // reset accumulator
+                                    rx_parity_r <= 1'b0;
                                     if (pen) rx_state <= RX_PARITY;
                                     else     rx_state <= RX_STOP;
                                 end else begin
@@ -319,9 +347,9 @@ module apb_uart_16550 #(
                             end
                             RX_STOP: begin
                                 if (!rx_sync2) rx_err_fram <= 1'b1;
-                                if (rx_shift == 8'h0 && rx_err_fram) rx_brk <= 1'b1;
+                                if (rx_shift == 8'h0 && (!rx_sync2 || rx_err_fram)) rx_brk <= 1'b1;
                                 if (!rx_full) begin
-                                    rx_fifo[rx_wr[RX_AW-1:0]] <= {rx_err_par, rx_err_fram, rx_brk, rx_shift};
+                                    rx_fifo[rx_wr[RX_AW-1:0]] <= {rx_err_par, !rx_sync2, (rx_shift == 8'h0 && (!rx_sync2 || rx_err_fram)), rx_shift};
                                     rx_wr <= rx_wr + 1'b1;
                                 end else begin
                                     overrun_r <= 1'b1;
@@ -335,15 +363,50 @@ module apb_uart_16550 #(
                     end
                 end
             endcase
-            // LSR-read clears overrun (16550 spec).
-            if (lsr_read_pulse) overrun_r <= 1'b0;
         end
     end
 
-    // ================= FIFO management + APB write =================
+    // ================= RX FIFO Read Pointer =================
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            tx_wr <= 0;
+            rx_rd <= 0;
+        end else if (wr_stb && paddr[4:2] == 3'b010 && write_data[1]) begin
+            rx_rd <= 0;
+        end else if (rd_stb && paddr[4:2] == 3'b000 && !dlab && !rx_empty) begin
+            rx_rd <= rx_rd + 1'b1;
+        end
+    end
+
+    // ================= RX Timeout Counter =================
+    wire [15:0] char_ticks = (16 * (1 + data_bits + (pen ? 4'd1 : 4'd0) + (stb2 ? 4'd2 : 4'd1)));
+    wire [15:0] timeout_limit = 4 * char_ticks;
+    reg  [15:0] timeout_cnt;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            timeout_cnt <= 16'h0;
+        end else if ((rd_stb && paddr[4:2] == 3'b000 && !dlab) ||
+                     (wr_stb && paddr[4:2] == 3'b010 && write_data[1]) ||
+                     !fifo_en || rx_empty) begin
+            timeout_cnt <= 16'h0;
+        end else if (baud16_tick) begin
+            if (fifo_en && (rx_count > 0) && (rx_count < rx_trig_level)) begin
+                if (rx_state != RX_IDLE) begin
+                    timeout_cnt <= 16'h0;
+                end else if (timeout_cnt < timeout_limit) begin
+                    timeout_cnt <= timeout_cnt + 1'b1;
+                end
+            end else begin
+                timeout_cnt <= 16'h0;
+            end
+        end
+    end
+
+    wire rx_timeout_int = ier_r[0] & fifo_en & (rx_count > 0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit);
+
+    // ================= Write Registers =================
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
             ier_r <= 8'h0;
             fcr_r <= 8'h0;
             lcr_r <= 8'h03;   // default 8N1
@@ -353,46 +416,56 @@ module apb_uart_16550 #(
             dlm_r <= 8'h0;
         end else if (wr_stb) begin
             case (paddr[4:2])
-                3'b000: begin
-                    if (dlab) dll_r <= pwdata[7:0];
-                    else if (!tx_full) begin
-                        tx_fifo[tx_wr[TX_AW-1:0]] <= pwdata[7:0];
-                        tx_wr <= tx_wr + 1'b1;
-                    end
-                end
-                3'b001: if (dlab) dlm_r <= pwdata[7:0];
-                        else      ier_r <= pwdata[7:0];
-                3'b010: fcr_r <= pwdata[7:0];
-                3'b011: lcr_r <= pwdata[7:0];
-                3'b100: mcr_r <= pwdata[7:0];
-                3'b111: scr_r <= pwdata[7:0];
+                3'b000: if (dlab) dll_r <= write_data;
+                3'b001: if (dlab) dlm_r <= write_data;
+                        else      ier_r <= write_data[3:0];
+                3'b010: fcr_r <= {write_data[7:6], 5'b00000, write_data[0]};
+                3'b011: lcr_r <= write_data;
+                3'b100: mcr_r <= write_data;
+                3'b111: scr_r <= write_data;
                 default: ;
             endcase
-            if (paddr[4:2] == 3'b010 && pwdata[1]) rx_wr <= rx_rd;
-            if (paddr[4:2] == 3'b010 && pwdata[2]) tx_wr <= tx_rd;
         end
     end
 
-    // ================= APB read + FIFO pop =================
-    wire [7:0] rx_head = rx_empty ? 8'h0 : rx_fifo[rx_rd[RX_AW-1:0]][7:0];
+    // ================= APB read & FIFO pop =================
+    wire [7:0] rx_head      = rx_empty ? 8'h0 : rx_fifo[rx_rd[RX_AW-1:0]][7:0];
     wire       rx_head_par  = rx_empty ? 1'b0 : rx_fifo[rx_rd[RX_AW-1:0]][10];
     wire       rx_head_fram = rx_empty ? 1'b0 : rx_fifo[rx_rd[RX_AW-1:0]][9];
     wire       rx_head_brk  = rx_empty ? 1'b0 : rx_fifo[rx_rd[RX_AW-1:0]][8];
 
-    // LSR bits (per spec §1.5)
-    wire [7:0] lsr = { |{rx_head_par, rx_head_fram, rx_head_brk}, // 7: FIFO err (any char has err)
-                       tx_empty && tx_state == TX_IDLE,           // 6: TEMT
-                       tx_empty,                                   // 5: THRE
-                       rx_head_brk,                                // 4: BI
-                       rx_head_fram,                               // 3: FE
-                       rx_head_par,                                // 2: PE
-                       overrun_r,                                  // 1: OE
-                       ~rx_empty };                                // 0: DR
+    // RFE calculation (LSR[7])
+    reg rx_fifo_has_err;
+    integer i_err;
+    reg [RX_AW:0] err_pos;
+    always @(*) begin
+        rx_fifo_has_err = 1'b0;
+        if (fifo_en) begin
+            for (i_err = 0; i_err < RX_FIFO_DEPTH; i_err = i_err + 1) begin
+                if (i_err < rx_count) begin
+                    err_pos = rx_rd + i_err;
+                    if (|rx_fifo[err_pos[RX_AW-1:0]][10:8])
+                        rx_fifo_has_err = 1'b1;
+                end
+            end
+        end
+    end
 
-    // IIR priority per spec §1.4
-    wire rx_line_err_int = ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r);
-    wire rx_data_int     = ier_r[0] & (rx_count >= {{(RX_AW+1-4){1'b0}}, rx_trig_level});
-    wire tx_empty_int    = ier_r[1] & tx_empty;
+    // LSR bits
+    wire [7:0] lsr = { rx_fifo_has_err,                        // 7: RFE
+                       tx_empty && (tx_state == TX_IDLE),       // 6: TEMT
+                       tx_empty,                               // 5: THRE
+                       rx_head_brk,                            // 4: BI
+                       rx_head_fram,                           // 3: FE
+                       rx_head_par,                            // 2: PE
+                       overrun_r,                              // 1: OE
+                       ~rx_empty };                            // 0: DR
+
+    // Interrupt identification
+    wire rx_line_err_int  = ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r);
+    wire rx_data_trig_int = ier_r[0] & (rx_count >= (fifo_en ? rx_trig_level : 4'd1));
+    wire tx_empty_int     = ier_r[1] & tx_empty;
+
     // Delta on modem status
     reg cts_n_prev, dsr_n_prev, dcd_n_prev, ri_n_prev;
     reg d_cts, d_dsr, d_dcd, d_ri;
@@ -416,24 +489,24 @@ module apb_uart_16550 #(
     end
     wire modem_int = ier_r[3] & (d_cts | d_dsr | d_dcd | d_ri);
 
-    // IIR encode (spec §1.4): 8'hCx where x = 6 for LSI, 4 for RX data, 2 for TX empty, 0 for modem
-    wire [7:0] iir = rx_line_err_int ? 8'hC6 :
-                     rx_data_int     ? 8'hC4 :
-                     tx_empty_int    ? 8'hC2 :
-                     modem_int       ? 8'hC0 :
-                                       8'hC1;
+    wire [1:0] iir_fifo_bits = fifo_en ? 2'b11 : 2'b00;
+    wire [7:0] iir = rx_line_err_int  ? {iir_fifo_bits, 2'b00, 4'b0110} :
+                     rx_data_trig_int ? {iir_fifo_bits, 2'b00, 4'b0100} :
+                     rx_timeout_int   ? {iir_fifo_bits, 2'b00, 4'b1100} :
+                     tx_empty_int     ? {iir_fifo_bits, 2'b00, 4'b0010} :
+                     modem_int        ? {iir_fifo_bits, 2'b00, 4'b0000} :
+                                        {iir_fifo_bits, 2'b00, 4'b0001};
 
-    assign irq = rx_line_err_int | rx_data_int | tx_empty_int | modem_int;
+    assign irq = rx_line_err_int | rx_data_trig_int | rx_timeout_int | tx_empty_int | modem_int;
 
-    // Combinational APB read (v1 compatibility — APB expects same-cycle
-    // response). Side-effecting reads (RX FIFO pop, overrun clear) still
-    // sequential in the block below.
+    // Combinational APB read
+    assign lsr_read_pulse = rd_stb && (paddr[4:2] == 3'b101);
     always @(*) begin
         prdata = 32'h0;
         if (rd_stb) begin
             case (paddr[4:2])
                 3'b000: prdata = {24'h0, dlab ? dll_r : rx_head};
-                3'b001: prdata = {24'h0, dlab ? dlm_r : ier_r};
+                3'b001: prdata = {24'h0, dlab ? dlm_r : {4'h0, ier_r[3:0]}};
                 3'b010: prdata = {24'h0, iir};
                 3'b011: prdata = {24'h0, lcr_r};
                 3'b100: prdata = {24'h0, mcr_r};
@@ -447,20 +520,8 @@ module apb_uart_16550 #(
         end
     end
 
-    // Sequential side effects on reads: RX FIFO pop. Overrun LSR-read clear
-    // is folded into the RX shifter block (single driver).
-    assign lsr_read_pulse = rd_stb && (paddr[4:2] == 3'b101);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            rx_rd <= 0;
-        end else if (rd_stb && paddr[4:2] == 3'b000 && !dlab && !rx_empty) begin
-            rx_rd <= rx_rd + 1'b1;
-        end
-    end
-
     // ================= Modem outputs =================
-    // Auto-RTS: if MCR[5]=1 and RX FIFO count >= trigger level → deassert RTS
-    wire auto_rts_deassert = mcr_r[5] & (rx_count >= {{(RX_AW+1-4){1'b0}}, rx_trig_level});
+    wire auto_rts_deassert = mcr_r[5] & (rx_count >= rx_trig_level);
     assign uart_rts_n = ~mcr_r[1] | auto_rts_deassert;
     assign uart_dtr_n = ~mcr_r[0];
 

@@ -1132,7 +1132,7 @@
     {
       "id": "EXCL-UVM-0014",
       "category": "General Module Coverage Exclusions",
-      "module": "mips_mdu_v2",
+      "module": "mips_mdu",
       "metric": "all",
       "rule_count": 45,
       "rules": [
@@ -4142,7 +4142,7 @@
     {
       "id": "EXCL-UVM-0021",
       "category": "General Module Coverage Exclusions",
-      "module": "apb_axi_dma_v2",
+      "module": "apb_axi_dma",
       "metric": "all",
       "rule_count": 91,
       "rules": [
@@ -4391,7 +4391,7 @@
       "rule_count": 3,
       "rules": [
         "Block 1 \"4034936954\" \"case (mdu_op)\"",
-        "Block 10 \"1739623138\" \"mdu_v2_op = 4'b0;\"",
+        "Block 10 \"1334838383\" \"mdu_op4b = 4'b0;\"",
         "Block 11 \"4034936954\" \"case (mdu_op)\""
       ]
     },
@@ -5996,7 +5996,7 @@
     {
       "id": "EXCL-PROD-0013",
       "category": "General Module Coverage Exclusions",
-      "module": "mips_mdu_v2",
+      "module": "mips_mdu",
       "metric": "all",
       "rule_count": 45,
       "rules": [
@@ -9010,7 +9010,7 @@
     {
       "id": "EXCL-PROD-0020",
       "category": "General Module Coverage Exclusions",
-      "module": "apb_axi_dma_v2",
+      "module": "apb_axi_dma",
       "metric": "all",
       "rule_count": 98,
       "rules": [
@@ -9847,7 +9847,7 @@
       "rule_count": 3,
       "rules": [
         "Block 1 \"4034936954\" \"case (mdu_op)\"",
-        "Block 10 \"1739623138\" \"mdu_v2_op = 4'b0;\"",
+        "Block 10 \"1334838383\" \"mdu_op4b = 4'b0;\"",
         "Block 11 \"4034936954\" \"case (mdu_op)\""
       ]
     },

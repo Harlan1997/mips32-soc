@@ -96,3 +96,5 @@ __pycache__/
 
 # Agent locks
 .agent/run.lock
+.agent/result.json
+.agent/test_report.md

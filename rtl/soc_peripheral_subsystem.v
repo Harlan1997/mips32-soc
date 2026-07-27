@@ -277,7 +277,7 @@ module soc_peripheral_subsystem #(
     assign m_arcache = 4'h0;
     assign m_arprot  = 3'h0;
 
-    apb_axi_dma_v2 #(.N_CHANNELS(4)) u_apb_dma (
+    apb_axi_dma #(.N_CHANNELS(4)) u_apb_dma (
         .clk             (clk),
         .rst_n           (rst_n),
 

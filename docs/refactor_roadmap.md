@@ -329,7 +329,120 @@ Phase 3D status:
   from a current full-exclusion dump and reviewed against current RTL hierarchy
   names.
 
+Post-rename DUT integration completeness audit:
+- Purpose: the following modules have recently been integrated or structurally
+  inserted into the DUT and must not be treated as product-complete solely
+  because smoke/regression tests pass. Each item needs a dedicated feature
+  completeness review against its block spec, directed tests, UVM coverage,
+  firmware scenarios, and negative/error-path behavior.
+- `mips_mdu`: integrated in `mips_ex_stage`; `_v2` transitional module/signal
+  naming is being removed. Audit remaining MDU ISA completeness, HI/LO hazard
+  behavior, stall/flush semantics, divide corner cases, and performance impact.
+- `apb_axi_dma`: integrated in `soc_peripheral_subsystem`; `_v2` transitional
+  naming is being removed. Audit channel model, descriptor/scatter-gather
+  behavior, AXI burst legality, APB programming model, interrupt/error handling,
+  alignment/length corner cases, and scoreboard coverage.
+- `apb_vic`: integrated as the interrupt controller baseline. Audit source
+  mapping, mask/active behavior, priority/vector semantics, edge-vs-level
+  handling, software-trigger behavior, nesting expectations, and formal
+  priority proofs before claiming product-level VIC closure.
+- `apb_uart_16550`: integrated as the UART baseline. Hardened in Phase 4E under
+  PC16550D-compatible contract with RX timeout, FCR reset, IIR priority, and
+  modem loopback.
+- `l2_cache`: real caching is enabled in the DUT through `SOC_L2_CACHING`
+  (128 KB 8-way write-back/write-allocate, NINE, single-outstanding, dirty
+  eviction, refill/write error propagation, snoop tie-off) and is closed under
+  Phase 4F (see above). The caching FSM services aligned word-INCR bursts
+  including line-crossing bursts and returns `SLVERR` only for genuinely-illegal
+  requests. Follow-up audit must not over-claim MSHR, multi-outstanding,
+  coherent snoop, ECC, or performance closure until those features are
+  implemented and verified.
+
 Exit criteria:
 - architecture is signoff-ready
 - debug and test hooks are gated
 - source tree is free of generated artifacts
+
+## Phase 4A: Commercial DUT Block Readiness Baseline
+
+Deliverables:
+- Block specs and RTL headers updated to reflect actual integration state and boundaries.
+- Hardened DMA AXI error response handling and MDU signed accumulation logic.
+- `make dut-block-unit-gate` entry point implemented for focused block unit tests (`mips_mdu`, `apb_axi_dma`, `apb_vic`, `apb_uart_16550`, `l2_cache`).
+- Extended focused unit test coverage for MDU signed/accumulate/div-zero, DMA scatter-gather and AXI error, VIC map & tie-break, UART DLAB/SCR & FIFO/IRQ, and L2 dirty/error.
+- Verified unit gate, firmware smoke, and UVM smoke gates pass cleanly.
+
+## Phase 4B: MDU CPU ISA Closure
+
+Deliverables:
+- Upgrade CPU MDU control plumbing from 3-bit legacy encoding to 4-bit `mips_mdu` operation encoding in `rtl/cpu/mips_control.v`, `rtl/cpu/mips_id_stage.v`, `rtl/cpu/mips_id_ex_reg.v`, `rtl/cpu/mips_ex_stage.v`, and `rtl/cpu/mips_cpu.v`.
+- Decode `MADD`, `MADDU`, `MUL`, `MSUB`, and `MSUBU` using the standard MIPS32 R2 SPECIAL2 opcode.
+- Route `MUL` low-word result to GPR writeback (`rd`) through `ex_out`.
+- Add dedicated `mdu_cpu` firmware test exercising signed/unsigned accumulate, subtract accumulate, negative `MUL`, `MUL` destination writeback, and `MFHI/MFLO` checks.
+- Add `make mdu-cpu-gate` entry point.
+
+## Phase 4C: DMA Commercial Closure
+
+Deliverables:
+- Hardened `apb_axi_dma` for direct copy, scatter-gather, error handling (`ERR_ALIGN`, `ERR_AXI_READ`, `ERR_AXI_WRITE`, `ERR_DESC`, `ERR_DESC_LIMIT`), busy reprogramming protection, bounded descriptor chains (`MAX_DESCRIPTORS=16`), and status W1C/re-arm semantics under the single-outstanding AXI fabric contract.
+- Updated `docs/block_specs/dma_spec.md` with full commercial DUT specification.
+- Extended `tb/unit/dma/tb_dma.v` unit test suite covering direct, SG, AXI error, alignment rejection, malformed descriptor, descriptor limit, busy protection, and W1C/IRQ test cases.
+- Added product firmware test `tb/soc_test/fw/tests/dma_cpu/` and `make dma-cpu-gate` top-level entry point.
+- Clarified non-claims: single-beat single-outstanding contract (no burst/multi-outstanding claim), no IOMMU/coherency claim, no formal/lint/synthesis/timing closure claim; coverage exclusion maintenance remains separate.
+
+## Phase 4D: VIC Commercial Closure
+
+Deliverables:
+- Hardened `apb_vic` to ensure single sequential state writers for all state registers (`active_r`, `edge_pending_r`, `soft_r`, `enable_r`, `type_r`, `polarity_r`, `prio_r`).
+- Reconciled interrupt source map with actual SoC integration (`rtl/soc_peripheral_subsystem.v`):
+  - Source 0: `uart_rx_int`
+  - Source 1: `uart_tx_int`
+  - Source 2: `timer_int`
+  - Source 3: `dma_int`
+  - Sources 4..31: tied low/reserved
+- Extended `tb/unit/vic/tb_vic.v` to cover reset defaults, enable set/clr, priority arbitration & tie-break, `VEC_ID` read accept event, repeated read protection, nested interrupt suppression, higher-priority preemption, ACK rollback, level high/low & rising/falling edge modes, software triggers, mask while active, 32-source consistency, legacy low offsets, and unsupported address handling.
+- Added product firmware gate `tb/soc_test/fw/tests/vic_cpu/` and `make vic-cpu-gate` top-level entry point.
+- Updated `docs/block_specs/vic_spec.md` and `docs/commercial_dut_block_readiness_plan.md`.
+- Explicit non-claims: single-line IRQ + APB dispatch contract (no CPU EIC/VEIC claim), no MSI claim, no multicore routing claim, no formal proof claim, no synthesis/timing closure claim; coverage exclusion maintenance remains separate.
+
+## Phase 4E: UART Commercial Closure
+
+Deliverables:
+- Hardened `apb_uart_16550` under PC16550D-compatible contract:
+  - DLAB DLL/DLM vs RBR/THR/IER access separation and SCR 8-bit read/write.
+  - FCR FIFO mode (1/4/8/14 trigger levels) vs FIFO disabled (1-byte compatibility mode with OE overrun on unread data).
+  - Self-clearing FCR reset bits (`RCVR_RESET`, `XFR_RESET`).
+  - RX character timeout interrupt after 4 character times when data is below threshold.
+  - IIR priority order (LSI > RDA/CTI > THRE > MSR) with accurate FCR FIFO enable prefix.
+  - Modem loopback mapping and MSR 4-bit delta flags cleared on MSR read.
+  - APB `pstrb[3:0]` byte-lane selection contract.
+  - APB `pready=1`, `pslverr=0`, and unsupported address read zero behavior.
+- Extended `tb/unit/uart/tb_uart_16550.v` covering 15 unit verification test cases.
+- Added product firmware gate under `tb/soc_test/fw/tests/uart_cpu/` and `make uart-cpu-gate` top-level entry point.
+- Updated `docs/block_specs/uart_16550_spec.md`, `docs/commercial_dut_block_readiness_plan.md`, and `docs/refactor_roadmap.md`.
+- Documented explicit non-claims: Linux 8250 system-level driver compatibility, real-board baud tolerance/CDC/RDC, complete CTS/RTS flow-control closure, DMA mode, formal proof, synthesis/timing, and coverage exclusion maintenance.
+
+## Phase 4F: L2 Cache Commercial Closure
+
+Status: CLOSED. Full acceptance sequence passed with `SOC_L2_CACHING=1`:
+`make dut-block-unit-gate` (5/5), `make l2-cpu-gate`, `make firmware`, `make uvm`
+(default `soc_bus_stress_test`, 0 UVM_ERROR / 0 SB_RESP), `soc_test run.sh`
+(clean `$finish`), and `git diff --check`. Two defects were fixed to reach
+closure: an ungated per-cycle `$display` in the `l2_cache_caching` FSM was
+removed, and a sample/drive `WLAST` race in the `tb_l2.v` `cache_write_raw`
+helper (which stalled the line-crossing write test) was corrected. The caching
+FSM itself already services aligned word-INCR line-crossing bursts by
+re-looking-up per beat; the previously reported `SB_RESP` UVM regression did not
+reproduce on the current tree.
+
+Deliverables:
+- Hardened `l2_cache` / `l2_cache_caching` under current single-outstanding blocking contract:
+  - Upstream request validation returning deterministic `SLVERR` (`2'b10`) for unaligned addresses, unsupported size (!=3'b010), non-INCR bursts, line-crossing bursts, or len>7.
+  - Downstream `RRESP`/`BRESP` error propagation with no invalid line installation on refill error and dirty victim preservation on eviction error.
+  - Single-outstanding rejection and backpressure (`s_arready=0`, `s_awready=0` while a request is active).
+  - Optimized multi-beat read hit bursts holding `s_rvalid` continuously without bubble cycles.
+  - Reserved snoop tie-off without side effects.
+- Extended `tb/unit/l2/tb_l2.v` to cover all 16 required commercial unit test cases.
+- Added product firmware test under `tb/soc_test/fw/tests/l2_cpu/` and `make l2-cpu-gate` top-level entry point.
+- Updated `docs/block_specs/l2_spec.md`, `docs/commercial_dut_block_readiness_plan.md`, and `docs/refactor_roadmap.md`.
+- Documented explicit non-claims: non-blocking L2, MSHR, writeback buffer, multi-outstanding AXI, coherent snoop/directory, ECC/SECDED, formal proof, synthesis/timing, and coverage exclusion maintenance.

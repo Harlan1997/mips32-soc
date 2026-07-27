@@ -103,7 +103,7 @@ module soc_memory_subsystem #(
     wire [3:0]  l2m_wstrb;
 
     l2_cache #(
-        .SIZE_BYTES(32768), .LINE_BYTES(32),
+        .SIZE_BYTES(131072), .LINE_BYTES(32), .WAYS(8),
         .ID_WIDTH(4), .ADDR_WIDTH(32), .DATA_WIDTH(32)
     ) u_l2_cache (
         .clk(clk), .rst_n(rst_n),

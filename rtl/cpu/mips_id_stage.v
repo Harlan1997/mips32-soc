@@ -64,7 +64,7 @@ module mips_id_stage (
     
     // Control Signals to ID/EX Pipeline Register
     output wire [4:0]  alu_op,
-    output wire [2:0]  mdu_op,
+    output wire [3:0]  mdu_op,
     output wire        mdu_start,
     output wire        sel_mdu_out,
     output wire        alu_src,
@@ -206,8 +206,12 @@ module mips_id_stage (
     wire reads_rs = (opcode == 6'b000000) ? (func != 6'b000000 && func != 6'b000010 && func != 6'b000011 && func != 6'b010000 && func != 6'b010010) :
                     (opcode != 6'b000010 && opcode != 6'b000011 && opcode != 6'b001111);
 
+    wire special2_reads_rt = (opcode == 6'b011100) &&
+                             (func == 6'b000000 || func == 6'b000001 ||
+                              func == 6'b000010 || func == 6'b000100 ||
+                              func == 6'b000101);
     wire reads_rt = (opcode == 6'b000000) ? (func != 6'b001000 && func != 6'b001001 && func != 6'b010000 && func != 6'b010001 && func != 6'b010010 && func != 6'b010011) :
-                    (opcode == 6'b101011 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101);
+                    (special2_reads_rt || opcode == 6'b101011 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101);
 
 
     wire load_use_hazard = ((ex_mem_read || ex_mem_to_reg == 2'b11) && (ex_waddr != 5'd0) && 

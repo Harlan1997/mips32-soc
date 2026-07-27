@@ -1,5 +1,5 @@
-// Unit test: mips_mdu_v2 — MULT/MULTU/DIV/DIVU/MADD/MADDU/MSUB/MSUBU/MFHI/MFLO/MTHI/MTLO
-module tb_mdu_v2;
+// Unit test: mips_mdu — MULT/MULTU/DIV/DIVU/MADD/MADDU/MSUB/MSUBU/MFHI/MFLO/MTHI/MTLO
+module tb_mdu;
     reg         clk = 0;
     reg         rst_n = 0;
     reg         issue_valid = 0;
@@ -13,7 +13,7 @@ module tb_mdu_v2;
 
     always #5 clk = ~clk;
 
-    mips_mdu_v2 dut (
+    mips_mdu dut (
         .clk(clk), .rst_n(rst_n),
         .issue_valid(issue_valid), .op(op),
         .rs_val(rs_val), .rt_val(rt_val),
@@ -87,6 +87,14 @@ module tb_mdu_v2;
         // -20 / 3 = -6 rem -2 (MIPS: rem sign follows dividend)
         check_hilo(-32'd2, -32'd6, "DIV -20/3");
 
+        // ---- DIV: signed divide by zero ----
+        issue_op(4'd2, -32'd42, 32'd0);
+        check_hilo(-32'd42, 32'hFFFF_FFFF, "DIV -42/0");
+
+        // ---- MULT: signed INT_MIN * INT_MIN edge case ----
+        issue_op(4'd0, 32'h8000_0000, 32'h8000_0000);
+        check_hilo(32'h4000_0000, 32'h0, "MULT INT_MIN*INT_MIN");
+
         // ---- MTHI / MTLO / MFHI / MFLO ----
         issue_op(4'd6, 32'hDEAD_BEEF, 32'h0);   // MTHI
         if (hi_out !== 32'hDEAD_BEEF) begin
@@ -103,16 +111,29 @@ module tb_mdu_v2;
         issue_op(4'd9, 32'd5, 32'd6);
         check_hilo(32'h0, 32'd130, "MADDU 100+5*6");
 
+        // ---- MADD: signed accumulate negative operand ----
+        // Currently HI:LO = 0:130. MADD (-5, 6) = -30 -> 100
+        issue_op(4'd8, -32'd5, 32'd6);
+        check_hilo(32'h0, 32'd100, "MADD 130+(-5)*6");
+
         // ---- MSUBU: {HI, LO} -= rs*rt ----
-        // Currently HI:LO = 0:130. MSUBU 2*10 = 20 → 110
+        // Currently HI:LO = 0:100. MSUBU 2*10 = 20 → 80
         issue_op(4'd11, 32'd2, 32'd10);
-        check_hilo(32'h0, 32'd110, "MSUBU 130-2*10");
+        check_hilo(32'h0, 32'd80, "MSUBU 100-2*10");
+
+        // ---- MSUB: signed accumulate negative operand ----
+        // Currently HI:LO = 0:80. MSUB (-5, 6) = -30 → 80 - (-30) = 110
+        issue_op(4'd10, -32'd5, 32'd6);
+        check_hilo(32'h0, 32'd110, "MSUB 80-(-5)*6");
 
         // ---- MUL rd = (rs*rt)[31:0] ----
         issue_op(4'd12, 32'd7, 32'd8);
         check_lo(32'd56, "MUL 7*8");
 
-        if (errs == 0) $display("REGRESSION_TEST_SUCCESS mdu_v2");
+        issue_op(4'd12, -32'd5, 32'd6);
+        check_lo(-32'd30, "MUL -5*6");
+
+        if (errs == 0) $display("REGRESSION_TEST_SUCCESS mdu");
         else           $display("REGRESSION_TEST_FAIL errs=%0d", errs);
         $finish;
     end
