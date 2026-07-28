@@ -1,11 +1,22 @@
-# L2 统一缓存微架构规格 (v1.1)
+# L2 统一缓存微架构规格 (v1.2)
 
-> 状态：v1.1 Phase 4F 已闭环商业基线。`rtl/cache/l2_cache.v` 与 `rtl/cache/l2_cache_caching.v`
-> 已在 DUT 中（`SOC_L2_CACHING=1`）完成 128 KB 8-way WB/WA NINE blocking single-outstanding
-> 合同闭环：caching FSM 对齐 word-INCR 突发（含跨 line，逐 beat 重新查表）正确服务，仅对
-> 真正非法请求（非 32 位、非对齐、非 INCR、len>7）返回 `SLVERR`。完整验收序列通过
-> （unit gate 5/5、`l2_cpu` 固件门槛、默认 `make uvm` soc_bus_stress_test 0 UVM_ERROR / 0 SB_RESP、
-> soc_test run.sh、`git diff --check`）。MSHR、WB buffer、coherent snoop、ECC 标为后续 4G+ 商用增强项。
+> 状态：v1.2 Phase 4F 已闭环商业基线。DUT 默认（`SOC_L2_CACHING=1`）实例化
+> **write-through / no-write-allocate** 实现 `rtl/cache/l2_cache_wt.v`：128 KB 8-way，
+> 缓存读命中，所有写立即透传到下游 SRAM（L2 不持有 dirty 状态）。这是 SoC 级默认，
+> 因为 TB 会在运行中脉冲异步全局 `rst_n`（JTAG reset-recovery 覆盖），write-back 会在
+> 写回前被复位清掉 dirty 行而静默丢失 SRAM-alias 写；write-through 立即透传写，复位无损。
+>
+> **write-back / write-allocate** 实现 `rtl/cache/l2_cache_caching.v`（128 KB 8-way WB/WA
+> NINE、PLRU、dirty eviction）保留在 `SOC_L2_WRITEBACK` 开关之后（默认关闭），仅用于不会
+> 在有未写回 dirty 行时复位的环境。块级单元门槛（`tb/unit/l2/tb_l2.v` 的 16 项 WB 合同）显式
+> 用 `+define+SOC_L2_WRITEBACK` 编译；write-through 路径（含三处 WT 修复）由 `tb/unit/l2/tb_l2_wt.v`
+> 与 SoC 级回归验证。
+>
+> 两种实现均为 blocking single-outstanding：对齐 word-INCR 突发（含跨 line，逐 beat
+> 重新查表）正确服务，仅对真正非法请求（非 32 位、非对齐、非 INCR、len>7）返回 `SLVERR`。
+> 完整验收序列通过（unit gate 5/5、`l2_cpu` 固件门槛、默认 `make uvm`
+> soc_bus_stress_test 0 UVM_ERROR / 0 SB_RESP、soc_test run.sh、`git diff --check`）。
+> MSHR、WB buffer、coherent snoop、ECC 标为后续 4G+ 商用增强项。
 
 ---
 
@@ -15,8 +26,10 @@
 - **组织**：8-way 组相联，pseudo-LRU
 - **行大小**：32 B
 - **PIPT**（无 alias 顾虑）
-- **策略**：Write-Back + Write-Allocate + NINE
-- **阻塞模型**：当前合同为 single-outstanding blocking L2
+- **策略**：
+  - DUT 默认 `l2_cache_wt`：**Write-Through + No-Write-Allocate + NINE**（复位安全）
+  - `SOC_L2_WRITEBACK` 可选 `l2_cache_caching`：**Write-Back + Write-Allocate + NINE**
+- **阻塞模型**：当前合同为 single-outstanding blocking L2（两实现相同）
 - **单口 AXI slave**（L1 侧汇聚）+ 单口 AXI master（DDR/存储侧）
 - **Snoop 端口**：Phase C **预留但不实现**（tie off）
 - **CACHE 指令穿透**：L1 CACHE 指令的 Index/Hit ops 需要透传或在 L2 层重放，Phase C 决策：L2 不响应 CACHE 指令，只被动接受 refill / eviction。
@@ -153,12 +166,35 @@ On L2 miss:
 
 ## 7. 参数化开关
 
+实现选择（编译期，`rtl/cache/l2_cache.v` 顶层 wrapper）：
+
+```verilog
+`define SOC_L2_CACHING      1       // 1 → 启用真实缓存；0 → 纯 pass-through (AXI 直通)
+`define SOC_L2_WRITEBACK            // 定义 → write-back/write-allocate (l2_cache_caching.v)
+                                     // 未定义（默认）→ write-through/no-write-allocate (l2_cache_wt.v)
+```
+
+- `SOC_L2_CACHING=1` 且未定义 `SOC_L2_WRITEBACK`（**DUT 默认**）→ `l2_cache_wt`。
+- `SOC_L2_CACHING=1` 且定义 `SOC_L2_WRITEBACK` → `l2_cache_caching`。
+- 未定义 `SOC_L2_CACHING` → 纯 pass-through。
+
+未来扩展开关：
+
 ```verilog
 `define SOC_L2_ENABLE       1       // 0 → 旁路 L2，L1 直接对接 DDR (面积 gate)
 `define SOC_L2_INCLUSIVE    0       // 0 = NINE, 1 = strictly inclusive (Phase 后)
 `define SOC_L2_CRITICAL_WORD_FIRST 1
 `define SOC_L2_PREFETCH     0       // Phase 后期 next-line prefetch
 ```
+
+### 7.1 Write-Through 默认实现 (`l2_cache_wt`)
+
+- 读命中缓存；读缺失整行 refill（`WORDS_PER_LN` beats），再从缓存服务。
+- 每次写立即透传下游 SRAM（no-write-allocate、无 dirty 位），复位不丢已提交写。
+- 已修复三处 WT 缺陷（见版本记录 v1.2），由 `tb/unit/l2/tb_l2_wt.v` 覆盖：
+  1. 多 beat 写只发一次 AW（`m_aw_sent` 保护），避免下游 slave 死锁。
+  2. 读缺失 refill 整条对齐 line，避免未取字命中返回 stale 0。
+  3. 跨 line 读突发逐 beat 以 `beat_addr` 重新查表/中途 refill。
 
 ---
 
@@ -239,6 +275,15 @@ module l2_cache #(
 
 ## 版本记录
 
+- v1.2 (2026-07-29)：DUT 默认缓存实现切换为 write-through / no-write-allocate
+  (`rtl/cache/l2_cache_wt.v`)。原因：TB 在运行中脉冲异步全局 `rst_n`（JTAG
+  reset-recovery 覆盖），write-back L2 会在写回前被复位清掉 dirty 行而静默丢失
+  SRAM-alias 写（`soc_axi_attribute_cross_sweep_test` 读回 0）。write-through 立即
+  透传写，复位无损。write-back/write-allocate (`l2_cache_caching.v`) 保留在
+  `SOC_L2_WRITEBACK` 开关之后（默认关闭）。闭环期间修复三处 WT 缺陷：多 beat 写重复
+  发 AW 死锁、读缺失部分行 refill 返回 stale 0、跨 line 读突发未逐 beat 重查表。
+  端到端验证通过：phase3 完成门槛（8 directed×2 no-cov + coverage、必需覆盖组 100%、
+  CPU/CP0 固件门槛）、DUT block unit gate、0 UVM error/fatal。
 - v1.1 (2026-07-28)：Phase 4F 已闭环商业基线：128 KB 8-way WB/WA NINE，
   single-outstanding 阻塞响应，caching FSM 逐 beat 重新查表正确服务对齐 word-INCR
   突发（含跨 line），仅对真正非法请求（非对齐、非 32 位、非 INCR、len>7）返回

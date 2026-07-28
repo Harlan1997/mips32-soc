@@ -349,14 +349,17 @@ Post-rename DUT integration completeness audit:
 - `apb_uart_16550`: integrated as the UART baseline. Hardened in Phase 4E under
   PC16550D-compatible contract with RX timeout, FCR reset, IIR priority, and
   modem loopback.
-- `l2_cache`: real caching is enabled in the DUT through `SOC_L2_CACHING`
-  (128 KB 8-way write-back/write-allocate, NINE, single-outstanding, dirty
-  eviction, refill/write error propagation, snoop tie-off) and is closed under
-  Phase 4F (see above). The caching FSM services aligned word-INCR bursts
-  including line-crossing bursts and returns `SLVERR` only for genuinely-illegal
-  requests. Follow-up audit must not over-claim MSHR, multi-outstanding,
-  coherent snoop, ECC, or performance closure until those features are
-  implemented and verified.
+- `l2_cache`: real caching is enabled in the DUT through `SOC_L2_CACHING`. The
+  default impl is reset-safe **write-through / no-write-allocate**
+  (`l2_cache_wt`, 128 KB 8-way, caches reads, forwards writes to SRAM, no dirty
+  state). The **write-back / write-allocate** impl (`l2_cache_caching`, NINE,
+  single-outstanding, dirty eviction, refill/write error propagation, snoop
+  tie-off) is available behind `SOC_L2_WRITEBACK` but is not reset-safe under the
+  TB's async `rst_n` pulses. Both are closed under Phase 4F (see above), service
+  aligned word-INCR bursts including line-crossing bursts, and return `SLVERR`
+  only for genuinely-illegal requests. Follow-up audit must not over-claim MSHR,
+  multi-outstanding, coherent snoop, ECC, or performance closure until those
+  features are implemented and verified.
 
 Exit criteria:
 - architecture is signoff-ready
@@ -427,7 +430,24 @@ Deliverables:
 Status: CLOSED. Full acceptance sequence passed with `SOC_L2_CACHING=1`:
 `make dut-block-unit-gate` (5/5), `make l2-cpu-gate`, `make firmware`, `make uvm`
 (default `soc_bus_stress_test`, 0 UVM_ERROR / 0 SB_RESP), `soc_test run.sh`
-(clean `$finish`), and `git diff --check`. Two defects were fixed to reach
+(clean `$finish`), and `git diff --check`.
+
+Follow-on fix (2026-07-29): the DUT default caching impl is now **write-through /
+no-write-allocate** (`rtl/cache/l2_cache_wt.v`), not write-back. The TB pulses
+async global `rst_n` mid-run (JTAG reset-recovery coverage); a write-back L2 holds
+written data as dirty until eviction, so a reset wipes it before writeback and
+silently drops SRAM-alias writes (`soc_axi_attribute_cross_sweep_test` read back
+0). Write-through forwards every write to SRAM immediately, so committed writes
+survive reset. The write-back/write-allocate impl (`l2_cache_caching`) stays
+available behind `SOC_L2_WRITEBACK`. Three latent write-through defects were fixed
+(multi-beat write re-forwarding AW → downstream deadlock; read-miss partial-line
+refill → stale 0; line-crossing read burst not re-looking-up per beat), covered by
+`tb/unit/l2/tb_l2_wt.v`. The DUT block unit gate compiles the WB impl explicitly
+via `+define+SOC_L2_WRITEBACK` (its 16 contracts are write-back-specific); the
+write-through path is validated at SoC level. Re-verified: phase3 completion gate,
+DUT block unit gate, 0 UVM errors/fatals.
+
+Two defects were fixed to reach
 closure: an ungated per-cycle `$display` in the `l2_cache_caching` FSM was
 removed, and a sample/drive `WLAST` race in the `tb_l2.v` `cache_write_raw`
 helper (which stalled the line-crossing write test) was corrected. The caching
