@@ -98,3 +98,6 @@ __pycache__/
 .agent/run.lock
 .agent/result.json
 .agent/test_report.md
+
+# Claude Code session state (not part of the repo)
+.claude/

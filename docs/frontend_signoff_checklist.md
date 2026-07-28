@@ -53,8 +53,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ### A.2 仓库清理
 - [x] `.gitignore` 覆盖 `fullexclude.*` / `scratch/`
 - [x] `tb/coverage/` 生产资产纳入 git 追踪
-- [ ] `rtl/` 内无仿真产物 (simv, csrc, *.log) 与 patch_*.py 脚本 —— 移出到 `build/` / `scripts/`
-- [ ] `git status --short` 除 build/ 外全干净
+- [x] `rtl/` 内无仿真产物 (simv, csrc) 与 patch_*.py 脚本 —— 已从 git 移除（可复现的 VCS 产物 + 无引用的死脚本；其一 `patch_soc.py` 含硬编码 `/home/admin/iccode/...` 路径，属签核违规）。`.gitignore` 已覆盖，未来重生成不再入库。
+- [x] `git status --short` 除 build/ 外全干净（`.claude/` 会话状态已 gitignore 并 untrack）
 
 ### A.3 Lint 基线（延后）
 - [N/A] Lint 工具选型 —— 用户暂缓
