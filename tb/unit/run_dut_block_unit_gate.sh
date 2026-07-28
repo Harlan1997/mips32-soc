@@ -105,9 +105,12 @@ L2_DIR="${RUN_ROOT}/l2"
 mkdir -p "${L2_DIR}"
 (
     cd "${L2_DIR}"
-    vcs -full64 -sverilog +define+SOC_L2_CACHING -timescale=1ns/1ps \
+    # tb_l2's 16 contracts (write-allocate, dirty eviction, PLRU) exercise the
+    # write-back impl, so select it explicitly via SOC_L2_WRITEBACK. The default
+    # caching path (write-through, l2_cache_wt) is validated at SoC level.
+    vcs -full64 -sverilog +define+SOC_L2_CACHING +define+SOC_L2_WRITEBACK -timescale=1ns/1ps \
         +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cache" \
-        "${ROOT_DIR}/rtl/cache/l2_cache_caching.v" "${ROOT_DIR}/rtl/cache/l2_cache.v" \
+        "${ROOT_DIR}/rtl/cache/l2_cache_caching.v" "${ROOT_DIR}/rtl/cache/l2_cache_wt.v" "${ROOT_DIR}/rtl/cache/l2_cache.v" \
         "${ROOT_DIR}/tb/unit/l2/tb_l2.v" \
         -l compile.log
     ./simv -l sim.log

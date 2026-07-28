@@ -451,17 +451,21 @@ module tb_l2;
         $display("--- Test 7h step B wr_resp=%b ---", wr_resp);
         if (wr_resp !== 2'b00) begin $display("FAIL 7h: line-crossing AW failed (got %b)", wr_resp); errs=errs+1; end
 
-        // 7i. Unsupported read length (> 7)
+        // 7i. Long read burst (len=8 => 9 beats, crosses line boundary).
+        // len>7 is legal: the FSM walks beats across lines and returns OKAY.
+        // (The SoC fabric issues 9-beat SRAM-alias bursts.) Uses isolated set
+        // index 300 (base 0x2580) so the refilled/dirtied lines do not disturb
+        // the shared index-0 state relied on by Tests 8/10/11/12.
         $display("--- Test 7i starting ---");
-        cache_read_raw(32'h0000, 8'd8, 3'b010, 2'b01, rd, rd_resp);
+        cache_read_raw(32'h2580, 8'd8, 3'b010, 2'b01, rd, rd_resp);
         $display("--- Test 7i done rd_resp=%b ---", rd_resp);
-        if (rd_resp !== 2'b10) begin $display("FAIL 7i: len>7 AR did not return SLVERR (got %b)", rd_resp); errs=errs+1; end
+        if (rd_resp !== 2'b00) begin $display("FAIL 7i: long AR burst (len=8) did not return OKAY (got %b)", rd_resp); errs=errs+1; end
 
-        // 7j. Unsupported write length (> 7)
+        // 7j. Long write burst (len=10 => 11 beats, crosses line boundary).
         $display("--- Test 7j starting ---");
-        cache_write_raw(32'h0000, 8'd10, 3'b010, 2'b01, 32'h12345678, 4'hF, wr_resp);
+        cache_write_raw(32'h2580, 8'd10, 3'b010, 2'b01, 32'h12345678, 4'hF, wr_resp);
         $display("--- Test 7j done wr_resp=%b ---", wr_resp);
-        if (wr_resp !== 2'b10) begin $display("FAIL 7j: len>7 AW did not return SLVERR (got %b)", wr_resp); errs=errs+1; end
+        if (wr_resp !== 2'b00) begin $display("FAIL 7j: long AW burst (len=10) did not return OKAY (got %b)", wr_resp); errs=errs+1; end
 
         // ---------------------------------------------------------------------
         // Test 8: Upstream read backpressure & write-response backpressure
@@ -567,6 +571,48 @@ module tb_l2;
         wait (s_rvalid == 1);
         @(negedge clk);
         s_awvalid = 0; s_arvalid = 0;
+
+        // ---------------------------------------------------------------------
+        // Test 17: Dirty write-allocate line survives eviction + refill (DATA).
+        // Reproduces the SoC write-then-read hazard: write a word (write-allocate,
+        // dirty), evict it by filling the same set with 8 other lines, then read
+        // it back. The data must round-trip through the writeback/refill path.
+        // Set index here = addr[13:5]; +0x4000 strides keep the same set.
+        // ---------------------------------------------------------------------
+        $display("--- Test 17 (dirty-evict data round-trip) ---");
+        cache_write(32'h0002_0A00, 32'hFACE_0001);      // write-allocate, dirty
+        cache_read(32'h0002_0A00, rd);                  // sanity: read back hit
+        if (rd !== 32'hFACE_0001) begin $display("FAIL 17a: pre-evict readback=%h", rd); errs=errs+1; end
+        for (way_idx = 1; way_idx <= 8; way_idx = way_idx + 1) begin
+            cache_read(32'h0002_0A00 + way_idx * 32'h4000, rd); // fill set, evict victim
+        end
+        cache_read(32'h0002_0A00, rd);                  // must refill from backing w/ written data
+        if (rd !== 32'hFACE_0001) begin $display("FAIL 17b: post-evict readback=%h expected=face0001", rd); errs=errs+1; end
+
+        // ---------------------------------------------------------------------
+        // Test 18: MULTI-BEAT dirty write-allocate line survives eviction (DATA).
+        // Same as 17 but the allocating write is a 4-beat burst (len=3). This is
+        // the SoC-failing shape: a multi-beat write-allocated line must be dirty
+        // across all its words and write back correctly on eviction.
+        // Base 0x00021500 => set 168 (unused above); word offset 0.
+        // ---------------------------------------------------------------------
+        $display("--- Test 18 (multi-beat dirty-evict data round-trip) ---");
+        cache_write_raw(32'h0002_1500, 8'd3, 3'b010, 2'b01, 32'hBEEF_0000, 4'hF, wr_resp);
+        if (wr_resp !== 2'b00) begin $display("FAIL 18a: multi-beat write resp=%b", wr_resp); errs=errs+1; end
+        // Pre-evict readback of all 4 words (should hit).
+        for (way_idx = 0; way_idx < 4; way_idx = way_idx + 1) begin
+            cache_read(32'h0002_1500 + way_idx*4, rd);
+            if (rd !== (32'hBEEF_0000 + way_idx)) begin $display("FAIL 18b[%0d]: pre-evict rd=%h exp=%h", way_idx, rd, 32'hBEEF_0000+way_idx); errs=errs+1; end
+        end
+        // Evict by filling set 168 with 8 other lines.
+        for (way_idx = 1; way_idx <= 8; way_idx = way_idx + 1) begin
+            cache_read(32'h0002_1500 + way_idx * 32'h4000, rd);
+        end
+        // Post-evict readback: must refill from backing with written data intact.
+        for (way_idx = 0; way_idx < 4; way_idx = way_idx + 1) begin
+            cache_read(32'h0002_1500 + way_idx*4, rd);
+            if (rd !== (32'hBEEF_0000 + way_idx)) begin $display("FAIL 18c[%0d]: post-evict rd=%h exp=%h", way_idx, rd, 32'hBEEF_0000+way_idx); errs=errs+1; end
+        end
 
         // ---------------------------------------------------------------------
         // Final Summary

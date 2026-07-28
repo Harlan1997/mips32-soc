@@ -90,6 +90,13 @@ module l2_cache #(
 );
 
 `ifdef SOC_L2_CACHING
+`ifdef SOC_L2_WRITEBACK
+    // ---- Write-back / write-allocate implementation ----
+    // NOTE: write-back holds dirty data in the cache until eviction. This SoC's
+    // verification injects async global rst_n pulses (JTAG recovery coverage),
+    // which wipe L2 dirty state before writeback, silently dropping SRAM-alias
+    // writes. Use only in environments that never reset with dirty lines
+    // outstanding. Default caching uses the reset-safe write-through impl below.
     l2_cache_caching #(
         .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES), .WAYS(WAYS),
         .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)
@@ -120,6 +127,42 @@ module l2_cache #(
         .snoop_addr(snoop_addr), .snoop_valid(snoop_valid),
         .snoop_ack(snoop_ack), .snoop_hit(snoop_hit)
     );
+`else
+    // ---- Write-through / no-write-allocate implementation (default) ----
+    // Every write is forwarded downstream to SRAM immediately, so no dirty
+    // state is held in L2. Async global resets cannot drop committed writes,
+    // satisfying the SoC's durable-SRAM contract while still caching reads.
+    l2_cache_wt #(
+        .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES),
+        .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)
+    ) u_impl (
+        .clk(clk), .rst_n(rst_n),
+        .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen),
+        .s_awsize(s_awsize), .s_awburst(s_awburst),
+        .s_awvalid(s_awvalid), .s_awready(s_awready),
+        .s_wdata(s_wdata), .s_wstrb(s_wstrb), .s_wlast(s_wlast),
+        .s_wvalid(s_wvalid), .s_wready(s_wready),
+        .s_bid(s_bid), .s_bresp(s_bresp), .s_bvalid(s_bvalid), .s_bready(s_bready),
+        .s_arid(s_arid), .s_araddr(s_araddr), .s_arlen(s_arlen),
+        .s_arsize(s_arsize), .s_arburst(s_arburst),
+        .s_arvalid(s_arvalid), .s_arready(s_arready),
+        .s_rid(s_rid), .s_rdata(s_rdata), .s_rresp(s_rresp),
+        .s_rlast(s_rlast), .s_rvalid(s_rvalid), .s_rready(s_rready),
+        .m_awid(m_awid), .m_awaddr(m_awaddr), .m_awlen(m_awlen),
+        .m_awsize(m_awsize), .m_awburst(m_awburst),
+        .m_awvalid(m_awvalid), .m_awready(m_awready),
+        .m_wdata(m_wdata), .m_wstrb(m_wstrb), .m_wlast(m_wlast),
+        .m_wvalid(m_wvalid), .m_wready(m_wready),
+        .m_bid(m_bid), .m_bresp(m_bresp), .m_bvalid(m_bvalid), .m_bready(m_bready),
+        .m_arid(m_arid), .m_araddr(m_araddr), .m_arlen(m_arlen),
+        .m_arsize(m_arsize), .m_arburst(m_arburst),
+        .m_arvalid(m_arvalid), .m_arready(m_arready),
+        .m_rid(m_rid), .m_rdata(m_rdata), .m_rresp(m_rresp),
+        .m_rlast(m_rlast), .m_rvalid(m_rvalid), .m_rready(m_rready),
+        .snoop_addr(snoop_addr), .snoop_valid(snoop_valid),
+        .snoop_ack(snoop_ack), .snoop_hit(snoop_hit)
+    );
+`endif
 `else
     // ---- Pure pass-through ----
     assign m_awid    = s_awid;
