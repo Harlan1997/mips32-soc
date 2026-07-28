@@ -17,8 +17,8 @@
                                   // forwards every write to SRAM (no dirty state,
                                   // reset-safe). Define SOC_L2_WRITEBACK to select
                                   // the write-back/write-allocate impl
-                                  // (l2_cache_caching.v) instead — not reset-safe
-                                  // under the TB's async rst_n pulses.
+                                  // (l2_cache_caching.v) instead — also reset-safe
+                                  // (retention arrays survive warm rst_n pulses).
 `define SOC_USE_UART_16550   1   // rtl/perips/apb_uart_16550.v — v2 in DUT.
                                   // pic_mask_arbitration seq uses VIC INTR_SOFT
                                   // for the UART bit when v2 is active (stable

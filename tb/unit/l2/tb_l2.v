@@ -15,6 +15,9 @@
 //  14. Downstream dirty eviction error propagation (dirty victim preservation)
 //  15. Snoop tie-off (no side effects)
 //  16. Single-outstanding rejection/backpressure (second AR/AW held low)
+//  17. Single-beat dirty write-allocate line survives eviction (data round-trip)
+//  18. Multi-beat dirty write-allocate line survives eviction (data round-trip)
+//  19. Warm-reset dirty-line retention (reset-safety)
 
 `timescale 1ns/1ps
 
@@ -613,6 +616,36 @@ module tb_l2;
             cache_read(32'h0002_1500 + way_idx*4, rd);
             if (rd !== (32'hBEEF_0000 + way_idx)) begin $display("FAIL 18c[%0d]: post-evict rd=%h exp=%h", way_idx, rd, 32'hBEEF_0000+way_idx); errs=errs+1; end
         end
+
+        // ---------------------------------------------------------------------
+        // Test 19: Warm-reset dirty-line retention (reset-safety).
+        // Write a dirty line, pulse async rst_n mid-run (as the SoC's JTAG
+        // reset-recovery coverage does), then read it back. A reset-safe
+        // write-back L2 must return the written data from a retained L2 hit
+        // WITHOUT a downstream refill; a reset that wiped valid/dirty would miss
+        // and refill stale backing data instead.
+        // Base 0x00022600 => a set unused by earlier tests; word offset 0.
+        // ---------------------------------------------------------------------
+        $display("--- Test 19 (warm-reset dirty-line retention) ---");
+        cache_write(32'h0002_2600, 32'hD00D_0001);          // write-allocate dirty line
+        cache_read(32'h0002_2600, rd);                       // hit, confirm value pre-reset
+        if (rd !== 32'hD00D_0001) begin $display("FAIL 19a: pre-reset readback=%h", rd); errs=errs+1; end
+        // Async warm reset pulse (mid-run), like the JTAG recovery stimulus.
+        @(negedge clk);
+        rst_n = 1'b0;
+        repeat (3) @(negedge clk);
+        rst_n = 1'b1;
+        @(negedge clk);
+        // Post-reset defaults must be sane again (FSM control state reset).
+        if (s_arready !== 1 || s_awready !== 1 || s_rvalid !== 0 || s_bvalid !== 0) begin
+            $display("FAIL 19b: post-reset defaults incorrect"); errs=errs+1;
+        end
+        // Read back: must HIT from retained L2 (no new downstream AR) and return
+        // the pre-reset dirty data, not stale backing memory.
+        start_ar_cnt = ds_ar_count;
+        cache_read(32'h0002_2600, rd);
+        if (rd !== 32'hD00D_0001) begin $display("FAIL 19c: post-reset readback=%h expected=d00d0001 (dirty line lost across reset)", rd); errs=errs+1; end
+        if (ds_ar_count !== start_ar_cnt) begin $display("FAIL 19d: unexpected downstream AR after reset (line was not retained)"); errs=errs+1; end
 
         // ---------------------------------------------------------------------
         // Final Summary

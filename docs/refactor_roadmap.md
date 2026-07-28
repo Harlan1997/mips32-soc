@@ -354,8 +354,10 @@ Post-rename DUT integration completeness audit:
   (`l2_cache_wt`, 128 KB 8-way, caches reads, forwards writes to SRAM, no dirty
   state). The **write-back / write-allocate** impl (`l2_cache_caching`, NINE,
   single-outstanding, dirty eviction, refill/write error propagation, snoop
-  tie-off) is available behind `SOC_L2_WRITEBACK` but is not reset-safe under the
-  TB's async `rst_n` pulses. Both are closed under Phase 4F (see above), service
+  tie-off) is available behind `SOC_L2_WRITEBACK` and is now also reset-safe: its
+  tag/data/valid/dirty/PLRU arrays are retention memory (cold-boot `initial` only,
+  not wiped by warm `rst_n`), mirroring `axi_sram.v`, so dirty lines survive the
+  TB's async reset pulses. Both are closed under Phase 4F (see above), service
   aligned word-INCR bursts including line-crossing bursts, and return `SLVERR`
   only for genuinely-illegal requests. Follow-up audit must not over-claim MSHR,
   multi-outstanding, coherent snoop, ECC, or performance closure until those
@@ -446,6 +448,17 @@ refill → stale 0; line-crossing read burst not re-looking-up per beat), covere
 via `+define+SOC_L2_WRITEBACK` (its 16 contracts are write-back-specific); the
 write-through path is validated at SoC level. Re-verified: phase3 completion gate,
 DUT block unit gate, 0 UVM errors/fatals.
+
+Follow-on fix (2026-07-29, reset-safety): the write-back impl `l2_cache_caching`
+is now itself reset-safe. Its `valid_ram`/`dirty_ram`/`plru_ram` (with the already-
+retention `tag_ram`/`data_ram`) are now retention memory — cold-boot `initial`
+init, not wiped by warm `rst_n`; only FSM control state resets. This is symmetric
+with the retention SoC SRAM model (`axi_sram.v`) and removes the silent dropped-
+write liability that motivated the write-through default. `tb/unit/l2/tb_l2.v`
+Test 19 covers write-dirty → warm-reset → L2-hit readback (no downstream refill).
+Verified: `make dut-block-unit-gate` 5/5 (L2 19/19); `tb_l2_wt.v` still passes.
+Write-through remains the default; full SoC write-back signoff (scoreboard SRAM-
+truth model) is a separate effort, not claimed here.
 
 Two defects were fixed to reach
 closure: an ungated per-cycle `$display` in the `l2_cache_caching` FSM was
