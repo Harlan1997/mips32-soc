@@ -92,11 +92,13 @@ module l2_cache #(
 `ifdef SOC_L2_CACHING
 `ifdef SOC_L2_WRITEBACK
     // ---- Write-back / write-allocate implementation ----
-    // NOTE: write-back holds dirty data in the cache until eviction. This SoC's
-    // verification injects async global rst_n pulses (JTAG recovery coverage),
-    // which wipe L2 dirty state before writeback, silently dropping SRAM-alias
-    // writes. Use only in environments that never reset with dirty lines
-    // outstanding. Default caching uses the reset-safe write-through impl below.
+    // Write-back holds dirty data in the cache until eviction. Its tag/data/
+    // valid/dirty/PLRU arrays are retention memory (cold-boot init only, not
+    // wiped by warm rst_n), matching the SoC SRAM model, so the async global
+    // rst_n pulses the verification injects (JTAG recovery coverage) do NOT drop
+    // committed dirty lines: a line written dirty before a warm reset survives it
+    // and post-reset reads hit in L2. The reset-safe write-through impl below is
+    // still the default caching path; write-back is opt-in via SOC_L2_WRITEBACK.
     l2_cache_caching #(
         .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES), .WAYS(WAYS),
         .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)

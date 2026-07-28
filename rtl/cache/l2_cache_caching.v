@@ -136,12 +136,35 @@ module l2_cache_caching #(
                              (s_araddr[1:0] != 2'b00) ||
                              (s_arburst != 2'b01);
 
-    // Cache Storage Arrays
+    // Cache Storage Arrays.
+    // These model retention RAM macros (data/tag arrays) plus valid/dirty/PLRU
+    // flops. Like the SoC SRAM model (rtl/perips/axi_sram.v), their contents are
+    // established once at cold boot via an initial block and are NOT wiped by the
+    // warm rst_n pulses the verification environment injects (JTAG reset-recovery
+    // coverage). Only the FSM control state resets on rst_n. This makes the
+    // write-back policy reset-safe: a line written dirty before a warm reset is
+    // still present (and authoritative) afterwards, so committed writes are not
+    // silently dropped and post-reset reads hit in L2 rather than refilling stale
+    // data from downstream. NOTE for silicon: real valid bits need a power-on
+    // reset to flash-invalidate at true cold boot; this behavioral model relies
+    // on the initial block for that, matching axi_sram.v.
     reg [TAG_BITS-1:0]   tag_ram   [0:NUM_SETS-1][0:WAYS-1];
     reg                  valid_ram [0:NUM_SETS-1][0:WAYS-1];
     reg                  dirty_ram [0:NUM_SETS-1][0:WAYS-1];
     reg [DATA_WIDTH-1:0] data_ram  [0:NUM_SETS-1][0:WAYS-1][0:WORDS_PER_LN-1];
     reg [6:0]            plru_ram  [0:NUM_SETS-1];
+
+    // Cold-boot initialization (retention arrays; not reset by warm rst_n).
+    integer cb_s, cb_w;
+    initial begin
+        for (cb_s = 0; cb_s < NUM_SETS; cb_s = cb_s + 1) begin
+            plru_ram[cb_s] = 7'd0;
+            for (cb_w = 0; cb_w < WAYS; cb_w = cb_w + 1) begin
+                valid_ram[cb_s][cb_w] = 1'b0;
+                dirty_ram[cb_s][cb_w] = 1'b0;
+            end
+        end
+    end
 
     // FSM States
     localparam ST_IDLE        = 4'd0;
@@ -365,7 +388,6 @@ module l2_cache_caching #(
     end
 
     // Sequential FSM & Cache Array Updates
-    integer s, w_idx;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state        <= ST_IDLE;
@@ -387,13 +409,11 @@ module l2_cache_caching #(
             evict_addr   <= {ADDR_WIDTH{1'b0}};
             resp_err     <= 2'b00;
 
-            for (s = 0; s < NUM_SETS; s = s + 1) begin
-                plru_ram[s] <= 7'd0;
-                for (w_idx = 0; w_idx < WAYS; w_idx = w_idx + 1) begin
-                    valid_ram[s][w_idx] <= 1'b0;
-                    dirty_ram[s][w_idx] <= 1'b0;
-                end
-            end
+            // NOTE: valid_ram / dirty_ram / plru_ram / tag_ram / data_ram are
+            // retention arrays (see declaration above) and are intentionally NOT
+            // cleared here. Clearing them on a warm rst_n pulse would drop
+            // committed dirty lines before writeback. Cold-boot init is done in
+            // the initial block.
         end else begin
             case (state)
                 ST_IDLE: begin

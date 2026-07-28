@@ -7,10 +7,14 @@
 > 写回前被复位清掉 dirty 行而静默丢失 SRAM-alias 写；write-through 立即透传写，复位无损。
 >
 > **write-back / write-allocate** 实现 `rtl/cache/l2_cache_caching.v`（128 KB 8-way WB/WA
-> NINE、PLRU、dirty eviction）保留在 `SOC_L2_WRITEBACK` 开关之后（默认关闭），仅用于不会
-> 在有未写回 dirty 行时复位的环境。块级单元门槛（`tb/unit/l2/tb_l2.v` 的 16 项 WB 合同）显式
-> 用 `+define+SOC_L2_WRITEBACK` 编译；write-through 路径（含三处 WT 修复）由 `tb/unit/l2/tb_l2_wt.v`
-> 与 SoC 级回归验证。
+> NINE、PLRU、dirty eviction）保留在 `SOC_L2_WRITEBACK` 开关之后（默认关闭）。它同样是
+> **复位安全**的：tag/data/valid/dirty/PLRU 阵列为 retention memory（仅冷启动 `initial`
+> 初始化，warm `rst_n` 脉冲不清），与 SoC SRAM 模型 `axi_sram.v` 一致，因此复位前写入的
+> dirty 行在复位后仍在（且为权威副本），提交写不会丢失、复位后读命中 L2 而非从下游 refill
+> 陈旧数据。块级单元门槛（`tb/unit/l2/tb_l2.v` 的 19 项 WB 合同，含 Test 19 warm-reset
+> 保持）显式用 `+define+SOC_L2_WRITEBACK` 编译；write-through 路径（含三处 WT 修复）由
+> `tb/unit/l2/tb_l2_wt.v` 与 SoC 级回归验证。（silicon 注意：真实 valid 位在真正冷启动需
+> power-on reset 做 flash-invalidate；行为模型用 `initial` 块承担该职责。）
 >
 > 两种实现均为 blocking single-outstanding：对齐 word-INCR 突发（含跨 line，逐 beat
 > 重新查表）正确服务，仅对真正非法请求（非 32 位、非对齐、非 INCR、len>7）返回 `SLVERR`。
@@ -158,7 +162,11 @@ On L2 miss:
 
 ## 6. Reset / Flush
 
-- Reset：valid=0, dirty=0, LRU=0, FSM=IDLE。
+- **冷启动（cold boot）**：`initial` 块置 valid=0, dirty=0, PLRU=0。行为模型用
+  `initial` 承担；silicon 需 power-on reset flash-invalidate valid 位。
+- **warm `rst_n` 脉冲**：仅复位 FSM 控制状态（state=IDLE、beat/fill/evict 计数、
+  latched 请求）。tag/data/valid/dirty/PLRU 阵列为 retention memory，**不清**，与
+  `axi_sram.v` 一致——故 write-back 复位安全，dirty 行跨复位保留。
 - 无 pipeline flush 概念（L2 与 CPU 流水线解耦）。
 - 若 L1 发 CACHE Hit_Writeback_Invalidate → 该行 dirty 数据经由正常 L1→L2 WB 路径进 L2；L2 保留副本。
 
@@ -275,6 +283,13 @@ module l2_cache #(
 
 ## 版本记录
 
+- v1.3 (2026-07-29)：write-back 实现 `l2_cache_caching.v` 现为复位安全。原先在 async
+  `rst_n` 分支清 valid/dirty/PLRU 阵列，warm 复位脉冲会在写回前丢弃 committed dirty 行。
+  改为：阵列为 retention memory（冷启动 `initial` 初始化，warm `rst_n` 不清），仅 FSM 控制
+  状态随 `rst_n` 复位——与 `rtl/perips/axi_sram.v` retention 语义对称。这消除了 DUT 选用
+  write-back 时的静默丢写隐患。`tb/unit/l2/tb_l2.v` 新增 Test 19（写 dirty 行 → 脉冲
+  `rst_n` → 读回，必须 L2 命中返回原值且无下游 refill）。验证：`dut-block-unit-gate` 5/5
+  （L2 19/19 with `+define+SOC_L2_WRITEBACK`），write-through `tb_l2_wt.v` 仍 `WT_TEST_SUCCESS`。
 - v1.2 (2026-07-29)：DUT 默认缓存实现切换为 write-through / no-write-allocate
   (`rtl/cache/l2_cache_wt.v`)。原因：TB 在运行中脉冲异步全局 `rst_n`（JTAG
   reset-recovery 覆盖），write-back L2 会在写回前被复位清掉 dirty 行而静默丢失
