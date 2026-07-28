@@ -457,8 +457,17 @@ with the retention SoC SRAM model (`axi_sram.v`) and removes the silent dropped-
 write liability that motivated the write-through default. `tb/unit/l2/tb_l2.v`
 Test 19 covers write-dirty → warm-reset → L2-hit readback (no downstream refill).
 Verified: `make dut-block-unit-gate` 5/5 (L2 19/19); `tb_l2_wt.v` still passes.
-Write-through remains the default; full SoC write-back signoff (scoreboard SRAM-
-truth model) is a separate effort, not claimed here.
+
+Follow-on (2026-07-29, write-back SoC signoff): write-back is now signed off at SoC
+level via an opt-in `L2_WRITEBACK=1` build switch (UVM/soc_test compile scripts +
+Makefile `uvm`/`phase3-complete`/`soc-smoke`; appends `+define+SOC_L2_WRITEBACK`,
+default unchanged = write-through). The deferred "scoreboard SRAM-truth model" concern
+proved a non-issue: the scoreboard builds its SRAM model from AXI taps upstream of L2
+and never reads physical SRAM, so write-back's deferred downstream writes are invisible
+to it (L2 is the single coherence point and returns dirty on hit). Verified with
+`L2_WRITEBACK=1`: phase3-complete PASS, `soc_bus_stress_test` 0 UVM_ERROR/0 UVM_FATAL,
+soc-smoke PASS, phase2 directed 16/16 incl. `soc_jtag_reset_recovery_test` (async
+`rst_n` pulses — the direct reset-safety validation). Write-through stays the default.
 
 Two defects were fixed to reach
 closure: an ungated per-cycle `$display` in the `l2_cache_caching` FSM was

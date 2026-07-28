@@ -26,7 +26,7 @@ tracked across five dimensions:
 | `apb_axi_dma` | Integrated in `soc_peripheral_subsystem`; legacy ch0 alias works for existing DMA copy/IRQ tests; v2 windows fully functional. | Closed in Phase 4C under single-outstanding AXI contract (direct/SG, error codes, busy protection, W1C, IRQ). Burst/multi-outstanding tracked for future fabric upgrade. | Closed in Phase 4C with unit & firmware gates (`tb_dma.v`, `dma_cpu` firmware, `make dma-cpu-gate`). | CLOSED in Phase 4C (RTL, error policy, busy protection, unit & dma-cpu-gate passed) |
 | `apb_vic` | Integrated as the interrupt controller baseline for the current single-line IRQ + APB VEC_ID dispatch model. | Closed in Phase 4D under single sequential writer state ownership and priority arbitration contract. | Closed in Phase 4D with unit & firmware gates (`tb_vic.v`, `vic_cpu` firmware, `make vic-cpu-gate`). | CLOSED in Phase 4D (RTL single writer, arbitration, nesting, accept, unit & vic-cpu-gate passed) |
 | `apb_uart_16550` | Integrated as UART baseline with TX/RX FIFO (16 default), divisor, loopback, modem pins, RX timeout, FCR reset, and interrupt logic. | Closed in Phase 4E under PC16550D-compatible DUT contract (DLAB, SCR, FCR FIFO/single-byte, RX timeout, IIR priority, MSR delta, byte strobe, VIC IRQ). | Closed in Phase 4E with unit & firmware gates (`tb_uart_16550.v`, `uart_cpu` firmware, `make uart-cpu-gate`). | CLOSED in Phase 4E (RTL hardening, RX timeout, FCR reset, IIR priority, byte strobe, unit & uart-cpu-gate passed) |
-| `l2_cache` | Integrated in DUT. `SOC_L2_CACHING=1` (default) selects the reset-safe **write-through / no-write-allocate** impl `l2_cache_wt` (128 KB, 8-way, caches reads, forwards every write to SRAM, no dirty state). `SOC_L2_WRITEBACK` selects the **write-back / write-allocate** impl `l2_cache_caching` (WB/WA, NINE, pseudo-LRU, dirty eviction), now also reset-safe (retention arrays survive the TB's async `rst_n` pulses, mirroring `axi_sram.v`). | Closed in Phase 4F under current single-outstanding blocking contract. Both impls service aligned word INCR bursts including line-crossing bursts (re-lookup per beat) and return `SLVERR` only for genuinely-illegal requests (non-word size, unaligned, non-INCR, `len>7`). Burst/multi-outstanding tracked for future fabric upgrade. | Closed in Phase 4F with unit & firmware gates (`tb_l2.v` WB contracts, `tb_l2_wt.v` WT fixes, `l2_cpu` firmware, `make l2-cpu-gate`). | CLOSED in Phase 4F (RTL error policy, single-outstanding backpressure, unit & l2-cpu-gate passed; full acceptance incl. `make uvm` clean — 0 UVM_ERROR / 0 SB_RESP). Write-through made the default in a follow-on fix (see Phase 4F note). |
+| `l2_cache` | Integrated in DUT. `SOC_L2_CACHING=1` (default) selects the reset-safe **write-through / no-write-allocate** impl `l2_cache_wt` (128 KB, 8-way, caches reads, forwards every write to SRAM, no dirty state). `SOC_L2_WRITEBACK` selects the **write-back / write-allocate** impl `l2_cache_caching` (WB/WA, NINE, pseudo-LRU, dirty eviction), now also reset-safe (retention arrays survive the TB's async `rst_n` pulses, mirroring `axi_sram.v`). | Closed in Phase 4F under current single-outstanding blocking contract. Both impls service aligned word INCR bursts including line-crossing bursts (re-lookup per beat) and return `SLVERR` only for genuinely-illegal requests (non-word size, unaligned, non-INCR, `len>7`). Burst/multi-outstanding tracked for future fabric upgrade. | Closed in Phase 4F with unit & firmware gates (`tb_l2.v` WB contracts, `tb_l2_wt.v` WT fixes, `l2_cpu` firmware, `make l2-cpu-gate`). | CLOSED in Phase 4F (RTL error policy, single-outstanding backpressure, unit & l2-cpu-gate passed; full acceptance incl. `make uvm` clean — 0 UVM_ERROR / 0 SB_RESP). Write-through made the default in a follow-on fix (see Phase 4F note). Write-back subsequently signed off at SoC level via the opt-in `L2_WRITEBACK=1` build switch: phase3-complete + `soc_bus_stress_test` (0 UVM_ERROR) + phase2 directed 16/16 incl. `soc_jtag_reset_recovery_test`, all green with write-back enabled. |
 
 ## Phase 4A: Readiness Gate And First Hardening
 
@@ -129,9 +129,24 @@ dirty line → pulse `rst_n` → readback must L2-hit with the pre-reset value a
 issue no downstream AR). Verified: `make dut-block-unit-gate` 5/5 (L2 19/19 with
 `+define+SOC_L2_WRITEBACK`); write-through `tb_l2_wt.v` still `WT_TEST_SUCCESS`.
 Write-through remains the DUT default; write-back is opt-in via `SOC_L2_WRITEBACK`.
-Note: full SoC-level write-back signoff (the scoreboard's SRAM-truth model treats
-SRAM as authoritative, which a write-back cache defers until eviction) remains a
-separate, larger effort and is not claimed here.
+
+Follow-on fix (2026-07-29, write-back SoC signoff): write-back is now signed off at
+SoC level, not just block level. Added an opt-in `L2_WRITEBACK=1` build switch to the
+UVM/soc_test compile scripts and the Makefile `uvm`/`phase3-complete`/`soc-smoke`
+recipes (appends `+define+SOC_L2_WRITEBACK`; default unchanged = write-through). The
+concern noted below — "the scoreboard treats SRAM as authoritative, which write-back
+defers" — was investigated and found NOT to hold: `tb/uvm_tb/env/soc_scoreboard.sv`
+builds its SRAM content model entirely from AXI taps UPSTREAM of the L2 (external
+master port for content via `update_sram_model`/`check_sram_read_data`; fabric `s0`
+for responses/DMA) and never reads physical SRAM. Since L2 is the single coherence
+point all masters funnel through and returns dirty data on read hits, the upstream
+model stays consistent regardless of when L2 flushes downstream — no scoreboard change
+needed. Verified with `L2_WRITEBACK=1`: `make phase3-complete` PASS (8 directed +
+CPU/CP0 gate), `make uvm` (soc_bus_stress_test) 0 UVM_ERROR / 0 UVM_FATAL, `make
+soc-smoke` PASS, and the phase2 directed list 16/16 PASS — critically including
+`soc_jtag_reset_recovery_test`, which injects the async `rst_n` pulses that directly
+exercise the reset-safety retention fix. Both L2 policies now pass at SoC level;
+write-through stays the default.
 
 Two defects from the prior rejected attempt were fixed during closure:
 - Removed an ungated per-cycle `$display("[L2 FSM] ...")` debug statement from the
