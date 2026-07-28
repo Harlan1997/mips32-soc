@@ -27,7 +27,17 @@ if [ -d /tool/module ]; then
 fi
 module load vcs
 
+# Opt-in L2 write-back selection (default = reset-safe write-through).
+l2_define_args=()
+if [ "${L2_WRITEBACK:-0}" = "1" ]; then
+    l2_define_args=(+define+SOC_L2_WRITEBACK)
+    echo "L2 policy: write-back (SOC_L2_WRITEBACK)"
+else
+    echo "L2 policy: write-through (default)"
+fi
+
 vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
+    "${l2_define_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
     +incdir+"${SCRIPT_DIR}" \

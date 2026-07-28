@@ -45,8 +45,20 @@ if [ -d /tool/module ]; then
 fi
 module load vcs
 
+# Opt-in L2 write-back selection. Default (unset/0) keeps the reset-safe
+# write-through impl (l2_cache_wt). L2_WRITEBACK=1 appends +define+SOC_L2_WRITEBACK
+# so l2_cache.v selects the write-back/write-allocate impl (l2_cache_caching).
+l2_define_args=()
+if [ "${L2_WRITEBACK:-0}" = "1" ]; then
+    l2_define_args=(+define+SOC_L2_WRITEBACK)
+    echo "L2 policy: write-back (SOC_L2_WRITEBACK)"
+else
+    echo "L2 policy: write-through (default)"
+fi
+
 echo "Compiling UVM Testbench with VCS..."
 vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
+    "${l2_define_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips +incdir+"${ROOT_DIR}"/rtl/cache \
     +incdir+"${SCRIPT_DIR}"/agents +incdir+"${SCRIPT_DIR}"/env +incdir+"${SCRIPT_DIR}"/tests +incdir+"${SCRIPT_DIR}"/seqs +incdir+"${SCRIPT_DIR}"/checkers +incdir+"${SCRIPT_DIR}"/tb_top \
     "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v "${ROOT_DIR}"/rtl/cache/*.v \
