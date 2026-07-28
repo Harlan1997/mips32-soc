@@ -15,6 +15,7 @@
 > 保持）显式用 `+define+SOC_L2_WRITEBACK` 编译；write-through 路径（含三处 WT 修复）由
 > `tb/unit/l2/tb_l2_wt.v` 与 SoC 级回归验证。（silicon 注意：真实 valid 位在真正冷启动需
 > power-on reset 做 flash-invalidate；行为模型用 `initial` 块承担该职责。）
+> **write-back 已于 v1.4 完成 SoC 级签核**（构建开关 `L2_WRITEBACK=1`，详见版本记录）。
 >
 > 两种实现均为 blocking single-outstanding：对齐 word-INCR 突发（含跨 line，逐 beat
 > 重新查表）正确服务，仅对真正非法请求（非 32 位、非对齐、非 INCR、len>7）返回 `SLVERR`。
@@ -283,6 +284,17 @@ module l2_cache #(
 
 ## 版本记录
 
+- v1.4 (2026-07-29)：write-back 完成 **SoC 级签核**（此前仅块级）。新增可选构建开关
+  `L2_WRITEBACK=1`（`run_uvm.sh`/`run_testlist.sh`/`run_regression.sh`/`tb/soc_test/run.sh`
+  与 Makefile `uvm`/`phase3-complete`/`soc-smoke` 目标），置位时向 vcs 追加
+  `+define+SOC_L2_WRITEBACK`；默认不变（write-through）。此前顾虑"scoreboard 以 SRAM 为
+  权威、write-back 延迟写回会破坏它"经核查不成立：scoreboard（`tb/uvm_tb/env/soc_scoreboard.sv`）
+  的 SRAM 内容模型完全构建在 **L2 上游** 的 AXI tap（external master 口做内容
+  `update_sram_model`/`check_sram_read_data`；fabric `s0` 做响应/DMA），从不读物理 SRAM；
+  L2 是所有 master 汇聚的单一 coherence 点且读命中返回 dirty 数据，故上游模型与 L2 何时下刷
+  无关，无需改 scoreboard。以 `L2_WRITEBACK=1` 验证：phase3-complete PASS、`soc_bus_stress_test`
+  0 UVM_ERROR/0 UVM_FATAL、soc-smoke PASS，且 phase2 定向 16 项全 PASS（关键含
+  `soc_jtag_reset_recovery_test`——即注入 async `rst_n` 脉冲、直接验证复位安全修复的用例）。
 - v1.3 (2026-07-29)：write-back 实现 `l2_cache_caching.v` 现为复位安全。原先在 async
   `rst_n` 分支清 valid/dirty/PLRU 阵列，warm 复位脉冲会在写回前丢弃 committed dirty 行。
   改为：阵列为 retention memory（冷启动 `initial` 初始化，warm `rst_n` 不清），仅 FSM 控制
