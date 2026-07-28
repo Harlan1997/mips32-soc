@@ -121,16 +121,20 @@ module l2_cache_caching #(
     localparam PA_WIDTH     = 29;                                      // MIPS 29-bit physical address space
     localparam TAG_BITS     = PA_WIDTH - INDEX_BITS - OFFSET_BITS;    // 15 bits
 
-    // Unsupported upstream request checks
+    // Unsupported upstream request checks.
+    // Only word-size (4B), word-aligned, INCR bursts are supported. Burst LENGTH
+    // is not restricted: the FSM services arbitrary-length INCR bursts (including
+    // those that cross cache lines) by re-looking-up index/tag/hit per beat, so
+    // a len>7 burst is legal and must return OKAY (the SoC fabric issues 9-beat
+    // SRAM-alias bursts). beat_cnt and the address adder are 8-bit / 29-bit wide,
+    // covering the full AXI INCR range (len up to 255).
     wire is_unsupported_aw = (s_awsize != 3'b010) ||
                              (s_awaddr[1:0] != 2'b00) ||
-                             (s_awburst != 2'b01) ||
-                             (s_awlen > 8'd7);
+                             (s_awburst != 2'b01);
 
     wire is_unsupported_ar = (s_arsize != 3'b010) ||
                              (s_araddr[1:0] != 2'b00) ||
-                             (s_arburst != 2'b01) ||
-                             (s_arlen > 8'd7);
+                             (s_arburst != 2'b01);
 
     // Cache Storage Arrays
     reg [TAG_BITS-1:0]   tag_ram   [0:NUM_SETS-1][0:WAYS-1];
@@ -391,9 +395,6 @@ module l2_cache_caching #(
                 end
             end
         end else begin
-`ifdef L2_TRACE
-            $display("[L2 t=%0t] st=%0d beat=%0d hit=%0b hw=%0d idx=%0d woff=%0d pa=0x%0h wlast=%0b s_wv=%0b s_wr=%0b s_bv=%0b", $time, state, beat_cnt, hit, hit_way, req_index, req_wordoff, current_beat_pa, req_wlast, s_wvalid, s_wready, s_bvalid);
-`endif
             case (state)
                 ST_IDLE: begin
                     beat_cnt <= 8'd0;

@@ -173,6 +173,18 @@ module l2_cache_wt #(
     wire hit = valid_ram[beat_index] && (tag_ram[beat_index] == beat_tag);
     wire is_last_beat = (beat_cnt == req_len);
 
+    // Full-line refill helpers, keyed off the CURRENT beat's address (beat_addr)
+    // rather than the burst start. A read burst may cross cache-line boundaries
+    // (the external master issues such bursts), so each beat must resolve to its
+    // own line: a read miss fetches that entire aligned line (every word valid,
+    // not just the requested beats — else a later hit on an un-fetched word
+    // returns stale 0), and a beat crossing into an un-cached line triggers a
+    // fresh refill mid-burst.
+    wire [INDEX_BITS-1:0] line_index = beat_addr[OFFSET_BITS +: INDEX_BITS];
+    wire [TAG_BITS-1:0]   line_tag   = beat_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    wire [ADDR_WIDTH-1:0] line_base  = {beat_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+    reg  [WORD_BITS-1:0]  fill_idx;
+
     // -------- Default AXI drives --------
     always @(*) begin
         s_awready = 1'b0;
@@ -212,19 +224,25 @@ module l2_cache_wt #(
                 s_arready = ~s_awvalid;
             end
             ST_R_HIT_LOOP: begin
-                s_rvalid = 1'b1;
+                // Only present valid read data while the current beat's line is
+                // cached. If a multi-line burst steps into an un-cached line,
+                // hit drops and the FSM diverts to refill it (see sequential).
+                s_rvalid = hit;
                 s_rlast  = is_last_beat;
             end
             ST_R_MISS_AR: begin
+                // Fetch the whole aligned line (WORDS_PER_LN beats), not just
+                // the upstream burst, so the cached line is fully valid.
                 m_arvalid = 1'b1;
+                m_araddr  = line_base;
+                m_arlen   = WORDS_PER_LN - 1;
+                m_arsize  = 3'b010;
+                m_arburst = 2'b01;
             end
             ST_R_MISS_R: begin
-                // Bridge R beats from downstream to upstream verbatim.
-                s_rvalid = m_rvalid;
-                s_rdata  = m_rdata;
-                s_rresp  = m_rresp;
-                s_rlast  = m_rlast;
-                m_rready = s_rready;
+                // Sink the full-line refill from downstream; do not bridge to
+                // upstream here (upstream is served from cache after the fill).
+                m_rready = 1'b1;
             end
             ST_W_ACCEPT: begin
                 s_wready = ~w_buf_valid;
@@ -261,6 +279,7 @@ module l2_cache_wt #(
             req_size    <= 3'h0;
             req_burst   <= 2'h0;
             beat_cnt    <= 8'h0;
+            fill_idx    <= {WORD_BITS{1'b0}};
             w_buf_valid <= 1'b0;
             w_buf_data  <= {DATA_WIDTH{1'b0}};
             w_buf_strb  <= 4'hF;
@@ -294,11 +313,19 @@ module l2_cache_wt #(
                 //--------------------------------------------------
                 ST_R_LOOKUP: begin
                     if (hit) state <= ST_R_HIT_LOOP;
-                    else     state <= ST_R_MISS_AR;
+                    else begin
+                        fill_idx <= {WORD_BITS{1'b0}};
+                        state    <= ST_R_MISS_AR;
+                    end
                 end
                 //--------------------------------------------------
                 ST_R_HIT_LOOP: begin
-                    if (s_rready) begin
+                    if (!hit) begin
+                        // Burst crossed into an un-cached line: refill it first,
+                        // then resume serving this beat (beat_cnt unchanged).
+                        fill_idx <= {WORD_BITS{1'b0}};
+                        state    <= ST_R_MISS_AR;
+                    end else if (s_rready) begin
                         if (is_last_beat) begin
                             beat_cnt <= 8'h0;
                             state    <= ST_IDLE;
@@ -313,19 +340,20 @@ module l2_cache_wt #(
                 end
                 //--------------------------------------------------
                 ST_R_MISS_R: begin
-                    // Snoop each downstream R beat into cache line + forward.
-                    if (m_rvalid && s_rready) begin
-                        data_ram[beat_index][beat_wordoff] <= m_rdata;
-                        if (m_rlast) begin
-                            // Update tag/valid for this line (assumes burst
-                            // stays within one line, which is the case for
-                            // L1 line refills).
-                            tag_ram[beat_index]   <= beat_tag;
-                            valid_ram[beat_index] <= 1'b1;
-                            beat_cnt              <= 8'h0;
-                            state                 <= ST_IDLE;
+                    // Sink the full-line refill: place each beat at its word
+                    // slot in the line. On last beat, validate the line and go
+                    // serve the upstream read from cache (ST_R_HIT_LOOP).
+                    if (m_rvalid) begin
+                        data_ram[line_index][fill_idx] <= m_rdata;
+                        if (m_rlast || (fill_idx == WORDS_PER_LN-1)) begin
+                            tag_ram[line_index]   <= line_tag;
+                            valid_ram[line_index] <= 1'b1;
+                            // Resume serving at the current beat (do NOT reset
+                            // beat_cnt: a mid-burst refill must continue the
+                            // upstream burst where it left off).
+                            state                 <= ST_R_HIT_LOOP;
                         end else begin
-                            beat_cnt <= beat_cnt + 1'b1;
+                            fill_idx <= fill_idx + 1'b1;
                         end
                     end
                 end
@@ -347,7 +375,11 @@ module l2_cache_wt #(
                                 s_wstrb[0] ? s_wdata[7:0]   : data_ram[beat_index][beat_wordoff][7:0]
                             };
                         end
-                        state <= ST_W_AW_FWD;
+                        // Forward AW exactly once per burst. Subsequent beats
+                        // stream straight to the W-forward state; a second AW
+                        // would violate AXI (one AW per burst) and deadlock the
+                        // downstream slave waiting for W beats.
+                        state <= m_aw_sent ? ST_W_W_FWD : ST_W_AW_FWD;
                     end
                 end
                 //--------------------------------------------------
