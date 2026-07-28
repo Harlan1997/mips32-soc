@@ -70,9 +70,18 @@ if [ "$ENABLE_COV" = "1" ]; then
     run_cov_args=(-cm line+cond+fsm+tgl+branch -cm_dir directed.vdb)
 fi
 
+# Opt-in L2 write-back selection (default = reset-safe write-through).
+l2_define_args=()
+if [ "${L2_WRITEBACK:-0}" = "1" ]; then
+    l2_define_args=(+define+SOC_L2_WRITEBACK)
+    echo "L2 policy: write-back (SOC_L2_WRITEBACK)"
+else
+    echo "L2 policy: write-through (default)"
+fi
+
 echo "Compiling UVM testbench with VCS..."
 vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
-    "${compile_cov_args[@]}" \
+    "${compile_cov_args[@]}" "${l2_define_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips +incdir+"${ROOT_DIR}"/rtl/cache \
     +incdir+"${SCRIPT_DIR}"/agents +incdir+"${SCRIPT_DIR}"/env +incdir+"${SCRIPT_DIR}"/tests +incdir+"${SCRIPT_DIR}"/seqs +incdir+"${SCRIPT_DIR}"/checkers +incdir+"${SCRIPT_DIR}"/tb_top \
     "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v "${ROOT_DIR}"/rtl/cache/*.v \
