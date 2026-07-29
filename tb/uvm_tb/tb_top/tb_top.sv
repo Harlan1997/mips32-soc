@@ -75,10 +75,15 @@ import uvm_pkg::*;
         .rready  (PREFIX``_rready) \
     );
 
-`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_axim_protocol_checker,  "fabric_axim",  axim)
-`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_axim2_protocol_checker, "fabric_axim2", axim2)
-`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_axim3_protocol_checker, "fabric_axim3", axim3)
-`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_axim4_protocol_checker, "fabric_axim4", axim4)
+// Phase C.3: the fabric is now a true crossbar (soc_fabric.v), so the legacy
+// shared-trunk nets axim/axim2/axim3/axim4 no longer exist. The meaningful
+// single-outstanding monitoring points are the crossbar's three slave-facing
+// ports (s0=SRAM/L2, s1=APB, s2=FLASH), which remain single-outstanding to match
+// the downstream slaves. Bind one protocol checker per slave port. These use
+// the flat slave-side signals (s0_/s1_/s2_) present on soc_fabric's boundary.
+`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_s0_protocol_checker, "fabric_s0", s0)
+`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_s1_protocol_checker, "fabric_s1", s1)
+`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_s2_protocol_checker, "fabric_s2", s2)
 
 `undef BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER
 
@@ -697,9 +702,14 @@ module tb_top;
     assign axi_vif.rvalid  = mon_s0_rvalid;
     assign axi_vif.rready  = mon_s0_rready;
 
+    // Phase C.3: the crossbar accepts multiple outstanding transactions from a
+    // master across different slaves (concurrent cross-slave traffic). The ext
+    // master legitimately overlaps requests now, so single-outstanding is no
+    // longer the contract at this port. Payload-stability and W-after-AW still
+    // hold and are still checked.
     axi_protocol_checker #(
         .CHECKER_NAME("ext_axi_master"),
-        .REQUIRE_SINGLE_OUTSTANDING(1'b1),
+        .REQUIRE_SINGLE_OUTSTANDING(1'b0),
         .REQUIRE_W_AFTER_AW(1'b1)
     ) u_ext_axi_protocol_checker (
         .clk     (clk),
