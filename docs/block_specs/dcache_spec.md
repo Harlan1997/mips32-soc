@@ -1,6 +1,14 @@
-# L1 数据缓存 (D-Cache) 微架构规格 (v0)
+# L1 数据缓存 (D-Cache) 微架构规格 (v1)
 
-> 状态：v0 草案。作为 Phase C **重写 `rtl/cache/dcache.v`** 的实施基线。当前是 8KB 2-way；升级为 8KB 4-way LRU + VIPT + WB/WA + CACHE 指令 + 单/多 MSHR 非阻塞。
+> 状态：v1 部分实现。已交付 **8 KB 4-way 组相联 + tree-PLRU 替换 + VIPT non-aliasing
+> + WB/WA**（`rtl/cache/dcache.v`：64 sets、index [10:5]、tag [31:11]、每 way 2 KB ≤ 4 KB 页）。
+> 阻塞式单-outstanding miss 处理、uncached (kseg1) 旁路保持不变。单元测试
+> `tb/unit/dcache/tb_dcache.v`（冷 miss/refill/hit、写命中 byte-strobe 合并、写 miss 分配、
+> 4-way 填满不误逐出、PLRU 逐出与 MRU 不被逐出、uncached 旁路）通过，纳入
+> `make dut-block-unit-gate`（[6/6]）。SoC 级 `cache_sweep` 固件与 phase3/uvm/smoke 全绿。
+>
+> **未实现（后续）**：CACHE 指令子集、非阻塞多-MSHR、4-entry store buffer——依赖非阻塞 L2
+> 与 CPU hit-under-miss（见 `docs/refactor_roadmap.md` 依赖链），单独排期。下文为完整 v0 目标。
 
 ---
 
