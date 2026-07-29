@@ -1,14 +1,4 @@
 {
-  "EXCL-UVM-0001": {
-    "id": "EXCL-UVM-0001",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "uvm",
-    "target": "MODULE: axi_arbiter_2x1",
-    "metric": "all",
-    "rationale": "Audited uncovered objects in uvm module axi_arbiter_2x1 under current single-outstanding RTL verification contract.",
-    "evidence": "URG dump verified uncovered objects in MODULE: axi_arbiter_2x1.",
-    "rule_count": 225
-  },
   "EXCL-UVM-0002": {
     "id": "EXCL-UVM-0002",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
@@ -48,16 +38,6 @@
     "rationale": "Audited uncovered objects in uvm module mips_if_stage under current single-outstanding RTL verification contract.",
     "evidence": "URG dump verified uncovered objects in MODULE: mips_if_stage.",
     "rule_count": 10
-  },
-  "EXCL-UVM-0006": {
-    "id": "EXCL-UVM-0006",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "uvm",
-    "target": "MODULE: axi_decoder_1x3",
-    "metric": "all",
-    "rationale": "Audited uncovered objects in uvm module axi_decoder_1x3 under current single-outstanding RTL verification contract.",
-    "evidence": "URG dump verified uncovered objects in MODULE: axi_decoder_1x3.",
-    "rule_count": 423
   },
   "EXCL-UVM-0007": {
     "id": "EXCL-UVM-0007",
@@ -259,16 +239,6 @@
     "evidence": "URG dump verified uncovered objects in MODULE: mips_id_ex_reg.",
     "rule_count": 4
   },
-  "EXCL-UVM-0027": {
-    "id": "EXCL-UVM-0027",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "uvm",
-    "target": "MODULE: axi_arbiter_2x1_full",
-    "metric": "all",
-    "rationale": "Audited uncovered objects in uvm module axi_arbiter_2x1_full under current single-outstanding RTL verification contract.",
-    "evidence": "URG dump verified uncovered objects in MODULE: axi_arbiter_2x1_full.",
-    "rule_count": 476
-  },
   "EXCL-UVM-0028": {
     "id": "EXCL-UVM-0028",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
@@ -349,16 +319,6 @@
     "evidence": "URG dump verified uncovered objects in MODULE: soc_top.",
     "rule_count": 11
   },
-  "EXCL-PROD-0036": {
-    "id": "EXCL-PROD-0036",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "prod",
-    "target": "MODULE: axi_arbiter_2x1",
-    "metric": "all",
-    "rationale": "Audited uncovered objects in prod module axi_arbiter_2x1 under current single-outstanding RTL verification contract.",
-    "evidence": "URG dump verified uncovered objects in MODULE: axi_arbiter_2x1.",
-    "rule_count": 224
-  },
   "EXCL-PROD-0037": {
     "id": "EXCL-PROD-0037",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
@@ -398,16 +358,6 @@
     "rationale": "Audited uncovered objects in prod module mips_if_stage under current single-outstanding RTL verification contract.",
     "evidence": "URG dump verified uncovered objects in MODULE: mips_if_stage.",
     "rule_count": 10
-  },
-  "EXCL-PROD-0041": {
-    "id": "EXCL-PROD-0041",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "prod",
-    "target": "MODULE: axi_decoder_1x3",
-    "metric": "all",
-    "rationale": "Audited uncovered objects in prod module axi_decoder_1x3 under current single-outstanding RTL verification contract.",
-    "evidence": "URG dump verified uncovered objects in MODULE: axi_decoder_1x3.",
-    "rule_count": 364
   },
   "EXCL-PROD-0042": {
     "id": "EXCL-PROD-0042",
@@ -648,16 +598,6 @@
     "rationale": "Audited uncovered objects in prod module mips_id_ex_reg under current single-outstanding RTL verification contract.",
     "evidence": "URG dump verified uncovered objects in MODULE: mips_id_ex_reg.",
     "rule_count": 4
-  },
-  "EXCL-PROD-0066": {
-    "id": "EXCL-PROD-0066",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "prod",
-    "target": "MODULE: axi_arbiter_2x1_full",
-    "metric": "all",
-    "rationale": "Audited uncovered objects in prod module axi_arbiter_2x1_full under current single-outstanding RTL verification contract.",
-    "evidence": "URG dump verified uncovered objects in MODULE: axi_arbiter_2x1_full.",
-    "rule_count": 479
   },
   "EXCL-PROD-0067": {
     "id": "EXCL-PROD-0067",
