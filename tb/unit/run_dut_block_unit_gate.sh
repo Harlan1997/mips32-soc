@@ -17,7 +17,7 @@ export LM_LICENSE_FILE=${LM_LICENSE_FILE:-2700@localhost}
 mkdir -p "${RUN_ROOT}"
 
 echo "========================================================================"
-echo " Running DUT Block Unit Gate (6 Blocks)"
+echo " Running DUT Block Unit Gate (7 Blocks)"
 echo " Run Root: ${RUN_ROOT}"
 echo "========================================================================"
 
@@ -140,9 +140,27 @@ else
     FAILED=1
 fi
 
+# 7. icache (L1 I-cache, 4-way + tree-PLRU)
+echo "--- [7/7] Running L1 I-Cache Unit Test ---"
+IC_DIR="${RUN_ROOT}/icache"
+mkdir -p "${IC_DIR}"
+(
+    cd "${IC_DIR}"
+    vcs -full64 -sverilog -timescale=1ns/1ps \
+        "${ROOT_DIR}/rtl/cache/icache.v" "${ROOT_DIR}/tb/unit/icache/tb_icache.v" \
+        -l compile.log
+    ./simv -l sim.log
+)
+if grep -q "REGRESSION_TEST_SUCCESS icache" "${IC_DIR}/sim.log"; then
+    echo "ICACHE: PASS"
+else
+    echo "ICACHE: FAIL"
+    FAILED=1
+fi
+
 echo "======================================================================--"
 if [ "$FAILED" -eq 0 ]; then
-    echo " DUT Block Unit Gate Passed (6/6)"
+    echo " DUT Block Unit Gate Passed (7/7)"
     echo "======================================================================--"
     exit 0
 else
