@@ -542,3 +542,24 @@ Honest scope / non-claims:
   `tb/coverage/manifest.json`, `exclusion_manifest.json`, and the `.el` files. A
   full coverage regeneration is separate (belongs to the parked coverage-closure
   effort); the pre-existing manifest/.el audit desync is unchanged by this work.
+
+## Phase C.1: L1 Cache Associativity (D-cache + I-cache)
+
+Status: DELIVERED (functional, blocking single-outstanding contract unchanged).
+
+- L1 D-cache: 8KB 2-way (single-bit LRU) -> 8KB 4-way + tree-PLRU
+  (`rtl/cache/dcache.v`). 64 sets, index [10:5], tag [31:11]. WB/WA and
+  uncached (kseg1) bypass unchanged. Unit test `tb/unit/dcache/tb_dcache.v`.
+- L1 I-cache: 8KB direct-mapped -> 8KB 4-way + tree-PLRU
+  (`rtl/cache/icache.v`). Same geometry; read-only so no writeback/merge.
+  Unit test `tb/unit/icache/tb_icache.v`.
+
+Both use an identical 3-bit tree-PLRU (prefer invalid way, else PLRU victim;
+touch accessed/refilled way to MRU). Interfaces byte-identical, so `mips_core.v`
+is unchanged. Verified: dut-block-unit-gate 7/7 (added DCACHE + ICACHE legs),
+phase3-complete, make uvm, make soc-smoke, and the phase2-complete coverage gate
+(D-cache) all green.
+
+Non-claims: still single-outstanding blocking (no MSHR / hit-under-miss — that
+depends on non-blocking L2 + CPU pipeline scoreboarding, separately sequenced).
+No CACHE-instruction subset, no store buffer, no synth/timing/formal.

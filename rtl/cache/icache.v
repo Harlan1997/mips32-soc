@@ -3,10 +3,10 @@
 // Design:    L1 Instruction Cache
 // Author:    Antigravity
 // Description:
-//   8KB Direct-mapped I-Cache.
-//   Line size: 32 bytes (8 words).
-//   Physical addressing.
-//   AXI4 Master interface (Read-only).
+//   8KB 4-way set-associative I-Cache.
+//   Line size: 32 bytes (8 words). 64 sets.
+//   Physical addressing. Tree pseudo-LRU (PLRU) replacement. Read-only.
+//   AXI4 Master interface (AR and R channels). Single-outstanding blocking.
 // =============================================================================
 
 module icache (
@@ -21,7 +21,6 @@ module icache (
     output wire        cpu_data_ok,
 
     // AXI4 Master Interface (AR and R channels)
-    // AR Channel
     output wire [3:0]  arid,
     output reg  [31:0] araddr,
     output wire [7:0]  arlen,
@@ -32,7 +31,6 @@ module icache (
     output wire [2:0]  arprot,
     output reg         arvalid,
     input  wire        arready,
-    // R Channel
     input  wire [3:0]  rid,
     input  wire [31:0] rdata,
     input  wire [1:0]  rresp,
@@ -47,14 +45,15 @@ module icache (
     assign arsize  = 3'b010;   // 4 bytes per transfer
     assign arburst = 2'b01;    // INCR
     assign arlock  = 2'd0;
-    assign arcache = 4'b0010;  // Normal, non-cacheable (or cacheable if L2 exists)
+    assign arcache = 4'b0010;
     assign arprot  = 3'b100;   // Instruction access
 
     // Cache parameters
-    // 8KB, 32B/line => 256 lines.
-    // Offset: 5 bits [4:0] (Word offset: [4:2])
-    // Index:  8 bits [12:5]
-    // Tag:   19 bits [31:13]
+    // 8KB, 4 ways => 2KB/way. 32B/line => 64 sets/way.
+    // Offset [4:0]  Index [10:5] (6b)  Tag [31:11] (21b)
+    localparam WAYS     = 4;
+    localparam SETS     = 64;
+    localparam TAG_BITS = 21;
 
     // State Machine
     localparam IDLE    = 3'd0;
@@ -67,38 +66,90 @@ module icache (
     // Request buffer
     reg        req_buf_valid;
     reg [31:0] req_buf_addr;
-    
-    wire [7:0]  lookup_index = req_buf_valid ? req_buf_addr[12:5] : cpu_addr[12:5];
-    wire [18:0] lookup_tag   = req_buf_addr[31:13];
+
+    wire [5:0]  lookup_index = req_buf_valid ? req_buf_addr[10:5] : cpu_addr[10:5];
+    wire [20:0] lookup_tag   = req_buf_addr[31:11];
     wire [2:0]  lookup_word  = req_buf_addr[4:2];
 
-    // SRAM arrays (Inference)
-    reg [19:0]  tag_ram  [0:255]; // [19]: valid, [18:0]: tag
-    reg [255:0] data_ram [0:255]; // 32 bytes per line
+    // SRAM arrays (4-way). tag entry = {valid[21], tag[20:0]}
+    reg [TAG_BITS:0] tag_ram  [0:WAYS-1][0:SETS-1];
+    reg [255:0]      data_ram [0:WAYS-1][0:SETS-1];
+    reg [2:0]        plru_ram [0:SETS-1];
 
-    // SRAM outputs
-    reg [19:0]  tag_rdata;
-    reg [255:0] data_rdata;
+    // Registered read-out of the indexed set
+    reg [TAG_BITS:0] tag_rdata  [0:WAYS-1];
+    reg [255:0]      data_rdata [0:WAYS-1];
+    reg [2:0]        plru_rdata;
 
     // Refill buffer
     reg [255:0] refill_buf;
     reg [2:0]   refill_word_cnt;
 
-    // Synchronous Read for SRAM
-    wire sram_read_en = (state == IDLE && cpu_req) || (state == LOOKUP && cpu_req && cpu_addr_ok);
+    // Synchronous read for SRAM (fan out across 4 ways)
+    wire sram_read_en  = (state == IDLE && cpu_req) || (state == LOOKUP && cpu_req && cpu_addr_ok);
     wire sram_write_en = (state == REFILL && rvalid && rlast);
-    
-    wire [7:0] sram_addr = sram_write_en ? req_buf_addr[12:5] : (sram_read_en ? cpu_addr[12:5] : req_buf_addr[12:5]);
+    wire [5:0] sram_addr = sram_write_en ? req_buf_addr[10:5] : (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5]);
 
+    integer ri;
     always @(posedge clk) begin
         if (sram_read_en || sram_write_en) begin
-            tag_rdata  <= tag_ram[sram_addr];
-            data_rdata <= data_ram[sram_addr];
+            for (ri=0; ri<WAYS; ri=ri+1) begin
+                tag_rdata[ri]  <= tag_ram[ri][sram_addr];
+                data_rdata[ri] <= data_ram[ri][sram_addr];
+            end
+            plru_rdata <= plru_ram[sram_addr];
         end
     end
 
-    // Hit detection
-    wire cache_hit = tag_rdata[19] && (tag_rdata[18:0] == lookup_tag);
+    // Hit detection across 4 ways
+    integer wi;
+    reg [WAYS-1:0] way_hit;
+    reg [WAYS-1:0] way_valid;
+    always @(*) begin
+        for (wi=0; wi<WAYS; wi=wi+1) begin
+            way_valid[wi] = tag_rdata[wi][TAG_BITS];
+            way_hit[wi]   = tag_rdata[wi][TAG_BITS] && (tag_rdata[wi][TAG_BITS-1:0] == lookup_tag);
+        end
+    end
+    wire cache_hit = |way_hit;
+    reg [1:0] hit_way;
+    always @(*) begin
+        hit_way = 2'd0;
+        for (wi=0; wi<WAYS; wi=wi+1) if (way_hit[wi]) hit_way = wi[1:0];
+    end
+
+    // Victim selection: prefer invalid way, else tree-PLRU
+    function [1:0] plru_victim;
+        input [2:0] p;
+        begin
+            if (p[0]==1'b0) plru_victim = (p[1]==1'b0) ? 2'd0 : 2'd1;
+            else            plru_victim = (p[2]==1'b0) ? 2'd2 : 2'd3;
+        end
+    endfunction
+    reg [1:0] victim_way;
+    always @(*) begin
+        if      (!way_valid[0]) victim_way = 2'd0;
+        else if (!way_valid[1]) victim_way = 2'd1;
+        else if (!way_valid[2]) victim_way = 2'd2;
+        else if (!way_valid[3]) victim_way = 2'd3;
+        else                    victim_way = plru_victim(plru_rdata);
+    end
+
+    function [2:0] plru_touch;
+        input [2:0] p;
+        input [1:0] w;
+        reg   [2:0] n;
+        begin
+            n = p;
+            case (w)
+                2'd0: begin n[0]=1'b1; n[1]=1'b1; end
+                2'd1: begin n[0]=1'b1; n[1]=1'b0; end
+                2'd2: begin n[0]=1'b0; n[2]=1'b1; end
+                2'd3: begin n[0]=1'b0; n[2]=1'b0; end
+            endcase
+            plru_touch = n;
+        end
+    endfunction
 
     // CPU interface logic
     assign cpu_addr_ok = (state == IDLE) || (state == LOOKUP && cache_hit);
@@ -108,48 +159,31 @@ module icache (
     always @(*) begin
         next_state = state;
         case (state)
-            IDLE: begin
-                if (cpu_req) next_state = LOOKUP;
-            end
+            IDLE:   if (cpu_req) next_state = LOOKUP;
             LOOKUP: begin
                 if (cache_hit) begin
-                    // VCS coverage off
                     if (!cpu_req) next_state = IDLE;
-                    // VCS coverage on
-                end else begin
-                    next_state = MISS;
-                end
+                end else next_state = MISS;
             end
-            MISS: begin
-                if (arready && arvalid) next_state = REFILL;
-            end
-            REFILL: begin
-                if (rvalid && rlast) next_state = IDLE;
-            end
+            MISS:   if (arready && arvalid) next_state = REFILL;
+            REFILL: if (rvalid && rlast) next_state = IDLE;
         endcase
     end
 
     // State Reg & Data Path
+    integer si, sw;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            // VCS coverage off
             state <= IDLE;
-            // VCS coverage on
-            req_buf_valid <= 1'b0;
-            req_buf_addr <= 32'd0;
-            arvalid <= 1'b0;
-            araddr <= 32'd0;
-            rready <= 1'b0;
-            refill_word_cnt <= 3'd0;
-            refill_buf <= 256'd0;
-            
-            // Invalidate all tags
-            for (int i = 0; i < 256; i = i + 1) begin
-                tag_ram[i] <= 20'd0;
+            req_buf_valid <= 1'b0; req_buf_addr <= 32'd0;
+            arvalid <= 1'b0; araddr <= 32'd0; rready <= 1'b0;
+            refill_word_cnt <= 3'd0; refill_buf <= 256'd0;
+            for (si=0; si<SETS; si=si+1) begin
+                plru_ram[si] <= 3'd0;
+                for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+1){1'b0}};
             end
         end else begin
             state <= next_state;
-            
             case (state)
                 IDLE: begin
                     if (cpu_req) begin
@@ -157,99 +191,57 @@ module icache (
                         req_buf_addr  <= cpu_addr;
                     end
                 end
-                
                 LOOKUP: begin
                     if (cache_hit) begin
-                        if (cpu_req) begin
-                            req_buf_addr <= cpu_addr;
-                        end else begin
-                            req_buf_valid <= 1'b0;
-                        end
+                        // accessed way becomes MRU
+                        plru_ram[lookup_index] <= plru_touch(plru_rdata, hit_way);
+                        if (cpu_req) req_buf_addr <= cpu_addr;
+                        else         req_buf_valid <= 1'b0;
                     end else begin
-                        // Cache miss, prepare AXI read request
                         arvalid <= 1'b1;
-                        // Align address to 32-byte boundary
-                        araddr  <= {req_buf_addr[31:5], 5'd0}; 
+                        araddr  <= {req_buf_addr[31:5], 5'd0};
                     end
                 end
-                
                 MISS: begin
                     if (arready && arvalid) begin
-                        arvalid <= 1'b0;
-                        rready  <= 1'b1;
-                        refill_word_cnt <= 3'd0;
+                        arvalid <= 1'b0; rready <= 1'b1; refill_word_cnt <= 3'd0;
                     end
                 end
-                
                 REFILL: begin
                     if (rvalid && rready) begin
-                        // Shift/insert data into refill buffer
-                        case (refill_word_cnt)
-                            3'd0: refill_buf[31:0]    <= rdata;
-                            3'd1: refill_buf[63:32]   <= rdata;
-                            3'd2: refill_buf[95:64]   <= rdata;
-                            3'd3: refill_buf[127:96]  <= rdata;
-                            3'd4: refill_buf[159:128] <= rdata;
-                            3'd5: refill_buf[191:160] <= rdata;
-                            3'd6: refill_buf[223:192] <= rdata;
-                            3'd7: refill_buf[255:224] <= rdata;
-                        endcase
-                        
+                        refill_buf[refill_word_cnt*32 +: 32] <= rdata;
                         refill_word_cnt <= refill_word_cnt + 1'b1;
-                        
-                        if (rlast) begin
-                            rready <= 1'b0;
-                        end
+                        if (rlast) rready <= 1'b0;
                     end
                 end
             endcase
-            
-            // Special fix: on sram_write_en (which is rvalid && rlast),
-            // refill_buf is being updated in the same cycle. So the data_ram update
-            // in the SRAM block needs the final concatenated value.
-            // Let's modify that logic in the SRAM write block instead.
         end
     end
 
-    // Extract correct word for CPU data
+    // Extract correct word for CPU data (from the hit way)
     always @(*) begin
         cpu_rdata = 32'd0;
-        if (state == LOOKUP && cache_hit) begin
-            case (lookup_word)
-                3'd0: cpu_rdata = data_rdata[31:0];
-                3'd1: cpu_rdata = data_rdata[63:32];
-                3'd2: cpu_rdata = data_rdata[95:64];
-                3'd3: cpu_rdata = data_rdata[127:96];
-                3'd4: cpu_rdata = data_rdata[159:128];
-                3'd5: cpu_rdata = data_rdata[191:160];
-                3'd6: cpu_rdata = data_rdata[223:192];
-                3'd7: cpu_rdata = data_rdata[255:224];
-            endcase
-        end
+        if (state == LOOKUP && cache_hit)
+            cpu_rdata = data_rdata[hit_way][lookup_word*32 +: 32];
     end
 
-    // Overwrite the data_ram write logic from above to use the correct full line
+    // Assemble full refilled line (last beat merges combinationally)
     wire [255:0] full_refill_line;
-    assign full_refill_line[31:0]    = (refill_word_cnt == 3'd0) ? rdata : refill_buf[31:0];
-    assign full_refill_line[63:32]   = (refill_word_cnt == 3'd1) ? rdata : refill_buf[63:32];
-    assign full_refill_line[95:64]   = (refill_word_cnt == 3'd2) ? rdata : refill_buf[95:64];
-    assign full_refill_line[127:96]  = (refill_word_cnt == 3'd3) ? rdata : refill_buf[127:96];
-    assign full_refill_line[159:128] = (refill_word_cnt == 3'd4) ? rdata : refill_buf[159:128];
-    assign full_refill_line[191:160] = (refill_word_cnt == 3'd5) ? rdata : refill_buf[191:160];
-    assign full_refill_line[223:192] = (refill_word_cnt == 3'd6) ? rdata : refill_buf[223:192];
-    assign full_refill_line[255:224] = (refill_word_cnt == 3'd7) ? rdata : refill_buf[255:224];
+    genvar g;
+    generate
+        for (g=0; g<8; g=g+1) begin : gen_line
+            assign full_refill_line[g*32 +: 32] =
+                (refill_word_cnt == g[2:0]) ? rdata : refill_buf[g*32 +: 32];
+        end
+    endgenerate
 
+    // Install refilled line into the victim way + mark it MRU
     always @(posedge clk) begin
         if (sram_write_en) begin
-            data_ram[sram_addr] <= full_refill_line;
-            tag_ram[sram_addr]  <= {1'b1, req_buf_addr[31:13]};
+            data_ram[victim_way][sram_addr] <= full_refill_line;
+            tag_ram[victim_way][sram_addr]  <= {1'b1, req_buf_addr[31:11]};
+            plru_ram[sram_addr]             <= plru_touch(plru_rdata, victim_way);
         end
     end
 
-    always @(posedge clk) begin
-//        if (arvalid || arready || rvalid || rready) begin
-//            $display("[%t] ICACHE READ: state=%d, arvalid=%b, arready=%b, araddr=%h, rvalid=%b, rready=%b, cpu_data_ok=%b",
-//                     $time, state, arvalid, arready, araddr, rvalid, rready, cpu_data_ok);
-//        end
-    end
 endmodule
