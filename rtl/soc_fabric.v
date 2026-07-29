@@ -271,795 +271,197 @@ module soc_fabric #(
     input  wire        s2_rvalid
 );
 
-    // Internal cascaded fabric links. These stay private to the fabric boundary.
-    wire [3:0]  axim_awid;
-    wire [31:0] axim_awaddr;
-    wire [7:0]  axim_awlen;
-    wire [2:0]  axim_awsize;
-    wire [1:0]  axim_awburst;
-    wire [1:0]  axim_awlock;
-    wire [3:0]  axim_awcache;
-    wire [2:0]  axim_awprot;
-    wire        axim_awvalid;
-    wire [31:0] axim_wdata;
-    wire [3:0]  axim_wstrb;
-    wire        axim_wlast;
-    wire        axim_wvalid;
-    wire        axim_bready;
-    wire [3:0]  axim_arid;
-    wire [31:0] axim_araddr;
-    wire [7:0]  axim_arlen;
-    wire [2:0]  axim_arsize;
-    wire [1:0]  axim_arburst;
-    wire [1:0]  axim_arlock;
-    wire [3:0]  axim_arcache;
-    wire [2:0]  axim_arprot;
-    wire        axim_arvalid;
-    wire        axim_rready;
-    wire        axim_awready;
-    wire        axim_wready;
-    wire [3:0]  axim_bid;
-    wire [1:0]  axim_bresp;
-    wire        axim_bvalid;
-    wire        axim_arready;
-    wire [3:0]  axim_rid;
-    wire [31:0] axim_rdata;
-    wire [1:0]  axim_rresp;
-    wire        axim_rlast;
-    wire        axim_rvalid;
+    // =========================================================================
+    // Phase C.3: true M x N crossbar replaces the legacy arbiter cascade.
+    // Masters packed: idx0=I$ (m0, read-only), 1=D$ (m1), 2=DMA (m2),
+    // 3=jtag, 4=ext. Slaves: 0=SRAM/L2, 1=APB, 2=FLASH (+ internal DECERR).
+    // ext master is masked off via m_enable when ENABLE_EXT_AXI_MASTER=0.
+    // =========================================================================
+    `include "soc_config.vh"
+    localparam integer NM = 5;
+    localparam integer NS = 3;
 
-    wire [3:0]  axim2_awid;
-    wire [31:0] axim2_awaddr;
-    wire [7:0]  axim2_awlen;
-    wire [2:0]  axim2_awsize;
-    wire [1:0]  axim2_awburst;
-    wire [1:0]  axim2_awlock;
-    wire [3:0]  axim2_awcache;
-    wire [2:0]  axim2_awprot;
-    wire        axim2_awvalid;
-    wire [31:0] axim2_wdata;
-    wire [3:0]  axim2_wstrb;
-    wire        axim2_wlast;
-    wire        axim2_wvalid;
-    wire        axim2_bready;
-    wire [3:0]  axim2_arid;
-    wire [31:0] axim2_araddr;
-    wire [7:0]  axim2_arlen;
-    wire [2:0]  axim2_arsize;
-    wire [1:0]  axim2_arburst;
-    wire [1:0]  axim2_arlock;
-    wire [3:0]  axim2_arcache;
-    wire [2:0]  axim2_arprot;
-    wire        axim2_arvalid;
-    wire        axim2_rready;
-    wire        axim2_awready;
-    wire        axim2_wready;
-    wire [3:0]  axim2_bid;
-    wire [1:0]  axim2_bresp;
-    wire        axim2_bvalid;
-    wire        axim2_arready;
-    wire [3:0]  axim2_rid;
-    wire [31:0] axim2_rdata;
-    wire [1:0]  axim2_rresp;
-    wire        axim2_rlast;
-    wire        axim2_rvalid;
+    wire [NM-1:0] xm_enable = { ENABLE_EXT_AXI_MASTER ? 1'b1 : 1'b0,
+                                1'b1, 1'b1, 1'b1, 1'b1 };
 
-    wire [3:0]  axim3_awid;
-    wire [31:0] axim3_awaddr;
-    wire [7:0]  axim3_awlen;
-    wire [2:0]  axim3_awsize;
-    wire [1:0]  axim3_awburst;
-    wire [1:0]  axim3_awlock;
-    wire [3:0]  axim3_awcache;
-    wire [2:0]  axim3_awprot;
-    wire        axim3_awvalid;
-    wire [31:0] axim3_wdata;
-    wire [3:0]  axim3_wstrb;
-    wire        axim3_wlast;
-    wire        axim3_wvalid;
-    wire        axim3_bready;
-    wire [3:0]  axim3_arid;
-    wire [31:0] axim3_araddr;
-    wire [7:0]  axim3_arlen;
-    wire [2:0]  axim3_arsize;
-    wire [1:0]  axim3_arburst;
-    wire [1:0]  axim3_arlock;
-    wire [3:0]  axim3_arcache;
-    wire [2:0]  axim3_arprot;
-    wire        axim3_arvalid;
-    wire        axim3_rready;
-    wire        axim3_awready;
-    wire        axim3_wready;
-    wire [3:0]  axim3_bid;
-    wire [1:0]  axim3_bresp;
-    wire        axim3_bvalid;
-    wire        axim3_arready;
-    wire [3:0]  axim3_rid;
-    wire [31:0] axim3_rdata;
-    wire [1:0]  axim3_rresp;
-    wire        axim3_rlast;
-    wire        axim3_rvalid;
+    // ---- Pack master request vectors (idx: {ext,jtag,dma,d$,i$}) ----
+    // m0 = I$ is read-only: tie its AW/W to 0.
+    wire [NM*4-1:0]  xm_awid    = { ext_awid,   jtag_awid,   m2_awid,   m1_awid,   4'd0 };
+    wire [NM*32-1:0] xm_awaddr  = { ext_awaddr, jtag_awaddr, m2_awaddr, m1_awaddr, 32'd0 };
+    wire [NM*8-1:0]  xm_awlen   = { ext_awlen,  jtag_awlen,  m2_awlen,  m1_awlen,  8'd0 };
+    wire [NM*3-1:0]  xm_awsize  = { ext_awsize, jtag_awsize, m2_awsize, m1_awsize, 3'd0 };
+    wire [NM*2-1:0]  xm_awburst = { ext_awburst,jtag_awburst,m2_awburst,m1_awburst,2'd0 };
+    wire [NM*2-1:0]  xm_awlock  = { ext_awlock, jtag_awlock, m2_awlock, m1_awlock, 2'd0 };
+    wire [NM*4-1:0]  xm_awcache = { ext_awcache,jtag_awcache,m2_awcache,m1_awcache,4'd0 };
+    wire [NM*3-1:0]  xm_awprot  = { ext_awprot, jtag_awprot, m2_awprot, m1_awprot, 3'd0 };
+    wire [NM*4-1:0]  xm_awqos   = { `SOC_XBAR_QOS_EXT, `SOC_XBAR_QOS_JTAG,
+                                    `SOC_XBAR_QOS_DMA, `SOC_XBAR_QOS_DCACHE,
+                                    `SOC_XBAR_QOS_ICACHE };
+    wire [NM-1:0]    xm_awvalid = { ext_awvalid, jtag_awvalid, m2_awvalid, m1_awvalid, 1'b0 };
+    wire [NM-1:0]    xm_awready;
 
-    wire [3:0]  axim4_awid;
-    wire [31:0] axim4_awaddr;
-    wire [7:0]  axim4_awlen;
-    wire [2:0]  axim4_awsize;
-    wire [1:0]  axim4_awburst;
-    wire [1:0]  axim4_awlock;
-    wire [3:0]  axim4_awcache;
-    wire [2:0]  axim4_awprot;
-    wire        axim4_awvalid;
-    wire [31:0] axim4_wdata;
-    wire [3:0]  axim4_wstrb;
-    wire        axim4_wlast;
-    wire        axim4_wvalid;
-    wire        axim4_bready;
-    wire [3:0]  axim4_arid;
-    wire [31:0] axim4_araddr;
-    wire [7:0]  axim4_arlen;
-    wire [2:0]  axim4_arsize;
-    wire [1:0]  axim4_arburst;
-    wire [1:0]  axim4_arlock;
-    wire [3:0]  axim4_arcache;
-    wire [2:0]  axim4_arprot;
-    wire        axim4_arvalid;
-    wire        axim4_rready;
-    wire        axim4_awready;
-    wire        axim4_wready;
-    wire [3:0]  axim4_bid;
-    wire [1:0]  axim4_bresp;
-    wire        axim4_bvalid;
-    wire        axim4_arready;
-    wire [3:0]  axim4_rid;
-    wire [31:0] axim4_rdata;
-    wire [1:0]  axim4_rresp;
-    wire        axim4_rlast;
-    wire        axim4_rvalid;
+    wire [NM*32-1:0] xm_wdata   = { ext_wdata, jtag_wdata, m2_wdata, m1_wdata, 32'd0 };
+    wire [NM*4-1:0]  xm_wstrb   = { ext_wstrb, jtag_wstrb, m2_wstrb, m1_wstrb, 4'd0 };
+    wire [NM-1:0]    xm_wlast   = { ext_wlast, jtag_wlast, m2_wlast, m1_wlast, 1'b0 };
+    wire [NM-1:0]    xm_wvalid  = { ext_wvalid, jtag_wvalid, m2_wvalid, m1_wvalid, 1'b0 };
+    wire [NM-1:0]    xm_wready;
 
-    axi_arbiter_2x1 u_axi_arbiter (
-        .clk             (clk),
-        .rst_n           (rst_n),
+    wire [NM*4-1:0]  xm_bid;
+    wire [NM*2-1:0]  xm_bresp;
+    wire [NM-1:0]    xm_bvalid;
+    wire [NM-1:0]    xm_bready  = { ext_bready, jtag_bready, m2_bready, m1_bready, 1'b0 };
 
-        .m0_arid         (m0_arid),
-        .m0_araddr       (m0_araddr),
-        .m0_arlen        (m0_arlen),
-        .m0_arsize       (m0_arsize),
-        .m0_arburst      (m0_arburst),
-        .m0_arlock       (m0_arlock),
-        .m0_arcache      (m0_arcache),
-        .m0_arprot       (m0_arprot),
-        .m0_arvalid      (m0_arvalid),
-        .m0_arready      (m0_arready),
-        .m0_rid          (m0_rid),
-        .m0_rdata        (m0_rdata),
-        .m0_rresp        (m0_rresp),
-        .m0_rlast        (m0_rlast),
-        .m0_rvalid       (m0_rvalid),
-        .m0_rready       (m0_rready),
+    wire [NM*4-1:0]  xm_arid    = { ext_arid,   jtag_arid,   m2_arid,   m1_arid,   m0_arid };
+    wire [NM*32-1:0] xm_araddr  = { ext_araddr, jtag_araddr, m2_araddr, m1_araddr, m0_araddr };
+    wire [NM*8-1:0]  xm_arlen   = { ext_arlen,  jtag_arlen,  m2_arlen,  m1_arlen,  m0_arlen };
+    wire [NM*3-1:0]  xm_arsize  = { ext_arsize, jtag_arsize, m2_arsize, m1_arsize, m0_arsize };
+    wire [NM*2-1:0]  xm_arburst = { ext_arburst,jtag_arburst,m2_arburst,m1_arburst,m0_arburst };
+    wire [NM*2-1:0]  xm_arlock  = { ext_arlock, jtag_arlock, m2_arlock, m1_arlock, m0_arlock };
+    wire [NM*4-1:0]  xm_arcache = { ext_arcache,jtag_arcache,m2_arcache,m1_arcache,m0_arcache };
+    wire [NM*3-1:0]  xm_arprot  = { ext_arprot, jtag_arprot, m2_arprot, m1_arprot, m0_arprot };
+    wire [NM*4-1:0]  xm_arqos   = { `SOC_XBAR_QOS_EXT, `SOC_XBAR_QOS_JTAG,
+                                    `SOC_XBAR_QOS_DMA, `SOC_XBAR_QOS_DCACHE,
+                                    `SOC_XBAR_QOS_ICACHE };
+    wire [NM-1:0]    xm_arvalid = { ext_arvalid, jtag_arvalid, m2_arvalid, m1_arvalid, m0_arvalid };
+    wire [NM-1:0]    xm_arready;
 
-        .m1_awid         (m1_awid),
-        .m1_awaddr       (m1_awaddr),
-        .m1_awlen        (m1_awlen),
-        .m1_awsize       (m1_awsize),
-        .m1_awburst      (m1_awburst),
-        .m1_awlock       (m1_awlock),
-        .m1_awcache      (m1_awcache),
-        .m1_awprot       (m1_awprot),
-        .m1_awvalid      (m1_awvalid),
-        .m1_awready      (m1_awready),
-        .m1_wdata        (m1_wdata),
-        .m1_wstrb        (m1_wstrb),
-        .m1_wlast        (m1_wlast),
-        .m1_wvalid       (m1_wvalid),
-        .m1_wready       (m1_wready),
-        .m1_bid          (m1_bid),
-        .m1_bresp        (m1_bresp),
-        .m1_bvalid       (m1_bvalid),
-        .m1_bready       (m1_bready),
-        .m1_arid         (m1_arid),
-        .m1_araddr       (m1_araddr),
-        .m1_arlen        (m1_arlen),
-        .m1_arsize       (m1_arsize),
-        .m1_arburst      (m1_arburst),
-        .m1_arlock       (m1_arlock),
-        .m1_arcache      (m1_arcache),
-        .m1_arprot       (m1_arprot),
-        .m1_arvalid      (m1_arvalid),
-        .m1_arready      (m1_arready),
-        .m1_rid          (m1_rid),
-        .m1_rdata        (m1_rdata),
-        .m1_rresp        (m1_rresp),
-        .m1_rlast        (m1_rlast),
-        .m1_rvalid       (m1_rvalid),
-        .m1_rready       (m1_rready),
+    wire [NM*4-1:0]  xm_rid;
+    wire [NM*32-1:0] xm_rdata;
+    wire [NM*2-1:0]  xm_rresp;
+    wire [NM-1:0]    xm_rlast;
+    wire [NM-1:0]    xm_rvalid;
+    wire [NM-1:0]    xm_rready  = { ext_rready, jtag_rready, m2_rready, m1_rready, m0_rready };
 
-        .s0_awid         (axim_awid),
-        .s0_awaddr       (axim_awaddr),
-        .s0_awlen        (axim_awlen),
-        .s0_awsize       (axim_awsize),
-        .s0_awburst      (axim_awburst),
-        .s0_awlock       (axim_awlock),
-        .s0_awcache      (axim_awcache),
-        .s0_awprot       (axim_awprot),
-        .s0_awvalid      (axim_awvalid),
-        .s0_awready      (axim_awready),
-        .s0_wdata        (axim_wdata),
-        .s0_wstrb        (axim_wstrb),
-        .s0_wlast        (axim_wlast),
-        .s0_wvalid       (axim_wvalid),
-        .s0_wready       (axim_wready),
-        .s0_bid          (axim_bid),
-        .s0_bresp        (axim_bresp),
-        .s0_bvalid       (axim_bvalid),
-        .s0_bready       (axim_bready),
-        .s0_arid         (axim_arid),
-        .s0_araddr       (axim_araddr),
-        .s0_arlen        (axim_arlen),
-        .s0_arsize       (axim_arsize),
-        .s0_arburst      (axim_arburst),
-        .s0_arlock       (axim_arlock),
-        .s0_arcache      (axim_arcache),
-        .s0_arprot       (axim_arprot),
-        .s0_arvalid      (axim_arvalid),
-        .s0_arready      (axim_arready),
-        .s0_rid          (axim_rid),
-        .s0_rdata        (axim_rdata),
-        .s0_rresp        (axim_rresp),
-        .s0_rlast        (axim_rlast),
-        .s0_rvalid       (axim_rvalid),
-        .s0_rready       (axim_rready)
-    );
-    axi_arbiter_2x1_full u_axi_arbiter_2 (
-        .clk             (clk),
-        .rst_n           (rst_n),
+    // ---- Unpack master response vectors back to flat ports ----
+    // idx0 = I$ (read-only)
+    assign m0_arready = xm_arready[0];
+    assign m0_rid     = xm_rid  [0*4 +: 4];
+    assign m0_rdata   = xm_rdata[0*32 +: 32];
+    assign m0_rresp   = xm_rresp[0*2 +: 2];
+    assign m0_rlast   = xm_rlast[0];
+    assign m0_rvalid  = xm_rvalid[0];
+    // idx1 = D$
+    assign m1_awready = xm_awready[1];
+    assign m1_wready  = xm_wready[1];
+    assign m1_bid     = xm_bid  [1*4 +: 4];
+    assign m1_bresp   = xm_bresp[1*2 +: 2];
+    assign m1_bvalid  = xm_bvalid[1];
+    assign m1_arready = xm_arready[1];
+    assign m1_rid     = xm_rid  [1*4 +: 4];
+    assign m1_rdata   = xm_rdata[1*32 +: 32];
+    assign m1_rresp   = xm_rresp[1*2 +: 2];
+    assign m1_rlast   = xm_rlast[1];
+    assign m1_rvalid  = xm_rvalid[1];
+    // idx2 = DMA
+    assign m2_awready = xm_awready[2];
+    assign m2_wready  = xm_wready[2];
+    assign m2_bid     = xm_bid  [2*4 +: 4];
+    assign m2_bresp   = xm_bresp[2*2 +: 2];
+    assign m2_bvalid  = xm_bvalid[2];
+    assign m2_arready = xm_arready[2];
+    assign m2_rid     = xm_rid  [2*4 +: 4];
+    assign m2_rdata   = xm_rdata[2*32 +: 32];
+    assign m2_rresp   = xm_rresp[2*2 +: 2];
+    assign m2_rlast   = xm_rlast[2];
+    assign m2_rvalid  = xm_rvalid[2];
+    // idx3 = jtag
+    assign jtag_awready = xm_awready[3];
+    assign jtag_wready  = xm_wready[3];
+    assign jtag_bid     = xm_bid  [3*4 +: 4];
+    assign jtag_bresp   = xm_bresp[3*2 +: 2];
+    assign jtag_bvalid  = xm_bvalid[3];
+    assign jtag_arready = xm_arready[3];
+    assign jtag_rid     = xm_rid  [3*4 +: 4];
+    assign jtag_rdata   = xm_rdata[3*32 +: 32];
+    assign jtag_rresp   = xm_rresp[3*2 +: 2];
+    assign jtag_rlast   = xm_rlast[3];
+    assign jtag_rvalid  = xm_rvalid[3];
+    // idx4 = ext
+    assign ext_awready = xm_awready[4];
+    assign ext_wready  = xm_wready[4];
+    assign ext_bid     = xm_bid  [4*4 +: 4];
+    assign ext_bresp   = xm_bresp[4*2 +: 2];
+    assign ext_bvalid  = xm_bvalid[4];
+    assign ext_arready = xm_arready[4];
+    assign ext_rid     = xm_rid  [4*4 +: 4];
+    assign ext_rdata   = xm_rdata[4*32 +: 32];
+    assign ext_rresp   = xm_rresp[4*2 +: 2];
+    assign ext_rlast   = xm_rlast[4];
+    assign ext_rvalid  = xm_rvalid[4];
 
-        .m0_arid         (axim_arid),
-        .m0_araddr       (axim_araddr),
-        .m0_arlen        (axim_arlen),
-        .m0_arsize       (axim_arsize),
-        .m0_arburst      (axim_arburst),
-        .m0_arlock       (axim_arlock),
-        .m0_arcache      (axim_arcache),
-        .m0_arprot       (axim_arprot),
-        .m0_arvalid      (axim_arvalid),
-        .m0_arready      (axim_arready),
-        .m0_rid          (axim_rid),
-        .m0_rdata        (axim_rdata),
-        .m0_rresp        (axim_rresp),
-        .m0_rlast        (axim_rlast),
-        .m0_rvalid       (axim_rvalid),
-        .m0_rready       (axim_rready),
+    // ---- Pack slave vectors (idx: {flash,apb,sram}) ----
+    wire [NS*4-1:0]  xs_awid;    wire [NS*32-1:0] xs_awaddr;  wire [NS*8-1:0] xs_awlen;
+    wire [NS*3-1:0]  xs_awsize;  wire [NS*2-1:0]  xs_awburst; wire [NS*2-1:0] xs_awlock;
+    wire [NS*4-1:0]  xs_awcache; wire [NS*3-1:0]  xs_awprot;  wire [NS-1:0]   xs_awvalid;
+    wire [NS-1:0]    xs_awready = { s2_awready, s1_awready, s0_awready };
+    wire [NS*32-1:0] xs_wdata;   wire [NS*4-1:0]  xs_wstrb;   wire [NS-1:0]   xs_wlast;
+    wire [NS-1:0]    xs_wvalid;  wire [NS-1:0]    xs_wready = { s2_wready, s1_wready, s0_wready };
+    wire [NS*4-1:0]  xs_bid   = { s2_bid,   s1_bid,   s0_bid };
+    wire [NS*2-1:0]  xs_bresp = { s2_bresp, s1_bresp, s0_bresp };
+    wire [NS-1:0]    xs_bvalid= { s2_bvalid,s1_bvalid,s0_bvalid };
+    wire [NS-1:0]    xs_bready;
+    wire [NS*4-1:0]  xs_arid;    wire [NS*32-1:0] xs_araddr;  wire [NS*8-1:0] xs_arlen;
+    wire [NS*3-1:0]  xs_arsize;  wire [NS*2-1:0]  xs_arburst; wire [NS*2-1:0] xs_arlock;
+    wire [NS*4-1:0]  xs_arcache; wire [NS*3-1:0]  xs_arprot;  wire [NS-1:0]   xs_arvalid;
+    wire [NS-1:0]    xs_arready = { s2_arready, s1_arready, s0_arready };
+    wire [NS*4-1:0]  xs_rid   = { s2_rid,   s1_rid,   s0_rid };
+    wire [NS*32-1:0] xs_rdata = { s2_rdata, s1_rdata, s0_rdata };
+    wire [NS*2-1:0]  xs_rresp = { s2_rresp, s1_rresp, s0_rresp };
+    wire [NS-1:0]    xs_rlast = { s2_rlast, s1_rlast, s0_rlast };
+    wire [NS-1:0]    xs_rvalid= { s2_rvalid,s1_rvalid,s0_rvalid };
+    wire [NS-1:0]    xs_rready;
 
-        .m0_awid         (axim_awid),
-        .m0_awaddr       (axim_awaddr),
-        .m0_awlen        (axim_awlen),
-        .m0_awsize       (axim_awsize),
-        .m0_awburst      (axim_awburst),
-        .m0_awlock       (axim_awlock),
-        .m0_awcache      (axim_awcache),
-        .m0_awprot       (axim_awprot),
-        .m0_awvalid      (axim_awvalid),
-        .m0_awready      (axim_awready),
-        .m0_wdata        (axim_wdata),
-        .m0_wstrb        (axim_wstrb),
-        .m0_wlast        (axim_wlast),
-        .m0_wvalid       (axim_wvalid),
-        .m0_wready       (axim_wready),
-        .m0_bid          (axim_bid),
-        .m0_bresp        (axim_bresp),
-        .m0_bvalid       (axim_bvalid),
-        .m0_bready       (axim_bready),
+    // Unpack slave request vectors to flat slave ports
+    assign s0_awid   = xs_awid  [0*4 +:4];  assign s1_awid   = xs_awid  [1*4 +:4];  assign s2_awid   = xs_awid  [2*4 +:4];
+    assign s0_awaddr = xs_awaddr[0*32+:32]; assign s1_awaddr = xs_awaddr[1*32+:32]; assign s2_awaddr = xs_awaddr[2*32+:32];
+    assign s0_awlen  = xs_awlen [0*8 +:8];  assign s1_awlen  = xs_awlen [1*8 +:8];  assign s2_awlen  = xs_awlen [2*8 +:8];
+    assign s0_awsize = xs_awsize[0*3 +:3];  assign s1_awsize = xs_awsize[1*3 +:3];  assign s2_awsize = xs_awsize[2*3 +:3];
+    assign s0_awburst= xs_awburst[0*2+:2];  assign s1_awburst= xs_awburst[1*2+:2];  assign s2_awburst= xs_awburst[2*2+:2];
+    assign s0_awlock = xs_awlock[0*2 +:2];  assign s1_awlock = xs_awlock[1*2 +:2];  assign s2_awlock = xs_awlock[2*2 +:2];
+    assign s0_awcache= xs_awcache[0*4+:4];  assign s1_awcache= xs_awcache[1*4+:4];  assign s2_awcache= xs_awcache[2*4+:4];
+    assign s0_awprot = xs_awprot[0*3 +:3];  assign s1_awprot = xs_awprot[1*3 +:3];  assign s2_awprot = xs_awprot[2*3 +:3];
+    assign s0_awvalid= xs_awvalid[0];       assign s1_awvalid= xs_awvalid[1];       assign s2_awvalid= xs_awvalid[2];
+    assign s0_wdata  = xs_wdata [0*32+:32]; assign s1_wdata  = xs_wdata [1*32+:32]; assign s2_wdata  = xs_wdata [2*32+:32];
+    assign s0_wstrb  = xs_wstrb [0*4 +:4];  assign s1_wstrb  = xs_wstrb [1*4 +:4];  assign s2_wstrb  = xs_wstrb [2*4 +:4];
+    assign s0_wlast  = xs_wlast [0];        assign s1_wlast  = xs_wlast [1];        assign s2_wlast  = xs_wlast [2];
+    assign s0_wvalid = xs_wvalid[0];        assign s1_wvalid = xs_wvalid[1];        assign s2_wvalid = xs_wvalid[2];
+    assign s0_bready = xs_bready[0];        assign s1_bready = xs_bready[1];        assign s2_bready = xs_bready[2];
+    assign s0_arid   = xs_arid  [0*4 +:4];  assign s1_arid   = xs_arid  [1*4 +:4];  assign s2_arid   = xs_arid  [2*4 +:4];
+    assign s0_araddr = xs_araddr[0*32+:32]; assign s1_araddr = xs_araddr[1*32+:32]; assign s2_araddr = xs_araddr[2*32+:32];
+    assign s0_arlen  = xs_arlen [0*8 +:8];  assign s1_arlen  = xs_arlen [1*8 +:8];  assign s2_arlen  = xs_arlen [2*8 +:8];
+    assign s0_arsize = xs_arsize[0*3 +:3];  assign s1_arsize = xs_arsize[1*3 +:3];  assign s2_arsize = xs_arsize[2*3 +:3];
+    assign s0_arburst= xs_arburst[0*2+:2];  assign s1_arburst= xs_arburst[1*2+:2];  assign s2_arburst= xs_arburst[2*2+:2];
+    assign s0_arlock = xs_arlock[0*2 +:2];  assign s1_arlock = xs_arlock[1*2 +:2];  assign s2_arlock = xs_arlock[2*2 +:2];
+    assign s0_arcache= xs_arcache[0*4+:4];  assign s1_arcache= xs_arcache[1*4+:4];  assign s2_arcache= xs_arcache[2*4+:4];
+    assign s0_arprot = xs_arprot[0*3 +:3];  assign s1_arprot = xs_arprot[1*3 +:3];  assign s2_arprot = xs_arprot[2*3 +:3];
+    assign s0_arvalid= xs_arvalid[0];       assign s1_arvalid= xs_arvalid[1];       assign s2_arvalid= xs_arvalid[2];
+    assign s0_rready = xs_rready[0];        assign s1_rready = xs_rready[1];        assign s2_rready = xs_rready[2];
 
-        .m1_arid         (m2_arid),
-        .m1_araddr       (m2_araddr),
-        .m1_arlen        (m2_arlen),
-        .m1_arsize       (m2_arsize),
-        .m1_arburst      (m2_arburst),
-        .m1_arlock       (m2_arlock),
-        .m1_arcache      (m2_arcache),
-        .m1_arprot       (m2_arprot),
-        .m1_arvalid      (m2_arvalid),
-        .m1_arready      (m2_arready),
-        .m1_rid          (m2_rid),
-        .m1_rdata        (m2_rdata),
-        .m1_rresp        (m2_rresp),
-        .m1_rlast        (m2_rlast),
-        .m1_rvalid       (m2_rvalid),
-        .m1_rready       (m2_rready),
-
-        .m1_awid         (m2_awid),
-        .m1_awaddr       (m2_awaddr),
-        .m1_awlen        (m2_awlen),
-        .m1_awsize       (m2_awsize),
-        .m1_awburst      (m2_awburst),
-        .m1_awlock       (m2_awlock),
-        .m1_awcache      (m2_awcache),
-        .m1_awprot       (m2_awprot),
-        .m1_awvalid      (m2_awvalid),
-        .m1_awready      (m2_awready),
-        .m1_wdata        (m2_wdata),
-        .m1_wstrb        (m2_wstrb),
-        .m1_wlast        (m2_wlast),
-        .m1_wvalid       (m2_wvalid),
-        .m1_wready       (m2_wready),
-        .m1_bid          (m2_bid),
-        .m1_bresp        (m2_bresp),
-        .m1_bvalid       (m2_bvalid),
-        .m1_bready       (m2_bready),
-
-        .s0_awid         (axim2_awid),
-        .s0_awaddr       (axim2_awaddr),
-        .s0_awlen        (axim2_awlen),
-        .s0_awsize       (axim2_awsize),
-        .s0_awburst      (axim2_awburst),
-        .s0_awlock       (axim2_awlock),
-        .s0_awcache      (axim2_awcache),
-        .s0_awprot       (axim2_awprot),
-        .s0_awvalid      (axim2_awvalid),
-        .s0_awready      (axim2_awready),
-        .s0_wdata        (axim2_wdata),
-        .s0_wstrb        (axim2_wstrb),
-        .s0_wlast        (axim2_wlast),
-        .s0_wvalid       (axim2_wvalid),
-        .s0_wready       (axim2_wready),
-        .s0_bid          (axim2_bid),
-        .s0_bresp        (axim2_bresp),
-        .s0_bvalid       (axim2_bvalid),
-        .s0_bready       (axim2_bready),
-        .s0_arid         (axim2_arid),
-        .s0_araddr       (axim2_araddr),
-        .s0_arlen        (axim2_arlen),
-        .s0_arsize       (axim2_arsize),
-        .s0_arburst      (axim2_arburst),
-        .s0_arlock       (axim2_arlock),
-        .s0_arcache      (axim2_arcache),
-        .s0_arprot       (axim2_arprot),
-        .s0_arvalid      (axim2_arvalid),
-        .s0_arready      (axim2_arready),
-        .s0_rid          (axim2_rid),
-        .s0_rdata        (axim2_rdata),
-        .s0_rresp        (axim2_rresp),
-        .s0_rlast        (axim2_rlast),
-        .s0_rvalid       (axim2_rvalid),
-        .s0_rready       (axim2_rready)
-    );
-
-    axi_arbiter_2x1_full u_axi_arbiter_3 (
-        .clk             (clk),
-        .rst_n           (rst_n),
-
-        .m0_arid         (axim2_arid),
-        .m0_araddr       (axim2_araddr),
-        .m0_arlen        (axim2_arlen),
-        .m0_arsize       (axim2_arsize),
-        .m0_arburst      (axim2_arburst),
-        .m0_arlock       (axim2_arlock),
-        .m0_arcache      (axim2_arcache),
-        .m0_arprot       (axim2_arprot),
-        .m0_arvalid      (axim2_arvalid),
-        .m0_arready      (axim2_arready),
-        .m0_rid          (axim2_rid),
-        .m0_rdata        (axim2_rdata),
-        .m0_rresp        (axim2_rresp),
-        .m0_rlast        (axim2_rlast),
-        .m0_rvalid       (axim2_rvalid),
-        .m0_rready       (axim2_rready),
-
-        .m0_awid         (axim2_awid),
-        .m0_awaddr       (axim2_awaddr),
-        .m0_awlen        (axim2_awlen),
-        .m0_awsize       (axim2_awsize),
-        .m0_awburst      (axim2_awburst),
-        .m0_awlock       (axim2_awlock),
-        .m0_awcache      (axim2_awcache),
-        .m0_awprot       (axim2_awprot),
-        .m0_awvalid      (axim2_awvalid),
-        .m0_awready      (axim2_awready),
-        .m0_wdata        (axim2_wdata),
-        .m0_wstrb        (axim2_wstrb),
-        .m0_wlast        (axim2_wlast),
-        .m0_wvalid       (axim2_wvalid),
-        .m0_wready       (axim2_wready),
-        .m0_bid          (axim2_bid),
-        .m0_bresp        (axim2_bresp),
-        .m0_bvalid       (axim2_bvalid),
-        .m0_bready       (axim2_bready),
-
-        .m1_arid         (jtag_arid),
-        .m1_araddr       (jtag_araddr),
-        .m1_arlen        (jtag_arlen),
-        .m1_arsize       (jtag_arsize),
-        .m1_arburst      (jtag_arburst),
-        .m1_arlock       (jtag_arlock),
-        .m1_arcache      (jtag_arcache),
-        .m1_arprot       (jtag_arprot),
-        .m1_arvalid      (jtag_arvalid),
-        .m1_arready      (jtag_arready),
-        .m1_rid          (jtag_rid),
-        .m1_rdata        (jtag_rdata),
-        .m1_rresp        (jtag_rresp),
-        .m1_rlast        (jtag_rlast),
-        .m1_rvalid       (jtag_rvalid),
-        .m1_rready       (jtag_rready),
-
-        .m1_awid         (jtag_awid),
-        .m1_awaddr       (jtag_awaddr),
-        .m1_awlen        (jtag_awlen),
-        .m1_awsize       (jtag_awsize),
-        .m1_awburst      (jtag_awburst),
-        .m1_awlock       (jtag_awlock),
-        .m1_awcache      (jtag_awcache),
-        .m1_awprot       (jtag_awprot),
-        .m1_awvalid      (jtag_awvalid),
-        .m1_awready      (jtag_awready),
-        .m1_wdata        (jtag_wdata),
-        .m1_wstrb        (jtag_wstrb),
-        .m1_wlast        (jtag_wlast),
-        .m1_wvalid       (jtag_wvalid),
-        .m1_wready       (jtag_wready),
-        .m1_bid          (jtag_bid),
-        .m1_bresp        (jtag_bresp),
-        .m1_bvalid       (jtag_bvalid),
-        .m1_bready       (jtag_bready),
-
-        .s0_awid         (axim3_awid),
-        .s0_awaddr       (axim3_awaddr),
-        .s0_awlen        (axim3_awlen),
-        .s0_awsize       (axim3_awsize),
-        .s0_awburst      (axim3_awburst),
-        .s0_awlock       (axim3_awlock),
-        .s0_awcache      (axim3_awcache),
-        .s0_awprot       (axim3_awprot),
-        .s0_awvalid      (axim3_awvalid),
-        .s0_awready      (axim3_awready),
-        .s0_wdata        (axim3_wdata),
-        .s0_wstrb        (axim3_wstrb),
-        .s0_wlast        (axim3_wlast),
-        .s0_wvalid       (axim3_wvalid),
-        .s0_wready       (axim3_wready),
-        .s0_bid          (axim3_bid),
-        .s0_bresp        (axim3_bresp),
-        .s0_bvalid       (axim3_bvalid),
-        .s0_bready       (axim3_bready),
-        .s0_arid         (axim3_arid),
-        .s0_araddr       (axim3_araddr),
-        .s0_arlen        (axim3_arlen),
-        .s0_arsize       (axim3_arsize),
-        .s0_arburst      (axim3_arburst),
-        .s0_arlock       (axim3_arlock),
-        .s0_arcache      (axim3_arcache),
-        .s0_arprot       (axim3_arprot),
-        .s0_arvalid      (axim3_arvalid),
-        .s0_arready      (axim3_arready),
-        .s0_rid          (axim3_rid),
-        .s0_rdata        (axim3_rdata),
-        .s0_rresp        (axim3_rresp),
-        .s0_rlast        (axim3_rlast),
-        .s0_rvalid       (axim3_rvalid),
-        .s0_rready       (axim3_rready)
-    );
-
-    generate
-    if (ENABLE_EXT_AXI_MASTER) begin : g_ext_axi_master
-    axi_arbiter_2x1_full u_axi_arbiter_4 (
-        .clk             (clk),
-        .rst_n           (rst_n),
-
-        .m0_arid         (axim3_arid),
-        .m0_araddr       (axim3_araddr),
-        .m0_arlen        (axim3_arlen),
-        .m0_arsize       (axim3_arsize),
-        .m0_arburst      (axim3_arburst),
-        .m0_arlock       (axim3_arlock),
-        .m0_arcache      (axim3_arcache),
-        .m0_arprot       (axim3_arprot),
-        .m0_arvalid      (axim3_arvalid),
-        .m0_arready      (axim3_arready),
-        .m0_rid          (axim3_rid),
-        .m0_rdata        (axim3_rdata),
-        .m0_rresp        (axim3_rresp),
-        .m0_rlast        (axim3_rlast),
-        .m0_rvalid       (axim3_rvalid),
-        .m0_rready       (axim3_rready),
-
-        .m0_awid         (axim3_awid),
-        .m0_awaddr       (axim3_awaddr),
-        .m0_awlen        (axim3_awlen),
-        .m0_awsize       (axim3_awsize),
-        .m0_awburst      (axim3_awburst),
-        .m0_awlock       (axim3_awlock),
-        .m0_awcache      (axim3_awcache),
-        .m0_awprot       (axim3_awprot),
-        .m0_awvalid      (axim3_awvalid),
-        .m0_awready      (axim3_awready),
-        .m0_wdata        (axim3_wdata),
-        .m0_wstrb        (axim3_wstrb),
-        .m0_wlast        (axim3_wlast),
-        .m0_wvalid       (axim3_wvalid),
-        .m0_wready       (axim3_wready),
-        .m0_bid          (axim3_bid),
-        .m0_bresp        (axim3_bresp),
-        .m0_bvalid       (axim3_bvalid),
-        .m0_bready       (axim3_bready),
-
-        .m1_arid         (ext_arid),
-        .m1_araddr       (ext_araddr),
-        .m1_arlen        (ext_arlen),
-        .m1_arsize       (ext_arsize),
-        .m1_arburst      (ext_arburst),
-        .m1_arlock       (ext_arlock),
-        .m1_arcache      (ext_arcache),
-        .m1_arprot       (ext_arprot),
-        .m1_arvalid      (ext_arvalid),
-        .m1_arready      (ext_arready),
-        .m1_rid          (ext_rid),
-        .m1_rdata        (ext_rdata),
-        .m1_rresp        (ext_rresp),
-        .m1_rlast        (ext_rlast),
-        .m1_rvalid       (ext_rvalid),
-        .m1_rready       (ext_rready),
-
-        .m1_awid         (ext_awid),
-        .m1_awaddr       (ext_awaddr),
-        .m1_awlen        (ext_awlen),
-        .m1_awsize       (ext_awsize),
-        .m1_awburst      (ext_awburst),
-        .m1_awlock       (ext_awlock),
-        .m1_awcache      (ext_awcache),
-        .m1_awprot       (ext_awprot),
-        .m1_awvalid      (ext_awvalid),
-        .m1_awready      (ext_awready),
-        .m1_wdata        (ext_wdata),
-        .m1_wstrb        (ext_wstrb),
-        .m1_wlast        (ext_wlast),
-        .m1_wvalid       (ext_wvalid),
-        .m1_wready       (ext_wready),
-        .m1_bid          (ext_bid),
-        .m1_bresp        (ext_bresp),
-        .m1_bvalid       (ext_bvalid),
-        .m1_bready       (ext_bready),
-
-        .s0_awid         (axim4_awid),
-        .s0_awaddr       (axim4_awaddr),
-        .s0_awlen        (axim4_awlen),
-        .s0_awsize       (axim4_awsize),
-        .s0_awburst      (axim4_awburst),
-        .s0_awlock       (axim4_awlock),
-        .s0_awcache      (axim4_awcache),
-        .s0_awprot       (axim4_awprot),
-        .s0_awvalid      (axim4_awvalid),
-        .s0_awready      (axim4_awready),
-        .s0_wdata        (axim4_wdata),
-        .s0_wstrb        (axim4_wstrb),
-        .s0_wlast        (axim4_wlast),
-        .s0_wvalid       (axim4_wvalid),
-        .s0_wready       (axim4_wready),
-        .s0_bid          (axim4_bid),
-        .s0_bresp        (axim4_bresp),
-        .s0_bvalid       (axim4_bvalid),
-        .s0_bready       (axim4_bready),
-        .s0_arid         (axim4_arid),
-        .s0_araddr       (axim4_araddr),
-        .s0_arlen        (axim4_arlen),
-        .s0_arsize       (axim4_arsize),
-        .s0_arburst      (axim4_arburst),
-        .s0_arlock       (axim4_arlock),
-        .s0_arcache      (axim4_arcache),
-        .s0_arprot       (axim4_arprot),
-        .s0_arvalid      (axim4_arvalid),
-        .s0_arready      (axim4_arready),
-        .s0_rid          (axim4_rid),
-        .s0_rdata        (axim4_rdata),
-        .s0_rresp        (axim4_rresp),
-        .s0_rlast        (axim4_rlast),
-        .s0_rvalid       (axim4_rvalid),
-        .s0_rready       (axim4_rready)
-    );
-    end else begin : g_no_ext_axi_master
-        assign axim4_awid     = axim3_awid;
-        assign axim4_awaddr   = axim3_awaddr;
-        assign axim4_awlen    = axim3_awlen;
-        assign axim4_awsize   = axim3_awsize;
-        assign axim4_awburst  = axim3_awburst;
-        assign axim4_awlock   = axim3_awlock;
-        assign axim4_awcache  = axim3_awcache;
-        assign axim4_awprot   = axim3_awprot;
-        assign axim4_awvalid  = axim3_awvalid;
-        assign axim3_awready  = axim4_awready;
-        assign axim4_wdata    = axim3_wdata;
-        assign axim4_wstrb    = axim3_wstrb;
-        assign axim4_wlast    = axim3_wlast;
-        assign axim4_wvalid   = axim3_wvalid;
-        assign axim3_wready   = axim4_wready;
-        assign axim3_bid      = axim4_bid;
-        assign axim3_bresp    = axim4_bresp;
-        assign axim3_bvalid   = axim4_bvalid;
-        assign axim4_bready   = axim3_bready;
-
-        assign axim4_arid     = axim3_arid;
-        assign axim4_araddr   = axim3_araddr;
-        assign axim4_arlen    = axim3_arlen;
-        assign axim4_arsize   = axim3_arsize;
-        assign axim4_arburst  = axim3_arburst;
-        assign axim4_arlock   = axim3_arlock;
-        assign axim4_arcache  = axim3_arcache;
-        assign axim4_arprot   = axim3_arprot;
-        assign axim4_arvalid  = axim3_arvalid;
-        assign axim3_arready  = axim4_arready;
-        assign axim3_rid      = axim4_rid;
-        assign axim3_rdata    = axim4_rdata;
-        assign axim3_rresp    = axim4_rresp;
-        assign axim3_rlast    = axim4_rlast;
-        assign axim3_rvalid   = axim4_rvalid;
-        assign axim4_rready   = axim3_rready;
-
-        assign ext_awready    = 1'b0;
-        assign ext_wready     = 1'b0;
-        assign ext_bid        = 4'd0;
-        assign ext_bresp      = 2'b00;
-        assign ext_bvalid     = 1'b0;
-        assign ext_arready    = 1'b0;
-        assign ext_rid        = 4'd0;
-        assign ext_rdata      = 32'd0;
-        assign ext_rresp      = 2'b00;
-        assign ext_rlast      = 1'b0;
-        assign ext_rvalid     = 1'b0;
-    end
-    endgenerate
-
-    // 1x3 Decoder
-    // Slave 0: SRAM boot window and uncached alias
-    // Slave 1: APB peripherals
-    // Slave 2: SPI flash
-    // Unmapped addresses complete internally with DECERR.
-
-    axi_decoder_1x3 u_axi_decoder (
-        .clk             (clk),
-        .rst_n           (rst_n),
-
-        .m_awid          (axim4_awid),
-        .m_awaddr        (axim4_awaddr),
-        .m_awlen         (axim4_awlen),
-        .m_awsize        (axim4_awsize),
-        .m_awburst       (axim4_awburst),
-        .m_awlock        (axim4_awlock),
-        .m_awcache       (axim4_awcache),
-        .m_awprot        (axim4_awprot),
-        .m_awvalid       (axim4_awvalid),
-        .m_awready       (axim4_awready),
-        .m_wdata         (axim4_wdata),
-        .m_wstrb         (axim4_wstrb),
-        .m_wlast         (axim4_wlast),
-        .m_wvalid        (axim4_wvalid),
-        .m_wready        (axim4_wready),
-        .m_bid           (axim4_bid),
-        .m_bresp         (axim4_bresp),
-        .m_bvalid        (axim4_bvalid),
-        .m_bready        (axim4_bready),
-        .m_arid          (axim4_arid),
-        .m_araddr        (axim4_araddr),
-        .m_arlen         (axim4_arlen),
-        .m_arsize        (axim4_arsize),
-        .m_arburst       (axim4_arburst),
-        .m_arlock        (axim4_arlock),
-        .m_arcache       (axim4_arcache),
-        .m_arprot        (axim4_arprot),
-        .m_arvalid       (axim4_arvalid),
-        .m_arready       (axim4_arready),
-        .m_rid           (axim4_rid),
-        .m_rdata         (axim4_rdata),
-        .m_rresp         (axim4_rresp),
-        .m_rlast         (axim4_rlast),
-        .m_rvalid        (axim4_rvalid),
-        .m_rready        (axim4_rready),
-
-        .s0_awid         (s0_awid),
-        .s0_awaddr       (s0_awaddr),
-        .s0_awlen        (s0_awlen),
-        .s0_awsize       (s0_awsize),
-        .s0_awburst      (s0_awburst),
-        .s0_awlock       (s0_awlock),
-        .s0_awcache      (s0_awcache),
-        .s0_awprot       (s0_awprot),
-        .s0_awvalid      (s0_awvalid),
-        .s0_awready      (s0_awready),
-        .s0_wdata        (s0_wdata),
-        .s0_wstrb        (s0_wstrb),
-        .s0_wlast        (s0_wlast),
-        .s0_wvalid       (s0_wvalid),
-        .s0_wready       (s0_wready),
-        .s0_bid          (s0_bid),
-        .s0_bresp        (s0_bresp),
-        .s0_bvalid       (s0_bvalid),
-        .s0_bready       (s0_bready),
-        .s0_arid         (s0_arid),
-        .s0_araddr       (s0_araddr),
-        .s0_arlen        (s0_arlen),
-        .s0_arsize       (s0_arsize),
-        .s0_arburst      (s0_arburst),
-        .s0_arlock       (s0_arlock),
-        .s0_arcache      (s0_arcache),
-        .s0_arprot       (s0_arprot),
-        .s0_arvalid      (s0_arvalid),
-        .s0_arready      (s0_arready),
-        .s0_rid          (s0_rid),
-        .s0_rdata        (s0_rdata),
-        .s0_rresp        (s0_rresp),
-        .s0_rlast        (s0_rlast),
-        .s0_rvalid       (s0_rvalid),
-        .s0_rready       (s0_rready),
-
-        .s1_awid         (s1_awid),
-        .s1_awaddr       (s1_awaddr),
-        .s1_awlen        (s1_awlen),
-        .s1_awsize       (s1_awsize),
-        .s1_awburst      (s1_awburst),
-        .s1_awlock       (s1_awlock),
-        .s1_awcache      (s1_awcache),
-        .s1_awprot       (s1_awprot),
-        .s1_awvalid      (s1_awvalid),
-        .s1_awready      (s1_awready),
-        .s1_wdata        (s1_wdata),
-        .s1_wstrb        (s1_wstrb),
-        .s1_wlast        (s1_wlast),
-        .s1_wvalid       (s1_wvalid),
-        .s1_wready       (s1_wready),
-        .s1_bid          (s1_bid),
-        .s1_bresp        (s1_bresp),
-        .s1_bvalid       (s1_bvalid),
-        .s1_bready       (s1_bready),
-        .s1_arid         (s1_arid),
-        .s1_araddr       (s1_araddr),
-        .s1_arlen        (s1_arlen),
-        .s1_arsize       (s1_arsize),
-        .s1_arburst      (s1_arburst),
-        .s1_arlock       (s1_arlock),
-        .s1_arcache      (s1_arcache),
-        .s1_arprot       (s1_arprot),
-        .s1_arvalid      (s1_arvalid),
-        .s1_arready      (s1_arready),
-        .s1_rid          (s1_rid),
-        .s1_rdata        (s1_rdata),
-        .s1_rresp        (s1_rresp),
-        .s1_rlast        (s1_rlast),
-        .s1_rvalid       (s1_rvalid),
-        .s1_rready       (s1_rready),
-
-        .s2_awid         (s2_awid),
-        .s2_awaddr       (s2_awaddr),
-        .s2_awlen        (s2_awlen),
-        .s2_awsize       (s2_awsize),
-        .s2_awburst      (s2_awburst),
-        .s2_awlock       (s2_awlock),
-        .s2_awcache      (s2_awcache),
-        .s2_awprot       (s2_awprot),
-        .s2_awvalid      (s2_awvalid),
-        .s2_awready      (s2_awready),
-        .s2_wdata        (s2_wdata),
-        .s2_wstrb        (s2_wstrb),
-        .s2_wlast        (s2_wlast),
-        .s2_wvalid       (s2_wvalid),
-        .s2_wready       (s2_wready),
-        .s2_bid          (s2_bid),
-        .s2_bresp        (s2_bresp),
-        .s2_bvalid       (s2_bvalid),
-        .s2_bready       (s2_bready),
-        .s2_arid         (s2_arid),
-        .s2_araddr       (s2_araddr),
-        .s2_arlen        (s2_arlen),
-        .s2_arsize       (s2_arsize),
-        .s2_arburst      (s2_arburst),
-        .s2_arlock       (s2_arlock),
-        .s2_arcache      (s2_arcache),
-        .s2_arprot       (s2_arprot),
-        .s2_arvalid      (s2_arvalid),
-        .s2_arready      (s2_arready),
-        .s2_rid          (s2_rid),
-        .s2_rdata        (s2_rdata),
-        .s2_rresp        (s2_rresp),
-        .s2_rlast        (s2_rlast),
-        .s2_rvalid       (s2_rvalid),
-        .s2_rready       (s2_rready)
+    axi_crossbar #(
+        .N_M(NM), .N_S(NS), .N_OT(`SOC_XBAR_N_OT),
+        .IDW(4), .AW(32), .DW(32), .QW(4)
+    ) u_xbar (
+        .clk(clk), .rst_n(rst_n), .m_enable(xm_enable),
+        .m_awid(xm_awid), .m_awaddr(xm_awaddr), .m_awlen(xm_awlen), .m_awsize(xm_awsize),
+        .m_awburst(xm_awburst), .m_awlock(xm_awlock), .m_awcache(xm_awcache), .m_awprot(xm_awprot),
+        .m_awqos(xm_awqos), .m_awvalid(xm_awvalid), .m_awready(xm_awready),
+        .m_wdata(xm_wdata), .m_wstrb(xm_wstrb), .m_wlast(xm_wlast), .m_wvalid(xm_wvalid), .m_wready(xm_wready),
+        .m_bid(xm_bid), .m_bresp(xm_bresp), .m_bvalid(xm_bvalid), .m_bready(xm_bready),
+        .m_arid(xm_arid), .m_araddr(xm_araddr), .m_arlen(xm_arlen), .m_arsize(xm_arsize),
+        .m_arburst(xm_arburst), .m_arlock(xm_arlock), .m_arcache(xm_arcache), .m_arprot(xm_arprot),
+        .m_arqos(xm_arqos), .m_arvalid(xm_arvalid), .m_arready(xm_arready),
+        .m_rid(xm_rid), .m_rdata(xm_rdata), .m_rresp(xm_rresp), .m_rlast(xm_rlast),
+        .m_rvalid(xm_rvalid), .m_rready(xm_rready),
+        .s_awid(xs_awid), .s_awaddr(xs_awaddr), .s_awlen(xs_awlen), .s_awsize(xs_awsize),
+        .s_awburst(xs_awburst), .s_awlock(xs_awlock), .s_awcache(xs_awcache), .s_awprot(xs_awprot),
+        .s_awvalid(xs_awvalid), .s_awready(xs_awready),
+        .s_wdata(xs_wdata), .s_wstrb(xs_wstrb), .s_wlast(xs_wlast), .s_wvalid(xs_wvalid), .s_wready(xs_wready),
+        .s_bid(xs_bid), .s_bresp(xs_bresp), .s_bvalid(xs_bvalid), .s_bready(xs_bready),
+        .s_arid(xs_arid), .s_araddr(xs_araddr), .s_arlen(xs_arlen), .s_arsize(xs_arsize),
+        .s_arburst(xs_arburst), .s_arlock(xs_arlock), .s_arcache(xs_arcache), .s_arprot(xs_arprot),
+        .s_arvalid(xs_arvalid), .s_arready(xs_arready),
+        .s_rid(xs_rid), .s_rdata(xs_rdata), .s_rresp(xs_rresp), .s_rlast(xs_rlast),
+        .s_rvalid(xs_rvalid), .s_rready(xs_rready)
     );
 
 endmodule

@@ -143,6 +143,24 @@
 `define SOC_CP0_COMPARE_RESET      32'hFFFF_FFFF
 
 // -----------------------------------------------------------------------------
+// AXI crossbar (Phase C.3)
+// -----------------------------------------------------------------------------
+// Per-slave outstanding depth accepted at the crossbar boundary. Realized
+// end-to-end depth is capped at 1 by today's single-outstanding slaves; the
+// crossbar still accepts up to this many ARs/AWs per slave (ready for a future
+// MSHR L1 / non-blocking L2). Cross-slave concurrency is realized now.
+`define SOC_XBAR_N_OT              4
+// Static per-master QoS class (4-bit). Higher wins per-slave arbitration; ties
+// break round-robin. Rationale: latency-critical CPU load/store first, fetch
+// next, bulk DMA lower, debug/ext lowest. Dynamic per-transaction QoS deferred
+// until masters emit AxQOS (they drive these constants today).
+`define SOC_XBAR_QOS_DCACHE        4'd12   // m1 D$
+`define SOC_XBAR_QOS_ICACHE        4'd8    // m0 I$
+`define SOC_XBAR_QOS_DMA           4'd4    // m2 DMA
+`define SOC_XBAR_QOS_JTAG          4'd2    // jtag
+`define SOC_XBAR_QOS_EXT           4'd1    // ext (verification)
+
+// -----------------------------------------------------------------------------
 // MMU / TLB (Phase B.3 series)
 // -----------------------------------------------------------------------------
 // log2(TLB_ENTRIES). Config1.MMUSize is TLB_ENTRIES-1, sized to fit.
