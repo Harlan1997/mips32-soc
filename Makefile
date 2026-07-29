@@ -75,6 +75,9 @@ l2-cpu-gate:
 dut-block-unit-gate:
 	RUN_ROOT=$(DUT_BLOCK_UNIT_DIR) tb/unit/run_dut_block_unit_gate.sh
 
+fabric-unit-gate:
+	RUN_ROOT=$(BUILD_DIR)/unit_tb/fabric tb/unit/run_fabric_unit_gate.sh
+
 firmware:
 	$(MAKE) -C tb/soc_test/fw OUT_DIR=$(FW_BUILD_DIR) FW_BASE=firmware all
 
