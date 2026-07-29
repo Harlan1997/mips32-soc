@@ -102,9 +102,12 @@ Current status:
   including timer enable, PIC mask enable, PIC STATUS/ACTIVE assertion, timer
   interrupt clear, PIC deassertion, and mask restore. It adds
   `timer_irq_event_cg` and `timer_irq_latency_cg`.
-- Next work item is hardening the remaining fabric behavior with an RTL-level
-  multi-outstanding response model, broader interrupt/exception coverage,
-  richer flash-image traffic, and the remaining peripheral data scoreboards.
+- The RTL-level multi-outstanding fabric is now delivered (see "Phase C.3" below):
+  the single-outstanding arbiter cascade was replaced by a true M×N crossbar with
+  concurrent cross-slave transactions, ID-tagged in-order response routing, QoS
+  arbitration, and per-slave outstanding depth. Remaining fabric-adjacent work:
+  broader interrupt/exception coverage, richer flash-image traffic, and the
+  remaining peripheral data scoreboards.
 
 Exit criteria:
 - RTL and TB use the same contract
@@ -488,3 +491,54 @@ Deliverables:
 - Added product firmware test under `tb/soc_test/fw/tests/l2_cpu/` and `make l2-cpu-gate` top-level entry point.
 - Updated `docs/block_specs/l2_spec.md`, `docs/commercial_dut_block_readiness_plan.md`, and `docs/refactor_roadmap.md`.
 - Documented explicit non-claims: non-blocking L2, MSHR, writeback buffer, multi-outstanding AXI, coherent snoop/directory, ECC/SECDED, formal proof, synthesis/timing, and coverage exclusion maintenance.
+
+## Phase C.3: Multi-Outstanding AXI Crossbar
+
+Status: DELIVERED (functional signoff under the current contract). The legacy
+single-outstanding arbiter cascade (`axi_arbiter_2x1`, `axi_arbiter_2x1_full`,
+`axi_decoder_1x3` — now deleted) is replaced by a true M×N crossbar
+`rtl/axi/axi_crossbar.v`, instantiated inside the `soc_fabric.v` wrapper (flat
+port list and `ENABLE_EXT_AXI_MASTER` param unchanged, so zero blast radius at
+`mips_soc_impl.v`).
+
+Delivered:
+- Concurrent cross-slave transactions: masters hitting different slaves proceed
+  in parallel (the key win over the old shared trunk).
+- Per-master address decode -> target slave (mirrors the old decoder map exactly:
+  SRAM 0x0/0xA0000000, APB 0x40000000, FLASH 0x10000000, else DECERR).
+- Per-slave QoS-priority arbiter (max AxQOS wins) with round-robin tie-break.
+  Static per-master QoS classes in `soc_config.vh` (D$>I$>DMA>jtag>ext).
+- Per-slave outstanding FIFO {master_idx,id,len} routes in-order responses to the
+  origin master; original id passes through (slaves are in-order, so no ID
+  widening needed). AR/AW grant lock holds address-channel payload stable while
+  xVALID && !xREADY.
+- Synthesized DECERR slave (per-master multi-beat DECERR reads + single-beat
+  DECERR write) — preserves legacy semantics without cross-master blocking.
+
+Verification:
+- `make fabric-unit-gate` (3/3): tb_xbar_core (R/W, DECERR, bursts),
+  tb_xbar_qos (QoS priority + RR), tb_xbar_multi_ot (N_OT=4 boundary depth +
+  cross-slave concurrency).
+- SoC regression green with the crossbar: phase2 directed 16/16 (incl.
+  soc_fabric_contract_test, soc_axi_id_sweep_test, soc_axi_overlap_probe_test,
+  soc_jtag_reset_recovery_test, soc_bus_stress_test), phase3-complete, make uvm,
+  make soc-smoke. The overlap-probe checker caught a real AR-payload-stability
+  bug during bring-up, fixed by the grant lock.
+
+Honest scope / non-claims:
+- Per-slave outstanding depth `SOC_XBAR_N_OT=4` is realized at the crossbar
+  BOUNDARY. End-to-end same-slave depth stays capped at 1 by today's single-
+  outstanding L2/APB/flash slaves; same-slave throughput gain awaits a non-
+  blocking slave (future L2 MSHR). Cross-slave concurrency is realized now.
+- QoS is a static per-master class today (masters drive constant AxQOS); dynamic
+  per-transaction QoS is deferred until masters emit AxQOS.
+- No formal proofs (no formal tool in-environment) and no commercial AXI VIP
+  compliance; covered by directed unit tests + self-built protocol checkers +
+  bus stress. No synthesis/timing/lint/CDC closure claim.
+- The verification protocol checkers were re-homed from the old shared-trunk nets
+  onto the three crossbar slave ports (still single-outstanding, matching the
+  slaves); the ext-master checker was relaxed to allow multiple outstanding.
+- Coverage exclusion entries for the three deleted modules were removed from
+  `tb/coverage/manifest.json`, `exclusion_manifest.json`, and the `.el` files. A
+  full coverage regeneration is separate (belongs to the parked coverage-closure
+  effort); the pre-existing manifest/.el audit desync is unchanged by this work.

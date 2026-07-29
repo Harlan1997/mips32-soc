@@ -191,14 +191,14 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] CoreMark L2 hit rate ≥ 80% (L1 miss 的 80% 命中 L2)
 
 ### C.3 多 outstanding AXI Fabric
-- [ ] Crossbar M×N 全连接
-- [ ] Per-master 至少 4 outstanding
-- [ ] 乱序响应 + ID tag 正确 route
-- [ ] QoS 4-bit 仲裁生效
-- [ ] Round-robin 公平性长期无饥饿
-- [ ] 内置 DECERR slave 未映射地址响应
-- [ ] AXI Compliance (VIP or 自建) 通过
-- [ ] Formal：arbitration liveness / deadlock freedom / ID 保序 proven
+- [x] Crossbar M×N 全连接 —— `rtl/axi/axi_crossbar.v`（5 master × 3 slave + 内置 DECERR），任意 master 可达任意 slave，不同 slave 并发。
+- [~] Per-master 至少 4 outstanding —— crossbar 边界按 `SOC_XBAR_N_OT=4` 接受；端到端同-slave 深度仍受当前单-outstanding L2/APB/flash 限制为 1。跨-slave 并发已实现（`tb_xbar_multi_ot` 证明边界深度 4 + 跨-slave 同时在途）。
+- [x] 乱序响应 + ID tag 正确 route —— 每-slave outstanding FIFO 记 {master_idx,id}，按发起顺序回路（真实 slave 按序响应）；原始 id 透传，无需加宽。
+- [x] QoS 4-bit 仲裁生效 —— per-slave arbiter 取最大 AxQOS，平局 round-robin；静态 per-master QoS class（D$>I$>DMA>jtag>ext，`soc_config.vh`）。`tb_xbar_qos` 证明优先级与 RR。动态 per-transaction QoS 待 master 输出 AxQOS 后启用。
+- [x] Round-robin 公平性长期无饥饿 —— 平局 RR 指针每次授权轮转；per-slave FIFO-full 背压不跨 slave 阻塞。`soc_bus_stress_test` 长压通过。
+- [x] 内置 DECERR slave 未映射地址响应 —— 合成 DECERR（多-beat 读 arlen+1、单-beat 写），per-master 不互相阻塞；保持 legacy decoder 语义。
+- [ ] AXI Compliance (VIP or 自建) 通过 —— 无商用 VIP；自建协议 checker（`axi_protocol_checker`）绑定 3 个 slave 口 + ext master，payload 稳定/W-after-AW/单-outstanding(每-slave) 均通过。完整 VIP compliance 待工具。
+- [ ] Formal：arbitration liveness / deadlock freedom / ID 保序 proven —— 无 formal 工具（环境未装）；以定向单元测试 + `soc_bus_stress` 覆盖，未做形式化证明。
 
 ### Gate C Sign-off
 
