@@ -176,11 +176,11 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ## Phase C — 缓存与总线 (Gate C)
 
 ### C.1 L1 升级
-- [ ] I-cache 8KB 4-way VIPT non-aliasing + pseudo-LRU
-- [ ] D-cache 8KB 4-way VIPT + WB/WA + 2 MSHR + 4 store buffer
-- [ ] CACHE 指令子集（I: Index/Hit Invalidate; D: 6 op）
-- [ ] Uncached bypass 正确
-- [ ] AXI 8-beat burst 正确
+- [x] I-cache 8KB 4-way non-aliasing + tree-PLRU —— `rtl/cache/icache.v`（64 sets、index [10:5]、tag [31:11]、物理寻址、只读、阻塞单-outstanding）。unit `tb/unit/icache/tb_icache.v`，`dut-block-unit-gate` [7/7]。
+- [~] D-cache 8KB 4-way WB/WA —— `rtl/cache/dcache.v`（4-way + tree-PLRU + VIPT non-aliasing + WB/WA）已交付；unit `tb/unit/dcache/tb_dcache.v`，`dut-block-unit-gate` [6/7]。**2 MSHR + 4 store buffer 未实现**（依赖非阻塞 L2 + CPU hit-under-miss，单独排期）。
+- [ ] CACHE 指令子集（I: Index/Hit Invalidate; D: 6 op）—— defer。
+- [x] Uncached bypass 正确 —— kseg1 (0xA…) / MMIO (0x4…) 旁路保持；dcache/icache unit + `cache_sweep` 固件覆盖。
+- [x] AXI 8-beat burst 正确 —— refill/writeback 8-beat INCR；unit + SoC 回归覆盖。
 
 ### C.2 L2 新增
 - [ ] DUT wrapper/pass-through 与真实 caching enablement 分开签核：详见
