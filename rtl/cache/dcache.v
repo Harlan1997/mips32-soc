@@ -3,11 +3,11 @@
 // Design:    L1 Data Cache
 // Author:    Antigravity
 // Description:
-//   8KB 2-way set-associative D-Cache.
-//   Line size: 32 bytes (8 words).
-//   Write-back, write-allocate.
-//   LRU replacement.
-//   AXI4 Master interface.
+//   8KB 4-way set-associative D-Cache.
+//   Line size: 32 bytes (8 words). 64 sets.
+//   Write-back, write-allocate. Tree pseudo-LRU (PLRU) replacement.
+//   AXI4 Master interface. Single-outstanding blocking miss handling.
+//   VIPT non-aliasing: index [10:5] lies within the 4KB page offset.
 // =============================================================================
 
 module dcache (
@@ -87,11 +87,11 @@ module dcache (
     assign arprot  = 3'b000;
 
     // Cache parameters
-    // 8KB, 2 ways => 4KB per way.
-    // 32B/line => 128 lines per way.
-    // Offset: [4:0] (5 bits)
-    // Index:  [11:5] (7 bits)
-    // Tag:    [31:12] (20 bits)
+    // 8KB, 4 ways => 2KB per way. 32B/line => 64 lines (sets) per way.
+    // Offset: [4:0] (5 bits)   Index: [10:5] (6 bits)   Tag: [31:11] (21 bits)
+    localparam WAYS     = 4;
+    localparam SETS     = 64;
+    localparam TAG_BITS = 21;
 
     // State Machine
     localparam IDLE           = 4'd0;
@@ -116,56 +116,101 @@ module dcache (
     reg [31:0] req_buf_wdata;
     reg [3:0]  req_buf_be;
 
-    wire [6:0]  lookup_index = req_buf_valid ? req_buf_addr[11:5] : cpu_addr[11:5];
-    wire [19:0] lookup_tag   = req_buf_addr[31:12];
+    wire [5:0]  lookup_index = req_buf_valid ? req_buf_addr[10:5] : cpu_addr[10:5];
+    wire [20:0] lookup_tag   = req_buf_addr[31:11];
     wire [2:0]  lookup_word  = req_buf_addr[4:2];
-    
-    assign uncacheable = (req_buf_valid ? (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA) : (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA));
 
-    // SRAM arrays
-    reg [21:0]  tag_ram_0 [0:127]; // [21]: valid, [20]: dirty, [19:0]: tag
-    reg [21:0]  tag_ram_1 [0:127];
-    reg [255:0] data_ram_0 [0:127];
-    reg [255:0] data_ram_1 [0:127];
-    reg         lru_ram [0:127]; // 0: way 0 is LRU, 1: way 1 is LRU
+    assign uncacheable = (req_buf_valid ? (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA)
+                                        : (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA));
 
-    reg [21:0]  tag_rdata_0, tag_rdata_1;
-    reg [255:0] data_rdata_0, data_rdata_1;
-    reg         lru_rdata;
+    // SRAM arrays (4-way). tag entry = {valid[22], dirty[21], tag[20:0]}
+    reg [TAG_BITS+1:0] tag_ram  [0:WAYS-1][0:SETS-1];
+    reg [255:0]        data_ram [0:WAYS-1][0:SETS-1];
+    reg [2:0]          plru_ram [0:SETS-1];   // tree-PLRU: b0=top, b1=left, b2=right
 
-    // Hit detection
-    wire hit_0 = tag_rdata_0[21] && (tag_rdata_0[19:0] == lookup_tag);
-    wire hit_1 = tag_rdata_1[21] && (tag_rdata_1[19:0] == lookup_tag);
-    wire cache_hit = hit_0 || hit_1;
-    
-    // Victim selection
-    wire victim_way = lru_rdata;
-    wire [21:0] victim_tag = victim_way ? tag_rdata_1 : tag_rdata_0;
-    wire victim_dirty = victim_tag[21] && victim_tag[20];
+    // Registered read-out of the indexed set
+    reg [TAG_BITS+1:0] tag_rdata  [0:WAYS-1];
+    reg [255:0]        data_rdata [0:WAYS-1];
+    reg [2:0]          plru_rdata;
+
+    // Hit detection across 4 ways
+    integer wi;
+    reg [WAYS-1:0] way_hit;
+    reg [WAYS-1:0] way_valid;
+    always @(*) begin
+        for (wi=0; wi<WAYS; wi=wi+1) begin
+            way_valid[wi] = tag_rdata[wi][TAG_BITS+1];
+            way_hit[wi]   = tag_rdata[wi][TAG_BITS+1] &&
+                            (tag_rdata[wi][TAG_BITS-1:0] == lookup_tag);
+        end
+    end
+    wire cache_hit = |way_hit;
+    reg [1:0] hit_way;
+    always @(*) begin
+        hit_way = 2'd0;
+        for (wi=0; wi<WAYS; wi=wi+1) if (way_hit[wi]) hit_way = wi[1:0];
+    end
+
+    // Victim selection: prefer an invalid way, else tree-PLRU.
+    // Tree bits: b0 top (0=>left pair {0,1}, 1=>right pair {2,3}),
+    //            b1 left pair (0=>way0, 1=>way1), b2 right pair (0=>way2,1=>way3).
+    function [1:0] plru_victim;
+        input [2:0] p;
+        begin
+            if (p[0]==1'b0) plru_victim = (p[1]==1'b0) ? 2'd0 : 2'd1;
+            else            plru_victim = (p[2]==1'b0) ? 2'd2 : 2'd3;
+        end
+    endfunction
+
+    reg [1:0] victim_way;
+    always @(*) begin
+        if      (!way_valid[0]) victim_way = 2'd0;
+        else if (!way_valid[1]) victim_way = 2'd1;
+        else if (!way_valid[2]) victim_way = 2'd2;
+        else if (!way_valid[3]) victim_way = 2'd3;
+        else                    victim_way = plru_victim(plru_rdata);
+    end
+
+    wire [TAG_BITS+1:0] victim_tag_entry = tag_rdata[victim_way];
+    wire victim_dirty = victim_tag_entry[TAG_BITS+1] && victim_tag_entry[TAG_BITS];
+
+    // PLRU update: mark accessed way as most-recently-used (point bits away).
+    function [2:0] plru_touch;
+        input [2:0] p;
+        input [1:0] w;
+        reg   [2:0] n;
+        begin
+            n = p;
+            case (w)
+                2'd0: begin n[0]=1'b1; n[1]=1'b1; end
+                2'd1: begin n[0]=1'b1; n[1]=1'b0; end
+                2'd2: begin n[0]=1'b0; n[2]=1'b1; end
+                2'd3: begin n[0]=1'b0; n[2]=1'b0; end
+            endcase
+            plru_touch = n;
+        end
+    endfunction
 
     // Internal buffers for refill and writeback
     reg [255:0] line_buf;
     reg [2:0]   word_cnt;
 
-    wire sram_read_en = (state == IDLE && cpu_req && !uncacheable) || (state == COMPARE && cache_hit && cpu_req && cpu_addr_ok && !uncacheable);
-    wire [6:0] sram_addr = sram_read_en ? cpu_addr[11:5] : req_buf_addr[11:5];
-    
-    wire sram_write_en = (state == COMPARE && cache_hit && req_buf_we && !uncacheable) || (state == REFILL_DATA && rvalid && rlast) || (state == WRITE_MERGE);
+    wire sram_read_en = (state == IDLE && cpu_req && !uncacheable) ||
+                        (state == COMPARE && cache_hit && cpu_req && cpu_addr_ok && !uncacheable);
 
     // CPU handshakes
     assign cpu_addr_ok = (state == IDLE) || (state == COMPARE && cache_hit && !uncacheable);
-    assign cpu_data_ok = (state == COMPARE && cache_hit && !uncacheable) || (state == UC_WRESP && bvalid) || (state == UC_RDATA && rvalid);
+    assign cpu_data_ok = (state == COMPARE && cache_hit && !uncacheable) ||
+                         (state == UC_WRESP && bvalid) || (state == UC_RDATA && rvalid);
 
+    integer ri;
     always @(posedge clk) begin
         if (sram_read_en) begin
-            tag_rdata_0  <= tag_ram_0[sram_addr];
-            tag_rdata_1  <= tag_ram_1[sram_addr];
-            data_rdata_0 <= data_ram_0[sram_addr];
-            data_rdata_1 <= data_ram_1[sram_addr];
-            lru_rdata    <= lru_ram[sram_addr];
-        end else if (state == REFILL_DATA || state == WRITEBACK_DATA) begin
-            // Hold the read data so victim data doesn't change
-            // Actually they don't change unless we write
+            for (ri=0; ri<WAYS; ri=ri+1) begin
+                tag_rdata[ri]  <= tag_ram[ri][cpu_addr[10:5]];
+                data_rdata[ri] <= data_ram[ri][cpu_addr[10:5]];
+            end
+            plru_rdata <= plru_ram[cpu_addr[10:5]];
         end
     end
 
@@ -174,204 +219,108 @@ module dcache (
         next_state = state;
         case (state)
             IDLE: begin
-                if (cpu_req) begin
-                    if (uncacheable) next_state = UC_REQ;
-                    else next_state = COMPARE;
-                end
+                if (cpu_req) next_state = uncacheable ? UC_REQ : COMPARE;
             end
             COMPARE: begin
-                if (cache_hit) begin
-                    next_state = IDLE;
-                end else begin
-                    if (victim_dirty) next_state = WRITEBACK_REQ;
-                    else next_state = REFILL_REQ;
-                end
+                if (cache_hit) next_state = IDLE;
+                else next_state = victim_dirty ? WRITEBACK_REQ : REFILL_REQ;
             end
-            WRITEBACK_REQ: begin
-                if (awready && awvalid) next_state = WRITEBACK_DATA;
-            end
-            WRITEBACK_DATA: begin
-                if (wready && wvalid && wlast) next_state = WRITEBACK_RESP;
-            end
-            WRITEBACK_RESP: begin
-                if (bready && bvalid) next_state = REFILL_REQ;
-            end
-            REFILL_REQ: begin
-                if (arready && arvalid) next_state = REFILL_DATA;
-            end
-            REFILL_DATA: begin
-                if (rvalid && rlast) next_state = WRITE_MERGE;
-            end
-            WRITE_MERGE: begin
-                next_state = IDLE;
-            end
-            UC_REQ: begin
-                if (req_buf_we) next_state = UC_WDATA;
-                else next_state = UC_RDATA;
-            end
-            UC_WDATA: begin
-                if ((!awvalid || awready) && (!wvalid || wready)) next_state = UC_WRESP;
-            end
-            UC_WRESP: begin
-                if (bready && bvalid) next_state = IDLE;
-            end
-            UC_RDATA: begin
-                if (rready && rvalid) next_state = IDLE;
-            end
+            WRITEBACK_REQ:  if (awready && awvalid) next_state = WRITEBACK_DATA;
+            WRITEBACK_DATA: if (wready && wvalid && wlast) next_state = WRITEBACK_RESP;
+            WRITEBACK_RESP: if (bready && bvalid) next_state = REFILL_REQ;
+            REFILL_REQ:     if (arready && arvalid) next_state = REFILL_DATA;
+            REFILL_DATA:    if (rvalid && rlast) next_state = WRITE_MERGE;
+            WRITE_MERGE:    next_state = IDLE;
+            UC_REQ:         next_state = req_buf_we ? UC_WDATA : UC_RDATA;
+            UC_WDATA:       if ((!awvalid || awready) && (!wvalid || wready)) next_state = UC_WRESP;
+            UC_WRESP:       if (bready && bvalid) next_state = IDLE;
+            UC_RDATA:       if (rready && rvalid) next_state = IDLE;
         endcase
     end
 
-    // Line merge for writes
-    wire [255:0] target_line = cache_hit ? (hit_0 ? data_rdata_0 : data_rdata_1) : line_buf;
-    
-    // Mux out the correct 32-bit word from the target line
-    wire [31:0] orig_word = (lookup_word == 3'd0) ? target_line[31:0] :
-                            (lookup_word == 3'd1) ? target_line[63:32] :
-                            (lookup_word == 3'd2) ? target_line[95:64] :
-                            (lookup_word == 3'd3) ? target_line[127:96] :
-                            (lookup_word == 3'd4) ? target_line[159:128] :
-                            (lookup_word == 3'd5) ? target_line[191:160] :
-                            (lookup_word == 3'd6) ? target_line[223:192] :
-                                                    target_line[255:224];
-                                                    
-    // Merge new word based on byte enables
+    // Line merge for writes: target line = hit way's line (hit) or refilled buf (miss)
+    wire [255:0] target_line = cache_hit ? data_rdata[hit_way] : line_buf;
+    wire [31:0] orig_word = target_line[lookup_word*32 +: 32];
     wire [31:0] merged_word;
     assign merged_word[7:0]   = req_buf_be[0] ? req_buf_wdata[7:0]   : orig_word[7:0];
     assign merged_word[15:8]  = req_buf_be[1] ? req_buf_wdata[15:8]  : orig_word[15:8];
     assign merged_word[23:16] = req_buf_be[2] ? req_buf_wdata[23:16] : orig_word[23:16];
     assign merged_word[31:24] = req_buf_be[3] ? req_buf_wdata[31:24] : orig_word[31:24];
 
-    wire [255:0] new_line;
-    assign new_line[31:0]    = (lookup_word == 3'd0 && req_buf_we) ? merged_word : target_line[31:0];
-    assign new_line[63:32]   = (lookup_word == 3'd1 && req_buf_we) ? merged_word : target_line[63:32];
-    assign new_line[95:64]   = (lookup_word == 3'd2 && req_buf_we) ? merged_word : target_line[95:64];
-    assign new_line[127:96]  = (lookup_word == 3'd3 && req_buf_we) ? merged_word : target_line[127:96];
-    assign new_line[159:128] = (lookup_word == 3'd4 && req_buf_we) ? merged_word : target_line[159:128];
-    assign new_line[191:160] = (lookup_word == 3'd5 && req_buf_we) ? merged_word : target_line[191:160];
-    assign new_line[223:192] = (lookup_word == 3'd6 && req_buf_we) ? merged_word : target_line[223:192];
-    assign new_line[255:224] = (lookup_word == 3'd7 && req_buf_we) ? merged_word : target_line[255:224];
+    reg [255:0] new_line;
+    integer nw;
+    always @(*) begin
+        new_line = target_line;
+        if (req_buf_we) new_line[lookup_word*32 +: 32] = merged_word;
+    end
 
     // CPU Read Data
     always @(*) begin
-        cpu_rdata = orig_word; 
+        cpu_rdata = orig_word;
         if (state == UC_RDATA) cpu_rdata = rdata;
     end
 
     // Main Control and SRAM Writes
+    integer si, sw;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            // VCS coverage off
             state <= IDLE;
-            // VCS coverage on
-            req_buf_valid <= 1'b0;
-            req_buf_we <= 1'b0;
-            req_buf_addr <= 32'd0;
-            req_buf_wdata <= 32'd0;
-            req_buf_be <= 4'd0;
-            
-            awvalid <= 1'b0;
-            awaddr <= 32'd0;
-            wvalid <= 1'b0;
-            wlast <= 1'b0;
-            wdata <= 32'd0;
-            wstrb <= 4'hF;
-            bready <= 1'b0;
-            
-            arvalid <= 1'b0;
-            araddr <= 32'd0;
-            rready <= 1'b0;
-            
-            word_cnt <= 3'd0;
-            line_buf <= 256'd0;
-            
-            for (int i = 0; i < 128; i = i + 1) begin
-                tag_ram_0[i] <= 22'd0;
-                tag_ram_1[i] <= 22'd0;
-                lru_ram[i]   <= 1'b0;
+            req_buf_valid <= 1'b0; req_buf_we <= 1'b0;
+            req_buf_addr <= 32'd0; req_buf_wdata <= 32'd0; req_buf_be <= 4'd0;
+            awvalid <= 1'b0; awaddr <= 32'd0;
+            wvalid <= 1'b0; wlast <= 1'b0; wdata <= 32'd0; wstrb <= 4'hF;
+            bready <= 1'b0; arvalid <= 1'b0; araddr <= 32'd0; rready <= 1'b0;
+            word_cnt <= 3'd0; line_buf <= 256'd0;
+            for (si=0; si<SETS; si=si+1) begin
+                plru_ram[si] <= 3'd0;
+                for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+2){1'b0}};
             end
         end else begin
             state <= next_state;
-            
             case (state)
                 IDLE: begin
                     if (cpu_req) begin
-                        req_buf_valid <= 1'b1;
-                        req_buf_we    <= cpu_we;
-                        req_buf_addr  <= cpu_addr;
-                        req_buf_wdata <= cpu_wdata;
+                        req_buf_valid <= 1'b1; req_buf_we <= cpu_we;
+                        req_buf_addr  <= cpu_addr; req_buf_wdata <= cpu_wdata;
                         req_buf_be    <= cpu_be;
                     end
                 end
-                
+
                 UC_REQ: begin
                     if (req_buf_we) begin
-                        awvalid <= 1'b1;
-                        awaddr  <= req_buf_addr;
-                        wvalid  <= 1'b1;
-                        wstrb   <= req_buf_be;
-                        wdata   <= req_buf_wdata;
-                        wlast   <= 1'b1;
+                        awvalid <= 1'b1; awaddr <= req_buf_addr;
+                        wvalid  <= 1'b1; wstrb <= req_buf_be; wdata <= req_buf_wdata; wlast <= 1'b1;
                     end else begin
-                        arvalid <= 1'b1;
-                        araddr  <= req_buf_addr;
+                        arvalid <= 1'b1; araddr <= req_buf_addr;
                     end
                 end
-                
                 UC_WDATA: begin
-                    if (awready && awvalid) begin
-                        awvalid <= 1'b0;
-                    end
-                    if (wready && wvalid) begin
-                        wvalid <= 1'b0;
-                        wlast  <= 1'b0;
-                    end
-                    if ((!awvalid || awready) && (!wvalid || wready)) begin
-                        // Both accepted, wait for response
-                        bready <= 1'b1;
-                        $display("[%t] DCACHE: Asserting BREADY. awvalid=%b, awready=%b, wvalid=%b, wready=%b", $time, awvalid, awready, wvalid, wready);
-                    end
+                    if (awready && awvalid) awvalid <= 1'b0;
+                    if (wready && wvalid) begin wvalid <= 1'b0; wlast <= 1'b0; end
+                    if ((!awvalid || awready) && (!wvalid || wready)) bready <= 1'b1;
                 end
-                
                 UC_WRESP: begin
-                    if (bready && bvalid) begin
-                        bready <= 1'b0;
-                        req_buf_valid <= 1'b0;
-                    end
+                    if (bready && bvalid) begin bready <= 1'b0; req_buf_valid <= 1'b0; end
                 end
-                
                 UC_RDATA: begin
-                    if (rready && rvalid) begin
-                        rready <= 1'b0;
-                        req_buf_valid <= 1'b0;
-                    end else if (arready && arvalid) begin
-                        arvalid <= 1'b0;
-                        rready  <= 1'b1;
-                    end
+                    if (rready && rvalid) begin rready <= 1'b0; req_buf_valid <= 1'b0; end
+                    else if (arready && arvalid) begin arvalid <= 1'b0; rready <= 1'b1; end
                 end
-                
+
                 COMPARE: begin
                     if (cache_hit) begin
-                        // Update LRU
-                        lru_ram[lookup_index] <= hit_0 ? 1'b1 : 1'b0;
-                        
-                        // Handle Write Hit
+                        // Update PLRU: accessed (hit) way is MRU
+                        plru_ram[lookup_index] <= plru_touch(plru_rdata, hit_way);
                         if (req_buf_we) begin
-                            if (hit_0) begin
-                                data_ram_0[lookup_index] <= new_line;
-                                tag_ram_0[lookup_index]  <= {1'b1, 1'b1, lookup_tag}; // Valid, Dirty, Tag
-                            end else begin
-                                data_ram_1[lookup_index] <= new_line;
-                                tag_ram_1[lookup_index]  <= {1'b1, 1'b1, lookup_tag};
-                            end
+                            data_ram[hit_way][lookup_index] <= new_line;
+                            tag_ram[hit_way][lookup_index]  <= {1'b1, 1'b1, lookup_tag};
                         end
-                        
-                        // Request is satisfied, return to IDLE
                         req_buf_valid <= 1'b0;
                     end else begin
-                        // Miss
+                        // Miss: launch writeback (dirty victim) or refill
                         if (victim_dirty) begin
                             awvalid <= 1'b1;
-                            awaddr  <= {victim_tag[19:0], req_buf_addr[11:5], 5'd0};
+                            awaddr  <= {victim_tag_entry[TAG_BITS-1:0], req_buf_addr[10:5], 5'd0};
                             word_cnt <= 3'd0;
                         end else begin
                             arvalid <= 1'b1;
@@ -380,91 +329,49 @@ module dcache (
                         end
                     end
                 end
-                
+
                 WRITEBACK_REQ: begin
                     if (awready && awvalid) begin
                         awvalid <= 1'b0;
-                        wvalid  <= 1'b1;
-                        wstrb   <= 4'hF;
-                        
-                        // First data word
-                        wdata <= victim_way ? data_rdata_1[31:0] : data_rdata_0[31:0];
-                        wlast <= 1'b0;
+                        wvalid  <= 1'b1; wstrb <= 4'hF;
+                        wdata   <= data_rdata[victim_way][31:0];
+                        wlast   <= 1'b0;
                     end
                 end
-                
                 WRITEBACK_DATA: begin
                     if (wready && wvalid) begin
                         if (wlast) begin
-                            wvalid <= 1'b0;
-                            wlast  <= 1'b0;
-                            bready <= 1'b1;
+                            wvalid <= 1'b0; wlast <= 1'b0; bready <= 1'b1;
                         end else begin
                             word_cnt <= word_cnt + 1'b1;
-                            if (word_cnt == 3'd6) wlast <= 1'b1; // next is last
-                            
-                            // Load next word
-                            case (word_cnt + 1'b1)
-                                3'd1: wdata <= victim_way ? data_rdata_1[63:32]   : data_rdata_0[63:32];
-                                3'd2: wdata <= victim_way ? data_rdata_1[95:64]   : data_rdata_0[95:64];
-                                3'd3: wdata <= victim_way ? data_rdata_1[127:96]  : data_rdata_0[127:96];
-                                3'd4: wdata <= victim_way ? data_rdata_1[159:128] : data_rdata_0[159:128];
-                                3'd5: wdata <= victim_way ? data_rdata_1[191:160] : data_rdata_0[191:160];
-                                3'd6: wdata <= victim_way ? data_rdata_1[223:192] : data_rdata_0[223:192];
-                                3'd7: wdata <= victim_way ? data_rdata_1[255:224] : data_rdata_0[255:224];
-                            endcase
+                            if (word_cnt == 3'd6) wlast <= 1'b1;
+                            wdata <= data_rdata[victim_way][(word_cnt+1'b1)*32 +: 32];
                         end
                     end
                 end
-                
                 WRITEBACK_RESP: begin
                     if (bready && bvalid) begin
                         bready <= 1'b0;
-                        arvalid <= 1'b1;
-                        araddr  <= {req_buf_addr[31:5], 5'd0};
-                        word_cnt <= 3'd0;
+                        arvalid <= 1'b1; araddr <= {req_buf_addr[31:5], 5'd0}; word_cnt <= 3'd0;
                     end
                 end
-                
+
                 REFILL_REQ: begin
-                    if (arready && arvalid) begin
-                        arvalid <= 1'b0;
-                        rready  <= 1'b1;
-                    end
+                    if (arready && arvalid) begin arvalid <= 1'b0; rready <= 1'b1; end
                 end
-                
                 REFILL_DATA: begin
                     if (rready && rvalid) begin
-                        case (word_cnt)
-                            3'd0: line_buf[31:0]    <= rdata;
-                            3'd1: line_buf[63:32]   <= rdata;
-                            3'd2: line_buf[95:64]   <= rdata;
-                            3'd3: line_buf[127:96]  <= rdata;
-                            3'd4: line_buf[159:128] <= rdata;
-                            3'd5: line_buf[191:160] <= rdata;
-                            3'd6: line_buf[223:192] <= rdata;
-                            3'd7: line_buf[255:224] <= rdata;
-                        endcase
+                        line_buf[word_cnt*32 +: 32] <= rdata;
                         word_cnt <= word_cnt + 1'b1;
-                        
-                        if (rlast) begin
-                            rready <= 1'b0;
-                        end
+                        if (rlast) rready <= 1'b0;
                     end
                 end
-                
                 WRITE_MERGE: begin
-                    // Write the filled (and optionally merged) line into the cache way
-                    if (!victim_way) begin
-                        data_ram_0[lookup_index] <= new_line;
-                        tag_ram_0[lookup_index]  <= {1'b1, req_buf_we, lookup_tag}; // dirty if we wrote
-                    end else begin
-                        data_ram_1[lookup_index] <= new_line;
-                        tag_ram_1[lookup_index]  <= {1'b1, req_buf_we, lookup_tag};
-                    end
-                    // Update LRU
-                    lru_ram[lookup_index] <= !victim_way;
-                    
+                    // Install refilled (optionally write-merged) line into victim way
+                    data_ram[victim_way][lookup_index] <= new_line;
+                    tag_ram[victim_way][lookup_index]  <= {1'b1, req_buf_we, lookup_tag};
+                    // Accessed way becomes MRU
+                    plru_ram[lookup_index] <= plru_touch(plru_rdata, victim_way);
                     req_buf_valid <= 1'b0;
                 end
             endcase

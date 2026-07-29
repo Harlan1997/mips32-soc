@@ -17,7 +17,7 @@ export LM_LICENSE_FILE=${LM_LICENSE_FILE:-2700@localhost}
 mkdir -p "${RUN_ROOT}"
 
 echo "========================================================================"
-echo " Running DUT Block Unit Gate (5 Blocks)"
+echo " Running DUT Block Unit Gate (6 Blocks)"
 echo " Run Root: ${RUN_ROOT}"
 echo "========================================================================"
 
@@ -122,9 +122,27 @@ else
     FAILED=1
 fi
 
+# 6. dcache (L1 D-cache, 4-way + tree-PLRU)
+echo "--- [6/6] Running L1 D-Cache Unit Test ---"
+DC_DIR="${RUN_ROOT}/dcache"
+mkdir -p "${DC_DIR}"
+(
+    cd "${DC_DIR}"
+    vcs -full64 -sverilog -timescale=1ns/1ps \
+        "${ROOT_DIR}/rtl/cache/dcache.v" "${ROOT_DIR}/tb/unit/dcache/tb_dcache.v" \
+        -l compile.log
+    ./simv -l sim.log
+)
+if grep -q "REGRESSION_TEST_SUCCESS dcache" "${DC_DIR}/sim.log"; then
+    echo "DCACHE: PASS"
+else
+    echo "DCACHE: FAIL"
+    FAILED=1
+fi
+
 echo "======================================================================--"
 if [ "$FAILED" -eq 0 ]; then
-    echo " DUT Block Unit Gate Passed (5/5)"
+    echo " DUT Block Unit Gate Passed (6/6)"
     echo "======================================================================--"
     exit 0
 else
