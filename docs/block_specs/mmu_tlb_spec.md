@@ -236,8 +236,41 @@ Multi-hit → `ExcCode = 24 (MCheck)`, `Status.TS = 1`。软件通常记录后�
 - **B.3.4**：Linux 头 (head.S) 移植 + 早期 paging 打开跑通。
 - **B.3.5**：完整 Linux boot 到 busybox shell。
 
+### 10.1 已知阻塞点：`SOC_MMU_ENABLE=1` 下 CPU 无法取指（发现于 2026-07-30）
+
+**现象**：`SOC_MMU_ENABLE` 由 0 翻转为 1 后，`soc_smoke` 等现有 SoC 级测试全部在极早期挂死（PC 卡在
+`0x180`~`0x190` 附近反复 stall，直至 5ms 仿真超时），且这一失败与 firmware 是否包含正确的 TLB-refill
+异常处理程序**无关**——即便新写一份编码完全正确的 refill handler（安装 identity-map 4KB entry 后
+ERET 重试），失败特征仍然逐位相同。
+
+**根因（架构级，非 firmware 缺陷）**：
+- 本设计复位向量固定为 `0x0000_0000`（`mips_if_stage.v` `RESET_ADDR`），唯一异常向量固定为
+  `0x0000_0180`（`mips_cpu.v` `exception_vector`，暂无 EBase 分派，属 B.3.3 范畴）。
+- 当前 firmware 链接脚本（`tb/soc_test/fw/common/link.ld`）把 `_start` 和 `_except_handler` 都放在
+  useg（VA[31]=0）。
+- `SOC_MMU_ENABLE=1` 时，useg 的任何访问（包括取指）都必须先过 TLB 查找（`mips_mmu.v`），kseg0/1
+  才是永久直通（`pa = {3'b000, va[28:0]}`，与 MMU 开关无关）。
+- 于是形成死锁：复位后 CPU 要取 `_start`（useg）→ 触发 TLBL miss → 跳转到 `_except_handler`
+  （同样在 useg）→ 取这条异常处理指令本身又需要一个已存在的 TLB entry → 而这正是 handler
+  要去安装的东西。CPU 连第一条指令、第一条异常处理指令都取不出来，firmware 层面无法打破这个循环。
+
+**结论**：B.3.2 "启用 `SOC_MMU_ENABLE=1`" 这一步在当前链接布局下**不可行**，与 fabric alias fold
+（`mips_mmu.v` 注释里提到的 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。真正的修复是把
+`_start` / `_except_handler`（以及未来的中断向量）迁移到 kseg0 或 kseg1，这需要修改
+`link.ld` 及可能所有现有 firmware 的假设，影响面较大，作为独立的 B.3.2 前置子任务单独规划，
+**本次不实施**。
+
+**已保留的验证脚手架**（证明 TLB/CP0/mips_mmu 翻译路径本身逻辑正确，仅卡在向量位置问题）：
+- `tb/soc_test/fw/tests/mmu_refill/`：最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
+- `tb/soc_test/run_mmu_refill.sh`：独立跑该固件的 gate 脚本（当前会因上述阻塞而失败，属预期）。
+- `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
+  `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
+
+**MMU 相关工作线在此暂停**，待 vector 重定位单独规划完成后再重新评估 B.3.2。
+
 ---
 
 ## 版本记录
 
 - v0 (2026-07-26)：初版规格，64-entry TLB + micro-TLB 分离 + 软件 refill 模型。等待 Phase B 起始时评审。
+- v0.1 (2026-07-30)：记录 `SOC_MMU_ENABLE=1` 架构级阻塞点（useg 向量死锁），暂停 MMU 工作线，见 §10.1。

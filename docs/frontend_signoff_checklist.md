@@ -28,7 +28,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 累计 unit tb 覆盖 ~130 checks，SoC 冒烟 `REGRESSION_TEST_SUCCESS` 全程保持。
 
-**未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合；Phase B.7 MDU 商用重构；Phase B FPU (可选)；`SOC_MMU_ENABLE=1` 激活（需 Phase C L2 + fabric alias fold）；EBase-driven 异常向量（需 0xBFC00000 boot ROM）；BPU IF 重定向（需 speculative fetch queue）。
+**未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合；Phase B.7 MDU 商用重构；Phase B FPU (可选)；`SOC_MMU_ENABLE=1` 激活（架构级阻塞：boot/异常向量位于 useg，需迁移到 kseg0/1，见 mmu_tlb_spec.md §10.1，2026-07-30 发现）；EBase-driven 异常向量（需 0xBFC00000 boot ROM）；BPU IF 重定向（需 speculative fetch queue）。
 
 ---
 
@@ -109,7 +109,10 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [x] Wired / Random 语义（Random 硬件递减到 Wired，Wired 写重置 Random）
 - [x] kseg0/1 直通决策、useg/kseg2/3 走 TLB 决策（gated by SOC_MMU_ENABLE=0 默认 identity 兼容当前 firmware）
 - [x] `SOC_MMU_ENABLE=0` 兼容模式：现有 firmware regression 全绿
-- [ ] `SOC_MMU_ENABLE=1` Linux head.S 集成 — 待 Phase C fabric alias fold 完成
+- [ ] `SOC_MMU_ENABLE=1` Linux head.S 集成 — 架构级阻塞：`_start`(0x0)/`_except_handler`(0x180) 位于
+      useg，MMU 打开后取指需先有 TLB entry 才能取到能安装 TLB entry 的 handler，形成死锁，firmware
+      层面无法绕过；需将启动/异常向量迁移到 kseg0/1（link.ld + 固件基础设施改动，单独规划）。
+      详见 `docs/block_specs/mmu_tlb_spec.md` §10.1（2026-07-30）。
 
 ### B.4 用户 / 内核态 (commit 11e3a9d)
 - [x] Status.KSU=00/10 切换正确 (RTL 支持，unit tb 验证)
