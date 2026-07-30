@@ -73,8 +73,16 @@
 
 ### 2.2 MSHR
 
-- 当前基线不实现 MSHR，不声明 non-blocking 或 multi-outstanding 能力。
-- 后续商用增强目标：8 entries，同 line 请求合并，满则反压上游。
+- 默认基线（`l2_cache_wt` / `l2_cache_caching`）不实现 MSHR，为 blocking single-
+  outstanding。
+- **非阻塞增强已交付**：`rtl/cache/l2_cache_nb.v`（`+define+SOC_L2_NONBLOCKING`）实现
+  8-entry MSHR，支持 hit-under-miss、miss-under-miss、同 line secondary-miss 合并、跨-id
+  乱序响应（同 id 保序）；MSHR/order-queue 满则反压上游（拉低 s_arready/s_awready）。
+  下游 master 口保持单-outstanding（遵守 fabric 合同）。正确性以「in-order accept 为数据
+  阵列唯一序列化点 + 乱序 responder 只读 per-entry 缓冲」保证，消除 eviction/fill 竞争。
+- 单元证明：`tb/unit/l2nb`（multi-outstanding master + 记分板 + 下游单-outstanding 断言，
+  peak_mshr=8、hit_under_miss_beats=26）。SoC 层 L1 仍阻塞，故为正确 drop-in、无 perf delta，
+  并发收益待 CPU/L1 hit-under-miss。
 
 ### 2.3 Write Back Buffer
 
@@ -284,6 +292,13 @@ module l2_cache #(
 
 ## 版本记录
 
+- v1.5 (2026-07-30)：Phase C.2 交付非阻塞 full-MSHR L2（`rtl/cache/l2_cache_nb.v`，
+  `+define+SOC_L2_NONBLOCKING`）：8-entry MSHR、hit-under-miss、miss-under-miss、
+  同 line secondary-miss 合并、跨-id 乱序响应（同 id 保序）、下游单-outstanding。新增
+  `tb/unit/l2nb/tb_l2nb.v`（multi-outstanding master + 记分板 + 下游单-outstanding 断言
+  + 并发证明 peak_mshr=8 / hit_under_miss_beats=26），并入 dut-block-unit-gate（7/7）。
+  SoC drop-in smoke green（`L2_NONBLOCKING=1 make soc-smoke`）。默认 WT / WB 实现与行为
+  不变；因 SoC L1 仍阻塞，为正确 drop-in、无 perf delta。详见 §2.2。
 - v1.4 (2026-07-29)：write-back 完成 **SoC 级签核**（此前仅块级）。新增可选构建开关
   `L2_WRITEBACK=1`（`run_uvm.sh`/`run_testlist.sh`/`run_regression.sh`/`tb/soc_test/run.sh`
   与 Makefile `uvm`/`phase3-complete`/`soc-smoke` 目标），置位时向 vcs 追加

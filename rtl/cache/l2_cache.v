@@ -90,7 +90,47 @@ module l2_cache #(
 );
 
 `ifdef SOC_L2_CACHING
-`ifdef SOC_L2_WRITEBACK
+`ifdef SOC_L2_NONBLOCKING
+    // ---- Non-blocking write-back implementation (full MSHR) ----
+    // Accepts new upstream requests while prior misses are outstanding: N-entry
+    // MSHR file, hit-under-miss + miss-under-miss, secondary-miss merge, OoO
+    // responses across ids (in-order per id). Downstream master port stays
+    // single-outstanding (fabric contract). Same retention-array reset policy as
+    // l2_cache_caching. Selected with +define+SOC_L2_CACHING +SOC_L2_NONBLOCKING.
+    // NOTE: current SoC L1s are blocking single-outstanding, so at SoC level this
+    // sees one request at a time (a correct drop-in); its concurrency is proven
+    // in tb/unit/l2nb. The perf win lands once CPU/L1 hit-under-miss exists.
+    l2_cache_nb #(
+        .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES), .WAYS(WAYS),
+        .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)
+    ) u_impl (
+        .clk(clk), .rst_n(rst_n),
+        .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen),
+        .s_awsize(s_awsize), .s_awburst(s_awburst),
+        .s_awvalid(s_awvalid), .s_awready(s_awready),
+        .s_wdata(s_wdata), .s_wstrb(s_wstrb), .s_wlast(s_wlast),
+        .s_wvalid(s_wvalid), .s_wready(s_wready),
+        .s_bid(s_bid), .s_bresp(s_bresp), .s_bvalid(s_bvalid), .s_bready(s_bready),
+        .s_arid(s_arid), .s_araddr(s_araddr), .s_arlen(s_arlen),
+        .s_arsize(s_arsize), .s_arburst(s_arburst),
+        .s_arvalid(s_arvalid), .s_arready(s_arready),
+        .s_rid(s_rid), .s_rdata(s_rdata), .s_rresp(s_rresp),
+        .s_rlast(s_rlast), .s_rvalid(s_rvalid), .s_rready(s_rready),
+        .m_awid(m_awid), .m_awaddr(m_awaddr), .m_awlen(m_awlen),
+        .m_awsize(m_awsize), .m_awburst(m_awburst),
+        .m_awvalid(m_awvalid), .m_awready(m_awready),
+        .m_wdata(m_wdata), .m_wstrb(m_wstrb), .m_wlast(m_wlast),
+        .m_wvalid(m_wvalid), .m_wready(m_wready),
+        .m_bid(m_bid), .m_bresp(m_bresp), .m_bvalid(m_bvalid), .m_bready(m_bready),
+        .m_arid(m_arid), .m_araddr(m_araddr), .m_arlen(m_arlen),
+        .m_arsize(m_arsize), .m_arburst(m_arburst),
+        .m_arvalid(m_arvalid), .m_arready(m_arready),
+        .m_rid(m_rid), .m_rdata(m_rdata), .m_rresp(m_rresp),
+        .m_rlast(m_rlast), .m_rvalid(m_rvalid), .m_rready(m_rready),
+        .snoop_addr(snoop_addr), .snoop_valid(snoop_valid),
+        .snoop_ack(snoop_ack), .snoop_hit(snoop_hit)
+    );
+`elsif SOC_L2_WRITEBACK
     // ---- Write-back / write-allocate implementation ----
     // Write-back holds dirty data in the cache until eviction. Its tag/data/
     // valid/dirty/PLRU arrays are retention memory (cold-boot init only, not
