@@ -27,9 +27,15 @@ if [ -d /tool/module ]; then
 fi
 module load vcs
 
-# Opt-in L2 write-back selection (default = reset-safe write-through).
+# Opt-in L2 selection (default = reset-safe write-through).
+#   L2_NONBLOCKING=1 -> non-blocking write-back (full MSHR) drop-in
+#   L2_WRITEBACK=1   -> blocking write-back
+#   (neither)        -> write-through (default)
 l2_define_args=()
-if [ "${L2_WRITEBACK:-0}" = "1" ]; then
+if [ "${L2_NONBLOCKING:-0}" = "1" ]; then
+    l2_define_args=(+define+SOC_L2_CACHING +define+SOC_L2_NONBLOCKING)
+    echo "L2 policy: non-blocking write-back / full MSHR (SOC_L2_NONBLOCKING)"
+elif [ "${L2_WRITEBACK:-0}" = "1" ]; then
     l2_define_args=(+define+SOC_L2_WRITEBACK)
     echo "L2 policy: write-back (SOC_L2_WRITEBACK)"
 else
@@ -50,7 +56,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${ROOT_DIR}"/rtl/perips/apb_axi_dma.v "${ROOT_DIR}"/rtl/perips/apb_gpio.v "${ROOT_DIR}"/rtl/perips/apb_vic.v "${ROOT_DIR}"/rtl/perips/apb_wdt.v \
     "${ROOT_DIR}"/rtl/perips/apb_timer.v "${ROOT_DIR}"/rtl/perips/apb_uart_16550.v "${ROOT_DIR}"/rtl/perips/axi_spi_flash.v "${ROOT_DIR}"/rtl/perips/axi_flash_image_model.v \
     "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
-    "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v "${ROOT_DIR}"/rtl/cache/l2_cache.v "${ROOT_DIR}"/rtl/cache/l2_cache_caching.v "${ROOT_DIR}"/rtl/cache/l2_cache_wt.v \
+    "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v "${ROOT_DIR}"/rtl/cache/l2_cache.v "${ROOT_DIR}"/rtl/cache/l2_cache_caching.v "${ROOT_DIR}"/rtl/cache/l2_cache_wt.v "${ROOT_DIR}"/rtl/cache/l2_cache_nb.v \
     "${ROOT_DIR}"/rtl/soc_fabric.v "${ROOT_DIR}"/rtl/soc_core_subsystem.v "${ROOT_DIR}"/rtl/soc_memory_subsystem.v "${ROOT_DIR}"/rtl/soc_peripheral_subsystem.v "${ROOT_DIR}"/rtl/soc_debug_subsystem.v "${ROOT_DIR}"/rtl/mips_soc_impl.v "${ROOT_DIR}"/rtl/mips_soc.v "${ROOT_DIR}"/rtl/soc_top.v \
     "${SCRIPT_DIR}"/tb_mips_soc.v -l vcs.log
 

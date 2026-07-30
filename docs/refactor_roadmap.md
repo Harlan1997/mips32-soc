@@ -529,7 +529,11 @@ Honest scope / non-claims:
 - Per-slave outstanding depth `SOC_XBAR_N_OT=4` is realized at the crossbar
   BOUNDARY. End-to-end same-slave depth stays capped at 1 by today's single-
   outstanding L2/APB/flash slaves; same-slave throughput gain awaits a non-
-  blocking slave (future L2 MSHR). Cross-slave concurrency is realized now.
+  blocking slave AND a multi-outstanding master. A non-blocking full-MSHR L2
+  (`rtl/cache/l2_cache_nb.v`, `+define+SOC_L2_NONBLOCKING`) now exists and is
+  proven in `tb/unit/l2nb`, but the SoC's L1s are still blocking single-
+  outstanding, so end-to-end same-slave depth remains 1 until CPU/L1 hit-under-
+  miss lands. Cross-slave concurrency is realized now.
 - QoS is a static per-master class today (masters drive constant AxQOS); dynamic
   per-transaction QoS is deferred until masters emit AxQOS.
 - No formal proofs (no formal tool in-environment) and no commercial AXI VIP

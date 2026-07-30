@@ -185,7 +185,15 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ### C.2 L2 新增
 - [ ] DUT wrapper/pass-through 与真实 caching enablement 分开签核：详见
   `docs/refactor_roadmap.md` "Post-rename DUT integration completeness audit"
-- [ ] 128 KB 8-way NINE + 8 MSHR + 4 WB buffer
+- [~] 128 KB 8-way NINE + 8 MSHR + 4 WB buffer —— 几何/8-way/写回已在 `l2_cache_caching`
+  签核（L2_WRITEBACK green）。**非阻塞 full-MSHR 实现已交付**：`rtl/cache/l2_cache_nb.v`
+  （8 项 MSHR，hit-under-miss + miss-under-miss + secondary-miss 合并 + 跨-id 乱序响应，
+  下游单-outstanding），经 `+define+SOC_L2_NONBLOCKING` 选中。单元证明见 `tb/unit/l2nb`
+  （peak_mshr=8、hit_under_miss_beats=26、55 拍记分板校验 + 下游单-outstanding 断言），
+  已并入 dut-block-unit-gate；SoC drop-in smoke green（`L2_NONBLOCKING=1 make soc-smoke`）。
+  仍缺：独立 4-entry WB buffer（当前 eviction 由 miss 引擎串行发起）；SoC 级并发收益需
+  CPU/L1 hit-under-miss（见 `docs/block_specs/dcache_spec.md` 依赖链）才能兑现——当前 L1 阻塞，SoC 层每次
+  只发一个请求，为正确 drop-in、无 perf delta。
 - [ ] Snoop 端口 tie-off 且无副作用
 - [ ] L1→L2→DDR 三级 miss 端到端通
 - [ ] CoreMark L2 hit rate ≥ 80% (L1 miss 的 80% 命中 L2)

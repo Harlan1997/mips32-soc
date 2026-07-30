@@ -17,14 +17,14 @@ export LM_LICENSE_FILE=${LM_LICENSE_FILE:-2700@localhost}
 mkdir -p "${RUN_ROOT}"
 
 echo "========================================================================"
-echo " Running DUT Block Unit Gate (6 Blocks)"
+echo " Running DUT Block Unit Gate (7 Blocks)"
 echo " Run Root: ${RUN_ROOT}"
 echo "========================================================================"
 
 FAILED=0
 
 # 1. mdu
-echo "--- [1/5] Running MDU Unit Test ---"
+echo "--- [1/7] Running MDU Unit Test ---"
 MDU_DIR="${RUN_ROOT}/mdu"
 mkdir -p "${MDU_DIR}"
 (
@@ -43,7 +43,7 @@ else
 fi
 
 # 2. dma
-echo "--- [2/5] Running DMA Unit Test ---"
+echo "--- [2/7] Running DMA Unit Test ---"
 DMA_DIR="${RUN_ROOT}/dma"
 mkdir -p "${DMA_DIR}"
 (
@@ -62,7 +62,7 @@ else
 fi
 
 # 3. vic
-echo "--- [3/5] Running VIC Unit Test ---"
+echo "--- [3/7] Running VIC Unit Test ---"
 VIC_DIR="${RUN_ROOT}/vic"
 mkdir -p "${VIC_DIR}"
 (
@@ -81,7 +81,7 @@ else
 fi
 
 # 4. uart
-echo "--- [4/5] Running UART 16550 Unit Test ---"
+echo "--- [4/7] Running UART 16550 Unit Test ---"
 UART_DIR="${RUN_ROOT}/uart"
 mkdir -p "${UART_DIR}"
 (
@@ -100,7 +100,7 @@ else
 fi
 
 # 5. l2
-echo "--- [5/5] Running L2 Cache Unit Test ---"
+echo "--- [5/7] Running L2 Cache Unit Test ---"
 L2_DIR="${RUN_ROOT}/l2"
 mkdir -p "${L2_DIR}"
 (
@@ -122,8 +122,31 @@ else
     FAILED=1
 fi
 
-# 6. dcache (L1 D-cache, 4-way + tree-PLRU)
-echo "--- [6/6] Running L1 D-Cache Unit Test ---"
+# 6. l2nb (non-blocking L2, full MSHR)
+echo "--- [6/7] Running Non-Blocking L2 (MSHR) Unit Test ---"
+L2NB_DIR="${RUN_ROOT}/l2nb"
+mkdir -p "${L2NB_DIR}"
+(
+    cd "${L2NB_DIR}"
+    # Exercises the non-blocking impl in isolation with a multi-outstanding
+    # master + scoreboard: hit-under-miss, miss-under-miss, secondary-miss
+    # merge, and a downstream single-outstanding assertion. SoC clients are
+    # still blocking, so this unit TB is the concurrency acceptance vehicle.
+    vcs -full64 -sverilog -timescale=1ns/1ps \
+        +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cache" \
+        "${ROOT_DIR}/rtl/cache/l2_cache_nb.v" "${ROOT_DIR}/tb/unit/l2nb/tb_l2nb.v" \
+        -l compile.log
+    ./simv -l sim.log
+)
+if grep -q "REGRESSION_TEST_SUCCESS l2nb" "${L2NB_DIR}/sim.log"; then
+    echo "L2NB: PASS"
+else
+    echo "L2NB: FAIL"
+    FAILED=1
+fi
+
+# 7. dcache (L1 D-cache, 4-way + tree-PLRU)
+echo "--- [7/7] Running L1 D-Cache Unit Test ---"
 DC_DIR="${RUN_ROOT}/dcache"
 mkdir -p "${DC_DIR}"
 (
@@ -142,7 +165,7 @@ fi
 
 echo "======================================================================--"
 if [ "$FAILED" -eq 0 ]; then
-    echo " DUT Block Unit Gate Passed (6/6)"
+    echo " DUT Block Unit Gate Passed (7/7)"
     echo "======================================================================--"
     exit 0
 else
