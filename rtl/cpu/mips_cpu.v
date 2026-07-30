@@ -591,12 +591,15 @@ module mips_cpu (
     wire [31:0] wb_ex_out;
     wire [31:0] wb_pc_plus_8;
     
-    mips_mem_wb_reg u_mips_mem_wb_reg (
+    // In-order-retirement completion buffer (mini-ROB). Stage 1: DEPTH=1, a
+    // drop-in for the old MEM/WB register (bit-identical). Later stages grow
+    // depth + run-ahead. Ports match mips_mem_wb_reg exactly.
+    mips_rob #(.DEPTH(1)) u_mips_rob (
         .clk             (clk),
         .rst_n           (rst_n),
         .stall           (global_stall),
         .flush           (flush_mem_wb),
-        
+
         .mem_rdata_fmt   (mem_rdata_fmt),
         .mem_ex_out      (mem_ex_out),
         .mem_pc_plus_8   (mem_pc_plus_8),
