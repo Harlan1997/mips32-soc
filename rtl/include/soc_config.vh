@@ -50,6 +50,20 @@
 `define SOC_APB_BASE          32'h4000_0000
 `define SOC_SRAM_ALIAS_BASE   32'hA000_0000
 `define SOC_DEBUG_BASE        32'hE000_0000
+// DDR window (Phase C.4): 128MB physical reservation for a future DDR3
+// controller. Today backed only by a behavioral capacity placeholder
+// (rtl/perips/axi_ddr_behavioral.v) — no timing/refresh/PHY realism. See
+// docs/block_specs/ddr3_spec.md for the real controller scope (deferred,
+// gated on procured PHY IP).
+// NOTE: SOC_DDR_BASE is not 256MB-aligned (it sits at a 128MB boundary), so
+// unlike SRAM/APB/FLASH it cannot be decoded with a simple mask-equality
+// check against SOC_256MB_REGION_MASK. Sized at 128MB (not the originally
+// scoped 256MB) so the window (0x0800_0000-0x0FFF_FFFF) sits entirely below
+// FLASH's own 256MB window (0x1000_0000-0x1FFF_FFFF) with no overlap. The
+// DDR branch in axi_crossbar's decode_slave() uses an explicit range
+// compare against SOC_DDR_BASE/SOC_DDR_SIZE instead of a mask compare.
+`define SOC_DDR_BASE          32'h0800_0000
+`define SOC_DDR_SIZE          32'h0800_0000
 
 // Address decode masks
 `define SOC_64KB_REGION_MASK  32'hFFFF_0000

@@ -338,6 +338,46 @@ module mips_soc_impl #(
     wire        s2_rvalid;
     wire        s2_rready;
 
+    // =========================================================================
+    // AXI Slave 3: DDR window (0x0800_0000 - 0x17FF_FFFF), Phase C.4
+    // Behavioral capacity placeholder only (rtl/perips/axi_ddr_behavioral.v).
+    // =========================================================================
+    wire [3:0]  s3_awid;
+    wire [31:0] s3_awaddr;
+    wire [7:0]  s3_awlen;
+    wire [2:0]  s3_awsize;
+    wire [1:0]  s3_awburst;
+    wire [1:0]  s3_awlock;
+    wire [3:0]  s3_awcache;
+    wire [2:0]  s3_awprot;
+    wire        s3_awvalid;
+    wire        s3_awready;
+    wire [31:0] s3_wdata;
+    wire [3:0]  s3_wstrb;
+    wire        s3_wlast;
+    wire        s3_wvalid;
+    wire        s3_wready;
+    wire [3:0]  s3_bid;
+    wire [1:0]  s3_bresp;
+    wire        s3_bvalid;
+    wire        s3_bready;
+    wire [3:0]  s3_arid;
+    wire [31:0] s3_araddr;
+    wire [7:0]  s3_arlen;
+    wire [2:0]  s3_arsize;
+    wire [1:0]  s3_arburst;
+    wire [1:0]  s3_arlock;
+    wire [3:0]  s3_arcache;
+    wire [2:0]  s3_arprot;
+    wire        s3_arvalid;
+    wire        s3_arready;
+    wire [3:0]  s3_rid;
+    wire [31:0] s3_rdata;
+    wire [1:0]  s3_rresp;
+    wire        s3_rlast;
+    wire        s3_rvalid;
+    wire        s3_rready;
+
     wire        cpu_int;
 
     // =========================================================================
@@ -690,7 +730,42 @@ module mips_soc_impl #(
         .s2_rdata     (s2_rdata),
         .s2_rresp     (s2_rresp),
         .s2_rlast     (s2_rlast),
-        .s2_rvalid    (s2_rvalid)
+        .s2_rvalid    (s2_rvalid),
+        .s3_awid      (s3_awid),
+        .s3_awaddr    (s3_awaddr),
+        .s3_awlen     (s3_awlen),
+        .s3_awsize    (s3_awsize),
+        .s3_awburst   (s3_awburst),
+        .s3_awlock    (s3_awlock),
+        .s3_awcache   (s3_awcache),
+        .s3_awprot    (s3_awprot),
+        .s3_awvalid   (s3_awvalid),
+        .s3_wdata     (s3_wdata),
+        .s3_wstrb     (s3_wstrb),
+        .s3_wlast     (s3_wlast),
+        .s3_wvalid    (s3_wvalid),
+        .s3_bready    (s3_bready),
+        .s3_arid      (s3_arid),
+        .s3_araddr    (s3_araddr),
+        .s3_arlen     (s3_arlen),
+        .s3_arsize    (s3_arsize),
+        .s3_arburst   (s3_arburst),
+        .s3_arlock    (s3_arlock),
+        .s3_arcache   (s3_arcache),
+        .s3_arprot    (s3_arprot),
+        .s3_arvalid   (s3_arvalid),
+        .s3_rready    (s3_rready),
+        .s3_awready   (s3_awready),
+        .s3_wready    (s3_wready),
+        .s3_bid       (s3_bid),
+        .s3_bresp     (s3_bresp),
+        .s3_bvalid    (s3_bvalid),
+        .s3_arready   (s3_arready),
+        .s3_rid       (s3_rid),
+        .s3_rdata     (s3_rdata),
+        .s3_rresp     (s3_rresp),
+        .s3_rlast     (s3_rlast),
+        .s3_rvalid    (s3_rvalid)
     );
 
     soc_memory_subsystem #(
@@ -774,7 +849,43 @@ module mips_soc_impl #(
         .s2_rresp     (s2_rresp),
         .s2_rlast     (s2_rlast),
         .s2_rvalid    (s2_rvalid),
-        .s2_rready    (s2_rready)
+        .s2_rready    (s2_rready),
+
+        .s3_awid      (s3_awid),
+        .s3_awaddr    (s3_awaddr),
+        .s3_awlen     (s3_awlen),
+        .s3_awsize    (s3_awsize),
+        .s3_awburst   (s3_awburst),
+        .s3_awlock    (s3_awlock),
+        .s3_awcache   (s3_awcache),
+        .s3_awprot    (s3_awprot),
+        .s3_awvalid   (s3_awvalid),
+        .s3_awready   (s3_awready),
+        .s3_wdata     (s3_wdata),
+        .s3_wstrb     (s3_wstrb),
+        .s3_wlast     (s3_wlast),
+        .s3_wvalid    (s3_wvalid),
+        .s3_wready    (s3_wready),
+        .s3_bid       (s3_bid),
+        .s3_bresp     (s3_bresp),
+        .s3_bvalid    (s3_bvalid),
+        .s3_bready    (s3_bready),
+        .s3_arid      (s3_arid),
+        .s3_araddr    (s3_araddr),
+        .s3_arlen     (s3_arlen),
+        .s3_arsize    (s3_arsize),
+        .s3_arburst   (s3_arburst),
+        .s3_arlock    (s3_arlock),
+        .s3_arcache   (s3_arcache),
+        .s3_arprot    (s3_arprot),
+        .s3_arvalid   (s3_arvalid),
+        .s3_arready   (s3_arready),
+        .s3_rid       (s3_rid),
+        .s3_rdata     (s3_rdata),
+        .s3_rresp     (s3_rresp),
+        .s3_rlast     (s3_rlast),
+        .s3_rvalid    (s3_rvalid),
+        .s3_rready    (s3_rready)
     );
 
     // synopsys translate_off

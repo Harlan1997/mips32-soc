@@ -14,16 +14,22 @@
 //   Flat-vector ports so the pure-Verilog soc_fabric wrapper can map easily.
 //
 //   Realized concurrency note: end-to-end same-slave depth is capped at 1 by
-//   today's single-outstanding slaves (L2/APB/flash); the crossbar still
-//   ACCEPTS up to N_OT at its boundary (ready for a future MSHR L1 / non-
-//   blocking L2). Cross-slave concurrency is realized now.
+//   today's single-outstanding slaves (L2/APB/flash/DDR placeholder); the
+//   crossbar still ACCEPTS up to N_OT at its boundary (ready for a future
+//   MSHR L1 / non-blocking L2). Cross-slave concurrency is realized now.
+//
+//   S3 = DDR: 128MB physical window (SOC_DDR_BASE/SOC_DDR_SIZE) backed today
+//   only by a behavioral capacity placeholder (rtl/perips/axi_ddr_behavioral.v).
+//   No DDR3 timing/refresh/PHY realism. See docs/block_specs/ddr3_spec.md.
+//   Decoded via an explicit range compare (not the 256MB mask used for
+//   SRAM/APB/FLASH) since SOC_DDR_BASE is only 128MB-aligned.
 // =============================================================================
 
 `include "soc_config.vh"
 
 module axi_crossbar #(
     parameter integer N_M   = 5,   // masters: 0=I$,1=D$,2=DMA,3=jtag,4=ext
-    parameter integer N_S   = 3,   // mapped slaves: 0=SRAM,1=APB,2=FLASH
+    parameter integer N_S   = 4,   // mapped slaves: 0=SRAM,1=APB,2=FLASH,3=DDR
     parameter integer N_OT  = 4,   // per-slave outstanding depth
     parameter integer IDW   = 4,
     parameter integer AW    = 32,
@@ -185,6 +191,8 @@ module axi_crossbar #(
                 decode_slave = 4'd1;                 // S1 APB
             else if ((a & `SOC_256MB_REGION_MASK) == `SOC_FLASH_BASE)
                 decode_slave = 4'd2;                 // S2 FLASH
+            else if ((a >= `SOC_DDR_BASE) && (a < (`SOC_DDR_BASE + `SOC_DDR_SIZE)))
+                decode_slave = 4'd3;                 // S3 DDR (behavioral placeholder)
             else
                 decode_slave = DEC[3:0];             // DECERR
         end
