@@ -4,6 +4,7 @@
 #   1. xbar_core     — basic R/W per slave, DECERR read burst + write, bursts
 #   2. xbar_qos      — QoS-priority arbitration + round-robin tie-break
 #   3. xbar_multi_ot — multi-outstanding boundary depth + cross-slave concurrency
+#   4. xbar_ddr      — Phase C.4 DDR window (S3) integrity + FLASH boundary
 # =============================================================================
 set -u
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -17,6 +18,7 @@ module load vcs 2>/dev/null
 XBAR="${ROOT_DIR}/rtl/axi/axi_crossbar.v"
 MEMSLV="${ROOT_DIR}/tb/unit/fabric/axi_mem_slave.v"
 MOSLV="${ROOT_DIR}/tb/unit/fabric/axi_mo_slave.v"
+DDRSLV="${ROOT_DIR}/rtl/perips/axi_ddr_behavioral.v"
 INC="+incdir+${ROOT_DIR}/rtl/include"
 
 FAILED=0
@@ -37,14 +39,15 @@ run_one() {
     fi
 }
 
-echo "Running Fabric Unit Gate (3 tests)"
+echo "Running Fabric Unit Gate (4 tests)"
 run_one xbar_core     "${ROOT_DIR}/tb/unit/fabric/tb_xbar_core.v"     "${XBAR}" "${MEMSLV}"
 run_one xbar_qos      "${ROOT_DIR}/tb/unit/fabric/tb_xbar_qos.v"      "${XBAR}" "${MEMSLV}"
 run_one xbar_multi_ot "${ROOT_DIR}/tb/unit/fabric/tb_xbar_multi_ot.v" "${XBAR}" "${MOSLV}"
+run_one xbar_ddr      "${ROOT_DIR}/tb/unit/fabric/tb_xbar_ddr.v"      "${XBAR}" "${MEMSLV}" "${DDRSLV}"
 
 echo "======================================================================"
 if [ "${FAILED}" -eq 0 ]; then
-    echo " Fabric Unit Gate Passed (3/3)"; exit 0
+    echo " Fabric Unit Gate Passed (4/4)"; exit 0
 else
     echo " Fabric Unit Gate FAILED"; exit 1
 fi

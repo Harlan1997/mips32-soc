@@ -233,6 +233,12 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] Linux MTD driver 挂载
 
 ### D.3 DDR3
+> Phase C.4 现状：已上线一个行为级容量占位窗口（`0x0800_0000`，128MB，
+> `rtl/perips/axi_ddr_behavioral.v`，纯 `reg` 数组），仅用于给 kseg0/1
+> 直接映射提供真实物理目标，不含任何 DDR3 时序/refresh/PHY 行为。以下所有
+> checkbox 均针对真实 DDR3 controller，全部保持未完成，不因占位模型上线而
+> 打勾。真实 controller 规格见 `docs/block_specs/ddr3_spec.md`，仍待 PHY IP
+> 落地后启动。
 - [ ] Init 序列符合 JEDEC
 - [ ] Timing (tRCD/tRP/tRAS/tFAW/tRRD/tWTR/tRTP) SVA 通过
 - [ ] Auto-refresh tREFI 遵守

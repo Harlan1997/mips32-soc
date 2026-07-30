@@ -87,7 +87,43 @@ module soc_memory_subsystem #(
     output wire [1:0]  s2_rresp,
     output wire        s2_rlast,
     output wire        s2_rvalid,
-    input  wire        s2_rready
+    input  wire        s2_rready,
+
+    input  wire [3:0]  s3_awid,
+    input  wire [31:0] s3_awaddr,
+    input  wire [7:0]  s3_awlen,
+    input  wire [2:0]  s3_awsize,
+    input  wire [1:0]  s3_awburst,
+    input  wire [1:0]  s3_awlock,
+    input  wire [3:0]  s3_awcache,
+    input  wire [2:0]  s3_awprot,
+    input  wire        s3_awvalid,
+    output wire        s3_awready,
+    input  wire [31:0] s3_wdata,
+    input  wire [3:0]  s3_wstrb,
+    input  wire        s3_wlast,
+    input  wire        s3_wvalid,
+    output wire        s3_wready,
+    output wire [3:0]  s3_bid,
+    output wire [1:0]  s3_bresp,
+    output wire        s3_bvalid,
+    input  wire        s3_bready,
+    input  wire [3:0]  s3_arid,
+    input  wire [31:0] s3_araddr,
+    input  wire [7:0]  s3_arlen,
+    input  wire [2:0]  s3_arsize,
+    input  wire [1:0]  s3_arburst,
+    input  wire [1:0]  s3_arlock,
+    input  wire [3:0]  s3_arcache,
+    input  wire [2:0]  s3_arprot,
+    input  wire        s3_arvalid,
+    output wire        s3_arready,
+    output wire [3:0]  s3_rid,
+    output wire [31:0] s3_rdata,
+    output wire [1:0]  s3_rresp,
+    output wire        s3_rlast,
+    output wire        s3_rvalid,
+    input  wire        s3_rready
 );
 
 `ifdef SOC_USE_L2_CACHE
@@ -214,6 +250,52 @@ module soc_memory_subsystem #(
         input [1023:0] hex_path;
         begin
             u_axi_sram.load_hex(hex_path);
+        end
+    endtask
+    // synopsys translate_on
+
+    // ---- DDR window (Phase C.4): behavioral capacity placeholder only.
+    // Independent of the SRAM/L2 path above; backs the new SOC_DDR_BASE
+    // fabric slave (s3) directly, with no cache in front of it today.
+    axi_ddr_behavioral u_axi_ddr_behavioral (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .s_awid          (s3_awid),
+        .s_awaddr        (s3_awaddr),
+        .s_awlen         (s3_awlen),
+        .s_awsize        (s3_awsize),
+        .s_awburst       (s3_awburst),
+        .s_awvalid       (s3_awvalid),
+        .s_awready       (s3_awready),
+        .s_wdata         (s3_wdata),
+        .s_wstrb         (s3_wstrb),
+        .s_wlast         (s3_wlast),
+        .s_wvalid        (s3_wvalid),
+        .s_wready        (s3_wready),
+        .s_bid           (s3_bid),
+        .s_bresp         (s3_bresp),
+        .s_bvalid        (s3_bvalid),
+        .s_bready        (s3_bready),
+        .s_arid          (s3_arid),
+        .s_araddr        (s3_araddr),
+        .s_arlen         (s3_arlen),
+        .s_arsize        (s3_arsize),
+        .s_arburst       (s3_arburst),
+        .s_arvalid       (s3_arvalid),
+        .s_arready       (s3_arready),
+        .s_rid           (s3_rid),
+        .s_rdata         (s3_rdata),
+        .s_rresp         (s3_rresp),
+        .s_rlast         (s3_rlast),
+        .s_rvalid        (s3_rvalid),
+        .s_rready        (s3_rready)
+    );
+
+    // synopsys translate_off
+    task preload_ddr_hex;
+        input [1023:0] hex_path;
+        begin
+            u_axi_ddr_behavioral.load_hex(hex_path);
         end
     endtask
     // synopsys translate_on
