@@ -20,6 +20,7 @@ module tb_mips_mmu;
     reg         req_is_fetch = 0;
     reg  [7:0]  asid         = 8'h42;
     reg  [2:0]  config_k0    = 3'b011;
+    reg         is_kernel    = 1'b1;  // tests target kseg0/1/2/3, all kernel-only
 
     wire [31:0] tlb_lookup_va;
     wire [7:0]  tlb_lookup_asid;
