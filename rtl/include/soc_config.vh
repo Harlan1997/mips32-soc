@@ -185,7 +185,14 @@
 // leave translation path off so kseg0/1 direct-map + useg-untranslated flow of
 // existing firmware is preserved. Phase B.3.c will bring the actual lookup path
 // online (see mmu_tlb_spec.md §8).
+// Guarded with ifndef so a test can opt into SOC_MMU_ENABLE=1 via
+// +define+SOC_MMU_ENABLE=1 on the vcs command line without changing this
+// project-wide default (which every other firmware/test still compiles
+// against). KNOWN BLOCKED: see docs/block_specs/mmu_tlb_spec.md Phase B.3.2
+// note -- flipping this on breaks boot today (useg vector placement).
+`ifndef SOC_MMU_ENABLE
 `define SOC_MMU_ENABLE             0
+`endif
 
 // -----------------------------------------------------------------------------
 // Branch Predictor (Phase B.6 series). See docs/block_specs/bpu_spec.md.
