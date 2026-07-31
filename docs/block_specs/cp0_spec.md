@@ -245,7 +245,7 @@ TLB refill 时硬件把 BadVAddr[31:13] → BadVPN2，方便快速 refill 处理
 
 - 复位 EBase = `0x8000_0000` (等价 kseg0，二进制 10_00...)。上 2 位硬件固定 10。
 - 只在 `Status.EXL=0` 且 `Status.BEV=0` 时可写。
-- `BEV=1` 时向量固定在 `0xBFC0_0200/0x0180`，不使用 EBase。
+- `BEV=1` 时 refill/general 向量固定在 `0xBFC0_0200/0xBFC0_0380`，不使用 EBase。
 
 **向量地址表**：
 | 情形 | BEV | Cause.IV | 向量 |
@@ -257,6 +257,13 @@ TLB refill 时硬件把 BadVAddr[31:13] → BadVPN2，方便快速 refill 处理
 | 中断（vectored） | 0 | 1 | EBase + 0x200 + (VN × VS × 32) |
 | Reset/NMI | x | x | 0xBFC0_0000 |
 | Cache Error | x | x | 0xA000_0100 (BEV=0) 或 0xBFC0_0300 (BEV=1) |
+
+**当前实现边界（2026-08-01）**：产品 opt-in 配置已实现 refill 与
+Invalid 的分派。CPU 以 TLB lookup 的 `hit=0` 识别 refill；`hit=1,V=0`
+保留为通用异常，即使两者 `ExcCode` 同为 TLBL/TLBS。I-side 的 BEV=1/0
+miss/invalid 及 D-side BEV=1 miss/invalid 均有完整 SoC directed 证据。
+该结论不覆盖 Modified、vectored interrupt、cache error 或可启动的 MMU
+firmware。
 
 ---
 

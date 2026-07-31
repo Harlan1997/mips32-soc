@@ -22,7 +22,7 @@ module tb_mips_rob;
     reg [2:0]  mem_tlb_op;
     reg        mem_except_req;
     reg [4:0]  mem_except_code;
-    reg        mem_except_is_data, mem_bd;
+    reg        mem_except_is_data, mem_except_is_tlb_refill, mem_bd;
     reg [1:0]  mem_mem_to_reg;
 
     wire [31:0] g_wb_rdata_fmt, g_wb_ex_out, g_wb_pc_plus_8;
@@ -32,7 +32,7 @@ module tb_mips_rob;
     wire [2:0]  g_wb_tlb_op;
     wire        g_wb_except_req;
     wire [4:0]  g_wb_except_code;
-    wire        g_wb_except_is_data, g_wb_bd;
+    wire        g_wb_except_is_data, g_wb_except_is_tlb_refill, g_wb_bd;
     wire [1:0]  g_wb_mem_to_reg;
 
     wire [31:0] d_wb_rdata_fmt, d_wb_ex_out, d_wb_pc_plus_8;
@@ -42,7 +42,7 @@ module tb_mips_rob;
     wire [2:0]  d_wb_tlb_op;
     wire        d_wb_except_req;
     wire [4:0]  d_wb_except_code;
-    wire        d_wb_except_is_data, d_wb_bd;
+    wire        d_wb_except_is_data, d_wb_except_is_tlb_refill, d_wb_bd;
     wire [1:0]  d_wb_mem_to_reg;
 
     integer errs = 0;
@@ -54,12 +54,14 @@ module tb_mips_rob;
         .mem_cp0_sel(mem_cp0_sel), .mem_reg_write(mem_reg_write), .mem_cp0_we(mem_cp0_we),
         .mem_is_eret(mem_is_eret), .mem_tlb_op(mem_tlb_op), .mem_except_req(mem_except_req),
         .mem_except_code(mem_except_code), .mem_except_is_data(mem_except_is_data),
+        .mem_except_is_tlb_refill(mem_except_is_tlb_refill),
         .mem_bd(mem_bd), .mem_mem_to_reg(mem_mem_to_reg),
         .wb_rdata_fmt(g_wb_rdata_fmt), .wb_ex_out(g_wb_ex_out), .wb_pc_plus_8(g_wb_pc_plus_8),
         .wb_waddr(g_wb_waddr), .wb_rd_addr(g_wb_rd_addr), .wb_cp0_raddr(g_wb_cp0_raddr),
         .wb_cp0_sel(g_wb_cp0_sel), .wb_reg_write(g_wb_reg_write), .wb_cp0_we(g_wb_cp0_we),
         .wb_is_eret(g_wb_is_eret), .wb_tlb_op(g_wb_tlb_op), .wb_except_req(g_wb_except_req),
         .wb_except_code(g_wb_except_code), .wb_except_is_data(g_wb_except_is_data),
+        .wb_except_is_tlb_refill(g_wb_except_is_tlb_refill),
         .wb_bd(g_wb_bd), .wb_mem_to_reg(g_wb_mem_to_reg)
     );
 
@@ -70,12 +72,14 @@ module tb_mips_rob;
         .mem_cp0_sel(mem_cp0_sel), .mem_reg_write(mem_reg_write), .mem_cp0_we(mem_cp0_we),
         .mem_is_eret(mem_is_eret), .mem_tlb_op(mem_tlb_op), .mem_except_req(mem_except_req),
         .mem_except_code(mem_except_code), .mem_except_is_data(mem_except_is_data),
+        .mem_except_is_tlb_refill(mem_except_is_tlb_refill),
         .mem_bd(mem_bd), .mem_mem_to_reg(mem_mem_to_reg),
         .wb_rdata_fmt(d_wb_rdata_fmt), .wb_ex_out(d_wb_ex_out), .wb_pc_plus_8(d_wb_pc_plus_8),
         .wb_waddr(d_wb_waddr), .wb_rd_addr(d_wb_rd_addr), .wb_cp0_raddr(d_wb_cp0_raddr),
         .wb_cp0_sel(d_wb_cp0_sel), .wb_reg_write(d_wb_reg_write), .wb_cp0_we(d_wb_cp0_we),
         .wb_is_eret(d_wb_is_eret), .wb_tlb_op(d_wb_tlb_op), .wb_except_req(d_wb_except_req),
         .wb_except_code(d_wb_except_code), .wb_except_is_data(d_wb_except_is_data),
+        .wb_except_is_tlb_refill(d_wb_except_is_tlb_refill),
         .wb_bd(d_wb_bd), .wb_mem_to_reg(d_wb_mem_to_reg)
     );
 
@@ -89,6 +93,7 @@ module tb_mips_rob;
             g_wb_tlb_op !== d_wb_tlb_op || g_wb_except_req !== d_wb_except_req ||
             g_wb_except_code !== d_wb_except_code ||
             g_wb_except_is_data !== d_wb_except_is_data ||
+            g_wb_except_is_tlb_refill !== d_wb_except_is_tlb_refill ||
             g_wb_bd !== d_wb_bd || g_wb_mem_to_reg !== d_wb_mem_to_reg) begin
             $display("FAIL %0s: DEPTH=1 vs DEPTH=2 mismatch @%0t", name, $time);
             $display("  golden: rdata=%h ex=%h pc8=%h waddr=%h rw=%b except=%b code=%h",
@@ -109,7 +114,7 @@ module tb_mips_rob;
         mem_rdata_fmt = rdata; mem_ex_out = exo; mem_pc_plus_8 = exo + 32'd8;
         mem_waddr = wa; mem_rd_addr = wa; mem_cp0_raddr = 5'd0; mem_cp0_sel = 3'd0;
         mem_reg_write = 1'b1; mem_cp0_we = 1'b0; mem_is_eret = 1'b0; mem_tlb_op = 3'd0;
-        mem_except_req = 1'b0; mem_except_code = 5'd0; mem_except_is_data = 1'b0;
+        mem_except_req = 1'b0; mem_except_code = 5'd0; mem_except_is_data = 1'b0; mem_except_is_tlb_refill = 1'b0;
         mem_bd = 1'b0; mem_mem_to_reg = 2'b00;
         @(posedge clk);
         #1 check_parity("alloc");
@@ -121,7 +126,7 @@ module tb_mips_rob;
         mem_rdata_fmt = 0; mem_ex_out = 0; mem_pc_plus_8 = 0;
         mem_waddr = 0; mem_rd_addr = 0; mem_cp0_raddr = 0; mem_cp0_sel = 0;
         mem_reg_write = 0; mem_cp0_we = 0; mem_is_eret = 0; mem_tlb_op = 0;
-        mem_except_req = 0; mem_except_code = 0; mem_except_is_data = 0;
+        mem_except_req = 0; mem_except_code = 0; mem_except_is_data = 0; mem_except_is_tlb_refill = 0;
         mem_bd = 0; mem_mem_to_reg = 0;
 
         #12 rst_n = 1;
@@ -169,13 +174,13 @@ module tb_mips_rob;
         stall = 0; flush = 0;
         mem_rdata_fmt = 32'h0; mem_ex_out = 32'h6000; mem_pc_plus_8 = 32'h6008;
         mem_waddr = 5'd0; mem_rd_addr = 5'd0; mem_reg_write = 1'b0;
-        mem_except_req = 1'b1; mem_except_code = 5'h04; mem_except_is_data = 1'b1;
+        mem_except_req = 1'b1; mem_except_code = 5'h04; mem_except_is_data = 1'b1; mem_except_is_tlb_refill = 1'b1;
         mem_bd = 1'b1;
         @(posedge clk);
         #1 check_parity("exception");
 
         @(negedge clk);
-        mem_except_req = 1'b0; mem_except_is_data = 1'b0; mem_bd = 1'b0;
+        mem_except_req = 1'b0; mem_except_is_data = 1'b0; mem_except_is_tlb_refill = 1'b0; mem_bd = 1'b0;
 
         if (errs == 0) $display("REGRESSION_TEST_SUCCESS rob");
         else           $display("REGRESSION_TEST_FAIL errs=%0d", errs);

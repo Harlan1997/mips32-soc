@@ -1,9 +1,9 @@
 # Boot and Memory Product Contract
 
-> Version: v0.3 (2026-08-01)
+> Version: v0.4 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
-> reset/map and general-exception-vector slices. This document defines the
+> reset/map, general-exception, and TLB refill/invalid vector slices. This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
 > these requirements today.
@@ -40,7 +40,7 @@ the PHY wrapper, but they do not change the address or reset contract below.
 |---|---|---|
 | Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
 | Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window | Add the immutable ROM image and prove reset through header check; do not treat the zero-filled simulation array as a boot image |
-| Exception vector | Product mode resets `BEV=1/ERL=1`; general exceptions select `BFC0_0380` or `EBase+0x180`; prototype mode retains literal `0x0000_0180` | Complete TLB-refill, vectored-interrupt, cache-error and firmware vector relocation behavior from `cp0_spec.md` |
+| Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, while invalid and ordinary exceptions select `BFC0_0380` or `EBase+0x180`; prototype mode retains literal `0x0000_0180` | Complete vectored-interrupt, cache-error and firmware vector relocation behavior from `cp0_spec.md` |
 | Firmware placement | `tb/soc_test/fw/common/link.ld` places `.text`, `.except`, data and stack in `0x0000_0000` SRAM | Keep the smoke linker for prototype tests; add a product linker with kseg0 SRAM execution and a separate Boot ROM/SPL image |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; enabling it TLB-misses on the current reset/useg image | Product boot must install wired TLB mappings and use kseg0/kseg1 addresses before enabling kernel accesses |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
@@ -132,11 +132,13 @@ The CPU must implement the vector table already specified by
 The current literal `0x0000_0180` path is retained only for the prototype
 smoke configuration and must not be used to sign product boot.
 
-The implemented product slice covers ordinary exceptions only: reset starts
-with `BEV=1/ERL=1`, a ROM exception fetch uses `0xBFC0_0380`, and software may
-clear `BEV/ERL` before a later exception uses `EBase+0x180`. TLB refill,
-vectored-interrupt (`Cause.IV`/`IntCtl.VS`) and cache-error vectors remain
-unimplemented product requirements.
+The implemented product slice distinguishes a TLB lookup miss from a matching
+invalid entry with a pipeline sideband; it does not infer refill from
+`ExcCode=TLBL/TLBS`, because both causes share that code. Directed full-SoC
+tests cover I-side miss/invalid for both BEV settings and D-side miss/invalid
+for `BEV=1`. Vectored-interrupt (`Cause.IV`/`IntCtl.VS`), cache-error, modified
+fault policy, production handlers, and firmware relocation remain unimplemented
+product requirements.
 
 ### 5.3 MMU and early mappings
 
@@ -242,8 +244,8 @@ tests remain block evidence only.
 ### 8.1 Current executable evidence
 
 The following evidence closes only the reset-address, fabric-routing, and
-ordinary-exception-vector sub-items of `bootrom_reset_test`; it does not close
-that gate:
+ordinary/refill/invalid-vector sub-items of `bootrom_reset_test`; it does not
+close that gate:
 
 - `tb/unit/bootrom/tb_axi_boot_rom.v` verifies a four-word read burst,
   out-of-range `DECERR`, unsupported-size `DECERR`, and write `SLVERR`.
@@ -255,18 +257,25 @@ that gate:
   raises a `syscall` at reset, verifies the `BFC0_0380` S4 fetch, clears
   `BEV/ERL` in the bootstrap vector, then verifies the `EBase+0x180` virtual
   PC (`0x8000_0180`) maps to an S0 fetch at physical `0x0000_0180`.
+- `tb/unit/bootrom/tb_product_tlb_vectors.sv` compiles with
+  `SOC_PRODUCT_BOOT_ENABLE=1` and `SOC_MMU_ENABLE=1`; it proves I-TLB miss
+  (`hit=0`) takes `BFC0_0200` then `EBase`, while matching invalid
+  (`hit=1,V=0`) takes `BFC0_0380` then `EBase+0x180`.
+- `tb/unit/bootrom/tb_product_tlb_data_vectors.sv` proves the same miss versus
+  invalid separation for a MEM-side useg load under `BEV=1`.
 
-These tests do not prove manifest parsing, TLB-refill/vectored/cache-error
-vectors, QSPI/DDR initialization, or firmware handoff. The ROM image is a
-simulation plusarg and is not a production mask-ROM artifact.
+These tests do not prove manifest parsing, modified/vectored/cache-error
+vectors, QSPI/DDR initialization, firmware handlers, or handoff. The ROM
+image is a simulation plusarg and is not a production mask-ROM artifact.
 
 ## 9. Implementation sequence
 
 1. Add the product map macros and update `docs/address_map.md`; correct stale
    comments without changing the prototype smoke map.
-2. Implement Boot ROM slave, reset-PC parameter, and ordinary BEV/EBase vector
-   path (complete only for the opt-in directed slice); implement TLB-refill and
-   vectored/cache-error policy plus a product linker/manifest builder next.
+2. Implement Boot ROM slave, reset-PC parameter, ordinary BEV/EBase, and
+   miss-versus-invalid TLB vector paths (complete only for the opt-in directed
+   slice); implement vectored/cache-error policy plus a product linker/manifest
+   builder next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.

@@ -238,15 +238,15 @@ Multi-hit → `ExcCode = 24 (MCheck)`, `Status.TS = 1`。软件通常记录后�
 
 ### 10.1 已知阻塞点：`SOC_MMU_ENABLE=1` 下 CPU 无法取指（发现于 2026-07-30）
 
-**现象**：`SOC_MMU_ENABLE` 由 0 翻转为 1 后，`soc_smoke` 等现有 SoC 级测试全部在极早期挂死（PC 卡在
-`0x180`~`0x190` 附近反复 stall，直至 5ms 仿真超时），且这一失败与 firmware 是否包含正确的 TLB-refill
-异常处理程序**无关**——即便新写一份编码完全正确的 refill handler（安装 identity-map 4KB entry 后
-ERET 重试），失败特征仍然逐位相同。
+**现象**：`SOC_MMU_ENABLE` 由 0 翻转为 1 后，现有 prototype `soc_smoke` 在早期超时。该 firmware 的
+reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。
 
 **根因（架构级，非 firmware 缺陷）**：
 - prototype 配置的复位向量固定为 `0x0000_0000`，异常向量固定为 `0x0000_0180`。产品 opt-in
-  配置已实现 `0xBFC0_0000` 复位及普通异常的 `BEV ? 0xBFC0_0380 : EBase+0x180` 选择；它尚未
-  实现 TLB refill 向量，且没有产品 linker/TLB firmware，因此不能解除本节的 MMU 启动阻塞。
+  配置已实现 `0xBFC0_0000` 复位、普通异常与真实 TLB miss 的
+  `BEV ? BFC0_0200/BFC0_0380 : EBase/EBase+0x180` 选择。该路由已由完整
+  SoC directed I-side 和 D-side 测试验证；它仍没有产品 linker/TLB firmware，不能解除本节的 MMU
+  启动阻塞。
 - 当前 firmware 链接脚本（`tb/soc_test/fw/common/link.ld`）把 `_start` 和 `_except_handler` 都放在
   useg（VA[31]=0）。
 - `SOC_MMU_ENABLE=1` 时，useg 的任何访问（包括取指）都必须先过 TLB 查找（`mips_mmu.v`），kseg0/1
@@ -267,11 +267,13 @@ ERET 重试），失败特征仍然逐位相同。
 - `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
-**MMU 相关工作线在此暂停**，待 vector 重定位单独规划完成后再重新评估 B.3.2。
+**下一项**：建立 kseg0/kseg1 产品 linker、refill handler 和最小 wired mapping firmware gate。
+在该 gate 通过前，MMU 仍不是可启动的产品功能。
 
 ---
 
 ## 版本记录
 
 - v0 (2026-07-26)：初版规格，64-entry TLB + micro-TLB 分离 + 软件 refill 模型。等待 Phase B 起始时评审。
-- v0.1 (2026-07-30)：记录 `SOC_MMU_ENABLE=1` 架构级阻塞点（useg 向量死锁），暂停 MMU 工作线，见 §10.1。
+- v0.1 (2026-07-30)：记录 `SOC_MMU_ENABLE=1` 架构级阻塞点（useg 向量死锁），见 §10.1。
+- v0.2 (2026-08-01)：产品 opt-in 实现并验证 refill 与 Invalid 的 BEV/EBase 向量分派；产品 linker 和 handler 继续为 P0。

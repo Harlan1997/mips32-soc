@@ -56,6 +56,7 @@ module mips_rob #(
     input  wire        mem_except_req,
     input  wire [4:0]  mem_except_code,
     input  wire        mem_except_is_data,
+    input  wire        mem_except_is_tlb_refill,
     input  wire        mem_bd,
     input  wire [1:0]  mem_mem_to_reg,
 
@@ -74,6 +75,7 @@ module mips_rob #(
     output reg         wb_except_req,
     output reg  [4:0]  wb_except_code,
     output reg         wb_except_is_data,
+    output reg         wb_except_is_tlb_refill,
     output reg         wb_bd,
     output reg  [1:0]  wb_mem_to_reg
 );
@@ -104,6 +106,7 @@ module mips_rob #(
                 wb_except_req     <= 1'b0;
                 wb_except_code    <= 5'd0;
                 wb_except_is_data <= 1'b0;
+                wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
             end else if (!stall) begin
                 wb_rdata_fmt      <= mem_rdata_fmt;
@@ -120,6 +123,7 @@ module mips_rob #(
                 wb_except_req     <= mem_except_req;
                 wb_except_code    <= mem_except_code;
                 wb_except_is_data <= mem_except_is_data;
+                wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd             <= mem_bd;
                 wb_mem_to_reg     <= mem_mem_to_reg;
             end
@@ -147,7 +151,7 @@ module mips_rob #(
     // exceed 0, rob_valid/rob_ready start mattering, and commit switches from
     // "always the incoming allocate" to "the ready head of the buffer."
     // ------------------------------------------------------------------------
-    localparam BW = 130; // packed allocate-bundle width (see pack below)
+    localparam BW = 131; // packed allocate-bundle width (see pack below)
 
     generate if (DEPTH >= 2) begin : g_depth_n
         localparam PTR_W = $clog2(DEPTH);
@@ -165,7 +169,7 @@ module mips_rob #(
             mem_reg_write, mem_cp0_we, mem_is_eret,            // 3 bits
             mem_tlb_op,                                        // 3 bits
             mem_except_req, mem_except_code,                   // 6 bits
-            mem_except_is_data, mem_bd,                         // 2 bits
+            mem_except_is_data, mem_except_is_tlb_refill, mem_bd, // 3 bits
             mem_mem_to_reg                                     // 2 bits
         };
 
@@ -193,6 +197,7 @@ module mips_rob #(
                 wb_except_req     <= 1'b0;
                 wb_except_code    <= 5'd0;
                 wb_except_is_data <= 1'b0;
+                wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
             end else if (flush) begin
                 rob_head <= {PTR_W{1'b0}};
@@ -216,6 +221,7 @@ module mips_rob #(
                 wb_except_req     <= 1'b0;
                 wb_except_code    <= 5'd0;
                 wb_except_is_data <= 1'b0;
+                wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
             end else if (!stall) begin
                 // Bookkeeping-only: store the bundle and walk both pointers
@@ -241,6 +247,7 @@ module mips_rob #(
                 wb_except_req     <= mem_except_req;
                 wb_except_code    <= mem_except_code;
                 wb_except_is_data <= mem_except_is_data;
+                wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd             <= mem_bd;
                 wb_mem_to_reg     <= mem_mem_to_reg;
             end
