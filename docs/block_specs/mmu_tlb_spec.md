@@ -244,8 +244,9 @@ Multi-hit → `ExcCode = 24 (MCheck)`, `Status.TS = 1`。软件通常记录后�
 ERET 重试），失败特征仍然逐位相同。
 
 **根因（架构级，非 firmware 缺陷）**：
-- 本设计复位向量固定为 `0x0000_0000`（`mips_if_stage.v` `RESET_ADDR`），唯一异常向量固定为
-  `0x0000_0180`（`mips_cpu.v` `exception_vector`，暂无 EBase 分派，属 B.3.3 范畴）。
+- prototype 配置的复位向量固定为 `0x0000_0000`，异常向量固定为 `0x0000_0180`。产品 opt-in
+  配置已实现 `0xBFC0_0000` 复位及普通异常的 `BEV ? 0xBFC0_0380 : EBase+0x180` 选择；它尚未
+  实现 TLB refill 向量，且没有产品 linker/TLB firmware，因此不能解除本节的 MMU 启动阻塞。
 - 当前 firmware 链接脚本（`tb/soc_test/fw/common/link.ld`）把 `_start` 和 `_except_handler` 都放在
   useg（VA[31]=0）。
 - `SOC_MMU_ENABLE=1` 时，useg 的任何访问（包括取指）都必须先过 TLB 查找（`mips_mmu.v`），kseg0/1

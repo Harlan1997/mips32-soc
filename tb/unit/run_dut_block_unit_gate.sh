@@ -217,9 +217,13 @@ mkdir -p "${BOOTROM_DIR}"
 
     RUN_DIR="$(pwd)/product_reset_fetch" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_reset_fetch.sh"
+
+    RUN_DIR="$(pwd)/product_boot_vector" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_boot_vector.sh"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log"; then
+   grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_boot_vector" "${BOOTROM_DIR}/product_boot_vector/sim.log"; then
     echo "BOOTROM: PASS"
 else
     echo "BOOTROM: FAIL"

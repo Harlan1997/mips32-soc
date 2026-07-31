@@ -28,7 +28,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 累计 unit tb 覆盖 ~130 checks，SoC 冒烟 `REGRESSION_TEST_SUCCESS` 全程保持。
 
-**未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合；Phase B.7 MDU 商用重构；Phase B FPU (可选)；`SOC_MMU_ENABLE=1` 激活（架构级阻塞：boot/异常向量位于 useg，需迁移到 kseg0/1，见 mmu_tlb_spec.md §10.1，2026-07-30 发现）；EBase-driven 异常向量（需 0xBFC00000 boot ROM）；BPU IF 重定向（需 speculative fetch queue）。
+**未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合；Phase B.7 MDU 商用重构；Phase B FPU (可选)；`SOC_MMU_ENABLE=1` 激活（架构级阻塞：prototype boot/异常向量位于 useg，需迁移到 kseg0/1，见 mmu_tlb_spec.md §10.1，2026-07-30 发现）；产品普通 BEV/EBase 向量切片已实现，但 TLB-refill/向量化中断/cache-error 向量仍未实现；BPU IF 重定向（需 speculative fetch queue）。
 
 ---
 
@@ -127,8 +127,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [x] Status.ERL 可写; ERET 按 ERL 优先级清 ERL 或 EXL
 - [x] intr_req 加 !ERL 条件
 - [x] epc_out 按 ERL 选 ErrorEPC / EPC
-- [ ] EBase-driven 异常向量 — 保持 literal 0x00000180 直到 boot ROM 就绪
-- [ ] BEV=1 时向量走 0xBFC0_0180/0x0200 — 同上
+- [x] 产品普通异常向量：BEV=1 时 `0xBFC0_0380`，BEV=0 时 `EBase+0x180`；prototype 保持 literal `0x00000180`
+- [ ] TLB refill / vectored interrupt / cache-error 向量 — 需要完整产品 MMU 与中断契约
 - [ ] Formal proof: 异常优先级正确 — 待 Phase F formal 设施
 
 ### B.6 分支预测 (commit b1183a4)
