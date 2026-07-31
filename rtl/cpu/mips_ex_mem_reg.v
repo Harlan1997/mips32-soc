@@ -34,6 +34,7 @@ module mips_ex_mem_reg (
     input  wire        ex_except_req,
     input  wire [4:0]  ex_except_code,
     input  wire        ex_except_is_data,   // Phase B.3.d
+    input  wire        ex_except_is_tlb_refill,
     input  wire        ex_bd,               // Phase B.5
     input  wire        ex_mem_read,
     input  wire        ex_mem_write,
@@ -60,6 +61,7 @@ module mips_ex_mem_reg (
     output reg         mem_except_req,
     output reg  [4:0]  mem_except_code,
     output reg         mem_except_is_data,
+    output reg         mem_except_is_tlb_refill,
     output reg         mem_bd,
     output reg         mem_mem_read,
     output reg         mem_mem_write,
@@ -89,6 +91,7 @@ module mips_ex_mem_reg (
             mem_except_req <= 1'b0;
             mem_except_code<= 5'd0;
             mem_except_is_data <= 1'b0;
+            mem_except_is_tlb_refill <= 1'b0;
             mem_bd         <= 1'b0;
             mem_done       <= 1'b0;
         end else if (flush) begin
@@ -111,6 +114,7 @@ module mips_ex_mem_reg (
             mem_except_req <= 1'b0;
             mem_except_code<= 5'd0;
             mem_except_is_data <= 1'b0;
+            mem_except_is_tlb_refill <= 1'b0;
             mem_bd         <= 1'b0;
             mem_done       <= 1'b0;
         end else if (!stall) begin
@@ -129,6 +133,7 @@ module mips_ex_mem_reg (
             mem_except_req <= ex_except_req;
             mem_except_code<= ex_except_code;
             mem_except_is_data <= ex_except_is_data;
+            mem_except_is_tlb_refill <= ex_except_is_tlb_refill;
             mem_bd         <= ex_bd;
             mem_mem_read   <= ex_mem_read;
             mem_mem_write  <= ex_mem_write;

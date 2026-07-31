@@ -220,10 +220,18 @@ mkdir -p "${BOOTROM_DIR}"
 
     RUN_DIR="$(pwd)/product_boot_vector" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_boot_vector.sh"
+
+    RUN_DIR="$(pwd)/product_tlb_vectors" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_tlb_vectors.sh"
+
+    RUN_DIR="$(pwd)/product_tlb_data_vectors" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_tlb_data_vectors.sh"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_boot_vector" "${BOOTROM_DIR}/product_boot_vector/sim.log"; then
+   grep -q "REGRESSION_TEST_SUCCESS product_boot_vector" "${BOOTROM_DIR}/product_boot_vector/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_tlb_vectors" "${BOOTROM_DIR}/product_tlb_vectors/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_tlb_data_vectors" "${BOOTROM_DIR}/product_tlb_data_vectors/sim.log"; then
     echo "BOOTROM: PASS"
 else
     echo "BOOTROM: FAIL"

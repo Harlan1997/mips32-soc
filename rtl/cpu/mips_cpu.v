@@ -47,6 +47,8 @@ module mips_cpu (
     
     // Exceptions
     wire wb_except_req;
+    wire wb_except_is_tlb_refill;
+    wire wb_tlb_refill_exception = wb_except_req & wb_except_is_tlb_refill;
     wire wb_is_eret;
     wire        intr_req;
     wire [31:0] epc_out;
@@ -57,10 +59,12 @@ module mips_cpu (
     wire        cp0_bev;
     // The prototype firmware remains linked at the legacy useg vector.  The
     // product configuration instead follows the CP0 bootstrap/general-vector
-    // contract: BEV selects Boot ROM, otherwise EBase selects kernel SRAM.
+    // contract. TLB refill is distinct from Invalid even though both report
+    // TLBL/TLBS; its sideband survives the pipeline to select the refill slot.
     wire [31:0] exception_vector = wb_is_eret ? epc_out :
                                   (`SOC_PRODUCT_BOOT_ENABLE != 0) ?
-                                  (cp0_bev ? 32'hBFC0_0380 : (ebase_out + 32'h0000_0180)) :
+                                  (cp0_bev ? (wb_tlb_refill_exception ? 32'hBFC0_0200 : 32'hBFC0_0380) :
+                                             (wb_tlb_refill_exception ? ebase_out : (ebase_out + 32'h0000_0180))) :
                                   32'h0000_0180;
     
     // ID stage outputs (for flush logic)
@@ -161,6 +165,7 @@ module mips_cpu (
     wire [31:0] id_inst;
     wire        id_except_req_in;
     wire [4:0]  id_except_code_in;
+    wire        id_except_is_tlb_refill_in;
     
     // Phase B.3.d + B.4: fold MMU I-side fault into the IF-stage exception path.
     // AdEL (misaligned PC) wins over MMU-TLBL because misalignment is detected
@@ -173,6 +178,10 @@ module mips_cpu (
     wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
                                 (mmu_i_fault_type == 3'b100) ? 5'h04 :  // AdEL from MMU
                                                                 5'h02;  // TLBL default
+    // A lookup miss is a refill candidate. A lookup hit with V=0 is Invalid
+    // and must use the general exception vector despite the shared TLBL code.
+    wire if_except_is_tlb_refill = ~if_adel_exception & inst_req & ~mmu_i_ok &
+                                   (mmu_i_fault_type == 3'b001) & ~mmu_ilookup_hit;
 
     mips_if_id_reg u_mips_if_id_reg (
         .clk          (clk),
@@ -183,10 +192,12 @@ module mips_cpu (
         .if_inst      (inst_rdata),
         .if_except_req  (if_fault_req),
         .if_except_code (if_fault_code),
+        .if_except_is_tlb_refill (if_except_is_tlb_refill),
         .id_pc_plus_4 (id_pc_plus_4),
         .id_inst      (id_inst),
         .id_except_req  (id_except_req_in),
-        .id_except_code (id_except_code_in)
+        .id_except_code (id_except_code_in),
+        .id_except_is_tlb_refill (id_except_is_tlb_refill_in)
     );
     
     // PC+8 calculation for link instructions
@@ -257,6 +268,8 @@ module mips_cpu (
     wire        ex_except_is_data;    // Phase B.3.d
     wire        mem_except_is_data;
     wire        wb_except_is_data;
+    wire        ex_except_is_tlb_refill;
+    wire        mem_except_is_tlb_refill;
     // Phase B.5: delay-slot marker propagated with each instruction so an
     // exception on a delay-slot instruction can drive Cause.BD=1 and EPC=PC-4.
     wire        id_bd;
@@ -350,6 +363,7 @@ module mips_cpu (
                                     id_is_syscall    ? 5'h08 :   // Sys
                                     id_illegal_inst  ? 5'h0A :   // RI
                                                         5'h00;
+    wire id_except_is_tlb_refill_out = id_except_req_in & id_except_is_tlb_refill_in;
 
     // Phase B.5: delay-slot detector. The current ID-stage instruction is in a
     // delay slot iff the *previous* cycle's ID decoded a branch or jump (both
@@ -407,6 +421,7 @@ module mips_cpu (
         .id_except_req  (id_except_req_out),
         .id_except_code (id_except_code_out),
         .id_except_is_data (1'b0),  // IF-origin faults + ID-added (RI/SYS) are never MEM-side
+        .id_except_is_tlb_refill (id_except_is_tlb_refill_out),
         .id_bd          (id_bd),
         .id_cp0_we      (id_cp0_we),
         .id_is_eret     (id_is_eret),
@@ -435,6 +450,7 @@ module mips_cpu (
         .ex_except_req  (ex_except_req),
         .ex_except_code (ex_except_code),
         .ex_except_is_data (ex_except_is_data),
+        .ex_except_is_tlb_refill (ex_except_is_tlb_refill),
         .ex_bd          (ex_bd),
         .ex_cp0_we      (ex_cp0_we),
         .ex_is_eret     (ex_is_eret),
@@ -510,6 +526,7 @@ module mips_cpu (
         .ex_except_req   (ex_except_req),
         .ex_except_code  (ex_except_code),
         .ex_except_is_data (ex_except_is_data),
+        .ex_except_is_tlb_refill (ex_except_is_tlb_refill),
         .ex_bd           (ex_bd),
         .ex_mem_read     (ex_mem_read),
         .ex_mem_write    (ex_mem_write),
@@ -530,6 +547,7 @@ module mips_cpu (
         .mem_except_req  (mem_except_req),
         .mem_except_code (mem_except_code),
         .mem_except_is_data (mem_except_is_data),
+        .mem_except_is_tlb_refill (mem_except_is_tlb_refill),
         .mem_bd          (mem_bd),
         .mem_mem_read    (mem_mem_read),
         .mem_mem_write   (mem_mem_write),
@@ -580,6 +598,9 @@ module mips_cpu (
                                      (mmu_d_fault_type == 3'b100) ? 5'h04 :  // AdEL (user kseg)
                                      (mmu_d_fault_type == 3'b101) ? 5'h05 :  // AdES (user kseg)
                                                                      5'h02;  // TLBL
+    wire mem_mmu_refill = mem_mmu_fault &
+                          ((mmu_d_fault_type == 3'b001) || (mmu_d_fault_type == 3'b010)) &
+                          ~mmu_dlookup_hit;
     wire mem_except_req_out  = mem_except_req | mem_mmu_fault
                              | mem_adel_exception | mem_ades_exception;
     wire [4:0] mem_except_code_out = mem_except_req      ? mem_except_code
@@ -590,6 +611,8 @@ module mips_cpu (
     // Upstream (IF-origin) faults keep their is_data (=0); any fault added at
     // MEM stage is MEM-origin (data-address related), so is_data becomes 1.
     wire mem_except_is_data_out = mem_except_req ? mem_except_is_data : 1'b1;
+    wire mem_except_is_tlb_refill_out = mem_except_req ? mem_except_is_tlb_refill
+                                                        : mem_mmu_refill;
     
     // =========================================================================
     // MEM/WB Pipeline Register
@@ -624,6 +647,7 @@ module mips_cpu (
         .mem_except_req  (mem_except_req_out),
         .mem_except_code (mem_except_code_out),
         .mem_except_is_data (mem_except_is_data_out),
+        .mem_except_is_tlb_refill (mem_except_is_tlb_refill_out),
         .mem_bd          (mem_bd),
         .mem_mem_to_reg  (mem_mem_to_reg),
         
@@ -642,6 +666,7 @@ module mips_cpu (
         .wb_except_req   (wb_except_req),
         .wb_except_code  (wb_except_code),
         .wb_except_is_data (wb_except_is_data),
+        .wb_except_is_tlb_refill (wb_except_is_tlb_refill),
         .wb_bd           (wb_bd),
         .wb_mem_to_reg   (wb_mem_to_reg)
     );
@@ -773,9 +798,8 @@ module mips_cpu (
         .fault_type      (mmu_d_fault_type)
     );
 
-    // MMU cache_attr and fault outputs are declared for observability and for
-    // Phase B.3.c.2 (cache attr routing) / Phase B.3.d (exception path). They
-    // are intentionally unconsumed here.
+    // Cache attributes remain observation-only until cache-attribute routing
+    // lands. Translation-ok and fault-type above drive the exception path.
     wire _mmu_unused = &{1'b0, mmu_i_cache_attr, mmu_d_cache_attr,
                               mmu_i_ok, mmu_d_ok,
                               mmu_i_fault_type, mmu_d_fault_type};

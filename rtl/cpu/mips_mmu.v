@@ -14,8 +14,9 @@
 //   0xC000_0000-0xDFFF_FFFF  sseg    : identity when SOC_MMU_ENABLE=0, else TLB
 //   0xE000_0000-0xFFFF_FFFF  kseg3   : identity when SOC_MMU_ENABLE=0, else TLB
 //
-// Fault reporting is exposed but not yet consumed by the pipeline; Phase B.3.d
-// wires it to the exception path (TLBL / TLBS / Mod / AdEL / AdES).
+// Fault reporting is consumed by mips_cpu's exception path (TLBL / TLBS /
+// Mod / AdEL / AdES). Vector selection retains a separate miss sideband so
+// TLBL/TLBS Invalid does not get conflated with TLB Refill.
 // =============================================================================
 
 `include "soc_config.vh"
