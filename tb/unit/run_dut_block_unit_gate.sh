@@ -17,14 +17,14 @@ export LM_LICENSE_FILE=${LM_LICENSE_FILE:-2700@localhost}
 mkdir -p "${RUN_ROOT}"
 
 echo "========================================================================"
-echo " Running DUT Block Unit Gate (7 Blocks)"
+echo " Running DUT Block Unit Gate (8 Blocks)"
 echo " Run Root: ${RUN_ROOT}"
 echo "========================================================================"
 
 FAILED=0
 
 # 1. mdu
-echo "--- [1/7] Running MDU Unit Test ---"
+echo "--- [1/8] Running MDU Unit Test ---"
 MDU_DIR="${RUN_ROOT}/mdu"
 mkdir -p "${MDU_DIR}"
 (
@@ -43,7 +43,7 @@ else
 fi
 
 # 2. dma
-echo "--- [2/7] Running DMA Unit Test ---"
+echo "--- [2/8] Running DMA Unit Test ---"
 DMA_DIR="${RUN_ROOT}/dma"
 mkdir -p "${DMA_DIR}"
 (
@@ -62,7 +62,7 @@ else
 fi
 
 # 3. vic
-echo "--- [3/7] Running VIC Unit Test ---"
+echo "--- [3/8] Running VIC Unit Test ---"
 VIC_DIR="${RUN_ROOT}/vic"
 mkdir -p "${VIC_DIR}"
 (
@@ -81,7 +81,7 @@ else
 fi
 
 # 4. uart
-echo "--- [4/7] Running UART 16550 Unit Test ---"
+echo "--- [4/8] Running UART 16550 Unit Test ---"
 UART_DIR="${RUN_ROOT}/uart"
 mkdir -p "${UART_DIR}"
 (
@@ -100,7 +100,7 @@ else
 fi
 
 # 5. l2
-echo "--- [5/7] Running L2 Cache Unit Test ---"
+echo "--- [5/8] Running L2 Cache Unit Test ---"
 L2_DIR="${RUN_ROOT}/l2"
 mkdir -p "${L2_DIR}"
 (
@@ -123,7 +123,7 @@ else
 fi
 
 # 6. l2nb (non-blocking L2, full MSHR)
-echo "--- [6/7] Running Non-Blocking L2 (MSHR) Unit Test ---"
+echo "--- [6/8] Running Non-Blocking L2 (MSHR) Unit Test ---"
 L2NB_DIR="${RUN_ROOT}/l2nb"
 mkdir -p "${L2NB_DIR}"
 (
@@ -146,7 +146,7 @@ else
 fi
 
 # 7. dcache (L1 D-cache, 4-way + tree-PLRU)
-echo "--- [7/7] Running L1 D-Cache Unit Test ---"
+echo "--- [7/8] Running L1 D-Cache Unit Test ---"
 DC_DIR="${RUN_ROOT}/dcache"
 mkdir -p "${DC_DIR}"
 (
@@ -163,9 +163,31 @@ else
     FAILED=1
 fi
 
+# 8. rob (mini-ROB, DEPTH=1 golden vs DEPTH=2 skeleton parity)
+echo "--- [8/8] Running mini-ROB Unit Test ---"
+ROB_DIR="${RUN_ROOT}/rob"
+mkdir -p "${ROB_DIR}"
+(
+    cd "${ROB_DIR}"
+    # Runs a DEPTH=1 (old-register-equivalent) instance and the DEPTH=2 Stage 2
+    # circular-buffer skeleton side by side against identical stimulus and
+    # checks every wb_* output matches every cycle -- the parity claim Stage 2
+    # depends on while the D-cache is still blocking.
+    vcs -full64 -sverilog -timescale=1ns/1ps \
+        "${ROOT_DIR}/rtl/cpu/mips_rob.v" "${ROOT_DIR}/tb/unit/rob/tb_mips_rob.v" \
+        -l compile.log
+    ./simv -l sim.log
+)
+if grep -q "REGRESSION_TEST_SUCCESS rob" "${ROB_DIR}/sim.log"; then
+    echo "ROB: PASS"
+else
+    echo "ROB: FAIL"
+    FAILED=1
+fi
+
 echo "======================================================================--"
 if [ "$FAILED" -eq 0 ]; then
-    echo " DUT Block Unit Gate Passed (7/7)"
+    echo " DUT Block Unit Gate Passed (8/8)"
     echo "======================================================================--"
     exit 0
 else

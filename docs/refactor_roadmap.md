@@ -546,3 +546,54 @@ Honest scope / non-claims:
   `tb/coverage/manifest.json`, `exclusion_manifest.json`, and the `.el` files. A
   full coverage regeneration is separate (belongs to the parked coverage-closure
   effort); the pre-existing manifest/.el audit desync is unchanged by this work.
+
+## Phase C.4: CPU/L1 Hit-Under-Miss (in progress)
+
+Goal: let the CPU accept new memory ops while an L1 D-cache miss is still
+outstanding, so the multi-outstanding fabric/non-blocking L2 delivered in
+Phase C.2/C.3 finally has a source of concurrent same-slave traffic (see the
+Phase C.3 non-claims above — same-slave depth is capped at 1 until this
+lands). Landing in stages so each one is independently provable against the
+previous baseline before growing scope, mirroring how Phase C.2/C.3 staged
+their own hardening:
+
+- **Stage 1 (delivered, `46fda4c`)**: `rtl/cpu/mips_rob.v`, a parameterized
+  in-order-retirement completion buffer (mini-ROB) replaces the plain
+  MEM/WB pipeline register (`mips_mem_wb_reg`). At `DEPTH=1` it is a
+  bit-exact drop-in — same three-way reset/flush/stall commit register
+  driving the same `wb_*` bundle. Purpose: rewire retirement/exceptions
+  through the new module boundary with zero functional change before any
+  stage grows depth or run-ahead.
+- **Stage 2 (delivered, this commit)**: `mips_rob` grows a real
+  `DEPTH>=2` circular-buffer skeleton (slot array, per-slot valid/ready
+  bits, head/tail pointers) instantiated at `DEPTH=2` in `mips_cpu.v`. The
+  D-cache is still blocking, so every allocated entry is ready in the same
+  cycle it's produced — occupancy is a structural invariant of 0 across
+  every clock edge, so the buffered path is bookkept every cycle but stays
+  dead code, and commit remains bit-identical to Stage 1. Proven with
+  `tb/unit/rob/tb_mips_rob.v`, which runs a `DEPTH=1` (golden) and
+  `DEPTH=2` (skeleton) instance side by side against identical stimulus
+  (back-to-back allocate, stall-hold, flush, exception propagation) and
+  diffs every `wb_*` output every cycle — now the 8th block in
+  `make dut-block-unit-gate` (8/8). `make soc-smoke` confirmed unaffected
+  (`REGRESSION_TEST_SUCCESS`, same as pre-change baseline).
+- **Stage 3 (not started)**: make `dcache.v`'s FSM non-blocking — add an
+  MSHR to track one outstanding miss while still accepting new hits (and,
+  later, additional misses), so an entry can genuinely go un-ready for
+  more than zero cycles for the first time. This is the point where
+  `rob_valid`/`rob_ready` in the Stage 2 skeleton start mattering and out-
+  of-order slot writeback + in-order head commit become live code paths
+  instead of dead bookkeeping.
+- **Stage 4 (not started)**: rework ID-stage hazard/forwarding
+  (`mips_id_stage.v`'s `fw_mem_we`/`fw_wb_we` forwarding and load-use
+  stall) to consult in-flight ROB entries rather than only EX/MEM, since a
+  source register can now be produced by a still-outstanding (not-yet-
+  ready) ROB slot.
+- **Stage 5 (not started)**: grow `DEPTH` beyond 2 and add run-ahead
+  profiling to characterize real throughput gain once Stage 3/4 land.
+
+Non-claims: no out-of-order issue/execute (this is strictly an in-order-
+issue, in-order-commit design — only the memory-completion stage tolerates
+a miss in flight), no register renaming, no speculative memory
+disambiguation. This is a narrowly-scoped MEM-stage hit-under-miss buffer,
+not a general out-of-order core.
