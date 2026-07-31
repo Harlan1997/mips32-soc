@@ -17,7 +17,8 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 
 CFLAGS  = -mabi=32 -mips32 -EL -O2 -ffreestanding -nostdlib -G 0 \
           -mno-abicalls -fno-pic -I$(COMMON_DIR)
-LDFLAGS = -T $(COMMON_DIR)/link.ld -nostdlib
+LINKER_SCRIPT ?= $(COMMON_DIR)/link.ld
+LDFLAGS = -T $(LINKER_SCRIPT) -nostdlib
 
 OUT_DIR ?= .
 FW_BASE ?= firmware
@@ -33,7 +34,9 @@ MANIFEST    = $(OUT_DIR)/$(FW_BASE).manifest
 # common. Preserves pre-split link layout so soc_smoke's CPU boot timing
 # exactly matches the signoff #12 baseline that current UVM tests were
 # validated against.
-ifeq ($(LEGACY_MONOLITHIC),1)
+ifeq ($(CUSTOM_BOOT),1)
+COMMON_SOURCES =
+else ifeq ($(LEGACY_MONOLITHIC),1)
 COMMON_SOURCES = $(COMMON_DIR)/boot.s
 else
 COMMON_SOURCES = $(COMMON_DIR)/boot.s $(COMMON_DIR)/print.c $(COMMON_DIR)/excpt.c
@@ -51,7 +54,7 @@ toolchain-check:
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
-$(ELF): $(ALL_SOURCES) $(COMMON_DIR)/link.ld | $(OUT_DIR)
+$(ELF): $(ALL_SOURCES) $(LINKER_SCRIPT) | $(OUT_DIR)
 	$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-Map,$(MAP) $(ALL_SOURCES) -o $(ELF)
 
 $(BIN): $(ELF)
