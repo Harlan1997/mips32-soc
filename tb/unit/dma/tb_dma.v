@@ -65,6 +65,7 @@ module tb_dma;
 
     reg inject_rerr = 0;
     reg inject_werr = 0;
+    reg stall_ar    = 0;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -78,6 +79,7 @@ module tb_dma;
             m_rlast   <= 1;
             latched_read_valid <= 0;
         end else begin
+            m_arready <= ~stall_ar;
             // Read pipeline
             if (m_rvalid && m_rready) m_rvalid <= 0;
             if (m_arvalid && m_arready) begin
@@ -97,6 +99,30 @@ module tb_dma;
                 m_bresp  <= inject_werr ? 2'b10 : 2'b00;
                 m_bvalid <= 1;
             end
+        end
+    end
+
+    // AR channel stability checker: once ARVALID asserts without ARREADY,
+    // it must stay asserted with an unchanged payload until accepted.
+    reg        ar_hold_q = 0;
+    reg [31:0] ar_addr_q = 0;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ar_hold_q <= 0;
+            ar_addr_q <= 0;
+        end else begin
+            if (ar_hold_q) begin
+                if (!m_arvalid) begin
+                    $display("FAIL ARVALID deasserted before ARREADY");
+                    errs = errs + 1;
+                end else if (m_araddr !== ar_addr_q) begin
+                    $display("FAIL AR payload changed while ARVALID waited for ARREADY: %h -> %h",
+                              ar_addr_q, m_araddr);
+                    errs = errs + 1;
+                end
+            end
+            ar_hold_q <= m_arvalid && !m_arready;
+            ar_addr_q <= m_araddr;
         end
     end
 
@@ -375,6 +401,68 @@ module tb_dma;
             $display("FAIL ch_int[0] expected 0 after W1C DONE");
             errs = errs + 1;
         end
+
+        // ---- Test 10: Arbiter lock vs lower-channel busy while higher
+        //      channel has an outstanding, unaccepted AR (act_ch must not
+        //      flip mid-transaction; the AR stability checker above will
+        //      flag any violation) ----
+        mem[200] = 32'hAAAA_0000; mem[201] = 32'hAAAA_0001;
+        mem[202] = 32'hAAAA_0002; mem[203] = 32'hAAAA_0003;
+        mem[210] = 32'h0; mem[211] = 32'h0; mem[212] = 32'h0; mem[213] = 32'h0;
+        mem[220] = 32'hBBBB_0000; mem[221] = 32'hBBBB_0001;
+        mem[222] = 32'hBBBB_0002; mem[223] = 32'hBBBB_0003;
+        mem[230] = 32'h0; mem[231] = 32'h0; mem[232] = 32'h0; mem[233] = 32'h0;
+
+        stall_ar = 1;
+
+        // Higher-numbered channel (ch2) starts first and becomes sole busy
+        // channel; it will assert ARVALID and stall waiting for ARREADY.
+        apb_write(12'h0C4, 32'h320);         // ch2 SRC = mem[200]
+        apb_write(12'h0C8, 32'h348);         // ch2 DST = mem[210]
+        apb_write(12'h0CC, 32'd16);          // ch2 LEN
+        apb_write(12'h0C0, 32'h0000_0001);   // CTRL: EN=1
+
+        repeat (4) @(negedge clk);           // let ch2 reach ST_EXEC_R w/ AR stalled
+
+        // Lower-numbered channel (ch0) becomes busy while ch2's AR is
+        // still outstanding-but-unaccepted. Pre-fix, the combinational
+        // "lowest busy" arbiter would flip act_ch to ch0 immediately.
+        apb_write(12'h044, 32'h370);         // ch0 SRC = mem[220]
+        apb_write(12'h048, 32'h398);         // ch0 DST = mem[230]
+        apb_write(12'h04C, 32'd16);          // ch0 LEN
+        apb_write(12'h040, 32'h0000_0001);   // CTRL: EN=1
+
+        repeat (10) @(negedge clk);          // hold the stall well past ch0 going busy
+
+        stall_ar = 0;
+
+        begin: wait_arb_lock_done
+            integer wait_cycles;
+            reg [31:0] st0, st2;
+            wait_cycles = 0;
+            st0 = 0; st2 = 0;
+            while (((st0[1] == 1'b0) || (st2[1] == 1'b0)) && (wait_cycles < 5000)) begin
+                apb_read(12'h054, st0); // ch0 STATUS
+                apb_read(12'h0D4, st2); // ch2 STATUS
+                @(negedge clk);
+                wait_cycles = wait_cycles + 1;
+            end
+        end
+
+        for (mi = 0; mi < 4; mi = mi + 1) begin
+            if (mem[210 + mi] !== mem[200 + mi]) begin
+                $display("FAIL arb lock ch2 word %0d: mem[dst]=%h expected %h",
+                         mi, mem[210 + mi], mem[200 + mi]);
+                errs = errs + 1;
+            end
+            if (mem[230 + mi] !== mem[220 + mi]) begin
+                $display("FAIL arb lock ch0 word %0d: mem[dst]=%h expected %h",
+                         mi, mem[230 + mi], mem[220 + mi]);
+                errs = errs + 1;
+            end
+        end
+        apb_write(12'h040, 32'h0000_0008);   // ch0 W1C DONE
+        apb_write(12'h0C0, 32'h0000_0008);   // ch2 W1C DONE
 
         if (errs == 0) $display("REGRESSION_TEST_SUCCESS dma");
         else           $display("REGRESSION_TEST_FAIL errs=%0d", errs);

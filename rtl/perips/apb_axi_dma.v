@@ -169,18 +169,57 @@ module apb_axi_dma #(
     reg        wait_w   [N_CHANNELS-1:0];
     reg        wait_b   [N_CHANNELS-1:0];
 
-    // Arbiter: pick lowest-numbered busy channel
-    reg [CH_W-1:0] act_ch;
-    reg            act_valid;
+    // Candidate arbitration: lowest-numbered busy channel
+    reg [CH_W-1:0] cand_ch;
+    reg            cand_valid;
     integer k;
     always @(*) begin
-        act_ch    = {CH_W{1'b0}};
-        act_valid = 1'b0;
+        cand_ch    = {CH_W{1'b0}};
+        cand_valid = 1'b0;
         for (k = 0; k < N_CHANNELS; k = k + 1) begin
-            if (busy_r[k] && !act_valid) begin
-                act_ch    = k[CH_W-1:0];
-                act_valid = 1'b1;
+            if (busy_r[k] && !cand_valid) begin
+                cand_ch    = k[CH_W-1:0];
+                cand_valid = 1'b1;
             end
+        end
+    end
+
+    // A channel mid-transaction on the AXI bus must keep the grant until it
+    // leaves the bus-needing state (or stops being busy) -- otherwise act_ch
+    // can flip while an AR/AW/W request is still outstanding-but-unaccepted,
+    // mutating the payload out from under it. Same class of fix as the
+    // crossbar's rd_lock/wr_lock, applied at DMA channel-arbitration level.
+    function is_bus_state;
+        input [3:0] st;
+        begin
+            is_bus_state = (st == ST_LOAD_SRC)  || (st == ST_LOAD_DST) ||
+                           (st == ST_LOAD_LEN)  || (st == ST_LOAD_NEXT) ||
+                           (st == ST_EXEC_R)    || (st == ST_EXEC_W);
+        end
+    endfunction
+
+    reg [CH_W-1:0] act_ch;
+    reg            act_valid;
+    reg [CH_W-1:0] act_ch_q;
+    reg            act_valid_q;
+
+    always @(*) begin
+        if (act_valid_q && busy_r[act_ch_q] && is_bus_state(ch_state[act_ch_q])) begin
+            act_ch    = act_ch_q;
+            act_valid = 1'b1;
+        end else begin
+            act_ch    = cand_ch;
+            act_valid = cand_valid;
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            act_ch_q    <= {CH_W{1'b0}};
+            act_valid_q <= 1'b0;
+        end else begin
+            act_ch_q    <= act_ch;
+            act_valid_q <= act_valid;
         end
     end
 
