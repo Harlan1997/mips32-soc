@@ -10,6 +10,11 @@
 #include "soc_addr.h"
 #include "print.h"
 
+static void mailbox_fail(void) {
+    *((volatile uint32_t*)0xA000FFFC) = 0xDEADDEAD;
+    while (1) { }
+}
+
 static void set_hilo(uint32_t hi, uint32_t lo) {
     asm volatile("mthi %0" :: "r"(hi));
     asm volatile("mtlo %0" :: "r"(lo));
@@ -95,16 +100,78 @@ static int test_mul(void) {
     return 0;
 }
 
+static int test_div(void) {
+    int32_t quotient = 0;
+    int32_t remainder = 0;
+    int32_t dividend = 100;
+    int32_t divisor = 3;
+
+    asm volatile(".set push\n"
+                 ".set noreorder\n"
+                 ".set nomacro\n"
+                 "div $0, %2, %3\n"
+                 "mflo %0\n"
+                 "mfhi %1\n"
+                 ".set pop"
+                 : "=&r"(quotient), "=&r"(remainder)
+                 : "r"(dividend), "r"(divisor));
+    if (quotient != 33 || remainder != 1) {
+        print_str("FAIL: DIV 100/3 got LO="); print_hex((uint32_t)quotient);
+        print_str(" HI="); print_hex((uint32_t)remainder); print_str("\n");
+        return -1;
+    }
+
+    dividend = -100;
+    asm volatile(".set push\n"
+                 ".set noreorder\n"
+                 ".set nomacro\n"
+                 "div $0, %2, %3\n"
+                 "mflo %0\n"
+                 "mfhi %1\n"
+                 ".set pop"
+                 : "=&r"(quotient), "=&r"(remainder)
+                 : "r"(dividend), "r"(divisor));
+    if (quotient != -33 || remainder != -1) {
+        print_str("FAIL: DIV -100/3 got LO="); print_hex((uint32_t)quotient);
+        print_str(" HI="); print_hex((uint32_t)remainder); print_str("\n");
+        return -1;
+    }
+
+    dividend = 100;
+    divisor = -3;
+    asm volatile(".set push\n"
+                 ".set noreorder\n"
+                 ".set nomacro\n"
+                 "div $0, %2, %3\n"
+                 "mflo %0\n"
+                 "mfhi %1\n"
+                 ".set pop"
+                 : "=&r"(quotient), "=&r"(remainder)
+                 : "r"(dividend), "r"(divisor));
+    if (quotient != -33 || remainder != 1) {
+        print_str("FAIL: DIV 100/-3 got LO="); print_hex((uint32_t)quotient);
+        print_str(" HI="); print_hex((uint32_t)remainder); print_str("\n");
+        return -1;
+    }
+
+    return 0;
+}
+
 int main(void) {
     print_str("mdu_cpu test: starting\n");
     if (test_madd_maddu_msub_msubu() != 0) {
         print_str("mdu_cpu test: FAILED accumulate tests\n");
-        mailbox_exit();
+        mailbox_fail();
         return 1;
     }
     if (test_mul() != 0) {
         print_str("mdu_cpu test: FAILED mul tests\n");
-        mailbox_exit();
+        mailbox_fail();
+        return 1;
+    }
+    if (test_div() != 0) {
+        print_str("mdu_cpu test: FAILED divide tests\n");
+        mailbox_fail();
         return 1;
     }
     print_str("mdu_cpu test: REGRESSION_TEST_SUCCESS\n");
