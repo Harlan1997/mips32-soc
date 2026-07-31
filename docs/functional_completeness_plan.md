@@ -25,7 +25,7 @@
 | `phase-c2-l2-nonblocking@fcfc9c1` | 比 `master` 多 7 个提交；含已独立提交的 JTAG、firmware、gate 与本计划修复 | 已是集成线父线；L2-NB、ROB、DDR placeholder 的产品状态仍须分项判断 |
 | `phase-c1-icache-4way@d695cb5` | 已由 merge commit `8b3dc6b` 合入集成线 | 保留为历史分支，不再重复 merge |
 | `phase-c3-axi-crossbar`、`phase4-dut-block-commercial-closure` | 已为 `master` 祖先 | 只保留历史引用，禁止重复合并 |
-| D-cache NB WIP | 未跟踪 `rtl/cache/dcache_nb.v`、`tb/unit/dcache/tb_dcache_nb.v`，以及相关 spec/gate 修改 | 仅为 `BLOCK_VERIFIED`；未接入 CPU/SoC，不能计入 SoC 功能完成 |
+| D-cache NB WIP：`feature/dcache-nb-stage3@fcfc9c1` | 未跟踪 `rtl/cache/dcache_nb.v`、`tb/unit/dcache/tb_dcache_nb.v`，以及相关 spec/gate 修改 | 已有唯一 feature 分支，但仍仅为 `BLOCK_VERIFIED`；未接入 CPU/SoC，不能计入 SoC 功能完成 |
 | 本轮功能修复/验证改动 | JTAG `7f74345`、firmware `1288681`、gate 隔离 `324d663`、原始计划 `fcfc9c1` 已分别提交 | 已进入集成线父线；不得与 D-cache NB WIP 混合提交 |
 | Coverage 生成工件 | `product_exclusions.el`、`uvm_exclusions.el` 和 `exclusion_manifest.json` 已由 fresh VDB 重生成但 strict URG 仍报 invalid object/checksum mismatch | 保留作 P3 调查输入；在告警清零和人工审计前不得提交或作为 coverage signoff 依据 |
 | `stash@{0}` | C3 遗留 WIP，含旧 fabric/coverage 变更 | 审计后 apply 或归档，禁止盲删 |
@@ -59,7 +59,7 @@
 | `fix(jtag-axi-contract)` | `rtl/perips/jtag_debug_top.v`、`tb/uvm_tb/checkers/axi_protocol_checker.sv`、`tb/uvm_tb/tb_top/tb_top.sv` | commit `7f74345`；seed 10 stress 已通过 | 已进入集成线父线，不与 firmware 或 cache WIP 混合 |
 | `test(firmware-failures-and-div)` | `tb/soc_test/fw/tests/mdu_cpu/main.c`、`tb/soc_test/fw/tests/soc_smoke/main.c` | commit `1288681`；mdu_cpu DIV 与 smoke 已通过 | 已进入集成线父线；保留 raw `div` 指令和 failure mailbox 语义 |
 | `test(clean-run-gates)` | 四个 `tb/uvm_tb/run_phase*_complete.sh` | commit `324d663`；`bash -n` 与 Phase 2 hardened run 通过 | 已进入集成线父线；这是证据可复现性修复，不是 RTL feature |
-| `feat(dcache-nb-stage3)` | `rtl/cache/dcache_nb.v`、`tb/unit/dcache/tb_dcache_nb.v`、D-cache spec/roadmap/checklist、`tb/unit/run_dut_block_unit_gate.sh` | untracked RTL/TB 加本地文档与 gate WIP；block gate `9/9` | 单独留在 feature branch；不得改产品默认 `dcache.v` 或与 C1 unit-gate 更新混合 |
+| `feat(dcache-nb-stage3)` | `rtl/cache/dcache_nb.v`、`tb/unit/dcache/tb_dcache_nb.v`、D-cache spec/roadmap/checklist、`tb/unit/run_dut_block_unit_gate.sh` | 位于 `feature/dcache-nb-stage3@fcfc9c1` 的 untracked RTL/TB 加本地文档与 gate WIP；block gate `9/9` | 单独留在 feature branch；不得改产品默认 `dcache.v` 或与 C1 unit-gate 更新混合 |
 | `docs(functional-readiness)` | `docs/functional_completeness_plan.md` | `fcfc9c1` 为初版；本次集成证据以独立文档提交记录 | 文档不与 RTL feature 或 D-cache NB WIP 混合 |
 | `coverage-generated-artifacts` | `tb/coverage/exclusion_manifest.json`、`product_exclusions.el`、`uvm_exclusions.el` | 自动生成且 strict URG 仍失败 | 不 stage、不 commit；留作后续 P3 调查输入 |
 
@@ -67,7 +67,7 @@
 2. `integration/function-contract` 已从 `phase-c2-l2-nonblocking@fcfc9c1` 建立。C2 的 L2-NB、ROB skeleton、DDR placeholder、MMU 脚手架和 DMA 修复仍按产品接入状态分项判断，不能整体标记为“商用缓存/DDR/MMU完成”。
 3. `phase-c1-icache-4way` 已以 `8b3dc6b` 合入；人工合并的文档和 unit gate 已通过 `bash -n` 及合并后 unit gate `9/9`。同一基线的 SoC smoke 与 seed 10 UVM stress 均通过。
 4. JTAG AXI payload 锁存、protocol checker bind/packing 与 firmware failure-mailbox 已作为独立 commit 固化，并在集成基线重复 seed 10 bus stress。
-5. D-cache NB 保持独立分支，当前只能是 `BLOCK_VERIFIED`；在 CPU/ROB tag、hazard/forwarding 和 SoC stress 完成前禁止合入产品默认路径。
+5. D-cache NB 保持在 `feature/dcache-nb-stage3`，当前只能是 `BLOCK_VERIFIED`；在 CPU/ROB tag、hazard/forwarding 和 SoC stress 完成前禁止合入产品默认路径。
 6. `phase-c3-axi-crossbar` 与 `phase4-dut-block-commercial-closure` 均已是 `master` 祖先，只归档引用，禁止再次 merge。`stash@{0}` 只审计、不删除；其内容不进入集成线，除非被拆成可验证主题。
 
 退出条件：存在一个干净的 integration branch；每个 WIP 有唯一主题与 commit 归属；每个已合入功能都有同一基线上的 block/firmware/SoC 证据。
