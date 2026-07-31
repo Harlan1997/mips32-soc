@@ -53,12 +53,15 @@ module mips_cpu (
     
     // Exception PC redirection
     wire exception_flush = wb_except_req | wb_is_eret | intr_req;
-    // Phase B.1: keep literal 0x00000180 vector (matches firmware .except_vector
-    // link address). EBase-driven vector selection is deferred to Phase B.5 so
-    // that BEV / kseg address rules can be resolved together with precise-exception
-    // pipeline changes. ebase_out is exposed for observability but not consumed here.
     wire [31:0] ebase_out;
-    wire [31:0] exception_vector = wb_is_eret ? epc_out : 32'h00000180;
+    wire        cp0_bev;
+    // The prototype firmware remains linked at the legacy useg vector.  The
+    // product configuration instead follows the CP0 bootstrap/general-vector
+    // contract: BEV selects Boot ROM, otherwise EBase selects kernel SRAM.
+    wire [31:0] exception_vector = wb_is_eret ? epc_out :
+                                  (`SOC_PRODUCT_BOOT_ENABLE != 0) ?
+                                  (cp0_bev ? 32'hBFC0_0380 : (ebase_out + 32'h0000_0180)) :
+                                  32'h0000_0180;
     
     // ID stage outputs (for flush logic)
     wire        id_branch_taken;
@@ -698,6 +701,7 @@ module mips_cpu (
         .bad_vaddr    (bad_vaddr),
         .epc_out      (epc_out),
         .ebase_out    (ebase_out),
+        .bev_out      (cp0_bev),
         .intr_req     (intr_req),
         .kernel_mode  (cpu_kernel_mode),
         .cu0_enable   (cpu_cu0),

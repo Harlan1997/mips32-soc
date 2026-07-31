@@ -53,6 +53,7 @@ module tb_cp0_timer;
     wire [19:0] mmu_dlookup_pfn;
     wire [31:0] epc_out;
     wire [31:0] ebase_out;
+    wire        bev_out;
     wire        intr_req;
 
     integer errors = 0;

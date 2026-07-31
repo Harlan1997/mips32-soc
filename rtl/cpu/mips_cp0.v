@@ -41,7 +41,9 @@
 //   - RDHWR $2 → Count (needs Phase B.4 user mode + instruction decode)
 //   - KSU / User mode enforcement (B.4)
 //   - Precise exception refinement + BD-in-pipeline plumbing (B.5)
-//   - EBase-driven exception vector (B.5)
+//   - TLB-refill, vectored-interrupt and cache-error vector selection (B.5).
+//     Product-mode ordinary BEV/EBase exception selection is implemented by
+//     mips_cpu; the remaining vector classes still need this CP0 policy.
 // =============================================================================
 
 `include "soc_config.vh"
@@ -79,6 +81,7 @@ module mips_cp0 (
     // Outputs to CPU pipeline
     output wire [31:0] epc_out,      // EPC register value (used by ERET)
     output wire [31:0] ebase_out,    // Full EBase register value (for vector gen)
+    output wire        bev_out,      // Status.BEV (for CPU exception-vector selection)
     output wire        intr_req,     // Interrupt request to CPU (if enabled)
     // Phase B.4: effective privilege exports
     output wire        kernel_mode,  // 1 = current instruction executes in kernel mode
@@ -188,6 +191,7 @@ module mips_cp0 (
 
     wire [31:0] ebase_val = { 2'b10, cp0_ebase_hi, 2'b00, `SOC_CP0_CPUNUM };
     assign ebase_out = ebase_val;
+    assign bev_out   = cp0_status[22];
 
     // Config (16,0): M=1, BE=0 (LE), AT=00 (MIPS32), AR=001 (R2), MT=010 (TLB),
     //                VI=0, K0 writable
@@ -346,12 +350,12 @@ module mips_cp0 (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             cp0_status      <= { 9'b0,                        // [31:23]
-                                 `SOC_CP0_STATUS_BEV_RESET,   // [22] BEV
+                                 ((`SOC_PRODUCT_BOOT_ENABLE != 0) ? 1'b1 : `SOC_CP0_STATUS_BEV_RESET), // [22] BEV
                                  6'b0,                        // [21:16]
                                  8'b0,                        // [15:8] IM
                                  3'b0,                        // [7:5]
                                  2'b0,                        // [4:3] KSU
-                                 1'b0,                        // [2] ERL
+                                 ((`SOC_PRODUCT_BOOT_ENABLE != 0) ? 1'b1 : 1'b0), // [2] ERL
                                  1'b0,                        // [1] EXL
                                  1'b0 };                      // [0] IE
             cp0_cause       <= 32'd0;

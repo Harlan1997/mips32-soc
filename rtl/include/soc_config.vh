@@ -146,10 +146,9 @@
 // Config (reg 16, sel 0) bit K0 (kseg0 cache attr): 011 = cacheable write-back
 `define SOC_CP0_CONFIG_K0_RESET    3'b011
 
-// Status.BEV reset. Strict MIPS spec = 1'b1 (vector base 0xBFC00380 at reset).
-// Deviation: current test firmware installs handler at .except_vector linked to
-// 0x00000180 and does not clear BEV; keep BEV=0 at reset until Phase F introduces
-// a real 0xBFC00000 boot ROM. Documented in cp0_spec.md v1 pending update.
+// Status.BEV reset for the prototype configuration. Product boot overrides this
+// to 1 (and ERL to 1) inside mips_cp0, selecting the Boot ROM exception vector.
+// Prototype firmware remains linked at 0x00000180 and therefore retains BEV=0.
 `define SOC_CP0_STATUS_BEV_RESET   1'b0
 
 // -----------------------------------------------------------------------------
