@@ -7,6 +7,13 @@ RUN_ROOT=${RUN_ROOT:-"${ROOT_DIR}/build/uvm/phase2_complete"}
 TESTLIST=${TESTLIST:-"${SCRIPT_DIR}/phase2_directed_tests.txt"}
 FW_HEX=${FW_HEX:-"${ROOT_DIR}/build/firmware/soc_smoke/firmware.hex"}
 
+BUILD_DIR=$(realpath -m "${ROOT_DIR}/build")
+RUN_ROOT=$(realpath -m "$RUN_ROOT")
+if [[ "${RUN_ROOT}" != "${BUILD_DIR}/"* ]]; then
+    echo "ERROR: RUN_ROOT must be a child directory of ${BUILD_DIR}, got: ${RUN_ROOT}"
+    exit 1
+fi
+
 DIRECTED_DIR="${RUN_ROOT}/directed"
 COV_DIR="${RUN_ROOT}/directed_cov"
 REPORT="${RUN_ROOT}/phase2_completion_report.md"
@@ -34,6 +41,11 @@ if [ ! -f "$TESTLIST" ]; then
     exit 1
 fi
 
+# A completion report is valid only when every owned artifact comes from this
+# invocation. Keep deletion constrained to this gate's build subdirectory.
+rm -rf -- "$DIRECTED_DIR" "$COV_DIR"
+rm -f -- "$REPORT" "${RUN_ROOT}/phase2_error_scan.txt" \
+    "${RUN_ROOT}/phase2_error_scan.txt.tmp" "${RUN_ROOT}/phase2_error_scan_err.txt"
 mkdir -p "$RUN_ROOT"
 
 echo "======================================================================"
