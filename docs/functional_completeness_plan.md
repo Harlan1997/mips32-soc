@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v0.3（2026-08-01）
+> 版本：v0.4（2026-08-01）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -21,11 +21,12 @@
 | 对象 | 状态 | 处理 |
 |---|---|---|
 | `master@6ecbbbc` | 当前产品基线，已包含 C3 crossbar 和 Phase 4 商用模块历史 | 作为集成基线 |
-| `phase-c2-l2-nonblocking` | 比 `master` 多 7 个提交；比远端同名分支多 `4baf139` | DMA 修复已有当前工作区功能证据；仍须按主题拆分后合入 |
-| `phase-c1-icache-4way` | 2 个本地未合并提交 | 独立跑 gate 后合入集成线 |
+| `integration/function-contract@8b3dc6b` | 唯一功能集成线；以 C2 `fcfc9c1` 为父线，已合入 C1 4-way I-cache | 当前验证和后续产品功能变更只在此线收敛，暂不直接推入 `master` |
+| `phase-c2-l2-nonblocking@fcfc9c1` | 比 `master` 多 7 个提交；含已独立提交的 JTAG、firmware、gate 与本计划修复 | 已是集成线父线；L2-NB、ROB、DDR placeholder 的产品状态仍须分项判断 |
+| `phase-c1-icache-4way@d695cb5` | 已由 merge commit `8b3dc6b` 合入集成线 | 保留为历史分支，不再重复 merge |
 | `phase-c3-axi-crossbar`、`phase4-dut-block-commercial-closure` | 已为 `master` 祖先 | 只保留历史引用，禁止重复合并 |
 | D-cache NB WIP | 未跟踪 `rtl/cache/dcache_nb.v`、`tb/unit/dcache/tb_dcache_nb.v`，以及相关 spec/gate 修改 | 仅为 `BLOCK_VERIFIED`；未接入 CPU/SoC，不能计入 SoC 功能完成 |
-| 本轮功能修复/验证改动 | JTAG AXI payload 锁存、JTAG master checker、smoke/MDU DIV firmware、Phase 2/3 gate clean-run 保护和本计划均未提交 | 先按本文件的证据与拆分原则审阅，再决定拆分提交；不得与 D-cache NB WIP 混合提交 |
+| 本轮功能修复/验证改动 | JTAG `7f74345`、firmware `1288681`、gate 隔离 `324d663`、原始计划 `fcfc9c1` 已分别提交 | 已进入集成线父线；不得与 D-cache NB WIP 混合提交 |
 | Coverage 生成工件 | `product_exclusions.el`、`uvm_exclusions.el` 和 `exclusion_manifest.json` 已由 fresh VDB 重生成但 strict URG 仍报 invalid object/checksum mismatch | 保留作 P3 调查输入；在告警清零和人工审计前不得提交或作为 coverage signoff 依据 |
 | `stash@{0}` | C3 遗留 WIP，含旧 fabric/coverage 变更 | 审计后 apply 或归档，禁止盲删 |
 | 最新 full signoff | `build/signoff/functional_completeness_20260801` 已完成所有 5 个功能阶段；只在 99% code-coverage threshold 失败 | 功能结果可用于当前 RTL contract 证据；coverage closure 保留为 P3，不能发布 `CONTRACT_CLOSED` |
@@ -37,17 +38,17 @@
 | 域 | 当前产品集成 | 已有测试证据 | 商用功能结论 |
 |---|---|---|---|
 | CPU/CP0 | 已接入；默认 `SOC_MMU_ENABLE=0` | smoke 与 Phase 3A/3B CPU/CP0 gate 通过，最新 `intr=11 syscall=1 ri=4 adel=1 eret=16` | 仅当前异常/中断子集已验证；无 ISA reference/compliance，MMU 打开后不能启动 |
-| L1 cache | 阻塞式 D-cache 在 DUT；I-cache 4-way 位于 C1 未合入分支 | D-cache unit、`cache_sweep` 与 smoke 通过；C1 `tb_icache` 于 2026-08-01 独立实测通过 | D-cache 有当前 SoC 证据；I-cache 仅 `BLOCK_VERIFIED`，未做 C1 SoC 集成回归 |
+| L1 cache | 阻塞式 D-cache 在 DUT；4-way I-cache 已合入 `integration/function-contract` | D-cache unit、`cache_sweep` 与 smoke 通过；合入后 unit gate `9/9`、SoC smoke 和 seed 10 UVM stress 通过 | I-cache 具备当前集成基线的 block/通用 SoC 证据；尚缺 refill/eviction/reset 的 I-cache 专项 SoC 测试，不能标为 `CONTRACT_CLOSED` |
 | L2 cache | 默认 write-through L2 已接入；write-back 为 opt-in | L2 unit、L2 firmware、Phase 2/3 与 smoke 通过 | 当前 blocking L2 契约可用；不具备 coherency/ECC/生产性能闭合 |
 | AXI fabric | C3 crossbar 已在 `master`；DDR 是 S3 slave | fabric unit `4/4`，Phase 2/3、10-seed stress 通过 | cross-slave 并发已验证；同一 slave 仍受单 outstanding slave 限制 |
-| DMA | 已接入 APB/AXI | DMA unit、DMA firmware、DMA copy/IRQ UVM 通过；最新 DMA grant stability 修复尚在本地工作区 | 当前 direct-copy/IRQ 契约有证据；不可宣称 IOMMU/coherency 或完整系统 DMA 生态 |
+| DMA | 已接入 APB/AXI | DMA unit、DMA firmware、DMA copy/IRQ UVM 通过；grant stability 修复已在 C2 集成父线 | 当前 direct-copy/IRQ 契约有证据；不可宣称 IOMMU/coherency 或完整系统 DMA 生态 |
 | VIC/interrupt | 已接入 CPU 单 IRQ 线，源为 UART/TIMER/DMA | VIC unit、VIC firmware、PIC mask UVM 通过 | mask/active 已验证；CPU 侧无向量化 EIC/VEIC 产品契约，UART RX source 当前不可用 |
 | UART | `apb_uart_16550` 已接入 APB，但产品 top 没有 UART pins；子系统将 `uart_rx` 固定为 `1`、`uart_rx_int` 固定为 `0` | UART unit 和 UART firmware gate 通过；UVM 仅覆盖 TX IRQ | UART block 不是产品级 UART；TX/RX pad、RX IRQ 和板级驱动未闭合 |
 | DDR | S3 使用 `axi_ddr_behavioral` 容量占位模型 | `xbar_ddr` unit 通过 | 无 DDR controller/PHY/校准/refresh/DDR boot，属于 P0 blocker |
 | Flash/boot | `axi_spi_flash` 支持简单 SPI read XIP；验证可选用 loadable AXI image | flash read/write response、loadable image UVM 通过 | 无 boot ROM、QSPI command/FIFO/erase/program 或 U-Boot boot，属于 P0 blocker |
 | MMU/TLB | RTL 与 unit TB 存在，但默认关闭 | MMU/CP0 unit 及脚手架存在；`SOC_MMU_ENABLE=1` smoke/refill gate 预期失败 | reset/exception vector 位于 useg 导致取指死锁；须先迁移到 kseg0/1 并实现 vector policy |
 | WDT/clock/reset | `apb_wdt`、clock/reset helper RTL 存在 | 无 WDT 集成或专用产品 gate；产品 top 只有单一 `clk/rst_n` | 未形成产品 reset/clock/watchdog 功能链 |
-| Debug/JTAG | 产品 top 接入 JTAG | JTAG reset-recovery UVM 通过，但 AXI payload 锁存修复尚未提交 | 当前仿真功能可用；必须先以独立 commit 固化，再作为集成基线证据 |
+| Debug/JTAG | 产品 top 接入 JTAG | JTAG reset-recovery UVM 与合入后 seed 10 bus stress 通过；AXI payload 锁存修复为 `7f74345` | 当前仿真功能可用；产品级 debug security/authentication 和量产工具链仍未定义 |
 
 ## 4. 唯一集成与合并计划
 
@@ -55,17 +56,17 @@
 
 | 变更集 | 文件范围 | 当前状态 | 处理规则 |
 |---|---|---|---|
-| `fix(jtag-axi-contract)` | `rtl/perips/jtag_debug_top.v`、`tb/uvm_tb/checkers/axi_protocol_checker.sv`、`tb/uvm_tb/tb_top/tb_top.sv` | 已通过 seed 10 stress；当前 full functional evidence 依赖它 | 首先独立提交，不与 firmware 或 cache WIP 混合 |
-| `test(firmware-failures-and-div)` | `tb/soc_test/fw/tests/mdu_cpu/main.c`、`tb/soc_test/fw/tests/soc_smoke/main.c` | mdu_cpu DIV 与 smoke 已通过 | 独立提交；保留 raw `div` 指令和 failure mailbox 语义 |
-| `test(clean-run-gates)` | 四个 `tb/uvm_tb/run_phase*_complete.sh` | `bash -n` 通过，Phase 2 hardened run 通过 | 独立提交；这是证据可复现性修复，不是 RTL feature |
+| `fix(jtag-axi-contract)` | `rtl/perips/jtag_debug_top.v`、`tb/uvm_tb/checkers/axi_protocol_checker.sv`、`tb/uvm_tb/tb_top/tb_top.sv` | commit `7f74345`；seed 10 stress 已通过 | 已进入集成线父线，不与 firmware 或 cache WIP 混合 |
+| `test(firmware-failures-and-div)` | `tb/soc_test/fw/tests/mdu_cpu/main.c`、`tb/soc_test/fw/tests/soc_smoke/main.c` | commit `1288681`；mdu_cpu DIV 与 smoke 已通过 | 已进入集成线父线；保留 raw `div` 指令和 failure mailbox 语义 |
+| `test(clean-run-gates)` | 四个 `tb/uvm_tb/run_phase*_complete.sh` | commit `324d663`；`bash -n` 与 Phase 2 hardened run 通过 | 已进入集成线父线；这是证据可复现性修复，不是 RTL feature |
 | `feat(dcache-nb-stage3)` | `rtl/cache/dcache_nb.v`、`tb/unit/dcache/tb_dcache_nb.v`、D-cache spec/roadmap/checklist、`tb/unit/run_dut_block_unit_gate.sh` | untracked RTL/TB 加本地文档与 gate WIP；block gate `9/9` | 单独留在 feature branch；不得改产品默认 `dcache.v` 或与 C1 unit-gate 更新混合 |
-| `docs(functional-readiness)` | `docs/functional_completeness_plan.md` | 本文件 v0.3 | 等上述主题拥有稳定 commit 后单独提交 |
+| `docs(functional-readiness)` | `docs/functional_completeness_plan.md` | `fcfc9c1` 为初版；本次集成证据以独立文档提交记录 | 文档不与 RTL feature 或 D-cache NB WIP 混合 |
 | `coverage-generated-artifacts` | `tb/coverage/exclusion_manifest.json`、`product_exclusions.el`、`uvm_exclusions.el` | 自动生成且 strict URG 仍失败 | 不 stage、不 commit；留作后续 P3 调查输入 |
 
-1. 冻结并分类当前工作区：D-cache NB WIP、JTAG/firmware/verification functional fixes、coverage 生成工件、文档 WIP 分开，任何提交不得跨类别。
-2. 从 `phase-c2-l2-nonblocking@4baf139` 建立 `integration/function-contract`。C2 的 7 个 commits 混合了 L2-NB、ROB skeleton、DDR behavioral placeholder、MMU 脚手架和 DMA 修复，需按产品接入状态保留或拆分，不能整体标记为“商用缓存/DDR/MMU完成”。
-3. 将 `phase-c1-icache-4way` 合入该 integration branch。预检确认无 RTL 冲突；仅 `docs/frontend_signoff_checklist.md`、`docs/refactor_roadmap.md`、`tb/unit/run_dut_block_unit_gate.sh` 需人工合并。I-cache unit 已于 2026-08-01 独立通过，合入后必须跑 I-cache + SoC smoke + Phase 2。
-4. 将 JTAG AXI payload 锁存、JTAG protocol checker bind/packing 修复和相关 firmware fail-mailbox 改动做成独立功能修复 commit，并重复最小 SoC stress；这是当前 full functional evidence 依赖的本地改动。
+1. 已冻结并分类：D-cache NB WIP、JTAG/firmware/gate commits、coverage 生成工件和文档彼此隔离；禁止跨类别提交。
+2. `integration/function-contract` 已从 `phase-c2-l2-nonblocking@fcfc9c1` 建立。C2 的 L2-NB、ROB skeleton、DDR placeholder、MMU 脚手架和 DMA 修复仍按产品接入状态分项判断，不能整体标记为“商用缓存/DDR/MMU完成”。
+3. `phase-c1-icache-4way` 已以 `8b3dc6b` 合入；人工合并的文档和 unit gate 已通过 `bash -n` 及合并后 unit gate `9/9`。同一基线的 SoC smoke 与 seed 10 UVM stress 均通过。
+4. JTAG AXI payload 锁存、protocol checker bind/packing 与 firmware failure-mailbox 已作为独立 commit 固化，并在集成基线重复 seed 10 bus stress。
 5. D-cache NB 保持独立分支，当前只能是 `BLOCK_VERIFIED`；在 CPU/ROB tag、hazard/forwarding 和 SoC stress 完成前禁止合入产品默认路径。
 6. `phase-c3-axi-crossbar` 与 `phase4-dut-block-commercial-closure` 均已是 `master` 祖先，只归档引用，禁止再次 merge。`stash@{0}` 只审计、不删除；其内容不进入集成线，除非被拆成可验证主题。
 
@@ -107,7 +108,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ### Phase 3：CPU、缓存和总线功能闭合
 
-- 合入并验证 I-cache 4-way 分支。
+- 4-way I-cache 已合入并完成通用 unit/SoC 证据；补 refill、eviction、reset 的专项 SoC sequence 后，才能将其标为 `CONTRACT_CLOSED`。
 - 将 C.2 变更拆成 L2-NB、ROB、DDR placeholder、DMA 修复四个可审阅主题。
 - 保持 `dcache_nb.v` 独立，先完成 block gate；之后进行 C.4 Stage 4：CPU/ROB tag、完成重排、load-use hazard 和 forwarding。
 - 只有完成 CPU 接入、SoC smoke、UVM overlap/stress 和性能前后对比后，D-cache NB 才能变成 `SOC_INTEGRATED`。
@@ -147,7 +148,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ## 8. 当前执行点
 
-固定 `seed=10`、块级 gate、fabric gate、SoC smoke、Phase 2、Phase 3A/3B/3C 和 10-seed stress 均已通过。完整 `current-contract-signoff` 的功能阶段均通过；coverage 阈值单独失败，保留为后续质量工作。**当前下一步是 Phase 0 分支/WIP 整理，然后进入 Phase 2 boot 与真实主存的架构定义，不是 coverage closure。**
+固定 `seed=10`、块级 gate、fabric gate、SoC smoke、Phase 2、Phase 3A/3B/3C 和 10-seed stress 均已通过。C1 已在唯一集成线完成合并后 unit gate、SoC smoke 和 seed 10 UVM stress。完整 `current-contract-signoff` 的功能阶段均通过；coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理已完成；下一步是 Phase 2 boot 与真实主存的架构定义，不是 coverage closure。**
 
 ## 9. 执行记录
 
@@ -163,6 +164,9 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | 2026-08-01 | firmware SHA256 `4deaea0d6bab403dee89a64a84548cca8eeaa05f6dafbf00c880896def493bc8` | `RUN_ROOT=build/uvm/phase2_complete_smoke_hardened tb/uvm_tb/run_phase2_complete.sh` | PASS：directed `16/16`、coverage `16/16`、8 个 required functional groups 均为 100%、error scan clean | clean-run 保护已生效。报告：`build/uvm/phase2_complete_smoke_hardened/phase2_completion_report.md` |
 | 2026-08-01 | 同上 | `make current-contract-signoff SIGNOFF_DIR=build/signoff/functional_completeness_20260801 NUM_TESTS=10 SEED_BASE=1` | Phase 2 `16/16`，Phase 3A `8/8` 加 CPU/CP0 PASS，Phase 3B `1/1`，Phase 3C `1/1`，stress seed 1-10 全 PASS，15 个 required functional groups 均为 100%；最终 FAIL 于 coverage threshold | 功能 gate 全部通过。唯一失败是 code coverage/exclusion closure；权威报告：`build/signoff/functional_completeness_20260801/current_contract_signoff_report.md`，度量：`coverage_summary.json` |
 | 2026-08-01 | `phase-c1-icache-4way@d695cb5` 独立 worktree | `vcs rtl/cache/icache.v tb/unit/icache/tb_icache.v && ./simv` | PASS：`REGRESSION_TEST_SUCCESS icache` | C1 的 4-way I-cache 达到 `BLOCK_VERIFIED`；未在 C1 基线上跑 SoC 集成回归。 |
+| 2026-08-01 | `integration/function-contract@8b3dc6b` | `RUN_ROOT=build/unit_tb/integration_c1_icache tb/unit/run_dut_block_unit_gate.sh` | PASS：MDU、DMA、VIC、UART、L2、L2NB、D-cache、ROB、I-cache 共 `9/9` | C1/C2 合并后的 unit-gate 逻辑和 I-cache 测试均通过。 |
+| 2026-08-01 | `integration/function-contract@8b3dc6b`，firmware SHA256 `4deaea0d6bab403dee89a64a84548cca8eeaa05f6dafbf00c880896def493bc8` | `make soc-smoke` | PASS：`REGRESSION_TEST_SUCCESS`，CPU/CP0 `intr=11 syscall=1 ri=4 adel=1 eret=16` | C1/C2 组合在 SoC smoke 下可执行。 |
+| 2026-08-01 | `integration/function-contract@8b3dc6b`，同上 firmware | `make uvm UVM_TEST=soc_bus_stress_test UVM_SEED=10 UVM_RUN_DIR=build/uvm/integration_c1_seed10` | PASS：`REGRESSION_TEST_SUCCESS`，无 UVM error/fatal 或 `$error` | C1/C2 组合在 background AXI stress 下通过；这不替代 I-cache 专项 SoC sequence。 |
 
 ## 10. 已知未决问题
 
