@@ -238,6 +238,22 @@ module jtag_debug_top (
     
     reg [2:0] axi_state, next_axi_state;
     reg [31:0] captured_rdata;
+    reg [31:0] axi_addr_q;
+    reg [31:0] axi_wdata_q;
+
+    // The command registers are written in the TCK domain. Capture each
+    // request payload as the system-clock FSM accepts its start indication so
+    // a following JTAG UPDATE_DR cannot alter an in-flight AXI transaction.
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            axi_addr_q  <= 32'd0;
+            axi_wdata_q <= 32'd0;
+        end else if (axi_state == ST_IDLE &&
+                     (start_axi_write || start_axi_read)) begin
+            axi_addr_q  <= axi_addr;
+            axi_wdata_q <= axi_wdata;
+        end
+    end
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -275,7 +291,7 @@ module jtag_debug_top (
 
     // AXI Master Assignments
     assign m_awid    = 4'd3;
-    assign m_awaddr  = axi_addr;
+    assign m_awaddr  = axi_addr_q;
     assign m_awlen   = 8'd0;
     assign m_awsize  = 3'b010;
     assign m_awburst = 2'b01;
@@ -284,14 +300,14 @@ module jtag_debug_top (
     assign m_awprot  = 3'd0;
     assign m_awvalid = (axi_state == ST_AW);
     
-    assign m_wdata   = axi_wdata;
+    assign m_wdata   = axi_wdata_q;
     assign m_wstrb   = 4'hF;
     assign m_wlast   = 1'b1;
     assign m_wvalid  = (axi_state == ST_W);
     assign m_bready  = (axi_state == ST_B);
     
     assign m_arid    = 4'd3;
-    assign m_araddr  = axi_addr;
+    assign m_araddr  = axi_addr_q;
     assign m_arlen   = 8'd0;
     assign m_arsize  = 3'b010;
     assign m_arburst = 2'b01;

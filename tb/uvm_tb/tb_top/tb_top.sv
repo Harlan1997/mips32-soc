@@ -84,6 +84,7 @@ import uvm_pkg::*;
 `BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_s0_protocol_checker, "fabric_s0", s0)
 `BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_s1_protocol_checker, "fabric_s1", s1)
 `BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_s2_protocol_checker, "fabric_s2", s2)
+`BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER(u_jtag_protocol_checker, "jtag_master", jtag)
 
 `undef BIND_SOC_FABRIC_AXI_PROTOCOL_CHECKER
 

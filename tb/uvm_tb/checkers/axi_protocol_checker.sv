@@ -51,13 +51,13 @@ module axi_protocol_checker #(
 );
 
     logic        aw_hold_q;
-    logic [58:0] aw_payload_q;
+    logic [57:0] aw_payload_q;
     logic        w_hold_q;
     logic [36:0] w_payload_q;
     logic        b_hold_q;
     logic [5:0]  b_payload_q;
     logic        ar_hold_q;
-    logic [58:0] ar_payload_q;
+    logic [57:0] ar_payload_q;
     logic        r_hold_q;
     logic [38:0] r_payload_q;
 
@@ -82,10 +82,10 @@ module axi_protocol_checker #(
     wire         ar_fire = arvalid && arready;
     wire         r_fire  = rvalid  && rready;
 
-    wire [58:0] aw_payload = {awid, awaddr, awlen, awsize, awburst, awlock, awcache, awprot};
+    wire [57:0] aw_payload = {awid, awaddr, awlen, awsize, awburst, awlock, awcache, awprot};
     wire [36:0] w_payload  = {wdata, wstrb, wlast};
     wire [5:0]  b_payload  = {bid, bresp};
-    wire [58:0] ar_payload = {arid, araddr, arlen, arsize, arburst, arlock, arcache, arprot};
+    wire [57:0] ar_payload = {arid, araddr, arlen, arsize, arburst, arlock, arcache, arprot};
     wire [38:0] r_payload  = {rid, rdata, rresp, rlast};
 
     function int unsigned write_outstanding_count();
@@ -158,10 +158,18 @@ module axi_protocol_checker #(
             end
             if (ar_hold_q) begin
                 if (!arvalid) begin
-                    $error("[%0t] %s: ARVALID deasserted before ARREADY", $time, CHECKER_NAME);
+                    $error("[%0t] %s: ARVALID deasserted before ARREADY; held={id=%h addr=%h len=%h size=%h burst=%h lock=%h cache=%h prot=%h}",
+                           $time, CHECKER_NAME, ar_payload_q[57:54], ar_payload_q[53:22],
+                           ar_payload_q[21:14], ar_payload_q[13:11], ar_payload_q[10:9],
+                           ar_payload_q[8:7], ar_payload_q[6:3], ar_payload_q[2:0]);
                 end
                 if (ar_payload !== ar_payload_q) begin
-                    $error("[%0t] %s: AR payload changed while ARVALID waited for ARREADY", $time, CHECKER_NAME);
+                    $error("[%0t] %s: AR payload changed while ARVALID waited for ARREADY; held={id=%h addr=%h len=%h size=%h burst=%h lock=%h cache=%h prot=%h} current={id=%h addr=%h len=%h size=%h burst=%h lock=%h cache=%h prot=%h}",
+                           $time, CHECKER_NAME,
+                           ar_payload_q[57:54], ar_payload_q[53:22], ar_payload_q[21:14],
+                           ar_payload_q[13:11], ar_payload_q[10:9], ar_payload_q[8:7],
+                           ar_payload_q[6:3], ar_payload_q[2:0],
+                           arid, araddr, arlen, arsize, arburst, arlock, arcache, arprot);
                 end
             end
             if (r_hold_q) begin
