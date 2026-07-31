@@ -21,6 +21,7 @@
 #define PIC_ACTIVE     (*(volatile uint32_t*)0x40004008)
 
 volatile uint32_t irq_count = 0;
+volatile uint32_t smoke_failures = 0;
 
 void print_str(const char *str) {
     while (*str) {
@@ -34,6 +35,26 @@ void print_hex(uint32_t val) {
         UART_TX_DATA = hex_chars[(val >> i) & 0xF];
     }
     UART_TX_DATA = '\n';
+}
+
+static void signed_div_raw(int32_t dividend, int32_t divisor,
+                           int32_t *quotient, int32_t *remainder) {
+    int32_t q;
+    int32_t r;
+
+    asm volatile(
+        ".set push\n"
+        ".set noreorder\n"
+        ".set nomacro\n"
+        "div $0, %2, %3\n"
+        "mflo %0\n"
+        "mfhi %1\n"
+        ".set pop"
+        : "=&r"(q), "=&r"(r)
+        : "r"(dividend), "r"(divisor));
+
+    *quotient = q;
+    *remainder = r;
 }
 
 void c_interrupt_handler() {
@@ -268,6 +289,7 @@ int main() {
         print_str("   GPIO Read/Write OK\n");
     } else {
         print_str("   GPIO ERROR\n");
+        smoke_failures++;
     }
 
     // 2. SPI Flash Access Test
@@ -301,7 +323,10 @@ int main() {
         if (sram_dst[i] != sram_src[i]) dma_ok = 0;
     }
     if (dma_ok) print_str("   DMA Copy OK\n");
-    else print_str("   DMA ERROR\n");
+    else {
+        print_str("   DMA ERROR\n");
+        smoke_failures++;
+    }
 
     // 4. Timer & Interrupt Test
     print_str("4. Testing Timer & PIC Interrupts...\n");
@@ -340,7 +365,10 @@ int main() {
         : "t0", "t1"
     );
     if (mdu_res_lo == 200 && mdu_res_hi == 0) print_str("   MULT OK\n");
-    else print_str("   MULT ERROR\n");
+    else {
+        print_str("   MULT ERROR\n");
+        smoke_failures++;
+    }
     
     // 4b. MDU Division Test
     int32_t dividend = 100;
@@ -348,49 +376,38 @@ int main() {
     int32_t div_res = 0;
     int32_t mod_res = 0;
     
-    asm volatile(
-        "div %2, %3\n"
-        "mflo %0\n"
-        "mfhi %1\n"
-        : "=r"(div_res), "=r"(mod_res)
-        : "r"(dividend), "r"(divisor)
-    );
+    signed_div_raw(dividend, divisor, &div_res, &mod_res);
     
     // Divide by zero test
     int32_t div_by_zero_res = 0;
-    asm volatile(
-        "div %1, $0\n"
-        "mflo %0\n"
-        : "=r"(div_by_zero_res)
-        : "r"(dividend)
-    );
+    int32_t div_by_zero_rem = 0;
+    signed_div_raw(dividend, 0, &div_by_zero_res, &div_by_zero_rem);
 
     // Mixed sign division tests
     int32_t neg_dividend = -100;
     int32_t mixed_res1 = 0;
-    asm volatile(
-        "div %1, %2\n"
-        "mflo %0\n"
-        : "=r"(mixed_res1)
-        : "r"(neg_dividend), "r"(divisor)
-    );
+    int32_t mixed_rem1 = 0;
+    signed_div_raw(neg_dividend, divisor, &mixed_res1, &mixed_rem1);
 
     int32_t neg_divisor = -3;
     int32_t mixed_res2 = 0;
-    asm volatile(
-        "div %1, %2\n"
-        "mflo %0\n"
-        : "=r"(mixed_res2)
-        : "r"(dividend), "r"(neg_divisor)
-    );
+    int32_t mixed_rem2 = 0;
+    signed_div_raw(dividend, neg_divisor, &mixed_res2, &mixed_rem2);
 
     if (div_res == 33 && mod_res == 1) {
         print_str("   DIV OK\n");
     } else {
         print_str("   DIV ERROR: lo=");
-        print_hex(mdu_res_lo);
+        print_hex((uint32_t)div_res);
         print_str("              hi=");
-        print_hex(mdu_res_hi);
+        print_hex((uint32_t)mod_res);
+        smoke_failures++;
+    }
+    if (div_by_zero_res != -1 || div_by_zero_rem != dividend ||
+        mixed_res1 != -33 || mixed_rem1 != -1 ||
+        mixed_res2 != -33 || mixed_rem2 != 1) {
+        print_str("   DIV EDGE ERROR\n");
+        smoke_failures++;
     }
 
     // MTHI/MTLO
@@ -406,7 +423,10 @@ int main() {
         : "t0", "t1"
     );
     if (mdu_res_hi == 0x12345678 && mdu_res_lo == 0x9ABCDEF0) print_str("   MTHI/MTLO OK\n");
-    else print_str("   MTHI/MTLO ERROR\n");
+    else {
+        print_str("   MTHI/MTLO ERROR\n");
+        smoke_failures++;
+    }
 
     // 6. ALU & Control Test
     print_str("6. Testing ALU (Shifts/Logic)...\n");
@@ -428,7 +448,10 @@ int main() {
         : "t0", "t1"
     );
     if (alu_res1 == 0x0000FF00 && alu_res2 == 0xFFFFFF00 && alu_res3 == 1 && alu_res4 == 1 && alu_res5 == 0) print_str("   ALU OK\n");
-    else print_str("   ALU ERROR\n");
+    else {
+        print_str("   ALU ERROR\n");
+        smoke_failures++;
+    }
 
     // 7. Branch and Link Test
     print_str("7. Testing Branches (BLTZAL, BGEZAL)...\n");
@@ -449,7 +472,10 @@ int main() {
         : "t0", "ra"
     );
     if (link_res1 != 0 && link_res2 != 0) print_str("   BRANCH LINK OK\n");
-    else print_str("   BRANCH LINK ERROR\n");
+    else {
+        print_str("   BRANCH LINK ERROR\n");
+        smoke_failures++;
+    }
 
     // 7.5 Missing Branches Test (J, BLEZ, BGTZ, BLTZ, BGEZ)
     print_str("7.5 Testing Remaining Branches (J, BLEZ, BGTZ, BLTZ, BGEZ)...\n");
@@ -497,7 +523,10 @@ int main() {
         : "t0", "t1"
     );
     if (branch_res == 0) print_str("   OTHER BRANCHES OK\n");
-    else print_str("   OTHER BRANCHES ERROR\n");
+    else {
+        print_str("   OTHER BRANCHES ERROR\n");
+        smoke_failures++;
+    }
 
 
     // 8. D-Cache Eviction Test
@@ -514,8 +543,10 @@ int main() {
     
     if (*ptr1 == 0xAAAAAAAA && *ptr2 == 0xBBBBBBBB && *ptr3 == 0xCCCCCCCC)
         print_str("   D-CACHE EVICTION OK\n");
-    else
+    else {
         print_str("   D-CACHE EVICTION ERROR\n");
+        smoke_failures++;
+    }
 
     // 9. Sub-word Memory Access Tests (LB, LBU, LH, LHU, SB, SH)
     print_str("9. Testing Sub-word Memory Accesses...\n");
@@ -538,6 +569,7 @@ int main() {
         print_str("   LOAD SUB-WORD OK\n");
     } else {
         print_str("   LOAD SUB-WORD ERROR\n");
+        smoke_failures++;
     }
     
     // Store tests
@@ -551,6 +583,7 @@ int main() {
         print_str("   STORE SUB-WORD OK\n");
     } else {
         print_str("   STORE SUB-WORD ERROR\n");
+        smoke_failures++;
     }
 
     // 10. Unaligned Memory Access Tests (LWL, LWR, SWL, SWR)
@@ -832,6 +865,7 @@ int main() {
         print_str("    QUICKSORT OK\n");
     } else {
         print_str("    QUICKSORT ERROR\n");
+        smoke_failures++;
     }
 
     // Phase A coverage-closure: CP0 MFC0 sub-select decode + safe MTC0 pokes.
@@ -865,6 +899,12 @@ int main() {
         asm volatile("mtc0 %0, $11, 0" :: "r"(save_compare));
         print_str("15. CP0 sweep: ");
         print_hex(v);
+    }
+
+    if (smoke_failures != 0) {
+        print_str("--- Comprehensive SoC Test Failed ---\n");
+        *((volatile uint32_t*)0xA000FFFC) = 0xDEADDEAD;
+        while (1) { }
     }
 
     print_str("--- Triggering AdEL Exception ---\n");
