@@ -1,6 +1,12 @@
-# L1 指令缓存 (I-Cache) 微架构规格 (v0)
+# L1 指令缓存 (I-Cache) 微架构规格 (v1)
 
-> 状态：v0 草案。作为 Phase C **重写 `rtl/cache/icache.v`** 的实施基线。当前是 8KB 直接映射；升级为 8KB 4-way LRU + VIPT + CACHE 指令支持。
+> 状态：v1 部分实现。已交付 **8 KB 4-way 组相联 + tree-PLRU 替换**（`rtl/cache/icache.v`：
+> 64 sets、index [10:5]、tag [31:11]、物理寻址、只读、单-outstanding 阻塞式 refill）。
+> 单元测试 `tb/unit/icache/tb_icache.v`（冷 miss/refill/hit、行内顺序命中、4-way 填满不误逐出、
+> PLRU 逐出且 MRU way 保留、数据完整性）通过，纳入 `make dut-block-unit-gate`（[7/7]）。
+> 全部固件测试经指令取指路径 + phase3/uvm/smoke 全绿。
+>
+> **未实现（后续）**：CACHE 指令子集（invalidate/fill）。下文 §0 起为完整 v0 目标。
 
 ---
 
