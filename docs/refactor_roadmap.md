@@ -547,6 +547,20 @@ Honest scope / non-claims:
   full coverage regeneration is separate (belongs to the parked coverage-closure
   effort); the pre-existing manifest/.el audit desync is unchanged by this work.
 
+## Phase C.1: L1 Cache Associativity (D-cache + I-cache)
+
+Status: DELIVERED in the integration branch under the blocking
+single-outstanding contract.
+
+- L1 D-cache: 8KB 4-way + tree-PLRU (`rtl/cache/dcache.v`), with WB/WA and
+  uncached kseg1 bypass unchanged.
+- L1 I-cache: 8KB 4-way + tree-PLRU (`rtl/cache/icache.v`), read-only and
+  interface-compatible with the former direct-mapped implementation.
+
+Both caches use a 3-bit tree-PLRU and prefer invalid ways before selecting a
+PLRU victim. I-cache has its own unit test `tb/unit/icache/tb_icache.v`; the
+combined block gate and SoC smoke/UVM regression remain the integration gate.
+
 ## Phase C.4: CPU/L1 Hit-Under-Miss (in progress)
 
 Goal: let the CPU accept new memory ops while an L1 D-cache miss is still
@@ -577,7 +591,7 @@ their own hardening:
   diffs every `wb_*` output every cycle — now the 8th block in
   `make dut-block-unit-gate` (8/8). `make soc-smoke` confirmed unaffected
   (`REGRESSION_TEST_SUCCESS`, same as pre-change baseline).
-- **Stage 3 (not started)**: make `dcache.v`'s FSM non-blocking — add an
+- **Stage 3 (not started in this integration branch)**: make `dcache.v`'s FSM non-blocking — add an
   MSHR to track one outstanding miss while still accepting new hits (and,
   later, additional misses), so an entry can genuinely go un-ready for
   more than zero cycles for the first time. This is the point where
