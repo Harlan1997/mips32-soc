@@ -4,6 +4,8 @@
 // Author:    Antigravity
 // =============================================================================
 
+`include "soc_config.vh"
+
 module mips_cpu (
     input  wire        clk,
     input  wire        rst_n,
@@ -124,7 +126,9 @@ module mips_cpu (
     // =========================================================================
     // IF Stage
     // =========================================================================
-    mips_if_stage u_mips_if_stage (
+    mips_if_stage #(
+        .RESET_ADDR((`SOC_PRODUCT_BOOT_ENABLE != 0) ? `SOC_BOOT_ROM_KSEG1 : `SOC_BOOT_BASE)
+    ) u_mips_if_stage (
         .clk              (clk),
         .rst_n            (rst_n),
         .stall            (stall_pc),

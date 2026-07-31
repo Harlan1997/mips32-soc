@@ -46,6 +46,9 @@
 
 // Memory map
 `define SOC_BOOT_BASE         32'h0000_0000
+`define SOC_BOOT_ROM_BASE     32'h1FC0_0000
+`define SOC_BOOT_ROM_SIZE     32'h0001_0000
+`define SOC_BOOT_ROM_KSEG1    32'hBFC0_0000
 `define SOC_FLASH_BASE        32'h1000_0000
 `define SOC_APB_BASE          32'h4000_0000
 `define SOC_SRAM_ALIAS_BASE   32'hA000_0000
@@ -64,6 +67,12 @@
 // compare against SOC_DDR_BASE/SOC_DDR_SIZE instead of a mask compare.
 `define SOC_DDR_BASE          32'h0800_0000
 `define SOC_DDR_SIZE          32'h0800_0000
+
+// Product boot remains opt-in until Boot ROM, vector, QSPI, DDR, and firmware
+// gates all pass. The prototype default preserves the SRAM-preload regressions.
+`ifndef SOC_PRODUCT_BOOT_ENABLE
+`define SOC_PRODUCT_BOOT_ENABLE 0
+`endif
 
 // Address decode masks
 `define SOC_64KB_REGION_MASK  32'hFFFF_0000

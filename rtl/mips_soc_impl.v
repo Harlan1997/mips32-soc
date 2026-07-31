@@ -339,7 +339,7 @@ module mips_soc_impl #(
     wire        s2_rready;
 
     // =========================================================================
-    // AXI Slave 3: DDR window (0x0800_0000 - 0x17FF_FFFF), Phase C.4
+    // AXI Slave 3: DDR window (0x0800_0000 - 0x0FFF_FFFF), Phase C.4
     // Behavioral capacity placeholder only (rtl/perips/axi_ddr_behavioral.v).
     // =========================================================================
     wire [3:0]  s3_awid;
@@ -377,6 +377,45 @@ module mips_soc_impl #(
     wire        s3_rlast;
     wire        s3_rvalid;
     wire        s3_rready;
+
+    // =========================================================================
+    // AXI Slave 4: Product Boot ROM (0x1FC0_0000 - 0x1FC0_FFFF)
+    // =========================================================================
+    wire [3:0]  s4_awid;
+    wire [31:0] s4_awaddr;
+    wire [7:0]  s4_awlen;
+    wire [2:0]  s4_awsize;
+    wire [1:0]  s4_awburst;
+    wire [1:0]  s4_awlock;
+    wire [3:0]  s4_awcache;
+    wire [2:0]  s4_awprot;
+    wire        s4_awvalid;
+    wire        s4_awready;
+    wire [31:0] s4_wdata;
+    wire [3:0]  s4_wstrb;
+    wire        s4_wlast;
+    wire        s4_wvalid;
+    wire        s4_wready;
+    wire [3:0]  s4_bid;
+    wire [1:0]  s4_bresp;
+    wire        s4_bvalid;
+    wire        s4_bready;
+    wire [3:0]  s4_arid;
+    wire [31:0] s4_araddr;
+    wire [7:0]  s4_arlen;
+    wire [2:0]  s4_arsize;
+    wire [1:0]  s4_arburst;
+    wire [1:0]  s4_arlock;
+    wire [3:0]  s4_arcache;
+    wire [2:0]  s4_arprot;
+    wire        s4_arvalid;
+    wire        s4_arready;
+    wire [3:0]  s4_rid;
+    wire [31:0] s4_rdata;
+    wire [1:0]  s4_rresp;
+    wire        s4_rlast;
+    wire        s4_rvalid;
+    wire        s4_rready;
 
     wire        cpu_int;
 
@@ -765,7 +804,42 @@ module mips_soc_impl #(
         .s3_rdata     (s3_rdata),
         .s3_rresp     (s3_rresp),
         .s3_rlast     (s3_rlast),
-        .s3_rvalid    (s3_rvalid)
+        .s3_rvalid    (s3_rvalid),
+        .s4_awid      (s4_awid),
+        .s4_awaddr    (s4_awaddr),
+        .s4_awlen     (s4_awlen),
+        .s4_awsize    (s4_awsize),
+        .s4_awburst   (s4_awburst),
+        .s4_awlock    (s4_awlock),
+        .s4_awcache   (s4_awcache),
+        .s4_awprot    (s4_awprot),
+        .s4_awvalid   (s4_awvalid),
+        .s4_wdata     (s4_wdata),
+        .s4_wstrb     (s4_wstrb),
+        .s4_wlast     (s4_wlast),
+        .s4_wvalid    (s4_wvalid),
+        .s4_bready    (s4_bready),
+        .s4_arid      (s4_arid),
+        .s4_araddr    (s4_araddr),
+        .s4_arlen     (s4_arlen),
+        .s4_arsize    (s4_arsize),
+        .s4_arburst   (s4_arburst),
+        .s4_arlock    (s4_arlock),
+        .s4_arcache   (s4_arcache),
+        .s4_arprot    (s4_arprot),
+        .s4_arvalid   (s4_arvalid),
+        .s4_rready    (s4_rready),
+        .s4_awready   (s4_awready),
+        .s4_wready    (s4_wready),
+        .s4_bid       (s4_bid),
+        .s4_bresp     (s4_bresp),
+        .s4_bvalid    (s4_bvalid),
+        .s4_arready   (s4_arready),
+        .s4_rid       (s4_rid),
+        .s4_rdata     (s4_rdata),
+        .s4_rresp     (s4_rresp),
+        .s4_rlast     (s4_rlast),
+        .s4_rvalid    (s4_rvalid)
     );
 
     soc_memory_subsystem #(
@@ -885,7 +959,42 @@ module mips_soc_impl #(
         .s3_rresp     (s3_rresp),
         .s3_rlast     (s3_rlast),
         .s3_rvalid    (s3_rvalid),
-        .s3_rready    (s3_rready)
+        .s3_rready    (s3_rready),
+        .s4_awid      (s4_awid),
+        .s4_awaddr    (s4_awaddr),
+        .s4_awlen     (s4_awlen),
+        .s4_awsize    (s4_awsize),
+        .s4_awburst   (s4_awburst),
+        .s4_awlock    (s4_awlock),
+        .s4_awcache   (s4_awcache),
+        .s4_awprot    (s4_awprot),
+        .s4_awvalid   (s4_awvalid),
+        .s4_awready   (s4_awready),
+        .s4_wdata     (s4_wdata),
+        .s4_wstrb     (s4_wstrb),
+        .s4_wlast     (s4_wlast),
+        .s4_wvalid    (s4_wvalid),
+        .s4_wready    (s4_wready),
+        .s4_bid       (s4_bid),
+        .s4_bresp     (s4_bresp),
+        .s4_bvalid    (s4_bvalid),
+        .s4_bready    (s4_bready),
+        .s4_arid      (s4_arid),
+        .s4_araddr    (s4_araddr),
+        .s4_arlen     (s4_arlen),
+        .s4_arsize    (s4_arsize),
+        .s4_arburst   (s4_arburst),
+        .s4_arlock    (s4_arlock),
+        .s4_arcache   (s4_arcache),
+        .s4_arprot    (s4_arprot),
+        .s4_arvalid   (s4_arvalid),
+        .s4_arready   (s4_arready),
+        .s4_rid       (s4_rid),
+        .s4_rdata     (s4_rdata),
+        .s4_rresp     (s4_rresp),
+        .s4_rlast     (s4_rlast),
+        .s4_rvalid    (s4_rvalid),
+        .s4_rready    (s4_rready)
     );
 
     // synopsys translate_off

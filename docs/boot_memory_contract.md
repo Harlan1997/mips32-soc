@@ -1,8 +1,9 @@
 # Boot and Memory Product Contract
 
-> Version: v0.1 (2026-08-01)
+> Version: v0.2 (2026-08-01)
 >
-> Status: Phase 2 architecture freeze candidate. This document defines the
+> Status: Phase 2 architecture freeze candidate with a verified Boot ROM
+> reset/map slice. This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
 > these requirements today.
@@ -37,7 +38,8 @@ the PHY wrapper, but they do not change the address or reset contract below.
 
 | Blocker | Current evidence | Required change |
 |---|---|---|
-| Reset address | `rtl/cpu/mips_if_stage.v` defaults `RESET_ADDR=0`; `mips_core` does not override it | Add a product reset parameter and drive `BFC0_0000` in the product build |
+| Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
+| Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window | Add the immutable ROM image and prove reset through header check; do not treat the zero-filled simulation array as a boot image |
 | Exception vector | `rtl/cpu/mips_cpu.v` uses literal `32'h0000_0180`; `SOC_CP0_STATUS_BEV_RESET=0` | Implement BEV/refill/general/EBase vector selection from `cp0_spec.md` |
 | Firmware placement | `tb/soc_test/fw/common/link.ld` places `.text`, `.except`, data and stack in `0x0000_0000` SRAM | Keep the smoke linker for prototype tests; add a product linker with kseg0 SRAM execution and a separate Boot ROM/SPL image |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; enabling it TLB-misses on the current reset/useg image | Product boot must install wired TLB mappings and use kseg0/kseg1 addresses before enabling kernel accesses |
@@ -53,7 +55,7 @@ addresses firmware may use after the MIPS segment rules are active.
 
 | Region | Physical base | Size | Product virtual access | State |
 |---|---:|---:|---|---|
-| Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | **New P0**; immutable reset image |
+| Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | RTL reset/map slice `BLOCK_VERIFIED`; immutable image and handoff are P0 |
 | Boot SRAM | `0x0000_0000` | 64 KB | `0x8000_0000` kseg0 / `0xA000_0000` kseg1 | Existing behavioral SRAM; post-boot code and mailbox |
 | DDR | `0x0800_0000` | 128 MB | `0x8800_0000` kseg0 / `0xA800_0000` kseg1 | Existing address reservation; behavioral placeholder must be replaced |
 | SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Existing AXI XIP window; controller and boot command path incomplete |
@@ -231,12 +233,28 @@ integration baseline, plus a real DDR PHY model/board wrapper and firmware
 image hash recorded in the report. Generic AXI flash-image or behavioral DDR
 tests remain block evidence only.
 
+### 8.1 Current executable evidence
+
+The following evidence closes only the reset-address and fabric-routing part
+of `bootrom_reset_test`; it does not close that gate:
+
+- `tb/unit/bootrom/tb_axi_boot_rom.v` verifies a four-word read burst,
+  out-of-range `DECERR`, unsupported-size `DECERR`, and write `SLVERR`.
+- `tb/unit/bootrom/tb_product_reset_fetch.sv` builds the complete SoC with
+  `SOC_PRODUCT_BOOT_ENABLE=1`, does not preload SRAM, verifies PC
+  `0xBFC0_0000`, and verifies the first I-cache AR transaction is accepted by
+  S4 at physical address `0x1FC0_0000`.
+
+The test ends at the accepted fetch. It does not prove a Boot ROM instruction,
+manifest parsing, exception-vector behavior, or firmware handoff.
+
 ## 9. Implementation sequence
 
 1. Add the product map macros and update `docs/address_map.md`; correct stale
    comments without changing the prototype smoke map.
-2. Implement Boot ROM slave, reset-PC parameter, CP0 BEV/EBase vector logic,
-   and a product linker/manifest builder. Keep prototype smoke as a separate
+2. Implement Boot ROM slave and reset-PC parameter (complete for the opt-in
+   product configuration); implement CP0 BEV/EBase vector logic and a product
+   linker/manifest builder next. Keep prototype smoke as a separate
    configuration until the product gate passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.
 4. Integrate DDR controller/PHY wrapper, APB status, refresh/calibration and
