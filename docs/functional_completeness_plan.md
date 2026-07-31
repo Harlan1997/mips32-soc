@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v0.4（2026-08-01）
+> 版本：v0.6（2026-08-01）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -101,6 +101,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ### Phase 2：产品启动与主存闭合
 
+- 已建立 `docs/boot_memory_contract.md` v0.1，冻结候选 reset/vector、物理/虚拟地址图、镜像格式、失败行为和六个行为 gate；当前仍是架构规范，不是 RTL 完成证据。
 - 冻结 ROM boot 地址、异常向量和 firmware linker 规则；不能继续从 useg reset vector 启动。
 - 实现或集成真实 DDR controller/PHY contract；完成 init、calibration、refresh、AXI backpressure 与 DDR memory test。
 - 实现实际 QSPI boot source（XIP/command path、image format、boot ROM）并完成 reset 到 first-stage firmware 的 SoC gate。
@@ -148,7 +149,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ## 8. 当前执行点
 
-固定 `seed=10`、块级 gate、fabric gate、SoC smoke、Phase 2、Phase 3A/3B/3C 和 10-seed stress 均已通过。C1 已在唯一集成线完成合并后 unit gate、SoC smoke 和 seed 10 UVM stress。完整 `current-contract-signoff` 的功能阶段均通过；coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理已完成；下一步是 Phase 2 boot 与真实主存的架构定义，不是 coverage closure。**
+固定 `seed=10`、块级 gate、fabric gate、SoC smoke、Phase 2、Phase 3A/3B/3C 和 10-seed stress 均已通过。C1 已在唯一集成线完成合并后 unit gate、SoC smoke 和 seed 10 UVM stress。完整 `current-contract-signoff` 的功能阶段均通过；coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理和 Phase 2 boot/memory 架构冻结已完成；下一步是产品地址宏、Boot ROM、复位/异常向量的首个 RTL 垂直切片，而不是 coverage closure。**
 
 ## 9. 执行记录
 
@@ -167,6 +168,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | 2026-08-01 | `integration/function-contract@8b3dc6b` | `RUN_ROOT=build/unit_tb/integration_c1_icache tb/unit/run_dut_block_unit_gate.sh` | PASS：MDU、DMA、VIC、UART、L2、L2NB、D-cache、ROB、I-cache 共 `9/9` | C1/C2 合并后的 unit-gate 逻辑和 I-cache 测试均通过。 |
 | 2026-08-01 | `integration/function-contract@8b3dc6b`，firmware SHA256 `4deaea0d6bab403dee89a64a84548cca8eeaa05f6dafbf00c880896def493bc8` | `make soc-smoke` | PASS：`REGRESSION_TEST_SUCCESS`，CPU/CP0 `intr=11 syscall=1 ri=4 adel=1 eret=16` | C1/C2 组合在 SoC smoke 下可执行。 |
 | 2026-08-01 | `integration/function-contract@8b3dc6b`，同上 firmware | `make uvm UVM_TEST=soc_bus_stress_test UVM_SEED=10 UVM_RUN_DIR=build/uvm/integration_c1_seed10` | PASS：`REGRESSION_TEST_SUCCESS`，无 UVM error/fatal 或 `$error` | C1/C2 组合在 background AXI stress 下通过；这不替代 I-cache 专项 SoC sequence。 |
+| 2026-08-01 | `integration/function-contract@3157091` | boot/memory architecture review: RTL reset/vector/MMU path, address map, linker, DDR/QSPI/WDT integration and existing block specs | COMPLETE（架构 gate，非 RTL 测试） | `docs/boot_memory_contract.md` v0.1 冻结候选产品地址图、MIPS reset/vector policy、flash manifest、失败行为和 6 个行为 gate；当前未形成任何 product boot RTL 完成声明。 |
 
 ## 10. 已知未决问题
 

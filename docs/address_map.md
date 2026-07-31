@@ -1,5 +1,10 @@
 # Address Map
 
+> Version: v0.2 (2026-08-01). The product boot/memory contract is defined in
+> `docs/boot_memory_contract.md`; the table below is the shared source of
+> truth for implementation and verification. Prototype smoke tests may still
+> use the legacy SRAM preload path until the product gate is enabled.
+
 This file is the first draft of the project-wide memory map.
 
 ## Rules
@@ -13,9 +18,10 @@ This file is the first draft of the project-wide memory map.
 
 | Region | Base | Size | Type | Notes |
 | --- | --- | --- | --- | --- |
-| Boot SRAM | `0x0000_0000` | 64 KB | cacheable | Early boot / reset vector |
+| Boot ROM | `0x1FC0_0000` | 64 KB | read-only, uncached | Product reset image; kseg1 alias `0xBFC0_0000` |
+| Boot SRAM | `0x0000_0000` | 64 KB | cacheable | Post-ROM code/data; kseg0 alias `0x8000_0000` |
 | Boot SRAM uncached alias | `0xA000_0000` | 64 KB | uncached | Same physical SRAM aperture; used by firmware mailbox/DMA buffers |
-| DDR (behavioral placeholder) | `0x0800_0000` | 128 MB | cacheable | Phase C.4: capacity/addressing placeholder only, backed by `rtl/perips/axi_ddr_behavioral.v` (plain `reg` array, no DDR3 timing/refresh/PHY). Real controller is `docs/block_specs/ddr3_spec.md`, deferred pending procured PHY IP. Sized at 128 MB (not 256 MB) so the window ends at `0x0FFF_FFFF`, directly below SPI Flash — this is not 256MB-aligned, so the crossbar decodes it via an explicit range compare instead of the mask-equality check used for the other regions. |
+| DDR (behavioral placeholder) | `0x0800_0000` | 128 MB | cacheable | Phase C.4 capacity placeholder only, backed by `rtl/perips/axi_ddr_behavioral.v`; product kseg0 alias `0x8800_0000`. No DDR3 timing/refresh/PHY. |
 | SPI Flash | `0x1000_0000` | 256 MB | read-mostly | Boot image / XIP candidate |
 | APB Bridge | `0x4000_0000` | 64 KB | uncached | Peripheral window |
 | Debug / Test | `0xE000_0000` | 64 KB | privileged | Reserved; only decoded when a future product feature gate enables it |
@@ -32,6 +38,10 @@ return AXI `DECERR`.
 | GPIO | `0x2000` | board control |
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
+| QSPI controller | `0x5000` | command/XIP/FIFO; product block not yet integrated |
+| DDR controller | `0x6000` | init/calibration/refresh status; product block not yet integrated |
+| Watchdog | `0x7000` | boot timeout/reset status; RTL exists but is not integrated |
+| Boot status | `0x8000` | immutable stage/failure code; product block not yet integrated |
 
 ## GPIO Register Map
 
