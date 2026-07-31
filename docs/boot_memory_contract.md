@@ -1,9 +1,9 @@
 # Boot and Memory Product Contract
 
-> Version: v0.4 (2026-08-01)
+> Version: v0.5 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
-> reset/map, general-exception, and TLB refill/invalid vector slices. This document defines the
+> reset/map, fetch-response PC alignment, general-exception, and TLB refill/invalid vector slices. This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
 > these requirements today.
@@ -243,8 +243,9 @@ tests remain block evidence only.
 
 ### 8.1 Current executable evidence
 
-The following evidence closes only the reset-address, fabric-routing, and
-ordinary/refill/invalid-vector sub-items of `bootrom_reset_test`; it does not
+The following evidence closes only the reset-address, fetch-response PC
+alignment, fabric-routing, and ordinary/refill/invalid-vector sub-items of
+`bootrom_reset_test`; it does not
 close that gate:
 
 - `tb/unit/bootrom/tb_axi_boot_rom.v` verifies a four-word read burst,
@@ -253,6 +254,13 @@ close that gate:
   `SOC_PRODUCT_BOOT_ENABLE=1`, does not preload SRAM, verifies PC
   `0xBFC0_0000`, and verifies the first I-cache AR transaction is accepted by
   S4 at physical address `0x1FC0_0000`.
+- `tb/unit/bootrom/tb_fetch_pc_alignment.sv` runs the same reset program in
+  prototype and `SOC_PRODUCT_BOOT_ENABLE=1` configurations. It proves the
+  reset `addiu`, its dependent `bne`, and the branch delay slot reach ID with
+  their exact PCs, observes the expected writes in WB, and verifies that the
+  branch reaches `reset+0x10`. The test
+  rejects the prior `inst_addr=pc` implementation, which shifts the I-cache
+  response PC by one word.
 - `tb/unit/bootrom/tb_product_boot_vector.sv` loads a simulation ROM image,
   raises a `syscall` at reset, verifies the `BFC0_0380` S4 fetch, clears
   `BEV/ERL` in the bootstrap vector, then verifies the `EBase+0x180` virtual
