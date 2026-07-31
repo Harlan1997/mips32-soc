@@ -70,7 +70,10 @@ module mips_if_stage #(
 
     // Cache Interface
     assign inst_req  = 1'b1; // Always trying to fetch
-    assign inst_addr = next_pc;
+    // The request address is the instruction currently held by PC. Driving
+    // next_pc here skips the reset entry word before the first response and
+    // makes a Boot ROM reset vector impossible to execute.
+    assign inst_addr = pc;
     assign pc_plus_4 = pc + 32'd4;
     
     // Stall if data is not ready

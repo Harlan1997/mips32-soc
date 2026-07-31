@@ -303,19 +303,54 @@ module soc_fabric #(
     input  wire [31:0] s3_rdata,
     input  wire [1:0]  s3_rresp,
     input  wire        s3_rlast,
-    input  wire        s3_rvalid
+    input  wire        s3_rvalid,
+    output wire [3:0]  s4_awid,
+    output wire [31:0] s4_awaddr,
+    output wire [7:0]  s4_awlen,
+    output wire [2:0]  s4_awsize,
+    output wire [1:0]  s4_awburst,
+    output wire [1:0]  s4_awlock,
+    output wire [3:0]  s4_awcache,
+    output wire [2:0]  s4_awprot,
+    output wire        s4_awvalid,
+    output wire [31:0] s4_wdata,
+    output wire [3:0]  s4_wstrb,
+    output wire        s4_wlast,
+    output wire        s4_wvalid,
+    output wire        s4_bready,
+    output wire [3:0]  s4_arid,
+    output wire [31:0] s4_araddr,
+    output wire [7:0]  s4_arlen,
+    output wire [2:0]  s4_arsize,
+    output wire [1:0]  s4_arburst,
+    output wire [1:0]  s4_arlock,
+    output wire [3:0]  s4_arcache,
+    output wire [2:0]  s4_arprot,
+    output wire        s4_arvalid,
+    output wire        s4_rready,
+    input  wire        s4_awready,
+    input  wire        s4_wready,
+    input  wire [3:0]  s4_bid,
+    input  wire [1:0]  s4_bresp,
+    input  wire        s4_bvalid,
+    input  wire        s4_arready,
+    input  wire [3:0]  s4_rid,
+    input  wire [31:0] s4_rdata,
+    input  wire [1:0]  s4_rresp,
+    input  wire        s4_rlast,
+    input  wire        s4_rvalid
 );
 
     // =========================================================================
     // Phase C.3: true M x N crossbar replaces the legacy arbiter cascade.
     // Masters packed: idx0=I$ (m0, read-only), 1=D$ (m1), 2=DMA (m2),
     // 3=jtag, 4=ext. Slaves: 0=SRAM/L2, 1=APB, 2=FLASH, 3=DDR (behavioral
-    // placeholder, Phase C.4) (+ internal DECERR). ext master is masked off
+    // placeholder), 4=Boot ROM (+ internal DECERR). ext master is masked off
     // via m_enable when ENABLE_EXT_AXI_MASTER=0.
     // =========================================================================
     `include "soc_config.vh"
     localparam integer NM = 5;
-    localparam integer NS = 4;
+    localparam integer NS = 5;
 
     wire [NM-1:0] xm_enable = { ENABLE_EXT_AXI_MASTER ? 1'b1 : 1'b0,
                                 1'b1, 1'b1, 1'b1, 1'b1 };
@@ -425,53 +460,53 @@ module soc_fabric #(
     assign ext_rlast   = xm_rlast[4];
     assign ext_rvalid  = xm_rvalid[4];
 
-    // ---- Pack slave vectors (idx: {ddr,flash,apb,sram}) ----
+    // ---- Pack slave vectors (idx: {bootrom,ddr,flash,apb,sram}) ----
     wire [NS*4-1:0]  xs_awid;    wire [NS*32-1:0] xs_awaddr;  wire [NS*8-1:0] xs_awlen;
     wire [NS*3-1:0]  xs_awsize;  wire [NS*2-1:0]  xs_awburst; wire [NS*2-1:0] xs_awlock;
     wire [NS*4-1:0]  xs_awcache; wire [NS*3-1:0]  xs_awprot;  wire [NS-1:0]   xs_awvalid;
-    wire [NS-1:0]    xs_awready = { s3_awready, s2_awready, s1_awready, s0_awready };
+    wire [NS-1:0]    xs_awready = { s4_awready, s3_awready, s2_awready, s1_awready, s0_awready };
     wire [NS*32-1:0] xs_wdata;   wire [NS*4-1:0]  xs_wstrb;   wire [NS-1:0]   xs_wlast;
-    wire [NS-1:0]    xs_wvalid;  wire [NS-1:0]    xs_wready = { s3_wready, s2_wready, s1_wready, s0_wready };
-    wire [NS*4-1:0]  xs_bid   = { s3_bid,   s2_bid,   s1_bid,   s0_bid };
-    wire [NS*2-1:0]  xs_bresp = { s3_bresp, s2_bresp, s1_bresp, s0_bresp };
-    wire [NS-1:0]    xs_bvalid= { s3_bvalid,s2_bvalid,s1_bvalid,s0_bvalid };
+    wire [NS-1:0]    xs_wvalid;  wire [NS-1:0]    xs_wready = { s4_wready, s3_wready, s2_wready, s1_wready, s0_wready };
+    wire [NS*4-1:0]  xs_bid   = { s4_bid,   s3_bid,   s2_bid,   s1_bid,   s0_bid };
+    wire [NS*2-1:0]  xs_bresp = { s4_bresp, s3_bresp, s2_bresp, s1_bresp, s0_bresp };
+    wire [NS-1:0]    xs_bvalid= { s4_bvalid,s3_bvalid,s2_bvalid,s1_bvalid,s0_bvalid };
     wire [NS-1:0]    xs_bready;
     wire [NS*4-1:0]  xs_arid;    wire [NS*32-1:0] xs_araddr;  wire [NS*8-1:0] xs_arlen;
     wire [NS*3-1:0]  xs_arsize;  wire [NS*2-1:0]  xs_arburst; wire [NS*2-1:0] xs_arlock;
     wire [NS*4-1:0]  xs_arcache; wire [NS*3-1:0]  xs_arprot;  wire [NS-1:0]   xs_arvalid;
-    wire [NS-1:0]    xs_arready = { s3_arready, s2_arready, s1_arready, s0_arready };
-    wire [NS*4-1:0]  xs_rid   = { s3_rid,   s2_rid,   s1_rid,   s0_rid };
-    wire [NS*32-1:0] xs_rdata = { s3_rdata, s2_rdata, s1_rdata, s0_rdata };
-    wire [NS*2-1:0]  xs_rresp = { s3_rresp, s2_rresp, s1_rresp, s0_rresp };
-    wire [NS-1:0]    xs_rlast = { s3_rlast, s2_rlast, s1_rlast, s0_rlast };
-    wire [NS-1:0]    xs_rvalid= { s3_rvalid,s2_rvalid,s1_rvalid,s0_rvalid };
+    wire [NS-1:0]    xs_arready = { s4_arready, s3_arready, s2_arready, s1_arready, s0_arready };
+    wire [NS*4-1:0]  xs_rid   = { s4_rid,   s3_rid,   s2_rid,   s1_rid,   s0_rid };
+    wire [NS*32-1:0] xs_rdata = { s4_rdata, s3_rdata, s2_rdata, s1_rdata, s0_rdata };
+    wire [NS*2-1:0]  xs_rresp = { s4_rresp, s3_rresp, s2_rresp, s1_rresp, s0_rresp };
+    wire [NS-1:0]    xs_rlast = { s4_rlast, s3_rlast, s2_rlast, s1_rlast, s0_rlast };
+    wire [NS-1:0]    xs_rvalid= { s4_rvalid,s3_rvalid,s2_rvalid,s1_rvalid,s0_rvalid };
     wire [NS-1:0]    xs_rready;
 
     // Unpack slave request vectors to flat slave ports
-    assign s0_awid   = xs_awid  [0*4 +:4];  assign s1_awid   = xs_awid  [1*4 +:4];  assign s2_awid   = xs_awid  [2*4 +:4];  assign s3_awid   = xs_awid  [3*4 +:4];
-    assign s0_awaddr = xs_awaddr[0*32+:32]; assign s1_awaddr = xs_awaddr[1*32+:32]; assign s2_awaddr = xs_awaddr[2*32+:32]; assign s3_awaddr = xs_awaddr[3*32+:32];
-    assign s0_awlen  = xs_awlen [0*8 +:8];  assign s1_awlen  = xs_awlen [1*8 +:8];  assign s2_awlen  = xs_awlen [2*8 +:8];  assign s3_awlen  = xs_awlen [3*8 +:8];
-    assign s0_awsize = xs_awsize[0*3 +:3];  assign s1_awsize = xs_awsize[1*3 +:3];  assign s2_awsize = xs_awsize[2*3 +:3];  assign s3_awsize = xs_awsize[3*3 +:3];
-    assign s0_awburst= xs_awburst[0*2+:2];  assign s1_awburst= xs_awburst[1*2+:2];  assign s2_awburst= xs_awburst[2*2+:2];  assign s3_awburst= xs_awburst[3*2+:2];
-    assign s0_awlock = xs_awlock[0*2 +:2];  assign s1_awlock = xs_awlock[1*2 +:2];  assign s2_awlock = xs_awlock[2*2 +:2];  assign s3_awlock = xs_awlock[3*2 +:2];
-    assign s0_awcache= xs_awcache[0*4+:4];  assign s1_awcache= xs_awcache[1*4+:4];  assign s2_awcache= xs_awcache[2*4+:4];  assign s3_awcache= xs_awcache[3*4+:4];
-    assign s0_awprot = xs_awprot[0*3 +:3];  assign s1_awprot = xs_awprot[1*3 +:3];  assign s2_awprot = xs_awprot[2*3 +:3];  assign s3_awprot = xs_awprot[3*3 +:3];
-    assign s0_awvalid= xs_awvalid[0];       assign s1_awvalid= xs_awvalid[1];       assign s2_awvalid= xs_awvalid[2];       assign s3_awvalid= xs_awvalid[3];
-    assign s0_wdata  = xs_wdata [0*32+:32]; assign s1_wdata  = xs_wdata [1*32+:32]; assign s2_wdata  = xs_wdata [2*32+:32]; assign s3_wdata  = xs_wdata [3*32+:32];
-    assign s0_wstrb  = xs_wstrb [0*4 +:4];  assign s1_wstrb  = xs_wstrb [1*4 +:4];  assign s2_wstrb  = xs_wstrb [2*4 +:4];  assign s3_wstrb  = xs_wstrb [3*4 +:4];
-    assign s0_wlast  = xs_wlast [0];        assign s1_wlast  = xs_wlast [1];        assign s2_wlast  = xs_wlast [2];        assign s3_wlast  = xs_wlast [3];
-    assign s0_wvalid = xs_wvalid[0];        assign s1_wvalid = xs_wvalid[1];        assign s2_wvalid = xs_wvalid[2];        assign s3_wvalid = xs_wvalid[3];
-    assign s0_bready = xs_bready[0];        assign s1_bready = xs_bready[1];        assign s2_bready = xs_bready[2];        assign s3_bready = xs_bready[3];
-    assign s0_arid   = xs_arid  [0*4 +:4];  assign s1_arid   = xs_arid  [1*4 +:4];  assign s2_arid   = xs_arid  [2*4 +:4];  assign s3_arid   = xs_arid  [3*4 +:4];
-    assign s0_araddr = xs_araddr[0*32+:32]; assign s1_araddr = xs_araddr[1*32+:32]; assign s2_araddr = xs_araddr[2*32+:32]; assign s3_araddr = xs_araddr[3*32+:32];
-    assign s0_arlen  = xs_arlen [0*8 +:8];  assign s1_arlen  = xs_arlen [1*8 +:8];  assign s2_arlen  = xs_arlen [2*8 +:8];  assign s3_arlen  = xs_arlen [3*8 +:8];
-    assign s0_arsize = xs_arsize[0*3 +:3];  assign s1_arsize = xs_arsize[1*3 +:3];  assign s2_arsize = xs_arsize[2*3 +:3];  assign s3_arsize = xs_arsize[3*3 +:3];
-    assign s0_arburst= xs_arburst[0*2+:2];  assign s1_arburst= xs_arburst[1*2+:2];  assign s2_arburst= xs_arburst[2*2+:2];  assign s3_arburst= xs_arburst[3*2+:2];
-    assign s0_arlock = xs_arlock[0*2 +:2];  assign s1_arlock = xs_arlock[1*2 +:2];  assign s2_arlock = xs_arlock[2*2 +:2];  assign s3_arlock = xs_arlock[3*2 +:2];
-    assign s0_arcache= xs_arcache[0*4+:4];  assign s1_arcache= xs_arcache[1*4+:4];  assign s2_arcache= xs_arcache[2*4+:4];  assign s3_arcache= xs_arcache[3*4+:4];
-    assign s0_arprot = xs_arprot[0*3 +:3];  assign s1_arprot = xs_arprot[1*3 +:3];  assign s2_arprot = xs_arprot[2*3 +:3];  assign s3_arprot = xs_arprot[3*3 +:3];
-    assign s0_arvalid= xs_arvalid[0];       assign s1_arvalid= xs_arvalid[1];       assign s2_arvalid= xs_arvalid[2];       assign s3_arvalid= xs_arvalid[3];
-    assign s0_rready = xs_rready[0];        assign s1_rready = xs_rready[1];        assign s2_rready = xs_rready[2];        assign s3_rready = xs_rready[3];
+    assign s0_awid   = xs_awid  [0*4 +:4];  assign s1_awid   = xs_awid  [1*4 +:4];  assign s2_awid   = xs_awid  [2*4 +:4];  assign s3_awid   = xs_awid  [3*4 +:4];  assign s4_awid   = xs_awid  [4*4 +:4];
+    assign s0_awaddr = xs_awaddr[0*32+:32]; assign s1_awaddr = xs_awaddr[1*32+:32]; assign s2_awaddr = xs_awaddr[2*32+:32]; assign s3_awaddr = xs_awaddr[3*32+:32]; assign s4_awaddr = xs_awaddr[4*32+:32];
+    assign s0_awlen  = xs_awlen [0*8 +:8];  assign s1_awlen  = xs_awlen [1*8 +:8];  assign s2_awlen  = xs_awlen [2*8 +:8];  assign s3_awlen  = xs_awlen [3*8 +:8];  assign s4_awlen  = xs_awlen [4*8 +:8];
+    assign s0_awsize = xs_awsize[0*3 +:3];  assign s1_awsize = xs_awsize[1*3 +:3];  assign s2_awsize = xs_awsize[2*3 +:3];  assign s3_awsize = xs_awsize[3*3 +:3];  assign s4_awsize = xs_awsize[4*3 +:3];
+    assign s0_awburst= xs_awburst[0*2+:2];  assign s1_awburst= xs_awburst[1*2+:2];  assign s2_awburst= xs_awburst[2*2+:2];  assign s3_awburst= xs_awburst[3*2+:2];  assign s4_awburst= xs_awburst[4*2+:2];
+    assign s0_awlock = xs_awlock[0*2 +:2];  assign s1_awlock = xs_awlock[1*2 +:2];  assign s2_awlock = xs_awlock[2*2 +:2];  assign s3_awlock = xs_awlock[3*2 +:2];  assign s4_awlock = xs_awlock[4*2 +:2];
+    assign s0_awcache= xs_awcache[0*4+:4];  assign s1_awcache= xs_awcache[1*4+:4];  assign s2_awcache= xs_awcache[2*4+:4];  assign s3_awcache= xs_awcache[3*4+:4];  assign s4_awcache= xs_awcache[4*4+:4];
+    assign s0_awprot = xs_awprot[0*3 +:3];  assign s1_awprot = xs_awprot[1*3 +:3];  assign s2_awprot = xs_awprot[2*3 +:3];  assign s3_awprot = xs_awprot[3*3 +:3];  assign s4_awprot = xs_awprot[4*3 +:3];
+    assign s0_awvalid= xs_awvalid[0];       assign s1_awvalid= xs_awvalid[1];       assign s2_awvalid= xs_awvalid[2];       assign s3_awvalid= xs_awvalid[3];       assign s4_awvalid= xs_awvalid[4];
+    assign s0_wdata  = xs_wdata [0*32+:32]; assign s1_wdata  = xs_wdata [1*32+:32]; assign s2_wdata  = xs_wdata [2*32+:32]; assign s3_wdata  = xs_wdata [3*32+:32]; assign s4_wdata  = xs_wdata [4*32+:32];
+    assign s0_wstrb  = xs_wstrb [0*4 +:4];  assign s1_wstrb  = xs_wstrb [1*4 +:4];  assign s2_wstrb  = xs_wstrb [2*4 +:4];  assign s3_wstrb  = xs_wstrb [3*4 +:4];  assign s4_wstrb  = xs_wstrb [4*4 +:4];
+    assign s0_wlast  = xs_wlast [0];        assign s1_wlast  = xs_wlast [1];        assign s2_wlast  = xs_wlast [2];        assign s3_wlast  = xs_wlast [3];        assign s4_wlast  = xs_wlast [4];
+    assign s0_wvalid = xs_wvalid[0];        assign s1_wvalid = xs_wvalid[1];        assign s2_wvalid = xs_wvalid[2];        assign s3_wvalid = xs_wvalid[3];        assign s4_wvalid = xs_wvalid[4];
+    assign s0_bready = xs_bready[0];        assign s1_bready = xs_bready[1];        assign s2_bready = xs_bready[2];        assign s3_bready = xs_bready[3];        assign s4_bready = xs_bready[4];
+    assign s0_arid   = xs_arid  [0*4 +:4];  assign s1_arid   = xs_arid  [1*4 +:4];  assign s2_arid   = xs_arid  [2*4 +:4];  assign s3_arid   = xs_arid  [3*4 +:4];  assign s4_arid   = xs_arid  [4*4 +:4];
+    assign s0_araddr = xs_araddr[0*32+:32]; assign s1_araddr = xs_araddr[1*32+:32]; assign s2_araddr = xs_araddr[2*32+:32]; assign s3_araddr = xs_araddr[3*32+:32]; assign s4_araddr = xs_araddr[4*32+:32];
+    assign s0_arlen  = xs_arlen [0*8 +:8];  assign s1_arlen  = xs_arlen [1*8 +:8];  assign s2_arlen  = xs_arlen [2*8 +:8];  assign s3_arlen  = xs_arlen [3*8 +:8];  assign s4_arlen  = xs_arlen [4*8 +:8];
+    assign s0_arsize = xs_arsize[0*3 +:3];  assign s1_arsize = xs_arsize[1*3 +:3];  assign s2_arsize = xs_arsize[2*3 +:3];  assign s3_arsize = xs_arsize[3*3 +:3];  assign s4_arsize = xs_arsize[4*3 +:3];
+    assign s0_arburst= xs_arburst[0*2+:2];  assign s1_arburst= xs_arburst[1*2+:2];  assign s2_arburst= xs_arburst[2*2+:2];  assign s3_arburst= xs_arburst[3*2+:2];  assign s4_arburst= xs_arburst[4*2+:2];
+    assign s0_arlock = xs_arlock[0*2 +:2];  assign s1_arlock = xs_arlock[1*2 +:2];  assign s2_arlock = xs_arlock[2*2 +:2];  assign s3_arlock = xs_arlock[3*2 +:2];  assign s4_arlock = xs_arlock[4*2 +:2];
+    assign s0_arcache= xs_arcache[0*4+:4];  assign s1_arcache= xs_arcache[1*4+:4];  assign s2_arcache= xs_arcache[2*4+:4];  assign s3_arcache= xs_arcache[3*4+:4];  assign s4_arcache= xs_arcache[4*4+:4];
+    assign s0_arprot = xs_arprot[0*3 +:3];  assign s1_arprot = xs_arprot[1*3 +:3];  assign s2_arprot = xs_arprot[2*3 +:3];  assign s3_arprot = xs_arprot[3*3 +:3];  assign s4_arprot = xs_arprot[4*3 +:3];
+    assign s0_arvalid= xs_arvalid[0];       assign s1_arvalid= xs_arvalid[1];       assign s2_arvalid= xs_arvalid[2];       assign s3_arvalid= xs_arvalid[3];       assign s4_arvalid= xs_arvalid[4];
+    assign s0_rready = xs_rready[0];        assign s1_rready = xs_rready[1];        assign s2_rready = xs_rready[2];        assign s3_rready = xs_rready[3];        assign s4_rready = xs_rready[4];
 
     axi_crossbar #(
         .N_M(NM), .N_S(NS), .N_OT(`SOC_XBAR_N_OT),

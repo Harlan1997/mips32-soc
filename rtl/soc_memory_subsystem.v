@@ -123,7 +123,43 @@ module soc_memory_subsystem #(
     output wire [1:0]  s3_rresp,
     output wire        s3_rlast,
     output wire        s3_rvalid,
-    input  wire        s3_rready
+    input  wire        s3_rready,
+
+    input  wire [3:0]  s4_awid,
+    input  wire [31:0] s4_awaddr,
+    input  wire [7:0]  s4_awlen,
+    input  wire [2:0]  s4_awsize,
+    input  wire [1:0]  s4_awburst,
+    input  wire [1:0]  s4_awlock,
+    input  wire [3:0]  s4_awcache,
+    input  wire [2:0]  s4_awprot,
+    input  wire        s4_awvalid,
+    output wire        s4_awready,
+    input  wire [31:0] s4_wdata,
+    input  wire [3:0]  s4_wstrb,
+    input  wire        s4_wlast,
+    input  wire        s4_wvalid,
+    output wire        s4_wready,
+    output wire [3:0]  s4_bid,
+    output wire [1:0]  s4_bresp,
+    output wire        s4_bvalid,
+    input  wire        s4_bready,
+    input  wire [3:0]  s4_arid,
+    input  wire [31:0] s4_araddr,
+    input  wire [7:0]  s4_arlen,
+    input  wire [2:0]  s4_arsize,
+    input  wire [1:0]  s4_arburst,
+    input  wire [1:0]  s4_arlock,
+    input  wire [3:0]  s4_arcache,
+    input  wire [2:0]  s4_arprot,
+    input  wire        s4_arvalid,
+    output wire        s4_arready,
+    output wire [3:0]  s4_rid,
+    output wire [31:0] s4_rdata,
+    output wire [1:0]  s4_rresp,
+    output wire        s4_rlast,
+    output wire        s4_rvalid,
+    input  wire        s4_rready
 );
 
 `ifdef SOC_USE_L2_CACHE
@@ -397,5 +433,49 @@ module soc_memory_subsystem #(
         );
     end
     endgenerate
+
+    // ---- Product Boot ROM (S4) ----
+    // This is a distinct read-only slave so reset fetches cannot alias the
+    // writable SRAM/L2 path. ROM_INIT_FILE and +BOOT_ROM_HEX are simulation
+    // hooks; the production image is supplied by the mask-ROM flow.
+    axi_boot_rom u_axi_boot_rom (
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .s_awid          (s4_awid),
+        .s_awaddr        (s4_awaddr),
+        .s_awlen         (s4_awlen),
+        .s_awsize        (s4_awsize),
+        .s_awburst       (s4_awburst),
+        .s_awlock        (s4_awlock),
+        .s_awcache       (s4_awcache),
+        .s_awprot        (s4_awprot),
+        .s_awvalid       (s4_awvalid),
+        .s_awready       (s4_awready),
+        .s_wdata         (s4_wdata),
+        .s_wstrb         (s4_wstrb),
+        .s_wlast         (s4_wlast),
+        .s_wvalid        (s4_wvalid),
+        .s_wready        (s4_wready),
+        .s_bid           (s4_bid),
+        .s_bresp         (s4_bresp),
+        .s_bvalid        (s4_bvalid),
+        .s_bready        (s4_bready),
+        .s_arid          (s4_arid),
+        .s_araddr        (s4_araddr),
+        .s_arlen         (s4_arlen),
+        .s_arsize        (s4_arsize),
+        .s_arburst       (s4_arburst),
+        .s_arlock        (s4_arlock),
+        .s_arcache       (s4_arcache),
+        .s_arprot        (s4_arprot),
+        .s_arvalid       (s4_arvalid),
+        .s_arready       (s4_arready),
+        .s_rid           (s4_rid),
+        .s_rdata         (s4_rdata),
+        .s_rresp         (s4_rresp),
+        .s_rlast         (s4_rlast),
+        .s_rvalid        (s4_rvalid),
+        .s_rready        (s4_rready)
+    );
 
 endmodule

@@ -29,7 +29,7 @@
 
 module axi_crossbar #(
     parameter integer N_M   = 5,   // masters: 0=I$,1=D$,2=DMA,3=jtag,4=ext
-    parameter integer N_S   = 4,   // mapped slaves: 0=SRAM,1=APB,2=FLASH,3=DDR
+    parameter integer N_S   = 5,   // mapped slaves: 0=SRAM,1=APB,2=FLASH,3=DDR,4=Boot ROM
     parameter integer N_OT  = 4,   // per-slave outstanding depth
     parameter integer IDW   = 4,
     parameter integer AW    = 32,
@@ -189,6 +189,11 @@ module axi_crossbar #(
                 decode_slave = 4'd0;                 // S0 SRAM
             else if ((a & `SOC_64KB_REGION_MASK) == `SOC_APB_BASE)
                 decode_slave = 4'd1;                 // S1 APB
+            // Boot ROM is embedded in the broad legacy FLASH mask window;
+            // retain it as an independent read-only target by testing its
+            // exact physical range before the coarse Flash decode.
+            else if ((a >= `SOC_BOOT_ROM_BASE) && (a < (`SOC_BOOT_ROM_BASE + `SOC_BOOT_ROM_SIZE)))
+                decode_slave = 4'd4;                 // S4 Boot ROM
             else if ((a & `SOC_256MB_REGION_MASK) == `SOC_FLASH_BASE)
                 decode_slave = 4'd2;                 // S2 FLASH
             else if ((a >= `SOC_DDR_BASE) && (a < (`SOC_DDR_BASE + `SOC_DDR_SIZE)))

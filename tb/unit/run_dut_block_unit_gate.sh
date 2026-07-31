@@ -17,14 +17,14 @@ export LM_LICENSE_FILE=${LM_LICENSE_FILE:-2700@localhost}
 mkdir -p "${RUN_ROOT}"
 
 echo "========================================================================"
-echo " Running DUT Block Unit Gate (9 Blocks)"
+echo " Running DUT Block Unit Gate (10 Blocks)"
 echo " Run Root: ${RUN_ROOT}"
 echo "========================================================================"
 
 FAILED=0
 
 # 1. mdu
-echo "--- [1/9] Running MDU Unit Test ---"
+echo "--- [1/10] Running MDU Unit Test ---"
 MDU_DIR="${RUN_ROOT}/mdu"
 mkdir -p "${MDU_DIR}"
 (
@@ -43,7 +43,7 @@ else
 fi
 
 # 2. dma
-echo "--- [2/9] Running DMA Unit Test ---"
+echo "--- [2/10] Running DMA Unit Test ---"
 DMA_DIR="${RUN_ROOT}/dma"
 mkdir -p "${DMA_DIR}"
 (
@@ -62,7 +62,7 @@ else
 fi
 
 # 3. vic
-echo "--- [3/9] Running VIC Unit Test ---"
+echo "--- [3/10] Running VIC Unit Test ---"
 VIC_DIR="${RUN_ROOT}/vic"
 mkdir -p "${VIC_DIR}"
 (
@@ -81,7 +81,7 @@ else
 fi
 
 # 4. uart
-echo "--- [4/9] Running UART 16550 Unit Test ---"
+echo "--- [4/10] Running UART 16550 Unit Test ---"
 UART_DIR="${RUN_ROOT}/uart"
 mkdir -p "${UART_DIR}"
 (
@@ -100,7 +100,7 @@ else
 fi
 
 # 5. l2
-echo "--- [5/9] Running L2 Cache Unit Test ---"
+echo "--- [5/10] Running L2 Cache Unit Test ---"
 L2_DIR="${RUN_ROOT}/l2"
 mkdir -p "${L2_DIR}"
 (
@@ -123,7 +123,7 @@ else
 fi
 
 # 6. l2nb (non-blocking L2, full MSHR)
-echo "--- [6/9] Running Non-Blocking L2 (MSHR) Unit Test ---"
+echo "--- [6/10] Running Non-Blocking L2 (MSHR) Unit Test ---"
 L2NB_DIR="${RUN_ROOT}/l2nb"
 mkdir -p "${L2NB_DIR}"
 (
@@ -146,7 +146,7 @@ else
 fi
 
 # 7. dcache (L1 D-cache, 4-way + tree-PLRU)
-echo "--- [7/9] Running L1 D-Cache Unit Test ---"
+echo "--- [7/10] Running L1 D-Cache Unit Test ---"
 DC_DIR="${RUN_ROOT}/dcache"
 mkdir -p "${DC_DIR}"
 (
@@ -164,7 +164,7 @@ else
 fi
 
 # 8. rob (mini-ROB, DEPTH=1 golden vs DEPTH=2 skeleton parity)
-echo "--- [8/9] Running mini-ROB Unit Test ---"
+echo "--- [8/10] Running mini-ROB Unit Test ---"
 ROB_DIR="${RUN_ROOT}/rob"
 mkdir -p "${ROB_DIR}"
 (
@@ -186,7 +186,7 @@ else
 fi
 
 # 9. icache (L1 I-cache, 4-way + tree-PLRU)
-echo "--- [9/9] Running L1 I-Cache Unit Test ---"
+echo "--- [9/10] Running L1 I-Cache Unit Test ---"
 IC_DIR="${RUN_ROOT}/icache"
 mkdir -p "${IC_DIR}"
 (
@@ -203,9 +203,32 @@ else
     FAILED=1
 fi
 
+# 10. bootrom (product reset address target, read-only AXI slave)
+echo "--- [10/10] Running Boot ROM Unit and Reset-Path Tests ---"
+BOOTROM_DIR="${RUN_ROOT}/bootrom"
+mkdir -p "${BOOTROM_DIR}"
+(
+    cd "${BOOTROM_DIR}"
+    vcs -full64 -sverilog -timescale=1ns/1ps \
+        +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/perips" \
+        "${ROOT_DIR}/rtl/perips/axi_boot_rom.v" "${ROOT_DIR}/tb/unit/bootrom/tb_axi_boot_rom.v" \
+        -l compile.log
+    ./simv -no_save -l sim.log
+
+    RUN_DIR="$(pwd)/product_reset_fetch" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_reset_fetch.sh"
+)
+if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log"; then
+    echo "BOOTROM: PASS"
+else
+    echo "BOOTROM: FAIL"
+    FAILED=1
+fi
+
 echo "======================================================================--"
 if [ "$FAILED" -eq 0 ]; then
-    echo " DUT Block Unit Gate Passed (9/9)"
+    echo " DUT Block Unit Gate Passed (10/10)"
     echo "======================================================================--"
     exit 0
 else
