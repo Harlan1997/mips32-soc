@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.19（2026-08-02）
+> 版本：v1.20（2026-08-02）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -57,7 +57,9 @@ ASIC controller/PHY、真实 DDR boot 或 `PRODUCT_FUNCTION_READY` 证据。
 推荐基线已接受：28nm LP、TSMC N28/28HPC RFQ target、BGA、1.2 V
 commercial、DDR4-2133、x32 single-rank、ECC disabled。`A-DDR4-02`
 foundry/PDK 书面确认和 `A-DDR4-09` training/WDT 仍需外部签收；B 当前以
-Synopsys DDR4 PHY/controller 为优先 RFQ，不能宣称 PHY 已选。
+Synopsys DDR4 PHY/controller 为优先 RFQ，不能宣称 PHY 已选。若外部输入
+暂时不可得，转入 F1 vendor-neutral contract/model + F4 并行 P0 功能，具体边界
+见 [`docs/asic_c1_ddr4_contingency_plan.md`](asic_c1_ddr4_contingency_plan.md)。
 
 ## 3. 商用 SoC 功能判断
 
@@ -194,6 +196,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | 2026-08-02 | `integration/function-contract` | `make ddr-contract-entry-audit DDR_ENTRY_AUDIT_DIR=build/unit_tb/ddr_contract_entry_profile_c1_ddr4` | PASS：契约、ASIC Profile C1 DDR4、DDR4 spec/manifest 检查通过；总体结果为 `BLOCKED`（预期） | 已记录用户选择 C1 DDR4，建立 `ddr4_spec.md` 与 `DDR4-IN-01..08` 输入清单；旧 DDR3 清单降为 legacy prototype 边界，未授权产品 DDR4 controller。报告：`build/unit_tb/ddr_contract_entry_profile_c1_ddr4/ddr_contract_entry_report.md` |
 | 2026-08-02 | `integration/function-contract` | 建立 [ASIC C1 DDR4 参数决策包](asic_c1_ddr4_parameter_decision.md) | BASELINE ACCEPTED：A-02/A-09 外部签收待定，B RFQ 准备启动 | 已接受 28nm LP、BGA、1.2 V commercial、DDR4-2133、x32 single-rank、ECC disabled；foundry/PDK 和 training/WDT 仍未签收。 |
 | 2026-08-02 | `integration/function-contract` | 建立 [C1 DDR4 PHY/IP 筛选计划](asic_c1_ddr4_phy_selection_plan.md) | RFQ_PRIORITY_SYNOPSYS：PHY_NOT_SELECTED | 已选择 Synopsys + TSMC N28/28HPC 作为优先 RFQ 组合，保留 Cadence/Rambus/foundry-approved 备选；只有工艺/封装确认和 vendor 书面支持后，才能更新 `DDR4-IN-03/04/07`。 |
+| 2026-08-02 | `integration/function-contract` | 建立 [C1 DDR4 外部输入缺失推进方案](asic_c1_ddr4_contingency_plan.md) | ACTIVE：F1 + F4；DDR4 产品 entry 仍 BLOCKED | 外部资料暂不可得时，F1 只做 vendor-neutral contract/model，F4 推进 kseg0 runtime、page-table/ASID rollover、cache-error/EIC、QSPI/UART/WDT 等 P0；不得将 behavioral/FPGA 证据升级为 ASIC DDR4 证据。 |
 | 2026-08-01 | `integration/function-contract` | `make ddr-contract-entry-audit DDR_ENTRY_AUDIT_DIR=build/unit_tb/ddr_contract_entry_asic_v1` | PASS：契约、ASIC 路线和输入获取计划检查通过；总体结果为 `BLOCKED`（预期） | 已将产品路线固定为 ASIC，并记录 `ASIC-DDR-01..08` 的获取顺序；工艺/foundry/package/PHY/DRAM/board/model/WDT 输入仍未登记，未授权 `ddr3_ctrl` RTL。报告：`build/unit_tb/ddr_contract_entry_asic_v1/ddr_contract_entry_report.md` |
 | 2026-08-01 | 初始 smoke firmware | `make soc-smoke` | 进程退出成功但 log 含 `DIV ERROR`，且 error 路径仍写成功 mailbox | 该结果不计入通过。根因是 firmware 二操作数 `div` 被 assembler 展开并隐式改写操作数，同时 smoke 没有把功能错误转换为失败。 |
 | 2026-08-01 | 当前工作区 | `FW_HEX=build/firmware/mdu_cpu/firmware.hex RUN_DIR=build/soc_test/mdu_cpu_div_fixed tb/soc_test/run.sh` | PASS：正数及两种混合符号 DIV 都由 CPU/MDU 返回正确商和余数 | 使用原始 `div $zero, rs, rt` 指令和失败 mailbox；证明 MDU block 与 CPU 集成正确。日志：`build/soc_test/mdu_cpu_div_fixed/sim.log` |

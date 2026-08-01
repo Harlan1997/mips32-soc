@@ -2,7 +2,7 @@
 
 > 版本：v0.2（2026-08-02）
 > 阶段：**B：PHY/IP 筛选准备**
-> 状态：**RFQ_PRIORITY_SYNOPSYS / PHY_NOT_SELECTED**
+> 状态：**RFQ_PRIORITY_SYNOPSYS / PHY_NOT_SELECTED / EXTERNAL_INPUTS_BLOCKED**
 
 本计划在 C1 推荐基线已接受后启动。供应商和 foundry 仍未签约，以下名单
 只是 RFQ 候选，不代表任何 vendor 已确认支持本项目工艺、封装或 DDR4
@@ -50,3 +50,6 @@ library 和 package ball map 获得书面确认后，才可进入正式技术评
 - 更新 `docs/ddr4_integration_inputs.md`，再运行 entry audit。
 
 在这些产出完成前，`PHY_NOT_SELECTED` 和 `DDR4_ENTRY_READY=0` 必须保持。
+若 TSMC PDK、Synopsys 交付包或真实 model 暂时不可获取，转入
+[`docs/asic_c1_ddr4_contingency_plan.md`](asic_c1_ddr4_contingency_plan.md)，
+执行 F1 + F4；不得用 behavioral/FPGA 证据替代 ASIC PHY 签收。
