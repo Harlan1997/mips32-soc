@@ -4,6 +4,8 @@
 // Author:    Antigravity
 // =============================================================================
 
+`include "soc_config.vh"
+
 module mips_core (
     input  wire        clk,
     input  wire        rst_n,
@@ -199,7 +201,10 @@ module mips_core (
     );
     
     // Instantiating the D-Cache
-    dcache u_dcache (
+    dcache #(
+        .ENABLE_LEGACY_ADDR_HEURISTIC ((`SOC_MMU_ENABLE == 0) &&
+                                        (`SOC_PRODUCT_BOOT_ENABLE == 0))
+    ) u_dcache (
         .clk          (clk),
         .rst_n        (rst_n),
         

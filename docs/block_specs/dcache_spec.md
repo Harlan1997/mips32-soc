@@ -185,6 +185,12 @@ CACHE 指令走 MEM 阶段专用端口；产生 1-16 cycle bubble（Hit_Writebac
   `BFC0_0100`（BEV=1）进入错误向量。写回 BRESP 错误遵循相同策略。
 - Uncached AXI SLVERR/DECERR 继续走 DBE (ExcCode=7)/EPC，不设置 ERL；这
   区分 controller/bus failure 与 cache-array/refill failure。
+- Prototype-only physical-address aliases `0x4xxx_xxxx` and `0xAxxx_xxxx`
+  remain uncached when both `SOC_MMU_ENABLE=0` and
+  `SOC_PRODUCT_BOOT_ENABLE=0`. Product MMU mode ignores that legacy heuristic
+  and honors the translated TLB `C` attribute, so a cacheable kseg2 mapping may
+  target a physical APB-looking address. `make product-cacheerr-gate` proves
+  this distinction with a cached `C000_F000 -> 4000_F000` refill fault.
 - Store buffer 中的 store 遇 TLB modified → 回滚 store buffer 项 + Mod 异常。
 
 ---

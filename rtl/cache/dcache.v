@@ -10,7 +10,11 @@
 //   VIPT non-aliasing: index [10:5] lies within the 4KB page offset.
 // =============================================================================
 
-module dcache (
+module dcache #(
+    // Product mips_core disables the prototype physical-address alias check;
+    // standalone block tests retain it by default.
+    parameter ENABLE_LEGACY_ADDR_HEURISTIC = 1'b1
+) (
     input  wire        clk,
     input  wire        rst_n,
 
@@ -131,8 +135,15 @@ module dcache (
     // so the physical address alone cannot identify them as uncached. Preserve
     // the MMU attribute with the buffered request while retaining legacy APB
     // and SRAM-alias decoding for the prototype configuration.
-    wire legacy_cpu_uncacheable = (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA);
-    wire legacy_req_uncacheable = (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA);
+    // In the prototype, untranslated physical 0x4xxx/0xAxxx accesses are
+    // legacy uncached aliases. Product MMU mode must honor the translated
+    // EntryLo C attribute instead: a cacheable kseg2 mapping may legitimately
+    // target physical APB/alias-looking addresses.
+    wire legacy_addr_uncacheable = ENABLE_LEGACY_ADDR_HEURISTIC;
+    wire legacy_cpu_uncacheable = legacy_addr_uncacheable &&
+                                  (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA);
+    wire legacy_req_uncacheable = legacy_addr_uncacheable &&
+                                  (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA);
     assign uncacheable = req_buf_valid ? (req_buf_uncacheable || legacy_req_uncacheable)
                                        : (cpu_uncacheable || legacy_cpu_uncacheable);
 
