@@ -1,12 +1,30 @@
 # DDR4 外部输入获取指南
 
-> 版本：v0.1（2026-08-02）
+> 版本：v0.2（2026-08-02）
 > 适用目标：ASIC Profile C1，TSMC N28/28HPC RFQ target，DDR4-2133，x32
 > single-rank，BGA，1.2 V commercial。
 
 这些资料不在 TSMC PDK 中，需要由 PHY vendor、DRAM vendor、package/OSAT、
 板卡团队和 SI/PI 工程团队分别提供。所有资料只登记路径、版本、SHA256、
 license owner 和 review 状态，不复制到 Git。
+
+## 0. 当前 RTL 前端范围
+
+当前项目暂不进入综合阶段，只要求 RTL 功能编写、前端编译/elaboration 和功能仿真。
+因此以下输入现在不是阻塞条件：
+
+- TSMC N28/N28HPC PDK 和 DDR IO library；
+- Synopsys 真实 PHY license、DFI port list 和 implementation model；
+- 精确 DRAM ordering code；
+- package ball map/parasitic 和 PCB SI/PI/timing 文件。
+
+当前允许使用 vendor-neutral contract、代表性 timing 参数和 behavioral PHY/DRAM model，
+完成初始化、training、refresh、读写、背压、reset 和错误路径仿真。该结果只能标为
+`RTL_FUNCTIONAL_SIM_READY` 或 `BLOCK_VERIFIED (vendor-neutral)`，不能把
+`DDR4_ENTRY_READY` 改为 `1`。
+
+本清单的 `DDR4-IN-01..08` 是后续真实 PHY/controller 和 ASIC 产品入口的验收项，
+不是当前 RTL 前端 gate 的前置条件。
 
 ## 1. 获取顺序
 

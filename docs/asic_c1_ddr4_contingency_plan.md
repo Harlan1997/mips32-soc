@@ -7,6 +7,10 @@ DDR4 完成证据。
 项目可以继续推进 SoC 功能，但必须把证据等级限制在 prototype/contract；
 任何替代物都不能发布为 ASIC DDR4 PHY 或 `PRODUCT_FUNCTION_READY` 证据。
 
+当前里程碑进一步限定为 **RTL 功能编写、前端编译/elaboration 和功能仿真**。
+综合、STA、PPA、lint、CDC/RDC、formal、package 和板级 SI/PI 均为后置任务，
+不会阻塞 F1 的 RTL 前端 gate。
+
 ## 1. 可选推进路径
 
 | 路径 | 做什么 | 能证明什么 | 不能证明什么 |
@@ -53,4 +57,5 @@ DDR4 完成证据。
 
 F1 gate 已通过：`make ddr4-phy-behavioral-gate` 验证 init/training success、
 training/init failure、refresh backpressure、读写、fatal 和非法命令分类。
-该结果等级为 `BLOCK_VERIFIED (vendor-neutral)`，不关闭 `DDR4-IN-01..08`。
+该结果等级为 `BLOCK_VERIFIED (vendor-neutral)`，可作为当前
+`RTL_FUNCTIONAL_SIM_READY` 的 DDR4 子项，但不关闭 `DDR4-IN-01..08`。
