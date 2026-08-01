@@ -40,7 +40,7 @@ return AXI `DECERR`.
 | PIC | `0x4000` | interrupt aggregation |
 | QSPI controller | `0x5000` | command/XIP/FIFO; product block not yet integrated |
 | DDR controller | `0x6000` | init/calibration/refresh status; product block not yet integrated |
-| Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse is integrated, boot-status retention is separate |
+| Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
 
 ## GPIO Register Map
