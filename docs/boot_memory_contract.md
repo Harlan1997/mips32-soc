@@ -50,7 +50,8 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry, and the handoff gate confirms kseg0 `0x8000_1000 -> 0x0000_1000` instruction translation | Kernel runtime data mapping, invalid-fault policy, ASID/page-table policy, cache-error handling and complete runtime firmware still require product work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
 | Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as IBE/DBE. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; add a software-visible fault/status register and full cache-error policy |
-| WDT/boot status | `apb_wdt` exists but is not instantiated by `soc_peripheral_subsystem.v` | Add product APB decode, reset request path, boot-failure status and timeout test |
+| UART pins | `soc_top.v` now exposes UART TX/RX, RTS/CTS, DTR/DSR, DCD and RI; `ENABLE_UART_PINS=0` preserves legacy/UVM tie-offs. The product subsystem routes RX-specific IRQ to PIC bit0 and preserves aggregate UART IRQ on bit1 | Bind the pins through the selected pad-mux/electrical wrapper and add an external RX waveform/board-level gate; pin exposure alone is not pad signoff |
+| WDT/boot status | `apb_wdt` is being connected at APB `0x4000_7000`; the intended expiry behavior is a one-cycle reset request with sticky expired state | Complete product APB decode, reset request path, boot-failure status retention across watchdog reset and timeout/boot-failure test |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
 
 ## 3. Physical and virtual memory map
@@ -243,15 +244,16 @@ Handoff requirements:
 
 ## 7. Product top-level I/O requirements
 
-The current `soc_top.v` pins are insufficient for this contract:
+The current `soc_top.v` pins are still not sufficient for full board signoff:
 
 - replace `spi_mosi/spi_miso` with a QSPI pad wrapper exposing `qspi_io[3:0]`,
   `qspi_sck`, and chip-select(s), while allowing a single-lane compatibility
   mode in simulation;
 - add the selected DDR3 PHY/pad interface (address, bank, command, clock,
   reset, DQ/DQS/DM) through a board-specific wrapper;
-- add UART TX/RX and flow-control pins, or explicitly bind them to a pad-mux
-  interface before product top signoff;
+- `soc_top.v` now exposes UART TX/RX and modem flow-control pins. Bind them to
+  the selected pad-mux/electrical interface and verify an external RX waveform
+  before product top signoff;
 - expose or intentionally isolate boot-status and watchdog reset observability.
 
 ## 8. Verification gates (behavioral, not coverage)

@@ -18,6 +18,9 @@ module tb_mips_soc;
     wire spi_sclk;
     wire spi_cs_n;
     wire spi_mosi;
+    wire uart_tx;
+    wire uart_rts_n;
+    wire uart_dtr_n;
 
     reg clk;
     reg rst_n;
@@ -30,6 +33,12 @@ module tb_mips_soc;
     integer cp0_eret_count;
     
     wire [31:0] gpio_pins;
+    wire uart_rx = 1'b1;
+    wire uart_cts_n = 1'b0;
+    wire uart_dsr_n = 1'b0;
+    wire uart_dcd_n = 1'b0;
+    wire uart_ri_n = 1'b1;
+    reg uart_tx_seen_low;
     
     // Pull down GPIOs weakly to avoid 'z' in simulation if not driven
     genvar i;
@@ -39,10 +48,18 @@ module tb_mips_soc;
         end
     endgenerate
     
-    mips_soc u_soc(
+    mips_soc #(.ENABLE_UART_PINS(1'b1)) u_soc(
         .clk        (clk),
         .rst_n      (rst_n),
         .gpio_pins  (gpio_pins),
+        .uart_rx    (uart_rx),
+        .uart_tx    (uart_tx),
+        .uart_cts_n (uart_cts_n),
+        .uart_rts_n (uart_rts_n),
+        .uart_dsr_n (uart_dsr_n),
+        .uart_dtr_n (uart_dtr_n),
+        .uart_dcd_n (uart_dcd_n),
+        .uart_ri_n  (uart_ri_n),
         .spi_sclk   (spi_sclk),
         .spi_cs_n   (spi_cs_n),
         .spi_mosi   (spi_mosi),
@@ -87,6 +104,7 @@ module tb_mips_soc;
         cp0_ri_count = 0;
         cp0_adel_count = 0;
         cp0_eret_count = 0;
+        uart_tx_seen_low = 1'b0;
 
         // Initialize memory with an explicit firmware artifact before reset release.
         firmware_hex = "firmware.hex";
@@ -118,6 +136,10 @@ module tb_mips_soc;
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+                if (!uart_tx_seen_low) begin
+                    $display("REGRESSION_TEST_FAILED UART TX pin never asserted");
+                    $finish;
+                end
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
             end else if (legacy_mailbox_wdata == 32'hdeaddead) begin
@@ -159,6 +181,8 @@ module tb_mips_soc;
     end
     
     always @(posedge clk) begin
+        if (rst_n && !uart_tx)
+            uart_tx_seen_low <= 1'b1;
         if (legacy_uart_tx_valid) begin
             $write("%c", legacy_uart_tx_data);
             $fflush();

@@ -13,6 +13,15 @@ module soc_peripheral_subsystem #(
 
     inout  wire [31:0] gpio_pins,
 
+    input  wire        uart_rx,
+    output wire        uart_tx,
+    input  wire        uart_cts_n,
+    output wire        uart_rts_n,
+    input  wire        uart_dsr_n,
+    output wire        uart_dtr_n,
+    input  wire        uart_dcd_n,
+    input  wire        uart_ri_n,
+
     output wire        cpu_int,
 
     input  wire [3:0]  s_awid,
@@ -185,8 +194,12 @@ module soc_peripheral_subsystem #(
     // signoff #19 validated the cutover. Serial line tied off in DUT;
     // loopback available via MCR[4] for verification.
     wire uart_16550_irq;
+    wire uart_16550_rx_irq;
+    wire uart_16550_tx_irq;
+    // Preserve the established PIC bit1 aggregate IRQ contract while exposing
+    // the RX-specific source on bit0 for product firmware.
     assign uart_tx_int = uart_16550_irq;
-    assign uart_rx_int = 1'b0;
+    assign uart_rx_int = uart_16550_rx_irq;
     apb_uart_16550 #(.TX_FIFO_DEPTH(16), .RX_FIFO_DEPTH(16)) u_apb_uart (
         .clk        (clk),
         .rst_n      (rst_n),
@@ -199,15 +212,17 @@ module soc_peripheral_subsystem #(
         .prdata     (uart_prdata),
         .pready     (uart_pready),
         .pslverr    (uart_pslverr),
-        .uart_tx    (),
-        .uart_rx    (1'b1),
-        .uart_rts_n (),
-        .uart_cts_n (1'b0),
-        .uart_dtr_n (),
-        .uart_dsr_n (1'b0),
-        .uart_dcd_n (1'b0),
-        .uart_ri_n  (1'b1),
-        .irq        (uart_16550_irq)
+        .uart_tx    (uart_tx),
+        .uart_rx    (uart_rx),
+        .uart_rts_n (uart_rts_n),
+        .uart_cts_n (uart_cts_n),
+        .uart_dtr_n (uart_dtr_n),
+        .uart_dsr_n (uart_dsr_n),
+        .uart_dcd_n (uart_dcd_n),
+        .uart_ri_n  (uart_ri_n),
+        .irq        (uart_16550_irq),
+        .rx_irq     (uart_16550_rx_irq),
+        .tx_irq     (uart_16550_tx_irq)
     );
 
     generate
