@@ -1,7 +1,12 @@
-# DDR4 控制器/PHY 功能契约候选 (v0.1)
+# DDR4 控制器/PHY 功能契约候选 (v0.2)
 
 > 状态：**C1 已选择，契约待外部 PHY/工艺输入冻结**（2026-08-02）。
 > 本文是 DDR4 产品契约候选，不代表 controller、PHY 或 DDR4 boot 已实现。
+
+当前已实现的 F1 抽象层为
+[`rtl/perips/ddr4_phy_behavioral.v`](../../rtl/perips/ddr4_phy_behavioral.v)，
+其命令接口不是 vendor DFI port list，只用于 vendor-neutral contract
+verification。它的 gate 不能关闭本契约的外部输入 entry。
 
 ## 0. 目标与边界
 
