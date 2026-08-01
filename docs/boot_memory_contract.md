@@ -1,10 +1,11 @@
 # Boot and Memory Product Contract
 
-> Version: v0.7 (2026-08-01)
+> Version: v0.8 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
-> vector, minimal BEV MMU boot-firmware, and EBase/Modified recovery slices.
+> vector, minimal BEV MMU boot-firmware, EBase/Modified recovery, and SPI XIP
+> pin-level slices.
 > This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
@@ -46,7 +47,7 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180` | Keep the smoke linker for prototype tests; add a full runtime kseg0 linker and a separate Boot ROM/SPL image |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, and relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry | Kernel runtime MMU contract, invalid-fault policy, ASID/page-table policy, and vectored/cache-error handling still require product firmware work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
-| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent |
+| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent |
 | WDT/boot status | `apb_wdt` exists but is not instantiated by `soc_peripheral_subsystem.v` | Add product APB decode, reset request path, boot-failure status and timeout test |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX` | Keep preload for block/debug tests only; product boot gate must preload the flash image and observe reset fetch |
 
@@ -291,6 +292,11 @@ close that gate:
   `Cause`/`BadVAddr`/`EPC`, rewrites the same entry dirty, returns with `ERET`,
   and firmware verifies the retried store/load.
   `make product-mmu-ebase-modified-gate` is its standalone entry point.
+- `tb/unit/flash/tb_axi_spi_flash.sv` drives the production
+  `axi_spi_flash` pins rather than `axi_flash_image_model`. It verifies the
+  standard-read command/address sequence (`0x03_000000`), two sequential
+  serial-read response words and a rejected AXI write (`SLVERR`).
+  `make spi-flash-unit-gate` is its standalone entry point.
 
 These tests do not prove manifest parsing, vectored/cache-error vectors,
 QSPI/DDR initialization, a complete relocated runtime handler set, or handoff.
