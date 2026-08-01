@@ -15,6 +15,13 @@ mkdir -p "${RUN_DIR}"
 RUN_DIR=$(cd "${RUN_DIR}" && pwd)
 FW_DIR="${RUN_DIR}/firmware"
 
+MMU_DEFINE=()
+KSEG0_RUNTIME_ARG=()
+if [ "${SOC_MMU_ENABLE:-0}" = "1" ]; then
+    MMU_DEFINE=(+define+SOC_MMU_ENABLE=1)
+    KSEG0_RUNTIME_ARG=(+EXPECT_KSEG0_RUNTIME)
+fi
+
 make -C "${ROOT_DIR}/tb/soc_test/fw" \
     FW_NAME=boot_manifest_handoff OUT_DIR="${FW_DIR}" FW_BASE=firmware all
 
@@ -22,6 +29,7 @@ cd "${RUN_DIR}"
 
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+SOC_PRODUCT_BOOT_ENABLE=1 \
+    "${MMU_DEFINE[@]}" \
     +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cpu" \
     +incdir+"${ROOT_DIR}/rtl/axi" +incdir+"${ROOT_DIR}/rtl/perips" \
     "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v \
@@ -35,6 +43,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
 ./simv -no_save \
     +BOOT_ROM_HEX="${FW_DIR}/boot_rom.hex" \
     +SPI_FLASH_HEX="${FW_DIR}/flash_image.hex" \
+    "${KSEG0_RUNTIME_ARG[@]}" \
     -l sim_valid.log
 grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" sim_valid.log
 
@@ -77,6 +86,7 @@ done
 # bounded AXI SLVERR into the Boot ROM's DBE failure record.
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+SOC_PRODUCT_BOOT_ENABLE=1 \
+    "${MMU_DEFINE[@]}" \
     +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cpu" \
     +incdir+"${ROOT_DIR}/rtl/axi" +incdir+"${ROOT_DIR}/rtl/perips" \
     +incdir+"${SCRIPT_DIR}" \

@@ -46,6 +46,7 @@ module tb_product_manifest_handoff #(
     reg spi_protocol_error;
     reg handoff_seen;
     reg stage1_entry_seen;
+    reg kseg0_pa_seen;
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
     reg xip_timeout_mailbox_seen;
@@ -127,6 +128,7 @@ module tb_product_manifest_handoff #(
             spi_protocol_error = 1'b0;
             handoff_seen = 1'b0;
             stage1_entry_seen = 1'b0;
+            kseg0_pa_seen = 1'b0;
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
             xip_timeout_mailbox_seen = 1'b0;
@@ -136,6 +138,11 @@ module tb_product_manifest_handoff #(
                 reset_seen = 1'b1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'h8000_1000)
                 stage1_entry_seen = 1'b1;
+            if ($test$plusargs("EXPECT_KSEG0_RUNTIME") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr == 32'h8000_1000 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr == 32'h0000_1000)
+                kseg0_pa_seen = 1'b1;
 
             if ($test$plusargs("BOOT_DEBUG") && u_soc.u_impl.s2_rvalid &&
                 u_soc.u_impl.s2_rready)
@@ -170,6 +177,8 @@ module tb_product_manifest_handoff #(
                     fail("SPI XIP command was not standard read 03");
                 if (!handoff_seen || !stage1_entry_seen)
                     fail("valid image did not reach the handoff marker and kseg0 entry");
+                if ($test$plusargs("EXPECT_KSEG0_RUNTIME") && !kseg0_pa_seen)
+                    fail("MMU-enabled kseg0 stage-1 fetch did not use the physical SRAM address");
                 if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[22] ||
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[2])
                     fail("BEV or ERL remained set after handoff");

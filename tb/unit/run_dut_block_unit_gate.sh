@@ -253,6 +253,9 @@ mkdir -p "${BOOTROM_DIR}"
 
     RUN_DIR="$(pwd)/product_manifest_handoff" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_manifest_handoff.sh"
+
+    SOC_MMU_ENABLE=1 RUN_DIR="$(pwd)/product_kseg0_runtime" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_manifest_handoff.sh"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS axi_spi_flash" "${BOOTROM_DIR}/axi_spi_flash/sim.log" && \
@@ -269,7 +272,8 @@ if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_vectored_interrupt" "${BOOTROM_DIR}/product_vectored_interrupt/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" "${BOOTROM_DIR}/product_manifest_handoff/sim_valid.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_bad_crc" "${BOOTROM_DIR}/product_manifest_handoff/sim_bad_crc.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_xip_timeout" "${BOOTROM_DIR}/product_manifest_handoff/sim_xip_timeout.log"; then
+   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_xip_timeout" "${BOOTROM_DIR}/product_manifest_handoff/sim_xip_timeout.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" "${BOOTROM_DIR}/product_kseg0_runtime/sim_valid.log"; then
     echo "BOOTROM: PASS"
 else
     echo "BOOTROM: FAIL"

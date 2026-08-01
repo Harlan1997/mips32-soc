@@ -1,6 +1,6 @@
-# MMU / TLB 微架构规格 (v0.3)
+# MMU / TLB 微架构规格 (v0.4)
 
-> 状态：v0.3 草案。作为 Phase B **新增 `rtl/cpu/mips_tlb.v` + 修改 `rtl/cpu/mips_cpu.v` / `mips_if_stage.v` / `mips_mem_stage.v`** 的实施基线。与 `cp0_spec.md` 配套读。
+> 状态：v0.4 草案。作为 Phase B **新增 `rtl/cpu/mips_tlb.v` + 修改 `rtl/cpu/mips_cpu.v` / `mips_if_stage.v` / `mips_mem_stage.v`** 的实施基线。与 `cp0_spec.md` 配套读。
 >
 > 引用：MIPS® Volume III Rev 6.06 §4 (Memory Management)。
 
@@ -242,10 +242,11 @@ ASID rollover 仍未实现或未验证。
 - **B.3.4**：Linux 头 (head.S) 移植 + 早期 paging 打开跑通。
 - **B.3.5**：完整 Linux boot 到 busybox shell。
 
-### 10.1 已知阻塞点：`SOC_MMU_ENABLE=1` 下 CPU 无法取指（发现于 2026-07-30）
+### 10.1 已解除的前置阻塞与当前边界
 
-**现象**：`SOC_MMU_ENABLE` 由 0 翻转为 1 后，现有 prototype `soc_smoke` 在早期超时。该 firmware 的
-reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。
+历史上，`SOC_MMU_ENABLE` 由 0 翻转为 1 后，现有 prototype `soc_smoke` 在早期超时。该 firmware 的
+reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。这个原型限制仍然存在，
+但已经不再阻塞当前的产品 kseg0 指令交接子集。
 
 **根因（架构级，非 firmware 缺陷）**：
 - prototype 配置的复位向量固定为 `0x0000_0000`，异常向量固定为 `0x0000_0180`。产品 opt-in
@@ -261,20 +262,25 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。
   （同样在 useg）→ 取这条异常处理指令本身又需要一个已存在的 TLB entry → 而这正是 handler
   要去安装的东西。CPU 连第一条指令、第一条异常处理指令都取不出来，firmware 层面无法打破这个循环。
 
-**结论**：B.3.2 "启用 `SOC_MMU_ENABLE=1`" 这一步在当前链接布局下**不可行**，与 fabric alias fold
-（`mips_mmu.v` 注释里提到的 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。真正的修复是把
-`_start` / `_except_handler`（以及未来的中断向量）迁移到 kseg0 或 kseg1，这需要修改
-`link.ld` 及可能所有现有 firmware 的假设，影响面较大，作为独立的 B.3.2 前置子任务单独规划，
-**本次不实施**。
+**已完成的前置子任务**：development manifest handoff image 已将 stage 1 放在物理 SRAM
+`0x0000_1000`，并以 kseg0 VA `0x8000_1000` 作为入口。`make product-kseg0-runtime-gate`
+在 `SOC_MMU_ENABLE=1` 下观察到该 instruction request 的 PA 为 `0x0000_1000`，且有效、
+header/CRC negative、XIP-timeout 场景均通过；它与 fabric alias fold（`mips_mmu.v` 注释里
+提到的 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。
 
-**已保留的验证脚手架**（证明 TLB/CP0/mips_mmu 翻译路径本身逻辑正确，仅卡在向量位置问题）：
+**当前结论**：kseg0 的 instruction fetch/handoff slice 已达到 `BLOCK_VERIFIED`，但 B.3.2
+仍未整体完成。尚未证明 runtime data mapping、page tables、cache maintenance、ASID rollover、
+完整异常 handler 或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
+
+**已保留的验证脚手架**（prototype useg 链接仍会触发上述历史死锁；产品切片使用独立 linker）：
 - `tb/soc_test/fw/tests/mmu_refill/`：最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
 - `tb/soc_test/run_mmu_refill.sh`：独立跑该固件的 gate 脚本（当前会因上述阻塞而失败，属预期）。
 - `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
-**下一项**：建立 kseg0/kseg1 产品 linker、refill handler 和最小 wired mapping firmware gate。
-在该 gate 通过前，MMU 仍不是可启动的产品功能。
+**下一项**：在已验证的 kseg0 指令交接上补齐 runtime data mapping、page-table/ASID rollover、
+cache-error/EIC policy 和 kernel-mode firmware gate。在这些 gate 通过前，MMU 仍不是可启动的
+完整产品功能。
 
 ---
 
@@ -285,3 +291,5 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。
 - v0.2 (2026-08-01)：产品 opt-in 实现并验证 refill 与 Invalid 的 BEV/EBase 向量分派；产品 linker 和 handler 继续为 P0。
 - v0.3 (2026-08-01)：新增 `tlb_asid_policy` directed gate，闭合 4KB ASID/Global/Invalid/Modified
   翻译边界；不扩大对可变页、multi-hit、micro-TLB 或 Linux/ASID rollover 的功能声明。
+- v0.4 (2026-08-01)：新增 MMU-enabled kseg0 stage-1 instruction handoff gate，证明
+  `0x8000_1000 -> 0x0000_1000`；明确该子集不等于完整 runtime 或 kernel boot。
