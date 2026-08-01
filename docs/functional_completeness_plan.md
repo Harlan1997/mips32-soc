@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.0（2026-08-01）
+> 版本：v1.1（2026-08-01）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -24,7 +24,7 @@
 | `integration/function-contract` | 唯一功能集成线；以 C2 `fcfc9c1` 为父线，已合入 C1 4-way I-cache、boot/memory 产品契约和 Boot ROM/CP0 向量切片 | 当前验证和后续产品功能变更只在此线收敛，暂不直接推入 `master` |
 | IF/I-cache response PC alignment | `44d263a` 将 IF 请求改为 `pc`，与 I-cache hit 的上一请求响应和 IF/ID 的 `pc_plus_4` 标签不一致；修复恢复 `inst_addr=next_pc` | `BLOCK_VERIFIED`：默认 prototype 路径与产品 Boot ROM 路径均验证 reset branch、delay slot、两次写回和精确分支目标；反向改回 `pc` 时定向测试失败 |
 | Boot ROM reset/vector slice | 独立 64-KB AXI S4 Boot ROM、`BFC0_0000 -> 1FC0_0000` 复位取指、产品 `BEV/ERL` 复位、`BFC0_0380` 与 `EBase+0x180` 普通异常路径已实现；`SOC_PRODUCT_BOOT_ENABLE` 默认仍为 `0` | `BLOCK_VERIFIED`，并有完整 SoC directed 证据；它不是可启动的产品 boot firmware，不能升级为 `SOC_INTEGRATED` 或产品启动完成 |
-| Product TLB/MMU boot slice | `SOC_PRODUCT_BOOT_ENABLE=1` 与 `SOC_MMU_ENABLE=1` 下，CPU 保留 TLB lookup miss/invalid 的来源位；miss 选 `BFC0_0200`/`EBase`，invalid 保持 `BFC0_0380`/`EBase+0x180`；最小 Boot ROM linker、BEV refill handler、wired kseg2-APB 映射和动态 DDR refill 已新增 | 完整 SoC firmware directed 通过：I-side 覆盖两个 BEV 模式的 miss/invalid，D-side 覆盖 BEV=1 miss/invalid；新 gate 覆盖 `TLBWI`/`Wired`、DTLB miss、`TLBWR`、`ERET` retry、DDR 和 APB。不含 EBase runtime handler、Modified 或 kernel boot，不能标为 MMU 产品完成 |
+| Product TLB/MMU boot slice | `SOC_PRODUCT_BOOT_ENABLE=1` 与 `SOC_MMU_ENABLE=1` 下，CPU 保留 TLB lookup miss/invalid 的来源位；miss 选 `BFC0_0200`/`EBase`，invalid 保持 `BFC0_0380`/`EBase+0x180`；最小 Boot ROM linker、BEV refill handler、wired kseg2-APB 映射、动态 DDR refill，以及复制到 SRAM 的 EBase `Mod` handler 已新增 | 完整 SoC firmware directed 通过：I-side 覆盖两个 BEV 模式的 miss/invalid，D-side 覆盖 BEV=1 miss/invalid；两个 firmware gate 覆盖 `TLBWI`/`Wired`、DTLB refill/`ERET` retry、DDR/APB，以及 EBase `Mod` precise-state 检查、`D=1` 修复和 retry。不含完整 kseg0 runtime、vectored/cache-error 或 kernel boot，不能标为 MMU 产品完成 |
 | `phase-c2-l2-nonblocking@fcfc9c1` | 比 `master` 多 7 个提交；含已独立提交的 JTAG、firmware、gate 与本计划修复 | 已是集成线父线；L2-NB、ROB、DDR placeholder 的产品状态仍须分项判断 |
 | `phase-c1-icache-4way@d695cb5` | 已由 merge commit `8b3dc6b` 合入集成线 | 保留为历史分支，不再重复 merge |
 | `phase-c3-axi-crossbar`、`phase4-dut-block-commercial-closure` | 已为 `master` 祖先 | 只保留历史引用，禁止重复合并 |
@@ -40,7 +40,7 @@
 
 | 域 | 当前产品集成 | 已有测试证据 | 商用功能结论 |
 |---|---|---|---|
-| CPU/CP0 | 已接入；默认 `SOC_MMU_ENABLE=0`；产品模式区分 TLB miss refill 与 invalid/general 的 BEV/EBase 向量 | smoke 与 Phase 3A/3B CPU/CP0 gate 通过；产品 directed 覆盖 I-side BEV=1/0 miss/invalid 和 D-side BEV=1 miss/invalid | refill/invalid vector 子集已验证；vectored interrupt、cache-error、Modified policy、ISA reference/compliance 和 MMU 产品启动仍未闭合 |
+| CPU/CP0 | 已接入；默认 `SOC_MMU_ENABLE=0`；产品模式区分 TLB miss refill 与 invalid/general 的 BEV/EBase 向量 | smoke 与 Phase 3A/3B CPU/CP0 gate 通过；产品 directed 覆盖 I-side BEV=1/0 miss/invalid、D-side BEV=1 miss/invalid，以及 EBase `Mod` precise state/recovery | refill/invalid 与最小 kernel-mode `Mod` recovery 子集已验证；vectored interrupt、cache-error、完整 Modified policy、ISA reference/compliance 和 MMU 产品启动仍未闭合 |
 | L1 cache | 阻塞式 D-cache 在 DUT；4-way I-cache 已合入 `integration/function-contract` | D-cache unit、`cache_sweep` 与 smoke 通过；IF/I-cache response-PC 的默认和 Boot ROM reset-branch directed tests、合入后 unit gate `10/10`、SoC smoke 和 seed 10 UVM stress 通过 | I-cache 具备当前集成基线的 block/通用 SoC 证据；本次只关闭 response-PC 对齐的 reset/branch 子项，refill/eviction/reset 专项 SoC 测试仍不足，不能标为 `CONTRACT_CLOSED` |
 | L2 cache | 默认 write-through L2 已接入；write-back 为 opt-in | L2 unit、L2 firmware、Phase 2/3 与 smoke 通过 | 当前 blocking L2 契约可用；不具备 coherency/ECC/生产性能闭合 |
 | AXI fabric | C3 crossbar 已在 `master`；DDR 是 S3 slave | fabric unit `4/4`，Phase 2/3、10-seed stress 通过 | cross-slave 并发已验证；同一 slave 仍受单 outstanding slave 限制 |
@@ -49,7 +49,7 @@
 | UART | `apb_uart_16550` 已接入 APB，但产品 top 没有 UART pins；子系统将 `uart_rx` 固定为 `1`、`uart_rx_int` 固定为 `0` | UART unit 和 UART firmware gate 通过；UVM 仅覆盖 TX IRQ | UART block 不是产品级 UART；TX/RX pad、RX IRQ 和板级驱动未闭合 |
 | DDR | S3 使用 `axi_ddr_behavioral` 容量占位模型 | `xbar_ddr` unit 通过 | 无 DDR controller/PHY/校准/refresh/DDR boot，属于 P0 blocker |
 | Flash/boot | `axi_spi_flash` 支持简单 SPI read XIP；独立只读 Boot ROM 已作为 S4 接入产品配置 | Boot ROM burst/read-error/write-reject、无 SRAM preload 的首笔复位取指、response-PC 对齐的 reset branch、普通异常，以及 TLB refill/invalid product directed tests 通过；flash read/write response、loadable image UVM 通过 | 仅 Boot ROM 复位/向量地址、response-PC 对齐和总线路由已验证；无 ROM 启动内容、QSPI command/FIFO/erase/program、镜像校验、DDR init 或 U-Boot boot，仍为 P0 blocker |
-| MMU/TLB | RTL 与 unit TB 存在，默认关闭；产品 opt-in 具备 refill/invalid vector routing，以及最小 Boot ROM kseg1 linker、BEV refill handler 和 wired kseg2-APB map | MMU/CP0 unit、完整 SoC I/D vector directed 和 `make product-mmu-boot-gate` 通过；后者覆盖 DTLB miss、动态 `TLBWR`、寄存器恢复后的 `ERET` retry、DDR store/load 和 APB write | 最小 BEV 启动链已有 SoC firmware 证据；EBase runtime handler、Modified、cache-error/vectored policy、kseg0 runtime、kernel/OS boot 仍未闭合 |
+| MMU/TLB | RTL 与 unit TB 存在，默认关闭；产品 opt-in 具备 refill/invalid vector routing、最小 Boot ROM kseg1 linker、BEV refill handler、wired kseg2-APB map，以及复制到 SRAM 的 EBase `Mod` handler | MMU/CP0 unit、完整 SoC I/D vector directed、`make product-mmu-boot-gate` 和 `make product-mmu-ebase-modified-gate` 通过；后者覆盖 DTLB `Mod`、CP0 precise state、EBase handler relocation、`D` bit repair 和 `ERET` retry | 最小 BEV 启动及单一 EBase `Mod` recovery 已有 SoC firmware 证据；cache-error/vectored policy、完整 kseg0 runtime、kernel/OS boot 仍未闭合 |
 | WDT/clock/reset | `apb_wdt`、clock/reset helper RTL 存在 | 无 WDT 集成或专用产品 gate；产品 top 只有单一 `clk/rst_n` | 未形成产品 reset/clock/watchdog 功能链 |
 | Debug/JTAG | 产品 top 接入 JTAG | JTAG reset-recovery UVM 与合入后 seed 10 bus stress 通过；AXI payload 锁存修复为 `7f74345` | 当前仿真功能可用；产品级 debug security/authentication 和量产工具链仍未定义 |
 
@@ -105,7 +105,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 ### Phase 2：产品启动与主存闭合
 
 - 已建立 `docs/boot_memory_contract.md` v0.2，冻结候选 reset/vector、物理/虚拟地址图、镜像格式、失败行为和六个行为 gate。
-- 第二和第三个 RTL/firmware 垂直切片已完成：TLB lookup miss 与 matching-invalid 的 vector 分派覆盖 I-side 两个 BEV 模式和 D-side BEV=1；最小产品 Boot ROM linker/BEV refill handler 进一步覆盖 wired kseg2-APB 映射、DTLB refill、`TLBWR`、寄存器恢复、`ERET` retry、DDR store/load 和 APB write。仍只关闭向量路由与最小 BEV 启动链；EBase runtime handler、Modified/向量化异常、QSPI、真实 DDR、WDT 和 handoff 未实现。
+- 第二至第四个 RTL/firmware 垂直切片已完成：TLB lookup miss 与 matching-invalid 的 vector 分派覆盖 I-side 两个 BEV 模式和 D-side BEV=1；最小产品 Boot ROM linker/BEV refill handler 进一步覆盖 wired kseg2-APB 映射、DTLB refill、`TLBWR`、寄存器恢复、`ERET` retry、DDR store/load 和 APB write；独立 gate 还证明 Boot ROM 把通用 handler 复制到 SRAM `EBase+0x180`，处理 precise `Mod`、将 `D=0` 改为 `D=1` 并 `ERET` retry。仍只关闭向量路由、最小 BEV 启动链和单一 `Mod` recovery；完整 kseg0 runtime、向量化/Cache-error 异常、QSPI、真实 DDR、WDT 和 handoff 未实现。
 - 冻结 ROM boot 地址、异常向量和 firmware linker 规则；不能继续从 useg reset vector 启动。
 - 实现或集成真实 DDR controller/PHY contract；完成 init、calibration、refresh、AXI backpressure 与 DDR memory test。
 - 实现实际 QSPI boot source（XIP/command path、image format、boot ROM）并完成 reset 到 first-stage firmware 的 SoC gate。
@@ -121,7 +121,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ### Phase 4：外设与系统软件功能闭合
 
-- `SOC_MMU_ENABLE=1`：最小 Boot ROM kseg1 linker、BEV refill handler 和 wired mapping firmware gate 已通过；继续完成 kseg0 runtime linker、EBase handler relocation、Modified 和 kernel-mode firmware gate。refill/invalid 的 EBase/BEV 向量路由已有 directed 证据。
+- `SOC_MMU_ENABLE=1`：最小 Boot ROM kseg1 linker、BEV refill handler、wired mapping，以及 EBase `Mod` handler relocation/retry gate 已通过；继续完成完整 kseg0 runtime linker、invalid/ASID/page-table policy、vectored/cache-error 和 kernel-mode firmware gate。refill/invalid 的 EBase/BEV 向量路由已有 directed 证据。
 - CPU/CP0：补 MIPS ISA compliance 与 reference-model lockstep；现有 exception smoke 只作为子集证据。
 - 外设：把 UART TX/RX/flow-control 接到产品 pins，完成 RX IRQ；接入 WDT 并验证 reset path；补齐 GPIO/timer 产品软件驱动。
 - 中断：定义 CPU-visible priority/vector contract，验证 VIC source mapping、mask、priority、nesting 与 reset。
@@ -153,7 +153,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ## 8. 当前执行点
 
-历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理、Phase 2 boot/memory 架构冻结、Boot ROM 复位/普通向量、TLB refill/invalid 的 BEV-EBase 路由，以及最小 Boot ROM kseg1 linker/BEV refill/wired mapping firmware gate 已完成。当前下一项是 ROM manifest 与 handoff，并并行定义 kseg0 runtime linker、EBase handler relocation 和 Modified policy；仍不是 coverage closure。**
+历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理、Phase 2 boot/memory 架构冻结、Boot ROM 复位/普通向量、TLB refill/invalid 的 BEV-EBase 路由、最小 Boot ROM kseg1 linker/BEV refill/wired mapping，以及复制到 SRAM 的 EBase `Mod` recovery firmware gate 已完成。当前下一项是 ROM manifest 与 handoff，并行定义完整 kseg0 runtime linker、invalid/ASID policy、vectored/cache-error policy；仍不是 coverage closure。**
 
 ## 9. 执行记录
 
@@ -184,13 +184,15 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | 2026-08-01 | `cba3a08` 与 TLB vector slice 对照 | `make soc-smoke SOC_TEST_RUN_DIR=...` | 两个基线均为 testbench timeout，未产生 `REGRESSION_TEST_SUCCESS` | 该历史结论已被后续 fetch-path 审计取代：timeout 不是 TLB sideband 根因，见下一条。 |
 | 2026-08-01 | `integration/function-contract` product MMU boot slice | `make product-mmu-boot-gate PRODUCT_MMU_BOOT_DIR=build/unit_tb/product_mmu_boot_final3` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_boot` | 从 `BFC0_0000` Boot ROM firmware 启动，安装 wired kseg2-APB TLB 项，DTLB miss 到 `BFC0_0200`，`TLBWR` 后保留被中断寄存器并以 `ERET` 重试，DDR store/load、APB write 和 `0xA000_FFFC` mailbox 请求完成。 |
 | 2026-08-01 | 同上 | `RUN_ROOT=build/unit_tb/product_mmu_boot_aggregate_final tb/unit/run_dut_block_unit_gate.sh` | PASS：`10/10` | 新增产品 MMU firmware 子测已进入 Boot ROM 类别；其余九个功能类别未回归。 |
+| 2026-08-01 | `integration/function-contract` EBase/Modified slice | `make product-mmu-ebase-modified-gate PRODUCT_MMU_EBASE_MODIFIED_DIR=build/unit_tb/product_mmu_ebase_modified_try3` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_ebase_modified` | Boot ROM 将 handler 拷贝到 SRAM `0x180`，清 `BEV/ERL` 后 valid `D=0` useg store 以 `Cause=Mod` 进入 `0x8000_0180`；handler 校验 precise `Cause`/`BadVAddr`/`EPC`，重写 entry 的 `D=1` 并 `ERET` retry，store/load 后写成功 mailbox。 |
+| 2026-08-01 | 同上 | `RUN_ROOT=build/unit_tb/product_mmu_ebase_modified_aggregate tb/unit/run_dut_block_unit_gate.sh` | PASS：`10/10` | 新 EBase/Modified firmware gate 已加入 Boot ROM 类别；九个既有功能类别以及其余 Boot ROM 产品路径均通过。 |
 
 ## 10. 已知未决问题
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
-| P0 | 产品 boot、DDR 和 QSPI 尚未闭合：Boot ROM 复位、普通与 refill/invalid BEV-EBase vector 切片和最小 BEV MMU firmware 已通过，但生产 ROM 镜像、manifest、剩余 vector policy、QSPI/U-Boot/Linux、DDR controller/PHY 仍只有 plan 或 placeholder | SoC 无真实启动链与产品主存，不能称商用 SoC | 在本文件 Phase 2 继续实现 ROM manifest/handoff、EBase runtime/Modified policy、QSPI、DDR 与 handoff，并分别验证。 |
-| P0 | 最小 Boot ROM kseg1 linker、BEV refill handler 和 wired mapping 已通过，但产品 runtime 尚未迁移到 kseg0，EBase handler relocation、Modified 和 kernel firmware 未验收；历史 prototype smoke timeout 的 fetch-path 根因已修复 | MMU/TLB 有最小启动链证据，但不能作为可启动的产品 OS 功能 | 建立 kseg0 runtime linker、EBase/Modified handlers 和 kernel firmware gate，再跑 exception regression。 |
+| P0 | 产品 boot、DDR 和 QSPI 尚未闭合：Boot ROM 复位、普通与 refill/invalid BEV-EBase vector 切片、最小 BEV MMU firmware 和单一 EBase `Mod` recovery 已通过，但生产 ROM 镜像、manifest、剩余 vector policy、QSPI/U-Boot/Linux、DDR controller/PHY 仍只有 plan 或 placeholder | SoC 无真实启动链与产品主存，不能称商用 SoC | 在本文件 Phase 2 继续实现 ROM manifest/handoff、完整 runtime exception policy、QSPI、DDR 与 handoff，并分别验证。 |
+| P0 | 最小 Boot ROM kseg1 linker、BEV refill handler、wired mapping 和 SRAM EBase `Mod` recovery 已通过，但产品主 runtime 尚未迁移到 kseg0，invalid/ASID/page-table、vectored/cache-error 和 kernel firmware 未验收；历史 prototype smoke timeout 的 fetch-path 根因已修复 | MMU/TLB 有最小启动及 `Mod` recovery 证据，但不能作为可启动的产品 OS 功能 | 建立完整 kseg0 runtime linker、exception policy 和 kernel firmware gate，再跑 exception regression。 |
 | P0 | UART block 未接入产品 pins，`uart_rx` 被固定为 1、`uart_rx_int` 为 0；WDT 未映射到 peripheral subsystem | 对外 serial I/O 和 watchdog reset 无产品功能证据 | 定义产品 pinmux/pad contract，接入 UART/WDT，补 firmware/UVM/板级模型 gate。 |
 | P3 | 当前 fresh VDB 执行 `refine_exclusions.py` 后，strict URG 仍报告 invalid condition/branch vector、illegal exclusion attempt 与 module checksum mismatch；合并 UVM 仅 SCORE `80.05`、COND `97.09`、TOGGLE `71.32`、FSM `53.33`、BRANCH `78.53`，product CPU/CP0 仅 SCORE `75.94`、LINE `83.84`、TOGGLE `69.05`、FSM `48.68`、BRANCH `78.33` | 当前功能行为证据有效，但 code-coverage 数字和 99% 入口均不能签收；不得提交本轮自动生成的 exclusion 文件 | 作为后续质量工作独立处理；不替代或阻塞本文件的产品功能 P0/P1。证据：`build/signoff/functional_completeness_20260801/coverage/urg.log`、`coverage_summary.json`。 |
 | P2 | `dcache_nb` 与其 TB 是未提交 WIP，已通过块级 gate 但尚未接入 CPU/SoC | 只能标为 `BLOCK_VERIFIED`，不得计入当前 SoC 功能完成 | 完成 CPU 接入、hazard/forwarding 和 SoC stress 证据后再升级。 |

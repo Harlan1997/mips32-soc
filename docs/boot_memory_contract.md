@@ -1,10 +1,11 @@
 # Boot and Memory Product Contract
 
-> Version: v0.6 (2026-08-01)
+> Version: v0.7 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
-> vector, and minimal BEV MMU boot-firmware slices. This document defines the
+> vector, minimal BEV MMU boot-firmware, and EBase/Modified recovery slices.
+> This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
 > these requirements today.
@@ -41,9 +42,9 @@ the PHY wrapper, but they do not change the address or reset contract below.
 |---|---|---|
 | Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
 | Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window | Add the immutable ROM image and prove reset through header check; do not treat the zero-filled simulation array as a boot image |
-| Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, while invalid and ordinary exceptions select `BFC0_0380` or `EBase+0x180`; prototype mode retains literal `0x0000_0180` | Complete vectored-interrupt, cache-error and firmware vector relocation behavior from `cp0_spec.md` |
-| Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links the reset and BEV refill entries at Boot ROM kseg1 | Keep the smoke linker for prototype tests; add the runtime kseg0 SRAM linker and a separate Boot ROM/SPL image |
-| MMU enable | `SOC_MMU_ENABLE` defaults to `0`; the product-mode directed image installs a wired APB mapping and dynamically refills a useg DDR mapping before retrying the faulting store | General EBase handler relocation, Modified policy and the kernel runtime MMU contract still require product firmware work |
+| Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, while invalid and ordinary exceptions select `BFC0_0380` or `EBase+0x180`; prototype mode retains literal `0x0000_0180` | A minimal firmware handler is now copied from Boot ROM into SRAM and recovers a precise `Mod`; complete vectored-interrupt and cache-error behavior from `cp0_spec.md` |
+| Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180` | Keep the smoke linker for prototype tests; add a full runtime kseg0 linker and a separate Boot ROM/SPL image |
+| MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, and relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry | Kernel runtime MMU contract, invalid-fault policy, ASID/page-table policy, and vectored/cache-error handling still require product firmware work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
 | Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent |
 | WDT/boot status | `apb_wdt` exists but is not instantiated by `soc_peripheral_subsystem.v` | Add product APB decode, reset request path, boot-failure status and timeout test |
@@ -137,9 +138,12 @@ The implemented product slice distinguishes a TLB lookup miss from a matching
 invalid entry with a pipeline sideband; it does not infer refill from
 `ExcCode=TLBL/TLBS`, because both causes share that code. Directed full-SoC
 tests cover I-side miss/invalid for both BEV settings and D-side miss/invalid
-for `BEV=1`. Vectored-interrupt (`Cause.IV`/`IntCtl.VS`), cache-error, modified
-fault policy, production handlers, and firmware relocation remain unimplemented
-product requirements.
+for `BEV=1`. `tb_product_mmu_ebase_modified.sv` additionally proves a Boot ROM
+image copies its EBase general handler to SRAM, clears `BEV/ERL`, takes a
+precise `Mod` on a valid `D=0` useg mapping, checks `Cause`/`BadVAddr`/`EPC`,
+sets `D=1`, and retries the store by `ERET`. Vectored-interrupt
+(`Cause.IV`/`IntCtl.VS`), cache-error, invalid-fault policy, and a production
+runtime handler set remain unimplemented product requirements.
 
 ### 5.3 MMU and early mappings
 
@@ -280,10 +284,17 @@ close that gate:
   dynamic useg DDR mapping with `TLBWR`, completes a DDR store/load retry,
   performs the kseg2 APB write, and writes the standard SRAM completion
   mailbox. `make product-mmu-boot-gate` is its standalone entry point.
+- `tb/unit/bootrom/tb_product_mmu_ebase_modified.sv` builds a separate
+  product-mode SoC image with no SRAM preload. Boot ROM copies a local handler
+  to physical SRAM `0x180`; after `BEV/ERL` clear, a valid `D=0` useg mapping
+  raises `Mod` at `0x8000_0180`. The handler checks precise CP0
+  `Cause`/`BadVAddr`/`EPC`, rewrites the same entry dirty, returns with `ERET`,
+  and firmware verifies the retried store/load.
+  `make product-mmu-ebase-modified-gate` is its standalone entry point.
 
-These tests do not prove manifest parsing, modified/vectored/cache-error
-vectors, QSPI/DDR initialization, a relocated EBase handler, or handoff. The ROM
-image is a simulation plusarg and is not a production mask-ROM artifact.
+These tests do not prove manifest parsing, vectored/cache-error vectors,
+QSPI/DDR initialization, a complete relocated runtime handler set, or handoff.
+The ROM image is a simulation plusarg and is not a production mask-ROM artifact.
 
 ## 9. Implementation sequence
 
@@ -291,9 +302,10 @@ image is a simulation plusarg and is not a production mask-ROM artifact.
    comments without changing the prototype smoke map.
 2. Implement Boot ROM slave, reset-PC parameter, ordinary BEV/EBase,
    miss-versus-invalid TLB vector paths, and the minimal BEV product linker,
-   wired mapping, dynamic refill and `ERET` retry slice (complete only for the
-   opt-in directed slice); implement vectored/cache-error policy, EBase handler
-   relocation and a product manifest builder next.
+   wired mapping, dynamic refill and `ERET` retry slice, plus a minimal copied
+   EBase general-handler/Modified recovery slice (complete only for the opt-in
+   directed slice); implement vectored/cache-error policy and a product
+   manifest builder next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.

@@ -235,6 +235,9 @@ mkdir -p "${BOOTROM_DIR}"
 
     RUN_DIR="$(pwd)/product_mmu_boot" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_mmu_boot.sh"
+
+    RUN_DIR="$(pwd)/product_mmu_ebase_modified" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_mmu_ebase_modified.sh"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log" && \
@@ -243,7 +246,8 @@ if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS fetch_pc_alignment" "${BOOTROM_DIR}/product_fetch_pc_alignment/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_tlb_vectors" "${BOOTROM_DIR}/product_tlb_vectors/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_tlb_data_vectors" "${BOOTROM_DIR}/product_tlb_data_vectors/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log"; then
+   grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_mmu_ebase_modified" "${BOOTROM_DIR}/product_mmu_ebase_modified/sim.log"; then
     echo "BOOTROM: PASS"
 else
     echo "BOOTROM: FAIL"
