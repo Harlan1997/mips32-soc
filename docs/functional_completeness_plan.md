@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.1（2026-08-01）
+> 版本：v1.2（2026-08-01）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -48,7 +48,7 @@
 | VIC/interrupt | 已接入 CPU 单 IRQ 线，源为 UART/TIMER/DMA | VIC unit、VIC firmware、PIC mask UVM 通过 | mask/active 已验证；CPU 侧无向量化 EIC/VEIC 产品契约，UART RX source 当前不可用 |
 | UART | `apb_uart_16550` 已接入 APB，但产品 top 没有 UART pins；子系统将 `uart_rx` 固定为 `1`、`uart_rx_int` 固定为 `0` | UART unit 和 UART firmware gate 通过；UVM 仅覆盖 TX IRQ | UART block 不是产品级 UART；TX/RX pad、RX IRQ 和板级驱动未闭合 |
 | DDR | S3 使用 `axi_ddr_behavioral` 容量占位模型 | `xbar_ddr` unit 通过 | 无 DDR controller/PHY/校准/refresh/DDR boot，属于 P0 blocker |
-| Flash/boot | `axi_spi_flash` 支持简单 SPI read XIP；独立只读 Boot ROM 已作为 S4 接入产品配置 | Boot ROM burst/read-error/write-reject、无 SRAM preload 的首笔复位取指、response-PC 对齐的 reset branch、普通异常，以及 TLB refill/invalid product directed tests 通过；flash read/write response、loadable image UVM 通过 | 仅 Boot ROM 复位/向量地址、response-PC 对齐和总线路由已验证；无 ROM 启动内容、QSPI command/FIFO/erase/program、镜像校验、DDR init 或 U-Boot boot，仍为 P0 blocker |
+| Flash/boot | `axi_spi_flash` 支持简单 SPI read XIP；独立只读 Boot ROM 已作为 S4 接入产品配置 | Boot ROM burst/read-error/write-reject、无 SRAM preload 的首笔复位取指、response-PC 对齐的 reset branch、普通异常，以及 TLB refill/invalid product directed tests 通过；生产 `axi_spi_flash` 的 pin-level `0x03`/24-bit address、连续读和写 `SLVERR` unit gate，以及 loadable-image UVM 通过 | 实际单线 XIP controller 具备块级证据，但无 ROM 启动内容、QSPI command/FIFO/erase/program、镜像校验、DDR init 或 U-Boot boot，仍为 P0 blocker |
 | MMU/TLB | RTL 与 unit TB 存在，默认关闭；产品 opt-in 具备 refill/invalid vector routing、最小 Boot ROM kseg1 linker、BEV refill handler、wired kseg2-APB map，以及复制到 SRAM 的 EBase `Mod` handler | MMU/CP0 unit、完整 SoC I/D vector directed、`make product-mmu-boot-gate` 和 `make product-mmu-ebase-modified-gate` 通过；后者覆盖 DTLB `Mod`、CP0 precise state、EBase handler relocation、`D` bit repair 和 `ERET` retry | 最小 BEV 启动及单一 EBase `Mod` recovery 已有 SoC firmware 证据；cache-error/vectored policy、完整 kseg0 runtime、kernel/OS boot 仍未闭合 |
 | WDT/clock/reset | `apb_wdt`、clock/reset helper RTL 存在 | 无 WDT 集成或专用产品 gate；产品 top 只有单一 `clk/rst_n` | 未形成产品 reset/clock/watchdog 功能链 |
 | Debug/JTAG | 产品 top 接入 JTAG | JTAG reset-recovery UVM 与合入后 seed 10 bus stress 通过；AXI payload 锁存修复为 `7f74345` | 当前仿真功能可用；产品级 debug security/authentication 和量产工具链仍未定义 |
@@ -186,6 +186,8 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | 2026-08-01 | 同上 | `RUN_ROOT=build/unit_tb/product_mmu_boot_aggregate_final tb/unit/run_dut_block_unit_gate.sh` | PASS：`10/10` | 新增产品 MMU firmware 子测已进入 Boot ROM 类别；其余九个功能类别未回归。 |
 | 2026-08-01 | `integration/function-contract` EBase/Modified slice | `make product-mmu-ebase-modified-gate PRODUCT_MMU_EBASE_MODIFIED_DIR=build/unit_tb/product_mmu_ebase_modified_try3` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_ebase_modified` | Boot ROM 将 handler 拷贝到 SRAM `0x180`，清 `BEV/ERL` 后 valid `D=0` useg store 以 `Cause=Mod` 进入 `0x8000_0180`；handler 校验 precise `Cause`/`BadVAddr`/`EPC`，重写 entry 的 `D=1` 并 `ERET` retry，store/load 后写成功 mailbox。 |
 | 2026-08-01 | 同上 | `RUN_ROOT=build/unit_tb/product_mmu_ebase_modified_aggregate tb/unit/run_dut_block_unit_gate.sh` | PASS：`10/10` | 新 EBase/Modified firmware gate 已加入 Boot ROM 类别；九个既有功能类别以及其余 Boot ROM 产品路径均通过。 |
+| 2026-08-01 | `integration/function-contract` SPI XIP slice | `make spi-flash-unit-gate SPI_FLASH_UNIT_DIR=build/unit_tb/axi_spi_flash_final` | PASS：`REGRESSION_TEST_SUCCESS axi_spi_flash` | 针对产品 `axi_spi_flash`（非 loadable verification model）验证 `0x03` + 24-bit address、两拍连续 serial read、AXI response ID/`RLAST` 和只读窗口写 `SLVERR`。 |
+| 2026-08-01 | 同上 | `RUN_ROOT=build/unit_tb/axi_spi_flash_aggregate tb/unit/run_dut_block_unit_gate.sh` | PASS：`10/10` | SPI XIP unit gate 已进入第 10 类 Boot ROM/flash 聚合门禁；其余九类既有块级测试和全部 Boot ROM/MMU 产品路径均通过。 |
 
 ## 10. 已知未决问题
 

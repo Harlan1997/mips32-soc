@@ -203,8 +203,8 @@ else
     FAILED=1
 fi
 
-# 10. bootrom (product reset address target, read-only AXI slave)
-echo "--- [10/10] Running Boot ROM Unit and Reset-Path Tests ---"
+# 10. bootrom/flash (product reset target and physical SPI XIP controller)
+echo "--- [10/10] Running Boot ROM, SPI Flash, and Reset-Path Tests ---"
 BOOTROM_DIR="${RUN_ROOT}/bootrom"
 mkdir -p "${BOOTROM_DIR}"
 (
@@ -214,6 +214,9 @@ mkdir -p "${BOOTROM_DIR}"
         "${ROOT_DIR}/rtl/perips/axi_boot_rom.v" "${ROOT_DIR}/tb/unit/bootrom/tb_axi_boot_rom.v" \
         -l compile.log
     ./simv -no_save -l sim.log
+
+    RUN_DIR="$(pwd)/axi_spi_flash" \
+        "${ROOT_DIR}/tb/unit/flash/run_axi_spi_flash.sh"
 
     RUN_DIR="$(pwd)/product_reset_fetch" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_reset_fetch.sh"
@@ -240,6 +243,7 @@ mkdir -p "${BOOTROM_DIR}"
         "${ROOT_DIR}/tb/unit/bootrom/run_product_mmu_ebase_modified.sh"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS axi_spi_flash" "${BOOTROM_DIR}/axi_spi_flash/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_boot_vector" "${BOOTROM_DIR}/product_boot_vector/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS fetch_pc_alignment" "${BOOTROM_DIR}/fetch_pc_alignment/sim.log" && \
