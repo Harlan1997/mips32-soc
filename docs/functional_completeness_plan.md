@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.14（2026-08-01）
+> 版本：v1.15（2026-08-02）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -38,13 +38,16 @@
 
 ### ASIC 目标与 DDR 输入状态
 
-当前产品路线已确定为 **ASIC**。这只关闭了路线选择，没有关闭实现输入：
+当前产品路线已确定为 **ASIC Profile C**。这只关闭了工艺档位选择，没有关闭
+内存代际和实现输入：
 工艺节点、foundry/PDK、封装和 IO 电压、PHY/IP 供应商与 license、精确
 DRAM part、板级 timing/electrical 文件、真实 memory model 以及 boot/WDT
 budget 仍缺失或未签收。详细获取顺序和 owner 见
 [`docs/asic_ddr_input_acquisition.md`](asic_ddr_input_acquisition.md)。
 
-因此当前状态仍为 `DDR_ENTRY_READY=0 / BLOCKED`；
+当前必须先在 C1 DDR4 和 C2 LPDDR4/4X 中二选一，再建立新的 memory contract；
+因此状态为 `MEMORY_ENTRY_BLOCKED`，旧 DDR3 清单不能升级为产品 entry。
+旧状态仍为 `DDR_ENTRY_READY=0 / BLOCKED`；
 `axi_ddr_behavioral` 只能提供地址/容量和 fabric 行为证据，不能提升为
 ASIC controller/PHY、真实 DDR boot 或 `PRODUCT_FUNCTION_READY` 证据。
 
@@ -167,7 +170,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ## 8. 当前执行点
 
-历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理、Phase 2 boot/memory 架构冻结、Boot ROM 复位/普通向量、TLB refill/invalid 的 BEV-EBase 路由、最小 Boot ROM kseg1 linker/BEV refill/wired mapping、复制到 SRAM 的 EBase `Mod` recovery、4KB ASID/Global/Invalid/Modified policy、IP-based `Cause.IV/IntCtl.VS` vectored interrupt、经实际 SPI XIP 的 development manifest/CRC-to-kseg0-SRAM handoff 和 header/CRC rejection matrix，以及 XIP controller/AXI stall 到 CPU DBE/`DEAD_B007` 失败行为均已完成。ASIC 路线已选，但工艺/foundry/package/PHY 输入仍未提供；DDR controller/PHY contract 已冻结候选，entry audit 已确认 `DDR_ENTRY_READY=0`；下一项受外部输入阻塞，不能跳过 entry criteria。完整 kseg0 runtime linker、page-table/ASID rollover、cache-error/EIC policy 仍未完成；仍不是 coverage closure。**
+历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理、Phase 2 boot/memory 架构冻结、Boot ROM 复位/普通向量、TLB refill/invalid 的 BEV-EBase 路由、最小 Boot ROM kseg1 linker/BEV refill/wired mapping、复制到 SRAM 的 EBase `Mod` recovery、4KB ASID/Global/Invalid/Modified policy、IP-based `Cause.IV/IntCtl.VS` vectored interrupt、经实际 SPI XIP 的 development manifest/CRC-to-kseg0-SRAM handoff 和 header/CRC rejection matrix，以及 XIP controller/AXI stall 到 CPU DBE/`DEAD_B007` 失败行为均已完成。ASIC Profile C 已选，但 C1/C2 和工艺/foundry/package/PHY 输入仍未提供；DDR3 controller/PHY contract 仅作为 legacy prototype，entry audit 已确认 `DDR_ENTRY_READY=0`；下一项受 memory contract 重基线阻塞，不能跳过 entry criteria。完整 kseg0 runtime linker、page-table/ASID rollover、cache-error/EIC policy 仍未完成；仍不是 coverage closure。**
 
 ## 9. 执行记录
 
@@ -180,6 +183,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | 2026-08-01 | 当前工作区 | `make product-mmu-boot-gate PRODUCT_MMU_BOOT_DIR=build/unit_tb/product_mmu_boot_ddr_contract` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_boot` | Boot ROM/MMU firmware 完成 wired TLB、DTLB refill/`ERET` retry、behavioral DDR store/load 与 APB write；该 gate 明确使用 `axi_ddr_behavioral`，不能升级为真实 DDR product boot evidence。 |
 | 2026-08-01 | `integration/function-contract` | `make ddr-contract-entry-audit DDR_ENTRY_AUDIT_DIR=build/unit_tb/ddr_contract_entry_v1` | PASS：契约一致性检查全部通过；报告状态为 `BLOCKED`（预期） | `DDR-IN-01..08` 中 PHY/IP、DFI port list、DRAM part、board timing、real memory model、WDT budget 仍缺失；审计确认未授权任何 `ddr3_ctrl` RTL，实现入口被明确阻塞。报告：`build/unit_tb/ddr_contract_entry_v1/ddr_contract_entry_report.md` |
 | 2026-08-01 | `integration/function-contract` | DDR controller/PHY contract architecture review；`docs/block_specs/ddr3_spec.md` v1.0、`rtl/include/soc_config.vh` DDR APB macros、`docs/address_map.md` v0.4、`docs/boot_memory_contract.md` v1.6 | COMPLETE（文档/接口 gate，非 RTL 测试） | 冻结 AXI 32-bit/4-bit ID、INCR 1-16 beat、S3 地址边界、APB `0x4000_6000` 寄存器/错误 ABI、axi/ddr/DFI clock-reset 和 bounded `SLVERR` reject 语义；记录 PHY vendor/IP、DRAM part/timing file、real memory model 为 implementation blockers。S3 未替换，不能标为 `IMPLEMENTED` 或 `SOC_INTEGRATED`。 |
+| 2026-08-02 | `integration/function-contract` | `make ddr-contract-entry-audit DDR_ENTRY_AUDIT_DIR=build/unit_tb/ddr_contract_entry_profile_c` | PASS：契约、ASIC Profile C 和输入计划检查通过；总体结果为 `BLOCKED`（预期） | 已记录用户选择 Profile C，并将 C1 DDR4/C2 LPDDR4/4X 设为下一项决策；旧 DDR3 清单降为 legacy prototype 边界，未授权产品 memory controller。报告：`build/unit_tb/ddr_contract_entry_profile_c/ddr_contract_entry_report.md` |
 | 2026-08-01 | `integration/function-contract` | `make ddr-contract-entry-audit DDR_ENTRY_AUDIT_DIR=build/unit_tb/ddr_contract_entry_asic_v1` | PASS：契约、ASIC 路线和输入获取计划检查通过；总体结果为 `BLOCKED`（预期） | 已将产品路线固定为 ASIC，并记录 `ASIC-DDR-01..08` 的获取顺序；工艺/foundry/package/PHY/DRAM/board/model/WDT 输入仍未登记，未授权 `ddr3_ctrl` RTL。报告：`build/unit_tb/ddr_contract_entry_asic_v1/ddr_contract_entry_report.md` |
 | 2026-08-01 | 初始 smoke firmware | `make soc-smoke` | 进程退出成功但 log 含 `DIV ERROR`，且 error 路径仍写成功 mailbox | 该结果不计入通过。根因是 firmware 二操作数 `div` 被 assembler 展开并隐式改写操作数，同时 smoke 没有把功能错误转换为失败。 |
 | 2026-08-01 | 当前工作区 | `FW_HEX=build/firmware/mdu_cpu/firmware.hex RUN_DIR=build/soc_test/mdu_cpu_div_fixed tb/soc_test/run.sh` | PASS：正数及两种混合符号 DIV 都由 CPU/MDU 返回正确商和余数 | 使用原始 `div $zero, rs, rt` 指令和失败 mailbox；证明 MDU block 与 CPU 集成正确。日志：`build/soc_test/mdu_cpu_div_fixed/sim.log` |
@@ -229,7 +233,7 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
-| P0 | 产品 boot、DDR 和 QSPI 尚未闭合：Boot ROM 复位、普通与 refill/invalid BEV-EBase vector、IP-based vectored interrupt、最小 BEV MMU firmware、单一 EBase `Mod` recovery、development manifest header/CRC-to-SRAM handoff，以及 controller/AXI stall-to-DBE 和 QSPI timeout status 观测已通过；ASIC 路线已选但 `ASIC-DDR-01..08`/`DDR-IN-01..08` 仍未登记，`ddr-contract-entry-audit` 已确认契约一致但 `DDR_ENTRY_READY=0`；PHY/IP、DRAM part/timing file、real memory model、WDT budget 和 RTL 仍未实现；生产 ROM/signature、原始 SPI 无响应检测、cache-error/EIC policy、QSPI/U-Boot/Linux 也未闭合 | SoC 已有受限的 reset-to-development-stage-1、behavioral DDR store/load、XIP transport-stall failure 和软件可读 timeout evidence，但无可发布的 secure boot 或产品主存，不能称商用 SoC | 在 ASIC 路线下先完成 `docs/asic_ddr_input_acquisition.md` 的工艺/foundry/package/PHY/DRAM/board/model/clock-reset 输入登记，再使 `DDR_ENTRY_READY=1`；之后实现真实 controller/PHY、APB status、init/calibration/refresh、bounded AXI error path 和 no-preload DDR boot gate；并继续实现完整 runtime exception/cache-error policy、真正 QSPI command/FIFO/四线控制器、boot-status/WDT 与 production handoff，分别验证。 |
+| P0 | 产品 boot、DDR 和 QSPI 尚未闭合：Boot ROM 复位、普通与 refill/invalid BEV-EBase vector、IP-based vectored interrupt、最小 BEV MMU firmware、单一 EBase `Mod` recovery、development manifest header/CRC-to-SRAM handoff，以及 controller/AXI stall-to-DBE 和 QSPI timeout status 观测已通过；ASIC Profile C 已选但 `C-MEM-01..08` 仍未登记，旧 `DDR-IN-01..08` 仅为 legacy DDR3 边界，`ddr-contract-entry-audit` 已确认契约一致但 `DDR_ENTRY_READY=0`；PHY/IP、DRAM part/timing file、real memory model、WDT budget 和 RTL 仍未实现；生产 ROM/signature、原始 SPI 无响应检测、cache-error/EIC policy、QSPI/U-Boot/Linux 也未闭合 | SoC 已有受限的 reset-to-development-stage-1、behavioral DDR store/load、XIP transport-stall failure 和软件可读 timeout evidence，但无可发布的 secure boot 或产品主存，不能称商用 SoC | 先在 C1 DDR4 与 C2 LPDDR4/4X 中二选一，重建对应 memory contract，再完成 `C-MEM-01..08` 输入登记；之后实现真实 controller/PHY、APB status、init/calibration/refresh、bounded AXI error path 和 no-preload boot gate；并继续实现完整 runtime exception/cache-error policy、真正 QSPI command/FIFO/四线控制器、boot-status/WDT 与 production handoff，分别验证。 |
 | P0 | 最小 Boot ROM kseg1 linker、BEV refill handler、wired mapping、4KB ASID/Global/Invalid/Modified gate、SRAM EBase `Mod` recovery 和 IP-based vectored interrupt 已通过，但产品主 runtime 尚未迁移到 kseg0；page-table/ASID rollover、cache-error/EIC policy 和 kernel firmware 未验收；历史 prototype smoke timeout 的 fetch-path 根因已修复 | MMU/TLB 有最小启动、4KB ASID/异常分类、`Mod` recovery 和 CPU vector table 证据，但不能作为可启动的产品 OS 功能 | 建立完整 kseg0 runtime linker、page-table/ASID rollover、exception policy 和 kernel firmware gate，再跑 exception regression。 |
 | P0 | UART RTL pins/IRQ wiring 已接入 `soc_top`，但 pad-mux/板级电气绑定、真实外部 RX waveform 和 RX firmware 仍未验收；WDT APB/reset pulse、boot-status retention、预加载 firmware retention 和无 SRAM preload Boot ROM failure slice 已通过 | 对外 serial I/O 仍缺板级证据；WDT gate 只证明 deliberate Boot ROM failure/reset，不证明 manifest/QSPI/DDR 真实故障分类、量产 ROM 和板级 reset 观测 | 固化 UART pad contract 并补外部 RX gate；把真实 manifest/controller/DDR failure 映射到 failure code，并增加板级 watchdog/reset 观测。 |
 | P3 | 当前 fresh VDB 执行 `refine_exclusions.py` 后，strict URG 仍报告 invalid condition/branch vector、illegal exclusion attempt 与 module checksum mismatch；合并 UVM 仅 SCORE `80.05`、COND `97.09`、TOGGLE `71.32`、FSM `53.33`、BRANCH `78.53`，product CPU/CP0 仅 SCORE `75.94`、LINE `83.84`、TOGGLE `69.05`、FSM `48.68`、BRANCH `78.33` | 当前功能行为证据有效，但 code-coverage 数字和 99% 入口均不能签收；不得提交本轮自动生成的 exclusion 文件 | 作为后续质量工作独立处理；不替代或阻塞本文件的产品功能 P0/P1。证据：`build/signoff/functional_completeness_20260801/coverage/urg.log`、`coverage_summary.json`。 |
