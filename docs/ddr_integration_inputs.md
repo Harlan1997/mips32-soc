@@ -2,8 +2,8 @@
 
 > Version: v0.3 (2026-08-02)
 >
-> Target route: **ASIC Profile C (selected)**. Product memory generation is
-> pending **C1 DDR4** vs **C2 LPDDR4/4X**.
+> Target route: **ASIC Profile C1 DDR4 (selected)**. This file remains a legacy
+> DDR3 prototype boundary and is not the C1 product entry manifest.
 >
 > Status: **REBASE REQUIRED / BLOCKED**. This is the legacy DDR3 controller/PHY
 > implementation. It is intentionally separate from the behavioral S3 model;
@@ -34,9 +34,9 @@ DDR3 model and no `ddr3_ctrl` implementation. The only RTL memory target is
 `rtl/perips/axi_ddr_behavioral.v`, which is capacity/address evidence only and
 must remain labeled `BLOCK_VERIFIED`.
 
-ASIC Profile C is selected, but `C-MEM-01..08` is not yet closed. There is no
-C1/C2 decision, process/foundry/package decision, PHY license/delivery, DRAM
-part, board timing file, real model or boot timeout budget in this repository.
+ASIC Profile C1 DDR4 is selected, but `DDR4-IN-01..08` is not yet closed. There
+is no process/foundry/package decision, DDR4 PHY license/delivery, DRAM part,
+board timing file, real model or boot timeout budget in this repository.
 
 This manifest must not be changed to `DDR_ENTRY_READY=1` for Profile C. It is
 retained only to audit the legacy DDR3 prototype boundary until the new memory
