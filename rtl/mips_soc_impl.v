@@ -431,6 +431,8 @@ module mips_soc_impl #(
 
     wire        cpu_int;
     wire        wdt_reset;
+    wire        qspi_timeout_sticky;
+    wire        qspi_controller_present;
     wire        soc_rst_n;
     assign soc_rst_n = rst_n & ~wdt_reset;
 
@@ -868,6 +870,8 @@ module mips_soc_impl #(
         .spi_cs_n     (spi_cs_n),
         .spi_mosi     (spi_mosi),
         .spi_miso     (spi_miso),
+        .qspi_timeout_sticky     (qspi_timeout_sticky),
+        .qspi_controller_present (qspi_controller_present),
 
         .s0_awid      (s0_awid),
         .s0_awaddr    (s0_awaddr),
@@ -1038,6 +1042,8 @@ module mips_soc_impl #(
         .uart_ri_n    (ENABLE_UART_PINS ? uart_ri_n  : 1'b1),
         .cpu_int      (cpu_int),
         .wdt_reset    (wdt_reset),
+        .qspi_timeout_sticky     (qspi_timeout_sticky),
+        .qspi_controller_present (qspi_controller_present),
 
         .s_awid       (s1_awid),
         .s_awaddr     (s1_awaddr),

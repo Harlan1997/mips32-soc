@@ -25,6 +25,9 @@ module soc_peripheral_subsystem #(
     output wire        cpu_int,
     output wire        wdt_reset,
 
+    input  wire        qspi_timeout_sticky,
+    input  wire        qspi_controller_present,
+
     input  wire [3:0]  s_awid,
     input  wire [31:0] s_awaddr,
     input  wire [7:0]  s_awlen,
@@ -168,19 +171,21 @@ module soc_peripheral_subsystem #(
     wire gpio_sel  = apb_psel & (apb_paddr[15:12] == 4'h2); // 0x4000_2000
     wire dma_sel   = apb_psel & (apb_paddr[15:12] == 4'h3); // 0x4000_3000
     wire pic_sel   = apb_psel & (apb_paddr[15:12] == 4'h4); // 0x4000_4000
+    wire qspi_sel  = apb_psel & (apb_paddr[15:12] == 4'h5); // 0x4000_5000
     wire wdt_sel   = apb_psel & (apb_paddr[15:12] == 4'h7); // 0x4000_7000
     wire boot_status_sel = apb_psel & (apb_paddr[15:12] == 4'h8); // 0x4000_8000
     wire fault_sel = ENABLE_APB_FAULT_INJECTOR & apb_psel & (apb_paddr[15:12] == 4'hF); // 0x4000_F000
 
-    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, wdt_prdata, boot_status_prdata, fault_prdata;
-    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, wdt_pready, boot_status_pready, fault_pready;
-    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr;
+    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, wdt_prdata, boot_status_prdata, fault_prdata;
+    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, wdt_pready, boot_status_pready, fault_pready;
+    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr;
 
     assign apb_prdata  = uart_sel ? uart_prdata :
                          timer_sel ? timer_prdata :
                          gpio_sel ? gpio_prdata :
                          dma_sel ? dma_prdata :
                          pic_sel ? pic_prdata :
+                         qspi_sel ? qspi_prdata :
                          wdt_sel ? wdt_prdata :
                          boot_status_sel ? boot_status_prdata :
                          fault_sel ? fault_prdata : 32'd0;
@@ -189,6 +194,7 @@ module soc_peripheral_subsystem #(
                          gpio_sel ? gpio_pready :
                          dma_sel ? dma_pready :
                          pic_sel ? pic_pready :
+                         qspi_sel ? qspi_pready :
                          wdt_sel ? wdt_pready :
                          boot_status_sel ? boot_status_pready :
                          fault_sel ? fault_pready : 1'b1;
@@ -197,6 +203,7 @@ module soc_peripheral_subsystem #(
                          gpio_sel ? gpio_pslverr :
                          dma_sel ? dma_pslverr :
                          pic_sel ? pic_pslverr :
+                         qspi_sel ? qspi_pslverr :
                          wdt_sel ? wdt_pslverr :
                          boot_status_sel ? boot_status_pslverr :
                          fault_sel ? fault_pslverr : 1'b0;
@@ -310,6 +317,21 @@ module soc_peripheral_subsystem #(
         .prdata     (boot_status_prdata),
         .pready     (boot_status_pready),
         .pslverr    (boot_status_pslverr)
+    );
+
+    apb_qspi_status u_apb_qspi_status (
+        .clk                  (clk),
+        .rst_n                (periph_rst_n),
+        .controller_present   (qspi_controller_present),
+        .xip_timeout_sticky   (qspi_timeout_sticky),
+        .psel                 (qspi_sel),
+        .penable              (apb_penable),
+        .pwrite               (apb_pwrite),
+        .paddr                (apb_paddr[4:0]),
+        .pwdata               (apb_pwdata),
+        .prdata               (qspi_prdata),
+        .pready               (qspi_pready),
+        .pslverr              (qspi_pslverr)
     );
 
     apb_gpio u_apb_gpio (

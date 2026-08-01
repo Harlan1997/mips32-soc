@@ -18,6 +18,9 @@ module soc_memory_subsystem #(
     output wire        spi_mosi,
     input  wire        spi_miso,
 
+    output wire        qspi_timeout_sticky,
+    output wire        qspi_controller_present,
+
     input  wire [3:0]  s0_awid,
     input  wire [31:0] s0_awaddr,
     input  wire [7:0]  s0_awlen,
@@ -339,6 +342,8 @@ module soc_memory_subsystem #(
 
     generate
     if (ENABLE_FLASH_IMAGE_MODEL) begin : g_flash_image_model
+        assign qspi_timeout_sticky     = 1'b0;
+        assign qspi_controller_present = 1'b0;
         axi_flash_image_model u_axi_flash_image_model (
             .clk             (clk),
             .rst_n           (rst_n),
@@ -403,6 +408,9 @@ module soc_memory_subsystem #(
         wire        flash_rvalid;
         wire        flash_rready;
         wire        flash_timeout_sticky;
+
+        assign qspi_timeout_sticky     = flash_timeout_sticky;
+        assign qspi_controller_present = 1'b1;
 
         // The pin-level controller has no flash-ready signal. Bound AXI-side
         // acceptance and response latency here so a wedged controller cannot

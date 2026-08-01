@@ -1,0 +1,222 @@
+`timescale 1ns/1ps
+
+// Integrates the real AXI timeout guard with the product peripheral APB
+// decode. A stalled downstream read must become an observable QSPI status
+// record, and software must be able to clear it through the mapped register.
+module tb_qspi_status_integration;
+    reg clk = 1'b0;
+    reg rst_n = 1'b0;
+    integer errors = 0;
+    always #5 clk = ~clk;
+
+    reg [3:0]  g_s_arid = 0;
+    reg [31:0] g_s_araddr = 0;
+    reg [7:0]  g_s_arlen = 0;
+    reg [2:0]  g_s_arsize = 2;
+    reg [1:0]  g_s_arburst = 1;
+    reg [1:0]  g_s_arlock = 0;
+    reg [3:0]  g_s_arcache = 0;
+    reg [2:0]  g_s_arprot = 0;
+    reg        g_s_arvalid = 0;
+    wire       g_s_arready;
+    wire [3:0] g_s_rid;
+    wire [31:0] g_s_rdata;
+    wire [1:0] g_s_rresp;
+    wire       g_s_rlast;
+    wire       g_s_rvalid;
+    reg        g_s_rready = 1'b1;
+    wire [3:0]  g_m_arid;
+    wire [31:0] g_m_araddr;
+    wire [7:0]  g_m_arlen;
+    wire [2:0]  g_m_arsize;
+    wire [1:0]  g_m_arburst;
+    wire [1:0]  g_m_arlock;
+    wire [3:0]  g_m_arcache;
+    wire [2:0]  g_m_arprot;
+    wire        g_m_arvalid;
+    reg         g_m_arready = 1'b0;
+    reg [3:0]   g_m_rid = 0;
+    reg [31:0]  g_m_rdata = 0;
+    reg [1:0]   g_m_rresp = 0;
+    reg         g_m_rlast = 1'b1;
+    reg         g_m_rvalid = 1'b0;
+    wire        g_m_rready;
+    wire        timeout_sticky;
+
+    axi_read_timeout_guard #(.TIMEOUT_CYCLES(3)) u_guard (
+        .clk(clk), .rst_n(rst_n),
+        .s_arid(g_s_arid), .s_araddr(g_s_araddr), .s_arlen(g_s_arlen),
+        .s_arsize(g_s_arsize), .s_arburst(g_s_arburst), .s_arlock(g_s_arlock),
+        .s_arcache(g_s_arcache), .s_arprot(g_s_arprot), .s_arvalid(g_s_arvalid),
+        .s_arready(g_s_arready), .s_rid(g_s_rid), .s_rdata(g_s_rdata),
+        .s_rresp(g_s_rresp), .s_rlast(g_s_rlast), .s_rvalid(g_s_rvalid),
+        .s_rready(g_s_rready), .m_arid(g_m_arid), .m_araddr(g_m_araddr),
+        .m_arlen(g_m_arlen), .m_arsize(g_m_arsize), .m_arburst(g_m_arburst),
+        .m_arlock(g_m_arlock), .m_arcache(g_m_arcache), .m_arprot(g_m_arprot),
+        .m_arvalid(g_m_arvalid), .m_arready(g_m_arready), .m_rid(g_m_rid),
+        .m_rdata(g_m_rdata), .m_rresp(g_m_rresp), .m_rlast(g_m_rlast),
+        .m_rvalid(g_m_rvalid), .m_rready(g_m_rready),
+        .timeout_sticky(timeout_sticky)
+    );
+
+    reg [3:0] s_awid = 0;
+    reg [31:0] s_awaddr = 0;
+    reg [7:0] s_awlen = 0;
+    reg [2:0] s_awsize = 2;
+    reg [1:0] s_awburst = 1;
+    reg [1:0] s_awlock = 0;
+    reg [3:0] s_awcache = 0;
+    reg [2:0] s_awprot = 0;
+    reg s_awvalid = 0;
+    wire s_awready;
+    reg [31:0] s_wdata = 0;
+    reg [3:0] s_wstrb = 4'hf;
+    reg s_wlast = 1;
+    reg s_wvalid = 0;
+    wire s_wready;
+    wire [3:0] s_bid;
+    wire [1:0] s_bresp;
+    wire s_bvalid;
+    reg s_bready = 1;
+    reg [3:0] s_arid = 0;
+    reg [31:0] s_araddr = 0;
+    reg [7:0] s_arlen = 0;
+    reg [2:0] s_arsize = 2;
+    reg [1:0] s_arburst = 1;
+    reg [1:0] s_arlock = 0;
+    reg [3:0] s_arcache = 0;
+    reg [2:0] s_arprot = 0;
+    reg s_arvalid = 0;
+    wire s_arready;
+    wire [3:0] s_rid;
+    wire [31:0] s_rdata;
+    wire [1:0] s_rresp;
+    wire s_rlast;
+    wire s_rvalid;
+    reg s_rready = 1;
+    wire [31:0] gpio_pins;
+    wire uart_tx, uart_rts_n, uart_dtr_n, cpu_int, wdt_reset;
+    reg uart_rx = 1, uart_cts_n = 0, uart_dsr_n = 0, uart_dcd_n = 0, uart_ri_n = 1;
+
+    wire [3:0] m_awid, m_bid, m_arid, m_rid;
+    wire [31:0] m_awaddr, m_wdata, m_araddr, m_rdata;
+    wire [7:0] m_awlen, m_arlen;
+    wire [2:0] m_awsize, m_arsize, m_awprot, m_arprot;
+    wire [1:0] m_awburst, m_awlock, m_arburst, m_arlock, m_bresp, m_rresp;
+    wire [3:0] m_awcache, m_arcache, m_wstrb;
+    wire m_awvalid, m_awready = 1'b0, m_wlast, m_wvalid, m_wready = 1'b0;
+    wire m_bvalid = 1'b0, m_bready, m_arvalid, m_arready = 1'b0;
+    wire m_rlast, m_rvalid = 1'b0, m_rready;
+
+    soc_peripheral_subsystem dut (
+        .clk(clk), .rst_n(rst_n), .gpio_pins(gpio_pins),
+        .uart_rx(uart_rx), .uart_tx(uart_tx), .uart_cts_n(uart_cts_n),
+        .uart_rts_n(uart_rts_n), .uart_dsr_n(uart_dsr_n), .uart_dtr_n(uart_dtr_n),
+        .uart_dcd_n(uart_dcd_n), .uart_ri_n(uart_ri_n), .cpu_int(cpu_int),
+        .wdt_reset(wdt_reset), .qspi_controller_present(1'b1),
+        .qspi_timeout_sticky(timeout_sticky),
+        .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen), .s_awsize(s_awsize),
+        .s_awburst(s_awburst), .s_awlock(s_awlock), .s_awcache(s_awcache),
+        .s_awprot(s_awprot), .s_awvalid(s_awvalid), .s_awready(s_awready),
+        .s_wdata(s_wdata), .s_wstrb(s_wstrb), .s_wlast(s_wlast), .s_wvalid(s_wvalid),
+        .s_wready(s_wready), .s_bid(s_bid), .s_bresp(s_bresp), .s_bvalid(s_bvalid),
+        .s_bready(s_bready), .s_arid(s_arid), .s_araddr(s_araddr), .s_arlen(s_arlen),
+        .s_arsize(s_arsize), .s_arburst(s_arburst), .s_arlock(s_arlock),
+        .s_arcache(s_arcache), .s_arprot(s_arprot), .s_arvalid(s_arvalid),
+        .s_arready(s_arready), .s_rid(s_rid), .s_rdata(s_rdata), .s_rresp(s_rresp),
+        .s_rlast(s_rlast), .s_rvalid(s_rvalid), .s_rready(s_rready),
+        .m_awid(m_awid), .m_awaddr(m_awaddr), .m_awlen(m_awlen), .m_awsize(m_awsize),
+        .m_awburst(m_awburst), .m_awlock(m_awlock), .m_awcache(m_awcache),
+        .m_awprot(m_awprot), .m_awvalid(m_awvalid), .m_awready(m_awready),
+        .m_wdata(m_wdata), .m_wstrb(m_wstrb), .m_wlast(m_wlast), .m_wvalid(m_wvalid),
+        .m_wready(m_wready), .m_bid(m_bid), .m_bresp(m_bresp), .m_bvalid(m_bvalid),
+        .m_bready(m_bready), .m_arid(m_arid), .m_araddr(m_araddr), .m_arlen(m_arlen),
+        .m_arsize(m_arsize), .m_arburst(m_arburst), .m_arlock(m_arlock),
+        .m_arcache(m_arcache), .m_arprot(m_arprot), .m_arvalid(m_arvalid),
+        .m_arready(m_arready), .m_rid(m_rid), .m_rdata(m_rdata), .m_rresp(m_rresp),
+        .m_rlast(m_rlast), .m_rvalid(m_rvalid), .m_rready(m_rready)
+    );
+
+    task axi_read;
+        input [31:0] addr;
+        input [31:0] expected;
+        integer guard;
+        begin
+            @(negedge clk); s_araddr = addr; s_arvalid = 1'b1;
+            guard = 0;
+            while (!s_arready && guard < 40) begin @(posedge clk); guard = guard + 1; end
+            @(negedge clk); s_arvalid = 1'b0;
+            guard = 0;
+            while (!s_rvalid && guard < 40) begin @(posedge clk); guard = guard + 1; end
+            if (!s_rvalid || s_rresp !== 2'b00 || s_rdata !== expected) begin
+                $display("FAIL: read %h got=%h resp=%b expected=%h", addr, s_rdata, s_rresp, expected);
+                errors = errors + 1;
+            end
+            @(negedge clk);
+        end
+    endtask
+
+    task axi_write;
+        input [31:0] addr;
+        input [31:0] data;
+        integer guard;
+        begin
+            @(negedge clk); s_awaddr = addr; s_wdata = data; s_awvalid = 1'b1; s_wvalid = 1'b1;
+            guard = 0;
+            while (!(s_awready && s_wready) && guard < 40) begin @(posedge clk); guard = guard + 1; end
+            @(negedge clk); s_awvalid = 1'b0; s_wvalid = 1'b0;
+            guard = 0;
+            while (!s_bvalid && guard < 40) begin @(posedge clk); guard = guard + 1; end
+            if (!s_bvalid || s_bresp !== 2'b00) begin
+                $display("FAIL: write %h resp=%b", addr, s_bresp);
+                errors = errors + 1;
+            end
+            @(negedge clk);
+        end
+    endtask
+
+    initial begin
+        repeat (2) @(posedge clk);
+        rst_n = 1'b1;
+        axi_read(32'h4000_5000, 32'h5153_5001);
+        axi_read(32'h4000_5004, 32'h0000_0002);
+
+        // A normal downstream acceptance/response must not set the fault
+        // record before the deliberately stalled transaction below.
+        g_m_arready = 1'b1;
+        @(negedge clk); g_s_arvalid = 1'b1;
+        while (!g_s_arready) @(posedge clk);
+        while (!g_m_arvalid) @(posedge clk);
+        @(negedge clk); g_m_rvalid = 1'b1; g_m_rdata = 32'h1234_5678;
+        while (!g_s_rvalid) @(posedge clk);
+        if (g_s_rresp !== 2'b00 || g_s_rdata !== 32'h1234_5678) begin
+            $display("FAIL: normal guard read did not complete cleanly");
+            errors = errors + 1;
+        end
+        @(negedge clk); g_s_arvalid = 1'b0; g_m_rvalid = 1'b0; g_m_arready = 1'b0;
+        axi_read(32'h4000_5004, 32'h0000_0002);
+
+        // A downstream AR stall must trip the real guard and set status.
+        @(negedge clk); g_s_arvalid = 1'b1;
+        while (!g_s_arready) @(posedge clk);
+        @(negedge clk); g_s_arvalid = 1'b0;
+        while (!g_s_rvalid) @(posedge clk);
+        if (g_s_rresp !== 2'b10 || !timeout_sticky) begin
+            $display("FAIL: guard did not produce sticky SLVERR timeout");
+            errors = errors + 1;
+        end
+        @(negedge clk);
+
+        axi_read(32'h4000_5004, 32'h0000_0003);
+        axi_read(32'h4000_5008, 32'h0001_0001);
+        axi_write(32'h4000_500C, 32'h1);
+        axi_read(32'h4000_5004, 32'h0000_0002);
+        axi_read(32'h4000_5008, 32'h0000_0000);
+
+        if (errors == 0)
+            $display("REGRESSION_TEST_SUCCESS qspi_status_integration");
+        else
+            $display("REGRESSION_TEST_FAILED qspi_status_integration errors=%0d", errors);
+        $finish;
+    end
+endmodule
