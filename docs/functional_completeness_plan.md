@@ -164,7 +164,7 @@ Phase 1 当前关闭条件是：RTL compile/elaboration 成功，seed 10 无 che
 F1 DDR4 behavioral gate 通过，并生成可追溯的 unit/firmware/SoC 仿真报告。full signoff
 和 coverage threshold 延后，不阻塞 `RTL_FUNCTIONAL_SIM_READY`。
 
-当前基线 `e1c6536` 已满足 `RTL_FRONTEND_COMPILE_READY`，并已具备
+当前基线 `5763eec` 已满足 `RTL_FRONTEND_COMPILE_READY`，并已具备
 `RTL_FUNCTIONAL_SIM_READY` 所需的 unit、firmware、SoC/UVM、F1 DDR4、Boot ROM/MMU、
 XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_READY`，真实 DDR4、
 完整 runtime/page-table、生产 cache-error handler/EIC、生产 QSPI 和板级 I/O 仍未闭合。
