@@ -47,6 +47,7 @@ WDT_BOOT_FAILURE_FW_DIR ?= $(BUILD_DIR)/firmware/wdt_boot_failure
 WDT_BOOT_FAILURE_FW_HEX ?= $(WDT_BOOT_FAILURE_FW_DIR)/firmware.hex
 PRODUCT_WDT_BOOT_FAILURE_DIR ?= $(BUILD_DIR)/unit_tb/product_wdt_boot_failure
 DDR_ENTRY_AUDIT_DIR ?= $(BUILD_DIR)/unit_tb/ddr_contract_entry
+DDR4_PHY_BEHAVIORAL_DIR ?= $(BUILD_DIR)/unit_tb/ddr4_phy_behavioral
 
 SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
 MDU_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/mdu_cpu
@@ -135,6 +136,10 @@ product-wdt-boot-failure-gate:
 
 ddr-contract-entry-audit:
 	RUN_DIR=$(DDR_ENTRY_AUDIT_DIR) tb/unit/run_ddr_contract_entry_audit.sh
+
+.PHONY: ddr4-phy-behavioral-gate
+ddr4-phy-behavioral-gate:
+	RUN_DIR=$(DDR4_PHY_BEHAVIORAL_DIR) tb/unit/ddr4/run_ddr4_phy_behavioral.sh
 
 dut-block-unit-gate:
 	RUN_ROOT=$(DUT_BLOCK_UNIT_DIR) tb/unit/run_dut_block_unit_gate.sh

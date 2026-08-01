@@ -25,7 +25,7 @@ priority PHY RFQ target, while foundry/PHY compatibility remains open.
 | `DDR4-IN-04` | Complete PHY DFI port list, ratio and training semantics | **MISSING** | Vendor port declaration, init/training/fail states and wrapper assumptions; memory/implementation |
 | `DDR4-IN-05` | Exact DDR4 DRAM part, rank, width, density and speed grade | **MISSING** | Ordering code, datasheet revision and supported PHY part list; board/hardware |
 | `DDR4-IN-06` | Board/package SI/PI, timing, ODT and constraint files | **MISSING** | Trace, termination, timing/corner files with hashes; board/implementation |
-| `DDR4-IN-07` | Real DDR4 memory model and verification license | **MISSING** | Simulator-runnable model exercising init/training/refresh/timing/error; verification |
+| `DDR4-IN-07` | Real DDR4 memory model and verification license | **MISSING** | Simulator-runnable vendor/DRAM model exercising init/training/refresh/timing/error; verification |
 | `DDR4-IN-08` | PLL/reset/power-good implementation and boot/WDT budget | **PARTIAL** | Concrete clock/reset ownership, timeout values and failure ABI; clock/system |
 
 ## Entry Decision
@@ -33,6 +33,9 @@ priority PHY RFQ target, while foundry/PHY compatibility remains open.
 `DDR4_ENTRY_READY=0`. No DDR4 PHY wrapper, real DDR4 model or product
 controller exists in the repository. `rtl/perips/axi_ddr_behavioral.v` remains
 capacity/address evidence only.
+
+The repository now contains an F1 vendor-neutral abstract model and gate, but it
+does not satisfy `DDR4-IN-03`, `DDR4-IN-04` or `DDR4-IN-07`.
 
 The entry audit may pass its consistency checks while returning `BLOCKED`. That
 result is not DDR4 functionality evidence and must not be included in

@@ -50,3 +50,7 @@ wrapper、接入真实 controller 并运行 no-preload DDR4 boot gate。
 在外部资料不可得期间，默认执行 **F1 + F4**；C1 DDR4 产品 entry 保持
 `BLOCKED`，不把 behavioral DDR、FPGA MIG/EMIF 或抽象 DFI model 当作 ASIC
 DDR4 完成证据。
+
+F1 gate 已通过：`make ddr4-phy-behavioral-gate` 验证 init/training success、
+training/init failure、refresh backpressure、读写、fatal 和非法命令分类。
+该结果等级为 `BLOCK_VERIFIED (vendor-neutral)`，不关闭 `DDR4-IN-01..08`。
