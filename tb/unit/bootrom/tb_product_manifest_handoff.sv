@@ -56,6 +56,10 @@ module tb_product_manifest_handoff #(
     reg kseg0_data_seen;
     reg kseg0_data_second_seen;
     reg kseg0_data_read_seen;
+    reg [19:0] kseg0_depth_write_mask;
+    reg [19:0] kseg0_depth_read_mask;
+    reg kseg0_depth_stack_write_seen;
+    reg kseg0_depth_stack_read_seen;
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
     reg xip_timeout_mailbox_seen;
@@ -149,6 +153,10 @@ module tb_product_manifest_handoff #(
             kseg0_data_seen = 1'b0;
             kseg0_data_second_seen = 1'b0;
             kseg0_data_read_seen = 1'b0;
+            kseg0_depth_write_mask = 20'd0;
+            kseg0_depth_read_mask = 20'd0;
+            kseg0_depth_stack_write_seen = 1'b0;
+            kseg0_depth_stack_read_seen = 1'b0;
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
             xip_timeout_mailbox_seen = 1'b0;
@@ -186,6 +194,29 @@ module tb_product_manifest_handoff #(
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7004 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_7004)
                 kseg0_data_read_seen = 1'b1;
+
+            if ($test$plusargs("EXPECT_KSEG0_DEPTH") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'h8000_7000 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr <= 32'h8000_704C &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr ==
+                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr & 32'h1FFF_FFFF) &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr[1:0]) == 2'b00)) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                    kseg0_depth_write_mask[(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr - 32'h8000_7000) >> 2] = 1'b1;
+                else
+                    kseg0_depth_read_mask[(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr - 32'h8000_7000) >> 2] = 1'b1;
+            end
+
+            if ($test$plusargs("EXPECT_KSEG0_DEPTH") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_8000 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_8000) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                    kseg0_depth_stack_write_seen = 1'b1;
+                else
+                    kseg0_depth_stack_read_seen = 1'b1;
+            end
 
             if ($test$plusargs("BOOT_DEBUG") && u_soc.u_impl.s2_rvalid &&
                 u_soc.u_impl.s2_rready)
@@ -228,6 +259,14 @@ module tb_product_manifest_handoff #(
                     fail("MMU-enabled kseg0 second data word did not use the physical SRAM address");
                 if ($test$plusargs("EXPECT_KSEG0_DATA") && !kseg0_data_read_seen)
                     fail("MMU-enabled kseg0 data readback was not observed");
+                if ($test$plusargs("EXPECT_KSEG0_DEPTH")) begin
+                    if (kseg0_depth_write_mask != 20'hF_FFFF)
+                        fail("kseg0 depth did not write all 20 data words");
+                    if (kseg0_depth_read_mask != 20'hF_FFFF)
+                        fail("kseg0 depth did not read all 20 data words");
+                    if (!kseg0_depth_stack_write_seen || !kseg0_depth_stack_read_seen)
+                        fail("kseg0 depth stack translation/readback was not observed");
+                end
                 if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[22] ||
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[2])
                     fail("BEV or ERL remained set after handoff");
