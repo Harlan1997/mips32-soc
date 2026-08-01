@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.22（2026-08-02）
+> 版本：v1.23（2026-08-02）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -148,24 +148,31 @@ coverage threshold 不属于当前退出条件。
 
 按以下顺序执行，任何一步失败都停止向后推进：
 
-1. `make firmware`
-2. `make dut-block-unit-gate`
-3. `make fabric-unit-gate`
-4. `make soc-smoke`
-5. `make uvm UVM_TEST=soc_bus_stress_test UVM_SEED=10 UVM_RUN_DIR=build/uvm/seed10_dma_fix`
-6. `make phase2-complete`
-7. `make phase3-complete`
-8. `make phase3b-complete` 和 `make phase3c-complete`
-9. `make current-contract-signoff`
+1. `make rtl-frontend-compile`
+2. `make firmware`
+3. `make ddr4-phy-behavioral-gate`
+4. `make dut-block-unit-gate`
+5. `make fabric-unit-gate`
+6. `make soc-smoke`
+7. `make uvm UVM_TEST=soc_bus_stress_test UVM_SEED=10 UVM_RUN_DIR=build/uvm/seed10_dma_fix`
+8. `make phase2-complete`
+9. `make phase3-complete`
+10. `make phase3b-complete` 和 `make phase3c-complete`
+11. `make current-contract-signoff`
 
 Phase 1 当前关闭条件是：RTL compile/elaboration 成功，seed 10 无 checker/scoreboard/error，
 F1 DDR4 behavioral gate 通过，并生成可追溯的 unit/firmware/SoC 仿真报告。full signoff
 和 coverage threshold 延后，不阻塞 `RTL_FUNCTIONAL_SIM_READY`。
 
+当前基线 `c52cea8` 已满足 `RTL_FRONTEND_COMPILE_READY`，并已具备
+`RTL_FUNCTIONAL_SIM_READY` 所需的 unit、firmware、SoC/UVM、F1 DDR4、Boot ROM/MMU、
+XIP/WDT/UART 和 ASID rollover 行为证据；这不是 `PRODUCT_FUNCTION_READY`，真实 DDR4、
+完整 runtime/page-table、cache-error/EIC、生产 QSPI 和板级 I/O 仍未闭合。
+
 ### Phase 2：产品启动与主存闭合
 
 - 已建立 `docs/boot_memory_contract.md` v1.6，冻结候选 reset/vector、物理/虚拟地址图、镜像格式、失败行为和六个行为 gate；`docs/block_specs/ddr3_spec.md` v1.0 冻结 DDR controller/PHY 的 AXI/APB/DFI/error contract，`soc_config.vh` 固化 `SOC_APB_DDRCTRL_BASE` 及寄存器 offsets；`make ddr-contract-entry-audit` 已将外部输入缺失变成可重复的 `BLOCKED` 结果。该动作只关闭接口歧义，不代表 DDR RTL 已实现。
-- 第二至第十二个 RTL/firmware 垂直切片已完成：TLB lookup miss 与 matching-invalid 的 vector 分派覆盖 I-side 两个 BEV 模式和 D-side BEV=1；最小产品 Boot ROM linker/BEV refill handler 进一步覆盖 wired kseg2-APB 映射、DTLB refill、`TLBWR`、寄存器恢复、`ERET` retry、DDR store/load 和 APB write；独立 ASID gate 覆盖 4KB 非 Global 隔离、Global 跨 ASID、Invalid/Modified 分类；独立 gate 还证明 Boot ROM 把通用 handler 复制到 SRAM `EBase+0x180`，处理 precise `Mod`、将 `D=0` 改为 `D=1` 并 `ERET` retry；IP-based `Cause.IV/IntCtl.VS` vectored interrupt gate 已证明 IP1 到 `EBase+0x220`；development manifest gate 则经实际 SPI XIP 完成 CRC 校验、Boot SRAM 拷贝和 kseg0 stage-1 handoff，`product-kseg0-runtime-gate` 在 `SOC_MMU_ENABLE=1` 下确认入口 VA 到 SRAM PA 的取指转换；XIP guard 则将下游 AR/R stall 限时为 `SLVERR`，经 cache/CPU DBE 路径由 Boot ROM 记录 `DEAD_B007`；新增 QSPI/XIP status integration gate 已证明 guard timeout 经产品 APB decode 可读出版本、controller-present、sticky timeout 和 `0x0001_0001` 错误码，并可由 W1C 清除；UART pins/IRQ slice、WDT APB/reset path、boot-status retention、预加载 firmware reset-retention 和无 SRAM preload 的 Boot ROM WDT failure slice 已有独立 gate。仍只关闭向量路由、最小 BEV 启动链、4KB ASID/异常分类、单一 `Mod` recovery、development handoff、kseg0 指令交接、AXI-side XIP stall/状态观测切片、manifest/DDR 故障到 failure code 的完整分类、完整 kseg0 runtime 数据路径、cache-error/EIC 异常、生产 QSPI 和真实 DDR。
+- 第二至第十二个 RTL/firmware 垂直切片已完成：TLB lookup miss 与 matching-invalid 的 vector 分派覆盖 I-side 两个 BEV 模式和 D-side BEV=1；最小产品 Boot ROM linker/BEV refill handler 进一步覆盖 wired kseg2-APB 映射、DTLB refill、`TLBWR`、寄存器恢复、`ERET` retry、DDR store/load 和 APB write；独立 ASID gate 覆盖 4KB 非 Global 隔离、Global 跨 ASID、Invalid/Modified 分类以及同一 index 的 `0xfe -> 0xff` replacement/旧 ASID 隔离；独立 gate 还证明 Boot ROM 把通用 handler 复制到 SRAM `EBase+0x180`，处理 precise `Mod`、将 `D=0` 改为 `D=1` 并 `ERET` retry；IP-based `Cause.IV/IntCtl.VS` vectored interrupt gate 已证明 IP1 到 `EBase+0x220`；development manifest gate 则经实际 SPI XIP 完成 CRC 校验、Boot SRAM 拷贝和 kseg0 stage-1 handoff，`product-kseg0-runtime-gate` 在 `SOC_MMU_ENABLE=1` 下确认入口取指 `0x8000_1000 -> 0x0000_1000` 和一次数据访问 `0x8000_7000 -> 0x0000_7000`；XIP guard 则将下游 AR/R stall 限时为 `SLVERR`，经 cache/CPU DBE 路径由 Boot ROM 记录 `DEAD_B007`；新增 QSPI/XIP status integration gate 已证明 guard timeout 经产品 APB decode 可读出版本、controller-present、sticky timeout 和 `0x0001_0001` 错误码，并可由 W1C 清除；UART pins/IRQ slice、WDT APB/reset path、boot-status retention、预加载 firmware reset-retention 和无 SRAM preload 的 Boot ROM WDT failure slice 已有独立 gate。仍只关闭向量路由、最小 BEV 启动链、4KB ASID/异常分类、单一 `Mod` recovery、development handoff、有限 kseg0 instruction/data 与硬件 rollover 边界、AXI-side XIP stall/状态观测切片、manifest/DDR 故障到 failure code 的完整分类、完整 kseg0 runtime 数据路径、cache-error/EIC 异常、生产 QSPI 和真实 DDR。
 - 冻结 ROM boot 地址、异常向量和 firmware linker 规则；不能继续从 useg reset vector 启动。
 - ASIC 路线下先按 `docs/ddr4_external_input_acquisition.md` 完成 `DDR4-IN-01..08`，同步登记 `docs/ddr4_integration_inputs.md` 并使 `DDR4_ENTRY_READY=1`；之后才实现真实 DDR controller/PHY contract，完成 init、calibration、refresh、AXI backpressure 与 DDR memory test。该步骤属于后续产品入口，不阻塞当前 RTL 前端阶段。
 - 实现实际 QSPI boot source（XIP/command path、image format、boot ROM）并完成 reset 到 first-stage firmware 的 SoC gate。
