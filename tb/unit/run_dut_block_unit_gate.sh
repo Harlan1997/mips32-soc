@@ -239,6 +239,9 @@ mkdir -p "${BOOTROM_DIR}"
     RUN_DIR="$(pwd)/product_tlb_data_vectors" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_tlb_data_vectors.sh"
 
+    RUN_DIR="$(pwd)/tlb_asid_policy" \
+        "${ROOT_DIR}/tb/unit/tlb/run_tlb_asid_policy.sh"
+
     RUN_DIR="$(pwd)/product_mmu_boot" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_mmu_boot.sh"
 
@@ -258,9 +261,10 @@ if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_boot_vector" "${BOOTROM_DIR}/product_boot_vector/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS fetch_pc_alignment" "${BOOTROM_DIR}/fetch_pc_alignment/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS fetch_pc_alignment" "${BOOTROM_DIR}/product_fetch_pc_alignment/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_tlb_vectors" "${BOOTROM_DIR}/product_tlb_vectors/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_tlb_data_vectors" "${BOOTROM_DIR}/product_tlb_data_vectors/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log" && \
+    grep -q "REGRESSION_TEST_SUCCESS product_tlb_vectors" "${BOOTROM_DIR}/product_tlb_vectors/sim.log" && \
+    grep -q "REGRESSION_TEST_SUCCESS product_tlb_data_vectors" "${BOOTROM_DIR}/product_tlb_data_vectors/sim.log" && \
+    grep -q "REGRESSION_TEST_SUCCESS tlb_asid_policy" "${BOOTROM_DIR}/tlb_asid_policy/sim.log" && \
+    grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_mmu_ebase_modified" "${BOOTROM_DIR}/product_mmu_ebase_modified/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_vectored_interrupt" "${BOOTROM_DIR}/product_vectored_interrupt/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" "${BOOTROM_DIR}/product_manifest_handoff/sim_valid.log" && \
