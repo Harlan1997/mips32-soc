@@ -465,16 +465,31 @@ module mips_cp0 (
                          $time, except_code, except_pc, intr_req, hw_int);
 `endif
                 // synopsys translate_on
-                cp0_status[1]  <= 1'b1;         // Set EXL
+                // MIPS CacheErr is an Error exception: use ERL/ErrorEPC and
+                // leave EXL clear so ERET returns through the error path.
+                // All other synchronous exceptions retain the ordinary EPC/
+                // EXL contract used by the existing CPU pipeline.
+                if (except_code == 5'h1E) begin
+                    cp0_status[2] <= 1'b1;       // Set ERL
+                    if (!cp0_status[2])
+                        cp0_errorepc <= except_pc;
+                end else begin
+                    cp0_status[1] <= 1'b1;        // Set EXL
+                    cp0_epc       <= except_pc;
+                end
                 cp0_cause[6:2] <= except_code;
                 cp0_cause[31]  <= except_bd;
 
-                // synopsys translate_off
-                if (except_bd)
-                    cp0_epc <= except_pc - 32'd4;   // Point to branch instruction
-                else
-                // synopsys translate_on
-                    cp0_epc <= except_pc;           // Point to faulting instruction
+                // Branch-delay EPC applies to both ordinary and cache-error
+                // entries, but ErrorEPC is the architectural return register
+                // for CacheErr.
+                if (except_bd) begin
+                    if (except_code == 5'h1E) begin
+                        if (!cp0_status[2]) cp0_errorepc <= except_pc - 32'd4;
+                    end else begin
+                        cp0_epc <= except_pc - 32'd4;
+                    end
+                end
 
                 // Phase B.3.d: address-related exceptions (Mod=1, TLBL=2, TLBS=3,
                 // AdEL=4, AdES=5) also latch BadVAddr and Context.BadVPN2 per

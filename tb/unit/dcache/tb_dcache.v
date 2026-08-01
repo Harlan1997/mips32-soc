@@ -16,7 +16,7 @@ module tb_dcache;
     reg  [31:0] cpu_addr, cpu_wdata;
     reg  [3:0]  cpu_be;
     wire [31:0] cpu_rdata;
-    wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error;
+    wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error, cpu_cache_error;
 
     // AXI
     wire [3:0]  awid; wire [31:0] awaddr; wire [7:0] awlen; wire [2:0] awsize;
@@ -32,7 +32,7 @@ module tb_dcache;
     dcache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_we(cpu_we),.cpu_addr(cpu_addr),.cpu_wdata(cpu_wdata),
-        .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),
+        .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
         .awid(awid),.awaddr(awaddr),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .awlock(awlock),.awcache(awcache),.awprot(awprot),.awvalid(awvalid),.awready(awready),
         .wdata(wdata),.wstrb(wstrb),.wlast(wlast),.wvalid(wvalid),.wready(wready),
@@ -117,13 +117,17 @@ module tb_dcache;
         @(negedge clk);
     end endtask
 
-    task cpu_read_error(input [31:0] addr);
+    task cpu_read_error(input [31:0] addr, input expect_cache_error);
     begin
         @(negedge clk);
         cpu_req=1; cpu_we=0; cpu_addr=addr; cpu_be=4'hF; cpu_wdata=0;
         @(posedge clk); while(!cpu_data_ok) @(posedge clk);
         if (!cpu_bus_error) begin
             $display("FAIL AXI read error was not exposed to CPU"); errs=errs+1;
+        end
+        if (cpu_cache_error !== expect_cache_error) begin
+            $display("FAIL CacheErr sideband=%b expected=%b for addr=%h",
+                     cpu_cache_error, expect_cache_error, addr); errs=errs+1;
         end
         @(negedge clk); cpu_req=0;
         @(negedge clk);
@@ -209,7 +213,7 @@ module tb_dcache;
         // T8: an uncached read SLVERR completes the request with a CPU-visible
         // error; disabling injection permits a clean retry.
         inject_read_error=1;
-        cpu_read_error(32'hA000_6000);
+        cpu_read_error(32'hA000_6000, 1'b0);
         inject_read_error=0;
         cpu_read(32'hA000_6000, rd);
         if (rd!==mem[32'h0000_6000>>2]) begin $display("FAIL T8 retry=%h",rd); errs=errs+1; end
@@ -217,7 +221,7 @@ module tb_dcache;
         // T9: a cached refill error also invalidates the victim instead of
         // retaining partially received data. The following retry must refill.
         inject_read_error=1;
-        cpu_read_error(32'h0000_7000);
+        cpu_read_error(32'h0000_7000, 1'b1);
         inject_read_error=0;
         c_ar=ar_count; cpu_read(32'h0000_7000, rd);
         if (ar_count!==c_ar+1) begin $display("FAIL T9 error line was installed"); errs=errs+1; end

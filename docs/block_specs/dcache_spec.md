@@ -5,7 +5,9 @@
 > 阻塞式单-outstanding miss 处理、uncached (kseg1) 旁路保持不变。单元测试
 > `tb/unit/dcache/tb_dcache.v`（冷 miss/refill/hit、写命中 byte-strobe 合并、写 miss 分配、
 > 4-way 填满不误逐出、PLRU 逐出与 MRU 不被逐出、uncached 旁路）通过，纳入
-> `make dut-block-unit-gate`（[6/6]）。SoC 级 `cache_sweep` 固件与 phase3/uvm/smoke 全绿。
+> `make dut-block-unit-gate`（[6/6]）。该单测还区分 uncached DBE 与 cached
+> refill/writeback `cpu_cache_error` sideband；SoC 级 `cache_sweep` 固件与
+> phase3/uvm/smoke 全绿。
 >
 > **未实现（后续）**：CACHE 指令子集、非阻塞多-MSHR、4-entry store buffer——依赖非阻塞 L2
 > 与 CPU hit-under-miss（见 `docs/refactor_roadmap.md` 依赖链），单独排期。下文为完整 v0 目标。
@@ -149,7 +151,11 @@ Uncached 严格顺序：等前一 uncached 完成才发下一。
 1. FSM → ST_WB_EVICT
 2. AXI W 8-beat burst 写 dirty line 到 memory
 3. 收 BRESP=OKAY → 继续 refill
-4. BRESP=SLVERR/DECERR → Data Bus Error (DBE, ExcCode=7)
+4. BRESP=SLVERR/DECERR on an uncached single-beat transfer -> Data Bus Error
+   (DBE, ExcCode=7).
+5. BRESP=SLVERR/DECERR during cached writeback/refill -> `cpu_cache_error=1`
+   for the response cycle; the cache does not install a partial line and the
+   CPU raises MIPS CacheErr (ExcCode=30), not DBE.
 ```
 
 ---
@@ -174,7 +180,11 @@ CACHE 指令走 MEM 阶段专用端口；产生 1-16 cycle bubble（Hit_Writebac
 ## 6. 与 TLB / 异常交互
 
 - MEM TLB miss/invalid/modified → 冲刷 dcache 请求；异常。
-- Refill 期间 AXI SLVERR/DECERR → DBE (ExcCode=7)；EPC 定位到发起的 load/store。
+- Refill 期间 AXI SLVERR/DECERR -> CacheErr (ExcCode=30)；`ErrorEPC` 定位到
+  发起的 load/store，`Status.ERL=1`，并从 `EBase+0x100`（BEV=0）或
+  `BFC0_0100`（BEV=1）进入错误向量。写回 BRESP 错误遵循相同策略。
+- Uncached AXI SLVERR/DECERR 继续走 DBE (ExcCode=7)/EPC，不设置 ERL；这
+  区分 controller/bus failure 与 cache-array/refill failure。
 - Store buffer 中的 store 遇 TLB modified → 回滚 store buffer 项 + Mod 异常。
 
 ---
@@ -233,6 +243,7 @@ module l1_dcache #(
     output wire        req_hit,
     output wire [31:0] req_rdata,
     output wire        req_dbe,        // data bus error
+    output wire        req_cacheerr,   // cached refill/writeback CacheErr
     output wire        req_mod_exc,    // TLB modified (from upstream)
 
     // CACHE instruction port
@@ -264,7 +275,8 @@ module l1_dcache #(
 - CACHE 6 种 op × hit/miss。
 - Uncached load/store 单 beat 直通。
 - SYNC 排空 store buffer + in-flight AXI。
-- SLVERR/DECERR 转 DBE。
+- Uncached SLVERR/DECERR 转 DBE；cached refill/writeback SLVERR/DECERR 转
+  CacheErr sideband/ExcCode=30。
 - LRU 5-way rotation。
 - VIPT non-aliasing 双 VA 同 PA。
 - TLB Modified → Mod 异常 + store buffer 回滚（decision §8）。
