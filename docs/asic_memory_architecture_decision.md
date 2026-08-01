@@ -1,8 +1,8 @@
 # ASIC 内存架构决策记录
 
-> 版本：v0.3（2026-08-02）
+> 版本：v0.4（2026-08-02）
 > 决策：**Profile C1 DDR4 已选择**
-> 状态：**C1_SELECTED / DDR4_MEMORY_ENTRY_BLOCKED**
+> 状态：**C1_SELECTED / BASELINE_ACCEPTED / DDR4_MEMORY_ENTRY_BLOCKED**
 
 ## 1. 决策含义
 
@@ -50,4 +50,5 @@ Profile C1 表示采用 28nm 或更先进 ASIC 工艺和商用 DDR4 PHY。当前
 当前结论：C1 DDR4 已选，但 `C-MEM-02..08` 未关闭，不能开始产品 DDR4
 controller 实现。阶段 A 的参数签收见
 [`docs/asic_c1_ddr4_parameter_decision.md`](asic_c1_ddr4_parameter_decision.md)；
-阶段 B 在阶段 A 关闭前保持阻塞。
+推荐基线已接受，阶段 B 的 RFQ/候选筛选准备见
+[`docs/asic_c1_ddr4_phy_selection_plan.md`](asic_c1_ddr4_phy_selection_plan.md)。
