@@ -60,6 +60,11 @@ module mips_cpu (
     wire exception_flush = wb_except_req | wb_is_eret | intr_req;
     wire [31:0] ebase_out;
     wire        cp0_bev;
+    wire        cp0_vint_enabled;
+    wire [31:0] cp0_vint_offset;
+    // A synchronous WB exception always takes precedence over an interrupt;
+    // only an accepted interrupt may use the Cause.IV vector table.
+    wire take_interrupt = intr_req && !wb_except_req && !wb_is_eret;
     // The prototype firmware remains linked at the legacy useg vector.  The
     // product configuration instead follows the CP0 bootstrap/general-vector
     // contract. TLB refill is distinct from Invalid even though both report
@@ -67,7 +72,10 @@ module mips_cpu (
     wire [31:0] exception_vector = wb_is_eret ? epc_out :
                                   (`SOC_PRODUCT_BOOT_ENABLE != 0) ?
                                   (cp0_bev ? (wb_tlb_refill_exception ? 32'hBFC0_0200 : 32'hBFC0_0380) :
-                                             (wb_tlb_refill_exception ? ebase_out : (ebase_out + 32'h0000_0180))) :
+                                             (wb_tlb_refill_exception ? ebase_out :
+                                              ((take_interrupt && cp0_vint_enabled) ?
+                                               (ebase_out + cp0_vint_offset) :
+                                               (ebase_out + 32'h0000_0180)))) :
                                   32'h0000_0180;
     
     // ID stage outputs (for flush logic)
@@ -737,6 +745,8 @@ module mips_cpu (
         .ebase_out    (ebase_out),
         .bev_out      (cp0_bev),
         .intr_req     (intr_req),
+        .vint_enabled_out (cp0_vint_enabled),
+        .vint_offset_out  (cp0_vint_offset),
         .kernel_mode  (cpu_kernel_mode),
         .cu0_enable   (cpu_cu0),
 

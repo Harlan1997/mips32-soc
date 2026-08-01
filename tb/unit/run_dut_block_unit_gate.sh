@@ -245,6 +245,9 @@ mkdir -p "${BOOTROM_DIR}"
     RUN_DIR="$(pwd)/product_mmu_ebase_modified" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_mmu_ebase_modified.sh"
 
+    RUN_DIR="$(pwd)/product_vectored_interrupt" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_vectored_interrupt.sh"
+
     RUN_DIR="$(pwd)/product_manifest_handoff" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_manifest_handoff.sh"
 )
@@ -259,6 +262,7 @@ if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_tlb_data_vectors" "${BOOTROM_DIR}/product_tlb_data_vectors/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_mmu_ebase_modified" "${BOOTROM_DIR}/product_mmu_ebase_modified/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_vectored_interrupt" "${BOOTROM_DIR}/product_vectored_interrupt/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" "${BOOTROM_DIR}/product_manifest_handoff/sim_valid.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_bad_crc" "${BOOTROM_DIR}/product_manifest_handoff/sim_bad_crc.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_xip_timeout" "${BOOTROM_DIR}/product_manifest_handoff/sim_xip_timeout.log"; then
