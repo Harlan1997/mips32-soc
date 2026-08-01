@@ -1,6 +1,6 @@
 # Address Map
 
-> Version: v0.2 (2026-08-01). The product boot/memory contract is defined in
+> Version: v0.3 (2026-08-01). The product boot/memory contract is defined in
 > `docs/boot_memory_contract.md`; the table below is the shared source of
 > truth for implementation and verification. Prototype smoke tests may still
 > use the legacy SRAM preload path until the product gate is enabled.
@@ -41,7 +41,7 @@ return AXI `DECERR`.
 | QSPI controller | `0x5000` | command/XIP/FIFO; product block not yet integrated |
 | DDR controller | `0x6000` | init/calibration/refresh status; product block not yet integrated |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse is integrated, boot-status retention is separate |
-| Boot status | `0x8000` | immutable stage/failure code; product block not yet integrated |
+| Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
 
 ## GPIO Register Map
 

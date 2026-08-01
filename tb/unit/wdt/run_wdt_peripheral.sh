@@ -19,6 +19,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     "${ROOT_DIR}/rtl/perips/apb_axi_dma.v" "${ROOT_DIR}/rtl/perips/apb_gpio.v" \
     "${ROOT_DIR}/rtl/perips/apb_timer.v" "${ROOT_DIR}/rtl/perips/apb_uart_16550.v" \
     "${ROOT_DIR}/rtl/perips/apb_vic.v" "${ROOT_DIR}/rtl/perips/apb_wdt.v" \
+    "${ROOT_DIR}/rtl/perips/apb_boot_status.v" \
     "${ROOT_DIR}/rtl/soc_peripheral_subsystem.v" "${SCRIPT_DIR}/tb_wdt_peripheral.sv" \
     -l compile.log
 ./simv -no_save -l sim.log

@@ -84,8 +84,23 @@
 `define SOC_APB_GPIO_OFFSET   16'h2000
 `define SOC_APB_DMA_OFFSET    16'h3000
 `define SOC_APB_PIC_OFFSET    16'h4000
+`define SOC_APB_WDT_OFFSET    16'h7000
+`define SOC_APB_BOOT_STATUS_OFFSET 16'h8000
+
+// Boot status stage values. The register is retained across watchdog reset;
+// firmware may use additional implementation-specific intermediate values.
+`define SOC_BOOT_STAGE_RESET       8'h00
+`define SOC_BOOT_STAGE_QSPI_PROBE  8'h10
+`define SOC_BOOT_STAGE_HEADER      8'h20
+`define SOC_BOOT_STAGE_DDR_WAIT    8'h30
+`define SOC_BOOT_STAGE_COPY_CRC    8'h40
+`define SOC_BOOT_STAGE_TLB_MAP     8'h50
+`define SOC_BOOT_STAGE_VECTOR      8'h60
+`define SOC_BOOT_STAGE_HANDOFF     8'h70
 // Verification-only APB fault slot. Product builds leave the injector disabled.
 `define SOC_APB_FAULT_OFFSET   16'hF000
+`define SOC_APB_WDT_BASE       32'h4000_7000
+`define SOC_APB_BOOT_STATUS_BASE 32'h4000_8000
 
 // GPIO register offsets
 `define SOC_GPIO_DATA_OFFSET  12'h000

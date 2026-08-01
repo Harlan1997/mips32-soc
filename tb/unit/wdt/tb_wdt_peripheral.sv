@@ -159,6 +159,8 @@ module tb_wdt_peripheral;
         repeat (2) @(posedge clk);
         rst_n = 1'b1;
         axi_read(32'h4000_7000, 32'h0);
+        axi_write(32'h4000_8000, 32'h70);
+        axi_write(32'h4000_8004, 32'hDEAD_B007);
         axi_write(32'h4000_7004, 32'd3);
         axi_write(32'h4000_7000, 32'h1);
         wait (wdt_reset === 1'b1);
@@ -173,6 +175,13 @@ module tb_wdt_peripheral;
             errors = errors + 1;
         end
         axi_read(32'h4000_7010, 32'h1);
+        axi_read(32'h4000_8000, 32'h70);
+        axi_read(32'h4000_8004, 32'hDEAD_B007);
+        axi_read(32'h4000_8008, 32'h3);
+        axi_write(32'h4000_8008, 32'h2);
+        axi_read(32'h4000_8008, 32'h1);
+        axi_write(32'h4000_8004, 32'h0);
+        axi_read(32'h4000_8004, 32'h0);
         axi_write(32'h4000_7010, 32'h1);
         axi_read(32'h4000_7010, 32'h0);
 
