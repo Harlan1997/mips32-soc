@@ -212,8 +212,9 @@ Multi-hit → `ExcCode = 24 (MCheck)`, `Status.TS = 1`。软件通常记录后�
 当前已有的独立契约 gate `tb/unit/tlb/run_tlb_asid_policy.sh` 使用 `SOC_MMU_ENABLE=1`
 直接连接 `mips_tlb` 和 `mips_mmu`，验证 4KB 页的 ASID 隔离、Global 跨 ASID 命中、
 matching-invalid 的 TLBL/TLBS 分类，以及清页 store 的 Modified 分类。该 gate 只关闭
-上述 ASID/异常分类子集；可变页大小、multi-hit machine check、micro-TLB 和 OS 级
-ASID rollover 仍未实现或未验证。
+上述 ASID/异常分类子集；同一 TLB index 的 `0xfe -> 0xff` replacement/旧 ASID 隔离
+已有 rollover slice；可变页大小、multi-hit machine check、micro-TLB 和 OS 级 ASID
+allocator/rollover 压力仍未实现或未验证。
 
 **SoC 级**：
 - Linux boot：kernel 早期 head.S 建映射 → paging on → init 进程 → busybox shell。
