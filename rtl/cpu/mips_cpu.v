@@ -16,6 +16,8 @@ module mips_cpu (
     input  wire        inst_addr_ok,
     input  wire        inst_data_ok,
     input  wire        inst_bus_error,
+    // I-cache refill failure; kept separate from an ordinary IBE response.
+    input  wire        inst_cache_error,
     input  wire [31:0] inst_rdata,
     
     // Data Cache Interface (to be connected to dcache)
@@ -28,6 +30,8 @@ module mips_cpu (
     input  wire        data_addr_ok,
     input  wire        data_data_ok,
     input  wire        data_bus_error,
+    // Cached D-side refill/writeback failure; uncached errors remain DBE.
+    input  wire        data_cache_error,
     input  wire [31:0] data_rdata,
     
     input  wire [5:0]  ext_int,
@@ -50,6 +54,7 @@ module mips_cpu (
     
     // Exceptions
     wire wb_except_req;
+    wire [4:0] wb_except_code;
     wire wb_except_is_tlb_refill;
     wire wb_tlb_refill_exception = wb_except_req & wb_except_is_tlb_refill;
     wire wb_is_eret;
@@ -65,14 +70,17 @@ module mips_cpu (
     // A synchronous WB exception always takes precedence over an interrupt;
     // only an accepted interrupt may use the Cause.IV vector table.
     wire take_interrupt = intr_req && !wb_except_req && !wb_is_eret;
+    wire wb_cache_error_exception = wb_except_req && (wb_except_code == 5'h1E);
     // The prototype firmware remains linked at the legacy useg vector.  The
     // product configuration instead follows the CP0 bootstrap/general-vector
     // contract. TLB refill is distinct from Invalid even though both report
     // TLBL/TLBS; its sideband survives the pipeline to select the refill slot.
     wire [31:0] exception_vector = wb_is_eret ? epc_out :
                                   (`SOC_PRODUCT_BOOT_ENABLE != 0) ?
-                                  (cp0_bev ? (wb_tlb_refill_exception ? 32'hBFC0_0200 : 32'hBFC0_0380) :
-                                             (wb_tlb_refill_exception ? ebase_out :
+                                  (cp0_bev ? (wb_cache_error_exception ? 32'hBFC0_0100 :
+                                              wb_tlb_refill_exception ? 32'hBFC0_0200 : 32'hBFC0_0380) :
+                                             (wb_cache_error_exception ? (ebase_out + 32'h0000_0100) :
+                                              wb_tlb_refill_exception ? ebase_out :
                                               ((take_interrupt && cp0_vint_enabled) ?
                                                (ebase_out + cp0_vint_offset) :
                                                (ebase_out + 32'h0000_0180)))) :
@@ -188,8 +196,10 @@ module mips_cpu (
     // Case equality keeps legacy standalone CPU harnesses that omit the new
     // optional cache-error sideband electrically quiet rather than X-active.
     wire        if_bus_fault  = inst_req & inst_data_ok & (inst_bus_error === 1'b1);
-    wire        if_fault_req  = if_adel_exception | if_bus_fault | (~mmu_i_ok & inst_req);
+    wire        if_cache_fault = inst_req & inst_data_ok & (inst_cache_error === 1'b1);
+    wire        if_fault_req  = if_adel_exception | if_cache_fault | if_bus_fault | (~mmu_i_ok & inst_req);
     wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
+                                if_cache_fault                ? 5'h1E :  // CacheErr
                                 if_bus_fault                  ? 5'h06 :  // IBE
                                 (mmu_i_fault_type == 3'b100) ? 5'h04 :  // AdEL from MMU
                                                                 5'h02;  // TLBL default
@@ -273,7 +283,6 @@ module mips_cpu (
     
     wire        wb_reg_write;
     wire        wb_cp0_we;
-    wire [4:0]  wb_except_code;
     wire [1:0]  wb_mem_to_reg;
     wire [1:0]  id_mem_to_reg;
     
@@ -617,10 +626,12 @@ module mips_cpu (
                           ((mmu_d_fault_type == 3'b001) || (mmu_d_fault_type == 3'b010)) &
                           ~mmu_dlookup_hit;
     wire mem_bus_fault      = data_req & data_data_ok & (data_bus_error === 1'b1);
-    wire mem_except_req_out  = mem_except_req | mem_mmu_fault | mem_bus_fault
+    wire mem_cache_fault    = data_req & data_data_ok & (data_cache_error === 1'b1);
+    wire mem_except_req_out  = mem_except_req | mem_mmu_fault | mem_cache_fault | mem_bus_fault
                              | mem_adel_exception | mem_ades_exception;
     wire [4:0] mem_except_code_out = mem_except_req      ? mem_except_code
                                    : mem_mmu_fault       ? mem_mmu_fault_code
+                                   : mem_cache_fault     ? 5'h1E // CacheErr
                                    : mem_bus_fault       ? 5'h07 // DBE
                                    : mem_adel_exception  ? 5'h04
                                    : mem_ades_exception  ? 5'h05

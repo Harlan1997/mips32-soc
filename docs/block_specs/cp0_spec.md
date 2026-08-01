@@ -151,6 +151,7 @@ Phase B 默认 IPTI=7、VS=0 (非向量化)。VS>0 时中断向量 = EBase + 0x2
 | 5  | AdES | Address error store |
 | 6  | IBE  | Instruction bus error |
 | 7  | DBE  | Data bus error |
+| 30 | CacheErr | Cached instruction/data refill or writeback error |
 | 8  | Sys  | SYSCALL |
 | 9  | Bp   | BREAK |
 | 10 | RI   | Reserved instruction |
@@ -174,6 +175,11 @@ Phase B 默认 IPTI=7、VS=0 (非向量化)。VS>0 时中断向量 = EBase + 0x2
 ## 7. ErrorEPC (30,0)
 
 同 EPC，但用于 Reset/NMI/CacheError 异常 (`ERL=1` 时使用)。`ERL=1` 时不更新。ERET when ERL=1 用此。
+
+CacheErr (`Cause.ExcCode=30`) 由 I/D-cache 的 dedicated cache-error
+sideband 触发。CPU 使用 CacheErr vector：`BFC0_0100` when `BEV=1`，或
+`EBase+0x100` when `BEV=0`；CP0 置 `Status.ERL=1`、写入 `ErrorEPC`，不置
+`EXL`。uncached AXI response error 仍为 DBE/IBE 的普通 EPC 路径。
 
 ---
 
@@ -256,7 +262,8 @@ TLB refill 时硬件把 BadVAddr[31:13] → BadVPN2，方便快速 refill 处理
 | 通用异常 | 1 | 0 | 0xBFC0_0380 |
 | 中断（vectored） | 0 | 1 | EBase + 0x200 + (VN × VS × 32) |
 | Reset/NMI | x | x | 0xBFC0_0000 |
-| Cache Error | x | x | 0xA000_0100 (BEV=0) 或 0xBFC0_0300 (BEV=1) |
+| Cache Error | 0 | x | EBase + 0x0000_0100 |
+| Cache Error | 1 | x | 0xBFC0_0100 |
 
 **当前实现边界（2026-08-01）**：产品 opt-in 配置已实现 refill、Invalid
 和 IP-based vectored interrupt 的分派。CPU 以 TLB lookup 的 `hit=0` 识别
@@ -265,8 +272,9 @@ refill；`hit=1,V=0` 保留为通用异常，即使两者 `ExcCode` 同为 TLBL/
 为 `IntCtl.VS * 32`，并只在真实 interrupt 被接受、`BEV=0`、`Cause.IV=1`
 时生效；`Config3.VEIC=0`，不宣称外部 VIC vector ID。I-side 的 BEV=1/0
 miss/invalid、D-side BEV=1 miss/invalid，以及软件 IP1 的 `EBase+0x220`
-SoC directed 证据均已通过。该结论不覆盖 Modified 的完整策略、cache error
-vector 或可启动的完整 MMU firmware。
+SoC directed 证据均已通过。CacheErr sideband、ExcCode=30、ERL/ErrorEPC
+和 `EBase+0x100`/`BFC0_0100` hardware vector 另有 CPU directed gate；该结论不覆盖
+Modified 的完整策略、production cache-error handler 或可启动的完整 MMU firmware。
 
 ---
 

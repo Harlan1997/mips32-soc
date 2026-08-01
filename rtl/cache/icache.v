@@ -20,6 +20,8 @@ module icache (
     output wire        cpu_addr_ok,
     output wire        cpu_data_ok,
     output wire        cpu_bus_error,
+    // All I-cache AXI failures are refill failures and use MIPS CacheErr.
+    output wire        cpu_cache_error,
 
     // AXI4 Master Interface (AR and R channels)
     output wire [3:0]  arid,
@@ -159,6 +161,7 @@ module icache (
     assign cpu_addr_ok = (state == IDLE) || (state == LOOKUP && cache_hit);
     assign cpu_data_ok = (state == LOOKUP && cache_hit) || (state == ERROR);
     assign cpu_bus_error = (state == ERROR);
+    assign cpu_cache_error = (state == ERROR);
 
     // Next State Logic
     always @(*) begin

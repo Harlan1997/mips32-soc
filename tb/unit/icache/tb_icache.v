@@ -13,7 +13,7 @@ module tb_icache;
     reg         cpu_req;
     reg  [31:0] cpu_addr;
     wire [31:0] cpu_rdata;
-    wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error;
+    wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error, cpu_cache_error;
 
     wire [3:0]  arid; wire [31:0] araddr; wire [7:0] arlen; wire [2:0] arsize;
     wire [1:0]  arburst, arlock; wire [3:0] arcache; wire [2:0] arprot;
@@ -23,7 +23,7 @@ module tb_icache;
     icache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_addr(cpu_addr),.cpu_rdata(cpu_rdata),
-        .cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),
+        .cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
         .arid(arid),.araddr(araddr),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .arlock(arlock),.arcache(arcache),.arprot(arprot),.arvalid(arvalid),.arready(arready),
         .rid(rid),.rdata(rdata),.rresp(rresp),.rlast(rlast),.rvalid(rvalid),.rready(rready)
@@ -94,6 +94,9 @@ module tb_icache;
         d=cpu_rdata;
         if (!cpu_bus_error) begin
             $display("FAIL AXI read error was not exposed to CPU"); errs=errs+1;
+        end
+        if (cpu_cache_error !== 1'b1) begin
+            $display("FAIL I-cache error did not raise CacheErr sideband"); errs=errs+1;
         end
         @(negedge clk); cpu_req=0;
         @(negedge clk);

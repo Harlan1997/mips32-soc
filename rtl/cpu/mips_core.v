@@ -102,6 +102,7 @@ module mips_core (
     wire        cpu_inst_addr_ok;
     wire        cpu_inst_data_ok;
     wire        cpu_inst_bus_error;
+    wire        cpu_inst_cache_error;
     wire [31:0] cpu_inst_rdata;
     
     // CPU to D-Cache Interface
@@ -114,6 +115,7 @@ module mips_core (
     wire        cpu_data_addr_ok;
     wire        cpu_data_data_ok;
     wire        cpu_data_bus_error;
+    wire        cpu_data_cache_error;
     wire [31:0] cpu_data_rdata;
     
     // Instantiating the CPU Pipeline
@@ -126,6 +128,7 @@ module mips_core (
         .inst_addr_ok    (cpu_inst_addr_ok),
         .inst_data_ok    (cpu_inst_data_ok),
         .inst_bus_error  (cpu_inst_bus_error),
+        .inst_cache_error(cpu_inst_cache_error),
         .inst_rdata      (cpu_inst_rdata),
         
         .data_req        (cpu_data_req),
@@ -138,6 +141,7 @@ module mips_core (
         .data_addr_ok    (cpu_data_addr_ok),
         .data_data_ok    (cpu_data_data_ok),
         .data_bus_error  (cpu_data_bus_error),
+        .data_cache_error(cpu_data_cache_error),
         .data_rdata      (cpu_data_rdata),
         
         .debug_stall     (debug_stall),
@@ -173,6 +177,7 @@ module mips_core (
         .cpu_addr_ok  (cpu_inst_addr_ok),
         .cpu_data_ok  (cpu_inst_data_ok),
         .cpu_bus_error(cpu_inst_bus_error),
+        .cpu_cache_error(cpu_inst_cache_error),
         
         .arid         (inst_arid),
         .araddr       (inst_araddr),
@@ -208,6 +213,7 @@ module mips_core (
         .cpu_addr_ok  (cpu_data_addr_ok),
         .cpu_data_ok  (cpu_data_data_ok),
         .cpu_bus_error(cpu_data_bus_error),
+        .cpu_cache_error(cpu_data_cache_error),
         
         .awid         (data_awid),
         .awaddr       (data_awaddr),

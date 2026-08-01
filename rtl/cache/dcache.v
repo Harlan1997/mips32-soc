@@ -25,6 +25,9 @@ module dcache (
     output wire        cpu_addr_ok,
     output wire        cpu_data_ok,
     output wire        cpu_bus_error,
+    // Cached refill/writeback failures are distinguished from uncached AXI
+    // response errors. The CPU maps this sideband to MIPS CacheErr (30).
+    output wire        cpu_cache_error,
 
     // AXI4 Master Interface
     // AW Channel
@@ -218,6 +221,7 @@ module dcache (
     assign cpu_bus_error = ((state == UC_WRESP) && bvalid && (bresp != 2'b00)) ||
                             ((state == UC_RDATA) && rvalid && (rresp != 2'b00)) ||
                             (state == ERROR_RESP);
+    assign cpu_cache_error = (state == ERROR_RESP) && cache_error_pending;
 
     integer ri;
     always @(posedge clk) begin
