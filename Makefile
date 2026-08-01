@@ -43,6 +43,7 @@ BOOT_STATUS_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/boot_status
 WDT_BOOT_FAILURE_DIR ?= $(BUILD_DIR)/soc_test/wdt_boot_failure_gate
 WDT_BOOT_FAILURE_FW_DIR ?= $(BUILD_DIR)/firmware/wdt_boot_failure
 WDT_BOOT_FAILURE_FW_HEX ?= $(WDT_BOOT_FAILURE_FW_DIR)/firmware.hex
+PRODUCT_WDT_BOOT_FAILURE_DIR ?= $(BUILD_DIR)/unit_tb/product_wdt_boot_failure
 
 SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
 MDU_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/mdu_cpu
@@ -64,7 +65,7 @@ SOC_TEST_L2_CPU_DIR ?= $(BUILD_DIR)/soc_test/l2_cpu_gate
 L2_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/l2_cpu
 L2_CPU_FW_HEX ?= $(L2_CPU_FW_DIR)/firmware.hex
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate product-manifest-handoff-gate product-kseg0-runtime-gate tlb-asid-policy-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate product-manifest-handoff-gate product-kseg0-runtime-gate tlb-asid-policy-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 mdu-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
@@ -122,6 +123,9 @@ boot-status-unit-gate:
 wdt-boot-failure-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=wdt_boot_failure OUT_DIR=$(WDT_BOOT_FAILURE_FW_DIR) FW_BASE=firmware all
 	FW_HEX=$(WDT_BOOT_FAILURE_FW_HEX) RUN_DIR=$(WDT_BOOT_FAILURE_DIR) tb/soc_test/run_wdt_boot_failure_gate.sh
+
+product-wdt-boot-failure-gate:
+	RUN_DIR=$(PRODUCT_WDT_BOOT_FAILURE_DIR) tb/unit/bootrom/run_product_wdt_boot_failure.sh
 
 dut-block-unit-gate:
 	RUN_ROOT=$(DUT_BLOCK_UNIT_DIR) tb/unit/run_dut_block_unit_gate.sh
