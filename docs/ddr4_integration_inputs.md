@@ -1,10 +1,10 @@
 # DDR4 Controller Integration Inputs
 
-> Version: v0.1 (2026-08-02)
+> Version: v0.2 (2026-08-02)
 >
 > Target route: **ASIC Profile C1 DDR4 (selected)**.
-> Status: **BASELINE_ACCEPTED / BLOCKED**. This is the product DDR4 entry
-> manifest; placeholders are not implementation inputs.
+> Status: **RTL_FRONTEND_ALLOWED / PRODUCT_ENTRY_BLOCKED**. This is the
+> product DDR4 entry manifest; placeholders are not implementation inputs.
 
 The candidate contract is
 [`docs/block_specs/ddr4_spec.md`](block_specs/ddr4_spec.md). The legacy DDR3
@@ -31,6 +31,14 @@ priority PHY RFQ target, while foundry/PHY compatibility remains open.
 | `DDR4-IN-08` | PLL/reset/power-good implementation and boot/WDT budget | **PARTIAL** | Concrete clock/reset ownership, timeout values and failure ABI; clock/system |
 
 ## Entry Decision
+
+### RTL frontend decision
+
+The current milestone stops at RTL compile/elaboration and behavioral simulation.
+`DDR4-IN-01..08` are therefore deferred product-entry inputs, not blockers for the
+vendor-neutral RTL contract. The repository may use a behavioral PHY/DRAM model and
+provisional timing parameters for `RTL_FRONTEND_COMPILE_READY` and
+`RTL_FUNCTIONAL_SIM_READY`.
 
 `DDR4_ENTRY_READY=0`. No DDR4 PHY wrapper, real DDR4 model or product
 controller exists in the repository. `rtl/perips/axi_ddr_behavioral.v` remains

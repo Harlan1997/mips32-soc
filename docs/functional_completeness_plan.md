@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.21（2026-08-02）
+> 版本：v1.22（2026-08-02）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -15,6 +15,32 @@
 5. `PRODUCT_FUNCTION_READY`：产品 boot、存储器、CPU 特权路径、对外 I/O、外设、中断和系统软件入口均已接入并有对应 SoC 证据。
 
 `CONTRACT_CLOSED` 不代表 `PRODUCT_FUNCTION_READY`，更不代表 tapeout ready。最终物理和静态签核暂缓。
+
+## 1A. 当前交付边界：RTL 前端
+
+本阶段的明确目标是 **RTL 功能编写、前端编译/elaboration 和功能仿真**，暂不进入综合阶段。
+当前交付等级使用以下两个 gate：
+
+1. `RTL_FRONTEND_COMPILE_READY`：目标 RTL、接口、参数和仿真模型可重复编译并完成 elaboration。
+2. `RTL_FUNCTIONAL_SIM_READY`：块级和 SoC behavioral simulation 覆盖正常、复位、背压、错误和软件驱动路径。
+
+本阶段包含：
+
+- 可综合 RTL 的功能实现和接口契约；
+- vendor-neutral DDR4 controller/PHY behavioral model；
+- unit test、firmware test、SoC/UVM behavioral simulation；
+- reset、timeout、backpressure、非法输入和错误响应验证；
+- 每项功能的 commit、测试命令、日志和残余风险登记。
+
+本阶段不包含，也不作为当前 gate 的前置条件：
+
+- TSMC PDK、DDR IO library、真实 Synopsys PHY license；
+- 精确 DRAM ordering code、package parasitic、PCB SI/PI/timing 文件；
+- lint、CDC/RDC、formal、综合、STA、PPA、gate-level simulation 和 tapeout signoff。
+
+如果 RTL 还没有接入真实 vendor PHY，则 `DDR4-IN-01..08` 保持产品入口阻塞状态，
+但不阻塞上述两个 RTL 前端 gate。真实 PHY wrapper 接入时才需要供应商的精确 DFI port list、
+ratio、model 和约束。
 
 ## 2. 当前基线快照
 
@@ -43,7 +69,7 @@
 工艺节点、foundry/PDK、封装和 IO 电压、PHY/IP 供应商与 license、精确
 DRAM part、板级 timing/electrical 文件、真实 memory model 以及 boot/WDT
 budget 仍缺失或未签收。详细获取顺序和 owner 见
-[`docs/asic_ddr_input_acquisition.md`](asic_ddr_input_acquisition.md)。
+[`docs/ddr4_external_input_acquisition.md`](ddr4_external_input_acquisition.md)。
 
 DDR4 产品契约候选已建立，但 `DDR4-IN-01..08` 仍缺失，因此状态为
 `DDR4_MEMORY_ENTRY_BLOCKED`；旧 DDR3 清单不能升级为产品 entry，旧状态仍为
@@ -115,6 +141,11 @@ Synopsys DDR4 PHY/controller 为优先 RFQ，不能宣称 PHY 已选。若外部
 
 ### Phase 1：当前 RTL 契约恢复
 
+本阶段按当前范围只要求 RTL 编译/elaboration、unit/firmware/SoC behavioral
+simulation 和 DDR4 F1 behavioral gate。`phase2-complete`、`phase3-complete`、
+`phase3b/3c-complete` 及 `current-contract-signoff` 属于后续扩展回归；其中的
+coverage threshold 不属于当前退出条件。
+
 按以下顺序执行，任何一步失败都停止向后推进：
 
 1. `make firmware`
@@ -127,14 +158,16 @@ Synopsys DDR4 PHY/controller 为优先 RFQ，不能宣称 PHY 已选。若外部
 8. `make phase3b-complete` 和 `make phase3c-complete`
 9. `make current-contract-signoff`
 
-Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff 生成 clean report，且所有必需功能覆盖组达到当前门槛。
+Phase 1 当前关闭条件是：RTL compile/elaboration 成功，seed 10 无 checker/scoreboard/error，
+F1 DDR4 behavioral gate 通过，并生成可追溯的 unit/firmware/SoC 仿真报告。full signoff
+和 coverage threshold 延后，不阻塞 `RTL_FUNCTIONAL_SIM_READY`。
 
 ### Phase 2：产品启动与主存闭合
 
 - 已建立 `docs/boot_memory_contract.md` v1.6，冻结候选 reset/vector、物理/虚拟地址图、镜像格式、失败行为和六个行为 gate；`docs/block_specs/ddr3_spec.md` v1.0 冻结 DDR controller/PHY 的 AXI/APB/DFI/error contract，`soc_config.vh` 固化 `SOC_APB_DDRCTRL_BASE` 及寄存器 offsets；`make ddr-contract-entry-audit` 已将外部输入缺失变成可重复的 `BLOCKED` 结果。该动作只关闭接口歧义，不代表 DDR RTL 已实现。
 - 第二至第十二个 RTL/firmware 垂直切片已完成：TLB lookup miss 与 matching-invalid 的 vector 分派覆盖 I-side 两个 BEV 模式和 D-side BEV=1；最小产品 Boot ROM linker/BEV refill handler 进一步覆盖 wired kseg2-APB 映射、DTLB refill、`TLBWR`、寄存器恢复、`ERET` retry、DDR store/load 和 APB write；独立 ASID gate 覆盖 4KB 非 Global 隔离、Global 跨 ASID、Invalid/Modified 分类；独立 gate 还证明 Boot ROM 把通用 handler 复制到 SRAM `EBase+0x180`，处理 precise `Mod`、将 `D=0` 改为 `D=1` 并 `ERET` retry；IP-based `Cause.IV/IntCtl.VS` vectored interrupt gate 已证明 IP1 到 `EBase+0x220`；development manifest gate 则经实际 SPI XIP 完成 CRC 校验、Boot SRAM 拷贝和 kseg0 stage-1 handoff，`product-kseg0-runtime-gate` 在 `SOC_MMU_ENABLE=1` 下确认入口 VA 到 SRAM PA 的取指转换；XIP guard 则将下游 AR/R stall 限时为 `SLVERR`，经 cache/CPU DBE 路径由 Boot ROM 记录 `DEAD_B007`；新增 QSPI/XIP status integration gate 已证明 guard timeout 经产品 APB decode 可读出版本、controller-present、sticky timeout 和 `0x0001_0001` 错误码，并可由 W1C 清除；UART pins/IRQ slice、WDT APB/reset path、boot-status retention、预加载 firmware reset-retention 和无 SRAM preload 的 Boot ROM WDT failure slice 已有独立 gate。仍只关闭向量路由、最小 BEV 启动链、4KB ASID/异常分类、单一 `Mod` recovery、development handoff、kseg0 指令交接、AXI-side XIP stall/状态观测切片、manifest/DDR 故障到 failure code 的完整分类、完整 kseg0 runtime 数据路径、cache-error/EIC 异常、生产 QSPI 和真实 DDR。
 - 冻结 ROM boot 地址、异常向量和 firmware linker 规则；不能继续从 useg reset vector 启动。
-- ASIC 路线下先按 `docs/asic_ddr_input_acquisition.md` 完成 `ASIC-DDR-01..08`，同步登记 `docs/ddr_integration_inputs.md` 的 `DDR-IN-01..08` 并使 `DDR_ENTRY_READY=1`；之后才实现真实 DDR controller/PHY contract，完成 init、calibration、refresh、AXI backpressure 与 DDR memory test。
+- ASIC 路线下先按 `docs/ddr4_external_input_acquisition.md` 完成 `DDR4-IN-01..08`，同步登记 `docs/ddr4_integration_inputs.md` 并使 `DDR4_ENTRY_READY=1`；之后才实现真实 DDR controller/PHY contract，完成 init、calibration、refresh、AXI backpressure 与 DDR memory test。该步骤属于后续产品入口，不阻塞当前 RTL 前端阶段。
 - 实现实际 QSPI boot source（XIP/command path、image format、boot ROM）并完成 reset 到 first-stage firmware 的 SoC gate。
 - 在 Phase 2 完成前，禁止把 behavioral DDR 或 loadable flash-image 测试称为产品 boot/memory 闭合。
 
@@ -180,7 +213,11 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 
 ## 8. 当前执行点
 
-历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。**Phase 0 的 C1/C2 分支整理、Phase 2 boot/memory 架构冻结、Boot ROM 复位/普通向量、TLB refill/invalid 的 BEV-EBase 路由、最小 Boot ROM kseg1 linker/BEV refill/wired mapping、复制到 SRAM 的 EBase `Mod` recovery、4KB ASID/Global/Invalid/Modified policy、IP-based `Cause.IV/IntCtl.VS` vectored interrupt、经实际 SPI XIP 的 development manifest/CRC-to-kseg0-SRAM handoff 和 header/CRC rejection matrix，以及 XIP controller/AXI stall 到 CPU DBE/`DEAD_B007` 失败行为均已完成。ASIC Profile C1 DDR4 已选，DDR4 contract candidate 已建立，但 `DDR4-IN-01..08` 仍未提供；DDR3 contract 仅作为 legacy prototype，下一项受 DDR4 memory entry 阻塞，不能跳过 entry criteria。完整 kseg0 runtime linker、page-table/ASID rollover、cache-error/EIC policy 仍未完成；仍不是 coverage closure。**
+历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。当前执行优先级已改为
+**RTL 前端编译和功能仿真**：不等待完整 PDK/PHY/package/板级资料，也不把综合、时序或 PPA
+混入当前 gate。Boot ROM/向量、最小 MMU/TLB、SPI XIP、manifest handoff、WDT retention 和
+DDR4 vendor-neutral F1 行为证据继续按 RTL 功能任务管理；完整 kseg0 runtime、page-table/ASID
+rollover、cache-error/EIC policy、QSPI production path 和真实 DDR4 product entry 仍未完成。**
 
 ## 9. 执行记录
 
@@ -255,3 +292,31 @@ Phase 1 的关闭条件是：seed 10 无 checker/scoreboard/error，full signoff
 | P2 | `dcache_nb` 与其 TB 是未提交 WIP，已通过块级 gate 但尚未接入 CPU/SoC | 只能标为 `BLOCK_VERIFIED`，不得计入当前 SoC 功能完成 | 完成 CPU 接入、hazard/forwarding 和 SoC stress 证据后再升级。 |
 | P1 | crossbar 支持 cross-slave 并发，但 L2/APB/flash/DDR slave 仍限制同 slave outstanding；SPI serial boot、cache-error/EIC/VEIC policy、MMU/Linux boot 均未纳入当前 RTL contract | 即使当前功能 gate 通过，也只能声明当前已文档化契约，不是商用 SoC 完整性结论 | 每项建独立 spec/RTL/firmware/UVM 变更集，并按本计划的五级状态推进。 |
 | P3 | `tb/uvm_tb/cov.cfg` 仍包含 3 个不存在模块模式，VCS 每次 coverage compile 均发出 `VCM-HFUFR` warning | 不影响当前产品功能主线，但使 coverage scope 噪声和进度判读变差 | 在后续 coverage 专项中删除或更新过时 scope；再跑 coverage compile，要求该 warning 清零。 |
+
+## 11. 当前剩余任务（仅 RTL 前端）
+
+以下任务是当前阶段的实际清单；完成条件是 RTL 可编译、仿真可重复且行为证据完整，
+不要求综合结果或工艺文件。
+
+| 优先级 | 剩余任务 | 当前状态 | 关闭证据 |
+|---|---|---|---|
+| P0 | 固定唯一集成线，清理分支/WIP 归属；D-cache NB 保持独立，不与产品默认路径混合 | `integration/function-contract` 为功能线；`feature/dcache-nb-stage3` 仍有未提交 WIP | 干净工作区、每个变更集有独立 commit 和 owner |
+| P0 | 完成全仓 RTL compile/elaboration，包含默认 SoC、Boot ROM/MMU 配置和 F1 DDR4 behavioral 配置 | 部分 block/SoC gate 已通过，需形成当前基线上的统一 compile gate | `RTL_FRONTEND_COMPILE_READY`，无 unresolved module/port/parameter 错误 |
+| P0 | 完成 DDR4 vendor-neutral contract/model 仿真：初始化、training 成功/失败、refresh、读写、背压、reset、fatal/error | F1 behavioral gate 已通过；尚未成为真实 PHY/DDR4 product entry | `RTL_FUNCTIONAL_SIM_READY`；F1 证据保持 `BLOCK_VERIFIED (vendor-neutral)` |
+| P0 | 补齐 CPU/MMU 前端功能缺口：完整 kseg0 runtime、page-table/ASID rollover、cache-error/EIC policy | 最小 refill/invalid/Modified/vector 子集已有证据 | firmware + SoC simulation 通过，并记录异常/恢复矩阵 |
+| P1 | 补齐 QSPI production command/FIFO/四线 RTL 契约、UART RX/pad behavioral path 和 boot failure 分类 | 当前只有 development SPI XIP、UART wiring 和部分 WDT retention 证据 | unit + firmware + SoC negative/reset simulation 通过 |
+| P1 | 将每个已实现模块登记为 `IMPLEMENTED`、`BLOCK_VERIFIED` 或 `SOC_INTEGRATED`，补齐测试日志和残余风险 | 文档与分支历史仍有混合状态 | 功能登记表与基线 commit、仿真报告一一对应 |
+| P2 | D-cache NB 完成 CPU 接入、hazard/forwarding 和 SoC stress 后再考虑合入 | 当前仅 block verified，仍是独立 WIP | 独立 branch gate + CPU/SoC simulation；此前不得升级状态 |
+
+### 当前阶段退出条件
+
+1. 目标 RTL 和 behavioral model 在固定集成线可重复编译/elaborate；
+2. unit、firmware、SoC/UVM 仿真覆盖正常、复位、背压、错误和超时路径；
+3. 每个 gate 都有命令、日志、基线 commit 和残余风险；
+4. 发布结论使用 `RTL_FUNCTIONAL_SIM_READY`，不得写成 `PRODUCT_FUNCTION_READY` 或 tapeout ready。
+
+### 明确后置任务
+
+真实 Synopsys PHY、TSMC PDK/DDR IO、精确 DRAM 型号、package parasitic、板级 SI/PI/timing、
+综合、STA、PPA、lint、CDC/RDC、formal、gate-level simulation 和 tapeout signoff 均移至后续阶段；
+它们不阻塞当前 RTL 前端交付，但在产品 ASIC DDR4 入口前必须重新打开并签收。
