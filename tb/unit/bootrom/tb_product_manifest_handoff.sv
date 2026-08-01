@@ -54,6 +54,8 @@ module tb_product_manifest_handoff #(
     reg stage1_entry_seen;
     reg kseg0_pa_seen;
     reg kseg0_data_seen;
+    reg kseg0_data_second_seen;
+    reg kseg0_data_read_seen;
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
     reg xip_timeout_mailbox_seen;
@@ -145,6 +147,8 @@ module tb_product_manifest_handoff #(
             stage1_entry_seen = 1'b0;
             kseg0_pa_seen = 1'b0;
             kseg0_data_seen = 1'b0;
+            kseg0_data_second_seen = 1'b0;
+            kseg0_data_read_seen = 1'b0;
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
             xip_timeout_mailbox_seen = 1'b0;
@@ -167,6 +171,21 @@ module tb_product_manifest_handoff #(
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_7000 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'hCAFE_BABE)
                 kseg0_data_seen = 1'b1;
+
+            if ($test$plusargs("EXPECT_KSEG0_DATA") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7004 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_7004 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'h1357_9BDF)
+                kseg0_data_second_seen = 1'b1;
+
+            if ($test$plusargs("EXPECT_KSEG0_DATA") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we == 1'b0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7004 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_7004)
+                kseg0_data_read_seen = 1'b1;
 
             if ($test$plusargs("BOOT_DEBUG") && u_soc.u_impl.s2_rvalid &&
                 u_soc.u_impl.s2_rready)
@@ -205,6 +224,10 @@ module tb_product_manifest_handoff #(
                     fail("MMU-enabled kseg0 stage-1 fetch did not use the physical SRAM address");
                 if ($test$plusargs("EXPECT_KSEG0_DATA") && !kseg0_data_seen)
                     fail("MMU-enabled kseg0 stage-1 data access did not use the physical SRAM address");
+                if ($test$plusargs("EXPECT_KSEG0_DATA") && !kseg0_data_second_seen)
+                    fail("MMU-enabled kseg0 second data word did not use the physical SRAM address");
+                if ($test$plusargs("EXPECT_KSEG0_DATA") && !kseg0_data_read_seen)
+                    fail("MMU-enabled kseg0 data readback was not observed");
                 if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[22] ||
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[2])
                     fail("BEV or ERL remained set after handoff");
