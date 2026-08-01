@@ -29,6 +29,7 @@ STAGE ?= ex
 NUM_TESTS ?= 10
 SEED_BASE ?= 1
 DUT_BLOCK_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/dut_block_readiness
+FABRIC_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/fabric
 PRODUCT_MMU_BOOT_DIR ?= $(BUILD_DIR)/unit_tb/product_mmu_boot
 PRODUCT_MMU_EBASE_MODIFIED_DIR ?= $(BUILD_DIR)/unit_tb/product_mmu_ebase_modified
 PRODUCT_VECTORED_INTERRUPT_DIR ?= $(BUILD_DIR)/unit_tb/product_vectored_interrupt
@@ -135,7 +136,7 @@ dut-block-unit-gate:
 	RUN_ROOT=$(DUT_BLOCK_UNIT_DIR) tb/unit/run_dut_block_unit_gate.sh
 
 fabric-unit-gate:
-	RUN_ROOT=$(BUILD_DIR)/unit_tb/fabric tb/unit/run_fabric_unit_gate.sh
+	RUN_ROOT=$(FABRIC_UNIT_DIR) tb/unit/run_fabric_unit_gate.sh
 
 firmware:
 	$(MAKE) -C tb/soc_test/fw OUT_DIR=$(FW_BUILD_DIR) FW_BASE=firmware all
