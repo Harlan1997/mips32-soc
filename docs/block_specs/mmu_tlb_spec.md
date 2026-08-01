@@ -213,8 +213,11 @@ Multi-hit → `ExcCode = 24 (MCheck)`, `Status.TS = 1`。软件通常记录后�
 直接连接 `mips_tlb` 和 `mips_mmu`，验证 4KB 页的 ASID 隔离、Global 跨 ASID 命中、
 matching-invalid 的 TLBL/TLBS 分类，以及清页 store 的 Modified 分类。该 gate 只关闭
 上述 ASID/异常分类子集；同一 TLB index 的 `0xfe -> 0xff` replacement/旧 ASID 隔离
-已有 rollover slice；可变页大小、multi-hit machine check、micro-TLB 和 OS 级 ASID
-allocator/rollover 压力仍未实现或未验证。
+已有 rollover slice。新增 `tb/unit/tlb/run_tlb_os_context.sh` 以真实
+`mips_tlb + mips_mmu` 建立软件页表 fixture，验证两个 ASID 对同一 VA 的不同 PFN、
+VPN pair even/odd、wired global 保留、非 wired flush 以及 ASID 1..255 回卷后的重新填充。
+这关闭了 software-managed TLB context-switch 的硬件边界子集；可变页大小、multi-hit
+machine check、micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
 
 **SoC 级**：
 - Linux boot：kernel 早期 head.S 建映射 → paging on → init 进程 → busybox shell。
@@ -270,10 +273,10 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。�
 negative、XIP-timeout 场景均通过。它与 fabric alias fold（`mips_mmu.v` 注释里提到的
 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。
 
-**当前结论**：kseg0 的 instruction fetch/handoff 与单次 data translation slice 已达到
-`BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。尚未证明完整 runtime data mapping、page tables、
-cache maintenance、ASID rollover、完整异常 handler 或 Linux/kernel boot，因此不能把此 gate
-标为 MMU 产品完成。
+**当前结论**：kseg0 的 instruction fetch/handoff、单次 data translation slice 和
+software-managed TLB context-switch 硬件边界已达到 `BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。
+尚未证明完整 runtime data mapping、SoC page-table allocator/shootdown、cache maintenance、
+完整异常 handler 或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
 
 **已保留的验证脚手架**（prototype useg 链接仍会触发上述历史死锁；产品切片使用独立 linker）：
 - `tb/soc_test/fw/tests/mmu_refill/`：最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
@@ -281,8 +284,9 @@ cache maintenance、ASID rollover、完整异常 handler 或 Linux/kernel boot�
 - `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
-**下一项**：在已验证的 kseg0 指令交接上补齐 runtime data mapping、page-table/ASID rollover、
-cache-error/EIC policy 和 kernel-mode firmware gate。在这些 gate 通过前，MMU 仍不是可启动的
+**下一项**：在已验证的 kseg0 指令交接和 software context-switch 边界上补齐 runtime data mapping、
+SoC page-table/ASID allocator 与 shootdown 压力、cache-error/EIC policy 和 kernel-mode firmware gate。
+在这些 gate 通过前，MMU 仍不是可启动的
 完整产品功能。
 
 ---
@@ -296,3 +300,5 @@ cache-error/EIC policy 和 kernel-mode firmware gate。在这些 gate 通过前�
   翻译边界；不扩大对可变页、multi-hit、micro-TLB 或 Linux/ASID rollover 的功能声明。
 - v0.4 (2026-08-01)：新增 MMU-enabled kseg0 stage-1 instruction handoff gate，证明
   `0x8000_1000 -> 0x0000_1000`；明确该子集不等于完整 runtime 或 kernel boot。
+- v0.5 (2026-08-02)：新增 `tlb_os_context` gate，证明软件页表/context-switch 的硬件边界、
+  wired global 保留与 ASID 1..255 回卷清空；不扩大到 SoC/OS allocator、shootdown 或 Linux boot。

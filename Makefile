@@ -38,6 +38,7 @@ XIP_READ_TIMEOUT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/axi_read_timeout_guard
 QSPI_STATUS_INTEGRATION_DIR ?= $(BUILD_DIR)/unit_tb/qspi_status_integration
 PRODUCT_MANIFEST_HANDOFF_DIR ?= $(BUILD_DIR)/unit_tb/product_manifest_handoff
 TLB_ASID_POLICY_DIR ?= $(BUILD_DIR)/unit_tb/tlb_asid_policy
+TLB_OS_CONTEXT_DIR ?= $(BUILD_DIR)/unit_tb/tlb_os_context
 PRODUCT_KSEG0_RUNTIME_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime
 CPU_CACHE_ERROR_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cache_error
 WDT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/wdt
@@ -70,7 +71,7 @@ SOC_TEST_L2_CPU_DIR ?= $(BUILD_DIR)/soc_test/l2_cpu_gate
 L2_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/l2_cpu
 L2_CPU_FW_HEX ?= $(L2_CPU_FW_DIR)/firmware.hex
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate product-manifest-handoff-gate product-kseg0-runtime-gate tlb-asid-policy-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate product-manifest-handoff-gate product-kseg0-runtime-gate tlb-asid-policy-gate tlb-os-context-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 mdu-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
@@ -121,6 +122,9 @@ cpu-cache-error-gate:
 
 tlb-asid-policy-gate:
 	RUN_DIR=$(TLB_ASID_POLICY_DIR) tb/unit/tlb/run_tlb_asid_policy.sh
+
+tlb-os-context-gate:
+	RUN_DIR=$(TLB_OS_CONTEXT_DIR) tb/unit/tlb/run_tlb_os_context.sh
 
 wdt-unit-gate:
 	RUN_DIR=$(WDT_UNIT_DIR) tb/unit/wdt/run_wdt.sh
