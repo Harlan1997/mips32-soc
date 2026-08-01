@@ -23,6 +23,7 @@ module mips_cpu (
     output wire [31:0] data_addr,
     output wire [31:0] data_wdata,
     output wire [3:0]  data_be,
+    output wire        data_uncacheable,
     input  wire        data_addr_ok,
     input  wire        data_data_ok,
     input  wire [31:0] data_rdata,
@@ -798,9 +799,10 @@ module mips_cpu (
         .fault_type      (mmu_d_fault_type)
     );
 
-    // Cache attributes remain observation-only until cache-attribute routing
-    // lands. Translation-ok and fault-type above drive the exception path.
-    wire _mmu_unused = &{1'b0, mmu_i_cache_attr, mmu_d_cache_attr,
+    // D-cache consumes the MIPS C=2 uncached attribute. I-cache routing and
+    // the remaining cache attributes are still outside this integration slice.
+    assign data_uncacheable = (mmu_d_cache_attr == 3'b010);
+    wire _mmu_unused = &{1'b0, mmu_i_cache_attr,
                               mmu_i_ok, mmu_d_ok,
                               mmu_i_fault_type, mmu_d_fault_type};
 

@@ -92,11 +92,13 @@ module axi_spi_flash (
     end
 
     // State Machine
-    localparam IDLE    = 4'd0;
-    localparam CMD     = 4'd1;
-    localparam ADDR    = 4'd2;
-    localparam READ    = 4'd3;
-    localparam RESP    = 4'd4;
+    localparam IDLE       = 4'd0;
+    localparam CMD        = 4'd1;
+    localparam ADDR       = 4'd2;
+    localparam READ       = 4'd3;
+    localparam RESP       = 4'd4;
+    localparam START      = 4'd5;
+    localparam READ_START = 4'd6;
     
     reg [3:0]  state, next_state;
     reg [3:0]  ar_id;
@@ -114,7 +116,10 @@ module axi_spi_flash (
         else        spi_clk_en <= ~spi_clk_en;
     end
     
-    assign spi_sclk = (state != IDLE && state != RESP) ? ~spi_clk_en : 1'b0;
+    // START/READ_START guarantee that CS is already low and MOSI/MISO are
+    // stable while SCLK is low before each serial word begins.
+    assign spi_sclk = (state != IDLE && state != RESP &&
+                       state != START && state != READ_START) ? ~spi_clk_en : 1'b0;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -122,21 +127,23 @@ module axi_spi_flash (
             state <= IDLE;
             // VCS coverage on
         end
-        else if (spi_clk_en || state == IDLE || state == RESP) state <= next_state;
+        else if (!spi_clk_en || state == IDLE || state == RESP) state <= next_state;
     end
     
     always @(*) begin
         next_state = state;
         case (state)
-            IDLE: if (s_arvalid) next_state = CMD;
+            IDLE: if (s_arvalid) next_state = START;
+            START: if (!spi_clk_en) next_state = CMD;
             CMD:  if (bit_cnt == 7) next_state = ADDR;
             ADDR: if (bit_cnt == 23) next_state = READ;
             READ: if (bit_cnt == 31) next_state = RESP;
             RESP: begin
                 if (s_rvalid && s_rready) begin
-                    next_state = (burst_beat == burst_len) ? IDLE : READ;
+                    next_state = (burst_beat == burst_len) ? IDLE : READ_START;
                 end
             end
+            READ_START: if (!spi_clk_en) next_state = READ;
             // VCS coverage off
             default: next_state = IDLE;
             // VCS coverage on
@@ -162,7 +169,7 @@ module axi_spi_flash (
                 cmd_reg    <= 8'h03;
                 burst_len  <= s_arlen;
                 burst_beat <= 8'd0;
-            end else if (spi_clk_en) begin
+            end else if (!spi_clk_en) begin
                 if (state == CMD) begin
                     bit_cnt <= (bit_cnt == 8'd7) ? 8'd0 : (bit_cnt + 8'd1);
                     cmd_reg <= {cmd_reg[6:0], 1'b0};

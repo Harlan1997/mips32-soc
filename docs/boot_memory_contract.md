@@ -1,11 +1,11 @@
 # Boot and Memory Product Contract
 
-> Version: v0.8 (2026-08-01)
+> Version: v0.9 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
-> vector, minimal BEV MMU boot-firmware, EBase/Modified recovery, and SPI XIP
-> pin-level slices.
+> vector, minimal BEV MMU boot-firmware, EBase/Modified recovery, SPI XIP
+> pin-level slices, and a development manifest-to-kseg0-SRAM handoff.
 > This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
@@ -42,14 +42,14 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | Blocker | Current evidence | Required change |
 |---|---|---|
 | Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
-| Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window | Add the immutable ROM image and prove reset through header check; do not treat the zero-filled simulation array as a boot image |
+| Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window. A plusarg-loaded development ROM now validates and copies a flash manifest payload in a full-SoC directed gate | Add a production immutable-ROM artifact and boot-status/WDT integration; do not treat the simulation image as mask-ROM evidence |
 | Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, while invalid and ordinary exceptions select `BFC0_0380` or `EBase+0x180`; prototype mode retains literal `0x0000_0180` | A minimal firmware handler is now copied from Boot ROM into SRAM and recovers a precise `Mod`; complete vectored-interrupt and cache-error behavior from `cp0_spec.md` |
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180` | Keep the smoke linker for prototype tests; add a full runtime kseg0 linker and a separate Boot ROM/SPL image |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, and relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry | Kernel runtime MMU contract, invalid-fault policy, ASID/page-table policy, and vectored/cache-error handling still require product firmware work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
-| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent |
+| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent |
 | WDT/boot status | `apb_wdt` exists but is not instantiated by `soc_peripheral_subsystem.v` | Add product APB decode, reset request path, boot-failure status and timeout test |
-| Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX` | Keep preload for block/debug tests only; product boot gate must preload the flash image and observe reset fetch |
+| Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
 
 ## 3. Physical and virtual memory map
 
@@ -58,7 +58,7 @@ addresses firmware may use after the MIPS segment rules are active.
 
 | Region | Physical base | Size | Product virtual access | State |
 |---|---:|---:|---|---|
-| Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | Reset/map and general-vector slices `BLOCK_VERIFIED`; immutable image and handoff are P0 |
+| Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | Reset/map/vector slices and development manifest handoff have directed SoC evidence; immutable production image remains P0 |
 | Boot SRAM | `0x0000_0000` | 64 KB | `0x8000_0000` kseg0 / `0xA000_0000` kseg1 | Existing behavioral SRAM; post-boot code and mailbox |
 | DDR | `0x0800_0000` | 128 MB | `0x8800_0000` kseg0 / `0xA800_0000` kseg1 | Existing address reservation; behavioral placeholder must be replaced |
 | SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Existing AXI XIP window; controller and boot command path incomplete |
@@ -189,6 +189,13 @@ error. A production image additionally fails closed if signature verification
 or key-policy validation is unavailable. The boot-status register must retain a
 stage and failure code across watchdog reset.
 
+The implemented development format is the fixed `SOC1` version-1 layout above:
+64-byte header, 64-byte payload offset, Boot SRAM physical load address
+`0x0000_1000`, kseg0 entry `0x8000_1000`, development-CRC flag, and CRC32/IEEE
+over a word-padded payload. Its current directed negative evidence is CRC
+failure. Bad magic, bounds, controller-error, and timeout injections remain
+separate required negative cases before this image contract can be closed.
+
 ### 6.2 Required state sequence
 
 ```text
@@ -202,6 +209,11 @@ RESET
   -> VECTOR_RELOCATE
   -> HANDOFF
 ```
+
+The current development handoff implements the subset
+`RESET -> BOOTROM_FETCH -> IMAGE_HEADER_CHECK -> IMAGE_COPY_AND_CRC -> HANDOFF`.
+It deliberately does not claim DDR wait, early APB mapping, vector relocation,
+or production boot-status persistence.
 
 Every state has a bounded timeout. Any failure records a code, disables normal
 interrupts, and requests a watchdog reset or enters a deterministic diagnostic
@@ -297,10 +309,28 @@ close that gate:
   standard-read command/address sequence (`0x03_000000`), two sequential
   serial-read response words and a rejected AXI write (`SLVERR`).
   `make spi-flash-unit-gate` is its standalone entry point.
+- `tb/soc_test/fw/tests/boot_manifest_handoff` builds a Boot ROM image, a
+  fixed development manifest, and a kseg0 stage-1 payload. Its full-SoC
+  directed test uses only `+BOOT_ROM_HEX` and `+SPI_FLASH_HEX`: it neither
+  preloads SRAM nor instantiates `axi_flash_image_model`. The valid image must
+  issue standard-read `0x03` traffic for both header and payload, copy to
+  kseg1 Boot SRAM, record `HAND`, clear `BEV/ERL`, fetch stage 1 at
+  `0x8000_1000`, and write its success mailbox. The bad-CRC image must write
+  the failure mailbox and never reach handoff or stage 1.
+  `make product-manifest-handoff-gate` is its standalone entry point.
+- The handoff uncovered and fixed two integration defects: SPI command/read
+  phase transitions could shift a CPU-originated XIP command to `0x06`, and
+  D-cache could lose the MMU C=2 uncached attribute after kseg1 translation.
+  `axi_spi_flash` now has explicit serial start phases, while `mips_cpu`,
+  `mips_core`, and `dcache` carry the uncached attribute with the buffered
+  request. The D-cache unit regression and the full handoff gate exercise the
+  corrected paths.
 
-These tests do not prove manifest parsing, vectored/cache-error vectors,
-QSPI/DDR initialization, a complete relocated runtime handler set, or handoff.
-The ROM image is a simulation plusarg and is not a production mask-ROM artifact.
+These tests prove this fixed development manifest and CRC handoff only. They do
+not prove the remaining manifest failure classes, signature/key policy,
+vectored/cache-error vectors, QSPI/DDR initialization, a complete relocated
+runtime handler set, or boot-status/WDT failure handling. The ROM image is a
+simulation plusarg and is not a production mask-ROM artifact.
 
 ## 9. Implementation sequence
 
@@ -310,8 +340,9 @@ The ROM image is a simulation plusarg and is not a production mask-ROM artifact.
    miss-versus-invalid TLB vector paths, and the minimal BEV product linker,
    wired mapping, dynamic refill and `ERET` retry slice, plus a minimal copied
    EBase general-handler/Modified recovery slice (complete only for the opt-in
-   directed slice); implement vectored/cache-error policy and a product
-   manifest builder next.
+   directed slice), plus the development manifest/CRC-to-SRAM handoff;
+   implement the remaining manifest negative cases and vectored/cache-error
+   policy next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.

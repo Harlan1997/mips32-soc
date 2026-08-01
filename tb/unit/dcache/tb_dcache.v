@@ -32,7 +32,7 @@ module tb_dcache;
     dcache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_we(cpu_we),.cpu_addr(cpu_addr),.cpu_wdata(cpu_wdata),
-        .cpu_be(cpu_be),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),
+        .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),
         .awid(awid),.awaddr(awaddr),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .awlock(awlock),.awcache(awcache),.awprot(awprot),.awvalid(awvalid),.awready(awready),
         .wdata(wdata),.wstrb(wstrb),.wlast(wlast),.wvalid(wvalid),.wready(wready),
