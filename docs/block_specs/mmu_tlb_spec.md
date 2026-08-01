@@ -275,10 +275,11 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。�
 negative、XIP-timeout 场景均通过。它与 fabric alias fold（`mips_mmu.v` 注释里提到的
 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。
 
-**当前结论**：kseg0 的 instruction fetch/handoff、单次 data translation slice 和
-software-managed TLB context-switch 硬件边界已达到 `BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。
-尚未证明完整 runtime data mapping、SoC 多进程 page-table allocator/shootdown 压力、cache maintenance、
-完整异常 handler 或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
+**当前结论**：kseg0 的 instruction fetch/handoff、单次 data translation slice、software-managed
+TLB context-switch 硬件边界和 bounded 4-ASID round-robin/shootdown slice 已达到
+`BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。尚未证明完整 runtime data mapping、SoC 多进程
+page-table allocator/scheduler 压力、IPI shootdown、cache maintenance、完整异常 handler
+或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
 
 **已保留的验证脚手架**（prototype useg 链接仍会触发上述历史死锁；产品切片使用独立 linker）：
 - `tb/soc_test/fw/tests/mmu_refill/`：最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
@@ -286,8 +287,9 @@ software-managed TLB context-switch 硬件边界已达到 `BLOCK_VERIFIED`，但
 - `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
-**下一项**：在已验证的 kseg0 指令交接和 software context-switch 边界上补齐 runtime data mapping、
-SoC 多进程 page-table/ASID allocator、shootdown IPI 压力、cache-error/EIC policy 和 kernel-mode firmware gate。
+**下一项**：在已验证的 bounded 4-ASID slice 上补齐完整 runtime data mapping、SoC 多进程
+page-table/ASID allocator、scheduler 与 shootdown IPI 压力、cache-error/EIC policy 和
+kernel-mode firmware gate。
 在这些 gate 通过前，MMU 仍不是可启动的
 完整产品功能。
 
@@ -298,6 +300,7 @@ SoC 多进程 page-table/ASID allocator、shootdown IPI 压力、cache-error/EIC
 - v0 (2026-07-26)：初版规格，64-entry TLB + micro-TLB 分离 + 软件 refill 模型。等待 Phase B 起始时评审。
 - v0.1 (2026-07-30)：记录 `SOC_MMU_ENABLE=1` 架构级阻塞点（useg 向量死锁），见 §10.1。
 - v0.2 (2026-08-01)：产品 opt-in 实现并验证 refill 与 Invalid 的 BEV/EBase 向量分派；产品 linker 和 handler 继续为 P0。
+- v0.3 (2026-08-02)：新增并通过 `product-mmu-process-pressure-gate`，覆盖 ASID 1..4 round-robin、动态 TLB shootdown 和清空后的重新 refill；完整 OS allocator/scheduler/IPI 仍为后续任务。
 - v0.3 (2026-08-01)：新增 `tlb_asid_policy` directed gate，闭合 4KB ASID/Global/Invalid/Modified
   翻译边界；不扩大对可变页、multi-hit、micro-TLB 或 Linux/ASID rollover 的功能声明。
 - v0.4 (2026-08-01)：新增 MMU-enabled kseg0 stage-1 instruction handoff gate，证明
