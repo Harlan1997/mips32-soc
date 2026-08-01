@@ -53,6 +53,7 @@ def vcs_file_list():
         "rtl/perips/apb_pic.v",
         "rtl/perips/apb_timer.v",
         "rtl/perips/apb_uart.v",
+        "rtl/perips/apb_qspi_status.v",
         "rtl/perips/axi_spi_flash.v",
         "rtl/perips/axi_flash_image_model.v",
         "rtl/perips/axi_sram.v",

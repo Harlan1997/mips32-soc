@@ -38,10 +38,19 @@ return AXI `DECERR`.
 | GPIO | `0x2000` | board control |
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
-| QSPI controller | `0x5000` | command/XIP/FIFO; product block not yet integrated |
+| QSPI/XIP status | `0x5000` | version/status/last-error observability; full command/XIP/FIFO controller not yet integrated |
 | DDR controller | `0x6000` | init/calibration/refresh status; product block not yet integrated |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
+
+### QSPI/XIP Status Registers (`0x4000_5000`)
+
+| Offset | Register | Access | Meaning |
+| --- | --- | --- | --- |
+| `0x000` | `VERSION` | RO | `0x5153_5001` |
+| `0x004` | `STATUS` | RO | bit 0: captured XIP timeout; bit 1: controller present |
+| `0x008` | `LAST_ERROR` | RO | `[31:16]` class, `[15:0]` code; `0x0001_0001` is AXI XIP timeout |
+| `0x00C` | `CONTROL` | WO | bit 0 W1C clears captured timeout and last error |
 
 ## GPIO Register Map
 
