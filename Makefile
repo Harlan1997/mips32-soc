@@ -32,6 +32,7 @@ DUT_BLOCK_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/dut_block_readiness
 PRODUCT_MMU_BOOT_DIR ?= $(BUILD_DIR)/unit_tb/product_mmu_boot
 PRODUCT_MMU_EBASE_MODIFIED_DIR ?= $(BUILD_DIR)/unit_tb/product_mmu_ebase_modified
 SPI_FLASH_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/axi_spi_flash
+XIP_READ_TIMEOUT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/axi_read_timeout_guard
 PRODUCT_MANIFEST_HANDOFF_DIR ?= $(BUILD_DIR)/unit_tb/product_manifest_handoff
 
 SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
@@ -54,7 +55,7 @@ SOC_TEST_L2_CPU_DIR ?= $(BUILD_DIR)/soc_test/l2_cpu_gate
 L2_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/l2_cpu
 L2_CPU_FW_HEX ?= $(L2_CPU_FW_DIR)/firmware.hex
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate product-mmu-boot-gate product-mmu-ebase-modified-gate spi-flash-unit-gate product-manifest-handoff-gate soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression phase3c-complete current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate l2-cpu-gate product-mmu-boot-gate product-mmu-ebase-modified-gate spi-flash-unit-gate xip-read-timeout-unit-gate product-manifest-handoff-gate soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 mdu-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
@@ -84,6 +85,9 @@ product-mmu-ebase-modified-gate:
 
 spi-flash-unit-gate:
 	RUN_DIR=$(SPI_FLASH_UNIT_DIR) tb/unit/flash/run_axi_spi_flash.sh
+
+xip-read-timeout-unit-gate:
+	RUN_DIR=$(XIP_READ_TIMEOUT_UNIT_DIR) tb/unit/flash/run_axi_read_timeout_guard.sh
 
 product-manifest-handoff-gate:
 	RUN_DIR=$(PRODUCT_MANIFEST_HANDOFF_DIR) tb/unit/bootrom/run_product_manifest_handoff.sh

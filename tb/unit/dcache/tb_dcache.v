@@ -16,7 +16,7 @@ module tb_dcache;
     reg  [31:0] cpu_addr, cpu_wdata;
     reg  [3:0]  cpu_be;
     wire [31:0] cpu_rdata;
-    wire        cpu_addr_ok, cpu_data_ok;
+    wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error;
 
     // AXI
     wire [3:0]  awid; wire [31:0] awaddr; wire [7:0] awlen; wire [2:0] awsize;
@@ -32,7 +32,7 @@ module tb_dcache;
     dcache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_we(cpu_we),.cpu_addr(cpu_addr),.cpu_wdata(cpu_wdata),
-        .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),
+        .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),
         .awid(awid),.awaddr(awaddr),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .awlock(awlock),.awcache(awcache),.awprot(awprot),.awvalid(awvalid),.awready(awready),
         .wdata(wdata),.wstrb(wstrb),.wlast(wlast),.wvalid(wvalid),.wready(wready),
@@ -53,11 +53,11 @@ module tb_dcache;
 
     reg [31:0] ar_addr_l, aw_addr_l; reg [7:0] ar_beat, aw_beat;
     reg ar_active, aw_active, w_active;
-    reg r_arready, r_awready, r_wready, r_bvalid, r_rvalid, r_rlast;
+    reg r_arready, r_awready, r_wready, r_bvalid, r_rvalid, r_rlast, inject_read_error;
     reg [31:0] r_rdata; reg [3:0] r_bid, r_rid;
     assign arready=r_arready; assign awready=r_awready; assign wready=r_wready;
     assign bvalid=r_bvalid; assign bresp=2'b00; assign bid=r_bid;
-    assign rvalid=r_rvalid; assign rlast=r_rlast; assign rdata=r_rdata; assign rresp=2'b00; assign rid=r_rid;
+    assign rvalid=r_rvalid; assign rlast=r_rlast; assign rdata=r_rdata; assign rresp=inject_read_error ? 2'b10 : 2'b00; assign rid=r_rid;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -117,6 +117,18 @@ module tb_dcache;
         @(negedge clk);
     end endtask
 
+    task cpu_read_error(input [31:0] addr);
+    begin
+        @(negedge clk);
+        cpu_req=1; cpu_we=0; cpu_addr=addr; cpu_be=4'hF; cpu_wdata=0;
+        @(posedge clk); while(!cpu_data_ok) @(posedge clk);
+        if (!cpu_bus_error) begin
+            $display("FAIL AXI read error was not exposed to CPU"); errs=errs+1;
+        end
+        @(negedge clk); cpu_req=0;
+        @(negedge clk);
+    end endtask
+
     reg [31:0] rd;
     integer c_aw, c_ar, c_wb;
     // Addresses: same set requires same index [10:5]; different tag = +0x800 (2KB/way)
@@ -125,7 +137,7 @@ module tb_dcache;
     localparam [31:0] WSTEP = 32'h0000_0800; // 2KB: same set, next tag
 
     initial begin
-        cpu_req=0; cpu_we=0; cpu_addr=0; cpu_wdata=0; cpu_be=0;
+        cpu_req=0; cpu_we=0; cpu_addr=0; cpu_wdata=0; cpu_be=0; inject_read_error=0;
         #23 rst_n=1; @(negedge clk);
 
         // T1: cold read miss -> refill -> hit
@@ -193,6 +205,23 @@ module tb_dcache;
         cpu_write(32'hA000_5000, 32'hBEEF_0007, 4'hF);
         cpu_read (32'hA000_5000, rd);
         if (rd!==32'hBEEF_0007) begin $display("FAIL T7 uncached=%h",rd); errs=errs+1; end
+
+        // T8: an uncached read SLVERR completes the request with a CPU-visible
+        // error; disabling injection permits a clean retry.
+        inject_read_error=1;
+        cpu_read_error(32'hA000_6000);
+        inject_read_error=0;
+        cpu_read(32'hA000_6000, rd);
+        if (rd!==mem[32'h0000_6000>>2]) begin $display("FAIL T8 retry=%h",rd); errs=errs+1; end
+
+        // T9: a cached refill error also invalidates the victim instead of
+        // retaining partially received data. The following retry must refill.
+        inject_read_error=1;
+        cpu_read_error(32'h0000_7000);
+        inject_read_error=0;
+        c_ar=ar_count; cpu_read(32'h0000_7000, rd);
+        if (ar_count!==c_ar+1) begin $display("FAIL T9 error line was installed"); errs=errs+1; end
+        if (rd!==mem[32'h0000_7000>>2]) begin $display("FAIL T9 retry=%h",rd); errs=errs+1; end
 
         #50;
         if (errs==0) $display("REGRESSION_TEST_SUCCESS dcache");

@@ -3,7 +3,9 @@
 // Design:    Product-facing MIPS32 SoC integration
 // =============================================================================
 
-module mips_soc (
+module mips_soc #(
+    parameter integer SPI_READ_TIMEOUT_CYCLES = 512
+) (
     input  wire clk,
     input  wire rst_n,
 
@@ -35,7 +37,8 @@ module mips_soc (
     mips_soc_impl #(
         .ENABLE_EXT_AXI_MASTER     (1'b0),
         .ENABLE_APB_FAULT_INJECTOR (1'b0),
-        .ENABLE_FLASH_IMAGE_MODEL  (1'b0)
+        .ENABLE_FLASH_IMAGE_MODEL  (1'b0),
+        .SPI_READ_TIMEOUT_CYCLES   (SPI_READ_TIMEOUT_CYCLES)
     ) u_impl (
         .clk          (clk),
         .rst_n        (rst_n),

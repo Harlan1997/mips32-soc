@@ -24,6 +24,7 @@ module dcache (
     output reg  [31:0] cpu_rdata,
     output wire        cpu_addr_ok,
     output wire        cpu_data_ok,
+    output wire        cpu_bus_error,
 
     // AXI4 Master Interface
     // AW Channel
@@ -107,6 +108,7 @@ module dcache (
     localparam UC_WDATA       = 4'd9;
     localparam UC_WRESP       = 4'd10;
     localparam UC_RDATA       = 4'd11;
+    localparam ERROR_RESP     = 4'd12;
 
     reg [3:0] state, next_state;
 
@@ -202,6 +204,8 @@ module dcache (
     // Internal buffers for refill and writeback
     reg [255:0] line_buf;
     reg [2:0]   word_cnt;
+    reg         refill_error;
+    reg         cache_error_pending;
 
     wire sram_read_en = (state == IDLE && cpu_req && !uncacheable) ||
                         (state == COMPARE && cache_hit && cpu_req && cpu_addr_ok && !uncacheable);
@@ -209,7 +213,11 @@ module dcache (
     // CPU handshakes
     assign cpu_addr_ok = (state == IDLE) || (state == COMPARE && cache_hit && !uncacheable);
     assign cpu_data_ok = (state == COMPARE && cache_hit && !uncacheable) ||
-                         (state == UC_WRESP && bvalid) || (state == UC_RDATA && rvalid);
+                         (state == UC_WRESP && bvalid) || (state == UC_RDATA && rvalid) ||
+                         (state == ERROR_RESP);
+    assign cpu_bus_error = ((state == UC_WRESP) && bvalid && (bresp != 2'b00)) ||
+                            ((state == UC_RDATA) && rvalid && (rresp != 2'b00)) ||
+                            (state == ERROR_RESP);
 
     integer ri;
     always @(posedge clk) begin
@@ -235,14 +243,17 @@ module dcache (
             end
             WRITEBACK_REQ:  if (awready && awvalid) next_state = WRITEBACK_DATA;
             WRITEBACK_DATA: if (wready && wvalid && wlast) next_state = WRITEBACK_RESP;
-            WRITEBACK_RESP: if (bready && bvalid) next_state = REFILL_REQ;
+            WRITEBACK_RESP: if (bready && bvalid)
+                                next_state = (bresp != 2'b00) ? ERROR_RESP : REFILL_REQ;
             REFILL_REQ:     if (arready && arvalid) next_state = REFILL_DATA;
-            REFILL_DATA:    if (rvalid && rlast) next_state = WRITE_MERGE;
+            REFILL_DATA:    if (rvalid && rlast)
+                                next_state = (refill_error || (rresp != 2'b00)) ? ERROR_RESP : WRITE_MERGE;
             WRITE_MERGE:    next_state = IDLE;
             UC_REQ:         next_state = req_buf_we ? UC_WDATA : UC_RDATA;
             UC_WDATA:       if ((!awvalid || awready) && (!wvalid || wready)) next_state = UC_WRESP;
             UC_WRESP:       if (bready && bvalid) next_state = IDLE;
             UC_RDATA:       if (rready && rvalid) next_state = IDLE;
+            ERROR_RESP:     next_state = IDLE;
         endcase
     end
 
@@ -279,6 +290,7 @@ module dcache (
             wvalid <= 1'b0; wlast <= 1'b0; wdata <= 32'd0; wstrb <= 4'hF;
             bready <= 1'b0; arvalid <= 1'b0; araddr <= 32'd0; rready <= 1'b0;
             word_cnt <= 3'd0; line_buf <= 256'd0;
+            refill_error <= 1'b0; cache_error_pending <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
                 for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+2){1'b0}};
@@ -327,6 +339,8 @@ module dcache (
                         req_buf_valid <= 1'b0;
                     end else begin
                         // Miss: launch writeback (dirty victim) or refill
+                        refill_error <= 1'b0;
+                        cache_error_pending <= 1'b0;
                         if (victim_dirty) begin
                             awvalid <= 1'b1;
                             awaddr  <= {victim_tag_entry[TAG_BITS-1:0], req_buf_addr[10:5], 5'd0};
@@ -361,7 +375,11 @@ module dcache (
                 WRITEBACK_RESP: begin
                     if (bready && bvalid) begin
                         bready <= 1'b0;
-                        arvalid <= 1'b1; araddr <= {req_buf_addr[31:5], 5'd0}; word_cnt <= 3'd0;
+                        if (bresp != 2'b00) begin
+                            cache_error_pending <= 1'b1;
+                        end else begin
+                            arvalid <= 1'b1; araddr <= {req_buf_addr[31:5], 5'd0}; word_cnt <= 3'd0;
+                        end
                     end
                 end
 
@@ -372,6 +390,10 @@ module dcache (
                     if (rready && rvalid) begin
                         line_buf[word_cnt*32 +: 32] <= rdata;
                         word_cnt <= word_cnt + 1'b1;
+                        if (rresp != 2'b00) begin
+                            refill_error <= 1'b1;
+                            cache_error_pending <= 1'b1;
+                        end
                         if (rlast) rready <= 1'b0;
                     end
                 end
@@ -381,6 +403,11 @@ module dcache (
                     tag_ram[victim_way][lookup_index]  <= {1'b1, req_buf_we, lookup_tag};
                     // Accessed way becomes MRU
                     plru_ram[lookup_index] <= plru_touch(plru_rdata, victim_way);
+                    req_buf_valid <= 1'b0;
+                end
+                ERROR_RESP: begin
+                    if (cache_error_pending)
+                        tag_ram[victim_way][lookup_index] <= {(TAG_BITS+2){1'b0}};
                     req_buf_valid <= 1'b0;
                 end
             endcase

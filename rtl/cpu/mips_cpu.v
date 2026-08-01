@@ -15,6 +15,7 @@ module mips_cpu (
     output wire [31:0] inst_addr,
     input  wire        inst_addr_ok,
     input  wire        inst_data_ok,
+    input  wire        inst_bus_error,
     input  wire [31:0] inst_rdata,
     
     // Data Cache Interface (to be connected to dcache)
@@ -26,6 +27,7 @@ module mips_cpu (
     output wire        data_uncacheable,
     input  wire        data_addr_ok,
     input  wire        data_data_ok,
+    input  wire        data_bus_error,
     input  wire [31:0] data_rdata,
     
     input  wire [5:0]  ext_int,
@@ -175,8 +177,12 @@ module mips_cpu (
     // SOC_MMU_ENABLE=0 with kernel-mode default, mmu_i_ok is always 1 → this
     // reduces to the pre-B.3.d AdEL-only behaviour and no regression is
     // possible.
-    wire        if_fault_req  = if_adel_exception | (~mmu_i_ok & inst_req);
+    // Case equality keeps legacy standalone CPU harnesses that omit the new
+    // optional cache-error sideband electrically quiet rather than X-active.
+    wire        if_bus_fault  = inst_req & inst_data_ok & (inst_bus_error === 1'b1);
+    wire        if_fault_req  = if_adel_exception | if_bus_fault | (~mmu_i_ok & inst_req);
     wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
+                                if_bus_fault                  ? 5'h06 :  // IBE
                                 (mmu_i_fault_type == 3'b100) ? 5'h04 :  // AdEL from MMU
                                                                 5'h02;  // TLBL default
     // A lookup miss is a refill candidate. A lookup hit with V=0 is Invalid
@@ -602,10 +608,12 @@ module mips_cpu (
     wire mem_mmu_refill = mem_mmu_fault &
                           ((mmu_d_fault_type == 3'b001) || (mmu_d_fault_type == 3'b010)) &
                           ~mmu_dlookup_hit;
-    wire mem_except_req_out  = mem_except_req | mem_mmu_fault
+    wire mem_bus_fault      = data_req & data_data_ok & (data_bus_error === 1'b1);
+    wire mem_except_req_out  = mem_except_req | mem_mmu_fault | mem_bus_fault
                              | mem_adel_exception | mem_ades_exception;
     wire [4:0] mem_except_code_out = mem_except_req      ? mem_except_code
                                    : mem_mmu_fault       ? mem_mmu_fault_code
+                                   : mem_bus_fault       ? 5'h07 // DBE
                                    : mem_adel_exception  ? 5'h04
                                    : mem_ades_exception  ? 5'h05
                                                           : 5'h00;

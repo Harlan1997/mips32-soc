@@ -7,7 +7,8 @@
 module mips_soc_impl #(
     parameter ENABLE_EXT_AXI_MASTER = 1'b0,
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
-    parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0
+    parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
+    parameter integer SPI_READ_TIMEOUT_CYCLES = 512
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -844,7 +845,8 @@ module mips_soc_impl #(
 
     soc_memory_subsystem #(
         .ENABLE_FLASH_IMAGE_MODEL (ENABLE_FLASH_IMAGE_MODEL),
-        .SRAM_DEPTH_WORDS         (32768)
+        .SRAM_DEPTH_WORDS         (32768),
+        .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES)
     ) u_memory_subsystem (
         .clk          (clk),
         .rst_n        (rst_n),

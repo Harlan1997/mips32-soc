@@ -763,10 +763,11 @@ int main() {
         // CP0 EPC (writable, safe as long as no eret)
         asm volatile("mtc0 %0, $14" : : "r"(p));
         
-        // SPI Flash Toggle (Read from various offsets to toggle AXI ARADDR and RDATA)
-        // 0xB0000000 maps to 0x10000000 physical (SPI Flash)
+        // SPI Flash Toggle (Read from various offsets to toggle AXI ARADDR and RDATA).
+        // soc_smoke runs in compatibility identity-map mode, so use the
+        // fabric-visible XIP window rather than the product kseg1 alias.
         volatile uint32_t dummy_read;
-        dummy_read = *((volatile uint32_t*)(0xB0000000 | (p & 0x0FFFFFFC)));
+        dummy_read = *((volatile uint32_t*)(0x10000000 | (p & 0x0FFFFFFC)));
         
         // APB DMA Registers Toggle (Don't start DMA, just write regs)
         DMA_SRC = p;

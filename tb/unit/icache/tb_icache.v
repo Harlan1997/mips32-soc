@@ -13,7 +13,7 @@ module tb_icache;
     reg         cpu_req;
     reg  [31:0] cpu_addr;
     wire [31:0] cpu_rdata;
-    wire        cpu_addr_ok, cpu_data_ok;
+    wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error;
 
     wire [3:0]  arid; wire [31:0] araddr; wire [7:0] arlen; wire [2:0] arsize;
     wire [1:0]  arburst, arlock; wire [3:0] arcache; wire [2:0] arprot;
@@ -23,7 +23,7 @@ module tb_icache;
     icache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_addr(cpu_addr),.cpu_rdata(cpu_rdata),
-        .cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),
+        .cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),
         .arid(arid),.araddr(araddr),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .arlock(arlock),.arcache(arcache),.arprot(arprot),.arvalid(arvalid),.arready(arready),
         .rid(rid),.rdata(rdata),.rresp(rresp),.rlast(rlast),.rvalid(rvalid),.rready(rready)
@@ -37,9 +37,9 @@ module tb_icache;
 
     integer ar_count;
     reg [31:0] ar_addr_l; reg [7:0] ar_beat; reg ar_active;
-    reg r_arready, r_rvalid, r_rlast; reg [31:0] r_rdata; reg [3:0] r_rid;
+    reg r_arready, r_rvalid, r_rlast, inject_read_error; reg [31:0] r_rdata; reg [3:0] r_rid;
     assign arready=r_arready; assign rvalid=r_rvalid; assign rlast=r_rlast;
-    assign rdata=r_rdata; assign rresp=2'b00; assign rid=r_rid;
+    assign rdata=r_rdata; assign rresp=inject_read_error ? 2'b10 : 2'b00; assign rid=r_rid;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -85,11 +85,25 @@ module tb_icache;
         end
     end endtask
 
+    task ifetch_error(input [31:0] addr);
+        reg [31:0] d;
+    begin
+        @(negedge clk);
+        cpu_req=1; cpu_addr=addr;
+        @(posedge clk); while(!cpu_data_ok) @(posedge clk);
+        d=cpu_rdata;
+        if (!cpu_bus_error) begin
+            $display("FAIL AXI read error was not exposed to CPU"); errs=errs+1;
+        end
+        @(negedge clk); cpu_req=0;
+        @(negedge clk);
+    end endtask
+
     integer c_ar;
     localparam [31:0] WSTEP = 32'h0000_0800; // 2KB: same set, next tag
 
     initial begin
-        cpu_req=0; cpu_addr=0;
+        cpu_req=0; cpu_addr=0; inject_read_error=0;
         #23 rst_n=1; @(negedge clk);
 
         // T1: cold miss -> refill -> hit
@@ -129,6 +143,14 @@ module tb_icache;
         check(32'h0000_4000+4*WSTEP);// E -> eviction
         c_ar=ar_count; check(32'h0000_4000);   // A should still be resident
         if (ar_count!==c_ar) begin $display("FAIL T4 MRU way A evicted"); errs=errs+1; end
+
+        // T5: a refill SLVERR is returned to the CPU and must not install a
+        // poisoned instruction line. Retrying after the fault performs AR.
+        inject_read_error=1;
+        ifetch_error(32'h0000_6800);
+        inject_read_error=0;
+        c_ar=ar_count; check(32'h0000_6800);
+        if (ar_count!==c_ar+1) begin $display("FAIL T5 error line was installed"); errs=errs+1; end
 
         #50;
         if (errs==0) $display("REGRESSION_TEST_SUCCESS icache");

@@ -1,11 +1,12 @@
 # Boot and Memory Product Contract
 
-> Version: v1.0 (2026-08-01)
+> Version: v1.1 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
 > vector, minimal BEV MMU boot-firmware, EBase/Modified recovery, SPI XIP
-> pin-level slices, and a development manifest-to-kseg0-SRAM handoff.
+> pin-level slices, a bounded AXI XIP timeout/DBE path, and a development
+> manifest-to-kseg0-SRAM handoff.
 > This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
@@ -47,7 +48,7 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180` | Keep the smoke linker for prototype tests; add a full runtime kseg0 linker and a separate Boot ROM/SPL image |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, and relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry | Kernel runtime MMU contract, invalid-fault policy, ASID/page-table policy, and vectored/cache-error handling still require product firmware work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
-| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent |
+| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as IBE/DBE. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; add a software-visible fault/status register and full cache-error policy |
 | WDT/boot status | `apb_wdt` exists but is not instantiated by `soc_peripheral_subsystem.v` | Add product APB decode, reset request path, boot-failure status and timeout test |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
 
@@ -61,7 +62,7 @@ addresses firmware may use after the MIPS segment rules are active.
 | Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | Reset/map/vector slices and development manifest handoff have directed SoC evidence; immutable production image remains P0 |
 | Boot SRAM | `0x0000_0000` | 64 KB | `0x8000_0000` kseg0 / `0xA000_0000` kseg1 | Existing behavioral SRAM; post-boot code and mailbox |
 | DDR | `0x0800_0000` | 128 MB | `0x8800_0000` kseg0 / `0xA800_0000` kseg1 | Existing address reservation; behavioral placeholder must be replaced |
-| SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Existing AXI XIP window; controller and boot command path incomplete |
+| SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Single-lane AXI XIP with a 512-cycle AXI-side guard; QSPI command, status and boot command paths remain incomplete |
 | APB peripherals | `0x4000_0000` | 64 KB | `0xC000_0000` kseg2 via wired TLB | Existing APB window; no direct kseg1 alias because PA is above 512 MB |
 | Debug/test | `0xE000_0000` | 64 KB | kseg2 via TLB, privileged only | Existing reserved window; not part of boot image |
 
@@ -311,6 +312,22 @@ close that gate:
   standard-read command/address sequence (`0x03_000000`), two sequential
   serial-read response words and a rejected AXI write (`SLVERR`).
   `make spi-flash-unit-gate` is its standalone entry point.
+- `rtl/axi/axi_read_timeout_guard.v` wraps only the production
+  `axi_spi_flash` read path. With `SPI_READ_TIMEOUT_CYCLES=512` by default,
+  it bounds waiting for downstream `ARREADY` and each next downstream
+  `RVALID`, returns deterministic AXI `SLVERR` upstream on expiry, and drains
+  any late downstream transaction before accepting another request. It does
+  not time out legal R-channel backpressure once downstream `RVALID` is high.
+- `tb/unit/flash/tb_axi_read_timeout_guard.sv` proves no-`ARREADY` and
+  no-`RVALID` cases, late-response drain, recovery by a following good read,
+  and the sticky timeout indication. `make xip-read-timeout-unit-gate` is its
+  standalone entry point.
+- `tb/unit/bootrom/tb_product_manifest_xip_timeout.sv` sets the real guard to
+  four cycles without forcing controller internals or changing MISO. It proves
+  that an in-flight production XIP read becomes CPU DBE (`Cause.ExcCode=7`)
+  and that the Boot ROM general handler records `DEAD_B007` instead of handing
+  off to stage 1. This test runs as part of
+  `make product-manifest-handoff-gate` and the block aggregate.
 - `tb/soc_test/fw/tests/boot_manifest_handoff` builds a Boot ROM image, a
   fixed development manifest, and a kseg0 stage-1 payload. Its full-SoC
   directed test uses only `+BOOT_ROM_HEX` and `+SPI_FLASH_HEX`: it neither
@@ -334,10 +351,15 @@ close that gate:
   and Boot ROM image buffers now hold 512 characters, and the fixture rejects
   an unloaded external-flash image before simulation starts.
 
-These tests prove this fixed development manifest, header rejection, CRC, and
-handoff only. They do not prove controller-error/timeout response,
-signature/key policy, vectored/cache-error vectors, QSPI/DDR initialization, a
-complete relocated runtime handler set, or boot-status/WDT failure handling.
+These tests prove this fixed development manifest, header rejection, CRC,
+handoff, and the bounded AXI-side XIP stall-to-DBE path only. A standard SPI
+`0x03` read has no ready/error signal: a silent or static MISO line still
+produces serial data, so this RTL cannot honestly detect a raw flash-device
+"timeout." The guard protects a wedged AXI/controller response path, not a
+non-responsive physical flash. It also exposes no software-readable timeout
+register today. These tests do not prove signature/key policy,
+vectored/cache-error vectors, QSPI/DDR initialization, a complete relocated
+runtime handler set, or boot-status/WDT failure handling.
 The ROM image is a simulation plusarg and is not a production mask-ROM
 artifact.
 
@@ -350,8 +372,8 @@ artifact.
    wired mapping, dynamic refill and `ERET` retry slice, plus a minimal copied
    EBase general-handler/Modified recovery slice (complete only for the opt-in
    directed slice), plus the development manifest/CRC-to-SRAM handoff and its
-   header rejection matrix; implement controller-error/timeout handling and
-   vectored/cache-error policy next.
+   header rejection matrix. The bounded AXI-side controller-stall/timeout path
+   is implemented; vectored/cache-error policy is next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.

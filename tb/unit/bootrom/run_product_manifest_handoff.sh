@@ -71,3 +71,26 @@ for negative_case in \
     bad_flags; do
     run_negative_image "${negative_case}"
 done
+
+# Compile a second top with a deliberately short guard threshold. The serial
+# responder remains untouched; the production timeout logic must turn its
+# bounded AXI SLVERR into the Boot ROM's DBE failure record.
+vcs -full64 -sverilog -timescale=1ns/1ps \
+    +define+SOC_PRODUCT_BOOT_ENABLE=1 \
+    +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cpu" \
+    +incdir+"${ROOT_DIR}/rtl/axi" +incdir+"${ROOT_DIR}/rtl/perips" \
+    +incdir+"${SCRIPT_DIR}" \
+    "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v \
+    "${ROOT_DIR}"/rtl/cache/*.v \
+    "${ROOT_DIR}"/rtl/soc_fabric.v "${ROOT_DIR}"/rtl/soc_core_subsystem.v \
+    "${ROOT_DIR}"/rtl/soc_memory_subsystem.v "${ROOT_DIR}"/rtl/soc_peripheral_subsystem.v \
+    "${ROOT_DIR}"/rtl/soc_debug_subsystem.v "${ROOT_DIR}"/rtl/mips_soc_impl.v \
+    "${ROOT_DIR}"/rtl/mips_soc.v "${ROOT_DIR}"/rtl/soc_top.v \
+    "${SCRIPT_DIR}"/tb_product_manifest_xip_timeout.sv \
+    -o simv_xip_timeout -l compile_xip_timeout.log
+
+./simv_xip_timeout -no_save \
+    +BOOT_ROM_HEX="${FW_DIR}/boot_rom.hex" \
+    +SPI_FLASH_HEX="${FW_DIR}/flash_image.hex" \
+    -l sim_xip_timeout.log
+grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_xip_timeout" sim_xip_timeout.log

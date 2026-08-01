@@ -7,7 +7,8 @@
 
 module soc_memory_subsystem #(
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
-    parameter SRAM_DEPTH_WORDS = 32768
+    parameter SRAM_DEPTH_WORDS = 32768,
+    parameter integer SPI_READ_TIMEOUT_CYCLES = 512
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -385,6 +386,67 @@ module soc_memory_subsystem #(
             .spi_miso        (spi_miso)
         );
     end else begin : g_spi_flash_controller
+        wire [3:0]  flash_arid;
+        wire [31:0] flash_araddr;
+        wire [7:0]  flash_arlen;
+        wire [2:0]  flash_arsize;
+        wire [1:0]  flash_arburst;
+        wire [1:0]  flash_arlock;
+        wire [3:0]  flash_arcache;
+        wire [2:0]  flash_arprot;
+        wire        flash_arvalid;
+        wire        flash_arready;
+        wire [3:0]  flash_rid;
+        wire [31:0] flash_rdata;
+        wire [1:0]  flash_rresp;
+        wire        flash_rlast;
+        wire        flash_rvalid;
+        wire        flash_rready;
+        wire        flash_timeout_sticky;
+
+        // The pin-level controller has no flash-ready signal. Bound AXI-side
+        // acceptance and response latency here so a wedged controller cannot
+        // hold the CPU indefinitely.
+        axi_read_timeout_guard #(
+            .TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES)
+        ) u_axi_read_timeout_guard (
+            .clk             (clk),
+            .rst_n           (rst_n),
+            .s_arid          (s2_arid),
+            .s_araddr        (s2_araddr),
+            .s_arlen         (s2_arlen),
+            .s_arsize        (s2_arsize),
+            .s_arburst       (s2_arburst),
+            .s_arlock        (s2_arlock),
+            .s_arcache       (s2_arcache),
+            .s_arprot        (s2_arprot),
+            .s_arvalid       (s2_arvalid),
+            .s_arready       (s2_arready),
+            .s_rid           (s2_rid),
+            .s_rdata         (s2_rdata),
+            .s_rresp         (s2_rresp),
+            .s_rlast         (s2_rlast),
+            .s_rvalid        (s2_rvalid),
+            .s_rready        (s2_rready),
+            .m_arid          (flash_arid),
+            .m_araddr        (flash_araddr),
+            .m_arlen         (flash_arlen),
+            .m_arsize        (flash_arsize),
+            .m_arburst       (flash_arburst),
+            .m_arlock        (flash_arlock),
+            .m_arcache       (flash_arcache),
+            .m_arprot        (flash_arprot),
+            .m_arvalid       (flash_arvalid),
+            .m_arready       (flash_arready),
+            .m_rid           (flash_rid),
+            .m_rdata         (flash_rdata),
+            .m_rresp         (flash_rresp),
+            .m_rlast         (flash_rlast),
+            .m_rvalid        (flash_rvalid),
+            .m_rready        (flash_rready),
+            .timeout_sticky  (flash_timeout_sticky)
+        );
+
         axi_spi_flash u_axi_spi_flash (
             .clk             (clk),
             .rst_n           (rst_n),
@@ -409,22 +471,22 @@ module soc_memory_subsystem #(
             .s_bvalid        (s2_bvalid),
             .s_bready        (s2_bready),
 
-            .s_arid          (s2_arid),
-            .s_araddr        (s2_araddr),
-            .s_arlen         (s2_arlen),
-            .s_arsize        (s2_arsize),
-            .s_arburst       (s2_arburst),
-            .s_arlock        (s2_arlock),
-            .s_arcache       (s2_arcache),
-            .s_arprot        (s2_arprot),
-            .s_arvalid       (s2_arvalid),
-            .s_arready       (s2_arready),
-            .s_rid           (s2_rid),
-            .s_rdata         (s2_rdata),
-            .s_rresp         (s2_rresp),
-            .s_rlast         (s2_rlast),
-            .s_rvalid        (s2_rvalid),
-            .s_rready        (s2_rready),
+            .s_arid          (flash_arid),
+            .s_araddr        (flash_araddr),
+            .s_arlen         (flash_arlen),
+            .s_arsize        (flash_arsize),
+            .s_arburst       (flash_arburst),
+            .s_arlock        (flash_arlock),
+            .s_arcache       (flash_arcache),
+            .s_arprot        (flash_arprot),
+            .s_arvalid       (flash_arvalid),
+            .s_arready       (flash_arready),
+            .s_rid           (flash_rid),
+            .s_rdata         (flash_rdata),
+            .s_rresp         (flash_rresp),
+            .s_rlast         (flash_rlast),
+            .s_rvalid        (flash_rvalid),
+            .s_rready        (flash_rready),
 
             .spi_sclk        (spi_sclk),
             .spi_cs_n        (spi_cs_n),
