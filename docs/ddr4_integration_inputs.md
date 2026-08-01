@@ -10,6 +10,9 @@ The candidate contract is
 [`docs/block_specs/ddr4_spec.md`](block_specs/ddr4_spec.md). The legacy DDR3
 manifest remains at [`docs/ddr_integration_inputs.md`](ddr_integration_inputs.md)
 and must not be used to authorize the C1 product controller.
+The upstream parameter decisions are tracked in
+[`docs/asic_c1_ddr4_parameter_decision.md`](asic_c1_ddr4_parameter_decision.md);
+stage A is not closed yet.
 
 | ID | Required input | Current state | Required evidence / owner |
 |---|---|---|---|
