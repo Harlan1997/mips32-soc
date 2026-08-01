@@ -430,6 +430,9 @@ module mips_soc_impl #(
     wire        s4_rready;
 
     wire        cpu_int;
+    wire        wdt_reset;
+    wire        soc_rst_n;
+    assign soc_rst_n = rst_n & ~wdt_reset;
 
     // =========================================================================
     // Instantiations
@@ -437,7 +440,7 @@ module mips_soc_impl #(
 
     soc_core_subsystem u_core_subsystem (
         .clk             (clk),
-        .rst_n           (rst_n),
+        .rst_n           (soc_rst_n),
         .cpu_int         (cpu_int),
 
         .inst_awid       (m0_awid),
@@ -520,7 +523,7 @@ module mips_soc_impl #(
         .ENABLE_EXT_AXI_MASTER (ENABLE_EXT_AXI_MASTER)
     ) u_soc_fabric (
         .clk          (clk),
-        .rst_n        (rst_n),
+        .rst_n        (soc_rst_n),
         .m0_arid      (m0_arid),
         .m0_araddr    (m0_araddr),
         .m0_arlen     (m0_arlen),
@@ -860,7 +863,7 @@ module mips_soc_impl #(
         .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES)
     ) u_memory_subsystem (
         .clk          (clk),
-        .rst_n        (rst_n),
+        .rst_n        (soc_rst_n),
         .spi_sclk     (spi_sclk),
         .spi_cs_n     (spi_cs_n),
         .spi_mosi     (spi_mosi),
@@ -1034,6 +1037,7 @@ module mips_soc_impl #(
         .uart_dcd_n   (ENABLE_UART_PINS ? uart_dcd_n : 1'b0),
         .uart_ri_n    (ENABLE_UART_PINS ? uart_ri_n  : 1'b1),
         .cpu_int      (cpu_int),
+        .wdt_reset    (wdt_reset),
 
         .s_awid       (s1_awid),
         .s_awaddr     (s1_awaddr),
@@ -1110,7 +1114,7 @@ module mips_soc_impl #(
 
     soc_debug_subsystem u_debug_subsystem (
         .clk          (clk),
-        .rst_n        (rst_n),
+        .rst_n        (soc_rst_n),
         .tck          (tck),
         .tms          (tms),
         .tdi          (tdi),

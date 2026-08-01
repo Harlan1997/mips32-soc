@@ -34,13 +34,13 @@ return AXI `DECERR`.
 | Peripheral | Offset | Notes |
 | --- | --- | --- |
 | UART | `0x0000` | console / bring-up |
-| Timer | `0x1000` | system tick / watchdog candidate |
+| Timer | `0x1000` | system tick |
 | GPIO | `0x2000` | board control |
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
 | QSPI controller | `0x5000` | command/XIP/FIFO; product block not yet integrated |
 | DDR controller | `0x6000` | init/calibration/refresh status; product block not yet integrated |
-| Watchdog | `0x7000` | boot timeout/reset status; RTL exists but is not integrated |
+| Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse is integrated, boot-status retention is separate |
 | Boot status | `0x8000` | immutable stage/failure code; product block not yet integrated |
 
 ## GPIO Register Map
