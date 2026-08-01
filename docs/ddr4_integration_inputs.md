@@ -3,8 +3,8 @@
 > Version: v0.1 (2026-08-02)
 >
 > Target route: **ASIC Profile C1 DDR4 (selected)**.
-> Status: **BLOCKED**. This is the product DDR4 entry manifest; placeholders
-> are not implementation inputs.
+> Status: **BASELINE_ACCEPTED / BLOCKED**. This is the product DDR4 entry
+> manifest; placeholders are not implementation inputs.
 
 The candidate contract is
 [`docs/block_specs/ddr4_spec.md`](block_specs/ddr4_spec.md). The legacy DDR3
@@ -13,6 +13,8 @@ and must not be used to authorize the C1 product controller.
 The upstream parameter decisions are tracked in
 [`docs/asic_c1_ddr4_parameter_decision.md`](asic_c1_ddr4_parameter_decision.md);
 stage A is not closed yet.
+The accepted baseline is 28nm LP, BGA, 1.2 V commercial, DDR4-2133, x32
+single-rank and ECC disabled; foundry/PHY compatibility remains open.
 
 | ID | Required input | Current state | Required evidence / owner |
 |---|---|---|---|
