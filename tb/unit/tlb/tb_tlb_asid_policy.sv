@@ -222,6 +222,35 @@ module tb_tlb_asid_policy;
         check("Clean page store is Modified", tlb_hit && tlb_v && !tlb_d &&
               !translation_ok && fault_type == 3'b011);
 
+        // ASID rollover contract: reusing an index for a new context must
+        // invalidate the old ASID mapping before the replacement is visible.
+        write_entry(2'd0, 19'h01234, 8'hFE,
+                    make_lo(20'h40000, 3'b011, 1'b1, 1'b1, 1'b0),
+                    make_lo(20'h40001, 3'b011, 1'b1, 1'b1, 1'b0));
+        req_is_store = 1'b0;
+        asid         = 8'hFE;
+        req_va       = {19'h01234, 13'h004};
+        #1;
+        check("Rollover old ASID mapping is initially valid", tlb_hit &&
+              translation_ok && pa == {20'h40000, 12'h004});
+
+        asid = 8'hFF;
+        #1;
+        check("Rollover new ASID misses before replacement", !tlb_hit &&
+              !translation_ok && fault_type == 3'b001);
+
+        write_entry(2'd0, 19'h01234, 8'hFF,
+                    make_lo(20'h41000, 3'b011, 1'b1, 1'b1, 1'b0),
+                    make_lo(20'h41001, 3'b011, 1'b1, 1'b1, 1'b0));
+        #1;
+        check("Rollover replacement selects new PFN", tlb_hit &&
+              translation_ok && pa == {20'h41000, 12'h004});
+
+        asid = 8'hFE;
+        #1;
+        check("Rollover old ASID stays isolated", !tlb_hit &&
+              !translation_ok && fault_type == 3'b001);
+
         req_valid = 1'b0;
         #1;
         if (errors == 0)
