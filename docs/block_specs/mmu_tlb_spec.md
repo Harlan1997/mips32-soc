@@ -216,8 +216,10 @@ matching-invalid 的 TLBL/TLBS 分类，以及清页 store 的 Modified 分类�
 已有 rollover slice。新增 `tb/unit/tlb/run_tlb_os_context.sh` 以真实
 `mips_tlb + mips_mmu` 建立软件页表 fixture，验证两个 ASID 对同一 VA 的不同 PFN、
 VPN pair even/odd、wired global 保留、非 wired flush 以及 ASID 1..255 回卷后的重新填充。
-这关闭了 software-managed TLB context-switch 的硬件边界子集；可变页大小、multi-hit
-machine check、micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
+这关闭了 software-managed TLB context-switch 的硬件边界子集；新增
+`tb/soc_test/run_product_mmu_asid_context.sh` 在真实 SoC firmware 上验证 ASID 1/2
+同 VA 不同 PFN、切回命中、`TLBWI` 清空动态槽、wired APB 保留和重新 refill。可变页大小、
+multi-hit machine check、micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
 
 **SoC 级**：
 - Linux boot：kernel 早期 head.S 建映射 → paging on → init 进程 → busybox shell。
@@ -275,7 +277,7 @@ negative、XIP-timeout 场景均通过。它与 fabric alias fold（`mips_mmu.v`
 
 **当前结论**：kseg0 的 instruction fetch/handoff、单次 data translation slice 和
 software-managed TLB context-switch 硬件边界已达到 `BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。
-尚未证明完整 runtime data mapping、SoC page-table allocator/shootdown、cache maintenance、
+尚未证明完整 runtime data mapping、SoC 多进程 page-table allocator/shootdown 压力、cache maintenance、
 完整异常 handler 或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
 
 **已保留的验证脚手架**（prototype useg 链接仍会触发上述历史死锁；产品切片使用独立 linker）：
@@ -285,7 +287,7 @@ software-managed TLB context-switch 硬件边界已达到 `BLOCK_VERIFIED`，但
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
 **下一项**：在已验证的 kseg0 指令交接和 software context-switch 边界上补齐 runtime data mapping、
-SoC page-table/ASID allocator 与 shootdown 压力、cache-error/EIC policy 和 kernel-mode firmware gate。
+SoC 多进程 page-table/ASID allocator、shootdown IPI 压力、cache-error/EIC policy 和 kernel-mode firmware gate。
 在这些 gate 通过前，MMU 仍不是可启动的
 完整产品功能。
 
@@ -302,3 +304,5 @@ SoC page-table/ASID allocator 与 shootdown 压力、cache-error/EIC policy 和 
   `0x8000_1000 -> 0x0000_1000`；明确该子集不等于完整 runtime 或 kernel boot。
 - v0.5 (2026-08-02)：新增 `tlb_os_context` gate，证明软件页表/context-switch 的硬件边界、
   wired global 保留与 ASID 1..255 回卷清空；不扩大到 SoC/OS allocator、shootdown 或 Linux boot。
+- v0.6 (2026-08-02)：新增 `product_mmu_asid_context` SoC firmware gate，证明 ASID 1/2
+  同 VA 不同 PFN、软件 `TLBWI` 动态清空与重新 refill；不扩大到 IPI、multi-core 或调度压力。
