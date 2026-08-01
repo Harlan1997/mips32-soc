@@ -1,6 +1,6 @@
-# MMU / TLB 微架构规格 (v0)
+# MMU / TLB 微架构规格 (v0.3)
 
-> 状态：v0 草案。作为 Phase B **新增 `rtl/cpu/mips_tlb.v` + 修改 `rtl/cpu/mips_cpu.v` / `mips_if_stage.v` / `mips_mem_stage.v`** 的实施基线。与 `cp0_spec.md` 配套读。
+> 状态：v0.3 草案。作为 Phase B **新增 `rtl/cpu/mips_tlb.v` + 修改 `rtl/cpu/mips_cpu.v` / `mips_if_stage.v` / `mips_mem_stage.v`** 的实施基线。与 `cp0_spec.md` 配套读。
 >
 > 引用：MIPS® Volume III Rev 6.06 §4 (Memory Management)。
 
@@ -209,6 +209,12 @@ Multi-hit → `ExcCode = 24 (MCheck)`, `Status.TS = 1`。软件通常记录后�
 - Multi-hit machine check：软件强制 TLBWI 写两条重叠 → TS=1 + MCheck。
 - micro-TLB 一致性：TLB 指令后 micro-TLB 清空断言。
 
+当前已有的独立契约 gate `tb/unit/tlb/run_tlb_asid_policy.sh` 使用 `SOC_MMU_ENABLE=1`
+直接连接 `mips_tlb` 和 `mips_mmu`，验证 4KB 页的 ASID 隔离、Global 跨 ASID 命中、
+matching-invalid 的 TLBL/TLBS 分类，以及清页 store 的 Modified 分类。该 gate 只关闭
+上述 ASID/异常分类子集；可变页大小、multi-hit machine check、micro-TLB 和 OS 级
+ASID rollover 仍未实现或未验证。
+
 **SoC 级**：
 - Linux boot：kernel 早期 head.S 建映射 → paging on → init 进程 → busybox shell。
 - 上下文切换压力：多进程 ASID rollover。
@@ -277,3 +283,5 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。
 - v0 (2026-07-26)：初版规格，64-entry TLB + micro-TLB 分离 + 软件 refill 模型。等待 Phase B 起始时评审。
 - v0.1 (2026-07-30)：记录 `SOC_MMU_ENABLE=1` 架构级阻塞点（useg 向量死锁），见 §10.1。
 - v0.2 (2026-08-01)：产品 opt-in 实现并验证 refill 与 Invalid 的 BEV/EBase 向量分派；产品 linker 和 handler 继续为 P0。
+- v0.3 (2026-08-01)：新增 `tlb_asid_policy` directed gate，闭合 4KB ASID/Global/Invalid/Modified
+  翻译边界；不扩大对可变页、multi-hit、micro-TLB 或 Linux/ASID rollover 的功能声明。
