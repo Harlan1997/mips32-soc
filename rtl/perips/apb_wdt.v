@@ -4,7 +4,8 @@
 // Author:    Antigravity — Phase D
 // Description:
 //   Simple software-fed watchdog. If not petted within TIMEOUT clocks after
-//   arming, asserts wdt_reset (level, active-high) into the reset aggregator.
+//   arming, asserts wdt_reset for one clock into the reset aggregator. The
+//   expired status remains sticky until software clears it after reboot.
 //   Pet by writing PETVAL to WDT_KICK register. Disable by clearing CTRL.EN.
 //
 // Register map (APB, byte offsets):
@@ -53,11 +54,15 @@ module apb_wdt (
             expired_r <= 1'b0;
             wdt_reset <= 1'b0;
         end else begin
-            wdt_reset <= expired_r;
+            // The reset request is a one-cycle pulse. Keeping the watchdog on
+            // the always-on reset domain lets the expired bit survive the SoC
+            // reset pulse and makes the cause software-visible after reboot.
+            wdt_reset <= 1'b0;
             if (ctrl_en) begin
                 if (val_r == 32'h0) begin
                     expired_r <= 1'b1;
                     ctrl_en   <= 1'b0;
+                    wdt_reset <= 1'b1;
                 end else begin
                     val_r <= val_r - 1'b1;
                 end

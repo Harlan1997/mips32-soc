@@ -23,6 +23,7 @@ module soc_peripheral_subsystem #(
     input  wire        uart_ri_n,
 
     output wire        cpu_int,
+    output wire        wdt_reset,
 
     input  wire [3:0]  s_awid,
     input  wire [31:0] s_awaddr,
@@ -97,6 +98,10 @@ module soc_peripheral_subsystem #(
     output wire        m_rready
 );
 
+    // The watchdog remains in the always-on domain. All bridge/peripheral
+    // state is reset by the one-cycle watchdog request below.
+    wire        periph_rst_n = rst_n & ~wdt_reset;
+
     wire [31:0] apb_paddr;
     wire        apb_psel;
     wire        apb_penable;
@@ -109,7 +114,7 @@ module soc_peripheral_subsystem #(
 
     axi2apb_bridge u_axi2apb (
         .clk             (clk),
-        .rst_n           (rst_n),
+        .rst_n           (periph_rst_n),
 
         .s_awid          (s_awid),
         .s_awaddr        (s_awaddr),
@@ -163,29 +168,33 @@ module soc_peripheral_subsystem #(
     wire gpio_sel  = apb_psel & (apb_paddr[15:12] == 4'h2); // 0x4000_2000
     wire dma_sel   = apb_psel & (apb_paddr[15:12] == 4'h3); // 0x4000_3000
     wire pic_sel   = apb_psel & (apb_paddr[15:12] == 4'h4); // 0x4000_4000
+    wire wdt_sel   = apb_psel & (apb_paddr[15:12] == 4'h7); // 0x4000_7000
     wire fault_sel = ENABLE_APB_FAULT_INJECTOR & apb_psel & (apb_paddr[15:12] == 4'hF); // 0x4000_F000
 
-    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, fault_prdata;
-    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, fault_pready;
-    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, fault_pslverr;
+    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, wdt_prdata, fault_prdata;
+    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, wdt_pready, fault_pready;
+    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, wdt_pslverr, fault_pslverr;
 
     assign apb_prdata  = uart_sel ? uart_prdata :
                          timer_sel ? timer_prdata :
                          gpio_sel ? gpio_prdata :
                          dma_sel ? dma_prdata :
                          pic_sel ? pic_prdata :
+                         wdt_sel ? wdt_prdata :
                          fault_sel ? fault_prdata : 32'd0;
     assign apb_pready  = uart_sel ? uart_pready :
                          timer_sel ? timer_pready :
                          gpio_sel ? gpio_pready :
                          dma_sel ? dma_pready :
                          pic_sel ? pic_pready :
+                         wdt_sel ? wdt_pready :
                          fault_sel ? fault_pready : 1'b1;
     assign apb_pslverr = uart_sel ? uart_pslverr :
                          timer_sel ? timer_pslverr :
                          gpio_sel ? gpio_pslverr :
                          dma_sel ? dma_pslverr :
                          pic_sel ? pic_pslverr :
+                         wdt_sel ? wdt_pslverr :
                          fault_sel ? fault_pslverr : 1'b0;
 
     wire uart_tx_int;
@@ -202,7 +211,7 @@ module soc_peripheral_subsystem #(
     assign uart_rx_int = uart_16550_rx_irq;
     apb_uart_16550 #(.TX_FIFO_DEPTH(16), .RX_FIFO_DEPTH(16)) u_apb_uart (
         .clk        (clk),
-        .rst_n      (rst_n),
+        .rst_n      (periph_rst_n),
         .psel       (uart_sel),
         .penable    (apb_penable),
         .pwrite     (apb_pwrite),
@@ -229,8 +238,8 @@ module soc_peripheral_subsystem #(
     if (ENABLE_APB_FAULT_INJECTOR) begin : g_apb_fault_injector
         reg fault_wait;
 
-        always @(posedge clk or negedge rst_n) begin
-            if (!rst_n) begin
+        always @(posedge clk or negedge periph_rst_n) begin
+            if (!periph_rst_n) begin
                 fault_wait <= 1'b0;
             end else if (fault_sel && apb_penable && !fault_wait) begin
                 fault_wait <= 1'b1;
@@ -252,7 +261,7 @@ module soc_peripheral_subsystem #(
     wire timer_int;
     apb_timer u_apb_timer (
         .pclk            (clk),
-        .presetn         (rst_n),
+        .presetn         (periph_rst_n),
 
         .paddr           (apb_paddr),
         .psel            (timer_sel),
@@ -266,9 +275,26 @@ module soc_peripheral_subsystem #(
         .timer_int       (timer_int)
     );
 
+    // Watchdog is the always-on APB block. Its expiry pulse feeds the SoC
+    // reset aggregation in mips_soc_impl; the sticky STATUS bit survives the
+    // resulting one-cycle reset of the bridge and other peripherals.
+    apb_wdt u_apb_wdt (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .psel       (wdt_sel),
+        .penable    (apb_penable),
+        .pwrite     (apb_pwrite),
+        .paddr      (apb_paddr[4:0]),
+        .pwdata     (apb_pwdata),
+        .prdata     (wdt_prdata),
+        .pready     (wdt_pready),
+        .pslverr    (wdt_pslverr),
+        .wdt_reset  (wdt_reset)
+    );
+
     apb_gpio u_apb_gpio (
         .pclk            (clk),
-        .presetn         (rst_n),
+        .presetn         (periph_rst_n),
 
         .paddr           (apb_paddr[11:0]),
         .psel            (gpio_sel),
@@ -294,7 +320,7 @@ module soc_peripheral_subsystem #(
 
     apb_axi_dma #(.N_CHANNELS(4)) u_apb_dma (
         .clk             (clk),
-        .rst_n           (rst_n),
+        .rst_n           (periph_rst_n),
 
         .paddr           (apb_paddr[11:0]),
         .psel            (dma_sel),
@@ -350,7 +376,7 @@ module soc_peripheral_subsystem #(
     wire [3:0] vic_vec_prio_unused;
     apb_vic #(.NUM_SOURCES(32)) u_apb_pic (
         .clk             (clk),
-        .rst_n           (rst_n),
+        .rst_n           (periph_rst_n),
         .psel            (pic_sel),
         .penable         (apb_penable),
         .pwrite          (apb_pwrite),

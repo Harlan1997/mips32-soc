@@ -44,14 +44,14 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | Blocker | Current evidence | Required change |
 |---|---|---|
 | Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
-| Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window. A plusarg-loaded development ROM now validates and copies a flash manifest payload in a full-SoC directed gate | Add a production immutable-ROM artifact and boot-status/WDT integration; do not treat the simulation image as mask-ROM evidence |
+| Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window. A plusarg-loaded development ROM now validates and copies a flash manifest payload in a full-SoC directed gate | Add a production immutable-ROM artifact and boot-status/boot-failure integration; WDT reset path is integrated but not yet part of the boot-failure gate |
 | Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, invalid/general selects `BFC0_0380` or `EBase+0x180`, and accepted `Cause.IV=1` interrupts select `EBase+0x200+VN*VS*32`; prototype mode retains literal `0x0000_0180` | A minimal firmware handler is copied from Boot ROM into SRAM and recovers a precise `Mod`; cache-error policy and external EIC/VEIC dispatch remain separate |
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180`; the manifest handoff image is linked at kseg0 VA `0x8000_1000` with physical load address `0x0000_1000` | The MMU-enabled kseg0 instruction handoff is verified, but a full runtime kseg0 linker/data layout and separate production Boot ROM/SPL image remain required |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry, and the handoff gate confirms kseg0 `0x8000_1000 -> 0x0000_1000` instruction translation | Kernel runtime data mapping, invalid-fault policy, ASID/page-table policy, cache-error handling and complete runtime firmware still require product work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
 | Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as IBE/DBE. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; add a software-visible fault/status register and full cache-error policy |
 | UART pins | `soc_top.v` now exposes UART TX/RX, RTS/CTS, DTR/DSR, DCD and RI; `ENABLE_UART_PINS=0` preserves legacy/UVM tie-offs. The product subsystem routes RX-specific IRQ to PIC bit0 and preserves aggregate UART IRQ on bit1 | Bind the pins through the selected pad-mux/electrical wrapper and add an external RX waveform/board-level gate; pin exposure alone is not pad signoff |
-| WDT/boot status | `apb_wdt` is being connected at APB `0x4000_7000`; the intended expiry behavior is a one-cycle reset request with sticky expired state | Complete product APB decode, reset request path, boot-failure status retention across watchdog reset and timeout/boot-failure test |
+| WDT/boot status | `apb_wdt` is decoded at APB `0x4000_7000`; expiry produces a one-cycle reset request into `mips_soc_impl` while the always-on WDT retains sticky `STATUS.expired`; AXI/APB and unit gates pass | Add boot-status register, stage/failure code retention across watchdog reset, and the no-preload boot-failure firmware gate |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
 
 ## 3. Physical and virtual memory map
@@ -254,7 +254,9 @@ The current `soc_top.v` pins are still not sufficient for full board signoff:
 - `soc_top.v` now exposes UART TX/RX and modem flow-control pins. Bind them to
   the selected pad-mux/electrical interface and verify an external RX waveform
   before product top signoff;
-- expose or intentionally isolate boot-status and watchdog reset observability.
+- expose or intentionally isolate boot-status and watchdog reset observability;
+  the current RTL exposes reset behavior internally but has no software-readable
+  boot-status register yet.
 
 ## 8. Verification gates (behavioral, not coverage)
 
@@ -326,6 +328,13 @@ close that gate:
   the fetch is translated to physical `0x0000_0220`, and CP0 records
   `EXL=1`, `ExcCode=INT`, `IV=1`. `make product-vectored-interrupt-gate` is
   its standalone entry point.
+- `tb/unit/wdt/tb_wdt.v` checks WDT reset defaults, arm/countdown, one-cycle
+  expiry pulse, sticky status/W1C and valid kick behavior. `make wdt-unit-gate`
+  is its standalone entry point.
+- `tb/unit/wdt/tb_wdt_peripheral.sv` drives the peripheral subsystem through
+  AXI/APB at `0x4000_7000`, verifies the decode, observes the aggregate reset
+  pulse and reads sticky status after reset. `make wdt-peripheral-gate` is its
+  integration entry point.
 - `tb/unit/flash/tb_axi_spi_flash.sv` drives the production
   `axi_spi_flash` pins rather than `axi_flash_image_model`. It verifies the
   standard-read command/address sequence (`0x03_000000`), two sequential
@@ -406,7 +415,8 @@ artifact.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.
 4. Integrate DDR controller/PHY wrapper, APB status, refresh/calibration and
    the DDR init gate. Do not call `axi_ddr_behavioral` a product memory model.
-5. Integrate WDT and boot-status registers into the peripheral/reset path.
+5. Add boot-status registers and boot-failure firmware around the integrated WDT
+   reset path; retain stage/failure code across watchdog reset.
 6. Run the six gates above with no coverage, lint, CDC/RDC, formal,
    synthesis/timing, or PPA work in this phase.
 
