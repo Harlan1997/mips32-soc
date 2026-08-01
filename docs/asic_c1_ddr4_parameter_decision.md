@@ -41,4 +41,6 @@ foundry/PDK/IO 书面确认和
 `A-DDR4-09` 的训练/WDT 数值。阶段 B 已进入 RFQ 准备，筛选规则见
 [`docs/asic_c1_ddr4_phy_selection_plan.md`](asic_c1_ddr4_phy_selection_plan.md)。
 在外部签收完成前，`DDR4_ENTRY_READY` 必须保持 `0`，不得创建产品 PHY
-wrapper 或 controller RTL。
+wrapper 或 controller RTL。资料暂时不可得时，按
+[`docs/asic_c1_ddr4_contingency_plan.md`](asic_c1_ddr4_contingency_plan.md)
+执行 F1 + F4。
