@@ -1,6 +1,6 @@
 # Address Map
 
-> Version: v0.3 (2026-08-01). The product boot/memory contract is defined in
+> Version: v0.4 (2026-08-01). The product boot/memory contract is defined in
 > `docs/boot_memory_contract.md`; the table below is the shared source of
 > truth for implementation and verification. Prototype smoke tests may still
 > use the legacy SRAM preload path until the product gate is enabled.
@@ -39,7 +39,7 @@ return AXI `DECERR`.
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
 | QSPI/XIP status | `0x5000` | version/status/last-error observability; full command/XIP/FIFO controller not yet integrated |
-| DDR controller | `0x6000` | init/calibration/refresh status; product block not yet integrated |
+| DDR controller | `0x6000` | frozen init/calibration/refresh/error contract; product block not yet integrated |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
 
@@ -51,6 +51,29 @@ return AXI `DECERR`.
 | `0x004` | `STATUS` | RO | bit 0: captured XIP timeout; bit 1: controller present |
 | `0x008` | `LAST_ERROR` | RO | `[31:16]` class, `[15:0]` code; `0x0001_0001` is AXI XIP timeout |
 | `0x00C` | `CONTROL` | WO | bit 0 W1C clears captured timeout and last error |
+
+### DDR Controller Registers (`0x4000_6000`)
+
+The register offsets below are an address/software contract only. No RTL DDR
+controller or PHY is instantiated on the current integration branch; S3 remains
+`axi_ddr_behavioral` until the entry criteria in
+`docs/block_specs/ddr3_spec.md` are met.
+
+| Offset | Register | Access | Meaning |
+| --- | --- | --- | --- |
+| `0x000` | `CTRL` | RW/W1S | enable, init-start, self-refresh request, force-refresh |
+| `0x004` | `STATUS` | RO | init/calibration/busy/refresh/self-refresh/error/PHY state |
+| `0x008..0x010` | `TIMING_0..2` | RW | JEDEC timing cycles |
+| `0x014` | `REFRESH_CTRL` | RW | tREFI and temperature mode |
+| `0x018..0x024` | `MR0_INIT..MR3_INIT` | RW | DDR3 mode-register values |
+| `0x028..0x02C` | `ADDR_MAP`, `ODT_CTRL` | RW | geometry and ODT configuration |
+| `0x030` | `ERROR_STATUS` | RO | sticky controller error code |
+| `0x034` | `ERROR_CLEAR` | WO/W1C | clear fatal error while idle |
+| `0x038` | `VERSION` | RO | `0x4444_0301` |
+| `0x040..0x044` | `PHY_CTRL`, `PHY_STATUS` | RW/RO | selected PHY control and training state |
+| `0x080..0x084` | `IRQ_EN`, `IRQ_STATUS` | RW/W1C | init/refresh/error/self-refresh events |
+| `0x100..0x108` | `ECC_*` | RW/RO | reserved hooks; ECC disabled in baseline |
+| `0x200..0x208` | `PERF_*` | RO | read/write/refresh counters |
 
 ## GPIO Register Map
 
