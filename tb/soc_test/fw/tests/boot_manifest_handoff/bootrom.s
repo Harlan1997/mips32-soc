@@ -143,3 +143,31 @@ boot_fail:
 boot_fail_loop:
     b       boot_fail_loop
     nop
+
+    /* The product BEV general vector is BFC0_0380. AXI read failures arrive
+     * as IBE/DBE through the cache sideband and must not look like a malformed
+     * manifest. Keep the failure code distinct for boot-status integration. */
+    .section .boot_exception, "ax"
+    .globl boot_exception_handler
+
+boot_exception_handler:
+    mfc0    $k0, $13
+    srl     $k0, $k0, 2
+    andi    $k0, $k0, 0x001F
+    addiu   $k1, $zero, 6
+    beq     $k0, $k1, boot_xip_bus_fail
+    nop
+    addiu   $k1, $zero, 7
+    bne     $k0, $k1, boot_fail
+    nop
+
+boot_xip_bus_fail:
+    lui     $k0, 0xA000
+    ori     $k0, $k0, 0xFFFC
+    lui     $k1, 0xDEAD
+    ori     $k1, $k1, 0xB007
+    sw      $k1, 0($k0)
+
+boot_xip_bus_fail_loop:
+    b       boot_xip_bus_fail_loop
+    nop

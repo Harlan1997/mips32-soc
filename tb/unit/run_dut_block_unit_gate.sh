@@ -218,6 +218,9 @@ mkdir -p "${BOOTROM_DIR}"
     RUN_DIR="$(pwd)/axi_spi_flash" \
         "${ROOT_DIR}/tb/unit/flash/run_axi_spi_flash.sh"
 
+    RUN_DIR="$(pwd)/axi_read_timeout_guard" \
+        "${ROOT_DIR}/tb/unit/flash/run_axi_read_timeout_guard.sh"
+
     RUN_DIR="$(pwd)/product_reset_fetch" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_reset_fetch.sh"
 
@@ -247,6 +250,7 @@ mkdir -p "${BOOTROM_DIR}"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS axi_spi_flash" "${BOOTROM_DIR}/axi_spi_flash/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS axi_read_timeout_guard" "${BOOTROM_DIR}/axi_read_timeout_guard/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_reset_fetch" "${BOOTROM_DIR}/product_reset_fetch/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_boot_vector" "${BOOTROM_DIR}/product_boot_vector/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS fetch_pc_alignment" "${BOOTROM_DIR}/fetch_pc_alignment/sim.log" && \
@@ -256,7 +260,8 @@ if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_mmu_ebase_modified" "${BOOTROM_DIR}/product_mmu_ebase_modified/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" "${BOOTROM_DIR}/product_manifest_handoff/sim_valid.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_bad_crc" "${BOOTROM_DIR}/product_manifest_handoff/sim_bad_crc.log"; then
+   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_bad_crc" "${BOOTROM_DIR}/product_manifest_handoff/sim_bad_crc.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_xip_timeout" "${BOOTROM_DIR}/product_manifest_handoff/sim_xip_timeout.log"; then
     echo "BOOTROM: PASS"
 else
     echo "BOOTROM: FAIL"

@@ -20,4 +20,8 @@ SECTIONS
         KEEP(*(.text.init))
         *(.text*)
     } > BOOT_ROM
+
+    .boot_exception ORIGIN(BOOT_ROM) + 0x380 : {
+        KEEP(*(.boot_exception))
+    } > BOOT_ROM
 }

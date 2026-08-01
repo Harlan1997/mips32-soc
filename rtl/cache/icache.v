@@ -19,6 +19,7 @@ module icache (
     output reg  [31:0] cpu_rdata,
     output wire        cpu_addr_ok,
     output wire        cpu_data_ok,
+    output wire        cpu_bus_error,
 
     // AXI4 Master Interface (AR and R channels)
     output wire [3:0]  arid,
@@ -60,6 +61,7 @@ module icache (
     localparam LOOKUP  = 3'd1;
     localparam MISS    = 3'd2;
     localparam REFILL  = 3'd3;
+    localparam ERROR   = 3'd4;
 
     reg [2:0] state, next_state;
 
@@ -84,10 +86,12 @@ module icache (
     // Refill buffer
     reg [255:0] refill_buf;
     reg [2:0]   refill_word_cnt;
+    reg         refill_error;
 
     // Synchronous read for SRAM (fan out across 4 ways)
     wire sram_read_en  = (state == IDLE && cpu_req) || (state == LOOKUP && cpu_req && cpu_addr_ok);
-    wire sram_write_en = (state == REFILL && rvalid && rlast);
+    wire sram_write_en = (state == REFILL && rvalid && rlast &&
+                          !(refill_error || (rresp != 2'b00)));
     wire [5:0] sram_addr = sram_write_en ? req_buf_addr[10:5] : (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5]);
 
     integer ri;
@@ -153,7 +157,8 @@ module icache (
 
     // CPU interface logic
     assign cpu_addr_ok = (state == IDLE) || (state == LOOKUP && cache_hit);
-    assign cpu_data_ok = (state == LOOKUP && cache_hit);
+    assign cpu_data_ok = (state == LOOKUP && cache_hit) || (state == ERROR);
+    assign cpu_bus_error = (state == ERROR);
 
     // Next State Logic
     always @(*) begin
@@ -166,7 +171,9 @@ module icache (
                 end else next_state = MISS;
             end
             MISS:   if (arready && arvalid) next_state = REFILL;
-            REFILL: if (rvalid && rlast) next_state = IDLE;
+            REFILL: if (rvalid && rlast)
+                        next_state = (refill_error || (rresp != 2'b00)) ? ERROR : IDLE;
+            ERROR:  next_state = IDLE;
         endcase
     end
 
@@ -177,7 +184,7 @@ module icache (
             state <= IDLE;
             req_buf_valid <= 1'b0; req_buf_addr <= 32'd0;
             arvalid <= 1'b0; araddr <= 32'd0; rready <= 1'b0;
-            refill_word_cnt <= 3'd0; refill_buf <= 256'd0;
+            refill_word_cnt <= 3'd0; refill_buf <= 256'd0; refill_error <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
                 for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+1){1'b0}};
@@ -205,14 +212,20 @@ module icache (
                 MISS: begin
                     if (arready && arvalid) begin
                         arvalid <= 1'b0; rready <= 1'b1; refill_word_cnt <= 3'd0;
+                        refill_error <= 1'b0;
                     end
                 end
                 REFILL: begin
                     if (rvalid && rready) begin
                         refill_buf[refill_word_cnt*32 +: 32] <= rdata;
                         refill_word_cnt <= refill_word_cnt + 1'b1;
+                        if (rresp != 2'b00)
+                            refill_error <= 1'b1;
                         if (rlast) rready <= 1'b0;
                     end
+                end
+                ERROR: begin
+                    req_buf_valid <= 1'b0;
                 end
             endcase
         end

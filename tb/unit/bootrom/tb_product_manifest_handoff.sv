@@ -5,9 +5,13 @@
 // through the production SPI XIP pins, validates/copies the payload, then
 // transfers to its kseg0 entry. The responder is a serial flash device, not
 // the verification-only AXI flash-image model.
-module tb_product_manifest_handoff;
+module tb_product_manifest_handoff #(
+    parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
+    parameter integer EXPECT_XIP_TIMEOUT = 0
+);
     localparam integer FLASH_BYTES = 65536;
     localparam [31:0] HANDOFF_MARKER = 32'h4841_4E44;
+    localparam [31:0] XIP_TIMEOUT_MARKER = 32'hDEAD_B007;
 
     reg clk;
     reg rst_n;
@@ -44,6 +48,7 @@ module tb_product_manifest_handoff;
     reg stage1_entry_seen;
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
+    reg xip_timeout_mailbox_seen;
     // Aggregate gate run directories exceed the historical 128-character
     // simulation-image buffer. Keep the external flash path intact so a
     // failed $readmemh cannot turn a negative test into an all-FF false pass.
@@ -56,7 +61,9 @@ module tb_product_manifest_handoff;
         end
     endgenerate
 
-    mips_soc u_soc (
+    mips_soc #(
+        .SPI_READ_TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES)
+    ) u_soc (
         .clk       (clk),
         .rst_n     (rst_n),
         .gpio_pins (gpio_pins),
@@ -122,6 +129,7 @@ module tb_product_manifest_handoff;
             stage1_entry_seen = 1'b0;
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
+            xip_timeout_mailbox_seen = 1'b0;
         end else begin
             cycles = cycles + 1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'hBFC0_0000)
@@ -139,13 +147,15 @@ module tb_product_manifest_handoff;
                 if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFF8 &&
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == HANDOFF_MARKER)
                     handoff_seen = 1'b1;
-                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFFC) begin
-                    if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'hDEAD_BEEF)
-                        pass_mailbox_seen = 1'b1;
-                    else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'hDEAD_DEAD)
-                        fail_mailbox_seen = 1'b1;
-                    else
-                        fail("boot firmware wrote an unexpected mailbox value");
+                    if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFFC) begin
+                        if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'hDEAD_BEEF)
+                            pass_mailbox_seen = 1'b1;
+                        else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'hDEAD_DEAD)
+                            fail_mailbox_seen = 1'b1;
+                        else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == XIP_TIMEOUT_MARKER)
+                            xip_timeout_mailbox_seen = 1'b1;
+                        else
+                            fail("boot firmware wrote an unexpected mailbox value");
                 end
             end
 
@@ -167,9 +177,17 @@ module tb_product_manifest_handoff;
                 $finish;
             end
 
-            if (fail_mailbox_seen) begin
+            if (fail_mailbox_seen || xip_timeout_mailbox_seen) begin
                 if (expect_boot_failure == 0)
                     fail("valid image was rejected by Boot ROM");
+                if (EXPECT_XIP_TIMEOUT != 0) begin
+                    if (!xip_timeout_mailbox_seen)
+                        fail("XIP timeout did not take the Boot ROM bus-error path");
+                    if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[6:2] != 5'h07)
+                        fail("XIP timeout did not raise DBE");
+                end else if (!fail_mailbox_seen) begin
+                    fail("manifest rejection used the XIP bus-error failure path");
+                end
                 if (handoff_seen || stage1_entry_seen)
                     fail("bad image executed after a manifest failure");
                 $display("REGRESSION_TEST_SUCCESS product_manifest_handoff_%0s", expect_failure_name);
@@ -201,8 +219,8 @@ module tb_product_manifest_handoff;
         // file load cannot masquerade as a bad-manifest test pass.
         if (flash_mem[4] != 8'h01 && flash_mem[4] != 8'h02)
             fail("SPI flash image was not loaded");
-        expect_boot_failure = $test$plusargs("EXPECT_BOOT_FAILURE");
-        expect_failure_name = "bad_crc";
+        expect_boot_failure = $test$plusargs("EXPECT_BOOT_FAILURE") || (EXPECT_XIP_TIMEOUT != 0);
+        expect_failure_name = (EXPECT_XIP_TIMEOUT != 0) ? "xip_timeout" : "bad_crc";
         void'($value$plusargs("EXPECT_FAILURE_NAME=%s", expect_failure_name));
         clk = 1'b0;
         rst_n = 1'b0;
