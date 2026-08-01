@@ -20,6 +20,7 @@ module dcache (
     input  wire [31:0] cpu_addr,
     input  wire [31:0] cpu_wdata,
     input  wire [3:0]  cpu_be,
+    input  wire        cpu_uncacheable,
     output reg  [31:0] cpu_rdata,
     output wire        cpu_addr_ok,
     output wire        cpu_data_ok,
@@ -115,13 +116,20 @@ module dcache (
     reg [31:0] req_buf_addr;
     reg [31:0] req_buf_wdata;
     reg [3:0]  req_buf_be;
+    reg        req_buf_uncacheable;
 
     wire [5:0]  lookup_index = req_buf_valid ? req_buf_addr[10:5] : cpu_addr[10:5];
     wire [20:0] lookup_tag   = req_buf_addr[31:11];
     wire [2:0]  lookup_word  = req_buf_addr[4:2];
 
-    assign uncacheable = (req_buf_valid ? (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA)
-                                        : (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA));
+    // Product-mode kseg1 accesses are translated before reaching this cache,
+    // so the physical address alone cannot identify them as uncached. Preserve
+    // the MMU attribute with the buffered request while retaining legacy APB
+    // and SRAM-alias decoding for the prototype configuration.
+    wire legacy_cpu_uncacheable = (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA);
+    wire legacy_req_uncacheable = (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA);
+    assign uncacheable = req_buf_valid ? (req_buf_uncacheable || legacy_req_uncacheable)
+                                       : (cpu_uncacheable || legacy_cpu_uncacheable);
 
     // SRAM arrays (4-way). tag entry = {valid[22], dirty[21], tag[20:0]}
     reg [TAG_BITS+1:0] tag_ram  [0:WAYS-1][0:SETS-1];
@@ -265,7 +273,7 @@ module dcache (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= IDLE;
-            req_buf_valid <= 1'b0; req_buf_we <= 1'b0;
+            req_buf_valid <= 1'b0; req_buf_we <= 1'b0; req_buf_uncacheable <= 1'b0;
             req_buf_addr <= 32'd0; req_buf_wdata <= 32'd0; req_buf_be <= 4'd0;
             awvalid <= 1'b0; awaddr <= 32'd0;
             wvalid <= 1'b0; wlast <= 1'b0; wdata <= 32'd0; wstrb <= 4'hF;
@@ -283,6 +291,7 @@ module dcache (
                         req_buf_valid <= 1'b1; req_buf_we <= cpu_we;
                         req_buf_addr  <= cpu_addr; req_buf_wdata <= cpu_wdata;
                         req_buf_be    <= cpu_be;
+                        req_buf_uncacheable <= cpu_uncacheable || legacy_cpu_uncacheable;
                     end
                 end
 

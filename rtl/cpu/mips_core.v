@@ -109,6 +109,7 @@ module mips_core (
     wire [31:0] cpu_data_addr;
     wire [31:0] cpu_data_wdata;
     wire [3:0]  cpu_data_be;
+    wire        cpu_data_uncacheable;
     wire        cpu_data_addr_ok;
     wire        cpu_data_data_ok;
     wire [31:0] cpu_data_rdata;
@@ -130,6 +131,7 @@ module mips_core (
         .ext_int         (ext_int),
         .data_wdata      (cpu_data_wdata),
         .data_be         (cpu_data_be),
+        .data_uncacheable(cpu_data_uncacheable),
         .data_addr_ok    (cpu_data_addr_ok),
         .data_data_ok    (cpu_data_data_ok),
         .data_rdata      (cpu_data_rdata),
@@ -196,6 +198,7 @@ module mips_core (
         .cpu_addr     (cpu_data_addr),
         .cpu_wdata    (cpu_data_wdata),
         .cpu_be       (cpu_data_be),
+        .cpu_uncacheable(cpu_data_uncacheable),
         .cpu_rdata    (cpu_data_rdata),
         .cpu_addr_ok  (cpu_data_addr_ok),
         .cpu_data_ok  (cpu_data_data_ok),

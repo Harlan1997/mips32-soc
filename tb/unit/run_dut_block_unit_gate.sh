@@ -203,8 +203,8 @@ else
     FAILED=1
 fi
 
-# 10. bootrom/flash (product reset target and physical SPI XIP controller)
-echo "--- [10/10] Running Boot ROM, SPI Flash, and Reset-Path Tests ---"
+# 10. bootrom/flash (product reset target, physical SPI XIP, and image handoff)
+echo "--- [10/10] Running Boot ROM, SPI Flash, and Product Boot Tests ---"
 BOOTROM_DIR="${RUN_ROOT}/bootrom"
 mkdir -p "${BOOTROM_DIR}"
 (
@@ -241,6 +241,9 @@ mkdir -p "${BOOTROM_DIR}"
 
     RUN_DIR="$(pwd)/product_mmu_ebase_modified" \
         "${ROOT_DIR}/tb/unit/bootrom/run_product_mmu_ebase_modified.sh"
+
+    RUN_DIR="$(pwd)/product_manifest_handoff" \
+        "${ROOT_DIR}/tb/unit/bootrom/run_product_manifest_handoff.sh"
 )
 if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS axi_spi_flash" "${BOOTROM_DIR}/axi_spi_flash/sim.log" && \
@@ -251,7 +254,9 @@ if grep -q "REGRESSION_TEST_SUCCESS axi_boot_rom" "${BOOTROM_DIR}/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_tlb_vectors" "${BOOTROM_DIR}/product_tlb_vectors/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_tlb_data_vectors" "${BOOTROM_DIR}/product_tlb_data_vectors/sim.log" && \
    grep -q "REGRESSION_TEST_SUCCESS product_mmu_boot" "${BOOTROM_DIR}/product_mmu_boot/sim.log" && \
-   grep -q "REGRESSION_TEST_SUCCESS product_mmu_ebase_modified" "${BOOTROM_DIR}/product_mmu_ebase_modified/sim.log"; then
+   grep -q "REGRESSION_TEST_SUCCESS product_mmu_ebase_modified" "${BOOTROM_DIR}/product_mmu_ebase_modified/sim.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" "${BOOTROM_DIR}/product_manifest_handoff/sim_valid.log" && \
+   grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_bad_crc" "${BOOTROM_DIR}/product_manifest_handoff/sim_bad_crc.log"; then
     echo "BOOTROM: PASS"
 else
     echo "BOOTROM: FAIL"
