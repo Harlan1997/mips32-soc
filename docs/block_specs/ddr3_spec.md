@@ -30,6 +30,9 @@
 
 ### 0.1 当前阻塞和输入
 
+输入登记见 [`docs/ddr_integration_inputs.md`](../ddr_integration_inputs.md)；
+当前 `DDR_ENTRY_READY=0`，因此本节只冻结实施前置条件，不授权 controller RTL。
+
 controller RTL 只有在以下输入全部冻结后才允许实现：
 
 1. PHY vendor/IP、版本、许可证和 DFI 3.1 port list；
