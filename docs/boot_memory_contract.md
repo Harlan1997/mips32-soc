@@ -1,13 +1,14 @@
 # Boot and Memory Product Contract
 
-> Version: v1.4 (2026-08-01)
+> Version: v1.5 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
 > vector, IP-based vectored interrupt, minimal BEV MMU boot-firmware, EBase/Modified recovery, SPI XIP
 > pin-level slices, a bounded AXI XIP timeout/DBE path, and a development
 > manifest-to-kseg0-SRAM handoff, an MMU-enabled kseg0 stage-1 instruction
-> handoff slice, and an always-on boot-status/WDT retention slice.
+> handoff slice, an always-on boot-status/WDT retention slice, and a
+> no-preload Boot ROM WDT failure/reset gate.
 > This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
@@ -288,7 +289,10 @@ integration baseline, plus a real DDR PHY model/board wrapper and firmware
 image hash recorded in the report. Generic AXI flash-image or behavioral DDR
 tests remain block evidence only. The current `wdt-boot-failure-gate` is a
 separate preloaded firmware reset-retention smoke; it is not evidence for the
-no-preload `wdt_boot_failure_test`.
+no-preload `wdt_boot_failure_test`. The separate
+`product-wdt-boot-failure-gate` now provides that no-preload Boot ROM reset /
+retention evidence, but deliberately does not inject a manifest/QSPI/DDR
+failure.
 
 ### 8.1 Current executable evidence
 
@@ -303,6 +307,9 @@ close that gate:
   `SOC_PRODUCT_BOOT_ENABLE=1`, does not preload SRAM, verifies PC
   `0xBFC0_0000`, and verifies the first I-cache AR transaction is accepted by
   S4 at physical address `0x1FC0_0000`.
+- `tb/unit/bootrom/run_product_wdt_boot_failure.sh` runs the Boot ROM with no
+  SRAM preload, installs the early APB TLB map, records stage/failure, arms the
+  WDT, and verifies the second reset entry reads `POR|WDT` and retained fields.
 - `tb/unit/bootrom/tb_fetch_pc_alignment.sv` runs the same reset program in
   prototype and `SOC_PRODUCT_BOOT_ENABLE=1` configurations. It proves the
   reset `addiu`, its dependent `bne`, and the branch delay slot reach ID with
@@ -430,10 +437,9 @@ artifact.
 4. Integrate DDR controller/PHY wrapper, APB status, refresh/calibration and
    the DDR init gate. Do not call `axi_ddr_behavioral` a product memory model.
 5. Add boot-failure firmware around the integrated WDT/reset path. The
-   always-on boot-status registers and retention gate are implemented; the
-   preloaded firmware smoke passes, but the no-preload firmware gate must still
-   write a failure code from the Boot ROM path, trigger WDT reset, and verify
-   deterministic restart/cause handling.
+   always-on boot-status registers, retention gate, and no-preload Boot ROM
+   deliberate-failure gate are implemented; connect manifest/QSPI/DDR failure
+   causes to the same codes and verify deterministic restart/cause handling.
 6. Run the six gates above with no coverage, lint, CDC/RDC, formal,
    synthesis/timing, or PPA work in this phase.
 
