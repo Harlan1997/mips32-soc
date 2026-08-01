@@ -12,6 +12,8 @@ module tb_uart_16550;
     wire         pready, pslverr;
     wire         uart_tx;
     wire         irq;
+    wire         rx_irq;
+    wire         tx_irq;
 
     integer errs = 0;
 
@@ -26,7 +28,7 @@ module tb_uart_16550;
         .uart_rts_n(), .uart_cts_n(1'b0),
         .uart_dtr_n(), .uart_dsr_n(1'b0),
         .uart_dcd_n(1'b0), .uart_ri_n(1'b1),
-        .irq(irq));
+        .irq(irq), .rx_irq(rx_irq), .tx_irq(tx_irq));
 
     task apb_write_strb(input [4:0] a, input [31:0] d, input [3:0] s);
     begin
@@ -321,6 +323,7 @@ module tb_uart_16550;
         apb_write(5'h04, 8'h02); // Enable ETBEI (IER[1])
         #100;
         if (!irq) begin $display("FAIL Case 10 THRE IRQ missing when TX empty"); errs = errs + 1; end
+        if (!tx_irq || rx_irq) begin $display("FAIL Case 10 IRQ split: tx=%b rx=%b", tx_irq, rx_irq); errs = errs + 1; end
         apb_read(5'h08, rd_data);
         if (rd_data[3:0] !== 4'b0010) begin
             $display("FAIL Case 10 THRE IIR code expected 02, got %h", rd_data[7:0]); errs = errs + 1;
@@ -336,10 +339,12 @@ module tb_uart_16550;
         $display("--- Case 11: Loopback TX->RX Data Path ---");
         apb_write(5'h08, 8'h01); // FIFO_EN=1
         apb_write(5'h10, 8'h10); // LOOP=1
+        apb_write(5'h04, 8'h01); // Enable RDA for the RX-specific source
         for (i = 0; i < 8; i = i + 1) begin
             apb_write(5'h00, test_data[i]);
         end
         #50000;
+        if (!rx_irq || tx_irq) begin $display("FAIL Case 11 IRQ split: tx=%b rx=%b", tx_irq, rx_irq); errs = errs + 1; end
         for (i = 0; i < 8; i = i + 1) begin
             apb_read(5'h00, rd_data);
             if (rd_data[7:0] !== test_data[i]) begin
@@ -347,6 +352,8 @@ module tb_uart_16550;
                 errs = errs + 1;
             end
         end
+        #100;
+        if (rx_irq) begin $display("FAIL Case 11 RX IRQ did not clear after FIFO drain"); errs = errs + 1; end
 
         // =====================================================================
         // Case 12: Single-Byte Mode (FIFO_EN=0) & RX Overrun

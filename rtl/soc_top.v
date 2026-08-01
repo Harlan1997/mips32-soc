@@ -11,6 +11,15 @@ module soc_top (
 
     inout  wire [31:0] gpio_pins,
 
+    input  wire        uart_rx,
+    output wire        uart_tx,
+    input  wire        uart_cts_n,
+    output wire        uart_rts_n,
+    input  wire        uart_dsr_n,
+    output wire        uart_dtr_n,
+    input  wire        uart_dcd_n,
+    input  wire        uart_ri_n,
+
     output wire        spi_sclk,
     output wire        spi_cs_n,
     output wire        spi_mosi,
@@ -22,11 +31,22 @@ module soc_top (
     output wire        tdo
 );
 
-    mips_soc u_soc (
+    mips_soc #(
+        .ENABLE_UART_PINS (1'b1)
+    ) u_soc (
         .clk          (clk),
         .rst_n        (rst_n),
 
         .gpio_pins    (gpio_pins),
+
+        .uart_rx      (uart_rx),
+        .uart_tx      (uart_tx),
+        .uart_cts_n   (uart_cts_n),
+        .uart_rts_n   (uart_rts_n),
+        .uart_dsr_n   (uart_dsr_n),
+        .uart_dtr_n   (uart_dtr_n),
+        .uart_dcd_n   (uart_dcd_n),
+        .uart_ri_n    (uart_ri_n),
 
         .spi_sclk     (spi_sclk),
         .spi_cs_n     (spi_cs_n),

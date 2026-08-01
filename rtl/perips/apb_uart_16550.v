@@ -49,7 +49,9 @@ module apb_uart_16550 #(
     input  wire        uart_dcd_n,
     input  wire        uart_ri_n,
 
-    output wire        irq
+    output wire        irq,
+    output wire        rx_irq,
+    output wire        tx_irq
 );
 
     localparam TX_AW = $clog2(TX_FIFO_DEPTH);
@@ -497,7 +499,9 @@ module apb_uart_16550 #(
                      modem_int        ? {iir_fifo_bits, 2'b00, 4'b0000} :
                                         {iir_fifo_bits, 2'b00, 4'b0001};
 
-    assign irq = rx_line_err_int | rx_data_trig_int | rx_timeout_int | tx_empty_int | modem_int;
+    assign rx_irq = rx_line_err_int | rx_data_trig_int | rx_timeout_int;
+    assign tx_irq = tx_empty_int;
+    assign irq = rx_irq | tx_irq | modem_int;
 
     // Combinational APB read
     assign lsr_read_pulse = rd_stb && (paddr[4:2] == 3'b101);

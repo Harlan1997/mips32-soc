@@ -8,6 +8,7 @@ module mips_soc_impl #(
     parameter ENABLE_EXT_AXI_MASTER = 1'b0,
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
+    parameter ENABLE_UART_PINS = 1'b0,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512
 ) (
     input  wire clk,
@@ -15,6 +16,16 @@ module mips_soc_impl #(
 
     // External GPIO Pins
     inout  wire [31:0] gpio_pins,
+
+    // Product UART/modem pins. Legacy/UVM configurations leave these disabled.
+    input  wire        uart_rx,
+    output wire        uart_tx,
+    input  wire        uart_cts_n,
+    output wire        uart_rts_n,
+    input  wire        uart_dsr_n,
+    output wire        uart_dtr_n,
+    input  wire        uart_dcd_n,
+    input  wire        uart_ri_n,
 
     // SPI Flash Interface
     output wire        spi_sclk,
@@ -1014,6 +1025,14 @@ module mips_soc_impl #(
         .clk          (clk),
         .rst_n        (rst_n),
         .gpio_pins    (gpio_pins),
+        .uart_rx      (ENABLE_UART_PINS ? uart_rx    : 1'b1),
+        .uart_tx      (uart_tx),
+        .uart_cts_n   (ENABLE_UART_PINS ? uart_cts_n : 1'b0),
+        .uart_rts_n   (uart_rts_n),
+        .uart_dsr_n   (ENABLE_UART_PINS ? uart_dsr_n : 1'b0),
+        .uart_dtr_n   (uart_dtr_n),
+        .uart_dcd_n   (ENABLE_UART_PINS ? uart_dcd_n : 1'b0),
+        .uart_ri_n    (ENABLE_UART_PINS ? uart_ri_n  : 1'b1),
         .cpu_int      (cpu_int),
 
         .s_awid       (s1_awid),
