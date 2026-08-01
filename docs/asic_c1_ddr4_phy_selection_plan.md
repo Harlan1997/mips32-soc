@@ -1,8 +1,8 @@
 # ASIC C1 DDR4 PHY/IP 筛选计划
 
-> 版本：v0.1（2026-08-02）
+> 版本：v0.2（2026-08-02）
 > 阶段：**B：PHY/IP 筛选准备**
-> 状态：**RFQ_PREPARATION / PHY_NOT_SELECTED**
+> 状态：**RFQ_PRIORITY_SYNOPSYS / PHY_NOT_SELECTED**
 
 本计划在 C1 推荐基线已接受后启动。供应商和 foundry 仍未签约，以下名单
 只是 RFQ 候选，不代表任何 vendor 已确认支持本项目工艺、封装或 DDR4
@@ -12,12 +12,12 @@ speed grade。
 
 | 候选 | 询价对象 | 必须核对 | 当前状态 |
 |---|---|---|---|
-| `PHY-CAND-01` | Synopsys DDR4 PHY / controller 组合 | 28nm LP、BGA、x32 single-rank、DDR4-2133/2400、DFI、model、license | **待 RFQ** |
+| `PHY-CAND-01` | **Synopsys DDR4 PHY / controller 组合** | **TSMC N28/28HPC、BGA、x32 single-rank、DDR4-2133/2400、DFI、model、license** | **优先 RFQ** |
 | `PHY-CAND-02` | Cadence DDR4 PHY / controller 组合 | 同上，并确认 foundry-approved delivery 和 APB/training ABI | **待 RFQ** |
 | `PHY-CAND-03` | Rambus 或 foundry-approved 等效 PHY | 同上，需确认交付形式、模型和板级工具 | **待 RFQ** |
 
-候选只有在 `A-DDR4-02` 的 foundry/PDK、IO library 和 package ball map 确认后
-才可进入正式技术评分。
+Synopsys/TSMC N28/28HPC 是当前优先 RFQ 组合，但只有在 foundry/PDK、IO
+library 和 package ball map 获得书面确认后，才可进入正式技术评分。
 
 ## 2. 必须向供应商索取的交付物
 

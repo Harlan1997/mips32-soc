@@ -1,6 +1,6 @@
 # ASIC 内存架构决策记录
 
-> 版本：v0.4（2026-08-02）
+> 版本：v0.5（2026-08-02）
 > 决策：**Profile C1 DDR4 已选择**
 > 状态：**C1_SELECTED / BASELINE_ACCEPTED / DDR4_MEMORY_ENTRY_BLOCKED**
 
@@ -52,3 +52,5 @@ controller 实现。阶段 A 的参数签收见
 [`docs/asic_c1_ddr4_parameter_decision.md`](asic_c1_ddr4_parameter_decision.md)；
 推荐基线已接受，阶段 B 的 RFQ/候选筛选准备见
 [`docs/asic_c1_ddr4_phy_selection_plan.md`](asic_c1_ddr4_phy_selection_plan.md)。
+当前 RFQ 优先组合为 **Synopsys DDR4 PHY/controller + TSMC N28/28HPC**；
+这仍是候选组合，不代表 license、PDK 或 vendor compatibility 已签收。
