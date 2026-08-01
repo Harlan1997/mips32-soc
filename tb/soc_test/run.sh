@@ -53,7 +53,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${ROOT_DIR}"/rtl/cpu/mips_if_id_reg.v "${ROOT_DIR}"/rtl/cpu/mips_if_stage.v "${ROOT_DIR}"/rtl/cpu/mips_mdu.v \
     "${ROOT_DIR}"/rtl/cpu/mips_mem_stage.v "${ROOT_DIR}"/rtl/cpu/mips_mem_wb_reg.v "${ROOT_DIR}"/rtl/cpu/mips_rob.v "${ROOT_DIR}"/rtl/cpu/mips_regfile.v \
     "${ROOT_DIR}"/rtl/cpu/mips_wb_stage.v "${ROOT_DIR}"/rtl/axi/axi2apb_bridge.v "${ROOT_DIR}"/rtl/axi/axi_crossbar.v "${ROOT_DIR}"/rtl/axi/axi_read_timeout_guard.v \
-    "${ROOT_DIR}"/rtl/perips/apb_axi_dma.v "${ROOT_DIR}"/rtl/perips/apb_gpio.v "${ROOT_DIR}"/rtl/perips/apb_vic.v "${ROOT_DIR}"/rtl/perips/apb_wdt.v \
+    "${ROOT_DIR}"/rtl/perips/apb_axi_dma.v "${ROOT_DIR}"/rtl/perips/apb_gpio.v "${ROOT_DIR}"/rtl/perips/apb_vic.v "${ROOT_DIR}"/rtl/perips/apb_wdt.v "${ROOT_DIR}"/rtl/perips/apb_boot_status.v \
     "${ROOT_DIR}"/rtl/perips/apb_timer.v "${ROOT_DIR}"/rtl/perips/apb_uart_16550.v "${ROOT_DIR}"/rtl/perips/axi_spi_flash.v "${ROOT_DIR}"/rtl/perips/axi_flash_image_model.v \
     "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/axi_ddr_behavioral.v "${ROOT_DIR}"/rtl/perips/axi_boot_rom.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
     "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v "${ROOT_DIR}"/rtl/cache/l2_cache.v "${ROOT_DIR}"/rtl/cache/l2_cache_caching.v "${ROOT_DIR}"/rtl/cache/l2_cache_wt.v "${ROOT_DIR}"/rtl/cache/l2_cache_nb.v \

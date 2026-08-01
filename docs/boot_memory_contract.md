@@ -1,13 +1,13 @@
 # Boot and Memory Product Contract
 
-> Version: v1.3 (2026-08-01)
+> Version: v1.4 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
 > vector, IP-based vectored interrupt, minimal BEV MMU boot-firmware, EBase/Modified recovery, SPI XIP
 > pin-level slices, a bounded AXI XIP timeout/DBE path, and a development
-> manifest-to-kseg0-SRAM handoff, and an MMU-enabled kseg0 stage-1 instruction
-> handoff slice.
+> manifest-to-kseg0-SRAM handoff, an MMU-enabled kseg0 stage-1 instruction
+> handoff slice, and an always-on boot-status/WDT retention slice.
 > This document defines the
 > minimum boot, address, reset, and memory behavior required before the SoC can
 > claim `PRODUCT_FUNCTION_READY`. It does not claim that the RTL implements
@@ -51,7 +51,7 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
 | Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as IBE/DBE. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; add a software-visible fault/status register and full cache-error policy |
 | UART pins | `soc_top.v` now exposes UART TX/RX, RTS/CTS, DTR/DSR, DCD and RI; `ENABLE_UART_PINS=0` preserves legacy/UVM tie-offs. The product subsystem routes RX-specific IRQ to PIC bit0 and preserves aggregate UART IRQ on bit1 | Bind the pins through the selected pad-mux/electrical wrapper and add an external RX waveform/board-level gate; pin exposure alone is not pad signoff |
-| WDT/boot status | `apb_wdt` is decoded at APB `0x4000_7000`; expiry produces a one-cycle reset request into `mips_soc_impl` while the always-on WDT retains sticky `STATUS.expired`; AXI/APB and unit gates pass | Add boot-status register, stage/failure code retention across watchdog reset, and the no-preload boot-failure firmware gate |
+| WDT/boot status | `apb_wdt` is decoded at APB `0x4000_7000`; expiry produces a one-cycle reset request into `mips_soc_impl`; the always-on WDT retains sticky `STATUS.expired`, and `apb_boot_status` at `0x4000_8000` retains stage/failure/cause across that pulse | RTL/unit and AXI/APB retention gates pass; add the no-preload boot-failure firmware gate and prove deterministic restart |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
 
 ## 3. Physical and virtual memory map
@@ -97,13 +97,25 @@ The existing offsets remain stable. New product blocks use previously unused
 | QSPI controller | `0x4000_5000` | command, FIFO, XIP and error |
 | DDR controller | `0x4000_6000` | init, calibration, refresh, error |
 | Watchdog | `0x4000_7000` | unlock, timeout, reset status |
-| Boot status | `0x4000_8000` | immutable boot stage/failure code |
+| Boot status | `0x4000_8000` | always-on diagnostic stage/failure/reset-cause registers |
 
 These addresses become the definitions `SOC_APB_QSPI_BASE`,
 `SOC_APB_DDRCTRL_BASE`, `SOC_APB_WDT_BASE`, and `SOC_APB_BOOT_STATUS_BASE` in
 the RTL configuration commit. The current QSPI and DDR draft specs reference
 undefined base macros; implementation must not proceed with undefined or
 duplicated addresses.
+
+The implemented boot-status register contract is:
+
+| Offset | Register | Access/reset behavior |
+|---:|---|---|
+| `0x00` | `BOOT_STAGE` | RW, low byte is the current boot stage; POR reset `0x00`; retained across WDT reset |
+| `0x04` | `FAILURE` | RW sticky code; a non-zero write records a code and a zero write clears it; POR reset `0x0000_0000`; retained across WDT reset |
+| `0x08` | `RESET_CAUSE` | sticky `[0] POR`, `[1] WDT`; POR initializes bit 0, a WDT pulse sets bit 1; writing 1 clears the selected bits |
+
+The block is software-writable by design so Boot ROM can record each state and
+failure before requesting reset. It is not a security authenticity register;
+signature/key policy remains a separate production requirement.
 
 ## 5. Reset and exception contract
 
@@ -255,8 +267,8 @@ The current `soc_top.v` pins are still not sufficient for full board signoff:
   the selected pad-mux/electrical interface and verify an external RX waveform
   before product top signoff;
 - expose or intentionally isolate boot-status and watchdog reset observability;
-  the current RTL exposes reset behavior internally but has no software-readable
-  boot-status register yet.
+  the APB boot-status block is now software-readable at `0x4000_8000`, while
+  the watchdog reset pulse remains an internal reset-aggregation signal.
 
 ## 8. Verification gates (behavioral, not coverage)
 
@@ -269,7 +281,7 @@ Each gate must run from a flash image and must not call `preload_sram_hex`:
 | `ddr_init_test` | init/calibration/refresh reaches `init_done`; memory march passes | init timeout, calibration error, AXI backpressure |
 | `mmu_product_boot_test` | wired TLB map, kseg aliases, refill and EBase vectors all pass | invalid/modified/refill, BEV transition, ERET |
 | `boot_handoff_test` | no SRAM preload; image reaches `HANDOFF` and writes boot mailbox | bad image must not execute payload |
-| `wdt_boot_failure_test` | failed boot records code and produces deterministic reset | timeout, reset while status is written |
+| `wdt_boot_failure_test` | failed boot records stage/code, produces deterministic reset, and reads both after reboot | timeout, reset while status is written, POR/WDT cause clear |
 
 `PRODUCT_FUNCTION_READY` for boot/memory requires all six gates on the same
 integration baseline, plus a real DDR PHY model/board wrapper and firmware
@@ -415,8 +427,10 @@ artifact.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.
 4. Integrate DDR controller/PHY wrapper, APB status, refresh/calibration and
    the DDR init gate. Do not call `axi_ddr_behavioral` a product memory model.
-5. Add boot-status registers and boot-failure firmware around the integrated WDT
-   reset path; retain stage/failure code across watchdog reset.
+5. Add boot-failure firmware around the integrated WDT/reset path. The
+   always-on boot-status registers and retention gate are implemented; the
+   no-preload firmware gate must still write a failure code, trigger WDT reset,
+   and verify deterministic restart/cause handling.
 6. Run the six gates above with no coverage, lint, CDC/RDC, formal,
    synthesis/timing, or PPA work in this phase.
 
