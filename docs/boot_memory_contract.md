@@ -286,7 +286,9 @@ Each gate must run from a flash image and must not call `preload_sram_hex`:
 `PRODUCT_FUNCTION_READY` for boot/memory requires all six gates on the same
 integration baseline, plus a real DDR PHY model/board wrapper and firmware
 image hash recorded in the report. Generic AXI flash-image or behavioral DDR
-tests remain block evidence only.
+tests remain block evidence only. The current `wdt-boot-failure-gate` is a
+separate preloaded firmware reset-retention smoke; it is not evidence for the
+no-preload `wdt_boot_failure_test`.
 
 ### 8.1 Current executable evidence
 
@@ -429,8 +431,9 @@ artifact.
    the DDR init gate. Do not call `axi_ddr_behavioral` a product memory model.
 5. Add boot-failure firmware around the integrated WDT/reset path. The
    always-on boot-status registers and retention gate are implemented; the
-   no-preload firmware gate must still write a failure code, trigger WDT reset,
-   and verify deterministic restart/cause handling.
+   preloaded firmware smoke passes, but the no-preload firmware gate must still
+   write a failure code from the Boot ROM path, trigger WDT reset, and verify
+   deterministic restart/cause handling.
 6. Run the six gates above with no coverage, lint, CDC/RDC, formal,
    synthesis/timing, or PPA work in this phase.
 
