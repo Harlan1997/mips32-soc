@@ -1,6 +1,6 @@
 # Boot and Memory Product Contract
 
-> Version: v0.9 (2026-08-01)
+> Version: v1.0 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
@@ -192,9 +192,11 @@ stage and failure code across watchdog reset.
 The implemented development format is the fixed `SOC1` version-1 layout above:
 64-byte header, 64-byte payload offset, Boot SRAM physical load address
 `0x0000_1000`, kseg0 entry `0x8000_1000`, development-CRC flag, and CRC32/IEEE
-over a word-padded payload. Its current directed negative evidence is CRC
-failure. Bad magic, bounds, controller-error, and timeout injections remain
-separate required negative cases before this image contract can be closed.
+over a word-padded payload. Its directed negative evidence independently
+rejects bad magic, version, header length, payload offset, zero/unaligned/
+out-of-bounds payload length, load address, entry address, flags, and CRC.
+Controller-error and timeout injections remain required before this image
+contract can be closed.
 
 ### 6.2 Required state sequence
 
@@ -315,8 +317,9 @@ close that gate:
   preloads SRAM nor instantiates `axi_flash_image_model`. The valid image must
   issue standard-read `0x03` traffic for both header and payload, copy to
   kseg1 Boot SRAM, record `HAND`, clear `BEV/ERL`, fetch stage 1 at
-  `0x8000_1000`, and write its success mailbox. The bad-CRC image must write
-  the failure mailbox and never reach handoff or stage 1.
+  `0x8000_1000`, and write its success mailbox. Eleven independently corrupted
+  header/CRC images must each write the failure mailbox and never reach
+  handoff or stage 1.
   `make product-manifest-handoff-gate` is its standalone entry point.
 - The handoff uncovered and fixed two integration defects: SPI command/read
   phase transitions could shift a CPU-originated XIP command to `0x06`, and
@@ -325,12 +328,18 @@ close that gate:
   `mips_core`, and `dcache` carry the uncached attribute with the buffered
   request. The D-cache unit regression and the full handoff gate exercise the
   corrected paths.
+- The rejection matrix also exposed a testbench false-pass risk: its former
+  128-character SPI-image plusarg buffer truncated aggregate-run paths, after
+  which the all-`FF` array initializer looked like a rejected image. The SPI
+  and Boot ROM image buffers now hold 512 characters, and the fixture rejects
+  an unloaded external-flash image before simulation starts.
 
-These tests prove this fixed development manifest and CRC handoff only. They do
-not prove the remaining manifest failure classes, signature/key policy,
-vectored/cache-error vectors, QSPI/DDR initialization, a complete relocated
-runtime handler set, or boot-status/WDT failure handling. The ROM image is a
-simulation plusarg and is not a production mask-ROM artifact.
+These tests prove this fixed development manifest, header rejection, CRC, and
+handoff only. They do not prove controller-error/timeout response,
+signature/key policy, vectored/cache-error vectors, QSPI/DDR initialization, a
+complete relocated runtime handler set, or boot-status/WDT failure handling.
+The ROM image is a simulation plusarg and is not a production mask-ROM
+artifact.
 
 ## 9. Implementation sequence
 
@@ -340,9 +349,9 @@ simulation plusarg and is not a production mask-ROM artifact.
    miss-versus-invalid TLB vector paths, and the minimal BEV product linker,
    wired mapping, dynamic refill and `ERET` retry slice, plus a minimal copied
    EBase general-handler/Modified recovery slice (complete only for the opt-in
-   directed slice), plus the development manifest/CRC-to-SRAM handoff;
-   implement the remaining manifest negative cases and vectored/cache-error
-   policy next.
+   directed slice), plus the development manifest/CRC-to-SRAM handoff and its
+   header rejection matrix; implement controller-error/timeout handling and
+   vectored/cache-error policy next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.

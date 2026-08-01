@@ -20,11 +20,18 @@ def write_byte_hex(path: Path, image: bytes) -> None:
     path.write_text("".join(f"{value:02x}\n" for value in image), encoding="ascii")
 
 
+def image_with_word(image: bytes, word_offset: int, value: int) -> bytes:
+    result = bytearray(image)
+    struct.pack_into("<I", result, word_offset, value)
+    return bytes(result)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--payload-bin", required=True, type=Path)
     parser.add_argument("--output-hex", required=True, type=Path)
     parser.add_argument("--bad-crc-hex", type=Path)
+    parser.add_argument("--negative-dir", type=Path)
     args = parser.parse_args()
 
     payload = args.payload_bin.read_bytes()
@@ -50,9 +57,26 @@ def main() -> None:
     write_byte_hex(args.output_hex, image)
 
     if args.bad_crc_hex:
-        corrupt = bytearray(image)
-        corrupt[0x20] ^= 0x01
-        write_byte_hex(args.bad_crc_hex, corrupt)
+        write_byte_hex(args.bad_crc_hex, image_with_word(image, 0x20, crc32 ^ 0x01))
+
+    if args.negative_dir:
+        args.negative_dir.mkdir(parents=True, exist_ok=True)
+        # Each image invalidates exactly one Boot ROM header check. This keeps
+        # a preceding failure from hiding an untested validation branch.
+        negative_images = {
+            "bad_magic": image_with_word(image, 0x00, 0),
+            "bad_version": image_with_word(image, 0x04, FORMAT_VERSION + 1),
+            "bad_header_bytes": image_with_word(image, 0x08, HEADER_BYTES - 4),
+            "bad_payload_offset": image_with_word(image, 0x0C, PAYLOAD_OFFSET + 4),
+            "bad_payload_length_zero": image_with_word(image, 0x10, 0),
+            "bad_payload_length_unaligned": image_with_word(image, 0x10, len(payload) - 1),
+            "bad_payload_length_bounds": image_with_word(image, 0x10, 0x8004),
+            "bad_load_address": image_with_word(image, 0x14, LOAD_PHYS_ADDR + 4),
+            "bad_entry_address": image_with_word(image, 0x18, ENTRY_VIRT_ADDR + 4),
+            "bad_flags": image_with_word(image, 0x1C, 0),
+        }
+        for name, negative_image in negative_images.items():
+            write_byte_hex(args.negative_dir / f"{name}.hex", negative_image)
 
 
 if __name__ == "__main__":
