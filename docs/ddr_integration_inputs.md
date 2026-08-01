@@ -1,18 +1,19 @@
 # DDR Controller Integration Inputs
 
-> Version: v0.2 (2026-08-01)
+> Version: v0.3 (2026-08-02)
 >
-> Target route: **ASIC (selected)**. Process/foundry/package/PHY inputs are not
-> selected yet.
+> Target route: **ASIC Profile C (selected)**. Product memory generation is
+> pending **C1 DDR4** vs **C2 LPDDR4/4X**.
 >
-> Status: **BLOCKED**. This is the entry manifest for the DDR3 controller/PHY
+> Status: **REBASE REQUIRED / BLOCKED**. This is the legacy DDR3 controller/PHY
 > implementation. It is intentionally separate from the behavioral S3 model;
 > an empty or placeholder row must never be treated as an implementation input.
 
-The interface contract is frozen in
+The current prototype interface contract is frozen in
 [`docs/block_specs/ddr3_spec.md`](block_specs/ddr3_spec.md). The following
-external inputs are required before `ddr3_ctrl` RTL or an S3 replacement is
-authorized. The ASIC acquisition sequence is tracked in
+DDR3 inputs are not product inputs for Profile C. A new DDR4/LPDDR4 contract is
+required before a product controller or S3 replacement is authorized. The ASIC
+acquisition sequence is tracked in
 [`docs/asic_ddr_input_acquisition.md`](asic_ddr_input_acquisition.md).
 
 | ID | Required input | Current state | Required evidence / owner |
@@ -33,9 +34,13 @@ DDR3 model and no `ddr3_ctrl` implementation. The only RTL memory target is
 `rtl/perips/axi_ddr_behavioral.v`, which is capacity/address evidence only and
 must remain labeled `BLOCK_VERIFIED`.
 
-ASIC is the selected product route, but `ASIC-DDR-01..08` is not yet closed:
-there is no process/foundry/package decision, PHY license/delivery, DRAM part,
-board timing file, real model or boot timeout budget in this repository.
+ASIC Profile C is selected, but `C-MEM-01..08` is not yet closed. There is no
+C1/C2 decision, process/foundry/package decision, PHY license/delivery, DRAM
+part, board timing file, real model or boot timeout budget in this repository.
+
+This manifest must not be changed to `DDR_ENTRY_READY=1` for Profile C. It is
+retained only to audit the legacy DDR3 prototype boundary until the new memory
+contract is created.
 
 The entry audit may therefore report `BLOCKED` while passing its own consistency
 checks. That result is not a DDR functionality pass and must not be included in

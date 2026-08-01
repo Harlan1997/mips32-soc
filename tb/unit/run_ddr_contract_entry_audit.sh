@@ -33,8 +33,8 @@ require_text() {
     echo "|---|---|---|"
     require_text "docs/block_specs/ddr3_spec.md" "DDR3 controller/PHY.*v1\.0|v1\.0" "contract spec present"
     require_text "docs/ddr_integration_inputs.md" "DDR_ENTRY_READY=0" "input manifest blocked"
-    require_text "docs/ddr_integration_inputs.md" "Target route: \*\*ASIC \(selected\)\*\*" "ASIC route selected"
-    require_text "docs/asic_ddr_input_acquisition.md" "ASIC_SELECTED / DDR_ENTRY_BLOCKED" "ASIC acquisition plan"
+    require_text "docs/ddr_integration_inputs.md" "Target route: \*\*ASIC Profile C \(selected\)\*\*" "ASIC Profile C selected"
+    require_text "docs/asic_ddr_input_acquisition.md" "PROFILE_C_SELECTED / C1_OR_C2_PENDING" "ASIC Profile C acquisition plan"
     require_text "rtl/include/soc_config.vh" "SOC_APB_DDRCTRL_BASE[[:space:]]+32'h4000_6000" "DDR APB base"
     require_text "rtl/include/soc_config.vh" "SOC_DDRCTRL_ERROR_STATUS_OFFSET[[:space:]]+12'h030" "error register offset"
     require_text "rtl/include/soc_config.vh" "SOC_DDRCTRL_VERSION[[:space:]]+32'h4444_0301" "contract version"
@@ -45,10 +45,10 @@ require_text() {
     echo
     echo "| Input | State |"
     echo "|---|---|"
-    echo "| ASIC process/foundry/package/PHY intake | BLOCKED: not selected |"
+    echo "| ASIC Profile C / C1-C2 memory choice | BLOCKED: pending choice |"
     echo "| PHY/IP and DFI port list | MISSING |"
     echo "| DRAM part and board timing | MISSING |"
-    echo "| Real DDR3 memory model | MISSING |"
+    echo "| Real DDR4/LPDDR4 memory model | MISSING |"
     echo "| Concrete clock/reset/power-good ownership | PARTIAL |"
     echo "| APB register ABI | CONTRACT FROZEN; firmware owner missing |"
     echo "| Boot/WDT timeout budget | MISSING |"
@@ -56,7 +56,7 @@ require_text() {
     if [ "${contract_errors}" -eq 0 ]; then
         echo "**RESULT: BLOCKED (expected until external inputs are supplied).**"
         echo
-        echo 'No `ddr3_ctrl` implementation is authorized by this result.'
+        echo 'No product DDR4/LPDDR4 controller implementation is authorized by this result.'
     else
         echo "**RESULT: FAIL (contract consistency checks failed).**"
     fi

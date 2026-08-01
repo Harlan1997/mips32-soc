@@ -1,13 +1,14 @@
 # ASIC DDR 输入获取计划
 
-> 版本：v0.1（2026-08-01）  
-> 路线：**ASIC**  
-> 当前状态：**ASIC_SELECTED / DDR_ENTRY_BLOCKED**
+> 版本：v0.2（2026-08-02）
+> 路线：**ASIC Profile C**
+> 当前状态：**PROFILE_C_SELECTED / C1_OR_C2_PENDING / MEMORY_ENTRY_BLOCKED**
 
-本文把 ASIC 目标与 DDR3 controller/PHY 的外部依赖分开管理。ASIC 路线
-已经确定，但在工艺、foundry、封装/板卡和 PHY/IP 选型落定前，不允许把
-`axi_ddr_behavioral` 或 FPGA MIG/EMIF 证据升级为商用 DDR 证据，也不允许
-开始无输入约束的 `ddr3_ctrl` RTL 实现。
+本文把 ASIC 目标与外部 memory controller/PHY 依赖分开管理。Profile C
+已经确定，但 DDR4 与 LPDDR4/4X 尚未二选一；在工艺、foundry、封装/板卡和
+对应 PHY/IP 选型落定前，不允许把 `axi_ddr_behavioral` 或 FPGA MIG/EMIF
+证据升级为商用 DDR 证据，也不允许开始无输入约束的产品 controller RTL
+实现。
 
 ## 1. ASIC 目标输入
 
@@ -28,15 +29,15 @@
 ## 2. 获取顺序
 
 1. 由 SoC owner 固定本项目的工艺节点、foundry、封装、IO 电压、温度等级
-   和目标 DDR3-1600 x32 单 rank 拓扑。
+   和 C1/C2 的目标内存拓扑。
 2. 向 foundry-approved catalog 以及 Synopsys/Cadence/Rambus 等 PHY 供应商
-   发出 RFI/RFQ；确认支持该节点、封装和 DDR3 speed grade。
+   发出 RFI/RFQ；确认支持该节点、封装和 DDR4/LPDDR4 speed grade。
 3. 在 NDA 和 license entitlement 生效后，索取完整交付包：DFI 3.1
    wrapper、port list/ratio、RTL/netlist、仿真模型、SVA/例程、时钟复位
    说明、综合/STA 约束和 APB/错误 ABI。
 4. 以 PHY 支持列表反选具体 DRAM part 和板级拓扑，取得 memory datasheet、
    SI/PI/ODT/终端参数、trace/timing 文件及 corner 约束。
-5. 获取供应商允许分发的真实 DDR3 model，建立无 preload 的 init、training、
+5. 获取供应商允许分发的真实 DDR4/LPDDR4 model，建立无 preload 的 init、training、
    refresh、read/write、backpressure 和 failure 仿真入口。
 6. 将每个交付物登记到输入 manifest：`path | version | SHA256 | license |
    owner | review date`。只有登记完整且 owner 签收，才允许把 entry audit
@@ -59,4 +60,3 @@
 | 3 | 选定 DRAM part 和板卡约束 | `ASIC-DDR-05..06` | **阻塞于 2** |
 | 4 | 取得 model、clock/reset 和 WDT budget | `ASIC-DDR-07..08` | **阻塞于 2/3** |
 | 5 | 更新 manifest、运行 entry audit、评审 wrapper 变更集 | `DDR_ENTRY_READY=1` | **未开始** |
-
