@@ -46,11 +46,11 @@ the PHY wrapper, but they do not change the address or reset contract below.
 |---|---|---|
 | Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
 | Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window. A plusarg-loaded development ROM now validates and copies a flash manifest payload in a full-SoC directed gate | Add a production immutable-ROM artifact and boot-status/boot-failure integration; WDT reset path is integrated but not yet part of the boot-failure gate |
-| Exception vector | Product mode resets `BEV=1/ERL=1`; CacheErr uses `BFC0_0100`/`EBase+0x100`, true TLB miss selects `BFC0_0200` or `EBase`, invalid/general selects `BFC0_0380` or `EBase+0x180`, and accepted `Cause.IV=1` interrupts select `EBase+0x200+VN*VS*32`; prototype mode retains literal `0x0000_0180` | CacheErr sideband/CP0 ERL/ErrorEPC is now RTL-directed verified; a production handler and external EIC/VEIC dispatch remain separate |
+| Exception vector | Product mode resets `BEV=1/ERL=1`; CacheErr uses `BFC0_0100`/`EBase+0x100`, true TLB miss selects `BFC0_0200` or `EBase`, invalid/general selects `BFC0_0380` or `EBase+0x180`, and accepted `Cause.IV=1` interrupts select `EBase+0x200+VN*VS*32`; prototype mode retains literal `0x0000_0180` | CacheErr sideband/CP0 ERL/ErrorEPC and an injected cached-refill handler/ERET recovery slice are RTL-directed verified; ECC, complete runtime policy and external EIC/VEIC dispatch remain separate |
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180`; the manifest handoff image is linked at kseg0 VA `0x8000_1000` with physical load address `0x0000_1000`, and its stage-1 issues kseg0 writes/readback at VA `0x8000_7000/0x8000_7004` | The MMU-enabled kseg0 instruction and finite multi-word data path are verified, but a full runtime kseg0 linker/data layout and separate production Boot ROM/SPL image remain required |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry, and the handoff gate confirms kseg0 `0x8000_1000 -> 0x0000_1000` instruction plus `0x8000_7000 -> 0x0000_7000` data translation; unit and product SoC gates prove software page-table lookup, ASID 1/2 switching, wired-global retention, `TLBWI` dynamic flush and re-refill | Kernel runtime data mapping, full SoC page-table allocator/multi-process pressure, shootdown IPI, invalid-fault policy and complete runtime firmware still require product work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral`; `docs/block_specs/ddr3_spec.md` v1.0 now freezes the controller/PHY contract and `soc_config.vh` defines `0x4000_6000` | Select PHY/DRAM inputs, implement the AXI/APB/DFI contract, replace S3, then run init/calibration/refresh and memory tests |
-| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as uncached IBE/DBE or cached CacheErr. The development handoff gate reads its manifest and payload through these physical SPI pins; APB `0x4000_5000` now exposes a version/presence/timeout/last-error observability slice with W1C clear; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; add production CacheErr handler/recovery and full software-visible fault classes |
+| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as uncached IBE/DBE or cached CacheErr. The development handoff gate reads its manifest and payload through these physical SPI pins; APB `0x4000_5000` now exposes a version/presence/timeout/last-error observability slice with W1C clear; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; extend the directed cached-refill handler slice to ECC/complete software-visible fault classes |
 | UART pins | `soc_top.v` now exposes UART TX/RX, RTS/CTS, DTR/DSR, DCD and RI; `ENABLE_UART_PINS=0` preserves legacy/UVM tie-offs. The product subsystem routes RX-specific IRQ to PIC bit0 and preserves aggregate UART IRQ on bit1 | Bind the pins through the selected pad-mux/electrical wrapper and add an external RX waveform/board-level gate; pin exposure alone is not pad signoff |
 | WDT/boot status | `apb_wdt` is decoded at APB `0x4000_7000`; expiry produces a one-cycle reset request into `mips_soc_impl`; the always-on WDT retains sticky `STATUS.expired`, and `apb_boot_status` at `0x4000_8000` retains stage/failure/cause across that pulse | RTL/unit, AXI/APB retention and no-preload Boot ROM failure gates pass; map manifest/QSPI/DDR fault classes to production failure codes and prove deterministic restart for each |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
@@ -161,9 +161,9 @@ image copies its EBase general handler to SRAM, clears `BEV/ERL`, takes a
 precise `Mod` on a valid `D=0` useg mapping, checks `Cause`/`BadVAddr`/`EPC`,
 sets `D=1`, and retries the store by `ERET`. The IP-based vectored-interrupt
 slice (`Cause.IV`/`IntCtl.VS`) is now implemented and has a product directed
-gate; CacheErr hardware routing is implemented and directed-tested, while its
-production recovery handler, invalid-fault policy and complete runtime handler
-set remain product requirements.
+gate; CacheErr hardware routing and the cached-refill recovery slice are
+implemented and directed-tested, while ECC escalation, invalid-fault policy and
+the complete runtime handler set remain product requirements.
 
 ### 5.3 MMU and early mappings
 
@@ -418,7 +418,7 @@ produces serial data, so this RTL cannot honestly detect a raw flash-device
 "timeout." The guard protects a wedged AXI/controller response path, not a
 non-responsive physical flash. The APB status block reports guarded AXI
 timeouts, not raw SPI silence. These tests do not prove signature/key policy,
-production CacheErr recovery, external EIC/VEIC dispatch, QSPI/DDR
+ECC/complete CacheErr policy, external EIC/VEIC dispatch, QSPI/DDR
 initialization, a complete relocated runtime handler set, or boot-status/WDT
 failure handling.
 The ROM image is a simulation plusarg and is not a production mask-ROM
@@ -434,9 +434,9 @@ artifact.
    EBase general-handler/Modified recovery slice (complete only for the opt-in
    directed slice), plus the IP-based vectored interrupt table, development
    manifest/CRC-to-SRAM handoff and its header rejection matrix. The bounded
-   AXI-side controller-stall/timeout path and the CPU CacheErr hardware
-   contract are implemented; production cache-error handler/recovery and
-   external EIC/VEIC policy are next.
+   AXI-side controller-stall/timeout path, the CPU CacheErr hardware contract,
+   and an injected cached-refill handler/recovery gate are implemented; ECC,
+   complete cache-error policy and external EIC/VEIC policy are next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.
