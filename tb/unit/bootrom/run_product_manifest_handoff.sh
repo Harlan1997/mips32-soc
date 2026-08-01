@@ -17,9 +17,11 @@ FW_DIR="${RUN_DIR}/firmware"
 
 MMU_DEFINE=()
 KSEG0_RUNTIME_ARG=()
+KSEG0_DATA_ARG=()
 if [ "${SOC_MMU_ENABLE:-0}" = "1" ]; then
     MMU_DEFINE=(+define+SOC_MMU_ENABLE=1)
     KSEG0_RUNTIME_ARG=(+EXPECT_KSEG0_RUNTIME)
+    KSEG0_DATA_ARG=(+EXPECT_KSEG0_DATA)
 fi
 
 make -C "${ROOT_DIR}/tb/soc_test/fw" \
@@ -44,6 +46,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     +BOOT_ROM_HEX="${FW_DIR}/boot_rom.hex" \
     +SPI_FLASH_HEX="${FW_DIR}/flash_image.hex" \
     "${KSEG0_RUNTIME_ARG[@]}" \
+    "${KSEG0_DATA_ARG[@]}" \
     -l sim_valid.log
 grep -q "REGRESSION_TEST_SUCCESS product_manifest_handoff_valid" sim_valid.log
 

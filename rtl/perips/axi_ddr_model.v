@@ -63,10 +63,13 @@ module axi_ddr_model #(
         firmware_hex = "firmware.hex";
         if ($value$plusargs("FW_HEX=%s", firmware_hex)) begin
             $display("axi_ddr_model: loading firmware from %0s", firmware_hex);
+            load_hex(firmware_hex);
         end else begin
-            $display("axi_ddr_model: loading default firmware.hex");
+            // A missing image is intentional for unit tests that exercise
+            // reset, bus errors, or an independent Boot ROM. Do not probe a
+            // default path here: VCS warns even for a failed $fopen.
+            $display("axi_ddr_model: no firmware image supplied; retaining zero init");
         end
-        load_hex(firmware_hex);
     end
 
     // synopsys translate_off
