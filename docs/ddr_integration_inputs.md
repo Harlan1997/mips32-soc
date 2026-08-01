@@ -1,6 +1,9 @@
 # DDR Controller Integration Inputs
 
-> Version: v0.1 (2026-08-01)
+> Version: v0.2 (2026-08-01)
+>
+> Target route: **ASIC (selected)**. Process/foundry/package/PHY inputs are not
+> selected yet.
 >
 > Status: **BLOCKED**. This is the entry manifest for the DDR3 controller/PHY
 > implementation. It is intentionally separate from the behavioral S3 model;
@@ -9,7 +12,8 @@
 The interface contract is frozen in
 [`docs/block_specs/ddr3_spec.md`](block_specs/ddr3_spec.md). The following
 external inputs are required before `ddr3_ctrl` RTL or an S3 replacement is
-authorized.
+authorized. The ASIC acquisition sequence is tracked in
+[`docs/asic_ddr_input_acquisition.md`](asic_ddr_input_acquisition.md).
 
 | ID | Required input | Current state | Required evidence / owner |
 |---|---|---|---|
@@ -28,6 +32,10 @@ authorized.
 DDR3 model and no `ddr3_ctrl` implementation. The only RTL memory target is
 `rtl/perips/axi_ddr_behavioral.v`, which is capacity/address evidence only and
 must remain labeled `BLOCK_VERIFIED`.
+
+ASIC is the selected product route, but `ASIC-DDR-01..08` is not yet closed:
+there is no process/foundry/package decision, PHY license/delivery, DRAM part,
+board timing file, real model or boot timeout budget in this repository.
 
 The entry audit may therefore report `BLOCKED` while passing its own consistency
 checks. That result is not a DDR functionality pass and must not be included in
