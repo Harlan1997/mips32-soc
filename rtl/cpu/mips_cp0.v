@@ -41,9 +41,9 @@
 //   - RDHWR $2 → Count (needs Phase B.4 user mode + instruction decode)
 //   - KSU / User mode enforcement (B.4)
 //   - Precise exception refinement + BD-in-pipeline plumbing (B.5)
-//   - TLB-refill, vectored-interrupt and cache-error vector selection (B.5).
-//     Product-mode ordinary BEV/EBase exception selection is implemented by
-//     mips_cpu; the remaining vector classes still need this CP0 policy.
+//   - TLB-refill and cache-error vector selection (B.5).
+//     Product-mode ordinary BEV/EBase and IP-based vectored-interrupt selection
+//     are implemented by mips_cpu; cache-error policy remains separate.
 // =============================================================================
 
 `include "soc_config.vh"
@@ -83,6 +83,8 @@ module mips_cp0 (
     output wire [31:0] ebase_out,    // Full EBase register value (for vector gen)
     output wire        bev_out,      // Status.BEV (for CPU exception-vector selection)
     output wire        intr_req,     // Interrupt request to CPU (if enabled)
+    output wire        vint_enabled_out, // Cause.IV permits BEV=0 vector selection
+    output wire [31:0] vint_offset_out,  // 0x200 + highest enabled IP * (VS * 32)
     // Phase B.4: effective privilege exports
     output wire        kernel_mode,  // 1 = current instruction executes in kernel mode
     output wire        cu0_enable,   // Status.CU0 (allows user-mode CP0 access)
@@ -304,6 +306,35 @@ module mips_cp0 (
     // IP field in cp0_cause is refreshed each cycle with combined_ip_hw below.
     assign intr_req = cp0_status[0] && !cp0_status[1] && !cp0_status[2]
                       && (|(cp0_cause[15:8] & cp0_status[15:8]));
+
+    // Vectored interrupt policy uses the highest numbered enabled pending IP.
+    // Config3.VEIC stays zero, so this is an IP-based CPU vector rather than a
+    // VIC-provided external vector number.
+    function [2:0] highest_enabled_pending_ip;
+        input [7:0] pending;
+        begin
+            if      (pending[7]) highest_enabled_pending_ip = 3'd7;
+            else if (pending[6]) highest_enabled_pending_ip = 3'd6;
+            else if (pending[5]) highest_enabled_pending_ip = 3'd5;
+            else if (pending[4]) highest_enabled_pending_ip = 3'd4;
+            else if (pending[3]) highest_enabled_pending_ip = 3'd3;
+            else if (pending[2]) highest_enabled_pending_ip = 3'd2;
+            else if (pending[1]) highest_enabled_pending_ip = 3'd1;
+            else                 highest_enabled_pending_ip = 3'd0;
+        end
+    endfunction
+
+    wire [7:0]  enabled_pending_ip = cp0_cause[15:8] & cp0_status[15:8];
+    wire [2:0]  vint_ip_number = highest_enabled_pending_ip(enabled_pending_ip);
+    wire [9:0]  vint_spacing = {cp0_intctl_vs, 5'b0};
+    // Extend both operands before multiplication; Verilog otherwise sizes the
+    // product to the widest operand and truncates VN*VS for large VS values.
+    wire [12:0] vint_ip_number_ext = {10'd0, vint_ip_number};
+    wire [12:0] vint_spacing_ext   = {3'd0, vint_spacing};
+    wire [12:0] vint_offset = 13'h200 + (vint_ip_number_ext * vint_spacing_ext);
+
+    assign vint_enabled_out = cp0_cause[23];
+    assign vint_offset_out  = {19'd0, vint_offset};
 
     // Phase B.5: ERET target selection — ERL=1 → ErrorEPC (Reset/NMI/CacheErr
     // return path); else EPC (ordinary exception return).

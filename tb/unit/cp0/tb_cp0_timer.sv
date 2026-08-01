@@ -55,6 +55,8 @@ module tb_cp0_timer;
     wire [31:0] ebase_out;
     wire        bev_out;
     wire        intr_req;
+    wire        vint_enabled_out;
+    wire [31:0] vint_offset_out;
 
     integer errors = 0;
 
@@ -163,6 +165,27 @@ module tb_cp0_timer;
         mfc0(5'd13, 3'd0, rd);
         check("hw_int[5] OR timer TI both drive Cause.IP7",
               rd[15] == 1'b1 && rd[30] == 1'b1);
+        hw_int = 6'b000000;
+
+        // 10) Vectored interrupt exports use the highest enabled pending IP.
+        // VEIC is not implemented, so CPU vector selection is IP-based.
+        mtc0(5'd11, 3'd0, 32'hFFFF_FFFF); // Clear the timer contribution.
+        mtc0(5'd13, 3'd0, 32'h0080_0000); // Cause.IV = 1
+        mtc0(5'd12, 3'd1, 32'h0000_0020); // IntCtl.VS = 1 -> 32-byte spacing
+        mtc0(5'd12, 3'd0, 32'h0000_A001); // IE, IM7 and IM5
+        hw_int = 6'b101000;                // hw[5]->IP7, hw[3]->IP5
+        @(posedge clk);
+        mfc0(5'd13, 3'd0, rd);
+        check("Cause.IV write/readback", rd[23] == 1'b1);
+        mfc0(5'd12, 3'd1, rd);
+        check("IntCtl.VS write/readback", rd[9:5] == 5'd1);
+        check("interrupt request asserts for enabled pending IPs", intr_req == 1'b1);
+        check("vector enable follows Cause.IV", vint_enabled_out == 1'b1);
+        check("IP7 wins and VS=1 yields offset 0x2E0", vint_offset_out == 32'h0000_02E0);
+        mtc0(5'd12, 3'd1, 32'h0000_03E0); // VS = 31, maximum spacing
+        @(negedge clk);
+        check("IP7 with VS=31 yields full-width offset 0x1D20",
+              vint_offset_out == 32'h0000_1D20);
         hw_int = 6'b000000;
 
         // -----------------------------------------------------------------

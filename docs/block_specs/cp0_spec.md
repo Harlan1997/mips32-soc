@@ -1,6 +1,6 @@
-# MIPS32 R2 Coprocessor 0 (CP0) 完整寄存器规格 (v0)
+# MIPS32 R2 Coprocessor 0 (CP0) 完整寄存器规格 (v0.1)
 
-> 状态：v0 草案。作为 Phase B **`rtl/cpu/mips_cp0.v` 重写基线**。所有位段、复位值、访问规则以本文件为准，实现偏差需回填此规格并评审。
+> 状态：v0.1 草案。作为 Phase B **`rtl/cpu/mips_cp0.v` 重写基线**。所有位段、复位值、访问规则以本文件为准，实现偏差需回填此规格并评审。
 >
 > 引用：MIPS® Architecture For Programmers Volume III: Privileged Resource Architecture, Revision 6.06。本项目当前不实现的字段用 "**RES**"（Reserved）或 "**tie**" 标注。
 
@@ -258,12 +258,15 @@ TLB refill 时硬件把 BadVAddr[31:13] → BadVPN2，方便快速 refill 处理
 | Reset/NMI | x | x | 0xBFC0_0000 |
 | Cache Error | x | x | 0xA000_0100 (BEV=0) 或 0xBFC0_0300 (BEV=1) |
 
-**当前实现边界（2026-08-01）**：产品 opt-in 配置已实现 refill 与
-Invalid 的分派。CPU 以 TLB lookup 的 `hit=0` 识别 refill；`hit=1,V=0`
-保留为通用异常，即使两者 `ExcCode` 同为 TLBL/TLBS。I-side 的 BEV=1/0
-miss/invalid 及 D-side BEV=1 miss/invalid 均有完整 SoC directed 证据。
-该结论不覆盖 Modified、vectored interrupt、cache error 或可启动的 MMU
-firmware。
+**当前实现边界（2026-08-01）**：产品 opt-in 配置已实现 refill、Invalid
+和 IP-based vectored interrupt 的分派。CPU 以 TLB lookup 的 `hit=0` 识别
+refill；`hit=1,V=0` 保留为通用异常，即使两者 `ExcCode` 同为 TLBL/TLBS。
+向量中断使用最高编号的 `Cause.IP & Status.IM` pending 位作为 VN，向量间距
+为 `IntCtl.VS * 32`，并只在真实 interrupt 被接受、`BEV=0`、`Cause.IV=1`
+时生效；`Config3.VEIC=0`，不宣称外部 VIC vector ID。I-side 的 BEV=1/0
+miss/invalid、D-side BEV=1 miss/invalid，以及软件 IP1 的 `EBase+0x220`
+SoC directed 证据均已通过。该结论不覆盖 Modified 的完整策略、cache error
+vector 或可启动的完整 MMU firmware。
 
 ---
 

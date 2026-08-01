@@ -1,10 +1,10 @@
 # Boot and Memory Product Contract
 
-> Version: v1.1 (2026-08-01)
+> Version: v1.2 (2026-08-01)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
-> vector, minimal BEV MMU boot-firmware, EBase/Modified recovery, SPI XIP
+> vector, IP-based vectored interrupt, minimal BEV MMU boot-firmware, EBase/Modified recovery, SPI XIP
 > pin-level slices, a bounded AXI XIP timeout/DBE path, and a development
 > manifest-to-kseg0-SRAM handoff.
 > This document defines the
@@ -44,9 +44,9 @@ the PHY wrapper, but they do not change the address or reset contract below.
 |---|---|---|
 | Reset address | Product configuration passes `BFC0_0000` to `mips_if_stage`; prototype mode retains reset address zero | Keep `SOC_PRODUCT_BOOT_ENABLE` opt-in until the remaining product boot gates pass |
 | Boot ROM map | `axi_boot_rom` is a distinct 64-KB read-only S4 slave; the crossbar gives its exact range priority over the broad legacy Flash window. A plusarg-loaded development ROM now validates and copies a flash manifest payload in a full-SoC directed gate | Add a production immutable-ROM artifact and boot-status/WDT integration; do not treat the simulation image as mask-ROM evidence |
-| Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, while invalid and ordinary exceptions select `BFC0_0380` or `EBase+0x180`; prototype mode retains literal `0x0000_0180` | A minimal firmware handler is now copied from Boot ROM into SRAM and recovers a precise `Mod`; complete vectored-interrupt and cache-error behavior from `cp0_spec.md` |
+| Exception vector | Product mode resets `BEV=1/ERL=1`; true TLB miss selects `BFC0_0200` or `EBase`, invalid/general selects `BFC0_0380` or `EBase+0x180`, and accepted `Cause.IV=1` interrupts select `EBase+0x200+VN*VS*32`; prototype mode retains literal `0x0000_0180` | A minimal firmware handler is copied from Boot ROM into SRAM and recovers a precise `Mod`; cache-error policy and external EIC/VEIC dispatch remain separate |
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180` | Keep the smoke linker for prototype tests; add a full runtime kseg0 linker and a separate Boot ROM/SPL image |
-| MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, and relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry | Kernel runtime MMU contract, invalid-fault policy, ASID/page-table policy, and vectored/cache-error handling still require product firmware work |
+| MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, and relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry | Kernel runtime MMU contract, invalid-fault policy, ASID/page-table policy, cache-error handling and complete runtime firmware still require product work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral` | Replace with DDR controller + PHY wrapper, init/calibration/refresh status and a memory test |
 | Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as IBE/DBE. The development handoff gate reads its manifest and payload through these physical SPI pins; `soc_top.v` exposes `spi_mosi/miso` only | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; add a software-visible fault/status register and full cache-error policy |
 | WDT/boot status | `apb_wdt` exists but is not instantiated by `soc_peripheral_subsystem.v` | Add product APB decode, reset request path, boot-failure status and timeout test |
@@ -143,9 +143,10 @@ tests cover I-side miss/invalid for both BEV settings and D-side miss/invalid
 for `BEV=1`. `tb_product_mmu_ebase_modified.sv` additionally proves a Boot ROM
 image copies its EBase general handler to SRAM, clears `BEV/ERL`, takes a
 precise `Mod` on a valid `D=0` useg mapping, checks `Cause`/`BadVAddr`/`EPC`,
-sets `D=1`, and retries the store by `ERET`. Vectored-interrupt
-(`Cause.IV`/`IntCtl.VS`), cache-error, invalid-fault policy, and a production
-runtime handler set remain unimplemented product requirements.
+sets `D=1`, and retries the store by `ERET`. The IP-based vectored-interrupt
+slice (`Cause.IV`/`IntCtl.VS`) is now implemented and has a product directed
+gate; cache-error, invalid-fault policy, and a production runtime handler set
+remain unimplemented product requirements.
 
 ### 5.3 MMU and early mappings
 
@@ -307,6 +308,13 @@ close that gate:
   `Cause`/`BadVAddr`/`EPC`, rewrites the same entry dirty, returns with `ERET`,
   and firmware verifies the retried store/load.
   `make product-mmu-ebase-modified-gate` is its standalone entry point.
+- `tb/unit/bootrom/tb_product_vectored_interrupt.sv` builds a product-mode
+  image with no SRAM preload, writes
+  `Cause.IV=1`, `IntCtl.VS=1`, and software `IP1`, then clears `BEV/ERL` and
+  enables `IE|IM1`. It proves the CPU enters `0x8000_0220` (`EBase+0x220`),
+  the fetch is translated to physical `0x0000_0220`, and CP0 records
+  `EXL=1`, `ExcCode=INT`, `IV=1`. `make product-vectored-interrupt-gate` is
+  its standalone entry point.
 - `tb/unit/flash/tb_axi_spi_flash.sv` drives the production
   `axi_spi_flash` pins rather than `axi_flash_image_model`. It verifies the
   standard-read command/address sequence (`0x03_000000`), two sequential
@@ -358,7 +366,7 @@ produces serial data, so this RTL cannot honestly detect a raw flash-device
 "timeout." The guard protects a wedged AXI/controller response path, not a
 non-responsive physical flash. It also exposes no software-readable timeout
 register today. These tests do not prove signature/key policy,
-vectored/cache-error vectors, QSPI/DDR initialization, a complete relocated
+cache-error vectors, external EIC/VEIC dispatch, QSPI/DDR initialization, a complete relocated
 runtime handler set, or boot-status/WDT failure handling.
 The ROM image is a simulation plusarg and is not a production mask-ROM
 artifact.
@@ -371,9 +379,10 @@ artifact.
    miss-versus-invalid TLB vector paths, and the minimal BEV product linker,
    wired mapping, dynamic refill and `ERET` retry slice, plus a minimal copied
    EBase general-handler/Modified recovery slice (complete only for the opt-in
-   directed slice), plus the development manifest/CRC-to-SRAM handoff and its
-   header rejection matrix. The bounded AXI-side controller-stall/timeout path
-   is implemented; vectored/cache-error policy is next.
+   directed slice), plus the IP-based vectored interrupt table, development
+   manifest/CRC-to-SRAM handoff and its header rejection matrix. The bounded
+   AXI-side controller-stall/timeout path is implemented; cache-error and
+   external EIC/VEIC policy are next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
 3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.
