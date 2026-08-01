@@ -60,7 +60,9 @@ module axi_boot_rom #(
 
     reg [31:0] rom [0:ROM_WORDS-1];
     integer i;
-    reg [1023:0] image_hex;
+    // Long aggregate build paths are valid simulation inputs; do not truncate
+    // the Boot ROM image plusarg at the legacy 128-character buffer limit.
+    reg [4095:0] image_hex;
 
     initial begin
         for (i = 0; i < ROM_WORDS; i = i + 1) begin

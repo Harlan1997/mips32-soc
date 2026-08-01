@@ -17,11 +17,13 @@ STAGE1_BIN := $(OUT_DIR)/stage1.bin
 STAGE1_HEX := $(OUT_DIR)/stage1.hex
 FLASH_IMAGE_HEX := $(OUT_DIR)/flash_image.hex
 FLASH_IMAGE_BAD_CRC_HEX := $(OUT_DIR)/flash_image_bad_crc.hex
+NEGATIVE_DIR := $(OUT_DIR)/negative
+NEGATIVE_IMAGES := $(addprefix $(NEGATIVE_DIR)/,bad_magic.hex bad_version.hex bad_header_bytes.hex bad_payload_offset.hex bad_payload_length_zero.hex bad_payload_length_unaligned.hex bad_payload_length_bounds.hex bad_load_address.hex bad_entry_address.hex bad_flags.hex)
 MANIFEST := $(OUT_DIR)/$(FW_BASE).manifest
 
 .PHONY: all toolchain-check clean
 
-all: toolchain-check $(BOOT_ROM_HEX) $(STAGE1_HEX) $(FLASH_IMAGE_HEX) $(FLASH_IMAGE_BAD_CRC_HEX) $(MANIFEST)
+all: toolchain-check $(BOOT_ROM_HEX) $(STAGE1_HEX) $(FLASH_IMAGE_HEX) $(FLASH_IMAGE_BAD_CRC_HEX) $(NEGATIVE_IMAGES) $(MANIFEST)
 
 toolchain-check:
 	@command -v $(CC) >/dev/null || { \
@@ -48,8 +50,8 @@ $(STAGE1_BIN): $(STAGE1_ELF)
 $(STAGE1_HEX): $(STAGE1_BIN)
 	python3 $(COMMON_DIR)/elf2hex.py $< $@
 
-$(FLASH_IMAGE_HEX) $(FLASH_IMAGE_BAD_CRC_HEX): $(STAGE1_BIN) $(COMMON_DIR)/build_boot_image.py
-	python3 $(COMMON_DIR)/build_boot_image.py --payload-bin $(STAGE1_BIN) --output-hex $(FLASH_IMAGE_HEX) --bad-crc-hex $(FLASH_IMAGE_BAD_CRC_HEX)
+$(FLASH_IMAGE_HEX) $(FLASH_IMAGE_BAD_CRC_HEX) $(NEGATIVE_IMAGES): $(STAGE1_BIN) $(COMMON_DIR)/build_boot_image.py
+	python3 $(COMMON_DIR)/build_boot_image.py --payload-bin $(STAGE1_BIN) --output-hex $(FLASH_IMAGE_HEX) --bad-crc-hex $(FLASH_IMAGE_BAD_CRC_HEX) --negative-dir $(NEGATIVE_DIR)
 
 $(MANIFEST): $(BOOT_ROM_HEX) $(STAGE1_HEX) $(FLASH_IMAGE_HEX) $(FLASH_IMAGE_BAD_CRC_HEX)
 	@{ \
@@ -61,3 +63,4 @@ clean:
 	rm -f $(BOOT_ROM_ELF) $(BOOT_ROM_BIN) $(BOOT_ROM_HEX) $(OUT_DIR)/boot_rom.map \
 		$(STAGE1_ELF) $(STAGE1_BIN) $(STAGE1_HEX) $(OUT_DIR)/stage1.map \
 		$(FLASH_IMAGE_HEX) $(FLASH_IMAGE_BAD_CRC_HEX) $(MANIFEST)
+	rm -rf $(NEGATIVE_DIR)

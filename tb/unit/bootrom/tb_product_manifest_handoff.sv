@@ -34,6 +34,7 @@ module tb_product_manifest_handoff;
     integer flash_index;
     integer spi_input_bits;
     integer expect_boot_failure;
+    reg [255:0] expect_failure_name;
     reg [31:0] spi_shift;
     reg reset_seen;
     reg header_read_seen;
@@ -43,7 +44,10 @@ module tb_product_manifest_handoff;
     reg stage1_entry_seen;
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
-    reg [1023:0] flash_hex;
+    // Aggregate gate run directories exceed the historical 128-character
+    // simulation-image buffer. Keep the external flash path intact so a
+    // failed $readmemh cannot turn a negative test into an all-FF false pass.
+    reg [4095:0] flash_hex;
 
     genvar i;
     generate
@@ -168,7 +172,7 @@ module tb_product_manifest_handoff;
                     fail("valid image was rejected by Boot ROM");
                 if (handoff_seen || stage1_entry_seen)
                     fail("bad image executed after a manifest failure");
-                $display("REGRESSION_TEST_SUCCESS product_manifest_handoff_bad_crc");
+                $display("REGRESSION_TEST_SUCCESS product_manifest_handoff_%0s", expect_failure_name);
                 $finish;
             end
 
@@ -192,7 +196,14 @@ module tb_product_manifest_handoff;
         if (!$value$plusargs("SPI_FLASH_HEX=%s", flash_hex))
             fail("SPI_FLASH_HEX is required");
         $readmemh(flash_hex, flash_mem);
+        // The fixed fixture always carries version 1, except for the explicit
+        // bad-version image (2). Reject the all-FF initializer so a failed
+        // file load cannot masquerade as a bad-manifest test pass.
+        if (flash_mem[4] != 8'h01 && flash_mem[4] != 8'h02)
+            fail("SPI flash image was not loaded");
         expect_boot_failure = $test$plusargs("EXPECT_BOOT_FAILURE");
+        expect_failure_name = "bad_crc";
+        void'($value$plusargs("EXPECT_FAILURE_NAME=%s", expect_failure_name));
         clk = 1'b0;
         rst_n = 1'b0;
         tck = 1'b0;
