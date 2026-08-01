@@ -13,6 +13,12 @@ module tb_product_vectored_interrupt;
     wire spi_sclk;
     wire spi_cs_n;
     wire spi_mosi;
+    wire uart_tx, uart_rts_n, uart_dtr_n;
+    wire uart_rx = 1'b1;
+    wire uart_cts_n = 1'b1;
+    wire uart_dsr_n = 1'b1;
+    wire uart_dcd_n = 1'b1;
+    wire uart_ri_n = 1'b1;
     wire [31:0] gpio_pins;
 
     integer cycles;
@@ -32,6 +38,14 @@ module tb_product_vectored_interrupt;
         .clk       (clk),
         .rst_n     (rst_n),
         .gpio_pins (gpio_pins),
+        .uart_rx   (uart_rx),
+        .uart_tx   (uart_tx),
+        .uart_cts_n(uart_cts_n),
+        .uart_rts_n(uart_rts_n),
+        .uart_dsr_n(uart_dsr_n),
+        .uart_dtr_n(uart_dtr_n),
+        .uart_dcd_n(uart_dcd_n),
+        .uart_ri_n (uart_ri_n),
         .spi_sclk  (spi_sclk),
         .spi_cs_n  (spi_cs_n),
         .spi_mosi  (spi_mosi),

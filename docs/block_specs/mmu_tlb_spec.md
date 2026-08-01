@@ -264,13 +264,15 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。�
 
 **已完成的前置子任务**：development manifest handoff image 已将 stage 1 放在物理 SRAM
 `0x0000_1000`，并以 kseg0 VA `0x8000_1000` 作为入口。`make product-kseg0-runtime-gate`
-在 `SOC_MMU_ENABLE=1` 下观察到该 instruction request 的 PA 为 `0x0000_1000`，且有效、
-header/CRC negative、XIP-timeout 场景均通过；它与 fabric alias fold（`mips_mmu.v` 注释里
-提到的 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。
+在 `SOC_MMU_ENABLE=1` 下观察到 instruction request 的 PA 为 `0x0000_1000`，并由 stage 1
+额外观察到单次 kseg0 data request `0x8000_7000 -> 0x0000_7000`；有效、header/CRC
+negative、XIP-timeout 场景均通过。它与 fabric alias fold（`mips_mmu.v` 注释里提到的
+`0xA000_0000` SRAM 别名问题）无关，是两个独立问题。
 
-**当前结论**：kseg0 的 instruction fetch/handoff slice 已达到 `BLOCK_VERIFIED`，但 B.3.2
-仍未整体完成。尚未证明 runtime data mapping、page tables、cache maintenance、ASID rollover、
-完整异常 handler 或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
+**当前结论**：kseg0 的 instruction fetch/handoff 与单次 data translation slice 已达到
+`BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。尚未证明完整 runtime data mapping、page tables、
+cache maintenance、ASID rollover、完整异常 handler 或 Linux/kernel boot，因此不能把此 gate
+标为 MMU 产品完成。
 
 **已保留的验证脚手架**（prototype useg 链接仍会触发上述历史死锁；产品切片使用独立 linker）：
 - `tb/soc_test/fw/tests/mmu_refill/`：最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
