@@ -13,6 +13,8 @@ and must not be used to authorize the C1 product controller.
 The upstream parameter decisions are tracked in
 [`docs/asic_c1_ddr4_parameter_decision.md`](asic_c1_ddr4_parameter_decision.md);
 stage A is not closed yet.
+Acquisition sources and request contents are defined in
+[`docs/ddr4_external_input_acquisition.md`](ddr4_external_input_acquisition.md).
 The accepted baseline is 28nm LP, **TSMC N28/28HPC RFQ target**, BGA, 1.2 V
 commercial, DDR4-2133, x32 single-rank and ECC disabled; Synopsys is the
 priority PHY RFQ target, while foundry/PHY compatibility remains open.

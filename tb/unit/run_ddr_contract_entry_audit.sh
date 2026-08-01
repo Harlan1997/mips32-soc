@@ -41,6 +41,7 @@ require_text() {
     require_text "docs/asic_c1_ddr4_parameter_decision.md" "BASELINE_ACCEPTED / A-02-A-09_OPEN / B_RFQ_PREPARATION" "ASIC parameter baseline stage"
     require_text "docs/asic_c1_ddr4_phy_selection_plan.md" "RFQ_PRIORITY_SYNOPSYS / PHY_NOT_SELECTED / EXTERNAL_INPUTS_BLOCKED" "PHY selection preparation"
     require_text "docs/asic_c1_ddr4_contingency_plan.md" "EXTERNAL_INPUTS_UNAVAILABLE / DDR4_PRODUCT_BLOCKED" "DDR4 contingency plan"
+    require_text "docs/ddr4_external_input_acquisition.md" "supported-part list" "DDR4 external input acquisition guide"
     require_text "rtl/include/soc_config.vh" "SOC_APB_DDRCTRL_BASE[[:space:]]+32'h4000_6000" "DDR APB base"
     require_text "rtl/include/soc_config.vh" "SOC_DDRCTRL_ERROR_STATUS_OFFSET[[:space:]]+12'h030" "error register offset"
     require_text "rtl/include/soc_config.vh" "SOC_DDRCTRL_VERSION[[:space:]]+32'h4444_0301" "contract version"
