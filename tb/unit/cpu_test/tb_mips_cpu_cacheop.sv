@@ -17,6 +17,8 @@ module tb_mips_cpu_cacheop;
     wire [31:0] cache_op_addr;
     reg         cache_op_done = 1'b0;
     wire        cache_op_error = 1'b0;
+    wire [31:0] data_cache_tag_rdata = 32'd0;
+    wire [31:0] data_cache_tag_wdata;
     wire [31:0] data_rdata = 32'd0;
 
     wire inst_addr_ok = 1'b1;
@@ -70,6 +72,8 @@ module tb_mips_cpu_cacheop;
         .data_cache_op_valid(cache_op_valid), .data_cache_op(cache_op),
         .data_cache_op_addr(cache_op_addr), .data_cache_op_done(cache_op_done),
         .data_cache_op_error(cache_op_error),
+        .data_cache_tag_rdata(data_cache_tag_rdata),
+        .data_cache_tag_wdata(data_cache_tag_wdata),
         .data_addr_ok(data_addr_ok), .data_data_ok(data_data_ok),
         .data_bus_error(data_bus_error), .data_cache_error(data_cache_error),
         .data_rdata(data_rdata), .ext_int(6'd0),

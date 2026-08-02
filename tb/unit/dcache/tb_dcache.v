@@ -21,6 +21,8 @@ module tb_dcache;
     reg  [4:0]  cache_op;
     reg  [31:0] cache_op_addr;
     wire        cache_op_ready, cache_op_done, cache_op_error;
+    reg  [31:0] cache_tag_wdata;
+    wire [31:0] cache_tag_rdata;
 
     // AXI
     wire [3:0]  awid; wire [31:0] awaddr; wire [7:0] awlen; wire [2:0] awsize;
@@ -38,6 +40,7 @@ module tb_dcache;
         .cpu_req(cpu_req),.cpu_we(cpu_we),.cpu_addr(cpu_addr),.cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
         .cache_op_valid(cache_op_valid),.cache_op(cache_op),.cache_op_addr(cache_op_addr),.cache_op_ready(cache_op_ready),.cache_op_done(cache_op_done),.cache_op_error(cache_op_error),
+        .cache_tag_wdata(cache_tag_wdata),.cache_tag_rdata(cache_tag_rdata),
         .awid(awid),.awaddr(awaddr),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .awlock(awlock),.awcache(awcache),.awprot(awprot),.awvalid(awvalid),.awready(awready),
         .wdata(wdata),.wstrb(wstrb),.wlast(wlast),.wvalid(wvalid),.wready(wready),
@@ -157,6 +160,16 @@ module tb_dcache;
         cache_maint_expect(op, addr, 1'b0);
     end endtask
 
+    task cache_tag_load(input [31:0] addr, input [31:0] expect_tag);
+    begin
+        cache_maint(5'b00101, addr);
+        if (cache_tag_rdata !== expect_tag) begin
+            $display("FAIL CACHE Index_Load_Tag_D addr=%h tag=%h expected=%h",
+                     addr, cache_tag_rdata, expect_tag);
+            errs=errs+1;
+        end
+    end endtask
+
     reg [31:0] rd;
     integer c_aw, c_ar, c_wb;
     // Addresses: same set requires same index [10:5]; different tag = +0x800 (2KB/way)
@@ -166,7 +179,7 @@ module tb_dcache;
 
     initial begin
         cpu_req=0; cpu_we=0; cpu_addr=0; cpu_wdata=0; cpu_be=0; inject_read_error=0;
-        cache_op_valid=0; cache_op=0; cache_op_addr=0; inject_write_error=0;
+        cache_op_valid=0; cache_op=0; cache_op_addr=0; cache_tag_wdata=0; inject_write_error=0;
         #23 rst_n=1; @(negedge clk);
 
         // T1: cold read miss -> refill -> hit
@@ -293,6 +306,15 @@ module tb_dcache;
         end
         c_ar=ar_count; cpu_read(32'h0000_C040, rd);
         if (ar_count!==c_ar+1 || rd!==32'hCAFE_C013) begin $display("FAIL T13 index invalidation/refill"); errs=errs+1; end
+
+        // T14: Index_Load/Store_Tag_D expose and replace the selected way's
+        // valid/dirty/tag tuple through the CP0 TagLo contract.
+        cpu_read(32'h0000_0060, rd); // fresh set/index, first line is way 0
+        cache_tag_wdata = 32'h0061_2345; // valid=1, dirty=1, tag=0x12345
+        cache_tag_load(32'h0000_0060, 32'h0040_0000);
+        cache_maint(5'b01001, 32'h0000_0060);
+        cache_tag_load(32'h0000_0060, cache_tag_wdata);
+        cache_tag_wdata = 32'd0;
 
         #50;
         if (errs==0) $display("REGRESSION_TEST_SUCCESS dcache");
