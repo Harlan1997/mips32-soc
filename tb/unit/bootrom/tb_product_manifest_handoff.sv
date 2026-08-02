@@ -56,6 +56,13 @@ module tb_product_manifest_handoff #(
     reg kseg0_data_seen;
     reg kseg0_data_second_seen;
     reg kseg0_data_read_seen;
+    reg kseg0_layout_rodata_read_seen;
+    reg kseg0_layout_data_read_seen;
+    reg [3:0] kseg0_layout_bss_write_mask;
+    reg kseg0_layout_bss_zero_read_seen;
+    reg kseg0_layout_bss_readback_seen;
+    reg kseg0_layout_stack_write_seen;
+    reg kseg0_layout_stack_read_seen;
     reg [19:0] kseg0_depth_write_mask;
     reg [19:0] kseg0_depth_read_mask;
     reg kseg0_depth_stack_write_seen;
@@ -153,6 +160,13 @@ module tb_product_manifest_handoff #(
             kseg0_data_seen = 1'b0;
             kseg0_data_second_seen = 1'b0;
             kseg0_data_read_seen = 1'b0;
+            kseg0_layout_rodata_read_seen = 1'b0;
+            kseg0_layout_data_read_seen = 1'b0;
+            kseg0_layout_bss_write_mask = 4'd0;
+            kseg0_layout_bss_zero_read_seen = 1'b0;
+            kseg0_layout_bss_readback_seen = 1'b0;
+            kseg0_layout_stack_write_seen = 1'b0;
+            kseg0_layout_stack_read_seen = 1'b0;
             kseg0_depth_write_mask = 20'd0;
             kseg0_depth_read_mask = 20'd0;
             kseg0_depth_stack_write_seen = 1'b0;
@@ -194,6 +208,46 @@ module tb_product_manifest_handoff #(
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7004 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_7004)
                 kseg0_data_read_seen = 1'b1;
+
+            if ($test$plusargs("EXPECT_KSEG0_LAYOUT") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we == 1'b0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_1100 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_1100)
+                kseg0_layout_rodata_read_seen = 1'b1;
+
+            if ($test$plusargs("EXPECT_KSEG0_LAYOUT") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we == 1'b0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_1110 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_1110)
+                kseg0_layout_data_read_seen = 1'b1;
+
+            if ($test$plusargs("EXPECT_KSEG0_LAYOUT") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'h8000_1120 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr <= 32'h8000_112C &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr ==
+                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr & 32'h1FFF_FFFF) &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr[1:0] == 2'b00) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                    kseg0_layout_bss_write_mask[(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr - 32'h8000_1120) >> 2] = 1'b1;
+                else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_1120 &&
+                         !kseg0_layout_bss_zero_read_seen)
+                    kseg0_layout_bss_zero_read_seen = 1'b1;
+                else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_1120)
+                    kseg0_layout_bss_readback_seen = 1'b1;
+            end
+
+            if ($test$plusargs("EXPECT_KSEG0_LAYOUT") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7FF0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr == 32'h0000_7FF0) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                    kseg0_layout_stack_write_seen = 1'b1;
+                else
+                    kseg0_layout_stack_read_seen = 1'b1;
+            end
 
             if ($test$plusargs("EXPECT_KSEG0_DEPTH") &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
@@ -259,6 +313,18 @@ module tb_product_manifest_handoff #(
                     fail("MMU-enabled kseg0 second data word did not use the physical SRAM address");
                 if ($test$plusargs("EXPECT_KSEG0_DATA") && !kseg0_data_read_seen)
                     fail("MMU-enabled kseg0 data readback was not observed");
+                if ($test$plusargs("EXPECT_KSEG0_LAYOUT")) begin
+                    if (!kseg0_layout_rodata_read_seen)
+                        fail("kseg0 runtime .rodata read was not observed");
+                    if (!kseg0_layout_data_read_seen)
+                        fail("kseg0 runtime initialized .data read was not observed");
+                    if (kseg0_layout_bss_write_mask != 4'hF)
+                        fail("kseg0 runtime .bss was not explicitly cleared across all words");
+                    if (!kseg0_layout_bss_zero_read_seen || !kseg0_layout_bss_readback_seen)
+                        fail("kseg0 runtime .bss zero/readback sequence was not observed");
+                    if (!kseg0_layout_stack_write_seen || !kseg0_layout_stack_read_seen)
+                        fail("kseg0 runtime linker stack translation/readback was not observed");
+                end
                 if ($test$plusargs("EXPECT_KSEG0_DEPTH")) begin
                     if (kseg0_depth_write_mask != 20'hF_FFFF)
                         fail("kseg0 depth did not write all 20 data words");
@@ -291,7 +357,7 @@ module tb_product_manifest_handoff #(
                 $finish;
             end
 
-            if (cycles > 30000) begin
+            if (cycles > ($test$plusargs("EXPECT_KSEG0_LAYOUT") ? 100000 : 30000)) begin
                 $display("DEBUG: timeout pc=%h data_req=%b data_we=%h mem_vaddr=%h status=%h stage0=%h stage1=%h",
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
