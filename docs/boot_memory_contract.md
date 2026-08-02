@@ -50,7 +50,7 @@ the PHY wrapper, but they do not change the address or reset contract below.
 | Firmware placement | `tb/soc_test/fw/common/link.ld` keeps the prototype image in useg SRAM; `tests/mmu_product_boot/link.ld` links reset/refill entries at Boot ROM kseg1; `tests/mmu_ebase_modified` copies a relocatable general handler to SRAM `0x180`; the manifest handoff image is linked at kseg0 VA `0x8000_1000` with physical load address `0x0000_1000`, and its stage-1 issues kseg0 writes/readback at VA `0x8000_7000/0x8000_7004`; the runtime-depth payload extends this to `0x8000_7000..0x8000_704C` plus stack `0x8000_8000`; the runtime-layout payload links `.rodata` at `0x8000_1100`, initialized `.data` at `0x8000_1110`, `.bss` at `0x8000_1120..0x8000_112f`, and a linker-defined stack top at `0x8000_8000` | The MMU-enabled kseg0 instruction, bounded multi-word/stack data path, and one linker/data-layout initialization slice are verified; CPU/D-cache support the six documented D-cache maintenance operations plus a limited TagLo/TagHi/SYNC CPU contract. A complete production runtime ABI/loader, I-cache tag state, parity/ECC, complex ordering semantics and separate production Boot ROM/SPL image remain required |
 | MMU enable | `SOC_MMU_ENABLE` defaults to `0`; product firmware installs a wired APB mapping, dynamically refills useg DDR, relocates an EBase handler that changes a valid `D=0` entry to `D=1` before `ERET` retry, and the handoff gate confirms kseg0 `0x8000_1000 -> 0x0000_1000` instruction plus `0x8000_7000 -> 0x0000_7000` data translation; unit and product SoC gates prove software page-table lookup, ASID 1/2 switching, bounded ASID 1..4 round-robin pressure, wired-global retention, `TLBWI` dynamic flush and re-refill | Kernel runtime data mapping, full SoC page-table allocator/multi-process scheduler pressure, shootdown IPI, invalid-fault policy and complete runtime firmware still require product work |
 | Main memory | `rtl/soc_memory_subsystem.v` connects `axi_ddr_behavioral`; `docs/block_specs/ddr3_spec.md` v1.0 now freezes the controller/PHY contract and `soc_config.vh` defines `0x4000_6000` | Select PHY/DRAM inputs, implement the AXI/APB/DFI contract, replace S3, then run init/calibration/refresh and memory tests |
-| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as uncached IBE/DBE or cached CacheErr. The development handoff gate reads its manifest and payload through these physical SPI pins; APB `0x4000_5000` now exposes a version/presence/timeout/last-error observability slice with W1C clear; `qspi_apb_integration` adds a `+0x20` APB command/FIFO window and the vendor-neutral `spi_flash_behavioral` endpoint gate proves x1 read/WREN/page-program exchange; `soc_top.v` still exposes only single-lane pins | Integrate QSPI command/XIP controller and expose four data lanes or a pad-wrapper equivalent; replace the vendor-neutral endpoint with a licensed/device-specific flash model or board endpoint; extend the directed cached-refill handler slice to ECC/complete software-visible fault classes |
+| Flash boot | `rtl/perips/axi_spi_flash.v` is single-lane read/XIP; its pin-level `0x03`/24-bit address, serial burst read and write-reject behavior are unit-tested. Production XIP reads are wrapped by a 512-cycle AXI acceptance/response guard that returns `SLVERR`, drains a late response, and reaches the CPU as uncached IBE/DBE or cached CacheErr. The development handoff gate reads its manifest and payload through these physical SPI pins; APB `0x4000_5000` now exposes a version/presence/timeout/last-error observability slice with W1C clear; `qspi_apb_integration` adds a `+0x20` APB command/FIFO window and the vendor-neutral `spi_flash_behavioral` endpoint gate proves x1 read/WREN/page-program exchange; standalone `qspi_axi_xip` now proves an AXI read-only command bridge against that endpoint; `soc_top.v` still exposes only single-lane pins | Integrate the standalone AXI/XIP bridge with the SoC memory subsystem only after defining APB-command versus AXI-XIP pin arbitration, priority, timeout, abort and reset-in-flight behavior; expose four data lanes or a pad-wrapper equivalent; replace the vendor-neutral endpoint with a licensed/device-specific flash model or board endpoint; extend the directed cached-refill handler slice to ECC/complete software-visible fault classes |
 | UART pins | `soc_top.v` now exposes UART TX/RX, RTS/CTS, DTR/DSR, DCD and RI; `ENABLE_UART_PINS=0` preserves legacy/UVM tie-offs. The product subsystem routes RX-specific IRQ to PIC bit0 and preserves aggregate UART IRQ on bit1 | Bind the pins through the selected pad-mux/electrical wrapper and add an external RX waveform/board-level gate; pin exposure alone is not pad signoff |
 | WDT/boot status | `apb_wdt` is decoded at APB `0x4000_7000`; expiry produces a one-cycle reset request into `mips_soc_impl`; the always-on WDT retains sticky `STATUS.expired`, and `apb_boot_status` at `0x4000_8000` retains stage/failure/cause across that pulse | RTL/unit, AXI/APB retention and no-preload Boot ROM failure gates pass; map manifest/QSPI/DDR fault classes to production failure codes and prove deterministic restart for each |
 | Test preload | `mips_soc` exposes `preload_sram_hex`; current UVM firmware flow uses `FW_HEX`. The manifest handoff gate instead supplies only Boot ROM and external SPI flash images | Keep preload for block/debug tests only; product boot gates must not preload SRAM or use an AXI flash-image verification model |
@@ -65,7 +65,7 @@ addresses firmware may use after the MIPS segment rules are active.
 | Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | Reset/map/vector slices and development manifest handoff have directed SoC evidence; immutable production image remains P0 |
 | Boot SRAM | `0x0000_0000` | 64 KB | `0x8000_0000` kseg0 / `0xA000_0000` kseg1 | Existing behavioral SRAM; stage-1 entry `0x8000_1000` is fetched through MMU-enabled kseg0 in the handoff slice; full runtime data use remains open |
 | DDR | `0x0800_0000` | 128 MB | `0x8800_0000` kseg0 / `0xA800_0000` kseg1 | Address window is frozen; behavioral placeholder must be replaced by the v1.0 controller/PHY contract |
-| SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Single-lane AXI XIP with a 512-cycle AXI-side guard; timeout status is observable at APB `0x4000_5000`, while QSPI command/FIFO/four-lane and boot command paths remain incomplete |
+| SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Default production path remains single-lane AXI XIP with a 512-cycle AXI-side guard; standalone `qspi_axi_xip` x1 command bridge is block-verified but not selected by `soc_memory_subsystem`; timeout status is observable at APB `0x4000_5000`, while shared-pin arbitration, four-lane XIP and boot command paths remain incomplete |
 | APB peripherals | `0x4000_0000` | 64 KB | `0xC000_0000` kseg2 via wired TLB | Existing APB window; no direct kseg1 alias because PA is above 512 MB |
 | Debug/test | `0xE000_0000` | 64 KB | kseg2 via TLB, privileged only | Existing reserved window; not part of boot image |
 
@@ -95,7 +95,7 @@ The existing offsets remain stable. New product blocks use previously unused
 | GPIO | `0x4000_2000` | pin direction/data |
 | DMA | `0x4000_3000` | copy, IRQ and error |
 | PIC/VIC | `0x4000_4000` | source mask/active/priority |
-| QSPI/XIP status slice | `0x4000_5000` | version, controller-present, timeout/last-error and W1C; command, FIFO and four-lane XIP remain future work |
+| QSPI/XIP status slice | `0x4000_5000` | version, controller-present, timeout/last-error and W1C; command/FIFO APB window is integrated for the x1 slice, while AXI XIP selection, shared-pin arbitration and four-lane XIP remain future work |
 | DDR controller | `0x4000_6000` | init, calibration, refresh, error |
 | Watchdog | `0x4000_7000` | unlock, timeout, reset status |
 | Boot status | `0x4000_8000` | always-on diagnostic stage/failure/reset-cause registers |
@@ -365,6 +365,12 @@ close that gate:
   standard-read command/address sequence (`0x03_000000`), two sequential
   serial-read response words and a rejected AXI write (`SLVERR`).
   `make spi-flash-unit-gate` is its standalone entry point.
+- `tb/unit/flash/tb_qspi_axi_xip.sv` drives the standalone
+  `qspi_axi_xip` bridge through a vendor-neutral `spi_flash_behavioral`
+  endpoint. It checks a single read, a two-beat burst, AXI ID/RLAST/RRESP,
+  APB command sequencing, and the read-only AXI write rejection. The bridge
+  is not wired into `soc_memory_subsystem`; `make qspi-axi-xip-gate` is its
+  standalone entry point.
 - `rtl/axi/axi_read_timeout_guard.v` wraps only the production
   `axi_spi_flash` read path. With `SPI_READ_TIMEOUT_CYCLES=512` by default,
   it bounds waiting for downstream `ARREADY` and each next downstream
@@ -450,7 +456,10 @@ artifact.
    complete cache-error policy and external EIC/VEIC policy are next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
-3. Integrate QSPI controller/pads and add the QSPI command/XIP block tests.
+3. Keep the standalone QSPI command/XIP bridge block-verified, then define
+   APB-command versus AXI-XIP shared-pin arbitration, timeout/abort and
+   reset-in-flight behavior before integrating it into `soc_memory_subsystem`.
+   Add the SoC QSPI command/XIP gate only after that contract is frozen.
 4. Select the PHY/DRAM/timing inputs required by `docs/block_specs/ddr3_spec.md`
    v1.0, then integrate the DDR controller/PHY wrapper, APB status, refresh/
    calibration and the DDR init gate. Do not call `axi_ddr_behavioral` a product
