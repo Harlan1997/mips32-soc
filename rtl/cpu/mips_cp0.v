@@ -151,6 +151,10 @@ module mips_cp0 (
     reg [31:0] cp0_cause;
     reg [31:0] cp0_epc;
     reg [31:0] cp0_errorepc;
+    // Tracks whether ErrorEPC contains an active CacheErr/ERL return point.
+    // Product reset starts with ERL=1, so the first startup CacheErr must still
+    // capture a precise PC even though ERL is already asserted.
+    reg        cp0_errorepc_valid;
     reg [17:0] cp0_ebase_hi;      // EBase[29:12] (bits [31:30]=10 forced; [11:10]=0; [9:0]=CPUNum)
     reg [31:0] cp0_hwrena;
     reg [2:0]  cp0_config_k0;
@@ -407,6 +411,7 @@ module mips_cp0 (
             cp0_cause       <= 32'd0;
             cp0_epc         <= 32'd0;
             cp0_errorepc    <= 32'd0;
+            cp0_errorepc_valid <= 1'b0;
             cp0_ebase_hi    <= `SOC_CP0_EBASE_RESET_HI;
             cp0_hwrena      <= 32'd0;
             cp0_config_k0   <= `SOC_CP0_CONFIG_K0_RESET;
@@ -491,8 +496,10 @@ module mips_cp0 (
                 // EXL contract used by the existing CPU pipeline.
                 if (except_code == 5'h1E) begin
                     cp0_status[2] <= 1'b1;       // Set ERL
-                    if (!cp0_status[2])
-                        cp0_errorepc <= except_pc;
+                    if (!cp0_errorepc_valid) begin
+                        cp0_errorepc <= except_bd ? (except_pc - 32'd4) : except_pc;
+                        cp0_errorepc_valid <= 1'b1;
+                    end
                 end else begin
                     cp0_status[1] <= 1'b1;        // Set EXL
                     cp0_epc       <= except_pc;
@@ -505,7 +512,10 @@ module mips_cp0 (
                 // for CacheErr.
                 if (except_bd) begin
                     if (except_code == 5'h1E) begin
-                        if (!cp0_status[2]) cp0_errorepc <= except_pc - 32'd4;
+                        if (!cp0_errorepc_valid) begin
+                            cp0_errorepc <= except_pc - 32'd4;
+                            cp0_errorepc_valid <= 1'b1;
+                        end
                     end else begin
                         cp0_epc <= except_pc - 32'd4;
                     end
@@ -526,7 +536,10 @@ module mips_cp0 (
                 // (returned from Reset/NMI/CacheErr via ErrorEPC); else clear
                 // EXL (returned from ordinary exception via EPC).
                 if (cp0_status[2])
-                    cp0_status[2] <= 1'b0;
+                    begin
+                        cp0_status[2] <= 1'b0;
+                        cp0_errorepc_valid <= 1'b0;
+                    end
                 else
                     cp0_status[1] <= 1'b0;
 
