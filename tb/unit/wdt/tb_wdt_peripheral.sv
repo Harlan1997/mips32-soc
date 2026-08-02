@@ -82,6 +82,8 @@ module tb_wdt_peripheral;
     reg uart_rx = 1'b1, uart_cts_n = 1'b0, uart_dsr_n = 1'b0;
     reg uart_dcd_n = 1'b0, uart_ri_n = 1'b1;
     wire cpu_int, wdt_reset;
+    wire spi_sclk, spi_cs_n, spi_mosi;
+    reg spi_miso = 1'b0;
     wire soc_rst_n = rst_n & ~wdt_reset;
     integer errors = 0;
 
@@ -94,6 +96,8 @@ module tb_wdt_peripheral;
         .uart_dcd_n(uart_dcd_n), .uart_ri_n(uart_ri_n), .cpu_int(cpu_int),
         .wdt_reset(wdt_reset), .qspi_timeout_sticky(1'b0),
         .qspi_controller_present(1'b0),
+        .spi_miso(spi_miso), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
+        .spi_mosi(spi_mosi), .qspi_active(),
         .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen), .s_awsize(s_awsize),
         .s_awburst(s_awburst), .s_awlock(s_awlock), .s_awcache(s_awcache),
         .s_awprot(s_awprot), .s_awvalid(s_awvalid), .s_awready(s_awready),

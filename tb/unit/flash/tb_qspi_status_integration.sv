@@ -97,6 +97,14 @@ module tb_qspi_status_integration;
     wire [31:0] gpio_pins;
     wire uart_tx, uart_rts_n, uart_dtr_n, cpu_int, wdt_reset;
     reg uart_rx = 1, uart_cts_n = 0, uart_dsr_n = 0, uart_dcd_n = 0, uart_ri_n = 1;
+    wire spi_sclk, spi_cs_n, spi_mosi;
+    reg spi_miso = 1'b0;
+    integer qspi_sclk_edges = 0;
+    integer qspi_cmd_bits = 0;
+    integer qspi_guard = 0;
+    reg [31:0] rd_value;
+    reg [7:0] qspi_cmd_capture = 8'h0;
+    reg qspi_cs_seen = 1'b0;
 
     wire [3:0] m_awid, m_bid, m_arid, m_rid;
     wire [31:0] m_awaddr, m_wdata, m_araddr, m_rdata;
@@ -115,6 +123,8 @@ module tb_qspi_status_integration;
         .uart_dcd_n(uart_dcd_n), .uart_ri_n(uart_ri_n), .cpu_int(cpu_int),
         .wdt_reset(wdt_reset), .qspi_controller_present(1'b1),
         .qspi_timeout_sticky(timeout_sticky),
+        .spi_miso(spi_miso), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
+        .spi_mosi(spi_mosi), .qspi_active(),
         .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen), .s_awsize(s_awsize),
         .s_awburst(s_awburst), .s_awlock(s_awlock), .s_awcache(s_awcache),
         .s_awprot(s_awprot), .s_awvalid(s_awvalid), .s_awready(s_awready),
@@ -136,6 +146,21 @@ module tb_qspi_status_integration;
         .m_arready(m_arready), .m_rid(m_rid), .m_rdata(m_rdata), .m_rresp(m_rresp),
         .m_rlast(m_rlast), .m_rvalid(m_rvalid), .m_rready(m_rready)
     );
+
+    always @(negedge spi_cs_n) begin
+        qspi_cs_seen = 1'b1;
+        qspi_cmd_bits = 0;
+        qspi_cmd_capture = 8'h0;
+    end
+
+    always @(posedge spi_sclk) begin
+        if (!spi_cs_n) begin
+            qspi_sclk_edges = qspi_sclk_edges + 1;
+            if (qspi_cmd_bits < 8)
+                qspi_cmd_capture = {qspi_cmd_capture[6:0], spi_mosi};
+            qspi_cmd_bits = qspi_cmd_bits + 1;
+        end
+    end
 
     task axi_read;
         input [31:0] addr;
@@ -169,6 +194,26 @@ module tb_qspi_status_integration;
             while (!s_bvalid && guard < 40) begin @(posedge clk); guard = guard + 1; end
             if (!s_bvalid || s_bresp !== 2'b00) begin
                 $display("FAIL: write %h resp=%b", addr, s_bresp);
+                errors = errors + 1;
+            end
+            @(negedge clk);
+        end
+    endtask
+
+    task axi_read_capture;
+        input [31:0] addr;
+        output [31:0] data;
+        integer guard;
+        begin
+            @(negedge clk); s_araddr = addr; s_arvalid = 1'b1;
+            guard = 0;
+            while (!s_arready && guard < 40) begin @(posedge clk); guard = guard + 1; end
+            @(negedge clk); s_arvalid = 1'b0;
+            guard = 0;
+            while (!s_rvalid && guard < 40) begin @(posedge clk); guard = guard + 1; end
+            data = s_rdata;
+            if (!s_rvalid || s_rresp !== 2'b00) begin
+                $display("FAIL: capture read %h resp=%b", addr, s_rresp);
                 errors = errors + 1;
             end
             @(negedge clk);
@@ -212,6 +257,39 @@ module tb_qspi_status_integration;
         axi_write(32'h4000_500C, 32'h1);
         axi_read(32'h4000_5004, 32'h0000_0002);
         axi_read(32'h4000_5008, 32'h0000_0000);
+
+        // Command controller window: legacy status remains at +0x00, while
+        // command-controller registers are exposed at +0x20.
+        axi_write(32'h4000_5020, 32'h1);          // CTRL.enable
+        axi_write(32'h4000_5040, 32'h0000_0006); // LUT0: Write Enable
+        axi_write(32'h4000_5128, 32'h0);          // CMD_DATA_LEN = 0
+        axi_write(32'h4000_5120, 32'h0);          // CMD_TRIGGER LUT0
+        qspi_guard = 0;
+        while (qspi_guard < 80) begin
+            axi_read_capture(32'h4000_5024, rd_value);
+            if (!rd_value[0])
+                qspi_guard = 80;
+            else
+                qspi_guard = qspi_guard + 1;
+        end
+        if (!qspi_cs_seen || qspi_sclk_edges == 0 || qspi_cmd_bits < 8 ||
+            qspi_cmd_capture !== 8'h06) begin
+            $display("FAIL: APB QSPI command pins cs=%b edges=%0d bits=%0d cmd=%h",
+                     qspi_cs_seen, qspi_sclk_edges, qspi_cmd_bits,
+                     qspi_cmd_capture);
+            errors = errors + 1;
+        end
+        axi_read_capture(32'h4000_5024, rd_value);
+        if (rd_value !== 32'h0000_000C) begin
+            $display("FAIL: QSPI command status got=%h expected=0000000c", rd_value);
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_5034, 32'h1);          // command IRQ_STATUS W1C
+        axi_read_capture(32'h4000_5024, rd_value);
+        if (rd_value !== 32'h0000_0004) begin
+            $display("FAIL: QSPI command IRQ W1C got=%h expected=00000004", rd_value);
+            errors = errors + 1;
+        end
 
         if (errors == 0)
             $display("REGRESSION_TEST_SUCCESS qspi_status_integration");
