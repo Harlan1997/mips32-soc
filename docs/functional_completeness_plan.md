@@ -42,12 +42,35 @@
 但不阻塞上述两个 RTL 前端 gate。真实 PHY wrapper 接入时才需要供应商的精确 DFI port list、
 ratio、model 和约束。
 
+## 1B. 冻结默认 RTL 功能基线（2026-08-03）
+
+当前 `integration/function-contract` 的默认配置冻结如下；所有默认回归必须使用这组
+配置，其他模式必须显式标注为 opt-in gate：
+
+| 配置项 | 冻结默认值 | 说明 |
+|---|---|---|
+| L2 | blocking write-through (`SOC_L2_CACHING`，不定义 `SOC_L2_WRITEBACK`/`SOC_L2_NONBLOCKING`) | reset-safe 默认产品路径；WB/NB 仅做独立 gate |
+| QSPI | x1 (`ENABLE_QSPI_QUAD=0`) | `soc_top`、`mips_soc`/legacy 和 UVM 默认 x1；quad 通过显式参数单独验证 |
+| DDR4 | vendor-neutral behavioral model | 真实 PHY/controller、`DDR4_ENTRY_READY` 和板级输入仍为产品入口阻塞项 |
+| CPU/MMU | bare-metal/development boot；`SOC_MMU_ENABLE=0` 默认 | 产品 MMU 使用 `SOC_PRODUCT_BOOT_ENABLE=1`、`SOC_MMU_ENABLE=1` 的独立 directed gates；不承诺 Linux/kernel boot |
+
+当前 HEAD 的可复现证据命令：
+
+```text
+make rtl-frontend-compile
+make soc-smoke
+make phase3-complete
+```
+
+上述命令的日志和报告必须记录当前 commit；`L2_WRITEBACK=1`、`L2_NONBLOCKING=1`、
+`ENABLE_QSPI_QUAD=1` 和产品 MMU 只允许作为显式 opt-in gate，不得覆盖默认 baseline。
+
 ## 2. 当前基线快照
 
 | 对象 | 状态 | 处理 |
 |---|---|---|
 | `master@6ecbbbc` | 当前产品基线，已包含 C3 crossbar 和 Phase 4 商用模块历史 | 作为集成基线 |
-| `integration/function-contract` | 唯一功能集成线；已合入 C1 4-way I-cache、boot/memory 产品契约、Boot ROM/CP0 向量切片、kseg0 runtime ABI gate、UART 外部 RX waveform gate 和 SoC RX integration gate；QSPI command/APB、vendor-neutral flash、quad pad、standalone x1/quad AXI/XIP bridge、单线 shared-pin SoC 接入、quad XIP opt-in memory path 和 quad development handoff 均在此线收敛 | 当前验证和后续产品功能变更只在此线收敛，暂不直接推入 `master`；`mips_soc`/legacy/UVM 默认仍为 x1，产品 `soc_top` 通过 `ENABLE_QSPI_QUAD=1` 选择 vendor-neutral quad path |
+| `integration/function-contract` | 唯一功能集成线；已合入 C1 4-way I-cache、boot/memory 产品契约、Boot ROM/CP0 向量切片、kseg0 runtime ABI gate、UART 外部 RX waveform gate 和 SoC RX integration gate；QSPI command/APB、vendor-neutral flash、quad pad、standalone x1/quad AXI/XIP bridge、单线 shared-pin SoC 接入、quad XIP opt-in memory path 和 quad development handoff 均在此线收敛 | 当前验证和后续产品功能变更只在此线收敛，暂不直接推入 `master`；`soc_top`、`mips_soc`/legacy/UVM 默认均为 x1，quad 仅通过 `ENABLE_QSPI_QUAD=1` 显式选择 |
 | IF/I-cache response PC alignment | `44d263a` 将 IF 请求改为 `pc`，与 I-cache hit 的上一请求响应和 IF/ID 的 `pc_plus_4` 标签不一致；修复恢复 `inst_addr=next_pc` | `BLOCK_VERIFIED`：默认 prototype 路径与产品 Boot ROM 路径均验证 reset branch、delay slot、两次写回和精确分支目标；反向改回 `pc` 时定向测试失败 |
 | Boot ROM reset/vector slice | 独立 64-KB AXI S4 Boot ROM、`BFC0_0000 -> 1FC0_0000` 复位取指、产品 `BEV/ERL` 复位、`BFC0_0380` 与 `EBase+0x180` 普通异常路径已实现；`SOC_PRODUCT_BOOT_ENABLE` 默认仍为 `0` | `BLOCK_VERIFIED`，并有完整 SoC directed 证据；它不是可启动的产品 boot firmware，不能升级为 `SOC_INTEGRATED` 或产品启动完成 |
 | Product TLB/MMU boot slice | `SOC_PRODUCT_BOOT_ENABLE=1` 与 `SOC_MMU_ENABLE=1` 下，CPU 保留 TLB lookup miss/invalid 的来源位；miss 选 `BFC0_0200`/`EBase`，invalid 保持 `BFC0_0380`/`EBase+0x180`；最小 Boot ROM linker、BEV refill handler、wired kseg2-APB 映射、动态 DDR refill，以及复制到 SRAM 的 EBase `Mod` handler 已新增 | 完整 SoC firmware directed 通过：I-side 覆盖两个 BEV 模式的 miss/invalid，D-side 覆盖 BEV=1 miss/invalid；两个 firmware gate 覆盖 `TLBWI`/`Wired`、DTLB refill/`ERET` retry、DDR/APB，以及 EBase `Mod` precise-state 检查、`D=1` 修复和 retry。独立 `tlb_asid_policy` gate 进一步验证 4KB ASID 隔离、Global 跨 ASID、Invalid/Modified 分类；`product-kseg0-runtime-gate` 证明 MMU 开启时 stage-1 VA `0x8000_1000` 取指映射到 PA `0x0000_1000`；另有独立 IP-based vectored interrupt gate。不含完整 kseg0 runtime、cache-error 或 kernel boot，不能标为 MMU 产品完成 |
@@ -331,6 +354,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-03 | `integration/function-contract` standalone quad AXI/XIP bridge slice | `make qspi-axi-xip-gate QSPI_AXI_XIP_DIR=/tmp/qspi_axi_xip_x4_default_v2`；`make qspi-axi-xip-quad-gate QSPI_AXI_XIP_QUAD_DIR=/tmp/qspi_axi_xip_quad_v2`；`make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_qspi_quad_v2` | PASS：x1/quad `REGRESSION_TEST_SUCCESS qspi_axi_xip`；RTL frontend `3/3` | `qspi_axi_xip` 的 `ENABLE_QUAD_IO=1` 以 `0x6B + 24-bit x1 address + x4 data` 驱动 `qspi_cmd_behavioral`；quad behavioral flash model 修正地址到 data phase 首个 nibble 的边沿对齐。两条 gate 均覆盖 AXI 单拍/两拍 burst、ID/RLAST/RRESP、APB sequencing、flash readback、AXI write `SLVERR` 和 pins idle。状态为 `BLOCK_VERIFIED (vendor-neutral)`；未接 `soc_memory_subsystem`，不覆盖 SoC 四线 AXI XIP、真实 PHY、电气时序、商用 flash、erase/program 或 production boot。 |
 | 2026-08-03 | `integration/function-contract` SoC memory quad XIP opt-in integration | `make qspi-soc-memory-quad-xip-gate QSPI_SOC_MEMORY_QUAD_XIP_DIR=/tmp/qspi_soc_memory_quad_xip_v1`；`make soc-smoke SOC_TEST_RUN_DIR=/tmp/soc_smoke_after_memory_quad_v2`；`make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_soc_quad_xip_v3` | PASS：`REGRESSION_TEST_SUCCESS soc_memory_quad_xip`；SoC smoke 退出码 `0`；RTL frontend `3/3` | `soc_memory_subsystem.ENABLE_QSPI_QUAD=1` 将 `qspi_axi_xip` 放入 S2 AXI path，并保留 `axi_read_timeout_guard`、shared grant 和 `qspi_io[3:0]` tri-state boundary。S2 gate 覆盖 quad 单拍/两拍 burst、AXI ID/RLAST/RRESP、flash readback、AXI write `SLVERR`、controller-present 和 idle pins；默认 SoC 配置仍为 x1。该证据是 vendor-neutral RTL/behavioral integration，不覆盖无 SRAM preload 的 CPU boot、真实 PHY、商用 flash 或 production boot。 |
 | 2026-08-03 | `integration/function-contract` quad no-preload development manifest handoff | `make product-manifest-handoff-quad-gate PRODUCT_MANIFEST_HANDOFF_QUAD_DIR=/tmp/product_manifest_handoff_quad_final`；对照 `make product-manifest-handoff-gate PRODUCT_MANIFEST_HANDOFF_DIR=/tmp/product_manifest_handoff_x1_final`；`make qspi-soc-memory-quad-xip-gate QSPI_SOC_MEMORY_QUAD_XIP_DIR=/tmp/qspi_soc_memory_quad_endian_final`；`make qspi-axi-xip-gate QSPI_AXI_XIP_DIR=/tmp/qspi_axi_xip_endian_final`；`make soc-smoke SOC_TEST_RUN_DIR=/tmp/soc_smoke_quad_endian_final`；`make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_quad_boot_final` | PASS：quad handoff 有效镜像、11 个 header/CRC 负例、timeout-to-DBE；x1 对照同样 PASS；SoC quad S2、standalone AXI/XIP、SoC smoke、RTL frontend `3/3` 均 PASS | 无 SRAM preload、无 `axi_flash_image_model` 的 vendor-neutral quad endpoint 通过真实 `qspi_io[3:0]` 完成 `0x6B` command/address、payload/CRC、Boot SRAM copy 和 kseg0 stage-1 handoff；timeout 返回 `SLVERR` 并到 DBE。`ENDIAN_SWAP=1` 固化 SoC little-endian AXI word ABI，默认配置仍保持 x1。证据等级为 `SOC_INTEGRATED` / vendor-neutral development boot；不代表真实 PHY、商用 flash、板级 SI/PI/timing、production ROM/signature、erase/program、DDR init 或 `PRODUCT_FUNCTION_READY`。 |
+| 2026-08-03 | `integration/function-contract@current` frozen default baseline | `make rtl-frontend-compile`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/frozen_default_x1`；`make phase3-complete UVM_PHASE3_COMPLETE_DIR=build/uvm/frozen_phase3_complete` | PASS：RTL frontend `3/3`；默认 SoC `REGRESSION_TEST_SUCCESS`；Phase 3A directed `8/8`、coverage `8/8`、CPU/CP0 `1/1` | 冻结默认 L2 write-through、QSPI x1、DDR4 behavioral、bare-metal/default MMU 配置；`soc_top` 的 `ENABLE_QSPI_QUAD` 已改为 `0`，quad/WB/NB/产品 MMU 只能显式 opt-in。RTL 报告：`build/unit_tb/rtl_frontend_compile/rtl_frontend_compile_report.md`；Phase 3 报告：`build/uvm/frozen_phase3_complete/phase3_completion_report.md`。Coverage exclusion 仍有既有 URG checksum/invalid-item warnings，不作为 signoff 依据。 |
 
 ## 10. 已知未决问题
 
