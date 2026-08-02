@@ -117,6 +117,7 @@ module mips_core (
     wire        cpu_data_cache_op_valid;
     wire [4:0]  cpu_data_cache_op;
     wire [31:0] cpu_data_cache_op_addr;
+    wire        cpu_data_cache_op_is_icache;
     wire        cpu_data_cache_op_done;
     wire        cpu_data_cache_op_error;
     wire [31:0] cpu_data_cache_tag_rdata;
@@ -126,6 +127,29 @@ module mips_core (
     wire        cpu_data_bus_error;
     wire        cpu_data_cache_error;
     wire [31:0] cpu_data_rdata;
+
+    wire        icache_op_valid = cpu_data_cache_op_valid &&
+                                  cpu_data_cache_op_is_icache;
+    wire        dcache_op_valid = cpu_data_cache_op_valid &&
+                                  !cpu_data_cache_op_is_icache;
+    wire        icache_op_done;
+    wire        icache_op_error;
+    wire [31:0] icache_tag_rdata;
+    wire        dcache_op_done;
+    wire        dcache_op_error;
+    wire [31:0] cpu_data_cache_tag_rdata_d;
+
+    // The CPU MEM-stage handshake is shared by both caches. Select completion
+    // and TagLo readback from the cache selected by the raw CACHE opcode.
+    assign cpu_data_cache_op_done  = cpu_data_cache_op_is_icache ?
+                                     icache_op_done : dcache_op_done;
+    assign cpu_data_cache_op_error = cpu_data_cache_op_is_icache ?
+                                     icache_op_error : dcache_op_error;
+    assign cpu_data_cache_tag_rdata = cpu_data_cache_op_is_icache ?
+                                      icache_tag_rdata :
+                                      cpu_data_cache_tag_rdata_d;
+
+    wire        icache_cpu_req = cpu_inst_req & ~cpu_data_cache_op_valid;
     
     // Instantiating the CPU Pipeline
     mips_cpu u_cpu (
@@ -150,6 +174,7 @@ module mips_core (
         .data_cache_op_valid(cpu_data_cache_op_valid),
         .data_cache_op   (cpu_data_cache_op),
         .data_cache_op_addr(cpu_data_cache_op_addr),
+        .data_cache_op_is_icache(cpu_data_cache_op_is_icache),
         .data_cache_op_done(cpu_data_cache_op_done),
         .data_cache_op_error(cpu_data_cache_op_error),
         .data_cache_tag_rdata(cpu_data_cache_tag_rdata),
@@ -187,13 +212,22 @@ module mips_core (
         .clk          (clk),
         .rst_n        (rst_n),
         
-        .cpu_req      (cpu_inst_req),
+        .cpu_req      (icache_cpu_req),
         .cpu_addr     (cpu_inst_addr),
         .cpu_rdata    (cpu_inst_rdata),
         .cpu_addr_ok  (cpu_inst_addr_ok),
         .cpu_data_ok  (cpu_inst_data_ok),
         .cpu_bus_error(cpu_inst_bus_error),
         .cpu_cache_error(cpu_inst_cache_error),
+
+        .cache_op_valid(icache_op_valid),
+        .cache_op      (cpu_data_cache_op),
+        .cache_op_addr (cpu_data_cache_op_addr),
+        .cache_op_ready(),
+        .cache_op_done (icache_op_done),
+        .cache_op_error(icache_op_error),
+        .cache_tag_wdata(cpu_data_cache_tag_wdata),
+        .cache_tag_rdata(icache_tag_rdata),
         
         .arid         (inst_arid),
         .araddr       (inst_araddr),
@@ -233,13 +267,13 @@ module mips_core (
         .cpu_data_ok  (cpu_data_data_ok),
         .cpu_bus_error(cpu_data_bus_error),
         .cpu_cache_error(cpu_data_cache_error),
-        .cache_op_valid(cpu_data_cache_op_valid),
+        .cache_op_valid(dcache_op_valid),
         .cache_op      (cpu_data_cache_op),
         .cache_op_addr (cpu_data_cache_op_addr),
         .cache_op_ready(),
-        .cache_op_done (cpu_data_cache_op_done),
-        .cache_op_error(cpu_data_cache_op_error),
-        .cache_tag_rdata(cpu_data_cache_tag_rdata),
+        .cache_op_done (dcache_op_done),
+        .cache_op_error(dcache_op_error),
+        .cache_tag_rdata(cpu_data_cache_tag_rdata_d),
         .cache_tag_wdata(cpu_data_cache_tag_wdata),
         
         .awid         (data_awid),
