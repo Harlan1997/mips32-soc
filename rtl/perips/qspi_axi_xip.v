@@ -1,13 +1,15 @@
 // AXI read-only XIP front-end for the vendor-neutral QSPI command contract.
 //
 // Each AXI beat is serialized through the command engine's APB programming
-// interface (0x03 + 24-bit address + four x1 data bytes).  This is a
-// correctness-oriented bridge: it supports one AXI read burst at a time and
-// deliberately leaves continuous-read/quad performance optimizations to a
-// later implementation.
+// interface. The default path uses 0x03 + 24-bit address + four x1 data bytes;
+// ENABLE_QUAD_IO selects the vendor-neutral 0x6B + 24-bit address + x4 data
+// contract. This is a correctness-oriented bridge: it supports one AXI read
+// burst at a time and deliberately leaves continuous-read performance
+// optimizations to a later implementation.
 
 module qspi_axi_xip #(
-    parameter integer COMMAND_TIMEOUT_CYCLES = 4096
+    parameter integer COMMAND_TIMEOUT_CYCLES = 4096,
+    parameter ENABLE_QUAD_IO = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -53,6 +55,9 @@ module qspi_axi_xip #(
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    output wire [3:0]  qspi_io_o,
+    output wire [3:0]  qspi_io_oe,
+    inout  wire [3:0]  qspi_io,
     output wire        active
 );
     localparam [3:0] ST_IDLE  = 4'd0;
@@ -100,7 +105,7 @@ module qspi_axi_xip #(
     wire cmd_sclk;
     wire [3:0] cmd_io_o;
     wire [3:0] cmd_io_oe;
-    wire [3:0] cmd_io_i = {3'b000, spi_miso};
+    wire [3:0] cmd_io_i = ENABLE_QUAD_IO ? qspi_io : {3'b000, spi_miso};
     wire cmd_irq;
 
     qspi_cmd_behavioral #(
@@ -118,6 +123,12 @@ module qspi_axi_xip #(
     assign spi_sclk = cmd_sclk;
     assign spi_cs_n = cmd_cs_n[0];
     assign spi_mosi = cmd_io_o[0];
+    assign qspi_io_o = cmd_io_o;
+    assign qspi_io_oe = ENABLE_QUAD_IO ? cmd_io_oe : 4'h0;
+    assign qspi_io[0] = qspi_io_oe[0] ? qspi_io_o[0] : 1'bz;
+    assign qspi_io[1] = qspi_io_oe[1] ? qspi_io_o[1] : 1'bz;
+    assign qspi_io[2] = qspi_io_oe[2] ? qspi_io_o[2] : 1'bz;
+    assign qspi_io[3] = qspi_io_oe[3] ? qspi_io_o[3] : 1'bz;
     assign active   = ~cmd_cs_n[0];
 
     assign s_arready = (state == ST_IDLE) && !wr_busy_r && !wr_bvalid_r;
@@ -149,7 +160,9 @@ module qspi_axi_xip #(
             end
             ST_LUT: begin
                 cmd_psel = 1'b1; cmd_penable = 1'b1; cmd_pwrite = 1'b1;
-                cmd_paddr = A_LUT0; cmd_pwdata = 32'h0000_0103;
+                cmd_paddr = A_LUT0;
+                cmd_pwdata = ENABLE_QUAD_IO ? 32'h0080_016b :
+                                                   32'h0000_0103;
             end
             ST_ADDR: begin
                 cmd_psel = 1'b1; cmd_penable = 1'b1; cmd_pwrite = 1'b1;

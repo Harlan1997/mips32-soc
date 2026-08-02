@@ -42,10 +42,18 @@ module tb_qspi_axi_xip;
     reg bready = 1;
 
     wire spi_sclk, spi_cs_n, spi_mosi, spi_miso, active;
+    tri [3:0] qspi_io;
+    wire [3:0] qspi_io_o, qspi_io_oe;
     integer errors = 0;
     integer guard;
 
-    qspi_axi_xip dut (
+    qspi_axi_xip #(
+`ifdef QSPI_AXI_XIP_QUAD
+        .ENABLE_QUAD_IO(1'b1)
+`else
+        .ENABLE_QUAD_IO(1'b0)
+`endif
+    ) dut (
         .clk(clk), .rst_n(rst_n),
         .s_arid(arid), .s_araddr(araddr), .s_arlen(arlen),
         .s_arsize(arsize), .s_arburst(arburst), .s_arlock(arlock),
@@ -60,13 +68,21 @@ module tb_qspi_axi_xip;
         .s_wlast(wlast), .s_wvalid(wvalid), .s_wready(wready),
         .s_bid(bid), .s_bresp(bresp), .s_bvalid(bvalid),
         .s_bready(bready), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
-        .spi_mosi(spi_mosi), .spi_miso(spi_miso), .active(active)
+        .spi_mosi(spi_mosi), .spi_miso(spi_miso), .qspi_io_o(qspi_io_o),
+        .qspi_io_oe(qspi_io_oe), .qspi_io(qspi_io), .active(active)
     );
 
+`ifdef QSPI_AXI_XIP_QUAD
+    qspi_flash_quad_behavioral #(.MEM_BYTES(65536)) flash (
+        .clk(clk), .rst_n(rst_n), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
+        .spi_io(qspi_io)
+    );
+`else
     spi_flash_behavioral #(.MEM_BYTES(65536)) flash (
         .clk(clk), .rst_n(rst_n), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
         .spi_mosi(spi_mosi), .spi_miso(spi_miso)
     );
+`endif
 
     task automatic fail(input [255:0] message);
         begin
