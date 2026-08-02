@@ -171,6 +171,27 @@ module tb_qspi_flash_behavioral;
         apb_write(A_CMD_TRIG, 0);
         wait_done();
         drain_word(32'hCAFE_BABE);
+        apb_write(A_IRQ_STATUS, 1);
+
+        // Sector erase is a second command-only transaction.  Re-issue WREN
+        // because the NOR model clears WEL after page program.
+        apb_write(A_CMD_LEN, 0);
+        apb_write(A_CMD_TRIG, 1);
+        wait_done();
+        apb_write(A_IRQ_STATUS, 1);
+        apb_write(A_LUT_BASE + 12'h10, 32'h0000_0120);
+        apb_write(A_CMD_ADDR, 32'h0000_0020);
+        apb_write(A_CMD_LEN, 0);
+        apb_write(A_CMD_TRIG, 4);
+        wait_done();
+        apb_write(A_IRQ_STATUS, 1);
+
+        apb_write(A_LUT_BASE, 32'h0000_0103);
+        apb_write(A_CMD_ADDR, 32'h0000_0020);
+        apb_write(A_CMD_LEN, 4);
+        apb_write(A_CMD_TRIG, 0);
+        wait_done();
+        drain_word(32'hFFFF_FFFF);
 
         if (errors != 0)
             fail("QSPI flash behavioral checks failed");
