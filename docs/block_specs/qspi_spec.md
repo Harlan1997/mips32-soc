@@ -1,6 +1,7 @@
 # QSPI Flash 控制器 微架构规格 (v0)
 
 > 状态：v0 草案。作为 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线。当前 SPI 控制器只支持 XIP 单线 read (0x03)，写返回 SLVERR，无擦除/编程/QUAD/DMA。新控制器目标是**通用 QSPI Flash controller (SPI/DSPI/QSPI)** + XIP + 擦除/编程 + DMA。
+> 当前 RTL 前端交付已增加 `qspi_axi_xip` standalone bridge：它通过 APB sequencer 驱动 `qspi_cmd_behavioral`，完成 x1 `0x03` 读和 AXI read-only 返回。该 bridge 已达到 `BLOCK_VERIFIED (vendor-neutral)`，但尚未接入 `soc_memory_subsystem`，不能替代产品 QSPI controller 或商用 flash/PHY。
 
 ---
 
@@ -87,6 +88,17 @@ AXI R (addr, len):
 **Continuous mode**：LUT 的 MODE 阶段发 0xA5 保持 flash 在 "no cmd" 状态，下次 XIP 只发 addr 省 cmd。可提速 10-20%。
 
 **性能**：QSPI 100 MHz × 4 lanes ≈ 400 Mbit/s = 50 MB/s；AXI 40 MHz × 32-bit = 160 MB/s → SPI 是瓶颈，AXI 侧自然 backpressure。
+
+### 4.1 当前 standalone AXI/XIP bridge contract
+
+`rtl/perips/qspi_axi_xip.v` 是当前 RTL 前端阶段的独立验证实现，边界如下：
+
+- 只接受一个 AXI read burst；每个 beat 串行执行一次 APB command transaction，burst 不跨 beat 合并。
+- 固定使用 LUT0=`0x03 + 24-bit address + 4-byte x1 read`，每个 beat 地址递增 4 字节。
+- 轮询 command status，读取四个 RX FIFO byte 后组成 `RDATA`；command error 返回 `SLVERR`。
+- AXI write address/data handshake 完成后返回 `BVALID/SLVERR`，不对 flash 发起写命令。
+- 该实现没有 continuous-read、quad XIP、内部 timeout、DMA 或多片 CS 支持；计划集成 SoC 时必须继续放在 `axi_read_timeout_guard` 后面。
+- APB command path 与 AXI/XIP path 目前没有共享 pin 的仲裁、优先级、abort 或 reset-in-flight contract，因此 bridge 保持 standalone，不切换默认 `soc_memory_subsystem` 的 `axi_spi_flash` 路径。
 
 ---
 
@@ -219,6 +231,7 @@ module qspi_ctrl #(
 - 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；vendor-neutral flash endpoint 和 standalone tri-state pad wrapper 只存在于仿真 gate，SoC 四线 mux/PHY、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
 - 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页、再次读回 `CA FE BA BE`，以及重新 WREN 后 `0x20` sector erase 读回全 `FF`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
 - 2026-08-02：`qspi_pad_wrapper` 通过 `make qspi-pad-wrapper-gate` 验证 x4 read `A5`、x4 write `A1B2C3D4` 的三态方向/nibble 映射和 CS 结束后的高阻。该 wrapper 仅是 vendor-neutral RTL pad boundary，未接 SoC top、pad ring、IO timing 或真实 PHY。
+- 2026-08-02：`qspi_axi_xip` 通过 `make qspi-axi-xip-gate` 验证 AXI 单拍读、两拍 burst、ID/RLAST/RRESP、内部 APB command sequencing、vendor-neutral flash 读回和 AXI write `SLVERR`；SPI pins 在每次事务后回到 idle。状态为 `BLOCK_VERIFIED (vendor-neutral)`。SoC memory subsystem 切换、APB-vs-XIP 仲裁、timeout/abort、quad XIP 和生产 boot 仍未完成。
 
 ## 版本记录
 
