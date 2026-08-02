@@ -9,12 +9,13 @@
 > refill/writeback `cpu_cache_error` sideband；SoC 级 `cache_sweep` 固件与
 > phase3/uvm/smoke 全绿。
 >
-> **当前实现边界**：CACHE D-cache 维护首批已接入 CPU MEM 阶段并由 D-cache
-> 完成握手；已实现 `Index_Writeback_Invalidate_D`、`Hit_Invalidate_D`、
-> `Hit_Writeback_Invalidate_D`、`Hit_Writeback_D`。`Index_Load_Tag_D` /
-> `Index_Store_Tag_D` 仍按非法指令处理（尚无 TagLo/TagHi 架构寄存器）。
-> 非阻塞多-MSHR、4-entry store buffer 仍依赖非阻塞 L2 与 CPU hit-under-miss
->（见 `docs/refactor_roadmap.md` 依赖链），单独排期。下文为完整 v0 目标。
+> **当前实现边界**：CACHE D-cache 维护操作已接入 CPU MEM 阶段并由 D-cache
+> 完成握手；当前 blocking baseline 覆盖 `Index_Writeback_Invalidate_D`、
+> `Hit_Invalidate_D`、`Hit_Writeback_Invalidate_D`、`Hit_Writeback_D`，以及
+> `Index_Load_Tag_D` / `Index_Store_Tag_D` 的有限 TagLo tuple 读写。CPU/D-cache
+> gate 还覆盖 TagHi 读写和 SYNC ordered-no-op。非阻塞多-MSHR、4-entry store
+> buffer、parity/ECC 和完整 OS cache ABI 不属于当前产品 baseline，仍单独排期。
+> 下文为完整 v0 目标。
 
 ---
 
