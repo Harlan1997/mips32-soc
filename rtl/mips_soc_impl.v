@@ -433,8 +433,21 @@ module mips_soc_impl #(
     wire        wdt_reset;
     wire        qspi_timeout_sticky;
     wire        qspi_controller_present;
+    wire        qspi_cmd_sclk;
+    wire        qspi_cmd_cs_n;
+    wire        qspi_cmd_mosi;
+    wire        qspi_cmd_active;
+    wire        mem_spi_sclk;
+    wire        mem_spi_cs_n;
+    wire        mem_spi_mosi;
     wire        soc_rst_n;
     assign soc_rst_n = rst_n & ~wdt_reset;
+
+    // The command path owns the shared SPI pins only while its CS is active;
+    // otherwise the established AXI XIP controller remains the pin owner.
+    assign spi_sclk = qspi_cmd_active ? qspi_cmd_sclk : mem_spi_sclk;
+    assign spi_cs_n = qspi_cmd_active ? qspi_cmd_cs_n : mem_spi_cs_n;
+    assign spi_mosi = qspi_cmd_active ? qspi_cmd_mosi : mem_spi_mosi;
 
     // =========================================================================
     // Instantiations
@@ -866,9 +879,9 @@ module mips_soc_impl #(
     ) u_memory_subsystem (
         .clk          (clk),
         .rst_n        (soc_rst_n),
-        .spi_sclk     (spi_sclk),
-        .spi_cs_n     (spi_cs_n),
-        .spi_mosi     (spi_mosi),
+        .spi_sclk     (mem_spi_sclk),
+        .spi_cs_n     (mem_spi_cs_n),
+        .spi_mosi     (mem_spi_mosi),
         .spi_miso     (spi_miso),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),
@@ -1044,6 +1057,11 @@ module mips_soc_impl #(
         .wdt_reset    (wdt_reset),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),
+        .spi_miso     (spi_miso),
+        .spi_sclk     (qspi_cmd_sclk),
+        .spi_cs_n     (qspi_cmd_cs_n),
+        .spi_mosi     (qspi_cmd_mosi),
+        .qspi_active  (qspi_cmd_active),
 
         .s_awid       (s1_awid),
         .s_awaddr     (s1_awaddr),

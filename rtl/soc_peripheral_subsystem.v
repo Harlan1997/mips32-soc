@@ -27,6 +27,11 @@ module soc_peripheral_subsystem #(
 
     input  wire        qspi_timeout_sticky,
     input  wire        qspi_controller_present,
+    input  wire        spi_miso,
+    output wire        spi_sclk,
+    output wire        spi_cs_n,
+    output wire        spi_mosi,
+    output wire        qspi_active,
 
     input  wire [3:0]  s_awid,
     input  wire [31:0] s_awaddr,
@@ -319,7 +324,8 @@ module soc_peripheral_subsystem #(
         .pslverr    (boot_status_pslverr)
     );
 
-    apb_qspi_status u_apb_qspi_status (
+    wire qspi_irq;
+    qspi_apb_integration u_qspi_apb_integration (
         .clk                  (clk),
         .rst_n                (periph_rst_n),
         .controller_present   (qspi_controller_present),
@@ -327,11 +333,18 @@ module soc_peripheral_subsystem #(
         .psel                 (qspi_sel),
         .penable              (apb_penable),
         .pwrite               (apb_pwrite),
-        .paddr                (apb_paddr[4:0]),
+        .paddr                (apb_paddr),
+        .pstrb                (apb_pstrb),
         .pwdata               (apb_pwdata),
         .prdata               (qspi_prdata),
         .pready               (qspi_pready),
-        .pslverr              (qspi_pslverr)
+        .pslverr              (qspi_pslverr),
+        .spi_sclk             (spi_sclk),
+        .spi_cs_n             (spi_cs_n),
+        .spi_mosi             (spi_mosi),
+        .spi_miso             (spi_miso),
+        .active               (qspi_active),
+        .irq                  (qspi_irq)
     );
 
     apb_gpio u_apb_gpio (
@@ -406,7 +419,7 @@ module soc_peripheral_subsystem #(
         .ch_int          (dma_ch_int)
     );
 
-    wire [31:0] irq_sources = {28'd0, dma_int, timer_int, uart_tx_int, uart_rx_int};
+    wire [31:0] irq_sources = {27'd0, qspi_irq, dma_int, timer_int, uart_tx_int, uart_rx_int};
 
     // -----------------------------------------------------------------------
     // Interrupt controller: apb_vic. Registers 0x0/0x4/0x8 v1-compatible
