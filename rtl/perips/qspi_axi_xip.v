@@ -9,7 +9,8 @@
 
 module qspi_axi_xip #(
     parameter integer COMMAND_TIMEOUT_CYCLES = 4096,
-    parameter ENABLE_QUAD_IO = 1'b0
+    parameter ENABLE_QUAD_IO = 1'b0,
+    parameter ENDIAN_SWAP = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -107,6 +108,11 @@ module qspi_axi_xip #(
     wire [3:0] cmd_io_oe;
     wire [3:0] cmd_io_i = ENABLE_QUAD_IO ? qspi_io : {3'b000, spi_miso};
     wire cmd_irq;
+    wire [31:0] assembled_rdata = {rx_b0_r, rx_b1_r, rx_b2_r, cmd_prdata[7:0]};
+    wire [31:0] formatted_rdata = ENDIAN_SWAP ?
+                                   {assembled_rdata[7:0], assembled_rdata[15:8],
+                                    assembled_rdata[23:16], assembled_rdata[31:24]} :
+                                   assembled_rdata;
 
     qspi_cmd_behavioral #(
         .COMMAND_TIMEOUT_CYCLES (COMMAND_TIMEOUT_CYCLES)
@@ -264,7 +270,7 @@ module qspi_axi_xip #(
                     state <= ST_RX3;
                 end
                 ST_RX3: begin
-                    rdata_r <= {rx_b0_r, rx_b1_r, rx_b2_r, cmd_prdata[7:0]};
+                    rdata_r <= formatted_rdata;
                     rresp_r <= 2'b00;
                     state <= ST_CLEAR;
                 end

@@ -158,14 +158,16 @@ module tb_soc_memory_quad_xip;
     initial begin
         repeat (3) @(posedge clk);
         rst_n = 1'b1;
-        flash.mem[16'h0010] = 8'hDE;
-        flash.mem[16'h0011] = 8'hAD;
-        flash.mem[16'h0012] = 8'hBE;
-        flash.mem[16'h0013] = 8'hEF;
-        flash.mem[16'h0014] = 8'h11;
-        flash.mem[16'h0015] = 8'h22;
-        flash.mem[16'h0016] = 8'h33;
-        flash.mem[16'h0017] = 8'h44;
+        // The SoC S2 path preserves the little-endian AXI word ABI used by
+        // axi_spi_flash, so the behavioral flash image stores bytes low-first.
+        flash.mem[16'h0010] = 8'hEF;
+        flash.mem[16'h0011] = 8'hBE;
+        flash.mem[16'h0012] = 8'hAD;
+        flash.mem[16'h0013] = 8'hDE;
+        flash.mem[16'h0014] = 8'h44;
+        flash.mem[16'h0015] = 8'h33;
+        flash.mem[16'h0016] = 8'h22;
+        flash.mem[16'h0017] = 8'h11;
 
         if (!qspi_controller_present)
             fail("quad memory controller-present status was not asserted");

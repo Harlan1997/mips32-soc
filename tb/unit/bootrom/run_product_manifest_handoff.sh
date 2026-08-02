@@ -24,6 +24,11 @@ if [ "${SOC_MMU_ENABLE:-0}" = "1" ]; then
     KSEG0_DATA_ARG=(+EXPECT_KSEG0_DATA)
 fi
 
+QUAD_DEFINE=()
+if [ "${QSPI_QUAD:-0}" = "1" ]; then
+    QUAD_DEFINE=(+define+TB_QSPI_QUAD=1)
+fi
+
 make -C "${ROOT_DIR}/tb/soc_test/fw" \
     FW_NAME=boot_manifest_handoff OUT_DIR="${FW_DIR}" FW_BASE=firmware all
 
@@ -32,6 +37,7 @@ cd "${RUN_DIR}"
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+SOC_PRODUCT_BOOT_ENABLE=1 \
     "${MMU_DEFINE[@]}" \
+    "${QUAD_DEFINE[@]}" \
     +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cpu" \
     +incdir+"${ROOT_DIR}/rtl/axi" +incdir+"${ROOT_DIR}/rtl/perips" \
     "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v \
@@ -90,6 +96,7 @@ done
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+SOC_PRODUCT_BOOT_ENABLE=1 \
     "${MMU_DEFINE[@]}" \
+    "${QUAD_DEFINE[@]}" \
     +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cpu" \
     +incdir+"${ROOT_DIR}/rtl/axi" +incdir+"${ROOT_DIR}/rtl/perips" \
     +incdir+"${SCRIPT_DIR}" \

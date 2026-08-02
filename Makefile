@@ -46,6 +46,7 @@ QSPI_SHARED_PIN_ARBITER_DIR ?= $(BUILD_DIR)/unit_tb/qspi_shared_pin_arbiter
 QSPI_SOC_PAD_MUX_DIR ?= $(BUILD_DIR)/unit_tb/qspi_soc_pad_mux
 QSPI_SOC_QUAD_DIR ?= $(BUILD_DIR)/unit_tb/qspi_soc_quad
 PRODUCT_MANIFEST_HANDOFF_DIR ?= $(BUILD_DIR)/unit_tb/product_manifest_handoff
+PRODUCT_MANIFEST_HANDOFF_QUAD_DIR ?= $(BUILD_DIR)/unit_tb/product_manifest_handoff_quad
 TLB_ASID_POLICY_DIR ?= $(BUILD_DIR)/unit_tb/tlb_asid_policy
 TLB_OS_CONTEXT_DIR ?= $(BUILD_DIR)/unit_tb/tlb_os_context
 PRODUCT_KSEG0_RUNTIME_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime
@@ -173,6 +174,10 @@ qspi-soc-quad-gate:
 
 product-manifest-handoff-gate:
 	RUN_DIR=$(PRODUCT_MANIFEST_HANDOFF_DIR) tb/unit/bootrom/run_product_manifest_handoff.sh
+
+.PHONY: product-manifest-handoff-quad-gate
+product-manifest-handoff-quad-gate:
+	QSPI_QUAD=1 RUN_DIR=$(PRODUCT_MANIFEST_HANDOFF_QUAD_DIR) tb/unit/bootrom/run_product_manifest_handoff.sh
 
 product-kseg0-runtime-gate:
 	SOC_MMU_ENABLE=1 RUN_DIR=$(PRODUCT_KSEG0_RUNTIME_DIR) tb/unit/bootrom/run_product_manifest_handoff.sh
