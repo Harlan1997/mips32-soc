@@ -95,7 +95,7 @@ The existing offsets remain stable. New product blocks use previously unused
 | GPIO | `0x4000_2000` | pin direction/data |
 | DMA | `0x4000_3000` | copy, IRQ and error |
 | PIC/VIC | `0x4000_4000` | source mask/active/priority |
-| QSPI/XIP status slice | `0x4000_5000` | version, controller-present, guarded-XIP timeout/last-error and W1C; command/FIFO APB window is integrated for the x1 slice with command timeout budget, abort and W1C event bits; WDT/reset-in-flight pin-safe recovery is verified; `qspi_soc_pad_mux` and optional `qspi_io[3:0]` are now present, while four-lane command/AXI behavior and PHY selection remain future work |
+| QSPI/XIP status slice | `0x4000_5000` | version, controller-present, guarded-XIP timeout/last-error and W1C; command/FIFO APB window is integrated for x1 and the SoC four-lane APB command read/write gate passes with timeout/abort/W1C event bits; WDT/reset-in-flight pin-safe recovery is verified; `qspi_soc_pad_mux` and optional `qspi_io[3:0]` are present, while four-lane AXI XIP and PHY selection remain future work |
 | DDR controller | `0x4000_6000` | init, calibration, refresh, error |
 | Watchdog | `0x4000_7000` | unlock, timeout, reset status |
 | Boot status | `0x4000_8000` | always-on diagnostic stage/failure/reset-cause registers |
