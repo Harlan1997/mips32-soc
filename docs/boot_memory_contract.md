@@ -1,6 +1,6 @@
 # Boot and Memory Product Contract
 
-> Version: v1.8 (2026-08-02)
+> Version: v1.9 (2026-08-02)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM
 > reset/map, fetch-response PC alignment, general-exception, TLB refill/invalid
@@ -65,7 +65,7 @@ addresses firmware may use after the MIPS segment rules are active.
 | Boot ROM | `0x1FC0_0000` | 64 KB | `0xBFC0_0000` kseg1 | Reset/map/vector slices and development manifest handoff have directed SoC evidence; immutable production image remains P0 |
 | Boot SRAM | `0x0000_0000` | 64 KB | `0x8000_0000` kseg0 / `0xA000_0000` kseg1 | Existing behavioral SRAM; stage-1 entry `0x8000_1000` is fetched through MMU-enabled kseg0 in the handoff slice; full runtime data use remains open |
 | DDR | `0x0800_0000` | 128 MB | `0x8800_0000` kseg0 / `0xA800_0000` kseg1 | Address window is frozen; behavioral placeholder must be replaced by the v1.0 controller/PHY contract |
-| SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Default production path remains single-lane AXI XIP with a 512-cycle AXI-side guard; standalone `qspi_axi_xip` x1 command bridge is block-verified but not selected by `soc_memory_subsystem`; timeout status is observable at APB `0x4000_5000`, while shared-pin arbitration, four-lane XIP and boot command paths remain incomplete |
+| SPI/QSPI flash | `0x1000_0000` | 256 MB | `0xB000_0000` kseg1 | Default path remains single-lane `axi_spi_flash` XIP with a 512-cycle AXI-side guard; APB command and AXI XIP now share pins through the SoC `qspi_shared_pin_arbiter`, with grant-gated downstream `ARVALID` and fabric `ARREADY`; standalone `qspi_axi_xip` remains block-verified and is not selected by `soc_memory_subsystem`; timeout status is observable at APB `0x4000_5000`, while abort/reset-in-flight, four-lane XIP, commercial flash and production boot remain incomplete |
 | APB peripherals | `0x4000_0000` | 64 KB | `0xC000_0000` kseg2 via wired TLB | Existing APB window; no direct kseg1 alias because PA is above 512 MB |
 | Debug/test | `0xE000_0000` | 64 KB | kseg2 via TLB, privileged only | Existing reserved window; not part of boot image |
 
@@ -374,8 +374,10 @@ close that gate:
 - `tb/unit/flash/tb_qspi_shared_pin_arbiter.sv` drives the standalone
   `qspi_shared_pin_arbiter` contract. It verifies latched ownership, no
   preemption of an active memory/command transaction, command priority while
-  idle, conflict indication and safe idle pins. It is not wired into the SoC
-  mux; `make qspi-shared-pin-arbiter-gate` is its standalone entry point.
+  idle, conflict indication and safe idle pins. `mips_soc_impl` now uses the
+  same contract for the existing single-lane `axi_spi_flash` and APB command
+  path; `make qspi-shared-pin-arbiter-gate` remains the standalone contract
+  entry point and `make soc-smoke` covers the limited SoC integration.
 - `rtl/axi/axi_read_timeout_guard.v` wraps only the production
   `axi_spi_flash` read path. With `SPI_READ_TIMEOUT_CYCLES=512` by default,
   it bounds waiting for downstream `ARREADY` and each next downstream
@@ -461,11 +463,12 @@ artifact.
    complete cache-error policy and external EIC/VEIC policy are next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
-3. Keep the standalone QSPI command/XIP bridge and shared-pin arbiter
-   block-verified, then bind command trigger/AXI acceptance to the arbiter's
-   request/grant contract and define timeout/abort/reset-in-flight behavior
-   before integrating it into `soc_memory_subsystem`. Add the SoC QSPI
-   command/XIP gate only after that contract is frozen.
+3. Keep the standalone QSPI command/XIP bridge block-verified, while the
+   existing single-lane `axi_spi_flash` and APB command path use the
+   `qspi_shared_pin_arbiter` SoC slice. The grant-gated AR acceptance and
+   response-accounting fix are verified by SoC smoke; next define
+   timeout/abort/reset-in-flight behavior before adding quad pad/PHY and
+   production boot gates.
 4. Select the PHY/DRAM/timing inputs required by `docs/block_specs/ddr3_spec.md`
    v1.0, then integrate the DDR controller/PHY wrapper, APB status, refresh/
    calibration and the DDR init gate. Do not call `axi_ddr_behavioral` a product

@@ -8,7 +8,8 @@
 module soc_memory_subsystem #(
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
     parameter SRAM_DEPTH_WORDS = 32768,
-    parameter integer SPI_READ_TIMEOUT_CYCLES = 512
+    parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
+    parameter ENABLE_SHARED_ARB = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -17,6 +18,8 @@ module soc_memory_subsystem #(
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    input  wire        spi_arb_grant,
+    output wire        spi_req,
 
     output wire        qspi_timeout_sticky,
     output wire        qspi_controller_present,
@@ -165,6 +168,10 @@ module soc_memory_subsystem #(
     output wire        s4_rvalid,
     input  wire        s4_rready
 );
+
+    // Keep legacy standalone subsystem instantiations functional when the
+    // optional shared-pin contract is not enabled at the SoC top.
+    wire effective_spi_grant = ENABLE_SHARED_ARB ? spi_arb_grant : 1'b1;
 
 `ifdef SOC_USE_L2_CACHE
     // ---- L2 cache in-line between fabric and axi_ddr_model backing store ----
@@ -340,10 +347,19 @@ module soc_memory_subsystem #(
     endtask
     // synopsys translate_on
 
+    // Keep the shared-pin ownership request asserted from AXI acceptance
+    // through completion. The controller's CS can remain inactive for one
+    // cycle while the timeout guard hands the request downstream, so CS alone
+    // is not sufficient to describe an in-flight memory transaction.
+    wire spi_transaction_active;
+
     generate
     if (ENABLE_FLASH_IMAGE_MODEL) begin : g_flash_image_model
+        wire flash_model_arready;
         assign qspi_timeout_sticky     = 1'b0;
         assign qspi_controller_present = 1'b0;
+        assign s2_arready              = effective_spi_grant && flash_model_arready;
+        assign spi_transaction_active  = !flash_model_arready;
         axi_flash_image_model u_axi_flash_image_model (
             .clk             (clk),
             .rst_n           (rst_n),
@@ -376,8 +392,8 @@ module soc_memory_subsystem #(
             .s_arlock        (s2_arlock),
             .s_arcache       (s2_arcache),
             .s_arprot        (s2_arprot),
-            .s_arvalid       (s2_arvalid),
-            .s_arready       (s2_arready),
+            .s_arvalid       (s2_arvalid && effective_spi_grant),
+            .s_arready       (flash_model_arready),
             .s_rid           (s2_rid),
             .s_rdata         (s2_rdata),
             .s_rresp         (s2_rresp),
@@ -401,6 +417,7 @@ module soc_memory_subsystem #(
         wire [2:0]  flash_arprot;
         wire        flash_arvalid;
         wire        flash_arready;
+        wire        flash_guard_arready;
         wire [3:0]  flash_rid;
         wire [31:0] flash_rdata;
         wire [1:0]  flash_rresp;
@@ -428,8 +445,8 @@ module soc_memory_subsystem #(
             .s_arlock        (s2_arlock),
             .s_arcache       (s2_arcache),
             .s_arprot        (s2_arprot),
-            .s_arvalid       (s2_arvalid),
-            .s_arready       (s2_arready),
+            .s_arvalid       (s2_arvalid && effective_spi_grant),
+            .s_arready       (flash_guard_arready),
             .s_rid           (s2_rid),
             .s_rdata         (s2_rdata),
             .s_rresp         (s2_rresp),
@@ -454,6 +471,9 @@ module soc_memory_subsystem #(
             .m_rready        (flash_rready),
             .timeout_sticky  (flash_timeout_sticky)
         );
+
+        assign s2_arready = effective_spi_grant && flash_guard_arready;
+        assign spi_transaction_active = !flash_guard_arready;
 
         axi_spi_flash u_axi_spi_flash (
             .clk             (clk),
@@ -503,6 +523,13 @@ module soc_memory_subsystem #(
         );
     end
     endgenerate
+
+    // The request remains asserted while an AXI flash read is waiting for a
+    // grant, while the guard/controller owns an in-flight transaction, or
+    // while the physical controller owns the pins. This lets the shared
+    // arbiter prevent a command trigger from colliding with XIP.
+    assign spi_req = ENABLE_SHARED_ARB &&
+                     (s2_arvalid || spi_transaction_active || !spi_cs_n);
 
     // ---- Product Boot ROM (S4) ----
     // This is a distinct read-only slave so reset fetches cannot alias the

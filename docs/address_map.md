@@ -38,7 +38,7 @@ return AXI `DECERR`.
 | GPIO | `0x2000` | board control |
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
-| QSPI/XIP status | `0x5000` | version/status/last-error observability; full command/XIP/FIFO controller not yet integrated |
+| QSPI/XIP status | `0x5000` | version/status/last-error observability plus APB command/FIFO window; existing single-lane AXI XIP and APB command share pins through the SoC arbiter, while standalone quad/production paths remain open |
 | DDR controller | `0x6000` | frozen init/calibration/refresh/error contract; product block not yet integrated |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
