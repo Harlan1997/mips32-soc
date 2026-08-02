@@ -165,7 +165,7 @@ Phase 1 当前关闭条件是：RTL compile/elaboration 成功，seed 10 无 che
 F1 DDR4 behavioral gate 通过，并生成可追溯的 unit/firmware/SoC 仿真报告。full signoff
 和 coverage threshold 延后，不阻塞 `RTL_FUNCTIONAL_SIM_READY`。
 
-当前基线 `5763eec` 已满足 `RTL_FRONTEND_COMPILE_READY`，并已具备
+当前基线 `150d75c` 已满足 `RTL_FRONTEND_COMPILE_READY`，并已具备
 `RTL_FUNCTIONAL_SIM_READY` 所需的 unit、firmware、SoC/UVM、F1 DDR4、Boot ROM/MMU、
 XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_READY`，真实 DDR4、
 完整 runtime/page-table、ECC/外部 EIC、生产 QSPI 和板级 I/O 仍未闭合；注入式 CacheErr handler/recovery slice 已新增，但不等于量产错误策略闭合。
@@ -310,7 +310,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-02 | `integration/function-contract` I-cache CPU/AXI error slice | `make cpu-icache-error-gate CPU_ICACHE_ERROR_DIR=build/unit_tb/mips_core_icache_error` | PASS：`REGRESSION_TEST_SUCCESS mips_core_icache_exec_error ar_count=6` | 在同一 `mips_core` execution harness 对 `0x0000_1000` refill 注入 AXI `SLVERR`，确认 I-cache `cpu_cache_error` sideband、CPU IF CacheErr 分类及 CP0 `Cause.ExcCode=30`/`Status.ERL`。该 slice 不覆盖完整产品 SoC reset/long-stress、ErrorEPC handler recovery、I-cache maintenance/tag ABI 或 parity/ECC。 |
 | 2026-08-02 | `integration/function-contract` product-boot I-cache CacheErr vector/recovery slice | `make cpu-icache-product-error-gate CPU_ICACHE_PRODUCT_ERROR_DIR=build/unit_tb/mips_core_icache_product_error`；`make rtl-frontend-compile`；`make cpu-cache-error-gate CPU_CACHE_ERROR_DIR=build/unit_tb/cpu_cache_error_after_product_icache`；`make product-cacheerr-gate PRODUCT_CACHEERR_DIR=build/unit_tb/product_cacheerr_after_cp0_valid` | PASS：`REGRESSION_TEST_SUCCESS mips_core_icache_product_error ar_count=3 boot_ar_count=2 vector_ar_count=1`；受影响 gate 均 PASS | 产品模式复位 `BFC0_0000` 的首笔物理 AR `1FC0_0000` 注入一次 `SLVERR`，确认 I-cache CacheErr、`Cause.ExcCode=30`、`ERL=1`、精确 `ErrorEPC=BFC0_0000`，向量虚拟/物理地址 `BFC0_0100`/`1FC0_0100` 只取一次，执行 `ERET` 清 ERL 并重取 Boot ROM。修复 CP0 `cp0_errorepc_valid`，使产品复位初始 `ERL=1` 时首个 CacheErr 仍捕获 ErrorEPC，同时避免嵌套错误覆盖；该 slice 不覆盖长期压力、I-cache maintenance/tag ABI、ECC 或量产 ROM。 |
 | 2026-08-02 | `integration/function-contract` I-cache multi-set long-stress slice | `make cpu-icache-stress-gate CPU_ICACHE_STRESS_DIR=build/unit_tb/mips_core_icache_stress` | PASS：`REGRESSION_TEST_SUCCESS mips_core_icache_stress ar_count=895 unique_lines=320 line_pc_count=960` | `mips_core` 运行确定性 320-line jump ring（64 sets × 5 tags/set）三轮，覆盖全部 line、四路容量后的重复 refill，并在 AXI instruction AR 通道周期性施加背压；检查 AR line alignment/len/size/burst/prot 和无死锁。该 slice 不覆盖 I-cache maintenance/tag ABI、parity/ECC、AXI R-channel fault 或长期 SoC firmware/kernel 压力。 |
-| 2026-08-02 | `integration/function-contract` branch/WIP audit | `git worktree list`；`git branch -avv`；`git -C /home/admin/mips32-soc status --short` | PASS：功能线 `integration/function-contract@fb3f2f5` clean；`master@6ecbbbc` 保持基线；主工作区挂载 `feature/dcache-nb-stage3@fcfc9c1` 且存在未提交 D-cache NB RTL/TB、spec/roadmap 和 coverage 工件 | D-cache NB WIP 继续隔离，不计入当前 RTL 功能完成；任何后续合并必须先在该分支形成独立 commit、block gate 和 owner，再由功能线审查合入。 |
+| 2026-08-02 | `integration/function-contract` branch/WIP audit | `git worktree list`；`git branch -avv`；`git -C /home/admin/mips32-soc status --short` | PASS：功能线 `integration/function-contract@150d75c` clean；`master@6ecbbbc` 保持基线；主工作区挂载 `feature/dcache-nb-stage3@fcfc9c1` 且存在未提交 D-cache NB RTL/TB、spec/roadmap 和 coverage 工件 | D-cache NB WIP 继续隔离，不计入当前 RTL 功能完成；任何后续合并必须先在该分支形成独立 commit、block gate 和 owner，再由功能线审查合入。 |
 
 ## 10. 已知未决问题
 
