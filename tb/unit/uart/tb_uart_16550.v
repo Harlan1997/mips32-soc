@@ -11,6 +11,7 @@ module tb_uart_16550;
     wire [31:0]  prdata;
     wire         pready, pslverr;
     wire         uart_tx;
+    reg          cts_n = 1'b0;
     wire         irq;
     wire         rx_irq;
     wire         tx_irq;
@@ -25,7 +26,7 @@ module tb_uart_16550;
         .paddr(paddr), .pstrb(pstrb), .pwdata(pwdata),
         .prdata(prdata), .pready(pready), .pslverr(pslverr),
         .uart_tx(uart_tx), .uart_rx(1'b1),
-        .uart_rts_n(), .uart_cts_n(1'b0),
+        .uart_rts_n(), .uart_cts_n(cts_n),
         .uart_dtr_n(), .uart_dsr_n(1'b0),
         .uart_dcd_n(1'b0), .uart_ri_n(1'b1),
         .irq(irq), .rx_irq(rx_irq), .tx_irq(tx_irq));
@@ -431,7 +432,27 @@ module tb_uart_16550;
         apb_write(5'h04, 8'h00);
 
         // =====================================================================
-        // Case 15: APB pready=1, pslverr=0 & Reserved Read Behavior
+        // Case 16: Hardware CTS flow control
+        // =====================================================================
+        $display("--- Case 16: Hardware CTS Flow Control ---");
+        rst_n = 1'b0; #20; rst_n = 1'b1;
+        apb_write(5'h0C, 8'h03); // 8N1
+        apb_write(5'h08, 8'h01); // FIFO enabled
+        cts_n = 1'b1;             // inactive CTS pauses a new frame
+        apb_write(5'h10, 8'h22); // RTS + auto flow-control enable
+        apb_write(5'h00, 8'h5A);
+        #200;
+        if (uart_tx !== 1'b1) begin
+            $display("FAIL Case 16 TX started while CTS inactive"); errs = errs + 1;
+        end
+        cts_n = 1'b0;             // release CTS; queued byte may now start
+        @(posedge clk); #1;
+        if (uart_tx !== 1'b0) begin
+            $display("FAIL Case 16 TX did not start after CTS release"); errs = errs + 1;
+        end
+        apb_write(5'h10, 8'h00);
+
+        // Case 17: APB pready=1, pslverr=0 & Reserved Read Behavior
         // =====================================================================
         $display("--- Case 15: APB Contract & Reserved Read Behavior ---");
         // Verify reserved bits in IER read back as 0 (bits 7:4)
