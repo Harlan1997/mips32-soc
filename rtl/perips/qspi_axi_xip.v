@@ -6,7 +6,9 @@
 // deliberately leaves continuous-read/quad performance optimizations to a
 // later implementation.
 
-module qspi_axi_xip (
+module qspi_axi_xip #(
+    parameter integer COMMAND_TIMEOUT_CYCLES = 4096
+) (
     input  wire        clk,
     input  wire        rst_n,
 
@@ -101,7 +103,9 @@ module qspi_axi_xip (
     wire [3:0] cmd_io_i = {3'b000, spi_miso};
     wire cmd_irq;
 
-    qspi_cmd_behavioral u_cmd (
+    qspi_cmd_behavioral #(
+        .COMMAND_TIMEOUT_CYCLES (COMMAND_TIMEOUT_CYCLES)
+    ) u_cmd (
         .clk(clk), .rst_n(rst_n),
         .psel(cmd_psel), .penable(cmd_penable), .pwrite(cmd_pwrite),
         .paddr(cmd_paddr), .pstrb(4'hf), .pwdata(cmd_pwdata),
@@ -169,7 +173,9 @@ module qspi_axi_xip (
             end
             ST_CLEAR: begin
                 cmd_psel = 1'b1; cmd_penable = 1'b1; cmd_pwrite = 1'b1;
-                cmd_paddr = A_IRQ_STATUS; cmd_pwdata = 32'h1;
+                // Clear done plus timeout/abort event latches before the
+                // bridge starts the next beat.
+                cmd_paddr = A_IRQ_STATUS; cmd_pwdata = 32'h7;
             end
             default: begin end
         endcase
@@ -223,7 +229,7 @@ module qspi_axi_xip (
                 ST_TRIG:  state <= ST_POLL;
                 ST_POLL: begin
                     if (!cmd_prdata[0] && cmd_prdata[3]) begin
-                        if (cmd_prdata[4]) begin
+                        if (cmd_prdata[4] || cmd_prdata[5] || cmd_prdata[6]) begin
                             rdata_r <= 32'h0;
                             rresp_r <= 2'b10;
                             state <= ST_CLEAR;

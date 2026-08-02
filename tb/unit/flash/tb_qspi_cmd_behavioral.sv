@@ -10,6 +10,7 @@ module tb_qspi_cmd_behavioral;
     localparam [11:0] A_CLK_DIV    = 12'h008;
     localparam [11:0] A_IRQ_EN     = 12'h010;
     localparam [11:0] A_IRQ_STATUS = 12'h014;
+    localparam [11:0] A_TIMEOUT    = 12'h018;
     localparam [11:0] A_LUT_BASE   = 12'h020;
     localparam [11:0] A_CMD_TRIG   = 12'h100;
     localparam [11:0] A_CMD_ADDR   = 12'h104;
@@ -197,6 +198,57 @@ module tb_qspi_cmd_behavioral;
         apb_read(A_STATUS, rd_value);
         if (rd_value[0] || rd_value[3] || rd_value[4])
             fail("QSPI soft reset did not clear status");
+
+        // A command that cannot make progress must terminate locally.  The
+        // timeout is counted in reference-clock cycles, independent of the
+        // SPI divisor, and leaves an observable event for software.
+        apb_write(A_TIMEOUT, 32'd4);
+        apb_write(A_CLK_DIV, 32'h0000_FFFF);
+        apb_write(A_CTRL, 32'h1);
+        apb_write(A_CMD_LEN, 32'd1);
+        apb_write(A_CMD_TRIG, 32'd0);
+        repeat (8) @(posedge clk);
+        apb_read(A_STATUS, rd_value);
+        if (rd_value[0] || !rd_value[3] || !rd_value[4] ||
+            !rd_value[5] || rd_value[6])
+            fail("command timeout did not return idle with timeout status");
+        if (!spi_cs_n[0] || spi_sclk)
+            fail("command timeout did not release SPI pins");
+        apb_write(A_IRQ_STATUS, 32'h7);
+        apb_read(A_STATUS, rd_value);
+        if (rd_value[3] || rd_value[4] || rd_value[5] || rd_value[6])
+            fail("timeout W1C did not clear event status");
+
+        // CTRL[2] aborts an active transaction synchronously.  It records a
+        // separate abort event and never leaves a stale command active.
+        apb_write(A_TIMEOUT, 32'd1000);
+        apb_write(A_CMD_TRIG, 32'd0);
+        while (dut.state == 3'd0) @(posedge clk);
+        apb_write(A_CTRL, 32'h5);
+        apb_read(A_STATUS, rd_value);
+        if (rd_value[0] || !rd_value[3] || !rd_value[4] ||
+            rd_value[5] || !rd_value[6])
+            fail("command abort did not return idle with abort status");
+        if (!spi_cs_n[0] || spi_sclk)
+            fail("command abort did not release SPI pins");
+        apb_write(A_IRQ_STATUS, 32'h7);
+
+        // External reset (the same reset asserted by the SoC WDT path) must
+        // cancel an in-flight command and return the boundary to safe idle.
+        apb_write(A_TIMEOUT, 32'd1000);
+        apb_write(A_CMD_TRIG, 32'd0);
+        while (dut.state == 3'd0) @(posedge clk);
+        rst_n = 1'b0;
+        #1;
+        if (!spi_cs_n[0] || spi_sclk || irq)
+            fail("reset-in-flight did not clear QSPI pins/status");
+        repeat (2) @(posedge clk);
+        rst_n = 1'b1;
+        repeat (2) @(posedge clk);
+        apb_read(A_STATUS, rd_value);
+        if (rd_value[0] || rd_value[3] || rd_value[4] ||
+            rd_value[5] || rd_value[6])
+            fail("QSPI reset did not restore clean status");
 
         $display("REGRESSION_TEST_SUCCESS qspi_cmd_behavioral");
         $finish;

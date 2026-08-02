@@ -7,7 +7,8 @@
 // be exercised through the real SoC APB bridge.
 
 module qspi_apb_integration #(
-    parameter ENABLE_SHARED_ARB = 1'b0
+    parameter ENABLE_SHARED_ARB = 1'b0,
+    parameter ENABLE_QUAD_IO    = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -28,6 +29,9 @@ module qspi_apb_integration #(
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    input  wire [3:0]  qspi_io_i,
+    output wire [3:0]  qspi_io_o,
+    output wire [3:0]  qspi_io_oe,
     input  wire        shared_grant,
     output wire        active,
     output wire        request,
@@ -48,7 +52,7 @@ module qspi_apb_integration #(
     wire [3:0] cmd_cs_n;
     wire [3:0] cmd_io_o;
     wire [3:0] cmd_io_oe;
-    wire [3:0] cmd_io_i = {3'b000, spi_miso};
+    wire [3:0] cmd_io_i = ENABLE_QUAD_IO ? qspi_io_i : {3'b000, spi_miso};
     wire cmd_irq;
     wire trigger_access = cmd_sel && penable && pwrite &&
                           (cmd_paddr == 12'h100);
@@ -97,17 +101,16 @@ module qspi_apb_integration #(
     assign pslverr = status_sel ? status_pslverr :
                      cmd_sel    ? (arbiter_wait ? 1'b0 : cmd_pslverr) : 1'b0;
 
-    // The current product top has single-wire SPI pins.  x1 command/address
-    // phases are therefore directly visible; the command block still keeps
-    // its four-lane internal contract for the future pad wrapper.
+    // Legacy x1 pins remain visible for the default product configuration.
+    // When ENABLE_QUAD_IO is set, qspi_io_o/qspi_io_oe carry the full command
+    // engine lane contract to qspi_soc_pad_mux.
     assign spi_sclk = cmd_sclk;
     assign spi_cs_n = cmd_cs_n[0];
     assign spi_mosi = cmd_io_o[0];
+    assign qspi_io_o = cmd_io_o;
+    assign qspi_io_oe = cmd_io_oe;
     assign active   = ~cmd_cs_n[0];
     assign request  = ENABLE_SHARED_ARB && (trigger_access || active);
     assign irq      = cmd_irq;
 
-    // Keep this signal intentionally unused at the wrapper boundary for now;
-    // it documents that output enable is owned by the eventual pad wrapper.
-    wire unused_cmd_io_oe = |cmd_io_oe;
 endmodule

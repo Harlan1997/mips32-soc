@@ -9,7 +9,8 @@ module mips_soc_impl #(
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
     parameter ENABLE_UART_PINS = 1'b0,
-    parameter integer SPI_READ_TIMEOUT_CYCLES = 512
+    parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
+    parameter ENABLE_QSPI_QUAD = 1'b0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -32,6 +33,7 @@ module mips_soc_impl #(
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    inout  wire [3:0]  qspi_io,
 
     // JTAG Interface
     input  wire        tck,
@@ -445,6 +447,11 @@ module mips_soc_impl #(
     wire        mem_spi_req;
     wire        mem_spi_grant;
     wire        qspi_shared_pin_conflict;
+    wire [3:0]  qspi_cmd_io_o;
+    wire [3:0]  qspi_cmd_io_oe;
+    wire        arb_spi_sclk;
+    wire        arb_spi_cs_n;
+    wire        arb_spi_mosi;
     wire        soc_rst_n;
     assign soc_rst_n = rst_n & ~wdt_reset;
 
@@ -466,11 +473,31 @@ module mips_soc_impl #(
         .mem_mosi   (mem_spi_mosi),
         .cmd_grant  (qspi_cmd_grant),
         .mem_grant  (mem_spi_grant),
+        .spi_sclk   (arb_spi_sclk),
+        .spi_cs_n   (arb_spi_cs_n),
+        .spi_mosi   (arb_spi_mosi),
+        .busy       (),
+        .conflict   (qspi_shared_pin_conflict)
+    );
+
+    qspi_soc_pad_mux #(
+        .ENABLE_QUAD_IO (ENABLE_QSPI_QUAD)
+    ) u_qspi_soc_pad_mux (
+        .cmd_grant  (qspi_cmd_grant),
+        .cmd_sclk   (qspi_cmd_sclk),
+        .cmd_cs_n   (qspi_cmd_cs_n),
+        .cmd_io_o   (qspi_cmd_io_o),
+        .cmd_io_oe  (qspi_cmd_io_oe),
+        .mem_grant  (mem_spi_grant),
+        .mem_sclk   (mem_spi_sclk),
+        .mem_cs_n   (mem_spi_cs_n),
+        .mem_mosi   (mem_spi_mosi),
         .spi_sclk   (spi_sclk),
         .spi_cs_n   (spi_cs_n),
         .spi_mosi   (spi_mosi),
-        .busy       (),
-        .conflict   (qspi_shared_pin_conflict)
+        .qspi_io_o  (),
+        .qspi_io_oe (),
+        .qspi_io    (qspi_io)
     );
 
     // =========================================================================
@@ -1068,7 +1095,8 @@ module mips_soc_impl #(
 
     soc_peripheral_subsystem #(
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
-        .ENABLE_QSPI_SHARED_ARB   (1'b1)
+        .ENABLE_QSPI_SHARED_ARB   (1'b1),
+        .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD)
     ) u_peripheral_subsystem (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -1090,6 +1118,9 @@ module mips_soc_impl #(
         .spi_sclk     (qspi_cmd_sclk),
         .spi_cs_n     (qspi_cmd_cs_n),
         .spi_mosi     (qspi_cmd_mosi),
+        .qspi_io_i    (qspi_io),
+        .qspi_io_o    (qspi_cmd_io_o),
+        .qspi_io_oe   (qspi_cmd_io_oe),
         .qspi_active  (qspi_cmd_active),
         .qspi_cmd_req (qspi_cmd_req),
 

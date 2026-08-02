@@ -24,6 +24,7 @@ module soc_top (
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    inout  wire [3:0]  qspi_io,
 
     input  wire        tck,
     input  wire        tms,
@@ -32,7 +33,8 @@ module soc_top (
 );
 
     mips_soc #(
-        .ENABLE_UART_PINS (1'b1)
+        .ENABLE_UART_PINS (1'b1),
+        .ENABLE_QSPI_QUAD (1'b1)
     ) u_soc (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -52,6 +54,7 @@ module soc_top (
         .spi_cs_n     (spi_cs_n),
         .spi_mosi     (spi_mosi),
         .spi_miso     (spi_miso),
+        .qspi_io      (qspi_io),
 
         .tck          (tck),
         .tms          (tms),
