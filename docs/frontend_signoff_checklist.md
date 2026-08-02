@@ -3,6 +3,11 @@
 > 状态：v0 草案。逐 phase 展开 `docs/vplan.md` §3 phase gate 为**可勾选清单**。每 phase 结束时由验证 lead + 架构师逐条 sign-off；未打勾项进入 blocker list，不允许过 gate。
 >
 > 与 `docs/signoff_criteria.md`（当前"current-contract"签核，只覆盖既有 RTL 契约）互补：本文件是**面向 AP 级前端交付**的完整签核契约。
+>
+> **当前状态口径（2026-08-03）**：下方 2026-07-26 Session 是历史快照，不覆盖后续
+> `integration/function-contract` 的功能证据。当前功能状态以
+> `docs/functional_completeness_plan.md` 的 gate 记录为准；本清单只保留“有限切片已验证”
+> 与“完整产品能力仍 deferred”的区分。
 
 ---
 
@@ -28,7 +33,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 累计 unit tb 覆盖 ~130 checks，SoC 冒烟 `REGRESSION_TEST_SUCCESS` 全程保持。
 
-**未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合；Phase B.7 MDU 商用重构；Phase B FPU (可选)；`SOC_MMU_ENABLE=1` 激活（架构级阻塞：prototype boot/异常向量位于 useg，需迁移到 kseg0/1，见 mmu_tlb_spec.md §10.1，2026-07-30 发现）；产品普通 BEV/EBase 向量切片已实现，但 TLB-refill/向量化中断/cache-error 向量仍未实现；BPU IF 重定向（需 speculative fetch queue）。
+**当前未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合、完整 ISA/compliance、BPU IF 重定向、FPU（可选）、Linux/kernel boot、完整多页尺度与 micro-TLB、ECC、外部 EIC/VEIC、formal 和综合相关签核。`SOC_MMU_ENABLE=1` 已有最小 kseg1 Boot ROM、TLB refill/invalid/Modified、ASID/context-switch、kseg0 runtime 和 CacheErr/vector directed gates；完整 OS/MMU 语义仍未闭合。产品普通 BEV/EBase、TLB refill、有限 vectored interrupt 和 CacheErr 向量已有切片证据，但不代表量产异常策略完成。
 
 ---
 
@@ -94,7 +99,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ### B.2 定时器与中断 (commit 8739eb8)
 - [x] CP0 Count 自由计数 + Compare 相等触发
 - [x] Cause.TI / Cause.IV / IntCtl.IPTI 联动 Timer
-- [ ] IntCtl.VS 向量间距实现（VS=0 非向量化，位存储已具备；向量化路由 defer）
+- [~] IntCtl.VS / vectored interrupt：IP-based `EBase+VS` 路由已有 directed gate；完整 VS 间距策略和量产中断契约仍 deferred
 - [x] 8 位 IM × 8 位 IP 中断裁决正确
 - [x] Timer/UART/DMA/PIC 中断 firmware 场景全绿（regression preserved）
 
@@ -105,14 +110,13 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [x] TLBR / TLBWI / TLBWR / TLBP 指令语义正确 (35/35 unit tb)
 - [x] Refill / Invalid / Modified 异常路径 (ExcCode 1/2/3) 挂到 pipeline
 - [ ] Machine Check (multi-hit) 检测断言 — TLB spec 涵盖，实现 defer
-- [ ] ASID 8-bit 隔离 firmware 测试 — unit tb 覆盖了 probe 侧
+- [x] ASID 8-bit 隔离 firmware 测试 —— `tlb_asid_policy`、OS context-switch 和 process-pressure gates 已通过；长期 OS allocator/shootdown 仍 deferred
 - [x] Wired / Random 语义（Random 硬件递减到 Wired，Wired 写重置 Random）
 - [x] kseg0/1 直通决策、useg/kseg2/3 走 TLB 决策（gated by SOC_MMU_ENABLE=0 默认 identity 兼容当前 firmware）
 - [x] `SOC_MMU_ENABLE=0` 兼容模式：现有 firmware regression 全绿
-- [ ] `SOC_MMU_ENABLE=1` Linux head.S 集成 — 架构级阻塞：`_start`(0x0)/`_except_handler`(0x180) 位于
-      useg，MMU 打开后取指需先有 TLB entry 才能取到能安装 TLB entry 的 handler，形成死锁，firmware
-      层面无法绕过；需将启动/异常向量迁移到 kseg0/1（link.ld + 固件基础设施改动，单独规划）。
-      详见 `docs/block_specs/mmu_tlb_spec.md` §10.1（2026-07-30）。
+- [~] `SOC_MMU_ENABLE=1` 产品启动 —— kseg1 Boot ROM、BEV refill、wired mapping、kseg0 runtime
+      和 EBase `Mod` recovery 已有 firmware/SoC gates；Linux head.S、完整 allocator/page-table、
+      TLB shootdown 和 kernel boot 仍 deferred。
 
 ### B.4 用户 / 内核态 (commit 11e3a9d)
 - [x] Status.KSU=00/10 切换正确 (RTL 支持，unit tb 验证)
@@ -128,7 +132,9 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [x] intr_req 加 !ERL 条件
 - [x] epc_out 按 ERL 选 ErrorEPC / EPC
 - [x] 产品普通异常向量：BEV=1 时 `0xBFC0_0380`，BEV=0 时 `EBase+0x180`；prototype 保持 literal `0x00000180`
-- [ ] TLB refill / vectored interrupt / cache-error 向量 — 需要完整产品 MMU 与中断契约
+- [~] TLB refill / vectored interrupt / cache-error 向量 —— refill/invalid/Modified、IP-based
+      vectored interrupt、CacheErr hardware/ERL/ErrorEPC 和产品 I-cache CacheErr recovery 已有
+      directed gates；ECC、外部 EIC/VEIC 和量产异常策略仍 deferred
 - [ ] Formal proof: 异常优先级正确 — 待 Phase F formal 设施
 
 ### B.6 分支预测 (commit b1183a4)
@@ -160,7 +166,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] SVA 断言库 (bind checker) 全 assert 通过 + 关键 property 100% cover
 - [ ] Formal proof 记录：TLB FSM / 异常优先级 / BPU FSM (proven or bounded)
 
-### Gate B Sign-off
+### 历史 Session Sign-off（2026-07-26，不作为当前 integration 状态）
 
 | 项 | 状态 | 签核人 | 日期 | 备注 |
 |---|---|---|---|---|
@@ -180,8 +186,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 ### C.1 L1 升级
 - [x] I-cache 8KB 4-way non-aliasing + tree-PLRU —— `rtl/cache/icache.v`（64 sets、index [10:5]、tag [31:11]、物理寻址、只读、阻塞单-outstanding）。unit `tb/unit/icache/tb_icache.v`，`dut-block-unit-gate` [7/7]。
-- [~] D-cache 8KB 4-way WB/WA —— `rtl/cache/dcache.v`（4-way + tree-PLRU + VIPT non-aliasing + WB/WA）已交付；unit `tb/unit/dcache/tb_dcache.v`，`dut-block-unit-gate` [6/7]。**2 MSHR + 4 store buffer 未实现**（依赖非阻塞 L2 + CPU hit-under-miss，单独排期）。
-- [ ] CACHE 指令子集（I: Index/Hit Invalidate; D: 6 op）—— defer。
+- [x] D-cache 8KB 4-way WB/WA —— `rtl/cache/dcache.v`（4-way + tree-PLRU + VIPT non-aliasing + WB/WA）已交付；blocking 单 outstanding、unit/CPU/SoC gates 通过。非阻塞多-MSHR和 store buffer 明确不属于当前产品 baseline。
+- [~] CACHE 指令子集 —— D-cache 六种 maintenance op、有限 TagLo/TagHi、SYNC ordered-no-op，以及 I-cache index TagLo ABI 已有 CPU/block/integration gates；parity/ECC、复杂 ordering 和完整 OS cache ABI 仍 deferred。
 - [x] Uncached bypass 正确 —— kseg1 (0xA…) / MMIO (0x4…) 旁路保持；dcache/icache unit + `cache_sweep` 固件覆盖。
 - [x] AXI 8-beat burst 正确 —— refill/writeback 8-beat INCR；unit + SoC 回归覆盖。
 
@@ -229,19 +235,16 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] Linux 8250 driver 挂载 + printk 输出
 
 ### D.2 QSPI Flash
-- [ ] 8-LUT 各阶段 lane 切换 (x1/x2/x4)
-- [ ] XIP 单/多 beat + continuous mode
-- [ ] Erase / Program / Read status 命令 API
-- [ ] 4 CS 多片切换
+- [~] vendor-neutral x1/quad LUT、lane 切换、AXI/XIP 单/多 beat、shared-pin arbiter 和 SoC
+      quad opt-in 已有 block/SoC gates；continuous mode、真实 PHY/电气时序仍 deferred
+- [~] vendor-neutral erase/program/read-status behavioral API 已有 flash model gate；商用 flash
+      command timing、4 CS 多片切换和 production error policy 仍 deferred
 - [ ] Linux MTD driver 挂载
 
-### D.3 DDR3
-> Phase C.4 现状：已上线一个行为级容量占位窗口（`0x0800_0000`，128MB，
-> `rtl/perips/axi_ddr_behavioral.v`，纯 `reg` 数组），仅用于给 kseg0/1
-> 直接映射提供真实物理目标，不含任何 DDR3 时序/refresh/PHY 行为。以下所有
-> checkbox 均针对真实 DDR3 controller，全部保持未完成，不因占位模型上线而
-> 打勾。真实 controller 规格见 `docs/block_specs/ddr3_spec.md`，仍待 PHY IP
-> 落地后启动。
+### D.3 DDR4
+> 当前 ASIC 路线为 Profile C1 DDR4。`axi_ddr_behavioral` 和 `ddr4_phy_behavioral` 仅用于
+> vendor-neutral RTL/仿真契约，`DDR4_ENTRY_READY` 尚未置位；不含真实 controller/PHY、
+> JEDEC 时序、refresh/training、板级 timing 或 Linux/U-Boot memory boot。
 - [ ] Init 序列符合 JEDEC
 - [ ] Timing (tRCD/tRP/tRAS/tFAW/tRRD/tWTR/tRTP) SVA 通过
 - [ ] Auto-refresh tREFI 遵守
