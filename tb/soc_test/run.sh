@@ -42,8 +42,14 @@ else
     echo "L2 policy: write-through (default)"
 fi
 
+vcs_extra_args=()
+if [ -n "${VCS_EXTRA_ARGS:-}" ]; then
+    read -r -a vcs_extra_args <<< "${VCS_EXTRA_ARGS}"
+fi
+
 vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${l2_define_args[@]}" \
+    "${vcs_extra_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
     +incdir+"${SCRIPT_DIR}" \
