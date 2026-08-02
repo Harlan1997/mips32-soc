@@ -216,8 +216,9 @@ module qspi_ctrl #(
 - 2026-08-02：`rtl/perips/qspi_cmd_behavioral.v` + `tb/unit/flash/tb_qspi_cmd_behavioral.sv` 通过 `make qspi-cmd-behavioral-gate`。证据覆盖 APB LUT/command API、24/32-bit address serialization、RX/TX FIFO、status read、x4 data lane、CS/SCLK、busy error、IRQ W1C 和 soft reset。
 - 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，尚未成为 `soc_top` 的 AXI XIP controller，也未连接商用 flash model、quad pad/PHY 或 erase/program boot path；不能标记为商用 ASIC QSPI 完成。
 - 2026-08-02：`qspi_apb_integration` 接入 `soc_peripheral_subsystem`；保留 `0x4000_5000` status map，在 `0x4000_5020..0x4000_519f` 暴露 command window，并由 SoC mux 在 command CS active 时接管单线 SPI pins。`qspi-status-integration`、SoC smoke 和 RTL frontend `3/3` 通过。
-- 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；vendor-neutral flash endpoint 只存在于仿真 gate，quad pad/PHY、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
+- 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；vendor-neutral flash endpoint 和 standalone tri-state pad wrapper 只存在于仿真 gate，SoC 四线 mux/PHY、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
 - 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页、再次读回 `CA FE BA BE`，以及重新 WREN 后 `0x20` sector erase 读回全 `FF`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
+- 2026-08-02：`qspi_pad_wrapper` 通过 `make qspi-pad-wrapper-gate` 验证 x4 read `A5`、x4 write `A1B2C3D4` 的三态方向/nibble 映射和 CS 结束后的高阻。该 wrapper 仅是 vendor-neutral RTL pad boundary，未接 SoC top、pad ring、IO timing 或真实 PHY。
 
 ## 版本记录
 
