@@ -12,6 +12,7 @@ module tb_product_manifest_handoff #(
     localparam integer FLASH_BYTES = 65536;
     localparam [31:0] HANDOFF_MARKER = 32'h4841_4E44;
     localparam [31:0] XIP_TIMEOUT_MARKER = 32'hDEAD_B007;
+    localparam [31:0] RUNTIME_EXCEPTION_MARKER = 32'hACCE_5511;
 
     reg clk;
     reg rst_n;
@@ -67,6 +68,18 @@ module tb_product_manifest_handoff #(
     reg [19:0] kseg0_depth_read_mask;
     reg kseg0_depth_stack_write_seen;
     reg kseg0_depth_stack_read_seen;
+    reg runtime_abi_entry_seen;
+    reg runtime_abi_handler_seen;
+    reg runtime_abi_vector_seen;
+    reg runtime_abi_reloc_seen;
+    reg runtime_abi_data_seen;
+    reg [3:0] runtime_abi_bss_write_mask;
+    reg runtime_abi_bss_read_seen;
+    reg [1:0] runtime_abi_heap_write_mask;
+    reg [1:0] runtime_abi_heap_read_mask;
+    reg runtime_abi_stack_write_seen;
+    reg runtime_abi_stack_read_seen;
+    reg runtime_abi_exception_seen;
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
     reg xip_timeout_mailbox_seen;
@@ -171,6 +184,18 @@ module tb_product_manifest_handoff #(
             kseg0_depth_read_mask = 20'd0;
             kseg0_depth_stack_write_seen = 1'b0;
             kseg0_depth_stack_read_seen = 1'b0;
+            runtime_abi_entry_seen = 1'b0;
+            runtime_abi_handler_seen = 1'b0;
+            runtime_abi_vector_seen = 1'b0;
+            runtime_abi_reloc_seen = 1'b0;
+            runtime_abi_data_seen = 1'b0;
+            runtime_abi_bss_write_mask = 4'd0;
+            runtime_abi_bss_read_seen = 1'b0;
+            runtime_abi_heap_write_mask = 2'd0;
+            runtime_abi_heap_read_mask = 2'd0;
+            runtime_abi_stack_write_seen = 1'b0;
+            runtime_abi_stack_read_seen = 1'b0;
+            runtime_abi_exception_seen = 1'b0;
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
             xip_timeout_mailbox_seen = 1'b0;
@@ -180,6 +205,12 @@ module tb_product_manifest_handoff #(
                 reset_seen = 1'b1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'h8000_1000)
                 stage1_entry_seen = 1'b1;
+            if ($test$plusargs("EXPECT_KSEG0_RUNTIME_ABI") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'h8000_1100)
+                runtime_abi_entry_seen = 1'b1;
+            if ($test$plusargs("EXPECT_KSEG0_RUNTIME_ABI") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'h8000_0180)
+                runtime_abi_vector_seen = 1'b1;
             if ($test$plusargs("EXPECT_KSEG0_RUNTIME") &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr == 32'h8000_1000 &&
@@ -272,6 +303,44 @@ module tb_product_manifest_handoff #(
                     kseg0_depth_stack_read_seen = 1'b1;
             end
 
+            if ($test$plusargs("EXPECT_KSEG0_RUNTIME_ABI") &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_0180)
+                    runtime_abi_handler_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we == 4'd0 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_1300)
+                    runtime_abi_reloc_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we == 4'd0 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_1670)
+                    runtime_abi_data_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'h8000_1680 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr <= 32'h8000_168C &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr[1:0] == 2'b00) begin
+                    if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                        runtime_abi_bss_write_mask[(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr - 32'h8000_1680) >> 2] = 1'b1;
+                    else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_1680)
+                        runtime_abi_bss_read_seen = 1'b1;
+                end
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7000 ||
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7004) begin
+                    if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                        runtime_abi_heap_write_mask[(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr - 32'h8000_7000) >> 2] = 1'b1;
+                    else
+                        runtime_abi_heap_read_mask[(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr - 32'h8000_7000) >> 2] = 1'b1;
+                end
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h8000_7FF0) begin
+                    if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)
+                        runtime_abi_stack_write_seen = 1'b1;
+                    else
+                        runtime_abi_stack_read_seen = 1'b1;
+                end
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFF0 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == RUNTIME_EXCEPTION_MARKER)
+                    runtime_abi_exception_seen = 1'b1;
+            end
+
             if ($test$plusargs("BOOT_DEBUG") && u_soc.u_impl.s2_rvalid &&
                 u_soc.u_impl.s2_rready)
                 $display("DEBUG: XIP response data=%h last=%b", u_soc.u_impl.s2_rdata,
@@ -305,6 +374,24 @@ module tb_product_manifest_handoff #(
                     fail("SPI XIP command was not standard read 03");
                 if (!handoff_seen || !stage1_entry_seen)
                     fail("valid image did not reach the handoff marker and kseg0 entry");
+                if ($test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) begin
+                    if (!runtime_abi_entry_seen)
+                        fail("runtime ABI image did not execute from relocated kseg0 entry");
+                    if (!runtime_abi_handler_seen || !runtime_abi_vector_seen)
+                        fail("runtime ABI exception handler was not relocated to EBase vector");
+                    if (!runtime_abi_reloc_seen || !runtime_abi_data_seen)
+                        fail("runtime ABI relocation/data access was not observed");
+                    if (runtime_abi_bss_write_mask != 4'hF || !runtime_abi_bss_read_seen)
+                        fail("runtime ABI .bss clear/readback contract was not observed");
+                    if (runtime_abi_heap_write_mask != 2'b11 || runtime_abi_heap_read_mask != 2'b11)
+                        fail("runtime ABI heap allocation read/write contract was not observed");
+                    if (!runtime_abi_stack_write_seen || !runtime_abi_stack_read_seen)
+                        fail("runtime ABI stack access contract was not observed");
+                    if (!runtime_abi_exception_seen)
+                        fail("runtime ABI exception handler did not publish its marker");
+                    $display("REGRESSION_TEST_SUCCESS product_manifest_handoff_runtime_abi");
+                    $finish;
+                end
                 if ($test$plusargs("EXPECT_KSEG0_RUNTIME") && !kseg0_pa_seen)
                     fail("MMU-enabled kseg0 stage-1 fetch did not use the physical SRAM address");
                 if ($test$plusargs("EXPECT_KSEG0_DATA") && !kseg0_data_seen)
@@ -357,7 +444,8 @@ module tb_product_manifest_handoff #(
                 $finish;
             end
 
-            if (cycles > ($test$plusargs("EXPECT_KSEG0_LAYOUT") ? 100000 : 30000)) begin
+            if (cycles > (($test$plusargs("EXPECT_KSEG0_LAYOUT") ||
+                          $test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) ? 120000 : 30000)) begin
                 $display("DEBUG: timeout pc=%h data_req=%b data_we=%h mem_vaddr=%h status=%h stage0=%h stage1=%h",
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,

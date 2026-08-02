@@ -247,6 +247,7 @@ module mips_cpu (
     wire [31:0] id_val_rs;
     wire [31:0] id_val_rt;
     wire [31:0] id_imm_ext;
+    wire [31:0] mem_rdata_fmt;
     wire [4:0]  id_waddr;
     wire [4:0]  id_sa;
     
@@ -339,7 +340,9 @@ module mips_cpu (
         .fw_ex_val     (ex_out),
         .fw_mem_we     (mem_reg_write),
         .fw_mem_waddr  (mem_waddr),
-        .fw_mem_val    (mem_ex_out),
+        // MEM-stage forwarding carries the formatted load result for loads;
+        // ALU results continue to come from the EX/MEM address/result bus.
+        .fw_mem_val    (mem_mem_read ? mem_rdata_fmt : mem_ex_out),
         .fw_wb_we      (wb_reg_write),
         .fw_wb_waddr   (wb_waddr),
         .fw_wb_val     (wb_wdata),
@@ -613,7 +616,6 @@ module mips_cpu (
     // =========================================================================
     // MEM Stage
     // =========================================================================
-    wire [31:0] mem_rdata_fmt;
     wire        mem_adel_exception;
     wire        mem_ades_exception;
     wire        mem_cache_op_fault;
@@ -650,7 +652,7 @@ module mips_cpu (
         .adel_exception  (mem_adel_exception),
         .ades_exception  (mem_ades_exception)
     );
-    
+
     // Phase B.3.d: fold MMU D-side fault into MEM-stage exception path.
     // Priority within MEM stage: upstream (mem_except_req) > MMU fault >
     // AdEL/AdES. Under SOC_MMU_ENABLE=0 mmu_d_ok is always 1 → this reduces
