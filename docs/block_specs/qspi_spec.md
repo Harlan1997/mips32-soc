@@ -1,6 +1,6 @@
-# QSPI Flash 控制器 微架构规格 (v0.3)
+# QSPI Flash 控制器 微架构规格 (v0.4)
 
-> 状态：v0.3，RTL 前端行为契约。它仍是 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线；当前可验证 slice 不是商用 QSPI controller。默认兼容路径仍为单线 XIP，`soc_top` 可选启用 vendor-neutral 四线 pad mux，`soc_memory_subsystem.ENABLE_QSPI_QUAD=1` 可选接入 quad AXI/XIP memory path；真实 PHY、器件时序、板级模型和 production boot 均未签收。
+> 状态：v0.4，RTL 前端行为契约。它仍是 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线；当前可验证 slice 不是商用 QSPI controller。默认兼容路径仍为单线 XIP，`soc_top` 可选启用 vendor-neutral 四线 pad mux，`soc_memory_subsystem.ENABLE_QSPI_QUAD=1` 可选接入 quad AXI/XIP memory path；真实 PHY、器件时序、板级模型和 production boot 均未签收。
 > 当前 RTL 前端交付已增加 `qspi_axi_xip` standalone bridge：它通过 APB sequencer 驱动 `qspi_cmd_behavioral`，支持默认 x1 `0x03` 读及可选 x4 `0x6B` read-data phase，并以 AXI read-only 返回。x1 与 quad standalone gate 均达到 `BLOCK_VERIFIED (vendor-neutral)`；新增 SoC memory gate 已验证 `ENABLE_QSPI_QUAD=1` 的 S2 opt-in 集成，但不能替代商用 flash/PHY 或 production boot。
 
 ---
@@ -118,12 +118,16 @@ AXI R (addr, len):
 原有 AXI-side timeout/error ABI 和 shared-pin grant。quad bridge 使用 `0x6B + 24-bit
 x1 address + x4 data`，每个 AXI beat 独立发起 command；AXI writes 直接返回 `SLVERR`。
 `qspi_io_o/qspi_io_oe/qspi_io_i` 经 `qspi_soc_pad_mux` 接到可选 `soc_top.qspi_io[3:0]`，
-默认 `ENABLE_QSPI_QUAD=0` 时所有行为保持 legacy x1。
+默认 `ENABLE_QSPI_QUAD=0` 时所有行为保持 legacy x1。SoC memory 实例设置
+`ENDIAN_SWAP=1`，保持 `axi_spi_flash` 的 little-endian AXI word ABI；standalone bridge
+默认不做 swap，以保留其 byte-oriented block contract。
 
 `make qspi-soc-memory-quad-xip-gate` 已通过 S2 单拍/两拍 burst、ID/RLAST/RRESP、quad
-flash readback、controller-present、AXI write `SLVERR` 和 idle pins 检查。该 gate 是
-RTL/behavioral integration evidence；CPU/no-preload Boot ROM handoff、真实 PHY、板级
-电气时序、商用 flash 和 production boot 仍未关闭。
+flash readback、controller-present、AXI write `SLVERR` 和 idle pins 检查。另有
+`make product-manifest-handoff-quad-gate` 覆盖 quad path 的无 SRAM preload development
+manifest/CRC handoff、11 个 header/CRC 负例和 timeout-to-DBE。上述证据仍是
+RTL/behavioral integration；真实 PHY、板级电气时序、商用 flash 和 production boot
+仍未关闭。
 
 ### 4.4 共享 pin 仲裁 contract（SoC 单线接入）
 
@@ -277,7 +281,8 @@ module qspi_ctrl #(
 - 2026-08-03：`qspi_soc_pad_mux` 接入 `mips_soc_impl`，`mips_soc/soc_top` 新增可选 `ENABLE_QSPI_QUAD` 与 `qspi_io[3:0]`，默认配置仍保持 legacy x1。`make qspi-soc-pad-mux-gate` 覆盖 command 四 lane 输出、memory lane-0 兼容、command 优先级、读阶段高阻和 idle 安全值；`rtl-frontend-compile`、QSPI 既有 gates 与 `soc-smoke` 通过。状态仅提升 SoC pad boundary 的 RTL 证据，不提升为真实 PHY、商用 flash 或 production boot。
 - 2026-08-03：`qspi-status-integration` 打开 `ENABLE_QSPI_SHARED_ARB=1`/`ENABLE_QSPI_QUAD=1`，经真实 AXI→APB command window 和共享 owner 完成 x4 read `0xC3`、x4 write `A1B2C3D4`；`make qspi-soc-quad-gate` 通过。该证据只关闭 SoC 四线 APB command wiring，不覆盖 SoC 四线 AXI XIP、真实 PHY 或 production boot。
 - 2026-08-03：`qspi_axi_xip` 增加 `ENABLE_QUAD_IO=1` standalone contract；`make qspi-axi-xip-gate` 与 `make qspi-axi-xip-quad-gate` 均通过，quad behavioral endpoint 以 `0x6B + 24-bit address + x4 data` 验证单拍/两拍 AXI read、ID/RLAST/RRESP、write `SLVERR` 和 idle pins。该证据为 `BLOCK_VERIFIED (vendor-neutral)`；默认 SoC path 仍为 x1。
-- 2026-08-03：`soc_memory_subsystem` 增加 `ENABLE_QSPI_QUAD=1` opt-in；`make qspi-soc-memory-quad-xip-gate` 通过 S2 单拍/两拍 burst、ID/RLAST/RRESP、quad flash readback、AXI write `SLVERR`、controller-present 和 idle pins；`make soc-smoke SOC_TEST_RUN_DIR=/tmp/soc_smoke_after_memory_quad_v2` 与 `make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_soc_quad_xip_v3` 也通过。该证据为 `SOC_INTEGRATED`/vendor-neutral S2 memory integration，不覆盖无 SRAM preload CPU/Boot ROM handoff、真实 PHY、商用 flash 或 production boot。
+- 2026-08-03：`soc_memory_subsystem` 增加 `ENABLE_QSPI_QUAD=1` opt-in；`make qspi-soc-memory-quad-xip-gate` 通过 S2 单拍/两拍 burst、ID/RLAST/RRESP、quad flash readback、AXI write `SLVERR`、controller-present 和 idle pins；`make soc-smoke SOC_TEST_RUN_DIR=/tmp/soc_smoke_after_memory_quad_v2` 与 `make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_soc_quad_xip_v3` 也通过。SoC quad instance 以 `ENDIAN_SWAP=1` 保持 legacy little-endian AXI word ABI。
+- 2026-08-03：`QSPI_QUAD=1 make product-manifest-handoff-quad-gate` 通过有效 manifest、11 个 header/CRC 负例和 timeout-to-DBE；quad endpoint 通过物理四线 boundary 供数，Boot ROM 无 SRAM preload 完成 development handoff。该证据为 `SOC_INTEGRATED`/vendor-neutral development boot slice，不覆盖真实 PHY、商用 flash 或 production boot。
 
 ## 版本记录
 
@@ -285,3 +290,4 @@ module qspi_ctrl #(
 - v0.1 (2026-08-03)：冻结 RTL 前端 timeout/abort/reset-in-flight 行为、W1C 位和可选 SoC 四线 pad boundary；商用 PHY、flash/板级模型、四线命令 SoC gate、擦写量产路径仍开放。
 - v0.2 (2026-08-03)：冻结 standalone `ENABLE_QUAD_IO` 的 `0x6B` x4 data contract，并以独立 behavioral gate 关闭 quad AXI/XIP bridge 的 RTL 功能证据。
 - v0.3 (2026-08-03)：将 quad bridge 以 `ENABLE_QSPI_QUAD=1` opt-in 接入 `soc_memory_subsystem` S2 path；新增 SoC memory quad gate，默认 x1 和真实 PHY/商用器件边界保持不变。
+- v0.4 (2026-08-03)：固定 SoC quad `ENDIAN_SWAP=1` ABI，并新增无 SRAM preload quad development manifest handoff gate。

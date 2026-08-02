@@ -488,7 +488,8 @@ module soc_memory_subsystem #(
 
         qspi_axi_xip #(
             .COMMAND_TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES),
-            .ENABLE_QUAD_IO         (1'b1)
+            .ENABLE_QUAD_IO         (1'b1),
+            .ENDIAN_SWAP            (1'b1)
         ) u_qspi_axi_xip (
             .clk             (clk),
             .rst_n           (rst_n),

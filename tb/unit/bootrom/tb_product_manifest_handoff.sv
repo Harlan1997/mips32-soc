@@ -7,7 +7,12 @@
 // the verification-only AXI flash-image model.
 module tb_product_manifest_handoff #(
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
-    parameter integer EXPECT_XIP_TIMEOUT = 0
+    parameter integer EXPECT_XIP_TIMEOUT = 0,
+`ifdef TB_QSPI_QUAD
+    parameter ENABLE_QSPI_QUAD = 1'b1
+`else
+    parameter ENABLE_QSPI_QUAD = 1'b0
+`endif
 );
     localparam integer FLASH_BYTES = 65536;
     localparam [31:0] HANDOFF_MARKER = 32'h4841_4E44;
@@ -22,13 +27,8 @@ module tb_product_manifest_handoff #(
     reg [7:0] flash_mem [0:FLASH_BYTES-1];
     integer flash_read_addr;
     reg serial_read_active;
-    wire [15:0] spi_stream_bit =
-        ({8'd0, u_soc.u_impl.u_memory_subsystem.g_spi_flash_controller.u_axi_spi_flash.burst_beat} << 5) +
-        u_soc.u_impl.u_memory_subsystem.g_spi_flash_controller.u_axi_spi_flash.bit_cnt;
-    wire [15:0] spi_stream_addr = flash_read_addr + (spi_stream_bit >> 3);
-    wire spi_miso = (serial_read_active &&
-                     u_soc.u_impl.u_memory_subsystem.g_spi_flash_controller.u_axi_spi_flash.state == 4'd3) ?
-                    flash_mem[spi_stream_addr % FLASH_BYTES][7 - (spi_stream_bit & 7)] : 1'b0;
+    wire [3:0] qspi_io;
+    wire spi_miso;
     wire tdo;
     wire spi_sclk;
     wire spi_cs_n;
@@ -40,6 +40,33 @@ module tb_product_manifest_handoff #(
     wire uart_dcd_n = 1'b1;
     wire uart_ri_n = 1'b1;
     wire [31:0] gpio_pins;
+
+    generate
+        if (ENABLE_QSPI_QUAD) begin : g_quad_flash
+            qspi_flash_quad_behavioral #(.MEM_BYTES(FLASH_BYTES)) flash_quad (
+                .clk      (clk),
+                .rst_n    (rst_n),
+                .spi_sclk (spi_sclk),
+                .spi_cs_n (spi_cs_n),
+                .spi_io   (qspi_io)
+            );
+
+            reg [4095:0] quad_flash_hex;
+            initial begin
+                if (!$value$plusargs("SPI_FLASH_HEX=%s", quad_flash_hex))
+                    fail("SPI_FLASH_HEX is required for quad flash");
+                $readmemh(quad_flash_hex, flash_quad.mem);
+            end
+        end else begin : g_x1_flash
+            wire [15:0] spi_stream_bit =
+                ({8'd0, u_soc.u_impl.u_memory_subsystem.g_spi_flash_controller.u_axi_spi_flash.burst_beat} << 5) +
+                u_soc.u_impl.u_memory_subsystem.g_spi_flash_controller.u_axi_spi_flash.bit_cnt;
+            wire [15:0] spi_stream_addr = flash_read_addr + (spi_stream_bit >> 3);
+            assign spi_miso = (serial_read_active &&
+                               u_soc.u_impl.u_memory_subsystem.g_spi_flash_controller.u_axi_spi_flash.state == 4'd3) ?
+                              flash_mem[spi_stream_addr % FLASH_BYTES][7 - (spi_stream_bit & 7)] : 1'b0;
+        end
+    endgenerate
 
     integer cycles;
     integer flash_index;
@@ -96,7 +123,8 @@ module tb_product_manifest_handoff #(
     endgenerate
 
     mips_soc #(
-        .SPI_READ_TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES)
+        .SPI_READ_TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES),
+        .ENABLE_QSPI_QUAD       (ENABLE_QSPI_QUAD)
     ) u_soc (
         .clk       (clk),
         .rst_n     (rst_n),
@@ -113,6 +141,7 @@ module tb_product_manifest_handoff #(
         .spi_cs_n  (spi_cs_n),
         .spi_mosi  (spi_mosi),
         .spi_miso  (spi_miso),
+        .qspi_io   (qspi_io),
         .tck       (tck),
         .tms       (tms),
         .tdi       (tdi),
@@ -132,33 +161,62 @@ module tb_product_manifest_handoff #(
 
     // Command/address are sampled from the physical SPI pins. The MISO value
     // follows the controller's serial word/bit progress so AXI response gaps
-    // do not create fictitious flash clock edges.
-    always @(negedge spi_cs_n) begin
-        spi_input_bits = 0;
-        spi_shift = 32'd0;
-        flash_read_addr = 0;
-        serial_read_active = 1'b0;
-    end
+    // do not create fictitious flash clock edges. The quad monitor observes
+    // the same x1 command/address phase on lane 0 and lets the endpoint drive
+    // data nibbles on all four lanes.
+    generate
+        if (ENABLE_QSPI_QUAD) begin : g_quad_monitor
+            reg [5:0] quad_input_bits;
+            reg [31:0] quad_shift;
 
-    always @(posedge spi_sclk) begin
-        if (!spi_cs_n && spi_input_bits < 32) begin
-            spi_shift = {spi_shift[30:0], spi_mosi};
-            if (spi_input_bits == 31) begin
-                if (spi_shift[31:24] != 8'h03)
-                    spi_protocol_error = 1'b1;
-                flash_read_addr = spi_shift[23:0];
-                serial_read_active = 1'b1;
-                if ($test$plusargs("BOOT_DEBUG"))
-                    $display("DEBUG: SPI read command=%h address=%h", spi_shift[31:24],
-                             spi_shift[23:0]);
-                if (spi_shift[23:0] == 24'd0)
-                    header_read_seen = 1'b1;
-                if (spi_shift[23:0] >= 24'd64)
-                    payload_read_seen = 1'b1;
+            always @(negedge spi_cs_n) begin
+                quad_input_bits = 0;
+                quad_shift = 32'd0;
             end
-            spi_input_bits = spi_input_bits + 1;
+
+            always @(posedge spi_sclk) begin
+                if (!spi_cs_n && quad_input_bits < 32) begin
+                    quad_shift = {quad_shift[30:0], qspi_io[0]};
+                    if (quad_input_bits == 31) begin
+                        if (quad_shift[31:24] != 8'h6b)
+                            spi_protocol_error = 1'b1;
+                        if (quad_shift[23:0] == 24'd0)
+                            header_read_seen = 1'b1;
+                        if (quad_shift[23:0] >= 24'd64)
+                            payload_read_seen = 1'b1;
+                    end
+                    quad_input_bits = quad_input_bits + 1'b1;
+                end
+            end
+        end else begin : g_x1_monitor
+            always @(negedge spi_cs_n) begin
+                spi_input_bits = 0;
+                spi_shift = 32'd0;
+                flash_read_addr = 0;
+                serial_read_active = 1'b0;
+            end
+
+            always @(posedge spi_sclk) begin
+                if (!spi_cs_n && spi_input_bits < 32) begin
+                    spi_shift = {spi_shift[30:0], spi_mosi};
+                    if (spi_input_bits == 31) begin
+                        if (spi_shift[31:24] != 8'h03)
+                            spi_protocol_error = 1'b1;
+                        flash_read_addr = spi_shift[23:0];
+                        serial_read_active = 1'b1;
+                        if ($test$plusargs("BOOT_DEBUG"))
+                            $display("DEBUG: SPI read command=%h address=%h", spi_shift[31:24],
+                                     spi_shift[23:0]);
+                        if (spi_shift[23:0] == 24'd0)
+                            header_read_seen = 1'b1;
+                        if (spi_shift[23:0] >= 24'd64)
+                            payload_read_seen = 1'b1;
+                    end
+                    spi_input_bits = spi_input_bits + 1;
+                end
+            end
         end
-    end
+    endgenerate
 
     always @(posedge clk) begin
         if (!rst_n) begin
@@ -370,8 +428,12 @@ module tb_product_manifest_handoff #(
                     fail("reset PC was not observed in Boot ROM");
                 if (!header_read_seen || !payload_read_seen)
                     fail("manifest and payload were not both read through SPI XIP");
-                if (spi_protocol_error)
-                    fail("SPI XIP command was not standard read 03");
+                if (spi_protocol_error) begin
+                    if (ENABLE_QSPI_QUAD)
+                        fail("quad SPI XIP command was not read 6B");
+                    else
+                        fail("SPI XIP command was not standard read 03");
+                end
                 if (!handoff_seen || !stage1_entry_seen)
                     fail("valid image did not reach the handoff marker and kseg0 entry");
                 if ($test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) begin
