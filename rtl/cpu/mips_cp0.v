@@ -68,7 +68,8 @@ module mips_cp0 (
     //   000 = none, 001 = TLBR, 010 = TLBWI, 011 = TLBWR, 100 = TLBP
     input  wire [2:0]  tlb_op,
 
-    // D-cache TagLo/TagHi maintenance contract.
+    // I/D-cache TagLo/TagHi maintenance contract. The cache operation code
+    // selects which cache supplied the merged tag read data in mips_core.
     input  wire        cache_op_done,
     input  wire [4:0]  cache_op,
     input  wire [31:0] cache_tag_rdata,
@@ -479,7 +480,8 @@ module mips_cp0 (
             else
                 cp0_random <= cp0_random - {{(TLB_IDX_BITS-1){1'b0}}, 1'b1};
 
-            if (cache_op_done && (cache_op == 5'b00101))
+            if (cache_op_done && ((cache_op == 5'b00101) ||
+                                  (cache_op == 5'b00100)))
                 cp0_taglo <= cache_tag_rdata;
 
             if (except_req && !cp0_status[1]) begin

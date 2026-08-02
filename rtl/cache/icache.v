@@ -23,6 +23,18 @@ module icache (
     // All I-cache AXI failures are refill failures and use MIPS CacheErr.
     output wire        cpu_cache_error,
 
+    // MIPS CACHE index tag maintenance. I-cache is read-only, so these
+    // operations only inspect or replace the valid/tag tuple and never issue
+    // AXI traffic. The request is held by the CPU MEM stage until done.
+    input  wire        cache_op_valid,
+    input  wire [4:0]  cache_op,
+    input  wire [31:0] cache_op_addr,
+    output wire        cache_op_ready,
+    output wire        cache_op_done,
+    output wire        cache_op_error,
+    input  wire [31:0] cache_tag_wdata,
+    output wire [31:0] cache_tag_rdata,
+
     // AXI4 Master Interface (AR and R channels)
     output wire [3:0]  arid,
     output reg  [31:0] araddr,
@@ -64,6 +76,8 @@ module icache (
     localparam MISS    = 3'd2;
     localparam REFILL  = 3'd3;
     localparam ERROR   = 3'd4;
+    localparam CACHE_LOOKUP = 3'd5;
+    localparam CACHE_DONE   = 3'd6;
 
     reg [2:0] state, next_state;
 
@@ -90,11 +104,29 @@ module icache (
     reg [2:0]   refill_word_cnt;
     reg         refill_error;
 
+    // Keep legacy direct icache unit benches source-compatible while the
+    // maintenance ports are added: an omitted input is Z, never a request.
+    wire        maint_req = (cache_op_valid === 1'b1);
+
+    reg [31:0]  maint_addr;
+    reg [4:0]   maint_op;
+    reg [1:0]   maint_way;
+    reg [31:0]  maint_tag_wdata;
+    reg         maint_error;
+
+    wire [5:0]  maint_index = maint_addr[10:5];
+    wire [TAG_BITS:0] maint_tag_entry = tag_rdata[maint_way];
+    wire              maint_load_tag = (maint_op == 5'b00100);
+    wire              maint_store_tag = (maint_op == 5'b01000);
+
     // Synchronous read for SRAM (fan out across 4 ways)
-    wire sram_read_en  = (state == IDLE && cpu_req) || (state == LOOKUP && cpu_req && cpu_addr_ok);
+    wire sram_read_en  = (state == IDLE && (cpu_req || maint_req)) ||
+                         (state == LOOKUP && cpu_req && cpu_addr_ok);
     wire sram_write_en = (state == REFILL && rvalid && rlast &&
                           !(refill_error || (rresp != 2'b00)));
-    wire [5:0] sram_addr = sram_write_en ? req_buf_addr[10:5] : (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5]);
+    wire [5:0] sram_addr = sram_write_en ? req_buf_addr[10:5] :
+                           ((state == IDLE && maint_req) ? cache_op_addr[10:5] :
+                            (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5]));
 
     integer ri;
     always @(posedge clk) begin
@@ -158,16 +190,27 @@ module icache (
     endfunction
 
     // CPU interface logic
-    assign cpu_addr_ok = (state == IDLE) || (state == LOOKUP && cache_hit);
+    assign cpu_addr_ok = (state == IDLE && !maint_req) ||
+                         (state == LOOKUP && cache_hit);
     assign cpu_data_ok = (state == LOOKUP && cache_hit) || (state == ERROR);
     assign cpu_bus_error = (state == ERROR);
     assign cpu_cache_error = (state == ERROR);
+    assign cache_op_ready = (state == IDLE) && !cpu_req;
+    assign cache_op_done = (state == CACHE_DONE);
+    assign cache_op_error = (state == CACHE_DONE) && maint_error;
+    // I-cache TagLo contract: [22]=valid, [21]=0 (read-only clean line),
+    // [20:0]=physical tag. Upper bits are reserved and read as zero.
+    assign cache_tag_rdata = {9'd0, maint_tag_entry[TAG_BITS], 1'b0,
+                              maint_tag_entry[TAG_BITS-1:0]};
 
     // Next State Logic
     always @(*) begin
         next_state = state;
         case (state)
-            IDLE:   if (cpu_req) next_state = LOOKUP;
+            IDLE:   begin
+                if (cpu_req) next_state = LOOKUP;
+                else if (maint_req) next_state = CACHE_LOOKUP;
+            end
             LOOKUP: begin
                 if (cache_hit) begin
                     if (!cpu_req) next_state = IDLE;
@@ -177,6 +220,8 @@ module icache (
             REFILL: if (rvalid && rlast)
                         next_state = (refill_error || (rresp != 2'b00)) ? ERROR : IDLE;
             ERROR:  next_state = IDLE;
+            CACHE_LOOKUP: next_state = CACHE_DONE;
+            CACHE_DONE:   next_state = IDLE;
         endcase
     end
 
@@ -188,6 +233,8 @@ module icache (
             req_buf_valid <= 1'b0; req_buf_addr <= 32'd0;
             arvalid <= 1'b0; araddr <= 32'd0; rready <= 1'b0;
             refill_word_cnt <= 3'd0; refill_buf <= 256'd0; refill_error <= 1'b0;
+            maint_addr <= 32'd0; maint_op <= 5'd0; maint_way <= 2'd0;
+            maint_tag_wdata <= 32'd0; maint_error <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
                 for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+1){1'b0}};
@@ -196,7 +243,13 @@ module icache (
             state <= next_state;
             case (state)
                 IDLE: begin
-                    if (cpu_req) begin
+                    if (maint_req && !cpu_req) begin
+                        maint_addr <= cache_op_addr;
+                        maint_op <= cache_op;
+                        maint_way <= cache_op_addr[12:11];
+                        maint_tag_wdata <= cache_tag_wdata;
+                        maint_error <= 1'b0;
+                    end else if (cpu_req) begin
                         req_buf_valid <= 1'b1;
                         req_buf_addr  <= cpu_addr;
                     end
@@ -229,6 +282,18 @@ module icache (
                 end
                 ERROR: begin
                     req_buf_valid <= 1'b0;
+                end
+                CACHE_LOOKUP: begin
+                    if (maint_store_tag) begin
+                        // Ignore the D-cache dirty bit in TagLo[21].
+                        tag_ram[maint_way][maint_index] <=
+                            {maint_tag_wdata[22], maint_tag_wdata[20:0]};
+                    end else if (!maint_load_tag) begin
+                        maint_error <= 1'b1;
+                    end
+                end
+                CACHE_DONE: begin
+                    // cache_op_done/cache_op_error are state-qualified outputs.
                 end
             endcase
         end

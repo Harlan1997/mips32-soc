@@ -30,7 +30,7 @@ module mips_control (
     output reg         mem_read,     // Data memory read enable
     output reg         mem_write,    // Data memory write enable
     output reg  [2:0]  mem_op,       // Size control: 000: B, 001: BU, 010: H, 011: HU, 100: W
-    // Supported D-cache maintenance operations. TagLo/TagHi state is exposed
+    // Supported I/D-cache maintenance operations. TagLo/TagHi state is exposed
     // through CP0 for the implemented index-tag slice.
     output reg         cache_op_valid,
     output reg  [4:0]  cache_op,
@@ -414,9 +414,13 @@ module mips_control (
             end
 
             6'b101111: begin // CACHE
-                // First functional subset: D-cache hit/index maintenance.
+                // Functional subset: I/D-cache hit/index maintenance. The
+                // pipeline carries the raw op; mips_cpu derives the I-cache
+                // sideband for the two architecturally distinct I-cache ops.
                 // The effective address is still computed by EX as rs+imm.
                 case (rt)
+                    5'b00100, // Index_Load_Tag_I
+                    5'b01000, // Index_Store_Tag_I
                     5'b00001, // Index_Writeback_Invalidate_D
                     5'b00101, // Index_Load_Tag_D
                     5'b01001, // Index_Store_Tag_D
