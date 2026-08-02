@@ -210,6 +210,11 @@ module qspi_ctrl #(
 
 ---
 
+## 验证状态
+
+- 2026-08-02：`rtl/perips/qspi_cmd_behavioral.v` + `tb/unit/flash/tb_qspi_cmd_behavioral.sv` 通过 `make qspi-cmd-behavioral-gate`。证据覆盖 APB LUT/command API、24/32-bit address serialization、RX/TX FIFO、status read、x4 data lane、CS/SCLK、busy error、IRQ W1C 和 soft reset。
+- 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，尚未连接 `soc_top`、AXI XIP、真实 flash model、quad pad/PHY 或 erase/program boot path；不能标记为 `SOC_INTEGRATED` 或商用 ASIC QSPI 完成。
+
 ## 版本记录
 
 - v0 (2026-07-26)：初版规格，8-LUT + XIP + 命令 API + 4 CS + 32-word TX/RX FIFO + 100MHz QSPI x4。等待 Phase D 启动评审。
