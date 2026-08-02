@@ -170,6 +170,11 @@ module apb_uart_16550 #(
         end
     endfunction
 
+    wire cts_n_int = mcr_r[4] ? ~mcr_r[1] : uart_cts_n;
+    // MCR[5] enables hardware CTS gating.  When asserted, a high (inactive)
+    // CTS input pauses TX between frames; reset/default operation is unchanged.
+    wire tx_cts_allowed = !mcr_r[5] || !cts_n_int;
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             tx_state      <= TX_IDLE;
@@ -183,7 +188,7 @@ module apb_uart_16550 #(
 
             if (tx_state == TX_IDLE) begin
                 if (!brk_send) tx_line <= 1'b1;
-                if (!tx_empty && !brk_send) begin
+                if (!tx_empty && !brk_send && tx_cts_allowed) begin
                     tx_shift   <= tx_fifo[tx_rd[TX_AW-1:0]];
                     tx_state   <= TX_START;
                     tx_bit_ctr <= 4'h0;
@@ -257,14 +262,14 @@ module apb_uart_16550 #(
             tx_rd <= 0;
         end else if (wr_stb && paddr[4:2] == 3'b010 && write_data[2]) begin
             tx_rd <= 0;
-        end else if (tx_state == TX_IDLE && !tx_empty && !brk_send) begin
+        end else if (tx_state == TX_IDLE && !tx_empty && !brk_send && tx_cts_allowed) begin
             tx_rd <= tx_rd + 1'b1;
         end
     end
 
     // ================= RX shifter & FIFO Write =================
     wire rx_pin      = mcr_r[4] ? tx_line   : uart_rx;
-    wire cts_n_int   = mcr_r[4] ? ~mcr_r[1] : uart_cts_n;
+    // cts_n_int is declared with the TX flow-control contract above.
     wire dsr_n_int   = mcr_r[4] ? ~mcr_r[0] : uart_dsr_n;
     wire dcd_n_int   = mcr_r[4] ? ~mcr_r[3] : uart_dcd_n;
     wire ri_n_int    = mcr_r[4] ? ~mcr_r[2] : uart_ri_n;
