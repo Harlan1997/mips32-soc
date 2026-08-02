@@ -30,6 +30,10 @@ module mips_control (
     output reg         mem_read,     // Data memory read enable
     output reg         mem_write,    // Data memory write enable
     output reg  [2:0]  mem_op,       // Size control: 000: B, 001: BU, 010: H, 011: HU, 100: W
+    // Supported D-cache maintenance operations. CACHE opcodes outside this
+    // subset remain illegal until TagLo/TagHi architectural state exists.
+    output reg         cache_op_valid,
+    output reg  [4:0]  cache_op,
     
     // WB Stage Control
     output reg  [1:0]  mem_to_reg,   // 0: EX output, 1: MEM load data, 2: PC+8 (link address)
@@ -76,6 +80,8 @@ module mips_control (
         mem_read     = 1'b0;
         mem_write    = 1'b0;
         mem_op       = 3'b100; // Word by default
+        cache_op_valid = 1'b0;
+        cache_op     = 5'd0;
         mem_to_reg   = 2'b00;
         branch_op    = 3'b000;
         jump_op      = 2'b00;
@@ -400,6 +406,24 @@ module mips_control (
                 mem_write  = 1'b1;
                 mem_op     = 3'b110; // WR
                 imm_signed = 1'b1;
+            end
+
+            6'b101111: begin // CACHE
+                // First functional subset: D-cache hit/index maintenance.
+                // The effective address is still computed by EX as rs+imm.
+                case (rt)
+                    5'b00001, // Index_Writeback_Invalidate_D
+                    5'b10101, // Hit_Invalidate_D
+                    5'b11001, // Hit_Writeback_Invalidate_D
+                    5'b11101: begin // Hit_Writeback_D
+                        alu_op         = 5'b00001;
+                        alu_src        = 1'b1;
+                        cache_op_valid = 1'b1;
+                        cache_op       = rt;
+                        imm_signed     = 1'b1;
+                    end
+                    default: illegal_inst = 1'b1;
+                endcase
             end
             
             // Jumps

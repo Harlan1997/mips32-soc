@@ -33,6 +33,16 @@ module dcache #(
     // response errors. The CPU maps this sideband to MIPS CacheErr (30).
     output wire        cpu_cache_error,
 
+    // MIPS CACHE maintenance interface. The request is held by the MEM
+    // stage until cache_op_done is observed; no CPU data request is issued
+    // for a maintenance operation.
+    input  wire        cache_op_valid,
+    input  wire [4:0]  cache_op,
+    input  wire [31:0] cache_op_addr,
+    output wire        cache_op_ready,
+    output wire        cache_op_done,
+    output wire        cache_op_error,
+
     // AXI4 Master Interface
     // AW Channel
     output wire [3:0]  awid,
@@ -80,11 +90,11 @@ module dcache #(
 
     // Fixed AXI configuration for cache line (8 words)
     assign awid    = 4'd0;
-    assign awlen   = uncacheable ? 8'd0 : 8'd7;
+    assign awlen   = cache_op_valid ? 8'd7 : (uncacheable ? 8'd0 : 8'd7);
     assign awsize  = 3'b010; // 4 bytes
     assign awburst = 2'b01;  // INCR
     assign awlock  = 2'd0;
-    assign awcache = uncacheable ? 4'b0000 : 4'b0010;
+    assign awcache = cache_op_valid ? 4'b0010 : (uncacheable ? 4'b0000 : 4'b0010);
     assign awprot  = 3'b000;
 
     assign arid    = 4'd0;
@@ -115,9 +125,22 @@ module dcache #(
     localparam UC_WDATA       = 4'd9;
     localparam UC_WRESP       = 4'd10;
     localparam UC_RDATA       = 4'd11;
-    localparam ERROR_RESP     = 4'd12;
+    localparam ERROR_RESP     = 5'd12;
+    localparam CACHE_LOOKUP   = 5'd13;
+    localparam CACHE_WB_REQ   = 5'd14;
+    localparam CACHE_WB_DATA  = 5'd15;
+    localparam CACHE_WB_RESP  = 5'd16;
+    localparam CACHE_DONE     = 5'd17;
 
-    reg [3:0] state, next_state;
+    reg [4:0] state, next_state;
+
+    reg [31:0] maint_addr;
+    reg [4:0]  maint_op;
+    reg [1:0]  maint_way;
+    reg [255:0] maint_line;
+    reg         maint_error;
+    reg         maint_clear_valid;
+    reg         maint_clear_dirty;
 
     // CPU request buffer
     reg        req_buf_valid;
@@ -127,9 +150,13 @@ module dcache #(
     reg [3:0]  req_buf_be;
     reg        req_buf_uncacheable;
 
-    wire [5:0]  lookup_index = req_buf_valid ? req_buf_addr[10:5] : cpu_addr[10:5];
-    wire [20:0] lookup_tag   = req_buf_addr[31:11];
-    wire [2:0]  lookup_word  = req_buf_addr[4:2];
+    wire [31:0] lookup_addr  = (state == CACHE_LOOKUP || state == CACHE_WB_REQ ||
+                                state == CACHE_WB_DATA || state == CACHE_WB_RESP ||
+                                state == CACHE_DONE) ? maint_addr :
+                               (req_buf_valid ? req_buf_addr : cpu_addr);
+    wire [5:0]  lookup_index = lookup_addr[10:5];
+    wire [20:0] lookup_tag   = lookup_addr[31:11];
+    wire [2:0]  lookup_word  = lookup_addr[4:2];
 
     // Product-mode kseg1 accesses are translated before reaching this cache,
     // so the physical address alone cannot identify them as uncached. Preserve
@@ -221,7 +248,7 @@ module dcache #(
     reg         refill_error;
     reg         cache_error_pending;
 
-    wire sram_read_en = (state == IDLE && cpu_req && !uncacheable) ||
+    wire sram_read_en = (state == IDLE && ((cpu_req && !uncacheable) || cache_op_valid)) ||
                         (state == COMPARE && cache_hit && cpu_req && cpu_addr_ok && !uncacheable);
 
     // CPU handshakes
@@ -233,15 +260,32 @@ module dcache #(
                             ((state == UC_RDATA) && rvalid && (rresp != 2'b00)) ||
                             (state == ERROR_RESP);
     assign cpu_cache_error = (state == ERROR_RESP) && cache_error_pending;
+    assign cache_op_ready  = (state == IDLE) && !cpu_req;
+    assign cache_op_done   = (state == CACHE_DONE);
+    assign cache_op_error  = (state == CACHE_DONE) && maint_error;
+
+    wire maint_index_wbi = (maint_op == 5'b00001);
+    wire maint_hit_inv   = (maint_op == 5'b10101);
+    wire maint_hit_wb_inv= (maint_op == 5'b11001);
+    wire maint_hit_wb    = (maint_op == 5'b11101);
+    wire [1:0] maint_target_way = maint_index_wbi ? maint_way : hit_way;
+    wire [TAG_BITS+1:0] maint_target_tag_entry = tag_rdata[maint_target_way];
+    wire maint_target_valid = maint_target_tag_entry[TAG_BITS+1];
+    wire maint_target_dirty = maint_target_tag_entry[TAG_BITS];
+    wire maint_needs_wb = (maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) &&
+                          maint_target_valid && maint_target_dirty;
 
     integer ri;
     always @(posedge clk) begin
         if (sram_read_en) begin
             for (ri=0; ri<WAYS; ri=ri+1) begin
-                tag_rdata[ri]  <= tag_ram[ri][cpu_addr[10:5]];
-                data_rdata[ri] <= data_ram[ri][cpu_addr[10:5]];
+                tag_rdata[ri]  <= tag_ram[ri][((state == IDLE) && cache_op_valid) ?
+                                                cache_op_addr[10:5] : lookup_addr[10:5]];
+                data_rdata[ri] <= data_ram[ri][((state == IDLE) && cache_op_valid) ?
+                                                cache_op_addr[10:5] : lookup_addr[10:5]];
             end
-            plru_rdata <= plru_ram[cpu_addr[10:5]];
+            plru_rdata <= plru_ram[((state == IDLE) && cache_op_valid) ?
+                                   cache_op_addr[10:5] : lookup_addr[10:5]];
         end
     end
 
@@ -251,6 +295,7 @@ module dcache #(
         case (state)
             IDLE: begin
                 if (cpu_req) next_state = uncacheable ? UC_REQ : COMPARE;
+                else if (cache_op_valid) next_state = CACHE_LOOKUP;
             end
             COMPARE: begin
                 if (cache_hit) next_state = IDLE;
@@ -269,6 +314,11 @@ module dcache #(
             UC_WRESP:       if (bready && bvalid) next_state = IDLE;
             UC_RDATA:       if (rready && rvalid) next_state = IDLE;
             ERROR_RESP:     next_state = IDLE;
+            CACHE_LOOKUP:   next_state = maint_needs_wb ? CACHE_WB_REQ : CACHE_DONE;
+            CACHE_WB_REQ:   if (awready && awvalid) next_state = CACHE_WB_DATA;
+            CACHE_WB_DATA:  if (wready && wvalid && wlast) next_state = CACHE_WB_RESP;
+            CACHE_WB_RESP:  if (bready && bvalid) next_state = CACHE_DONE;
+            CACHE_DONE:     next_state = IDLE;
         endcase
     end
 
@@ -306,6 +356,10 @@ module dcache #(
             bready <= 1'b0; arvalid <= 1'b0; araddr <= 32'd0; rready <= 1'b0;
             word_cnt <= 3'd0; line_buf <= 256'd0;
             refill_error <= 1'b0; cache_error_pending <= 1'b0;
+            maint_addr <= 32'd0; maint_op <= 5'd0; maint_way <= 2'd0;
+            maint_line <= 256'd0;
+            maint_error <= 1'b0;
+            maint_clear_valid <= 1'b0; maint_clear_dirty <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
                 for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+2){1'b0}};
@@ -319,7 +373,79 @@ module dcache #(
                         req_buf_addr  <= cpu_addr; req_buf_wdata <= cpu_wdata;
                         req_buf_be    <= cpu_be;
                         req_buf_uncacheable <= cpu_uncacheable || legacy_cpu_uncacheable;
+                    end else if (cache_op_valid) begin
+                        maint_addr <= cache_op_addr;
+                        maint_op   <= cache_op;
+                        // The index operation selects its way from VA[12:11].
+                        // This is the explicit contract used by the directed
+                        // tests; hit operations ignore this field.
+                        maint_way  <= cache_op_addr[12:11];
+                        maint_error <= 1'b0;
+                        maint_clear_valid <= (cache_op == 5'b00001) ||
+                                             (cache_op == 5'b10101) ||
+                                             (cache_op == 5'b11001);
+                        maint_clear_dirty <= (cache_op == 5'b11101);
                     end
+                end
+
+                CACHE_LOOKUP: begin
+                    if (!maint_needs_wb) begin
+                        if ((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) &&
+                            maint_target_valid && (maint_clear_valid || maint_clear_dirty)) begin
+                            if (maint_clear_valid)
+                                tag_ram[maint_target_way][lookup_index][TAG_BITS+1] <= 1'b0;
+                            else if (maint_clear_dirty)
+                                tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;
+                        end
+                    end else begin
+                        maint_line <= data_rdata[maint_target_way];
+                        awvalid <= 1'b1;
+                        awaddr <= {maint_target_tag_entry[TAG_BITS-1:0], lookup_index, 5'd0};
+                        word_cnt <= 3'd0;
+                    end
+                end
+
+                CACHE_WB_REQ: begin
+                    if (awready && awvalid) begin
+                        awvalid <= 1'b0;
+                        wvalid <= 1'b1;
+                        wstrb <= 4'hF;
+                        wdata <= maint_line[31:0];
+                        wlast <= 1'b0;
+                    end
+                end
+
+                CACHE_WB_DATA: begin
+                    if (wready && wvalid) begin
+                        if (wlast) begin
+                            wvalid <= 1'b0;
+                            wlast <= 1'b0;
+                            bready <= 1'b1;
+                        end else begin
+                            word_cnt <= word_cnt + 1'b1;
+                            if (word_cnt == 3'd6) wlast <= 1'b1;
+                            wdata <= maint_line[(word_cnt+1'b1)*32 +: 32];
+                        end
+                    end
+                end
+
+                CACHE_WB_RESP: begin
+                    if (bready && bvalid) begin
+                        bready <= 1'b0;
+                        if (bresp != 2'b00) begin
+                            maint_error <= 1'b1;
+                        end else begin
+                            if (maint_clear_valid)
+                                tag_ram[maint_target_way][lookup_index][TAG_BITS+1] <= 1'b0;
+                            else if (maint_clear_dirty)
+                                tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;
+                        end
+                    end
+                end
+
+                CACHE_DONE: begin
+                    // cache_op_done/cache_op_error are state-qualified outputs;
+                    // the MEM stage samples them while this state is active.
                 end
 
                 UC_REQ: begin

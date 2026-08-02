@@ -73,6 +73,8 @@ module mips_id_stage (
     output wire        mem_write,
     output wire [2:0]  mem_op,
     output wire [1:0]  mem_to_reg,
+    output wire        cache_op_valid,
+    output wire [4:0]  cache_op,
     
     // CP0 and Exceptions
     output wire        cp0_we,
@@ -133,6 +135,8 @@ module mips_id_stage (
         .mem_write   (mem_write),
         .mem_op      (mem_op),
         .mem_to_reg  (mem_to_reg),
+        .cache_op_valid(cache_op_valid),
+        .cache_op    (cache_op),
         .branch_op   (branch_op),
         .jump_op     (jump_op),
         .illegal_inst(illegal_inst),

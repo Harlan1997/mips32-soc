@@ -12,6 +12,7 @@ module mips_ex_mem_reg (
     input  wire        stall,
     input  wire        flush,
     input  wire        dmem_data_ok,
+    input  wire        cache_op_done,
 
     
     // Inputs from EX
@@ -40,6 +41,8 @@ module mips_ex_mem_reg (
     input  wire        ex_mem_write,
     input  wire [2:0]  ex_mem_op,
     input  wire [1:0]  ex_mem_to_reg,
+    input  wire        ex_cache_op_valid,
+    input  wire [4:0]  ex_cache_op,
     
     // Outputs to MEM
     output reg  [31:0] mem_ex_out,
@@ -67,6 +70,8 @@ module mips_ex_mem_reg (
     output reg         mem_mem_write,
     output reg  [2:0]  mem_mem_op,
     output reg  [1:0]  mem_mem_to_reg,
+    output reg         mem_cache_op_valid,
+    output reg  [4:0]  mem_cache_op,
     output reg         mem_done
 );
 
@@ -85,6 +90,8 @@ module mips_ex_mem_reg (
             mem_mem_write  <= 1'b0;
             mem_mem_op     <= 3'd0;
             mem_mem_to_reg <= 2'd0;
+            mem_cache_op_valid <= 1'b0;
+            mem_cache_op   <= 5'd0;
             mem_cp0_we     <= 1'b0;
             mem_is_eret    <= 1'b0;
             mem_tlb_op     <= 3'd0;
@@ -108,6 +115,8 @@ module mips_ex_mem_reg (
             mem_mem_write  <= 1'b0;
             mem_mem_op     <= 3'd0;
             mem_mem_to_reg <= 2'd0;
+            mem_cache_op_valid <= 1'b0;
+            mem_cache_op   <= 5'd0;
             mem_cp0_we     <= 1'b0;
             mem_is_eret    <= 1'b0;
             mem_tlb_op     <= 3'd0;
@@ -139,8 +148,10 @@ module mips_ex_mem_reg (
             mem_mem_write  <= ex_mem_write;
             mem_mem_op     <= ex_mem_op;
             mem_mem_to_reg <= ex_mem_to_reg;
+            mem_cache_op_valid <= ex_cache_op_valid;
+            mem_cache_op   <= ex_cache_op;
             mem_done       <= 1'b0;
-        end else if (dmem_data_ok) begin
+        end else if (dmem_data_ok || (cache_op_done === 1'b1)) begin
             mem_done       <= 1'b1;
         end
     end
