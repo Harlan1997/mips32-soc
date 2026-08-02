@@ -371,6 +371,11 @@ close that gate:
   APB command sequencing, and the read-only AXI write rejection. The bridge
   is not wired into `soc_memory_subsystem`; `make qspi-axi-xip-gate` is its
   standalone entry point.
+- `tb/unit/flash/tb_qspi_shared_pin_arbiter.sv` drives the standalone
+  `qspi_shared_pin_arbiter` contract. It verifies latched ownership, no
+  preemption of an active memory/command transaction, command priority while
+  idle, conflict indication and safe idle pins. It is not wired into the SoC
+  mux; `make qspi-shared-pin-arbiter-gate` is its standalone entry point.
 - `rtl/axi/axi_read_timeout_guard.v` wraps only the production
   `axi_spi_flash` read path. With `SPI_READ_TIMEOUT_CYCLES=512` by default,
   it bounds waiting for downstream `ARREADY` and each next downstream
@@ -456,10 +461,11 @@ artifact.
    complete cache-error policy and external EIC/VEIC policy are next.
    Keep prototype smoke as a separate configuration until the product gate
    passes.
-3. Keep the standalone QSPI command/XIP bridge block-verified, then define
-   APB-command versus AXI-XIP shared-pin arbitration, timeout/abort and
-   reset-in-flight behavior before integrating it into `soc_memory_subsystem`.
-   Add the SoC QSPI command/XIP gate only after that contract is frozen.
+3. Keep the standalone QSPI command/XIP bridge and shared-pin arbiter
+   block-verified, then bind command trigger/AXI acceptance to the arbiter's
+   request/grant contract and define timeout/abort/reset-in-flight behavior
+   before integrating it into `soc_memory_subsystem`. Add the SoC QSPI
+   command/XIP gate only after that contract is frozen.
 4. Select the PHY/DRAM/timing inputs required by `docs/block_specs/ddr3_spec.md`
    v1.0, then integrate the DDR controller/PHY wrapper, APB status, refresh/
    calibration and the DDR init gate. Do not call `axi_ddr_behavioral` a product
