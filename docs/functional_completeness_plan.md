@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.28（2026-08-02）
+> 版本：v1.29（2026-08-02）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -94,7 +94,7 @@ Synopsys DDR4 PHY/controller 为优先 RFQ，不能宣称 PHY 已选。若外部
 | 域 | 当前产品集成 | 已有测试证据 | 商用功能结论 |
 |---|---|---|---|
 | CPU/CP0 | 已接入；默认 `SOC_MMU_ENABLE=0`；产品模式区分 CacheErr、TLB miss refill、invalid/general 与 IP-based vectored interrupt 的 BEV/EBase 向量 | smoke 与 Phase 3A/3B CPU/CP0 gate 通过；CP0 timer/TLB 单测验证 `IV/VS`；产品 directed 覆盖 I-side BEV=1/0 miss/invalid、D-side BEV=1 miss/invalid、EBase `Mod` precise state/recovery、CacheErr `ExcCode=30`/`ERL`/`ErrorEPC`/`EBase+0x100`，以及软件 `IP1` 到 `EBase+0x220`；`product-cacheerr-gate` 还覆盖真实 MMU/D-cache/APB SLVERR 到 handler/ERET | refill/invalid、最小 kernel-mode `Mod` recovery、CacheErr hardware contract 和注入式 production handler/recovery slice 已验证；ECC/多级 cache recovery、完整 Modified policy、外部 EIC/VEIC、ISA reference/compliance 和 MMU 产品启动仍未闭合 |
-| L1 cache | 阻塞式 D-cache 在 DUT；4-way I-cache 已合入 `integration/function-contract` | D-cache unit、`cache_sweep` 与 smoke 通过；IF/I-cache response-PC 的默认和 Boot ROM reset-branch directed tests、合入后 unit gate `10/10`、SoC smoke 和 seed 10 UVM stress 通过；新增 `mips_core` CPU/AXI execution gate 覆盖六个同 set tag 的 refill 与 eviction | I-cache 已有 CPU/AXI 集成 slice，但完整 SoC reset/error/长期压力及 I-cache maintenance/tag ABI 仍不足，不能标为 `CONTRACT_CLOSED` |
+| L1 cache | 阻塞式 D-cache 在 DUT；4-way I-cache 已合入 `integration/function-contract` | D-cache unit、`cache_sweep` 与 smoke 通过；IF/I-cache response-PC 的默认和 Boot ROM reset-branch directed tests、合入后 unit gate `10/10`、SoC smoke 和 seed 10 UVM stress 通过；新增 `mips_core` CPU/AXI execution gate 覆盖六个同 set tag 的 refill/eviction 及一次 I-cache `SLVERR`/CacheErr/ERL | I-cache 已有 CPU/AXI 集成和错误 slice，但完整 SoC reset/长期压力及 I-cache maintenance/tag ABI 仍不足，不能标为 `CONTRACT_CLOSED` |
 | L2 cache | 默认 write-through L2 已接入；write-back 为 opt-in | L2 unit、L2 firmware、Phase 2/3 与 smoke 通过 | 当前 blocking L2 契约可用；不具备 coherency/ECC/生产性能闭合 |
 | AXI fabric | C3 crossbar 已在 `master`；DDR 是 S3 slave | fabric unit `4/4`，Phase 2/3、10-seed stress 通过 | cross-slave 并发已验证；同一 slave 仍受单 outstanding slave 限制 |
 | DMA | 已接入 APB/AXI | DMA unit、DMA firmware、DMA copy/IRQ UVM 通过；grant stability 修复已在 C2 集成父线 | 当前 direct-copy/IRQ 契约有证据；不可宣称 IOMMU/coherency 或完整系统 DMA 生态 |
@@ -180,7 +180,7 @@ XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_
 
 ### Phase 3：CPU、缓存和总线功能闭合
 
-- 4-way I-cache 已合入并完成通用 unit/SoC 证据；新增 `mips_core` CPU/AXI execution gate 覆盖 reset 后真实取指、六个同 set tag 的 line refill、四路容量压力和后续 eviction/refill；仍需完整 SoC reset/错误/长期压力 sequence 后，才能将其标为 `CONTRACT_CLOSED`。
+- 4-way I-cache 已合入并完成通用 unit/SoC 证据；`mips_core` CPU/AXI execution gate 覆盖 reset 后真实取指、六个同 set tag 的 line refill、四路容量压力和后续 eviction/refill，error gate 进一步覆盖指定 refill 的 `SLVERR` -> I-cache CacheErr -> CP0 `ExcCode=30/ERL`；仍需完整 SoC reset/长期压力 sequence 后，才能将其标为 `CONTRACT_CLOSED`。
 - 将 C.2 变更拆成 L2-NB、ROB、DDR placeholder、DMA 修复四个可审阅主题。
 - 保持 `dcache_nb.v` 独立，先完成 block gate；之后进行 C.4 Stage 4：CPU/ROB tag、完成重排、load-use hazard 和 forwarding。
 - 只有完成 CPU 接入、SoC smoke、UVM overlap/stress 和性能前后对比后，D-cache NB 才能变成 `SOC_INTEGRATED`。
@@ -188,7 +188,7 @@ XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_
 
 ### Phase 4：外设与系统软件功能闭合
 
-- `SOC_MMU_ENABLE=1`：最小 Boot ROM kseg1 linker、BEV refill handler、wired mapping、4KB ASID/Global/Invalid/Modified policy gate、软件页表/context-switch 子集、4-ASID process-pressure、EBase `Mod` handler relocation/retry gate、stage-1 kseg0 指令交接、20-word/stack kseg0 runtime-depth gate、`.rodata/.data/.bss/stack` runtime-layout slice，以及真实 cached-refill CacheErr handler/recovery gate 已通过；CACHE 六种 D-cache maintenance op、有限 TagLo/TagHi CP0 读写和 SYNC ordered-no-op 已有 CPU/块级证据；I-cache 另有 CPU/AXI execution/refill/eviction slice；继续完成完整 runtime linker/loader ABI、SoC page-table allocator/多进程压力、I-cache error/reset/long-stress contract、ECC/外部 EIC policy 和 kernel-mode firmware gate。refill/invalid 的 EBase/BEV 向量路由、CacheErr hardware vector 及 IP-based vectored interrupt 已有 directed 证据。
+- `SOC_MMU_ENABLE=1`：最小 Boot ROM kseg1 linker、BEV refill handler、wired mapping、4KB ASID/Global/Invalid/Modified policy gate、软件页表/context-switch 子集、4-ASID process-pressure、EBase `Mod` handler relocation/retry gate、stage-1 kseg0 指令交接、20-word/stack kseg0 runtime-depth gate、`.rodata/.data/.bss/stack` runtime-layout slice，以及真实 cached-refill CacheErr handler/recovery gate 已通过；CACHE 六种 D-cache maintenance op、有限 TagLo/TagHi CP0 读写和 SYNC ordered-no-op 已有 CPU/块级证据；I-cache 已有 CPU/AXI execution/refill/eviction 及单次 `SLVERR`/CacheErr/ERL slice；继续完成完整 runtime linker/loader ABI、SoC page-table allocator/多进程压力、I-cache reset/long-stress contract、ECC/外部 EIC policy 和 kernel-mode firmware gate。refill/invalid 的 EBase/BEV 向量路由、CacheErr hardware vector 及 IP-based vectored interrupt 已有 directed 证据。
 - CPU/CP0：补 MIPS ISA compliance 与 reference-model lockstep；现有 exception smoke 只作为子集证据。
 - 外设：为已接入的 UART TX/RX/flow-control 完成 pad-mux、外部 RX waveform 和板级 gate；为 WDT 补无预加载 Boot ROM failure firmware、自动重启和板级 reset 观测；补齐 GPIO/timer 产品软件驱动。
 - 中断：定义 CPU-visible priority/vector contract，验证 VIC source mapping、mask、priority、nesting 与 reset。
@@ -302,6 +302,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-02 | `integration/function-contract` kseg0 runtime linker/data layout slice | `make product-kseg0-runtime-layout-gate PRODUCT_KSEG0_RUNTIME_LAYOUT_DIR=build/unit_tb/product_kseg0_runtime_layout`；`make rtl-frontend-compile` | PASS：`REGRESSION_TEST_SUCCESS product_manifest_handoff_valid`；payload `288` bytes，小于 Boot SRAM stage-1 上限 `32 KiB`；RTL frontend `3/3` | 新增 `stage1_layout.ld/.s` 和独立 layout flash image；真实 SPI XIP、manifest CRC、无 SRAM preload、MMU kseg0 直映射下，TB 观察 `.rodata`/`.data` 读、四个 `.bss` word 的显式清零写、清零前读与写后读回，以及 linker stack top 派生的 `0x8000_7ff0 -> 0x0000_7ff0` 访问。修复 `%hi/%lo` 低半字 `0x8000` 的 MIPS stack 地址构造错误；该切片仍不覆盖完整 runtime ABI、page-table allocator、kernel 或 `TagLo/TagHi/SYNC`。 |
 | 2026-08-02 | `integration/function-contract` CACHE TagLo/TagHi/SYNC CPU contract slice | `make cpu-cache-tag-gate CPU_CACHE_TAG_DIR=build/unit_tb/cpu_cachetag`；`make cpu-cache-op-gate CPU_CACHE_OP_DIR=build/unit_tb/cpu_cacheop_tag_ports`；`make rtl-frontend-compile`；D-cache unit gate | PASS：`REGRESSION_TEST_SUCCESS mips_cpu_cachetag`、既有 `mips_cpu_cacheop`、D-cache unit `REGRESSION_TEST_SUCCESS dcache`、RTL frontend `3/3` | CPU directed test 覆盖 MTC0 TagLo -> Index_Store_Tag_D 的 tag write data、Index_Load_Tag_D -> MFC0 TagLo readback、MTC0/MFC0 TagHi、SYNC 不触发 RI/异常；D-cache unit 验证 valid/dirty/tag tuple 的 index load/store。该 slice 只定义 D-cache TagLo bit[22:0] 和顺序 no-op 语义，不覆盖 I-cache tag state、parity/ECC、复杂 outstanding/store-buffer ordering 或完整 kernel cache ABI。 |
 | 2026-08-02 | `integration/function-contract` I-cache CPU/AXI execution eviction slice | `make cpu-icache-exec-gate CPU_ICACHE_EXEC_DIR=build/unit_tb/mips_core_icache_exec`；已有 D-cache/RTL frontend gates | PASS：`REGRESSION_TEST_SUCCESS mips_core_icache_exec ar_count=7` | 直接实例化 `mips_core`、真实 `icache` 和单 outstanding AXI instruction model；测试程序跳转访问 `0x0000_0000`、`0x0000_0800`、`0x0000_1000`、`0x0000_1800`、`0x0000_2000`、`0x0000_2800` 六个同 `index[10:5]` 的 tag，确认四路容量压力后的重复 AR/refill。该 slice 不覆盖完整 SoC reset/error/long-stress、I-cache maintenance/tag ABI 或 parity/ECC。 |
+| 2026-08-02 | `integration/function-contract` I-cache CPU/AXI error slice | `make cpu-icache-error-gate CPU_ICACHE_ERROR_DIR=build/unit_tb/mips_core_icache_error` | PASS：`REGRESSION_TEST_SUCCESS mips_core_icache_exec_error ar_count=6` | 在同一 `mips_core` execution harness 对 `0x0000_1000` refill 注入 AXI `SLVERR`，确认 I-cache `cpu_cache_error` sideband、CPU IF CacheErr 分类及 CP0 `Cause.ExcCode=30`/`Status.ERL`。该 slice 不覆盖完整产品 SoC reset/long-stress、ErrorEPC handler recovery、I-cache maintenance/tag ABI 或 parity/ECC。 |
 
 ## 10. 已知未决问题
 

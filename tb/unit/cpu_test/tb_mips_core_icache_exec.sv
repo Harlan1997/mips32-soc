@@ -76,11 +76,16 @@ module tb_mips_core_icache_exec;
     wire        debug_stall, debug_flush;
 
     reg        i_active;
+    reg        i_error;
     reg [31:0] i_base;
     reg [2:0]  i_beat;
     integer    ar_count;
     reg [5:0]  seen_mask;
     reg        repeat_seen;
+    reg        error_mode;
+    reg        error_ar_seen;
+    reg        cache_error_seen;
+    reg        cp0_error_seen;
     integer    cycles;
 
     function [31:0] program_word(input [31:0] addr);
@@ -102,15 +107,18 @@ module tb_mips_core_icache_exec;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             i_active    <= 1'b0;
+            i_error     <= 1'b0;
             i_base      <= 32'd0;
             i_beat      <= 3'd0;
             inst_rvalid <= 1'b0;
             inst_rlast  <= 1'b0;
             inst_rdata  <= 32'd0;
+            inst_rresp  <= 2'b00;
             ar_count    <= 0;
         end else begin
             if (inst_arvalid && inst_arready && !i_active) begin
                 i_active <= 1'b1;
+                i_error  <= error_mode && (inst_araddr == 32'h0000_1000);
                 i_base   <= inst_araddr;
                 i_beat   <= 3'd0;
                 ar_count <= ar_count + 1;
@@ -118,12 +126,14 @@ module tb_mips_core_icache_exec;
             if (i_active && !inst_rvalid) begin
                 inst_rvalid <= 1'b1;
                 inst_rdata  <= program_word(i_base + (i_beat << 2));
+                inst_rresp  <= i_error ? 2'b10 : 2'b00;
                 inst_rlast  <= (i_beat == 3'd7);
             end
             if (inst_rvalid && inst_rready) begin
                 inst_rvalid <= 1'b0;
                 if (inst_rlast) begin
                     i_active   <= 1'b0;
+                    i_error    <= 1'b0;
                     inst_rlast <= 1'b0;
                 end else begin
                     i_beat <= i_beat + 1'b1;
@@ -136,10 +146,15 @@ module tb_mips_core_icache_exec;
         if (!rst_n) begin
             seen_mask   <= 6'd0;
             repeat_seen <= 1'b0;
+            error_ar_seen <= 1'b0;
+            cache_error_seen <= 1'b0;
+            cp0_error_seen <= 1'b0;
             cycles      <= 0;
         end else begin
             cycles <= cycles + 1;
             if (inst_arvalid && inst_arready) begin
+                if (error_mode && (inst_araddr == 32'h0000_1000))
+                    error_ar_seen <= 1'b1;
                 case (inst_araddr)
                     32'h0000_0000: begin if (seen_mask[0]) repeat_seen <= 1'b1; else seen_mask[0] <= 1'b1; end
                     32'h0000_0800: begin if (seen_mask[1]) repeat_seen <= 1'b1; else seen_mask[1] <= 1'b1; end
@@ -150,13 +165,26 @@ module tb_mips_core_icache_exec;
                     default: ;
                 endcase
             end
-            if (&seen_mask && repeat_seen) begin
-                $display("REGRESSION_TEST_SUCCESS mips_core_icache_exec ar_count=%0d", ar_count);
+            if (u_core.u_icache.cpu_cache_error === 1'b1)
+                cache_error_seen <= 1'b1;
+            if (u_core.u_cpu.u_mips_cp0.cp0_status[2] === 1'b1 &&
+                u_core.u_cpu.u_mips_cp0.cp0_cause[6:2] === 5'h1e)
+                cp0_error_seen <= 1'b1;
+            if ((!error_mode && &seen_mask && repeat_seen) ||
+                (error_mode && error_ar_seen && cache_error_seen && cp0_error_seen)) begin
+                if (error_mode)
+                    $display("REGRESSION_TEST_SUCCESS mips_core_icache_exec_error ar_count=%0d", ar_count);
+                else
+                    $display("REGRESSION_TEST_SUCCESS mips_core_icache_exec ar_count=%0d", ar_count);
                 $finish;
             end
             if (cycles > 100000) begin
-                $display("REGRESSION_TEST_FAIL mips_core_icache_exec timeout mask=%b repeats=%b ar_count=%0d",
-                         seen_mask, repeat_seen, ar_count);
+                if (error_mode)
+                    $display("REGRESSION_TEST_FAIL mips_core_icache_exec_error timeout ar=%b cache=%b cp0=%b ar_count=%0d",
+                             error_ar_seen, cache_error_seen, cp0_error_seen, ar_count);
+                else
+                    $display("REGRESSION_TEST_FAIL mips_core_icache_exec timeout mask=%b repeats=%b ar_count=%0d",
+                             seen_mask, repeat_seen, ar_count);
                 $finish;
             end
         end
@@ -192,6 +220,7 @@ module tb_mips_core_icache_exec;
     );
 
     initial begin
+        error_mode = $test$plusargs("INJECT_ICACHE_ERROR");
         repeat (3) @(posedge clk);
         rst_n = 1'b1;
     end
