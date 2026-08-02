@@ -376,7 +376,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 
 | 优先级 | 剩余任务 | 当前状态 | 关闭证据 |
 |---|---|---|---|
-| P0 | 固定唯一集成线，清理分支/WIP 归属；移除已废弃的 D-cache NB | `integration/function-contract@1740619` 为功能线；主工作区 clean；`feature/dcache-nb-stage3` 已删除 | 干净工作区、每个保留变更集有独立 commit 和 owner |
+| P0 | 固定唯一集成线，清理分支/WIP 归属；移除已废弃的 D-cache NB | `integration/function-contract@bc3d6c8` 为功能线；主工作区 clean；`feature/dcache-nb-stage3` 已删除 | 干净工作区、每个保留变更集有独立 commit 和 owner |
 | P0 | 完成全仓 RTL compile/elaboration，包含默认 SoC、Boot ROM/MMU 配置和 F1 DDR4 behavioral 配置 | 已完成：统一 gate `3/3` 通过；报告 `build/unit_tb/rtl_frontend_compile/rtl_frontend_compile_report.md` | 维护 `RTL_FRONTEND_COMPILE_READY`；后续新增 RTL 或参数配置必须重新运行 `make rtl-frontend-compile` |
 | P0 | 完成 DDR4 vendor-neutral contract/model 仿真：初始化、training 成功/失败、refresh、读写、背压、reset、fatal/error | F1 behavioral gate 已通过；尚未成为真实 PHY/DDR4 product entry | `RTL_FUNCTIONAL_SIM_READY`；F1 证据保持 `BLOCK_VERIFIED (vendor-neutral)` |
 | P0 | 补齐 CPU/MMU 前端功能缺口：完整 kseg0 runtime、SoC page-table/ASID allocator 与多进程调度/shootdown 压力、ECC/外部 EIC policy | 最小 refill/invalid/Modified/vector、CacheErr hardware contract + cached-refill recovery、产品启动 I-cache 首笔错误/vector/ERET retry、320-line AR-backpressure stress、I-cache index tag ABI、软件/SoC page-table/context-switch 子集、4-ASID pressure、20-word/stack kseg0 depth slice、runtime ABI 单镜像、硬件 index replacement、CACHE 六种 D-cache maintenance operation、有限 I/D-cache TagLo/TagHi/SYNC 已有证据 | runtime ABI 单镜像 firmware + SoC gate 通过，并记录 relocation/`.bss`/heap/stack/exception/ERET 证据；完整多段/PIC/TLS/权限 linker/loader、真实 allocator/page-table、复杂 ordering、ECC/production policy 和 kernel 仍未关闭 |
