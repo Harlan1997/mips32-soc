@@ -97,14 +97,20 @@ module tb_qspi_status_integration;
     wire [31:0] gpio_pins;
     wire uart_tx, uart_rts_n, uart_dtr_n, cpu_int, wdt_reset;
     reg uart_rx = 1, uart_cts_n = 0, uart_dsr_n = 0, uart_dcd_n = 0, uart_ri_n = 1;
+    wire cmd_spi_sclk, cmd_spi_cs_n, cmd_spi_mosi;
     wire spi_sclk, spi_cs_n, spi_mosi, qspi_active, qspi_cmd_req;
-    reg spi_miso = 1'b0;
+    wire qspi_cmd_grant;
+    wire [3:0] qspi_cmd_io_o, qspi_cmd_io_oe;
+    tri [3:0] qspi_io;
+    wire spi_miso = qspi_io[0];
     integer qspi_sclk_edges = 0;
     integer qspi_cmd_bits = 0;
     integer qspi_guard = 0;
     reg [31:0] rd_value;
     reg [7:0] qspi_cmd_capture = 8'h0;
     reg qspi_cs_seen = 1'b0;
+    integer qspi_quad_groups = 0;
+    reg [31:0] qspi_quad_capture = 32'h0;
 
     wire [3:0] m_awid, m_bid, m_arid, m_rid;
     wire [31:0] m_awaddr, m_wdata, m_araddr, m_rdata;
@@ -116,15 +122,29 @@ module tb_qspi_status_integration;
     wire m_bvalid = 1'b0, m_bready, m_arvalid, m_arready = 1'b0;
     wire m_rlast, m_rvalid = 1'b0, m_rready;
 
-    soc_peripheral_subsystem dut (
+    wire qspi_flash_read_active = !spi_cs_n &&
+        dut.u_qspi_apb_integration.u_cmd.state == 3'd5 &&
+        !dut.u_qspi_apb_integration.u_cmd.data_write &&
+        dut.u_qspi_apb_integration.u_cmd.phase_lane_r == 3'd4;
+    wire [3:0] qspi_flash_read_nibble =
+        (dut.u_qspi_apb_integration.u_cmd.phase_bits_left == 7'd8) ?
+        4'hC : 4'h3;
+    assign qspi_io = qspi_flash_read_active ? qspi_flash_read_nibble : 4'bz;
+
+    soc_peripheral_subsystem #(
+        .ENABLE_QSPI_SHARED_ARB(1'b1),
+        .ENABLE_QSPI_QUAD(1'b1)
+    ) dut (
         .clk(clk), .rst_n(rst_n), .gpio_pins(gpio_pins),
         .uart_rx(uart_rx), .uart_tx(uart_tx), .uart_cts_n(uart_cts_n),
         .uart_rts_n(uart_rts_n), .uart_dsr_n(uart_dsr_n), .uart_dtr_n(uart_dtr_n),
         .uart_dcd_n(uart_dcd_n), .uart_ri_n(uart_ri_n), .cpu_int(cpu_int),
         .wdt_reset(wdt_reset), .qspi_controller_present(1'b1),
         .qspi_timeout_sticky(timeout_sticky),
-        .spi_miso(spi_miso), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
-        .spi_mosi(spi_mosi), .qspi_active(qspi_active),
+        .spi_miso(spi_miso), .spi_sclk(cmd_spi_sclk), .spi_cs_n(cmd_spi_cs_n),
+        .spi_mosi(cmd_spi_mosi), .qspi_io_i(qspi_io),
+        .qspi_io_o(qspi_cmd_io_o), .qspi_io_oe(qspi_cmd_io_oe),
+        .qspi_cmd_grant(qspi_cmd_grant), .qspi_active(qspi_active),
         .qspi_cmd_req(qspi_cmd_req),
         .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen), .s_awsize(s_awsize),
         .s_awburst(s_awburst), .s_awlock(s_awlock), .s_awcache(s_awcache),
@@ -148,6 +168,26 @@ module tb_qspi_status_integration;
         .m_rlast(m_rlast), .m_rvalid(m_rvalid), .m_rready(m_rready)
     );
 
+    qspi_shared_pin_arbiter u_qspi_arbiter (
+        .clk(clk), .rst_n(rst_n),
+        .cmd_req(qspi_cmd_req), .cmd_active(qspi_active),
+        .cmd_sclk(cmd_spi_sclk), .cmd_cs_n(cmd_spi_cs_n),
+        .cmd_mosi(cmd_spi_mosi),
+        .mem_req(1'b0), .mem_active(1'b0), .mem_sclk(1'b0),
+        .mem_cs_n(1'b1), .mem_mosi(1'b0),
+        .cmd_grant(qspi_cmd_grant), .mem_grant(),
+        .spi_sclk(), .spi_cs_n(), .spi_mosi(), .busy(), .conflict()
+    );
+
+    qspi_soc_pad_mux #(.ENABLE_QUAD_IO(1'b1)) u_qspi_pad_mux (
+        .cmd_grant(qspi_cmd_grant), .cmd_sclk(cmd_spi_sclk),
+        .cmd_cs_n(cmd_spi_cs_n), .cmd_io_o(qspi_cmd_io_o),
+        .cmd_io_oe(qspi_cmd_io_oe), .mem_grant(1'b0), .mem_sclk(1'b0),
+        .mem_cs_n(1'b1), .mem_mosi(1'b0), .spi_sclk(spi_sclk),
+        .spi_cs_n(spi_cs_n), .spi_mosi(spi_mosi), .qspi_io_o(),
+        .qspi_io_oe(), .qspi_io(qspi_io)
+    );
+
     always @(negedge spi_cs_n) begin
         qspi_cs_seen = 1'b1;
         qspi_cmd_bits = 0;
@@ -160,6 +200,10 @@ module tb_qspi_status_integration;
             if (qspi_cmd_bits < 8)
                 qspi_cmd_capture = {qspi_cmd_capture[6:0], spi_mosi};
             qspi_cmd_bits = qspi_cmd_bits + 1;
+            if (qspi_cmd_io_oe === 4'hf) begin
+                qspi_quad_capture = {qspi_quad_capture[27:0], qspi_io};
+                qspi_quad_groups = qspi_quad_groups + 1;
+            end
         end
     end
 
@@ -291,6 +335,51 @@ module tb_qspi_status_integration;
             $display("FAIL: QSPI command IRQ W1C got=%h expected=00000004", rd_value);
             errors = errors + 1;
         end
+
+        // Integrated four-lane read: command/address remain x1 while the
+        // data phase samples two external nibbles from qspi_io[3:0].
+        axi_write(32'h4000_5020, 32'h1);          // CTRL.enable
+        axi_write(32'h4000_5040, 32'h0080_0005); // LUT0: x4 data, status read
+        axi_write(32'h4000_5128, 32'd1);         // one RX byte
+        axi_write(32'h4000_5120, 32'h0);         // trigger LUT0
+        qspi_guard = 0;
+        while (qspi_guard < 80) begin
+            axi_read_capture(32'h4000_5024, rd_value);
+            if (!rd_value[0])
+                qspi_guard = 80;
+            else
+                qspi_guard = qspi_guard + 1;
+        end
+        axi_read_capture(32'h4000_5134, rd_value); // RX_DATA
+        if (rd_value[7:0] !== 8'hc3) begin
+            $display("FAIL: integrated x4 read got=%h expected=000000c3", rd_value);
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_5034, 32'h7);         // clear done/timeout/abort
+
+        // Integrated four-lane write: capture eight data nibbles after the
+        // x1 command/address phase and verify direction/data ordering.
+        qspi_quad_groups = 0;
+        qspi_quad_capture = 32'h0;
+        axi_write(32'h4000_5044, (2 << 22) | (1 << 17) | (1 << 8) | 32'h32);
+        axi_write(32'h4000_5124, 32'h0012_3456);
+        axi_write(32'h4000_5128, 32'd4);
+        axi_write(32'h4000_5130, 32'hA1B2_C3D4);
+        axi_write(32'h4000_5120, 32'h1);         // trigger LUT1
+        qspi_guard = 0;
+        while (qspi_guard < 100) begin
+            axi_read_capture(32'h4000_5024, rd_value);
+            if (!rd_value[0])
+                qspi_guard = 100;
+            else
+                qspi_guard = qspi_guard + 1;
+        end
+        if (qspi_quad_groups !== 8 || qspi_quad_capture !== 32'hA1B2_C3D4) begin
+            $display("FAIL: integrated x4 write groups=%0d data=%h expected groups=8 data=A1B2C3D4",
+                     qspi_quad_groups, qspi_quad_capture);
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_5034, 32'h7);
 
         // The integrated command window must bound a stalled command and
         // expose the timeout event without leaving the shared pins asserted.
