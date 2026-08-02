@@ -205,7 +205,7 @@ module qspi_ctrl #(
 ## 11. Flash Model 依赖
 
 - 现有 `rtl/perips/axi_flash_image_model.v` 是 AXI image-window 仿真专用模型，可保留供 UVM/legacy tb 使用。
-- `rtl/perips/spi_flash_behavioral.v` 提供当前 command slice 的 vendor-neutral SPI 端点：`0x03` 读、`0x05` 状态、`0x06` WREN、`0x02` page-program 基本 NOR `1->0` 语义；它只用于 RTL 仿真，不代表 Micron/Winbond 宏模型、时序、电压、擦写寿命或 PHY。
+- `rtl/perips/spi_flash_behavioral.v` 提供当前 command slice 的 vendor-neutral SPI 端点：`0x03` 读、`0x05` 状态、`0x06` WREN、`0x02` page-program 基本 NOR `1->0` 语义和 `0x20` 4-KB sector erase；它只用于 RTL 仿真，不代表 Micron/Winbond 宏模型、时序、电压、擦写寿命或 PHY。
 - 真实产品验证仍需选定 flash 厂商/型号并引入其受许可的行为模型或板级模型。
 - 真实 tape-out：直接接商用 flash 芯片。
 
@@ -217,7 +217,7 @@ module qspi_ctrl #(
 - 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，尚未成为 `soc_top` 的 AXI XIP controller，也未连接商用 flash model、quad pad/PHY 或 erase/program boot path；不能标记为商用 ASIC QSPI 完成。
 - 2026-08-02：`qspi_apb_integration` 接入 `soc_peripheral_subsystem`；保留 `0x4000_5000` status map，在 `0x4000_5020..0x4000_519f` 暴露 command window，并由 SoC mux 在 command CS active 时接管单线 SPI pins。`qspi-status-integration`、SoC smoke 和 RTL frontend `3/3` 通过。
 - 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；vendor-neutral flash endpoint 只存在于仿真 gate，quad pad/PHY、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
-- 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页后再次 `0x03` 读回 `CA FE BA BE`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
+- 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页、再次读回 `CA FE BA BE`，以及重新 WREN 后 `0x20` sector erase 读回全 `FF`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
 
 ## 版本记录
 
