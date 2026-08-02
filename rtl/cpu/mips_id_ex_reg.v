@@ -44,6 +44,8 @@ module mips_id_ex_reg (
     input  wire        id_mem_write,
     input  wire [2:0]  id_mem_op,
     input  wire [1:0]  id_mem_to_reg,
+    input  wire        id_cache_op_valid,
+    input  wire [4:0]  id_cache_op,
     
     // Data Outputs to EX
     output reg  [31:0] ex_val_rs,
@@ -75,7 +77,9 @@ module mips_id_ex_reg (
     output reg         ex_mem_read,
     output reg         ex_mem_write,
     output reg  [2:0]  ex_mem_op,
-    output reg  [1:0]  ex_mem_to_reg
+    output reg  [1:0]  ex_mem_to_reg,
+    output reg         ex_cache_op_valid,
+    output reg  [4:0]  ex_cache_op
 );
 
     always @(posedge clk or negedge rst_n) begin
@@ -109,6 +113,8 @@ module mips_id_ex_reg (
             ex_mem_write   <= 1'b0;
             ex_mem_op      <= 3'd0;
             ex_mem_to_reg  <= 2'd0;
+            ex_cache_op_valid <= 1'b0;
+            ex_cache_op    <= 5'd0;
         end else if (flush) begin
             ex_val_rs      <= 32'd0;
             ex_val_rt      <= 32'd0;
@@ -139,6 +145,8 @@ module mips_id_ex_reg (
             ex_mem_write   <= 1'b0;
             ex_mem_op      <= 3'd0;
             ex_mem_to_reg  <= 2'd0;
+            ex_cache_op_valid <= 1'b0;
+            ex_cache_op    <= 5'd0;
         end else if (stall) begin
             // Convert held multi-cycle MDU instructions into a single issue
             // pulse while preserving the rest of the EX-stage instruction until
@@ -174,6 +182,8 @@ module mips_id_ex_reg (
             ex_mem_write   <= id_mem_write;
             ex_mem_op      <= id_mem_op;
             ex_mem_to_reg  <= id_mem_to_reg;
+            ex_cache_op_valid <= id_cache_op_valid;
+            ex_cache_op    <= id_cache_op;
         end
     end
 

@@ -9,8 +9,12 @@
 > refill/writeback `cpu_cache_error` sideband；SoC 级 `cache_sweep` 固件与
 > phase3/uvm/smoke 全绿。
 >
-> **未实现（后续）**：CACHE 指令子集、非阻塞多-MSHR、4-entry store buffer——依赖非阻塞 L2
-> 与 CPU hit-under-miss（见 `docs/refactor_roadmap.md` 依赖链），单独排期。下文为完整 v0 目标。
+> **当前实现边界**：CACHE D-cache 维护首批已接入 CPU MEM 阶段并由 D-cache
+> 完成握手；已实现 `Index_Writeback_Invalidate_D`、`Hit_Invalidate_D`、
+> `Hit_Writeback_Invalidate_D`、`Hit_Writeback_D`。`Index_Load_Tag_D` /
+> `Index_Store_Tag_D` 仍按非法指令处理（尚无 TagLo/TagHi 架构寄存器）。
+> 非阻塞多-MSHR、4-entry store buffer 仍依赖非阻塞 L2 与 CPU hit-under-miss
+>（见 `docs/refactor_roadmap.md` 依赖链），单独排期。下文为完整 v0 目标。
 
 ---
 
@@ -166,14 +170,16 @@ MIPS `CACHE op[4:2]==001` (D-cache) 子集：
 
 | op[4:0] | 助记 | 行为 |
 |:-:|---|---|
-| 5'b00001 | Index_Writeback_Invalidate_D | 若 dirty → writeback；然后 clear valid |
+| 5'b00001 | Index_Writeback_Invalidate_D | **已实现**：若 dirty → writeback；然后 clear valid。way 由 `addr[12:11]` 选择，set 由 `addr[10:5]` |
 | 5'b10001 | Index_Load_Tag_D             | 读 tag 到 TagLo |
 | 5'b01001 | Index_Store_Tag_D            | 写 TagLo 到 index |
-| 5'b10101 | Hit_Invalidate_D             | 若命中 → clear valid（不 writeback，可能丢失 dirty）|
-| 5'b11001 | Hit_Writeback_Invalidate_D   | 若命中 → writeback + clear valid |
-| 5'b11101 | Hit_Writeback_D              | 若命中且 dirty → writeback + clear dirty，保留 valid |
+| 5'b10101 | Hit_Invalidate_D             | **已实现**：若命中 → clear valid（不 writeback，可能丢失 dirty）|
+| 5'b11001 | Hit_Writeback_Invalidate_D   | **已实现**：若命中 → writeback + clear valid |
+| 5'b11101 | Hit_Writeback_D              | **已实现**：若命中且 dirty → writeback + clear dirty，保留 valid |
 
-CACHE 指令走 MEM 阶段专用端口；产生 1-16 cycle bubble（Hit_Writeback 需等 AXI）。
+CACHE 指令走 MEM 阶段专用端口；产生维护 bubble（Hit_Writeback 需等 AXI）。
+AXI 写回 `SLVERR/DECERR` 时，维护请求完成并通过 `cache_op_error` 触发
+`CacheErr`（ExcCode=30）；成功时 `cache_op_done` 仅在完成状态保持一个周期。
 
 ---
 
@@ -309,3 +315,5 @@ module l1_dcache #(
 ## 版本记录
 
 - v0 (2026-07-26)：初版规格，8 KB 4-way VIPT + WB/WA + 2 MSHR + 4-entry store buffer + CACHE 6 op。等待 Phase C 启动评审。
+- v0.1 (2026-08-02)：完成 CACHE D-cache 维护首批（四种 op）CPU/MEM/D-cache
+  握手和 CacheErr sideband；Index tag 读写留待 TagLo/TagHi 架构状态实现。

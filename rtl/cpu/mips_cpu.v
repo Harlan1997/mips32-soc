@@ -27,6 +27,11 @@ module mips_cpu (
     output wire [31:0] data_wdata,
     output wire [3:0]  data_be,
     output wire        data_uncacheable,
+    output wire        data_cache_op_valid,
+    output wire [4:0]  data_cache_op,
+    output wire [31:0] data_cache_op_addr,
+    input  wire        data_cache_op_done,
+    input  wire        data_cache_op_error,
     input  wire        data_addr_ok,
     input  wire        data_data_ok,
     input  wire        data_bus_error,
@@ -246,6 +251,8 @@ module mips_cpu (
     wire        id_mem_read;
     wire        id_mem_write;
     wire [2:0]  id_mem_op;
+    wire        id_cache_op_valid;
+    wire [4:0]  id_cache_op;
 
     wire        id_illegal_inst;
     wire        id_cp0_we;
@@ -280,6 +287,8 @@ module mips_cpu (
     wire [4:0]  mem_waddr;
     wire [31:0] mem_ex_out;
     wire        mem_mem_read;
+    wire        mem_cache_op_valid;
+    wire [4:0]  mem_cache_op;
     
     wire        wb_reg_write;
     wire        wb_cp0_we;
@@ -364,6 +373,8 @@ module mips_cpu (
         .mem_write     (id_mem_write),
         .mem_op        (id_mem_op),
         .mem_to_reg    (id_mem_to_reg),
+        .cache_op_valid(id_cache_op_valid),
+        .cache_op      (id_cache_op),
 
         .illegal_inst  (id_illegal_inst),
         .cp0_we        (id_cp0_we),
@@ -422,6 +433,8 @@ module mips_cpu (
     wire        ex_alu_src;
     wire        ex_mem_write;
     wire [2:0]  ex_mem_op;
+    wire        ex_cache_op_valid;
+    wire [4:0]  ex_cache_op;
     
     mips_id_ex_reg u_mips_id_ex_reg (
         .clk            (clk),
@@ -457,6 +470,8 @@ module mips_cpu (
         .id_mem_write   (id_mem_write),
         .id_mem_op      (id_mem_op),
         .id_mem_to_reg  (id_mem_to_reg),
+        .id_cache_op_valid(id_cache_op_valid),
+        .id_cache_op    (id_cache_op),
         
         .ex_val_rs      (ex_val_rs),
         .ex_val_rt      (ex_val_rt),
@@ -485,7 +500,9 @@ module mips_cpu (
         .ex_mem_read    (ex_mem_read),
         .ex_mem_write   (ex_mem_write),
         .ex_mem_op      (ex_mem_op),
-        .ex_mem_to_reg  (ex_mem_to_reg)
+        .ex_mem_to_reg  (ex_mem_to_reg),
+        .ex_cache_op_valid(ex_cache_op_valid),
+        .ex_cache_op    (ex_cache_op)
     );
     
     // =========================================================================
@@ -535,6 +552,7 @@ module mips_cpu (
         .stall           (global_stall),
         .flush           (flush_ex_mem),
         .dmem_data_ok    (data_data_ok),
+        .cache_op_done   (data_cache_op_done),
         
         .ex_out          (ex_out),
         .ex_val_rt       (ex_val_rt),
@@ -556,6 +574,8 @@ module mips_cpu (
         .ex_mem_write    (ex_mem_write),
         .ex_mem_op       (ex_mem_op),
         .ex_mem_to_reg   (ex_mem_to_reg),
+        .ex_cache_op_valid(ex_cache_op_valid),
+        .ex_cache_op     (ex_cache_op),
         
         .mem_ex_out      (mem_ex_out),
         .mem_val_rt      (mem_val_rt),
@@ -577,6 +597,8 @@ module mips_cpu (
         .mem_mem_write   (mem_mem_write),
         .mem_mem_op      (mem_mem_op),
         .mem_mem_to_reg  (mem_mem_to_reg),
+        .mem_cache_op_valid(mem_cache_op_valid),
+        .mem_cache_op    (mem_cache_op),
         .mem_done        (mem_done)
     );
     
@@ -586,6 +608,8 @@ module mips_cpu (
     wire [31:0] mem_rdata_fmt;
     wire        mem_adel_exception;
     wire        mem_ades_exception;
+    wire        mem_cache_op_fault;
+    wire [31:0] cache_op_vaddr;
     
     mips_mem_stage u_mips_mem_stage (
         .mem_ex_out      (mem_ex_out),
@@ -594,6 +618,8 @@ module mips_cpu (
         .mem_write       (mem_mem_write),
         .mem_op          (mem_mem_op),
         .mem_done        (mem_done),
+        .mem_cache_op_valid(mem_cache_op_valid),
+        .mem_cache_op    (mem_cache_op),
         
         .dmem_rdata      (data_rdata),
         .dmem_addr       (mem_vaddr),
@@ -603,8 +629,14 @@ module mips_cpu (
         .dmem_en         (data_req),
         .dmem_addr_ok    (data_addr_ok),
         .dmem_data_ok    (data_data_ok),
+        .cache_op_done   (data_cache_op_done),
+        .cache_op_error  (data_cache_op_error),
         
         .stall_req_mem   (stall_req_mem),
+        .cache_op_valid  (data_cache_op_valid),
+        .cache_op        (data_cache_op),
+        .cache_op_addr   (cache_op_vaddr),
+        .cache_op_fault  (mem_cache_op_fault),
         
         .mem_rdata_ext   (mem_rdata_fmt),
         .adel_exception  (mem_adel_exception),
@@ -616,7 +648,8 @@ module mips_cpu (
     // AdEL/AdES. Under SOC_MMU_ENABLE=0 mmu_d_ok is always 1 → this reduces
     // to the pre-B.3.d AdEL/AdES-only behaviour.
     //   MMU fault_type encoding: 010=TLBS, 011=Mod, else (001) → TLBL.
-    wire        mem_mmu_fault      = ~mmu_d_ok & data_req;
+    wire        dmem_translate_req = data_req | data_cache_op_valid;
+    wire        mem_mmu_fault      = ~mmu_d_ok & dmem_translate_req;
     wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
                                      (mmu_d_fault_type == 3'b100) ? 5'h04 :  // AdEL (user kseg)
@@ -627,11 +660,15 @@ module mips_cpu (
                           ~mmu_dlookup_hit;
     wire mem_bus_fault      = data_req & data_data_ok & (data_bus_error === 1'b1);
     wire mem_cache_fault    = data_req & data_data_ok & (data_cache_error === 1'b1);
-    wire mem_except_req_out  = mem_except_req | mem_mmu_fault | mem_cache_fault | mem_bus_fault
+    wire mem_cache_op_fault_seen = mem_cache_op_fault |
+                                   (data_cache_op_valid & data_cache_op_done &
+                                    (data_cache_op_error === 1'b1));
+    wire mem_except_req_out  = mem_except_req | mem_mmu_fault | mem_cache_fault |
+                               mem_cache_op_fault_seen | mem_bus_fault
                              | mem_adel_exception | mem_ades_exception;
     wire [4:0] mem_except_code_out = mem_except_req      ? mem_except_code
                                    : mem_mmu_fault       ? mem_mmu_fault_code
-                                   : mem_cache_fault     ? 5'h1E // CacheErr
+                                   : (mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1E // CacheErr
                                    : mem_bus_fault       ? 5'h07 // DBE
                                    : mem_adel_exception  ? 5'h04
                                    : mem_ades_exception  ? 5'h05
@@ -808,7 +845,7 @@ module mips_cpu (
     );
 
     mips_mmu u_mmu_d (
-        .req_valid       (data_req),
+        .req_valid       (dmem_translate_req),
         .req_va          (mem_vaddr),
         .req_is_store    (data_we),
         .req_is_fetch    (1'b0),
@@ -831,6 +868,7 @@ module mips_cpu (
     // D-cache consumes the MIPS C=2 uncached attribute. I-cache routing and
     // the remaining cache attributes are still outside this integration slice.
     assign data_uncacheable = (mmu_d_cache_attr == 3'b010);
+    assign data_cache_op_addr = data_addr;
     wire _mmu_unused = &{1'b0, mmu_i_cache_attr,
                               mmu_i_ok, mmu_d_ok,
                               mmu_i_fault_type, mmu_d_fault_type};

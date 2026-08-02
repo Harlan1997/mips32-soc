@@ -17,6 +17,10 @@ module tb_dcache;
     reg  [3:0]  cpu_be;
     wire [31:0] cpu_rdata;
     wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error, cpu_cache_error;
+    reg         cache_op_valid;
+    reg  [4:0]  cache_op;
+    reg  [31:0] cache_op_addr;
+    wire        cache_op_ready, cache_op_done, cache_op_error;
 
     // AXI
     wire [3:0]  awid; wire [31:0] awaddr; wire [7:0] awlen; wire [2:0] awsize;
@@ -33,6 +37,7 @@ module tb_dcache;
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_we(cpu_we),.cpu_addr(cpu_addr),.cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
+        .cache_op_valid(cache_op_valid),.cache_op(cache_op),.cache_op_addr(cache_op_addr),.cache_op_ready(cache_op_ready),.cache_op_done(cache_op_done),.cache_op_error(cache_op_error),
         .awid(awid),.awaddr(awaddr),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .awlock(awlock),.awcache(awcache),.awprot(awprot),.awvalid(awvalid),.awready(awready),
         .wdata(wdata),.wstrb(wstrb),.wlast(wlast),.wvalid(wvalid),.wready(wready),
@@ -53,10 +58,10 @@ module tb_dcache;
 
     reg [31:0] ar_addr_l, aw_addr_l; reg [7:0] ar_beat, aw_beat;
     reg ar_active, aw_active, w_active;
-    reg r_arready, r_awready, r_wready, r_bvalid, r_rvalid, r_rlast, inject_read_error;
+    reg r_arready, r_awready, r_wready, r_bvalid, r_rvalid, r_rlast, inject_read_error, inject_write_error;
     reg [31:0] r_rdata; reg [3:0] r_bid, r_rid;
     assign arready=r_arready; assign awready=r_awready; assign wready=r_wready;
-    assign bvalid=r_bvalid; assign bresp=2'b00; assign bid=r_bid;
+    assign bvalid=r_bvalid; assign bresp=inject_write_error ? 2'b10 : 2'b00; assign bid=r_bid;
     assign rvalid=r_rvalid; assign rlast=r_rlast; assign rdata=r_rdata; assign rresp=inject_read_error ? 2'b10 : 2'b00; assign rid=r_rid;
 
     always @(posedge clk or negedge rst_n) begin
@@ -133,6 +138,25 @@ module tb_dcache;
         @(negedge clk);
     end endtask
 
+    task cache_maint_expect(input [4:0] op, input [31:0] addr, input expect_error);
+    begin
+        @(negedge clk);
+        cache_op_valid=1'b1; cache_op=op; cache_op_addr=addr;
+        @(posedge clk);
+        while (!cache_op_done) @(posedge clk);
+        if (cache_op_error !== expect_error) begin
+            $display("FAIL CACHE op=%h addr=%h error=%b expected=%b", op, addr, cache_op_error, expect_error);
+            errs=errs+1;
+        end
+        @(negedge clk); cache_op_valid=1'b0; cache_op=5'd0; cache_op_addr=32'd0;
+        @(negedge clk);
+    end endtask
+
+    task cache_maint(input [4:0] op, input [31:0] addr);
+    begin
+        cache_maint_expect(op, addr, 1'b0);
+    end endtask
+
     reg [31:0] rd;
     integer c_aw, c_ar, c_wb;
     // Addresses: same set requires same index [10:5]; different tag = +0x800 (2KB/way)
@@ -142,6 +166,7 @@ module tb_dcache;
 
     initial begin
         cpu_req=0; cpu_we=0; cpu_addr=0; cpu_wdata=0; cpu_be=0; inject_read_error=0;
+        cache_op_valid=0; cache_op=0; cache_op_addr=0; inject_write_error=0;
         #23 rst_n=1; @(negedge clk);
 
         // T1: cold read miss -> refill -> hit
@@ -226,6 +251,48 @@ module tb_dcache;
         c_ar=ar_count; cpu_read(32'h0000_7000, rd);
         if (ar_count!==c_ar+1) begin $display("FAIL T9 error line was installed"); errs=errs+1; end
         if (rd!==mem[32'h0000_7000>>2]) begin $display("FAIL T9 retry=%h",rd); errs=errs+1; end
+
+        // T10: Hit_Invalidate_D drops a clean line; the next load refills.
+        cpu_read(32'h0000_9000, rd);
+        c_ar=ar_count;
+        cache_maint(5'b10101, 32'h0000_9000);
+        cpu_read(32'h0000_9000, rd);
+        if (ar_count!==c_ar+1) begin $display("FAIL T10 hit invalidate did not force refill"); errs=errs+1; end
+
+        // T11: Hit_Writeback_D makes a dirty line visible without eviction.
+        cpu_write(32'h0000_A000, 32'hCAFE_A011, 4'hF);
+        // Leave the request buffer in the legacy uncached state first; the
+        // maintenance burst must still advertise an 8-beat cacheable AXI W.
+        cpu_read(32'hA000_9000, rd);
+        inject_write_error=1'b1;
+        cache_maint_expect(5'b11101, 32'h0000_A000, 1'b1);
+        inject_write_error=1'b0;
+        cache_maint(5'b11101, 32'h0000_A000);
+        if (mem[32'h0000_A000>>2]!==32'hCAFE_A011) begin
+            $display("FAIL T11 writeback memory=%h", mem[32'h0000_A000>>2]); errs=errs+1;
+        end
+        c_ar=ar_count; cpu_read(32'h0000_A000, rd);
+        if (ar_count!==c_ar || rd!==32'hCAFE_A011) begin $display("FAIL T11 line not retained after WB"); errs=errs+1; end
+
+        // T12: Hit_Writeback_Invalidate_D writes memory and removes the line.
+        cpu_write(32'h0000_B000, 32'hCAFE_B012, 4'hF);
+        cache_maint(5'b11001, 32'h0000_B000);
+        if (mem[32'h0000_B000>>2]!==32'hCAFE_B012) begin
+            $display("FAIL T12 writeback memory=%h", mem[32'h0000_B000>>2]); errs=errs+1;
+        end
+        c_ar=ar_count; cpu_read(32'h0000_B000, rd);
+        if (ar_count!==c_ar+1 || rd!==32'hCAFE_B012) begin $display("FAIL T12 invalidation/refill"); errs=errs+1; end
+
+        // T13: Index_Writeback_Invalidate_D selects way via VA[12:11].
+        // 0xC040 allocates the first free way in set 2 (way 1 because the
+        // earlier 0x2040 line occupies way 0); 0x2840 selects that way.
+        cpu_write(32'h0000_C040, 32'hCAFE_C013, 4'hF);
+        cache_maint(5'b00001, 32'h0000_1040);
+        if (mem[32'h0000_C040>>2]!==32'hCAFE_C013) begin
+            $display("FAIL T13 index writeback memory=%h", mem[32'h0000_C040>>2]); errs=errs+1;
+        end
+        c_ar=ar_count; cpu_read(32'h0000_C040, rd);
+        if (ar_count!==c_ar+1 || rd!==32'hCAFE_C013) begin $display("FAIL T13 index invalidation/refill"); errs=errs+1; end
 
         #50;
         if (errs==0) $display("REGRESSION_TEST_SUCCESS dcache");

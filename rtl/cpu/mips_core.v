@@ -114,6 +114,11 @@ module mips_core (
     wire [31:0] cpu_data_wdata;
     wire [3:0]  cpu_data_be;
     wire        cpu_data_uncacheable;
+    wire        cpu_data_cache_op_valid;
+    wire [4:0]  cpu_data_cache_op;
+    wire [31:0] cpu_data_cache_op_addr;
+    wire        cpu_data_cache_op_done;
+    wire        cpu_data_cache_op_error;
     wire        cpu_data_addr_ok;
     wire        cpu_data_data_ok;
     wire        cpu_data_bus_error;
@@ -140,6 +145,11 @@ module mips_core (
         .data_wdata      (cpu_data_wdata),
         .data_be         (cpu_data_be),
         .data_uncacheable(cpu_data_uncacheable),
+        .data_cache_op_valid(cpu_data_cache_op_valid),
+        .data_cache_op   (cpu_data_cache_op),
+        .data_cache_op_addr(cpu_data_cache_op_addr),
+        .data_cache_op_done(cpu_data_cache_op_done),
+        .data_cache_op_error(cpu_data_cache_op_error),
         .data_addr_ok    (cpu_data_addr_ok),
         .data_data_ok    (cpu_data_data_ok),
         .data_bus_error  (cpu_data_bus_error),
@@ -219,6 +229,12 @@ module mips_core (
         .cpu_data_ok  (cpu_data_data_ok),
         .cpu_bus_error(cpu_data_bus_error),
         .cpu_cache_error(cpu_data_cache_error),
+        .cache_op_valid(cpu_data_cache_op_valid),
+        .cache_op      (cpu_data_cache_op),
+        .cache_op_addr (cpu_data_cache_op_addr),
+        .cache_op_ready(),
+        .cache_op_done (cpu_data_cache_op_done),
+        .cache_op_error(cpu_data_cache_op_error),
         
         .awid         (data_awid),
         .awaddr       (data_awaddr),

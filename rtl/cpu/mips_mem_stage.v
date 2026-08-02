@@ -15,6 +15,8 @@ module mips_mem_stage (
     input  wire        mem_write,
     input  wire [2:0]  mem_op,         // 000:B, 001:BU, 010:H, 011:HU, 100:W
     input  wire        mem_done,
+    input  wire        mem_cache_op_valid,
+    input  wire [4:0]  mem_cache_op,
     
     // Inputs from Data Memory / Cache
     input  wire [31:0] dmem_rdata,
@@ -27,9 +29,15 @@ module mips_mem_stage (
     output wire        dmem_en,        // Memory request enable
     input  wire        dmem_addr_ok,
     input  wire        dmem_data_ok,
+    input  wire        cache_op_done,
+    input  wire        cache_op_error,
     
     // Outputs to Pipeline Control
     output wire        stall_req_mem,
+    output wire        cache_op_valid,
+    output wire [4:0]  cache_op,
+    output wire [31:0] cache_op_addr,
+    output wire        cache_op_fault,
 
     
     // Outputs to WB Stage
@@ -44,9 +52,14 @@ module mips_mem_stage (
     assign dmem_addr = {mem_ex_out[31:2], 2'b00}; // Word aligned access address
     assign dmem_en   = (mem_read | mem_write) & ~adel_exception & ~ades_exception & ~mem_done;
     assign dmem_we   = mem_write;
+    assign cache_op_valid = mem_cache_op_valid & ~mem_done;
+    assign cache_op       = mem_cache_op;
+    assign cache_op_addr  = mem_ex_out;
+    assign cache_op_fault = cache_op_valid & cache_op_done & cache_op_error;
     
     // Stall logic
-    assign stall_req_mem = dmem_en & ~dmem_data_ok;
+    assign stall_req_mem = (dmem_en & ~dmem_data_ok) |
+                           (cache_op_valid & ~cache_op_done);
 
     wire [1:0] addr_align = mem_ex_out[1:0];
 
