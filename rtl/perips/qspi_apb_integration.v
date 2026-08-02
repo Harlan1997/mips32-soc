@@ -6,7 +6,9 @@
 // software-visible timeout status stable while allowing command/FIFO work to
 // be exercised through the real SoC APB bridge.
 
-module qspi_apb_integration (
+module qspi_apb_integration #(
+    parameter ENABLE_SHARED_ARB = 1'b0
+) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        controller_present,
@@ -26,7 +28,9 @@ module qspi_apb_integration (
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    input  wire        shared_grant,
     output wire        active,
+    output wire        request,
     output wire        irq
 );
     wire status_sel = psel && (paddr[11:0] < 12'h020);
@@ -46,6 +50,10 @@ module qspi_apb_integration (
     wire [3:0] cmd_io_oe;
     wire [3:0] cmd_io_i = {3'b000, spi_miso};
     wire cmd_irq;
+    wire trigger_access = cmd_sel && penable && pwrite &&
+                          (cmd_paddr == 12'h100);
+    wire arbiter_wait = ENABLE_SHARED_ARB && trigger_access && !shared_grant;
+    wire cmd_engine_sel = cmd_sel && !arbiter_wait;
 
     apb_qspi_status u_status (
         .clk                (clk),
@@ -65,7 +73,7 @@ module qspi_apb_integration (
     qspi_cmd_behavioral u_cmd (
         .clk                (clk),
         .rst_n              (rst_n),
-        .psel               (cmd_sel),
+        .psel               (cmd_engine_sel),
         .penable            (penable),
         .pwrite             (pwrite),
         .paddr              (cmd_paddr),
@@ -85,9 +93,9 @@ module qspi_apb_integration (
     assign prdata  = status_sel ? status_prdata :
                      cmd_sel    ? cmd_prdata : 32'h0;
     assign pready  = status_sel ? status_pready :
-                     cmd_sel    ? cmd_pready : 1'b1;
+                     cmd_sel    ? (arbiter_wait ? 1'b0 : cmd_pready) : 1'b1;
     assign pslverr = status_sel ? status_pslverr :
-                     cmd_sel    ? cmd_pslverr : 1'b0;
+                     cmd_sel    ? (arbiter_wait ? 1'b0 : cmd_pslverr) : 1'b0;
 
     // The current product top has single-wire SPI pins.  x1 command/address
     // phases are therefore directly visible; the command block still keeps
@@ -96,6 +104,7 @@ module qspi_apb_integration (
     assign spi_cs_n = cmd_cs_n[0];
     assign spi_mosi = cmd_io_o[0];
     assign active   = ~cmd_cs_n[0];
+    assign request  = ENABLE_SHARED_ARB && (trigger_access || active);
     assign irq      = cmd_irq;
 
     // Keep this signal intentionally unused at the wrapper boundary for now;

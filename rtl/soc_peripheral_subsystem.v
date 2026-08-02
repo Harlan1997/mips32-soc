@@ -6,7 +6,8 @@
 `include "soc_config.vh"
 
 module soc_peripheral_subsystem #(
-    parameter ENABLE_APB_FAULT_INJECTOR = 1'b0
+    parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
+    parameter ENABLE_QSPI_SHARED_ARB = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -28,10 +29,12 @@ module soc_peripheral_subsystem #(
     input  wire        qspi_timeout_sticky,
     input  wire        qspi_controller_present,
     input  wire        spi_miso,
+    input  wire        qspi_cmd_grant,
     output wire        spi_sclk,
     output wire        spi_cs_n,
     output wire        spi_mosi,
     output wire        qspi_active,
+    output wire        qspi_cmd_req,
 
     input  wire [3:0]  s_awid,
     input  wire [31:0] s_awaddr,
@@ -325,7 +328,9 @@ module soc_peripheral_subsystem #(
     );
 
     wire qspi_irq;
-    qspi_apb_integration u_qspi_apb_integration (
+    qspi_apb_integration #(
+        .ENABLE_SHARED_ARB (ENABLE_QSPI_SHARED_ARB)
+    ) u_qspi_apb_integration (
         .clk                  (clk),
         .rst_n                (periph_rst_n),
         .controller_present   (qspi_controller_present),
@@ -343,7 +348,9 @@ module soc_peripheral_subsystem #(
         .spi_cs_n             (spi_cs_n),
         .spi_mosi             (spi_mosi),
         .spi_miso             (spi_miso),
+        .shared_grant         (qspi_cmd_grant),
         .active               (qspi_active),
+        .request              (qspi_cmd_req),
         .irq                  (qspi_irq)
     );
 

@@ -437,17 +437,41 @@ module mips_soc_impl #(
     wire        qspi_cmd_cs_n;
     wire        qspi_cmd_mosi;
     wire        qspi_cmd_active;
+    wire        qspi_cmd_req;
+    wire        qspi_cmd_grant;
     wire        mem_spi_sclk;
     wire        mem_spi_cs_n;
     wire        mem_spi_mosi;
+    wire        mem_spi_req;
+    wire        mem_spi_grant;
+    wire        qspi_shared_pin_conflict;
     wire        soc_rst_n;
     assign soc_rst_n = rst_n & ~wdt_reset;
 
-    // The command path owns the shared SPI pins only while its CS is active;
-    // otherwise the established AXI XIP controller remains the pin owner.
-    assign spi_sclk = qspi_cmd_active ? qspi_cmd_sclk : mem_spi_sclk;
-    assign spi_cs_n = qspi_cmd_active ? qspi_cmd_cs_n : mem_spi_cs_n;
-    assign spi_mosi = qspi_cmd_active ? qspi_cmd_mosi : mem_spi_mosi;
+    // Command and AXI XIP share one physical SPI pin boundary. The arbiter
+    // holds an owner across the transaction and blocks a new AXI AR while a
+    // command trigger is waiting for the bus.
+    qspi_shared_pin_arbiter u_qspi_shared_pin_arbiter (
+        .clk        (clk),
+        .rst_n      (soc_rst_n),
+        .cmd_req    (qspi_cmd_req),
+        .cmd_active (qspi_cmd_active),
+        .cmd_sclk   (qspi_cmd_sclk),
+        .cmd_cs_n   (qspi_cmd_cs_n),
+        .cmd_mosi   (qspi_cmd_mosi),
+        .mem_req    (mem_spi_req),
+        .mem_active (!mem_spi_cs_n),
+        .mem_sclk   (mem_spi_sclk),
+        .mem_cs_n   (mem_spi_cs_n),
+        .mem_mosi   (mem_spi_mosi),
+        .cmd_grant  (qspi_cmd_grant),
+        .mem_grant  (mem_spi_grant),
+        .spi_sclk   (spi_sclk),
+        .spi_cs_n   (spi_cs_n),
+        .spi_mosi   (spi_mosi),
+        .busy       (),
+        .conflict   (qspi_shared_pin_conflict)
+    );
 
     // =========================================================================
     // Instantiations
@@ -875,7 +899,8 @@ module mips_soc_impl #(
     soc_memory_subsystem #(
         .ENABLE_FLASH_IMAGE_MODEL (ENABLE_FLASH_IMAGE_MODEL),
         .SRAM_DEPTH_WORDS         (32768),
-        .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES)
+        .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES),
+        .ENABLE_SHARED_ARB        (1'b1)
     ) u_memory_subsystem (
         .clk          (clk),
         .rst_n        (soc_rst_n),
@@ -883,6 +908,8 @@ module mips_soc_impl #(
         .spi_cs_n     (mem_spi_cs_n),
         .spi_mosi     (mem_spi_mosi),
         .spi_miso     (spi_miso),
+        .spi_arb_grant          (mem_spi_grant),
+        .spi_req                (mem_spi_req),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),
 
@@ -1040,7 +1067,8 @@ module mips_soc_impl #(
     // synopsys translate_on
 
     soc_peripheral_subsystem #(
-        .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR)
+        .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
+        .ENABLE_QSPI_SHARED_ARB   (1'b1)
     ) u_peripheral_subsystem (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -1058,10 +1086,12 @@ module mips_soc_impl #(
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),
         .spi_miso     (spi_miso),
+        .qspi_cmd_grant (qspi_cmd_grant),
         .spi_sclk     (qspi_cmd_sclk),
         .spi_cs_n     (qspi_cmd_cs_n),
         .spi_mosi     (qspi_cmd_mosi),
         .qspi_active  (qspi_cmd_active),
+        .qspi_cmd_req (qspi_cmd_req),
 
         .s_awid       (s1_awid),
         .s_awaddr     (s1_awaddr),

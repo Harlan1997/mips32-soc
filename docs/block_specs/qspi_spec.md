@@ -99,8 +99,9 @@ AXI R (addr, len):
 - AXI write address/data handshake 完成后返回 `BVALID/SLVERR`，不对 flash 发起写命令。
 - 该实现没有 continuous-read、quad XIP、内部 timeout、DMA 或多片 CS 支持；计划集成 SoC 时必须继续放在 `axi_read_timeout_guard` 后面。
 - APB command path 与 AXI/XIP path 目前没有共享 pin 的仲裁、优先级、abort 或 reset-in-flight contract，因此 bridge 保持 standalone，不切换默认 `soc_memory_subsystem` 的 `axi_spi_flash` 路径。
+- 注意：上句指 standalone `qspi_axi_xip` bridge 本身仍未替换默认路径；SoC 当前已对既有 `axi_spi_flash` 单线 XIP 与 APB command path 接入 `qspi_shared_pin_arbiter`，该接入是有限 `SOC_INTEGRATED` slice，不是 quad/商用 QSPI 完成。
 
-### 4.2 共享 pin 仲裁 contract（standalone）
+### 4.2 共享 pin 仲裁 contract（SoC 单线接入）
 
 `rtl/perips/qspi_shared_pin_arbiter.v` 固定当前接入前的总线语义：
 
@@ -108,7 +109,7 @@ AXI R (addr, len):
 - owner 一旦 active 不可抢占；owner 释放后才允许切换，切换到空闲时 `SCLK=0`、`CS_N=1`、`MOSI=0`。
 - 总线空闲且两个 source 同时 claim 时，command 获得确定性优先级；不会在一个事务中间切换 source。
 - 两个 source 同时 claim 或未获 grant 的 source assert `*_active` 时，`conflict=1`；冲突不会覆写当前 owner 的 pins。
-- 该模块目前只完成 `BLOCK_VERIFIED (vendor-neutral)` contract gate，尚未接入 `mips_soc_impl`。SoC 接入时还必须把 command trigger/AXI `AR` acceptance 与 `*_req` 正确绑定，并定义 timeout、abort 和 WDT/reset-in-flight 行为。
+- `qspi_shared_pin_arbiter` 的独立 contract gate 已通过，并已由 `mips_soc_impl` 接入既有单线 `axi_spi_flash` 与 APB command path。SoC 接入同时把 command trigger/AXI `AR` acceptance、downstream `ARVALID` 与 `*_req` 正确绑定；SoC smoke 已证明 crossbar response accounting 不因 grant 等待而失步。abort、command timeout 和 WDT/reset-in-flight 行为仍未定义。
 
 ---
 
@@ -241,8 +242,9 @@ module qspi_ctrl #(
 - 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；vendor-neutral flash endpoint 和 standalone tri-state pad wrapper 只存在于仿真 gate，SoC 四线 mux/PHY、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
 - 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页、再次读回 `CA FE BA BE`，以及重新 WREN 后 `0x20` sector erase 读回全 `FF`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
 - 2026-08-02：`qspi_pad_wrapper` 通过 `make qspi-pad-wrapper-gate` 验证 x4 read `A5`、x4 write `A1B2C3D4` 的三态方向/nibble 映射和 CS 结束后的高阻。该 wrapper 仅是 vendor-neutral RTL pad boundary，未接 SoC top、pad ring、IO timing 或真实 PHY。
-- 2026-08-02：`qspi_axi_xip` 通过 `make qspi-axi-xip-gate` 验证 AXI 单拍读、两拍 burst、ID/RLAST/RRESP、内部 APB command sequencing、vendor-neutral flash 读回和 AXI write `SLVERR`；SPI pins 在每次事务后回到 idle。状态为 `BLOCK_VERIFIED (vendor-neutral)`。SoC memory subsystem 切换、APB-vs-XIP 仲裁、timeout/abort、quad XIP 和生产 boot 仍未完成。
-- 2026-08-02：`qspi_shared_pin_arbiter` 通过 `make qspi-shared-pin-arbiter-gate` 验证 memory owner 保持、command 非抢占、release 后切换、idle 时 command priority、冲突指示和 idle pin 安全值。状态为 `BLOCK_VERIFIED (vendor-neutral)`；未接入 `mips_soc_impl`，不代表 SoC 共享 pin 仲裁闭合。
+- 2026-08-02：`qspi_axi_xip` 通过 `make qspi-axi-xip-gate` 验证 AXI 单拍读、两拍 burst、ID/RLAST/RRESP、内部 APB command sequencing、vendor-neutral flash 读回和 AXI write `SLVERR`；SPI pins 在每次事务后回到 idle。该 bridge 仍为 `BLOCK_VERIFIED (vendor-neutral)` standalone 实现，未替换 SoC 默认 `axi_spi_flash`。
+- 2026-08-02：`qspi_shared_pin_arbiter` 通过 `make qspi-shared-pin-arbiter-gate` 验证 memory owner 保持、command 非抢占、release 后切换、idle 时 command priority、冲突指示和 idle pin 安全值；随后由 `mips_soc_impl` 接入既有单线 AXI XIP/APB command，`make soc-smoke`、QSPI integration gates 和 RTL frontend `3/3` 通过。状态升级为有限 `SOC_INTEGRATED` shared-pin slice；abort/reset-in-flight、quad PHY、商用 flash/boot 仍未完成。
+- 2026-08-02：SoC integration fix：grant 同时门控 fabric `ARREADY` 与 guard/model downstream `ARVALID`，并在 guard/model 已接受事务后保持 memory request；修复此前 SoC smoke 中 crossbar response FIFO 与 guard 状态失步的 5 ms timeout。该行为已由 `/tmp/soc_smoke_qspi_arbiter_final/sim.log` 的 `REGRESSION_TEST_SUCCESS` 复验。
 
 ## 版本记录
 
