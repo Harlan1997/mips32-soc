@@ -34,7 +34,8 @@ module soc_top (
 
     mips_soc #(
         .ENABLE_UART_PINS (1'b1),
-        .ENABLE_QSPI_QUAD (1'b1)
+        // Frozen RTL baseline: x1 SPI is the default; quad is opt-in per gate.
+        .ENABLE_QSPI_QUAD (1'b0)
     ) u_soc (
         .clk          (clk),
         .rst_n        (rst_n),
