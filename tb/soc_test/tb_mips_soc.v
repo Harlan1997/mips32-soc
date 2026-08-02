@@ -33,7 +33,11 @@ module tb_mips_soc;
     integer cp0_eret_count;
     
     wire [31:0] gpio_pins;
+`ifdef SOC_UART_EXTERNAL_RX_WAVEFORM
+    reg uart_rx = 1'b1;
+`else
     wire uart_rx = 1'b1;
+`endif
     wire uart_cts_n = 1'b0;
     wire uart_dsr_n = 1'b0;
     wire uart_dcd_n = 1'b0;
@@ -153,6 +157,37 @@ module tb_mips_soc;
             $display("Time=%0t PC=%h", $time, legacy_trace_pc);
         end
     end
+
+`ifdef SOC_UART_EXTERNAL_RX_WAVEFORM
+    // Wait until firmware enables RX with loopback disabled, then inject one
+    // asynchronous 8N1 frame at the DUT's divisor=1 (16 clocks/bit) rate.
+    task automatic external_uart_bit(input bit value);
+    begin
+        uart_rx = value;
+        repeat (16) @(posedge clk);
+    end
+    endtask
+
+    task automatic external_uart_frame(input [7:0] value);
+        integer b;
+    begin
+        external_uart_bit(1'b0);
+        for (b = 0; b < 8; b = b + 1)
+            external_uart_bit(value[b]);
+        external_uart_bit(1'b1);
+        external_uart_bit(1'b1);
+    end
+    endtask
+
+    initial begin
+        wait (rst_n === 1'b1);
+        wait (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.ier_r[0] === 1'b1 &&
+              u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.mcr_r[4] === 1'b0);
+        repeat (32) @(posedge clk);
+        $display("tb_mips_soc: injecting external UART RX frame 0x5A");
+        external_uart_frame(8'h5A);
+    end
+`endif
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
