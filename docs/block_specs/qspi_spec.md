@@ -1,6 +1,6 @@
-# QSPI Flash 控制器 微架构规格 (v0)
+# QSPI Flash 控制器 微架构规格 (v0.1)
 
-> 状态：v0 草案。作为 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线。当前 SPI 控制器只支持 XIP 单线 read (0x03)，写返回 SLVERR，无擦除/编程/QUAD/DMA。新控制器目标是**通用 QSPI Flash controller (SPI/DSPI/QSPI)** + XIP + 擦除/编程 + DMA。
+> 状态：v0.1，RTL 前端行为契约。它仍是 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线；当前可验证 slice 不是商用 QSPI controller。默认兼容路径仍为单线 XIP，`soc_top` 可选启用 vendor-neutral 四线 pad mux，但真实 PHY、器件时序、板级模型和 production boot 均未签收。
 > 当前 RTL 前端交付已增加 `qspi_axi_xip` standalone bridge：它通过 APB sequencer 驱动 `qspi_cmd_behavioral`，完成 x1 `0x03` 读和 AXI read-only 返回。该 bridge 已达到 `BLOCK_VERIFIED (vendor-neutral)`，但尚未接入 `soc_memory_subsystem`，不能替代产品 QSPI controller 或商用 flash/PHY。
 
 ---
@@ -53,11 +53,12 @@ XIP 内部固定用 `LUT[0]` (默认 QSPI Fast Read Quad I/O 0xEB) 或软件配�
 | Offset | 名称 | RW | 说明 |
 |:-:|---|:-:|---|
 | 0x000 | CTRL       | RW | 使能、模式、CS 自动/手动、reset |
-| 0x004 | STATUS     | RO | busy/tx_full/rx_empty/error |
+| 0x004 | STATUS     | RO | bit0 busy, bit1 tx_full, bit2 rx_empty, bit3 done/IRQ pending, bit4 error, bit5 timeout, bit6 aborted |
 | 0x008 | CLK_DIV    | RW | SPI clk = APB clk / (2 × (CLK_DIV+1)) |
 | 0x00C | CS_CTRL    | RW | CS 手动 assert; ss select |
 | 0x010 | IRQ_EN     | RW | 完成中断使能 |
-| 0x014 | IRQ_STATUS | W1C | 完成 pending |
+| 0x014 | IRQ_STATUS | RW/W1C | bit0 done, bit1 timeout, bit2 aborted；对应位 W1C |
+| 0x018 | TIMEOUT    | RW | command reference-clock budget; 0 disables command timeout |
 | 0x020–0x040 | LUT[0..7] | RW | 8 × 32-bit LUT 描述 |
 | 0x044 | XIP_LUT_INDEX | RW | XIP 用哪条 LUT (默认 0) |
 | 0x100 | CMD_TRIGGER | W | 写触发命令：{lut_idx[2:0], addr[24-bit or 32-bit low], data_len[16-bit]} |
@@ -97,9 +98,10 @@ AXI R (addr, len):
 - 固定使用 LUT0=`0x03 + 24-bit address + 4-byte x1 read`，每个 beat 地址递增 4 字节。
 - 轮询 command status，读取四个 RX FIFO byte 后组成 `RDATA`；command error 返回 `SLVERR`。
 - AXI write address/data handshake 完成后返回 `BVALID/SLVERR`，不对 flash 发起写命令。
-- 该实现没有 continuous-read、quad XIP、内部 timeout、DMA 或多片 CS 支持；计划集成 SoC 时必须继续放在 `axi_read_timeout_guard` 后面。
-- APB command path 与 AXI/XIP path 目前没有共享 pin 的仲裁、优先级、abort 或 reset-in-flight contract，因此 bridge 保持 standalone，不切换默认 `soc_memory_subsystem` 的 `axi_spi_flash` 路径。
-- 注意：上句指 standalone `qspi_axi_xip` bridge 本身仍未替换默认路径；SoC 当前已对既有 `axi_spi_flash` 单线 XIP 与 APB command path 接入 `qspi_shared_pin_arbiter`，该接入是有限 `SOC_INTEGRATED` slice，不是 quad/商用 QSPI 完成。
+- 该实现没有 continuous-read、quad XIP、DMA 或多片 CS 支持；command timeout 已由 reference-clock budget 提供，计划集成 SoC 时仍必须继续放在 `axi_read_timeout_guard` 后面。
+- standalone bridge 的 command timeout/error 会转换为 AXI `SLVERR`；AXI bridge 仍保持单 outstanding，并由 `COMMAND_TIMEOUT_CYCLES` 参数提供 bounded command budget。
+- APB command path 与既有单线 AXI/XIP path 已有共享 pin 的 owner/priority/abort/timeout/reset-in-flight contract；standalone bridge 仍不切换默认 `soc_memory_subsystem` 的 `axi_spi_flash` 路径。
+- 注意：上句指 standalone `qspi_axi_xip` bridge 本身仍未替换默认路径；SoC 当前已对既有 `axi_spi_flash` 单线 XIP 与 APB command path 接入 `qspi_shared_pin_arbiter`，并由 `qspi_soc_pad_mux` 提供可选 `qspi_io[3:0]` 四线三态边界。该接入是有限 `SOC_INTEGRATED`/vendor-neutral slice，不是 quad PHY 或商用 QSPI 完成。
 
 ### 4.2 共享 pin 仲裁 contract（SoC 单线接入）
 
@@ -109,7 +111,7 @@ AXI R (addr, len):
 - owner 一旦 active 不可抢占；owner 释放后才允许切换，切换到空闲时 `SCLK=0`、`CS_N=1`、`MOSI=0`。
 - 总线空闲且两个 source 同时 claim 时，command 获得确定性优先级；不会在一个事务中间切换 source。
 - 两个 source 同时 claim 或未获 grant 的 source assert `*_active` 时，`conflict=1`；冲突不会覆写当前 owner 的 pins。
-- `qspi_shared_pin_arbiter` 的独立 contract gate 已通过，并已由 `mips_soc_impl` 接入既有单线 `axi_spi_flash` 与 APB command path。SoC 接入同时把 command trigger/AXI `AR` acceptance、downstream `ARVALID` 与 `*_req` 正确绑定；SoC smoke 已证明 crossbar response accounting 不因 grant 等待而失步。abort、command timeout 和 WDT/reset-in-flight 行为仍未定义。
+- `qspi_shared_pin_arbiter` 的独立 contract gate 已通过，并已由 `mips_soc_impl` 接入既有单线 `axi_spi_flash` 与 APB command path。SoC 接入同时把 command trigger/AXI `AR` acceptance、downstream `ARVALID` 与 `*_req` 正确绑定；SoC smoke 已证明 crossbar response accounting 不因 grant 等待而失步。command timeout 在 command reference clock 上计数，超时回到 IDLE、置 `STATUS.timeout/error`、产生 done IRQ 并释放 pins；CTRL[2] 或清 enable 终止当前事务并置 `STATUS.aborted/error`；IRQ_STATUS bit0/1/2 分别清 done/timeout/aborted。任一外部/WDT reset 优先清 FSM/FIFO/事件并将 pins 回到 `SCLK=0/CS_N=1/MOSI=0`，不保留半个 command。
 
 ---
 
@@ -145,8 +147,10 @@ APB:
 
 ## 7. Reset / Flush
 
-- Reset：CTRL.enable=0, FIFOs 空, FSM=IDLE, CS deasserted, IRQ_STATUS 清
-- CTRL.reset (软) 位：软件写 1 → 清 FIFO + FSM
+- Reset：CTRL.enable=0, FIFOs 空, FSM=IDLE, CS deasserted, IRQ_STATUS 清；reset/WDT 期间正在进行的 command 被丢弃，不能产生迟到 IRQ。
+- CTRL.reset (软) 位：软件写 1 → 清 FIFO + FSM + timeout/abort/error/done 状态。
+- CTRL[2] abort 或清 CTRL.enable：同步终止当前 command，保留 FIFO 内容，置 aborted/error/done，软件可通过 IRQ_STATUS W1C 清事件。
+- `TIMEOUT=0` 仅用于受控仿真/调试来禁用 command budget；产品配置必须使用非零值。
 - XIP AXI 请求 in-flight 时 reset：AXI 侧返回 SLVERR + RLAST；不能挂
 
 ---
@@ -206,7 +210,8 @@ module qspi_ctrl #(
 - CS 手动/自动
 - CS 多片 (ss_n[3:0]) 切换
 - Divisor 边界 (最小 clk, 最大 clk)
-- Reset 中断进行中的事务 → 恢复
+- Reset/WDT 中断进行中的事务 → pins 安全 idle、状态清零、下一事务可恢复
+- Command timeout、CTRL abort、清 enable → bounded completion、IRQ/error 事件和 W1C
 - SPI 错误注入 (模型强制返回 dummy) → SLVERR
 
 **SoC 级**：
@@ -239,13 +244,16 @@ module qspi_ctrl #(
 - 2026-08-02：`rtl/perips/qspi_cmd_behavioral.v` + `tb/unit/flash/tb_qspi_cmd_behavioral.sv` 通过 `make qspi-cmd-behavioral-gate`。证据覆盖 APB LUT/command API、24/32-bit address serialization、RX/TX FIFO、status read、x4 data lane、CS/SCLK、busy error、IRQ W1C 和 soft reset。
 - 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，尚未成为 `soc_top` 的 AXI XIP controller，也未连接商用 flash model、quad pad/PHY 或 erase/program boot path；不能标记为商用 ASIC QSPI 完成。
 - 2026-08-02：`qspi_apb_integration` 接入 `soc_peripheral_subsystem`；保留 `0x4000_5000` status map，在 `0x4000_5020..0x4000_519f` 暴露 command window，并由 SoC mux 在 command CS active 时接管单线 SPI pins。`qspi-status-integration`、SoC smoke 和 RTL frontend `3/3` 通过。
-- 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；vendor-neutral flash endpoint 和 standalone tri-state pad wrapper 只存在于仿真 gate，SoC 四线 mux/PHY、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
+- 该集成证据仅为有限 `SOC_INTEGRATED` APB/x1 command slice；`qspi_soc_pad_mux` 已接入 `mips_soc_impl`，并由 `soc_top` 的 `ENABLE_QSPI_QUAD=1` 暴露 `qspi_io[3:0]`。四线 mux 的 lane mapping/高阻 gate 已通过，但 SoC 四线命令读写、PHY、电气时序、AXI XIP、商用 flash model、erase/program production path 和 boot handoff 仍未完成。
 - 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页、再次读回 `CA FE BA BE`，以及重新 WREN 后 `0x20` sector erase 读回全 `FF`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
 - 2026-08-02：`qspi_pad_wrapper` 通过 `make qspi-pad-wrapper-gate` 验证 x4 read `A5`、x4 write `A1B2C3D4` 的三态方向/nibble 映射和 CS 结束后的高阻。该 wrapper 仅是 vendor-neutral RTL pad boundary，未接 SoC top、pad ring、IO timing 或真实 PHY。
 - 2026-08-02：`qspi_axi_xip` 通过 `make qspi-axi-xip-gate` 验证 AXI 单拍读、两拍 burst、ID/RLAST/RRESP、内部 APB command sequencing、vendor-neutral flash 读回和 AXI write `SLVERR`；SPI pins 在每次事务后回到 idle。该 bridge 仍为 `BLOCK_VERIFIED (vendor-neutral)` standalone 实现，未替换 SoC 默认 `axi_spi_flash`。
 - 2026-08-02：`qspi_shared_pin_arbiter` 通过 `make qspi-shared-pin-arbiter-gate` 验证 memory owner 保持、command 非抢占、release 后切换、idle 时 command priority、冲突指示和 idle pin 安全值；随后由 `mips_soc_impl` 接入既有单线 AXI XIP/APB command，`make soc-smoke`、QSPI integration gates 和 RTL frontend `3/3` 通过。状态升级为有限 `SOC_INTEGRATED` shared-pin slice；abort/reset-in-flight、quad PHY、商用 flash/boot 仍未完成。
 - 2026-08-02：SoC integration fix：grant 同时门控 fabric `ARREADY` 与 guard/model downstream `ARVALID`，并在 guard/model 已接受事务后保持 memory request；修复此前 SoC smoke 中 crossbar response FIFO 与 guard 状态失步的 5 ms timeout。该行为已由 `/tmp/soc_smoke_qspi_arbiter_final/sim.log` 的 `REGRESSION_TEST_SUCCESS` 复验。
+- 2026-08-03：`qspi_cmd_behavioral` 增加 `TIMEOUT`、CTRL[2] abort、清 enable abort、timeout/abort W1C 和 reset-in-flight 安全语义；`tb_qspi_cmd_behavioral` 覆盖 timeout、abort、外部 reset，`qspi-status-integration` 覆盖 AXI/APB 集成 timeout 及 WDT 中断 command。`qspi-cmd-behavioral-gate`、`qspi-status-integration-gate`、相关 QSPI gates、`rtl-frontend-compile` 和 `soc-smoke` 均通过；证据仍为 RTL 前端功能，不代表真实 flash 静默检测、quad PHY 或 production boot。
+- 2026-08-03：`qspi_soc_pad_mux` 接入 `mips_soc_impl`，`mips_soc/soc_top` 新增可选 `ENABLE_QSPI_QUAD` 与 `qspi_io[3:0]`，默认配置仍保持 legacy x1。`make qspi-soc-pad-mux-gate` 覆盖 command 四 lane 输出、memory lane-0 兼容、command 优先级、读阶段高阻和 idle 安全值；`rtl-frontend-compile`、QSPI 既有 gates 与 `soc-smoke` 通过。状态仅提升 SoC pad boundary 的 RTL 证据，不提升为真实 PHY、商用 flash 或 production boot。
 
 ## 版本记录
 
 - v0 (2026-07-26)：初版规格，8-LUT + XIP + 命令 API + 4 CS + 32-word TX/RX FIFO + 100MHz QSPI x4。等待 Phase D 启动评审。
+- v0.1 (2026-08-03)：冻结 RTL 前端 timeout/abort/reset-in-flight 行为、W1C 位和可选 SoC 四线 pad boundary；商用 PHY、flash/板级模型、四线命令 SoC gate、擦写量产路径仍开放。

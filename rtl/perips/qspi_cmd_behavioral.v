@@ -10,7 +10,8 @@ module qspi_cmd_behavioral #(
     parameter TX_FIFO_DEPTH = 32,
     parameter RX_FIFO_DEPTH = 32,
     parameter LUT_SLOTS     = 8,
-    parameter CS_COUNT      = 4
+    parameter CS_COUNT      = 4,
+    parameter integer COMMAND_TIMEOUT_CYCLES = 4096
 ) (
     input  wire                    clk,
     input  wire                    rst_n,
@@ -39,6 +40,7 @@ module qspi_cmd_behavioral #(
     localparam [11:0] A_CS_CTRL    = 12'h00c;
     localparam [11:0] A_IRQ_EN     = 12'h010;
     localparam [11:0] A_IRQ_STATUS = 12'h014;
+    localparam [11:0] A_TIMEOUT    = 12'h018;
     localparam [11:0] A_LUT_BASE   = 12'h020;
     localparam [11:0] A_XIP_INDEX  = 12'h044;
     localparam [11:0] A_CMD_TRIG   = 12'h100;
@@ -63,11 +65,14 @@ module qspi_cmd_behavioral #(
     wire tx_push = wr && (paddr == A_TX_DATA);
     wire rx_pop  = rd && (paddr == A_RX_DATA);
     wire soft_reset = wr && (paddr == A_CTRL) && pwdata[1];
+    // CTRL[2] is a write-one command abort pulse and is not retained.
+    wire abort_cmd = wr && (paddr == A_CTRL) && pwdata[2];
 
     reg [31:0] ctrl_r;
     reg [15:0] clk_div_r;
     reg [31:0] cs_ctrl_r;
     reg [31:0] irq_en_r;
+    reg [31:0] timeout_limit_r;
     reg [31:0] cmd_addr_r;
     reg [15:0] cmd_len_r;
     reg [2:0]  xip_index_r;
@@ -99,8 +104,11 @@ module qspi_cmd_behavioral #(
     reg [2:0]  tx_bytes_left_r;
     reg spi_sclk_r;
     reg [15:0] div_count_r;
+    reg [31:0] timeout_count_r;
     reg irq_pending_r;
     reg error_r;
+    reg timeout_r;
+    reg aborted_r;
 
     wire [1:0] addr_type = active_lut_r[9:8];
     wire [1:0] mode_type = active_lut_r[11:10];
@@ -137,6 +145,11 @@ module qspi_cmd_behavioral #(
     wire trigger_write = wr && (paddr == A_CMD_TRIG);
     wire trigger_busy = trigger_write && (state != ST_IDLE);
     wire trigger_disabled = trigger_write && !ctrl_r[0];
+    wire disable_abort = wr && (paddr == A_CTRL) && !pwdata[0] &&
+                         (state != ST_IDLE);
+    wire timeout_expired = (state != ST_IDLE) &&
+                           (timeout_limit_r != 0) &&
+                           (timeout_count_r >= (timeout_limit_r - 1'b1));
 
     assign pready = 1'b1;
     assign pslverr = 1'b0;
@@ -179,6 +192,7 @@ module qspi_cmd_behavioral #(
             clk_div_r <= 16'h0;
             cs_ctrl_r <= 32'h0;
             irq_en_r <= 32'h0;
+            timeout_limit_r <= COMMAND_TIMEOUT_CYCLES;
             cmd_addr_r <= 32'h0;
             cmd_len_r <= 16'h0;
             xip_index_r <= 3'h0;
@@ -186,10 +200,11 @@ module qspi_cmd_behavioral #(
                 lut_r[i_lut] <= 32'h0;
         end else if (wr) begin
             case (paddr)
-                A_CTRL:       ctrl_r <= pwdata;
+                A_CTRL:       ctrl_r <= {pwdata[31:3], 1'b0, pwdata[1:0]};
                 A_CLK_DIV:    clk_div_r <= pwdata[15:0];
                 A_CS_CTRL:    cs_ctrl_r <= pwdata;
                 A_IRQ_EN:     irq_en_r <= pwdata;
+                A_TIMEOUT:    timeout_limit_r <= pwdata;
                 A_CMD_ADDR:   cmd_addr_r <= pwdata;
                 A_CMD_LEN:    cmd_len_r <= pwdata[15:0];
                 A_XIP_INDEX:  xip_index_r <= pwdata[2:0];
@@ -292,8 +307,11 @@ module qspi_cmd_behavioral #(
             tx_bytes_left_r <= 0;
             spi_sclk_r <= 0;
             div_count_r <= 0;
+            timeout_count_r <= 0;
             irq_pending_r <= 0;
             error_r <= 0;
+            timeout_r <= 0;
+            aborted_r <= 0;
             tx_pop_pulse <= 0;
             rx_push_pulse <= 0;
             rx_push_data <= 0;
@@ -301,15 +319,44 @@ module qspi_cmd_behavioral #(
             tx_pop_pulse <= 1'b0;
             rx_push_pulse <= 1'b0;
 
-            if (wr && paddr == A_IRQ_STATUS && pwdata[0])
-                irq_pending_r <= 1'b0;
+            if (wr && paddr == A_IRQ_STATUS) begin
+                if (pwdata[0]) irq_pending_r <= 1'b0;
+                if (pwdata[1]) timeout_r <= 1'b0;
+                if (pwdata[2]) aborted_r <= 1'b0;
+                if (pwdata[1] || pwdata[2]) error_r <= 1'b0;
+            end
 
             if (soft_reset) begin
                 state <= ST_IDLE;
                 spi_sclk_r <= 1'b0;
                 div_count_r <= 0;
+                timeout_count_r <= 0;
                 irq_pending_r <= 1'b0;
                 error_r <= 1'b0;
+                timeout_r <= 1'b0;
+                aborted_r <= 1'b0;
+                tx_word_r <= 0;
+                tx_bytes_left_r <= 0;
+            end else if (abort_cmd || disable_abort) begin
+                // Abort atomically releases CS/SCLK and records a completion
+                // event; no late command response is generated.
+                state <= ST_IDLE;
+                spi_sclk_r <= 1'b0;
+                div_count_r <= 0;
+                timeout_count_r <= 0;
+                error_r <= 1'b1;
+                aborted_r <= 1'b1;
+                irq_pending_r <= 1'b1;
+                tx_word_r <= 0;
+                tx_bytes_left_r <= 0;
+            end else if (timeout_expired) begin
+                state <= ST_IDLE;
+                spi_sclk_r <= 1'b0;
+                div_count_r <= 0;
+                timeout_count_r <= 0;
+                error_r <= 1'b1;
+                timeout_r <= 1'b1;
+                irq_pending_r <= 1'b1;
                 tx_word_r <= 0;
                 tx_bytes_left_r <= 0;
             end else if (trigger_busy || trigger_disabled) begin
@@ -317,6 +364,7 @@ module qspi_cmd_behavioral #(
             end else if (state == ST_IDLE) begin
                 spi_sclk_r <= 1'b0;
                 div_count_r <= 0;
+                timeout_count_r <= 0;
                 if (trigger_write && ctrl_r[0]) begin
                     active_lut_r <= lut_r[pwdata[2:0]];
                     active_addr_r <= cmd_addr_r;
@@ -330,8 +378,12 @@ module qspi_cmd_behavioral #(
             end else if (!ctrl_r[0]) begin
                 state <= ST_IDLE;
                 spi_sclk_r <= 1'b0;
+                timeout_count_r <= 0;
                 error_r <= 1'b1;
+                aborted_r <= 1'b1;
+                irq_pending_r <= 1'b1;
             end else if (spi_tick) begin
+                timeout_count_r <= timeout_count_r + 1'b1;
                 div_count_r <= 0;
                 if (!spi_sclk_r) begin
                     spi_sclk_r <= 1'b1;
@@ -410,6 +462,7 @@ module qspi_cmd_behavioral #(
                     end
                 end
             end else if (div_count_r < clk_div_r) begin
+                timeout_count_r <= timeout_count_r + 1'b1;
                 div_count_r <= div_count_r + 1'b1;
             end
         end
@@ -420,11 +473,14 @@ module qspi_cmd_behavioral #(
         if (rd) begin
             case (paddr)
                 A_CTRL:       prdata = ctrl_r;
-                A_STATUS:     prdata = {27'h0, error_r, irq_pending_r, rx_empty, tx_full, (state != ST_IDLE)};
+                A_STATUS:     prdata = {25'h0, aborted_r, timeout_r, error_r,
+                                         irq_pending_r, rx_empty, tx_full,
+                                         (state != ST_IDLE)};
                 A_CLK_DIV:    prdata = {16'h0, clk_div_r};
                 A_CS_CTRL:    prdata = cs_ctrl_r;
                 A_IRQ_EN:     prdata = irq_en_r;
-                A_IRQ_STATUS: prdata = {31'h0, irq_pending_r};
+                A_IRQ_STATUS: prdata = {29'h0, aborted_r, timeout_r, irq_pending_r};
+                A_TIMEOUT:    prdata = timeout_limit_r;
                 A_XIP_INDEX:  prdata = {29'h0, xip_index_r};
                 A_CMD_ADDR:   prdata = cmd_addr_r;
                 A_CMD_LEN:    prdata = {16'h0, cmd_len_r};

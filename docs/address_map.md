@@ -38,7 +38,7 @@ return AXI `DECERR`.
 | GPIO | `0x2000` | board control |
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
-| QSPI/XIP status | `0x5000` | version/status/last-error observability plus APB command/FIFO window; existing single-lane AXI XIP and APB command share pins through the SoC arbiter, while standalone quad/production paths remain open |
+| QSPI/XIP status | `0x5000` | version/status/last-error observability plus APB command/FIFO window; existing single-lane AXI XIP and APB command share pins through the SoC arbiter, with optional vendor-neutral `qspi_io[3:0]` pad mux at the top-level; quad PHY/production paths remain open |
 | DDR controller | `0x6000` | frozen init/calibration/refresh/error contract; product block not yet integrated |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
@@ -51,6 +51,15 @@ return AXI `DECERR`.
 | `0x004` | `STATUS` | RO | bit 0: captured XIP timeout; bit 1: controller present |
 | `0x008` | `LAST_ERROR` | RO | `[31:16]` class, `[15:0]` code; `0x0001_0001` is AXI XIP timeout |
 | `0x00C` | `CONTROL` | WO | bit 0 W1C clears captured timeout and last error |
+
+The command/FIFO window is exposed at host offset `0x020 + command_offset`
+(`0x4000_5020..0x4000_519f`). In that window, `STATUS` bit 0/1/2/3/4/5/6
+are respectively busy, TX full, RX empty, done/IRQ pending, error, command
+timeout and command aborted. `IRQ_STATUS` bits 0/1/2 are W1C for done/timeout/
+aborted; `TIMEOUT` at command offset `0x018` is the reference-clock budget
+(zero disables it for controlled debug only). CTRL bit 2 is a write-one abort;
+clearing CTRL.enable also aborts an active command. External or WDT reset drops
+an in-flight command and restores `SCLK=0`, `CS_N=1`, `MOSI=0`.
 
 ### DDR Controller Registers (`0x4000_6000`)
 

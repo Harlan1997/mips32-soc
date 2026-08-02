@@ -97,7 +97,7 @@ module tb_qspi_status_integration;
     wire [31:0] gpio_pins;
     wire uart_tx, uart_rts_n, uart_dtr_n, cpu_int, wdt_reset;
     reg uart_rx = 1, uart_cts_n = 0, uart_dsr_n = 0, uart_dcd_n = 0, uart_ri_n = 1;
-    wire spi_sclk, spi_cs_n, spi_mosi;
+    wire spi_sclk, spi_cs_n, spi_mosi, qspi_active, qspi_cmd_req;
     reg spi_miso = 1'b0;
     integer qspi_sclk_edges = 0;
     integer qspi_cmd_bits = 0;
@@ -124,7 +124,8 @@ module tb_qspi_status_integration;
         .wdt_reset(wdt_reset), .qspi_controller_present(1'b1),
         .qspi_timeout_sticky(timeout_sticky),
         .spi_miso(spi_miso), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
-        .spi_mosi(spi_mosi), .qspi_active(),
+        .spi_mosi(spi_mosi), .qspi_active(qspi_active),
+        .qspi_cmd_req(qspi_cmd_req),
         .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen), .s_awsize(s_awsize),
         .s_awburst(s_awburst), .s_awlock(s_awlock), .s_awcache(s_awcache),
         .s_awprot(s_awprot), .s_awvalid(s_awvalid), .s_awready(s_awready),
@@ -290,6 +291,65 @@ module tb_qspi_status_integration;
             $display("FAIL: QSPI command IRQ W1C got=%h expected=00000004", rd_value);
             errors = errors + 1;
         end
+
+        // The integrated command window must bound a stalled command and
+        // expose the timeout event without leaving the shared pins asserted.
+        axi_write(32'h4000_5028, 32'h0000_FFFF); // CLK_DIV
+        axi_write(32'h4000_5038, 32'd4);         // command timeout
+        axi_write(32'h4000_5040, 32'h0000_0005); // status-read opcode
+        axi_write(32'h4000_5128, 32'd1);         // one RX byte
+        axi_write(32'h4000_5120, 32'h0);         // trigger LUT0
+        qspi_guard = 0;
+        while (qspi_active && qspi_guard < 40) begin
+            @(posedge clk);
+            qspi_guard = qspi_guard + 1;
+        end
+        axi_read_capture(32'h4000_5024, rd_value);
+        if (rd_value[0] || !rd_value[3] || !rd_value[4] ||
+            !rd_value[5] || rd_value[6] || !spi_cs_n || spi_sclk) begin
+            $display("FAIL: integrated QSPI timeout status=%h active=%b cs_n=%b sclk=%b",
+                     rd_value, qspi_active, spi_cs_n, spi_sclk);
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_5034, 32'h7);         // W1C done/timeout/abort
+
+        // Arm the always-on watchdog while a command owns the pins.  The WDT
+        // reset must cancel the command at the peripheral reset boundary and
+        // leave the sticky WDT cause readable after restart.
+        axi_write(32'h4000_5028, 32'h0000_FFFF);
+        axi_write(32'h4000_5038, 32'd1000);
+        axi_write(32'h4000_5020, 32'h1);
+        axi_write(32'h4000_5128, 32'd1);
+        axi_write(32'h4000_5120, 32'h0);
+        qspi_guard = 0;
+        while (!qspi_active && qspi_guard < 20) begin
+            @(posedge clk);
+            qspi_guard = qspi_guard + 1;
+        end
+        if (!qspi_active) begin
+            $display("FAIL: QSPI command was not active before WDT reset");
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_7004, 32'd5);         // WDT load
+        axi_write(32'h4000_7000, 32'h1);         // arm
+        qspi_guard = 0;
+        while (!wdt_reset && qspi_guard < 30) begin
+            @(posedge clk);
+            qspi_guard = qspi_guard + 1;
+        end
+        if (!wdt_reset || qspi_active || !spi_cs_n || spi_sclk) begin
+            $display("FAIL: WDT reset did not cancel QSPI command reset=%b active=%b cs_n=%b sclk=%b",
+                     wdt_reset, qspi_active, spi_cs_n, spi_sclk);
+            errors = errors + 1;
+        end
+        repeat (3) @(posedge clk);
+        axi_read_capture(32'h4000_5024, rd_value);
+        if (rd_value[0] || rd_value[3] || rd_value[4] ||
+            rd_value[5] || rd_value[6]) begin
+            $display("FAIL: QSPI command status was not reset after WDT: %h", rd_value);
+            errors = errors + 1;
+        end
+        axi_read(32'h4000_7010, 32'h0000_0001); // sticky WDT expiry
 
         if (errors == 0)
             $display("REGRESSION_TEST_SUCCESS qspi_status_integration");

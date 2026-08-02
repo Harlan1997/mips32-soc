@@ -6,6 +6,7 @@
 module mips_soc #(
     parameter ENABLE_UART_PINS = 1'b0,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
+    parameter ENABLE_QSPI_QUAD = 1'b0,
     // Verification-only APB error source. Keep disabled for product builds;
     // directed CacheErr recovery tests opt in explicitly at the top level.
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0
@@ -28,6 +29,7 @@ module mips_soc #(
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    inout  wire [3:0]  qspi_io,
 
     input  wire        tck,
     input  wire        tms,
@@ -52,7 +54,8 @@ module mips_soc #(
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
         .ENABLE_FLASH_IMAGE_MODEL  (1'b0),
         .ENABLE_UART_PINS          (ENABLE_UART_PINS),
-        .SPI_READ_TIMEOUT_CYCLES   (SPI_READ_TIMEOUT_CYCLES)
+        .SPI_READ_TIMEOUT_CYCLES   (SPI_READ_TIMEOUT_CYCLES),
+        .ENABLE_QSPI_QUAD          (ENABLE_QSPI_QUAD)
     ) u_impl (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -72,6 +75,7 @@ module mips_soc #(
         .spi_cs_n     (spi_cs_n),
         .spi_mosi     (spi_mosi),
         .spi_miso     (spi_miso),
+        .qspi_io      (qspi_io),
 
         .tck          (tck),
         .tms          (tms),

@@ -7,7 +7,8 @@
 
 module soc_peripheral_subsystem #(
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
-    parameter ENABLE_QSPI_SHARED_ARB = 1'b0
+    parameter ENABLE_QSPI_SHARED_ARB = 1'b0,
+    parameter ENABLE_QSPI_QUAD = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -33,6 +34,9 @@ module soc_peripheral_subsystem #(
     output wire        spi_sclk,
     output wire        spi_cs_n,
     output wire        spi_mosi,
+    input  wire [3:0]  qspi_io_i,
+    output wire [3:0]  qspi_io_o,
+    output wire [3:0]  qspi_io_oe,
     output wire        qspi_active,
     output wire        qspi_cmd_req,
 
@@ -329,7 +333,8 @@ module soc_peripheral_subsystem #(
 
     wire qspi_irq;
     qspi_apb_integration #(
-        .ENABLE_SHARED_ARB (ENABLE_QSPI_SHARED_ARB)
+        .ENABLE_SHARED_ARB (ENABLE_QSPI_SHARED_ARB),
+        .ENABLE_QUAD_IO    (ENABLE_QSPI_QUAD)
     ) u_qspi_apb_integration (
         .clk                  (clk),
         .rst_n                (periph_rst_n),
@@ -348,6 +353,9 @@ module soc_peripheral_subsystem #(
         .spi_cs_n             (spi_cs_n),
         .spi_mosi             (spi_mosi),
         .spi_miso             (spi_miso),
+        .qspi_io_i            (qspi_io_i),
+        .qspi_io_o            (qspi_io_o),
+        .qspi_io_oe           (qspi_io_oe),
         .shared_grant         (qspi_cmd_grant),
         .active               (qspi_active),
         .request              (qspi_cmd_req),
