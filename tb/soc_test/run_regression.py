@@ -58,6 +58,7 @@ def vcs_file_list():
         "rtl/perips/qspi_apb_integration.v",
         "rtl/perips/qspi_shared_pin_arbiter.v",
         "rtl/perips/qspi_soc_pad_mux.v",
+        "rtl/perips/qspi_axi_xip.v",
         "rtl/perips/axi_spi_flash.v",
         "rtl/perips/axi_flash_image_model.v",
         "rtl/perips/axi_sram.v",

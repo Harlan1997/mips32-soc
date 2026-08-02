@@ -449,6 +449,10 @@ module mips_soc_impl #(
     wire        qspi_shared_pin_conflict;
     wire [3:0]  qspi_cmd_io_o;
     wire [3:0]  qspi_cmd_io_oe;
+    wire [3:0]  mem_qspi_io_o;
+    wire [3:0]  mem_qspi_io_oe;
+    wire [3:0]  arb_qspi_io_o;
+    wire [3:0]  arb_qspi_io_oe;
     wire        arb_spi_sclk;
     wire        arb_spi_cs_n;
     wire        arb_spi_mosi;
@@ -492,11 +496,13 @@ module mips_soc_impl #(
         .mem_sclk   (mem_spi_sclk),
         .mem_cs_n   (mem_spi_cs_n),
         .mem_mosi   (mem_spi_mosi),
+        .mem_io_o   (mem_qspi_io_o),
+        .mem_io_oe  (mem_qspi_io_oe),
         .spi_sclk   (spi_sclk),
         .spi_cs_n   (spi_cs_n),
         .spi_mosi   (spi_mosi),
-        .qspi_io_o  (),
-        .qspi_io_oe (),
+        .qspi_io_o  (arb_qspi_io_o),
+        .qspi_io_oe (arb_qspi_io_oe),
         .qspi_io    (qspi_io)
     );
 
@@ -927,7 +933,8 @@ module mips_soc_impl #(
         .ENABLE_FLASH_IMAGE_MODEL (ENABLE_FLASH_IMAGE_MODEL),
         .SRAM_DEPTH_WORDS         (32768),
         .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES),
-        .ENABLE_SHARED_ARB        (1'b1)
+        .ENABLE_SHARED_ARB        (1'b1),
+        .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD)
     ) u_memory_subsystem (
         .clk          (clk),
         .rst_n        (soc_rst_n),
@@ -935,6 +942,9 @@ module mips_soc_impl #(
         .spi_cs_n     (mem_spi_cs_n),
         .spi_mosi     (mem_spi_mosi),
         .spi_miso     (spi_miso),
+        .qspi_io_i    (qspi_io),
+        .qspi_io_o    (mem_qspi_io_o),
+        .qspi_io_oe   (mem_qspi_io_oe),
         .spi_arb_grant          (mem_spi_grant),
         .spi_req                (mem_spi_req),
         .qspi_timeout_sticky     (qspi_timeout_sticky),

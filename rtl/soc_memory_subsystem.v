@@ -9,7 +9,8 @@ module soc_memory_subsystem #(
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
     parameter SRAM_DEPTH_WORDS = 32768,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
-    parameter ENABLE_SHARED_ARB = 1'b0
+    parameter ENABLE_SHARED_ARB = 1'b0,
+    parameter ENABLE_QSPI_QUAD = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -18,6 +19,9 @@ module soc_memory_subsystem #(
     output wire        spi_cs_n,
     output wire        spi_mosi,
     input  wire        spi_miso,
+    input  wire [3:0]  qspi_io_i,
+    output wire [3:0]  qspi_io_o,
+    output wire [3:0]  qspi_io_oe,
     input  wire        spi_arb_grant,
     output wire        spi_req,
 
@@ -358,6 +362,8 @@ module soc_memory_subsystem #(
         wire flash_model_arready;
         assign qspi_timeout_sticky     = 1'b0;
         assign qspi_controller_present = 1'b0;
+        assign qspi_io_o                = 4'h0;
+        assign qspi_io_oe               = 4'h0;
         assign s2_arready              = effective_spi_grant && flash_model_arready;
         assign spi_transaction_active  = !flash_model_arready;
         axi_flash_image_model u_axi_flash_image_model (
@@ -406,7 +412,133 @@ module soc_memory_subsystem #(
             .spi_mosi        (spi_mosi),
             .spi_miso        (spi_miso)
         );
+    end else if (ENABLE_QSPI_QUAD) begin : g_quad_xip_controller
+        wire [3:0]  flash_arid;
+        wire [31:0] flash_araddr;
+        wire [7:0]  flash_arlen;
+        wire [2:0]  flash_arsize;
+        wire [1:0]  flash_arburst;
+        wire [1:0]  flash_arlock;
+        wire [3:0]  flash_arcache;
+        wire [2:0]  flash_arprot;
+        wire        flash_arvalid;
+        wire        flash_arready;
+        wire        flash_guard_arready;
+        wire [3:0]  flash_rid;
+        wire [31:0] flash_rdata;
+        wire [1:0]  flash_rresp;
+        wire        flash_rlast;
+        wire        flash_rvalid;
+        wire        flash_rready;
+        wire        flash_timeout_sticky;
+        wire [3:0]  quad_io_o;
+        wire [3:0]  quad_io_oe;
+        tri  [3:0]  quad_io;
+
+        // Preserve the AXI-side timeout/error ABI while replacing only the
+        // pin-level controller with the vendor-neutral quad bridge.
+        assign qspi_timeout_sticky     = flash_timeout_sticky;
+        assign qspi_controller_present = 1'b1;
+        assign qspi_io_o                = quad_io_o;
+        assign qspi_io_oe               = quad_io_oe;
+        assign quad_io                  = qspi_io_i;
+
+        axi_read_timeout_guard #(
+            .TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES)
+        ) u_axi_read_timeout_guard_quad (
+            .clk             (clk),
+            .rst_n           (rst_n),
+            .s_arid          (s2_arid),
+            .s_araddr        (s2_araddr),
+            .s_arlen         (s2_arlen),
+            .s_arsize        (s2_arsize),
+            .s_arburst       (s2_arburst),
+            .s_arlock        (s2_arlock),
+            .s_arcache       (s2_arcache),
+            .s_arprot        (s2_arprot),
+            .s_arvalid       (s2_arvalid && effective_spi_grant),
+            .s_arready       (flash_guard_arready),
+            .s_rid           (s2_rid),
+            .s_rdata         (s2_rdata),
+            .s_rresp         (s2_rresp),
+            .s_rlast         (s2_rlast),
+            .s_rvalid        (s2_rvalid),
+            .s_rready        (s2_rready),
+            .m_arid          (flash_arid),
+            .m_araddr        (flash_araddr),
+            .m_arlen         (flash_arlen),
+            .m_arsize        (flash_arsize),
+            .m_arburst       (flash_arburst),
+            .m_arlock        (flash_arlock),
+            .m_arcache       (flash_arcache),
+            .m_arprot        (flash_arprot),
+            .m_arvalid       (flash_arvalid),
+            .m_arready       (flash_arready),
+            .m_rid           (flash_rid),
+            .m_rdata         (flash_rdata),
+            .m_rresp         (flash_rresp),
+            .m_rlast         (flash_rlast),
+            .m_rvalid        (flash_rvalid),
+            .m_rready        (flash_rready),
+            .timeout_sticky  (flash_timeout_sticky)
+        );
+
+        assign s2_arready = effective_spi_grant && flash_guard_arready;
+        assign spi_transaction_active = !flash_guard_arready;
+
+        qspi_axi_xip #(
+            .COMMAND_TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES),
+            .ENABLE_QUAD_IO         (1'b1)
+        ) u_qspi_axi_xip (
+            .clk             (clk),
+            .rst_n           (rst_n),
+            .s_arid          (flash_arid),
+            .s_araddr        (flash_araddr),
+            .s_arlen         (flash_arlen),
+            .s_arsize        (flash_arsize),
+            .s_arburst       (flash_arburst),
+            .s_arlock        (flash_arlock),
+            .s_arcache       (flash_arcache),
+            .s_arprot        (flash_arprot),
+            .s_arvalid       (flash_arvalid),
+            .s_arready       (flash_arready),
+            .s_rid           (flash_rid),
+            .s_rdata         (flash_rdata),
+            .s_rresp         (flash_rresp),
+            .s_rlast         (flash_rlast),
+            .s_rvalid        (flash_rvalid),
+            .s_rready        (flash_rready),
+            .s_awid          (s2_awid),
+            .s_awaddr        (s2_awaddr),
+            .s_awlen         (s2_awlen),
+            .s_awsize        (s2_awsize),
+            .s_awburst       (s2_awburst),
+            .s_awlock        (s2_awlock),
+            .s_awcache       (s2_awcache),
+            .s_awprot        (s2_awprot),
+            .s_awvalid       (s2_awvalid),
+            .s_awready       (s2_awready),
+            .s_wdata         (s2_wdata),
+            .s_wstrb         (s2_wstrb),
+            .s_wlast         (s2_wlast),
+            .s_wvalid        (s2_wvalid),
+            .s_wready        (s2_wready),
+            .s_bid           (s2_bid),
+            .s_bresp         (s2_bresp),
+            .s_bvalid        (s2_bvalid),
+            .s_bready        (s2_bready),
+            .spi_sclk        (spi_sclk),
+            .spi_cs_n        (spi_cs_n),
+            .spi_mosi        (spi_mosi),
+            .spi_miso        (spi_miso),
+            .qspi_io_o       (quad_io_o),
+            .qspi_io_oe      (quad_io_oe),
+            .qspi_io         (quad_io),
+            .active          ()
+        );
     end else begin : g_spi_flash_controller
+        assign qspi_io_o  = 4'h0;
+        assign qspi_io_oe = 4'h0;
         wire [3:0]  flash_arid;
         wire [31:0] flash_araddr;
         wire [7:0]  flash_arlen;

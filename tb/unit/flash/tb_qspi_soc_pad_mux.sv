@@ -7,6 +7,7 @@ module tb_qspi_soc_pad_mux;
     reg cmd_grant, cmd_sclk, cmd_cs_n;
     reg [3:0] cmd_io_o, cmd_io_oe;
     reg mem_grant, mem_sclk, mem_cs_n, mem_mosi;
+    reg [3:0] mem_io_o, mem_io_oe;
     wire spi_sclk, spi_cs_n, spi_mosi;
     wire [3:0] qspi_io_o, qspi_io_oe;
     tri [3:0] qspi_io;
@@ -16,7 +17,8 @@ module tb_qspi_soc_pad_mux;
         .cmd_grant(cmd_grant), .cmd_sclk(cmd_sclk), .cmd_cs_n(cmd_cs_n),
         .cmd_io_o(cmd_io_o), .cmd_io_oe(cmd_io_oe),
         .mem_grant(mem_grant), .mem_sclk(mem_sclk), .mem_cs_n(mem_cs_n),
-        .mem_mosi(mem_mosi), .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
+        .mem_mosi(mem_mosi), .mem_io_o(mem_io_o), .mem_io_oe(mem_io_oe),
+        .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n),
         .spi_mosi(spi_mosi), .qspi_io_o(qspi_io_o), .qspi_io_oe(qspi_io_oe),
         .qspi_io(qspi_io)
     );
@@ -35,6 +37,7 @@ module tb_qspi_soc_pad_mux;
         cmd_grant = 1'b1; cmd_sclk = 1'b1; cmd_cs_n = 1'b0;
         cmd_io_o = 4'hA; cmd_io_oe = 4'hF;
         mem_grant = 1'b0; mem_sclk = 1'b0; mem_cs_n = 1'b1; mem_mosi = 1'b0;
+        mem_io_o = 4'h0; mem_io_oe = 4'h0;
         #1;
         check("command clock mapping", spi_sclk === 1'b1);
         check("command cs mapping", spi_cs_n === 1'b0);
@@ -51,6 +54,7 @@ module tb_qspi_soc_pad_mux;
         // Memory owner remains x1-only at the shared boundary.
         cmd_grant = 1'b0; mem_grant = 1'b1; mem_sclk = 1'b1;
         mem_cs_n = 1'b0; mem_mosi = 1'b1;
+        mem_io_o = 4'b0001; mem_io_oe = 4'b0001;
         #1;
         check("memory clock mapping", spi_sclk === 1'b1);
         check("memory cs mapping", spi_cs_n === 1'b0);
