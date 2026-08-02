@@ -42,6 +42,8 @@ module dcache #(
     output wire        cache_op_ready,
     output wire        cache_op_done,
     output wire        cache_op_error,
+    input  wire [31:0] cache_tag_wdata,
+    output wire [31:0] cache_tag_rdata,
 
     // AXI4 Master Interface
     // AW Channel
@@ -137,6 +139,7 @@ module dcache #(
     reg [31:0] maint_addr;
     reg [4:0]  maint_op;
     reg [1:0]  maint_way;
+    reg [31:0] maint_tag_wdata;
     reg [255:0] maint_line;
     reg         maint_error;
     reg         maint_clear_valid;
@@ -263,17 +266,22 @@ module dcache #(
     assign cache_op_ready  = (state == IDLE) && !cpu_req;
     assign cache_op_done   = (state == CACHE_DONE);
     assign cache_op_error  = (state == CACHE_DONE) && maint_error;
-
     wire maint_index_wbi = (maint_op == 5'b00001);
+    wire maint_index_load_tag = (maint_op == 5'b00101);
+    wire maint_index_store_tag = (maint_op == 5'b01001);
+    wire maint_index_tag = maint_index_load_tag || maint_index_store_tag;
     wire maint_hit_inv   = (maint_op == 5'b10101);
     wire maint_hit_wb_inv= (maint_op == 5'b11001);
     wire maint_hit_wb    = (maint_op == 5'b11101);
-    wire [1:0] maint_target_way = maint_index_wbi ? maint_way : hit_way;
+    wire [1:0] maint_target_way = (maint_index_wbi || maint_index_tag) ? maint_way : hit_way;
     wire [TAG_BITS+1:0] maint_target_tag_entry = tag_rdata[maint_target_way];
     wire maint_target_valid = maint_target_tag_entry[TAG_BITS+1];
     wire maint_target_dirty = maint_target_tag_entry[TAG_BITS];
     wire maint_needs_wb = (maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) &&
                           maint_target_valid && maint_target_dirty;
+    // TagLo contract: [22]=valid, [21]=dirty, [20:0]=physical tag.
+    // The upper bits are reserved and read as zero.
+    assign cache_tag_rdata = {9'd0, maint_target_tag_entry};
 
     integer ri;
     always @(posedge clk) begin
@@ -357,6 +365,7 @@ module dcache #(
             word_cnt <= 3'd0; line_buf <= 256'd0;
             refill_error <= 1'b0; cache_error_pending <= 1'b0;
             maint_addr <= 32'd0; maint_op <= 5'd0; maint_way <= 2'd0;
+            maint_tag_wdata <= 32'd0;
             maint_line <= 256'd0;
             maint_error <= 1'b0;
             maint_clear_valid <= 1'b0; maint_clear_dirty <= 1'b0;
@@ -376,6 +385,7 @@ module dcache #(
                     end else if (cache_op_valid) begin
                         maint_addr <= cache_op_addr;
                         maint_op   <= cache_op;
+                        maint_tag_wdata <= cache_tag_wdata;
                         // The index operation selects its way from VA[12:11].
                         // This is the explicit contract used by the directed
                         // tests; hit operations ignore this field.
@@ -390,7 +400,9 @@ module dcache #(
 
                 CACHE_LOOKUP: begin
                     if (!maint_needs_wb) begin
-                        if ((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) &&
+                        if (maint_index_store_tag) begin
+                            tag_ram[maint_target_way][lookup_index] <= maint_tag_wdata[22:0];
+                        end else if ((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) &&
                             maint_target_valid && (maint_clear_valid || maint_clear_dirty)) begin
                             if (maint_clear_valid)
                                 tag_ram[maint_target_way][lookup_index][TAG_BITS+1] <= 1'b0;

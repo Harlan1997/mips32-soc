@@ -37,6 +37,8 @@ module mips_cpu (
     input  wire        data_bus_error,
     // Cached D-side refill/writeback failure; uncached errors remain DBE.
     input  wire        data_cache_error,
+    input  wire [31:0] data_cache_tag_rdata,
+    output wire [31:0] data_cache_tag_wdata,
     input  wire [31:0] data_rdata,
     
     input  wire [5:0]  ext_int,
@@ -72,6 +74,8 @@ module mips_cpu (
     wire        cp0_bev;
     wire        cp0_vint_enabled;
     wire [31:0] cp0_vint_offset;
+    wire [31:0] cp0_taglo;
+    wire [31:0] cp0_taghi;
     // A synchronous WB exception always takes precedence over an interrupt;
     // only an accepted interrupt may use the Cause.IV vector table.
     wire take_interrupt = intr_req && !wb_except_req && !wb_is_eret;
@@ -783,6 +787,9 @@ module mips_cpu (
         .rsel         (wb_cp0_sel),
         .rdata        (cp0_rdata),
         .tlb_op       (wb_tlb_op),
+        .cache_op_done(data_cache_op_done),
+        .cache_op     (data_cache_op),
+        .cache_tag_rdata(data_cache_tag_rdata),
         .except_req   (wb_except_req | intr_req),
         .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
         .except_pc    (except_pc),
@@ -801,6 +808,8 @@ module mips_cpu (
         // MMU pass-through
         .cp0_asid_out       (cp0_asid),
         .cp0_config_k0_out  (cp0_config_k0),
+        .taglo_out          (cp0_taglo),
+        .taghi_out          (cp0_taghi),
         .mmu_ilookup_va     (mmu_ilookup_va),
         .mmu_ilookup_hit    (mmu_ilookup_hit),
         .mmu_ilookup_v      (mmu_ilookup_v),
@@ -869,6 +878,7 @@ module mips_cpu (
     // the remaining cache attributes are still outside this integration slice.
     assign data_uncacheable = (mmu_d_cache_attr == 3'b010);
     assign data_cache_op_addr = data_addr;
+    assign data_cache_tag_wdata = cp0_taglo;
     wire _mmu_unused = &{1'b0, mmu_i_cache_attr,
                               mmu_i_ok, mmu_d_ok,
                               mmu_i_fault_type, mmu_d_fault_type};

@@ -30,8 +30,8 @@ module mips_control (
     output reg         mem_read,     // Data memory read enable
     output reg         mem_write,    // Data memory write enable
     output reg  [2:0]  mem_op,       // Size control: 000: B, 001: BU, 010: H, 011: HU, 100: W
-    // Supported D-cache maintenance operations. CACHE opcodes outside this
-    // subset remain illegal until TagLo/TagHi architectural state exists.
+    // Supported D-cache maintenance operations. TagLo/TagHi state is exposed
+    // through CP0 for the implemented index-tag slice.
     output reg         cache_op_valid,
     output reg  [4:0]  cache_op,
     
@@ -139,6 +139,11 @@ module mips_control (
                     end
                     6'b001100: begin // SYSCALL
                         is_syscall = 1'b1;
+                    end
+                    6'b001111: begin // SYNC
+                        // The pipeline is already in-order and the memory
+                        // stage blocks until the preceding request completes.
+                        // Recognize SYNC as an ordered no-op rather than RI.
                     end
                     6'b001010: begin // MOVZ rd, rs, rt (R2)
                         alu_op    = 5'b10110;  // OP_MOV_PASS (rd = rs)
@@ -413,6 +418,8 @@ module mips_control (
                 // The effective address is still computed by EX as rs+imm.
                 case (rt)
                     5'b00001, // Index_Writeback_Invalidate_D
+                    5'b00101, // Index_Load_Tag_D
+                    5'b01001, // Index_Store_Tag_D
                     5'b10101, // Hit_Invalidate_D
                     5'b11001, // Hit_Writeback_Invalidate_D
                     5'b11101: begin // Hit_Writeback_D

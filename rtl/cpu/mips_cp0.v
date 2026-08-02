@@ -68,6 +68,11 @@ module mips_cp0 (
     //   000 = none, 001 = TLBR, 010 = TLBWI, 011 = TLBWR, 100 = TLBP
     input  wire [2:0]  tlb_op,
 
+    // D-cache TagLo/TagHi maintenance contract.
+    input  wire        cache_op_done,
+    input  wire [4:0]  cache_op,
+    input  wire [31:0] cache_tag_rdata,
+
     // Exception Interface (from WB stage)
     input  wire        except_req,
     input  wire [4:0]  except_code,
@@ -94,6 +99,8 @@ module mips_cp0 (
     // combinational fanout; mips_cp0 does not consume them.
     output wire [7:0]  cp0_asid_out,
     output wire [2:0]  cp0_config_k0_out,
+    output wire [31:0] taglo_out,
+    output wire [31:0] taghi_out,
 
     input  wire [31:0] mmu_ilookup_va,
     output wire        mmu_ilookup_hit,
@@ -182,6 +189,8 @@ module mips_cp0 (
     reg [31:0]                cp0_badvaddr;             // updated by HW in B.3.d
     reg [18:0]                cp0_entryhi_vpn2;         // EntryHi[31:13]
     reg [7:0]                 cp0_entryhi_asid;         // EntryHi[7:0]
+    reg [31:0]                cp0_taglo;
+    reg [31:0]                cp0_taghi;
 
     // -------------------------------------------------------------------------
     // Static reads (hardcoded constants from soc_config.vh)
@@ -194,6 +203,10 @@ module mips_cp0 (
     wire [31:0] ebase_val = { 2'b10, cp0_ebase_hi, 2'b00, `SOC_CP0_CPUNUM };
     assign ebase_out = ebase_val;
     assign bev_out   = cp0_status[22];
+    // Forward a same-cycle MTC0 write so an immediately following CACHE
+    // Index_Store_Tag_D observes the architectural value at the D-cache port.
+    assign taglo_out = (we && (waddr == 5'd28) && (wsel == 3'd0)) ? wdata : cp0_taglo;
+    assign taghi_out = (we && (waddr == 5'd29) && (wsel == 3'd0)) ? wdata : cp0_taghi;
 
     // Config (16,0): M=1, BE=0 (LE), AT=00 (MIPS32), AR=001 (R2), MT=010 (TLB),
     //                VI=0, K0 writable
@@ -369,6 +382,8 @@ module mips_cp0 (
             {5'd16, 3'd1}: rdata = config1_val;
             {5'd16, 3'd2}: rdata = config2_val;
             {5'd16, 3'd3}: rdata = config3_val;
+            {5'd28, 3'd0}: rdata = cp0_taglo;
+            {5'd29, 3'd0}: rdata = cp0_taghi;
             {5'd30, 3'd0}: rdata = cp0_errorepc;
             default:       rdata = 32'd0;
         endcase
@@ -414,6 +429,8 @@ module mips_cp0 (
             cp0_badvaddr        <= 32'd0;
             cp0_entryhi_vpn2    <= 19'd0;
             cp0_entryhi_asid    <= 8'd0;
+            cp0_taglo           <= 32'd0;
+            cp0_taghi           <= 32'd0;
         end else begin
             // -----------------------------------------------------------------
             // Cause.IP[7:2] update every cycle: mirror hw_int OR timer routing.
@@ -456,6 +473,9 @@ module mips_cp0 (
                 cp0_random <= `SOC_CP0_TLB_INDEX_MAX;
             else
                 cp0_random <= cp0_random - {{(TLB_IDX_BITS-1){1'b0}}, 1'b1};
+
+            if (cache_op_done && (cache_op == 5'b00101))
+                cp0_taglo <= cache_tag_rdata;
 
             if (except_req && !cp0_status[1]) begin
                 // Take exception (only if not already in exception level)
@@ -606,6 +626,12 @@ module mips_cp0 (
                     {5'd16, 3'd0}: begin
                         // Config: only K0 is software-writable
                         cp0_config_k0    <= wdata[2:0];
+                    end
+                    {5'd28, 3'd0}: begin
+                        cp0_taglo        <= wdata;
+                    end
+                    {5'd29, 3'd0}: begin
+                        cp0_taghi        <= wdata;
                     end
                     {5'd30, 3'd0}: begin
                         cp0_errorepc     <= wdata;
