@@ -41,6 +41,11 @@ logical target/mailbox transaction:
 `scope=page` invalidates one VPN; `scope=asid` invalidates all non-wired
 entries for the ASID; `scope=all` is reserved for bootstrap recovery.
 
+The RTL reference implementation is `rtl/cpu/mmu_tlb_shootdown_mailbox.v`.
+It emits a one-cycle `invalidate_valid`, rejects overlapping requests, and
+reports completion or bounded timeout. It is a logical single-core endpoint;
+it does not claim a physical inter-core interrupt fabric.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:

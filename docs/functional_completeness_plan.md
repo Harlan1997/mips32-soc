@@ -376,6 +376,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | CPU/MMU 四 ASID 压力 | `make product-mmu-process-pressure-gate` | PASS，`refills=8` | 已验证现有软件 context-switch、四 ASID 映射隔离和 shootdown 标记；尚不等同于 allocator/generation/真实 IPI shootdown |
 | QSPI status 兼容性 | `make qspi-status-integration-gate` | PASS | 原 timeout/APB/quad shared-pin 行为未回归；脚本补入 `apb_ddr4_status.v` 编译依赖 |
 | QSPI taxonomy | `make qspi-error-taxonomy-gate` | PASS | canonical class/code 入口、sticky、W1C、未清除前不覆盖已验证；Boot ROM/command/init/auth 上报尚待接线 |
+| CPU/MMU shootdown mailbox | `make tlb-shootdown-mailbox-gate` | PASS | page/ASID/all payload、busy 重入拒绝、ack completion、无目标 timeout 已验证；尚未接入 CPU/CP0 或真实 IPI |
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
