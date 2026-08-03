@@ -66,6 +66,11 @@ module tb_mips_soc;
 `else
                .ENABLE_DDR4_STATUS(1'b0)
 `endif
+`ifdef SOC_DDR4_STATUS_FATAL
+               ,.ENABLE_DDR4_STATUS_FATAL(1'b1)
+`else
+               ,.ENABLE_DDR4_STATUS_FATAL(1'b0)
+`endif
     ) u_soc(
         .clk        (clk),
         .rst_n      (rst_n),

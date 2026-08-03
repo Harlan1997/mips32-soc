@@ -11,7 +11,8 @@ module mips_soc_impl #(
     parameter ENABLE_UART_PINS = 1'b0,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
     parameter ENABLE_QSPI_QUAD = 1'b0,
-    parameter ENABLE_DDR4_STATUS = 1'b0
+    parameter ENABLE_DDR4_STATUS = 1'b0,
+    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -939,6 +940,7 @@ module mips_soc_impl #(
         .ENABLE_SHARED_ARB        (1'b1),
         .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD)
         ,.ENABLE_DDR4_STATUS      (ENABLE_DDR4_STATUS)
+        ,.ENABLE_DDR4_STATUS_FATAL(ENABLE_DDR4_STATUS_FATAL)
     ) u_memory_subsystem (
         .clk          (clk),
         .rst_n        (soc_rst_n),
