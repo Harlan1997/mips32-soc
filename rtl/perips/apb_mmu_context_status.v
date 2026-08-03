@@ -1,0 +1,5 @@
+module apb_mmu_context_status(input wire clk,input wire rst_n,input wire psel,input wire penable,input wire pwrite,input wire [4:0] paddr,input wire [31:0] pwdata,output reg [31:0] prdata,output wire pready,output wire pslverr);
+ reg [7:0] asid_r,generation_r; reg [19:0] vpn_r; reg [1:0] scope_r; reg [3:0] event_r; wire wr=psel&penable&pwrite; wire rd=psel&penable&~pwrite; assign pready=1'b1;assign pslverr=1'b0;
+ always @(posedge clk or negedge rst_n) begin if(!rst_n) begin asid_r<=0;generation_r<=0;vpn_r<=0;scope_r<=0;event_r<=0; end else if(wr) case(paddr[4:2]) 3'b000:begin asid_r<=pwdata[7:0];generation_r<=pwdata[15:8];end 3'b001:vpn_r<=pwdata[19:0]; 3'b010:scope_r<=pwdata[1:0]; 3'b011:event_r<=event_r|pwdata[3:0]; 3'b100:event_r<=event_r&~pwdata[3:0]; default:; endcase end
+ always @(*) begin prdata=0;if(rd) case(paddr[4:2]) 3'b000:prdata={16'h0,generation_r,asid_r};3'b001:prdata={12'h0,vpn_r};3'b010:prdata={30'h0,scope_r};3'b011:prdata={28'h0,event_r};default:prdata=0;endcase end
+endmodule
