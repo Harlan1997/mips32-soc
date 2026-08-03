@@ -1,0 +1,19 @@
+`timescale 1ns/1ps
+module tb_mmu_context_status;
+  reg clk=0; always #5 clk=~clk;
+  reg rst_n=0, psel=0, penable=0, pwrite=0; reg [4:0] paddr=0; reg [31:0] pwdata=0;
+  wire [31:0] prdata; wire pready, pslverr; integer errors=0;
+  apb_mmu_context_status dut(.*);
+  task apb_write(input [4:0] a,input [31:0] d); begin @(negedge clk); paddr=a;pwdata=d;pwrite=1;psel=1;penable=1; @(negedge clk); psel=0;penable=0;pwrite=0; end endtask
+  task apb_read(input [4:0] a,input [31:0] exp,input [127:0] n); begin @(negedge clk);paddr=a;pwrite=0;psel=1;penable=1;#1;if(prdata!==exp) begin $display("[FAIL] %0s got %h exp %h",n,prdata,exp);errors=errors+1;end else $display("[PASS] %0s",n);@(negedge clk);psel=0;penable=0; end endtask
+  initial begin
+    repeat(2) @(negedge clk); rst_n=1;
+    apb_write(5'h00,32'h00003412); apb_read(5'h00,32'h00003412,"asid generation");
+    apb_write(5'h04,32'h000ABCDE); apb_read(5'h04,32'h000ABCDE,"vpn");
+    apb_write(5'h08,32'h2); apb_read(5'h08,32'h2,"scope");
+    apb_write(5'h0c,32'h5); apb_read(5'h0c,32'h5,"sticky events");
+    apb_write(5'h10,32'h1); apb_read(5'h0c,32'h4,"W1C event");
+    if(!pready || pslverr) begin $display("[FAIL] APB handshake");errors=errors+1;end
+    if(errors==0) $display("REGRESSION_TEST_SUCCESS mmu_context_status"); else $display("REGRESSION_TEST_FAILED mmu_context_status"); $finish;
+  end
+endmodule

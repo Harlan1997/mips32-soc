@@ -179,6 +179,9 @@ mmu-context-contract-gate:
 mmu-active-gate:
 	RUN_DIR=$(BUILD_DIR)/unit/mmu_active tb/unit/mmu/run_active.sh
 
+mmu-context-status-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_context_status tb/unit/tlb/run_mmu_context_status.sh
+
 qspi-cmd-behavioral-gate:
 	RUN_DIR=$(QSPI_CMD_BEHAVIORAL_DIR) tb/unit/flash/run_qspi_cmd_behavioral.sh
 
