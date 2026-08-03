@@ -378,6 +378,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | QSPI taxonomy | `make qspi-error-taxonomy-gate` | PASS | canonical class/code 入口、sticky、W1C、未清除前不覆盖已验证；Boot ROM/command/init/auth 上报尚待接线 |
 | CPU/MMU shootdown mailbox | `make tlb-shootdown-mailbox-gate` | PASS | page/ASID/all payload、busy 重入拒绝、ack completion、无目标 timeout 已验证；尚未接入 CPU/CP0 或真实 IPI |
 | CPU/MMU ASID allocator | `make tlb-asid-allocator-gate` | PASS | 四槽分配/耗尽、stale generation 拒绝、释放后 generation 递增并复用已验证；尚未接入真实 page-table walker/OS |
+| CPU/MMU context contract | `make mmu-context-contract-gate` | PASS | allocator -> shootdown -> ack -> release/reuse 组合路径通过；尚未接入 CPU/CP0 TLB 硬件或 SoC firmware |
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|

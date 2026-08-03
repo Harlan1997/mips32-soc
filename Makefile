@@ -170,6 +170,9 @@ tlb-shootdown-mailbox-gate:
 tlb-asid-allocator-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_asid_allocator tb/unit/tlb/run_tlb_asid_allocator.sh
 
+mmu-context-contract-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_context_contract tb/unit/tlb/run_mmu_context_contract.sh
+
 qspi-cmd-behavioral-gate:
 	RUN_DIR=$(QSPI_CMD_BEHAVIORAL_DIR) tb/unit/flash/run_qspi_cmd_behavioral.sh
 
