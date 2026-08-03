@@ -10,7 +10,8 @@ module mips_soc_impl #(
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
     parameter ENABLE_UART_PINS = 1'b0,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
-    parameter ENABLE_QSPI_QUAD = 1'b0
+    parameter ENABLE_QSPI_QUAD = 1'b0,
+    parameter ENABLE_DDR4_STATUS = 1'b0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -434,6 +435,8 @@ module mips_soc_impl #(
     wire        cpu_int;
     wire        wdt_reset;
     wire        qspi_timeout_sticky;
+    wire        ddr4_controller_present, ddr4_init_done, ddr4_training_done, ddr4_fatal_error;
+    wire [15:0] ddr4_error_code;
     wire        qspi_controller_present;
     wire        qspi_cmd_sclk;
     wire        qspi_cmd_cs_n;
@@ -935,6 +938,7 @@ module mips_soc_impl #(
         .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES),
         .ENABLE_SHARED_ARB        (1'b1),
         .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD)
+        ,.ENABLE_DDR4_STATUS      (ENABLE_DDR4_STATUS)
     ) u_memory_subsystem (
         .clk          (clk),
         .rst_n        (soc_rst_n),
@@ -949,6 +953,11 @@ module mips_soc_impl #(
         .spi_req                (mem_spi_req),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),
+        .ddr4_controller_present (ddr4_controller_present),
+        .ddr4_init_done          (ddr4_init_done),
+        .ddr4_training_done      (ddr4_training_done),
+        .ddr4_fatal_error        (ddr4_fatal_error),
+        .ddr4_error_code         (ddr4_error_code),
 
         .s0_awid      (s0_awid),
         .s0_awaddr    (s0_awaddr),
@@ -1123,6 +1132,11 @@ module mips_soc_impl #(
         .wdt_reset    (wdt_reset),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),
+        .ddr4_controller_present (ddr4_controller_present),
+        .ddr4_init_done          (ddr4_init_done),
+        .ddr4_training_done      (ddr4_training_done),
+        .ddr4_fatal_error        (ddr4_fatal_error),
+        .ddr4_error_code         (ddr4_error_code),
         .spi_miso     (spi_miso),
         .qspi_cmd_grant (qspi_cmd_grant),
         .spi_sclk     (qspi_cmd_sclk),

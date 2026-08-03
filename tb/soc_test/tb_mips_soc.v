@@ -60,7 +60,13 @@ module tb_mips_soc;
         end
     endgenerate
     
-    mips_soc #(.ENABLE_UART_PINS(1'b1)) u_soc(
+    mips_soc #(.ENABLE_UART_PINS(1'b1),
+`ifdef SOC_ENABLE_DDR4_STATUS
+               .ENABLE_DDR4_STATUS(1'b1)
+`else
+               .ENABLE_DDR4_STATUS(1'b0)
+`endif
+    ) u_soc(
         .clk        (clk),
         .rst_n      (rst_n),
         .gpio_pins  (gpio_pins),

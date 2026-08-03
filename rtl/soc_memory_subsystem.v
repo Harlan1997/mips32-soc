@@ -10,7 +10,8 @@ module soc_memory_subsystem #(
     parameter SRAM_DEPTH_WORDS = 32768,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
     parameter ENABLE_SHARED_ARB = 1'b0,
-    parameter ENABLE_QSPI_QUAD = 1'b0
+    parameter ENABLE_QSPI_QUAD = 1'b0,
+    parameter ENABLE_DDR4_STATUS = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -27,6 +28,11 @@ module soc_memory_subsystem #(
 
     output wire        qspi_timeout_sticky,
     output wire        qspi_controller_present,
+    output wire        ddr4_controller_present,
+    output wire        ddr4_init_done,
+    output wire        ddr4_training_done,
+    output wire        ddr4_fatal_error,
+    output wire [15:0] ddr4_error_code,
 
     input  wire [3:0]  s0_awid,
     input  wire [31:0] s0_awaddr,
@@ -341,6 +347,36 @@ module soc_memory_subsystem #(
         .s_rvalid        (s3_rvalid),
         .s_rready        (s3_rready)
     );
+
+    generate
+        if (ENABLE_DDR4_STATUS) begin : g_ddr4_status_phy
+            reg init_start_r;
+            wire phy_cmd_ready, phy_rd_valid, phy_rd_error, phy_refresh_busy;
+            wire [31:0] phy_rd_data;
+            wire [15:0] phy_rd_error_code;
+            always @(posedge clk or negedge rst_n)
+                if (!rst_n) init_start_r <= 1'b0;
+                else init_start_r <= 1'b1;
+            ddr4_phy_behavioral u_ddr4_status_phy (
+                .clk(clk), .rst_n(rst_n), .init_start(init_start_r),
+                .inject_init_fail(1'b0), .inject_training_fail(1'b0), .inject_fatal(1'b0),
+                .refresh_req(1'b0), .cmd_valid(1'b0), .cmd_ready(phy_cmd_ready),
+                .cmd(4'd0), .cmd_addr(32'd0), .cmd_wdata(32'd0), .cmd_wstrb(4'd0),
+                .rd_valid(phy_rd_valid), .rd_ready(1'b1), .rd_data(phy_rd_data),
+                .rd_error(phy_rd_error), .rd_error_code(phy_rd_error_code),
+                .init_done(ddr4_init_done), .training_done(ddr4_training_done),
+                .refresh_busy(phy_refresh_busy), .fatal_error(ddr4_fatal_error),
+                .error_code(ddr4_error_code)
+            );
+            assign ddr4_controller_present = 1'b1;
+        end else begin : g_no_ddr4_status_phy
+            assign ddr4_controller_present = 1'b0;
+            assign ddr4_init_done = 1'b0;
+            assign ddr4_training_done = 1'b0;
+            assign ddr4_fatal_error = 1'b0;
+            assign ddr4_error_code = 16'd0;
+        end
+    endgenerate
 
     // synopsys translate_off
     task preload_ddr_hex;

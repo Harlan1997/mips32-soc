@@ -96,6 +96,8 @@ UART_EXTERNAL_RX_FW_HEX ?= $(UART_EXTERNAL_RX_FW_DIR)/firmware.hex
 SOC_TEST_UART_CTS_DIR ?= $(BUILD_DIR)/soc_test/uart_cts_gate
 UART_CTS_FW_DIR ?= $(BUILD_DIR)/firmware/uart_cts
 UART_CTS_FW_HEX ?= $(UART_CTS_FW_DIR)/firmware.hex
+DDR4_STATUS_SOC_DIR ?= $(BUILD_DIR)/soc_test/ddr4_status_gate
+DDR4_STATUS_FW_DIR ?= $(BUILD_DIR)/firmware/ddr4_status
 
 SOC_TEST_L2_CPU_DIR ?= $(BUILD_DIR)/soc_test/l2_cpu_gate
 L2_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/l2_cpu
@@ -129,6 +131,10 @@ uart-external-rx-soc-gate:
 uart-cts-soc-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=uart_cts OUT_DIR=$(abspath $(UART_CTS_FW_DIR)) FW_BASE=firmware all
 	FW_HEX=$(UART_CTS_FW_HEX) RUN_DIR=$(SOC_TEST_UART_CTS_DIR) tb/soc_test/run_uart_cts_gate.sh
+
+ddr4-status-soc-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=ddr4_status OUT_DIR=$(abspath $(DDR4_STATUS_FW_DIR)) FW_BASE=firmware all
+	FW_HEX=$(abspath $(DDR4_STATUS_FW_DIR))/firmware.hex RUN_DIR=$(DDR4_STATUS_SOC_DIR) tb/soc_test/run_ddr4_status_gate.sh
 
 l2-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=l2_cpu OUT_DIR=$(L2_CPU_FW_DIR) FW_BASE=firmware all
