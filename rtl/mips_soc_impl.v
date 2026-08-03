@@ -1114,6 +1114,27 @@ module mips_soc_impl #(
     endtask
     // synopsys translate_on
 
+    wire uart_tx_int, uart_rts_n_int, uart_dtr_n_int;
+    wire uart_rx_int, uart_cts_n_int, uart_dsr_n_int, uart_dcd_n_int, uart_ri_n_int;
+    generate
+        if (ENABLE_UART_PINS) begin : g_uart_pad_boundary
+            uart_pad_wrapper u_uart_pad_wrapper (
+                .enable(1'b1), .uart_tx_i(uart_tx_int), .uart_rts_n_i(uart_rts_n_int),
+                .uart_dtr_n_i(uart_dtr_n_int), .uart_tx_pad(uart_tx),
+                .uart_rts_n_pad(uart_rts_n), .uart_dtr_n_pad(uart_dtr_n),
+                .uart_rx_pad(uart_rx), .uart_cts_n_pad(uart_cts_n),
+                .uart_dsr_n_pad(uart_dsr_n), .uart_dcd_n_pad(uart_dcd_n),
+                .uart_ri_n_pad(uart_ri_n), .uart_rx_o(uart_rx_int),
+                .uart_cts_n_o(uart_cts_n_int), .uart_dsr_n_o(uart_dsr_n_int),
+                .uart_dcd_n_o(uart_dcd_n_int), .uart_ri_n_o(uart_ri_n_int)
+            );
+        end else begin : g_uart_legacy_boundary
+            assign uart_tx = uart_tx_int; assign uart_rts_n = uart_rts_n_int; assign uart_dtr_n = uart_dtr_n_int;
+            assign uart_rx_int = 1'b1; assign uart_cts_n_int = 1'b0; assign uart_dsr_n_int = 1'b0;
+            assign uart_dcd_n_int = 1'b0; assign uart_ri_n_int = 1'b1;
+        end
+    endgenerate
+
     soc_peripheral_subsystem #(
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
         .ENABLE_QSPI_SHARED_ARB   (1'b1),
@@ -1122,14 +1143,10 @@ module mips_soc_impl #(
         .clk          (clk),
         .rst_n        (rst_n),
         .gpio_pins    (gpio_pins),
-        .uart_rx      (ENABLE_UART_PINS ? uart_rx    : 1'b1),
-        .uart_tx      (uart_tx),
-        .uart_cts_n   (ENABLE_UART_PINS ? uart_cts_n : 1'b0),
-        .uart_rts_n   (uart_rts_n),
-        .uart_dsr_n   (ENABLE_UART_PINS ? uart_dsr_n : 1'b0),
-        .uart_dtr_n   (uart_dtr_n),
-        .uart_dcd_n   (ENABLE_UART_PINS ? uart_dcd_n : 1'b0),
-        .uart_ri_n    (ENABLE_UART_PINS ? uart_ri_n  : 1'b1),
+        .uart_rx      (uart_rx_int), .uart_tx      (uart_tx_int),
+        .uart_cts_n   (uart_cts_n_int), .uart_rts_n   (uart_rts_n_int),
+        .uart_dsr_n   (uart_dsr_n_int), .uart_dtr_n   (uart_dtr_n_int),
+        .uart_dcd_n   (uart_dcd_n_int), .uart_ri_n    (uart_ri_n_int),
         .cpu_int      (cpu_int),
         .wdt_reset    (wdt_reset),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
