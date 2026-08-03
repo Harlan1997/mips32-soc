@@ -11,6 +11,7 @@ module tb_uart_16550;
     wire [31:0]  prdata;
     wire         pready, pslverr;
     wire         uart_tx;
+    wire         uart_rts_n;
     reg          cts_n = 1'b0;
     wire         irq;
     wire         rx_irq;
@@ -26,7 +27,7 @@ module tb_uart_16550;
         .paddr(paddr), .pstrb(pstrb), .pwdata(pwdata),
         .prdata(prdata), .pready(pready), .pslverr(pslverr),
         .uart_tx(uart_tx), .uart_rx(1'b1),
-        .uart_rts_n(), .uart_cts_n(cts_n),
+        .uart_rts_n(uart_rts_n), .uart_cts_n(cts_n),
         .uart_dtr_n(), .uart_dsr_n(1'b0),
         .uart_dcd_n(1'b0), .uart_ri_n(1'b1),
         .irq(irq), .rx_irq(rx_irq), .tx_irq(tx_irq));
@@ -452,9 +453,38 @@ module tb_uart_16550;
         end
         apb_write(5'h10, 8'h00);
 
-        // Case 17: APB pready=1, pslverr=0 & Reserved Read Behavior
         // =====================================================================
-        $display("--- Case 15: APB Contract & Reserved Read Behavior ---");
+        // Case 17: Auto-RTS RX FIFO water mark
+        // =====================================================================
+        $display("--- Case 17: Auto-RTS RX FIFO Watermark ---");
+        rst_n = 1'b0; #20; rst_n = 1'b1;
+        apb_write(5'h0C, 8'h03); // 8N1
+        apb_write(5'h08, 8'h41); // FIFO enabled, RX trigger level 4
+        apb_write(5'h10, 8'h32); // LOOP + RTS + auto-RTS enable
+        #100;
+        if (uart_rts_n !== 1'b0) begin
+            $display("FAIL Case 17 RTS not asserted before RX watermark: %b", uart_rts_n);
+            errs = errs + 1;
+        end
+        for (i = 0; i < 4; i = i + 1)
+            apb_write(5'h00, 8'h80 + i);
+        #30000;
+        if (uart_rts_n !== 1'b1) begin
+            $display("FAIL Case 17 RTS not deasserted at RX watermark: %b", uart_rts_n);
+            errs = errs + 1;
+        end
+        for (i = 0; i < 4; i = i + 1)
+            apb_read(5'h00, rd_data);
+        #100;
+        if (uart_rts_n !== 1'b0) begin
+            $display("FAIL Case 17 RTS did not reassert after RX FIFO drain: %b", uart_rts_n);
+            errs = errs + 1;
+        end
+        apb_write(5'h10, 8'h00);
+
+        // Case 18: APB pready=1, pslverr=0 & Reserved Read Behavior
+        // =====================================================================
+        $display("--- Case 18: APB Contract & Reserved Read Behavior ---");
         // Verify reserved bits in IER read back as 0 (bits 7:4)
         apb_write(5'h04, 8'hFF);
         apb_read(5'h04, rd_data);
