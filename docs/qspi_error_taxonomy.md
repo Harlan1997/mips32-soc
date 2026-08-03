@@ -28,3 +28,7 @@ The current RTL can implement all taxonomy, sticky/W1C, retry, and no-preload
 behavioral gates. Real flash status bits, dummy-cycle/device mode behavior,
 PHY/electrical timing, production erase/program, and signature verification
 require external device/security inputs and remain out of this frontend gate.
+
+`rtl/perips/qspi_retry_policy.v` is the reference bounded policy: timeout and
+controller-init errors receive one retry; all other classes terminate without
+automatic retry.

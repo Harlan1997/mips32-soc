@@ -164,6 +164,9 @@ qspi-status-integration-gate:
 qspi-error-taxonomy-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/qspi_error_taxonomy tb/unit/flash/run_qspi_error_taxonomy.sh
 
+qspi-retry-policy-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/qspi_retry_policy tb/unit/flash/run_qspi_retry_policy.sh
+
 tlb-shootdown-mailbox-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_shootdown_mailbox tb/unit/tlb/run_tlb_shootdown_mailbox.sh
 
