@@ -26,6 +26,10 @@ The first frontend gate will use a deterministic fixed pool (four roots and
 four ASIDs) so allocation failure, reuse, and isolation are observable without
 requiring a heap or an operating system.
 
+`rtl/cpu/mmu_asid_allocator.v` is the reference lease model. It reserves ASID
+0, rejects stale release generations, reports pool exhaustion, and increments
+the generation on a successful release before reuse.
+
 ## Shootdown contract
 
 The current hardware is single-core. Shootdown is therefore modeled as a

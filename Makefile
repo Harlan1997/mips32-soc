@@ -167,6 +167,9 @@ qspi-error-taxonomy-gate:
 tlb-shootdown-mailbox-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_shootdown_mailbox tb/unit/tlb/run_tlb_shootdown_mailbox.sh
 
+tlb-asid-allocator-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_asid_allocator tb/unit/tlb/run_tlb_asid_allocator.sh
+
 qspi-cmd-behavioral-gate:
 	RUN_DIR=$(QSPI_CMD_BEHAVIORAL_DIR) tb/unit/flash/run_qspi_cmd_behavioral.sh
 
