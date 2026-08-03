@@ -13,15 +13,18 @@
 //   0x08 ERROR  : [31:16] error class, [15:0] error code
 //   0x0c CONTROL: bit[0] W1C status and last error
 //
-// Error class/code 0x0001/0x0001 denotes the bounded AXI XIP timeout. The
-// source guard is itself sticky, so an edge detector prevents a W1C write from
-// being immediately undone while the source remains asserted.
+// Error class/code 0x0001/0x0001 denotes the bounded AXI XIP timeout. Other
+// controller/boot sources may use error_event/error_value to publish the
+// canonical taxonomy from docs/qspi_error_taxonomy.md. The source guards are
+// edge detected so a W1C write is not immediately undone by a sticky source.
 
 module apb_qspi_status (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        controller_present,
     input  wire        xip_timeout_sticky,
+    input  wire        error_event,
+    input  wire [31:0] error_value,
 
     input  wire        psel,
     input  wire        penable,
@@ -39,10 +42,12 @@ module apb_qspi_status (
     reg        timeout_captured_r;
     reg [31:0] last_error_r;
     reg        source_seen_r;
+    reg        error_seen_r;
 
     wire wr = psel & penable & pwrite;
     wire rd = psel & penable & ~pwrite;
     wire timeout_rise = xip_timeout_sticky & ~source_seen_r;
+    wire error_rise = error_event & ~error_seen_r;
 
     assign pready  = 1'b1;
     assign pslverr = 1'b0;
@@ -52,12 +57,19 @@ module apb_qspi_status (
             timeout_captured_r <= 1'b0;
             last_error_r       <= 32'h0000_0000;
             source_seen_r      <= 1'b0;
+            error_seen_r       <= 1'b0;
         end else begin
             source_seen_r <= xip_timeout_sticky;
+            error_seen_r  <= error_event;
 
             if (timeout_rise) begin
                 timeout_captured_r <= 1'b1;
                 last_error_r       <= XIP_TIMEOUT_ERROR;
+            end
+
+            if (error_rise) begin
+                timeout_captured_r <= 1'b1;
+                last_error_r       <= error_value;
             end
 
             // W1C has priority for a simultaneous source edge and software

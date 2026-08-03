@@ -18,6 +18,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     "${ROOT_DIR}/rtl/perips/apb_axi_dma.v" "${ROOT_DIR}/rtl/perips/apb_gpio.v" \
     "${ROOT_DIR}/rtl/perips/apb_vic.v" "${ROOT_DIR}/rtl/perips/apb_wdt.v" \
     "${ROOT_DIR}/rtl/perips/apb_boot_status.v" "${ROOT_DIR}/rtl/perips/apb_qspi_status.v" \
+    "${ROOT_DIR}/rtl/perips/apb_ddr4_status.v" \
     "${ROOT_DIR}/rtl/perips/qspi_cmd_behavioral.v" "${ROOT_DIR}/rtl/perips/qspi_apb_integration.v" \
     "${ROOT_DIR}/rtl/perips/qspi_shared_pin_arbiter.v" "${ROOT_DIR}/rtl/perips/qspi_soc_pad_mux.v" \
     "${ROOT_DIR}/rtl/perips/apb_timer.v" "${ROOT_DIR}/rtl/perips/apb_uart_16550.v" \

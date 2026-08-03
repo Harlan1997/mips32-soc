@@ -161,6 +161,9 @@ xip-read-timeout-unit-gate:
 qspi-status-integration-gate:
 	RUN_DIR=$(QSPI_STATUS_INTEGRATION_DIR) tb/unit/flash/run_qspi_status_integration.sh
 
+qspi-error-taxonomy-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/qspi_error_taxonomy tb/unit/flash/run_qspi_error_taxonomy.sh
+
 qspi-cmd-behavioral-gate:
 	RUN_DIR=$(QSPI_CMD_BEHAVIORAL_DIR) tb/unit/flash/run_qspi_cmd_behavioral.sh
 
