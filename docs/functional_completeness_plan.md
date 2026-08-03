@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.40（2026-08-03）
+> 版本：v1.41（2026-08-04）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -64,6 +64,28 @@ make phase3-complete
 
 上述命令的日志和报告必须记录当前 commit；`L2_WRITEBACK=1`、`L2_NONBLOCKING=1`、
 `ENABLE_QSPI_QUAD=1` 和产品 MMU 只允许作为显式 opt-in gate，不得覆盖默认 baseline。
+
+## 1C. 一页执行看板（当前唯一有效计划）
+
+只看本节即可判断进度；后面的长表是历史证据和追溯记录。
+
+| 阶段 | 目标 | 状态 | 下一动作 | 完成标志 |
+|---|---|---|---|---|
+| A. 默认基线 | 固定默认配置并可重复编译/仿真 | **已完成** | 变更后重跑 3 条基线命令 | `rtl-frontend-compile`、`soc-smoke`、`phase2/3-complete` 通过 |
+| B. 外设行为 | UART/QSPI vendor-neutral 功能和错误恢复 | **已完成当前 RTL 范围** | 只补新失败场景；真实 PHY/板级输入暂缓 | UART、QSPI block/SoC gates 通过 |
+| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime | **已完成有限切片** | 扩展多段/PIC/TLS/权限 runtime | 新增 runtime gate + SoC firmware gate |
+| D. 产品输入 | 真实 DDR4、QSPI PHY/Flash、secure boot | **阻塞，当前不做** | 等外部 PHY/DRAM/板级资料 | `DDR4_ENTRY_READY=1` 且真实器件 gate 通过 |
+| E. 质量签核 | lint/CDC/RDC/formal/综合/STA/PPA | **明确暂缓** | RTL 功能目标完成后再启动 | 不属于当前阶段 |
+
+### 当前只执行这 3 类工作
+
+1. **补 RTL 功能缺口**：多段/PIC/TLS/权限、page-table/allocator 接口、异常策略。
+2. **补功能证据**：unit、firmware、SoC gate；每项必须有命令、结果、commit。
+3. **维护默认基线**：任何 RTL 改动后重跑 `make rtl-frontend-compile`、`make soc-smoke`、`make phase3-complete`。
+
+### 当前明确不做
+
+真实 DDR4 PHY/controller、商用 QSPI PHY/Flash、secure boot、Linux/U-Boot、板级 SI/PI、lint、CDC/RDC、formal、综合、时序和 PPA。
 
 ## 2. 当前基线快照
 
