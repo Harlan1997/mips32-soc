@@ -369,6 +369,14 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 
 ## 10. 已知未决问题
 
+### 本轮执行证据（2026-08-03）
+
+| 项目 | 命令 | 结果 | 结论 |
+|---|---|---|---|
+| CPU/MMU 四 ASID 压力 | `make product-mmu-process-pressure-gate` | PASS，`refills=8` | 已验证现有软件 context-switch、四 ASID 映射隔离和 shootdown 标记；尚不等同于 allocator/generation/真实 IPI shootdown |
+| QSPI status 兼容性 | `make qspi-status-integration-gate` | PASS | 原 timeout/APB/quad shared-pin 行为未回归；脚本补入 `apb_ddr4_status.v` 编译依赖 |
+| QSPI taxonomy | `make qspi-error-taxonomy-gate` | PASS | canonical class/code 入口、sticky、W1C、未清除前不覆盖已验证；Boot ROM/command/init/auth 上报尚待接线 |
+
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
 | P0 | 产品 boot、DDR 和 QSPI 尚未闭合：Boot ROM 复位、普通与 refill/invalid BEV-EBase vector、IP-based vectored interrupt、最小 BEV MMU firmware、单一 EBase `Mod` recovery、development manifest header/CRC-to-SRAM handoff、cached-refill CacheErr handler/recovery，以及 controller/AXI stall-to-DBE 和 QSPI timeout status 观测已通过；ASIC Profile C1 DDR4 已选但 `DDR4-IN-01..08` 仍未登记，旧 `DDR-IN-01..08` 仅为 legacy DDR3 边界，`ddr-contract-entry-audit` 已确认契约一致但 `DDR4_ENTRY_READY=0`；PHY/IP、DRAM part/timing file、real memory model、WDT budget 和 RTL 仍未实现；生产 ROM/signature、ECC/完整 cache-error policy、原始 SPI 无响应检测、外部 EIC/VEIC、QSPI/U-Boot/Linux 也未闭合 | SoC 已有受限的 reset-to-development-stage-1、behavioral DDR store/load、XIP transport-stall failure、软件可读 timeout 和 cached-refill recovery evidence，但无可发布的 secure boot 或产品主存，不能称商用 SoC | 先完成 `docs/ddr4_integration_inputs.md` 的 `DDR4-IN-01..08` 输入登记并使 `DDR4_ENTRY_READY=1`，重建 DDR4 controller/PHY contract；之后实现真实 PHY/controller、APB status、init/training/refresh、bounded AXI error path 和 no-preload boot gate；并继续实现 AXI/XIP QSPI command path、quad pad/PHY、production erase/program、ECC/完整 runtime exception/cache-error policy、boot-status/WDT 与 production handoff，分别验证。 |
@@ -391,7 +399,9 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | P0 | 完成全仓 RTL compile/elaboration，包含默认 SoC、Boot ROM/MMU 配置和 F1 DDR4 behavioral 配置 | 已完成：统一 gate `3/3` 通过；报告 `build/unit_tb/rtl_frontend_compile/rtl_frontend_compile_report.md` | 维护 `RTL_FRONTEND_COMPILE_READY`；后续新增 RTL 或参数配置必须重新运行 `make rtl-frontend-compile` |
 | P0 | 完成 DDR4 vendor-neutral contract/model 仿真：初始化、training 成功/失败、refresh、读写、背压、reset、fatal/error | F1 behavioral gate 已通过；尚未成为真实 PHY/DDR4 product entry | `RTL_FUNCTIONAL_SIM_READY`；F1 证据保持 `BLOCK_VERIFIED (vendor-neutral)` |
 | P0 | 补齐 CPU/MMU 前端功能缺口：完整 kseg0 runtime、SoC page-table/ASID allocator 与多进程调度/shootdown 压力、ECC/外部 EIC policy | 最小 refill/invalid/Modified/vector、CacheErr hardware contract + cached-refill recovery、产品启动 I-cache 首笔错误/vector/ERET retry、320-line AR-backpressure stress、I-cache index tag ABI、软件/SoC page-table/context-switch 子集、4-ASID pressure、20-word/stack kseg0 depth slice、runtime ABI 单镜像、硬件 index replacement、CACHE 六种 D-cache maintenance operation、有限 I/D-cache TagLo/TagHi/SYNC 已有证据 | runtime ABI 单镜像 firmware + SoC gate 通过，并记录 relocation/`.bss`/heap/stack/exception/ERET 证据；完整多段/PIC/TLS/权限 linker/loader、真实 allocator/page-table、复杂 ordering、ECC/production policy 和 kernel 仍未关闭 |
+| P0 | CPU/MMU allocator/shootdown contract | 本轮已冻结 vendor-neutral 单核契约，见 `docs/cpu_mmu_function_contract.md`；RTL allocator、generation 检查、逻辑 mailbox shootdown gate 待实现 | 四地址空间 allocate/map/switch/unmap/refill、page/ASID/all shootdown、ack/timeout、ASID 隔离和压力 gate 全部可重复通过 |
 | P1 | 完成 QSPI 从有限 SoC command/XIP shared-pin slice、vendor-neutral quad S2 memory opt-in 和 development handoff 到完整 SoC/boot 集成，并补齐 UART pad/driver path 和 boot failure 分类 | QSPI command/FIFO/24-bit address/x4 data、SoC 四线 APB command gate、standalone x1/quad AXI/XIP bridge、`qspi-soc-memory-quad-xip-gate`、`product-manifest-handoff-quad-gate` 均有 vendor-neutral 证据；`qspi_soc_pad_mux` 已接入 SoC、`soc_top` 暴露 `qspi_io[3:0]` 并启用 quad opt-in，`mips_soc`/legacy 默认仍为 x1；UART RTL pins、IRQ wiring、外部 RX waveform、SoC RX/PIC/RBR behavioral gate 和 CTS flow-control SoC gate 已通过，pad-mux/板级/量产 RX/TX driver 仍缺 | 当前 QSPI block + APB/SoC x1/x4 command + SoC single-lane XIP/arbiter + vendor-neutral SoC qspi pad mux + vendor-neutral SoC S2 quad memory + quad endian ABI + quad no-preload manifest/CRC/timeout handoff + standalone x1/quad AXI/XIP + SPI flash behavioral + quad pad wrapper + timeout/abort/reset gate + RTL frontend + SoC smoke PASS；UART 当前有 RX 与 CTS/TX behavioral SoC 证据；后续完成真实 PHY、商用 flash model/板级模型、production erase/program/boot SoC gate，以及 UART pad/driver/板级 gate |
+| P1 | QSPI 统一错误分类与恢复策略 | 本轮已冻结 class/code/retry/W1C 契约，见 `docs/qspi_error_taxonomy.md`；当前 RTL 仅完整支持 timeout 单类，其他类别和统一映射待实现 | 八类错误在 Boot ROM/APB/boot-status/mailbox 中保持一致；sticky/W1C、一次性 retry、abort/reset 和 no-preload behavioral gate 全部通过 |
 | P1 | 将每个已实现模块登记为 `IMPLEMENTED`、`BLOCK_VERIFIED` 或 `SOC_INTEGRATED`，补齐测试日志和残余风险 | 持续进行；本轮新增统一 compile 证据，已删除的 D-cache NB 不再计入 | 功能登记表与基线 commit、仿真报告一一对应 |
 | P2 | 保留阻塞式 D-cache 功能基线并维护其已有测试证据 | `rtl/cache/dcache.v` 在当前默认路径；D-cache NB 不再作为候选优化 | D-cache block/CPU/SoC 仿真证据持续可重跑 |
 

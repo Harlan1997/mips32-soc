@@ -12,8 +12,10 @@ module qspi_apb_integration #(
 ) (
     input  wire        clk,
     input  wire        rst_n,
-    input  wire        controller_present,
-    input  wire        xip_timeout_sticky,
+        input  wire        controller_present,
+        input  wire        xip_timeout_sticky,
+    input  wire        error_event,
+    input  wire [31:0] error_value,
 
     input  wire        psel,
     input  wire        penable,
@@ -64,6 +66,8 @@ module qspi_apb_integration #(
         .rst_n              (rst_n),
         .controller_present (controller_present),
         .xip_timeout_sticky (xip_timeout_sticky),
+        .error_event        (error_event),
+        .error_value        (error_value),
         .psel               (status_sel),
         .penable            (penable),
         .pwrite             (pwrite),
