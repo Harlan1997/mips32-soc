@@ -38,11 +38,19 @@ module tb_mips_soc;
 `else
     wire uart_rx = 1'b1;
 `endif
+`ifdef SOC_UART_CTS_FLOW_CONTROL
+    reg uart_cts_n = 1'b1;
+`else
     wire uart_cts_n = 1'b0;
+`endif
     wire uart_dsr_n = 1'b0;
     wire uart_dcd_n = 1'b0;
     wire uart_ri_n = 1'b1;
     reg uart_tx_seen_low;
+`ifdef SOC_UART_CTS_FLOW_CONTROL
+    reg uart_cts_release_seen;
+    reg uart_tx_low_before_cts_release;
+`endif
     
     // Pull down GPIOs weakly to avoid 'z' in simulation if not driven
     genvar i;
@@ -109,6 +117,10 @@ module tb_mips_soc;
         cp0_adel_count = 0;
         cp0_eret_count = 0;
         uart_tx_seen_low = 1'b0;
+`ifdef SOC_UART_CTS_FLOW_CONTROL
+        uart_cts_release_seen = 1'b0;
+        uart_tx_low_before_cts_release = 1'b0;
+`endif
 
         // Initialize memory with an explicit firmware artifact before reset release.
         firmware_hex = "firmware.hex";
@@ -140,6 +152,16 @@ module tb_mips_soc;
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+`ifdef SOC_UART_CTS_FLOW_CONTROL
+                if (uart_tx_low_before_cts_release) begin
+                    $display("REGRESSION_TEST_FAILED UART TX asserted before CTS release");
+                    $finish;
+                end
+                if (!uart_cts_release_seen) begin
+                    $display("REGRESSION_TEST_FAILED UART CTS release checkpoint not reached");
+                    $finish;
+                end
+`endif
                 if (!uart_tx_seen_low) begin
                     $display("REGRESSION_TEST_FAILED UART TX pin never asserted");
                     $finish;
@@ -189,6 +211,24 @@ module tb_mips_soc;
     end
 `endif
 
+`ifdef SOC_UART_CTS_FLOW_CONTROL
+    initial begin
+        wait (rst_n === 1'b1);
+        wait (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.mcr_r[5] === 1'b1 &&
+              u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.tx_empty === 1'b0);
+        repeat (512) @(posedge clk);
+        if (uart_tx !== 1'b1) begin
+            $display("REGRESSION_TEST_FAILED UART TX started while CTS inactive");
+            $finish;
+        end
+        $display("tb_mips_soc: UART CTS inactive held TX idle");
+        uart_cts_release_seen = 1'b1;
+        uart_cts_n = 1'b0;
+        wait (uart_tx === 1'b0);
+        $display("tb_mips_soc: UART CTS release allowed TX frame");
+    end
+`endif
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             cp0_interrupt_count <= 0;
@@ -216,6 +256,10 @@ module tb_mips_soc;
     end
     
     always @(posedge clk) begin
+`ifdef SOC_UART_CTS_FLOW_CONTROL
+        if (rst_n && !uart_cts_release_seen && !uart_tx)
+            uart_tx_low_before_cts_release <= 1'b1;
+`endif
         if (rst_n && !uart_tx)
             uart_tx_seen_low <= 1'b1;
         if (legacy_uart_tx_valid) begin
