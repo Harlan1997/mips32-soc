@@ -134,6 +134,14 @@ crc_no_xor:
     nop
 
 boot_fail:
+    /* Publish a stable malformed-manifest code before stopping. */
+    lui     $t2, 0xA000
+    ori     $t2, $t2, 0x8000
+    addiu   $t3, $zero, 0x20
+    sw      $t3, 0($t2)
+    lui     $t3, 0xB007
+    ori     $t3, $t3, 0x0003
+    sw      $t3, 4($t2)
     lui     $t0, 0xA000
     ori     $t0, $t0, 0xFFFC
     lui     $t1, 0xDEAD
@@ -162,6 +170,14 @@ boot_exception_handler:
     nop
 
 boot_xip_bus_fail:
+    /* Distinguish transport timeout/DBE from a malformed image. */
+    lui     $t2, 0xA000
+    ori     $t2, $t2, 0x8000
+    addiu   $t3, $zero, 0x20
+    sw      $t3, 0($t2)
+    lui     $t3, 0xB007
+    ori     $t3, $t3, 0x0004
+    sw      $t3, 4($t2)
     lui     $k0, 0xA000
     ori     $k0, $k0, 0xFFFC
     lui     $k1, 0xDEAD

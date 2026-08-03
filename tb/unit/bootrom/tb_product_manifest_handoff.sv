@@ -110,6 +110,10 @@ module tb_product_manifest_handoff #(
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
     reg xip_timeout_mailbox_seen;
+    reg boot_status_stage_seen;
+    reg boot_status_failure_seen;
+    reg [31:0] boot_status_stage_value;
+    reg [31:0] boot_status_failure_value;
     // Aggregate gate run directories exceed the historical 128-character
     // simulation-image buffer. Keep the external flash path intact so a
     // failed $readmemh cannot turn a negative test into an all-FF false pass.
@@ -257,6 +261,10 @@ module tb_product_manifest_handoff #(
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
             xip_timeout_mailbox_seen = 1'b0;
+            boot_status_stage_seen = 1'b0;
+            boot_status_failure_seen = 1'b0;
+            boot_status_stage_value = 32'd0;
+            boot_status_failure_value = 32'd0;
         end else begin
             cycles = cycles + 1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'hBFC0_0000)
@@ -406,6 +414,14 @@ module tb_product_manifest_handoff #(
 
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_8000) begin
+                    boot_status_stage_seen = 1'b1;
+                    boot_status_stage_value = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata;
+                end
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_8004) begin
+                    boot_status_failure_seen = 1'b1;
+                    boot_status_failure_value = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata;
+                end
                 if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFF8 &&
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == HANDOFF_MARKER)
                     handoff_seen = 1'b1;
@@ -497,8 +513,16 @@ module tb_product_manifest_handoff #(
                         fail("XIP timeout did not take the Boot ROM bus-error path");
                     if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[6:2] != 5'h07)
                         fail("XIP timeout did not raise DBE");
+                    if (!boot_status_stage_seen || !boot_status_failure_seen ||
+                        boot_status_stage_value != 32'h0000_0020 ||
+                        boot_status_failure_value != 32'hB007_0004)
+                        fail("XIP timeout did not publish boot-status failure code");
                 end else if (!fail_mailbox_seen) begin
                     fail("manifest rejection used the XIP bus-error failure path");
+                end else if (!boot_status_stage_seen || !boot_status_failure_seen ||
+                             boot_status_stage_value != 32'h0000_0020 ||
+                             boot_status_failure_value != 32'hB007_0003) begin
+                    fail("manifest rejection did not publish boot-status failure code");
                 end
                 if (handoff_seen || stage1_entry_seen)
                     fail("bad image executed after a manifest failure");
