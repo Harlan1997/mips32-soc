@@ -102,6 +102,26 @@ module tb_mips_mmu;
         check("tlb_lookup_va tracks req_va",    tlb_lookup_va   == 32'h1234_5000);
         check("tlb_lookup_asid tracks ASID",    tlb_lookup_asid == 8'h55);
 
+        // 7) User mode must not access kernel segments, independent of the
+        // compile-time MMU compatibility setting.
+        is_kernel = 1'b0;
+        req_va = 32'h8000_1000;
+        req_is_store = 1'b0;
+        #1;
+        check("user kseg0 load rejected", !translation_ok);
+        check("user kseg0 load reports AdEL", fault_type == 3'b100);
+        req_is_store = 1'b1;
+        #1;
+        check("user kseg0 store rejected", !translation_ok);
+        check("user kseg0 store reports AdES", fault_type == 3'b101);
+        req_va = 32'hA000_1000;
+        req_is_store = 1'b0;
+        #1;
+        check("user kseg1 load rejected", !translation_ok && fault_type == 3'b100);
+        req_is_store = 1'b1;
+        #1;
+        check("user kseg1 store rejected", !translation_ok && fault_type == 3'b101);
+
         // Summary
         if (errors == 0) $display("TB PASS (0 errors)");
         else             $display("TB FAIL (%0d errors)", errors);
