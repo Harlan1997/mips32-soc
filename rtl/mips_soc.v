@@ -8,6 +8,7 @@ module mips_soc #(
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
     parameter ENABLE_QSPI_QUAD = 1'b0,
     parameter ENABLE_DDR4_STATUS = 1'b0,
+    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0,
     // Verification-only APB error source. Keep disabled for product builds;
     // directed CacheErr recovery tests opt in explicitly at the top level.
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0
@@ -55,6 +56,7 @@ module mips_soc #(
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
         .ENABLE_FLASH_IMAGE_MODEL  (1'b0),
         .ENABLE_DDR4_STATUS        (ENABLE_DDR4_STATUS),
+        .ENABLE_DDR4_STATUS_FATAL  (ENABLE_DDR4_STATUS_FATAL),
         .ENABLE_UART_PINS          (ENABLE_UART_PINS),
         .SPI_READ_TIMEOUT_CYCLES   (SPI_READ_TIMEOUT_CYCLES),
         .ENABLE_QSPI_QUAD          (ENABLE_QSPI_QUAD)

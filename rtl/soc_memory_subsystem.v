@@ -11,7 +11,8 @@ module soc_memory_subsystem #(
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
     parameter ENABLE_SHARED_ARB = 1'b0,
     parameter ENABLE_QSPI_QUAD = 1'b0,
-    parameter ENABLE_DDR4_STATUS = 1'b0
+    parameter ENABLE_DDR4_STATUS = 1'b0,
+    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -359,7 +360,8 @@ module soc_memory_subsystem #(
                 else init_start_r <= 1'b1;
             ddr4_phy_behavioral u_ddr4_status_phy (
                 .clk(clk), .rst_n(rst_n), .init_start(init_start_r),
-                .inject_init_fail(1'b0), .inject_training_fail(1'b0), .inject_fatal(1'b0),
+                .inject_init_fail(1'b0), .inject_training_fail(1'b0),
+                .inject_fatal(ENABLE_DDR4_STATUS_FATAL),
                 .refresh_req(1'b0), .cmd_valid(1'b0), .cmd_ready(phy_cmd_ready),
                 .cmd(4'd0), .cmd_addr(32'd0), .cmd_wdata(32'd0), .cmd_wstrb(4'd0),
                 .rd_valid(phy_rd_valid), .rd_ready(1'b1), .rd_data(phy_rd_data),
