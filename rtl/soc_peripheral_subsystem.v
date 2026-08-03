@@ -123,6 +123,8 @@ module soc_peripheral_subsystem #(
     wire        periph_rst_n = rst_n & ~wdt_reset;
 
     wire [31:0] apb_paddr;
+    wire [31:0] mmu_context_prdata;
+    wire mmu_context_pready, mmu_context_pslverr;
     wire        apb_psel;
     wire        apb_penable;
     wire        apb_pwrite;
@@ -192,6 +194,7 @@ module soc_peripheral_subsystem #(
     wire ddr4_status_sel = apb_psel & (apb_paddr[15:12] == 4'h6); // 0x4000_6000
     wire wdt_sel   = apb_psel & (apb_paddr[15:12] == 4'h7); // 0x4000_7000
     wire boot_status_sel = apb_psel & (apb_paddr[15:12] == 4'h8); // 0x4000_8000
+    wire mmu_context_sel = apb_psel & (apb_paddr[15:12] == 4'h9); // 0x4000_9000
     wire fault_sel = ENABLE_APB_FAULT_INJECTOR & apb_psel & (apb_paddr[15:12] == 4'hF); // 0x4000_F000
 
     wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, fault_prdata;
@@ -207,6 +210,7 @@ module soc_peripheral_subsystem #(
                          ddr4_status_sel ? ddr4_status_prdata :
                          wdt_sel ? wdt_prdata :
                          boot_status_sel ? boot_status_prdata :
+                         mmu_context_sel ? mmu_context_prdata :
                          fault_sel ? fault_prdata : 32'd0;
     assign apb_pready  = uart_sel ? uart_pready :
                          timer_sel ? timer_pready :
@@ -217,6 +221,7 @@ module soc_peripheral_subsystem #(
                          ddr4_status_sel ? ddr4_status_pready :
                          wdt_sel ? wdt_pready :
                          boot_status_sel ? boot_status_pready :
+                         mmu_context_sel ? mmu_context_pready :
                          fault_sel ? fault_pready : 1'b1;
     assign apb_pslverr = uart_sel ? uart_pslverr :
                          timer_sel ? timer_pslverr :
@@ -227,6 +232,7 @@ module soc_peripheral_subsystem #(
                          ddr4_status_sel ? ddr4_status_pslverr :
                          wdt_sel ? wdt_pslverr :
                          boot_status_sel ? boot_status_pslverr :
+                         mmu_context_sel ? mmu_context_pslverr :
                          fault_sel ? fault_pslverr : 1'b0;
 
     wire uart_tx_int;
@@ -339,6 +345,12 @@ module soc_peripheral_subsystem #(
         .pready     (boot_status_pready),
         .pslverr    (boot_status_pslverr)
     );
+
+    apb_mmu_context_status u_apb_mmu_context_status (
+        .clk(clk), .rst_n(rst_n), .psel(mmu_context_sel), .penable(apb_penable),
+        .pwrite(apb_pwrite), .paddr(apb_paddr[4:0]), .pwdata(apb_pwdata),
+        .prdata(mmu_context_prdata), .pready(mmu_context_pready),
+        .pslverr(mmu_context_pslverr));
 
     apb_ddr4_status u_apb_ddr4_status (
         .clk(clk), .rst_n(rst_n), .controller_present(ddr4_controller_present),
