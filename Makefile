@@ -257,6 +257,9 @@ ddr-contract-entry-audit:
 	RUN_DIR=$(DDR_ENTRY_AUDIT_DIR) tb/unit/run_ddr_contract_entry_audit.sh
 
 .PHONY: ddr4-phy-behavioral-gate
+ddr4-status-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/apb_ddr4_status tb/unit/ddr4/run_apb_ddr4_status.sh
+
 ddr4-phy-behavioral-gate:
 	RUN_DIR=$(DDR4_PHY_BEHAVIORAL_DIR) tb/unit/ddr4/run_ddr4_phy_behavioral.sh
 
