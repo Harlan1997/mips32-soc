@@ -128,8 +128,8 @@ uart-pad-wrapper-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/uart_pad_wrapper tb/unit/uart/run_uart_pad_wrapper.sh
 
 uart-external-rx-soc-gate:
-	$(MAKE) -C tb/soc_test/fw FW_NAME=uart_external_rx OUT_DIR=$(UART_EXTERNAL_RX_FW_DIR) FW_BASE=firmware all
-	FW_HEX=$(UART_EXTERNAL_RX_FW_HEX) RUN_DIR=$(SOC_TEST_UART_EXTERNAL_RX_DIR) tb/soc_test/run_uart_external_rx_gate.sh
+	$(MAKE) -C tb/soc_test/fw FW_NAME=uart_external_rx OUT_DIR=$(abspath $(UART_EXTERNAL_RX_FW_DIR)) FW_BASE=firmware all
+	FW_HEX=$(abspath $(UART_EXTERNAL_RX_FW_DIR))/firmware.hex RUN_DIR=$(SOC_TEST_UART_EXTERNAL_RX_DIR) tb/soc_test/run_uart_external_rx_gate.sh
 
 uart-cts-soc-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=uart_cts OUT_DIR=$(abspath $(UART_CTS_FW_DIR)) FW_BASE=firmware all
