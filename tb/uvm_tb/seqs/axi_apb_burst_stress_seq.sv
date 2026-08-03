@@ -22,7 +22,8 @@ class axi_apb_burst_stress_seq extends uvm_sequence#(axi_transaction);
     localparam logic [31:0] DMA_CTRL_ADDR     = `SOC_APB_BASE + `SOC_APB_DMA_OFFSET   + `SOC_DMA_CTRL_OFFSET;
     localparam logic [31:0] PIC_STATUS_ADDR   = `SOC_APB_BASE + `SOC_APB_PIC_OFFSET   + `SOC_PIC_STATUS_OFFSET;
     localparam logic [31:0] PIC_MASK_ADDR     = `SOC_APB_BASE + `SOC_APB_PIC_OFFSET   + `SOC_PIC_MASK_OFFSET;
-    localparam logic [31:0] APB_UNUSED_ADDR   = `SOC_APB_BASE + 32'h0000_5000;
+    // 0x5000 is the QSPI status window; use an actually unmapped APB slot.
+    localparam logic [31:0] APB_UNUSED_ADDR   = `SOC_APB_BASE + 32'h0000_9000;
 
     localparam int WINDOW_UART   = 0;
     localparam int WINDOW_TIMER  = 1;
