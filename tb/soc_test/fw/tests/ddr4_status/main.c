@@ -18,6 +18,12 @@ int main(void) {
             REG32(0xA000FFFC) = 0xDEADDEAD;
             while (1) { }
         }
+        REG32(DDR4_STATUS + 12) = 1;
+        if (REG32(DDR4_STATUS + 8) != 0) {
+            print_str("ddr4_status: FAIL_W1C\n");
+            REG32(0xA000FFFC) = 0xDEADDEAD;
+            while (1) { }
+        }
         print_str("ddr4_status: FATAL_REGRESSION_TEST_SUCCESS\n");
     } else {
         if ((status & 7) != 7 || error != 0) {
