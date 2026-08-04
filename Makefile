@@ -183,6 +183,9 @@ tlb-shootdown-mailbox-gate:
 mmu-ipi-shootdown-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_ipi_shootdown tb/unit/tlb/run_mmu_ipi_shootdown.sh
 
+apb-mmu-ipi-status-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/apb_mmu_ipi_status tb/unit/tlb/run_apb_mmu_ipi_status.sh
+
 tlb-asid-allocator-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_asid_allocator tb/unit/tlb/run_tlb_asid_allocator.sh
 
