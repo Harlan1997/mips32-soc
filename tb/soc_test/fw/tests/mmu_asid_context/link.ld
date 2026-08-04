@@ -23,4 +23,8 @@ SECTIONS
     .tlb_refill 0xBFC00200 : {
         KEEP(*(.tlb_refill))
     } > BOOT_ROM
+
+    .text.shootdown 0xBFC00400 : {
+        KEEP(*(.text.shootdown))
+    } > BOOT_ROM
 }

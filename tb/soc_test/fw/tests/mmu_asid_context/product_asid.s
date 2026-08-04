@@ -94,24 +94,8 @@ _start:
     bne     $t1, $t2, fail
     nop
 
-    /* Software TLB shootdown: invalidate every non-wired slot with TLBWI. */
-    addiu   $s0, $zero, 1
-flush_dynamic:
-    mtc0    $s0, $0
-    nop
-    nop
-    mtc0    $zero, $10
-    mtc0    $zero, $2
-    mtc0    $zero, $3
-    mtc0    $zero, $5
-    nop
-    nop
-    tlbwi
-    nop
-    nop
-    addiu   $s0, $s0, 1
-    slti    $t0, $s0, 64
-    bne     $t0, $zero, flush_dynamic
+    /* Real APB mailbox shootdown: invalidate ASID 1 dynamic entries. */
+    jal     do_mailbox_shootdown
     nop
 
     /* The wired entry must remain usable after the dynamic flush. */
@@ -161,6 +145,51 @@ fail:
     sw      $t1, 0($t0)
 fail_loop:
     b       fail_loop
+    nop
+
+    .section .text.shootdown, "ax"
+    .globl do_mailbox_shootdown
+do_mailbox_shootdown:
+    /* Install APB context mapping as the second wired entry. */
+    addiu   $t0, $zero, 1
+    mtc0    $t0, $0
+    nop
+    lui     $t0, 0xC000
+    ori     $t0, $t0, 0x9000
+    mtc0    $t0, $10
+    nop
+    lui     $t0, 0x0100
+    ori     $t0, $t0, 0x0217
+    mtc0    $t0, $2
+    nop
+    addiu   $t0, $t0, 0x0040
+    mtc0    $t0, $3
+    nop
+    mtc0    $zero, $5
+    tlbwi
+    nop
+    addiu   $t0, $zero, 2
+    mtc0    $t0, $6
+    nop
+    lui     $t7, 0xC000
+    ori     $t7, $t7, 0x9000
+    ori     $t0, $zero, 1
+    sw      $t0, 0($t7)
+    ori     $t0, $zero, 0x8002
+    sw      $t0, 4($t7)
+    ori     $t0, $zero, 1
+    sw      $t0, 8($t7)
+    sw      $t0, 28($t7)
+    lw      $t1, 36($t7)
+    andi    $t2, $t1, 1
+    beq     $t2, $zero, fail
+    nop
+    sw      $t2, 32($t7)
+    lw      $t1, 36($t7)
+    andi    $t2, $t1, 4
+    beq     $t2, $zero, fail
+    nop
+    jr      $ra
     nop
 
     .section .tlb_refill, "ax"

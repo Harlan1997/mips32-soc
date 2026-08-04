@@ -44,7 +44,9 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  assign pslverr = 1'b0;
  assign invalidate_valid = sd_invalidate_valid;
  assign invalidate_asid = sd_invalidate_asid;
- assign invalidate_vpn = sd_invalidate_vpn[18:0];
+ // APB contract carries a 20-bit page number (VA[31:12]); the TLB sideband
+ // consumes VPN2 (VA[31:13]).
+ assign invalidate_vpn = sd_invalidate_vpn[19:1];
  assign invalidate_scope = sd_invalidate_scope;
 
  always @(posedge clk or negedge rst_n) begin
