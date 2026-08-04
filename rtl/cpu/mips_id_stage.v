@@ -225,7 +225,15 @@ module mips_id_stage (
                            ((reads_rs && (fw_mem_waddr == rs_addr)) || 
                             (reads_rt && (fw_mem_waddr == rt_addr))));
 
-    assign stall_req = load_use_hazard;
+    // Keep one explicit bubble at the WB boundary for loads whose consumer
+    // is decoded in the same cycle as register-file writeback.  This matters
+    // for APB/AXI reads where the formatted result becomes valid late in the
+    // blocking transaction; forwarding alone cannot bypass the regfile edge.
+    wire wb_use_hazard = fw_wb_we && (fw_wb_waddr != 5'd0) &&
+                         ((reads_rs && (fw_wb_waddr == rs_addr)) ||
+                          (reads_rt && (fw_wb_waddr == rt_addr)));
+
+    assign stall_req = load_use_hazard || wb_use_hazard;
     
     // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=3,
     // funct=0x3b; its hwreg selector is rd, and UserLocal (hwreg 29) is

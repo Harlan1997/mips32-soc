@@ -733,16 +733,29 @@ module mips_cpu (
     wire [31:0] wb_rdata_fmt;
     wire [31:0] wb_ex_out;
     wire [31:0] wb_pc_plus_8;
+    reg  [31:0] completed_load_data;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            completed_load_data <= 32'd0;
+        else if (data_data_ok && mem_mem_read)
+            completed_load_data <= mem_rdata_fmt;
+    end
     
     // In-order-retirement completion buffer (mini-ROB). Stage 2: DEPTH=2,
     // real circular-buffer bookkeeping now runs, but is still a bit-exact
     // drop-in for the old MEM/WB register because the D-cache is still
     // blocking (see mips_rob.v header comment). Ports match mips_mem_wb_reg
     // exactly.
-    mips_rob #(.DEPTH(2)) u_mips_rob (
+    // The current D-cache is blocking, so use the proven single-entry
+    // retirement path. The depth-2 bookkeeping path remains opt-in until its
+    // late-response capture semantics are closed.
+    wire rob_stall = global_stall && !(data_data_ok || data_cache_op_done);
+
+    mips_rob #(.DEPTH(1)) u_mips_rob (
         .clk             (clk),
         .rst_n           (rst_n),
-        .stall           (global_stall),
+        .stall           (rob_stall),
         .flush           (flush_mem_wb),
 
         .mem_rdata_fmt   (mem_rdata_fmt),
@@ -789,8 +802,10 @@ module mips_cpu (
     // =========================================================================
     wire [31:0] cp0_rdata;
     
+    wire [31:0] wb_rdata_selected = (wb_mem_to_reg == 2'b01) ? completed_load_data : wb_rdata_fmt;
+
     mips_wb_stage u_mips_wb_stage (
-        .mem_rdata_fmt (wb_rdata_fmt),
+        .mem_rdata_fmt (wb_rdata_selected),
         .ex_out      (wb_ex_out),
         .pc_plus_8   (wb_pc_plus_8),
         .mem_to_reg  (wb_mem_to_reg),
