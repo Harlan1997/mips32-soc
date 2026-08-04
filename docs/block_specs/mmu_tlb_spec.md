@@ -83,7 +83,8 @@ MIPS32 硬编码 4 段：
    - `HIT_i = Valid_i && MATCH_VPN_i && MATCH_ASID_i`
 2. **奇偶选择位** = 页偏移范围以上的 VA 位：PageMask `0x0000/0x0003/0x000F/0x003F/0x00FF/0x03FF/0x0FFF/0x3FFF` 分别使用 `VA[12/14/16/18/20/22/24/26]`（等效于按页尺度将 entry 分成偶奇两半）。RTL 对非法/非连续 mask 回退到 4 KiB 选择位。
    - 若选择位 = 0 → 用 `Lo0`（PFN0/C0/D0/V0）
-   - 若选择位 = 1 → 用 `Lo1`
+    - 若选择位 = 1 → 用 `Lo1`
+   - PA 由现有 `{PFN, VA[11:0]}` MMU 接口形成；RTL 在大 PageMask 下将 `VA[13:12]` 等额外页内偏移位折入 PFN 低位，保持完整物理页内偏移。
 3. **命中后属性检查**：
    - 若 `V=0` → **TLB Invalid** 异常（Load/Fetch → TLBL；Store → TLBS）
    - 若 `V=1 && op==store && D=0` → **TLB Modified** 异常

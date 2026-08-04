@@ -175,6 +175,29 @@ module mips_tlb #(
         end
     endfunction
 
+    // The MMU consumes a conventional {PFN, VA[11:0]} address. For a larger
+    // page, fold the additional page-offset bits (VA[13:12], VA[15:12], ...)
+    // into the low PFN bits so that the existing interface still produces the
+    // complete physical address without losing the offset above bit 11.
+    function [19:0] effective_pfn;
+        input [19:0] pfn;
+        input [31:0] va;
+        input [15:0] mask;
+        begin
+            effective_pfn = pfn;
+            case (mask)
+                16'h0003: effective_pfn = {pfn[19:2], va[13:12]};
+                16'h000f: effective_pfn = {pfn[19:4], va[15:12]};
+                16'h003f: effective_pfn = {pfn[19:6], va[17:12]};
+                16'h00ff: effective_pfn = {pfn[19:8], va[19:12]};
+                16'h03ff: effective_pfn = {pfn[19:10], va[21:12]};
+                16'h0fff: effective_pfn = {pfn[19:12], va[23:12]};
+                16'h3fff: effective_pfn = {pfn[19:14], va[25:12]};
+                default:  effective_pfn = pfn;
+            endcase
+        end
+    endfunction
+
     // Port 0 (I-side)
     wire [18:0] lookup0_vpn2 = lookup0_va[31:13];
     wire [TLB_ENTRIES-1:0] lookup0_hit_vec;
@@ -208,7 +231,8 @@ module mips_tlb #(
     assign lookup0_v   = sel_lo0[1];
     assign lookup0_d   = sel_lo0[2];
     assign lookup0_c   = sel_lo0[5:3];
-    assign lookup0_pfn = sel_lo0[25:6];
+    assign lookup0_pfn = effective_pfn(sel_lo0[25:6], lookup0_va,
+                                       tlb_mask[lookup0_hit_index_r]);
 
     // Port 1 (D-side)
     wire [18:0] lookup1_vpn2 = lookup1_va[31:13];
@@ -243,7 +267,8 @@ module mips_tlb #(
     assign lookup1_v   = sel_lo1[1];
     assign lookup1_d   = sel_lo1[2];
     assign lookup1_c   = sel_lo1[5:3];
-    assign lookup1_pfn = sel_lo1[25:6];
+    assign lookup1_pfn = effective_pfn(sel_lo1[25:6], lookup1_va,
+                                       tlb_mask[lookup1_hit_index_r]);
 
     // -------------------------------------------------------------------------
     // Write (TLBWI / TLBWR): synchronous, one entry per cycle.
