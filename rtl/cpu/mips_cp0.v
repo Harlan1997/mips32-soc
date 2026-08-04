@@ -403,7 +403,9 @@ module mips_cp0 (
             {5'd14, 3'd0}: rdata = cp0_epc;
             {5'd15, 3'd0}: rdata = prid_val;
             {5'd15, 3'd1}: rdata = ebase_val;
+            {5'd15, 3'd2}: rdata = 32'd0; // RDHWR CPUNum (single-core)
             {5'd7,  3'd1}: rdata = 32'd32; // RDHWR SYNCI_Step (32-byte I-cache line)
+            {5'd9,  3'd1}: rdata = 32'd2; // RDHWR CCRes (Count increments every 2 cycles)
             {5'd17, 3'd0}: rdata = lladdr_in;
             {5'd16, 3'd0}: rdata = config0_val;
             {5'd16, 3'd1}: rdata = config1_val;

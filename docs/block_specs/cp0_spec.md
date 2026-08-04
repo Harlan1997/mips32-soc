@@ -385,3 +385,4 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v0.4 (2026-08-05)：CP0 `(17,0)` LLAddr 接入单核 reservation 地址只读路径；CP0 block gate 覆盖 MFC0 读回。多核 coherency 与软件写入语义保持 deferred。
 - v0.5 (2026-08-05)：完成 `RDHWR $1` SYNCI_Step（32-byte line step）解码、HWREna[1] user 权限和 CP0 readback；其余 HWR 目标仍 deferred。
 - v0.6 (2026-08-05)：完成 `RDHWR $2` Count 解码、HWREna[2] user 权限和 CP0 Count readback；CPUNum/CCRes 等其余 HWR 目标仍 deferred。
+- v0.7 (2026-08-05)：完成 `RDHWR $0` CPUNum（单核返回 0）和 `$3` CCRes（Count resolution=2 cycles），HWREna[0]/[3] user 权限和 CP0 readback；标准 HWR 0..3 基础集合闭合。
