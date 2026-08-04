@@ -386,4 +386,4 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v0.5 (2026-08-05)：完成 `RDHWR $1` SYNCI_Step（32-byte line step）解码、HWREna[1] user 权限和 CP0 readback；其余 HWR 目标仍 deferred。
 - v0.6 (2026-08-05)：完成 `RDHWR $2` Count 解码、HWREna[2] user 权限和 CP0 Count readback；CPUNum/CCRes 等其余 HWR 目标仍 deferred。
 - v0.7 (2026-08-05)：加入 `RDHWR $0` CPUNum（单核返回 0）和 `$3` CCRes（Count resolution=2 cycles）的 CP0 映射与 HWREna 权限路径。
-- v0.8 (2026-08-05)：修正标准 RDHWR 的 `rs=3` 指令编码及 `$1/$3` CP0 selector/address 映射；真实 SoC gate 发现连续 RDHWR 写回时 CP0 read-address 保留，故 `$0/$3` readback 暂不签收，待 CPU pipeline 修复后重测。
+- v0.8 (2026-08-05)：修正标准 RDHWR 的 `rs=3` 与 `rd=0/1/2/3/29` 指令编码、`$1/$3` CP0 selector/address 映射，并在 CPU 中串行化相邻 CP0 read；SoC gate 验证 `$0..$3/$29` kernel readback 及 user HWREna 权限矩阵。
