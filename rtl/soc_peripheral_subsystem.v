@@ -26,6 +26,11 @@ module soc_peripheral_subsystem #(
 
     output wire        cpu_int,
     output wire        wdt_reset,
+    output wire        tlb_inv_en,
+    output wire [18:0] tlb_inv_vpn2,
+    output wire [7:0]  tlb_inv_asid,
+    output wire [1:0]  tlb_inv_scope,
+    output wire [5:0]  tlb_inv_wired_floor,
 
     input  wire        qspi_timeout_sticky,
     input  wire        qspi_controller_present,
@@ -350,7 +355,10 @@ module soc_peripheral_subsystem #(
         .clk(clk), .rst_n(rst_n), .psel(mmu_context_sel), .penable(apb_penable),
         .pwrite(apb_pwrite), .paddr(apb_paddr[5:0]), .pwdata(apb_pwdata),
         .prdata(mmu_context_prdata), .pready(mmu_context_pready),
-        .pslverr(mmu_context_pslverr));
+        .pslverr(mmu_context_pslverr), .invalidate_valid(tlb_inv_en),
+        .invalidate_asid(tlb_inv_asid), .invalidate_vpn(tlb_inv_vpn2),
+        .invalidate_scope(tlb_inv_scope));
+    assign tlb_inv_wired_floor = 6'd2;
 
     apb_ddr4_status u_apb_ddr4_status (
         .clk(clk), .rst_n(rst_n), .controller_present(ddr4_controller_present),

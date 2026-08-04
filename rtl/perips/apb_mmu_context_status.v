@@ -3,7 +3,9 @@
 module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  input wire clk,input wire rst_n,input wire psel,input wire penable,input wire pwrite,
  input wire [5:0] paddr,input wire [31:0] pwdata,output reg [31:0] prdata,
- output wire pready,output wire pslverr);
+ output wire pready,output wire pslverr,
+ output wire invalidate_valid, output wire [7:0] invalidate_asid,
+ output wire [18:0] invalidate_vpn, output wire [1:0] invalidate_scope);
  reg [7:0] asid_r,generation_r; reg [19:0] vpn_r; reg [1:0] scope_r; reg [3:0] event_r; reg [4:1] sd_status_r;
  wire wr = psel & penable & pwrite;
  wire rd = psel & penable & ~pwrite;
@@ -40,6 +42,10 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
 
  assign pready = 1'b1;
  assign pslverr = 1'b0;
+ assign invalidate_valid = sd_invalidate_valid;
+ assign invalidate_asid = sd_invalidate_asid;
+ assign invalidate_vpn = sd_invalidate_vpn[18:0];
+ assign invalidate_scope = sd_invalidate_scope;
 
  always @(posedge clk or negedge rst_n) begin
    if (!rst_n) begin

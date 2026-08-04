@@ -434,6 +434,11 @@ module mips_soc_impl #(
     wire        s4_rready;
 
     wire        cpu_int;
+    wire        tlb_inv_en;
+    wire [18:0] tlb_inv_vpn2;
+    wire [7:0]  tlb_inv_asid;
+    wire [1:0]  tlb_inv_scope;
+    wire [5:0]  tlb_inv_wired_floor;
     wire        wdt_reset;
     wire        qspi_timeout_sticky;
     wire        ddr4_controller_present, ddr4_init_done, ddr4_training_done, ddr4_fatal_error;
@@ -518,6 +523,11 @@ module mips_soc_impl #(
         .clk             (clk),
         .rst_n           (soc_rst_n),
         .cpu_int         (cpu_int),
+        .tlb_inv_en      (tlb_inv_en),
+        .tlb_inv_vpn2    (tlb_inv_vpn2),
+        .tlb_inv_asid    (tlb_inv_asid),
+        .tlb_inv_scope   (tlb_inv_scope),
+        .tlb_inv_wired_floor(tlb_inv_wired_floor),
 
         .inst_awid       (m0_awid),
         .inst_awaddr     (m0_awaddr),
@@ -1148,6 +1158,11 @@ module mips_soc_impl #(
         .uart_dsr_n   (uart_dsr_n_int), .uart_dtr_n   (uart_dtr_n_int),
         .uart_dcd_n   (uart_dcd_n_int), .uart_ri_n    (uart_ri_n_int),
         .cpu_int      (cpu_int),
+        .tlb_inv_en   (tlb_inv_en),
+        .tlb_inv_vpn2 (tlb_inv_vpn2),
+        .tlb_inv_asid (tlb_inv_asid),
+        .tlb_inv_scope(tlb_inv_scope),
+        .tlb_inv_wired_floor(tlb_inv_wired_floor),
         .wdt_reset    (wdt_reset),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),

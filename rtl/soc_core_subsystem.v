@@ -7,6 +7,11 @@ module soc_core_subsystem (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        cpu_int,
+    input  wire        tlb_inv_en,
+    input  wire [18:0] tlb_inv_vpn2,
+    input  wire [7:0]  tlb_inv_asid,
+    input  wire [1:0]  tlb_inv_scope,
+    input  wire [5:0]  tlb_inv_wired_floor,
 
     output wire [3:0]  inst_awid,
     output wire [31:0] inst_awaddr,
@@ -88,6 +93,11 @@ module soc_core_subsystem (
         .clk             (clk),
         .rst_n           (rst_n),
         .ext_int         ({5'd0, cpu_int}),
+        .tlb_inv_en      (tlb_inv_en),
+        .tlb_inv_vpn2    (tlb_inv_vpn2),
+        .tlb_inv_asid    (tlb_inv_asid),
+        .tlb_inv_scope   (tlb_inv_scope),
+        .tlb_inv_wired_floor(tlb_inv_wired_floor),
 
         .inst_awid       (inst_awid),
         .inst_awaddr     (inst_awaddr),
