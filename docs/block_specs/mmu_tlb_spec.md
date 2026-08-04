@@ -218,10 +218,10 @@ matching-invalid 的 TLBL/TLBS 分类，以及清页 store 的 Modified 分类�
 `mips_tlb + mips_mmu` 建立软件页表 fixture，验证两个 ASID 对同一 VA 的不同 PFN、
 VPN pair even/odd、wired global 保留、非 wired flush 以及 ASID 1..255 回卷后的重新填充。
 这关闭了 software-managed TLB context-switch 的硬件边界子集。该 gate 还验证 PageMask `0x0003`
-的 16 KiB even/odd 选择及 `VA[12]` offset 保持；其余页尺度尚未由 SoC/OS 压力覆盖。新增
+的 16 KiB even/odd 选择及 `VA[12]` offset 保持，以及重叠 valid 项的 MCheck 分类；其余页尺度尚未由 SoC/OS 压力覆盖。新增
 `tb/soc_test/run_product_mmu_asid_context.sh` 在真实 SoC firmware 上验证 ASID 1/2
 同 VA 不同 PFN、切回命中、`TLBWI` 清空动态槽、wired APB 保留和重新 refill。可变页大小、
-multi-hit machine check、micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
+micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
 
 **SoC 级**：
 - Linux boot：kernel 早期 head.S 建映射 → paging on → init 进程 → busybox shell。

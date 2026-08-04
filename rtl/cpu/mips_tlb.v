@@ -73,6 +73,7 @@ module mips_tlb #(
     output wire                  lookup0_d,
     output wire [2:0]            lookup0_c,
     output wire [19:0]           lookup0_pfn,
+    output wire                  lookup0_multi_hit,
 
     input  wire [31:0]           lookup1_va,
     input  wire [7:0]            lookup1_asid,
@@ -80,7 +81,8 @@ module mips_tlb #(
     output wire                  lookup1_v,
     output wire                  lookup1_d,
     output wire [2:0]            lookup1_c,
-    output wire [19:0]           lookup1_pfn
+    output wire [19:0]           lookup1_pfn,
+    output wire                  lookup1_multi_hit
 );
 
     // -------------------------------------------------------------------------
@@ -212,18 +214,22 @@ module mips_tlb #(
     endgenerate
     reg [INDEX_BITS-1:0] lookup0_hit_index_r;
     reg                  lookup0_hit_r;
+    reg                  lookup0_multi_hit_r;
     integer m0;
     always @(*) begin
         lookup0_hit_r       = 1'b0;
         lookup0_hit_index_r = {INDEX_BITS{1'b0}};
+        lookup0_multi_hit_r = 1'b0;
         for (m0 = TLB_ENTRIES - 1; m0 >= 0; m0 = m0 - 1) begin
             if (lookup0_hit_vec[m0]) begin
+                if (lookup0_hit_r) lookup0_multi_hit_r = 1'b1;
                 lookup0_hit_r       = 1'b1;
                 lookup0_hit_index_r = m0[INDEX_BITS-1:0];
             end
         end
     end
     assign lookup0_hit = lookup0_hit_r;
+    assign lookup0_multi_hit = lookup0_multi_hit_r;
     wire [5:0] lookup0_odd_bit = page_odd_bit_index(tlb_mask[lookup0_hit_index_r]);
     wire        lookup0_odd = lookup0_va[lookup0_odd_bit];
     wire [31:0] sel_lo0 = lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r]
@@ -248,18 +254,22 @@ module mips_tlb #(
     endgenerate
     reg [INDEX_BITS-1:0] lookup1_hit_index_r;
     reg                  lookup1_hit_r;
+    reg                  lookup1_multi_hit_r;
     integer m1;
     always @(*) begin
         lookup1_hit_r       = 1'b0;
         lookup1_hit_index_r = {INDEX_BITS{1'b0}};
+        lookup1_multi_hit_r = 1'b0;
         for (m1 = TLB_ENTRIES - 1; m1 >= 0; m1 = m1 - 1) begin
             if (lookup1_hit_vec[m1]) begin
+                if (lookup1_hit_r) lookup1_multi_hit_r = 1'b1;
                 lookup1_hit_r       = 1'b1;
                 lookup1_hit_index_r = m1[INDEX_BITS-1:0];
             end
         end
     end
     assign lookup1_hit = lookup1_hit_r;
+    assign lookup1_multi_hit = lookup1_multi_hit_r;
     wire [5:0] lookup1_odd_bit = page_odd_bit_index(tlb_mask[lookup1_hit_index_r]);
     wire        lookup1_odd = lookup1_va[lookup1_odd_bit];
     wire [31:0] sel_lo1 = lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r]

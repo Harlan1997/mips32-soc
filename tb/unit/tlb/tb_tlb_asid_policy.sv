@@ -34,6 +34,7 @@ module tb_tlb_asid_policy;
     wire        tlb_d;
     wire [2:0]  tlb_c;
     wire [19:0] tlb_pfn;
+    wire        tlb_multi_hit;
 
     reg         req_valid = 1'b0;
     reg  [31:0] req_va = 32'b0;
@@ -137,6 +138,7 @@ module tb_tlb_asid_policy;
         .lookup0_d    (tlb_d),
         .lookup0_c    (tlb_c),
         .lookup0_pfn  (tlb_pfn),
+        .lookup0_multi_hit (tlb_multi_hit),
         .lookup1_va   (mmu_tlb_va),
         .lookup1_asid (mmu_tlb_asid),
         .lookup1_hit  (),
@@ -157,6 +159,7 @@ module tb_tlb_asid_policy;
         .tlb_lookup_va   (mmu_tlb_va),
         .tlb_lookup_asid (mmu_tlb_asid),
         .tlb_lookup_hit  (tlb_hit),
+        .tlb_lookup_multi_hit (tlb_multi_hit),
         .tlb_lookup_v    (tlb_v),
         .tlb_lookup_d    (tlb_d),
         .tlb_lookup_c    (tlb_c),
@@ -286,6 +289,20 @@ module tb_tlb_asid_policy;
         #1;
         check("16KiB physical offset preserves VA[13:12]", tlb_hit &&
               translation_ok && pa == {20'h52005, 12'h1004});
+
+        // Overlapping valid entries are architecturally fatal (MCheck), not a
+        // normal priority-encoded hit.
+        write_entry(2'd0, 19'h03000, 8'h88,
+                    make_lo(20'h60000, 3'b011, 1'b1, 1'b1, 1'b0),
+                    make_lo(20'h60002, 3'b011, 1'b1, 1'b1, 1'b0));
+        write_entry(2'd1, 19'h03000, 8'h88,
+                    make_lo(20'h61000, 3'b011, 1'b1, 1'b1, 1'b0),
+                    make_lo(20'h61002, 3'b011, 1'b1, 1'b1, 1'b0));
+        asid   = 8'h88;
+        req_va = {19'h03000, 13'h0020};
+        #1;
+        check("Overlapping TLB entries raise MCheck", tlb_multi_hit &&
+              !translation_ok && fault_type == 3'b110);
 
         req_valid = 1'b0;
         #1;
