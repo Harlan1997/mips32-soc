@@ -348,7 +348,7 @@ module soc_peripheral_subsystem #(
 
     apb_mmu_context_status u_apb_mmu_context_status (
         .clk(clk), .rst_n(rst_n), .psel(mmu_context_sel), .penable(apb_penable),
-        .pwrite(apb_pwrite), .paddr(apb_paddr[4:0]), .pwdata(apb_pwdata),
+        .pwrite(apb_pwrite), .paddr(apb_paddr[5:0]), .pwdata(apb_pwdata),
         .prdata(mmu_context_prdata), .pready(mmu_context_pready),
         .pslverr(mmu_context_pslverr));
 
