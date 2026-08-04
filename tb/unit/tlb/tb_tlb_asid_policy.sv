@@ -26,6 +26,7 @@ module tb_tlb_asid_policy;
     wire [31:0]          rd_entrylo1;
     wire                 probe_hit;
     wire [INDEX_BITS-1:0] probe_index;
+    wire                 probe_multi_hit;
 
     wire [31:0] mmu_tlb_va;
     wire [7:0]  mmu_tlb_asid;
@@ -131,6 +132,7 @@ module tb_tlb_asid_policy;
         .probe_asid   (wr_asid),
         .probe_hit    (probe_hit),
         .probe_index  (probe_index),
+        .probe_multi_hit (probe_multi_hit),
         .lookup0_va   (mmu_tlb_va),
         .lookup0_asid (mmu_tlb_asid),
         .lookup0_hit  (tlb_hit),
@@ -303,6 +305,7 @@ module tb_tlb_asid_policy;
         #1;
         check("Overlapping TLB entries raise MCheck", tlb_multi_hit &&
               !translation_ok && fault_type == 3'b110);
+        check("TLBP reports overlapping entries", probe_multi_hit && probe_hit);
 
         req_valid = 1'b0;
         #1;
