@@ -30,7 +30,7 @@ module mips_cpu (
     output wire        data_cache_op_valid,
     output wire [4:0]  data_cache_op,
     output wire [31:0] data_cache_op_addr,
-    // CACHE Index_Load/Store_Tag_I are routed to the I-cache by mips_core.
+    // CACHE I-cache invalidate and index-tag operations are routed by mips_core.
     // The raw operation and completion remain on the existing maintenance
     // handshake so the pipeline/CP0 ordering contract is unchanged.
     output wire        data_cache_op_is_icache,
@@ -953,8 +953,10 @@ module mips_cpu (
     assign data_uncacheable = (mmu_d_cache_attr == 3'b010);
     assign data_cache_op_addr = data_addr;
     assign data_cache_op_is_icache = data_cache_op_valid &&
-                                     ((data_cache_op == 5'b00100) ||
-                                      (data_cache_op == 5'b01000));
+                                     ((data_cache_op == 5'b00000) ||
+                                      (data_cache_op == 5'b00100) ||
+                                      (data_cache_op == 5'b01000) ||
+                                      (data_cache_op == 5'b10000));
     assign data_cache_tag_wdata = cp0_taglo;
     wire _mmu_unused = &{1'b0, mmu_i_cache_attr,
                               mmu_i_ok, mmu_d_ok,
