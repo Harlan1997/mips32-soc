@@ -292,6 +292,34 @@ module tb_tlb_asid_policy;
         check("16KiB physical offset preserves VA[13:12]", tlb_hit &&
               translation_ok && pa == {20'h52005, 12'h1004});
 
+        // 64 KiB pair: VA[16] selects the half and VA[15:12] remains offset.
+        write_entry_mask(2'd2, 19'h04000, 8'h99, 16'h000f,
+                         make_lo(20'h53000, 3'b011, 1'b1, 1'b1, 1'b0),
+                         make_lo(20'h53010, 3'b011, 1'b1, 1'b1, 1'b0));
+        asid   = 8'h99;
+        req_va = {19'h04000, 13'h1004};
+        #1;
+        check("64KiB even half preserves offset", tlb_hit && translation_ok &&
+              pa == {20'h53001, 12'h1004});
+        req_va = {19'h04009, 13'h1004}; // VA[16]=1, VA[15:12]=3
+        #1;
+        check("64KiB odd half and offset", tlb_hit && translation_ok &&
+              pa == {20'h53013, 12'h3004});
+
+        // 1 MiB pair: VA[20] selects the half and VA[19:12] is preserved.
+        write_entry_mask(2'd2, 19'h05000, 8'h9a, 16'h00ff,
+                         make_lo(20'h54000, 3'b011, 1'b1, 1'b1, 1'b0),
+                         make_lo(20'h55000, 3'b011, 1'b1, 1'b1, 1'b0));
+        asid   = 8'h9a;
+        req_va = {19'h05000, 13'h1004};
+        #1;
+        check("1MiB even half preserves offset", tlb_hit && translation_ok &&
+              pa == {20'h54001, 12'h1004});
+        req_va = {19'h05081, 13'h1004}; // VA[20]=1, VA[19:12]=0x3
+        #1;
+        check("1MiB odd half and offset", tlb_hit && translation_ok &&
+              pa == {20'h55003, 12'h3004});
+
         // Overlapping valid entries are architecturally fatal (MCheck), not a
         // normal priority-encoded hit.
         write_entry(2'd0, 19'h03000, 8'h88,
