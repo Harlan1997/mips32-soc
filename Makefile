@@ -148,8 +148,8 @@ l2-cpu-gate:
 	FW_HEX=$(L2_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_L2_CPU_DIR) tb/soc_test/run_l2_cpu_gate.sh
 
 llsc-gate:
-	$(MAKE) -C tb/soc_test/fw FW_NAME=llsc OUT_DIR=$(LLSC_FW_DIR) FW_BASE=firmware all
-	FW_HEX=$(LLSC_FW_HEX) RUN_DIR=$(SOC_TEST_LLSC_DIR) tb/soc_test/run_llsc_gate.sh
+	$(MAKE) -C tb/soc_test/fw FW_NAME=llsc OUT_DIR=$(abspath $(LLSC_FW_DIR)) FW_BASE=firmware all
+	FW_HEX=$(abspath $(LLSC_FW_DIR))/firmware.hex RUN_DIR=$(SOC_TEST_LLSC_DIR) tb/soc_test/run_llsc_gate.sh
 
 product-mmu-boot-gate:
 	RUN_DIR=$(PRODUCT_MMU_BOOT_DIR) tb/unit/bootrom/run_product_mmu_boot.sh

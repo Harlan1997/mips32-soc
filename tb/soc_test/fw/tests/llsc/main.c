@@ -27,6 +27,18 @@ static uint32_t sc_word(volatile uint32_t *addr, uint32_t value)
     return result;
 }
 
+static uint32_t read_lladdr(void)
+{
+    uint32_t value;
+    __asm__ volatile("mfc0 %0, $17, 0" : "=r"(value));
+    return value;
+}
+
+static void write_lladdr(uint32_t value)
+{
+    __asm__ volatile("mtc0 %0, $17, 0" : : "r"(value));
+}
+
 int main(void)
 {
     uint32_t result;
@@ -34,6 +46,13 @@ int main(void)
     *TEST_WORD = 0x11223344;
     if (ll_word(TEST_WORD) != 0x11223344)
         fail("FAIL: LL read=", *TEST_WORD);
+    if (read_lladdr() != (uint32_t)TEST_WORD)
+        fail("FAIL: LLAddr after LL=", read_lladdr());
+
+    /* LLAddr is diagnostic read-only state, not a software reservation setter. */
+    write_lladdr(0xDEADBEEFU);
+    if (read_lladdr() != (uint32_t)TEST_WORD)
+        fail("FAIL: LLAddr accepted MTC0=", read_lladdr());
 
     result = sc_word(TEST_WORD, 0x55667788);
     if (result != 1)
