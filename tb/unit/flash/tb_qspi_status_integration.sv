@@ -271,6 +271,28 @@ module tb_qspi_status_integration;
         axi_read(32'h4000_5000, 32'h5153_5001);
         axi_read(32'h4000_5004, 32'h0000_0002);
 
+        // Direct AXI master path to the MMU context window, bypassing CPU/TLB.
+        axi_write(32'h4000_9014, 32'h0000_0001);
+        axi_read_capture(32'h4000_9000, rd_value);
+        if (rd_value[7:0] !== 8'h01) begin
+            $display("FAIL: direct context allocator lease=%h", rd_value);
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_9004, 32'h0000_4001);
+        axi_write(32'h4000_9008, 32'h0000_0001);
+        axi_write(32'h4000_901c, 32'h0000_0001);
+        axi_read_capture(32'h4000_9024, rd_value);
+        if (!rd_value[0]) begin
+            $display("FAIL: direct context shootdown not busy status=%h", rd_value);
+            errors = errors + 1;
+        end
+        axi_write(32'h4000_9020, 32'h0000_0001);
+        axi_read_capture(32'h4000_9024, rd_value);
+        if (!rd_value[2]) begin
+            $display("FAIL: direct context shootdown not done status=%h", rd_value);
+            errors = errors + 1;
+        end
+
         // A normal downstream acceptance/response must not set the fault
         // record before the deliberately stalled transaction below.
         g_m_arready = 1'b1;
