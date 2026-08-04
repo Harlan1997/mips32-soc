@@ -36,6 +36,29 @@ static uint32_t read_vec_id(void)
     __asm__ volatile("nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop" ::: "memory");
     return value;
 }
+static uint32_t read_vic_reg(uint32_t addr)
+{
+    uint32_t value = REG32(addr);
+    __asm__ volatile("nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop" ::: "memory");
+    return value;
+}
+
+static volatile uint32_t cpu_irq_seen;
+static volatile uint32_t cpu_irq_test;
+
+void c_interrupt_handler(void)
+{
+    uint32_t cause, status = 0;
+    __asm__ volatile("mfc0 %0, $13" : "=r"(cause));
+    if (((cause >> 2) & 0x1f) == 0 && cpu_irq_test) {
+        /* Mask IE while APB ACK/SOFT_CLR transactions retire. */
+        __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
+        cpu_irq_seen = read_vec_id();
+        REG32(VIC_ACK) = 0x00000100;
+        __asm__ volatile("nop\n\tnop\n\tnop\n\tnop" ::: "memory");
+        REG32(VIC_SOFT_CLR) = 0x00000100;
+    }
+}
 
 static void mailbox_fail(void) {
     *((volatile uint32_t*)0xA000FFFC) = 0xDEADDEAD;
@@ -189,6 +212,28 @@ static int test_tie_break(void) {
     return 0;
 }
 
+static int test_cpu_interrupt_clear(void)
+{
+    uint32_t status = 0x00000401;
+    cpu_irq_seen = 0xff;
+    cpu_irq_test = 1;
+    REG32(VIC_PRIO(8)) = 7;
+    REG32(VIC_INTR_ENABLE) = 1u << 8;
+    REG32(VIC_SOFT) = 1u << 8;
+    __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
+    for (volatile uint32_t timeout = 0; timeout < 20000 && cpu_irq_seen == 0xff; timeout++) { }
+    cpu_irq_test = 0;
+    REG32(VIC_INTR_ENABLE) = 0;
+    __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
+    { uint32_t active = read_vic_reg(VIC_ACTIVE); uint32_t soft = read_vic_reg(VIC_SOFT);
+      if (cpu_irq_seen != 8 || active != 0 || soft != 0) {
+        print_str("FAIL: irq_seen="); print_hex(cpu_irq_seen); print_str(" active="); print_hex(active); print_str(" soft="); print_hex(soft); print_str("\n");
+        return -1;
+      }
+    }
+    return 0;
+}
+
 int main(void) {
     print_str("vic_cpu test: starting Phase 4D checks\n");
 
@@ -212,6 +257,12 @@ int main(void) {
 
     if (test_tie_break() != 0) {
         print_str("vic_cpu test: FAILED tie break\n");
+        mailbox_fail();
+        return 1;
+    }
+
+    if (test_cpu_interrupt_clear() != 0) {
+        print_str("vic_cpu test: FAILED CPU interrupt clear\n");
         mailbox_fail();
         return 1;
     }
