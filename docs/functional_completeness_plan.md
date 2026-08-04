@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.44（2026-08-04）
+> 版本：v1.45（2026-08-04）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -427,7 +427,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-03 | `integration/function-contract` Phase 2 baseline re-signoff after UART/DDR changes | `make phase2-complete` | PASS：directed `16/16`、coverage `16/16`、required functional groups `100%`、error scan clean；报告 `build/uvm/phase2_complete/phase2_completion_report.md` | 修正 `axi_apb_burst_stress_seq` 对 `0x4000_5000` 的陈旧“unused slot”假设；该地址现在是 QSPI status，unused burst 改用 `0x4000_9000`。确认近期 UART pad 与 DDR status 变更未破坏默认 Phase 2 contract。 |
 | 2026-08-04 | `integration/function-contract` CP0 UserLocal/TLS pointer slice | `RUN_DIR=build/unit/cp0_userlocal tb/unit/cp0/run.sh`；`make rtl-frontend-compile` | PASS：`cp0_timer: PASS`；RTL frontend `3/3` | CP0 `(4,2)` UserLocal 复位为零，MTC0/MFC0 可保存和恢复线程本地指针，且不影响 Context `(4,0)`；Config3.ULRI 置 1。该 slice 关闭 kernel context-switch 的 UserLocal 存储契约；RDHWR `$29` 用户态读取和完整 TLS runtime/linker 仍为后续任务。 |
 | 2026-08-04 | `integration/function-contract` RDHWR `$29` UserLocal decode slice | `RUN_DIR=build/unit/cp0_rdhwr tb/unit/cp0/run.sh`；`make rtl-frontend-compile RUN_ROOT=build/unit_tb/rtl_frontend_rdhwr` | PASS：CP0 regression、RTL frontend `3/3` | SPECIAL3 `RDHWR rt,$29` 已解码为 CP0 `(4,2)` 回写路径；用户态仅当 `HWREna[29]` 置位时允许，禁止时走 CpU=0，kernel/CU0 路径保持可用。 |
-| 2026-08-04 | `integration/function-contract` RDHWR `$29` CPU firmware gate | `make cp0-rdhwr-gate RUN_DIR=build/soc_test/cp0_rdhwr_gate FW_DIR=build/firmware/cp0_rdhwr_gate` | PASS：`SUCCESS: RDHWR USERLOCAL FIRMWARE GATE PASSED`；firmware SHA256 `7799c471d3f31f441aaae9485f8e0b853bc1b0e6d8d9e6b48607ec87b528009c` | 真实 SoC firmware 写入 `UserLocal=0x81234567`、开启 `HWREna[29]`，执行原始 SPECIAL3 `RDHWR rt,$29` 并读回一致值；失败则不发布 mailbox。该 gate 关闭 kernel 建立 TLS 指针和 CPU 读回路径；用户态禁止访问触发 CpU 的专门负例仍待权限 runtime gate。 |
+| 2026-08-04 | `integration/function-contract` RDHWR `$29` CPU firmware gate | `make cp0-rdhwr-gate RUN_DIR=build/soc_test/cp0_rdhwr_gate FW_DIR=build/firmware/cp0_rdhwr_gate` | PASS：`SUCCESS: RDHWR USERLOCAL FIRMWARE GATE PASSED`；firmware SHA256 `80f2df57e3a47173f695bbd310afe88bdfe6f152412e4b285347b7bd6653f892` | 真实 SoC firmware 写入 `UserLocal=0x81234567`；用户态关闭 `HWREna[29]` 后执行 RDHWR，handler 观察 `CpU=0`、推进 EPC 并 `ERET`；随后开启 `HWREna[29]`，用户态读回 UserLocal 一致。该 gate 关闭 TLS 允许/禁止和异常恢复路径。 |
 
 ## 10. 已知未决问题
 

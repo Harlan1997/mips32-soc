@@ -13,6 +13,29 @@
 #include "soc_addr.h"
 #include "print.h"
 
+static volatile uint32_t cp_u_seen;
+
+/* This firmware-owned handler makes the user-mode RDHWR negative case
+ * observable without relying on the generic handler's permissive skip path. */
+void c_interrupt_handler(void) {
+    uint32_t cause, epc;
+    asm volatile("mfc0 %0, $13" : "=r"(cause));
+    asm volatile("mfc0 %0, $14" : "=r"(epc));
+    if (((cause >> 2) & 0x1f) == 11) {
+        cp_u_seen++;
+    }
+    epc += 4;
+    asm volatile("mtc0 %0, $14" : : "r"(epc));
+}
+
+static uint32_t read_userlocal(void) {
+    uint32_t value;
+    asm volatile(".word 0x7c68e83b\n\t"
+                 "move %0, $8\n\t"
+                 : "=r"(value) : : "$8");
+    return value;
+}
+
 static uint32_t cp0_sweep(void) {
     uint32_t v = 0, tmp;
     uint32_t save_compare;
@@ -55,14 +78,42 @@ static uint32_t cp0_sweep(void) {
                      "mtc0 %1, $7, 0\n\t"
                      "ehb\n\t"
                      :: "r"(userlocal), "r"(hwrena));
-        asm volatile(".word 0x7c68e83b\n\t"
-                     "move %0, $8\n\t"
-                     : "=r"(tls_read) : : "$8");
+        tls_read = read_userlocal();
         if (tls_read != userlocal) {
             print_str("FAIL: RDHWR UserLocal got ");
             print_hex(tls_read);
             print_str(" expected ");
             print_hex(userlocal);
+            print_str("\n");
+            return 0;
+        }
+
+        /* User mode must not read RDHWR $29 while HWREna[29] is clear. */
+        cp_u_seen = 0;
+        asm volatile("mtc0 %0, $7, 0\n\t"
+                     "mtc0 %1, $12, 0\n\t"
+                     "ehb\n\t"
+                     :: "r"(0U), "r"(0x10U));
+        (void)read_userlocal();
+        asm volatile("mtc0 %0, $12, 0\n\t"
+                     "ehb\n\t" :: "r"(0U));
+        if (cp_u_seen != 1U) {
+            print_str("FAIL: RDHWR disabled user access did not raise CpU\n");
+            return 0;
+        }
+
+        /* Re-enable the user capability and verify the same instruction now
+         * returns the kernel-installed thread pointer in user mode. */
+        asm volatile("mtc0 %0, $7, 0\n\t"
+                     "mtc0 %1, $12, 0\n\t"
+                     "ehb\n\t"
+                     :: "r"(0x20000000U), "r"(0x10U));
+        tls_read = read_userlocal();
+        asm volatile("mtc0 %0, $12, 0\n\t"
+                     "ehb\n\t" :: "r"(0U));
+        if (tls_read != userlocal) {
+            print_str("FAIL: RDHWR enabled user read got ");
+            print_hex(tls_read);
             print_str("\n");
             return 0;
         }
