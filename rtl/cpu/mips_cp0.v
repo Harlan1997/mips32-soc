@@ -83,6 +83,10 @@ module mips_cp0 (
     // Phase B.3.d: faulting virtual address for BadVAddr / Context.BadVPN2
     // Latched only when except_code is address-related (1/2/3/4/5).
     input  wire [31:0] bad_vaddr,
+    // Single-core LL/SC reservation address (CP0 LLAddr, reg 17 sel 0).
+    // The reservation itself remains owned by mips_cpu; this is read-only
+    // observability for software diagnostics.
+    input  wire [31:0] lladdr_in,
 
     // Outputs to CPU pipeline
     output wire [31:0] epc_out,      // EPC register value (used by ERET)
@@ -399,6 +403,7 @@ module mips_cp0 (
             {5'd14, 3'd0}: rdata = cp0_epc;
             {5'd15, 3'd0}: rdata = prid_val;
             {5'd15, 3'd1}: rdata = ebase_val;
+            {5'd17, 3'd0}: rdata = lladdr_in;
             {5'd16, 3'd0}: rdata = config0_val;
             {5'd16, 3'd1}: rdata = config1_val;
             {5'd16, 3'd2}: rdata = config2_val;

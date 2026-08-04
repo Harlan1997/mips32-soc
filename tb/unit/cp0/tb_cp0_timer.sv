@@ -29,6 +29,7 @@ module tb_cp0_timer;
     reg         except_bd = 0;
     reg         eret = 0;
     reg  [31:0] bad_vaddr = 0;
+    reg  [31:0] lladdr_in = 0;
 
     // Phase B.4 CP0 privilege exports (unused checks in this timer/TLB tb but
     // required for `.*` wildcard connectivity).
@@ -487,6 +488,11 @@ module tb_cp0_timer;
         @(posedge clk);
         mfc0(5'd12, 3'd0, rd);
         check("MCheck sets sticky Status.TS", rd[21] == 1'b1);
+
+        // LLAddr is read-only CP0 observability of the CPU reservation.
+        lladdr_in = 32'h8123_4560;
+        mfc0(5'd17, 3'd0, rd);
+        check("LLAddr reports reservation address", rd == 32'h8123_4560);
         mtc0(5'd12, 3'd0, 32'd0);
         mfc0(5'd12, 3'd0, rd);
         check("Status write cannot clear TS", rd[21] == 1'b1);

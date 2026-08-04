@@ -859,6 +859,7 @@ module mips_cpu (
         .except_bd    (wb_bd),
         .eret         (wb_is_eret),
         .bad_vaddr    (bad_vaddr),
+        .lladdr_in    (ll_reservation_addr),
         .tlb_inv_en   (tlb_inv_en),
         .tlb_inv_vpn2 (tlb_inv_vpn2),
         .tlb_inv_asid (tlb_inv_asid),
