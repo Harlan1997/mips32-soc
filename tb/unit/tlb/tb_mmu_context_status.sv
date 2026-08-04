@@ -2,7 +2,10 @@
 module tb_mmu_context_status;
   reg clk=0; always #5 clk=~clk;
   reg rst_n=0, psel=0, penable=0, pwrite=0; reg [5:0] paddr=0; reg [31:0] pwdata=0;
-  wire [31:0] prdata; wire pready, pslverr; integer errors=0;
+  wire [31:0] prdata; wire pready, pslverr;
+  wire invalidate_valid; wire [7:0] invalidate_asid;
+  wire [18:0] invalidate_vpn; wire [1:0] invalidate_scope;
+  integer errors=0;
   apb_mmu_context_status dut(.*);
   task apb_write(input [5:0] a,input [31:0] d); begin @(negedge clk); paddr=a;pwdata=d;pwrite=1;psel=1;penable=1; @(negedge clk); psel=0;penable=0;pwrite=0; end endtask
   task apb_read(input [5:0] a,input [31:0] exp,input [127:0] n); begin @(negedge clk);paddr=a;pwrite=0;psel=1;penable=1;#1;if(prdata!==exp) begin $display("[FAIL] %0s got %h exp %h",n,prdata,exp);errors=errors+1;end else $display("[PASS] %0s",n);@(negedge clk);psel=0;penable=0; end endtask
