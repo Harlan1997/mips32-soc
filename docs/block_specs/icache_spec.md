@@ -6,7 +6,10 @@
 > PLRU 逐出且 MRU way 保留、数据完整性）通过，纳入 `make dut-block-unit-gate`（[7/7]）。
 > 全部固件测试经指令取指路径 + phase3/uvm/smoke 全绿。
 >
-> **未实现（后续）**：CACHE 指令子集（invalidate/fill）。下文 §0 起为完整 v0 目标。
+> 已实现的 CACHE 子集：`Index_Invalidate_I`、`Hit_Invalidate_I`、
+> `Index_Store_Tag_I`、`Index_Load_Tag_I`。这些操作均为阻塞式维护，
+> 不发起 AXI 写事务；Hit invalidate 未命中时为成功 no-op。`SYNCI` 仍是
+> in-order pipeline 的 ordered no-op，完整 OS cache-ordering ABI 仍为后续工作。
 
 ---
 
@@ -123,10 +126,10 @@ MIPS CACHE `op[4:0]` 编码，本 phase 实现子集：
 
 | op | 助记 | 行为 |
 |:-:|---|---|
-| 5'b00000 | Index_Invalidate_I  | 清 `EntryLo0.PFN` 索引对应 way 的 valid（way 由 op[1:0] 指定或 spec-defined）|
+| 5'b00000 | Index_Invalidate_I  | 清除由 VA `[12:11]` 选择的 way、VA `[10:5]` 选择的 set 的 valid |
 | 5'b01000 | Index_Store_Tag_I    | 用 TagLo (CP0) 写 tag/valid 到 index |
 | 5'b00001 | Index_Load_Tag_I     | 读 index 的 tag 到 TagLo |
-| 5'b10000 | Hit_Invalidate_I     | 若命中 → 清该 way valid；miss → nop |
+| 5'b10000 | Hit_Invalidate_I     | 若 physical tag 命中 → 清该 way valid；miss → 成功 no-op |
 
 **决策**：TagLo/TagHi CP0 寄存器（`(28, 0)` / `(29, 0)`）需要在 CP0 spec 补齐（当前 Phase B spec 未列 → v1 增补）。
 

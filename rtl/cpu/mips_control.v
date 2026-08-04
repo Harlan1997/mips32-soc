@@ -438,8 +438,10 @@ module mips_control (
                 // sideband for the two architecturally distinct I-cache ops.
                 // The effective address is still computed by EX as rs+imm.
                 case (rt)
+                    5'b00000, // Index_Invalidate_I
                     5'b00100, // Index_Load_Tag_I
                     5'b01000, // Index_Store_Tag_I
+                    5'b10000, // Hit_Invalidate_I
                     5'b00001, // Index_Writeback_Invalidate_D
                     5'b00101, // Index_Load_Tag_D
                     5'b01001, // Index_Store_Tag_D

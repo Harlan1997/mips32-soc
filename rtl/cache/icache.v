@@ -116,8 +116,24 @@ module icache (
 
     wire [5:0]  maint_index = maint_addr[10:5];
     wire [TAG_BITS:0] maint_tag_entry = tag_rdata[maint_way];
+    wire              maint_index_invalidate = (maint_op == 5'b00000);
     wire              maint_load_tag = (maint_op == 5'b00100);
     wire              maint_store_tag = (maint_op == 5'b01000);
+    wire              maint_hit_invalidate = (maint_op == 5'b10000);
+    reg               maint_hit;
+    reg [1:0]         maint_hit_way;
+    integer           mw;
+    always @(*) begin
+        maint_hit = 1'b0;
+        maint_hit_way = 2'd0;
+        for (mw = 0; mw < WAYS; mw = mw + 1) begin
+            if (tag_rdata[mw][TAG_BITS] &&
+                (tag_rdata[mw][TAG_BITS-1:0] == maint_addr[31:11])) begin
+                maint_hit = 1'b1;
+                maint_hit_way = mw[1:0];
+            end
+        end
+    end
 
     // Synchronous read for SRAM (fan out across 4 ways)
     wire sram_read_en  = (state == IDLE && (cpu_req || maint_req)) ||
@@ -284,7 +300,12 @@ module icache (
                     req_buf_valid <= 1'b0;
                 end
                 CACHE_LOOKUP: begin
-                    if (maint_store_tag) begin
+                    if (maint_index_invalidate) begin
+                        tag_ram[maint_way][maint_index][TAG_BITS] <= 1'b0;
+                    end else if (maint_hit_invalidate) begin
+                        if (maint_hit)
+                            tag_ram[maint_hit_way][maint_index][TAG_BITS] <= 1'b0;
+                    end else if (maint_store_tag) begin
                         // Ignore the D-cache dirty bit in TagLo[21].
                         tag_ram[maint_way][maint_index] <=
                             {maint_tag_wdata[22], maint_tag_wdata[20:0]};

@@ -96,9 +96,10 @@ module tb_mips_core_icache_tag;
                     3'd1: program_word = 32'h3508_2345; // ORI t0, t0, 0x2345
                     3'd2: program_word = 32'h4088_e000; // MTC0 t0, TagLo
                     3'd3: program_word = 32'hbc08_2800; // CACHE Index_Store_Tag_I
-                    3'd4: program_word = 32'hbc04_2800; // CACHE Index_Load_Tag_I
-                    3'd5: program_word = 32'h4009_e000; // MFC0 t1, TagLo
-                    3'd6: program_word = 32'h0800_0000; // J 0
+                    3'd4: program_word = 32'hbc00_2800; // CACHE Index_Invalidate_I
+                    3'd5: program_word = 32'hbc04_2800; // CACHE Index_Load_Tag_I
+                    3'd6: program_word = 32'hbc10_0000; // CACHE Hit_Invalidate_I
+                    3'd7: program_word = 32'h4009_e000; // MFC0 t1, TagLo
                     default: program_word = 32'h0000_0000;
                 endcase
             end
@@ -162,7 +163,19 @@ module tb_mips_core_icache_tag;
                             failures = failures + 1;
                     end
                     1: begin
+                        if (u_core.u_cpu.data_cache_op !== 5'b00000)
+                            failures = failures + 1;
+                        if (!u_core.icache_op_valid || u_core.dcache_op_valid)
+                            failures = failures + 1;
+                    end
+                    2: begin
                         if (u_core.u_cpu.data_cache_op !== 5'b00100)
+                            failures = failures + 1;
+                        if (!u_core.icache_op_valid || u_core.dcache_op_valid)
+                            failures = failures + 1;
+                    end
+                    3: begin
+                        if (u_core.u_cpu.data_cache_op !== 5'b10000)
                             failures = failures + 1;
                         if (!u_core.icache_op_valid || u_core.dcache_op_valid)
                             failures = failures + 1;
@@ -173,11 +186,11 @@ module tb_mips_core_icache_tag;
             end
             prev_op_valid <= u_core.u_cpu.data_cache_op_valid;
 
-            if ((op_count == 2) &&
-                (u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[9] === TAGLO_I_VALUE)) begin
+            if ((op_count == 4) &&
+                (u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[9] === 32'd0)) begin
                 if (u_core.u_cpu.u_mips_cp0.cp0_cause[6:2] !== 5'd0)
                     failures = failures + 1;
-                if (ar_count != 1)
+                if (ar_count != 2)
                     failures = failures + 1;
                 if (!stall_seen)
                     failures = failures + 1;
@@ -189,13 +202,13 @@ module tb_mips_core_icache_tag;
             end
 
             if (cycles > 5000) begin
-                if (op_count != 2)
+                if (op_count != 4)
                     failures = failures + 1;
-                if (u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[9] !== TAGLO_I_VALUE)
+                if (u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[9] !== 32'd0)
                     failures = failures + 1;
                 if (u_core.u_cpu.u_mips_cp0.cp0_cause[6:2] !== 5'd0)
                     failures = failures + 1;
-                if (ar_count != 1)
+                if (ar_count != 2)
                     failures = failures + 1;
                 if (failures != 0)
                     $display("REGRESSION_TEST_FAIL mips_core_icache_tag failures=%0d ops=%0d ar_count=%0d", failures, op_count, ar_count);
