@@ -180,6 +180,9 @@ qspi-retry-policy-gate:
 tlb-shootdown-mailbox-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_shootdown_mailbox tb/unit/tlb/run_tlb_shootdown_mailbox.sh
 
+mmu-ipi-shootdown-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_ipi_shootdown tb/unit/tlb/run_mmu_ipi_shootdown.sh
+
 tlb-asid-allocator-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/tlb_asid_allocator tb/unit/tlb/run_tlb_asid_allocator.sh
 
