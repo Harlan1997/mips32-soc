@@ -37,6 +37,14 @@ module mips_tlb #(
     input  wire [31:0]           wr_entrylo0,  // full 32-bit EntryLo0
     input  wire [31:0]           wr_entrylo1,  // full 32-bit EntryLo1
 
+    // Optional invalidate sideband: scope 0=page, 1=ASID, 2=all dynamic.
+    // Entries below inv_wired_floor are preserved by the TLB itself.
+    input  wire                  inv_en,
+    input  wire [18:0]           inv_vpn2,
+    input  wire [7:0]            inv_asid,
+    input  wire [1:0]            inv_scope,
+    input  wire [INDEX_BITS-1:0] inv_wired_floor,
+
     // Read port (TLBR): combinational
     input  wire [INDEX_BITS-1:0] rd_index,
     output wire [18:0]           rd_vpn2,
@@ -219,6 +227,7 @@ module mips_tlb #(
     // will be overwritten before any lookup can see them (guarded by valid).
     // -------------------------------------------------------------------------
     integer k;
+    reg inv_match;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             for (k = 0; k < TLB_ENTRIES; k = k + 1) begin
@@ -232,6 +241,22 @@ module mips_tlb #(
             tlb_entrylo1[wr_index] <= wr_entrylo1;
             tlb_g       [wr_index] <= wr_entrylo0[0] & wr_entrylo1[0];
             tlb_valid   [wr_index] <= 1'b1;
+        end else if (inv_en) begin
+            for (k = 0; k < TLB_ENTRIES; k = k + 1) begin
+                inv_match = 1'b0;
+                if (k >= inv_wired_floor) begin
+                    case (inv_scope)
+                      2'd0: inv_match = tlb_valid[k] &&
+                                         (tlb_vpn2[k] == inv_vpn2) &&
+                                         (tlb_g[k] || (tlb_asid[k] == inv_asid));
+                      2'd1: inv_match = tlb_valid[k] &&
+                                         (tlb_g[k] || (tlb_asid[k] == inv_asid));
+                      2'd2: inv_match = tlb_valid[k];
+                      default: inv_match = 1'b0;
+                    endcase
+                end
+                if (inv_match) tlb_valid[k] <= 1'b0;
+            end
         end
     end
 
