@@ -55,7 +55,7 @@ MIPS32 CP0 通过 `(regnum[4:0], sel[2:0])` 8 位地址访问，共 256 槽。�
 | 16 | 1 | Config1       | CFG1     | 见 §12 | TLB/Cache/协处理器指示 |
 | 16 | 2 | Config2       | CFG2     | 32'h8000_0000 | L2/L3 cache（此 phase 全 tie 0，M 位 → Config3） |
 | 16 | 3 | Config3       | CFG3     | 见 §12 | R2 特性位 |
-| 17 | 0 | LLAddr        | LLADDR   | 32'h0000_0000 | CP0 架构保留字段；当前单核 LL/SC reservation 在 CPU 内部维护，LLAddr 尚未接入 MFC0/MTC0 |
+| 17 | 0 | LLAddr        | LLADDR   | 32'h0000_0000 | 只读映射 CPU 单核 LL/SC reservation 对齐地址；MFC0 可读，MTC0 不改变 reservation；多核一致性仍不在当前契约 |
 | 30 | 0 | ErrorEPC      | ERR_EPC  | 32'hxxxx_xxxx | 错误异常返回地址（Reset/NMI/CacheErr） |
 
 **Sel != 已列** 值：读返回 0，写忽略。
@@ -360,7 +360,7 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 2. **B.2 — 定时器与中断**：Count/Compare、Cause.IP/TI/IV、IntCtl (IPTI/VS)、HWREna（RDHWR $2）。
 3. **B.3 — MMU/TLB**：Index/Random/Wired/EntryHi/EntryLo0/1/PageMask/Context/BadVAddr、TLBR/TLBWI/TLBWR/TLBP 指令、refill/invalid/modified 异常路径（详见 `mmu_tlb_spec.md`）。
 4. **B.4 — 用户态**：KSU 生效、CU0 检查、User-mode 内存访问受 TLB 保护、Coprocessor Unusable 路径。
-5. **B.5 — 可选**：LLAddr + LL/SC；UserLocal (4,2) 与 RDHWR $29 用户态读取已实现；EJTAG Debug (延后)。
+5. **B.5 — 可选**：LLAddr + LL/SC 已完成单核 reservation/只读可见性；UserLocal (4,2) 与 RDHWR $29 用户态读取已实现；EJTAG Debug (延后)。
 
 每小步独立回归 + SVA + firmware sanity + 覆盖率增量。
 
@@ -382,4 +382,4 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v0 (2026-07-26)：初版规格，20 CP0 寄存器完整位段 + 复位 + 异常模型。等待 Phase B 起始时评审。
 - v0.1 (2026-08-04)：UserLocal (4,2) MTC0/MFC0 存储契约实现并通过 CP0 directed gate；Config3.ULRI 置位。RDHWR `$29` 与完整 TLS linker/runtime 保持后续范围。
 - v0.2 (2026-08-04)：SPECIAL3 `RDHWR rt,$29` 接入 CP0 (4,2) 回写路径，用户态受 `HWREna[29]` gating；RTL frontend 与 CP0 regression 通过，完整 firmware TLS runtime 仍后续验证。
-- v0.3 (2026-08-04)：CPU 接入 LL/SC 单核 reservation contract；`llsc-gate` 覆盖成功/失败/普通 store 清除 reservation。LLAddr CP0 可见性和多核 coherency 保持 deferred。
+- v0.4 (2026-08-05)：CP0 `(17,0)` LLAddr 接入单核 reservation 地址只读路径；CP0 block gate 覆盖 MFC0 读回。多核 coherency 与软件写入语义保持 deferred。
