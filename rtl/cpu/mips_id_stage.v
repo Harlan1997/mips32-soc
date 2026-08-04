@@ -237,12 +237,14 @@ module mips_id_stage (
     
     // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=3,
     // funct=0x3b; hwreg selector is rd. UserLocal (29) maps to CP0 (4,2),
-    // while SYNCI_Step (1) uses the reserved internal CP0 (7,1) read slot.
+    // while SYNCI_Step (1) uses CP0 (7,1) and Count (2) uses CP0 (9,0).
     wire is_rdhwr = (inst[31:26] == 6'b011111) &&
                               (inst[25:21] == 5'b00011) &&
-                              ((inst[15:11] == 5'd1) || (inst[15:11] == 5'd29)) &&
+                              ((inst[15:11] == 5'd1) || (inst[15:11] == 5'd2) ||
+                               (inst[15:11] == 5'd29)) &&
                               (inst[5:0] == 6'b111011);
-    assign id_cp0_raddr = is_rdhwr ? ((inst[15:11] == 5'd29) ? 5'd4 : 5'd7) : inst[15:11];
-    assign id_cp0_sel   = is_rdhwr ? ((inst[15:11] == 5'd29) ? 3'd2 : 3'd1) : inst[2:0];
+    assign id_cp0_raddr = is_rdhwr ? ((inst[15:11] == 5'd29) ? 5'd4 :
+                                      (inst[15:11] == 5'd2) ? 5'd9 : 5'd7) : inst[15:11];
+    assign id_cp0_sel   = is_rdhwr ? ((inst[15:11] == 5'd29) ? 3'd2 : 3'd0) : inst[2:0];
 
 endmodule

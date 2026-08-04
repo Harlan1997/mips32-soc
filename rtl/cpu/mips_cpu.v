@@ -413,7 +413,8 @@ module mips_cpu (
     // without Status.CU0 override, raise Coprocessor Unusable (ExcCode 11).
     wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
                                  (id_inst[25:21] == 5'b00011) &&
-                                 ((id_inst[15:11] == 5'd1) || (id_inst[15:11] == 5'd29)) &&
+                                 ((id_inst[15:11] == 5'd1) || (id_inst[15:11] == 5'd2) ||
+                                  (id_inst[15:11] == 5'd29)) &&
                                  (id_inst[5:0] == 6'b111011);
     wire id_is_priv     = id_cp0_we | id_is_mfc0 | id_is_eret | (|id_tlb_op);
     wire id_rdhwr_allowed = id_is_rdhwr && cpu_hwrena[id_inst[15:11]];

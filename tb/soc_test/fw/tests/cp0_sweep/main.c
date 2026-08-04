@@ -44,6 +44,14 @@ static uint32_t read_synci_step(void) {
     return value;
 }
 
+static uint32_t read_hwcount(void) {
+    uint32_t value;
+    asm volatile(".word 0x7c10083b\n\t"
+                 "move %0, $8\n\t"
+                 : "=r"(value) : : "$8");
+    return value;
+}
+
 static uint32_t cp0_sweep(void) {
     uint32_t v = 0, tmp;
     uint32_t save_compare;
@@ -80,7 +88,7 @@ static uint32_t cp0_sweep(void) {
      * SPECIAL3 rs=3, rt=$8, rd=$29, funct=0x3b. */
     {
         uint32_t userlocal = 0x81234567U;
-        uint32_t hwrena = 0x20000002U;
+        uint32_t hwrena = 0x20000006U;
         uint32_t tls_read;
         asm volatile("mtc0 %0, $4, 2\n\t"
                      "mtc0 %1, $7, 0\n\t"
@@ -88,6 +96,10 @@ static uint32_t cp0_sweep(void) {
                      :: "r"(userlocal), "r"(hwrena));
         if (read_synci_step() != 32U) {
             print_str("FAIL: RDHWR SYNCI_Step\n");
+            return 0;
+        }
+        if (read_hwcount() == 0U) {
+            print_str("FAIL: RDHWR Count\n");
             return 0;
         }
         tls_read = read_userlocal();
