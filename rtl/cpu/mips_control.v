@@ -510,6 +510,13 @@ module mips_control (
                         reg_dst    = 2'b10; // $ra
                         mem_to_reg = 2'b10; // PC+8
                     end
+                    5'b11111: begin // SYNCI offset(base), REGIMM rt=31
+                        alu_op         = 5'b00001;
+                        alu_src        = 1'b1;
+                        cache_op_valid = 1'b1;
+                        cache_op       = 5'b10000; // Hit_Invalidate_I
+                        imm_signed     = 1'b1;
+                    end
                     default: begin
                         illegal_inst = 1'b1;
                     end

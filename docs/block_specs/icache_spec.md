@@ -8,8 +8,8 @@
 >
 > 已实现的 CACHE 子集：`Index_Invalidate_I`、`Hit_Invalidate_I`、
 > `Index_Store_Tag_I`、`Index_Load_Tag_I`。这些操作均为阻塞式维护，
-> 不发起 AXI 写事务；Hit invalidate 未命中时为成功 no-op。`SYNCI` 仍是
-> in-order pipeline 的 ordered no-op，完整 OS cache-ordering ABI 仍为后续工作。
+> 不发起 AXI 写事务；Hit invalidate 未命中时为成功 no-op。`SYNCI` 映射为
+> 同一条 Hit invalidate 维护路径；完整 OS cache-ordering ABI 仍为后续工作。
 
 ---
 
@@ -135,7 +135,9 @@ MIPS CACHE `op[4:0]` 编码，本 phase 实现子集：
 
 CACHE 指令走 MEM 阶段发到 I-cache 控制端口（新增），产生 1-3 cycle bubble。
 
-**SYNCI**：软件工具用来同步 I-cache 与 D-cache（比如 JIT）。实现为 CACHE Hit_Invalidate_I + `SYNC` 序列，或直接把 SYNCI 视为 nop（若无 self-modifying code 支持）。Phase C 默认支持 SYNCI = Hit_Invalidate_I。
+**SYNCI**：软件工具用来同步 I-cache 与 D-cache（比如 JIT）。当前实现将
+`SYNCI offset(base)` 解码为 I-cache `Hit_Invalidate_I`，并依靠 in-order
+pipeline 保证此前存储已完成；额外 `SYNC` 仍是 ordered no-op。
 
 ---
 

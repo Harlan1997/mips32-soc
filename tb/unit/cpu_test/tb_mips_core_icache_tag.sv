@@ -98,7 +98,7 @@ module tb_mips_core_icache_tag;
                     3'd3: program_word = 32'hbc08_2800; // CACHE Index_Store_Tag_I
                     3'd4: program_word = 32'hbc00_2800; // CACHE Index_Invalidate_I
                     3'd5: program_word = 32'hbc04_2800; // CACHE Index_Load_Tag_I
-                    3'd6: program_word = 32'hbc10_0000; // CACHE Hit_Invalidate_I
+                    3'd6: program_word = 32'h041f_0000; // SYNCI 0($zero)
                     3'd7: program_word = 32'h4009_e000; // MFC0 t1, TagLo
                     default: program_word = 32'h0000_0000;
                 endcase
