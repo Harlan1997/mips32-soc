@@ -163,6 +163,10 @@ module mips_cp0 (
     reg        cp0_errorepc_valid;
     reg [17:0] cp0_ebase_hi;      // EBase[29:12] (bits [31:30]=10 forced; [11:10]=0; [9:0]=CPUNum)
     reg [31:0] cp0_hwrena;
+    // UserLocal is the software-managed per-thread pointer exposed by CP0
+    // (4,2).  RDHWR integration remains a separate decode slice; MFC0/MTC0
+    // provides the kernel context-switch ABI in this step.
+    reg [31:0] cp0_userlocal;
     reg [2:0]  cp0_config_k0;
     reg [2:0]  cp0_intctl_ipti;
     reg [4:0]  cp0_intctl_vs;
@@ -262,7 +266,7 @@ module mips_cp0 (
     //         [4]=rsv, [3]=VInt, [2]=SP, [1]=CDMM, [0]=TL
     wire [31:0] config3_val = { 1'b0,   // M
                                 17'b0,
-                                1'b0,   // ULRI (UserLocal not implemented yet)
+                                1'b1,   // ULRI: UserLocal (4,2) implemented
                                 7'b0,
                                 1'b0,   // VEIC
                                 1'b0,
@@ -378,6 +382,7 @@ module mips_cp0 (
             {5'd5,  3'd0}: rdata = pagemask_val;
             {5'd6,  3'd0}: rdata = wired_val;
             {5'd7,  3'd0}: rdata = cp0_hwrena;
+            {5'd4,  3'd2}: rdata = cp0_userlocal;
             {5'd8,  3'd0}: rdata = cp0_badvaddr;
             {5'd9,  3'd0}: rdata = cp0_count;
             {5'd10, 3'd0}: rdata = entryhi_val;
@@ -420,6 +425,7 @@ module mips_cp0 (
             cp0_errorepc_valid <= 1'b0;
             cp0_ebase_hi    <= `SOC_CP0_EBASE_RESET_HI;
             cp0_hwrena      <= 32'd0;
+            cp0_userlocal   <= 32'd0;
             cp0_config_k0   <= `SOC_CP0_CONFIG_K0_RESET;
             cp0_intctl_ipti <= 3'd7;                       // Timer int mapped to IP7 by default
             cp0_intctl_vs   <= 5'd0;                       // Non-vectored default
@@ -604,6 +610,9 @@ module mips_cp0 (
                         // HWREna: only bits [3:0] (CPUNum/SYNCI_Step/CC/CCRes)
                         // and [29] (ULR) are defined in R2; keep others 0.
                         cp0_hwrena       <= { 2'b0, wdata[29], 25'b0, wdata[3:0] };
+                    end
+                    {5'd4, 3'd2}: begin
+                        cp0_userlocal    <= wdata;
                     end
                     {5'd10, 3'd0}: begin
                         // EntryHi: [31:13]=VPN2, [7:0]=ASID; middle 5 bits rsv.

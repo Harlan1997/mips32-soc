@@ -57,6 +57,16 @@ module tb_cp0_timer;
     wire        intr_req;
     wire        vint_enabled_out;
     wire [31:0] vint_offset_out;
+    wire [31:0] taglo_out;
+    wire [31:0] taghi_out;
+    reg         tlb_inv_en = 1'b0;
+    reg  [18:0] tlb_inv_vpn2 = 19'd0;
+    reg  [7:0]  tlb_inv_asid = 8'd0;
+    reg  [1:0]  tlb_inv_scope = 2'd0;
+    reg  [5:0]  tlb_inv_wired_floor = 6'd0;
+    reg         cache_op_done = 1'b0;
+    reg  [4:0]  cache_op = 5'd0;
+    reg  [31:0] cache_tag_rdata = 32'd0;
 
     integer errors = 0;
 
@@ -445,6 +455,18 @@ module tb_cp0_timer;
         @(posedge clk);
         check("CU0 readback = 1",            cu0_enable  == 1'b1);
         check("User mode with CU0=1",        kernel_mode == 1'b0);
+
+        // UserLocal (CP0 4,2) is the kernel-managed TLS pointer.  It must
+        // reset to zero, retain a software-written value, and be independent
+        // of the Context (4,0) BadVPN2/PTEBase state.
+        mfc0(5'd4, 3'd2, rd);
+        check("UserLocal reset",             rd == 32'd0);
+        mtc0(5'd4, 3'd2, 32'h8123_4567);
+        @(posedge clk);
+        mfc0(5'd4, 3'd2, rd);
+        check("UserLocal write/read",         rd == 32'h8123_4567);
+        mfc0(5'd4, 3'd0, rd);
+        check("Context remains independent",  rd[31:23] == 9'h1FF);
 
         // Restore kernel mode for subsequent state
         mtc0(5'd12, 3'd0, 32'd0);

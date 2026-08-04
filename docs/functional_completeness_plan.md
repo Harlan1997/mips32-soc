@@ -1,6 +1,6 @@
 # SoC 功能完整性计划
 
-> 版本：v1.41（2026-08-04）
+> 版本：v1.42（2026-08-04）
 >
 > 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
 
@@ -73,7 +73,7 @@ make phase3-complete
 |---|---|---|---|---|
 | A. 默认基线 | 固定默认配置并可重复编译/仿真 | **已完成** | 变更后重跑 3 条基线命令 | `rtl-frontend-compile`、`soc-smoke`、`phase2/3-complete` 通过 |
 | B. 外设行为 | UART/QSPI vendor-neutral 功能和错误恢复 | **已完成当前 RTL 范围** | 只补新失败场景；真实 PHY/板级输入暂缓 | UART、QSPI block/SoC gates 通过 |
-| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime | **已完成有限切片** | 接入真实 CPU/CP0 的 page-table/allocator 边界，再扩展 PIC/TLS/权限 runtime | active-MMU sseg/kseg3 block gate 已通过；后续需 SoC firmware gate |
+| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime | **已完成有限切片** | UserLocal/TLS CP0 ABI 已补齐；继续扩展 RDHWR、PIC/TLS/权限 runtime | active-MMU sseg/kseg3 block gate 与 UserLocal CP0 gate 已通过；后续需 SoC firmware gate |
 | D. 产品输入 | 真实 DDR4、QSPI PHY/Flash、secure boot | **阻塞，当前不做** | 等外部 PHY/DRAM/板级资料 | `DDR4_ENTRY_READY=1` 且真实器件 gate 通过 |
 | E. 质量签核 | lint/CDC/RDC/formal/综合/STA/PPA | **明确暂缓** | RTL 功能目标完成后再启动 | 不属于当前阶段 |
 
@@ -425,6 +425,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-03 | `integration/function-contract` UART pad wrapper SoC integration | `make uart-cts-soc-gate SOC_TEST_UART_CTS_DIR=build/soc_test/uart_cts_pad_integrated UART_CTS_FW_DIR=build/firmware/uart_cts_pad_integrated` | PASS：UART CTS SoC gate；RTL/SoC compile and simulation completed | `ENABLE_UART_PINS=1` 的真实 `mips_soc_impl` 路径已经过 `uart_pad_wrapper`，CTS hold/release 行为保持通过；`ENABLE_UART_PINS=0` 仍走 legacy bypass。该集成仍不覆盖 ASIC pad cell、ESD、IO timing 或板级模型。 |
 | 2026-08-03 | `integration/function-contract` UART pad wrapper RX integration | `make uart-external-rx-soc-gate SOC_TEST_UART_EXTERNAL_RX_DIR=build/soc_test/uart_external_rx_pad_integrated UART_EXTERNAL_RX_FW_DIR=build/firmware/uart_external_rx_pad_integrated`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_uart_pad_integrated` | PASS：external RX SoC gate、默认 SoC smoke | 异步 8N1 `0x5A` 经过 `uart_pad_wrapper`、RX synchronizer/FIFO/PIC/RBR 后由 CPU 读回；默认 smoke 无回归。修正 `uart-external-rx-soc-gate` firmware 输出目录使用相对路径导致的错误。 |
 | 2026-08-03 | `integration/function-contract` Phase 2 baseline re-signoff after UART/DDR changes | `make phase2-complete` | PASS：directed `16/16`、coverage `16/16`、required functional groups `100%`、error scan clean；报告 `build/uvm/phase2_complete/phase2_completion_report.md` | 修正 `axi_apb_burst_stress_seq` 对 `0x4000_5000` 的陈旧“unused slot”假设；该地址现在是 QSPI status，unused burst 改用 `0x4000_9000`。确认近期 UART pad 与 DDR status 变更未破坏默认 Phase 2 contract。 |
+| 2026-08-04 | `integration/function-contract` CP0 UserLocal/TLS pointer slice | `RUN_DIR=build/unit/cp0_userlocal tb/unit/cp0/run.sh`；`make rtl-frontend-compile` | PASS：`cp0_timer: PASS`；RTL frontend `3/3` | CP0 `(4,2)` UserLocal 复位为零，MTC0/MFC0 可保存和恢复线程本地指针，且不影响 Context `(4,0)`；Config3.ULRI 置 1。该 slice 关闭 kernel context-switch 的 UserLocal 存储契约；RDHWR `$29` 用户态读取和完整 TLS runtime/linker 仍为后续任务。 |
 
 ## 10. 已知未决问题
 
