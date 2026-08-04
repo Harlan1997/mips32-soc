@@ -446,7 +446,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | CPU/MMU 四 ASID 压力 | `make product-mmu-process-pressure-gate` | PASS，`refills=8` | 已验证现有软件 context-switch、四 ASID 映射隔离和 shootdown 标记；尚不等同于 allocator/generation/真实 IPI shootdown |
 | QSPI status 兼容性 | `make qspi-status-integration-gate` | PASS | 原 timeout/APB/quad shared-pin 行为未回归；脚本补入 `apb_ddr4_status.v` 编译依赖 |
 | QSPI taxonomy | `make qspi-error-taxonomy-gate` | PASS | canonical class/code 入口、sticky、W1C、未清除前不覆盖已验证；Boot ROM/command/init/auth 上报尚待接线 |
-| CPU/MMU shootdown mailbox | `make tlb-shootdown-mailbox-gate`、`make product-mmu-context-cpu-gate` | PASS | vendor-neutral mailbox 与真实 CPU/APB 控制面均已验证；`invalidate_valid` 尚未接入 CPU/CP0 TLB invalidation 或真实 IPI |
+| CPU/MMU shootdown mailbox | `make tlb-shootdown-mailbox-gate`、`make product-mmu-context-cpu-gate` | PASS | vendor-neutral mailbox、真实 CPU/APB 控制面以及 `invalidate_valid/asid/vpn/scope` 到 `mips_cp0 -> mips_tlb` 的单核 invalidation/refill 已验证；真实多核 IPI、page-table walker 和 scheduler 仍未实现 |
 | CPU/MMU ASID allocator | `make tlb-asid-allocator-gate`、`make product-mmu-context-cpu-gate` | PASS | 四槽分配/耗尽、stale generation 拒绝、释放后 generation 递增并复用，以及真实 CPU APB lease/readback 已验证；完整 page-table walker/OS allocator 仍不在当前 RTL contract |
 | CPU/MMU context contract | `make mmu-context-contract-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate` | PASS | allocator -> shootdown -> ack -> release/reuse、真实 CPU TLB invalidation/refill 已覆盖；仍未实现 page-table walker、scheduler 或多核 IPI |
 | QSPI retry policy | `make qspi-retry-policy-gate` | PASS | timeout/init 一次 retry、retry exhaustion、CRC no-retry 已验证；尚未接入真实 controller/flash status |
