@@ -129,7 +129,8 @@ module mips_mmu (
             pa_r   = pa_kseg_dir;
             attr_r = attr_kseg1;
         end else begin
-            // TLB-translated path (MMU active). PageMask=0 (4KB) assumption.
+            // TLB-translated path (MMU active). The TLB supplies an effective
+            // PFN that preserves any larger-page offset above VA[11:0].
             if (!tlb_lookup_hit) begin
                 ok_r    = 1'b0;
                 fault_r = req_is_store ? 3'b010 : 3'b001;   // TLBS or TLBL

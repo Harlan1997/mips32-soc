@@ -267,7 +267,7 @@ module tb_tlb_asid_policy;
         // as the half selector. VA[12] must remain part of the page offset.
         write_entry_mask(2'd3, 19'h02200, 8'h77, 16'h0003,
                          make_lo(20'h52000, 3'b011, 1'b1, 1'b1, 1'b0),
-                         make_lo(20'h52001, 3'b011, 1'b1, 1'b1, 1'b0));
+                         make_lo(20'h52004, 3'b011, 1'b1, 1'b1, 1'b0));
         asid = 8'h77;
         req_va = {19'h02200, 13'h0004}; // VA[14]=0, VA[12]=0
         #1;
@@ -276,11 +276,16 @@ module tb_tlb_asid_policy;
         req_va = {19'h02200, 13'h1004}; // VA[12]=1, VA[14]=0
         #1;
         check("16KiB offset bit does not change half", tlb_hit && translation_ok &&
-              pa == {20'h52000, 12'h1004});
+              pa == {20'h52001, 12'h1004});
         req_va = {19'h02202, 13'h0004}; // VA[14]=1; masked VPN2 bit changes
         #1;
         check("16KiB page selects odd half", tlb_hit && translation_ok &&
-              pa == {20'h52001, 12'h0004});
+              pa == {20'h52004, 12'h0004});
+
+        req_va = {19'h02202, 13'h1004}; // odd half with VA[12]=1
+        #1;
+        check("16KiB physical offset preserves VA[13:12]", tlb_hit &&
+              translation_ok && pa == {20'h52005, 12'h1004});
 
         req_valid = 1'b0;
         #1;
