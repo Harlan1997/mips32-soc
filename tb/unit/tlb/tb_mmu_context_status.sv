@@ -11,8 +11,11 @@ module tb_mmu_context_status;
     apb_write(5'h00,32'h00003412); apb_read(5'h00,32'h00003412,"asid generation");
     apb_write(5'h04,32'h000ABCDE); apb_read(5'h04,32'h000ABCDE,"vpn");
     apb_write(5'h08,32'h2); apb_read(5'h08,32'h2,"scope");
-    apb_write(5'h0c,32'h5); apb_read(5'h0c,32'h5,"sticky events");
-    apb_write(5'h10,32'h1); apb_read(5'h0c,32'h4,"W1C event");
+    apb_write(5'h14,32'h1); apb_read(5'h00,32'h00000001,"allocator lease");
+    apb_read(5'h0c,32'h1,"allocator valid event");
+    apb_write(5'h18,32'h80000101); apb_read(5'h0c,32'h9,"release reject event");
+    apb_write(5'h0c,32'h5); apb_read(5'h0c,32'hd,"sticky events");
+    apb_write(5'h10,32'h1); apb_read(5'h0c,32'hc,"W1C event");
     if(!pready || pslverr) begin $display("[FAIL] APB handshake");errors=errors+1;end
     if(errors==0) $display("REGRESSION_TEST_SUCCESS mmu_context_status"); else $display("REGRESSION_TEST_FAILED mmu_context_status"); $finish;
   end
