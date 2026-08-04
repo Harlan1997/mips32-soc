@@ -490,6 +490,12 @@ module tb_cp0_timer;
         mtc0(5'd12, 3'd0, 32'd0);
         mfc0(5'd12, 3'd0, rd);
         check("Status write cannot clear TS", rd[21] == 1'b1);
+        rst_n = 1'b0;
+        #2;
+        rst_n = 1'b1;
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("Reset clears sticky Status.TS", rd[21] == 1'b0);
 
         // Summary
         if (errors == 0)
