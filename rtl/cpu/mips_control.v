@@ -538,6 +538,16 @@ module mips_control (
 
             6'b011111: begin // SPECIAL3 (Phase B ISA R2: SEB / SEH via BSHFL func 0x20)
                 case (func)
+                    6'b111011: begin  // RDHWR rt, rd (UserLocal uses hwreg 29)
+                        if (rs == 5'b00011 && inst[15:11] == 5'd29) begin
+                            reg_write  = 1'b1;
+                            reg_dst    = 2'b00; // rt is the GPR destination
+                            mem_to_reg = 2'b11; // CP0-backed hardware register
+                            is_mfc0    = 1'b1; // reuse CP0 readback pipeline
+                        end else begin
+                            illegal_inst = 1'b1;
+                        end
+                    end
                     6'b100000: begin  // BSHFL family — sub-op in sa field (bits 10:6)
                         case (inst[10:6])
                             5'b00010: begin  // WSBH rd, rt (R2)

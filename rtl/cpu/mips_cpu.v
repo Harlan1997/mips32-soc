@@ -154,6 +154,7 @@ module mips_cpu (
     // Phase B.4: effective privilege from CP0 (combinational readback)
     wire        cpu_kernel_mode;
     wire        cpu_cu0;
+    wire [31:0] cpu_hwrena;
     wire [31:0] mmu_ilookup_va;
     wire        mmu_ilookup_hit;
     wire        mmu_ilookup_v;
@@ -403,8 +404,14 @@ module mips_cpu (
     // Phase B.4: privileged instruction detection + CU0 gate. If the current
     // ID instruction is MTC0/MFC0/ERET/TLB* and the effective mode is user-mode
     // without Status.CU0 override, raise Coprocessor Unusable (ExcCode 11).
+    wire id_is_rdhwr_userlocal = (id_inst[31:26] == 6'b011111) &&
+                                 (id_inst[25:21] == 5'b00011) &&
+                                 (id_inst[15:11] == 5'd29) &&
+                                 (id_inst[5:0] == 6'b111011);
     wire id_is_priv     = id_cp0_we | id_is_mfc0 | id_is_eret | (|id_tlb_op);
-    wire id_cpu_unusable = id_is_priv & ~cpu_kernel_mode & ~cpu_cu0;
+    wire id_rdhwr_allowed = id_is_rdhwr_userlocal && cpu_hwrena[29];
+    wire id_cpu_unusable = id_is_priv & ~cpu_kernel_mode & ~cpu_cu0 &
+                           ~id_rdhwr_allowed;
 
     // Exception priority at ID: upstream (IF-origin) > CpU > SYSCALL > RI.
     wire id_except_req_out = id_except_req_in | id_illegal_inst | id_is_syscall
@@ -820,6 +827,7 @@ module mips_cpu (
         .vint_offset_out  (cp0_vint_offset),
         .kernel_mode  (cpu_kernel_mode),
         .cu0_enable   (cpu_cu0),
+        .hwrena_out   (cpu_hwrena),
 
         // MMU pass-through
         .cp0_asid_out       (cp0_asid),

@@ -34,6 +34,7 @@ module tb_cp0_timer;
     // required for `.*` wildcard connectivity).
     wire        kernel_mode;
     wire        cu0_enable;
+    wire [31:0]  hwrena_out;
 
     // Phase B.3.c MMU pass-through signals (unused inside this timer/TLB tb but
     // required for `.*` wildcard connectivity to mips_cp0's post-B.3.c ports).
@@ -467,6 +468,8 @@ module tb_cp0_timer;
         check("UserLocal write/read",         rd == 32'h8123_4567);
         mfc0(5'd4, 3'd0, rd);
         check("Context remains independent",  rd[31:23] == 9'h1FF);
+        mfc0(5'd16, 3'd3, rd);
+        check("Config3 advertises UserLocal", rd[13] == 1'b1);
 
         // Restore kernel mode for subsequent state
         mtc0(5'd12, 3'd0, 32'd0);
