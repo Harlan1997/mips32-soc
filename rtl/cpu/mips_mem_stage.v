@@ -95,7 +95,7 @@ module mips_mem_stage (
                         // VCS coverage on
                     endcase
                 end
-                3'b100: begin // SW: Store Word
+                3'b100, 3'b111: begin // SW / SC: Store Word
                     wdata_aligned = mem_val_rt;
                     we_aligned    = 4'b1111;
                 end
@@ -178,7 +178,7 @@ module mips_mem_stage (
                         // VCS coverage on
                     endcase
                 end
-                3'b100: begin // LW: Load Word
+                3'b100, 3'b111: begin // LW / LL: Load Word
                     mem_rdata_ext = dmem_rdata;
                 end
                 3'b101: begin // LWL (Little Endian)

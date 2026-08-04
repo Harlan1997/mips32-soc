@@ -85,6 +85,10 @@ module mips_cpu (
     wire [31:0] cp0_vint_offset;
     wire [31:0] cp0_taglo;
     wire [31:0] cp0_taghi;
+    // Single-core LL/SC reservation state. External snoops are not present in
+    // the current fabric, so any completed store clears the reservation.
+    reg         ll_reservation_valid;
+    reg [31:0]  ll_reservation_addr;
     // A synchronous WB exception always takes precedence over an interrupt;
     // only an accepted interrupt may use the Cause.IV vector table.
     wire take_interrupt = intr_req && !wb_except_req && !wb_is_eret;
@@ -632,6 +636,7 @@ module mips_cpu (
     wire        mem_ades_exception;
     wire        mem_cache_op_fault;
     wire [31:0] cache_op_vaddr;
+    wire        data_we_raw;
     
     mips_mem_stage u_mips_mem_stage (
         .mem_ex_out      (mem_ex_out),
@@ -646,7 +651,7 @@ module mips_cpu (
         .dmem_rdata      (data_rdata),
         .dmem_addr       (mem_vaddr),
         .dmem_wdata      (data_wdata),
-        .dmem_we         (data_we),
+        .dmem_we         (data_we_raw),
         .dmem_be         (data_be),
         .dmem_en         (data_req),
         .dmem_addr_ok    (data_addr_ok),
@@ -664,6 +669,27 @@ module mips_cpu (
         .adel_exception  (mem_adel_exception),
         .ades_exception  (mem_ades_exception)
     );
+
+    wire is_ll_mem = mem_mem_read  && (mem_mem_op == 3'b111);
+    wire is_sc_mem = mem_mem_write && (mem_mem_op == 3'b111);
+    wire sc_reservation_match = ll_reservation_valid &&
+                                 (ll_reservation_addr == {mem_vaddr[31:2], 2'b00});
+    assign data_we = data_we_raw && (!is_sc_mem || sc_reservation_match);
+    wire [31:0] mem_ex_out_wb = is_sc_mem ? {31'd0, sc_reservation_match} : mem_ex_out;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ll_reservation_valid <= 1'b0;
+            ll_reservation_addr  <= 32'd0;
+        end else if (data_data_ok) begin
+            if (is_ll_mem) begin
+                ll_reservation_valid <= 1'b1;
+                ll_reservation_addr  <= {mem_vaddr[31:2], 2'b00};
+            end else if (mem_mem_write) begin
+                ll_reservation_valid <= 1'b0;
+            end
+        end
+    end
 
     // Phase B.3.d: fold MMU D-side fault into MEM-stage exception path.
     // Priority within MEM stage: upstream (mem_except_req) > MMU fault >
@@ -720,7 +746,7 @@ module mips_cpu (
         .flush           (flush_mem_wb),
 
         .mem_rdata_fmt   (mem_rdata_fmt),
-        .mem_ex_out      (mem_ex_out),
+        .mem_ex_out      (mem_ex_out_wb),
         .mem_pc_plus_8   (mem_pc_plus_8),
         .mem_waddr       (mem_waddr),
         .mem_rd_addr     (mem_rd_addr),

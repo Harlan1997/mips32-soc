@@ -317,6 +317,16 @@ module mips_control (
                 mem_to_reg = 2'b01;
                 imm_signed = 1'b1;
             end
+            6'b110000: begin // LL (word)
+                alu_op    = 5'b00001;
+                alu_src   = 1'b1;
+                reg_write = 1'b1;
+                reg_dst   = 2'b00;
+                mem_read  = 1'b1;
+                mem_op    = 3'b111;
+                mem_to_reg = 2'b01;
+                imm_signed = 1'b1;
+            end
             6'b100000: begin // LB
                 alu_op    = 5'b00001;
                 alu_src    = 1'b1;
@@ -382,6 +392,15 @@ module mips_control (
                 alu_src    = 1'b1;
                 mem_write  = 1'b1;
                 mem_op     = 3'b100;
+                imm_signed = 1'b1;
+            end
+            6'b111000: begin // SC (word)
+                alu_op    = 5'b00001;
+                alu_src   = 1'b1;
+                reg_write = 1'b1;
+                reg_dst   = 2'b00;
+                mem_write = 1'b1;
+                mem_op    = 3'b111;
                 imm_signed = 1'b1;
             end
             6'b101000: begin // SB
