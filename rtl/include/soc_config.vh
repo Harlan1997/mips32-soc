@@ -88,6 +88,7 @@
 `define SOC_APB_DDRCTRL_OFFSET 16'h6000
 `define SOC_APB_WDT_OFFSET    16'h7000
 `define SOC_APB_BOOT_STATUS_OFFSET 16'h8000
+`define SOC_APB_IPI_OFFSET   16'hA000
 
 // Boot status stage values. The register is retained across watchdog reset;
 // firmware may use additional implementation-specific intermediate values.
@@ -105,6 +106,7 @@
 `define SOC_APB_DDRCTRL_BASE   32'h4000_6000
 `define SOC_APB_WDT_BASE       32'h4000_7000
 `define SOC_APB_BOOT_STATUS_BASE 32'h4000_8000
+`define SOC_APB_IPI_BASE      32'h4000_A000
 
 // DDR controller APB register offsets. The block is not instantiated yet;
 // these definitions freeze the software/RTL address contract before PHY IP
