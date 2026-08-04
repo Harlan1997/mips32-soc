@@ -8,7 +8,8 @@
 module soc_peripheral_subsystem #(
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
     parameter ENABLE_QSPI_SHARED_ARB = 1'b0,
-    parameter ENABLE_QSPI_QUAD = 1'b0
+    parameter ENABLE_QSPI_QUAD = 1'b0,
+    parameter ENABLE_DUAL_CORE_IPI = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -31,6 +32,16 @@ module soc_peripheral_subsystem #(
     output wire [7:0]  tlb_inv_asid,
     output wire [1:0]  tlb_inv_scope,
     output wire [5:0]  tlb_inv_wired_floor,
+    input  wire        ipi_target_present,
+    input  wire        ipi_ack_valid,
+    input  wire        ipi_ack_target,
+    input  wire [7:0]  ipi_ack_generation,
+    output wire        ipi_invalidate_valid,
+    output wire        ipi_invalidate_target,
+    output wire [7:0]  ipi_invalidate_generation,
+    output wire [7:0]  ipi_invalidate_asid,
+    output wire [19:0] ipi_invalidate_vpn,
+    output wire [1:0]  ipi_invalidate_scope,
 
     input  wire        qspi_timeout_sticky,
     input  wire        qspi_controller_present,
@@ -200,11 +211,12 @@ module soc_peripheral_subsystem #(
     wire wdt_sel   = apb_psel & (apb_paddr[15:12] == 4'h7); // 0x4000_7000
     wire boot_status_sel = apb_psel & (apb_paddr[15:12] == 4'h8); // 0x4000_8000
     wire mmu_context_sel = apb_psel & (apb_paddr[15:12] == 4'h9); // 0x4000_9000
+    wire ipi_sel = ENABLE_DUAL_CORE_IPI & apb_psel & (apb_paddr[15:12] == 4'hA); // 0x4000_A000
     wire fault_sel = ENABLE_APB_FAULT_INJECTOR & apb_psel & (apb_paddr[15:12] == 4'hF); // 0x4000_F000
 
-    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, fault_prdata;
-    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, ddr4_status_pready, wdt_pready, boot_status_pready, fault_pready;
-    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, ddr4_status_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr;
+    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, fault_prdata, ipi_prdata;
+    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, ddr4_status_pready, wdt_pready, boot_status_pready, fault_pready, ipi_pready;
+    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, ddr4_status_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr, ipi_pslverr;
 
     assign apb_prdata  = uart_sel ? uart_prdata :
                          timer_sel ? timer_prdata :
@@ -216,6 +228,7 @@ module soc_peripheral_subsystem #(
                          wdt_sel ? wdt_prdata :
                          boot_status_sel ? boot_status_prdata :
                          mmu_context_sel ? mmu_context_prdata :
+                         ipi_sel ? ipi_prdata :
                          fault_sel ? fault_prdata : 32'd0;
     assign apb_pready  = uart_sel ? uart_pready :
                          timer_sel ? timer_pready :
@@ -227,6 +240,7 @@ module soc_peripheral_subsystem #(
                          wdt_sel ? wdt_pready :
                          boot_status_sel ? boot_status_pready :
                          mmu_context_sel ? mmu_context_pready :
+                         ipi_sel ? ipi_pready :
                          fault_sel ? fault_pready : 1'b1;
     assign apb_pslverr = uart_sel ? uart_pslverr :
                          timer_sel ? timer_pslverr :
@@ -238,6 +252,7 @@ module soc_peripheral_subsystem #(
                          wdt_sel ? wdt_pslverr :
                          boot_status_sel ? boot_status_pslverr :
                          mmu_context_sel ? mmu_context_pslverr :
+                         ipi_sel ? ipi_pslverr :
                          fault_sel ? fault_pslverr : 1'b0;
 
     wire uart_tx_int;
@@ -359,6 +374,34 @@ module soc_peripheral_subsystem #(
         .invalidate_asid(tlb_inv_asid), .invalidate_vpn(tlb_inv_vpn2),
         .invalidate_scope(tlb_inv_scope));
     assign tlb_inv_wired_floor = 6'd2;
+
+    generate
+        if (ENABLE_DUAL_CORE_IPI) begin : g_dual_core_ipi
+            apb_mmu_ipi_status #(.TIMEOUT_CYCLES(64)) u_apb_mmu_ipi_status (
+                .clk(clk), .rst_n(periph_rst_n), .psel(ipi_sel),
+                .penable(apb_penable), .pwrite(apb_pwrite),
+                .paddr(apb_paddr[5:0]), .pwdata(apb_pwdata),
+                .prdata(ipi_prdata), .pready(ipi_pready), .pslverr(ipi_pslverr),
+                .target_present(ipi_target_present), .ack_valid(ipi_ack_valid),
+                .ack_target(ipi_ack_target), .ack_generation(ipi_ack_generation),
+                .invalidate_valid(ipi_invalidate_valid),
+                .invalidate_target(ipi_invalidate_target),
+                .invalidate_generation(ipi_invalidate_generation),
+                .invalidate_asid(ipi_invalidate_asid),
+                .invalidate_vpn(ipi_invalidate_vpn),
+                .invalidate_scope(ipi_invalidate_scope));
+        end else begin : g_no_dual_core_ipi
+            assign ipi_prdata = 32'd0;
+            assign ipi_pready = 1'b1;
+            assign ipi_pslverr = 1'b0;
+            assign ipi_invalidate_valid = 1'b0;
+            assign ipi_invalidate_target = 1'b0;
+            assign ipi_invalidate_generation = 8'd0;
+            assign ipi_invalidate_asid = 8'd0;
+            assign ipi_invalidate_vpn = 20'd0;
+            assign ipi_invalidate_scope = 2'd0;
+        end
+    endgenerate
 
     apb_ddr4_status u_apb_ddr4_status (
         .clk(clk), .rst_n(rst_n), .controller_present(ddr4_controller_present),

@@ -467,7 +467,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | CPU/MMU ASID allocator | `make tlb-asid-allocator-gate`、`make product-mmu-context-cpu-gate` | PASS | 四槽分配/耗尽、stale generation 拒绝、释放后 generation 递增并复用，以及真实 CPU APB lease/readback 已验证；完整 page-table walker/OS allocator 仍不在当前 RTL contract |
 | CPU/MMU context contract | `make mmu-context-contract-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate` | PASS | allocator -> shootdown -> ack -> release/reuse、真实 CPU TLB invalidation/refill 已覆盖；仍未实现 page-table walker、scheduler 或多核 IPI |
 | QSPI retry policy | `make qspi-retry-policy-gate` | PASS | timeout/init 一次 retry、retry exhaustion、CRC no-retry 已验证；尚未接入真实 controller/flash status |
-| MMU APB context window | `0x4000_9000` | `make mmu-context-status-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate`、`make rtl-frontend-compile` PASS | WDT `0x4000_7000` 与 Boot Status `0x4000_8000` 保持兼容；`0x14` allocate、`0x18` release、`0x1c` shootdown submit、`0x20` ack、`0x24` status 已接入 bounded allocator/mailbox、真实 CPU TLB invalidation/refill；仍未接入多核 IPI 或 firmware scheduler |
+| MMU APB context window | `0x4000_9000`；可选 dual-core IPI `0x4000_A000` | `make mmu-context-status-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate`、`make mmu-ipi-shootdown-gate`、`make apb-mmu-ipi-status-gate`、`make rtl-frontend-compile` PASS | 原 context window 保持兼容；新增 `ENABLE_DUAL_CORE_IPI` 可选 APB 控制面，支持目标/代次/payload/send/status/W1C，并在 `soc_peripheral_subsystem` 提供可选端点；默认配置仍关闭，尚未接双核 CPU、共享内存一致性或 firmware scheduler |
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
