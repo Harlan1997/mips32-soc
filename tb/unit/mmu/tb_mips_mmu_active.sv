@@ -9,6 +9,7 @@ module tb_mips_mmu_active;
     reg [2:0] config_k0 = 3'b011;
     reg is_kernel = 1'b1;
     reg tlb_lookup_hit = 1'b1;
+    reg tlb_lookup_multi_hit = 1'b0;
     reg tlb_lookup_v = 1'b1;
     reg tlb_lookup_d = 1'b1;
     reg [2:0] tlb_lookup_c = 3'b011;
