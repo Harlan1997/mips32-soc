@@ -38,7 +38,7 @@ MIPS32 CP0 通过 `(regnum[4:0], sel[2:0])` 8 位地址访问，共 256 槽。�
 | 4  | 2 | UserLocal     | USERLOCAL| 32'h0000_0000 | 软件管理线程本地存储指针；kernel context-switch ABI |
 | 5  | 0 | PageMask      | PAGEMASK | 32'h0000_0000 | 页尺度掩码 (4KB..16MB) |
 | 6  | 0 | Wired         | WIRED    | 32'h0000_0000 | Random 下限 (锁定入口数) |
-| 7  | 0 | HWREna        | HWRENA   | 32'h0000_0000 | RDHWR 用户可见寄存器使能 |
+| 7  | 0 | HWREna        | HWRENA   | 32'h0000_0000 | RDHWR 用户可见寄存器使能（含 SYNCI_Step/UserLocal） |
 | 8  | 0 | BadVAddr      | BADVADDR | 32'hxxxx_xxxx | 最近一次 addr 异常的虚拟地址 |
 | 9  | 0 | Count         | COUNT    | 32'h0000_0000 | 自由运行计数器（每 2 cycles +1 可参数化） |
 | 10 | 0 | EntryHi       | ENTRYHI  | 32'h0000_0000 | VPN2 + ASID |
@@ -383,3 +383,4 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v0.1 (2026-08-04)：UserLocal (4,2) MTC0/MFC0 存储契约实现并通过 CP0 directed gate；Config3.ULRI 置位。RDHWR `$29` 与完整 TLS linker/runtime 保持后续范围。
 - v0.2 (2026-08-04)：SPECIAL3 `RDHWR rt,$29` 接入 CP0 (4,2) 回写路径，用户态受 `HWREna[29]` gating；RTL frontend 与 CP0 regression 通过，完整 firmware TLS runtime 仍后续验证。
 - v0.4 (2026-08-05)：CP0 `(17,0)` LLAddr 接入单核 reservation 地址只读路径；CP0 block gate 覆盖 MFC0 读回。多核 coherency 与软件写入语义保持 deferred。
+- v0.5 (2026-08-05)：完成 `RDHWR $1` SYNCI_Step（32-byte line step）解码、HWREna[1] user 权限和 CP0 readback；其余 HWR 目标仍 deferred。
