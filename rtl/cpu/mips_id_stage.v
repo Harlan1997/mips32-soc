@@ -227,7 +227,14 @@ module mips_id_stage (
 
     assign stall_req = load_use_hazard;
     
-    assign id_cp0_raddr = inst[15:11]; // CP0 register address is in rd for MFC0
-    assign id_cp0_sel   = inst[2:0];   // CP0 sub-select in low 3 bits (MIPS32 R2)
+    // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=3,
+    // funct=0x3b; its hwreg selector is rd, and UserLocal (hwreg 29) is
+    // presented to the existing CP0 readback path as CP0 (4,2).
+    wire is_rdhwr_userlocal = (inst[31:26] == 6'b011111) &&
+                              (inst[25:21] == 5'b00011) &&
+                              (inst[15:11] == 5'd29) &&
+                              (inst[5:0] == 6'b111011);
+    assign id_cp0_raddr = is_rdhwr_userlocal ? 5'd4 : inst[15:11];
+    assign id_cp0_sel   = is_rdhwr_userlocal ? 3'd2 : inst[2:0];
 
 endmodule

@@ -318,7 +318,7 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 | bit | 名 | 值 |
 |:-:|---|---|
 | 31 | M | 0 |
-| 13 | ULRI | 1（UserLocal (4,2) 已实现；RDHWR $29 仍为后续 decode slice） |
+| 13 | ULRI | 1（UserLocal (4,2) 与 RDHWR $29 已实现） |
 | 5  | VEIC | 0 (无外部中断控制器接口) |
 | 3  | VInt | 1 (支持 vectored interrupts via IntCtl.VS) |
 | 2  | SP  | 0 |
@@ -360,7 +360,7 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 2. **B.2 — 定时器与中断**：Count/Compare、Cause.IP/TI/IV、IntCtl (IPTI/VS)、HWREna（RDHWR $2）。
 3. **B.3 — MMU/TLB**：Index/Random/Wired/EntryHi/EntryLo0/1/PageMask/Context/BadVAddr、TLBR/TLBWI/TLBWR/TLBP 指令、refill/invalid/modified 异常路径（详见 `mmu_tlb_spec.md`）。
 4. **B.4 — 用户态**：KSU 生效、CU0 检查、User-mode 内存访问受 TLB 保护、Coprocessor Unusable 路径。
-5. **B.5 — 可选**：LLAddr + LL/SC；UserLocal 存储已实现（CP0 4,2），RDHWR $29 用户态读取仍待 decode；EJTAG Debug (延后)。
+5. **B.5 — 可选**：LLAddr + LL/SC；UserLocal (4,2) 与 RDHWR $29 用户态读取已实现；EJTAG Debug (延后)。
 
 每小步独立回归 + SVA + firmware sanity + 覆盖率增量。
 
@@ -381,3 +381,4 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 
 - v0 (2026-07-26)：初版规格，20 CP0 寄存器完整位段 + 复位 + 异常模型。等待 Phase B 起始时评审。
 - v0.1 (2026-08-04)：UserLocal (4,2) MTC0/MFC0 存储契约实现并通过 CP0 directed gate；Config3.ULRI 置位。RDHWR `$29` 与完整 TLS linker/runtime 保持后续范围。
+- v0.2 (2026-08-04)：SPECIAL3 `RDHWR rt,$29` 接入 CP0 (4,2) 回写路径，用户态受 `HWREna[29]` gating；RTL frontend 与 CP0 regression 通过，完整 firmware TLS runtime 仍后续验证。

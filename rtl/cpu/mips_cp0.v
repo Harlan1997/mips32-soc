@@ -100,6 +100,7 @@ module mips_cp0 (
     // combinational fanout; mips_cp0 does not consume them.
     output wire [7:0]  cp0_asid_out,
     output wire [2:0]  cp0_config_k0_out,
+    output wire [31:0] hwrena_out,
     output wire [31:0] taglo_out,
     output wire [31:0] taghi_out,
 
@@ -737,5 +738,6 @@ module mips_cp0 (
 
     assign cp0_asid_out      = cp0_entryhi_asid;
     assign cp0_config_k0_out = cp0_config_k0;
+    assign hwrena_out        = cp0_hwrena;
 
 endmodule
