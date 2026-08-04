@@ -73,7 +73,7 @@ make phase3-complete
 |---|---|---|---|---|
 | A. 默认基线 | 固定默认配置并可重复编译/仿真 | **已完成** | 变更后重跑 3 条基线命令 | `rtl-frontend-compile`、`soc-smoke`、`phase2/3-complete` 通过 |
 | B. 外设行为 | UART/QSPI vendor-neutral 功能和错误恢复 | **已完成当前 RTL 范围** | 只补新失败场景；真实 PHY/板级输入暂缓 | UART、QSPI block/SoC gates 通过 |
-| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime | **已完成有限切片** | UserLocal/TLS CP0 ABI 已补齐；继续扩展 RDHWR、PIC/TLS/权限 runtime | active-MMU sseg/kseg3 block gate 与 UserLocal CP0 gate 已通过；后续需 SoC firmware gate |
+| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime | **当前单核 RTL baseline 已签收** | 下一阶段按 `docs/block_specs/multicore_tlb_ipi_spec.md` 扩展双核/IPI/TLB shootdown；硬件 walker、scheduler、OS 仍后置 | 当前单核 CPU/MMU gate、SoC firmware gate 和回归均通过；产品扩展不改变现有 baseline |
 | D. 产品输入 | 真实 DDR4、QSPI PHY/Flash、secure boot | **阻塞，当前不做** | 等外部 PHY/DRAM/板级资料 | `DDR4_ENTRY_READY=1` 且真实器件 gate 通过 |
 | E. 质量签核 | lint/CDC/RDC/formal/综合/STA/PPA | **明确暂缓** | RTL 功能目标完成后再启动 | 不属于当前阶段 |
 
