@@ -30,6 +30,13 @@
 #define VIC_ACTIVE           (VIC_BASE + 0x20C)
 #define VIC_RUNNING_PRIO     (VIC_BASE + 0x210)
 
+static uint32_t read_vec_id(void)
+{
+    uint32_t value = REG32(VIC_VEC_ID);
+    __asm__ volatile("nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop" ::: "memory");
+    return value;
+}
+
 static void mailbox_fail(void) {
     *((volatile uint32_t*)0xA000FFFC) = 0xDEADDEAD;
     while (1) { /* halt */ }
@@ -48,10 +55,11 @@ static int test_reset_defaults(void) {
         print_str("FAIL: VIC_INTR_MASKED reset != 0\n");
         return -1;
     }
-    if (REG32(VIC_VEC_ID) != 0xFF) {
-        print_str("FAIL: VIC_VEC_ID reset != 0xFF\n");
+    { uint32_t vec_reset = read_vec_id();
+    if (vec_reset != 0xFF) {
+        print_str("FAIL: VIC_VEC_ID reset="); print_hex(vec_reset); print_str(" != 0xFF\n");
         return -1;
-    }
+    } }
     if (REG32(VIC_VEC_IPRIO) != 0) {
         print_str("FAIL: VIC_VEC_IPRIO reset != 0\n");
         return -1;
@@ -99,7 +107,7 @@ static int test_soft_irq_accept_nesting(void) {
     REG32(VIC_SOFT) = (1 << 4) | (1 << 5);
 
     // VEC_ID read should return 5 (higher priority 9) and accept it
-    uint32_t vec = REG32(VIC_VEC_ID);
+    uint32_t vec = read_vec_id();
     if (vec != 5) {
         print_str("FAIL: soft IRQ VEC_ID expected 5, got "); print_hex(vec); print_str("\n");
         return -1;
@@ -122,7 +130,7 @@ static int test_soft_irq_accept_nesting(void) {
     REG32(VIC_SOFT_CLR) = (1 << 5);
 
     // Now VEC_ID read should return 4
-    vec = REG32(VIC_VEC_ID);
+    vec = read_vec_id();
     if (vec != 4) {
         print_str("FAIL: post-ACK VEC_ID expected 4, got "); print_hex(vec); print_str("\n");
         return -1;
@@ -160,7 +168,7 @@ static int test_tie_break(void) {
     REG32(VIC_INTR_ENABLE) = (1 << 6) | (1 << 7);
     REG32(VIC_SOFT) = (1 << 6) | (1 << 7);
 
-    uint32_t vec = REG32(VIC_VEC_ID);
+    uint32_t vec = read_vec_id();
     if (vec != 6) {
         print_str("FAIL: tie break VEC_ID expected 6 (lower ID wins), got "); print_hex(vec); print_str("\n");
         return -1;
@@ -169,7 +177,7 @@ static int test_tie_break(void) {
     REG32(VIC_ACK) = (1 << 6);
     REG32(VIC_SOFT_CLR) = (1 << 6);
 
-    vec = REG32(VIC_VEC_ID);
+    vec = read_vec_id();
     if (vec != 7) {
         print_str("FAIL: post ACK 6 VEC_ID expected 7, got "); print_hex(vec); print_str("\n");
         return -1;
