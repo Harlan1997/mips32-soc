@@ -346,7 +346,7 @@ module soc_peripheral_subsystem #(
         .pslverr    (boot_status_pslverr)
     );
 
-    apb_mmu_context_status u_apb_mmu_context_status (
+    apb_mmu_context_status #(.TIMEOUT_CYCLES(64)) u_apb_mmu_context_status (
         .clk(clk), .rst_n(rst_n), .psel(mmu_context_sel), .penable(apb_penable),
         .pwrite(apb_pwrite), .paddr(apb_paddr[5:0]), .pwdata(apb_pwdata),
         .prdata(mmu_context_prdata), .pready(mmu_context_pready),
