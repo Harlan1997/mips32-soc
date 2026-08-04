@@ -161,12 +161,14 @@ module mips_cpu (
     wire [31:0] cpu_hwrena;
     wire [31:0] mmu_ilookup_va;
     wire        mmu_ilookup_hit;
+    wire        mmu_ilookup_multi_hit;
     wire        mmu_ilookup_v;
     wire        mmu_ilookup_d;
     wire [2:0]  mmu_ilookup_c;
     wire [19:0] mmu_ilookup_pfn;
     wire [31:0] mmu_dlookup_va;
     wire        mmu_dlookup_hit;
+    wire        mmu_dlookup_multi_hit;
     wire        mmu_dlookup_v;
     wire        mmu_dlookup_d;
     wire [2:0]  mmu_dlookup_c;
@@ -224,6 +226,7 @@ module mips_cpu (
     wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
                                 if_cache_fault                ? 5'h1E :  // CacheErr
                                 if_bus_fault                  ? 5'h06 :  // IBE
+                                (mmu_i_fault_type == 3'b110) ? 5'h18 :  // MCheck
                                 (mmu_i_fault_type == 3'b100) ? 5'h04 :  // AdEL from MMU
                                                                 5'h02;  // TLBL default
     // A lookup miss is a refill candidate. A lookup hit with V=0 is Invalid
@@ -700,6 +703,7 @@ module mips_cpu (
     wire        mem_mmu_fault      = ~mmu_d_ok & dmem_translate_req;
     wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
+                                     (mmu_d_fault_type == 3'b110) ? 5'h18 :  // MCheck
                                      (mmu_d_fault_type == 3'b100) ? 5'h04 :  // AdEL (user kseg)
                                      (mmu_d_fault_type == 3'b101) ? 5'h05 :  // AdES (user kseg)
                                                                      5'h02;  // TLBL
@@ -877,12 +881,14 @@ module mips_cpu (
         .taghi_out          (cp0_taghi),
         .mmu_ilookup_va     (mmu_ilookup_va),
         .mmu_ilookup_hit    (mmu_ilookup_hit),
+        .mmu_ilookup_multi_hit (mmu_ilookup_multi_hit),
         .mmu_ilookup_v      (mmu_ilookup_v),
         .mmu_ilookup_d      (mmu_ilookup_d),
         .mmu_ilookup_c      (mmu_ilookup_c),
         .mmu_ilookup_pfn    (mmu_ilookup_pfn),
         .mmu_dlookup_va     (mmu_dlookup_va),
         .mmu_dlookup_hit    (mmu_dlookup_hit),
+        .mmu_dlookup_multi_hit (mmu_dlookup_multi_hit),
         .mmu_dlookup_v      (mmu_dlookup_v),
         .mmu_dlookup_d      (mmu_dlookup_d),
         .mmu_dlookup_c      (mmu_dlookup_c),
@@ -908,6 +914,7 @@ module mips_cpu (
         .tlb_lookup_va   (mmu_ilookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_ilookup_hit),
+        .tlb_lookup_multi_hit (mmu_ilookup_multi_hit),
         .tlb_lookup_v    (mmu_ilookup_v),
         .tlb_lookup_d    (mmu_ilookup_d),
         .tlb_lookup_c    (mmu_ilookup_c),
@@ -929,6 +936,7 @@ module mips_cpu (
         .tlb_lookup_va   (mmu_dlookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_dlookup_hit),
+        .tlb_lookup_multi_hit (mmu_dlookup_multi_hit),
         .tlb_lookup_v    (mmu_dlookup_v),
         .tlb_lookup_d    (mmu_dlookup_d),
         .tlb_lookup_c    (mmu_dlookup_c),

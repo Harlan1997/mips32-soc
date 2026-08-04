@@ -37,6 +37,7 @@ module mips_mmu (
     output wire [31:0] tlb_lookup_va,
     output wire [7:0]  tlb_lookup_asid,
     input  wire        tlb_lookup_hit,
+    input  wire        tlb_lookup_multi_hit,
     input  wire        tlb_lookup_v,
     input  wire        tlb_lookup_d,
     input  wire [2:0]  tlb_lookup_c,
@@ -53,6 +54,7 @@ module mips_mmu (
     //   011 = Mod  (TLB modified: store to non-dirty page)
     //   100 = AdEL (address error on fetch or load — reserved for B.3.d/B.4)
     //   101 = AdES (address error on store — reserved for B.3.d/B.4)
+    //   110 = MCheck (multiple TLB entries matched the same lookup)
     output wire [2:0]  fault_type
 );
 
@@ -131,7 +133,10 @@ module mips_mmu (
         end else begin
             // TLB-translated path (MMU active). The TLB supplies an effective
             // PFN that preserves any larger-page offset above VA[11:0].
-            if (!tlb_lookup_hit) begin
+            if (tlb_lookup_multi_hit === 1'b1) begin
+                ok_r    = 1'b0;
+                fault_r = 3'b110;
+            end else if (!tlb_lookup_hit) begin
                 ok_r    = 1'b0;
                 fault_r = req_is_store ? 3'b010 : 3'b001;   // TLBS or TLBL
             end else if (!tlb_lookup_v) begin

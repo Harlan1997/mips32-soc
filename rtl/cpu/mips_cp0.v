@@ -106,6 +106,7 @@ module mips_cp0 (
 
     input  wire [31:0] mmu_ilookup_va,
     output wire        mmu_ilookup_hit,
+    output wire        mmu_ilookup_multi_hit,
     output wire        mmu_ilookup_v,
     output wire        mmu_ilookup_d,
     output wire [2:0]  mmu_ilookup_c,
@@ -113,6 +114,7 @@ module mips_cp0 (
 
     input  wire [31:0] mmu_dlookup_va,
     output wire        mmu_dlookup_hit,
+    output wire        mmu_dlookup_multi_hit,
     output wire        mmu_dlookup_v,
     output wire        mmu_dlookup_d,
     output wire [2:0]  mmu_dlookup_c,
@@ -722,6 +724,7 @@ module mips_cp0 (
         .lookup0_va  (mmu_ilookup_va),
         .lookup0_asid(cp0_entryhi_asid),
         .lookup0_hit (mmu_ilookup_hit),
+        .lookup0_multi_hit (mmu_ilookup_multi_hit),
         .lookup0_v   (mmu_ilookup_v),
         .lookup0_d   (mmu_ilookup_d),
         .lookup0_c   (mmu_ilookup_c),
@@ -730,6 +733,7 @@ module mips_cp0 (
         .lookup1_va  (mmu_dlookup_va),
         .lookup1_asid(cp0_entryhi_asid),
         .lookup1_hit (mmu_dlookup_hit),
+        .lookup1_multi_hit (mmu_dlookup_multi_hit),
         .lookup1_v   (mmu_dlookup_v),
         .lookup1_d   (mmu_dlookup_d),
         .lookup1_c   (mmu_dlookup_c),
