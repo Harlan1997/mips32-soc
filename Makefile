@@ -188,6 +188,9 @@ axi2apb-write-timing-gate:
 dcache-attr-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/dcache_attr tb/unit/dcache/run_attr.sh
 
+product-mmu-context-cpu-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/product_mmu_context_cpu tb/soc_test/run_product_mmu_context_cpu.sh
+
 qspi-cmd-behavioral-gate:
 	RUN_DIR=$(QSPI_CMD_BEHAVIORAL_DIR) tb/unit/flash/run_qspi_cmd_behavioral.sh
 
