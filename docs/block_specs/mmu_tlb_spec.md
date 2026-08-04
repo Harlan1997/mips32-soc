@@ -116,18 +116,18 @@ MIPS32 硬编码 4 段：
 | A. 单份 64-entry CAM，双读端口 | 面积小 | 需双读比较端口，功耗高 |
 | **B. Micro-TLB 分离 (推荐)** | 4-entry ITLB + 8-entry DTLB fully-assoc micro-TLB；主 TLB 64-entry 单端口，miss 时 fill micro-TLB | 二级复杂度，但吞吐好、功耗低（24Kc 采用此结构）|
 
-**Phase B 决策**：采纳方案 B。主 TLB 单端口，micro-TLB 分离在 IF/MEM 各自。micro-TLB miss 走主 TLB 一次；主 TLB miss → 软件 refill。
+**当前 RTL 基线**：采用方案 A 的 direct dual-lookup 变体。`mips_tlb` 保持一份主 TLB array，并为 I/D 两侧提供组合 lookup；当前没有独立 micro-TLB fill/flush 状态机。方案 B（I/D micro-TLB）作为后续性能/功耗优化，不属于当前 RTL 功能闭合条件；主 TLB miss 仍由软件 refill 处理。
 
 ### 4.4 TLB 指令 (TLBR/TLBWI/TLBWR/TLBP)
 
 只允许内核态执行，否则 RI 异常。
 
-- **TLBP**：以 `EntryHi.VPN2 + EntryHi.ASID` 查 TLB。命中 → `Index[log2N-1:0] = 命中索引`, `Index[31] = 0`；miss → `Index[31] = 1`。**清空 micro-TLB**。
-- **TLBR**：从主 TLB `[Index]` 读回 → 填充 `EntryHi/EntryLo0/EntryLo1/PageMask`。**清空 micro-TLB**。
-- **TLBWI**：把 `EntryHi/EntryLo0/EntryLo1/PageMask` 写入主 TLB `[Index]`。**清空 micro-TLB**。
-- **TLBWR**：同 TLBWI 但索引 = `Random`。**清空 micro-TLB**。
+- **TLBP**：以 `EntryHi.VPN2 + EntryHi.ASID` 查主 TLB。命中 → `Index[log2N-1:0] = 命中索引`, `Index[31] = 0`；miss → `Index[31] = 1`；重复命中置 `Status.TS`。
+- **TLBR**：从主 TLB `[Index]` 读回 → 填充 `EntryHi/EntryLo0/EntryLo1/PageMask`。
+- **TLBWI**：把 `EntryHi/EntryLo0/EntryLo1/PageMask` 写入主 TLB `[Index]`。
+- **TLBWR**：同 TLBWI 但索引 = `Random`。
 
-**执行时序**：单周期发射，产生 1-2 泡冲刷流水线（保守 3 cycles bubble 用于 micro-TLB 清空）。
+**执行时序**：单周期发射；当前无 micro-TLB 清空泡，lookup 直接观察主 TLB array。
 
 ---
 
