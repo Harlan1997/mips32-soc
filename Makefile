@@ -363,6 +363,9 @@ soc-smoke: firmware
 cpu-cp0-gate: firmware
 	FW_HEX=$(FW_HEX) RUN_DIR=$(SOC_TEST_CPU_CP0_DIR) tb/soc_test/run_cpu_cp0_gate.sh
 
+cp0-rdhwr-gate:
+	tb/soc_test/run_cp0_rdhwr_gate.sh
+
 soc-random-regression:
 	RUN_DIR=$(SOC_TEST_RANDOM_DIR) NUM_TESTS=$(NUM_TESTS) python3 tb/soc_test/run_regression.py
 
