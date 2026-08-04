@@ -61,6 +61,7 @@ module mips_cpu (
     // Pipeline Control Signals
     // =========================================================================
     wire stall_req_if;
+    wire stall_req_id_raw;
     wire stall_req_id;
     wire stall_req_mem;
     wire mdu_ready;
@@ -335,6 +336,15 @@ module mips_cpu (
     wire        ex_is_eret;
     wire [1:0]  ex_mem_to_reg;
     wire [1:0]  mem_mem_to_reg;
+
+    // CP0 reads are serialized through the WB read-data mux.  Treat them as
+    // a distinct one-entry resource so adjacent MFC0/RDHWR instructions
+    // cannot observe the previous instruction's CP0 address/selector.
+    wire cp0_read_hazard = id_is_mfc0 &&
+                           ((ex_mem_to_reg == 2'b11) ||
+                            (mem_mem_to_reg == 2'b11) ||
+                            (wb_mem_to_reg == 2'b11));
+    assign stall_req_id = stall_req_id_raw | cp0_read_hazard;
     
     mips_id_stage u_mips_id_stage (
         .clk           (clk),
@@ -366,7 +376,7 @@ module mips_cpu (
         .mem_mem_read  (mem_mem_read),
         .ex_mem_to_reg (ex_mem_to_reg),
         .mem_mem_to_reg(mem_mem_to_reg),
-        .stall_req     (stall_req_id),
+        .stall_req     (stall_req_id_raw),
         
         // Branch & Jump
         .branch_taken  (id_branch_taken),

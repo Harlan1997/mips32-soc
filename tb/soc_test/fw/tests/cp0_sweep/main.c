@@ -48,7 +48,7 @@ static uint32_t read_synci_step(void) {
 
 static uint32_t read_hwcount(void) {
     uint32_t value;
-    asm volatile(".word 0x7c70083b\n\t"
+    asm volatile(".word 0x7c68103b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -56,7 +56,7 @@ static uint32_t read_hwcount(void) {
 
 static uint32_t read_cpunum(void) {
     uint32_t value;
-    asm volatile(".word 0x7c60083b\n\t"
+    asm volatile(".word 0x7c68003b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -64,7 +64,7 @@ static uint32_t read_cpunum(void) {
 
 static uint32_t read_ccres(void) {
     uint32_t value;
-    asm volatile(".word 0x7c78083b\n\t"
+    asm volatile(".word 0x7c68183b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -129,17 +129,26 @@ static uint32_t cp0_sweep(void) {
             print_str("FAIL: RDHWR Count\n");
             return 0;
         }
-        /* User mode must not read RDHWR $29 while HWREna[29] is clear. */
+        if (read_cpunum() != 0U || read_ccres() != 2U) {
+            print_str("FAIL: RDHWR CPUNum/CCRes\n");
+            return 0;
+        }
+        /* User mode must not read any standard RDHWR target while its
+         * HWREna bit is clear. */
         cp_u_seen = 0;
         asm volatile("mtc0 %0, $7, 0\n\t"
                      "mtc0 %1, $12, 0\n\t"
                      "ehb\n\t"
                      :: "r"(0U), "r"(0x10U));
+        (void)read_synci_step();
+        (void)read_hwcount();
+        (void)read_cpunum();
+        (void)read_ccres();
         (void)read_userlocal();
         asm volatile("mtc0 %0, $12, 0\n\t"
                      "ehb\n\t" :: "r"(0U));
-        if (cp_u_seen != 1U) {
-            print_str("FAIL: RDHWR disabled user access did not raise CpU\n");
+        if (cp_u_seen != 5U) {
+            print_str("FAIL: RDHWR disabled user access CpU count\n");
             return 0;
         }
 
@@ -149,6 +158,11 @@ static uint32_t cp0_sweep(void) {
                      "mtc0 %1, $12, 0\n\t"
                      "ehb\n\t"
                      :: "r"(0x20000000U), "r"(0x10U));
+        if (read_synci_step() != 32U || read_hwcount() == 0U ||
+            read_cpunum() != 0U || read_ccres() != 2U) {
+            print_str("FAIL: RDHWR enabled user standard read\n");
+            return 0;
+        }
         tls_read = read_userlocal();
         asm volatile("mtc0 %0, $12, 0\n\t"
                      "ehb\n\t" :: "r"(0U));
