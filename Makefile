@@ -182,6 +182,9 @@ mmu-active-gate:
 mmu-context-status-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_context_status tb/unit/tlb/run_mmu_context_status.sh
 
+axi2apb-write-timing-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/axi2apb_write_timing tb/unit/axi/run_axi2apb_bridge.sh
+
 qspi-cmd-behavioral-gate:
 	RUN_DIR=$(QSPI_CMD_BEHAVIORAL_DIR) tb/unit/flash/run_qspi_cmd_behavioral.sh
 
