@@ -58,6 +58,7 @@ module mips_tlb #(
     input  wire [7:0]            probe_asid,
     output wire                  probe_hit,
     output wire [INDEX_BITS-1:0] probe_index,
+    output wire                  probe_multi_hit,
 
     // Address-translation lookup ports (Phase B.3.c). Combinational.
     // Two ports (I-fetch + D-load/store) let both pipeline sides translate in
@@ -134,12 +135,15 @@ module mips_tlb #(
     // Priority-encode smallest-index hit
     reg [INDEX_BITS-1:0] probe_index_r;
     reg                  probe_hit_r;
+    reg                  probe_multi_hit_r;
     integer j;
     always @(*) begin
         probe_hit_r   = 1'b0;
         probe_index_r = {INDEX_BITS{1'b0}};
+        probe_multi_hit_r = 1'b0;
         for (j = TLB_ENTRIES - 1; j >= 0; j = j - 1) begin
             if (hit_vec[j]) begin
+                if (probe_hit_r) probe_multi_hit_r = 1'b1;
                 probe_hit_r   = 1'b1;
                 probe_index_r = j[INDEX_BITS-1:0];
             end
@@ -147,6 +151,7 @@ module mips_tlb #(
     end
     assign probe_hit   = probe_hit_r;
     assign probe_index = probe_index_r;
+    assign probe_multi_hit = probe_multi_hit_r;
 
     // -------------------------------------------------------------------------
     // Lookup ports (Phase B.3.c): combinational address translation.

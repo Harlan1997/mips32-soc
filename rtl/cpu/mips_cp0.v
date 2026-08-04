@@ -194,6 +194,7 @@ module mips_cp0 (
     wire [31:0]              tlb_rd_entrylo1;
     wire                     tlb_probe_hit;
     wire [TLB_IDX_BITS-1:0]  tlb_probe_index;
+    wire                     tlb_probe_multi_hit;
     reg                       cp0_index_p;              // Index[31] probe-fail
     reg [TLB_IDX_BITS-1:0]    cp0_index;                // Index[log2(N)-1:0]
     reg [TLB_IDX_BITS-1:0]    cp0_random;               // free-running downcounter
@@ -575,6 +576,8 @@ module mips_cp0 (
                     3'b100: begin // TLBP: probe → Index[31]=~hit, Index[low]=hit_index or 0
                         cp0_index_p <= ~tlb_probe_hit;
                         cp0_index   <= tlb_probe_hit ? tlb_probe_index : {TLB_IDX_BITS{1'b0}};
+                        if (tlb_probe_multi_hit)
+                            cp0_status[21] <= 1'b1; // duplicate probe is MCheck/TS
                     end
                     // TLBWI (010) and TLBWR (011) write TLB array via mips_tlb
                     // instantiation below; they do not modify CP0 register state.
@@ -723,6 +726,7 @@ module mips_cp0 (
         .probe_asid  (cp0_entryhi_asid),
         .probe_hit   (tlb_probe_hit),
         .probe_index (tlb_probe_index),
+        .probe_multi_hit (tlb_probe_multi_hit),
 
         // Phase B.3.c dual lookup ports (fanned to MMU I / D)
         .lookup0_va  (mmu_ilookup_va),
