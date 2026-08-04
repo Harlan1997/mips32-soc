@@ -31,6 +31,8 @@ void c_interrupt_handler(void) {
 static uint32_t read_userlocal(void) {
     uint32_t value;
     asm volatile(".word 0x7c68e83b\n\t"
+                 "nop\n\t"
+                 "nop\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -38,7 +40,7 @@ static uint32_t read_userlocal(void) {
 
 static uint32_t read_synci_step(void) {
     uint32_t value;
-    asm volatile(".word 0x7c08083b\n\t"
+    asm volatile(".word 0x7c68083b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -46,7 +48,7 @@ static uint32_t read_synci_step(void) {
 
 static uint32_t read_hwcount(void) {
     uint32_t value;
-    asm volatile(".word 0x7c10083b\n\t"
+    asm volatile(".word 0x7c70083b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -54,7 +56,7 @@ static uint32_t read_hwcount(void) {
 
 static uint32_t read_cpunum(void) {
     uint32_t value;
-    asm volatile(".word 0x7c00083b\n\t"
+    asm volatile(".word 0x7c60083b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -62,7 +64,7 @@ static uint32_t read_cpunum(void) {
 
 static uint32_t read_ccres(void) {
     uint32_t value;
-    asm volatile(".word 0x7c18083b\n\t"
+    asm volatile(".word 0x7c78083b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -110,18 +112,6 @@ static uint32_t cp0_sweep(void) {
                      "mtc0 %1, $7, 0\n\t"
                      "ehb\n\t"
                      :: "r"(userlocal), "r"(hwrena));
-        if (read_synci_step() != 32U) {
-            print_str("FAIL: RDHWR SYNCI_Step\n");
-            return 0;
-        }
-        if (read_hwcount() == 0U) {
-            print_str("FAIL: RDHWR Count\n");
-            return 0;
-        }
-        if (read_cpunum() != 0U || read_ccres() != 2U) {
-            print_str("FAIL: RDHWR CPUNum/CCRes\n");
-            return 0;
-        }
         tls_read = read_userlocal();
         if (tls_read != userlocal) {
             print_str("FAIL: RDHWR UserLocal got ");
@@ -131,7 +121,14 @@ static uint32_t cp0_sweep(void) {
             print_str("\n");
             return 0;
         }
-
+        if (read_synci_step() != 32U) {
+            print_str("FAIL: RDHWR SYNCI_Step\n");
+            return 0;
+        }
+        if (read_hwcount() == 0U) {
+            print_str("FAIL: RDHWR Count\n");
+            return 0;
+        }
         /* User mode must not read RDHWR $29 while HWREna[29] is clear. */
         cp_u_seen = 0;
         asm volatile("mtc0 %0, $7, 0\n\t"

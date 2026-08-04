@@ -247,9 +247,10 @@ module mips_id_stage (
                               (inst[5:0] == 6'b111011);
     assign id_cp0_raddr = is_rdhwr ? ((inst[15:11] == 5'd29) ? 5'd4 :
                                       (inst[15:11] == 5'd0)  ? 5'd15 :
-                                      (inst[15:11] == 5'd2)  ? 5'd9 : 5'd7) : inst[15:11];
+                                      ((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7) : inst[15:11];
     assign id_cp0_sel   = is_rdhwr ? ((inst[15:11] == 5'd29) ? 3'd2 :
                                       (inst[15:11] == 5'd0)  ? 3'd2 :
+                                      (inst[15:11] == 5'd1)  ? 3'd1 :
                                       (inst[15:11] == 5'd3)  ? 3'd1 : 3'd0) : inst[2:0];
 
 endmodule
