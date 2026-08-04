@@ -42,12 +42,14 @@ module tb_cp0_timer;
     wire [2:0]  cp0_config_k0_out;
     reg  [31:0] mmu_ilookup_va = 0;
     wire        mmu_ilookup_hit;
+    wire        mmu_ilookup_multi_hit;
     wire        mmu_ilookup_v;
     wire        mmu_ilookup_d;
     wire [2:0]  mmu_ilookup_c;
     wire [19:0] mmu_ilookup_pfn;
     reg  [31:0] mmu_dlookup_va = 0;
     wire        mmu_dlookup_hit;
+    wire        mmu_dlookup_multi_hit;
     wire        mmu_dlookup_v;
     wire        mmu_dlookup_d;
     wire [2:0]  mmu_dlookup_c;
@@ -473,6 +475,21 @@ module tb_cp0_timer;
 
         // Restore kernel mode for subsequent state
         mtc0(5'd12, 3'd0, 32'd0);
+
+        // MCheck/TLB-shutdown contract: CP0 Status.TS is hardware-sticky.
+        // A software Status write may change ordinary writable bits but must
+        // not clear TS once a multi-hit exception has been taken.
+        except_pc = 32'h8000_0100;
+        except_code = 5'h18;
+        except_req = 1'b1;
+        @(posedge clk);
+        except_req = 1'b0;
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("MCheck sets sticky Status.TS", rd[21] == 1'b1);
+        mtc0(5'd12, 3'd0, 32'd0);
+        mfc0(5'd12, 3'd0, rd);
+        check("Status write cannot clear TS", rd[21] == 1'b1);
 
         // Summary
         if (errors == 0)

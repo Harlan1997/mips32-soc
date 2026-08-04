@@ -143,7 +143,7 @@ module mips_cp0 (
     //   9    0    Count      Free-running counter (Phase B.2)
     //   10   0    EntryHi    [31:13]=VPN2, [7:0]=ASID                 (Phase B.3.a)
     //   11   0    Compare    Timer match value (Phase B.2)
-    //   12   0    Status     [22]=BEV, [15:8]=IM, [1]=EXL, [0]=IE  (extended)
+    //   12   0    Status     [22]=BEV, [21]=TS, [15:8]=IM, [1]=EXL, [0]=IE
     //   12   1    IntCtl     [31:29]=IPTI, [9:5]=VS
     //   13   0    Cause      [31]=BD, [30]=TI, [27]=DC, [23]=IV, [15:8]=IP, [6:2]=ExcCode
     //   14   0    EPC
@@ -296,7 +296,8 @@ module mips_cp0 (
 
     // Status (12,0) read-back: assemble writable+reserved bits.
     // Layout: [31:23]=9b (CU3/CU2/CU1/CU0/RP/FR/RE/MX/PX), [22]=BEV,
-    //         [21:16]=6b (TS/SR/NMI/impl), [15:8]=IM, [7:5]=3b, [4:3]=KSU,
+    //         [21]=TS (MCheck sticky), [20:16]=5b (SR/NMI/impl), [15:8]=IM,
+    //         [7:5]=3b, [4:3]=KSU,
     //         [2]=ERL, [1]=EXL, [0]=IE.
     // Phase B.4: KSU[4:3] and CU0[28] added to the writable set. Other CU bits
     // (CU1/CU2/CU3) stay tied 0 until FPU / CP2 land.
@@ -304,7 +305,8 @@ module mips_cp0 (
                                cp0_status[28],        // [28] CU0
                                5'b0,                  // [27:23]
                                cp0_status[22],        // [22] BEV
-                               6'b0,                  // [21:16]
+                               cp0_status[21],        // [21] TS (sticky MCheck)
+                               5'b0,                  // [20:16]
                                cp0_status[15:8],      // [15:8]  IM
                                3'b0,                  // [7:5]
                                cp0_status[4:3],       // [4:3]   KSU (Phase B.4)
@@ -522,6 +524,8 @@ module mips_cp0 (
                 end
                 cp0_cause[6:2] <= except_code;
                 cp0_cause[31]  <= except_bd;
+                if (except_code == 5'h18)
+                    cp0_status[21] <= 1'b1;             // TLB multi-hit shutdown
 
                 // Branch-delay EPC applies to both ordinary and cache-error
                 // entries, but ErrorEPC is the architectural return register
