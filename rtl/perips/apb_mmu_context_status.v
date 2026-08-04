@@ -1,6 +1,6 @@
 // APB-visible MMU context contract.  The allocator is intentionally bounded
 // (four dynamic leases) for the current frontend/behavioral scope.
-module apb_mmu_context_status(
+module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  input wire clk,input wire rst_n,input wire psel,input wire penable,input wire pwrite,
  input wire [5:0] paddr,input wire [31:0] pwdata,output reg [31:0] prdata,
  output wire pready,output wire pslverr);
@@ -20,7 +20,10 @@ module apb_mmu_context_status(
  wire [19:0] sd_invalidate_vpn;
  wire [1:0] sd_invalidate_scope;
 
- mmu_tlb_shootdown_mailbox #(.TIMEOUT_CYCLES(16)) u_shootdown (
+ // The CPU-visible APB path needs room for an uncached read/ack round trip.
+ // Keep the standalone mailbox default short, but use a 64-cycle integration
+ // window so a legal software acknowledgment is not lost in bridge latency.
+ mmu_tlb_shootdown_mailbox #(.TIMEOUT_CYCLES(TIMEOUT_CYCLES)) u_shootdown (
    .clk(clk), .rst_n(rst_n), .req_valid(shootdown_req), .req_asid(asid_r),
    .req_vpn(vpn_r), .req_scope(scope_r), .target_present(1'b1),
    .target_ack(shootdown_ack), .busy(sd_busy),

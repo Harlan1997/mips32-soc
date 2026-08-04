@@ -10,7 +10,7 @@ module tb_product_mmu_context_cpu;
      if(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr==32'hC0009014) begin
        trace_seen=1; $display("CPU_CTX_TRACE va=%h uncached=%b awvalid=%b awaddr=%h apb_sel=%b apb_wr=%b",u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_uncacheable,u_soc.u_impl.u_core_subsystem.data_awvalid,u_soc.u_impl.u_core_subsystem.data_awaddr,u_soc.u_impl.u_peripheral_subsystem.mmu_context_sel,u_soc.u_impl.u_peripheral_subsystem.apb_pwrite);
      end
-     if(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr==32'hA000FFFC) begin if(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata!==32'hDEADBEEF) $finish; pass_seen=1; end
+     if(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr==32'hA000FFFC) begin if(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata!==32'hDEADBEEF) begin $display("REGRESSION_TEST_FAILED product_mmu_context_cpu firmware failure"); $finish; end pass_seen=1; end
      if(pass_seen && trace_seen) begin $display("REGRESSION_TEST_SUCCESS product_mmu_context_cpu"); $finish; end
      if(cycles>12000) begin $display("REGRESSION_TEST_FAILED product_mmu_context_cpu timeout trace=%b",trace_seen); $finish; end
    end
