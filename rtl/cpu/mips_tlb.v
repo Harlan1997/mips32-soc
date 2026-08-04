@@ -63,8 +63,9 @@ module mips_tlb #(
     // Two ports (I-fetch + D-load/store) let both pipeline sides translate in
     // the same cycle. Callers (mips_mmu) supply the full VA and gate the port
     // to only useg/kseg2/kseg3 accesses; kseg0/kseg1 direct-map does not touch
-    // the TLB. Sub-page selection uses VA[12] (4KB-page assumption; variable
-    // page sizes land with Phase B.3.d).
+    // the TLB. Sub-page selection is derived from the matching entry's
+    // PageMask, so larger MIPS even/odd page pairs select the correct
+    // EntryLo half.
     input  wire [31:0]           lookup0_va,
     input  wire [7:0]            lookup0_asid,
     output wire                  lookup0_hit,
@@ -149,13 +150,33 @@ module mips_tlb #(
     // Lookup ports (Phase B.3.c): combinational address translation.
     // Two parallel ports (0 = I-side, 1 = D-side) share the same TLB storage.
     // Each uses the probe match rule and additionally selects even/odd sub-page
-    // via VA[12] to expose V/D/C/PFN. 4KB-page assumption; PageMask-aware
-    // sub-page selection is a B.3.d follow-up.
+    // via the matching entry's PageMask to expose V/D/C/PFN.
     // -------------------------------------------------------------------------
+
+    // MIPS PageMask encodings are contiguous low-one fields.  The even/odd
+    // selector is the VA bit immediately above the masked page-offset range.
+    // Keep the supported architectural encodings explicit; an invalid mask
+    // falls back to the 4 KiB contract rather than creating an X-dependent
+    // variable index.
+    function [5:0] page_odd_bit_index;
+        input [15:0] mask;
+        begin
+            case (mask)
+                16'h0000: page_odd_bit_index = 6'd12;
+                16'h0003: page_odd_bit_index = 6'd14;
+                16'h000f: page_odd_bit_index = 6'd16;
+                16'h003f: page_odd_bit_index = 6'd18;
+                16'h00ff: page_odd_bit_index = 6'd20;
+                16'h03ff: page_odd_bit_index = 6'd22;
+                16'h0fff: page_odd_bit_index = 6'd24;
+                16'h3fff: page_odd_bit_index = 6'd26;
+                default:  page_odd_bit_index = 6'd12;
+            endcase
+        end
+    endfunction
 
     // Port 0 (I-side)
     wire [18:0] lookup0_vpn2 = lookup0_va[31:13];
-    wire        lookup0_odd  = lookup0_va[12];
     wire [TLB_ENTRIES-1:0] lookup0_hit_vec;
     generate
         for (gi = 0; gi < TLB_ENTRIES; gi = gi + 1) begin : g_lookup0
@@ -180,6 +201,8 @@ module mips_tlb #(
         end
     end
     assign lookup0_hit = lookup0_hit_r;
+    wire [5:0] lookup0_odd_bit = page_odd_bit_index(tlb_mask[lookup0_hit_index_r]);
+    wire        lookup0_odd = lookup0_va[lookup0_odd_bit];
     wire [31:0] sel_lo0 = lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r]
                                       : tlb_entrylo0[lookup0_hit_index_r];
     assign lookup0_v   = sel_lo0[1];
@@ -189,7 +212,6 @@ module mips_tlb #(
 
     // Port 1 (D-side)
     wire [18:0] lookup1_vpn2 = lookup1_va[31:13];
-    wire        lookup1_odd  = lookup1_va[12];
     wire [TLB_ENTRIES-1:0] lookup1_hit_vec;
     generate
         for (gi = 0; gi < TLB_ENTRIES; gi = gi + 1) begin : g_lookup1
@@ -214,6 +236,8 @@ module mips_tlb #(
         end
     end
     assign lookup1_hit = lookup1_hit_r;
+    wire [5:0] lookup1_odd_bit = page_odd_bit_index(tlb_mask[lookup1_hit_index_r]);
+    wire        lookup1_odd = lookup1_va[lookup1_odd_bit];
     wire [31:0] sel_lo1 = lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r]
                                       : tlb_entrylo0[lookup1_hit_index_r];
     assign lookup1_v   = sel_lo1[1];

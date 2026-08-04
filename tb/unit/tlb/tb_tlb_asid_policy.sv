@@ -81,11 +81,23 @@ module tb_tlb_asid_policy;
         input [31:0] lo0;
         input [31:0] lo1;
         begin
+            write_entry_mask(index, vpn2, entry_asid, 16'b0, lo0, lo1);
+        end
+    endtask
+
+    task automatic write_entry_mask;
+        input [1:0]  index;
+        input [18:0] vpn2;
+        input [7:0]  entry_asid;
+        input [15:0] entry_mask;
+        input [31:0] lo0;
+        input [31:0] lo1;
+        begin
             @(negedge clk);
             wr_index    = index;
             wr_vpn2     = vpn2;
             wr_asid     = entry_asid;
-            wr_mask     = 16'b0; // 4 KiB pair for this contract gate
+            wr_mask     = entry_mask;
             wr_entrylo0 = lo0;
             wr_entrylo1 = lo1;
             wr_en       = 1'b1;
@@ -250,6 +262,25 @@ module tb_tlb_asid_policy;
         #1;
         check("Rollover old ASID stays isolated", !tlb_hit &&
               !translation_ok && fault_type == 3'b001);
+
+        // PageMask-aware even/odd selection: a 16 KiB page pair uses VA[14]
+        // as the half selector. VA[12] must remain part of the page offset.
+        write_entry_mask(2'd3, 19'h02200, 8'h77, 16'h0003,
+                         make_lo(20'h52000, 3'b011, 1'b1, 1'b1, 1'b0),
+                         make_lo(20'h52001, 3'b011, 1'b1, 1'b1, 1'b0));
+        asid = 8'h77;
+        req_va = {19'h02200, 13'h0004}; // VA[14]=0, VA[12]=0
+        #1;
+        check("16KiB page selects even half", tlb_hit && translation_ok &&
+              pa == {20'h52000, 12'h0004});
+        req_va = {19'h02200, 13'h1004}; // VA[12]=1, VA[14]=0
+        #1;
+        check("16KiB offset bit does not change half", tlb_hit && translation_ok &&
+              pa == {20'h52000, 12'h1004});
+        req_va = {19'h02202, 13'h0004}; // VA[14]=1; masked VPN2 bit changes
+        #1;
+        check("16KiB page selects odd half", tlb_hit && translation_ok &&
+              pa == {20'h52001, 12'h0004});
 
         req_valid = 1'b0;
         #1;
