@@ -143,7 +143,13 @@ module mips_tlb #(
         probe_multi_hit_r = 1'b0;
         for (j = TLB_ENTRIES - 1; j >= 0; j = j - 1) begin
             if (hit_vec[j]) begin
-                if (probe_hit_r) probe_multi_hit_r = 1'b1;
+                if (probe_hit_r &&
+                    ((tlb_vpn2[j] != tlb_vpn2[probe_index_r]) ||
+                     (tlb_asid[j] != tlb_asid[probe_index_r]) ||
+                     (tlb_mask[j] != tlb_mask[probe_index_r]) ||
+                     (tlb_entrylo0[j] != tlb_entrylo0[probe_index_r]) ||
+                     (tlb_entrylo1[j] != tlb_entrylo1[probe_index_r])))
+                    probe_multi_hit_r = 1'b1;
                 probe_hit_r   = 1'b1;
                 probe_index_r = j[INDEX_BITS-1:0];
             end
@@ -227,7 +233,13 @@ module mips_tlb #(
         lookup0_multi_hit_r = 1'b0;
         for (m0 = TLB_ENTRIES - 1; m0 >= 0; m0 = m0 - 1) begin
             if (lookup0_hit_vec[m0]) begin
-                if (lookup0_hit_r) lookup0_multi_hit_r = 1'b1;
+                if (lookup0_hit_r &&
+                    ((tlb_vpn2[m0] != tlb_vpn2[lookup0_hit_index_r]) ||
+                     (tlb_asid[m0] != tlb_asid[lookup0_hit_index_r]) ||
+                     (tlb_mask[m0] != tlb_mask[lookup0_hit_index_r]) ||
+                     (tlb_entrylo0[m0] != tlb_entrylo0[lookup0_hit_index_r]) ||
+                     (tlb_entrylo1[m0] != tlb_entrylo1[lookup0_hit_index_r])))
+                    lookup0_multi_hit_r = 1'b1;
                 lookup0_hit_r       = 1'b1;
                 lookup0_hit_index_r = m0[INDEX_BITS-1:0];
             end
@@ -267,7 +279,13 @@ module mips_tlb #(
         lookup1_multi_hit_r = 1'b0;
         for (m1 = TLB_ENTRIES - 1; m1 >= 0; m1 = m1 - 1) begin
             if (lookup1_hit_vec[m1]) begin
-                if (lookup1_hit_r) lookup1_multi_hit_r = 1'b1;
+                if (lookup1_hit_r &&
+                    ((tlb_vpn2[m1] != tlb_vpn2[lookup1_hit_index_r]) ||
+                     (tlb_asid[m1] != tlb_asid[lookup1_hit_index_r]) ||
+                     (tlb_mask[m1] != tlb_mask[lookup1_hit_index_r]) ||
+                     (tlb_entrylo0[m1] != tlb_entrylo0[lookup1_hit_index_r]) ||
+                     (tlb_entrylo1[m1] != tlb_entrylo1[lookup1_hit_index_r])))
+                    lookup1_multi_hit_r = 1'b1;
                 lookup1_hit_r       = 1'b1;
                 lookup1_hit_index_r = m1[INDEX_BITS-1:0];
             end
