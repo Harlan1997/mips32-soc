@@ -43,20 +43,25 @@ static uint32_t read_vic_reg(uint32_t addr)
     return value;
 }
 
-static volatile uint32_t cpu_irq_seen;
+static volatile uint32_t cpu_irq_count;
+static volatile uint32_t cpu_irq_ids[2];
 static volatile uint32_t cpu_irq_test;
 
 void c_interrupt_handler(void)
 {
-    uint32_t cause, status = 0;
+    uint32_t cause, saved_status, masked_status;
     __asm__ volatile("mfc0 %0, $13" : "=r"(cause));
-    if (((cause >> 2) & 0x1f) == 0 && cpu_irq_test) {
+    __asm__ volatile("mfc0 %0, $12" : "=r"(saved_status));
+    masked_status = saved_status & ~1u;
+    if (((cause >> 2) & 0x1f) == 0 && cpu_irq_test && cpu_irq_count < 2) {
         /* Mask IE while APB ACK/SOFT_CLR transactions retire. */
-        __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
-        cpu_irq_seen = read_vec_id();
-        REG32(VIC_ACK) = 0x00000100;
+        __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(masked_status));
+        cpu_irq_ids[cpu_irq_count] = read_vec_id();
+        REG32(VIC_ACK) = (cpu_irq_ids[cpu_irq_count] == 9) ? 0x00000200 : 0x00000100;
         __asm__ volatile("nop\n\tnop\n\tnop\n\tnop" ::: "memory");
-        REG32(VIC_SOFT_CLR) = 0x00000100;
+        REG32(VIC_SOFT_CLR) = (cpu_irq_ids[cpu_irq_count] == 9) ? 0x00000200 : 0x00000100;
+        cpu_irq_count++;
+        __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(saved_status));
     }
 }
 
@@ -215,19 +220,21 @@ static int test_tie_break(void) {
 static int test_cpu_interrupt_clear(void)
 {
     uint32_t status = 0x00000401;
-    cpu_irq_seen = 0xff;
+    cpu_irq_count = 0;
+    cpu_irq_ids[0] = cpu_irq_ids[1] = 0xff;
     cpu_irq_test = 1;
-    REG32(VIC_PRIO(8)) = 7;
-    REG32(VIC_INTR_ENABLE) = 1u << 8;
-    REG32(VIC_SOFT) = 1u << 8;
+    REG32(VIC_PRIO(8)) = 3;
+    REG32(VIC_PRIO(9)) = 11;
+    REG32(VIC_INTR_ENABLE) = (1u << 8) | (1u << 9);
+    REG32(VIC_SOFT) = (1u << 8) | (1u << 9);
     __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
-    for (volatile uint32_t timeout = 0; timeout < 20000 && cpu_irq_seen == 0xff; timeout++) { }
+    for (volatile uint32_t timeout = 0; timeout < 20000 && cpu_irq_count < 2; timeout++) { }
     cpu_irq_test = 0;
     REG32(VIC_INTR_ENABLE) = 0;
     __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
     { uint32_t active = read_vic_reg(VIC_ACTIVE); uint32_t soft = read_vic_reg(VIC_SOFT);
-      if (cpu_irq_seen != 8 || active != 0 || soft != 0) {
-        print_str("FAIL: irq_seen="); print_hex(cpu_irq_seen); print_str(" active="); print_hex(active); print_str(" soft="); print_hex(soft); print_str("\n");
+      if (cpu_irq_count != 2 || cpu_irq_ids[0] != 9 || cpu_irq_ids[1] != 8 || active != 0 || soft != 0) {
+        print_str("FAIL: irq_seq="); print_hex((cpu_irq_ids[0] << 8) | cpu_irq_ids[1]); print_str(" active="); print_hex(active); print_str(" soft="); print_hex(soft); print_str("\n");
         return -1;
       }
     }
