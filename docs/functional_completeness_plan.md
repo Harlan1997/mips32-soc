@@ -1,8 +1,8 @@
 # SoC 功能完整性计划
 
-> 版本：v1.45（2026-08-04）
+> 版本：v1.46（2026-08-05）
 >
-> 目标：建立一条可复现、可审计的 SoC 功能完整性主线，并明确区分“当前 RTL 契约通过”和“商用 SoC 功能完成”。本文优先覆盖产品架构、RTL 集成、块级验证、firmware 与 SoC UVM；覆盖率只保留为历史风险记录，不是当前执行主线。Lint、CDC/RDC、formal、综合/时序和 PPA 明确暂缓，不作为本阶段 gate。
+> 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文当前只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据；不以综合、后端或量产级 SoC 完成为目标。
 
 ## 1. 完成等级
 
@@ -12,9 +12,10 @@
 2. `BLOCK_VERIFIED`：块级 directed/negative/reset 测试通过。
 3. `SOC_INTEGRATED`：接入产品 SoC，firmware 和 SoC UVM 通过。
 4. `CONTRACT_CLOSED`：多 seed、错误路径、复位/背压、scoreboard、功能覆盖率和当前契约签收通过。
-5. `PRODUCT_FUNCTION_READY`：产品 boot、存储器、CPU 特权路径、对外 I/O、外设、中断和系统软件入口均已接入并有对应 SoC 证据。
+5. `PRODUCT_FUNCTION_READY`：后续产品化阶段定义的等级，不属于当前 RTL/仿真交付目标。
 
-`CONTRACT_CLOSED` 不代表 `PRODUCT_FUNCTION_READY`，更不代表 tapeout ready。最终物理和静态签核暂缓。
+`CONTRACT_CLOSED` 仅表示当前文档化 RTL contract 的仿真证据闭合，不代表
+`PRODUCT_FUNCTION_READY`，也不代表综合、后端或 tapeout ready。
 
 ## 1A. 当前交付边界：RTL 前端
 
@@ -27,10 +28,10 @@
 本阶段包含：
 
 - 可综合 RTL 的功能实现和接口契约；
-- vendor-neutral DDR4 controller/PHY behavioral model；
+- vendor-neutral DDR4 controller/PHY behavioral model（仅作为 RTL 仿真模型）；
 - unit test、firmware test、SoC/UVM behavioral simulation；
 - reset、timeout、backpressure、非法输入和错误响应验证；
-- 每项功能的 commit、测试命令、日志和残余风险登记。
+- 每项功能的 commit、测试命令、日志、功能覆盖率和残余风险登记。
 
 本阶段不包含，也不作为当前 gate 的前置条件：
 
@@ -79,13 +80,13 @@ make phase3-complete
 
 ### 当前只执行这 3 类工作
 
-1. **补 RTL 功能缺口**：多段/PIC/TLS/权限、page-table/allocator 接口、异常策略。
+1. **补 RTL 功能缺口**：按当前 contract 完成功能模块、接口、异常和错误处理。
 2. **补功能证据**：unit、firmware、SoC gate；每项必须有命令、结果、commit。
 3. **维护默认基线**：任何 RTL 改动后重跑 `make rtl-frontend-compile`、`make soc-smoke`、`make phase3-complete`。
 
 ### 当前明确不做
 
-真实 DDR4 PHY/controller、商用 QSPI PHY/Flash、secure boot、Linux/U-Boot、板级 SI/PI、lint、CDC/RDC、formal、综合、时序和 PPA。
+真实 DDR4 PHY/controller、商用 QSPI PHY/Flash、secure boot、Linux/U-Boot、板级 SI/PI、lint、CDC/RDC、formal、综合、STA、PPA、gate-level simulation、后端实现和 tapeout signoff。
 
 ## 2. 当前基线快照
 
@@ -455,6 +456,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-05 | `integration/function-contract` dual-core IPI APB control slice | `make mmu-ipi-shootdown-gate`；`make apb-mmu-ipi-status-gate` | PASS：standalone IPI controller；APB register/control gate | 新增 vendor-neutral APB IPI 控制面：目标核/代次、ASID/VPN/scope 配置，send 命令，busy/pending/done/timeout/rejected/stale-ack 状态和 W1C 清除；外部 target-present/ack 端点验证 payload、匹配 ACK 与目标不存在超时。该切片尚未接入 `soc_peripheral_subsystem`/双核 CPU，不升级为 SoC 多核功能完成。 |
 | 2026-08-05 | `integration/function-contract` IPI APB optional SoC wiring recheck | `make rtl-frontend-compile RUN_ROOT=build/unit_tb/rtl_frontend_ipi_integration`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_after_ipi_apb`；`build/cpu_mmu_ipi_recheck_20260805.log` | PASS：RTL frontend `3/3`；default SoC smoke；CPU/MMU/IPI recheck all gates | `soc_peripheral_subsystem` 增加 `ENABLE_DUAL_CORE_IPI=0` 默认关闭的 `0x4000_A000` APB 窗口和外部 target/ack/invalidate 端点；默认单核 CPU、MMU context window 和既有 firmware 不变。重跑 IPI、APB IPI、TLB policy/invalidate、CPU context、ASID context、process pressure、EBase Mod、CacheErr gates 均通过。该证据仍不等同于双核 CPU、共享内存一致性或 OS scheduler 完成。 |
 | 2026-08-05 | `integration/function-contract` full functional closure batch | `build/functional_closure_20260805.log` | PASS：CPU/CP0、TLB/MMU、IPI、cache-error、kseg0 runtime、DDR4 behavioral、QSPI/XIP behavioral 共 `38` 个 gate | 从干净编译状态重新执行当前 RTL 功能范围内的 CPU/MMU、Boot、cache、DDR4 behavioral 和 QSPI/XIP gate；期间修复 `tb_mmu_context_status.sv` 的 `.*` 输出声明缺失，避免旧 sim 日志掩盖当前 HEAD 的编译失败。该批次闭合当前 vendor-neutral RTL/仿真范围，不改变真实双核一致性、商用 DDR/PHY、production boot 等 P0 外部依赖。 |
+| 2026-08-05 | `integration/function-contract` Phase closure rerun | `build/phase_closure_20260805.log`；`make phase2-complete`；`make phase3-complete`；`make phase3b-complete`；`make phase3c-complete` | PASS：Phase 2、3A、3B、3C 全部完成 | 汇总回归在当前 HEAD 重新通过，确认 APB IPI 接入和 context-status TB 修复没有破坏既有 DMA/timer/PIC、UART/flash/APB stress、CPU/CP0、PIC arbitration 和 firmware gates。覆盖率数值仍不是本阶段功能完整性判据。 |
 
 ## 10. 已知未决问题
 
