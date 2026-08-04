@@ -46,6 +46,11 @@ module mips_cpu (
     input  wire [31:0] data_rdata,
     
     input  wire [5:0]  ext_int,
+    input  wire        tlb_inv_en,
+    input  wire [18:0] tlb_inv_vpn2,
+    input  wire [7:0]  tlb_inv_asid,
+    input  wire [1:0]  tlb_inv_scope,
+    input  wire [5:0]  tlb_inv_wired_floor,
     
     // Pipeline controls
     output wire        debug_stall,
@@ -802,6 +807,11 @@ module mips_cpu (
         .except_bd    (wb_bd),
         .eret         (wb_is_eret),
         .bad_vaddr    (bad_vaddr),
+        .tlb_inv_en   (tlb_inv_en),
+        .tlb_inv_vpn2 (tlb_inv_vpn2),
+        .tlb_inv_asid (tlb_inv_asid),
+        .tlb_inv_scope(tlb_inv_scope),
+        .tlb_inv_wired_floor(tlb_inv_wired_floor),
         .epc_out      (epc_out),
         .ebase_out    (ebase_out),
         .bev_out      (cp0_bev),

@@ -10,6 +10,11 @@ module mips_core (
     input  wire        clk,
     input  wire        rst_n,
     input  wire [5:0]  ext_int,
+    input  wire        tlb_inv_en,
+    input  wire [18:0] tlb_inv_vpn2,
+    input  wire [7:0]  tlb_inv_asid,
+    input  wire [1:0]  tlb_inv_scope,
+    input  wire [5:0]  tlb_inv_wired_floor,
     
     // AXI4 Master Interface (Instruction Cache)
     output wire [3:0]  inst_awid,
@@ -168,6 +173,11 @@ module mips_core (
         .data_we         (cpu_data_we),
         .data_addr       (cpu_data_addr),
         .ext_int         (ext_int),
+        .tlb_inv_en      (tlb_inv_en),
+        .tlb_inv_vpn2    (tlb_inv_vpn2),
+        .tlb_inv_asid    (tlb_inv_asid),
+        .tlb_inv_scope   (tlb_inv_scope),
+        .tlb_inv_wired_floor(tlb_inv_wired_floor),
         .data_wdata      (cpu_data_wdata),
         .data_be         (cpu_data_be),
         .data_uncacheable(cpu_data_uncacheable),

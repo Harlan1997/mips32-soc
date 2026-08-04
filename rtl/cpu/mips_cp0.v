@@ -115,7 +115,12 @@ module mips_cp0 (
     output wire        mmu_dlookup_v,
     output wire        mmu_dlookup_d,
     output wire [2:0]  mmu_dlookup_c,
-    output wire [19:0] mmu_dlookup_pfn
+    output wire [19:0] mmu_dlookup_pfn,
+    input wire        tlb_inv_en,
+    input wire [18:0] tlb_inv_vpn2,
+    input wire [7:0]  tlb_inv_asid,
+    input wire [1:0]  tlb_inv_scope,
+    input wire [5:0]  tlb_inv_wired_floor
 );
 
     // -------------------------------------------------------------------------
@@ -685,6 +690,11 @@ module mips_cp0 (
         .wr_mask     (cp0_pagemask_mask),
         .wr_entrylo0 (cp0_entrylo0),
         .wr_entrylo1 (cp0_entrylo1),
+        .inv_en      (tlb_inv_en),
+        .inv_vpn2    (tlb_inv_vpn2),
+        .inv_asid    (tlb_inv_asid),
+        .inv_scope   (tlb_inv_scope),
+        .inv_wired_floor(tlb_inv_wired_floor),
 
         .rd_index    (cp0_index),
         .rd_vpn2     (tlb_rd_vpn2),
