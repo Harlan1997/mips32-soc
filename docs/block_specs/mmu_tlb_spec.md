@@ -58,7 +58,7 @@ MIPS32 硬编码 4 段：
   - **Data 部分**：
     - Lo0：PFN0 (20 bit) + C0 (3 bit) + D0 (1) + V0 (1) + G0 (1)
     - Lo1：PFN1 (20 bit) + C1 (3 bit) + D1 (1) + V1 (1) + G1 (1)
-- 一条 entry 同时映射**两页**（VPN2 = VA[31:13] 的偶数半，选择位 = VA[12] 或按 PageMask 调整）。
+- 一条 entry 同时映射**两页**（VPN2 = VA[31:13] 的偶数半；4 KiB 时选择位为 VA[12]，更大页按 PageMask 取页偏移范围以上的 VA 位）。
 
 ### 2.2 参数
 
@@ -81,7 +81,7 @@ MIPS32 硬编码 4 段：
    - `MATCH_VPN_i = (VA[31:13] & ~MASK_i[28:13]) == (VPN2_i & ~MASK_i[28:13])`
    - `MATCH_ASID_i = G_i || (ASID_i == ASID_curr)`
    - `HIT_i = Valid_i && MATCH_VPN_i && MATCH_ASID_i`
-2. **奇偶选择位** = `VA[12 + log2_pagesize - 12]`，即 `VA[MASK_i[log2] + 12]`（等效于 `VA` 按页尺度分成偶奇两半的第 0 位）。
+2. **奇偶选择位** = 页偏移范围以上的 VA 位：PageMask `0x0000/0x0003/0x000F/0x003F/0x00FF/0x03FF/0x0FFF/0x3FFF` 分别使用 `VA[12/14/16/18/20/22/24/26]`（等效于按页尺度将 entry 分成偶奇两半）。RTL 对非法/非连续 mask 回退到 4 KiB 选择位。
    - 若选择位 = 0 → 用 `Lo0`（PFN0/C0/D0/V0）
    - 若选择位 = 1 → 用 `Lo1`
 3. **命中后属性检查**：
@@ -216,7 +216,8 @@ matching-invalid 的 TLBL/TLBS 分类，以及清页 store 的 Modified 分类�
 已有 rollover slice。新增 `tb/unit/tlb/run_tlb_os_context.sh` 以真实
 `mips_tlb + mips_mmu` 建立软件页表 fixture，验证两个 ASID 对同一 VA 的不同 PFN、
 VPN pair even/odd、wired global 保留、非 wired flush 以及 ASID 1..255 回卷后的重新填充。
-这关闭了 software-managed TLB context-switch 的硬件边界子集；新增
+这关闭了 software-managed TLB context-switch 的硬件边界子集。该 gate 还验证 PageMask `0x0003`
+的 16 KiB even/odd 选择及 `VA[12]` offset 保持；其余页尺度尚未由 SoC/OS 压力覆盖。新增
 `tb/soc_test/run_product_mmu_asid_context.sh` 在真实 SoC firmware 上验证 ASID 1/2
 同 VA 不同 PFN、切回命中、`TLBWI` 清空动态槽、wired APB 保留和重新 refill。可变页大小、
 multi-hit machine check、micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
