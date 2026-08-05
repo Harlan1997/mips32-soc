@@ -108,6 +108,8 @@ module qspi_axi_xip #(
     wire [3:0] cmd_io_oe;
     wire [3:0] cmd_io_i = ENABLE_QUAD_IO ? qspi_io : {3'b000, spi_miso};
     wire cmd_irq;
+    wire cmd_error_event;
+    wire [31:0] cmd_error_value;
     wire [31:0] assembled_rdata = {rx_b0_r, rx_b1_r, rx_b2_r, cmd_prdata[7:0]};
     wire [31:0] formatted_rdata = ENDIAN_SWAP ?
                                    {assembled_rdata[7:0], assembled_rdata[15:8],
@@ -123,7 +125,7 @@ module qspi_axi_xip #(
         .prdata(cmd_prdata), .pready(cmd_pready), .pslverr(cmd_pslverr),
         .spi_sclk(cmd_sclk), .spi_cs_n(cmd_cs_n),
         .spi_io_o(cmd_io_o), .spi_io_oe(cmd_io_oe), .spi_io_i(cmd_io_i),
-        .irq(cmd_irq)
+        .irq(cmd_irq), .error_event(cmd_error_event), .error_value(cmd_error_value)
     );
 
     assign spi_sclk = cmd_sclk;

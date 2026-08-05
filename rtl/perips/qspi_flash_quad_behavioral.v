@@ -29,8 +29,6 @@ module qspi_flash_quad_behavioral #(
     reg [15:0] byte_count_r;
     reg [3:0] io_o_r;
     reg [3:0] io_oe_r;
-    integer i;
-
     function automatic integer mem_index(input [23:0] base,
                                           input integer offset);
         integer value;
@@ -43,11 +41,6 @@ module qspi_flash_quad_behavioral #(
             mem_index = value;
         end
     endfunction
-
-    initial begin
-        for (i = 0; i < MEM_BYTES; i = i + 1)
-            mem[i] = 8'hff;
-    end
 
     always @(negedge spi_cs_n or negedge rst_n) begin
         if (!rst_n) begin

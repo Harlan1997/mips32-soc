@@ -1,7 +1,7 @@
 // =============================================================================
 // tb_xbar_ddr.v — Phase C.4 DDR window fabric test
 // Checks the new S3 DDR mapped slave (SOC_DDR_BASE=0x0800_0000, 128MB) end to
-// end through axi_crossbar into the real axi_ddr_behavioral module:
+// end through axi_crossbar into the protocol-level DDR4 controller:
 //   - read-after-write data integrity at the DDR base address
 //   - burst read-after-write integrity at an offset within the window
 //   - the DDR/FLASH boundary is respected: DDR ends at 0x0FFF_FFFF, FLASH
@@ -10,7 +10,7 @@
 //   - existing SRAM window (S0) traffic is unaffected by the new slave
 // Uses N_M=2, N_S=4 (SRAM@0x0, APB@0x40000000, FLASH@0x10000000,
 // DDR@0x08000000) + DECERR. S0-S2 are backed by the generic axi_mem_slave TB
-// model; S3 is backed by the real rtl/perips/axi_ddr_behavioral.v module.
+// model; S3 is backed by rtl/perips/axi_ddr4_controller.v.
 // =============================================================================
 `timescale 1ns/1ps
 `include "soc_config.vh"
@@ -106,7 +106,7 @@ module tb_xbar_ddr;
     end endgenerate
 
     // S3=DDR: real behavioral placeholder module under test.
-    axi_ddr_behavioral #(.MEM_DEPTH_WORDS(4096)) u_ddr (
+    axi_ddr4_controller #(.MEM_DEPTH_WORDS(4096), .REFRESH_INTERVAL_CYCLES(0)) u_ddr (
         .clk(clk),.rst_n(rst_n),
         .s_awid(s_awid[3*IDW+:IDW]),.s_awaddr(s_awaddr[3*AW+:AW]),.s_awlen(s_awlen[3*8+:8]),
         .s_awsize(s_awsize[3*3+:3]),.s_awburst(s_awburst[3*2+:2]),
@@ -118,7 +118,9 @@ module tb_xbar_ddr;
         .s_arsize(s_arsize[3*3+:3]),.s_arburst(s_arburst[3*2+:2]),
         .s_arvalid(s_arvalid[3]),.s_arready(s_arready[3]),
         .s_rid(s_rid[3*IDW+:IDW]),.s_rdata(s_rdata[3*DW+:DW]),.s_rresp(s_rresp[3*2+:2]),
-        .s_rlast(s_rlast[3]),.s_rvalid(s_rvalid[3]),.s_rready(s_rready[3])
+        .s_rlast(s_rlast[3]),.s_rvalid(s_rvalid[3]),.s_rready(s_rready[3]),
+        .refresh_req(1'b0), .controller_present(), .init_done(),
+        .training_done(), .refresh_busy(), .fatal_error(), .error_code()
     );
 
     integer errs=0;

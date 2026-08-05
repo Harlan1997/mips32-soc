@@ -18,7 +18,7 @@ module load vcs 2>/dev/null
 XBAR="${ROOT_DIR}/rtl/axi/axi_crossbar.v"
 MEMSLV="${ROOT_DIR}/tb/unit/fabric/axi_mem_slave.v"
 MOSLV="${ROOT_DIR}/tb/unit/fabric/axi_mo_slave.v"
-DDRSLV="${ROOT_DIR}/rtl/perips/axi_ddr_behavioral.v"
+DDRSLV="${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v"
 INC="+incdir+${ROOT_DIR}/rtl/include"
 
 FAILED=0

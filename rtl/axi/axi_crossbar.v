@@ -19,7 +19,7 @@
 //   MSHR L1 / non-blocking L2). Cross-slave concurrency is realized now.
 //
 //   S3 = DDR: 128MB physical window (SOC_DDR_BASE/SOC_DDR_SIZE) backed today
-//   only by a behavioral capacity placeholder (rtl/perips/axi_ddr_behavioral.v).
+//   only by the protocol-level DDR4 controller (rtl/perips/axi_ddr4_controller.v).
 //   No DDR3 timing/refresh/PHY realism. See docs/block_specs/ddr3_spec.md.
 //   Decoded via an explicit range compare (not the 256MB mask used for
 //   SRAM/APB/FLASH) since SOC_DDR_BASE is only 128MB-aligned.

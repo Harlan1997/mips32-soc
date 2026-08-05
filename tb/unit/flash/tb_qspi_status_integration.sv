@@ -422,6 +422,7 @@ module tb_qspi_status_integration;
                      rd_value, qspi_active, spi_cs_n, spi_sclk);
             errors = errors + 1;
         end
+        axi_read(32'h4000_5008, 32'h0001_0001);
         axi_write(32'h4000_5034, 32'h7);         // W1C done/timeout/abort
 
         // Arm the always-on watchdog while a command owns the pins.  The WDT

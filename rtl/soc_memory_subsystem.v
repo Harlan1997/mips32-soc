@@ -312,10 +312,20 @@ module soc_memory_subsystem #(
     endtask
     // synopsys translate_on
 
-    // ---- DDR window (Phase C.4): behavioral capacity placeholder only.
-    // Independent of the SRAM/L2 path above; backs the new SOC_DDR_BASE
-    // fabric slave (s3) directly, with no cache in front of it today.
-    axi_ddr_behavioral u_axi_ddr_behavioral (
+    // ---- DDR4 window: protocol-level controller.
+    // The controller owns AXI acceptance, DDR command sequencing, refresh,
+    // address/error checks and the vendor-neutral simulation backing store.
+    wire ddr4_ctrl_present_i, ddr4_init_done_i, ddr4_training_done_i;
+    wire ddr4_refresh_busy_i, ddr4_fatal_error_i;
+    wire [15:0] ddr4_error_code_i;
+    wire ddr4_phy_cmd_valid_i;
+    wire [3:0] ddr4_phy_cmd_i;
+    wire [31:0] ddr4_phy_addr_i, ddr4_phy_wdata_i;
+    wire [3:0] ddr4_phy_wstrb_i;
+    wire ddr4_last_row_hit_i, ddr4_last_row_miss_i;
+    axi_ddr4_controller #(
+        .INJECT_FATAL(ENABLE_DDR4_STATUS_FATAL)
+    ) u_axi_ddr4_controller (
         .clk             (clk),
         .rst_n           (rst_n),
         .s_awid          (s3_awid),
@@ -346,31 +356,30 @@ module soc_memory_subsystem #(
         .s_rresp         (s3_rresp),
         .s_rlast         (s3_rlast),
         .s_rvalid        (s3_rvalid),
-        .s_rready        (s3_rready)
+        .s_rready        (s3_rready),
+        .refresh_req     (1'b0),
+        .controller_present(ddr4_ctrl_present_i),
+        .init_done       (ddr4_init_done_i),
+        .training_done   (ddr4_training_done_i),
+        .refresh_busy    (ddr4_refresh_busy_i),
+        .fatal_error     (ddr4_fatal_error_i),
+        .error_code      (ddr4_error_code_i),
+        .phy_cmd_valid   (ddr4_phy_cmd_valid_i),
+        .phy_cmd         (ddr4_phy_cmd_i),
+        .phy_addr        (ddr4_phy_addr_i),
+        .phy_wdata       (ddr4_phy_wdata_i),
+        .phy_wstrb       (ddr4_phy_wstrb_i),
+        .last_row_hit    (ddr4_last_row_hit_i),
+        .last_row_miss   (ddr4_last_row_miss_i)
     );
 
     generate
         if (ENABLE_DDR4_STATUS) begin : g_ddr4_status_phy
-            reg init_start_r;
-            wire phy_cmd_ready, phy_rd_valid, phy_rd_error, phy_refresh_busy;
-            wire [31:0] phy_rd_data;
-            wire [15:0] phy_rd_error_code;
-            always @(posedge clk or negedge rst_n)
-                if (!rst_n) init_start_r <= 1'b0;
-                else init_start_r <= 1'b1;
-            ddr4_phy_behavioral u_ddr4_status_phy (
-                .clk(clk), .rst_n(rst_n), .init_start(init_start_r),
-                .inject_init_fail(1'b0), .inject_training_fail(1'b0),
-                .inject_fatal(ENABLE_DDR4_STATUS_FATAL),
-                .refresh_req(1'b0), .cmd_valid(1'b0), .cmd_ready(phy_cmd_ready),
-                .cmd(4'd0), .cmd_addr(32'd0), .cmd_wdata(32'd0), .cmd_wstrb(4'd0),
-                .rd_valid(phy_rd_valid), .rd_ready(1'b1), .rd_data(phy_rd_data),
-                .rd_error(phy_rd_error), .rd_error_code(phy_rd_error_code),
-                .init_done(ddr4_init_done), .training_done(ddr4_training_done),
-                .refresh_busy(phy_refresh_busy), .fatal_error(ddr4_fatal_error),
-                .error_code(ddr4_error_code)
-            );
-            assign ddr4_controller_present = 1'b1;
+            assign ddr4_controller_present = ddr4_ctrl_present_i;
+            assign ddr4_init_done = ddr4_init_done_i;
+            assign ddr4_training_done = ddr4_training_done_i;
+            assign ddr4_fatal_error = ddr4_fatal_error_i;
+            assign ddr4_error_code = ddr4_error_code_i;
         end else begin : g_no_ddr4_status_phy
             assign ddr4_controller_present = 1'b0;
             assign ddr4_init_done = 1'b0;
@@ -384,7 +393,7 @@ module soc_memory_subsystem #(
     task preload_ddr_hex;
         input [1023:0] hex_path;
         begin
-            u_axi_ddr_behavioral.load_hex(hex_path);
+            u_axi_ddr4_controller.load_hex(hex_path);
         end
     endtask
     // synopsys translate_on

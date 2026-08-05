@@ -464,6 +464,8 @@ module soc_peripheral_subsystem #(
         .rst_n                (periph_rst_n),
         .controller_present   (qspi_controller_present),
         .xip_timeout_sticky   (qspi_timeout_sticky),
+        .error_event          (1'b0),
+        .error_value          (32'h0000_0000),
         .psel                 (qspi_sel),
         .penable              (apb_penable),
         .pwrite               (apb_pwrite),

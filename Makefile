@@ -75,6 +75,7 @@ WDT_BOOT_FAILURE_FW_HEX ?= $(WDT_BOOT_FAILURE_FW_DIR)/firmware.hex
 PRODUCT_WDT_BOOT_FAILURE_DIR ?= $(BUILD_DIR)/unit_tb/product_wdt_boot_failure
 DDR_ENTRY_AUDIT_DIR ?= $(BUILD_DIR)/unit_tb/ddr_contract_entry
 DDR4_PHY_BEHAVIORAL_DIR ?= $(BUILD_DIR)/unit_tb/ddr4_phy_behavioral
+DDR4_CONTROLLER_DIR ?= $(BUILD_DIR)/unit_tb/axi_ddr4_controller
 
 SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
 MDU_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/mdu_cpu
@@ -111,7 +112,7 @@ LLSC_FW_HEX ?= $(LLSC_FW_DIR)/firmware.hex
 CP0_RDHWR_DIR ?= $(BUILD_DIR)/soc_test/cp0_rdhwr
 CP0_RDHWR_FW_DIR ?= $(BUILD_DIR)/firmware/cp0_rdhwr
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete dual-core-frontend-compile dual-core-soc-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete dual-core-frontend-compile dual-core-soc-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 mdu-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
@@ -322,6 +323,15 @@ ddr4-status-gate:
 
 ddr4-phy-behavioral-gate:
 	RUN_DIR=$(DDR4_PHY_BEHAVIORAL_DIR) tb/unit/ddr4/run_ddr4_phy_behavioral.sh
+
+ddr4-controller-gate:
+	RUN_DIR=$(DDR4_CONTROLLER_DIR) tb/unit/ddr4/run_axi_ddr4_controller.sh
+
+ddr4-controller-stress-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/axi_ddr4_controller_stress tb/unit/ddr4/run_axi_ddr4_controller_stress.sh
+
+ddr4-complete-gate: ddr4-controller-gate ddr4-controller-stress-gate ddr4-status-gate
+	@echo "DDR4 RTL functional closure gate: PASS"
 
 rtl-frontend-compile:
 	RUN_ROOT=$(BUILD_DIR)/unit_tb/rtl_frontend_compile tb/unit/run_rtl_frontend_compile.sh
