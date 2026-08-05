@@ -5,7 +5,9 @@
 
 `include "soc_config.vh"
 
-module soc_top (
+module soc_top #(
+    parameter ENABLE_DUAL_CORE = 1'b0
+) (
     input  wire clk,
     input  wire rst_n,
 
@@ -33,6 +35,7 @@ module soc_top (
 );
 
     mips_soc #(
+        .ENABLE_DUAL_CORE (ENABLE_DUAL_CORE),
         .ENABLE_UART_PINS (1'b1),
         // Frozen RTL baseline: x1 SPI is the default; quad is opt-in per gate.
         .ENABLE_QSPI_QUAD (1'b0)

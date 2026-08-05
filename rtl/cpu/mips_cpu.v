@@ -51,6 +51,34 @@ module mips_cpu (
     input  wire [7:0]  tlb_inv_asid,
     input  wire [1:0]  tlb_inv_scope,
     input  wire [5:0]  tlb_inv_wired_floor,
+    input  wire        sim_exception_req,
+    input  wire [4:0]  sim_exception_code,
+    // A peer successful store invalidates reservations in the same cache line.
+    input  wire        coh_snoop_valid,
+    input  wire [31:0] coh_snoop_addr,
+
+    input  wire        ctx_save_req,
+    output wire        ctx_save_done,
+    output wire [31:0] ctx_save_pc,
+    output wire [31:0] ctx_save_status,
+    output wire [7:0]  ctx_save_asid,
+    output wire [1023:0] ctx_save_gpr,
+    input  wire        ctx_restore_req,
+    input  wire [31:0] ctx_restore_pc,
+    input  wire [31:0] ctx_restore_status,
+    input  wire [7:0]  ctx_restore_asid,
+    input  wire [1023:0] ctx_restore_gpr,
+    output wire        ctx_restore_ack,
+
+    input  wire        hardware_walker_enable,
+    input  wire [31:0] hardware_walker_ptbr,
+    output wire        ptw_mem_valid,
+    output wire [31:0] ptw_mem_addr,
+    input  wire        ptw_mem_ready,
+    input  wire [31:0] ptw_mem_rdata,
+    input  wire        ptw_mem_error,
+    output wire        ptw_fault_valid,
+    output wire [2:0]  ptw_fault_code,
     
     // Pipeline controls
     output wire        debug_stall,
@@ -67,7 +95,11 @@ module mips_cpu (
     wire mdu_ready;
     
     // Global stall if IF, MEM, or MDU stalls
-    wire global_stall = stall_req_if | stall_req_mem | ~mdu_ready;
+    reg ptw_busy;
+    reg ptw_refill_pending;
+    wire context_active = (ctx_save_req === 1'b1) | (ctx_restore_req === 1'b1);
+    wire global_stall = stall_req_if | stall_req_mem | ~mdu_ready |
+                        context_active | ptw_busy | ptw_refill_pending;
     
     // Exceptions
     wire wb_except_req;
@@ -79,15 +111,18 @@ module mips_cpu (
     wire [31:0] epc_out;
     
     // Exception PC redirection
-    wire exception_flush = wb_except_req | wb_is_eret | intr_req;
+    wire sim_exception_active = (sim_exception_req === 1'b1);
+    wire effective_except_req = wb_except_req | sim_exception_active;
+    wire [4:0] effective_except_code = sim_exception_active ? sim_exception_code : wb_except_code;
+    wire exception_flush = effective_except_req | wb_is_eret | intr_req;
     wire [31:0] ebase_out;
     wire        cp0_bev;
     wire        cp0_vint_enabled;
     wire [31:0] cp0_vint_offset;
     wire [31:0] cp0_taglo;
     wire [31:0] cp0_taghi;
-    // Single-core LL/SC reservation state. External snoops are not present in
-    // the current fabric, so any completed store clears the reservation.
+    // LL/SC reservation state. A peer store clears a reservation at line
+    // granularity, matching the coherency write-invalidate contract.
     reg         ll_reservation_valid;
     reg [31:0]  ll_reservation_addr;
     // A synchronous WB exception always takes precedence over an interrupt;
@@ -125,17 +160,17 @@ module mips_cpu (
     wire stall_pc = global_stall | stall_req_id;
     
     // IF flush on exception/eret
-    wire if_flush = exception_flush;
+    wire if_flush = exception_flush | ctx_restore_req;
     
     // IF/ID flush on exception only (MIPS has branch delay slots, so we DO NOT flush on branch/jump)
-    wire if_id_flush = exception_flush;
+    wire if_id_flush = exception_flush | ctx_restore_req;
     
     // ID/EX flushes (inserts bubble) if load-use hazard occurs without global stall, or on exception
-    wire flush_id_ex = (stall_req_id & ~global_stall) | exception_flush;
+    wire flush_id_ex = (stall_req_id & ~global_stall) | exception_flush | ctx_restore_req;
     
     // EX/MEM and MEM/WB flush on exception
-    wire flush_ex_mem = exception_flush;
-    wire flush_mem_wb = exception_flush;
+    wire flush_ex_mem = exception_flush | ctx_restore_req;
+    wire flush_mem_wb = exception_flush | ctx_restore_req;
     
     assign debug_stall = global_stall;
     assign debug_flush = if_id_flush;
@@ -174,6 +209,32 @@ module mips_cpu (
     wire        mmu_dlookup_d;
     wire [2:0]  mmu_dlookup_c;
     wire [19:0] mmu_dlookup_pfn;
+    wire dmem_translate_req = data_req | data_cache_op_valid;
+
+    wire hw_walker_i_miss = (hardware_walker_enable === 1'b1) &&
+                             inst_req && !mmu_i_ok &&
+                             (mmu_i_fault_type == 3'b001) && !mmu_ilookup_hit;
+    wire hw_walker_d_miss = (hardware_walker_enable === 1'b1) &&
+                             dmem_translate_req && !mmu_d_ok &&
+                             ((mmu_d_fault_type == 3'b001) ||
+                              (mmu_d_fault_type == 3'b010)) && !mmu_dlookup_hit;
+    wire ptw_req_valid = !ptw_busy && !ptw_refill_pending &&
+                         (hw_walker_i_miss || hw_walker_d_miss);
+    wire ptw_req_ready;
+    wire ptw_resp_valid;
+    wire [31:0] ptw_pa;
+    wire ptw_fault_i;
+    wire [2:0] ptw_fault_code_i;
+    wire [31:0] ptw_leaf_pte;
+    wire [31:0] ptw_req_va = hw_walker_i_miss ? if_vaddr : mem_vaddr;
+    wire [1:0] ptw_req_access = hw_walker_i_miss ? 2'd0 :
+                                 (data_we ? 2'd2 : 2'd1);
+    wire ptw_req_user = !cpu_kernel_mode;
+    reg [31:0] ptw_va_q;
+    wire hw_tlb_wr_ready;
+    wire hw_tlb_wr_en = ptw_refill_pending && hw_tlb_wr_ready;
+    wire [31:0] hw_tlb_entrylo = {2'b0, 4'b0, ptw_leaf_pte[31:12],
+                                  3'b011, ptw_leaf_pte[1], ptw_leaf_pte[0], 1'b0};
     
     // =========================================================================
     // IF Stage
@@ -198,9 +259,14 @@ module mips_cpu (
         
         .stall_req_if     (stall_req_if),
         
-        .pc               (),
+        .pc               (ctx_save_pc),
         .pc_plus_4        (if_pc_plus_4),
-        .adel_exception   (if_adel_exception)
+        .adel_exception   (if_adel_exception),
+        .ctx_save_req     (ctx_save_req),
+        .ctx_save_done    (),
+        .ctx_restore_req  (ctx_restore_req),
+        .ctx_restore_pc   (ctx_restore_pc),
+        .ctx_restore_done ()
     );
     
     // =========================================================================
@@ -223,7 +289,8 @@ module mips_cpu (
     // optional cache-error sideband electrically quiet rather than X-active.
     wire        if_bus_fault  = inst_req & inst_data_ok & (inst_bus_error === 1'b1);
     wire        if_cache_fault = inst_req & inst_data_ok & (inst_cache_error === 1'b1);
-    wire        if_fault_req  = if_adel_exception | if_cache_fault | if_bus_fault | (~mmu_i_ok & inst_req);
+    wire        if_fault_req  = if_adel_exception | if_cache_fault | if_bus_fault |
+                                ((~mmu_i_ok & inst_req) & !hw_walker_i_miss);
     wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
                                 if_cache_fault                ? 5'h1E :  // CacheErr
                                 if_bus_fault                  ? 5'h06 :  // IBE
@@ -356,6 +423,12 @@ module mips_cpu (
         .rf_waddr      (wb_waddr),
         .rf_wdata      (wb_wdata),
         .rf_we         (wb_reg_write),
+        .ctx_save_req  (ctx_save_req),
+        .ctx_save_done (),
+        .ctx_save_data (ctx_save_gpr),
+        .ctx_restore_req(ctx_restore_req),
+        .ctx_restore_data(ctx_restore_gpr),
+        .ctx_restore_done(),
         
         // Forwarding
         .fw_ex_we      (ex_reg_write),
@@ -696,6 +769,9 @@ module mips_cpu (
         if (!rst_n) begin
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+        end else if (coh_snoop_valid &&
+                     (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) begin
+            ll_reservation_valid <= 1'b0;
         end else if (data_data_ok) begin
             if (is_ll_mem) begin
                 ll_reservation_valid <= 1'b1;
@@ -711,8 +787,7 @@ module mips_cpu (
     // AdEL/AdES. Under SOC_MMU_ENABLE=0 mmu_d_ok is always 1 → this reduces
     // to the pre-B.3.d AdEL/AdES-only behaviour.
     //   MMU fault_type encoding: 010=TLBS, 011=Mod, else (001) → TLBL.
-    wire        dmem_translate_req = data_req | data_cache_op_valid;
-    wire        mem_mmu_fault      = ~mmu_d_ok & dmem_translate_req;
+    wire        mem_mmu_fault      = ~mmu_d_ok & dmem_translate_req & !hw_walker_d_miss;
     wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
                                      (mmu_d_fault_type == 3'b110) ? 5'h18 :  // MCheck
@@ -845,7 +920,8 @@ module mips_cpu (
         (id_pc_plus_4  != 32'd0) ? id_pc :
         if_pc_plus_4 - 32'd4;
         
-    wire [31:0] except_pc = wb_except_req ? wb_pc : oldest_flushed_pc;
+    wire [31:0] except_pc = sim_exception_active ? inst_addr :
+                             wb_except_req ? wb_pc : oldest_flushed_pc;
     // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
     // faults latch the faulting fetch PC.
@@ -865,13 +941,29 @@ module mips_cpu (
         .cache_op_done(data_cache_op_done),
         .cache_op     (data_cache_op),
         .cache_tag_rdata(data_cache_tag_rdata),
-        .except_req   (wb_except_req | intr_req),
-        .except_code  (wb_except_req ? wb_except_code : 5'h00), // 0x00 for INT
+        .except_req   (effective_except_req | intr_req),
+        .except_code  (effective_except_req ? effective_except_code : 5'h00), // 0x00 for INT
         .except_pc    (except_pc),
         .except_bd    (wb_bd),
         .eret         (wb_is_eret),
         .bad_vaddr    (bad_vaddr),
         .lladdr_in    (ll_reservation_addr),
+        .ctx_save_req (ctx_save_req),
+        .ctx_save_done(),
+        .ctx_save_status(ctx_save_status),
+        .ctx_save_asid(ctx_save_asid),
+        .ctx_restore_req(ctx_restore_req),
+        .ctx_restore_status(ctx_restore_status),
+        .ctx_restore_asid(ctx_restore_asid),
+        .ctx_restore_done(),
+        .hw_tlb_wr_en(hw_tlb_wr_en),
+        .hw_tlb_wr_index(6'd0),
+        .hw_tlb_wr_vpn2(ptw_va_q[31:13]),
+        .hw_tlb_wr_asid(cp0_asid),
+        .hw_tlb_wr_mask(16'd0),
+        .hw_tlb_wr_entrylo0(hw_tlb_entrylo),
+        .hw_tlb_wr_entrylo1(hw_tlb_entrylo),
+        .hw_tlb_wr_ready(hw_tlb_wr_ready),
         .tlb_inv_en   (tlb_inv_en),
         .tlb_inv_vpn2 (tlb_inv_vpn2),
         .tlb_inv_asid (tlb_inv_asid),
@@ -907,6 +999,9 @@ module mips_cpu (
         .mmu_dlookup_c      (mmu_dlookup_c),
         .mmu_dlookup_pfn    (mmu_dlookup_pfn)
     );
+
+    assign ctx_save_done = ctx_save_req;
+    assign ctx_restore_ack = ctx_restore_req;
 
     // -------------------------------------------------------------------------
     // Phase B.3.c: address translation for I-fetch and D-load/store.
@@ -959,6 +1054,45 @@ module mips_cpu (
         .translation_ok  (mmu_d_ok),
         .fault_type      (mmu_d_fault_type)
     );
+
+    mips_page_table_walker u_hardware_walker (
+        .clk(clk), .rst_n(rst_n),
+        .req_valid(ptw_req_valid), .req_ready(ptw_req_ready),
+        .ptbr(hardware_walker_ptbr), .va(ptw_req_va),
+        .access(ptw_req_access), .user_mode(ptw_req_user),
+        .mem_valid(ptw_mem_valid), .mem_addr(ptw_mem_addr),
+        .mem_ready(ptw_mem_ready), .mem_rdata(ptw_mem_rdata),
+        .mem_error(ptw_mem_error), .resp_valid(ptw_resp_valid),
+        .pa(ptw_pa), .fault_valid(ptw_fault_i),
+        .fault_code(ptw_fault_code_i), .leaf_pte(ptw_leaf_pte)
+    );
+
+    assign ptw_fault_valid = ptw_resp_valid && ptw_fault_i;
+    assign ptw_fault_code = ptw_fault_code_i;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ptw_busy <= 1'b0;
+            ptw_refill_pending <= 1'b0;
+            ptw_va_q <= 32'd0;
+        end else begin
+            if (ptw_req_valid && ptw_req_ready) begin
+                ptw_busy <= 1'b1;
+                ptw_va_q <= ptw_req_va;
+            end
+            if (ptw_busy && ptw_resp_valid) begin
+                if (ptw_fault_i) begin
+                    ptw_busy <= 1'b0;
+                end else begin
+                    ptw_refill_pending <= 1'b1;
+                end
+            end
+            if (ptw_refill_pending && hw_tlb_wr_ready) begin
+                ptw_refill_pending <= 1'b0;
+                ptw_busy <= 1'b0;
+            end
+        end
+    end
 
     // D-cache consumes the MIPS C=2 uncached attribute. I-cache routing and
     // the remaining cache attributes are still outside this integration slice.

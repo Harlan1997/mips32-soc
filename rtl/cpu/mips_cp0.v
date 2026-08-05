@@ -127,7 +127,24 @@ module mips_cp0 (
     input wire [18:0] tlb_inv_vpn2,
     input wire [7:0]  tlb_inv_asid,
     input wire [1:0]  tlb_inv_scope,
-    input wire [5:0]  tlb_inv_wired_floor
+    input wire [5:0]  tlb_inv_wired_floor,
+
+    input wire        ctx_save_req,
+    output wire       ctx_save_done,
+    output wire [31:0] ctx_save_status,
+    output wire [7:0]  ctx_save_asid,
+    input wire        ctx_restore_req,
+    input wire [31:0] ctx_restore_status,
+    input wire [7:0]  ctx_restore_asid,
+    output wire       ctx_restore_done
+    ,input wire       hw_tlb_wr_en
+    ,input wire [5:0] hw_tlb_wr_index
+    ,input wire [18:0] hw_tlb_wr_vpn2
+    ,input wire [7:0]  hw_tlb_wr_asid
+    ,input wire [15:0] hw_tlb_wr_mask
+    ,input wire [31:0] hw_tlb_wr_entrylo0
+    ,input wire [31:0] hw_tlb_wr_entrylo1
+    ,output wire       hw_tlb_wr_ready
 );
 
     // -------------------------------------------------------------------------
@@ -376,6 +393,10 @@ module mips_cp0 (
     // Phase B.5: ERET target selection — ERL=1 → ErrorEPC (Reset/NMI/CacheErr
     // return path); else EPC (ordinary exception return).
     assign epc_out = cp0_status[2] ? cp0_errorepc : cp0_epc;
+    assign ctx_save_done = ctx_save_req;
+    assign ctx_save_status = cp0_status;
+    assign ctx_save_asid = cp0_entryhi_asid;
+    assign ctx_restore_done = ctx_restore_req;
 
     // -------------------------------------------------------------------------
     // CP0 Read Mux (MFC0)
@@ -509,7 +530,13 @@ module mips_cp0 (
                                   (cache_op == 5'b00100)))
                 cp0_taglo <= cache_tag_rdata;
 
-            if (except_req && !cp0_status[1]) begin
+            if (ctx_restore_req) begin
+                cp0_status[28]   <= ctx_restore_status[28];
+                cp0_status[22]   <= ctx_restore_status[22];
+                cp0_status[15:8] <= ctx_restore_status[15:8];
+                cp0_status[4:0]  <= ctx_restore_status[4:0];
+                cp0_entryhi_asid <= ctx_restore_asid;
+            end else if (except_req && !cp0_status[1]) begin
                 // Take exception (only if not already in exception level)
                 // synopsys translate_off
 `ifdef SIMULATION
@@ -699,9 +726,16 @@ module mips_cp0 (
     // the same instruction (not taken here because tlb_op traps to RI in user
     // mode when B.4 lands) or ERET must not commit a partial TLB write.
     wire        tlb_wr_gate   = !(except_req && !cp0_status[1]) && !eret;
-    wire        tlb_wr_en     = tlb_wr_en_raw && tlb_wr_gate;
-    wire [TLB_IDX_BITS-1:0] tlb_wr_index = (tlb_op == 3'b010) ? cp0_index
-                                                              : cp0_random;
+    wire        tlb_wr_en_sw  = tlb_wr_en_raw && tlb_wr_gate;
+    assign hw_tlb_wr_ready = !tlb_wr_en_sw;
+    wire        tlb_wr_en     = tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready);
+    wire [TLB_IDX_BITS-1:0] tlb_wr_index = hw_tlb_wr_en ? hw_tlb_wr_index :
+                                            (tlb_op == 3'b010) ? cp0_index : cp0_random;
+    wire [18:0] tlb_wr_vpn2 = hw_tlb_wr_en ? hw_tlb_wr_vpn2 : cp0_entryhi_vpn2;
+    wire [7:0] tlb_wr_asid = hw_tlb_wr_en ? hw_tlb_wr_asid : cp0_entryhi_asid;
+    wire [15:0] tlb_wr_mask = hw_tlb_wr_en ? hw_tlb_wr_mask : cp0_pagemask_mask;
+    wire [31:0] tlb_wr_entrylo0 = hw_tlb_wr_en ? hw_tlb_wr_entrylo0 : cp0_entrylo0;
+    wire [31:0] tlb_wr_entrylo1 = hw_tlb_wr_en ? hw_tlb_wr_entrylo1 : cp0_entrylo1;
 
     mips_tlb #(
         .TLB_ENTRIES (`SOC_CP0_TLB_ENTRIES),
@@ -712,11 +746,11 @@ module mips_cp0 (
 
         .wr_en       (tlb_wr_en),
         .wr_index    (tlb_wr_index),
-        .wr_vpn2     (cp0_entryhi_vpn2),
-        .wr_asid     (cp0_entryhi_asid),
-        .wr_mask     (cp0_pagemask_mask),
-        .wr_entrylo0 (cp0_entrylo0),
-        .wr_entrylo1 (cp0_entrylo1),
+        .wr_vpn2     (tlb_wr_vpn2),
+        .wr_asid     (tlb_wr_asid),
+        .wr_mask     (tlb_wr_mask),
+        .wr_entrylo0 (tlb_wr_entrylo0),
+        .wr_entrylo1 (tlb_wr_entrylo1),
         .inv_en      (tlb_inv_en),
         .inv_vpn2    (tlb_inv_vpn2),
         .inv_asid    (tlb_inv_asid),

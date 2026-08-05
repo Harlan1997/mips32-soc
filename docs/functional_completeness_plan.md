@@ -28,7 +28,7 @@
 本阶段包含：
 
 - 可综合 RTL 的功能实现和接口契约；
-- vendor-neutral DDR4 controller/PHY behavioral model（仅作为 RTL 仿真模型）；
+- 按冻结协议契约实现 DDR4 controller RTL；现有 behavioral 文件只可作为过渡验证依赖，不是交付目标；
 - unit test、firmware test、SoC/UVM behavioral simulation；
 - reset、timeout、backpressure、非法输入和错误响应验证；
 - 每项功能的 commit、测试命令、日志、功能覆盖率和残余风险登记。
@@ -52,7 +52,7 @@ ratio、model 和约束。
 |---|---|---|
 | L2 | blocking write-through (`SOC_L2_CACHING`，不定义 `SOC_L2_WRITEBACK`/`SOC_L2_NONBLOCKING`) | reset-safe 默认产品路径；WB/NB 仅做独立 gate |
 | QSPI | x1 (`ENABLE_QSPI_QUAD=0`) | `soc_top`、`mips_soc`/legacy 和 UVM 默认 x1；quad 通过显式参数单独验证 |
-| DDR4 | vendor-neutral behavioral model | 真实 PHY/controller、`DDR4_ENTRY_READY` 和板级输入仍为产品入口阻塞项 |
+| DDR4 | DDR4 协议级 controller RTL | 真实 PHY/DFI wrapper、DRAM 器件和板级输入后置；behavioral 文件不作为 controller RTL 完成证据 |
 | CPU/MMU | bare-metal/development boot；`SOC_MMU_ENABLE=0` 默认 | 产品 MMU 使用 `SOC_PRODUCT_BOOT_ENABLE=1`、`SOC_MMU_ENABLE=1` 的独立 directed gates；不承诺 Linux/kernel boot |
 
 当前 HEAD 的可复现证据命令：
@@ -74,7 +74,7 @@ make phase3-complete
 |---|---|---|---|---|
 | A. 默认基线 | 固定默认配置并可重复编译/仿真 | **已完成** | 变更后重跑 3 条基线命令 | `rtl-frontend-compile`、`soc-smoke`、`phase2/3-complete` 通过 |
 | B. 外设行为 | UART/QSPI vendor-neutral 功能和错误恢复 | **已完成当前 RTL 范围** | 只补新失败场景；真实 PHY/板级输入暂缓 | UART、QSPI block/SoC gates 通过 |
-| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime | **当前单核 RTL baseline 已签收** | 下一阶段按 `docs/block_specs/multicore_tlb_ipi_spec.md` 扩展双核/IPI/TLB shootdown；硬件 walker、scheduler、OS 仍后置 | 当前单核 CPU/MMU gate、SoC firmware gate 和回归均通过；产品扩展不改变现有 baseline |
+| C. CPU/MMU 行为 | ASID、TLB、异常、kseg0 runtime、双核 CPU/IPI、coherency、page-table walker、scheduler/OS 接入 | **当前 RTL/仿真范围 CONTRACT_CLOSED** | 保持 gate 回归；Linux/完整 OS 语义、长期压力和默认产品配置选择属于后续产品工作 | 基础子集、coherency v0.1、walker block/refill、CPU hardware-walker miss/refill/retry、scheduler block/timer/IPI、CPU scheduler PC/GPR/CP0 context integration 均有通过证据；默认 SoC 关闭 opt-in walker/scheduler 是已审定配置，不是未闭合项 |
 | D. 产品输入 | 真实 DDR4、QSPI PHY/Flash、secure boot | **阻塞，当前不做** | 等外部 PHY/DRAM/板级资料 | `DDR4_ENTRY_READY=1` 且真实器件 gate 通过 |
 | E. 质量签核 | lint/CDC/RDC/formal/综合/STA/PPA | **明确暂缓** | RTL 功能目标完成后再启动 | 不属于当前阶段 |
 
@@ -194,8 +194,8 @@ budget）、CTRL[2]/清 enable abort、timeout/abort W1C、standalone AXI comman
 
 ### Phase 1：当前 RTL 契约恢复
 
-本阶段按当前范围只要求 RTL 编译/elaboration、unit/firmware/SoC behavioral
-simulation 和 DDR4 F1 behavioral gate。`phase2-complete`、`phase3-complete`、
+本阶段按当前范围只要求 RTL 编译/elaboration、unit/firmware/SoC 仿真和
+DDR4 controller RTL 协议 gate。`phase2-complete`、`phase3-complete`、
 `phase3b/3c-complete` 及 `current-contract-signoff` 属于后续扩展回归；其中的
 coverage threshold 不属于当前退出条件。
 
@@ -203,7 +203,7 @@ coverage threshold 不属于当前退出条件。
 
 1. `make rtl-frontend-compile`
 2. `make firmware`
-3. `make ddr4-phy-behavioral-gate`
+3. DDR4 controller RTL 协议 gate（实现后加入 Makefile）
 4. `make dut-block-unit-gate`
 5. `make fabric-unit-gate`
 6. `make soc-smoke`
@@ -214,12 +214,13 @@ coverage threshold 不属于当前退出条件。
 11. `make current-contract-signoff`
 
 Phase 1 当前关闭条件是：RTL compile/elaboration 成功，seed 10 无 checker/scoreboard/error，
-F1 DDR4 behavioral gate 通过，并生成可追溯的 unit/firmware/SoC 仿真报告。full signoff
+DDR4 controller RTL 的协议 gate 通过，并生成可追溯的 unit/firmware/SoC 仿真报告。full signoff
 和 coverage threshold 延后，不阻塞 `RTL_FUNCTIONAL_SIM_READY`。
 
 本轮起始基线 `b77898e` 已满足 `RTL_FRONTEND_COMPILE_READY`，并已具备
-`RTL_FUNCTIONAL_SIM_READY` 所需的 unit、firmware、SoC/UVM、F1 DDR4、Boot ROM/MMU、
-XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_READY`，真实 DDR4、
+`RTL_FUNCTIONAL_SIM_READY` 所需的 unit、firmware、SoC/UVM、Boot ROM/MMU、
+XIP/WDT/UART 和 ASID context-switch 行为证据；DDR4 controller RTL 协议实现仍未闭合。
+这不是 `PRODUCT_FUNCTION_READY`，真实 DDR4、
 完整 runtime/page-table、ECC/外部 EIC、生产 QSPI 和板级 I/O 仍未闭合；注入式 CacheErr handler/recovery slice 已新增，但不等于量产错误策略闭合。
 
 ### Phase 2：产品启动与主存闭合
@@ -227,7 +228,7 @@ XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_
 - 已建立 `docs/boot_memory_contract.md` v1.6，冻结候选 reset/vector、物理/虚拟地址图、镜像格式、失败行为和六个行为 gate；`docs/block_specs/ddr3_spec.md` v1.0 冻结 DDR controller/PHY 的 AXI/APB/DFI/error contract，`soc_config.vh` 固化 `SOC_APB_DDRCTRL_BASE` 及寄存器 offsets；`make ddr-contract-entry-audit` 已将外部输入缺失变成可重复的 `BLOCKED` 结果。该动作只关闭接口歧义，不代表 DDR RTL 已实现。
 - 第二至第十五个 RTL/firmware 垂直切片已完成：TLB lookup miss 与 matching-invalid 的 vector 分派覆盖 I-side 两个 BEV 模式和 D-side BEV=1；最小产品 Boot ROM linker/BEV refill handler 进一步覆盖 wired kseg2-APB 映射、DTLB refill、`TLBWR`、寄存器恢复、`ERET` retry、DDR store/load 和 APB write；独立 ASID gate 覆盖 4KB 非 Global 隔离、Global 跨 ASID、Invalid/Modified 分类以及同一 index 的 `0xfe -> 0xff` replacement/旧 ASID 隔离；新增 OS-context gate 以真实 `mips_tlb + mips_mmu` 验证软件页表查找、同一 VA 在两个 ASID 下的不同 PFN、wired global 保留、非 wired 清空和 8-bit ASID 1..255 回卷；独立 gate 还证明 Boot ROM 把通用 handler 复制到 SRAM `EBase+0x180`，处理 precise `Mod`、将 `D=0` 改为 `D=1` 并 `ERET` retry；IP-based `Cause.IV/IntCtl.VS` vectored interrupt gate 已证明 IP1 到 `EBase+0x220`；development manifest gate 则经实际 SPI XIP 完成 CRC 校验、Boot SRAM 拷贝和 kseg0 stage-1 handoff，`product-kseg0-runtime-gate` 在 `SOC_MMU_ENABLE=1` 下确认入口取指 `0x8000_1000 -> 0x0000_1000` 和一次数据访问 `0x8000_7000 -> 0x0000_7000`；新增 runtime ABI gate 进一步覆盖可重定位 `.data`、`.bss` 清零/readback、heap、stack、20-word exception handler relocation、I-cache index tag maintenance 与 `syscall`/`ERET`；XIP guard 则将下游 AR/R stall 限时为 `SLVERR`，经 uncached cache/CPU DBE 路径由 Boot ROM 记录 `DEAD_B007`；新增 QSPI/XIP status integration gate 已证明 guard timeout 经产品 APB decode 可读出版本、controller-present、sticky timeout 和 `0x0001_0001` 错误码，并可由 W1C 清除；UART pins/IRQ slice、外部 RX waveform、SoC RX/PIC/RBR behavioral gate、WDT APB/reset path、boot-status retention、预加载 firmware reset-retention 和无 SRAM preload 的 Boot ROM WDT failure slice 已有独立 gate；`product-cacheerr-gate` 通过真实 MMU/D-cache/APB fault injector 验证 cacheable refill 的 AXI `SLVERR` 到 `Cause.ExcCode=30`、`Status.ERL=1`、精确 `ErrorEPC`、`BFC0_0100` handler marker、ErrorEPC+4/`ERET` 和成功 mailbox。仍只关闭向量路由、最小 BEV 启动链、4KB ASID/异常分类、软件 context-switch 子集、单一 `Mod` recovery、development handoff、有限 kseg0 instruction/data 与硬件 rollover 边界、runtime ABI 单镜像子集、AXI-side XIP stall/状态观测切片、manifest/DDR 故障到 failure code 的完整分类、完整 runtime loader/OS 语义、ECC/外部 EIC/VEIC policy、生产 QSPI 和真实 DDR。
 - 冻结 ROM boot 地址、异常向量和 firmware linker 规则；不能继续从 useg reset vector 启动。
-- ASIC 路线下先按 `docs/ddr4_external_input_acquisition.md` 完成 `DDR4-IN-01..08`，同步登记 `docs/ddr4_integration_inputs.md` 并使 `DDR4_ENTRY_READY=1`；之后才实现真实 DDR controller/PHY contract，完成 init、calibration、refresh、AXI backpressure 与 DDR memory test。该步骤属于后续产品入口，不阻塞当前 RTL 前端阶段。
+- 当前阶段先依据冻结的 DDR4 协议契约实现 controller RTL，完成 init、命令时序、refresh、AXI backpressure、reset 和错误路径仿真；真实 PHY/DFI wrapper、DRAM part、板级约束和 calibration 属于后续产品入口，不阻塞当前 RTL 阶段。
 - `qspi_cmd_behavioral` 已通过 block gate，并由 `qspi_apb_integration` 接入 SoC APB/共享 pins；`qspi-soc-quad-gate` 已关闭 vendor-neutral 四线 APB command read/write slice；standalone `qspi_axi_xip` 的 x1/quad AXI/XIP bridge 也已分别通过 vendor-neutral gate。新增 `qspi-soc-memory-quad-xip-gate` 已把 quad bridge 接入 `soc_memory_subsystem` 的 opt-in S2 path，并验证 AXI burst/response、quad readback、写拒绝和 idle pins；后续仍需把该 opt-in path 接到无 SRAM preload 的 CPU/Boot ROM handoff，再做真实 PHY、商用 flash/板级模型和 production boot。
 - 在 Phase 2 完成前，禁止把 behavioral DDR 或 loadable flash-image 测试称为产品 boot/memory 闭合。
 
@@ -275,7 +276,7 @@ XIP/WDT/UART 和 ASID context-switch 行为证据；这不是 `PRODUCT_FUNCTION_
 历史 full signoff 的功能阶段均通过，coverage 阈值单独失败，保留为后续质量工作。当前执行优先级已改为
 **RTL 前端编译和功能仿真**：不等待完整 PDK/PHY/package/板级资料，也不把综合、时序或 PPA
 混入当前 gate。Boot ROM/向量、最小 MMU/TLB、SPI XIP、manifest handoff、WDT retention 和
-DDR4 vendor-neutral F1 行为证据继续按 RTL 功能任务管理；完整 kseg0 runtime、page-table/ASID
+DDR4 controller RTL 协议证据继续按 RTL 功能任务管理；完整 kseg0 runtime、page-table/ASID
 rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和真实 DDR4 product entry 仍未完成。**
 
 ## 9. 执行记录
@@ -457,6 +458,18 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 2026-08-05 | `integration/function-contract` IPI APB optional SoC wiring recheck | `make rtl-frontend-compile RUN_ROOT=build/unit_tb/rtl_frontend_ipi_integration`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_after_ipi_apb`；`build/cpu_mmu_ipi_recheck_20260805.log` | PASS：RTL frontend `3/3`；default SoC smoke；CPU/MMU/IPI recheck all gates | `soc_peripheral_subsystem` 增加 `ENABLE_DUAL_CORE_IPI=0` 默认关闭的 `0x4000_A000` APB 窗口和外部 target/ack/invalidate 端点；默认单核 CPU、MMU context window 和既有 firmware 不变。重跑 IPI、APB IPI、TLB policy/invalidate、CPU context、ASID context、process pressure、EBase Mod、CacheErr gates 均通过。该证据仍不等同于双核 CPU、共享内存一致性或 OS scheduler 完成。 |
 | 2026-08-05 | `integration/function-contract` full functional closure batch | `build/functional_closure_20260805.log` | PASS：CPU/CP0、TLB/MMU、IPI、cache-error、kseg0 runtime、DDR4 behavioral、QSPI/XIP behavioral 共 `38` 个 gate | 从干净编译状态重新执行当前 RTL 功能范围内的 CPU/MMU、Boot、cache、DDR4 behavioral 和 QSPI/XIP gate；期间修复 `tb_mmu_context_status.sv` 的 `.*` 输出声明缺失，避免旧 sim 日志掩盖当前 HEAD 的编译失败。该批次闭合当前 vendor-neutral RTL/仿真范围，不改变真实双核一致性、商用 DDR/PHY、production boot 等 P0 外部依赖。 |
 | 2026-08-05 | `integration/function-contract` Phase closure rerun | `build/phase_closure_20260805.log`；`make phase2-complete`；`make phase3-complete`；`make phase3b-complete`；`make phase3c-complete` | PASS：Phase 2、3A、3B、3C 全部完成 | 汇总回归在当前 HEAD 重新通过，确认 APB IPI 接入和 context-status TB 修复没有破坏既有 DMA/timer/PIC、UART/flash/APB stress、CPU/CP0、PIC arbitration 和 firmware gates。覆盖率数值仍不是本阶段功能完整性判据。 |
+| 2026-08-05 | `integration/function-contract` CPU/MMU unified completion gate | `make cpu-mmu-complete` | PASS：统一报告中的 21 个已冻结 CPU/MMU gate 全部通过；报告 `build/cpu_mmu_complete/cpu_mmu_completion_report.md` | 当前单核 MIPS32 software-managed MMU/TLB RTL contract、CP0 异常/返回、ASID/context/shootdown、MMU boot/kseg0 runtime、CacheErr/CacheOp/Tag、vectored interrupt、MDU、LL/SC 及 standalone dual-core IPI/APB contract 已闭合。Linux/OS boot、硬件 page-table walker、双核 CPU/共享内存 coherency、ECC、production EIC/VEIC 和 full ISA compliance 尚未实现，需求归属与架构规格待确认。 |
+| 2026-08-05 | `integration/function-contract` dual-core CPU opt-in RTL integration | `make dual-core-frontend-compile` | PASS：`soc_top.ENABLE_DUAL_CORE=1` VCS elaboration；报告 `build/dual_core_frontend/dual_core_frontend_report.md` | 新增核 1 CPU/MMU/L1 实例、核 1 I/D read arbitration、dual-core opt-in 参数和核 0 APB IPI 到核 1 local invalidate/interrupt 接线；默认单核配置不变。双核 firmware execution、反向 shootdown、shared-memory coherency 和 scheduler 仍未签收。 |
+| 2026-08-05 | `integration/function-contract` dual-core SoC execution gate | `make dual-core-soc-gate` | PASS：`DUAL_CORE_CORE1_ACTIVE pc=000004a8`；`REGRESSION_TEST_SUCCESS`；日志 `build/soc_test/dual_core/sim.log` | 双核 opt-in 下核 0/核 1 共享 Boot ROM/DDR behavioral 路径均可运行现有 smoke firmware，核 1 PC 已进入 firmware；核 0 APB IPI 到核 1 的 local invalidate/interrupt 具备接线。该 gate 尚未覆盖双核专用 firmware 的双向 shootdown、stale generation/timeout、共享内存 coherency 或 scheduler。 |
+| 2026-08-05 | `integration/function-contract` dual-core IPI firmware gate and AXI routing fixes | `make dual-core-soc-gate RUN_DIR=build/soc_test/dual_core_gate_final` | PASS：`DUAL_CORE_CORE1_ACTIVE pc=00000020`；`REGRESSION_TEST_SUCCESS`；wrapper 输出 `dual-core SoC gate: PASS`；日志 `build/soc_test/dual_core_gate_final/sim.log` | 双核专用 firmware 在核 0 -> 核 1 路径完成 target/generation/payload/send/status，testbench 观察核 1 local invalidate 后接受 mailbox success；同时修正核 1 AXI BREADY 方向、D-only AR 请求字段选择和过早 marker 检查。该 gate 仍不覆盖反向 shootdown、stale generation/timeout/busy re-entry、异常隔离、共享内存 coherency 或 scheduler。 |
+| 2026-08-05 | `integration/function-contract` dual-core dual-target IPI firmware gate | `make dual-core-soc-gate RUN_DIR=build/soc_test/dual_core_bidirectional2` | PASS：`DUAL_CORE_CORE1_ACTIVE pc=00000020`；`REGRESSION_TEST_SUCCESS`；wrapper 输出 `dual-core SoC gate: PASS`；日志 `build/soc_test/dual_core_bidirectional2/sim.log` | firmware 依次发送 generation 1 -> target 1、generation 2 -> target 0；testbench 分别观察核 1/核 0 local invalidate 后才接受 mailbox success。补齐 target-0 local invalidate 和 target-0 ack。该 gate 仍不代表独立 core-1 软件 IPI master，也未覆盖 stale generation/timeout/busy re-entry、异常隔离、共享内存 coherency 或 scheduler。 |
+| 2026-08-05 | `integration/function-contract` independent core IPI-master alias gate | `make dual-core-soc-gate RUN_DIR=build/soc_test/dual_core_independent_ipi2` | PASS：`DUAL_CORE_CORE1_ACTIVE pc=00000020`；`REGRESSION_TEST_SUCCESS`；wrapper 输出 `dual-core SoC gate: PASS`；日志 `build/soc_test/dual_core_independent_ipi2/sim.log` | 核 0 使用 `0x4000_A000`、核 1 通过 AXI alias 使用 `0x4000_B000` 独立 controller；两个 controller 分别完成 generation/target/ack 和核 0/核 1 local invalidate。双核 SoC stale generation/timeout/busy、异常隔离、共享内存 coherency 或 scheduler 仍未闭合。 |
+| 2026-08-05 | `integration/function-contract` dual-core SoC timeout fault-injection gate | `make dual-core-soc-gate RUN_DIR=build/soc_test/dual_core_timeout` | PASS：`DUAL_CORE_CORE1_ACTIVE`；`REGRESSION_TEST_SUCCESS`；日志 `build/soc_test/dual_core_timeout/sim.log` | 双核 firmware 先完成 target 1/target 0 的真实 IPI transaction，再通过 opt-in `0x4000_B03C` 目标不可见注入使两路 controller 均进入 sticky timeout，恢复目标并清除状态后写成功 mailbox。该寄存器是仿真故障入口，不是生产功能；stale-ack/busy-reentry 和独立复位/异常隔离仍保持 OPEN。 |
+| 2026-08-05 | `integration/function-contract` CPU/MMU closure rerun after SoC timeout slice | `make apb-mmu-ipi-status-gate cpu-mmu-complete dual-core-frontend-compile`；`RUN_DIR=build/soc_test/dual_core_timeout_final tb/soc_test/run_dual_core_gate.sh` | PASS：APB IPI unit、CPU/MMU unified gate、dual-core frontend 和 dual-core SoC timeout gate 全部通过 | APB unit 新增 `0x3c` target-absent readback/clear 与 injected timeout 检查；CPU/MMU report `build/cpu_mmu_complete/cpu_mmu_completion_report.md`；dual-core SoC log `build/soc_test/dual_core_timeout_final/sim.log`。既有 URG exclusion/checksum warnings 仍按 P3 跟踪。 |
+| 2026-08-05 | `integration/function-contract` dual-core stale-ack and busy-reentry gate | `RUN_DIR=build/soc_test/dual_core_faults tb/soc_test/run_dual_core_gate.sh`；`make apb-mmu-ipi-status-gate` | PASS：`REGRESSION_TEST_SUCCESS`；wrapper 输出 `dual-core SoC gate: PASS`；APB unit PASS | 双核 firmware 通过 `0x3c` 注入 ACK generation mismatch，验证 stale-ack 与后续 timeout；再屏蔽 ACK，在 busy 期间重复发送并验证 rejected 与 timeout。`0x3c` 为仿真专用 fault control，默认值为 0，不是生产功能。 |
+| 2026-08-05 | `integration/function-contract` dual-core exception-isolation gate | `RUN_DIR=build/soc_test/dual_core_exception_isolation tb/soc_test/run_dual_core_gate.sh` | PASS：`DUAL_CORE_CORE1_EXCEPTION_INJECTED code=0A`；`REGRESSION_TEST_SUCCESS` | 通过默认关闭的仿真专用 core-1 RI stimulus 触发 core-1 CP0 异常采样；testbench 要求 core-1 异常可观测且 core-0 仍完成 IPI/reset 后的 `0xDEADBEEF` mailbox。 |
+| 2026-08-05 | `integration/function-contract` dual-core core-1 reset isolation gate | `RUN_DIR=build/soc_test/dual_core_reset_isolation tb/soc_test/run_dual_core_gate.sh` | PASS：`REGRESSION_TEST_SUCCESS`；wrapper 输出 `dual-core SoC gate: PASS` | `0x3c[3]` 请求仅复位 core 1；testbench 观察 core 1 reset request，同时确认 core 0 继续完成成功 mailbox。该入口是仿真专用 fault control，不代表独立电源域、RDC 或产品 reset architecture 已完成。 |
+| 2026-08-05 | `integration/function-contract` default single-core regression after core-1 reset slice | `make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_after_core1_reset` | PASS：`REGRESSION_TEST_SUCCESS`；`CPU_CP0_SUMMARY intr=10 syscall=1 ri=4 adel=1 eret=15` | 新增 core-1 reset request、IPI fault-control bit 扩展和 reset isolation testbench 检查未改变默认 `ENABLE_DUAL_CORE=0` 路径。既有 URG exclusion/checksum warnings 仍按 P3 跟踪。 |
 
 ## 10. 已知未决问题
 
@@ -467,16 +480,17 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | CPU/MMU 四 ASID 压力 | `make product-mmu-process-pressure-gate` | PASS，`refills=8` | 已验证现有软件 context-switch、四 ASID 映射隔离和 shootdown 标记；尚不等同于 allocator/generation/真实 IPI shootdown |
 | QSPI status 兼容性 | `make qspi-status-integration-gate` | PASS | 原 timeout/APB/quad shared-pin 行为未回归；脚本补入 `apb_ddr4_status.v` 编译依赖 |
 | QSPI taxonomy | `make qspi-error-taxonomy-gate` | PASS | canonical class/code 入口、sticky、W1C、未清除前不覆盖已验证；Boot ROM/command/init/auth 上报尚待接线 |
-| CPU/MMU shootdown mailbox | `make tlb-shootdown-mailbox-gate`、`make product-mmu-context-cpu-gate`、`make mmu-ipi-shootdown-gate`、`make apb-mmu-ipi-status-gate` | PASS（当前为单核 mailbox + standalone dual-core IPI/APB contract） | vendor-neutral mailbox、真实 CPU/APB 控制面以及 `invalidate_valid/asid/vpn/scope` 到 `mips_cp0 -> mips_tlb` 的单核 invalidation/refill 已验证；dual-core IPI 控制器和 APB 协议已独立验证，但尚未接入 `soc_peripheral_subsystem`、双核 CPU、共享内存一致性、page-table walker 或 scheduler |
+| CPU/MMU shootdown mailbox | `make tlb-shootdown-mailbox-gate`、`make product-mmu-context-cpu-gate`、`make mmu-ipi-shootdown-gate`、`make apb-mmu-ipi-status-gate`、`make dual-core-frontend-compile`、`make dual-core-soc-gate` | PASS（单核 mailbox + standalone dual-core IPI/APB + independent dual-core IPI-master alias firmware gate） | vendor-neutral mailbox、两个独立 IPI controller、target 1/target 0 local invalidate、generation ack、AXI B/R routing 和 mailbox success 已验证；双核 SoC stale/timeout/busy、异常隔离、共享内存一致性、page-table walker 或 scheduler 仍未闭合 |
 | CPU/MMU ASID allocator | `make tlb-asid-allocator-gate`、`make product-mmu-context-cpu-gate` | PASS | 四槽分配/耗尽、stale generation 拒绝、释放后 generation 递增并复用，以及真实 CPU APB lease/readback 已验证；完整 page-table walker/OS allocator 仍不在当前 RTL contract |
 | CPU/MMU context contract | `make mmu-context-contract-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate` | PASS | allocator -> shootdown -> ack -> release/reuse、真实 CPU TLB invalidation/refill 已覆盖；仍未实现 page-table walker、scheduler 或多核 IPI |
 | QSPI retry policy | `make qspi-retry-policy-gate` | PASS | timeout/init 一次 retry、retry exhaustion、CRC no-retry 已验证；尚未接入真实 controller/flash status |
-| MMU APB context window | `0x4000_9000`；可选 dual-core IPI `0x4000_A000` | `make mmu-context-status-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate`、`make mmu-ipi-shootdown-gate`、`make apb-mmu-ipi-status-gate`、`make rtl-frontend-compile` PASS | 原 context window 保持兼容；新增 `ENABLE_DUAL_CORE_IPI` 可选 APB 控制面，支持目标/代次/payload/send/status/W1C，并在 `soc_peripheral_subsystem` 提供可选端点；默认配置仍关闭，尚未接双核 CPU、共享内存一致性或 firmware scheduler |
+| MMU APB context window | `0x4000_9000`；可选 dual-core IPI `0x4000_A000` | `make mmu-context-status-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate`、`make mmu-ipi-shootdown-gate`、`make apb-mmu-ipi-status-gate`、`make dual-core-frontend-compile` PASS | 原 context window 保持兼容；`ENABLE_DUAL_CORE_IPI` 在 dual-core opt-in 下提供目标/代次/payload/send/status/W1C，并接入核 1 invalidate/interrupt；默认配置仍关闭。双核 scheduler、反向 shootdown 和共享内存一致性之外的扩展需求待确认，不能由本表单方面标为后置 |
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
 | P0 | 产品 boot、DDR 和 QSPI 尚未闭合：Boot ROM 复位、普通与 refill/invalid BEV-EBase vector、IP-based vectored interrupt、最小 BEV MMU firmware、单一 EBase `Mod` recovery、development manifest header/CRC-to-SRAM handoff、cached-refill CacheErr handler/recovery，以及 controller/AXI stall-to-DBE 和 QSPI timeout status 观测已通过；ASIC Profile C1 DDR4 已选但 `DDR4-IN-01..08` 仍未登记，旧 `DDR-IN-01..08` 仅为 legacy DDR3 边界，`ddr-contract-entry-audit` 已确认契约一致但 `DDR4_ENTRY_READY=0`；PHY/IP、DRAM part/timing file、real memory model、WDT budget 和 RTL 仍未实现；生产 ROM/signature、ECC/完整 cache-error policy、原始 SPI 无响应检测、外部 EIC/VEIC、QSPI/U-Boot/Linux 也未闭合 | SoC 已有受限的 reset-to-development-stage-1、behavioral DDR store/load、XIP transport-stall failure、软件可读 timeout 和 cached-refill recovery evidence，但无可发布的 secure boot 或产品主存，不能称商用 SoC | 先完成 `docs/ddr4_integration_inputs.md` 的 `DDR4-IN-01..08` 输入登记并使 `DDR4_ENTRY_READY=1`，重建 DDR4 controller/PHY contract；之后实现真实 PHY/controller、APB status、init/training/refresh、bounded AXI error path 和 no-preload boot gate；并继续实现 AXI/XIP QSPI command path、quad pad/PHY、production erase/program、ECC/完整 runtime exception/cache-error policy、boot-status/WDT 与 production handoff，分别验证。 |
-| P0 | 最小 Boot ROM kseg1 linker、BEV refill handler、wired mapping、4KB ASID/Global/Invalid/Modified gate、软件 page-table/context-switch 子集、SoC ASID 1/2 与 TLBWI shootdown slice、4-ASID process-pressure slice、SRAM EBase `Mod` recovery、IP-based vectored interrupt、MMU-enabled kseg0 instruction/单次 data slice、20-word/stack kseg0 runtime-depth 与 `.rodata/.data/.bss/stack` runtime-layout slice、runtime ABI 单镜像 gate、硬件 ASID index replacement slice、CacheErr hardware vector/ERL/ErrorEPC 和注入式 handler/recovery gate、产品启动 I-cache CacheErr vector/ERET retry gate、320-line I-cache stress gate、CACHE maintenance/有限 I/D-cache TagLo/TagHi/SYNC slice 已通过；完整 SoC page-table allocator、multi-process/scheduler 长期压力、TLB shootdown IPI、ECC/外部 EIC policy 和 kernel firmware 未验收；历史 prototype smoke timeout 的 fetch-path 根因已修复 | MMU/TLB 有最小启动、4KB ASID/异常分类、软件/SoC context-switch 子集、bounded process pressure、`Mod` recovery、CacheErr hardware contract + recovery slice、CPU vector table、产品复位 I-cache 首笔错误恢复、320-line AR-backpressure stress、有限 kseg0 handoff/runtime-depth/runtime-layout、runtime ABI 单镜像、CACHE D-cache maintenance、I-cache index tag ABI 和有限 TagLo/TagHi/SYNC 证据，但不能作为可启动的产品 OS 功能 | 保持 runtime ABI 单镜像 gate；继续扩展多段/PIC/TLS/权限、真实 allocator/page-table 与异常/cache-error policy、SoC 多进程调度/shootdown、ECC/production exception 和 kernel firmware，再跑 exception regression。 |
+| P0 | 双核 CPU/MMU 运行时闭合：核 0/1 firmware execution、core 0/1 IPI 发起、双核 uncached mailbox、复位/异常隔离和 AXI response routing | **已完成已冻结的 TLB/IPI/异常基础子集**：双核 opt-in firmware 已验证两个独立 IPI controller、核 0/核 1 local invalidate、generation ack、SoC target timeout、stale-ack、busy re-entry rejection、core-1 reset isolation 和 core-1 exception isolation | shared-memory coherency、page-table walker、scheduler/OS 等整体 CPU/MMU 需求尚未裁决；冻结后继续实现，不能宣称已完成 |
+| P1 | CPU/MMU 当前阶段扩展：多段/PIC/TLS/权限 linker/loader、更多页尺度压力、共享内存 coherency、硬件 page-table walker、长期 scheduler/shootdown、ECC、production EIC/VEIC、完整 ISA compliance 和 kernel/OS boot | **ACTIVE：已纳入当前阶段；coherency v0.1 已开始实现，其余尚未实现** | 依次冻结并实现各项 RTL 接口、firmware/UVM 场景和验收门槛；不得以基础子集 gate 代替扩展 gate |
 | P0 | UART RTL pins/IRQ wiring、外部 RX waveform、SoC RX/PIC/RBR behavioral 路径和 CTS flow-control SoC 集成已有证据，但 pad-mux/板级电气绑定、量产 RX/TX driver 仍未验收；WDT APB/reset pulse、boot-status retention、预加载 firmware retention 和无 SRAM preload Boot ROM failure slice 已通过 | 对外 serial I/O 仍缺板级证据；UART CTS gate 只证明 behavioral 外部 pin 与 APB/firmware 配置路径，不证明 pad cell、电气/板级 timing、真实线缆/收发器或量产 driver；WDT gate 只证明 deliberate Boot ROM failure/reset，不证明 manifest/QSPI/DDR 真实故障分类、量产 ROM 和板级 reset 观测 | 固化 UART pad contract、板级 gate 和端到端量产 RX/TX driver；把真实 manifest/controller/DDR failure 映射到 failure code，并增加板级 watchdog/reset 观测。 |
 | P3 | 当前 fresh VDB 执行 `refine_exclusions.py` 后，strict URG 仍报告 invalid condition/branch vector、illegal exclusion attempt 与 module checksum mismatch；合并 UVM 仅 SCORE `80.05`、COND `97.09`、TOGGLE `71.32`、FSM `53.33`、BRANCH `78.53`，product CPU/CP0 仅 SCORE `75.94`、LINE `83.84`、TOGGLE `69.05`、FSM `48.68`、BRANCH `78.33` | 当前功能行为证据有效，但 code-coverage 数字和 99% 入口均不能签收；不得提交本轮自动生成的 exclusion 文件 | 作为后续质量工作独立处理；不替代或阻塞本文件的产品功能 P0/P1。证据：`build/signoff/functional_completeness_20260801/coverage/urg.log`、`coverage_summary.json`。 |
 | P0 | standalone x1/quad AXI/XIP bridge、shared-pin arbiter contract、SoC memory quad opt-in gate 和 quad no-preload development handoff 已通过；APB command trigger、单线 AXI XIP 的 fabric `AR` acceptance、guard/model downstream `ARVALID`、request/grant、`qspi_soc_pad_mux`/`qspi_io[3:0]` boundary 均已接入 SoC | 当前可声明有限 `SOC_INTEGRATED` 单线 XIP/APB shared-pin slice、vendor-neutral quad AXI/XIP opt-in S2 memory integration 和 development manifest/CRC handoff；默认 `mips_soc`/legacy 仍是 x1，quad gate 只覆盖当前 vendor-neutral image/endpoint；command timeout、CTRL abort、WDT/reset-in-flight、pin-safe recovery 和 endian ABI 已关闭，但不能将 bridge 或该 slice 当作商用 QSPI/boot 完成；PHY、商用 flash、production erase/program/boot 仍为 P0 | 下一步做真实 PHY、商用 flash/板级 model、production erase/program 与 production boot/error policy；coverage/lint/CDC/RDC/formal/综合/时序/PPA 仍不在当前阶段 |
@@ -492,10 +506,11 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | 优先级 | 剩余任务 | 当前状态 | 关闭证据 |
 |---|---|---|---|
 | P0 | 固定唯一集成线，清理分支/WIP 归属；移除已废弃的 D-cache NB | `integration/function-contract@bc3d6c8` 为功能线；主工作区 clean；`feature/dcache-nb-stage3` 已删除 | 干净工作区、每个保留变更集有独立 commit 和 owner |
-| P0 | 完成全仓 RTL compile/elaboration，包含默认 SoC、Boot ROM/MMU 配置和 F1 DDR4 behavioral 配置 | 已完成：统一 gate `3/3` 通过；报告 `build/unit_tb/rtl_frontend_compile/rtl_frontend_compile_report.md` | 维护 `RTL_FRONTEND_COMPILE_READY`；后续新增 RTL 或参数配置必须重新运行 `make rtl-frontend-compile` |
-| P0 | 完成 DDR4 vendor-neutral contract/model 仿真：初始化、training 成功/失败、refresh、读写、背压、reset、fatal/error | F1 behavioral gate 已通过；尚未成为真实 PHY/DDR4 product entry | `RTL_FUNCTIONAL_SIM_READY`；F1 证据保持 `BLOCK_VERIFIED (vendor-neutral)` |
-| P0 | 补齐 CPU/MMU 前端功能缺口：完整 kseg0 runtime、SoC page-table/ASID allocator 与多进程调度/shootdown 压力、ECC/外部 EIC policy | 最小 refill/invalid/Modified/vector、4 KiB 与 16 KiB PageMask lookup、CacheErr hardware contract + cached-refill recovery、产品启动 I-cache 首笔错误/vector/ERET retry、320-line AR-backpressure stress、I-cache index tag ABI、软件/SoC page-table/context-switch 子集、4-ASID pressure、20-word/stack kseg0 depth slice、runtime ABI 单镜像、硬件 index replacement、CACHE 六种 D-cache maintenance operation、有限 I/D-cache TagLo/TagHi/SYNC 已有证据 | runtime ABI 单镜像 firmware + SoC gate 通过，并记录 relocation/`.bss`/heap/stack/exception/ERET 证据；其余 64 KiB 至 16 MiB 页尺度尚缺独立 gate，完整多段/PIC/TLS/权限 linker/loader、真实 allocator/page-table、复杂 ordering、ECC/production policy 和 kernel 仍未关闭 |
-| P0 | CPU/MMU allocator/shootdown contract | vendor-neutral 契约、RTL ASID allocator、generation 检查、逻辑 mailbox 和真实单核 CPU/TLB invalidation 已实现；相关 unit/SoC gates 均通过 | 四槽 allocate/release、stale-generation reject、page/ASID/all payload、ack/timeout、重入拒绝、真实 TLB 清除和重新 refill 可重复通过；多核 IPI、page-table walker 和 OS scheduler 仍属于后续 contract |
+| P0 | 完成全仓 RTL compile/elaboration，包含默认 SoC、Boot ROM/MMU 配置和 DDR4 controller RTL 配置 | 基础 SoC/Boot ROM/MMU 配置已完成；DDR4 controller RTL 接入后需重新闭合 | 维护 `RTL_FRONTEND_COMPILE_READY`；后续新增 RTL 或参数配置必须重新运行 `make rtl-frontend-compile` |
+| P0 | 实现 DDR4 协议级 controller RTL：初始化、命令时序、bank/row 状态、refresh、读写、背压、reset、fatal/error | 当前只有 `axi_ddr_behavioral` / `ddr4_phy_behavioral` 过渡验证依赖，controller RTL 尚未闭合 | controller RTL compile/elaboration、协议 checker、正常/错误/背压/refresh 仿真 gate |
+| P0 | 建立 CPU/MMU 统一 RTL 功能 gate | 已完成：`make cpu-mmu-complete` 汇总 CPU/CP0、TLB、ASID、shootdown、IPI、MMU boot、CacheErr、CacheOp、Tag、VIC、MDU、LL/SC gates | 统一报告 `build/cpu_mmu_complete/cpu_mmu_completion_report.md`；后续 CPU/MMU RTL/firmware gate 必须纳入该入口 |
+| P0 | CPU/MMU 当前已冻结 RTL contract：kseg0 runtime、软件/硬件 TLB refill、ASID/context/shootdown、ECC/外部 EIC policy 之外的已定义基础子集 | **CONTRACT_CLOSED（当前 RTL/仿真范围）**：统一 `make cpu-mmu-complete` 通过；覆盖 CP0/异常/ERET、TLB lookup 与 PageMask、ASID/Global/Invalid/Modified/MCheck、软件及 SoC context-switch 子集、hardware-walker CPU miss/refill/retry、scheduler CPU PC/GPR/CP0 restore、ASID pressure、单核 invalidation/shootdown、MMU boot、kseg0 runtime ABI、CacheErr/CacheOp/Tag、vectored interrupt、MDU、LL/SC 及前端 compile 证据 | 当前阶段明确不包含完整 Linux/OS demand paging、allocator/权限 loader 扩展、ECC、production EIC/VEIC、完整 ISA compliance、kernel/OS boot；这些是边界而非本阶段未闭合任务 |
+| P0 | CPU/MMU allocator/shootdown contract | **CONTRACT_CLOSED（当前 RTL/仿真范围）**：单核软件管理 TLB、硬件 walker opt-in、scheduler context ports、vendor-neutral 契约、双核 IPI/shootdown、core-1 reset isolation 和异常隔离均有证据 | 四槽 allocate/release、stale-generation reject、page/ASID/all payload、ack/timeout、重入拒绝、双核 target 1/target 0 transaction、local TLB invalidate/refill、CPU scheduler 保存/恢复 PC/GPR29/CP0、CPU hardware walker 两级页表读取/TLB refill/重取指、core-1 RI exception isolation 和 core-0 mailbox survival 均已通过；完整 OS scheduler policy 仍明确不在当前范围 |
 | P1 | 完成 QSPI 从有限 SoC command/XIP shared-pin slice、vendor-neutral quad S2 memory opt-in 和 development handoff 到完整 SoC/boot 集成，并补齐 UART pad/driver path 和 boot failure 分类 | QSPI command/FIFO/24-bit address/x4 data、SoC 四线 APB command gate、standalone x1/quad AXI/XIP bridge、`qspi-soc-memory-quad-xip-gate`、`product-manifest-handoff-quad-gate` 均有 vendor-neutral 证据；`qspi_soc_pad_mux` 已接入 SoC、`soc_top` 暴露 `qspi_io[3:0]` 并启用 quad opt-in，`mips_soc`/legacy 默认仍为 x1；UART RTL pins、IRQ wiring、外部 RX waveform、SoC RX/PIC/RBR behavioral gate 和 CTS flow-control SoC gate 已通过，pad-mux/板级/量产 RX/TX driver 仍缺 | 当前 QSPI block + APB/SoC x1/x4 command + SoC single-lane XIP/arbiter + vendor-neutral SoC qspi pad mux + vendor-neutral SoC S2 quad memory + quad endian ABI + quad no-preload manifest/CRC/timeout handoff + standalone x1/quad AXI/XIP + SPI flash behavioral + quad pad wrapper + timeout/abort/reset gate + RTL frontend + SoC smoke PASS；UART 当前有 RX 与 CTS/TX behavioral SoC 证据；后续完成真实 PHY、商用 flash model/板级模型、production erase/program/boot SoC gate，以及 UART pad/driver/板级 gate |
 | P1 | QSPI 统一错误分类与恢复策略 | class/code/retry/W1C 契约已冻结，见 `docs/qspi_error_taxonomy.md`；timeout、retry budget、abort/reset、sticky/W1C 和 manifest/XIP boot-status 映射已验证 | 已通过 timeout/abort/reset、bounded retry、manifest `0xB007_0003`、XIP timeout `0xB007_0004` 及 no-preload behavioral gates；其余 device-specific/secure-boot/erase-program 错误仍 deferred |
 | P1 | 将每个已实现模块登记为 `IMPLEMENTED`、`BLOCK_VERIFIED` 或 `SOC_INTEGRATED`，补齐测试日志和残余风险 | 持续进行；本轮新增统一 compile 证据，已删除的 D-cache NB 不再计入 | 功能登记表与基线 commit、仿真报告一一对应 |
@@ -503,7 +518,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 
 ### 当前阶段退出条件
 
-1. 目标 RTL 和 behavioral model 在固定集成线可重复编译/elaborate；
+1. 目标 RTL 和协议验证依赖在固定集成线可重复编译/elaborate；
 2. unit、firmware、SoC/UVM 仿真覆盖正常、复位、背压、错误和超时路径；
 3. 每个 gate 都有命令、日志、基线 commit 和残余风险；
 4. 发布结论使用 `RTL_FUNCTIONAL_SIM_READY`，不得写成 `PRODUCT_FUNCTION_READY` 或 tapeout ready。

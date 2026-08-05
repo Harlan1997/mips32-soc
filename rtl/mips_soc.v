@@ -4,6 +4,7 @@
 // =============================================================================
 
 module mips_soc #(
+    parameter ENABLE_DUAL_CORE = 1'b0,
     parameter ENABLE_UART_PINS = 1'b0,
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
     parameter ENABLE_QSPI_QUAD = 1'b0,
@@ -53,6 +54,7 @@ module mips_soc #(
 
     mips_soc_impl #(
         .ENABLE_EXT_AXI_MASTER     (1'b0),
+        .ENABLE_DUAL_CORE          (ENABLE_DUAL_CORE),
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
         .ENABLE_FLASH_IMAGE_MODEL  (1'b0),
         .ENABLE_DDR4_STATUS        (ENABLE_DDR4_STATUS),

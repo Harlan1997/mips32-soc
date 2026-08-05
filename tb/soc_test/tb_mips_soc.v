@@ -31,6 +31,10 @@ module tb_mips_soc;
     integer cp0_ri_count;
     integer cp0_adel_count;
     integer cp0_eret_count;
+    integer dual_core_ipi_count;
+    integer dual_core_reverse_ipi_count;
+    integer dual_core_reset_count;
+    integer dual_core_exception_count;
     
     wire [31:0] gpio_pins;
 `ifdef SOC_UART_EXTERNAL_RX_WAVEFORM
@@ -60,7 +64,11 @@ module tb_mips_soc;
         end
     endgenerate
     
-    mips_soc #(.ENABLE_UART_PINS(1'b1),
+    mips_soc #(
+`ifdef SOC_ENABLE_DUAL_CORE
+               .ENABLE_DUAL_CORE(1'b1),
+`endif
+               .ENABLE_UART_PINS(1'b1),
 `ifdef SOC_ENABLE_DDR4_STATUS
                .ENABLE_DDR4_STATUS(1'b1)
 `else
@@ -127,6 +135,10 @@ module tb_mips_soc;
         cp0_ri_count = 0;
         cp0_adel_count = 0;
         cp0_eret_count = 0;
+        dual_core_ipi_count = 0;
+        dual_core_reverse_ipi_count = 0;
+        dual_core_reset_count = 0;
+        dual_core_exception_count = 0;
         uart_tx_seen_low = 1'b0;
 `ifdef SOC_UART_CTS_FLOW_CONTROL
         uart_cts_release_seen = 1'b0;
@@ -149,6 +161,29 @@ module tb_mips_soc;
         // We need to wait enough cycles for instruction fetch, cache miss, uncacheable writes
     end
 
+`ifdef SOC_ENABLE_DUAL_CORE
+    initial begin
+        wait (rst_n === 1'b1);
+        repeat (100) @(posedge clk);
+        if (^u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc === 1'bx) begin
+            $display("REGRESSION_TEST_FAILED dual-core core1 PC is unknown");
+            $finish;
+        end
+        $display("DUAL_CORE_CORE1_ACTIVE pc=%08h", u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc);
+    end
+
+    initial begin
+        wait (rst_n === 1'b1);
+        repeat (200) @(posedge clk);
+        @(negedge clk);
+        force u_soc.u_impl.core1_sim_exception_req = 1'b1;
+        @(negedge clk);
+        release u_soc.u_impl.core1_sim_exception_req;
+        $display("DUAL_CORE_CORE1_EXCEPTION_INJECTED code=0A");
+    end
+
+`endif
+
     initial begin
         #5000000;
         $display("\n==================================================");
@@ -163,6 +198,24 @@ module tb_mips_soc;
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+`ifdef SOC_ENABLE_DUAL_CORE
+                if (dual_core_ipi_count == 0) begin
+                    $display("REGRESSION_TEST_FAILED dual-core IPI invalidate not observed");
+                    $finish;
+                end
+                if (dual_core_reverse_ipi_count == 0) begin
+                    $display("REGRESSION_TEST_FAILED target-0 IPI invalidate not observed");
+                    $finish;
+                end
+                if (dual_core_reset_count == 0) begin
+                    $display("REGRESSION_TEST_FAILED core1 reset isolation not observed");
+                    $finish;
+                end
+                if (dual_core_exception_count == 0) begin
+                    $display("REGRESSION_TEST_FAILED core1 exception isolation not observed");
+                    $finish;
+                end
+`endif
 `ifdef SOC_UART_CTS_FLOW_CONTROL
                 if (uart_tx_low_before_cts_release) begin
                     $display("REGRESSION_TEST_FAILED UART TX asserted before CTS release");
@@ -173,10 +226,12 @@ module tb_mips_soc;
                     $finish;
                 end
 `endif
+`ifndef SOC_ENABLE_DUAL_CORE
                 if (!uart_tx_seen_low) begin
                     $display("REGRESSION_TEST_FAILED UART TX pin never asserted");
                     $finish;
                 end
+`endif
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
             end else if (legacy_mailbox_wdata == 32'hdeaddead) begin
@@ -184,6 +239,22 @@ module tb_mips_soc;
                 $finish;
             end
         end
+
+`ifdef SOC_ENABLE_DUAL_CORE
+        if (u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.except_req &&
+            u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.except_code == 5'h0A)
+            dual_core_exception_count = dual_core_exception_count + 1;
+        if (u_soc.u_impl.core1_reset_req)
+            dual_core_reset_count = dual_core_reset_count + 1;
+        if (u_soc.u_impl.g_dual_core.u_core1.tlb_inv_en &&
+            u_soc.u_impl.g_dual_core.u_core1.tlb_inv_vpn2 == 19'h12345) begin
+            dual_core_ipi_count = dual_core_ipi_count + 1;
+        end
+        if (u_soc.u_impl.u_core_subsystem.tlb_inv_en &&
+            u_soc.u_impl.u_core_subsystem.tlb_inv_vpn2 == 19'h12346) begin
+            dual_core_reverse_ipi_count = dual_core_reverse_ipi_count + 1;
+        end
+`endif
         
         // Debug PC Trace
         if ($time % 5000000 == 0) begin

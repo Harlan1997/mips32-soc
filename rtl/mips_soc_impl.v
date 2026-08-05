@@ -6,6 +6,7 @@
 
 module mips_soc_impl #(
     parameter ENABLE_EXT_AXI_MASTER = 1'b0,
+    parameter ENABLE_DUAL_CORE = 1'b0,
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
     parameter ENABLE_FLASH_IMAGE_MODEL = 1'b0,
     parameter ENABLE_UART_PINS = 1'b0,
@@ -80,6 +81,22 @@ module mips_soc_impl #(
     output wire        ext_rvalid,
     input  wire        ext_rready
 );
+
+    // The fabric external-master slot is used by core 1 in dual-core mode.
+    // In the default mode it remains the original externally supplied AXI slot.
+    wire [3:0]  fx_awid, fx_awcache;
+    wire [31:0] fx_awaddr, fx_wdata;
+    wire [7:0]  fx_awlen;
+    wire [2:0]  fx_awsize, fx_awprot;
+    wire [1:0]  fx_awburst, fx_awlock;
+    wire        fx_awvalid, fx_awready, fx_wlast, fx_wvalid, fx_wready;
+    wire [3:0]  fx_wstrb, fx_bid, fx_arid, fx_rid, fx_arcache;
+    wire [1:0]  fx_bresp, fx_arburst, fx_arlock, fx_rresp;
+    wire [31:0] fx_araddr, fx_rdata;
+    wire [7:0]  fx_arlen;
+    wire [2:0]  fx_arsize, fx_arprot;
+    wire        fx_bvalid, fx_bready, fx_arvalid, fx_arready;
+    wire        fx_rlast, fx_rvalid, fx_rready;
 
     // =========================================================================
     // I-Cache AXI4 Master Interface (M0)
@@ -434,6 +451,36 @@ module mips_soc_impl #(
     wire        s4_rready;
 
     wire        cpu_int;
+    wire        core1_ipi_int;
+    wire        ipi_target_present = ENABLE_DUAL_CORE;
+    wire        ipi_ack_valid;
+    wire        ipi_ack_target;
+    wire [7:0]  ipi_ack_generation;
+    wire        ipi_invalidate_valid;
+    wire        ipi_invalidate_target;
+    wire [7:0]  ipi_invalidate_generation;
+    wire [7:0]  ipi_invalidate_asid;
+    wire [19:0] ipi_invalidate_vpn;
+    wire [1:0]  ipi_invalidate_scope;
+    wire        ipi_core0_invalidate = ipi_invalidate_valid && !ipi_invalidate_target;
+    wire        ipi_core1_ack_valid;
+    wire        ipi_core1_ack_target;
+    wire [7:0]  ipi_core1_ack_generation;
+    wire        ipi_core1_invalidate_valid;
+    wire        ipi_core1_invalidate_target;
+    wire [7:0]  ipi_core1_invalidate_generation;
+    wire [7:0]  ipi_core1_invalidate_asid;
+    wire [19:0] ipi_core1_invalidate_vpn;
+    wire [1:0]  ipi_core1_invalidate_scope;
+    wire        core1_reset_req;
+    wire        core1_sim_exception_req = 1'b0;
+    wire [4:0]  core1_sim_exception_code = 5'h0A;
+    wire        core0_coh_store_valid;
+    wire [31:0] core0_coh_store_addr;
+    wire        core1_coh_store_valid;
+    wire [31:0] core1_coh_store_addr;
+    wire        ipi_core1_core0_invalidate = ipi_core1_invalidate_valid && !ipi_core1_invalidate_target;
+    wire        ipi_core1_core1_invalidate = ipi_core1_invalidate_valid && ipi_core1_invalidate_target;
     wire        tlb_inv_en;
     wire [18:0] tlb_inv_vpn2;
     wire [7:0]  tlb_inv_asid;
@@ -519,15 +566,19 @@ module mips_soc_impl #(
     // Instantiations
     // =========================================================================
 
-    soc_core_subsystem u_core_subsystem (
+    soc_core_subsystem #(.ENABLE_COHERENCY(ENABLE_DUAL_CORE)) u_core_subsystem (
         .clk             (clk),
         .rst_n           (soc_rst_n),
         .cpu_int         (cpu_int),
-        .tlb_inv_en      (tlb_inv_en),
-        .tlb_inv_vpn2    (tlb_inv_vpn2),
-        .tlb_inv_asid    (tlb_inv_asid),
-        .tlb_inv_scope   (tlb_inv_scope),
+        .tlb_inv_en      (tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate),
+        .tlb_inv_vpn2    (ipi_core1_core0_invalidate ? ipi_core1_invalidate_vpn[18:0] : (ipi_core0_invalidate ? ipi_invalidate_vpn[18:0] : tlb_inv_vpn2)),
+        .tlb_inv_asid    (ipi_core1_core0_invalidate ? ipi_core1_invalidate_asid : (ipi_core0_invalidate ? ipi_invalidate_asid : tlb_inv_asid)),
+        .tlb_inv_scope   (ipi_core1_core0_invalidate ? ipi_core1_invalidate_scope : (ipi_core0_invalidate ? ipi_invalidate_scope : tlb_inv_scope)),
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
+        .coh_store_valid(core0_coh_store_valid),
+        .coh_store_addr(core0_coh_store_addr),
+        .coh_snoop_valid(ENABLE_DUAL_CORE && core1_coh_store_valid),
+        .coh_snoop_addr(core1_coh_store_addr),
 
         .inst_awid       (m0_awid),
         .inst_awaddr     (m0_awaddr),
@@ -605,8 +656,68 @@ module mips_soc_impl #(
         .debug_flush     ()
     );
 
+    generate
+        if (ENABLE_DUAL_CORE) begin : g_dual_core
+            dual_core_axi_subsystem u_core1 (
+                .clk(clk), .rst_n(soc_rst_n & ~core1_reset_req), .ext_int({5'd0, core1_ipi_int}),
+                .sim_exception_req(core1_sim_exception_req), .sim_exception_code(core1_sim_exception_code),
+                .coh_store_valid(core1_coh_store_valid), .coh_store_addr(core1_coh_store_addr),
+                .coh_snoop_valid(core0_coh_store_valid), .coh_snoop_addr(core0_coh_store_addr),
+                .tlb_inv_en((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate),
+                .tlb_inv_vpn2(ipi_core1_core1_invalidate ? ipi_core1_invalidate_vpn[18:0] : ipi_invalidate_vpn[18:0]),
+                .tlb_inv_asid(ipi_core1_core1_invalidate ? ipi_core1_invalidate_asid : ipi_invalidate_asid),
+                .tlb_inv_scope(ipi_core1_core1_invalidate ? ipi_core1_invalidate_scope : ipi_invalidate_scope), .tlb_inv_wired_floor(6'd2),
+                .ext_awid(fx_awid), .ext_awaddr(fx_awaddr), .ext_awlen(fx_awlen),
+                .ext_awsize(fx_awsize), .ext_awburst(fx_awburst), .ext_awlock(fx_awlock),
+                .ext_awcache(fx_awcache), .ext_awprot(fx_awprot), .ext_awvalid(fx_awvalid),
+                .ext_awready(fx_awready), .ext_wdata(fx_wdata), .ext_wstrb(fx_wstrb),
+                .ext_wlast(fx_wlast), .ext_wvalid(fx_wvalid), .ext_wready(fx_wready),
+                .ext_bid(fx_bid), .ext_bresp(fx_bresp), .ext_bvalid(fx_bvalid),
+                .ext_bready(fx_bready), .ext_arid(fx_arid), .ext_araddr(fx_araddr),
+                .ext_arlen(fx_arlen), .ext_arsize(fx_arsize), .ext_arburst(fx_arburst),
+                .ext_arlock(fx_arlock), .ext_arcache(fx_arcache), .ext_arprot(fx_arprot),
+                .ext_arvalid(fx_arvalid), .ext_arready(fx_arready), .ext_rid(fx_rid),
+                .ext_rdata(fx_rdata), .ext_rresp(fx_rresp), .ext_rlast(fx_rlast),
+                .ext_rvalid(fx_rvalid), .ext_rready(fx_rready),
+                .debug_stall(), .debug_flush()
+            );
+        end else begin : g_no_dual_core
+            assign core1_coh_store_valid = 1'b0;
+            assign core1_coh_store_addr = 32'd0;
+            assign fx_awid = ext_awid; assign fx_awaddr = ext_awaddr; assign fx_awlen = ext_awlen;
+            assign fx_awsize = ext_awsize; assign fx_awburst = ext_awburst; assign fx_awlock = ext_awlock;
+            assign fx_awcache = ext_awcache; assign fx_awprot = ext_awprot; assign fx_awvalid = ext_awvalid;
+            assign fx_wdata = ext_wdata; assign fx_wstrb = ext_wstrb; assign fx_wlast = ext_wlast;
+            assign fx_wvalid = ext_wvalid; assign fx_bready = ext_bready;
+            assign fx_arid = ext_arid; assign fx_araddr = ext_araddr; assign fx_arlen = ext_arlen;
+            assign fx_arsize = ext_arsize; assign fx_arburst = ext_arburst; assign fx_arlock = ext_arlock;
+            assign fx_arcache = ext_arcache; assign fx_arprot = ext_arprot; assign fx_arvalid = ext_arvalid;
+            assign fx_rready = ext_rready;
+        end
+    endgenerate
+
+    assign ext_awready = ENABLE_DUAL_CORE ? 1'b0 : fx_awready;
+    assign ext_wready  = ENABLE_DUAL_CORE ? 1'b0 : fx_wready;
+    assign ext_bid     = ENABLE_DUAL_CORE ? 4'd0 : fx_bid;
+    assign ext_bresp   = ENABLE_DUAL_CORE ? 2'd0 : fx_bresp;
+    assign ext_bvalid  = ENABLE_DUAL_CORE ? 1'b0 : fx_bvalid;
+    assign ext_arready = ENABLE_DUAL_CORE ? 1'b0 : fx_arready;
+    assign ext_rid     = ENABLE_DUAL_CORE ? 4'd0 : fx_rid;
+    assign ext_rdata   = ENABLE_DUAL_CORE ? 32'd0 : fx_rdata;
+    assign ext_rresp   = ENABLE_DUAL_CORE ? 2'd0 : fx_rresp;
+    assign ext_rlast   = ENABLE_DUAL_CORE ? 1'b0 : fx_rlast;
+    assign ext_rvalid  = ENABLE_DUAL_CORE ? 1'b0 : fx_rvalid;
+
+    assign ipi_ack_valid = ipi_invalidate_valid;
+    assign ipi_ack_target = ipi_invalidate_target;
+    assign ipi_ack_generation = ipi_invalidate_generation;
+    assign ipi_core1_ack_valid = ipi_core1_invalidate_valid && !ipi_core1_invalidate_target;
+    assign ipi_core1_ack_target = ipi_core1_invalidate_target;
+    assign ipi_core1_ack_generation = ipi_core1_invalidate_generation;
+    assign core1_ipi_int = (ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate;
+
     soc_fabric #(
-        .ENABLE_EXT_AXI_MASTER (ENABLE_EXT_AXI_MASTER)
+        .ENABLE_EXT_AXI_MASTER (ENABLE_EXT_AXI_MASTER || ENABLE_DUAL_CORE)
     ) u_soc_fabric (
         .clk          (clk),
         .rst_n        (soc_rst_n),
@@ -731,41 +842,41 @@ module mips_soc_impl #(
         .jtag_rresp   (jtag_rresp),
         .jtag_rlast   (jtag_rlast),
         .jtag_rvalid  (jtag_rvalid),
-        .ext_awid     (ext_awid),
-        .ext_awaddr   (ext_awaddr),
-        .ext_awlen    (ext_awlen),
-        .ext_awsize   (ext_awsize),
-        .ext_awburst  (ext_awburst),
-        .ext_awlock   (ext_awlock),
-        .ext_awcache  (ext_awcache),
-        .ext_awprot   (ext_awprot),
-        .ext_awvalid  (ext_awvalid),
-        .ext_wdata    (ext_wdata),
-        .ext_wstrb    (ext_wstrb),
-        .ext_wlast    (ext_wlast),
-        .ext_wvalid   (ext_wvalid),
-        .ext_bready   (ext_bready),
-        .ext_arid     (ext_arid),
-        .ext_araddr   (ext_araddr),
-        .ext_arlen    (ext_arlen),
-        .ext_arsize   (ext_arsize),
-        .ext_arburst  (ext_arburst),
-        .ext_arlock   (ext_arlock),
-        .ext_arcache  (ext_arcache),
-        .ext_arprot   (ext_arprot),
-        .ext_arvalid  (ext_arvalid),
-        .ext_rready   (ext_rready),
-        .ext_awready  (ext_awready),
-        .ext_wready   (ext_wready),
-        .ext_bid      (ext_bid),
-        .ext_bresp    (ext_bresp),
-        .ext_bvalid   (ext_bvalid),
-        .ext_arready  (ext_arready),
-        .ext_rid      (ext_rid),
-        .ext_rdata    (ext_rdata),
-        .ext_rresp    (ext_rresp),
-        .ext_rlast    (ext_rlast),
-        .ext_rvalid   (ext_rvalid),
+        .ext_awid     (fx_awid),
+        .ext_awaddr   (fx_awaddr),
+        .ext_awlen    (fx_awlen),
+        .ext_awsize   (fx_awsize),
+        .ext_awburst  (fx_awburst),
+        .ext_awlock   (fx_awlock),
+        .ext_awcache  (fx_awcache),
+        .ext_awprot   (fx_awprot),
+        .ext_awvalid  (fx_awvalid),
+        .ext_wdata    (fx_wdata),
+        .ext_wstrb    (fx_wstrb),
+        .ext_wlast    (fx_wlast),
+        .ext_wvalid   (fx_wvalid),
+        .ext_bready   (fx_bready),
+        .ext_arid     (fx_arid),
+        .ext_araddr   (fx_araddr),
+        .ext_arlen    (fx_arlen),
+        .ext_arsize   (fx_arsize),
+        .ext_arburst  (fx_arburst),
+        .ext_arlock   (fx_arlock),
+        .ext_arcache  (fx_arcache),
+        .ext_arprot   (fx_arprot),
+        .ext_arvalid  (fx_arvalid),
+        .ext_rready   (fx_rready),
+        .ext_awready  (fx_awready),
+        .ext_wready   (fx_wready),
+        .ext_bid      (fx_bid),
+        .ext_bresp    (fx_bresp),
+        .ext_bvalid   (fx_bvalid),
+        .ext_arready  (fx_arready),
+        .ext_rid      (fx_rid),
+        .ext_rdata    (fx_rdata),
+        .ext_rresp    (fx_rresp),
+        .ext_rlast    (fx_rlast),
+        .ext_rvalid   (fx_rvalid),
         .s0_awid      (s0_awid),
         .s0_awaddr    (s0_awaddr),
         .s0_awlen     (s0_awlen),
@@ -1148,7 +1259,8 @@ module mips_soc_impl #(
     soc_peripheral_subsystem #(
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
         .ENABLE_QSPI_SHARED_ARB   (1'b1),
-        .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD)
+        .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD),
+        .ENABLE_DUAL_CORE_IPI     (ENABLE_DUAL_CORE)
     ) u_peripheral_subsystem (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -1163,6 +1275,26 @@ module mips_soc_impl #(
         .tlb_inv_asid (tlb_inv_asid),
         .tlb_inv_scope(tlb_inv_scope),
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
+        .ipi_target_present(ipi_target_present),
+        .ipi_ack_valid(ipi_ack_valid),
+        .ipi_ack_target(ipi_ack_target),
+        .ipi_ack_generation(ipi_ack_generation),
+        .ipi_invalidate_valid(ipi_invalidate_valid),
+        .ipi_invalidate_target(ipi_invalidate_target),
+        .ipi_invalidate_generation(ipi_invalidate_generation),
+        .ipi_invalidate_asid(ipi_invalidate_asid),
+        .ipi_invalidate_vpn(ipi_invalidate_vpn),
+        .ipi_invalidate_scope(ipi_invalidate_scope),
+        .ipi_core1_ack_valid(ipi_core1_ack_valid),
+        .ipi_core1_ack_target(ipi_core1_ack_target),
+        .ipi_core1_ack_generation(ipi_core1_ack_generation),
+        .ipi_core1_invalidate_valid(ipi_core1_invalidate_valid),
+        .ipi_core1_invalidate_target(ipi_core1_invalidate_target),
+        .ipi_core1_invalidate_generation(ipi_core1_invalidate_generation),
+        .ipi_core1_invalidate_asid(ipi_core1_invalidate_asid),
+        .ipi_core1_invalidate_vpn(ipi_core1_invalidate_vpn),
+        .ipi_core1_invalidate_scope(ipi_core1_invalidate_scope),
+        .core1_reset_req(core1_reset_req),
         .wdt_reset    (wdt_reset),
         .qspi_timeout_sticky     (qspi_timeout_sticky),
         .qspi_controller_present (qspi_controller_present),

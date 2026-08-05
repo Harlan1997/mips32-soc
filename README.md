@@ -124,6 +124,13 @@
 
 ## 6. 快速入门 (Quick Start)
 
+### 当前项目范围
+
+当前阶段只聚焦于 RTL 功能编写和仿真验证：包括 RTL 前端编译/elaboration、
+unit/firmware/SoC/UVM 仿真、协议检查、scoreboard、错误路径和功能覆盖率。
+综合、STA、DFT、CDC/RDC、formal、门级仿真、后端实现和 tapeout sign-off
+均不属于当前目标。
+
 ### 环境初始化
 在运行任何 EDA 工具（VCS/Verdi）前，需初始化 Module 环境：
 ```bash

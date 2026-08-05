@@ -53,6 +53,8 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
     +incdir+"${SCRIPT_DIR}" \
+    "${ROOT_DIR}"/rtl/cpu/dual_core_axi_subsystem.v \
+    "${ROOT_DIR}"/rtl/cpu/cpu_scheduler.v "${ROOT_DIR}"/rtl/cpu/mips_page_table_walker.v \
     "${ROOT_DIR}"/rtl/cpu/mips_alu.v "${ROOT_DIR}"/rtl/cpu/mips_control.v \
     "${ROOT_DIR}"/rtl/cpu/mips_core.v "${ROOT_DIR}"/rtl/cpu/mips_cp0.v "${ROOT_DIR}"/rtl/cpu/mips_tlb.v "${ROOT_DIR}"/rtl/cpu/mips_mmu.v "${ROOT_DIR}"/rtl/cpu/mips_bpu.v "${ROOT_DIR}"/rtl/cpu/mips_cpu.v "${ROOT_DIR}"/rtl/cpu/mips_ex_mem_reg.v \
     "${ROOT_DIR}"/rtl/cpu/mips_ex_stage.v "${ROOT_DIR}"/rtl/cpu/mips_id_ex_reg.v "${ROOT_DIR}"/rtl/cpu/mips_id_stage.v \
@@ -60,9 +62,9 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${ROOT_DIR}"/rtl/cpu/mips_mem_stage.v "${ROOT_DIR}"/rtl/cpu/mips_mem_wb_reg.v "${ROOT_DIR}"/rtl/cpu/mips_rob.v "${ROOT_DIR}"/rtl/cpu/mips_regfile.v \
     "${ROOT_DIR}"/rtl/cpu/mips_wb_stage.v "${ROOT_DIR}"/rtl/axi/axi2apb_bridge.v "${ROOT_DIR}"/rtl/axi/axi_crossbar.v "${ROOT_DIR}"/rtl/axi/axi_read_timeout_guard.v \
     "${ROOT_DIR}"/rtl/perips/apb_axi_dma.v "${ROOT_DIR}"/rtl/perips/apb_gpio.v "${ROOT_DIR}"/rtl/perips/apb_vic.v "${ROOT_DIR}"/rtl/perips/apb_wdt.v "${ROOT_DIR}"/rtl/perips/apb_boot_status.v "${ROOT_DIR}"/rtl/perips/apb_ddr4_status.v \
-    "${ROOT_DIR}"/rtl/cpu/mmu_asid_allocator.v \
+    "${ROOT_DIR}"/rtl/cpu/mmu_asid_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_ipi_shootdown.v \
     "${ROOT_DIR}"/rtl/cpu/mmu_tlb_shootdown_mailbox.v \
-    "${ROOT_DIR}"/rtl/perips/apb_mmu_context_status.v \
+    "${ROOT_DIR}"/rtl/perips/apb_mmu_context_status.v "${ROOT_DIR}"/rtl/perips/apb_mmu_ipi_status.v \
     "${ROOT_DIR}"/rtl/perips/apb_timer.v "${ROOT_DIR}"/rtl/perips/apb_uart_16550.v "${ROOT_DIR}"/rtl/perips/uart_pad_wrapper.v "${ROOT_DIR}"/rtl/perips/apb_qspi_status.v "${ROOT_DIR}"/rtl/perips/qspi_cmd_behavioral.v "${ROOT_DIR}"/rtl/perips/qspi_apb_integration.v "${ROOT_DIR}"/rtl/perips/qspi_shared_pin_arbiter.v "${ROOT_DIR}"/rtl/perips/qspi_soc_pad_mux.v "${ROOT_DIR}"/rtl/perips/qspi_axi_xip.v "${ROOT_DIR}"/rtl/perips/axi_spi_flash.v "${ROOT_DIR}"/rtl/perips/axi_flash_image_model.v \
     "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/axi_ddr_behavioral.v "${ROOT_DIR}"/rtl/perips/ddr4_phy_behavioral.v "${ROOT_DIR}"/rtl/perips/axi_boot_rom.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
     "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v "${ROOT_DIR}"/rtl/cache/l2_cache.v "${ROOT_DIR}"/rtl/cache/l2_cache_caching.v "${ROOT_DIR}"/rtl/cache/l2_cache_wt.v "${ROOT_DIR}"/rtl/cache/l2_cache_nb.v \

@@ -2,9 +2,11 @@
 
 ## Goal
 
-Turn the current teaching-style SoC integration into a production-grade chip
-architecture with a clear product boundary, a separate verification boundary,
-and a single system contract.
+Turn the current SoC integration into a maintainable RTL implementation with a
+clear product/verification boundary, a single system contract, and repeatable
+functional simulation evidence. The current project target is RTL frontend and
+simulation readiness; synthesis, backend implementation, and tapeout sign-off
+are explicitly outside this plan.
 
 ## Step 1: Freeze the System Contract
 
@@ -355,7 +357,7 @@ Initial implementation:
   from known legacy artifacts that may already exist under `sim/` or
   `tb/soc_test/`.
 
-## Step 7: Signoff the New Architecture
+## Step 7: Signoff the RTL and Simulation Contract
 
 Exit only when:
 - product top is stable
@@ -365,7 +367,7 @@ Exit only when:
 - protocol checkers are enabled in normal UVM runs
 - scoreboards and coverage prove the fabric contract, not only firmware success
 
-Current architecture review status:
+Current RTL/simulation review status:
 - Phase 2 is complete for the current single-outstanding RTL fabric contract.
 - Phase 3A is complete for UART TX IRQ, APB wait/PSLVERR stress, loadable
   AXI flash-image reads, and CPU/CP0 firmware smoke gating.
@@ -374,9 +376,10 @@ Current architecture review status:
 - Phase 3C is complete for PIC multi-source mask arbitration coverage. Priority
   ordering is intentionally not claimed because the current PIC exposes raw
   status, mask, active bits, and an OR-reduced CPU interrupt.
-- The architecture is hardened and bounded, but not production-final. Remaining
-  production work is tracked below and must not be folded into the already
-  closed Phase 2/3A/3B/3C claims.
+- The current RTL contract is bounded and verified through simulation. This is
+  not a production, synthesis, backend, or tapeout conclusion. Any future
+  productization work must define a new scope and gate rather than changing the
+  meaning of the current Phase 2/3A/3B/3C claims.
 
 ## Step 8: Product Boundary Hardening
 

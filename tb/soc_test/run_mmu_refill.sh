@@ -43,6 +43,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
     +incdir+"${ROOT_DIR}"/tb/soc_test \
+    "${ROOT_DIR}"/rtl/cpu/cpu_scheduler.v "${ROOT_DIR}"/rtl/cpu/mips_page_table_walker.v \
     "${ROOT_DIR}"/rtl/cpu/mips_alu.v "${ROOT_DIR}"/rtl/cpu/mips_control.v \
     "${ROOT_DIR}"/rtl/cpu/mips_core.v "${ROOT_DIR}"/rtl/cpu/mips_cp0.v "${ROOT_DIR}"/rtl/cpu/mips_tlb.v "${ROOT_DIR}"/rtl/cpu/mips_mmu.v "${ROOT_DIR}"/rtl/cpu/mips_bpu.v "${ROOT_DIR}"/rtl/cpu/mips_cpu.v "${ROOT_DIR}"/rtl/cpu/mips_ex_mem_reg.v \
     "${ROOT_DIR}"/rtl/cpu/mips_ex_stage.v "${ROOT_DIR}"/rtl/cpu/mips_id_ex_reg.v "${ROOT_DIR}"/rtl/cpu/mips_id_stage.v \

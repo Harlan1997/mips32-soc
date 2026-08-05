@@ -3,7 +3,9 @@
 // Design:    SoC CPU/cache subsystem integration
 // =============================================================================
 
-module soc_core_subsystem (
+module soc_core_subsystem #(
+    parameter ENABLE_COHERENCY = 1'b0
+) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        cpu_int,
@@ -12,6 +14,10 @@ module soc_core_subsystem (
     input  wire [7:0]  tlb_inv_asid,
     input  wire [1:0]  tlb_inv_scope,
     input  wire [5:0]  tlb_inv_wired_floor,
+    output wire        coh_store_valid,
+    output wire [31:0] coh_store_addr,
+    input  wire        coh_snoop_valid,
+    input  wire [31:0] coh_snoop_addr,
 
     output wire [3:0]  inst_awid,
     output wire [31:0] inst_awaddr,
@@ -89,7 +95,7 @@ module soc_core_subsystem (
     output wire        debug_flush
 );
 
-    mips_core u_core (
+    mips_core #(.ENABLE_COHERENCY(ENABLE_COHERENCY)) u_core (
         .clk             (clk),
         .rst_n           (rst_n),
         .ext_int         ({5'd0, cpu_int}),
@@ -98,6 +104,21 @@ module soc_core_subsystem (
         .tlb_inv_asid    (tlb_inv_asid),
         .tlb_inv_scope   (tlb_inv_scope),
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
+        .sim_exception_req(1'b0),
+        .sim_exception_code(5'd0),
+        .coh_store_valid(coh_store_valid),
+        .coh_store_addr(coh_store_addr),
+        .coh_snoop_valid(coh_snoop_valid),
+        .coh_snoop_addr(coh_snoop_addr),
+        .scheduler_enable(1'b0),
+        .scheduler_timer_tick(1'b0),
+        .scheduler_ipi_resched(1'b0),
+        .scheduler_yield_req(1'b0),
+        .scheduler_active_mask(4'b0001),
+        .hardware_walker_enable(1'b0), .hardware_walker_ptbr(32'd0),
+        .ptw_mem_valid(), .ptw_mem_addr(), .ptw_mem_ready(1'b0),
+        .ptw_mem_rdata(32'd0), .ptw_mem_error(1'b0),
+        .ptw_fault_valid(), .ptw_fault_code(),
 
         .inst_awid       (inst_awid),
         .inst_awaddr     (inst_awaddr),

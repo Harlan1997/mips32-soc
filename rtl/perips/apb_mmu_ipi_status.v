@@ -1,6 +1,9 @@
 // APB control/status wrapper for the dual-core TLB shootdown contract.
-// Register offsets are relative to the APB window: 0x20..0x38.
-module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
+// Register offsets are relative to the APB window: 0x20..0x3c.
+module apb_mmu_ipi_status #(
+    parameter TIMEOUT_CYCLES = 16,
+    parameter TARGET_XOR = 1'b0
+) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        psel,
@@ -20,7 +23,8 @@ module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
     output wire [7:0]  invalidate_generation,
     output wire [7:0]  invalidate_asid,
     output wire [19:0] invalidate_vpn,
-    output wire [1:0]  invalidate_scope
+    output wire [1:0]  invalidate_scope,
+    output wire        core1_reset_req
 );
     wire wr = psel & penable & pwrite;
     wire rd = psel & penable & ~pwrite;
@@ -30,16 +34,23 @@ module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
     reg [19:0] vpn_r;
     reg [1:0] scope_r;
     reg [5:0] status_r;
+    // Simulation-only fault controls: target absent, ACK blocked, stale ACK.
+    reg [3:0] fault_inject_r;
     wire send_valid = wr && word == 4'd12 && pwdata[0];
+    wire effective_target = target_r ^ TARGET_XOR;
+    wire effective_target_present = target_present && !fault_inject_r[0];
+    wire effective_ack_valid = ack_valid && !fault_inject_r[1];
+    wire [7:0] effective_ack_generation = ack_generation ^
+                                           (fault_inject_r[2] ? 8'h01 : 8'h00);
     wire busy, pending, done_pulse, timeout_pulse, rejected_pulse, stale_pulse;
 
     mmu_ipi_shootdown #(.TIMEOUT_CYCLES(TIMEOUT_CYCLES)) u_shootdown (
         .clk(clk), .rst_n(rst_n),
-        .send_valid(send_valid), .send_target(target_r),
+        .send_valid(send_valid),
         .send_generation(generation_r), .send_asid(asid_r),
         .send_vpn(vpn_r), .send_scope(scope_r),
-        .target_present(target_present), .ack_valid(ack_valid),
-        .ack_target(ack_target), .ack_generation(ack_generation),
+        .send_target(effective_target), .target_present(effective_target_present), .ack_valid(effective_ack_valid),
+        .ack_target(ack_target), .ack_generation(effective_ack_generation),
         .busy(busy), .pending(pending), .invalidate_valid(invalidate_valid),
         .invalidate_target(invalidate_target),
         .invalidate_generation(invalidate_generation),
@@ -51,6 +62,7 @@ module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
 
     assign pready = 1'b1;
     assign pslverr = 1'b0;
+    assign core1_reset_req = fault_inject_r[3];
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -60,6 +72,7 @@ module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
             vpn_r <= 20'd0;
             scope_r <= 2'd0;
             status_r <= 6'd0;
+            fault_inject_r <= 4'b0000;
         end else begin
             if (wr && word == 4'd8) begin
                 target_r <= pwdata[0];
@@ -73,6 +86,7 @@ module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
             if (rejected_pulse) status_r[4] <= 1'b1;
             if (stale_pulse) status_r[5] <= 1'b1;
             if (wr && word == 4'd14) status_r <= status_r & ~pwdata[5:0];
+            if (wr && word == 4'd15) fault_inject_r <= pwdata[3:0];
         end
     end
 
@@ -91,6 +105,7 @@ module apb_mmu_ipi_status #(parameter TIMEOUT_CYCLES = 16) (
                 prdata[4] = status_r[4];
                 prdata[5] = status_r[5];
             end
+            4'd15: prdata = {28'd0, fault_inject_r};
             default: prdata = 32'd0;
         endcase
     end

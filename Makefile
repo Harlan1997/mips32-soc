@@ -63,6 +63,8 @@ CPU_ICACHE_ERROR_DIR ?= $(BUILD_DIR)/unit_tb/mips_core_icache_error
 CPU_ICACHE_PRODUCT_ERROR_DIR ?= $(BUILD_DIR)/unit_tb/mips_core_icache_product_error
 CPU_ICACHE_STRESS_DIR ?= $(BUILD_DIR)/unit_tb/mips_core_icache_stress
 CPU_ICACHE_TAG_DIR ?= $(BUILD_DIR)/unit_tb/mips_core_icache_tag
+CPU_SCHEDULER_INTEGRATION_DIR ?= $(BUILD_DIR)/unit_tb/cpu_scheduler_integration
+CPU_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_hardware_walker
 PRODUCT_CACHEERR_DIR ?= $(BUILD_DIR)/unit_tb/product_cacheerr
 WDT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/wdt
 WDT_PERIPHERAL_DIR ?= $(BUILD_DIR)/unit_tb/wdt_peripheral
@@ -109,7 +111,7 @@ LLSC_FW_HEX ?= $(LLSC_FW_DIR)/firmware.hex
 CP0_RDHWR_DIR ?= $(BUILD_DIR)/soc_test/cp0_rdhwr
 CP0_RDHWR_FW_DIR ?= $(BUILD_DIR)/firmware/cp0_rdhwr
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete dual-core-frontend-compile dual-core-soc-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 mdu-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
@@ -378,6 +380,36 @@ soc-smoke: firmware
 
 cpu-cp0-gate: firmware
 	FW_HEX=$(FW_HEX) RUN_DIR=$(SOC_TEST_CPU_CP0_DIR) tb/soc_test/run_cpu_cp0_gate.sh
+
+cpu-mmu-complete:
+	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
+
+dual-core-frontend-compile:
+	RUN_ROOT=$(BUILD_DIR)/dual_core_frontend tb/unit/run_dual_core_frontend_compile.sh
+
+dual-core-soc-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/dual_core tb/soc_test/run_dual_core_gate.sh
+
+dcache-coherency-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/dcache_coherency tb/unit/dcache/run_coherency.sh
+
+page-table-walker-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/page_table_walker tb/unit/mmu/run_page_table_walker.sh
+
+page-table-tlb-refill-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/page_table_tlb_refill tb/unit/mmu/run_page_table_tlb_refill.sh
+
+cpu-hardware-walker-gate:
+	RUN_DIR=$(CPU_HARDWARE_WALKER_DIR) tb/unit/mmu/run_cpu_hardware_walker.sh
+
+cpu-scheduler-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_scheduler tb/unit/cpu_test/run_cpu_scheduler.sh
+
+cpu-scheduler-integration-gate:
+	RUN_DIR=$(CPU_SCHEDULER_INTEGRATION_DIR) tb/unit/cpu_test/run_cpu_scheduler_integration.sh
+
+scheduler-timer-ipi-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/scheduler_timer_ipi tb/unit/cpu_test/run_scheduler_timer_ipi.sh
 
 cp0-rdhwr-gate:
 	RUN_DIR=$(abspath $(CP0_RDHWR_DIR)) FW_DIR=$(abspath $(CP0_RDHWR_FW_DIR)) tb/soc_test/run_cp0_rdhwr_gate.sh

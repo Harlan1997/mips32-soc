@@ -42,6 +42,16 @@ module soc_peripheral_subsystem #(
     output wire [7:0]  ipi_invalidate_asid,
     output wire [19:0] ipi_invalidate_vpn,
     output wire [1:0]  ipi_invalidate_scope,
+    input  wire        ipi_core1_ack_valid,
+    input  wire        ipi_core1_ack_target,
+    input  wire [7:0]  ipi_core1_ack_generation,
+    output wire        ipi_core1_invalidate_valid,
+    output wire        ipi_core1_invalidate_target,
+    output wire [7:0]  ipi_core1_invalidate_generation,
+    output wire [7:0]  ipi_core1_invalidate_asid,
+    output wire [19:0] ipi_core1_invalidate_vpn,
+    output wire [1:0]  ipi_core1_invalidate_scope,
+    output wire        core1_reset_req,
 
     input  wire        qspi_timeout_sticky,
     input  wire        qspi_controller_present,
@@ -212,11 +222,12 @@ module soc_peripheral_subsystem #(
     wire boot_status_sel = apb_psel & (apb_paddr[15:12] == 4'h8); // 0x4000_8000
     wire mmu_context_sel = apb_psel & (apb_paddr[15:12] == 4'h9); // 0x4000_9000
     wire ipi_sel = ENABLE_DUAL_CORE_IPI & apb_psel & (apb_paddr[15:12] == 4'hA); // 0x4000_A000
+    wire ipi_core1_sel = ENABLE_DUAL_CORE_IPI & apb_psel & (apb_paddr[15:12] == 4'hB); // 0x4000_B000
     wire fault_sel = ENABLE_APB_FAULT_INJECTOR & apb_psel & (apb_paddr[15:12] == 4'hF); // 0x4000_F000
 
-    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, fault_prdata, ipi_prdata;
-    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, ddr4_status_pready, wdt_pready, boot_status_pready, fault_pready, ipi_pready;
-    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, ddr4_status_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr, ipi_pslverr;
+    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, fault_prdata, ipi_prdata, ipi_core1_prdata;
+    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, ddr4_status_pready, wdt_pready, boot_status_pready, fault_pready, ipi_pready, ipi_core1_pready;
+    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, ddr4_status_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr, ipi_pslverr, ipi_core1_pslverr;
 
     assign apb_prdata  = uart_sel ? uart_prdata :
                          timer_sel ? timer_prdata :
@@ -229,6 +240,7 @@ module soc_peripheral_subsystem #(
                          boot_status_sel ? boot_status_prdata :
                          mmu_context_sel ? mmu_context_prdata :
                          ipi_sel ? ipi_prdata :
+                         ipi_core1_sel ? ipi_core1_prdata :
                          fault_sel ? fault_prdata : 32'd0;
     assign apb_pready  = uart_sel ? uart_pready :
                          timer_sel ? timer_pready :
@@ -241,6 +253,7 @@ module soc_peripheral_subsystem #(
                          boot_status_sel ? boot_status_pready :
                          mmu_context_sel ? mmu_context_pready :
                          ipi_sel ? ipi_pready :
+                         ipi_core1_sel ? ipi_core1_pready :
                          fault_sel ? fault_pready : 1'b1;
     assign apb_pslverr = uart_sel ? uart_pslverr :
                          timer_sel ? timer_pslverr :
@@ -253,6 +266,7 @@ module soc_peripheral_subsystem #(
                          boot_status_sel ? boot_status_pslverr :
                          mmu_context_sel ? mmu_context_pslverr :
                          ipi_sel ? ipi_pslverr :
+                         ipi_core1_sel ? ipi_core1_pslverr :
                          fault_sel ? fault_pslverr : 1'b0;
 
     wire uart_tx_int;
@@ -291,6 +305,9 @@ module soc_peripheral_subsystem #(
         .rx_irq     (uart_16550_rx_irq),
         .tx_irq     (uart_16550_tx_irq)
     );
+
+    wire ipi_core0_reset_req;
+    wire ipi_core1_reset_req;
 
     generate
     if (ENABLE_APB_FAULT_INJECTOR) begin : g_apb_fault_injector
@@ -389,7 +406,23 @@ module soc_peripheral_subsystem #(
                 .invalidate_generation(ipi_invalidate_generation),
                 .invalidate_asid(ipi_invalidate_asid),
                 .invalidate_vpn(ipi_invalidate_vpn),
-                .invalidate_scope(ipi_invalidate_scope));
+                .invalidate_scope(ipi_invalidate_scope),
+                .core1_reset_req(ipi_core0_reset_req));
+            apb_mmu_ipi_status #(.TIMEOUT_CYCLES(64), .TARGET_XOR(1'b1)) u_apb_mmu_ipi_core1_status (
+                .clk(clk), .rst_n(periph_rst_n), .psel(ipi_core1_sel),
+                .penable(apb_penable), .pwrite(apb_pwrite),
+                .paddr(apb_paddr[5:0]), .pwdata(apb_pwdata),
+                .prdata(ipi_core1_prdata), .pready(ipi_core1_pready), .pslverr(ipi_core1_pslverr),
+                .target_present(ipi_target_present), .ack_valid(ipi_core1_ack_valid),
+                .ack_target(ipi_core1_ack_target), .ack_generation(ipi_core1_ack_generation),
+                .invalidate_valid(ipi_core1_invalidate_valid),
+                .invalidate_target(ipi_core1_invalidate_target),
+                .invalidate_generation(ipi_core1_invalidate_generation),
+                .invalidate_asid(ipi_core1_invalidate_asid),
+                .invalidate_vpn(ipi_core1_invalidate_vpn),
+                .invalidate_scope(ipi_core1_invalidate_scope),
+                .core1_reset_req(ipi_core1_reset_req));
+            assign core1_reset_req = ipi_core0_reset_req | ipi_core1_reset_req;
         end else begin : g_no_dual_core_ipi
             assign ipi_prdata = 32'd0;
             assign ipi_pready = 1'b1;
@@ -400,6 +433,16 @@ module soc_peripheral_subsystem #(
             assign ipi_invalidate_asid = 8'd0;
             assign ipi_invalidate_vpn = 20'd0;
             assign ipi_invalidate_scope = 2'd0;
+            assign ipi_core1_prdata = 32'd0;
+            assign ipi_core1_pready = 1'b1;
+            assign ipi_core1_pslverr = 1'b0;
+            assign ipi_core1_invalidate_valid = 1'b0;
+            assign ipi_core1_invalidate_target = 1'b0;
+            assign ipi_core1_invalidate_generation = 8'd0;
+            assign ipi_core1_invalidate_asid = 8'd0;
+            assign ipi_core1_invalidate_vpn = 20'd0;
+            assign ipi_core1_invalidate_scope = 2'd0;
+            assign core1_reset_req = 1'b0;
         end
     endgenerate
 
