@@ -268,6 +268,12 @@ module qspi_ctrl #(
 
 ## 验证状态
 
+- 2026-08-05：command engine 的 timeout、abort/disable 和 busy/disabled
+  rejection 分别通过 `{class,code}` 事件接入 `apb_qspi_status.ERROR`，对应
+  `0x0001_0001`、`0x0002_0001` 和 `0x0002_0002`；SoC status integration gate
+  验证 sticky/W1C 及 timeout 上报。登记、日志路径和残余风险见
+  `docs/functional_evidence_registry.md`。
+
 - 2026-08-02：`rtl/perips/qspi_cmd_behavioral.v` + `tb/unit/flash/tb_qspi_cmd_behavioral.sv` 通过 `make qspi-cmd-behavioral-gate`。证据覆盖 APB LUT/command API、24/32-bit address serialization、RX/TX FIFO、status read、x4 data lane、CS/SCLK、busy error、IRQ W1C 和 soft reset。
 - 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，尚未成为 `soc_top` 的 AXI XIP controller，也未连接商用 flash model、quad pad/PHY 或 erase/program boot path；不能标记为商用 ASIC QSPI 完成。
 - 2026-08-02：`qspi_apb_integration` 接入 `soc_peripheral_subsystem`；保留 `0x4000_5000` status map，在 `0x4000_5020..0x4000_519f` 暴露 command window，并由 SoC mux 在 command CS active 时接管单线 SPI pins。`qspi-status-integration`、SoC smoke 和 RTL frontend `3/3` 通过。

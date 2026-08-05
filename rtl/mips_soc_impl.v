@@ -372,8 +372,8 @@ module mips_soc_impl #(
     wire        s2_rready;
 
     // =========================================================================
-    // AXI Slave 3: DDR window (0x0800_0000 - 0x0FFF_FFFF), Phase C.4
-    // Behavioral capacity placeholder only (rtl/perips/axi_ddr_behavioral.v).
+    // AXI Slave 3: DDR4 window (0x0800_0000 - 0x0FFF_FFFF).
+    // Protocol-level controller; real PHY/DFI and DRAM remain external inputs.
     // =========================================================================
     wire [3:0]  s3_awid;
     wire [31:0] s3_awaddr;

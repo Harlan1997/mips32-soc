@@ -49,19 +49,20 @@ run_soc_compile() {
 }
 
 run_ddr4_compile() {
-    local dir="${RUN_ROOT}/ddr4_behavioral"
+    local dir="${RUN_ROOT}/ddr4_controller"
     mkdir -p "${dir}"
-    echo "--- RTL frontend compile: ddr4_behavioral ---"
+    echo "--- RTL frontend compile: ddr4_controller ---"
     (
         cd "${dir}"
         vcs -full64 -sverilog -timescale=1ns/1ps \
-            -top tb_ddr4_phy_behavioral \
-            "${ROOT_DIR}/rtl/perips/ddr4_phy_behavioral.v" \
-            "${ROOT_DIR}/tb/unit/ddr4/tb_ddr4_phy_behavioral.sv" \
+            -top tb_axi_ddr4_controller \
+            +incdir+"${ROOT_DIR}/rtl/include" \
+            "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
+            "${ROOT_DIR}/tb/unit/ddr4/tb_axi_ddr4_controller.sv" \
             -l compile.log
     )
     test -x "${dir}/simv"
-    echo "ddr4_behavioral: PASS"
+    echo "ddr4_controller: PASS"
 }
 
 run_soc_compile default
@@ -72,7 +73,7 @@ cat > "${RUN_ROOT}/rtl_frontend_compile_report.md" <<EOF
 # RTL Frontend Compile Report
 
 - Status: \`RTL_FRONTEND_COMPILE_READY\`
-- Configurations: default \`soc_top\`, product boot + MMU, DDR4 behavioral PHY
+- Configurations: default \`soc_top\`, product boot + MMU, DDR4 controller protocol gate
 - Run root: \`${RUN_ROOT}\`
 - Evidence: each configuration produced a VCS elaborated \`simv\`; see \`*/compile.log\`.
 - Scope: RTL parsing/elaboration only; no synthesis, STA, PPA, lint, CDC/RDC or formal.

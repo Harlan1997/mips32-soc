@@ -56,6 +56,8 @@ module qspi_apb_integration #(
     wire [3:0] cmd_io_oe;
     wire [3:0] cmd_io_i = ENABLE_QUAD_IO ? qspi_io_i : {3'b000, spi_miso};
     wire cmd_irq;
+    wire cmd_error_event;
+    wire [31:0] cmd_error_value;
     wire trigger_access = cmd_sel && penable && pwrite &&
                           (cmd_paddr == 12'h100);
     wire arbiter_wait = ENABLE_SHARED_ARB && trigger_access && !shared_grant;
@@ -66,8 +68,8 @@ module qspi_apb_integration #(
         .rst_n              (rst_n),
         .controller_present (controller_present),
         .xip_timeout_sticky (xip_timeout_sticky),
-        .error_event        (error_event),
-        .error_value        (error_value),
+        .error_event        (error_event | cmd_error_event),
+        .error_value        (cmd_error_event ? cmd_error_value : error_value),
         .psel               (status_sel),
         .penable            (penable),
         .pwrite             (pwrite),
@@ -95,7 +97,9 @@ module qspi_apb_integration #(
         .spi_io_o           (cmd_io_o),
         .spi_io_oe          (cmd_io_oe),
         .spi_io_i           (cmd_io_i),
-        .irq                (cmd_irq)
+        .irq                (cmd_irq),
+        .error_event        (cmd_error_event),
+        .error_value        (cmd_error_value)
     );
 
     assign prdata  = status_sel ? status_prdata :

@@ -31,7 +31,9 @@ module qspi_cmd_behavioral #(
     output wire [3:0]              spi_io_o,
     output wire [3:0]              spi_io_oe,
     input  wire [3:0]              spi_io_i,
-    output wire                    irq
+    output wire                    irq,
+    output reg                     error_event,
+    output reg  [31:0]              error_value
 );
 
     localparam [11:0] A_CTRL       = 12'h000;
@@ -315,9 +317,12 @@ module qspi_cmd_behavioral #(
             tx_pop_pulse <= 0;
             rx_push_pulse <= 0;
             rx_push_data <= 0;
+            error_event <= 1'b0;
+            error_value <= 32'h0000_0000;
         end else begin
             tx_pop_pulse <= 1'b0;
             rx_push_pulse <= 1'b0;
+            error_event <= 1'b0;
 
             if (wr && paddr == A_IRQ_STATUS) begin
                 if (pwdata[0]) irq_pending_r <= 1'b0;
@@ -347,6 +352,8 @@ module qspi_cmd_behavioral #(
                 error_r <= 1'b1;
                 aborted_r <= 1'b1;
                 irq_pending_r <= 1'b1;
+                error_event <= 1'b1;
+                error_value <= 32'h0002_0001;
                 tx_word_r <= 0;
                 tx_bytes_left_r <= 0;
             end else if (timeout_expired) begin
@@ -357,10 +364,14 @@ module qspi_cmd_behavioral #(
                 error_r <= 1'b1;
                 timeout_r <= 1'b1;
                 irq_pending_r <= 1'b1;
+                error_event <= 1'b1;
+                error_value <= 32'h0001_0001;
                 tx_word_r <= 0;
                 tx_bytes_left_r <= 0;
             end else if (trigger_busy || trigger_disabled) begin
                 error_r <= 1'b1;
+                error_event <= 1'b1;
+                error_value <= 32'h0002_0002;
             end else if (state == ST_IDLE) begin
                 spi_sclk_r <= 1'b0;
                 div_count_r <= 0;
@@ -382,6 +393,8 @@ module qspi_cmd_behavioral #(
                 error_r <= 1'b1;
                 aborted_r <= 1'b1;
                 irq_pending_r <= 1'b1;
+                error_event <= 1'b1;
+                error_value <= 32'h0002_0001;
             end else if (spi_tick) begin
                 timeout_count_r <= timeout_count_r + 1'b1;
                 div_count_r <= 0;

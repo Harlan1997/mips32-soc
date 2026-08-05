@@ -30,6 +30,8 @@ module qspi_pad_wrapper #(
     wire [3:0] spi_io_o;
     wire [3:0] spi_io_oe;
     wire [3:0] spi_io_i = spi_io;
+    wire       cmd_error_event;
+    wire [31:0] cmd_error_value;
 
     qspi_cmd_behavioral #(
         .TX_FIFO_DEPTH(TX_FIFO_DEPTH),
@@ -41,7 +43,8 @@ module qspi_pad_wrapper #(
         .pwrite(pwrite), .paddr(paddr), .pstrb(pstrb), .pwdata(pwdata),
         .prdata(prdata), .pready(pready), .pslverr(pslverr),
         .spi_sclk(spi_sclk), .spi_cs_n(spi_cs_n), .spi_io_o(spi_io_o),
-        .spi_io_oe(spi_io_oe), .spi_io_i(spi_io_i), .irq(irq)
+        .spi_io_oe(spi_io_oe), .spi_io_i(spi_io_i), .irq(irq),
+        .error_event(cmd_error_event), .error_value(cmd_error_value)
     );
 
     assign spi_io[0] = spi_io_oe[0] ? spi_io_o[0] : 1'bz;

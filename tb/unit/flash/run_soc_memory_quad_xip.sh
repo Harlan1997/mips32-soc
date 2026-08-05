@@ -14,7 +14,7 @@ cd "${RUN_DIR}"
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +incdir+"${ROOT_DIR}/rtl/include" \
     "${ROOT_DIR}/rtl/axi/axi_read_timeout_guard.v" \
-    "${ROOT_DIR}/rtl/perips/axi_ddr_behavioral.v" \
+    "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
     "${ROOT_DIR}/rtl/perips/axi_ddr_model.v" \
     "${ROOT_DIR}/rtl/perips/axi_flash_image_model.v" \
     "${ROOT_DIR}/rtl/perips/axi_spi_flash.v" \

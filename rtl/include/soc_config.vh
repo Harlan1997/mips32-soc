@@ -53,11 +53,9 @@
 `define SOC_APB_BASE          32'h4000_0000
 `define SOC_SRAM_ALIAS_BASE   32'hA000_0000
 `define SOC_DEBUG_BASE        32'hE000_0000
-// DDR window (Phase C.4): 128MB physical reservation for a future DDR3
-// controller. Today backed only by a behavioral capacity placeholder
-// (rtl/perips/axi_ddr_behavioral.v) — no timing/refresh/PHY realism. See
-// docs/block_specs/ddr3_spec.md for the real controller scope (deferred,
-// gated on procured PHY IP).
+// DDR4 window: 128MB physical reservation backed by the protocol-level
+// vendor-neutral controller (rtl/perips/axi_ddr4_controller.v). A real PHY,
+// DFI wrapper, DRAM part and board timing remain product integration inputs.
 // NOTE: SOC_DDR_BASE is not 256MB-aligned (it sits at a 128MB boundary), so
 // unlike SRAM/APB/FLASH it cannot be decoded with a simple mask-equality
 // check against SOC_256MB_REGION_MASK. Sized at 128MB (not the originally
