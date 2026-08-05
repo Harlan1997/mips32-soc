@@ -20,6 +20,12 @@ module mips_id_stage (
     input  wire [4:0]  rf_waddr,
     input  wire [31:0] rf_wdata,
     input  wire        rf_we,
+    input  wire        ctx_save_req,
+    output wire        ctx_save_done,
+    output wire [1023:0] ctx_save_data,
+    input  wire        ctx_restore_req,
+    input  wire [1023:0] ctx_restore_data,
+    output wire        ctx_restore_done,
     
     // Forwarding paths from downstream stages for ID stage branch comparison
     input  wire        fw_ex_we,
@@ -106,7 +112,13 @@ module mips_id_stage (
         .rdata2 (rf_rdata2),
         .waddr  (rf_waddr),
         .wdata  (rf_wdata),
-        .we     (rf_we)
+        .we     (rf_we),
+        .ctx_save_req(ctx_save_req),
+        .ctx_save_done(ctx_save_done),
+        .ctx_save_data(ctx_save_data),
+        .ctx_restore_req(ctx_restore_req),
+        .ctx_restore_data(ctx_restore_data),
+        .ctx_restore_done(ctx_restore_done)
     );
 
     // Instantiate Control Unit

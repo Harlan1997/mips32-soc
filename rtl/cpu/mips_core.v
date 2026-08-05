@@ -6,7 +6,10 @@
 
 `include "soc_config.vh"
 
-module mips_core (
+module mips_core #(
+    parameter ENABLE_COHERENCY = 1'b0,
+    parameter ENABLE_SCHEDULER = 1'b0
+) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire [5:0]  ext_int,
@@ -15,6 +18,26 @@ module mips_core (
     input  wire [7:0]  tlb_inv_asid,
     input  wire [1:0]  tlb_inv_scope,
     input  wire [5:0]  tlb_inv_wired_floor,
+    input  wire        sim_exception_req,
+    input  wire [4:0]  sim_exception_code,
+    output wire        coh_store_valid,
+    output wire [31:0] coh_store_addr,
+    input  wire        coh_snoop_valid,
+    input  wire [31:0] coh_snoop_addr,
+    input  wire        scheduler_enable,
+    input  wire        scheduler_timer_tick,
+    input  wire        scheduler_ipi_resched,
+    input  wire        scheduler_yield_req,
+    input  wire [3:0]  scheduler_active_mask,
+    input  wire        hardware_walker_enable,
+    input  wire [31:0] hardware_walker_ptbr,
+    output wire        ptw_mem_valid,
+    output wire [31:0] ptw_mem_addr,
+    input  wire        ptw_mem_ready,
+    input  wire [31:0] ptw_mem_rdata,
+    input  wire        ptw_mem_error,
+    output wire        ptw_fault_valid,
+    output wire [2:0]  ptw_fault_code,
     
     // AXI4 Master Interface (Instruction Cache)
     output wire [3:0]  inst_awid,
@@ -155,6 +178,42 @@ module mips_core (
                                       cpu_data_cache_tag_rdata_d;
 
     wire        icache_cpu_req = cpu_inst_req & ~cpu_data_cache_op_valid;
+
+    wire sched_enable_i = ENABLE_SCHEDULER && (scheduler_enable === 1'b1);
+    wire [3:0] sched_active_mask_i = sched_enable_i ? scheduler_active_mask : 4'b0001;
+    wire sched_save_req, sched_save_done;
+    wire [7:0] sched_save_task;
+    wire [31:0] sched_save_pc, sched_save_sp, sched_save_status;
+    wire [7:0] sched_save_asid;
+    wire [1023:0] sched_save_gpr;
+    wire sched_restore_req, sched_restore_ack;
+    wire [7:0] sched_restore_task;
+    wire [31:0] sched_restore_pc, sched_restore_sp, sched_restore_status;
+    wire [7:0] sched_restore_asid;
+    wire [1023:0] sched_restore_gpr;
+    wire sched_unused_ack;
+
+    // SP is architecturally GPR29; keep the scheduler's explicit SP field
+    // coherent with the packed register image used by the CPU boundary.
+    assign sched_save_sp = sched_save_gpr[29*32 +: 32];
+
+    cpu_scheduler #(.TASKS(4)) u_cpu_scheduler (
+        .clk(clk), .rst_n(rst_n), .enable(sched_enable_i),
+        .timer_tick(scheduler_timer_tick === 1'b1),
+        .ipi_resched(scheduler_ipi_resched === 1'b1),
+        .yield_req(scheduler_yield_req === 1'b1),
+        .active_mask(sched_active_mask_i),
+        .resched_ack(sched_unused_ack), .scheduler_busy(), .current_task(),
+        .switch_valid(), .switch_from(), .switch_to(),
+        .ctx_save_req(sched_save_req), .ctx_save_task(sched_save_task),
+        .ctx_save_done(sched_save_done), .ctx_save_pc(sched_save_pc),
+        .ctx_save_sp(sched_save_sp), .ctx_save_status(sched_save_status),
+        .ctx_save_asid(sched_save_asid), .ctx_save_gpr(sched_save_gpr),
+        .ctx_restore_req(sched_restore_req), .ctx_restore_task(sched_restore_task),
+        .ctx_restore_ack(sched_restore_ack), .ctx_restore_pc(sched_restore_pc),
+        .ctx_restore_sp(sched_restore_sp), .ctx_restore_status(sched_restore_status),
+        .ctx_restore_asid(sched_restore_asid), .ctx_restore_gpr(sched_restore_gpr)
+    );
     
     // Instantiating the CPU Pipeline
     mips_cpu u_cpu (
@@ -178,6 +237,22 @@ module mips_core (
         .tlb_inv_asid    (tlb_inv_asid),
         .tlb_inv_scope   (tlb_inv_scope),
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
+        .sim_exception_req(sim_exception_req),
+        .sim_exception_code(sim_exception_code),
+        .ctx_save_req(sched_save_req), .ctx_save_done(sched_save_done),
+        .ctx_save_pc(sched_save_pc), .ctx_save_status(sched_save_status),
+        .ctx_save_asid(sched_save_asid), .ctx_save_gpr(sched_save_gpr),
+        .ctx_restore_req(sched_restore_req), .ctx_restore_pc(sched_restore_pc),
+        .ctx_restore_status(sched_restore_status), .ctx_restore_asid(sched_restore_asid),
+        .ctx_restore_gpr(sched_restore_gpr), .ctx_restore_ack(sched_restore_ack),
+        .hardware_walker_enable(hardware_walker_enable),
+        .hardware_walker_ptbr(hardware_walker_ptbr),
+        .ptw_mem_valid(ptw_mem_valid), .ptw_mem_addr(ptw_mem_addr),
+        .ptw_mem_ready(ptw_mem_ready), .ptw_mem_rdata(ptw_mem_rdata),
+        .ptw_mem_error(ptw_mem_error), .ptw_fault_valid(ptw_fault_valid),
+        .ptw_fault_code(ptw_fault_code),
+        .coh_snoop_valid (coh_snoop_valid),
+        .coh_snoop_addr  (coh_snoop_addr),
         .data_wdata      (cpu_data_wdata),
         .data_be         (cpu_data_be),
         .data_uncacheable(cpu_data_uncacheable),
@@ -261,7 +336,8 @@ module mips_core (
     // Instantiating the D-Cache
     dcache #(
         .ENABLE_LEGACY_ADDR_HEURISTIC ((`SOC_MMU_ENABLE == 0) &&
-                                        (`SOC_PRODUCT_BOOT_ENABLE == 0))
+                                        (`SOC_PRODUCT_BOOT_ENABLE == 0)),
+        .ENABLE_COHERENCY             (ENABLE_COHERENCY)
     ) u_dcache (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -324,7 +400,11 @@ module mips_core (
         .rresp        (data_rresp),
         .rlast        (data_rlast),
         .rvalid       (data_rvalid),
-        .rready       (data_rready)
+        .rready       (data_rready),
+        .coh_store_valid(coh_store_valid),
+        .coh_store_addr (coh_store_addr),
+        .coh_snoop_valid(coh_snoop_valid),
+        .coh_snoop_addr (coh_snoop_addr)
     );
 
 endmodule

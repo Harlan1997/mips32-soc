@@ -26,6 +26,11 @@ module mips_if_stage #(
     // Exception Handling Interface
     input  wire        exception_req,    // Redirect PC to exception handler
     input  wire [31:0] exception_vector,  // Exception vector address
+    input  wire        ctx_save_req,
+    output wire        ctx_save_done,
+    input  wire        ctx_restore_req,
+    input  wire [31:0] ctx_restore_pc,
+    output wire        ctx_restore_done,
     
     // Outputs to Instruction Cache
     output wire        inst_req,
@@ -64,12 +69,17 @@ module mips_if_stage #(
         if (!rst_n) begin
             pc <= RESET_ADDR;
         end else begin
-            pc <= next_pc;
+            if (ctx_restore_req)
+                pc <= ctx_restore_pc;
+            else
+                pc <= next_pc;
         end
     end
 
     // Cache Interface
     assign inst_req  = 1'b1; // Always trying to fetch
+    assign ctx_save_done = ctx_save_req;
+    assign ctx_restore_done = ctx_restore_req;
     // I-cache returns the previous cycle's request on a hit while accepting
     // the next request. Keep this one-cycle look-ahead aligned with
     // pc_plus_4, which tags the returning instruction in IF/ID. During a

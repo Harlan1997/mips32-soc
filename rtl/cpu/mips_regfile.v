@@ -22,7 +22,15 @@ module mips_regfile (
     // Write Port
     input  wire [4:0]  waddr,
     input  wire [31:0] wdata,
-    input  wire        we
+    input  wire        we,
+
+    // Packed context image uses register index * 32 as bit offset.
+    input  wire        ctx_save_req,
+    output wire        ctx_save_done,
+    output wire [1023:0] ctx_save_data,
+    input  wire        ctx_restore_req,
+    input  wire [1023:0] ctx_restore_data,
+    output wire        ctx_restore_done
 );
 
     // Register 0 is hardwired to 0. 31 registers are writeable.
@@ -35,6 +43,19 @@ module mips_regfile (
     assign rdata2 = (raddr2 == 5'd0) ? 32'd0 :
                     ((we && (waddr == raddr2)) ? wdata : regs[raddr2]);
 
+    genvar g;
+    generate
+        for (g = 0; g < 32; g = g + 1) begin : gen_ctx_image
+            if (g == 0)
+                assign ctx_save_data[g*32 +: 32] = 32'd0;
+            else
+                assign ctx_save_data[g*32 +: 32] = regs[g];
+        end
+    endgenerate
+
+    assign ctx_save_done = ctx_save_req;
+    assign ctx_restore_done = ctx_restore_req;
+
     // Synchronous Write
     integer i;
     always @(posedge clk or negedge rst_n) begin
@@ -42,6 +63,9 @@ module mips_regfile (
             for (i = 1; i < 32; i = i + 1) begin
                 regs[i] <= 32'd0;
             end
+        end else if (ctx_restore_req) begin
+            for (i = 1; i < 32; i = i + 1)
+                regs[i] <= ctx_restore_data[i*32 +: 32];
         end else if (we && (waddr != 5'd0)) begin
             regs[waddr] <= wdata;
         end

@@ -6,6 +6,7 @@ module tb_apb_mmu_ipi_status;
   wire [31:0] prdata; wire pready, pslverr;
   wire invalidate_valid, invalidate_target; wire [7:0] invalidate_generation, invalidate_asid;
   wire [19:0] invalidate_vpn; wire [1:0] invalidate_scope;
+  wire core1_reset_req;
   apb_mmu_ipi_status #(.TIMEOUT_CYCLES(4)) dut (.*);
   always #5 clk = ~clk;
   task fail; input [127:0] m; begin $display("ERROR: %0s",m); $display("REGRESSION_TEST_FAILED apb_mmu_ipi_status"); $finish; end endtask
@@ -31,6 +32,12 @@ module tb_apb_mmu_ipi_status;
     apb_read(6'h34,rd); if (rd[0] || !rd[2] || rd[3]) fail("done status");
     apb_write(6'h38,32'h0000_0004); apb_read(6'h34,rd); if (rd[2]) fail("clear status");
     target_present=0; apb_write(6'h30,32'h1); apb_read(6'h34,rd); if (!rd[3]) fail("target timeout status");
+    target_present=1; apb_write(6'h3c,32'h1); apb_read(6'h3c,rd);
+    if (!rd[0] || rd[1] || rd[2]) fail("target absent injection readback");
+    apb_write(6'h38,32'h0000_0008); apb_write(6'h30,32'h1);
+    apb_read(6'h34,rd); if (!rd[3]) fail("injected target timeout status");
+    apb_write(6'h3c,32'h0); apb_read(6'h3c,rd);
+    if (rd[2:0] != 3'b000) fail("target absent injection clear");
     $display("REGRESSION_TEST_SUCCESS apb_mmu_ipi_status"); $finish;
   end
 endmodule

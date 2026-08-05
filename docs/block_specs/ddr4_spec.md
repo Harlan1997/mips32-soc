@@ -3,10 +3,11 @@
 > 状态：**C1 已选择，契约待外部 PHY/工艺输入冻结**（2026-08-02）。
 > 本文是 DDR4 产品契约候选，不代表 controller、PHY 或 DDR4 boot 已实现。
 
-当前已实现的 F1 抽象层为
+当前仓库中的
 [`rtl/perips/ddr4_phy_behavioral.v`](../../rtl/perips/ddr4_phy_behavioral.v)，
-其命令接口不是 vendor DFI port list，只用于 vendor-neutral contract
-verification。它的 gate 不能关闭本契约的外部输入 entry。
+只是过渡验证依赖；其命令接口不是 vendor DFI port list，也不代表 DDR4
+controller RTL 已实现。当前目标是先按本文冻结的协议级 contract 实现
+controller RTL，再通过仿真验证其行为。
 
 ## 0. 目标与边界
 
@@ -45,8 +46,8 @@ APB 并受 WDT 约束；fatal 状态必须在 bounded latency 内以 `SLVERR` �
 
 ## 3. Entry / exit criteria
 
-进入 DDR4 controller RTL 前，必须关闭
-[`docs/ddr4_integration_inputs.md`](../ddr4_integration_inputs.md) 的
-`DDR4-IN-01..08`。完成后才允许实现 AXI/DDR CDC、scheduler、DFI wrapper
-和 APB status。产品功能关闭还需要真实 PHY/model 的 init/training、refresh、
-read/write、backpressure、reset/error 和 no-preload boot gate。
+进入 DDR4 controller RTL 前，必须冻结 AXI/APB、地址映射、命令时序、refresh、
+错误和 reset contract；不要求先取得真实 PHY、DRAM part 或板级输入。controller
+RTL 应先使用协议级、vendor-neutral 的 DFI-like boundary 实现并仿真验证。
+真实 PHY/DFI wrapper、DRAM model、calibration 和 no-preload boot gate 属于
+后续产品集成阶段。

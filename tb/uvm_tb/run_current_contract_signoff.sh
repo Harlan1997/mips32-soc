@@ -94,8 +94,9 @@ fail_signoff() {
         echo "- **Host**: $(hostname)"
         echo
         echo "## Scope Limitation"
+        echo "- Current scope: RTL implementation, frontend compile/elaboration, and functional simulation verification."
         echo "- Unclosed features: RTL multi-outstanding/reordering, UART RX, SPI-serial timing, PIC priority encoding, synthesis/STA/DFT/formal/CDC/RDC."
-        echo "- Scope claim: strictly limited to the current documented RTL contract. Not tapeout sign-off."
+        echo "- Scope claim: strictly limited to the current documented RTL contract. This is not synthesis, backend, production, or tapeout sign-off."
     } > "$REPORT"
     exit 1
 }
@@ -543,7 +544,7 @@ lines.append("")
 lines.append("## Executive Summary")
 lines.append("")
 lines.append("- **Overall Status**: **PASS for the current documented RTL contract**")
-lines.append("- **Sign-off Scope**: Current RTL contract sign-off (NOT tapeout sign-off)")
+lines.append("- **Sign-off Scope**: RTL implementation and functional simulation of the current RTL contract (NOT synthesis, backend, production, or tapeout sign-off)")
 lines.append(f"- **Execution Date**: `{date_str}`")
 lines.append(f"- **Host**: `{host_str}`")
 lines.append(f"- **Git HEAD**: `{git_head}` ({dirty_str})")
@@ -634,7 +635,7 @@ lines.append(f"- Error Scan Artifact: `{run_root}/project_error_scan.txt`")
 lines.append("")
 lines.append("## Explicit Scope Boundaries & Open Items")
 lines.append("")
-lines.append("This sign-off applies strictly to the current documented RTL contract. The following domains remain explicitly OPEN and OUT OF SCOPE:")
+lines.append("This sign-off applies strictly to RTL implementation and functional simulation of the current documented RTL contract. The following domains remain explicitly OPEN and OUT OF SCOPE:")
 lines.append("1. **RTL Multi-outstanding & Response Reordering**: Current fabric contract remains single-outstanding AXI.")
 lines.append("2. **UART RX Datapath & RX Interrupt**: UART RX is not implemented/signed off in current RTL.")
 lines.append("3. **SPI-Serial Protocol Timing & Real Flash Boot**: Verification models loadable AXI flash-image window.")

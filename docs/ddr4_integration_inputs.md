@@ -10,6 +10,10 @@ The candidate contract is
 [`docs/block_specs/ddr4_spec.md`](block_specs/ddr4_spec.md). The legacy DDR3
 manifest remains at [`docs/ddr_integration_inputs.md`](ddr_integration_inputs.md)
 and must not be used to authorize the C1 product controller.
+The public-data provisional baseline is recorded in
+[`docs/ddr4_public_reference_baseline.md`](ddr4_public_reference_baseline.md);
+it provides representative DDR4-2133 timing, initialization/refresh assumptions,
+WDT budget and source links without changing product-entry status.
 The upstream parameter decisions are tracked in
 [`docs/asic_c1_ddr4_parameter_decision.md`](asic_c1_ddr4_parameter_decision.md);
 stage A is not closed yet.
@@ -34,18 +38,19 @@ priority PHY RFQ target, while foundry/PHY compatibility remains open.
 
 ### RTL frontend decision
 
-The current milestone stops at RTL compile/elaboration and behavioral simulation.
-`DDR4-IN-01..08` are therefore deferred product-entry inputs, not blockers for the
-vendor-neutral RTL contract. The repository may use a behavioral PHY/DRAM model and
-provisional timing parameters for `RTL_FRONTEND_COMPILE_READY` and
-`RTL_FUNCTIONAL_SIM_READY`.
+The current milestone implements and verifies the DDR4 controller RTL against a
+frozen protocol-level contract. `DDR4-IN-01..08` are deferred product-entry
+inputs, not prerequisites for the controller RTL. Provisional timing parameters
+and the existing behavioral files may be used only as temporary verification
+dependencies; they are not the DDR4 RTL deliverable or completion evidence.
 
 `DDR4_ENTRY_READY=0`. No DDR4 PHY wrapper, real DDR4 model or product
 controller exists in the repository. `rtl/perips/axi_ddr_behavioral.v` remains
 capacity/address evidence only.
 
-The repository now contains an F1 vendor-neutral abstract model and gate, but it
-does not satisfy `DDR4-IN-03`, `DDR4-IN-04` or `DDR4-IN-07`.
+The repository contains an F1 vendor-neutral abstract model and gate, but it does
+not satisfy the DDR4 controller RTL requirement or `DDR4-IN-03`, `DDR4-IN-04` or
+`DDR4-IN-07`.
 
 The entry audit may pass its consistency checks while returning `BLOCKED`. That
 result is not DDR4 functionality evidence and must not be included in
@@ -56,7 +61,8 @@ result is not DDR4 functionality evidence and must not be included in
 1. Fill `DDR4-IN-01..08` with artifact path, version, SHA256, license, owner and
    review sign-off.
 2. Run `make ddr-contract-entry-audit` and require `DDR4_ENTRY_READY=1`.
-3. Add the selected PHY wrapper and real memory model in a separate reviewed
-   change set; then implement the DDR4 controller against the candidate contract.
+3. Implement and verify the DDR4 controller RTL against the frozen protocol
+   contract. Add the selected PHY wrapper and real memory model later in a
+   separate reviewed product-integration change set.
 4. Run init/training/refresh/error/backpressure/reset/no-preload boot gates before
    replacing S3 or upgrading the DDR domain beyond `BLOCK_VERIFIED`.

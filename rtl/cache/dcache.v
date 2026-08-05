@@ -13,7 +13,8 @@
 module dcache #(
     // Product mips_core disables the prototype physical-address alias check;
     // standalone block tests retain it by default.
-    parameter ENABLE_LEGACY_ADDR_HEURISTIC = 1'b1
+    parameter ENABLE_LEGACY_ADDR_HEURISTIC = 1'b1,
+    parameter ENABLE_COHERENCY = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -85,7 +86,15 @@ module dcache #(
     input  wire [1:0]  rresp,
     input  wire        rlast,
     input  wire        rvalid,
-    output reg         rready
+    output reg         rready,
+
+    // Minimal dual-core write-invalidate contract. In coherency mode stores
+    // bypass this cache; a completed store invalidates a matching line in the
+    // peer cache through the fabric-level broadcast.
+    output wire        coh_store_valid,
+    output wire [31:0] coh_store_addr,
+    input  wire        coh_snoop_valid,
+    input  wire [31:0] coh_snoop_addr
 );
 
     wire uncacheable;
@@ -174,13 +183,27 @@ module dcache #(
                                   (cpu_addr[31:28] == 4'h4 || cpu_addr[31:28] == 4'hA);
     wire legacy_req_uncacheable = legacy_addr_uncacheable &&
                                   (req_buf_addr[31:28] == 4'h4 || req_buf_addr[31:28] == 4'hA);
-    assign uncacheable = req_buf_valid ? (req_buf_uncacheable || legacy_req_uncacheable)
-                                       : (cpu_uncacheable || legacy_cpu_uncacheable);
+    assign uncacheable = req_buf_valid ? (req_buf_uncacheable || legacy_req_uncacheable ||
+                                          (ENABLE_COHERENCY && req_buf_we))
+                                       : (cpu_uncacheable || legacy_cpu_uncacheable ||
+                                          (ENABLE_COHERENCY && cpu_we));
 
     // SRAM arrays (4-way). tag entry = {valid[22], dirty[21], tag[20:0]}
     reg [TAG_BITS+1:0] tag_ram  [0:WAYS-1][0:SETS-1];
     reg [255:0]        data_ram [0:WAYS-1][0:SETS-1];
     reg [2:0]          plru_ram [0:SETS-1];   // tree-PLRU: b0=top, b1=left, b2=right
+
+    wire coh_snoop_index_hit = tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                                ((tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]) ||
+                                 tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                                 (tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]) ||
+                                 tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                                 (tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]) ||
+                                 tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                                 (tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]));
+    assign coh_store_valid = ENABLE_COHERENCY && req_buf_valid && req_buf_we &&
+                             (state == UC_WRESP) && bvalid && (bresp == 2'b00);
+    assign coh_store_addr = req_buf_addr;
 
     // Registered read-out of the indexed set
     reg [TAG_BITS+1:0] tag_rdata  [0:WAYS-1];
@@ -375,6 +398,20 @@ module dcache #(
             end
         end else begin
             state <= next_state;
+            if (ENABLE_COHERENCY && coh_snoop_valid) begin
+                if (tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                    tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
+                    tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
+                if (tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                    tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
+                    tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
+                if (tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                    tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
+                    tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
+                if (tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS+1] &&
+                    tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
+                    tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
+            end
             case (state)
                 IDLE: begin
                     if (cpu_req) begin
