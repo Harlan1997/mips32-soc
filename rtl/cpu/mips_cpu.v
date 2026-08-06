@@ -7,7 +7,8 @@
 `include "soc_config.vh"
 
 module mips_cpu #(
-    parameter ENABLE_VEIC = 1'b0
+    parameter ENABLE_VEIC = 1'b0,
+    parameter [9:0] CPUNUM = 10'd0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -100,9 +101,13 @@ module mips_cpu #(
     // Global stall if IF, MEM, or MDU stalls
     reg ptw_busy;
     reg ptw_refill_pending;
+    reg ptw_fault_pending;
+    reg ptw_fault_is_data;
+    wire walker_d_stall;
     wire context_active = (ctx_save_req === 1'b1) | (ctx_restore_req === 1'b1);
     wire global_stall = stall_req_if | stall_req_mem | ~mdu_ready |
-                        context_active | ptw_busy | ptw_refill_pending;
+                        context_active | ptw_busy | ptw_refill_pending |
+                        walker_d_stall;
     
     // Exceptions
     wire wb_except_req;
@@ -228,8 +233,9 @@ module mips_cpu #(
     wire hw_walker_d_miss = (hardware_walker_enable === 1'b1) &&
                              dmem_translate_req && !mmu_d_ok &&
                              ((mmu_d_fault_type == 3'b001) ||
-                              (mmu_d_fault_type == 3'b010)) && !mmu_dlookup_hit;
-    wire ptw_req_valid = !ptw_busy && !ptw_refill_pending &&
+                             (mmu_d_fault_type == 3'b010)) && !mmu_dlookup_hit;
+    assign walker_d_stall = hw_walker_d_miss && !ptw_fault_pending;
+    wire ptw_req_valid = !ptw_busy && !ptw_refill_pending && !ptw_fault_pending &&
                          (hw_walker_i_miss || hw_walker_d_miss);
     wire ptw_req_ready;
     wire ptw_resp_valid;
@@ -244,6 +250,13 @@ module mips_cpu #(
     reg [31:0] ptw_va_q;
     wire hw_tlb_wr_ready;
     wire hw_tlb_wr_en = ptw_refill_pending && hw_tlb_wr_ready;
+    // Use the low VPN2 bits as a deterministic hardware-refill slot.  A
+    // fixed slot lets an instruction refill evict the D-side translation
+    // immediately (and vice versa), preventing the original operation from
+    // retrying when both pages are active.
+    wire [5:0] hw_tlb_wr_index = {2'b00, ptw_va_q[16:13]};
+    wire hw_walker_i_fault = ptw_fault_pending && !ptw_fault_is_data;
+    wire hw_walker_d_fault = ptw_fault_pending && ptw_fault_is_data;
     wire [31:0] hw_tlb_entrylo = {2'b0, 4'b0, ptw_leaf_pte[31:12],
                                   3'b011, ptw_leaf_pte[1], ptw_leaf_pte[0], 1'b0};
     
@@ -301,8 +314,10 @@ module mips_cpu #(
     wire        if_bus_fault  = inst_req & inst_data_ok & (inst_bus_error === 1'b1);
     wire        if_cache_fault = inst_req & inst_data_ok & (inst_cache_error === 1'b1);
     wire        if_fault_req  = if_adel_exception | if_cache_fault | if_bus_fault |
+                                hw_walker_i_fault |
                                 ((~mmu_i_ok & inst_req) & !hw_walker_i_miss);
-    wire [4:0]  if_fault_code = if_adel_exception            ? 5'h04 :  // misaligned PC
+    wire [4:0]  if_fault_code = hw_walker_i_fault            ? 5'h02 :  // walker TLBL
+                                if_adel_exception            ? 5'h04 :  // misaligned PC
                                 if_cache_fault                ? 5'h1E :  // CacheErr
                                 if_bus_fault                  ? 5'h06 :  // IBE
                                 (mmu_i_fault_type == 3'b110) ? 5'h18 :  // MCheck
@@ -311,6 +326,7 @@ module mips_cpu #(
     // A lookup miss is a refill candidate. A lookup hit with V=0 is Invalid
     // and must use the general exception vector despite the shared TLBL code.
     wire if_except_is_tlb_refill = ~if_adel_exception & inst_req & ~mmu_i_ok &
+                                   !hw_walker_i_fault &
                                    (mmu_i_fault_type == 3'b001) & ~mmu_ilookup_hit;
 
     mips_if_id_reg u_mips_if_id_reg (
@@ -415,8 +431,15 @@ module mips_cpu #(
     wire [1:0]  ex_mem_to_reg;
     wire [1:0]  mem_mem_to_reg;
 
+    wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
+                       (id_inst[25:21] == 5'b00011) &&
+                       ((id_inst[15:11] == 5'd0) || (id_inst[15:11] == 5'd1) ||
+                        (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) ||
+                        (id_inst[15:11] == 5'd29)) &&
+                       (id_inst[5:0] == 6'b111011);
+
     // CP0 reads are serialized through the WB read-data mux.  Treat them as
-    // a distinct one-entry resource so adjacent MFC0/RDHWR instructions
+    // a distinct one-entry resource so adjacent MFC0 instructions
     // cannot observe the previous instruction's CP0 address/selector.
     wire cp0_read_hazard = id_is_mfc0 &&
                            ((ex_mem_to_reg == 2'b11) ||
@@ -505,12 +528,6 @@ module mips_cpu #(
     // Phase B.4: privileged instruction detection + CU0 gate. If the current
     // ID instruction is MTC0/MFC0/ERET/TLB* and the effective mode is user-mode
     // without Status.CU0 override, raise Coprocessor Unusable (ExcCode 11).
-    wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
-                                 (id_inst[25:21] == 5'b00011) &&
-                                 ((id_inst[15:11] == 5'd0) || (id_inst[15:11] == 5'd1) ||
-                                  (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) ||
-                                  (id_inst[15:11] == 5'd29)) &&
-                                 (id_inst[5:0] == 6'b111011);
     wire id_is_priv     = id_cp0_we | id_is_mfc0 | id_is_eret | (|id_tlb_op);
     wire id_rdhwr_allowed = id_is_rdhwr && cpu_hwrena[id_inst[15:11]];
     wire id_cpu_unusable = id_is_priv & ~cpu_kernel_mode & ~cpu_cu0 &
@@ -674,8 +691,12 @@ module mips_cpu #(
 
     assign dmem_translate_req = ((mem_mem_read | mem_mem_write) & ~mem_done) |
                                 (mem_cache_op_valid & ~mem_done);
-    assign dmem_translation_fault = ~mmu_d_ok & dmem_translate_req &
-                                    !hw_walker_d_miss;
+    assign dmem_translation_fault = (~mmu_d_ok & dmem_translate_req &
+                                     !hw_walker_d_miss) || hw_walker_d_fault;
+    // A D-side walker miss must hold the MEM operation without exposing the
+    // untranslated address to the data fabric.  The architectural exception
+    // remains deferred until the walker returns a latched fault.
+    wire dmem_request_blocked = dmem_translation_fault | hw_walker_d_miss;
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
         .clk             (clk),
@@ -760,7 +781,7 @@ module mips_cpu #(
         .dmem_en         (data_req),
         .dmem_addr_ok    (data_addr_ok),
         .dmem_data_ok    (data_data_ok),
-        .translation_fault(dmem_translation_fault),
+        .translation_fault(dmem_request_blocked),
         .cache_op_done   (data_cache_op_done),
         .cache_op_error  (data_cache_op_error),
         
@@ -805,13 +826,15 @@ module mips_cpu #(
     // to the pre-B.3.d AdEL/AdES-only behaviour.
     //   MMU fault_type encoding: 010=TLBS, 011=Mod, else (001) → TLBL.
     wire        mem_mmu_fault      = dmem_translation_fault;
-    wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
+    wire [4:0]  mem_mmu_fault_code = hw_walker_d_fault ?
+                                     (mem_mem_write ? 5'h03 : 5'h02) :
+                                     (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
                                      (mmu_d_fault_type == 3'b110) ? 5'h18 :  // MCheck
                                      (mmu_d_fault_type == 3'b100) ? 5'h04 :  // AdEL (user kseg)
                                      (mmu_d_fault_type == 3'b101) ? 5'h05 :  // AdES (user kseg)
                                                                      5'h02;  // TLBL
-    wire mem_mmu_refill = mem_mmu_fault &
+    wire mem_mmu_refill = mem_mmu_fault & !hw_walker_d_fault &
                           ((mmu_d_fault_type == 3'b001) || (mmu_d_fault_type == 3'b010)) &
                           ~mmu_dlookup_hit;
     wire mem_bus_fault      = data_req & data_data_ok & (data_bus_error === 1'b1);
@@ -943,7 +966,7 @@ module mips_cpu #(
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
     // faults latch the faulting fetch PC.
     wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out : except_pc;
-    mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC)) u_mips_cp0 (
+    mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_mips_cp0 (
         .clk          (clk),
         .rst_n        (rst_n),
         .hw_int       (ext_int), // Connect hardware interrupt
@@ -974,7 +997,7 @@ module mips_cpu #(
         .ctx_restore_asid(ctx_restore_asid),
         .ctx_restore_done(),
         .hw_tlb_wr_en(hw_tlb_wr_en),
-        .hw_tlb_wr_index(6'd0),
+        .hw_tlb_wr_index(hw_tlb_wr_index),
         .hw_tlb_wr_vpn2(ptw_va_q[31:13]),
         .hw_tlb_wr_asid(cp0_asid),
         .hw_tlb_wr_mask(16'd0),
@@ -1091,6 +1114,8 @@ module mips_cpu #(
         if (!rst_n) begin
             ptw_busy <= 1'b0;
             ptw_refill_pending <= 1'b0;
+            ptw_fault_pending <= 1'b0;
+            ptw_fault_is_data <= 1'b0;
             ptw_va_q <= 32'd0;
         end else begin
             if (ptw_req_valid && ptw_req_ready) begin
@@ -1100,6 +1125,8 @@ module mips_cpu #(
             if (ptw_busy && ptw_resp_valid) begin
                 if (ptw_fault_i) begin
                     ptw_busy <= 1'b0;
+                    ptw_fault_pending <= 1'b1;
+                    ptw_fault_is_data <= hw_walker_d_miss;
                 end else begin
                     ptw_refill_pending <= 1'b1;
                 end
@@ -1108,12 +1135,23 @@ module mips_cpu #(
                 ptw_refill_pending <= 1'b0;
                 ptw_busy <= 1'b0;
             end
+            if (ptw_fault_pending && wb_except_req)
+                ptw_fault_pending <= 1'b0;
         end
     end
 
-    // D-cache consumes the MIPS C=2 uncached attribute. I-cache routing and
-    // the remaining cache attributes are still outside this integration slice.
-    assign data_uncacheable = (mmu_d_cache_attr == 3'b010);
+    // D-cache consumes the MIPS C=2 uncached attribute. In the prototype
+    // (MMU disabled), the translation path strips kseg1's A-segment bit before
+    // the cache sees the address, so preserve the legacy alias attribute from
+    // the original virtual address here. Otherwise control/peripheral reads
+    // such as 0xA0002100 can incorrectly become cached line bursts.
+    wire legacy_data_uncacheable = (`SOC_MMU_ENABLE == 0) &&
+                                   ((mem_vaddr[31:28] == 4'h4) ||
+                                    (mem_vaddr[31:28] == 4'hA) ||
+                                    (data_addr[31:28] == 4'h4) ||
+                                    (data_addr[31:28] == 4'hA));
+    assign data_uncacheable = (mmu_d_cache_attr == 3'b010) ||
+                              legacy_data_uncacheable;
     assign data_cache_op_addr = data_addr;
     assign data_cache_op_is_icache = data_cache_op_valid &&
                                      ((data_cache_op == 5'b00000) ||

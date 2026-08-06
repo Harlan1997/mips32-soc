@@ -148,6 +148,8 @@ module dcache #(
     reg [31:0] maint_addr;
     reg [4:0]  maint_op;
     reg [1:0]  maint_way;
+    reg        coh_refill_snoop_pending;
+    reg        coh_snoop_block;
     reg [31:0] maint_tag_wdata;
     reg [255:0] maint_line;
     reg         maint_error;
@@ -188,22 +190,40 @@ module dcache #(
                                        : (cpu_uncacheable || legacy_cpu_uncacheable ||
                                           (ENABLE_COHERENCY && cpu_we));
 
+    // Coherency tags are physical. Prototype SRAM accesses may arrive through
+    // the A000xxxx alias, so normalize that alias before broadcasting or
+    // comparing a peer store against a cached physical line.
+    function [31:0] normalize_coh_addr;
+        input [31:0] addr;
+        begin
+            normalize_coh_addr = ((addr[31:28] == 4'hA) &&
+                                  (addr[27:16] == 12'd0)) ?
+                                 {16'd0, addr[15:0]} : addr;
+        end
+    endfunction
+    wire [31:0] coh_snoop_addr_norm = normalize_coh_addr(coh_snoop_addr);
+
     // SRAM arrays (4-way). tag entry = {valid[22], dirty[21], tag[20:0]}
     reg [TAG_BITS+1:0] tag_ram  [0:WAYS-1][0:SETS-1];
     reg [255:0]        data_ram [0:WAYS-1][0:SETS-1];
     reg [2:0]          plru_ram [0:SETS-1];   // tree-PLRU: b0=top, b1=left, b2=right
 
-    wire coh_snoop_index_hit = tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                                ((tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]) ||
-                                 tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                                 (tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]) ||
-                                 tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                                 (tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]) ||
-                                 tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                                 (tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11]));
+    wire coh_snoop_index_hit = tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                                ((tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11]) ||
+                                 tag_ram[1][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                                 (tag_ram[1][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11]) ||
+                                 tag_ram[2][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                                 (tag_ram[2][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11]) ||
+                                 tag_ram[3][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                                 (tag_ram[3][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11]));
     assign coh_store_valid = ENABLE_COHERENCY && req_buf_valid && req_buf_we &&
                              (state == UC_WRESP) && bvalid && (bresp == 2'b00);
-    assign coh_store_addr = req_buf_addr;
+    assign coh_store_addr = normalize_coh_addr(req_buf_addr);
+    wire coh_refill_collision = coh_refill_snoop_pending ||
+                                (ENABLE_COHERENCY && coh_snoop_valid &&
+                                 req_buf_valid &&
+                                 (state == REFILL_REQ || state == REFILL_DATA || state == WRITE_MERGE) &&
+                                (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5]));
 
     // Registered read-out of the indexed set
     reg [TAG_BITS+1:0] tag_rdata  [0:WAYS-1];
@@ -222,6 +242,9 @@ module dcache #(
         end
     end
     wire cache_hit = |way_hit;
+    wire coh_snoop_hits_lookup = ENABLE_COHERENCY && coh_snoop_valid &&
+                                  (lookup_addr[31:5] == coh_snoop_addr_norm[31:5]);
+    wire cache_hit_for_request = cache_hit && !coh_snoop_hits_lookup && !coh_snoop_block;
     reg [1:0] hit_way;
     always @(*) begin
         hit_way = 2'd0;
@@ -274,12 +297,13 @@ module dcache #(
     reg         refill_error;
     reg         cache_error_pending;
 
-    wire sram_read_en = (state == IDLE && ((cpu_req && !uncacheable) || cache_op_valid)) ||
-                        (state == COMPARE && cache_hit && cpu_req && cpu_addr_ok && !uncacheable);
+    wire sram_read_en = !coh_snoop_valid &&
+                        ((state == IDLE && ((cpu_req && !uncacheable) || cache_op_valid)) ||
+                         (state == COMPARE && cache_hit_for_request && cpu_req && cpu_addr_ok && !uncacheable));
 
     // CPU handshakes
-    assign cpu_addr_ok = (state == IDLE) || (state == COMPARE && cache_hit && !uncacheable);
-    assign cpu_data_ok = (state == COMPARE && cache_hit && !uncacheable) ||
+    assign cpu_addr_ok = (state == IDLE) || (state == COMPARE && cache_hit_for_request && !uncacheable);
+    assign cpu_data_ok = (state == COMPARE && cache_hit_for_request && !uncacheable) ||
                          (state == UC_WRESP && bvalid) || (state == UC_RDATA && rvalid) ||
                          (state == ERROR_RESP);
     assign cpu_bus_error = ((state == UC_WRESP) && bvalid && (bresp != 2'b00)) ||
@@ -329,7 +353,7 @@ module dcache #(
                 else if (cache_op_valid) next_state = CACHE_LOOKUP;
             end
             COMPARE: begin
-                if (cache_hit) next_state = IDLE;
+                if (cache_hit_for_request) next_state = IDLE;
                 else next_state = victim_dirty ? WRITEBACK_REQ : REFILL_REQ;
             end
             WRITEBACK_REQ:  if (awready && awvalid) next_state = WRITEBACK_DATA;
@@ -354,7 +378,7 @@ module dcache #(
     end
 
     // Line merge for writes: target line = hit way's line (hit) or refilled buf (miss)
-    wire [255:0] target_line = cache_hit ? data_rdata[hit_way] : line_buf;
+    wire [255:0] target_line = cache_hit_for_request ? data_rdata[hit_way] : line_buf;
     wire [31:0] orig_word = target_line[lookup_word*32 +: 32];
     wire [31:0] merged_word;
     assign merged_word[7:0]   = req_buf_be[0] ? req_buf_wdata[7:0]   : orig_word[7:0];
@@ -392,25 +416,60 @@ module dcache #(
             maint_line <= 256'd0;
             maint_error <= 1'b0;
             maint_clear_valid <= 1'b0; maint_clear_dirty <= 1'b0;
+            coh_refill_snoop_pending <= 1'b0;
+            coh_snoop_block <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
                 for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+2){1'b0}};
             end
         end else begin
             state <= next_state;
+            coh_snoop_block <= ENABLE_COHERENCY && coh_snoop_valid;
             if (ENABLE_COHERENCY && coh_snoop_valid) begin
-                if (tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                    tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
-                    tag_ram[0][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
-                if (tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                    tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
-                    tag_ram[1][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
-                if (tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                    tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
-                    tag_ram[2][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
-                if (tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS+1] &&
-                    tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS-1:0] == coh_snoop_addr[31:11])
-                    tag_ram[3][coh_snoop_addr[10:5]][TAG_BITS+1] <= 1'b0;
+                // tag_rdata is a registered lookup snapshot and can still
+                // describe a line invalidated on this same clock edge. Drop
+                // its valid bits for the duration of the snoop; the next
+                // lookup will repopulate the snapshot from tag_ram.
+                tag_rdata[0][TAG_BITS+1] <= 1'b0;
+                tag_rdata[1][TAG_BITS+1] <= 1'b0;
+                tag_rdata[2][TAG_BITS+1] <= 1'b0;
+                tag_rdata[3][TAG_BITS+1] <= 1'b0;
+                if (tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                    tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                    begin
+                        tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS+1] <= 1'b0;
+                        if (tag_rdata[0][TAG_BITS+1] &&
+                            tag_rdata[0][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                            tag_rdata[0][TAG_BITS+1] <= 1'b0;
+                    end
+                if (tag_ram[1][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                    tag_ram[1][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                    begin
+                        tag_ram[1][coh_snoop_addr_norm[10:5]][TAG_BITS+1] <= 1'b0;
+                        if (tag_rdata[1][TAG_BITS+1] &&
+                            tag_rdata[1][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                            tag_rdata[1][TAG_BITS+1] <= 1'b0;
+                    end
+                if (tag_ram[2][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                    tag_ram[2][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                    begin
+                        tag_ram[2][coh_snoop_addr_norm[10:5]][TAG_BITS+1] <= 1'b0;
+                        if (tag_rdata[2][TAG_BITS+1] &&
+                            tag_rdata[2][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                            tag_rdata[2][TAG_BITS+1] <= 1'b0;
+                    end
+                if (tag_ram[3][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
+                    tag_ram[3][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                    begin
+                        tag_ram[3][coh_snoop_addr_norm[10:5]][TAG_BITS+1] <= 1'b0;
+                        if (tag_rdata[3][TAG_BITS+1] &&
+                            tag_rdata[3][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11])
+                            tag_rdata[3][TAG_BITS+1] <= 1'b0;
+                    end
+                if (req_buf_valid &&
+                    (state == REFILL_REQ || state == REFILL_DATA || state == WRITE_MERGE) &&
+                    (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5]))
+                    coh_refill_snoop_pending <= 1'b1;
             end
             case (state)
                 IDLE: begin
@@ -511,7 +570,29 @@ module dcache #(
                     if ((!awvalid || awready) && (!wvalid || wready)) bready <= 1'b1;
                 end
                 UC_WRESP: begin
-                    if (bready && bvalid) begin bready <= 1'b0; req_buf_valid <= 1'b0; end
+                    if (bready && bvalid) begin
+                        bready <= 1'b0;
+                        if ((bresp == 2'b00) && ENABLE_COHERENCY) begin
+                            // Keep a local write-through copy coherent without
+                            // forcing the next local load through a refill.
+                            for (sw=0; sw<WAYS; sw=sw+1)
+                                if (tag_ram[sw][req_buf_addr[10:5]][TAG_BITS+1] &&
+                                    (tag_ram[sw][req_buf_addr[10:5]][TAG_BITS-1:0] ==
+                                     normalize_coh_addr(req_buf_addr)[31:11])) begin
+                                    if (req_buf_be[0])
+                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 +: 8] <= req_buf_wdata[7:0];
+                                    if (req_buf_be[1])
+                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 + 8 +: 8] <= req_buf_wdata[15:8];
+                                    if (req_buf_be[2])
+                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 + 16 +: 8] <= req_buf_wdata[23:16];
+                                    if (req_buf_be[3])
+                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 + 24 +: 8] <= req_buf_wdata[31:24];
+                                    tag_ram[sw][req_buf_addr[10:5]] <=
+                                        {1'b1, 1'b0, normalize_coh_addr(req_buf_addr)[31:11]};
+                                end
+                        end
+                        req_buf_valid <= 1'b0;
+                    end
                 end
                 UC_RDATA: begin
                     if (rready && rvalid) begin rready <= 1'b0; req_buf_valid <= 1'b0; end
@@ -519,7 +600,7 @@ module dcache #(
                 end
 
                 COMPARE: begin
-                    if (cache_hit) begin
+                    if (cache_hit_for_request) begin
                         // Update PLRU: accessed (hit) way is MRU
                         plru_ram[lookup_index] <= plru_touch(plru_rdata, hit_way);
                         if (req_buf_we) begin
@@ -590,15 +671,20 @@ module dcache #(
                 WRITE_MERGE: begin
                     // Install refilled (optionally write-merged) line into victim way
                     data_ram[victim_way][lookup_index] <= new_line;
-                    tag_ram[victim_way][lookup_index]  <= {1'b1, req_buf_we, lookup_tag};
+                    // A peer store may have arrived after the refill had
+                    // already read the affected word. Do not publish this
+                    // stale line; the next access must refill from memory.
+                    tag_ram[victim_way][lookup_index]  <= {~coh_refill_collision, req_buf_we, lookup_tag};
                     // Accessed way becomes MRU
                     plru_ram[lookup_index] <= plru_touch(plru_rdata, victim_way);
                     req_buf_valid <= 1'b0;
+                    coh_refill_snoop_pending <= 1'b0;
                 end
                 ERROR_RESP: begin
                     if (cache_error_pending)
                         tag_ram[victim_way][lookup_index] <= {(TAG_BITS+2){1'b0}};
                     req_buf_valid <= 1'b0;
+                    coh_refill_snoop_pending <= 1'b0;
                 end
             endcase
         end

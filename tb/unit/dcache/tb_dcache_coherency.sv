@@ -125,13 +125,31 @@ module tb_dcache_coherency;
     coh_axi_mem m1(.clk(clk),.rst_n(rst_n),.awaddr(awaddr1),.awvalid(awvalid1),.awready(awready1),.wdata(wdata1),.wstrb(wstrb1),.wvalid(wvalid1),.wlast(wlast1),.wready(wready1),.bvalid(bvalid1),.bready(bready1),.bresp(bresp1),.araddr(araddr1),.arlen(arlen1),.arvalid(arvalid1),.arready(arready1),.rdata(rdata1),.rlast(rlast1),.rvalid(rvalid1),.rready(rready1),.rresp(rresp1),.inject_write_error(inject_write_error1));
 
     integer errors = 0; integer notif_count;
-    always @(posedge clk) if (sv0 || sv1) notif_count = notif_count + 1;
-    // The two AXI endpoints model independent ports into one backing store.
-    // Reflect a completed peer write into port 0 at the same visibility edge.
-    always @(posedge clk) if (sv1)
-        m0.mem[sa1[31:2] % 1024] <= m1.mem[sa1[31:2] % 1024];
+    reg [1:0] notif_order [0:7];
+    always @(posedge clk) begin
+        if (sv0) begin
+            notif_order[notif_count] = 2'd0;
+            notif_count = notif_count + 1;
+            m1.mem[sa0[31:2] % 1024] <= m0.mem[sa0[31:2] % 1024];
+        end
+        if (sv1) begin
+            notif_order[notif_count] = 2'd1;
+            notif_count = notif_count + 1;
+            m0.mem[sa1[31:2] % 1024] <= m1.mem[sa1[31:2] % 1024];
+        end
+    end
     task read0(input [31:0] a, output [31:0] d); begin @(negedge clk); req0=1;we0=0;addr0=a;be0=4'hf; @(posedge clk); while(!ok0) @(posedge clk); d=rd0; @(negedge clk);req0=0; end endtask
+    task read1(input [31:0] a, output [31:0] d); begin @(negedge clk); req1=1;we1=0;addr1=a;be1=4'hf; @(posedge clk); while(!ok1) @(posedge clk); d=rd1; @(negedge clk);req1=0; end endtask
+    task write0(input [31:0] a,input [31:0] d,input [3:0] b); begin @(negedge clk);req0=1;we0=1;addr0=a;wd0=d;be0=b; @(posedge clk); while(!ok0) @(posedge clk); @(negedge clk);req0=0; end endtask
     task write1(input [31:0] a,input [31:0] d,input [3:0] b); begin @(negedge clk);req1=1;we1=1;addr1=a;wd1=d;be1=b; @(posedge clk); while(!ok1) @(posedge clk); @(negedge clk);req1=0; end endtask
+    task collision_read0(input [31:0] a,input [31:0] peer_data,output [31:0] d); begin
+        @(negedge clk); req0=1; we0=0; addr0=a; be0=4'hf;
+        wait (c0.state == 5'd6 && c0.word_cnt == 3'd1);
+        write1(a,peer_data,4'hf);
+        @(posedge clk); while(!ok0) @(posedge clk);
+        d=rd0;
+        @(negedge clk); req0=0;
+    end endtask
     reg [31:0] d; integer n;
     initial begin
         req0=0;we0=0;addr0=0;wd0=0;be0=0;req1=0;we1=0;addr1=0;wd1=0;be1=0;inject_write_error1=0;notif_count=0;
@@ -140,12 +158,32 @@ module tb_dcache_coherency;
         n=notif_count; write1(32'h0000_0104,32'hCAFE_BABE,4'hf);
         if (notif_count !== n+1) begin $display("FAIL no peer notification"); errors=errors+1; end
         read0(32'h0000_0104,d); if (d !== 32'hCAFE_BABE) begin $display("FAIL peer word=%h",d); errors=errors+1; end
+        n=notif_count; write0(32'h0000_010c,32'h1357_2468,4'hf);
+        if (notif_count !== n+1 || notif_order[n] !== 2'd0) begin $display("FAIL core0 store ordering/count"); errors=errors+1; end
+        read1(32'h0000_010c,d); if (d !== 32'h1357_2468) begin $display("FAIL reverse peer word=%h",d); errors=errors+1; end
         write1(32'h0000_0108,32'h0000_00AA,4'h1);
         read0(32'h0000_0108,d); if (d !== 32'h1000_00AA) begin $display("FAIL partial word=%h",d); errors=errors+1; end
+        @(negedge clk); rst_n=1'b0;
+        repeat (3) @(negedge clk);
+        rst_n=1'b1;
+        read0(32'h0000_0104,d); if (d !== 32'hCAFE_BABE) begin $display("FAIL reset/read0=%h",d); errors=errors+1; end
+        read1(32'h0000_010c,d); if (d !== 32'h1357_2468) begin $display("FAIL reset/read1=%h",d); errors=errors+1; end
+        if (notif_order[0] !== 2'd1 || notif_order[1] !== 2'd0) begin
+            $display("FAIL accepted notification order=%0d,%0d", notif_order[0], notif_order[1]); errors=errors+1;
+        end
+
+        // Peer store arrives after word 0 was read but before the refill
+        // installs its tag. The stale line must not become valid.
+        @(negedge clk); rst_n=1'b0;
+        repeat (3) @(negedge clk);
+        rst_n=1'b1;
+        collision_read0(32'h0000_0200,32'hC011_C011,d);
+        if (d !== 32'hC011_C011) begin $display("FAIL refill collision value=%h",d); errors=errors+1; end
+
         inject_write_error1=1; n=notif_count; write1(32'h0000_0110,32'hDEAD_BEEF,4'hf);
         if (notif_count !== n) begin $display("FAIL error store notified"); errors=errors+1; end
         inject_write_error1=0;
-        if (errors == 0) $display("REGRESSION_TEST_SUCCESS dcache_coherency");
+        if (errors == 0) $display("REGRESSION_TEST_SUCCESS dcache_coherency_v03 notifications=%0d",notif_count);
         else $display("REGRESSION_TEST_FAILED dcache_coherency errors=%0d",errors);
         $finish;
     end

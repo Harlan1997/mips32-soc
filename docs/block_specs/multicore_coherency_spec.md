@@ -1,6 +1,7 @@
 # Dual-Core Coherency Contract
 
-状态：v0.1，当前阶段 ACTIVE；需求已纳入，但完整 MESI/目录协议尚未冻结。
+状态：v0.4，当前 RTL/仿真 contract CLOSED；write-invalidate/order/reset/refill-collision
+及双核 firmware stress 子集已有 evidence，完整 MESI/目录协议尚未冻结。
 
 ## 1. 当前实现基线
 
@@ -45,8 +46,16 @@ peer notification -> line refill、同一 line 不同 word、partial-byte store�
 peer store coherency gate 由 `make llsc-coherency-gate` 闭合：在 dual-core opt-in
 和 `SOC_COHERENCY_LL_SC` 下注入 core-0 匹配 peer store notification，验证
 core-0 reservation 被正确清除，后续 SC 返回失败 0 且内存数据未被修改。
-该 gate 仍然不宣称完整 MESI/MOESI 协议、Directory、写回 coherency、multi-outstanding
-内存序或全共享内存 coherency。
+`make dcache-coherency-gate` 当前输出 v0.3，额外覆盖双向同一 cache line 不同
+word 的 store visibility、accepted AXI `B` response 的 notification 顺序、reset
+后两核 private tag 丢弃并重新 refill，以及已有 partial-byte/error 负例。
+同时覆盖 peer store 在 refill 已读取目标 word、尚未安装 tag 的冲突窗口；冲突
+line 不得被重新发布为 valid，后续访问必须从共享内存重新 refill。
+独立 `make coherency-stress-gate` 通过双核 firmware 的 8 轮共享内存压力测试，覆盖
+core-0/core-1 cached load、uncached store、partial-byte merge、L1/L2 stale-line
+失效、AXI backpressure 和最终 shared-memory pass marker。该 contract 仍然不宣称
+完整 MESI/MOESI 协议、Directory、写回 coherency、multi-outstanding 并发总序或全
+共享内存 coherency。
 
 ## 5. 后续架构决策
 

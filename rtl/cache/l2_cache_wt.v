@@ -103,7 +103,7 @@ module l2_cache_wt #(
     input  wire                  m_rvalid,
     output reg                   m_rready,
 
-    // Snoop (tied off)
+    // Shared-memory write-invalidate notification.
     input  wire [ADDR_WIDTH-1:0] snoop_addr,
     input  wire                  snoop_valid,
     output wire                  snoop_ack,
@@ -118,12 +118,15 @@ module l2_cache_wt #(
     localparam TAG_BITS     = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS;
 
     assign snoop_ack = snoop_valid;
-    assign snoop_hit = 1'b0;
-
     // -------- Cache arrays --------
     reg [TAG_BITS-1:0]   tag_ram   [NUM_SETS-1:0];
     reg                  valid_ram [NUM_SETS-1:0];
     reg [DATA_WIDTH-1:0] data_ram  [NUM_SETS-1:0][WORDS_PER_LN-1:0];
+
+    wire [INDEX_BITS-1:0] snoop_index = snoop_addr[OFFSET_BITS +: INDEX_BITS];
+    wire [TAG_BITS-1:0] snoop_tag = snoop_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    wire snoop_line_hit = valid_ram[snoop_index] && (tag_ram[snoop_index] == snoop_tag);
+    assign snoop_hit = snoop_valid && snoop_line_hit;
 
     integer i, j;
     initial begin
@@ -171,6 +174,8 @@ module l2_cache_wt #(
     wire [TAG_BITS-1:0]   beat_tag    = beat_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
     wire [WORD_BITS-1:0]  beat_wordoff = beat_addr[OFFSET_BITS-1:2];
     wire hit = valid_ram[beat_index] && (tag_ram[beat_index] == beat_tag);
+    wire lookup_hit = hit && !(snoop_valid && (beat_index == snoop_index) &&
+                               (beat_tag == snoop_tag));
     wire is_last_beat = (beat_cnt == req_len);
 
     // Full-line refill helpers, keyed off the CURRENT beat's address (beat_addr)
@@ -184,6 +189,7 @@ module l2_cache_wt #(
     wire [TAG_BITS-1:0]   line_tag   = beat_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
     wire [ADDR_WIDTH-1:0] line_base  = {beat_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
     reg  [WORD_BITS-1:0]  fill_idx;
+    reg                   snoop_invalidate_pending;
 
     // -------- Default AXI drives --------
     always @(*) begin
@@ -286,8 +292,15 @@ module l2_cache_wt #(
             w_buf_last  <= 1'b0;
             m_aw_sent   <= 1'b0;
             m_b_rcvd    <= 1'b0;
+            snoop_invalidate_pending <= 1'b0;
             for (i = 0; i < NUM_SETS; i = i + 1) valid_ram[i] <= 1'b0;
         end else begin
+            if (snoop_valid && snoop_line_hit) begin
+                if (state == ST_R_HIT_LOOP)
+                    snoop_invalidate_pending <= 1'b1;
+                else
+                    valid_ram[snoop_index] <= 1'b0;
+            end
             case (state)
                 //--------------------------------------------------
                 ST_IDLE: begin
@@ -312,7 +325,7 @@ module l2_cache_wt #(
                 end
                 //--------------------------------------------------
                 ST_R_LOOKUP: begin
-                    if (hit) state <= ST_R_HIT_LOOP;
+                    if (lookup_hit) state <= ST_R_HIT_LOOP;
                     else begin
                         fill_idx <= {WORD_BITS{1'b0}};
                         state    <= ST_R_MISS_AR;
@@ -327,6 +340,9 @@ module l2_cache_wt #(
                         state    <= ST_R_MISS_AR;
                     end else if (s_rready) begin
                         if (is_last_beat) begin
+                            if (snoop_invalidate_pending)
+                                valid_ram[beat_index] <= 1'b0;
+                            snoop_invalidate_pending <= 1'b0;
                             beat_cnt <= 8'h0;
                             state    <= ST_IDLE;
                         end else begin

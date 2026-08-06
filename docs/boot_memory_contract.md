@@ -425,6 +425,21 @@ close that gate:
   stack-top-derived access `0x8000_7ff0 -> 0x0000_7ff0`. Its payload is 288
   bytes and is checked against the 32 KiB stage-1 limit. This is a bounded
   freestanding layout contract, not a production kernel linker/loader.
+- `make product-kseg0-runtime-multi-gate` adds a three-entry runtime segment
+  table to the no-preload manifest flow. The kseg0 stage-1 validates the table
+  magic/count, word alignment, non-zero lengths, and rejects W+X descriptors;
+  it then copies separate RX text, R-only rodata, and RW data segments through
+  uncached aliases and executes the copied text segment. A valid-CRC W+X image
+  is also rejected before handoff. This is a bounded multi-segment/W^X loader
+  slice; it does not claim hardware-enforced runtime permissions, PIC/GOT/TLS,
+  or a production ELF loader.
+- `make product-kseg0-runtime-multi-gate` adds a three-entry runtime segment
+  table to the no-preload manifest flow. The kseg0 stage-1 validates the table
+  magic/count, word alignment, non-zero lengths, and rejects W+X descriptors;
+  it then copies separate RX text, R-only rodata, and RW data segments through
+  uncached aliases and executes the copied text segment. This is a bounded
+  multi-segment/W^X loader slice; it does not claim hardware-enforced runtime
+  permissions, PIC/GOT/TLS, or a production ELF loader.
 - The handoff uncovered and fixed two integration defects: SPI command/read
   phase transitions could shift a CPU-originated XIP command to `0x06`, and
   D-cache could lose the MMU C=2 uncached attribute after kseg1 translation.

@@ -14,6 +14,9 @@
 #include "print.h"
 
 static volatile uint32_t cp_u_seen;
+extern uint32_t __tls_start, __tls_end, __tbss_start, __tbss_end;
+volatile uint32_t tls_seed __attribute__((section(".tdata"))) = 0x13572468U;
+volatile uint32_t tls_zero __attribute__((section(".tbss")));
 
 /* This firmware-owned handler makes the user-mode RDHWR negative case
  * observable without relying on the generic handler's permissive skip path. */
@@ -105,13 +108,43 @@ static uint32_t cp0_sweep(void) {
      * The explicit word keeps this test independent of assembler RDHWR aliases:
      * SPECIAL3 rs=3, rt=$8, rd=$29, funct=0x3b. */
     {
-        uint32_t userlocal = 0x81234567U;
+        uint32_t userlocal = (uint32_t)(uintptr_t)&__tls_start;
         uint32_t hwrena = 0x2000000FU;
         uint32_t tls_read;
         asm volatile("mtc0 %0, $4, 2\n\t"
                      "mtc0 %1, $7, 0\n\t"
                      "ehb\n\t"
                      :: "r"(userlocal), "r"(hwrena));
+
+        /* Context-switch contract: consecutive UserLocal writes must retire
+         * in order, and RDHWR must observe the selected thread pointer. */
+        {
+            uint32_t thread_a = userlocal;
+            uint32_t thread_b = userlocal + 4U;
+            uint32_t switched;
+            asm volatile("mtc0 %0, $4, 2\n\t"
+                         "mtc0 %1, $4, 2\n\t"
+                         :: "r"(thread_a), "r"(thread_b));
+            switched = read_userlocal();
+            if (switched != thread_b) {
+                print_str("FAIL: UserLocal B got ");
+                print_hex(switched);
+                print_str(" expected ");
+                print_hex(thread_b);
+                print_str("\n");
+                return 0;
+            }
+            asm volatile("mtc0 %0, $4, 2\n\t" :: "r"(thread_a));
+            switched = read_userlocal();
+            if (switched != thread_a) {
+                print_str("FAIL: UserLocal A got ");
+                print_hex(switched);
+                print_str(" expected ");
+                print_hex(thread_a);
+                print_str("\n");
+                return 0;
+            }
+        }
         tls_read = read_userlocal();
         if (tls_read != userlocal) {
             print_str("FAIL: RDHWR UserLocal got ");
@@ -164,6 +197,16 @@ static uint32_t cp0_sweep(void) {
             return 0;
         }
         tls_read = read_userlocal();
+        /* The user-visible thread pointer must be usable as a real TLS base,
+         * not merely readable through RDHWR. */
+        if (tls_read != (uint32_t)(uintptr_t)&tls_seed ||
+            tls_seed != 0x13572468U || tls_zero != 0U) {
+            print_str("FAIL: TLS initial slot\n");
+            print_hex(tls_read); print_str(" "); print_hex((uint32_t)(uintptr_t)&tls_seed);
+            print_str(" "); print_hex(tls_seed); print_str(" "); print_hex(tls_zero); print_str("\n");
+            return 0;
+        }
+        *((volatile uint32_t *)(uintptr_t)tls_read + 1) = 0x24681357U;
         asm volatile("mtc0 %0, $12, 0\n\t"
                      "ehb\n\t" :: "r"(0U));
         if (tls_read != userlocal) {
@@ -172,6 +215,11 @@ static uint32_t cp0_sweep(void) {
             print_str("\n");
             return 0;
         }
+        if (tls_zero != 0x24681357U) {
+            print_str("FAIL: TLS user store\n");
+            return 0;
+        }
+
     }
 
     return v;

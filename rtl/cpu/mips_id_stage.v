@@ -227,7 +227,8 @@ module mips_id_stage (
                               func == 6'b000010 || func == 6'b000100 ||
                               func == 6'b000101);
     wire reads_rt = (opcode == 6'b000000) ? (func != 6'b001000 && func != 6'b001001 && func != 6'b010000 && func != 6'b010001 && func != 6'b010010 && func != 6'b010011) :
-                    (special2_reads_rt || opcode == 6'b101011 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101);
+                    (special2_reads_rt || opcode == 6'b101011 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101 ||
+                     (opcode == 6'b010000 && inst[25:21] == 5'b00100));
 
 
     wire load_use_hazard = ((ex_mem_read || ex_mem_to_reg == 2'b11) && (ex_waddr != 5'd0) && 

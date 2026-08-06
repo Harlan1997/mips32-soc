@@ -6,13 +6,18 @@ module tb_cpu_hardware_walker;
   wire ptw_fault_valid;
   wire [2:0] ptw_fault_code;
   integer errors=0, reads=0, cycles=0;
+  integer faults=0;
+  reg permission_mode=1'b0;
   always #5 clk=~clk;
 
   wire [31:0] zero32 = 32'd0;
   wire [31:0] ptw_rdata = (ptw_mem_addr == 32'h0000_1000) ? 32'h0000_2003 :
-                           (ptw_mem_addr == 32'h0000_2000) ? 32'h0000_3007 : 32'd0;
+                           (ptw_mem_addr == 32'h0000_2000) ?
+                           (permission_mode ? 32'h0000_3003 : 32'h0000_3007) :
+                           32'd0;
 
   always @(posedge clk) if (ptw_mem_valid) reads = reads + 1;
+  always @(posedge clk) if (ptw_fault_valid) faults = faults + 1;
   mips_cpu u_cpu (
     .clk(clk), .rst_n(rst_n), .inst_addr_ok(1'b1), .inst_data_ok(1'b1),
     .inst_bus_error(1'b0), .inst_cache_error(1'b0), .inst_rdata(zero32),
@@ -43,7 +48,20 @@ module tb_cpu_hardware_walker;
     if (u_cpu.inst_addr[31:12] !== 20'h00003) errors = errors + 1;
     if (ptw_fault_valid || ptw_fault_code !== 3'd0) errors = errors + 1;
     if (u_cpu.u_mips_cp0.cp0_status[1]) errors = errors + 1;
-    if (errors == 0) $display("REGRESSION_TEST_SUCCESS cpu_hardware_walker");
+    permission_mode = 1'b1;
+    rst_n = 1'b0;
+    reads = 0;
+    faults = 0;
+    cycles = 0;
+    repeat (3) @(posedge clk);
+    rst_n = 1'b1;
+    while (faults == 0 && cycles < 200) begin
+      @(posedge clk); cycles=cycles+1;
+    end
+    #1;
+    if (faults == 0) errors = errors + 1;
+    if (ptw_fault_code !== 3'd2) errors = errors + 1;
+    if (errors == 0) $display("REGRESSION_TEST_SUCCESS cpu_hardware_walker permission_faults=%0d", faults);
     else $display("REGRESSION_TEST_FAILED cpu_hardware_walker errors=%0d reads=%0d addr=%h", errors, reads, u_cpu.inst_addr);
     $finish;
   end

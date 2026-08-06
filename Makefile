@@ -53,8 +53,10 @@ PRODUCT_KSEG0_RUNTIME_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime
 PRODUCT_KSEG0_RUNTIME_DEPTH_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_depth
 PRODUCT_KSEG0_RUNTIME_LAYOUT_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_layout
 PRODUCT_KSEG0_RUNTIME_ABI_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_abi
+PRODUCT_KSEG0_RUNTIME_MULTI_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_multi
 PRODUCT_MMU_ASID_CONTEXT_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_asid_context
 PRODUCT_MMU_PROCESS_PRESSURE_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_process_pressure
+PRODUCT_MMU_PAGEMASK_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_pagemask
 CPU_CACHE_ERROR_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cache_error
 CPU_CACHE_OP_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cacheop
 CPU_CACHE_TAG_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cachetag
@@ -65,6 +67,8 @@ CPU_ICACHE_STRESS_DIR ?= $(BUILD_DIR)/unit_tb/mips_core_icache_stress
 CPU_ICACHE_TAG_DIR ?= $(BUILD_DIR)/unit_tb/mips_core_icache_tag
 CPU_SCHEDULER_INTEGRATION_DIR ?= $(BUILD_DIR)/unit_tb/cpu_scheduler_integration
 CPU_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_hardware_walker
+CPU_DSIDE_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_dside_hardware_walker
+MMU_PAGE_TABLE_ALLOCATOR_DIR ?= $(BUILD_DIR)/unit_tb/mmu_page_table_allocator
 PRODUCT_CACHEERR_DIR ?= $(BUILD_DIR)/unit_tb/product_cacheerr
 WDT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/wdt
 WDT_PERIPHERAL_DIR ?= $(BUILD_DIR)/unit_tb/wdt_peripheral
@@ -111,11 +115,16 @@ SOC_TEST_LLSC_COHERENCY_DIR ?= $(BUILD_DIR)/soc_test/llsc_coherency_gate
 LLSC_FW_DIR ?= $(BUILD_DIR)/firmware/llsc
 LLSC_COHERENCY_FW_DIR ?= $(BUILD_DIR)/firmware/llsc_coherency
 LLSC_FW_HEX ?= $(LLSC_FW_DIR)/firmware.hex
+COHERENCY_STRESS_DIR ?= $(BUILD_DIR)/soc_test/coherency_stress
+COHERENCY_STRESS_FW_DIR ?= $(BUILD_DIR)/firmware/coherency_stress
 CP0_RDHWR_DIR ?= $(BUILD_DIR)/soc_test/cp0_rdhwr
 CP0_RDHWR_FW_DIR ?= $(BUILD_DIR)/firmware/cp0_rdhwr
 P1_COMPLETE_DIR ?= $(BUILD_DIR)/p1_complete
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate coverage-strict-clean-gate linux-boot-dependency-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+
+linux-boot-dependency-gate:
+	bash tb/linux_boot/check_dependencies.sh
 
 mdu-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
@@ -263,11 +272,17 @@ product-kseg0-runtime-layout-gate:
 product-kseg0-runtime-abi-gate:
 	RUN_DIR=$(PRODUCT_KSEG0_RUNTIME_ABI_DIR) tb/unit/bootrom/run_product_kseg0_runtime_abi.sh
 
+product-kseg0-runtime-multi-gate:
+	RUN_DIR=$(PRODUCT_KSEG0_RUNTIME_MULTI_DIR) tb/unit/bootrom/run_product_kseg0_runtime_multi.sh
+
 product-mmu-asid-context-gate:
 	RUN_DIR=$(PRODUCT_MMU_ASID_CONTEXT_DIR) tb/soc_test/run_product_mmu_asid_context.sh
 
 product-mmu-process-pressure-gate:
 	RUN_DIR=$(PRODUCT_MMU_PROCESS_PRESSURE_DIR) tb/soc_test/run_product_mmu_process_pressure.sh
+
+product-mmu-pagemask-gate:
+	RUN_DIR=$(PRODUCT_MMU_PAGEMASK_DIR) tb/soc_test/run_product_mmu_pagemask.sh
 
 cpu-cache-error-gate:
 	RUN_DIR=$(CPU_CACHE_ERROR_DIR) tb/unit/cpu_test/run_cache_error.sh
@@ -328,6 +343,9 @@ ddr-contract-entry-audit:
 ddr4-status-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/apb_ddr4_status tb/unit/ddr4/run_apb_ddr4_status.sh
 
+ddr4-pic-integration-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/ddr4_pic_integration tb/unit/ddr4/run_ddr4_pic_integration.sh
+
 ddr4-phy-behavioral-gate:
 	RUN_DIR=$(DDR4_PHY_BEHAVIORAL_DIR) tb/unit/ddr4/run_ddr4_phy_behavioral.sh
 
@@ -337,8 +355,9 @@ ddr4-controller-gate:
 ddr4-controller-stress-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/axi_ddr4_controller_stress tb/unit/ddr4/run_axi_ddr4_controller_stress.sh
 
-ddr4-complete-gate: ddr4-controller-gate ddr4-controller-stress-gate ddr4-status-gate
+ddr4-complete-gate: ddr4-controller-gate ddr4-controller-stress-gate ddr4-status-gate ddr4-pic-integration-gate
 	@echo "DDR4 RTL functional closure gate: PASS"
+
 
 ecc-secded-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/ecc_secded_32 tb/unit/ddr4/run_ecc_secded_32.sh
@@ -410,14 +429,14 @@ cpu-mmu-complete:
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
 # contracts and are intentionally not hidden behind this aggregate gate.
-p1-current-complete: rtl-frontend-compile dcache-coherency-gate page-table-walker-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete ddr4-complete-gate
+p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-dside-hardware-walker-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
 	@mkdir -p $(P1_COMPLETE_DIR)
 	@{ \
 		echo '# P1 RTL/Simulation Extension Completion Report'; \
 		echo; \
 		echo '- Baseline commit: '`git rev-parse --short HEAD`; \
 		echo '- Result: PASS'; \
-		echo '- Scope: coherency v0.1, hardware walker, scheduler context, SECDED primitive, finite VEIC routing, ISA R2 implemented subset, and existing P0 regressions'; \
+		echo '- Scope: coherency v0.4 firmware stress, I/D hardware walker refill/retry and permission matrix, bounded page-table root allocator, scheduler context, SoC 16KB PageMask, SECDED primitive, finite VEIC routing, ISA R2 implemented subset, strict coverage metadata hygiene, and existing P0 regressions'; \
 		echo '- Excluded: full MESI/directory protocol, full ISA compliance/FPU, Linux/OS boot, and production software policy'; \
 	} > $(P1_COMPLETE_DIR)/p1_completion_report.md
 	@echo "P1 current RTL/simulation extension gate: PASS"
@@ -431,6 +450,9 @@ dual-core-soc-gate:
 dcache-coherency-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/dcache_coherency tb/unit/dcache/run_coherency.sh
 
+coherency-stress-gate:
+	RUN_DIR=$(COHERENCY_STRESS_DIR) FW_DIR=$(COHERENCY_STRESS_FW_DIR) tb/soc_test/run_coherency_stress_gate.sh
+
 page-table-walker-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/page_table_walker tb/unit/mmu/run_page_table_walker.sh
 
@@ -439,6 +461,15 @@ page-table-tlb-refill-gate:
 
 cpu-hardware-walker-gate:
 	RUN_DIR=$(CPU_HARDWARE_WALKER_DIR) tb/unit/mmu/run_cpu_hardware_walker.sh
+
+cpu-dside-hardware-walker-gate:
+	RUN_DIR=$(CPU_DSIDE_HARDWARE_WALKER_DIR) tb/unit/mmu/run_cpu_dside_hardware_walker.sh
+
+coverage-strict-clean-gate:
+	tb/coverage/run_strict_clean_gate.sh
+
+mmu-page-table-allocator-gate:
+	RUN_DIR=$(MMU_PAGE_TABLE_ALLOCATOR_DIR) tb/unit/tlb/run_mmu_page_table_allocator.sh
 
 cpu-scheduler-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_scheduler tb/unit/cpu_test/run_cpu_scheduler.sh

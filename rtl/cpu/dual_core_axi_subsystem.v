@@ -45,7 +45,7 @@ module dual_core_axi_subsystem #(
     wire [2:0] iprot, dprot;
     wire iawvalid, iwlast, iwvalid, ibready;
     wire iarvalid, iarready, irvalid, irready, irlast;
-    wire dawvalid, dwlast, dwvalid, darvalid, darready, drvalid, drready;
+    wire dawvalid, dwlast, dwvalid, darvalid, darready, drvalid, drready, drlast;
     wire [3:0] dawid, dawcache, darcache;
     wire [31:0] dawaddr, ddata;
     wire [7:0] dawlen;
@@ -71,7 +71,7 @@ module dual_core_axi_subsystem #(
         end
     endfunction
 
-    mips_core #(.ENABLE_COHERENCY(1'b1), .ENABLE_VEIC(ENABLE_VEIC)) u_core1 (
+    mips_core #(.ENABLE_COHERENCY(1'b1), .ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(10'd1)) u_core1 (
         .clk(clk), .rst_n(rst_n), .ext_int(ext_int),
         .tlb_inv_en(tlb_inv_en), .tlb_inv_vpn2(tlb_inv_vpn2),
         .tlb_inv_asid(tlb_inv_asid), .tlb_inv_scope(tlb_inv_scope),
@@ -109,7 +109,7 @@ module dual_core_axi_subsystem #(
         .data_arlen(dlen), .data_arsize(dsize), .data_arburst(dburst),
         .data_arlock(dlock), .data_arcache(darcache), .data_arprot(dprot),
         .data_arvalid(darvalid), .data_arready(darready), .data_rid(drid),
-        .data_rdata(dcpu_rdata), .data_rresp(dbresp), .data_rlast(),
+        .data_rdata(dcpu_rdata), .data_rresp(dbresp), .data_rlast(drlast),
         .data_rvalid(drvalid), .data_rready(drready),
         .debug_stall(debug_stall), .debug_flush(debug_flush)
     );
@@ -121,7 +121,11 @@ module dual_core_axi_subsystem #(
     assign ext_wvalid = dwvalid; assign ext_bready = dbready;
     // Before AR handshake, select the D-side request whenever it is pending;
     // after handshake, keep the registered owner for response routing.
-    wire rd_req_owner = (!rd_busy && darvalid) ? 1'b1 : rd_owner;
+    // While no response is outstanding, select the request that is currently
+    // valid. Do not retain rd_owner here: after a D response completes it is
+    // still 1 until the next AR handshake, and using it for an I-only request
+    // would put the stale D address on the shared AR channel.
+    wire rd_req_owner = rd_busy ? rd_owner : (darvalid ? 1'b1 : 1'b0);
     assign ext_arid = (rd_req_owner == 1'b0) ? iarid : darid;
     assign ext_araddr = (rd_req_owner == 1'b0) ? iaddr : core1_ipi_alias(daddr);
     assign ext_arlen = (rd_req_owner == 1'b0) ? ilen : dlen;
@@ -136,6 +140,7 @@ module dual_core_axi_subsystem #(
     assign irid = ext_rid; assign irdata = ext_rdata; assign ibresp = ext_rresp;
     assign irlast = ext_rlast; assign irvalid = ext_rvalid && (rd_owner == 1'b0);
     assign drid = ext_rid; assign dcpu_rdata = ext_rdata; assign dbresp = ext_rresp;
+    assign drlast = ext_rlast;
     assign drvalid = ext_rvalid && (rd_owner == 1'b1);
     assign ext_rready = (rd_owner == 1'b0) ? irready : drready;
 

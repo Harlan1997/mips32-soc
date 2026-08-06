@@ -53,8 +53,9 @@
   combined PIC assertion/deassertion before CPU-level interrupt signoff is
   claimed
 - UART TX interrupt signoff requires `soc_uart_irq_test` and
-  `uart_irq_event_cg` at 100%; UART RX interrupt signoff remains blocked until
-  a real RX datapath exists
+  `uart_irq_event_cg` at 100%; the behavioral external RX/PIC/RBR path is
+  covered by the dedicated UART RX SoC gates, while board electrical timing
+  and Linux 8250 compatibility remain outside this contract
 - CPU/CP0 firmware smoke signoff requires `make cpu-cp0-gate` to observe
   interrupt, syscall, reserved-instruction, AdEL, and ERET events
 - UVM-visible CPU exception-entry/return signoff requires

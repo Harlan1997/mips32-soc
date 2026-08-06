@@ -565,7 +565,8 @@ module soc_peripheral_subsystem #(
         .ch_int          (dma_ch_int)
     );
 
-    wire [31:0] irq_sources = {27'd0, qspi_irq, dma_int, timer_int, uart_tx_int, uart_rx_int};
+    wire ddr4_ecc_irq = ddr4_fatal_error | ddr4_ecc_uncorrectable_error;
+    wire [31:0] irq_sources = {26'd0, ddr4_ecc_irq, qspi_irq, dma_int, timer_int, uart_tx_int, uart_rx_int};
 
     // -----------------------------------------------------------------------
     // Interrupt controller: apb_vic. Registers 0x0/0x4/0x8 v1-compatible

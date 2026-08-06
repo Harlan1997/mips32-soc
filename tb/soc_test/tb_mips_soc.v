@@ -164,6 +164,12 @@ module tb_mips_soc;
 `ifdef SOC_ENABLE_DUAL_CORE
     initial begin
         wait (rst_n === 1'b1);
+
+`ifdef SOC_COHERENCY_FW_STRESS
+        $display("COH_STRESS_CPUNUM core0=%0d core1=%0d",
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.CPUNUM,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.CPUNUM);
+`endif
         repeat (100) @(posedge clk);
         if (^u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc === 1'bx) begin
             $display("REGRESSION_TEST_FAILED dual-core core1 PC is unknown");
@@ -173,6 +179,7 @@ module tb_mips_soc;
     end
 
 `ifndef SOC_COHERENCY_LL_SC
+`ifndef SOC_COHERENCY_FW_STRESS
     initial begin
         wait (rst_n === 1'b1);
         repeat (200) @(posedge clk);
@@ -182,6 +189,7 @@ module tb_mips_soc;
         release u_soc.u_impl.core1_sim_exception_req;
         $display("DUAL_CORE_CORE1_EXCEPTION_INJECTED code=0A");
     end
+`endif
 `endif
 
 `endif
@@ -230,7 +238,55 @@ module tb_mips_soc;
 `endif
 
     initial begin
+`ifdef SOC_COHERENCY_FW_STRESS
+        #20000000;
+`else
         #5000000;
+`endif
+`ifdef SOC_COHERENCY_FW_STRESS
+        $display("COH_STRESS_TIMEOUT core0_pc=%08h core1_pc=%08h c1_pc=%08h c0_state=%0d c0_req=%b/%b/%08h c1_exc=%b/%0d c1_epc=%08h c1_cause=%08h c1_bad=%08h c1_state=%0d c1_req=%b c1_we=%b c1_addr=%08h c1_wdata=%08h c1_be=%h rd=%b/%b/%08h/%b/%b owner=%b s0=%0d/%08h/%b/%b xrd=%0d/%0d/%0d/%b/%b/%b seen0=%08h seen1=%08h start=%08h ready=%08h command=%08h ack_word=%08h ack_part=%08h done=%08h fail=%08h",
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_dcache.state,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.except_req,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.except_code,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_epc,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_cause,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_badvaddr,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_dcache.state,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_req,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_we,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_addr,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_dcache.req_buf_wdata,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_dcache.req_buf_be,
+                 u_soc.u_impl.fx_arvalid, u_soc.u_impl.fx_arready,
+                 u_soc.u_impl.fx_araddr, u_soc.u_impl.fx_rvalid,
+                 u_soc.u_impl.fx_rready,
+                 u_soc.u_impl.g_dual_core.u_core1.rd_owner,
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.r_state,
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.r_addr,
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rvalid,
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rready,
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_cnt[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_head[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_head_mid[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_occ[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.s_arvalid[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.s_rvalid[0],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2120/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2124/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2100/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2104/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2108/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h210c/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2110/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2114/4],
+                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2118/4]);
+`endif
         $display("\n==================================================");
         $display("SoC Simulation Timeout");
         $display("==================================================");
@@ -250,6 +306,7 @@ module tb_mips_soc;
                 end
 `else
 `ifdef SOC_ENABLE_DUAL_CORE
+`ifndef SOC_COHERENCY_FW_STRESS
                 if (dual_core_ipi_count == 0) begin
                     $display("REGRESSION_TEST_FAILED dual-core IPI invalidate not observed");
                     $finish;
@@ -266,6 +323,7 @@ module tb_mips_soc;
                     $display("REGRESSION_TEST_FAILED core1 exception isolation not observed");
                     $finish;
                 end
+`endif
 `endif
 `endif
 `ifdef SOC_UART_CTS_FLOW_CONTROL
@@ -509,6 +567,7 @@ module tb_mips_soc;
         end
     endtask
 
+`ifndef SOC_COHERENCY_FW_STRESS
     initial begin
         // Let system reset finish
         #1500;
@@ -598,6 +657,7 @@ module tb_mips_soc;
         
         $display("JTAG Test Completed");
         
+`ifndef SOC_COHERENCY_FW_STRESS
         // Wait until almost the end of simulation (3ms) before asserting reset
         // to avoid interrupting the main CPU firmware tests.
         #3000000;
@@ -756,8 +816,10 @@ module tb_mips_soc;
         // Assert system reset
         rst_n = 0;
         #50 rst_n = 1;
+`endif
         
     end
+`endif
 
 endmodule
 

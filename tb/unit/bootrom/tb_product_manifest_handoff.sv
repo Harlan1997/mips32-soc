@@ -519,19 +519,22 @@ module tb_product_manifest_handoff #(
                         fail("XIP timeout did not publish boot-status failure code");
                 end else if (!fail_mailbox_seen) begin
                     fail("manifest rejection used the XIP bus-error failure path");
-                end else if (!boot_status_stage_seen || !boot_status_failure_seen ||
+                end else if (!$test$plusargs("EXPECT_RUNTIME_FAILURE") &&
+                             (!boot_status_stage_seen || !boot_status_failure_seen ||
                              boot_status_stage_value != 32'h0000_0020 ||
-                             boot_status_failure_value != 32'hB007_0003) begin
+                             boot_status_failure_value != 32'hB007_0003)) begin
                     fail("manifest rejection did not publish boot-status failure code");
                 end
-                if (handoff_seen || stage1_entry_seen)
+                if (!$test$plusargs("EXPECT_RUNTIME_FAILURE") &&
+                    (handoff_seen || stage1_entry_seen))
                     fail("bad image executed after a manifest failure");
                 $display("REGRESSION_TEST_SUCCESS product_manifest_handoff_%0s", expect_failure_name);
                 $finish;
             end
 
-            if (cycles > (($test$plusargs("EXPECT_KSEG0_LAYOUT") ||
-                          $test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) ? 120000 : 30000)) begin
+            if (cycles > ($test$plusargs("EXPECT_KSEG0_RUNTIME_MULTI") ? 500000 :
+                         (($test$plusargs("EXPECT_KSEG0_LAYOUT") ||
+                           $test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) ? 120000 : 30000))) begin
                 $display("DEBUG: timeout pc=%h data_req=%b data_we=%h mem_vaddr=%h status=%h stage0=%h stage1=%h",
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
