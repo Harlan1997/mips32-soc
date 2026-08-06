@@ -331,6 +331,12 @@ ddr4-controller-stress-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/axi_ddr4_controller_stress tb/unit/ddr4/run_axi_ddr4_controller_stress.sh
 
 ddr4-complete-gate: ddr4-controller-gate ddr4-controller-stress-gate ddr4-status-gate
+
+ecc-secded-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/ecc_secded_32 tb/unit/ddr4/run_ecc_secded_32.sh
+
+isa-r2-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/isa_r2_sweep FW_DIR=$(BUILD_DIR)/firmware/isa_r2_sweep tb/soc_test/run_isa_r2_gate.sh
 	@echo "DDR4 RTL functional closure gate: PASS"
 
 rtl-frontend-compile:

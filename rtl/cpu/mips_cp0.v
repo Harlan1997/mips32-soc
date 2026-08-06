@@ -48,7 +48,9 @@
 
 `include "soc_config.vh"
 
-module mips_cp0 (
+module mips_cp0 #(
+    parameter ENABLE_VEIC = 1'b0
+) (
     input  wire        clk,
     input  wire        rst_n,
 
@@ -293,7 +295,7 @@ module mips_cp0 (
                                 17'b0,
                                 1'b1,   // ULRI: UserLocal (4,2) implemented
                                 7'b0,
-                                1'b0,   // VEIC
+                                ENABLE_VEIC, // VEIC
                                 1'b0,
                                 1'b1,   // VInt
                                 1'b0,   // SP

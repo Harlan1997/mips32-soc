@@ -33,6 +33,8 @@ module soc_memory_subsystem #(
     output wire        ddr4_init_done,
     output wire        ddr4_training_done,
     output wire        ddr4_fatal_error,
+    output wire        ddr4_ecc_correctable_error,
+    output wire        ddr4_ecc_uncorrectable_error,
     output wire [15:0] ddr4_error_code,
 
     input  wire [3:0]  s0_awid,
@@ -317,6 +319,7 @@ module soc_memory_subsystem #(
     // address/error checks and the vendor-neutral simulation backing store.
     wire ddr4_ctrl_present_i, ddr4_init_done_i, ddr4_training_done_i;
     wire ddr4_refresh_busy_i, ddr4_fatal_error_i;
+    wire ddr4_ecc_correctable_error_i, ddr4_ecc_uncorrectable_error_i;
     wire [15:0] ddr4_error_code_i;
     wire ddr4_phy_cmd_valid_i;
     wire [3:0] ddr4_phy_cmd_i;
@@ -324,7 +327,8 @@ module soc_memory_subsystem #(
     wire [3:0] ddr4_phy_wstrb_i;
     wire ddr4_last_row_hit_i, ddr4_last_row_miss_i;
     axi_ddr4_controller #(
-        .INJECT_FATAL(ENABLE_DDR4_STATUS_FATAL)
+        .INJECT_FATAL(ENABLE_DDR4_STATUS_FATAL),
+        .ENABLE_ECC(ENABLE_DDR4_STATUS)
     ) u_axi_ddr4_controller (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -363,6 +367,8 @@ module soc_memory_subsystem #(
         .training_done   (ddr4_training_done_i),
         .refresh_busy    (ddr4_refresh_busy_i),
         .fatal_error     (ddr4_fatal_error_i),
+        .ecc_correctable_error(ddr4_ecc_correctable_error_i),
+        .ecc_uncorrectable_error(ddr4_ecc_uncorrectable_error_i),
         .error_code      (ddr4_error_code_i),
         .phy_cmd_valid   (ddr4_phy_cmd_valid_i),
         .phy_cmd         (ddr4_phy_cmd_i),
@@ -379,12 +385,16 @@ module soc_memory_subsystem #(
             assign ddr4_init_done = ddr4_init_done_i;
             assign ddr4_training_done = ddr4_training_done_i;
             assign ddr4_fatal_error = ddr4_fatal_error_i;
+            assign ddr4_ecc_correctable_error = ddr4_ecc_correctable_error_i;
+            assign ddr4_ecc_uncorrectable_error = ddr4_ecc_uncorrectable_error_i;
             assign ddr4_error_code = ddr4_error_code_i;
         end else begin : g_no_ddr4_status_phy
             assign ddr4_controller_present = 1'b0;
             assign ddr4_init_done = 1'b0;
             assign ddr4_training_done = 1'b0;
             assign ddr4_fatal_error = 1'b0;
+            assign ddr4_ecc_correctable_error = 1'b0;
+            assign ddr4_ecc_uncorrectable_error = 1'b0;
             assign ddr4_error_code = 16'd0;
         end
     endgenerate

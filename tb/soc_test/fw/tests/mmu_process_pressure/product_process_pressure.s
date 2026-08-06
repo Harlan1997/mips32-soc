@@ -189,7 +189,9 @@ _tlb_refill:
     ori     $t2, $t2, PFN_BASE
     addu    $t2, $t2, $t1
     sll     $t2, $t2, 6
-    ori     $t2, $t2, 0x0016
+    /* C=3, D=1, V=1: keep this ASID-pressure test on the cacheable DDR
+       path; uncached AXI read response behavior is covered separately. */
+    ori     $t2, $t2, 0x001e
     mtc0    $t2, $2
     nop
     nop

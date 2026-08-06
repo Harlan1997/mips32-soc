@@ -6,7 +6,9 @@
 
 `include "soc_config.vh"
 
-module mips_cpu (
+module mips_cpu #(
+    parameter ENABLE_VEIC = 1'b0
+) (
     input  wire        clk,
     input  wire        rst_n,
     
@@ -53,6 +55,7 @@ module mips_cpu (
     input  wire [5:0]  tlb_inv_wired_floor,
     input  wire        sim_exception_req,
     input  wire [4:0]  sim_exception_code,
+    input  wire [7:0]  external_vec_id,
     // A peer successful store invalidates reservations in the same cache line.
     input  wire        coh_snoop_valid,
     input  wire [31:0] coh_snoop_addr,
@@ -133,15 +136,18 @@ module mips_cpu (
     // product configuration instead follows the CP0 bootstrap/general-vector
     // contract. TLB refill is distinct from Invalid even though both report
     // TLBL/TLBS; its sideband survives the pipeline to select the refill slot.
+    wire [31:0] veic_offset = 32'h0000_0200 + ({24'd0, external_vec_id} << 5);
     wire [31:0] exception_vector = wb_is_eret ? epc_out :
                                   (`SOC_PRODUCT_BOOT_ENABLE != 0) ?
                                   (cp0_bev ? (wb_cache_error_exception ? 32'hBFC0_0100 :
                                               wb_tlb_refill_exception ? 32'hBFC0_0200 : 32'hBFC0_0380) :
                                              (wb_cache_error_exception ? (ebase_out + 32'h0000_0100) :
                                               wb_tlb_refill_exception ? ebase_out :
+                                              ((take_interrupt && ENABLE_VEIC && (external_vec_id != 8'hff)) ?
+                                               (ebase_out + veic_offset) :
                                               ((take_interrupt && cp0_vint_enabled) ?
                                                (ebase_out + cp0_vint_offset) :
-                                               (ebase_out + 32'h0000_0180)))) :
+                                               (ebase_out + 32'h0000_0180))))) :
                                   32'h0000_0180;
     
     // ID stage outputs (for flush logic)
@@ -209,7 +215,12 @@ module mips_cpu (
     wire        mmu_dlookup_d;
     wire [2:0]  mmu_dlookup_c;
     wire [19:0] mmu_dlookup_pfn;
-    wire dmem_translate_req = data_req | data_cache_op_valid;
+    // Translation is requested from the MEM-stage operation itself rather
+    // than from data_req.  data_req is intentionally suppressed below when
+    // translation fails, so deriving the MMU request from it would hide the
+    // fault and deadlock the pipeline waiting for data_data_ok.
+    wire dmem_translate_req;
+    wire dmem_translation_fault;
 
     wire hw_walker_i_miss = (hardware_walker_enable === 1'b1) &&
                              inst_req && !mmu_i_ok &&
@@ -660,6 +671,11 @@ module mips_cpu (
     wire [4:0]  mem_rd_addr;
     wire [4:0]  mem_cp0_raddr;
     wire        mem_done;
+
+    assign dmem_translate_req = ((mem_mem_read | mem_mem_write) & ~mem_done) |
+                                (mem_cache_op_valid & ~mem_done);
+    assign dmem_translation_fault = ~mmu_d_ok & dmem_translate_req &
+                                    !hw_walker_d_miss;
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
         .clk             (clk),
@@ -744,6 +760,7 @@ module mips_cpu (
         .dmem_en         (data_req),
         .dmem_addr_ok    (data_addr_ok),
         .dmem_data_ok    (data_data_ok),
+        .translation_fault(dmem_translation_fault),
         .cache_op_done   (data_cache_op_done),
         .cache_op_error  (data_cache_op_error),
         
@@ -787,7 +804,7 @@ module mips_cpu (
     // AdEL/AdES. Under SOC_MMU_ENABLE=0 mmu_d_ok is always 1 → this reduces
     // to the pre-B.3.d AdEL/AdES-only behaviour.
     //   MMU fault_type encoding: 010=TLBS, 011=Mod, else (001) → TLBL.
-    wire        mem_mmu_fault      = ~mmu_d_ok & dmem_translate_req & !hw_walker_d_miss;
+    wire        mem_mmu_fault      = dmem_translation_fault;
     wire [4:0]  mem_mmu_fault_code = (mmu_d_fault_type == 3'b010) ? 5'h03 :  // TLBS
                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :  // Mod
                                      (mmu_d_fault_type == 3'b110) ? 5'h18 :  // MCheck
@@ -926,7 +943,7 @@ module mips_cpu (
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
     // faults latch the faulting fetch PC.
     wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out : except_pc;
-    mips_cp0 u_mips_cp0 (
+    mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC)) u_mips_cp0 (
         .clk          (clk),
         .rst_n        (rst_n),
         .hw_int       (ext_int), // Connect hardware interrupt

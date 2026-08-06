@@ -21,8 +21,9 @@ SECTIONS
     } > BOOT_ROM
 
     /* The testbench mirrors this ROM image into Boot SRAM at PA 0, so the
-     * BEV=0 EBase vector fetch has executable contents at PA 0x220. */
-    .vectored_interrupt 0xBFC00220 : {
+     * BEV=0 EBase+VEIC source-8 vector fetch has executable contents at PA
+     * 0x300. */
+    .vectored_interrupt 0xBFC00300 : {
         KEEP(*(.vectored_interrupt))
     } > BOOT_ROM
 }

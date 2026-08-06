@@ -58,6 +58,7 @@ run_ddr4_compile() {
             -top tb_axi_ddr4_controller \
             +incdir+"${ROOT_DIR}/rtl/include" \
             "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
+            "${ROOT_DIR}/rtl/perips/ecc_secded_32.v" \
             "${ROOT_DIR}/tb/unit/ddr4/tb_axi_ddr4_controller.sv" \
             -l compile.log
     )

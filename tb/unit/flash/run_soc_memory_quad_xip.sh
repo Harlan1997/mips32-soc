@@ -14,6 +14,7 @@ cd "${RUN_DIR}"
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +incdir+"${ROOT_DIR}/rtl/include" \
     "${ROOT_DIR}/rtl/axi/axi_read_timeout_guard.v" \
+    "${ROOT_DIR}/rtl/perips/ecc_secded_32.v" \
     "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
     "${ROOT_DIR}/rtl/perips/axi_ddr_model.v" \
     "${ROOT_DIR}/rtl/perips/axi_flash_image_model.v" \
@@ -21,6 +22,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     "${ROOT_DIR}/rtl/perips/axi_boot_rom.v" \
     "${ROOT_DIR}/rtl/perips/qspi_cmd_behavioral.v" \
     "${ROOT_DIR}/rtl/perips/qspi_axi_xip.v" \
+    "${ROOT_DIR}/rtl/perips/qspi_retry_policy.v" \
     "${ROOT_DIR}/rtl/perips/qspi_flash_quad_behavioral.v" \
     "${ROOT_DIR}/rtl/cache/l2_cache.v" \
     "${ROOT_DIR}/rtl/cache/l2_cache_wt.v" \

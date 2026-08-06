@@ -12,7 +12,8 @@ module mips_soc #(
     parameter ENABLE_DDR4_STATUS_FATAL = 1'b0,
     // Verification-only APB error source. Keep disabled for product builds;
     // directed CacheErr recovery tests opt in explicitly at the top level.
-    parameter ENABLE_APB_FAULT_INJECTOR = 1'b0
+    parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
+    parameter ENABLE_VEIC = 1'b0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -56,6 +57,7 @@ module mips_soc #(
         .ENABLE_EXT_AXI_MASTER     (1'b0),
         .ENABLE_DUAL_CORE          (ENABLE_DUAL_CORE),
         .ENABLE_APB_FAULT_INJECTOR (ENABLE_APB_FAULT_INJECTOR),
+        .ENABLE_VEIC              (ENABLE_VEIC),
         .ENABLE_FLASH_IMAGE_MODEL  (1'b0),
         .ENABLE_DDR4_STATUS        (ENABLE_DDR4_STATUS),
         .ENABLE_DDR4_STATUS_FATAL  (ENABLE_DDR4_STATUS_FATAL),

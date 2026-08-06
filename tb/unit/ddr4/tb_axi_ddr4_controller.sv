@@ -36,6 +36,7 @@ module tb_axi_ddr4_controller;
         .INIT_CYCLES(3),
         .COMMAND_LATENCY(2),
         .REFRESH_INTERVAL_CYCLES(0),
+        .ENABLE_ECC(1'b1),
         .REFRESH_CYCLES(3)
     ) dut (
         .clk(clk), .rst_n(rst_n),

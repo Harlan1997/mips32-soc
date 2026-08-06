@@ -66,7 +66,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${ROOT_DIR}"/rtl/cpu/mmu_tlb_shootdown_mailbox.v \
     "${ROOT_DIR}"/rtl/perips/apb_mmu_context_status.v "${ROOT_DIR}"/rtl/perips/apb_mmu_ipi_status.v \
     "${ROOT_DIR}"/rtl/perips/apb_timer.v "${ROOT_DIR}"/rtl/perips/apb_uart_16550.v "${ROOT_DIR}"/rtl/perips/uart_pad_wrapper.v "${ROOT_DIR}"/rtl/perips/apb_qspi_status.v "${ROOT_DIR}"/rtl/perips/qspi_cmd_behavioral.v "${ROOT_DIR}"/rtl/perips/qspi_apb_integration.v "${ROOT_DIR}"/rtl/perips/qspi_shared_pin_arbiter.v "${ROOT_DIR}"/rtl/perips/qspi_soc_pad_mux.v "${ROOT_DIR}"/rtl/perips/qspi_axi_xip.v "${ROOT_DIR}"/rtl/perips/axi_spi_flash.v "${ROOT_DIR}"/rtl/perips/axi_flash_image_model.v \
-    "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/axi_ddr4_controller.v "${ROOT_DIR}"/rtl/perips/axi_boot_rom.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
+    "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/ecc_secded_32.v "${ROOT_DIR}"/rtl/perips/axi_ddr4_controller.v "${ROOT_DIR}"/rtl/perips/axi_boot_rom.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
     "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v "${ROOT_DIR}"/rtl/cache/l2_cache.v "${ROOT_DIR}"/rtl/cache/l2_cache_caching.v "${ROOT_DIR}"/rtl/cache/l2_cache_wt.v "${ROOT_DIR}"/rtl/cache/l2_cache_nb.v \
     "${ROOT_DIR}"/rtl/soc_fabric.v "${ROOT_DIR}"/rtl/soc_core_subsystem.v "${ROOT_DIR}"/rtl/soc_memory_subsystem.v "${ROOT_DIR}"/rtl/soc_peripheral_subsystem.v "${ROOT_DIR}"/rtl/soc_debug_subsystem.v "${ROOT_DIR}"/rtl/mips_soc_impl.v "${ROOT_DIR}"/rtl/mips_soc.v "${ROOT_DIR}"/rtl/soc_top.v \
     "${SCRIPT_DIR}"/tb_mips_soc.v -l vcs.log

@@ -13,7 +13,8 @@ module mips_soc_impl #(
     parameter integer SPI_READ_TIMEOUT_CYCLES = 512,
     parameter ENABLE_QSPI_QUAD = 1'b0,
     parameter ENABLE_DDR4_STATUS = 1'b0,
-    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0
+    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0,
+    parameter ENABLE_VEIC = 1'b0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -451,6 +452,7 @@ module mips_soc_impl #(
     wire        s4_rready;
 
     wire        cpu_int;
+    wire [7:0]  vic_vec_id;
     wire        core1_ipi_int;
     wire        ipi_target_present = ENABLE_DUAL_CORE;
     wire        ipi_ack_valid;
@@ -489,6 +491,7 @@ module mips_soc_impl #(
     wire        wdt_reset;
     wire        qspi_timeout_sticky;
     wire        ddr4_controller_present, ddr4_init_done, ddr4_training_done, ddr4_fatal_error;
+    wire        ddr4_ecc_correctable_error, ddr4_ecc_uncorrectable_error;
     wire [15:0] ddr4_error_code;
     wire        qspi_controller_present;
     wire        qspi_cmd_sclk;
@@ -566,10 +569,11 @@ module mips_soc_impl #(
     // Instantiations
     // =========================================================================
 
-    soc_core_subsystem #(.ENABLE_COHERENCY(ENABLE_DUAL_CORE)) u_core_subsystem (
+    soc_core_subsystem #(.ENABLE_COHERENCY(ENABLE_DUAL_CORE), .ENABLE_VEIC(ENABLE_VEIC)) u_core_subsystem (
         .clk             (clk),
         .rst_n           (soc_rst_n),
         .cpu_int         (cpu_int),
+        .external_vec_id (vic_vec_id),
         .tlb_inv_en      (tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate),
         .tlb_inv_vpn2    (ipi_core1_core0_invalidate ? ipi_core1_invalidate_vpn[18:0] : (ipi_core0_invalidate ? ipi_invalidate_vpn[18:0] : tlb_inv_vpn2)),
         .tlb_inv_asid    (ipi_core1_core0_invalidate ? ipi_core1_invalidate_asid : (ipi_core0_invalidate ? ipi_invalidate_asid : tlb_inv_asid)),
@@ -658,8 +662,9 @@ module mips_soc_impl #(
 
     generate
         if (ENABLE_DUAL_CORE) begin : g_dual_core
-            dual_core_axi_subsystem u_core1 (
+            dual_core_axi_subsystem #(.ENABLE_VEIC(ENABLE_VEIC)) u_core1 (
                 .clk(clk), .rst_n(soc_rst_n & ~core1_reset_req), .ext_int({5'd0, core1_ipi_int}),
+                .external_vec_id(vic_vec_id),
                 .sim_exception_req(core1_sim_exception_req), .sim_exception_code(core1_sim_exception_code),
                 .coh_store_valid(core1_coh_store_valid), .coh_store_addr(core1_coh_store_addr),
                 .coh_snoop_valid(core0_coh_store_valid), .coh_snoop_addr(core0_coh_store_addr),
@@ -1080,6 +1085,8 @@ module mips_soc_impl #(
         .ddr4_init_done          (ddr4_init_done),
         .ddr4_training_done      (ddr4_training_done),
         .ddr4_fatal_error        (ddr4_fatal_error),
+        .ddr4_ecc_correctable_error(ddr4_ecc_correctable_error),
+        .ddr4_ecc_uncorrectable_error(ddr4_ecc_uncorrectable_error),
         .ddr4_error_code         (ddr4_error_code),
 
         .s0_awid      (s0_awid),
@@ -1270,6 +1277,7 @@ module mips_soc_impl #(
         .uart_dsr_n   (uart_dsr_n_int), .uart_dtr_n   (uart_dtr_n_int),
         .uart_dcd_n   (uart_dcd_n_int), .uart_ri_n    (uart_ri_n_int),
         .cpu_int      (cpu_int),
+        .vic_vec_id   (vic_vec_id),
         .tlb_inv_en   (tlb_inv_en),
         .tlb_inv_vpn2 (tlb_inv_vpn2),
         .tlb_inv_asid (tlb_inv_asid),
@@ -1302,6 +1310,8 @@ module mips_soc_impl #(
         .ddr4_init_done          (ddr4_init_done),
         .ddr4_training_done      (ddr4_training_done),
         .ddr4_fatal_error        (ddr4_fatal_error),
+        .ddr4_ecc_correctable_error(ddr4_ecc_correctable_error),
+        .ddr4_ecc_uncorrectable_error(ddr4_ecc_uncorrectable_error),
         .ddr4_error_code         (ddr4_error_code),
         .spi_miso     (spi_miso),
         .qspi_cmd_grant (qspi_cmd_grant),

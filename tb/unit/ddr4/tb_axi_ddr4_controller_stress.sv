@@ -44,7 +44,8 @@ module tb_axi_ddr4_controller_stress;
         .INIT_CYCLES(2),
         .REFRESH_INTERVAL_CYCLES(6),
         .REFRESH_CYCLES(2),
-        .COMMAND_LATENCY(1)
+        .COMMAND_LATENCY(1),
+        .ENABLE_ECC(1'b1)
     ) dut (
         .clk(clk), .rst_n(rst_n),
         .s_awid(awid), .s_awaddr(awaddr), .s_awlen(awlen), .s_awsize(awsize),

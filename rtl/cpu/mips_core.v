@@ -8,7 +8,8 @@
 
 module mips_core #(
     parameter ENABLE_COHERENCY = 1'b0,
-    parameter ENABLE_SCHEDULER = 1'b0
+    parameter ENABLE_SCHEDULER = 1'b0,
+    parameter ENABLE_VEIC = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -20,6 +21,7 @@ module mips_core #(
     input  wire [5:0]  tlb_inv_wired_floor,
     input  wire        sim_exception_req,
     input  wire [4:0]  sim_exception_code,
+    input  wire [7:0]  external_vec_id,
     output wire        coh_store_valid,
     output wire [31:0] coh_store_addr,
     input  wire        coh_snoop_valid,
@@ -216,7 +218,7 @@ module mips_core #(
     );
     
     // Instantiating the CPU Pipeline
-    mips_cpu u_cpu (
+    mips_cpu #(.ENABLE_VEIC(ENABLE_VEIC)) u_cpu (
         .clk             (clk),
         .rst_n           (rst_n),
         
@@ -239,6 +241,7 @@ module mips_core #(
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
         .sim_exception_req(sim_exception_req),
         .sim_exception_code(sim_exception_code),
+        .external_vec_id(external_vec_id),
         .ctx_save_req(sched_save_req), .ctx_save_done(sched_save_done),
         .ctx_save_pc(sched_save_pc), .ctx_save_status(sched_save_status),
         .ctx_save_asid(sched_save_asid), .ctx_save_gpr(sched_save_gpr),
