@@ -22,6 +22,7 @@ RTL 完成证据。
 - APB base 为 `0x4000_6000`，version/status/error offsets 与 `soc_config.vh` 一致。
 - `STATUS.init_done=0` 时，AXI 请求可以暂停；仿真必须证明恢复后请求继续完成。
 - status 提供初始化、refresh、busy、fatal/error 和最近错误信息，并支持规定的 W1C 清除。
+- P1 DDR4 ECC IRQ Escalation 契约：`ddr4_fatal_error || ddr4_ecc_uncorrectable_error` 接入 `soc_peripheral_subsystem` 的 PIC source 5；Existing source IDs 0..4 保持不变。Correctable ECC 仍为 status-only，不触发 source 5 或 CPU IRQ。由 `ddr4-pic-integration-gate` 验证 source 5 raw/masked/CPU IRQ 和 APB status classification / W1C。
 - AXI 读写必须保持 ID、beat 数、`R_LAST/W_LAST` 和 response code 的对应关系。
 - reset 必须 flush 所有未完成事务，master 观察到有界错误响应或明确的取消语义。
 

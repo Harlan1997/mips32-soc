@@ -387,3 +387,7 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v0.6 (2026-08-05)：完成 `RDHWR $2` Count 解码、HWREna[2] user 权限和 CP0 Count readback；CPUNum/CCRes 等其余 HWR 目标仍 deferred。
 - v0.7 (2026-08-05)：加入 `RDHWR $0` CPUNum（单核返回 0）和 `$3` CCRes（Count resolution=2 cycles）的 CP0 映射与 HWREna 权限路径。
 - v0.8 (2026-08-05)：修正标准 RDHWR 的 `rs=3` 与 `rd=0/1/2/3/29` 指令编码、`$1/$3` CP0 selector/address 映射，并在 CPU 中串行化相邻 CP0 read；SoC gate 验证 `$0..$3/$29` kernel readback 及 user HWREna 权限矩阵。
+- v0.9 (2026-08-07)：CP0 firmware gate 以 `UserLocal=0x00006000` 作为真实 TLS 基址，验证用户态通过 `RDHWR $29` 读取 TLS 槽位并写回第二槽位；完整 TLS linker/多线程调度 ABI 仍未闭合。
+- v1.0 (2026-08-07)：`cp0_sweep` 使用专用 linker script 固定 `.tdata`/`.tbss`，由 `__tls_start`/`__tbss_start` 导出 TLS 布局；SoC gate 验证初始化槽、清零槽和用户态 TLS store。完整 TLS relocation/model 仍 deferred。
+- v1.1 (2026-08-07)：ID-stage hazard decode 将 COP0/MTC0 的 `rt` 标记为真实源操作数，复用 EX/MEM/WB GPR forwarding；RTL frontend、CP0 firmware、ASID allocator 和 MMU context contract 均通过。
+- v1.2 (2026-08-07)：`cp0_sweep` 增加无显式 `nop` 的连续 UserLocal A->B->A MTC0/RDHWR context-switch 检查并通过；当前 CPU/CP0 contract 已闭合，完整 scheduler 保存/恢复 ABI 仍 deferred。

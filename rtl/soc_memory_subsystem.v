@@ -179,7 +179,9 @@ module soc_memory_subsystem #(
     output wire [1:0]  s4_rresp,
     output wire        s4_rlast,
     output wire        s4_rvalid,
-    input  wire        s4_rready
+    input  wire        s4_rready,
+    input  wire [31:0] coh_snoop_addr,
+    input  wire        coh_snoop_valid
 );
 
     // Keep legacy standalone subsystem instantiations functional when the
@@ -227,7 +229,7 @@ module soc_memory_subsystem #(
         .m_arvalid(l2m_arvalid), .m_arready(l2m_arready),
         .m_rid(l2m_rid), .m_rdata(l2m_rdata), .m_rresp(l2m_rresp),
         .m_rlast(l2m_rlast), .m_rvalid(l2m_rvalid), .m_rready(l2m_rready),
-        .snoop_addr(32'h0), .snoop_valid(1'b0),
+        .snoop_addr(coh_snoop_addr), .snoop_valid(coh_snoop_valid),
         .snoop_ack(), .snoop_hit()
     );
 

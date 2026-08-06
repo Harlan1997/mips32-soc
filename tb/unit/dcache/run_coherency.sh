@@ -10,5 +10,5 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
   "${ROOT_DIR}/tb/unit/dcache/tb_dcache_coherency.sv" \
   -top tb_dcache_coherency -l compile.log
 ./simv -l sim.log
-grep -q "REGRESSION_TEST_SUCCESS dcache_coherency" sim.log
-echo "dcache coherency v0.1: PASS"
+grep -q "REGRESSION_TEST_SUCCESS dcache_coherency_v03" sim.log
+echo "dcache coherency v0.3: PASS"

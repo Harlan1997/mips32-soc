@@ -1,7 +1,19 @@
 # Linux Boot Regression (Phase F)
 
-Placeholder for U-Boot → Linux kernel → busybox rootfs boot regression, run
-nightly against the DUT starting from QSPI Flash reset.
+This directory is the product boot integration boundary. The current tree does
+not contain the external toolchain, U-Boot, Linux, QEMU, or a device-specific
+flash/DDR endpoint, so the boot regression is dependency-gated. Run
+`tb/linux_boot/check_dependencies.sh` before attempting the end-to-end flow; it
+reports each missing dependency and exits 2 rather than falling back to a host
+compiler or a preload model.
+
+Defaults:
+
+```text
+MIPS_CROSS_COMPILE=mips64-linux-gnu-
+UBOOT_SOURCE_DIR=third_party/u-boot
+LINUX_SOURCE_DIR=third_party/linux
+```
 
 ## Boot flow (target)
 
@@ -23,10 +35,10 @@ Reset  →  BootROM       (mask ROM, verifies QSPI header, jumps to SPL)
 | Phase D | Real QSPI XIP, DDR3 controller, UART 16550, GMAC (optional for boot), Timer |
 | Phase E | Multi-clock domain, proper reset sequence |
 
-Linux boot **cannot** run until all four above phases have working
-implementations of the marked components. This directory is a scaffold —
-actual boot scripts arrive once Phase D DDR3 + QSPI controllers pass their
-block-level UVM tests.
+Linux boot cannot be claimed until the dependency gate passes and the four
+hardware/software phases above have working implementations. Existing
+behavioral Boot ROM, DDR4 controller, and QSPI/XIP gates remain lower-level
+evidence, not substitutes for this end-to-end regression.
 
 ## Directory layout (planned)
 

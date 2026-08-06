@@ -9,7 +9,8 @@
 module mips_core #(
     parameter ENABLE_COHERENCY = 1'b0,
     parameter ENABLE_SCHEDULER = 1'b0,
-    parameter ENABLE_VEIC = 1'b0
+    parameter ENABLE_VEIC = 1'b0,
+    parameter [9:0] CPUNUM = 10'd0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -218,7 +219,7 @@ module mips_core #(
     );
     
     // Instantiating the CPU Pipeline
-    mips_cpu #(.ENABLE_VEIC(ENABLE_VEIC)) u_cpu (
+    mips_cpu #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_cpu (
         .clk             (clk),
         .rst_n           (rst_n),
         

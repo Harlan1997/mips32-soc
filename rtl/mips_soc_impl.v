@@ -1088,6 +1088,8 @@ module mips_soc_impl #(
         .ddr4_ecc_correctable_error(ddr4_ecc_correctable_error),
         .ddr4_ecc_uncorrectable_error(ddr4_ecc_uncorrectable_error),
         .ddr4_error_code         (ddr4_error_code),
+        .coh_snoop_addr          (core0_coh_store_valid ? core0_coh_store_addr : core1_coh_store_addr),
+        .coh_snoop_valid         (core0_coh_store_valid | core1_coh_store_valid),
 
         .s0_awid      (s0_awid),
         .s0_awaddr    (s0_awaddr),

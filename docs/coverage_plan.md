@@ -330,8 +330,9 @@ thresholds (merged UVM: Score 75.00%, Line 70.00%, Condition 80.00%, Toggle 60.0
   combinations. Priority-order signoff remains unclaimed because the PIC has no
   priority encoder output. CPU/CP0 firmware smoke and UVM-visible
   exception-entry/return functional coverage are closed through Phase 3A/3B
-  gates. UART TX IRQ is covered in Phase 3A; RX IRQ remains tied off until an
-  RX datapath exists.
+  gates. UART TX IRQ and the behavioral external RX/PIC/RBR path are covered by
+  Phase 3A and the dedicated UART RX SoC gates; real board electrical timing
+  and Linux 8250 driver compatibility remain outside this contract.
 - Firmware-driven long-running tests currently terminate through the mailbox
   `$finish` path, so UVM report-phase coverage summaries are mainly visible in
   directed UVM tests.

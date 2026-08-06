@@ -12,6 +12,13 @@ module tb_page_table_tlb_refill;
     mem[1024]=32'h0000_2003;mem[2048]=32'h0000_300f;#23 rst_n=1;run_walk;
     if(!tlb_wr_valid||tlb_wr_vpn2!==19'd0||tlb_wr_asid!==8'h2||tlb_wr_entrylo0[29:6]!==24'h000003)errors=errors+1;
     @(negedge clk);tlb_wr_ready=1;repeat(2)@(posedge clk);@(negedge clk);tlb_wr_ready=0;@(posedge clk);if(tlb_wr_valid)errors=errors+1;
+    /* D-side store permission is carried through the refill wrapper. */
+    mem[2048]=32'h0000_300b; miss_access=2'd2; run_walk;
+    if(!tlb_wr_valid || !tlb_wr_entrylo0[6] || tlb_wr_entrylo0[2:0]!==3'b110) errors=errors+1;
+    @(negedge clk);tlb_wr_ready=1;repeat(2)@(posedge clk);@(negedge clk);tlb_wr_ready=0;@(posedge clk);
+    /* A user store without W must fault and must not produce a TLB write. */
+    mem[2048]=32'h0000_3009; miss_access=2'd2; run_walk;
+    if(!walk_fault_valid || walk_fault_code!==3'd2 || tlb_wr_valid) errors=errors+1;
     if(errors==0)$display("REGRESSION_TEST_SUCCESS page_table_tlb_refill");else $display("REGRESSION_TEST_FAILED page_table_tlb_refill errors=%0d",errors);$finish;
   end
 endmodule

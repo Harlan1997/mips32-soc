@@ -2,6 +2,7 @@
     .globl _start
 
 _start:
+    .set    noreorder
     # Initialize Status Register (enable Coprocessor 0)
     # CU0=1, IE=0 (interrupts disabled initially)
     lui     $8, 0x1000
@@ -15,6 +16,7 @@ _start:
     # Jump to main in C
     jal     main
     nop
+    .set    reorder
 
     # Infinite loop if main returns
 end_loop:
