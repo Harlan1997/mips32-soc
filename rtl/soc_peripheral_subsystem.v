@@ -26,6 +26,7 @@ module soc_peripheral_subsystem #(
     input  wire        uart_ri_n,
 
     output wire        cpu_int,
+    output wire [7:0]  vic_vec_id,
     output wire        wdt_reset,
     output wire        tlb_inv_en,
     output wire [18:0] tlb_inv_vpn2,
@@ -59,6 +60,8 @@ module soc_peripheral_subsystem #(
     input  wire        ddr4_init_done,
     input  wire        ddr4_training_done,
     input  wire        ddr4_fatal_error,
+    input  wire        ddr4_ecc_correctable_error,
+    input  wire        ddr4_ecc_uncorrectable_error,
     input  wire [15:0] ddr4_error_code,
     input  wire        spi_miso,
     input  wire        qspi_cmd_grant,
@@ -450,6 +453,8 @@ module soc_peripheral_subsystem #(
         .clk(clk), .rst_n(rst_n), .controller_present(ddr4_controller_present),
         .init_done(ddr4_init_done), .training_done(ddr4_training_done),
         .fatal_error(ddr4_fatal_error), .error_code(ddr4_error_code),
+        .ecc_correctable_error(ddr4_ecc_correctable_error),
+        .ecc_uncorrectable_error(ddr4_ecc_uncorrectable_error),
         .psel(ddr4_status_sel), .penable(apb_penable), .pwrite(apb_pwrite),
         .paddr(apb_paddr[4:0]), .pwdata(apb_pwdata), .prdata(ddr4_status_prdata),
         .pready(ddr4_status_pready), .pslverr(ddr4_status_pslverr)
@@ -568,7 +573,6 @@ module soc_peripheral_subsystem #(
     // trigger, priority, nesting, VEC_ID) at higher offsets. v1 apb_pic
     // was deleted after signoff #12 validated this cutover.
     // -----------------------------------------------------------------------
-    wire [7:0] vic_vec_id_unused;
     wire [3:0] vic_vec_prio_unused;
     apb_vic #(.NUM_SOURCES(32)) u_apb_pic (
         .clk             (clk),
@@ -583,7 +587,7 @@ module soc_peripheral_subsystem #(
         .pslverr         (pic_pslverr),
         .src_in          (irq_sources),
         .irq             (cpu_int),
-        .vec_id          (vic_vec_id_unused),
+        .vec_id          (vic_vec_id),
         .vec_prio        (vic_vec_prio_unused)
     );
 

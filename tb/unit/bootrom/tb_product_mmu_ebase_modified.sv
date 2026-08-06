@@ -110,8 +110,7 @@ module tb_product_mmu_ebase_modified;
                 clean_entry_seen = 1'b1;
 
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h0800_0000 &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
-                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0) &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_write &&
                 !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_ok &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_hit &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_v &&
@@ -173,8 +172,28 @@ module tb_product_mmu_ebase_modified;
                 $finish;
             end
 
-            if (cycles > 7000)
+            if (cycles > 7000) begin
+                $display("DEBUG: timeout pc=%h if_va=%h data_req=%b data_we=%b mem_va=%h mmu_ok=%b hit=%b v=%b d=%b fault=%b cause=%h badv=%h epc=%h status=%h ebase=%h tlb_vpn=%h lo0=%h lo1=%h",
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_ok,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_hit,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_v,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_d,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_fault_type,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.ebase_val,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_vpn2[1],
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[1],
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo1[1]);
                 fail("EBase Modified firmware did not reach its completion mailbox");
+            end
         end
     end
 

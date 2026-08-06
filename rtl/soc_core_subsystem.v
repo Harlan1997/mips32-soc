@@ -4,11 +4,13 @@
 // =============================================================================
 
 module soc_core_subsystem #(
-    parameter ENABLE_COHERENCY = 1'b0
+    parameter ENABLE_COHERENCY = 1'b0,
+    parameter ENABLE_VEIC = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        cpu_int,
+    input  wire [7:0]  external_vec_id,
     input  wire        tlb_inv_en,
     input  wire [18:0] tlb_inv_vpn2,
     input  wire [7:0]  tlb_inv_asid,
@@ -95,7 +97,7 @@ module soc_core_subsystem #(
     output wire        debug_flush
 );
 
-    mips_core #(.ENABLE_COHERENCY(ENABLE_COHERENCY)) u_core (
+    mips_core #(.ENABLE_COHERENCY(ENABLE_COHERENCY), .ENABLE_VEIC(ENABLE_VEIC)) u_core (
         .clk             (clk),
         .rst_n           (rst_n),
         .ext_int         ({5'd0, cpu_int}),
@@ -106,6 +108,7 @@ module soc_core_subsystem #(
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
         .sim_exception_req(1'b0),
         .sim_exception_code(5'd0),
+        .external_vec_id(external_vec_id),
         .coh_store_valid(coh_store_valid),
         .coh_store_addr(coh_store_addr),
         .coh_snoop_valid(coh_snoop_valid),

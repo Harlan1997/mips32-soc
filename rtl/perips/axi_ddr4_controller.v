@@ -14,7 +14,10 @@ module axi_ddr4_controller #(
     parameter integer REFRESH_CYCLES = 4,
     parameter integer COMMAND_LATENCY = 1,
     parameter integer INJECT_INIT_FAIL = 1'b0,
-    parameter integer INJECT_FATAL = 1'b0
+    parameter integer INJECT_FATAL = 1'b0,
+    parameter integer ENABLE_ECC = 1'b0,
+    parameter integer INJECT_ECC_CORRECTABLE = 1'b0,
+    parameter integer INJECT_ECC_UNCORRECTABLE = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -63,7 +66,9 @@ module axi_ddr4_controller #(
     output reg  [31:0] phy_wdata,
     output reg  [3:0]  phy_wstrb,
     output reg         last_row_hit,
-    output reg         last_row_miss
+    output reg         last_row_miss,
+    output wire        ecc_correctable_error,
+    output wire        ecc_uncorrectable_error
 );
 
     localparam [3:0] CMD_NOP = 4'h0;
@@ -93,6 +98,7 @@ module axi_ddr4_controller #(
     reg [31:0] timer;
     reg [31:0] refresh_timer;
     reg [31:0] ram [0:MEM_DEPTH_WORDS-1];
+    reg [38:0] ecc_ram [0:MEM_DEPTH_WORDS-1];
     integer i;
 
     reg        write_active;
@@ -116,6 +122,38 @@ module axi_ddr4_controller #(
     reg [15:0] active_row;
     reg        bank_open;
     reg [15:0] error_code_r;
+
+    wire [38:0] ecc_code_current =
+        ecc_ram[word_index(read_addr)] ^
+        ((ENABLE_ECC && INJECT_ECC_CORRECTABLE) ? 39'd1 : 39'd0) ^
+        ((ENABLE_ECC && INJECT_ECC_UNCORRECTABLE) ? 39'h3 : 39'd0);
+    wire [31:0] ecc_data_current;
+    wire ecc_corr_current, ecc_uncorr_current;
+    wire [31:0] ecc_data_next;
+    wire [31:0] ecc_old_write_data;
+    wire [31:0] ecc_merged_write_data = {
+        s_wstrb[3] ? s_wdata[31:24] : ecc_old_write_data[31:24],
+        s_wstrb[2] ? s_wdata[23:16] : ecc_old_write_data[23:16],
+        s_wstrb[1] ? s_wdata[15:8]  : ecc_old_write_data[15:8],
+        s_wstrb[0] ? s_wdata[7:0]   : ecc_old_write_data[7:0]
+    };
+    wire [38:0] ecc_write_code;
+    ecc_secded_32 u_ecc_read(.data_in(32'd0), .code_in(ecc_code_current),
+        .code_out(), .data_out(ecc_data_current),
+        .correctable_error(ecc_corr_current), .uncorrectable_error(ecc_uncorr_current));
+    ecc_secded_32 u_ecc_read_next(.data_in(32'd0),
+        .code_in(ecc_ram[word_index(read_addr + 32'd4)]), .code_out(),
+        .data_out(ecc_data_next), .correctable_error(), .uncorrectable_error());
+    ecc_secded_32 u_ecc_old(.data_in(32'd0), .code_in(ecc_ram[word_index(write_addr)]),
+        .code_out(), .data_out(ecc_old_write_data),
+        .correctable_error(), .uncorrectable_error());
+    ecc_secded_32 u_ecc_write(.data_in(ecc_merged_write_data), .code_in(39'd0),
+        .code_out(ecc_write_code), .data_out(),
+        .correctable_error(), .uncorrectable_error());
+    // ECC status is meaningful only for an active read response. Gating it
+    // avoids exposing decode results from the idle address state to APB.
+    assign ecc_correctable_error = ENABLE_ECC && read_active && ecc_corr_current;
+    assign ecc_uncorrectable_error = ENABLE_ECC && read_active && ecc_uncorr_current;
 
     function integer word_index;
         input [31:0] addr;
@@ -156,6 +194,7 @@ module axi_ddr4_controller #(
     initial begin
         for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1)
             ram[i] = 32'd0;
+            ecc_ram[i] = 39'd0;
     end
 
     // Simulation-only firmware preload hook retained under the new instance
@@ -179,6 +218,8 @@ module axi_ddr4_controller #(
             refresh_timer <= 0;
             write_active <= 1'b0;
             read_active <= 1'b0;
+            write_addr <= `SOC_DDR_BASE;
+            read_addr <= `SOC_DDR_BASE;
             s_bvalid <= 1'b0;
             s_rvalid <= 1'b0;
             s_rlast <= 1'b0;
@@ -210,7 +251,7 @@ module axi_ddr4_controller #(
                 end else begin
                     read_left <= read_left - 1'b1;
                     read_addr <= read_addr + 32'd4;
-                    s_rdata <= read_bad ? 32'd0 : ram[word_index(read_addr + 32'd4)];
+                    s_rdata <= read_bad ? 32'd0 : (ENABLE_ECC ? ecc_data_next : ram[word_index(read_addr + 32'd4)]);
                     s_rlast <= (read_left == 1);
                 end
             end
@@ -313,7 +354,7 @@ module axi_ddr4_controller #(
                             phy_addr <= read_addr;
                             s_rid <= read_id;
                             s_rresp <= read_bad ? 2'b11 : 2'b00;
-                            s_rdata <= read_bad ? 32'd0 : ram[word_index(read_addr)];
+                    s_rdata <= read_bad ? 32'd0 : (ENABLE_ECC ? ecc_data_current : ram[word_index(read_addr)]);
                             s_rlast <= (read_left == 0);
                             s_rvalid <= 1'b1;
                             state <= ST_READ_DATA;
@@ -326,6 +367,7 @@ module axi_ddr4_controller #(
                     ST_WRITE_DATA: begin
                         if (s_wvalid && s_wready) begin
                             if (!write_bad && (s_wlast == (write_left == 0))) begin
+                                if (ENABLE_ECC) ecc_ram[word_index(write_addr)] <= ecc_write_code;
                                 if (s_wstrb[0]) ram[word_index(write_addr)][7:0] <= s_wdata[7:0];
                                 if (s_wstrb[1]) ram[word_index(write_addr)][15:8] <= s_wdata[15:8];
                                 if (s_wstrb[2]) ram[word_index(write_addr)][23:16] <= s_wdata[23:16];

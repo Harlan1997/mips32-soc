@@ -29,6 +29,7 @@ module mips_mem_stage (
     output wire        dmem_en,        // Memory request enable
     input  wire        dmem_addr_ok,
     input  wire        dmem_data_ok,
+    input  wire        translation_fault,
     input  wire        cache_op_done,
     input  wire        cache_op_error,
     
@@ -50,7 +51,12 @@ module mips_mem_stage (
 
     // Basic outputs
     assign dmem_addr = {mem_ex_out[31:2], 2'b00}; // Word aligned access address
-    assign dmem_en   = (mem_read | mem_write) & ~adel_exception & ~ades_exception & ~mem_done;
+    // A failed MMU translation is retired as a CPU exception.  Do not send
+    // the untranslated request into the cache, which would otherwise leave
+    // MEM waiting forever for data_ok and prevent the exception from reaching
+    // CP0.
+    assign dmem_en   = (mem_read | mem_write) & ~adel_exception & ~ades_exception &
+                       ~translation_fault & ~mem_done;
     assign dmem_we   = mem_write;
     assign cache_op_valid = mem_cache_op_valid & ~mem_done;
     assign cache_op       = mem_cache_op;

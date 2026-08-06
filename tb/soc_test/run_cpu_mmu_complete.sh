@@ -60,6 +60,7 @@ for gate in \
     cpu-cache-error-gate \
     cpu-cache-op-gate \
     cpu-cache-tag-gate \
+    dcache-coherency-gate \
     product-vectored-interrupt-gate \
     cpu-scheduler-integration-gate \
     cpu-hardware-walker-gate \

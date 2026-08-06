@@ -14,7 +14,7 @@ _start:
     nop
     nop
 
-    /* VS=1 means 32-byte spacing. IP1 therefore selects EBase + 0x220. */
+    /* VS=1 means 32-byte spacing; the VIC source ID selects the VEIC slot. */
     addiu   $t0, $zero, 0x20
     mtc0    $t0, $12, 1
     nop
@@ -23,19 +23,15 @@ _start:
     nop
     nop
 
-    /* Cause writes cover both IV and software IP fields, so preserve IV while
-     * setting IP1 before it becomes globally enabled. */
-    lui     $t0, 0x0080
-    ori     $t0, $t0, 0x0200
-    mtc0    $t0, $13
+    /* Preserve IV and leave pending-source generation to the real VIC path. */
     nop
     nop
     nop
     nop
     nop
 
-    /* Clear reset BEV/ERL and atomically enable IE plus mask bit IM1. */
-    addiu   $t0, $zero, 0x0201
+    /* Clear reset BEV/ERL and enable IE plus external IP2 (IM2, bit 10). */
+    addiu   $t0, $zero, 0x0401
     mtc0    $t0, $12
     nop
     nop

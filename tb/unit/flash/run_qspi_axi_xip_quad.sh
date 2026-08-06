@@ -15,6 +15,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+QSPI_AXI_XIP_QUAD \
     "${ROOT_DIR}/rtl/perips/qspi_cmd_behavioral.v" \
     "${ROOT_DIR}/rtl/perips/qspi_axi_xip.v" \
+    "${ROOT_DIR}/rtl/perips/qspi_retry_policy.v" \
     "${ROOT_DIR}/rtl/perips/qspi_flash_quad_behavioral.v" \
     "${SCRIPT_DIR}/tb_qspi_axi_xip.sv" -l compile.log
 

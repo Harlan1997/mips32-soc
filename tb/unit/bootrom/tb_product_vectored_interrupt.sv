@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
-// Product CP0 vector contract: an enabled software IP1 with Cause.IV=1 and
-// IntCtl.VS=1 must enter EBase + 0x200 + 1*32, via the kseg0 direct map.
+// Product VEIC contract: real VIC source 8 pending must reach CP0 external
+// IP2 and enter EBase + 0x200 + 8*32 via the kseg0 direct map.
 module tb_product_vectored_interrupt;
     reg clk;
     reg rst_n;
@@ -34,7 +34,7 @@ module tb_product_vectored_interrupt;
         end
     endgenerate
 
-    mips_soc u_soc (
+    mips_soc #(.ENABLE_VEIC(1'b1)) u_soc (
         .clk       (clk),
         .rst_n     (rst_n),
         .gpio_pins (gpio_pins),
@@ -58,6 +58,17 @@ module tb_product_vectored_interrupt;
 
     always #5 clk = ~clk;
 
+    // Stimulate the real VIC source arbitration state. This avoids depending
+    // on a product-boot APB virtual mapping while retaining the VIC -> CPU
+    // interrupt and vector-ID datapath under test.
+    initial begin
+        @(posedge rst_n);
+        repeat (5) @(posedge clk);
+        force u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.enable_r = 32'h0000_0100;
+        force u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.soft_r = 32'h0000_0100;
+        force u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.prio_r[8] = 4'd11;
+    end
+
     task fail;
         input [255:0] message;
         begin
@@ -80,18 +91,19 @@ module tb_product_vectored_interrupt;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'hBFC0_0000)
                 reset_seen = 1'b1;
 
-            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'h8000_0220)
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc == 32'h8000_0300)
                 vector_pc_seen = 1'b1;
 
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr == 32'h8000_0220 &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr == 32'h0000_0220)
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr == 32'h8000_0300 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr == 32'h0000_0300)
                 vector_pa_seen = 1'b1;
 
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[22] == 1'b0 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[2] == 1'b0 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[1] == 1'b1 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[23] == 1'b1 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[10] == 1'b1 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[6:2] == 5'h00 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_vs == 5'd1)
                 cp0_state_seen = 1'b1;
@@ -99,7 +111,19 @@ module tb_product_vectored_interrupt;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0) &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFFC)
+                begin
+                $display("DEBUG: failure pc=%h status=%h cause=%h intr=%b cpu_int=%b vec_id=%h enable=%h soft=%h irq=%b",
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req,
+                         u_soc.u_impl.u_peripheral_subsystem.cpu_int,
+                         u_soc.u_impl.u_peripheral_subsystem.vic_vec_id,
+                         u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.enable_r,
+                         u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.soft_r,
+                         u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.irq);
                 fail("interrupt was not accepted before the firmware failure mailbox");
+                end
 
             if (reset_seen && vector_pc_seen && vector_pa_seen && cp0_state_seen) begin
                 $display("REGRESSION_TEST_SUCCESS product_vectored_interrupt");
@@ -118,7 +142,7 @@ module tb_product_vectored_interrupt;
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_vint_offset);
                 if (!reset_seen) fail("reset PC was not observed in Boot ROM");
                 if (!cp0_state_seen) fail("CP0 did not accept an IV-enabled interrupt");
-                if (!vector_pc_seen) fail("CPU did not fetch the IP1 vectored interrupt PC");
+                if (!vector_pc_seen) fail("CPU did not fetch the VIC source-8 VEIC vector PC");
                 fail("vectored interrupt fetch did not use the kseg0 direct map");
             end
         end

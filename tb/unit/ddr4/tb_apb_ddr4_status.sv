@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 module tb_apb_ddr4_status;
     reg clk=0, rst_n=0, controller_present=0, init_done=0, training_done=0, fatal_error=0;
+    reg ecc_correctable_error=0, ecc_uncorrectable_error=0;
     reg [15:0] error_code=0; reg psel=0, penable=0, pwrite=0; reg [4:0] paddr=0; reg [31:0] pwdata=0;
     wire [31:0] prdata; wire pready, pslverr; integer errors=0;
     always #5 clk=~clk;
@@ -13,6 +14,11 @@ module tb_apb_ddr4_status;
         fatal_error=1; error_code=16'h0002; @(posedge clk); read(5'h08,32'h0004_0002); write(5'h0c,32'h1); read(5'h08,32'h0);
         fatal_error=0; repeat(2) @(posedge clk); fatal_error=1; error_code=16'h0004; @(posedge clk); read(5'h08,32'h0004_0004);
         fatal_error=0; write(5'h0c,32'h2); @(posedge clk); read(5'h08,32'h0004_0004);
+        write(5'h0c,32'h4);
+        fatal_error=0; ecc_correctable_error=1; read(5'h04,32'h0000_0017);
+        ecc_correctable_error=0; ecc_uncorrectable_error=1; @(posedge clk);
+        read(5'h04,32'h0000_0027); read(5'h08,32'h0004_0008);
+        ecc_uncorrectable_error=0; write(5'h0c,32'h1); read(5'h08,32'h0);
         write(5'h0c,32'h5); read(5'h08,32'h0);
         if(errors==0)$display("REGRESSION_TEST_SUCCESS apb_ddr4_status");else $display("REGRESSION_TEST_FAILED apb_ddr4_status errors=%0d",errors);$finish;
     end

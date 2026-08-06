@@ -8,7 +8,7 @@ module load vcs
 mkdir -p "${RUN_DIR}"
 cd "${RUN_DIR}"
 vcs -full64 -sverilog -timescale=1ns/1ps \
-    "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
+  "${ROOT_DIR}/rtl/perips/ecc_secded_32.v" "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
     "${SCRIPT_DIR}/tb_axi_ddr4_controller.sv" \
     +incdir+"${ROOT_DIR}/rtl/include" -l compile.log
 ./simv -l sim.log

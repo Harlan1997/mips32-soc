@@ -17,6 +17,7 @@ cd "${RUN_DIR}"
 vcs -full64 -sverilog -timescale=1ns/1ps \
     "${ROOT_DIR}/rtl/perips/qspi_cmd_behavioral.v" \
     "${ROOT_DIR}/rtl/perips/qspi_axi_xip.v" \
+    "${ROOT_DIR}/rtl/perips/qspi_retry_policy.v" \
     "${ROOT_DIR}/rtl/perips/spi_flash_behavioral.v" \
     "${SCRIPT_DIR}/tb_qspi_axi_xip.sv" -l compile.log
 

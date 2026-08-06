@@ -4,9 +4,12 @@
 // data writes have their own AXI write channel.  The arbiter holds the read
 // owner until the complete AXI response, so cache refill state cannot change
 // while a response is in flight.
-module dual_core_axi_subsystem (
+module dual_core_axi_subsystem #(
+    parameter ENABLE_VEIC = 1'b0
+) (
     input wire clk, input wire rst_n,
     input wire [5:0] ext_int,
+    input wire [7:0] external_vec_id,
     input wire tlb_inv_en, input wire [18:0] tlb_inv_vpn2,
     input wire [7:0] tlb_inv_asid, input wire [1:0] tlb_inv_scope,
     input wire [5:0] tlb_inv_wired_floor,
@@ -68,12 +71,13 @@ module dual_core_axi_subsystem (
         end
     endfunction
 
-    mips_core #(.ENABLE_COHERENCY(1'b1)) u_core1 (
+    mips_core #(.ENABLE_COHERENCY(1'b1), .ENABLE_VEIC(ENABLE_VEIC)) u_core1 (
         .clk(clk), .rst_n(rst_n), .ext_int(ext_int),
         .tlb_inv_en(tlb_inv_en), .tlb_inv_vpn2(tlb_inv_vpn2),
         .tlb_inv_asid(tlb_inv_asid), .tlb_inv_scope(tlb_inv_scope),
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
         .sim_exception_req(sim_exception_req), .sim_exception_code(sim_exception_code),
+        .external_vec_id(external_vec_id),
         .coh_store_valid(coh_store_valid), .coh_store_addr(coh_store_addr),
         .coh_snoop_valid(coh_snoop_valid), .coh_snoop_addr(coh_snoop_addr),
         .scheduler_enable(1'b0), .scheduler_timer_tick(1'b0),

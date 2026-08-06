@@ -93,6 +93,7 @@ module qspi_axi_xip #(
     reg        wr_busy_r;
     reg        wr_bvalid_r;
     reg [3:0]  wr_id_r;
+    reg        retry_pending_r;
 
     wire [31:0] cmd_prdata;
     wire cmd_pready;
@@ -110,6 +111,16 @@ module qspi_axi_xip #(
     wire cmd_irq;
     wire cmd_error_event;
     wire [31:0] cmd_error_value;
+    wire retry_request;
+    wire retry_terminal_error;
+    wire retry_busy;
+    wire [1:0] retry_count;
+    wire retry_start = (state == ST_IDLE) && s_arvalid && s_arready;
+    wire cmd_error_valid = (state == ST_POLL) && !cmd_prdata[0] &&
+                           cmd_prdata[3] &&
+                           (cmd_prdata[4] || cmd_prdata[5] || cmd_prdata[6]);
+    wire [15:0] cmd_error_class = cmd_prdata[5] ? 16'h0001 : 16'h0002;
+    wire [15:0] cmd_error_code = 16'h0001;
     wire [31:0] assembled_rdata = {rx_b0_r, rx_b1_r, rx_b2_r, cmd_prdata[7:0]};
     wire [31:0] formatted_rdata = ENDIAN_SWAP ?
                                    {assembled_rdata[7:0], assembled_rdata[15:8],
@@ -126,6 +137,19 @@ module qspi_axi_xip #(
         .spi_sclk(cmd_sclk), .spi_cs_n(cmd_cs_n),
         .spi_io_o(cmd_io_o), .spi_io_oe(cmd_io_oe), .spi_io_i(cmd_io_i),
         .irq(cmd_irq), .error_event(cmd_error_event), .error_value(cmd_error_value)
+    );
+
+    qspi_retry_policy #(.MAX_RETRIES(1)) u_retry_policy (
+        .clk          (clk),
+        .rst_n        (rst_n),
+        .start        (retry_start),
+        .error_valid  (cmd_error_valid),
+        .error_class  (cmd_error_class),
+        .error_code   (cmd_error_code),
+        .retry_request(retry_request),
+        .terminal_error(retry_terminal_error),
+        .busy         (retry_busy),
+        .retry_count  (retry_count)
     );
 
     assign spi_sclk = cmd_sclk;
@@ -232,6 +256,7 @@ module qspi_axi_xip #(
             rx_b2_r        <= 8'h0;
             rdata_r        <= 32'h0;
             rresp_r        <= 2'b00;
+            retry_pending_r <= 1'b0;
         end else begin
             case (state)
                 ST_IDLE: begin
@@ -251,8 +276,12 @@ module qspi_axi_xip #(
                 ST_POLL: begin
                     if (!cmd_prdata[0] && cmd_prdata[3]) begin
                         if (cmd_prdata[4] || cmd_prdata[5] || cmd_prdata[6]) begin
-                            rdata_r <= 32'h0;
-                            rresp_r <= 2'b10;
+                            if (retry_request && !retry_terminal_error) begin
+                                retry_pending_r <= 1'b1;
+                            end else begin
+                                rdata_r <= 32'h0;
+                                rresp_r <= 2'b10;
+                            end
                             state <= ST_CLEAR;
                         end else begin
                             state <= ST_RX0;
@@ -276,7 +305,14 @@ module qspi_axi_xip #(
                     rresp_r <= 2'b00;
                     state <= ST_CLEAR;
                 end
-                ST_CLEAR: state <= ST_RESP;
+                ST_CLEAR: begin
+                    if (retry_pending_r) begin
+                        retry_pending_r <= 1'b0;
+                        state <= ST_CTRL;
+                    end else begin
+                        state <= ST_RESP;
+                    end
+                end
                 ST_RESP: begin
                     if (s_rvalid && s_rready) begin
                         if (beats_left_r == 9'd1) begin
