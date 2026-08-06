@@ -456,7 +456,7 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 |---|---|---|---|
 | P0 | 当前 RTL/仿真功能闭合：Boot ROM/异常向量、MMU 基础路径、DDR4 controller、QSPI/XIP、UART、WDT 和 CPU/MMU gate | **已完成当前冻结 contract**：本次 Phase 3、CPU/MMU、DDR4 和前端 gate 重跑通过 | 仅在 RTL contract 发生变更时增量重跑对应 gate；不新增物理实现任务 |
 | P0 | 双核 CPU/MMU 运行时闭合：核 0/1 firmware execution、core 0/1 IPI 发起、双核 uncached mailbox、复位/异常隔离和 AXI response routing | **已完成已冻结的 TLB/IPI/异常基础子集**：双核 opt-in firmware 已验证两个独立 IPI controller、核 0/核 1 local invalidate、generation ack、SoC target timeout、stale-ack、busy re-entry rejection、core-1 reset isolation 和 core-1 exception isolation | shared-memory coherency、page-table walker、scheduler/OS 等不属于当前 P0 contract；另立需求后再实现 |
-| P1 | CPU/MMU 扩展：共享内存 coherency、更多页尺度 SoC/OS 压力、长期 scheduler/shootdown、权限/多段 runtime、完整 ISA compliance 和 kernel/OS boot | **ACTIVE：基础 hardware walker、scheduler context、ECC SECDED primitive、有限 VEIC source-vector slice 已有证据；其余扩展仍未闭合** | 每项单独冻结 RTL/firmware contract 和验收 gate；不得以基础子集 gate 代替扩展 gate |
+| P1 | CPU/MMU 与 ISA/系统软件扩展：共享内存 coherency、更多页尺度 SoC/OS 压力、长期 scheduler/shootdown、权限/多段 runtime、完整 ISA compliance 和 kernel/OS boot | **当前 RTL/仿真 bundle 已由 `make p1-current-complete` 闭合；产品级扩展仍 ACTIVE** | 每项单独冻结 RTL/firmware contract 和验收 gate；不得以当前 bundle gate 代替完整 MESI/directory、完整 ISA/FPU 或 Linux/OS gate |
 | P0 | UART RTL pins/IRQ wiring、外部 RX waveform、SoC RX/PIC/RBR behavioral 路径和 CTS flow-control SoC 集成已有证据；WDT APB/reset pulse、boot-status retention 和 Boot ROM failure slice 已通过 | **已完成当前 RTL/仿真 contract** | 仅在 UART/WDT contract 发生变更时增量重跑负例、超时、复位和错误分类 gate |
 | P3 | 当前 fresh VDB 执行 `refine_exclusions.py` 后，strict URG 仍报告 invalid condition/branch vector、illegal exclusion attempt 与 module checksum mismatch；合并 UVM 仅 SCORE `80.05`、COND `97.09`、TOGGLE `71.32`、FSM `53.33`、BRANCH `78.53`，product CPU/CP0 仅 SCORE `75.94`、LINE `83.84`、TOGGLE `69.05`、FSM `48.68`、BRANCH `78.33` | 当前功能行为证据有效，但 code-coverage 数字和 99% 入口均不能签收；不得提交本轮自动生成的 exclusion 文件 | 作为后续质量工作独立处理；不替代或阻塞本文件的产品功能 P0/P1。证据：`build/signoff/functional_completeness_20260801/coverage/urg.log`、`coverage_summary.json`。 |
 | P1 | standalone x1/quad AXI/XIP bridge、shared-pin arbiter、SoC memory quad opt-in 和 development handoff 已通过；APB command、AXI acceptance、request/grant、timeout/abort/recovery 和 endian ABI 均有证据 | **CONTRACT_CLOSED（当前 RTL/仿真范围）** | 仅在当前 contract 变更时增量回归；production boot、device-specific status 和 secure-boot policy 不属于当前范围 |
@@ -477,6 +477,11 @@ rollover、ECC/complete cache-error policy、EIC/VEIC、QSPI production path 和
 | P2 | 阻塞式 D-cache 与默认基线维护 | `rtl/cache/dcache.v` 是默认路径，D-cache NB 已废弃；只维护现有 block/CPU/SoC 证据 | RTL 变更后重跑 `make rtl-frontend-compile soc-smoke phase3-complete` 及受影响 gate |
 | P2 | 当前 contract 的证据维护 | registry、Phase 报告和 commit 已建立；后续 RTL 变更需要同步更新命令、日志、基线和残余风险 | `docs/functional_evidence_registry.md` 与 `docs/functional_completeness_plan.md` 可追溯 |
 | P3 | coverage/exclusion 治理 | strict URG 仍有 invalid object、checksum mismatch、illegal exclusion 和过时 coverage scope warning | 更新 exclusion/scope 后重新生成 VDB；要求 warning 清零后再讨论 coverage signoff |
+
+`p1-current-complete` 是当前唯一集成线上的 P1 RTL/仿真聚合验收入口。它串联
+frontend compile、CPU/MMU、双核、coherency v0.1、walker、scheduler、SECDED、
+VEIC、ISA R2 implemented subset 和 DDR4 closure gates，并写出固定路径报告。
+该入口不吸收没有独立 spec、RTL、firmware 和验收 gate 的产品级扩展。
 
 ### 当前阶段退出条件
 
