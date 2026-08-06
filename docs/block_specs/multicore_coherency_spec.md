@@ -41,9 +41,12 @@
 `make dcache-coherency-gate` 已通过：覆盖 cached load -> peer store ->
 peer notification -> line refill、同一 line 不同 word、partial-byte store，
 并确认 AXI `B` error 不产生 notification。双核参数化 RTL 由
-`make dual-core-frontend-compile` 通过 elaboration。CPU LL/SC reservation
-现在在 peer store 命中同一 cache line 时清除；仍需要 CPU/firmware 级 LL/SC
-场景确认该行为贯穿 pipeline。
+`make dual-core-frontend-compile` 通过 elaboration。CPU/firmware 级 LL/SC
+peer store coherency gate 由 `make llsc-coherency-gate` 闭合：在 dual-core opt-in
+和 `SOC_COHERENCY_LL_SC` 下注入 core-0 匹配 peer store notification，验证
+core-0 reservation 被正确清除，后续 SC 返回失败 0 且内存数据未被修改。
+该 gate 仍然不宣称完整 MESI/MOESI 协议、Directory、写回 coherency、multi-outstanding
+内存序或全共享内存 coherency。
 
 ## 5. 后续架构决策
 

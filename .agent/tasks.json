@@ -1,7 +1,7 @@
 {
   "run_id": "RUN-L2-COMMERCIAL-CLOSURE-001",
   "project_name": "mips32-soc",
-  "current_stage": "COMPLETED",
+  "current_stage": "CLOSED",
   "attempt": 3,
   "max_attempts": 5,
   "base_commit": "81c06030f33c3c5387f43935feada35674c8de2e",
@@ -92,6 +92,14 @@
       "status": "completed",
       "spec_ref": ".agent/spec.md",
       "summary": "Closed the integrated 128KB 8-way WB/WA NINE single-outstanding L2 contract. Fixed a per-cycle debug $display in l2_cache_caching and a WLAST sample/drive race in tb_l2.v cache_write_raw that stalled the line-crossing write test. Full acceptance passed: dut-block-unit-gate 5/5, l2-cpu-gate, firmware, make uvm (0 UVM_ERROR/0 SB_RESP), soc_test run.sh, git diff --check. The prior reported SB_RESP UVM regression did not reproduce on the current tree."
+    },
+    {
+      "id": "TASK-010",
+      "title": "P1 CPU/firmware LL/SC peer-store coherency gate",
+      "assigned_to": "agy",
+      "status": "completed",
+      "spec_ref": ".agent/spec.md",
+      "summary": "Verify that an injected successful peer-store notification clears a core-0 LL/SC reservation in the dual-core SoC path without claiming full MESI coherency."
     }
   ]
 }

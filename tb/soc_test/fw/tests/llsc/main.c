@@ -74,6 +74,27 @@ int main(void)
     if (result != 0 || *TEST_WORD != 0x05060708)
         fail("FAIL: cleared reservation result/value=", (result << 31) | (*TEST_WORD & 0x7fffffff));
 
+    /* Peer store notification clears reservation test. */
+#ifdef LL_SC_COHERENCY
+    *TEST_WORD = 0x12345678;
+    (void)ll_word(TEST_WORD);
+    /* Register-only delay loop: no memory stores to avoid clearing reservation locally. */
+    __asm__ volatile(
+        "li $t0, 50\n\t"
+        "1:\n\t"
+        "addiu $t0, $t0, -1\n\t"
+        "bnez $t0, 1b\n\t"
+        "nop\n\t"
+        : : : "t0"
+    );
+    result = sc_word(TEST_WORD, 0x87654321);
+    if (result != 0)
+        fail("FAIL: peer notification did not invalidate SC=", result);
+    if (*TEST_WORD != 0x12345678)
+        fail("FAIL: peer invalidated SC value=", *TEST_WORD);
+    print_str("LLSC_COHERENCY_PEER_INVALIDATED_SC_FAILED\n");
+#endif
+
     print_str("llsc test: REGRESSION_TEST_SUCCESS\n");
     mailbox_exit();
     return 0;

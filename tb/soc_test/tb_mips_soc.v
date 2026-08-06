@@ -172,6 +172,7 @@ module tb_mips_soc;
         $display("DUAL_CORE_CORE1_ACTIVE pc=%08h", u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc);
     end
 
+`ifndef SOC_COHERENCY_LL_SC
     initial begin
         wait (rst_n === 1'b1);
         repeat (200) @(posedge clk);
@@ -181,7 +182,51 @@ module tb_mips_soc;
         release u_soc.u_impl.core1_sim_exception_req;
         $display("DUAL_CORE_CORE1_EXCEPTION_INJECTED code=0A");
     end
+`endif
 
+`endif
+
+`ifdef SOC_COHERENCY_LL_SC
+    reg llsc_coherency_injected;
+    reg llsc_coherency_observed;
+    integer ll_valid_rise_count;
+
+    initial begin
+        force u_soc.u_impl.core1_reset_req = 1'b1;
+        llsc_coherency_injected = 0;
+        llsc_coherency_observed = 0;
+        ll_valid_rise_count = 0;
+
+        wait (rst_n === 1'b1);
+
+        while (ll_valid_rise_count < 3) begin
+            @(posedge u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ll_reservation_valid);
+            ll_valid_rise_count = ll_valid_rise_count + 1;
+            $display("tb_mips_soc: Observed LL reservation rise #%0d at time=%0t", ll_valid_rise_count, $time);
+        end
+
+        repeat (5) @(posedge clk);
+        @(negedge clk);
+        $display("tb_mips_soc: Injecting peer store notification for address 0xA0002000");
+        force u_soc.u_impl.core1_coh_store_valid = 1'b1;
+        force u_soc.u_impl.core1_coh_store_addr = 32'ha0002000;
+        llsc_coherency_injected = 1;
+        $display("LLSC_COHERENCY_PEER_NOTIF_INJECTED addr=A0002000");
+
+        @(negedge clk);
+        release u_soc.u_impl.core1_coh_store_valid;
+        release u_soc.u_impl.core1_coh_store_addr;
+
+        @(posedge clk);
+        #1;
+        if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ll_reservation_valid === 1'b0) begin
+            llsc_coherency_observed = 1;
+            $display("tb_mips_soc: Observed core-0 reservation cleared by peer notification");
+        end else begin
+            $display("REGRESSION_TEST_FAILED core-0 reservation was not cleared by peer notification");
+            $finish;
+        end
+    end
 `endif
 
     initial begin
@@ -198,6 +243,12 @@ module tb_mips_soc;
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+`ifdef SOC_COHERENCY_LL_SC
+                if (!llsc_coherency_injected || !llsc_coherency_observed) begin
+                    $display("REGRESSION_TEST_FAILED LL/SC peer coherency notification not injected/observed");
+                    $finish;
+                end
+`else
 `ifdef SOC_ENABLE_DUAL_CORE
                 if (dual_core_ipi_count == 0) begin
                     $display("REGRESSION_TEST_FAILED dual-core IPI invalidate not observed");
@@ -215,6 +266,7 @@ module tb_mips_soc;
                     $display("REGRESSION_TEST_FAILED core1 exception isolation not observed");
                     $finish;
                 end
+`endif
 `endif
 `ifdef SOC_UART_CTS_FLOW_CONTROL
                 if (uart_tx_low_before_cts_release) begin
