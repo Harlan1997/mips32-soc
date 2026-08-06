@@ -55,7 +55,7 @@
 ### 2.1 数据阵列
 
 - **Data RAM**：4 way × 64 set × 32 B = 8 KB。
-  - 每 way 单口同步 RAM (可综合成 SRAM macro)。
+  - 每 way 单口同步 RAM。
   - 读延迟 1 cycle（组合读输出 latch 后一拍到 IF+1）。
 - **Tag RAM**：4 way × 64 set × (`TAG_BITS + valid` = 22 bit)。
   - 单口同步。

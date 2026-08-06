@@ -236,15 +236,13 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 ### D.2 QSPI Flash
 - [~] vendor-neutral x1/quad LUT、lane 切换、AXI/XIP 单/多 beat、shared-pin arbiter 和 SoC
-      quad opt-in 已有 block/SoC gates；continuous mode、真实 PHY/电气时序仍 deferred
+      quad opt-in 已有 block/SoC gates；continuous mode 仍 deferred
 - [~] vendor-neutral erase/program/read-status behavioral API 已有 flash model gate；商用 flash
       command timing、4 CS 多片切换和 production error policy 仍 deferred
 - [ ] Linux MTD driver 挂载
 
 ### D.3 DDR4
-> 当前 ASIC 路线为 Profile C1 DDR4。`axi_ddr_behavioral` 和 `ddr4_phy_behavioral` 仅用于
-> vendor-neutral RTL/仿真契约，`DDR4_ENTRY_READY` 尚未置位；不含真实 controller/PHY、
-> JEDEC 时序、refresh/training、板级 timing 或 Linux/U-Boot memory boot。
+> 当前 DDR4 范围是 vendor-neutral RTL/仿真契约；`DDR4_ENTRY_READY` 尚未置位。
 - [ ] Init 序列符合 JEDEC
 - [ ] Timing (tRCD/tRP/tRAS/tFAW/tRRD/tWTR/tRTP) SVA 通过
 - [ ] Auto-refresh tREFI 遵守
@@ -269,18 +267,16 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 ---
 
-## Phase E — 时钟 / 复位 / CDC / 电源意图 (Gate E)
+## Phase E — 时钟 / 复位 / CDC (Gate E)
 
 ### E.1 多时钟域
-- [ ] 8 时钟域独立时钟树声明
-- [ ] PLL wrapper + lock 检测 + bypass 模式
-- [ ] ICG cell wrapper (latch-based)
+- [ ] 多时钟域接口与复位依赖声明
 
 ### E.2 复位架构
 - [ ] AASD (async assert / sync deassert) 统一实现
 - [ ] 每域独立复位同步器 (STAGES ≥ 3)
-- [ ] POR / 软复位 / WDT / JTAG / PLL-lost-lock 聚合正确
-- [ ] 复位顺序 FSM 正确 (PLL lock → CPU → DDR → APB → 外设)
+- [ ] POR / 软复位 / WDT / JTAG 聚合正确
+- [ ] 复位顺序 FSM 正确 (CPU → DDR → APB → 外设)
 
 ### E.3 CDC 单元库
 - [ ] sync_2ff / pulse_sync / handshake_sync / async_fifo / mux_sync 五类实现
@@ -290,12 +286,6 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 ### E.4 RDC
 - [ ] RDC 静态验证 0 违规
-
-### E.5 UPF 声明层
-- [ ] `upf/soc.upf` 声明 PD_AON / PD_CPU / PD_L2 / PD_DDR / PD_PERI
-- [ ] RTL 侧跨域信号命名规范 (`<dst_pd>_from_<src_pd>_<name>`)
-- [ ] 每电源域边界处 register 输出，供后端插入 iso cell
-- [ ] Always-on 逻辑（VIC/RTC/PMU/WDT）位于 PD_AON
 
 ### Gate E Sign-off
 
@@ -358,9 +348,9 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] `docs/rtl_coding_style.md` v1+
 - [ ] `docs/vplan.md` 反映实际覆盖
 - [ ] `docs/frontend_signoff_release.md` 记录版本 / SHA / 报告链接
-- [ ] 交付后端团队的 handoff 包（RTL 版本冻结 + 约束假设 + 未决问题清单）
+- [ ] RTL/仿真交付包（RTL 版本冻结 + 测试命令 + 报告链接 + 未决功能风险）
 
-### Gate F Sign-off — 前端交付后端
+### Gate F Sign-off — RTL/仿真前端交付
 
 ⬜ pending
 

@@ -66,7 +66,6 @@
 ### 2.1 阵列
 
 - **Data RAM**：8 way × 512 set × 32 B = 128 KB
-  - 综合成 SRAM macro；面积紧张时可改 4 way × 1024 set
 - **Tag RAM**：8 way × 512 set × (tag=18 + valid=1 + dirty=1) = 20 bit
 - **LRU RAM**：512 set × 7 bit (8-way pseudo-LRU tree)
 - **Inclusion 位**（可选，为将来 snoop 反向失效 L1）：per line 2 bit (L1I/L1D 存在指示)。Phase C 先不实现，为简化 non-inclusive。
@@ -172,7 +171,7 @@ On L2 miss:
 ## 6. Reset / Flush
 
 - **冷启动（cold boot）**：`initial` 块置 valid=0, dirty=0, PLRU=0。行为模型用
-  `initial` 承担；silicon 需 power-on reset flash-invalidate valid 位。
+  `initial` 承担。
 - **warm `rst_n` 脉冲**：仅复位 FSM 控制状态（state=IDLE、beat/fill/evict 计数、
   latched 请求）。tag/data/valid/dirty/PLRU 阵列为 retention memory，**不清**，与
   `axi_sram.v` 一致——故 write-back 复位安全，dirty 行跨复位保留。
@@ -198,7 +197,7 @@ On L2 miss:
 未来扩展开关：
 
 ```verilog
-`define SOC_L2_ENABLE       1       // 0 → 旁路 L2，L1 直接对接 DDR (面积 gate)
+`define SOC_L2_ENABLE       1       // 0 → 旁路 L2，L1 直接对接 DDR
 `define SOC_L2_INCLUSIVE    0       // 0 = NINE, 1 = strictly inclusive (Phase 后)
 `define SOC_L2_CRITICAL_WORD_FIRST 1
 `define SOC_L2_PREFETCH     0       // Phase 后期 next-line prefetch

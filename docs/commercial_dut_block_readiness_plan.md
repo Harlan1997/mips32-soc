@@ -14,7 +14,7 @@ tracked across five dimensions:
   illegal input handling, and integration into the product top.
 - Verification depth: block unit tests, SoC UVM directed tests, scoreboard
   checks, functional coverage, and negative/error-path tests.
-- Signoff hygiene: lint/synthesis friendliness, debug gating, no generated
+- Signoff hygiene: lint friendliness, debug gating, no generated
   artifacts in source, and clean build/test entry points.
 - Residual-risk log: explicit future features that are not yet claimed.
 
@@ -60,7 +60,7 @@ CLOSED in Phase 4C:
 - Updated `docs/block_specs/dma_spec.md` with full commercial DUT specification.
 - Extended `tb/unit/dma/tb_dma.v` unit test suite covering direct, SG, AXI error, alignment rejection, malformed descriptor, descriptor limit, busy protection, and W1C/IRQ test cases.
 - Added product firmware test `tb/soc_test/fw/tests/dma_cpu/` and `make dma-cpu-gate` top-level entry point.
-- Clarified non-claims: single-beat single-outstanding contract (no burst/multi-outstanding claim), no IOMMU/coherency claim, no formal/lint/synthesis/timing closure claim; coverage exclusion maintenance remains separate.
+- Clarified non-claims: single-beat single-outstanding contract (no burst/multi-outstanding claim), no IOMMU/coherency claim, no formal/lint closure claim; coverage exclusion maintenance remains separate.
 
 ## Phase 4D VIC Commercial Closure
 
@@ -75,7 +75,7 @@ CLOSED in Phase 4D:
 - Verified priority arbitration with lower-ID tie-breaking, preemption, nesting via `ACTIVE` and `RUNNING_PRIO`, APB `VEC_ID` read accept event, repeated `VEC_ID` read protection, ACK clear, level/edge/soft trigger modes, and legacy map compatibility (`0x004` enable/mask, `0x008` masked pending).
 - Extended `tb/unit/vic/tb_vic.v` unit test suite covering all 16 required commercial contract test cases.
 - Added product firmware test under `tb/soc_test/fw/tests/vic_cpu/` and `make vic-cpu-gate` top-level entry point.
-- Documented explicit non-claims: single-line IRQ + APB dispatch contract (no CPU EIC/VEIC claim), no MSI claim, no multicore routing claim, no formal proof claim, no synthesis/timing closure claim; coverage exclusion maintenance remains separate.
+- Documented explicit non-claims: single-line IRQ + APB dispatch contract (no CPU EIC/VEIC claim), no MSI claim, no multicore routing claim, no formal proof claim; coverage exclusion maintenance remains separate.
 
 ## Phase 4E UART Commercial Closure
 
@@ -165,7 +165,7 @@ Two defects from the prior rejected attempt were fixed during closure:
 - Extended `tb/unit/l2/tb_l2.v` to cover all 16 required commercial unit test cases.
 - Added product firmware gate `tb/soc_test/fw/tests/l2_cpu/` and `make l2-cpu-gate` top-level entry point.
 - Updated `docs/block_specs/l2_spec.md`, `docs/commercial_dut_block_readiness_plan.md`, and `docs/refactor_roadmap.md`.
-- Documented explicit non-claims: non-blocking L2, MSHR, writeback buffer, multi-outstanding AXI, coherent snoop/directory, ECC/SECDED, formal proof, synthesis/timing, and coverage exclusion maintenance.
+- Documented explicit non-claims: non-blocking L2, MSHR, writeback buffer, multi-outstanding AXI, coherent snoop/directory, ECC/SECDED, formal proof, and coverage exclusion maintenance.
 
 ## Follow-On Phases
 

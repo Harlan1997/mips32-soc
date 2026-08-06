@@ -80,14 +80,14 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 
 ### 2.2 乘法器实现选项
 
-| 选项 | 面积 | 延迟 | 备注 |
+| 选项 | 延迟 | 备注 |
 |---|---|---|---|
-| A. 单周期 32×32 组合 | 大 | 1 cycle | 综合会跑不上高频 |
+| A. 单周期 32×32 组合 | 1 cycle | 组合路径较长 |
 | **B. Booth radix-4, 5-cycle** | 中 | 5 cycle | 24Kc 常见选择 |
-| C. Wallace tree pipelined 3-stage | 大 | 3 cycle (throughput 1/cycle) | 面积换性能 |
+| C. Wallace tree pipelined 3-stage | 3 cycle (throughput 1/cycle) | 用流水化换取吞吐 |
 
 **当前 RTL**：使用 Verilog `*` 的 behavioral 乘法，配 3-cycle latency
-模型。Booth/radix-4、Wallace tree 或综合定制乘法器是后续 PPA/综合阶段任务。
+模型。Booth/radix-4、Wallace tree 或定制乘法器可作为后续 RTL 演进方向。
 
 ### 2.3 除法器实现
 

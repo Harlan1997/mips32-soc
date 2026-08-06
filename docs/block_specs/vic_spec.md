@@ -18,7 +18,7 @@
 - CPU EIC/VEIC 硬件向量派发（需硬件 vector index 接口与 `Config3.VEIC=1`）
 - MSI (Message-Signalled Interrupts)
 - 多核中断路由与 CPU affinity 掩码
-- 形式化验证 (Formal proof) 与 综合/时序闭环 (Synthesis/Timing closure)
+- 形式化验证 (Formal proof)
 - 更丰富的外部中断源映射表
 - Coverage exclusion 文件的变更与维护
 
