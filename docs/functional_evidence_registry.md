@@ -27,6 +27,7 @@ Status levels used by this registry:
 | DDR4 ECC SECDED path | `BLOCK_VERIFIED` | `make ecc-secded-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-status-gate` | `build/unit_tb/ecc_secded_32/`, `build/unit_tb/axi_ddr4_controller*/`, `build/unit_tb/apb_ddr4_status/` | SECDED correction/detection, controller storage/injection, and APB status classification are verified; SoC IRQ escalation and multi-rank policy are outside this RTL contract |
 | EIC/VEIC vector path | `SOC_INTEGRATED` | `make product-vectored-interrupt-gate` | `build/unit_tb/product_vectored_interrupt/` | VEIC is opt-in and uses the VIC source ID contract; nested interrupt policy and full MIPS compliance remain separate |
 | ISA R2 implemented subset | `SOC_INTEGRATED` | `make isa-r2-gate` | `build/soc_test/isa_r2_sweep/` | Directed firmware covers implemented R2 ALU/control/CP0 operations; full compliance suite, FPU and reference-model lockstep remain open |
+| P1 current RTL/simulation extension bundle | `CONTRACT_CLOSED` | `make p1-current-complete` | `build/p1_complete/p1_completion_report.md` and dependent `build/unit_tb/`, `build/soc_test/`, `build/cpu_mmu_complete/` reports | Aggregate covers the current RTL/simulation slice only; full MESI/directory coherency, full ISA/FPU, Linux/OS boot and production software policy remain open |
 
 ## Evidence Rules
 
