@@ -46,3 +46,24 @@ on the current tree.
   separate cleanup.
 - Coverage exclusion `.el` checksum mismatches remain (coverage-maintenance
   task, explicitly out of scope for Phase 4F).
+
+# TASK-010 Review: ACCEPTED
+
+Reviewer: Codex
+Date: 2026-08-06
+
+The first worker result was rejected because the firmware allowed a successful
+SC when the peer notification was missed. The firmware was corrected so SC=1
+is a hard failure for the dedicated coherency case.
+
+Independent verification:
+
+- `make llsc-coherency-gate` — PASS
+- `make llsc-gate` — PASS
+- `make rtl-frontend-compile` — PASS (`3/3`)
+- `git diff --check` — PASS
+
+Residual: the gate uses a simulation-only peer notification injection. It
+verifies the CPU reservation path but does not claim full MESI/directory
+coherency, snoop retry, writeback ordering, or production multi-core software
+semantics.

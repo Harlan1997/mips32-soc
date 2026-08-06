@@ -1,3 +1,20 @@
+# CURRENT TASK OVERRIDE: P1 CPU/Firmware LL/SC Coherency Gate
+
+The active task is the CPU/firmware verification slice for the existing
+dual-core write-invalidate coherency v0.1 contract. The required result is a
+dedicated `llsc-coherency-gate` proving that a matching peer-store
+notification clears a core-0 LL/SC reservation before SC. This does not claim
+MESI/MOESI, a directory, snoop retry, writeback coherency, or multi-outstanding
+ordering.
+
+The worker may edit only the relevant Makefile, LL/SC firmware and Makefile,
+SoC testbench, coherency/functional evidence documents, and C2A result files.
+Do not edit RTL or coverage exclusions. The normal `llsc-gate` must remain
+passing. The dedicated gate must require explicit peer-notification and
+peer-invalidated-SC markers.
+
+---
+
 # TASK-009 Spec: Phase 4F L2 Current-Contract Commercial Closure
 
 ## Objective
