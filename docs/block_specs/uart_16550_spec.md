@@ -1,7 +1,7 @@
 # UART 16550 兼容控制器 微架构规格 (v2 - Phase 4E Commercial Hardening)
 
 > 状态：Phase 4E 已闭合当前商业级 DUT 合同。`rtl/perips/apb_uart_16550.v` 已通过单元测试门禁 (`make dut-block-unit-gate`) 以及 SoC APB CPU 固件门禁 (`make uart-cpu-gate`)。
-> 注意：Linux 8250 驱动完整兼容性、实板波特率容差、CDC/RDC、Formal 证明、综合/时序与完整 CTS/RTS 硬件流控仍属于后续系统级验证目标。
+> 注意：Linux 8250 驱动完整兼容性、实板波特率容差、CDC/RDC、Formal 证明与完整 CTS/RTS 硬件流控仍属于后续系统级验证目标。
 
 ---
 
@@ -26,7 +26,7 @@
 - Linux 8250 驱动完全无缝移植与系统级兼容
 - 实板晶振/波特率容差与异步 Sampling CDC/RDC
 - 完整 DMA 模式 (FCR[3] tie 0) 与全自动 CTS/RTS 平台流控闭合
-- 形式验证 (Formal Proof)、综合/时序 (Synthesis/Timing)
+- 形式验证 (Formal Proof)
 - 覆盖率豁免文件 (Coverage Exclusion) 维护
 
 ---

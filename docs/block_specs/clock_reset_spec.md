@@ -1,6 +1,6 @@
-# 时钟 / 复位 / CDC / 电源意图 微架构规格 (v0)
+# 时钟 / 复位 / CDC 微架构规格 (v0)
 
-> 状态：v0 草案。作为 Phase E **新增 `rtl/clock/`** 与 `upf/soc.upf` 的实施基线。当前 SoC 单时钟 (`clk`) + 单同步复位 (`rst_n`)；Phase E 升级为多时钟域 + AASD 复位架构 + CDC 单元库 + PLL 接口 + ICG + UPF 声明层。
+> 状态：v0 草案。作为 Phase E 时钟、复位和 CDC RTL 契约。当前 SoC 单时钟 (`clk`) + 单同步复位 (`rst_n`)；Phase E 关注多时钟域、AASD 复位架构和 CDC 单元库。
 
 ---
 
@@ -9,9 +9,6 @@
 - **多时钟域**：CPU / L2 / AXI fabric / APB / DDR / GMAC / USB / QSPI / 32K RTC 各自独立
 - **复位架构**：AASD (async assert / sync deassert) 统一约定；每域独立复位同步器；POR / 软复位 / WDT 复位分层聚合
 - **CDC 单元库**：async FIFO、握手同步器、脉冲同步器、灰码计数器、mux-based 同步器
-- **PLL 接口**：外部 PLL macro (采购)；控制器 wrapper 提供 lock 检测 / 分频 / 旁路 / 参考切换
-- **ICG (集成时钟门控)**：latch-based ICG cell wrapper，供 clock gating 使用
-- **UPF 电源意图**：声明层 (Phase E 只做 RTL 兼容性 + 声明；物理实现在后端)
 - **CDC / RDC 静态验证 0 违规**
 
 ---
@@ -20,53 +17,19 @@
 
 | 域 | 频率 (典型) | 用途 | 源 |
 |---|---|---|---|
-| `cpu_clk`    | 500 MHz – 1 GHz | CPU pipeline / L1 caches | PLL0 |
-| `l2_clk`     | 500 MHz | L2 cache | PLL0 / 2 |
-| `axi_clk`    | 250 MHz | AXI fabric + AXI 侧 DMA | PLL0 / 4 |
-| `apb_clk`    | 50 MHz  | APB peripherals (UART/GPIO/SPI/I2C/TMR/VIC) | axi_clk / 5 |
-| `ddr_clk`    | 400 MHz (DDR3-1600 内部) | DDR3 controller + PHY | PLL1 |
-| `ddr_phy_clk` | 800 MHz | DDR3 PHY (2× ddr_clk) | PLL1 |
-| `gmac_tx_clk` | 125 MHz (Gigabit) | GMAC TX | PLL2 或外部 |
-| `gmac_rx_clk` | 125 MHz | GMAC RX | 外部 (PHY 提供) |
-| `usb_utmi_clk` | 60 MHz | USB 2.0 UTMI | 外部 PHY 提供 |
-| `qspi_clk`   | 100 MHz | QSPI Flash | axi_clk / 2 |
-| `rtc_clk`    | 32.768 kHz | RTC / 深度睡眠计时 | 外部晶振 |
-| `jtag_tck`   | ≤ 20 MHz | JTAG TAP | 外部 |
+| `cpu_clk`    | implementation-defined | CPU pipeline / L1 caches | clock input |
+| `l2_clk`     | implementation-defined | L2 cache | clock input |
+| `axi_clk`    | implementation-defined | AXI fabric + AXI 侧 DMA | clock input |
+| `apb_clk`    | implementation-defined | APB peripherals (UART/GPIO/SPI/I2C/TMR/VIC) | clock input |
+| `ddr_clk`    | implementation-defined | DDR controller | clock input |
+| `qspi_clk`   | implementation-defined | QSPI Flash | clock input |
+| `jtag_tck`   | implementation-defined | JTAG TAP | external input |
 
-**Phase E 决策**：先落 8 个核心域（cpu / l2 / axi / apb / ddr / ddr_phy / qspi / jtag），其他（gmac/usb/rtc）随 Phase D 外设并行加入。
+**Phase E 决策**：先落核心域的复位同步和 CDC 契约，外设时钟域按实际集成需要加入。
 
 ---
 
-## 2. PLL 接口
-
-`rtl/clock/pll_wrapper.v`：包裹外部 PLL macro，提供统一接口。
-
-```verilog
-module pll_wrapper #(
-    parameter OUT_DIVIDERS = 4      // 输出分频数
-)(
-    input  wire        ref_clk,     // 参考晶振 (e.g. 25 MHz)
-    input  wire        rst_n,       // 异步 reset (PLL 断电)
-    input  wire        bypass,      // 1 → 直通 ref_clk
-    input  wire [7:0]  fb_div,      // 反馈分频
-    input  wire [3:0]  out0_div,    // 输出 0 分频
-    input  wire [3:0]  out1_div,
-    input  wire [3:0]  out2_div,
-    input  wire [3:0]  out3_div,
-
-    output wire [OUT_DIVIDERS-1:0] out_clk,
-    output wire        lock         // PLL 锁定
-);
-    // Phase E: 内部 tie-off 或 behavioral model；实际实现由后端插入 PLL macro
-    // 提供 lock=1 (bypass 或 macro lock)
-endmodule
-```
-
-**上电序列**：Reset 释放 → ref_clk 稳定 → 配置分频 → 等 lock (通常 100 µs) → 释放该 PLL 下游复位。
-
----
-
-## 3. 复位架构
+## 2. 复位架构
 
 ### 3.1 复位源
 
@@ -127,12 +90,10 @@ endmodule
 
 ```
 1. POR: 全域异步拉低
-2. Ref clk 稳定 → PLL enable
-3. PLL lock (~100µs) → 释放 cpu_clk 域 pll_lock
-4. cpu_clk 域 reset_sync 释放 → CPU 出复位 (PC = 0xBFC0_0000)
-5. DDR PHY init → dfi_init_complete → ddr_clk 域释放
-6. AXI/APB 域跟随 cpu_clk 释放
-7. Peripheral 域按依赖顺序释放
+2. cpu_clk 域 reset_sync 释放 → CPU 出复位 (PC = 0xBFC0_0000)
+3. DDR init → dfi_init_complete → ddr_clk 域释放
+4. AXI/APB 域跟随 cpu_clk 释放
+5. Peripheral 域按依赖顺序释放
 ```
 
 由外部 PMU/CMU 顺序控制器 (`rtl/clock/reset_seq.v`) 生成。
@@ -198,97 +159,17 @@ endmodule
 
 ---
 
-## 5. ICG (Integrated Clock Gating)
-
-`rtl/clock/clkgate_icg.v`：
-
-```verilog
-module clkgate_icg (
-    input  wire clk_in,
-    input  wire enable,
-    input  wire test_en,        // scan / test bypass
-    output wire clk_out
-);
-    reg latch;
-    always @(clk_in or enable or test_en)
-        if (~clk_in) latch <= enable | test_en;
-    assign clk_out = clk_in & latch;
-endmodule
-```
-
-- Latch-based (低毛刺)
-- test_en 供 DFT scan 模式旁路
-- 综合工具会替换为工艺库 ICG cell (如 CLKGATETST_X1)
-
-**使用规则**：
-- 每层 clock gating 只用 ICG，不用 AND 门（会 glitch）
-- Enable 必须由**寄存器输出**，或经 pipeline stage 打拍
-- 层次门控：粗粒度 (block level) + 细粒度 (register bank) 结合
-
----
-
-## 6. UPF (Unified Power Format) 声明层
-
-`upf/soc.upf`（Phase E 只落声明，物理实现在后端）：
-
-```tcl
-# 电源域声明
-create_power_domain PD_AON  -include_scope
-create_power_domain PD_CPU  -elements {u_soc_top/u_core_subsystem}
-create_power_domain PD_L2   -elements {u_soc_top/u_core_subsystem/u_l2}
-create_power_domain PD_DDR  -elements {u_soc_top/u_memory_subsystem/u_ddr_ctrl}
-create_power_domain PD_PERI -elements {u_soc_top/u_peripheral_subsystem}
-
-# 电源开关
-create_power_switch PSW_CPU -domain PD_CPU \
-    -input_supply_port {vin VDD} -output_supply_port {vout VDD_CPU} \
-    -control_port {pcm cpu_pwr_ctrl}
-
-# 隔离
-set_isolation ISO_CPU -domain PD_CPU -isolation_supply_set primary \
-    -clamp_value 0 -applies_to outputs
-set_isolation_control ISO_CPU -domain PD_CPU \
-    -isolation_signal cpu_iso_en -isolation_sense high
-
-# Retention
-set_retention RET_CPU -domain PD_CPU -retention_supply primary \
-    -save_signal {cpu_ret_save posedge} -restore_signal {cpu_ret_restore posedge}
-```
-
-**Phase E 范围**：只落 UPF 声明 + RTL 侧兼容性检查（跨域信号命名规范 + 不引入 UPF-违规的直连）。物理实现（隔离单元插入、retention flop 映射）在后端。
-
-**RTL 编码约束**（配合 UPF）：
-- 跨电源域信号命名：`<dst_pd>_from_<src_pd>_<name>`
-- 电源域边界处必须有可插入 iso cell 的 register 输出
-- 关键 always-on 逻辑 (VIC / RTC / PMU / WDT) 放 PD_AON
-
----
-
-## 7. 参数化 (`rtl/include/soc_config.vh`)
+## 5. 参数化 (`rtl/include/soc_config.vh`)
 
 ```verilog
 // Clock domain enable (仿真 / bring-up 用)
 `define SOC_CLK_DOMAINS       8
 `define SOC_RESET_SYNC_STAGES 3
 
-// PLL config default
-`define SOC_PLL0_REF_HZ       25_000_000
-`define SOC_PLL0_OUT0_HZ      1_000_000_000   // cpu_clk 目标
-`define SOC_PLL0_OUT1_HZ      500_000_000     // l2_clk
-`define SOC_PLL0_OUT2_HZ      250_000_000     // axi_clk
-`define SOC_PLL0_OUT3_HZ      50_000_000      // apb_clk
-
-`define SOC_PLL1_REF_HZ       25_000_000
-`define SOC_PLL1_OUT0_HZ      400_000_000     // ddr_clk
-
 // CDC FIFO defaults
 `define SOC_CDC_FIFO_DEPTH    16
 `define SOC_CDC_SYNC_STAGES   2
 
-// Power domain enable
-`define SOC_PD_CPU_SWITCHABLE  1     // 支持关 CPU 保 L2 (deep sleep)
-`define SOC_PD_L2_SWITCHABLE   0
-`define SOC_PD_DDR_SWITCHABLE  1     // 支持关 DDR (self-refresh 除外)
 ```
 
 ---
@@ -307,10 +188,6 @@ module soc_top (
 
     // ... 其他 I/O ...
 );
-    // PLL 层
-    pll_wrapper u_pll0 (.ref_clk(ref_clk_25m), ...);
-    pll_wrapper u_pll1 (.ref_clk(ref_clk_25m), ...);
-
     // 复位聚合与同步
     reset_agg u_rst_agg_cpu (...);
     reset_sync u_rst_sync_cpu (.clk(cpu_clk), .rst_pre_n(cpu_rst_pre_n), .rst_n(cpu_rst_n));
@@ -329,14 +206,12 @@ endmodule
 
 **块级** (`tb/uvm_tb/clock_reset/`)：
 
-- **PLL wrapper**：bypass / lock 时序、分频正确性
 - **reset_sync**：async assert 立即传播；deassert 3 拍延迟
 - **reset_agg**：任一源拉低即聚合拉低
 - **sync_2ff / pulse_sync / handshake_sync / async_fifo**：单元级功能 + 边界（连续 pulse / 空满 / 握手循环）
-- **ICG**：enable=0 时 clk_out 无翻转；test_en 强制旁路
 
 **SoC 级**：
-- 复位序列：POR → PLL lock → 各域按依赖释放 → CPU 从 0xBFC0_0000 取指
+- 复位序列：POR → 各域按依赖释放 → CPU 从 0xBFC0_0000 取指
 - WDT reset：使能 WDT → 不喂狗 → 触发全芯片 reset → 重新引导
 - 跨域数据流：AXI (axi_clk) ↔ DDR (ddr_clk) 大数据传输无 loss
 - APB 慢域访问快域寄存器无 hazard
@@ -360,13 +235,10 @@ endmodule
 
 ## 10. 演进
 
-- **DFS/DVFS (动态调压调频)**：PLL 分频动态切换 + 电压变化联动
-- **Multi-PLL sync**：多 PLL 之间保序切换
-- **Power sequencer (PMU FSM)**：多域顺序上下电，与外部 PMIC 通信
 - **AON (always-on) 深度睡眠唤醒**：RTC/GPIO/UART 唤醒源
 
 ---
 
 ## 版本记录
 
-- v0 (2026-07-26)：初版规格，8 时钟域 + AASD 复位 + CDC 单元库 (5 类) + ICG + UPF 声明层。等待 Phase E 启动评审。
+- v0 (2026-07-26)：初版规格，时钟域 + AASD 复位 + CDC 单元库 (5 类)。等待 Phase E 启动评审。

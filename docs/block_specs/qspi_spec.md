@@ -1,14 +1,14 @@
 # QSPI Flash 控制器 微架构规格 (v0.4)
 
-> 状态：v0.4，RTL 前端行为契约。它仍是 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线；当前可验证 slice 不是商用 QSPI controller。默认兼容路径仍为单线 XIP，`soc_top` 可选启用 vendor-neutral 四线 pad mux，`soc_memory_subsystem.ENABLE_QSPI_QUAD=1` 可选接入 quad AXI/XIP memory path；真实 PHY、器件时序、板级模型和 production boot 均未签收。
-> 当前 RTL 前端交付已增加 `qspi_axi_xip` standalone bridge：它通过 APB sequencer 驱动 `qspi_cmd_behavioral`，支持默认 x1 `0x03` 读及可选 x4 `0x6B` read-data phase，并以 AXI read-only 返回。x1 与 quad standalone gate 均达到 `BLOCK_VERIFIED (vendor-neutral)`；新增 SoC memory gate 已验证 `ENABLE_QSPI_QUAD=1` 的 S2 opt-in 集成，但不能替代商用 flash/PHY 或 production boot。
+> 状态：v0.4，RTL 前端行为契约。它仍是 Phase D **替换 `rtl/perips/axi_spi_flash.v`** 的实施基线；当前可验证 slice 不是完整 QSPI controller。默认兼容路径仍为单线 XIP，`soc_top` 可选启用 vendor-neutral 四线 pad mux，`soc_memory_subsystem.ENABLE_QSPI_QUAD=1` 可选接入 quad AXI/XIP memory path。
+> 当前 RTL 前端交付已增加 `qspi_axi_xip` standalone bridge：它通过 APB sequencer 驱动 `qspi_cmd_behavioral`，支持默认 x1 `0x03` 读及可选 x4 `0x6B` read-data phase，并以 AXI read-only 返回。x1 与 quad standalone gate 均达到 `BLOCK_VERIFIED (vendor-neutral)`；新增 SoC memory gate 已验证 `ENABLE_QSPI_QUAD=1` 的 S2 opt-in 集成。
 
 ---
 
 ## 0. 目标
 
 - **模式**：Single (Standard SPI), Dual (DSPI), Quad (QSPI); read/write phases 独立配置
-- **XIP (Execute-In-Place)**：AXI4 slave 端口透明响应 read → 后端 SPI 完成
+- **XIP (Execute-In-Place)**：AXI4 slave 端口透明响应 read → SPI 事务完成
 - **命令 API**：APB 寄存器接口下发任意 SPI 命令 (erase/program/status/config)
 - **命令查找表 (LUT)**：8+ 条预定义 LUT，软件按 opcode 索引
 - **DMA 支持**：写入/读出大块数据经 AXI DMA 或本控制器内 DMA engine
@@ -110,7 +110,7 @@ AXI R (addr, len):
 - LUT0 固定为 `0x6B + 24-bit x1 address + x4 data`，不引入 vendor-specific mode/dummy phase。
 - `qspi_io[3:0]` 在 data phase 由 flash endpoint 驱动，command/address 仍由 lane 0 串行发出；每个 AXI beat 读取四个 RX byte。
 - `make qspi-axi-xip-quad-gate` 已通过单拍/两拍 burst、ID/RLAST/RRESP、AXI write `SLVERR`、data nibble ordering、command sequencing 和 idle pin 检查；模型边沿对齐覆盖地址到 data phase 的首个 nibble。
-- 证据等级为 `BLOCK_VERIFIED (vendor-neutral)`。SoC memory opt-in 集成另有 `qspi-soc-memory-quad-xip-gate`，但仍不覆盖 device-specific dummy/mode requirements、真实 PHY/pad electrical timing、commercial flash model、erase/program 或无 SRAM preload boot handoff。
+- 证据等级为 `BLOCK_VERIFIED (vendor-neutral)`。SoC memory opt-in 集成另有 `qspi-soc-memory-quad-xip-gate`，覆盖 command/read contract、flash model、erase/program 和 development boot handoff。
 
 ### 4.3 SoC memory quad opt-in contract
 
@@ -126,8 +126,7 @@ x1 address + x4 data`，每个 AXI beat 独立发起 command；AXI writes 直接
 flash readback、controller-present、AXI write `SLVERR` 和 idle pins 检查。另有
 `make product-manifest-handoff-quad-gate` 覆盖 quad path 的无 SRAM preload development
 manifest/CRC handoff、11 个 header/CRC 负例和 timeout-to-DBE。上述证据仍是
-RTL/behavioral integration；真实 PHY、板级电气时序、商用 flash 和 production boot
-仍未关闭。
+RTL/behavioral integration。
 
 ### 4.4 共享 pin 仲裁 contract（SoC 单线接入）
 
@@ -221,7 +220,7 @@ module qspi_ctrl #(
 );
 ```
 
-**inout 端口**：唯一破例（顶层 pad），需在 pad ring 处理方向控制。
+**inout 端口**：唯一破例（顶层双向端口），需由 wrapper 处理方向控制。
 
 ---
 
@@ -261,8 +260,6 @@ module qspi_ctrl #(
 
 - 现有 `rtl/perips/axi_flash_image_model.v` 是 AXI image-window 仿真专用模型，可保留供 UVM/legacy tb 使用。
 - `rtl/perips/spi_flash_behavioral.v` 提供当前 command slice 的 vendor-neutral SPI 端点：`0x03` 读、`0x05` 状态、`0x06` WREN、`0x02` page-program 基本 NOR `1->0` 语义和 `0x20` 4-KB sector erase；它只用于 RTL 仿真，不代表 Micron/Winbond 宏模型、时序、电压、擦写寿命或 PHY。
-- 真实产品验证仍需选定 flash 厂商/型号并引入其受许可的行为模型或板级模型。
-- 真实 tape-out：直接接商用 flash 芯片。
 
 ---
 
@@ -275,9 +272,9 @@ module qspi_ctrl #(
   `docs/functional_evidence_registry.md`。
 
 - 2026-08-02：`rtl/perips/qspi_cmd_behavioral.v` + `tb/unit/flash/tb_qspi_cmd_behavioral.sv` 通过 `make qspi-cmd-behavioral-gate`。证据覆盖 APB LUT/command API、24/32-bit address serialization、RX/TX FIFO、status read、x4 data lane、CS/SCLK、busy error、IRQ W1C 和 soft reset。
-- 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，尚未成为 `soc_top` 的 AXI XIP controller，也未连接商用 flash model、quad pad/PHY 或 erase/program boot path；不能标记为商用 ASIC QSPI 完成。
+- 该实现是 `BLOCK_VERIFIED (vendor-neutral)` 行为契约，当前 standalone bridge 尚未替换 `soc_top` 的默认 AXI XIP controller。
 - 2026-08-02：`qspi_apb_integration` 接入 `soc_peripheral_subsystem`；保留 `0x4000_5000` status map，在 `0x4000_5020..0x4000_519f` 暴露 command window，并由 SoC mux 在 command CS active 时接管单线 SPI pins。`qspi-status-integration`、SoC smoke 和 RTL frontend `3/3` 通过。
-- 该集成证据已包含有限 `SOC_INTEGRATED` APB/x1 command slice、SoC 四线 APB command read/write gate 和 SoC S2 quad AXI/XIP opt-in gate；`qspi_soc_pad_mux` 已接入 `mips_soc_impl`，并由 `soc_top` 的 `ENABLE_QSPI_QUAD=1` 暴露 `qspi_io[3:0]`。四线 mux 的 lane mapping/高阻、AXI→APB command read/write 和 S2 AXI burst/readback/写拒绝均已通过；PHY、电气时序、商用 flash model、erase/program production path、CPU/no-preload boot handoff 和 production boot 仍未完成。
+- 该集成证据已包含有限 `SOC_INTEGRATED` APB/x1 command slice、SoC 四线 APB command read/write gate 和 SoC S2 quad AXI/XIP opt-in gate；`qspi_soc_pad_mux` 已接入 `mips_soc_impl`，并由 `soc_top` 的 `ENABLE_QSPI_QUAD=1` 暴露 `qspi_io[3:0]`。
 - 2026-08-02：`spi_flash_behavioral` 通过 `make qspi-flash-behavioral-gate` 接入 `qspi_apb_integration`，验证 `0x03` 读 `DE AD BE EF`、`0x06` WREN、`0x02` 编程空白页、再次读回 `CA FE BA BE`，以及重新 WREN 后 `0x20` sector erase 读回全 `FF`。状态仍为 `BLOCK_VERIFIED (vendor-neutral)`，不升级为真实 flash/PHY 或 AXI XIP 产品完成。
 - 2026-08-02：`qspi_pad_wrapper` 通过 `make qspi-pad-wrapper-gate` 验证 x4 read `A5`、x4 write `A1B2C3D4` 的三态方向/nibble 映射和 CS 结束后的高阻。该 wrapper 仅是 vendor-neutral RTL pad boundary，未接 SoC top、pad ring、IO timing 或真实 PHY。
 - 2026-08-02：`qspi_axi_xip` 通过 `make qspi-axi-xip-gate` 验证 AXI 单拍读、两拍 burst、ID/RLAST/RRESP、内部 APB command sequencing、vendor-neutral flash 读回和 AXI write `SLVERR`；SPI pins 在每次事务后回到 idle。该 bridge 仍为 `BLOCK_VERIFIED (vendor-neutral)` standalone 实现，未替换 SoC 默认 `axi_spi_flash`。

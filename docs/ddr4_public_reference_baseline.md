@@ -3,9 +3,8 @@
 > 版本：v0.1（2026-08-05）
 > 状态：`PUBLIC_REFERENCE_COLLECTED / PROVISIONAL / DDR4_ENTRY_READY=0`
 
-本文把无需 NDA 即可获得的 DDR4 公开资料整理成当前项目的预研基线。它用于
-vendor-neutral controller/PHY behavioral model、接口审查和软件时序假设，不是
-真实 PHY、DRAM、封装或板级 signoff。不得用本文把 `DDR4-IN-01..08` 改成已关闭。
+本文把无需 NDA 即可获得的 DDR4 公开资料整理成当前项目的协议与 RTL
+仿真基线。它用于 controller RTL、接口审查和软件时序假设。
 
 ## 1. 目标配置
 
@@ -16,10 +15,10 @@ vendor-neutral controller/PHY behavioral model、接口审查和软件时序假�
 | 温度 | commercial，0..85 C | `PROVISIONAL` |
 | ECC | disabled | 当前 C1 假设 |
 | AXI data path | 32-bit，aligned INCR，1..16 beats | 当前 SoC contract |
-| memory model | `rtl/perips/axi_ddr_model.v` + `rtl/perips/ddr4_phy_behavioral.v` | vendor-neutral |
+| memory model | `rtl/perips/axi_ddr_model.v` + `rtl/perips/ddr4_phy_behavioral.v` | simulation reference |
 
-DDR4-2133 只是用于先行验证的速度档，不代表最终 PHY 支持矩阵。最终颗粒必须
-同时满足 PHY supported-part list、封装、板级拓扑和 SI/PI 约束。
+DDR4-2133 是当前 controller 仿真的代表性速度档。不同 density、speed bin、
+temperature 和 ordering code 可通过参数 profile 扩展。
 
 ## 2. 公开资料摘录
 
@@ -46,20 +45,19 @@ DDR4-2133 的代表性初始值；不同密度、speed bin、温度和厂商 ord
 
 ## 3. WDT 与初始化临时预算
 
-这是用于 RTL gate 的明确假设，不是 PHY worst-case signoff：
+这是用于 RTL gate 的明确仿真假设：
 
 | 阶段 | 临时预算 | 100 MHz controller clock 折算 |
 |---|---:|---:|
 | power-good/reset settle | 100 us | 10,000 cycles |
 | JEDEC init command sequence | 200 us | 20,000 cycles |
-| PHY write-leveling/training | 5 ms | 500,000 cycles |
+| controller initialization/training abstraction | 5 ms | 500,000 cycles |
 | retry budget | 2 次 | 每次重新进入 bounded init |
 | boot WDT timeout | 20 ms | 2,000,000 cycles |
 
 临时 gate 的要求是：init/training 成功或失败必须在 20 ms 内产生确定状态；
 失败必须置位 sticky error、让 AXI 请求以 bounded `SLVERR` 完成，并允许 WDT
-复位和 boot-status 保留。真实 WDT 数值应由 PHY training worst-case、PLL/
-reset/power-good 时序和系统 boot budget 共同签收。
+复位和 boot-status 保留。
 
 ## 4. 项目内模型映射
 
@@ -67,15 +65,13 @@ reset/power-good 时序和系统 boot budget 共同签收。
 
 - `rtl/perips/ddr4_phy_behavioral.v`：抽象 init、training、refresh、读写、
   backpressure 和 fatal/error；其 `INIT_CYCLES=4`、`TRAIN_CYCLES=4`、
-  `REFRESH_CYCLES=3` 是仿真抽象 cycle，不等于上表纳秒预算。
+  `REFRESH_CYCLES=3` 是仿真抽象 cycle。
 - `rtl/perips/axi_ddr_model.v`：AXI memory、随机 backpressure 和周期性
   refresh stall；不模拟 DQ/DQS、CA timing、ODT、校准或电气行为。
 - `rtl/perips/apb_ddr4_status.v`：软件可见的 controller/init/training/
   fatal/error status 和 W1C contract。
 
-因此当前模型可以验证 controller-facing behavior 和错误恢复，但不能验证
-真实 DDR4 command timing、DFI ratio、PHY training margin、SI/PI 或 DRAM
-retention。
+因此当前模型用于验证 controller-facing behavior、错误恢复和协议时序假设。
 
 ## 5. 公开来源登记
 
@@ -105,15 +101,10 @@ retention。
 ## 6. 结论与下一步
 
 本资料包已经解除“没有公开预研参数”的问题，可直接支持当前
-`RTL_FUNCTIONAL_SIM_READY` 范围。它没有解除产品入口阻塞：`DDR4-IN-03/04`
-仍需要真实 PHY/DFI 交付物，`DDR4-IN-05/06` 仍需要目标颗粒与板级约束，
-`DDR4-IN-07` 仍需要可运行且许可明确的真实 model，`DDR4-IN-08` 仍需要
-项目签收的时钟/复位/WDT 预算。
+`RTL_FUNCTIONAL_SIM_READY` 范围；不涉及产品 PHY、封装、板级或其他物理实现入口。
 
-公开资料实际能关闭的是：DDR4 协议预研、代表性 timing、候选颗粒筛选、
-vendor-neutral model 和临时 boot/WDT 假设。公开资料不能关闭的是：TSMC
-PDK/DDR IO library、foundry-approved 商用 PHY、目标板级 SI/PI、PHY training
-margin、可用于发布的 licensed memory model，以及本项目最终 WDT 签收。
+公开资料实际支持的是：DDR4 协议、代表性 timing、controller/model、错误分类
+和临时 boot/WDT 仿真假设。
 
-建议后续先将上表 `PROVISIONAL` 参数做成独立 model parameter profile；选定
-PHY 和 DRAM 后替换 profile，并新增 init/training/refresh/no-preload boot gate。
+当前仅维护 RTL/model 参数 profile，并持续运行 init/training/refresh/no-preload
+等功能仿真 gate。

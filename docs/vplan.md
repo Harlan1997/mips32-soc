@@ -76,15 +76,13 @@
 | eFuse/OTP | ✓ | ✓ | ~ | ✓ | Sec-DV | 待写 | Phase D |
 | JTAG TAP + Debug Master | ~ | ✓ | | ✓ | Dbg-DV | 现有 | Phase A |
 
-### 1.4 时钟 / 复位 / 电源意图
+### 1.4 时钟 / 复位 / CDC
 
 | 特性 | 块 UVM | SoC UVM | SVA | Formal | CDC | RDC | 责任 | Spec | 状态 |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | 多时钟域架构 | | ✓ | ✓ | | ✓ | | Infra | 待写 clock_spec.md | Phase E |
 | 复位同步器 (AASD) | ✓ | ✓ | ✓ | ✓ | | ✓ | Infra | 同上 | Phase E |
 | CDC 单元库 (FIFO/handshake/pulse) | ✓ | | ✓ | ✓ | ✓ | | Infra | 同上 | Phase E |
-| ICG 门控 | ✓ | ~ | ✓ | | | | Infra | 同上 | Phase E |
-| UPF 电源意图（声明） | | ✓ | | | | | Infra | `upf/soc.upf` | Phase E |
 
 ### 1.5 系统级
 
@@ -142,7 +140,7 @@
 | B 结束 | CP0 完整 + MMU + BPU + MDU + 精确异常 + MIPS ISA compliance 100% + ISA-Ref co-sim >1e9 指令 无 mismatch + CoreMark 通过 | 本文件 §1.1 |
 | C 结束 | L1 4-way + L2 + 多 outstanding AXI + AXI compliance + 缓存一致性 formal | 本文件 §1.2 |
 | D 结束 | 所有外设块级 + SoC 级 pass + register model (RAL) 覆盖 100% | 本文件 §1.3 |
-| E 结束 | 多时钟域 + CDC 0 违规 + RDC 0 违规 + AASD 复位 + UPF 声明 | 本文件 §1.4 |
+| E 结束 | 多时钟域 + CDC 0 违规 + RDC 0 违规 + AASD 复位 | 本文件 §1.4 |
 | F 结束（前端签核） | SVA 库 + formal 关键模块 proven + Linux boot 稳定 + 所有 §2 覆盖率契约达标 + `docs/frontend_signoff_checklist.md` 全绿 | 本文件 §1.5 |
 
 ---
@@ -158,8 +156,8 @@
 | Mem-DV | DDR3 ctrl + ECC (未来) |
 | Sec-DV | eFuse + secure boot (未来) |
 | Dbg-DV | JTAG TAP + debug master + EJTAG (未来) |
-| Infra | 时钟/复位/CDC/UPF/Lint/CDC-CI |
-| IP-Integ | 采购 IP (USB / GMAC option / PLL) 集成 |
+| Infra | 时钟/复位/CDC/Lint/CDC-CI |
+| IP-Integ | 外部 IP 接口集成 |
 | Integ | 系统级 boot + Linux + 性能 |
 
 每 phase 起始由 verification lead 分工登记 + owner 签字。

@@ -30,10 +30,10 @@
 
 ### 0.1 当前阻塞和输入
 
-输入登记见 [`docs/ddr_integration_inputs.md`](../ddr_integration_inputs.md)；
-当前 `DDR_ENTRY_READY=0`，因此本节只冻结实施前置条件，不授权 controller RTL。
+该 DDR3 文档仅保留为 legacy prototype 参考，不是当前 DDR4 RTL 实现入口；
+当前 controller RTL 以 `docs/block_specs/ddr4_spec.md` 和代码/仿真 gate 为准。
 
-controller RTL 只有在以下输入全部冻结后才允许实现：
+历史 DDR3 路线曾要求以下外部输入：
 
 1. PHY vendor/IP、版本、许可证和 DFI 3.1 port list；
 2. DDR3 part number、rank/width、板级频率/电气约束和 timing file；

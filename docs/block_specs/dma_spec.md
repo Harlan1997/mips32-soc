@@ -83,5 +83,5 @@ When an error occurs during transfer initiation, descriptor loading, or data mov
 - **Non-Claims / Exclusions**:
   - No AXI burst or multi-outstanding transaction claims (single-beat current fabric baseline).
   - No IOMMU or hardware cache coherency claims.
-  - No formal verification, linting, synthesis, or timing closure claims in this phase.
+  - No formal verification or linting claims in this phase.
   - Coverage exclusion maintenance remains a separate task.

@@ -113,10 +113,10 @@ MIPS32 硬编码 4 段：
 
 | 选项 | 优点 | 缺点 |
 |---|---|---|
-| A. 单份 64-entry CAM，双读端口 | 面积小 | 需双读比较端口，功耗高 |
-| **B. Micro-TLB 分离 (推荐)** | 4-entry ITLB + 8-entry DTLB fully-assoc micro-TLB；主 TLB 64-entry 单端口，miss 时 fill micro-TLB | 二级复杂度，但吞吐好、功耗低（24Kc 采用此结构）|
+| A. 单份 64-entry CAM，双读端口 | 直接支持 I/D 双 lookup | 结构简单 |
+| **B. Micro-TLB 分离 (推荐)** | 4-entry ITLB + 8-entry DTLB fully-assoc micro-TLB；主 TLB 64-entry 单端口，miss 时 fill micro-TLB | 二级 lookup，吞吐更高 |
 
-**当前 RTL 基线**：采用方案 A 的 direct dual-lookup 变体。`mips_tlb` 保持一份主 TLB array，并为 I/D 两侧提供组合 lookup；当前没有独立 micro-TLB fill/flush 状态机。方案 B（I/D micro-TLB）作为后续性能/功耗优化，不属于当前 RTL 功能闭合条件；主 TLB miss 仍由软件 refill 处理。
+**当前 RTL 基线**：采用方案 A 的 direct dual-lookup 变体。`mips_tlb` 保持一份主 TLB array，并为 I/D 两侧提供组合 lookup；当前没有独立 micro-TLB fill/flush 状态机。方案 B（I/D micro-TLB）作为后续性能优化，不属于当前 RTL 功能闭合条件；主 TLB miss 仍由软件 refill 处理。
 
 ### 4.4 TLB 指令 (TLBR/TLBWI/TLBWR/TLBP)
 

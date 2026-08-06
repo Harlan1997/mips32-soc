@@ -5,8 +5,7 @@
 Turn the current SoC integration into a maintainable RTL implementation with a
 clear product/verification boundary, a single system contract, and repeatable
 functional simulation evidence. The current project target is RTL frontend and
-simulation readiness; synthesis, backend implementation, and tapeout sign-off
-are explicitly outside this plan.
+simulation readiness.
 
 ## Step 1: Freeze the System Contract
 
@@ -376,10 +375,9 @@ Current RTL/simulation review status:
 - Phase 3C is complete for PIC multi-source mask arbitration coverage. Priority
   ordering is intentionally not claimed because the current PIC exposes raw
   status, mask, active bits, and an OR-reduced CPU interrupt.
-- The current RTL contract is bounded and verified through simulation. This is
-  not a production, synthesis, backend, or tapeout conclusion. Any future
-  productization work must define a new scope and gate rather than changing the
-  meaning of the current Phase 2/3A/3B/3C claims.
+- The current RTL contract is bounded and verified through simulation. Any
+  future productization work must define a new scope and gate rather than
+  changing the meaning of the current Phase 2/3A/3B/3C claims.
 
 ## Step 8: Product Boundary Hardening
 
