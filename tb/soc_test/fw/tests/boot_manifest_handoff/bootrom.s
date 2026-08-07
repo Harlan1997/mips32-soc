@@ -5,6 +5,54 @@
     .globl _start
 
 _start:
+    /* Serialize dual-core reset boot. CP0 EBase carries CPUNum; secondary
+     * waits for primary to finish manifest copy/CRC before entering the
+     * shared kernel image, avoiding interleaved SPI transactions. */
+    .word   0x7c68003b
+    beq     $t0, $zero, boot_primary
+    nop
+
+boot_secondary_wait:
+    lui     $s0, 0xA000
+    ori     $s0, $s0, 0x0FFC
+    /* Leave a persistent secondary-boot record while waiting for release. */
+    lui     $s1, 0xA000
+    ori     $s1, $s1, 0xFF04
+    lui     $t4, 0xC0DE
+    ori     $t4, $t4, 0x0001
+    sw      $t4, 0($s1)
+    ori     $t3, $zero, 0xFFFF
+boot_secondary_start_delay:
+    addiu   $t3, $t3, -1
+    bne     $t3, $zero, boot_secondary_start_delay
+    nop
+boot_secondary_poll:
+    lw      $t1, 0($s0)
+    lui     $t2, 0xC0DE
+    ori     $t2, $t2, 0x0001
+    beq     $t1, $t2, boot_secondary_release
+    nop
+boot_secondary_backoff:
+    addiu   $t3, $zero, 256
+boot_secondary_backoff_loop:
+    addiu   $t3, $t3, -1
+    bne     $t3, $zero, boot_secondary_backoff_loop
+    nop
+    j       boot_secondary_poll
+    nop
+boot_secondary_release:
+    lui     $t0, 0x1000
+    mtc0    $t0, $12
+    nop
+    nop
+    nop
+    nop
+    lui     $t9, 0x8000
+    ori     $t9, $t9, 0x1000
+    jr      $t9
+    nop
+
+boot_primary:
     /* Read the fixed development manifest through the kseg1 XIP window. */
     lui     $s0, 0xB000
     lw      $t0, 0($s0)
@@ -128,6 +176,12 @@ crc_no_xor:
     nop
     nop
     nop
+    /* Release a waiting secondary core after payload CRC and copy pass. */
+    lui     $t0, 0xA000
+    ori     $t0, $t0, 0x0FFC
+    lui     $t1, 0xC0DE
+    ori     $t1, $t1, 0x0001
+    sw      $t1, 0($t0)
     lui     $t9, 0x8000
     ori     $t9, $t9, 0x1000
     jr      $t9

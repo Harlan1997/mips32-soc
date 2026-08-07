@@ -110,6 +110,9 @@ module tb_product_manifest_handoff #(
     reg pass_mailbox_seen;
     reg fail_mailbox_seen;
     reg xip_timeout_mailbox_seen;
+    reg product_kernel_core0_seen;
+    reg product_kernel_core1_seen;
+    reg product_kernel_ipi_seen;
     reg boot_status_stage_seen;
     reg boot_status_failure_seen;
     reg [31:0] boot_status_stage_value;
@@ -127,6 +130,9 @@ module tb_product_manifest_handoff #(
     endgenerate
 
     mips_soc #(
+`ifdef TB_PRODUCT_KERNEL_DUAL_CORE
+        .ENABLE_DUAL_CORE       (1'b1),
+`endif
         .SPI_READ_TIMEOUT_CYCLES (SPI_READ_TIMEOUT_CYCLES),
         .ENABLE_QSPI_QUAD       (ENABLE_QSPI_QUAD)
     ) u_soc (
@@ -261,6 +267,9 @@ module tb_product_manifest_handoff #(
             pass_mailbox_seen = 1'b0;
             fail_mailbox_seen = 1'b0;
             xip_timeout_mailbox_seen = 1'b0;
+            product_kernel_core0_seen = 1'b0;
+            product_kernel_core1_seen = 1'b0;
+            product_kernel_ipi_seen = 1'b0;
             boot_status_stage_seen = 1'b0;
             boot_status_failure_seen = 1'b0;
             boot_status_stage_value = 32'd0;
@@ -414,6 +423,10 @@ module tb_product_manifest_handoff #(
 
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0)) begin
+                if ($test$plusargs("EXPECT_PRODUCT_KERNEL") &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FF00 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata == 32'hC0DE_0000)
+                    product_kernel_core0_seen = 1'b1;
                 if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_8000) begin
                     boot_status_stage_seen = 1'b1;
                     boot_status_stage_value = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata;
@@ -437,9 +450,31 @@ module tb_product_manifest_handoff #(
                 end
             end
 
+`ifdef TB_PRODUCT_KERNEL_DUAL_CORE
+            if ($test$plusargs("EXPECT_PRODUCT_KERNEL") &&
+                u_soc.u_impl.core1_ipi_int)
+                product_kernel_ipi_seen = 1'b1;
+            if ($test$plusargs("EXPECT_PRODUCT_KERNEL") &&
+                u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_req &&
+                (u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_we != 4'd0) &&
+                u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.mem_vaddr == 32'hA000_FF04 &&
+                u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_wdata == 32'hC0DE_0001)
+                product_kernel_core1_seen = 1'b1;
+`endif
+
             if (pass_mailbox_seen) begin
                 if (expect_boot_failure != 0)
                     fail("bad image reached the stage-1 success mailbox");
+`ifdef TB_PRODUCT_KERNEL_DUAL_CORE
+                if ($test$plusargs("EXPECT_PRODUCT_KERNEL")) begin
+                    product_kernel_core0_seen = product_kernel_core0_seen ||
+                        (u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[16'h3FC0] == 32'hC0DE_0000);
+                    product_kernel_core1_seen = product_kernel_core1_seen ||
+                        (u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[16'h3FC1] == 32'hC0DE_0001);
+                    product_kernel_ipi_seen = product_kernel_ipi_seen ||
+                        (u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[16'h0C00] == 32'hCAFE_0000);
+                end
+`endif
                 if (!reset_seen)
                     fail("reset PC was not observed in Boot ROM");
                 if (!header_read_seen || !payload_read_seen)
@@ -452,6 +487,14 @@ module tb_product_manifest_handoff #(
                 end
                 if (!handoff_seen || !stage1_entry_seen)
                     fail("valid image did not reach the handoff marker and kseg0 entry");
+                if ($test$plusargs("EXPECT_PRODUCT_KERNEL")) begin
+                    if (!product_kernel_core0_seen || !product_kernel_core1_seen)
+                        fail("product kernel did not publish both core entry markers");
+                    if (!product_kernel_ipi_seen)
+                        fail("product kernel did not deliver the core-1 IPI");
+                    $display("REGRESSION_TEST_SUCCESS product_kernel_boot");
+                    $finish;
+                end
                 if ($test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) begin
                     if (!runtime_abi_entry_seen)
                         fail("runtime ABI image did not execute from relocated kseg0 entry");
@@ -532,7 +575,8 @@ module tb_product_manifest_handoff #(
                 $finish;
             end
 
-            if (cycles > ($test$plusargs("EXPECT_KSEG0_RUNTIME_MULTI") ? 500000 :
+            if (cycles > ($test$plusargs("EXPECT_PRODUCT_KERNEL") ||
+                         $test$plusargs("EXPECT_KSEG0_RUNTIME_MULTI") ? 500000 :
                          (($test$plusargs("EXPECT_KSEG0_LAYOUT") ||
                            $test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) ? 120000 : 30000))) begin
                 $display("DEBUG: timeout pc=%h data_req=%b data_we=%h mem_vaddr=%h status=%h stage0=%h stage1=%h",
@@ -543,6 +587,15 @@ module tb_product_manifest_handoff #(
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
                          u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[1024],
                          u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[1025]);
+`ifdef TB_PRODUCT_KERNEL_DUAL_CORE
+                $display("DEBUG: kernel dual cp0 core0=%0d pc0=%h core1=%0d pc1=%h release=%h ipi=%b",
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.CPUNUM,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                         u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.CPUNUM,
+                         u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc,
+                         u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[1023],
+                         u_soc.u_impl.core1_ipi_int);
+`endif
                 fail("product manifest boot did not reach a terminal mailbox");
             end
         end
