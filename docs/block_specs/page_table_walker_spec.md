@@ -16,6 +16,8 @@ allocator gate 覆盖 bounded root lease/generation contract。
 - access `00=fetch`、`01=load`、`10=store`；fetch 要求 X，load 要求 W 或 X，store 要求 W；user access 要求 U。
 - walker 只允许一个 outstanding memory read；`mem_ready` 完成请求，`mem_error` 产生 bus fault。
 - 成功返回 `PA={leaf.PFN,VA[11:0]}`；fault 分类为 miss、permission、bus、format。
+- 硬件 refill 一次只解析一个 4KB leaf；对应 VPN2 的另一半 EntryLo 保持 invalid，
+  不把单页 PFN 错误复制到相邻 4KB 页。
 
 这是 CPU/MMU 当前阶段的硬件翻译扩展 contract，不等同于完整 MIPS Linux 页表 ABI。
 CPU refill 使用受控 VPN2 slot 选择，避免 I/D refill 互相驱逐；TLBWI/TLBWR 仲裁和异常向量接入已有当前集成切片；PTE
@@ -30,4 +32,5 @@ fault 保持原有异常路径。默认 SoC 将该端口关闭并 tie-off。
 `make cpu-hardware-walker-gate` 已验证真实 CPU 的两级页表读、TLB 写入、物理
 地址重取指，以及 leaf permission fault 到一次性 CPU TLBL/TLBS fault 状态的
 路径。walker fault 会锁存并阻止同一 miss 重新发起；该闭合不包含完整 OS
-demand paging 或 page-table allocator。
+demand paging 或 page-table allocator。`page-table-tlb-refill-gate` 另验证了
+even/odd 4KB leaf 只写 EntryLo0/EntryLo1 的对应 half。

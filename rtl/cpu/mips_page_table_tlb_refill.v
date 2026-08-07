@@ -45,11 +45,13 @@ module mips_page_table_tlb_refill (
     assign tlb_wr_asid = asid_q;
     assign tlb_wr_mask = 16'h0000;
     // MIPS EntryLo: PFN[29:6], C=3, D follows PTE.W, V follows PTE.V,
-    // global remains software-owned and is zero for hardware refills.
+    // global remains software-owned and is zero for hardware refills.  The
+    // walker resolves one 4KB leaf, so leave the other half invalid instead
+    // of aliasing both halves to the same physical page.
     wire [31:0] entrylo = {2'b0, 4'b0, leaf_pte[31:12], 3'b011,
                            leaf_pte[1], leaf_pte[0], 1'b0};
-    assign tlb_wr_entrylo0 = entrylo;
-    assign tlb_wr_entrylo1 = entrylo;
+    assign tlb_wr_entrylo0 = va_q[12] ? 32'd0 : entrylo;
+    assign tlb_wr_entrylo1 = va_q[12] ? entrylo : 32'd0;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin refill_pending <= 1'b0; resp_seen <= 1'b0; grant_seen <= 1'b0; va_q <= 0; asid_q <= 0; end
