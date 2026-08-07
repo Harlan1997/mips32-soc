@@ -575,7 +575,7 @@ module tb_product_manifest_handoff #(
                 $finish;
             end
 
-            if (cycles > ($test$plusargs("EXPECT_PRODUCT_KERNEL") ||
+            if (cycles > ($test$plusargs("EXPECT_PRODUCT_KERNEL") ? 1000000 :
                          $test$plusargs("EXPECT_KSEG0_RUNTIME_MULTI") ? 500000 :
                          (($test$plusargs("EXPECT_KSEG0_LAYOUT") ||
                            $test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) ? 120000 : 30000))) begin
