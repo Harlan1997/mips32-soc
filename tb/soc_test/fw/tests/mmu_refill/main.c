@@ -33,9 +33,9 @@ static volatile unsigned int last_unexpected_badv = 0;
 struct page_mapping { unsigned int va; unsigned int pa; };
 static const struct page_mapping page_table[] = {
     { 0x00020000u, 0x00006000u },
-    { 0x00022000u, 0x00007000u },
-    { 0x00024000u, 0x00008000u },
-    { 0x00026000u, 0x00009000u }
+    { 0x00021000u, 0x00007000u },
+    { 0x00022000u, 0x00008000u },
+    { 0x00023000u, 0x00009000u }
 };
 
 /* The table and backing pages are kseg0 addresses, so this path does not
@@ -56,11 +56,9 @@ static int install_page_entry(unsigned int bad_vaddr) {
                         (1u << 2) | (1u << 1) | (1u << 0);
     unsigned int lo0 = ((bad_vaddr >> 12) & 1u) ? 0u : leaf;
     unsigned int lo1 = ((bad_vaddr >> 12) & 1u) ? leaf : 0u;
-    unsigned int index;
+    unsigned int index, old_lo0, old_lo1;
 
     asm volatile("mtc0 %0, $10, 0" :: "r"(vpn2));   /* EntryHi: VPN2 (ASID=0) */
-    asm volatile("mtc0 %0, $2,  0" :: "r"(lo0));     /* EntryLo0 */
-    asm volatile("mtc0 %0, $3,  0" :: "r"(lo1));     /* EntryLo1 */
     asm volatile("mtc0 %0, $5,  0" :: "r"(0));       /* PageMask: 4KB (mask=0) */
     /* Reuse an existing VPN2 slot when the other half of a pair faults;
      * random replacement would leave duplicate entries and raise MCheck. */
@@ -68,11 +66,20 @@ static int install_page_entry(unsigned int bad_vaddr) {
                  "nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t"
                  "mfc0 %0, $0, 0" : "=r"(index));
     if (index & 0x80000000u) {
+        asm volatile("mtc0 %0, $2, 0" :: "r"(lo0));
+        asm volatile("mtc0 %0, $3, 0" :: "r"(lo1));
+        asm volatile("nop\n\t nop\n\t nop\n\t nop\n\t nop");
         asm volatile("tlbwr");
     } else {
-        asm volatile("mtc0 %0, $0, 0\n\t"
-                     "nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t"
-                     "tlbwi" :: "r"(index));
+        asm volatile("tlbr\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop");
+        asm volatile("mfc0 %0, $2, 0" : "=r"(old_lo0));
+        asm volatile("mfc0 %0, $3, 0" : "=r"(old_lo1));
+        if ((bad_vaddr >> 12) & 1u) lo0 = old_lo0;
+        else lo1 = old_lo1;
+        asm volatile("mtc0 %0, $2, 0" :: "r"(lo0));
+        asm volatile("mtc0 %0, $3, 0" :: "r"(lo1));
+        asm volatile("nop\n\t nop\n\t nop\n\t nop\n\t nop");
+        asm volatile("tlbwi");
     }
     refill_count++;
     if (vpn != 0x40000000u) demand_fault_count++;
@@ -114,7 +121,7 @@ int main(void) {
     /* Touch four non-identity useg pages spread across the software table. */
     volatile unsigned int *p;
     unsigned int i, ok = 1;
-    unsigned int bases[4] = { 0x00020000u, 0x00022000u, 0x00024000u, 0x00026000u };
+    unsigned int bases[4] = { 0x00020000u, 0x00021000u, 0x00022000u, 0x00023000u };
 
     for (i = 0; i < 4; i++) {
         p = (volatile unsigned int *)bases[i];
