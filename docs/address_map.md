@@ -1,11 +1,12 @@
 # Address Map
 
-> Version: v0.4 (2026-08-01). The product boot/memory contract is defined in
+> Version: v0.5 (2026-08-08). The product boot/memory contract is defined in
 > `docs/boot_memory_contract.md`; the table below is the shared source of
 > truth for implementation and verification. Prototype smoke tests may still
 > use the legacy SRAM preload path until the product gate is enabled.
 
-This file is the first draft of the project-wide memory map.
+This file is the shared address-map summary. Boot, reset, image, and product
+readiness details remain in `boot_memory_contract.md`.
 
 ## Rules
 
@@ -14,14 +15,14 @@ This file is the first draft of the project-wide memory map.
 - Every unmapped access must complete with AXI `DECERR` (`2'b11`).
 - Comments in RTL are not the source of truth; this file is.
 
-## Draft Map
+## Current Map
 
 | Region | Base | Size | Type | Notes |
 | --- | --- | --- | --- | --- |
 | Boot ROM | `0x1FC0_0000` | 64 KB | read-only, uncached | Product reset image; kseg1 alias `0xBFC0_0000` |
 | Boot SRAM | `0x0000_0000` | 64 KB | cacheable | Post-ROM code/data; kseg0 alias `0x8000_0000` |
 | Boot SRAM uncached alias | `0xA000_0000` | 64 KB | uncached | Same physical SRAM aperture; used by firmware mailbox/DMA buffers |
-| DDR (behavioral placeholder) | `0x0800_0000` | 128 MB | cacheable | Phase C.4 capacity placeholder only, backed by `rtl/perips/axi_ddr_behavioral.v`; product kseg0 alias `0x8800_0000`. No DDR3 timing/refresh/PHY. |
+| DDR4 | `0x0800_0000` | 128 MB | cacheable | Product address window backed by the current DDR4 protocol-controller RTL and vendor-neutral behavioral endpoint; product kseg0 alias `0x8800_0000`. PHY/electrical timing and silicon integration remain out of scope. |
 | SPI Flash | `0x1000_0000` | 256 MB | read-mostly | Boot image / XIP candidate |
 | APB Bridge | `0x4000_0000` | 64 KB | uncached | Peripheral window |
 | Debug / Test | `0xE000_0000` | 64 KB | privileged | Reserved; only decoded when a future product feature gate enables it |
@@ -39,7 +40,7 @@ return AXI `DECERR`.
 | DMA | `0x3000` | optional bandwidth path |
 | PIC | `0x4000` | interrupt aggregation |
 | QSPI/XIP status | `0x5000` | version/status/last-error observability plus APB command/FIFO window; existing single-lane AXI XIP and APB command share pins through the SoC arbiter, with optional vendor-neutral `qspi_io[3:0]` pad mux at the top-level; quad PHY/production paths remain open |
-| DDR controller | `0x6000` | frozen init/calibration/refresh/error contract; product block not yet integrated |
+| DDR4 controller | `0x6000` | frozen init/calibration/refresh/error contract; see `block_specs/ddr4_spec.md` |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
 
@@ -63,10 +64,9 @@ an in-flight command and restores `SCLK=0`, `CS_N=1`, `MOSI=0`.
 
 ### DDR Controller Registers (`0x4000_6000`)
 
-The register offsets below are an address/software contract only. No RTL DDR
-controller or PHY is instantiated on the current integration branch; S3 remains
-`axi_ddr_behavioral` until the entry criteria in
-`docs/block_specs/ddr3_spec.md` are met.
+The register offsets below are an address/software contract. The current RTL
+controller contract is defined by `block_specs/ddr4_spec.md`; this map does not
+claim a vendor PHY or production silicon readiness.
 
 | Offset | Register | Access | Meaning |
 | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ controller or PHY is instantiated on the current integration branch; S3 remains
 | `0x004` | `STATUS` | RO | init/calibration/busy/refresh/self-refresh/error/PHY state |
 | `0x008..0x010` | `TIMING_0..2` | RW | JEDEC timing cycles |
 | `0x014` | `REFRESH_CTRL` | RW | tREFI and temperature mode |
-| `0x018..0x024` | `MR0_INIT..MR3_INIT` | RW | DDR3 mode-register values |
+| `0x018..0x024` | `MR0_INIT..MR3_INIT` | RW | DDR4 mode-register values |
 | `0x028..0x02C` | `ADDR_MAP`, `ODT_CTRL` | RW | geometry and ODT configuration |
 | `0x030` | `ERROR_STATUS` | RO | sticky controller error code |
 | `0x034` | `ERROR_CLEAR` | WO/W1C | clear fatal error while idle |

@@ -1,14 +1,16 @@
 # SoC Refactor Docs
 
-This directory defines the production-grade target for the project and the
-sequence to get there.
+This directory contains the current RTL contract, functional evidence,
+verification gates, and supporting architecture records.
 
 Start here:
-- `docs/architecture_review.md`
 - `docs/target_architecture.md`
-- `docs/architecture_migration_plan.md`
 - `docs/address_map.md`
-- `docs/coverage_plan.md`
+- `docs/functional_completeness_plan.md`
+- `docs/functional_evidence_registry.md`
 - `docs/repo_layout.md`
-- `docs/refactor_roadmap.md`
+- `docs/coverage_plan.md`
 - `docs/signoff_criteria.md`
+
+Module contracts are under `docs/block_specs/`. Historical architecture and
+session notes are under `docs/archive/` and are not signoff authority.

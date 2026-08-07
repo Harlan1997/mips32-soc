@@ -103,7 +103,7 @@ The existing offsets remain stable. New product blocks use previously unused
 These addresses are now defined as `SOC_APB_QSPI_BASE`,
 `SOC_APB_DDRCTRL_BASE`, `SOC_APB_WDT_BASE`, and `SOC_APB_BOOT_STATUS_BASE` in
 `rtl/include/soc_config.vh`. The DDR register offsets and error ABI are frozen
-in `docs/block_specs/ddr3_spec.md`; implementation must not introduce an
+in `docs/block_specs/ddr4_spec.md`; implementation must not introduce an
 alternate base, undefined macro, or silently wrap an address outside the DDR
 window.
 

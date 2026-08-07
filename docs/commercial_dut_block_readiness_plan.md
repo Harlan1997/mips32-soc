@@ -164,7 +164,8 @@ Two defects from the prior rejected attempt were fixed during closure:
   - Reserved snoop tie-off without side effects.
 - Extended `tb/unit/l2/tb_l2.v` to cover all 16 required commercial unit test cases.
 - Added product firmware gate `tb/soc_test/fw/tests/l2_cpu/` and `make l2-cpu-gate` top-level entry point.
-- Updated `docs/block_specs/l2_spec.md`, `docs/commercial_dut_block_readiness_plan.md`, and `docs/refactor_roadmap.md`.
+- Updated `docs/block_specs/l2_spec.md` and
+  `docs/functional_evidence_registry.md`.
 - Documented explicit non-claims: non-blocking L2, MSHR, writeback buffer, multi-outstanding AXI, coherent snoop/directory, ECC/SECDED, formal proof, and coverage exclusion maintenance.
 
 ## Follow-On Phases

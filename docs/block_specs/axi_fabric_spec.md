@@ -10,8 +10,10 @@
 > 仍受当前单-outstanding L2/APB/flash 限制为 1（跨-slave 并发已实现，同-slave 吞吐待非阻塞
 > slave / L2 MSHR）。QoS 为静态 per-master class（master 尚未输出 AxQOS）。无 formal 证明、
 > 无商用 VIP compliance。验证：`make fabric-unit-gate` 3/3 +
-> SoC 回归（phase2 16/16、phase3-complete、uvm、soc-smoke）全绿。详见 `docs/refactor_roadmap.md`
-> "Phase C.3"。下文 §0 起为原始设计目标（v0）；未实现项（≥8 深度、动态 QoS、formal）为后续。
+> SoC 回归（phase2 16/16、phase3-complete、uvm、soc-smoke）全绿。当前回归和功能边界以
+> `docs/functional_completeness_plan.md` 与
+> `docs/functional_evidence_registry.md` 为准。下文 §0 起为原始设计目标（v0）；
+> 未实现项（≥8 深度、动态 QoS、formal）为后续。
 
 ---
 
