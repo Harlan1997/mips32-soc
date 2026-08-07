@@ -137,8 +137,9 @@ module mips_cpu #(
     // only an accepted interrupt may use the Cause.IV vector table.
     wire take_interrupt = intr_req && !wb_except_req && !wb_is_eret;
     wire wb_cache_error_exception = wb_except_req && (wb_except_code == 5'h1E);
-    // The prototype firmware remains linked at the legacy useg vector.  The
-    // product configuration instead follows the CP0 bootstrap/general-vector
+    // MMU-enabled prototype firmware is linked in kseg0 so reset and the
+    // general exception handler remain executable before software has created
+    // any useg TLB entry. Product boot follows the CP0 bootstrap/general-vector
     // contract. TLB refill is distinct from Invalid even though both report
     // TLBL/TLBS; its sideband survives the pipeline to select the refill slot.
     wire [31:0] veic_offset = 32'h0000_0200 + ({24'd0, external_vec_id} << 5);
@@ -153,6 +154,7 @@ module mips_cpu #(
                                               ((take_interrupt && cp0_vint_enabled) ?
                                                (ebase_out + cp0_vint_offset) :
                                                (ebase_out + 32'h0000_0180))))) :
+                                  (`SOC_MMU_ENABLE != 0) ? 32'h8000_0180 :
                                   32'h0000_0180;
     
     // ID stage outputs (for flush logic)
@@ -264,7 +266,8 @@ module mips_cpu #(
     // IF Stage
     // =========================================================================
     mips_if_stage #(
-        .RESET_ADDR((`SOC_PRODUCT_BOOT_ENABLE != 0) ? `SOC_BOOT_ROM_KSEG1 : `SOC_BOOT_BASE)
+        .RESET_ADDR((`SOC_PRODUCT_BOOT_ENABLE != 0) ? `SOC_BOOT_ROM_KSEG1 :
+                    ((`SOC_MMU_ENABLE != 0) ? 32'h8000_0000 : `SOC_BOOT_BASE))
     ) u_mips_if_stage (
         .clk              (clk),
         .rst_n            (rst_n),

@@ -252,16 +252,16 @@ micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未�
 
 ### 10.1 已解除的前置阻塞与当前边界
 
-历史上，`SOC_MMU_ENABLE` 由 0 翻转为 1 后，现有 prototype `soc_smoke` 在早期超时。该 firmware 的
-reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。这个原型限制仍然存在，
-但已经不再阻塞当前的产品 kseg0 指令交接子集。
+历史上，`SOC_MMU_ENABLE` 由 0 翻转为 1 后，现有 prototype `soc_smoke` 在早期超时。现已新增
+独立的 kseg0 prototype bootstrap contract；旧的 useg-linked `soc_smoke` 仍不能作为 MMU boot
+验收程序，但该 reset/vector deadlock 已不再阻塞 MMU refill bring-up。
 
 **根因（架构级，非 firmware 缺陷）**：
 - prototype 配置的复位向量固定为 `0x0000_0000`，异常向量固定为 `0x0000_0180`。产品 opt-in
   配置已实现 `0xBFC0_0000` 复位、普通异常与真实 TLB miss 的
   `BEV ? BFC0_0200/BFC0_0380 : EBase/EBase+0x180` 选择。该路由已由完整
-  SoC directed I-side 和 D-side 测试验证；它仍没有产品 linker/TLB firmware，不能解除本节的 MMU
-  启动阻塞。
+  SoC directed I-side 和 D-side 测试验证；prototype 配置现在也提供独立 kseg0 reset/general
+  vector contract。
 - 当前 firmware 链接脚本（`tb/soc_test/fw/common/link.ld`）把 `_start` 和 `_except_handler` 都放在
   useg（VA[31]=0）。
 - `SOC_MMU_ENABLE=1` 时，useg 的任何访问（包括取指）都必须先过 TLB 查找（`mips_mmu.v`），kseg0/1
@@ -277,23 +277,24 @@ reset/vector 链接仍在 useg，不能作为产品 MMU boot 的验收程序。�
 negative、XIP-timeout 场景均通过。它与 fabric alias fold（`mips_mmu.v` 注释里提到的
 `0xA000_0000` SRAM 别名问题）无关，是两个独立问题。
 
-**当前结论**：kseg0 的 instruction fetch/handoff、单次 data translation slice、software-managed
-TLB context-switch 硬件边界和 bounded 4-ASID round-robin/shootdown slice 已达到
+**当前结论**：kseg0 的 instruction fetch/handoff、prototype reset/vector bootstrap、单次 data
+translation slice、software-managed TLB context-switch 硬件边界和 bounded 4-ASID
+round-robin/shootdown slice 已达到
 `BLOCK_VERIFIED`，但 B.3.2 仍未整体完成。尚未证明完整 runtime data mapping、SoC 多进程
 page-table allocator/scheduler 压力、IPI shootdown、cache maintenance、完整异常 handler
 或 Linux/kernel boot，因此不能把此 gate 标为 MMU 产品完成。
 
-**已保留的验证脚手架**（prototype useg 链接仍会触发上述历史死锁；产品切片使用独立 linker）：
-- `tb/soc_test/fw/tests/mmu_refill/`：最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
-- `tb/soc_test/run_mmu_refill.sh`：独立跑该固件的 gate 脚本（当前会因上述阻塞而失败，属预期）。
+**已保留的验证脚手架**（prototype MMU 使用独立 kseg0 linker；产品切片使用独立 linker）：
+- `tb/soc_test/fw/tests/mmu_refill/`：kseg0 reset/general-vector 启动和最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
+- `make mmu-refill-gate`：独立验证 bootstrap、APB uncached refill、even/odd PFN 和四页 SRAM 访问。
 - `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
 **下一项**：在已验证的 bounded 4-ASID slice 上补齐完整 runtime data mapping、SoC 多进程
 page-table/ASID allocator、scheduler 与 shootdown IPI 压力、cache-error/EIC policy 和
 kernel-mode firmware gate。
-在这些 gate 通过前，MMU 仍不是可启动的
-完整产品功能。
+该 gate 不声明完整产品 MMU、demand paging 或 Linux/kernel boot；这些仍需独立
+page-table ownership、权限、长期压力和系统软件验收。
 
 ---
 
