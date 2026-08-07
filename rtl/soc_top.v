@@ -7,7 +7,9 @@
 
 module soc_top #(
     parameter ENABLE_DUAL_CORE = 1'b0,
-    parameter ENABLE_VEIC = 1'b0
+    parameter ENABLE_VEIC = 1'b0,
+    parameter ENABLE_HARDWARE_WALKER = 1'b0,
+    parameter [31:0] HARDWARE_WALKER_PTBR = 32'd0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -38,6 +40,8 @@ module soc_top #(
     mips_soc #(
         .ENABLE_DUAL_CORE (ENABLE_DUAL_CORE),
         .ENABLE_VEIC      (ENABLE_VEIC),
+        .ENABLE_HARDWARE_WALKER (ENABLE_HARDWARE_WALKER),
+        .HARDWARE_WALKER_PTBR   (HARDWARE_WALKER_PTBR),
         .ENABLE_UART_PINS (1'b1),
         // Frozen RTL baseline: x1 SPI is the default; quad is opt-in per gate.
         .ENABLE_QSPI_QUAD (1'b0)
