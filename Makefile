@@ -440,14 +440,14 @@ mmu-hardware-walker-soc-gate:
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
 # contracts and are intentionally not hidden behind this aggregate gate.
-p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-dside-hardware-walker-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
+p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
 	@mkdir -p $(P1_COMPLETE_DIR)
 	@{ \
 		echo '# P1 RTL/Simulation Extension Completion Report'; \
 		echo; \
 		echo '- Baseline commit: '`git rev-parse --short HEAD`; \
 		echo '- Result: PASS'; \
-		echo '- Scope: coherency v0.4 firmware stress, I/D hardware walker refill/retry and permission matrix, bounded page-table root allocator, scheduler context, SoC 16KB PageMask, SECDED primitive, finite VEIC routing, ISA R2 implemented subset, strict coverage metadata hygiene, and existing P0 regressions'; \
+		echo '- Scope: coherency v0.4 firmware stress, I/D and SoC hardware walker refill/retry plus permission matrix, bounded page-table root allocator, scheduler context, SoC 16KB PageMask, SECDED primitive, finite VEIC routing, ISA R2 implemented subset, strict coverage metadata hygiene, and existing P0 regressions'; \
 		echo '- Excluded: full MESI/directory protocol, full ISA compliance/FPU, Linux/OS boot, and production software policy'; \
 	} > $(P1_COMPLETE_DIR)/p1_completion_report.md
 	@echo "P1 current RTL/simulation extension gate: PASS"
