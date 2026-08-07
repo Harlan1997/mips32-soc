@@ -35,7 +35,8 @@ module mips_bpu #(
     parameter BHT_IDX_BITS = `SOC_BHT_INDEX_BITS,
     parameter RAS_DEPTH   = `SOC_RAS_DEPTH,
     parameter RAS_PTR_BITS = `SOC_RAS_DEPTH_BITS,
-    parameter ADDR_WIDTH  = 32
+    parameter ADDR_WIDTH  = 32,
+    parameter ENABLE_BPU  = 1'b1
 )(
     input  wire                    clk,
     input  wire                    rst_n,
@@ -54,7 +55,8 @@ module mips_bpu #(
     input  wire                    resolve_taken,
     input  wire [ADDR_WIDTH-1:0]   resolve_target,
     input  wire [1:0]              resolve_type,
-    input  wire                    resolve_mispredict
+    input  wire                    resolve_mispredict,
+    input  wire                    flush_if
 );
 
     localparam BTB_TAG_BITS = ADDR_WIDTH - BTB_IDX_BITS - 2;   // ignore 2 word-align
@@ -79,7 +81,7 @@ module mips_bpu #(
     wire [BTB_TAG_BITS-1:0] pred_tag     = if_pc[ADDR_WIDTH-1:BTB_IDX_BITS+2];
     wire [BHT_IDX_BITS-1:0] pred_bht_idx = if_pc[BHT_IDX_BITS+1:2];
 
-    wire btb_hit = if_valid && btb_valid[pred_btb_idx]
+    wire btb_hit = ENABLE_BPU && if_valid && btb_valid[pred_btb_idx]
                             && (btb_tag[pred_btb_idx] == pred_tag);
     wire [1:0] btb_type_out    = btb_type[pred_btb_idx];
     wire [ADDR_WIDTH-1:0] btb_target_out = btb_target[pred_btb_idx];
@@ -139,7 +141,7 @@ module mips_bpu #(
                 bht_ctr[bi] <= 2'b01;
             ras_top   <= {RAS_PTR_BITS{1'b0}};
             ras_valid <= 1'b0;
-        end else if (resolve_valid) begin
+        end else if (resolve_valid && (flush_if !== 1'b1)) begin
             // -----------------------------------------------------------------
             // BTB: allocate on taken, update target on hit-but-target-changed
             // for indirect jumps. Not-taken conditional branches only refresh

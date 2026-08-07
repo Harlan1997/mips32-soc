@@ -47,8 +47,24 @@ if [ -n "${VCS_EXTRA_ARGS:-}" ]; then
     read -r -a vcs_extra_args <<< "${VCS_EXTRA_ARGS}"
 fi
 
-vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
+sva_args=()
+sva_sources=()
+cm_args="line+cond+fsm+branch+tgl"
+if [ "${SVA_ENABLE:-0}" = "1" ]; then
+    sva_args=(+define+SVA_ENABLE)
+    sva_sources=(
+        "${ROOT_DIR}/rtl/clock/reset_sync.v"
+        "${ROOT_DIR}/tb/sva/axi4_protocol_props.sv"
+        "${ROOT_DIR}/tb/sva/apb_protocol_props.sv"
+        "${ROOT_DIR}/tb/sva/reset_sync_props.sv"
+        "${ROOT_DIR}/tb/sva/sva_bind.sv"
+    )
+    cm_args="line+cond+fsm+branch+tgl+assert"
+fi
+
+vcs -full64 -sverilog -timescale=1ns/1ps -cm "${cm_args}" \
     "${l2_define_args[@]}" \
+    "${sva_args[@]}" \
     "${vcs_extra_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
@@ -69,8 +85,13 @@ vcs -full64 -sverilog -timescale=1ns/1ps -cm line+cond+fsm+branch+tgl \
     "${ROOT_DIR}"/rtl/perips/axi_sram.v "${ROOT_DIR}"/rtl/perips/axi_ddr_model.v "${ROOT_DIR}"/rtl/perips/ecc_secded_32.v "${ROOT_DIR}"/rtl/perips/axi_ddr4_controller.v "${ROOT_DIR}"/rtl/perips/axi_boot_rom.v "${ROOT_DIR}"/rtl/perips/jtag_debug_top.v \
     "${ROOT_DIR}"/rtl/cache/dcache.v "${ROOT_DIR}"/rtl/cache/icache.v "${ROOT_DIR}"/rtl/cache/l2_cache.v "${ROOT_DIR}"/rtl/cache/l2_cache_caching.v "${ROOT_DIR}"/rtl/cache/l2_cache_wt.v "${ROOT_DIR}"/rtl/cache/l2_cache_nb.v \
     "${ROOT_DIR}"/rtl/soc_fabric.v "${ROOT_DIR}"/rtl/soc_core_subsystem.v "${ROOT_DIR}"/rtl/soc_memory_subsystem.v "${ROOT_DIR}"/rtl/soc_peripheral_subsystem.v "${ROOT_DIR}"/rtl/soc_debug_subsystem.v "${ROOT_DIR}"/rtl/mips_soc_impl.v "${ROOT_DIR}"/rtl/mips_soc.v "${ROOT_DIR}"/rtl/soc_top.v \
+    "${sva_sources[@]}" \
     "${SCRIPT_DIR}"/tb_mips_soc.v -l vcs.log
 
-./simv +FW_HEX="$FW_HEX_ABS" -cm line+cond+fsm+branch+tgl -l sim.log
+./simv +FW_HEX="$FW_HEX_ABS" -cm "${cm_args}" -l sim.log
+if grep -q "SoC Simulation Timeout" sim.log; then
+    echo "ERROR: SoC simulation watchdog expired"
+    exit 1
+fi
 urg -dir simv.vdb -report textReportRaw -format text
 urg -dir simv.vdb -elfile "${ROOT_DIR}/tb/coverage/product_exclusions.el" -excl_strict -report textReportFinal -format text

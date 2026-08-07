@@ -162,6 +162,28 @@ module mips_cpu #(
     wire [31:0] id_branch_target;
     wire        id_jump_taken;
     wire [31:0] id_jump_target;
+    wire        id_control_valid;
+    wire        id_control_taken;
+    wire [31:0] id_control_target;
+    wire [1:0]  id_control_type;
+    wire [31:0] id_pc_plus_4;
+
+    wire        bpu_predict_hit;
+    wire        bpu_predict_taken;
+    wire [31:0] bpu_predict_target;
+    wire [1:0]  bpu_predict_type;
+    wire        id_bpu_valid;
+    wire        id_bpu_taken;
+    wire [31:0] id_bpu_target;
+    wire [1:0]  id_bpu_type;
+    wire        bpu_mispredict;
+    wire [31:0] bpu_actual_next_pc = id_control_taken ? id_control_target :
+                                     id_pc_plus_4;
+    wire [31:0] bpu_predicted_next_pc = id_bpu_taken ? id_bpu_target :
+                                        id_pc_plus_4;
+    assign bpu_mispredict = (`SOC_BPU_ENABLE != 0) && id_control_valid &&
+                            id_bpu_valid &&
+                            (bpu_actual_next_pc != bpu_predicted_next_pc);
     
     // WB stage signals (for ID regfile write)
     wire [4:0]  wb_waddr;
@@ -281,6 +303,12 @@ module mips_cpu #(
         .branch_target    (id_branch_target),
         .jump_taken       (id_jump_taken),
         .jump_target      (id_jump_target),
+        .bpu_enable       (`SOC_BPU_ENABLE != 0),
+        .bpu_predict_valid(bpu_predict_hit),
+        .bpu_predict_taken(bpu_predict_taken),
+        .bpu_predict_target(bpu_predict_target),
+        .bpu_recover      (bpu_mispredict),
+        .bpu_recover_target(bpu_actual_next_pc),
         .exception_req    (exception_flush),
         .exception_vector (exception_vector),
         
@@ -304,7 +332,6 @@ module mips_cpu #(
     // =========================================================================
     // IF/ID Pipeline Register
     // =========================================================================
-    wire [31:0] id_pc_plus_4;
     wire [31:0] id_inst;
     wire        id_except_req_in;
     wire [4:0]  id_except_code_in;
@@ -347,11 +374,19 @@ module mips_cpu #(
         .if_except_req  (if_fault_req),
         .if_except_code (if_fault_code),
         .if_except_is_tlb_refill (if_except_is_tlb_refill),
+        .if_bpu_valid  (bpu_predict_hit),
+        .if_bpu_taken  (bpu_predict_taken),
+        .if_bpu_target (bpu_predict_target),
+        .if_bpu_type   (bpu_predict_type),
         .id_pc_plus_4 (id_pc_plus_4),
         .id_inst      (id_inst),
         .id_except_req  (id_except_req_in),
         .id_except_code (id_except_code_in),
-        .id_except_is_tlb_refill (id_except_is_tlb_refill_in)
+        .id_except_is_tlb_refill (id_except_is_tlb_refill_in),
+        .id_bpu_valid  (id_bpu_valid),
+        .id_bpu_taken  (id_bpu_taken),
+        .id_bpu_target (id_bpu_target),
+        .id_bpu_type   (id_bpu_type)
     );
     
     // PC+8 calculation for link instructions
@@ -498,6 +533,10 @@ module mips_cpu #(
         .branch_target (id_branch_target),
         .jump_taken    (id_jump_taken),
         .jump_target   (id_jump_target),
+        .control_valid (id_control_valid),
+        .control_taken (id_control_taken),
+        .control_target(id_control_target),
+        .control_type  (id_control_type),
         
         // Outputs to ID/EX
         .val_rs        (id_val_rs),
@@ -1174,43 +1213,23 @@ module mips_cpu #(
     // -------------------------------------------------------------------------
     // Phase B.6 — Branch Prediction Unit
     // -------------------------------------------------------------------------
-    // Instantiated as an observation-side predictor: it maintains BTB/BHT/RAS
-    // state driven by ID-stage resolution and produces per-fetch predictions.
-    // The predictions are NOT routed into mips_if_stage.next_pc yet because
-    // the current 5-stage pipeline already resolves branches in ID for zero
-    // taken-branch penalty. A future phase that adds a fetch queue or moves
-    // branch resolution later can flip SOC_BPU_ENABLE=1 and wire
-    // predict_target into IF.
-    wire        bpu_predict_hit;
-    wire        bpu_predict_taken;
-    wire [31:0] bpu_predict_target;
-    wire [1:0]  bpu_predict_type;
+    // The architectural result is still resolved in ID. BPU state is updated
+    // for every control transfer, including not-taken conditional branches;
+    // the optional IF path uses the prediction only when explicitly enabled.
+    wire        bpu_resolve_v     = id_control_valid & ~global_stall;
+    wire [1:0]  bpu_resolve_type  = id_control_type;
+    wire [31:0] bpu_resolve_pc    = id_pc;
+    wire [31:0] bpu_resolve_tgt   = id_control_target;
+    wire        bpu_resolve_taken = id_control_taken;
 
-    // Resolve interface: fire whenever ID resolves a branch or jump (not on
-    // stalled cycles). Encoded BTB type follows the mips_bpu spec:
-    //   00 conditional, 01 direct jump (J/JAL), 10 register jump (JR),
-    //   11 register-and-link (JALR).
-    // The decoder does not currently distinguish JAL from J or JALR from JR
-    // at ID output, so we approximate:
-    //   - Any conditional (branch_op != 0) → type 00
-    //   - jump_op == 01 (direct J or JAL) → type 01
-    //   - jump_op == 10 (JR or JALR)      → type 10 (return heuristic)
-    // This is coarse but adequate for BPU state maintenance; refinement lands
-    // when a JAL/JALR-specific decode bit is added.
-    wire        bpu_id_is_cond   = id_branch_taken | ((~global_stall) & 1'b0);  // taken cond branch
-    wire        bpu_id_is_jump   = id_jump_taken;
-    wire        bpu_resolve_v    = (id_branch_taken | id_jump_taken) & ~global_stall;
-    wire [1:0]  bpu_resolve_type = id_branch_taken ? 2'b00 :
-                                   /*id_jump_taken*/ 2'b01;  // JR heuristic subsumed for now
-    wire [31:0] bpu_resolve_pc   = id_pc;
-    wire [31:0] bpu_resolve_tgt  = id_branch_taken ? id_branch_target : id_jump_target;
-    wire        bpu_resolve_taken = 1'b1;   // only firing on taken cases (see above)
-
-    mips_bpu u_mips_bpu (
+    mips_bpu #(.ENABLE_BPU(`SOC_BPU_ENABLE != 0)) u_mips_bpu (
         .clk               (clk),
         .rst_n             (rst_n),
         .if_valid          (inst_req),
-        .if_pc             (if_vaddr),
+        // IF/ID's instruction PC is the registered IF pc.  if_vaddr is the
+        // look-ahead cache address and would associate a prediction with the
+        // following instruction rather than the one entering ID.
+        .if_pc             (ctx_save_pc),
         .predict_hit       (bpu_predict_hit),
         .predict_taken     (bpu_predict_taken),
         .predict_target    (bpu_predict_target),
@@ -1220,13 +1239,9 @@ module mips_cpu #(
         .resolve_taken     (bpu_resolve_taken),
         .resolve_target    (bpu_resolve_tgt),
         .resolve_type      (bpu_resolve_type),
-        .resolve_mispredict(1'b0)
+        .resolve_mispredict(bpu_mispredict),
+        .flush_if          (bpu_mispredict)
     );
-
-    // BPU outputs currently observability-only; suppress unused lint.
-    wire _bpu_unused = &{1'b0, bpu_predict_hit, bpu_predict_taken,
-                               bpu_predict_target, bpu_predict_type,
-                               bpu_id_is_cond, bpu_id_is_jump};
 
     always @(posedge clk) begin
         if ($time > 324400 && $time < 324600) begin

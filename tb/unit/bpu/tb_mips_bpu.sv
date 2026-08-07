@@ -27,6 +27,7 @@ module tb_mips_bpu;
     reg  [31:0] resolve_target = 0;
     reg  [1:0]  resolve_type = 0;
     reg  resolve_mispredict = 0;
+    reg  flush_if = 0;
 
     integer errors = 0;
 
@@ -92,6 +93,10 @@ module tb_mips_bpu;
         do_resolve(32'h0000_1000, 1'b0, 32'h0000_1080, 2'b00);
         if_pc = 32'h0000_1000; #1;
         check("BHT sat: predict_taken=0 after 4 not-taken", predict_taken == 1'b0);
+
+        // A not-taken conditional branch retains its BTB entry while the
+        // direction counter learns the fall-through path.
+        check("Not-taken: BTB entry retained", predict_hit == 1'b1);
 
         // 5) Direct jump: type 01 always predicted taken
         do_resolve(32'h0000_2000, 1'b1, 32'h0000_20A0, 2'b01);
