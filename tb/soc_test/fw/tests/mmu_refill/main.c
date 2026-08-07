@@ -5,12 +5,10 @@
  * part of the default project build -- SOC_MMU_ENABLE stays 0 for every
  * other firmware/test.
  *
- * This does NOT implement real demand paging. On any TLB miss (TLBL/TLBS),
- * the exception handler installs a single identity-mapped 4KB entry for the
- * faulting page (PA == VA, uncached C=3'b010, valid,
- * dirty, global) via TLBWR, then ERETs to retry the faulting instruction.
- * This is enough to prove the CP0/TLB/mips_mmu translation path actually
- * works under real firmware, without taking on page-table-based paging.
+ * The handler models a small software-owned page table in kseg0. On a TLB
+ * miss it resolves a non-identity VA->PA mapping, installs only the faulting
+ * 4KB half of the TLB pair, and ERETs to retry the access. This is a bounded
+ * execution-level demand-paging slice, not a production OS page allocator.
  * -------------------------------------------------------------------------- */
 #include "soc_addr.h"
 #include "print.h"
@@ -27,25 +25,58 @@
 #define EXC_ADES  5
 
 static volatile unsigned int refill_count = 0;
+static volatile unsigned int demand_fault_count = 0;
 static volatile unsigned int unexpected_exc = 0;
+static volatile unsigned int last_unexpected_code = 0;
+static volatile unsigned int last_unexpected_badv = 0;
 
-/* Install an identity mapping for the 4KB page containing bad_vaddr and
- * retry. EntryLo0/1 cover the even/odd 4KB halves of the 8KB TLB pair so
- * identity mapping preserves the page offset across VA[12]. */
-static void install_identity_entry(unsigned int bad_vaddr) {
-    unsigned int vpn2  = bad_vaddr & 0xFFFFE000u;   /* VA[31:13], EntryHi field */
-    unsigned int pfn   = (bad_vaddr >> 12) & 0xFFFFFu; /* identity: PFN = VA>>12 */
-    unsigned int lo0    = (pfn << 6) | (2u << 3) /* C=uncached */
-                         | (1u << 2) /* D */ | (1u << 1) /* V */ | (1u << 0); /* G */
-    unsigned int lo1    = ((pfn + 1u) << 6) | (2u << 3)
-                         | (1u << 2) | (1u << 1) | (1u << 0);
+struct page_mapping { unsigned int va; unsigned int pa; };
+static const struct page_mapping page_table[] = {
+    { 0x00020000u, 0x00006000u },
+    { 0x00022000u, 0x00007000u },
+    { 0x00024000u, 0x00008000u },
+    { 0x00026000u, 0x00009000u }
+};
+
+/* The table and backing pages are kseg0 addresses, so this path does not
+ * depend on the useg mapping that caused the fault. */
+static int install_page_entry(unsigned int bad_vaddr) {
+    unsigned int vpn = bad_vaddr & 0xFFFFF000u;
+    unsigned int pa = 0;
+    unsigned int i;
+    int found = 0;
+    if (vpn == 0x40000000u) { pa = vpn; found = 1; }
+    for (i = 0; i < sizeof(page_table) / sizeof(page_table[0]); i++) {
+        if (page_table[i].va == vpn) { pa = page_table[i].pa; found = 1; break; }
+    }
+    if (!found) return 0;
+
+    unsigned int vpn2 = bad_vaddr & 0xFFFFE000u;
+    unsigned int leaf = ((pa >> 12) << 6) | (2u << 3) |
+                        (1u << 2) | (1u << 1) | (1u << 0);
+    unsigned int lo0 = ((bad_vaddr >> 12) & 1u) ? 0u : leaf;
+    unsigned int lo1 = ((bad_vaddr >> 12) & 1u) ? leaf : 0u;
+    unsigned int index;
 
     asm volatile("mtc0 %0, $10, 0" :: "r"(vpn2));   /* EntryHi: VPN2 (ASID=0) */
     asm volatile("mtc0 %0, $2,  0" :: "r"(lo0));     /* EntryLo0 */
     asm volatile("mtc0 %0, $3,  0" :: "r"(lo1));     /* EntryLo1 */
     asm volatile("mtc0 %0, $5,  0" :: "r"(0));       /* PageMask: 4KB (mask=0) */
-    asm volatile("tlbwr");
+    /* Reuse an existing VPN2 slot when the other half of a pair faults;
+     * random replacement would leave duplicate entries and raise MCheck. */
+    asm volatile("tlbp\n\t"
+                 "nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t"
+                 "mfc0 %0, $0, 0" : "=r"(index));
+    if (index & 0x80000000u) {
+        asm volatile("tlbwr");
+    } else {
+        asm volatile("mtc0 %0, $0, 0\n\t"
+                     "nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t"
+                     "tlbwi" :: "r"(index));
+    }
     refill_count++;
+    if (vpn != 0x40000000u) demand_fault_count++;
+    return 1;
 }
 
 void c_interrupt_handler(void) {
@@ -55,7 +86,14 @@ void c_interrupt_handler(void) {
 
     if (exc_code == EXC_TLBL || exc_code == EXC_TLBS) {
         asm volatile("mfc0 %0, $8, 0" : "=r"(bad_vaddr));
-        install_identity_entry(bad_vaddr);
+        if (!install_page_entry(bad_vaddr)) {
+            unexpected_exc++;
+            last_unexpected_code = exc_code;
+            last_unexpected_badv = bad_vaddr;
+            asm volatile("mfc0 %0, $14" : "=r"(epc));
+            epc += 4;
+            asm volatile("mtc0 %0, $14" :: "r"(epc));
+        }
         return; /* ERET retries the faulting instruction, no EPC advance */
     }
 
@@ -63,6 +101,8 @@ void c_interrupt_handler(void) {
      * advance past it so the test can still reach its exit report instead
      * of looping forever. */
     unexpected_exc++;
+    last_unexpected_code = exc_code;
+    asm volatile("mfc0 %0, $8, 0" : "=r"(last_unexpected_badv));
     asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
     epc += 4;
     asm volatile("mtc0 %0, $14, 0" :: "r"(epc));
@@ -71,14 +111,10 @@ void c_interrupt_handler(void) {
 int main(void) {
     print_str("mmu_refill: start\n");
 
-    /* Touch a handful of useg words spread across several 4KB pages so we
-     * exercise multiple TLB misses/refills, not just one lucky entry. */
+    /* Touch four non-identity useg pages spread across the software table. */
     volatile unsigned int *p;
     unsigned int i, ok = 1;
-    /* Use four useg pages in the backed SRAM window. The product DDR refill
-     * path has its own gate; keeping this bootstrap gate on SRAM isolates the
-     * reset/vector/TLB/ERET contract from DDR controller behavior. */
-    unsigned int bases[4] = { 0x00006000u, 0x00007000u, 0x00008000u, 0x00009000u };
+    unsigned int bases[4] = { 0x00020000u, 0x00022000u, 0x00024000u, 0x00026000u };
 
     for (i = 0; i < 4; i++) {
         p = (volatile unsigned int *)bases[i];
@@ -91,10 +127,16 @@ int main(void) {
 
     print_str("mmu_refill: refills=");
     print_hex(refill_count);
+    print_str("mmu_refill: demand_faults=");
+    print_hex(demand_fault_count);
     print_str("mmu_refill: unexpected_exc=");
     print_hex(unexpected_exc);
+    print_str("mmu_refill: last_code=");
+    print_hex(last_unexpected_code);
+    print_str("mmu_refill: last_badv=");
+    print_hex(last_unexpected_badv);
 
-    if (ok && refill_count > 0 && unexpected_exc == 0) {
+    if (ok && demand_fault_count == 4 && unexpected_exc == 0) {
         print_str("mmu_refill: PASS\n");
     } else {
         print_str("mmu_refill: FAIL\n");

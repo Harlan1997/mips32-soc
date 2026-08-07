@@ -20,8 +20,9 @@ allocator gate 覆盖 bounded root lease/generation contract。
   不把单页 PFN 错误复制到相邻 4KB 页。
 
 这是 CPU/MMU 当前阶段的硬件翻译扩展 contract，不等同于完整 MIPS Linux 页表 ABI。
-CPU refill 使用受控 VPN2 slot 选择，避免 I/D refill 互相驱逐；TLBWI/TLBWR 仲裁和异常向量接入已有当前集成切片；PTE
-population、demand paging 和 production OS page-table ownership 仍在范围外。
+CPU refill 使用受控 VPN2 slot 选择，避免 I/D refill 互相驱逐；TLBWI/TLBWR 仲裁和异常向量接入已有当前集成切片；
+`make mmu-refill-gate` 另提供 kseg0 软件 page-table 驱动的 bounded non-identity fault/refill/ERET
+证据；完整 PTE population、长期 demand paging 和 production OS page-table ownership 仍在范围外。
 # Hardware Walker CPU Integration
 
 在 `mips_cpu` 的 `hardware_walker_enable=1` opt-in 路径中，I/D 侧 TLBL/TLBS
