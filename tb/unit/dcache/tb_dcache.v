@@ -47,7 +47,8 @@ module tb_dcache;
         .bid(bid),.bresp(bresp),.bvalid(bvalid),.bready(bready),
         .arid(arid),.araddr(araddr),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .arlock(arlock),.arcache(arcache),.arprot(arprot),.arvalid(arvalid),.arready(arready),
-        .rid(rid),.rdata(rdata),.rresp(rresp),.rlast(rlast),.rvalid(rvalid),.rready(rready)
+        .rid(rid),.rdata(rdata),.rresp(rresp),.rlast(rlast),.rvalid(rvalid),.rready(rready),
+        .coh_snoop_valid(1'b0),.coh_snoop_addr(32'd0)
     );
 
     // -------- behavioral single-outstanding AXI memory (1MB) --------

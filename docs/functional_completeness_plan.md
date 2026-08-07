@@ -398,6 +398,8 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | 2026-08-04 | `integration/function-contract` DDR4 controller/status contract re-run | `make ddr4-controller-gate`；`make ddr4-status-gate` | PASS：controller gate；`REGRESSION_TEST_SUCCESS apb_ddr4_status` | controller/status 通过 init、refresh/backpressure、读写、fatal/非法命令和 APB sticky/W1C；证据限定为 RTL/仿真。 |
 | 2026-08-03 | `integration/function-contract` UART CTS SoC integration slice | `make uart-cts-soc-gate SOC_TEST_UART_CTS_DIR=build/soc_test/uart_cts_gate UART_CTS_FW_DIR=build/firmware/uart_cts`；`make dut-block-unit-gate DUT_BLOCK_UNIT_DIR=build/unit_tb/uart_cts_block_aggregate`；`make rtl-frontend-compile` | PASS：SoC gate `REGRESSION_TEST_SUCCESS`，并打印 `UART CTS inactive held TX idle` 与 `UART CTS release allowed TX frame`；DUT block aggregate `10/10`；RTL frontend `3/3` | 新增 `uart_cts` firmware 经真实 CPU/APB 配置 UART 8N1/FIFO/divisor、打开 MCR[5] 并写 TX FIFO；SoC TB 从外部保持 `uart_cts_n=1`，确认 `uart_tx` 不启动，再释放 CTS 并确认 TX frame 出现和 firmware 完成。该证据关闭 `soc_top -> mips_soc -> APB UART -> external CTS/TX pin` 的 behavioral flow-control 集成；不覆盖 接口单元、外部接口/外部系统 timing、接口行为、真实线缆/收发器或软件 driver policy。 |
 | 2026-08-03 | `integration/function-contract` UART auto-RTS watermark slice | `make dut-block-unit-gate DUT_BLOCK_UNIT_DIR=build/unit_tb/uart_rts_block_aggregate`；UART unit log `build/unit_tb/uart_rts_block_aggregate/uart/sim.log` | PASS：UART Case 17 与 block aggregate `10/10`；`REGRESSION_TEST_SUCCESS uart_16550` | UART loopback 在 MCR[1]/MCR[5] 开启、FIFO trigger=4 时，验证 RX FIFO 达到阈值后 `uart_rts_n` 由有效低撤销为高，读空 FIFO 后重新有效；该证据关闭 RTL auto-RTS 水位行为，不覆盖 接口单元、外部接口/外部系统 timing、接口行为 或软件 driver policy。 |
+| 2026-08-08 | `integration/function-contract` DUT block readiness rerun after testbench observer fixes | `source /etc/profile.d/modules.sh && module load vcs && RUN_ROOT=build/unit_tb/dut_block_readiness_fixed2_20260808 tb/unit/run_dut_block_unit_gate.sh`；`RUN_DIR=build/unit_tb/product_tlb_data_vectors_fixed_20260808 tb/unit/bootrom/run_product_tlb_data_vectors.sh` | PASS：DUT block gate `10/10`；`REGRESSION_TEST_SUCCESS dcache`；`REGRESSION_TEST_SUCCESS product_tlb_data_vectors` | D-cache unit TB 将新增 coherency 输入显式 tie-off，消除未连接输入造成的 X 状态；product TLB data-vector TB 改观察 MEM-side `dmem_translate_req`，覆盖 translation fault 抑制外部 cache request 的当前 CPU contract。该记录是验证/observer 修复，不扩大 D-cache ECC/coherency、完整 MMU 或产品启动承诺。 |
+| 2026-08-08 | `integration/function-contract` BPU opt-in IF redirect closure slice | `make bpu-redirect-gate`；`VCS_EXTRA_ARGS='+define+SOC_BPU_ENABLE=1' FW_HEX=build/firmware/soc_smoke/firmware.hex RUN_DIR=build/soc_test/bpu_opt_in2 tb/soc_test/run.sh`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_after_bpu` | PASS：BPU unit；frontend opt-in `4/4`；BPU opt-in SoC smoke；默认 SoC smoke | BPU 的 BTB/BHT/RAS 预测经 IF delay-slot pending path 接入，ID resolve 作为架构真值，wrong direction/target 通过 recovery target 修正；J/JAL、JR/JALR 分类和 not-taken BHT 更新已接线。CoreMark/Dhrystone 命中率、fetch queue、多在途分支、完整 mispredict 性能和 formal 仍 deferred。 |
 | 2026-08-03 | `integration/function-contract` UART vendor-neutral pad wrapper | `make uart-pad-wrapper-gate` | PASS：`REGRESSION_TEST_SUCCESS uart_pad_wrapper` | 固化 UART pin enable contract：disabled 时 TX/RTS/DTR 为安全 idle，RX/CTS/DSR/DCD/RI 返回 inactive；enabled 时双向信号透传。该 gate 只覆盖 RTL pad boundary，不覆盖 外部接口单元、接口行为、IO 外部时序或外部系统模型。 |
 | 2026-08-03 | `integration/function-contract` UART pad wrapper SoC integration | `make uart-cts-soc-gate SOC_TEST_UART_CTS_DIR=build/soc_test/uart_cts_pad_integrated UART_CTS_FW_DIR=build/firmware/uart_cts_pad_integrated` | PASS：UART CTS SoC gate；RTL/SoC compile and simulation completed | `ENABLE_UART_PINS=1` 的真实 `mips_soc_impl` 路径已经过 `uart_pad_wrapper`，CTS hold/release 行为保持通过；`ENABLE_UART_PINS=0` 仍走 legacy bypass。该集成仍不覆盖 外部接口单元、接口行为、接口时序 或外部系统模型。 |
 | 2026-08-03 | `integration/function-contract` UART pad wrapper RX integration | `make uart-external-rx-soc-gate SOC_TEST_UART_EXTERNAL_RX_DIR=build/soc_test/uart_external_rx_pad_integrated UART_EXTERNAL_RX_FW_DIR=build/firmware/uart_external_rx_pad_integrated`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_uart_pad_integrated` | PASS：external RX SoC gate、默认 SoC smoke | 异步 8N1 `0x5A` 经过 `uart_pad_wrapper`、RX synchronizer/FIFO/PIC/RBR 后由 CPU 读回；默认 smoke 无回归。修正 `uart-external-rx-soc-gate` firmware 输出目录使用相对路径导致的错误。 |
@@ -497,6 +499,16 @@ VEIC、ISA R2 implemented subset 和 DDR4 closure gates，并写出固定路径�
 2. unit、firmware、SoC/UVM 仿真覆盖正常、复位、背压、错误和超时路径；
 3. 每个 gate 都有命令、日志、基线 commit 和残余风险；
 4. 发布结论使用 `RTL_FUNCTIONAL_SIM_READY`，不得将其扩展为本阶段未定义的产品级结论。
+
+### SVA simulation assertion slice (2026-08-08)
+
+`make sva-gate` provides the first executable assertion gate for the current
+RTL contract. It binds VCS SVA properties to the real `axi_sram` and
+`apb_vic` interfaces and runs a dedicated `reset_sync` AASD unit scenario.
+The slice checks payload stability under backpressure, single-outstanding
+burst termination, APB setup/wait/error behavior, and synchronized reset
+release. It is simulation assertion evidence only; formal proof, CDC/RDC,
+lint, and final assertion-coverage signoff remain deferred.
 
 ### 当前文档范围声明
 

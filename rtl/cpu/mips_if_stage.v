@@ -22,6 +22,12 @@ module mips_if_stage #(
     input  wire [31:0] branch_target,    // Branch target PC
     input  wire        jump_taken,       // Jump instruction detected
     input  wire [31:0] jump_target,       // Jump target PC
+    input  wire        bpu_enable,
+    input  wire        bpu_predict_valid,
+    input  wire        bpu_predict_taken,
+    input  wire [31:0] bpu_predict_target,
+    input  wire        bpu_recover,
+    input  wire [31:0] bpu_recover_target,
     
     // Exception Handling Interface
     input  wire        exception_req,    // Redirect PC to exception handler
@@ -48,6 +54,8 @@ module mips_if_stage #(
 );
 
     reg [31:0] next_pc;
+    reg        bpu_delay_pending;
+    reg [31:0] bpu_delay_target;
 
     // Next PC selection logic
     always @(*) begin
@@ -55,10 +63,14 @@ module mips_if_stage #(
             next_pc = exception_vector;
         end else if (stall) begin
             next_pc = pc;
+        end else if (bpu_recover) begin
+            next_pc = bpu_recover_target;
         end else if (branch_taken) begin
             next_pc = branch_target;
         end else if (jump_taken) begin
             next_pc = jump_target;
+        end else if (bpu_delay_pending) begin
+            next_pc = bpu_delay_target;
         end else begin
             next_pc = pc + 32'd4;
         end
@@ -68,11 +80,26 @@ module mips_if_stage #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pc <= RESET_ADDR;
+            bpu_delay_pending <= 1'b0;
+            bpu_delay_target <= 32'd0;
         end else begin
             if (ctx_restore_req)
                 pc <= ctx_restore_pc;
             else
                 pc <= next_pc;
+
+            if (ctx_restore_req || exception_req || bpu_recover) begin
+                bpu_delay_pending <= 1'b0;
+            end else if (!stall) begin
+                if (bpu_delay_pending) begin
+                    bpu_delay_pending <= 1'b0;
+                end else if (bpu_enable && bpu_predict_valid &&
+                             bpu_predict_taken && !branch_taken &&
+                             !jump_taken) begin
+                    bpu_delay_pending <= 1'b1;
+                    bpu_delay_target <= bpu_predict_target;
+                end
+            end
         end
     end
 

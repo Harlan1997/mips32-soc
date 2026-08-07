@@ -278,7 +278,9 @@
 // -----------------------------------------------------------------------------
 // Branch Predictor (Phase B.6 series). See docs/block_specs/bpu_spec.md.
 // -----------------------------------------------------------------------------
+`ifndef SOC_BPU_ENABLE
 `define SOC_BPU_ENABLE             0            // 1 = drive IF next_pc from BPU
+`endif
 `define SOC_BTB_ENTRIES            256
 `define SOC_BTB_INDEX_BITS         8            // log2(256)
 `define SOC_BHT_ENTRIES            256

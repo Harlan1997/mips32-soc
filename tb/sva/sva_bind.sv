@@ -9,10 +9,6 @@
 
 `ifdef SVA_ENABLE
 
-// Example bind: attach axi4_protocol_props to every axi slave interface in
-// the SoC. Real binds must know the exact hierarchical path — this file
-// serves as a template; expand per subsystem as they gain SVA coverage.
-
 bind axi_sram axi4_protocol_props #(
     .ID_WIDTH(4), .ADDR_WIDTH(32), .DATA_WIDTH(32)
 ) u_sram_axi_props (
@@ -32,7 +28,22 @@ bind axi_sram axi4_protocol_props #(
     .rlast   (s_rlast)
 );
 
-// Additional binds for dcache/icache when their state signals are exposed:
-//   bind dcache dcache_state_props u_dcache_props (...);
+bind apb_vic apb_protocol_props u_vic_apb_props (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .psel    (psel),
+    .penable (penable),
+    .pwrite  (pwrite),
+    .paddr   (paddr),
+    .pwdata  (pwdata),
+    .pready  (pready),
+    .pslverr (pslverr)
+);
+
+bind reset_sync reset_sync_props #(.STAGES(STAGES)) u_reset_sync_props (
+    .clk       (clk),
+    .rst_pre_n (rst_pre_n),
+    .rst_n     (rst_n)
+);
 
 `endif

@@ -68,16 +68,26 @@ run_ddr4_compile() {
 
 run_soc_compile default
 run_soc_compile product_mmu +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1
+if [[ "${SOC_BPU_ENABLE:-0}" == "1" ]]; then
+    run_soc_compile bpu_opt_in +define+SOC_BPU_ENABLE=1
+fi
 run_ddr4_compile
+
+FRONTEND_CONFIGS="default,product_mmu,ddr4_controller"
+FRONTEND_COUNT=3
+if [[ "${SOC_BPU_ENABLE:-0}" == "1" ]]; then
+    FRONTEND_CONFIGS="default,product_mmu,bpu_opt_in,ddr4_controller"
+    FRONTEND_COUNT=4
+fi
 
 cat > "${RUN_ROOT}/rtl_frontend_compile_report.md" <<EOF
 # RTL Frontend Compile Report
 
 - Status: \`RTL_FRONTEND_COMPILE_READY\`
-- Configurations: default \`soc_top\`, product boot + MMU, DDR4 controller protocol gate
+- Configurations: ${FRONTEND_CONFIGS}
 - Run root: \`${RUN_ROOT}\`
 - Evidence: each configuration produced a VCS elaborated \`simv\`; see \`*/compile.log\`.
 - Scope: RTL parsing/elaboration only; no synthesis, STA, PPA, lint, CDC/RDC or formal.
 EOF
 
-echo "RTL frontend compile gate: PASS (3/3)"
+echo "RTL frontend compile gate: PASS (${FRONTEND_COUNT}/${FRONTEND_COUNT})"

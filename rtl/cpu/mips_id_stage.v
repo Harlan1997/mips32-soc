@@ -55,6 +55,10 @@ module mips_id_stage (
     output wire [31:0] branch_target,// Calculated branch target address
     output wire        jump_taken,   // 1: Jump instruction detected
     output wire [31:0] jump_target,   // Calculated jump target address
+    output wire        control_valid,
+    output wire        control_taken,
+    output wire [31:0] control_target,
+    output wire [1:0]  control_type,
     output wire [4:0]  id_cp0_raddr,
     output wire [2:0]  id_cp0_sel,   // CP0 register sub-select field (MIPS32 R2)
     
@@ -195,6 +199,20 @@ module mips_id_stage (
 
     // Direct / Register Jump Resolution
     assign jump_target = (jump_op == 2'b01) ? {pc_plus_4[31:28], inst[25:0], 2'b00} : val_rs;
+
+    wire is_direct_jump = (inst[31:26] == 6'b000010) ||
+                          (inst[31:26] == 6'b000011);
+    wire is_reg_return  = (inst[31:26] == 6'b000000) &&
+                          (inst[5:0] == 6'b001000);
+    wire is_reg_call    = (inst[31:26] == 6'b000000) &&
+                          (inst[5:0] == 6'b001001);
+    assign control_valid  = is_branch | is_jump;
+    assign control_taken  = is_branch ? branch_taken : jump_taken;
+    assign control_target = is_branch ? branch_target : jump_target;
+    assign control_type   = is_branch ? 2'b00 :
+                            is_direct_jump ? 2'b01 :
+                            is_reg_return ? 2'b10 :
+                            is_reg_call ? 2'b11 : 2'b10;
 
     // Immediate extension
     assign imm_ext = imm_signed ? { {16{inst[15]}}, inst[15:0] } : { 16'd0, inst[15:0] };

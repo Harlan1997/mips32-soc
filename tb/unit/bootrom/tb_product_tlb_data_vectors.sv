@@ -69,8 +69,11 @@ module tb_product_tlb_data_vectors;
         end else begin
             cycles = cycles + 1;
 
+            // Translation faults intentionally suppress the external data_req
+            // so the D-cache cannot deadlock waiting for data_ok. Observe the
+            // MEM-side translation request instead of the downstream request.
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'h0000_0000 &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translate_req &&
                 !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_ok) begin
                 if (!u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_hit)
                     data_refill_seen = 1'b1;

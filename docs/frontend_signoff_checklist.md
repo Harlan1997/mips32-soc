@@ -4,7 +4,7 @@
 >
 > 与 `docs/signoff_criteria.md`（当前"current-contract"签核，只覆盖既有 RTL 契约）互补：本文件是**面向 AP 级前端交付**的完整签核契约。
 >
-> **当前状态口径（2026-08-03）**：下方 2026-07-26 Session 是历史快照，不覆盖后续
+> **当前状态口径（2026-08-08）**：下方 2026-07-26 Session 是历史快照，不覆盖后续
 > `integration/function-contract` 的功能证据。当前功能状态以
 > `docs/functional_completeness_plan.md` 的 gate 记录为准；本清单只保留“有限切片已验证”
 > 与“完整产品能力仍 deferred”的区分。
@@ -33,7 +33,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 累计 unit tb 覆盖 ~130 checks，SoC 冒烟 `REGRESSION_TEST_SUCCESS` 全程保持。
 
-**当前未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合、完整 ISA/compliance、BPU IF 重定向、FPU（可选）、Linux/kernel boot、完整多页尺度与 micro-TLB、ECC、外部 EIC/VEIC、formal 和综合相关签核。`SOC_MMU_ENABLE=1` 已有最小 kseg1 Boot ROM、TLB refill/invalid/Modified、ASID/context-switch、kseg0 runtime 和 CacheErr/vector directed gates；完整 OS/MMU 语义仍未闭合。产品普通 BEV/EBase、TLB refill、有限 vectored interrupt 和 CacheErr 向量已有切片证据，但不代表量产异常策略完成。
+**当前未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合、完整 ISA/compliance、BPU 性能基准与完整 speculative fetch、FPU（可选）、Linux/kernel boot、完整多页尺度与 micro-TLB、ECC、外部 EIC/VEIC、formal 和综合相关签核。`SOC_MMU_ENABLE=1` 已有最小 kseg1 Boot ROM、TLB refill/invalid/Modified、ASID/context-switch、kseg0 runtime 和 CacheErr/vector directed gates；完整 OS/MMU 语义仍未闭合。产品普通 BEV/EBase、TLB refill、有限 vectored interrupt 和 CacheErr 向量已有切片证据，但不代表量产异常策略完成。
 
 ---
 
@@ -140,19 +140,22 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ### B.6 分支预测 (commit b1183a4)
 - [x] BTB 256 + BHT 256 (2-bit sat) + RAS 8 存储与预测逻辑 (12/12 unit tb)
 - [x] `SOC_BPU_ENABLE=0` 兼容模式 (预测输出不消费)
-- [ ] IF next_pc 从 BPU 重定向 — 需 speculative fetch queue，独立架构决策
+- [x] IF next_pc 从 BPU 重定向 —— `SOC_BPU_ENABLE=1` opt-in gate 已覆盖 delay-slot 后 target、实际 resolve recovery；完整 fetch queue/多在途分支仍 deferred
 - [ ] CoreMark / Dhrystone 分支命中率 ≥ 88%/90% — 需 CoreMark 集成
 - [ ] 误预测 1-bubble 冲刷 — 待 IF 重定向
 
 ### B.7 MDU 多周期
-- [ ] DUT 合入后的功能完备性复审：详见 `docs/refactor_roadmap.md`
-  "Post-rename DUT integration completeness audit"
-- [ ] Booth radix-4 乘法 5-cycle
-- [ ] Radix-2 除法 18-cycle，早退出到 3 cycle
-- [ ] MADD/MADDU/MSUB/MSUBU + CLO/CLZ 实现
-- [ ] MFHI/MFLO stall 遇 busy MDU
-- [ ] Flush-to-IDLE 语义（异常/mispredict 时）
-- [ ] MDU stall 占正常 workload < 5% cycles
+- [x] DUT 合入后的功能完备性复审：当前 `rtl/cpu/mips_mdu.v` 已接入 CPU，块级与 CPU-visible 门禁通过
+- [ ] Booth radix-4 乘法 5-cycle（当前为 behavioral `*` 的 3-cycle 模型）
+- [ ] Radix-2 除法 18-cycle，早退出到 3 cycle（当前为最多 32 次迭代）
+- [x] MADD/MADDU/MSUB/MSUBU + MUL 实现；CLO/CLZ 保持在 ALU 路径
+- [x] MFHI/MFLO stall 遇 busy MDU（由 CPU MDU hazard/stall 路径和 CPU 门禁覆盖）
+- [ ] Flush-to-IDLE 语义（当前 MDU 接口尚无 flush 输入，异常/mispredict 取消仍未定义）
+- [ ] MDU stall 占正常 workload < 5% cycles（缺少 CoreMark/Dhrystone 性能基准）
+
+当前可签收范围：`make mdu-cpu-gate` 与 `make dut-block-unit-gate` 的 MDU 子项均通过，覆盖
+MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符号边界和
+小操作数早退。上述未勾选项是性能/取消语义扩展，不属于当前 CPU-visible 功能闭合。
 
 ### B.8 FPU CP1（可选）
 - [N/A] 决策：Phase B 是否含 FPU
@@ -175,8 +178,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 | B.3 MMU/TLB    | ⚠ partial   | Claude | 2026-07-26 | Register+array+lookup+fault path 全套；micro-TLB / PageMask 变尺度 / Linux boot defer |
 | B.4 用户态     | ✅ core done | Claude | 2026-07-26 | KSU/CU0/kseg 保护/CpU 全套；RDHWR defer |
 | B.5 精确异常   | ⚠ partial   | Claude | 2026-07-26 | BD-in-pipeline + ErrorEPC/ERL 落地；EBase-vector defer |
-| B.6 BPU        | ⚠ partial   | Claude | 2026-07-26 | BTB/BHT/RAS 全套；IF 重定向待 speculative fetch |
-| B.7 MDU 多周期 | ⬜ pending   |        |            | 现有 MDU 是简单实现；商用重构未开始 |
+| B.6 BPU        | ⚠ partial   | Codex | 2026-08-08 | BTB/BHT/RAS 与 opt-in IF redirect 已验证；CoreMark/Dhrystone 命中率、fetch queue、多在途恢复和 formal 仍 deferred |
+| B.7 MDU 多周期 | ⚠ partial   | Codex | 2026-08-08 | CPU-visible MDU 已闭合；Booth/除法低延迟、flush 取消和 workload 性能仍 deferred |
 | B.8 FPU CP1    | ⏸ deferred  |        |            | 决策：Phase B 不含 FPU |
 | B.9 综合验证   | ⬜ pending   |        |            | 依赖 Phase F formal 与 CoreMark/Dhrystone/ISA compliance 基础设施 |
 
@@ -193,7 +196,8 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 ### C.2 L2 新增
 - [ ] DUT wrapper/pass-through 与真实 caching enablement 分开签核：详见
-  `docs/refactor_roadmap.md` "Post-rename DUT integration completeness audit"
+  `docs/functional_completeness_plan.md` 和
+  `docs/functional_evidence_registry.md`
 - [~] 128 KB 8-way NINE + 8 MSHR + 4 WB buffer —— 几何/8-way/写回已在 `l2_cache_caching`
   签核（L2_WRITEBACK green）。**非阻塞 full-MSHR 实现已交付**：`rtl/cache/l2_cache_nb.v`
   （8 项 MSHR，hit-under-miss + miss-under-miss + secondary-miss 合并 + 跨-id 乱序响应，
@@ -226,8 +230,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ## Phase D — 外设商用化 (Gate D)
 
 ### D.1 UART 16550
-- [ ] DUT 合入后的功能完备性复审：详见 `docs/refactor_roadmap.md`
-  "Post-rename DUT integration completeness audit"
+- [ ] DUT 合入后的功能完备性复审：详见功能完整性计划和证据登记
 - [ ] 波特率 115200 @ 48MHz APB clock 精度 ≤ 3%
 - [ ] 帧格式全组合 (5-8 位 × 1/1.5/2 stop × 5 种 parity)
 - [ ] FIFO 64 深度 + 阈值中断
@@ -251,14 +254,12 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] Linux 引导 kernel 加载到 DDR
 
 ### D.4 VIC
-- [ ] DUT 合入后的功能完备性复审：详见 `docs/refactor_roadmap.md`
-  "Post-rename DUT integration completeness audit"
+- [ ] DUT 合入后的功能完备性复审：详见功能完整性计划和证据登记
 - [ ] 32 源 × 4-bit 优先级 + 嵌套 + 软触发
 - [ ] Formal：优先级编码器 max 正确性 proven
 
 ### D.5 其他外设（SD/eMMC, GMAC, USB, I2C/SPI, WDT/PWM, DMA, GPIO, eFuse）
-- [ ] `apb_axi_dma` DUT 合入后的功能完备性复审：详见
-  `docs/refactor_roadmap.md` "Post-rename DUT integration completeness audit"
+- [ ] `apb_axi_dma` DUT 合入后的功能完备性复审：详见功能完整性计划和证据登记
 - 每外设完成时逐条添加子清单，本 v0 不展开
 
 ### Gate D Sign-off
@@ -282,7 +283,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] sync_2ff / pulse_sync / handshake_sync / async_fifo / mux_sync 五类实现
 - [ ] CDC 静态验证工具 0 违规
 - [ ] 100% CDC 路径被工具识别为已同步
-- [ ] `docs/cdc_waivers.md` 建立（可空但存在）
+- [x] CDC waiver 清单建立（当前无批准 waiver，见 `docs/cdc_waivers.md`）
 
 ### E.4 RDC
 - [ ] RDC 静态验证 0 违规
@@ -296,7 +297,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 ## Phase F — 验证扩展与前端签核 (Gate F — 前端最终签核)
 
 ### F.1 SVA 断言库
-- [ ] AXI / APB / cache FSM / TLB / interrupt / CDC 全类别 bind checker
+- [~] AXI / APB / reset bind checker：首批 simulation slice 已由 `make sva-gate` 接通；cache FSM / TLB / interrupt / CDC checker 仍 deferred
 - [ ] 关键 property 100% assert 通过 + 100% cover 命中
 - [ ] SVA 断言覆盖率纳入 gate 门槛
 
@@ -347,7 +348,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] 所有 block spec v1+（每模块变更完成后更新）
 - [ ] `docs/rtl_coding_style.md` v1+
 - [ ] `docs/vplan.md` 反映实际覆盖
-- [ ] `docs/frontend_signoff_release.md` 记录版本 / SHA / 报告链接
+- [ ] 前端 release 记录版本 / SHA / 报告链接（release 文档尚未建立）
 - [ ] RTL/仿真交付包（RTL 版本冻结 + 测试命令 + 报告链接 + 未决功能风险）
 
 ### Gate F Sign-off — RTL/仿真前端交付
