@@ -29,6 +29,7 @@ static volatile unsigned int demand_fault_count = 0;
 static volatile unsigned int unexpected_exc = 0;
 static volatile unsigned int last_unexpected_code = 0;
 static volatile unsigned int last_unexpected_badv = 0;
+static volatile unsigned int hw_permission_faults = 0;
 
 #ifdef SOC_HW_WALKER
 /* Root index 0 -> L2 table at physical 0x2000.  The two leaf entries cover
@@ -38,10 +39,12 @@ const unsigned int hw_root[1024] __attribute__((section(".pt_root"))) = {
 };
 const unsigned int hw_l2[1024] __attribute__((section(".pt_l2"))) = {
     [0x20] = 0x0000600Bu,
-    [0x21] = 0x0000700Bu
+    [0x21] = 0x0000700Bu,
+    [0x22] = 0x0000800Du
 };
 volatile unsigned int hw_page0 __attribute__((section(".page_data"))) = 0x13572468u;
 volatile unsigned int hw_page1 __attribute__((section(".page_data"))) = 0x24681357u;
+volatile unsigned int hw_page_ro __attribute__((section(".page_ro"))) = 0x55AA33CCu;
 #endif
 
 struct page_mapping { unsigned int va; unsigned int pa; };
@@ -104,9 +107,18 @@ void c_interrupt_handler(void) {
     unsigned int cause, exc_code, bad_vaddr, epc;
     asm volatile("mfc0 %0, $13, 0" : "=r"(cause));
     exc_code = CAUSE_EXCCODE(cause);
+    asm volatile("mfc0 %0, $8, 0" : "=r"(bad_vaddr));
+#ifdef SOC_HW_WALKER
+    if (bad_vaddr == 0x00022000u && exc_code == EXC_MOD) {
+        hw_permission_faults++;
+        asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
+        epc += 4;
+        asm volatile("mtc0 %0, $14" :: "r"(epc));
+        return;
+    }
+#endif
 
     if (exc_code == EXC_TLBL || exc_code == EXC_TLBS) {
-        asm volatile("mfc0 %0, $8, 0" : "=r"(bad_vaddr));
         if (!install_page_entry(bad_vaddr)) {
             unexpected_exc++;
             last_unexpected_code = exc_code;
@@ -141,6 +153,10 @@ int main(void) {
         odd[0] = 0xA5A50002u;
         ok = ok && (even[0] == 0xA5A50001u) &&
                   (odd[0] == 0xA5A50002u);
+        volatile unsigned int *ro = (volatile unsigned int *)0x00022000u;
+        ok = ok && (ro[0] == 0x55AA33CCu);
+        ro[0] = 0xDEADC0DEu;
+        ok = ok && (hw_permission_faults == 1u);
         print_str("mmu_hw_walker: values=");
         print_hex(ok ? 1u : 0u);
         print_str("mmu_hw_walker: even=");
@@ -151,9 +167,14 @@ int main(void) {
         print_hex(unexpected_exc);
         print_str("mmu_hw_walker: demand_faults=");
         print_hex(demand_fault_count);
+        print_str("mmu_hw_walker: permission_faults=");
+        print_hex(hw_permission_faults);
         print_str("mmu_hw_walker: badv=");
         print_hex(last_unexpected_badv);
-        if (ok && demand_fault_count == 0) print_str("mmu_hw_walker: PASS\n");
+        print_str("mmu_hw_walker: last_code=");
+        print_hex(last_unexpected_code);
+        if (ok && demand_fault_count == 0 && hw_permission_faults == 1u)
+            print_str("mmu_hw_walker: PASS\n");
         else print_str("mmu_hw_walker: FAIL\n");
         mailbox_exit();
         return 0;
