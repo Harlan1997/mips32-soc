@@ -17,6 +17,8 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 
 CFLAGS  = -mabi=32 -mips32 -EL -O2 -ffreestanding -nostdlib -G 0 \
           -mno-abicalls -fno-pic -I$(COMMON_DIR)
+EXTRA_CFLAGS ?=
+CFLAGS += $(EXTRA_CFLAGS)
 LINKER_SCRIPT ?= $(COMMON_DIR)/link.ld
 LDFLAGS = -T $(LINKER_SCRIPT) -nostdlib
 

@@ -68,6 +68,10 @@ module tb_mips_soc;
 `ifdef SOC_ENABLE_DUAL_CORE
                .ENABLE_DUAL_CORE(1'b1),
 `endif
+`ifdef SOC_HARDWARE_WALKER_ENABLE
+               .ENABLE_HARDWARE_WALKER(1'b1),
+               .HARDWARE_WALKER_PTBR(32'h0000_1000),
+`endif
                .ENABLE_UART_PINS(1'b1),
 `ifdef SOC_ENABLE_DDR4_STATUS
                .ENABLE_DDR4_STATUS(1'b1)

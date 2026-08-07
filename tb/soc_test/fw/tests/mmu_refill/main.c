@@ -30,6 +30,20 @@ static volatile unsigned int unexpected_exc = 0;
 static volatile unsigned int last_unexpected_code = 0;
 static volatile unsigned int last_unexpected_badv = 0;
 
+#ifdef SOC_HW_WALKER
+/* Root index 0 -> L2 table at physical 0x2000.  The two leaf entries cover
+ * both halves of one 8KB MIPS TLB pair and deliberately use different PFNs. */
+const unsigned int hw_root[1024] __attribute__((section(".pt_root"))) = {
+    [0] = 0x00002003u
+};
+const unsigned int hw_l2[1024] __attribute__((section(".pt_l2"))) = {
+    [0x20] = 0x0000600Bu,
+    [0x21] = 0x0000700Bu
+};
+volatile unsigned int hw_page0 __attribute__((section(".page_data"))) = 0x13572468u;
+volatile unsigned int hw_page1 __attribute__((section(".page_data"))) = 0x24681357u;
+#endif
+
 struct page_mapping { unsigned int va; unsigned int pa; };
 static const struct page_mapping page_table[] = {
     { 0x00020000u, 0x00006000u },
@@ -117,6 +131,34 @@ void c_interrupt_handler(void) {
 
 int main(void) {
     print_str("mmu_refill: start\n");
+
+#ifdef SOC_HW_WALKER
+    {
+        volatile unsigned int *even = (volatile unsigned int *)0x00020000u;
+        volatile unsigned int *odd = (volatile unsigned int *)0x00021000u;
+        unsigned int ok = 1u;
+        even[0] = 0xA5A50001u;
+        odd[0] = 0xA5A50002u;
+        ok = ok && (even[0] == 0xA5A50001u) &&
+                  (odd[0] == 0xA5A50002u);
+        print_str("mmu_hw_walker: values=");
+        print_hex(ok ? 1u : 0u);
+        print_str("mmu_hw_walker: even=");
+        print_hex(even[0]);
+        print_str("mmu_hw_walker: odd=");
+        print_hex(odd[0]);
+        print_str("mmu_hw_walker: exceptions=");
+        print_hex(unexpected_exc);
+        print_str("mmu_hw_walker: demand_faults=");
+        print_hex(demand_fault_count);
+        print_str("mmu_hw_walker: badv=");
+        print_hex(last_unexpected_badv);
+        if (ok && demand_fault_count == 0) print_str("mmu_hw_walker: PASS\n");
+        else print_str("mmu_hw_walker: FAIL\n");
+        mailbox_exit();
+        return 0;
+    }
+#endif
 
     /* Touch four non-identity useg pages spread across the software table. */
     volatile unsigned int *p;

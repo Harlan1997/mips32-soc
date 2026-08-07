@@ -20,6 +20,12 @@ SECTIONS
 
     .except 0x80000180 : { KEEP(*(.except_vector)) } > SRAM
 
+    /* Hardware-walker gate: physical root/L2 tables and backing pages are
+     * emitted into the SRAM image at their kseg0 aliases. */
+    .pt_root 0x80001000 : { KEEP(*(.pt_root)) } > SRAM
+    .pt_l2   0x80002000 : { KEEP(*(.pt_l2)) } > SRAM
+    .page_data 0x80006000 : { KEEP(*(.page_data)) } > SRAM
+
     .text : { *(.text .text.*) } > SRAM
     .rodata : { *(.rodata .rodata.*) } > SRAM
     .data : { *(.data .data.*) } > SRAM
