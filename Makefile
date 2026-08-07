@@ -54,6 +54,7 @@ PRODUCT_KSEG0_RUNTIME_DEPTH_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_de
 PRODUCT_KSEG0_RUNTIME_LAYOUT_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_layout
 PRODUCT_KSEG0_RUNTIME_ABI_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_abi
 PRODUCT_KSEG0_RUNTIME_MULTI_DIR ?= $(BUILD_DIR)/unit_tb/product_kseg0_runtime_multi
+PRODUCT_KERNEL_BOOT_DIR ?= $(BUILD_DIR)/unit_tb/product_kernel_boot
 PRODUCT_MMU_ASID_CONTEXT_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_asid_context
 PRODUCT_MMU_PROCESS_PRESSURE_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_process_pressure
 PRODUCT_MMU_PAGEMASK_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_pagemask
@@ -121,7 +122,7 @@ CP0_RDHWR_DIR ?= $(BUILD_DIR)/soc_test/cp0_rdhwr
 CP0_RDHWR_FW_DIR ?= $(BUILD_DIR)/firmware/cp0_rdhwr
 P1_COMPLETE_DIR ?= $(BUILD_DIR)/p1_complete
 
-.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate coverage-strict-clean-gate linux-boot-dependency-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+.PHONY: firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate coverage-strict-clean-gate linux-boot-dependency-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 linux-boot-dependency-gate:
 	bash tb/linux_boot/check_dependencies.sh
@@ -274,6 +275,9 @@ product-kseg0-runtime-abi-gate:
 
 product-kseg0-runtime-multi-gate:
 	RUN_DIR=$(PRODUCT_KSEG0_RUNTIME_MULTI_DIR) tb/unit/bootrom/run_product_kseg0_runtime_multi.sh
+
+product-kernel-boot-gate:
+	RUN_DIR=$(PRODUCT_KERNEL_BOOT_DIR) tb/unit/bootrom/run_product_kernel_boot.sh
 
 product-mmu-asid-context-gate:
 	RUN_DIR=$(PRODUCT_MMU_ASID_CONTEXT_DIR) tb/soc_test/run_product_mmu_asid_context.sh
