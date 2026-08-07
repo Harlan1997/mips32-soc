@@ -1,6 +1,8 @@
 # 验证计划 (vPlan) v0
 
-> 状态：v0 草案，前端签核范围。与 `docs/coverage_plan.md`（战术级 coverpoint 清单）与 `docs/signoff_criteria.md`（当前签核门槛）互补：本文件是**战略级 × 全特性 × 全方法**总览。
+> 状态：战略规划参考，不是当前功能状态或 signoff 依据。当前 RTL 状态以
+> `docs/functional_completeness_plan.md` 和 `docs/functional_evidence_registry.md`
+> 为准；当前签核门槛以 `docs/signoff_criteria.md` 为准。
 >
 > 目的：把每一个需要验证的 SoC 特性映射到明确的验证方法、覆盖率契约、责任子团队与状态。每次评审滚动更新。
 
@@ -34,53 +36,53 @@
 | 特性 | 块 UVM | SoC UVM | Firmware | SVA | Formal | ISA-Ref | Compliance | 责任 | Spec | 状态 |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | MIPS32 R2 ISA 指令集 | ~ | | ✓ | | | ✓ | ✓ | CPU-DV | `cp0_spec.md`, ISA Vol II | Phase A 部分 |
-| 5 段流水线 hazard/forwarding | | ✓ | ✓ | ✓ | | ✓ | | CPU-DV | 待补 pipeline spec | 现有 |
+| 5 段流水线 hazard/forwarding | | ✓ | ✓ | ✓ | | ✓ | | CPU-DV | RTL/现有验证 | 现有 |
 | CP0 完整寄存器 (20 regs) | ✓ | ✓ | ✓ | ✓ | ~ | ✓ | ✓ | CPU-DV | `cp0_spec.md` | Phase B |
 | 精确异常 (含 BD 位) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | CPU-DV | `cp0_spec.md` §14 | Phase B |
 | 用户/内核态 (KSU) | ~ | ✓ | ✓ | ✓ | ~ | ✓ | ✓ | CPU-DV | `cp0_spec.md` §3 | Phase B |
 | MMU / TLB (64-entry) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | CPU-DV | `mmu_tlb_spec.md` | Phase B |
 | 中断 (8 IP + vectored) | ✓ | ✓ | ✓ | ✓ | ✓ | | | CPU-DV | `cp0_spec.md` §3.4 | Phase B |
 | Count/Compare 定时器 | ✓ | ✓ | ✓ | ✓ | | | | CPU-DV | `cp0_spec.md` §9 | Phase B |
-| 分支预测 (BTB + 2-bit) | ✓ | ~ | ✓ | ✓ | ~ | | | CPU-DV | 待写 bpu_spec.md | Phase B |
-| MDU 多周期 FSM | ✓ | ~ | ✓ | ✓ | ✓ | ✓ | | CPU-DV | 待写 mdu_spec.md | Phase B |
-| FPU CP1 (可选) | ✓ | ~ | ✓ | ✓ | ~ | ✓ | ✓ | CPU-DV | 待写 fpu_spec.md | Phase B (opt) |
+| 分支预测 (BTB + 2-bit) | ✓ | ~ | ✓ | ✓ | ~ | | | CPU-DV | `block_specs/bpu_spec.md` | 已有有限切片 |
+| MDU 多周期 FSM | ✓ | ~ | ✓ | ✓ | ✓ | ✓ | | CPU-DV | `block_specs/mdu_spec.md` | 当前合同已闭合 |
+| FPU CP1 (可选) | | | | | | | | CPU-DV | 未建立 spec | 后续可选 |
 | LL/SC 原子 | ~ | ~ | ✓ | ✓ | ✓ | | | CPU-DV | `cp0_spec.md` §1 LLAddr | Phase B (opt) |
 
 ### 1.2 缓存与总线
 
 | 特性 | 块 UVM | SoC UVM | Firmware | SVA | Formal | Compliance | 责任 | Spec | 状态 |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| L1 I-Cache 4-way + CACHE | ✓ | ✓ | ✓ | ✓ | ~ | | Cache-DV | 待写 icache_spec.md | Phase C |
-| L1 D-Cache 4-way + WB/WA | ✓ | ✓ | ✓ | ✓ | ~ | | Cache-DV | 待写 dcache_spec.md | Phase C |
-| L2 统一 8-way 非阻塞 | ✓ | ✓ | ✓ | ✓ | ✓ | | Cache-DV | 待写 l2_spec.md | Phase C |
+| L1 I-Cache 4-way + CACHE | ✓ | ✓ | ✓ | ✓ | ~ | | Cache-DV | `block_specs/icache_spec.md` | 当前合同范围 |
+| L1 D-Cache 4-way + WB/WA | ✓ | ✓ | ✓ | ✓ | ~ | | Cache-DV | `block_specs/dcache_spec.md` | 当前合同范围 |
+| L2 统一缓存 | ✓ | ✓ | ✓ | ✓ | ✓ | | Cache-DV | `block_specs/l2_spec.md` | 当前合同范围；增强项 deferred |
 | AXI 多 outstanding + 乱序 | ✓ | ✓ | ~ | ✓ | ✓ | ✓ | Bus-DV | 待更新 axi_spec.md | Phase C |
 | AXI QoS/PROT/CACHE 语义 | ~ | ✓ | | ✓ | | ✓ | Bus-DV | 同上 | Phase C |
-| Crossbar 仲裁 (multi-M/S) | ✓ | ✓ | ~ | ✓ | ✓ | | Bus-DV | 待写 fabric_spec.md | Phase C |
-| Cache 一致性接口 (预留) | ~ | | | ~ | ✓ | | Cache-DV | 待写 | Phase C 预留 |
+| Crossbar 仲裁 (multi-M/S) | ✓ | ✓ | ~ | ✓ | ✓ | | Bus-DV | `block_specs/axi_fabric_spec.md` | 当前单 outstanding 合同 |
+| Cache 一致性接口 (预留) | ~ | | | ~ | ✓ | | Cache-DV | `block_specs/multicore_coherency_spec.md` | 有限双核合同；MESI deferred |
 
 ### 1.3 外设
 
 | 外设 | 块 UVM | SoC UVM | Firmware | SVA | 责任 | Spec | 状态 |
 |---|:-:|:-:|:-:|:-:|---|---|---|
-| UART 16550 | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| QSPI Flash Ctrl | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| DDR3 Ctrl | ✓ | ✓ | ✓ | ✓ | Mem-DV | 待写 | Phase D |
-| SD/eMMC | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| GMAC 千兆 | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
+| UART 16550 | ✓ | ✓ | ✓ | ✓ | Perf-DV | `block_specs/uart_16550_spec.md` | 当前合同范围 |
+| QSPI Flash Ctrl | ✓ | ✓ | ✓ | ✓ | Perf-DV | `block_specs/qspi_spec.md` | 当前合同范围 |
+| DDR4 Ctrl | ✓ | ✓ | ✓ | ✓ | Mem-DV | `block_specs/ddr4_spec.md` | 当前 RTL 合同 |
+| SD/eMMC | | | | | Perf-DV | 未建立 spec | 后续产品范围 |
+| GMAC 千兆 | | | | | Perf-DV | 未建立 spec | 后续产品范围 |
 | USB 2.0 (采购 IP) | 供应商 | ✓ | ✓ | ✓ | IP-Integ | vendor | Phase D |
-| I2C/SPI 主从 | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| 高级 Timer/WDT/PWM | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| VIC 中断控制器 | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| GPIO 边沿中断 | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| DMA scatter-gather 多通道 | ✓ | ✓ | ✓ | ✓ | Perf-DV | 待写 | Phase D |
-| eFuse/OTP | ✓ | ✓ | ~ | ✓ | Sec-DV | 待写 | Phase D |
+| I2C/SPI 主从 | | | | | Perf-DV | 未建立 spec | 后续产品范围 |
+| 高级 Timer/WDT/PWM | ✓ | ✓ | ✓ | ✓ | Perf-DV | RTL/现有验证 | 当前有限范围 |
+| VIC 中断控制器 | ✓ | ✓ | ✓ | ✓ | Perf-DV | `block_specs/vic_spec.md` | 当前合同范围 |
+| GPIO 边沿中断 | | | | | Perf-DV | 未建立 spec | 后续产品范围 |
+| DMA scatter-gather 多通道 | ✓ | ✓ | ✓ | ✓ | Perf-DV | `block_specs/dma_spec.md` | 当前合同范围 |
+| eFuse/OTP | | | | | Sec-DV | 未建立 spec | 后续产品范围 |
 | JTAG TAP + Debug Master | ~ | ✓ | | ✓ | Dbg-DV | 现有 | Phase A |
 
 ### 1.4 时钟 / 复位 / CDC
 
 | 特性 | 块 UVM | SoC UVM | SVA | Formal | CDC | RDC | 责任 | Spec | 状态 |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| 多时钟域架构 | | ✓ | ✓ | | ✓ | | Infra | 待写 clock_spec.md | Phase E |
+| 多时钟域架构 | | ✓ | ✓ | | ✓ | | Infra | `block_specs/clock_reset_spec.md` | 规划/尚未闭合 |
 | 复位同步器 (AASD) | ✓ | ✓ | ✓ | ✓ | | ✓ | Infra | 同上 | Phase E |
 | CDC 单元库 (FIFO/handshake/pulse) | ✓ | | ✓ | ✓ | ✓ | | Infra | 同上 | Phase E |
 
@@ -113,7 +115,8 @@
 | FSM (transition) | ≥ 95% | 同上 |
 | SCORE | ≥ 99% | 同上 |
 
-**Exclusion 政策**：object-level 精化；6 类允许（`.agent/spec.md` 定义）；每条 exclusion 需 spec 引用 + evidence，manifest 审计。
+**Exclusion 政策**：object-level 精化；每条 exclusion 需 spec 引用和 evidence，
+并由当前 signoff 流程审计。历史 session 规则不再作为本 vPlan 的外部依赖。
 
 ### 2.2 功能覆盖率
 
@@ -164,21 +167,22 @@
 
 ---
 
-## 5. 待补 spec 清单（Phase B-E 起动前必须完成）
+## 5. Spec 与后续工作状态
 
-优先级从高到低：
+The block specs listed in the matrix are now present under
+`docs/block_specs/`. Their presence does not imply that every planned feature
+is implemented: each spec records its current RTL boundary and deferred work.
 
-1. `docs/block_specs/cp0_spec.md` ✓ 已完成 v0
-2. `docs/block_specs/mmu_tlb_spec.md` ✓ 已完成 v0
-3. `docs/block_specs/bpu_spec.md`
-4. `docs/block_specs/mdu_spec.md`
-5. `docs/block_specs/fpu_spec.md` (可选)
-6. `docs/block_specs/icache_spec.md` / `dcache_spec.md` / `l2_spec.md`
-7. `docs/block_specs/axi_fabric_spec.md`（多 outstanding + QoS）
-8. `docs/block_specs/vic_spec.md`
-9. `docs/block_specs/uart_16550_spec.md` / `qspi_spec.md` / `ddr3_spec.md` / ...
-10. `docs/block_specs/clock_reset_spec.md`
-11. `docs/frontend_signoff_checklist.md`
+Current contract work is tracked by the functional completeness plan and
+evidence registry. The following remain future work or optional scope:
+
+- FPU/CP1 and full ISA compliance.
+- Multi-outstanding AXI/QoS beyond the current single-outstanding contract.
+- Full Linux/OS boot, production boot policy, and long-duration stress.
+- Lint, CDC/RDC, formal proof, and final release packaging.
+
+Do not add a new block spec to this list unless the corresponding module is
+actually in project scope. Optional FPU work has no spec in the current tree.
 
 ---
 
@@ -197,10 +201,11 @@
 | U-Boot MIPS port | ✗ | Phase F |
 | Linux kernel + busybox rootfs | ✗ | Phase F |
 
-`.agents/` 或 `scripts/env/` 增加对应工具模块加载脚本（沿用 EDA loader 约定）。
+工具环境和 EDA module 加载约定见仓库根目录 `AGENTS.md`。
 
 ---
 
 ## 版本记录
 
-- v0 (2026-07-26)：初版战略级 vPlan。列出全特性 × 全方法矩阵、覆盖率契约、phase gate、待补 spec 清单。
+- v0 (2026-07-26)：初版战略级 vPlan。
+- 2026-08-08：标注当前合同来源，移除已完成 spec 的“待写”表述，明确后续产品范围。
