@@ -286,7 +286,8 @@ page-table allocator/scheduler 压力、IPI shootdown、cache maintenance、完�
 
 **已保留的验证脚手架**（prototype MMU 使用独立 kseg0 linker；产品切片使用独立 linker）：
 - `tb/soc_test/fw/tests/mmu_refill/`：kseg0 reset/general-vector 启动和最小 TLB-refill handler（TLBWR 安装 identity map + ERET 重试）。
-- `make mmu-refill-gate`：独立验证 bootstrap、APB uncached refill、even/odd PFN 和四页 SRAM 访问。
+- `make mmu-refill-gate`：独立验证 bootstrap、APB uncached refill、kseg0 软件 page table
+  驱动的四个非 identity useg 页 fault/refill/ERET 和不同 SRAM PFN 读写。
 - `rtl/include/soc_config.vh` 中 `SOC_MMU_ENABLE` 的 `ifndef` 保护，允许通过
   `+define+SOC_MMU_ENABLE=1` 命令行覆盖，不影响项目默认值 0。
 
