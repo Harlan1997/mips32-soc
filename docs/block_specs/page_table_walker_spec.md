@@ -10,6 +10,11 @@ permission matrix）、`make page-table-tlb-refill-gate` 和
 到 MIPS EntryLo、VPN2/ASID 传递、D/V 权限映射和 TLB write ready 握手；
 allocator gate 覆盖 bounded root lease/generation contract。
 
+SoC opt-in evidence：`make mmu-hardware-walker-soc-gate` 通过。该 gate 将
+walker 接入 core 0 的 D-side AXI 读通道，验证真实 SoC 两级页表读、even/odd
+4KB leaf 的两次硬件 refill、load/store retry，以及 `demand_faults=0`。默认
+SoC 仍关闭 `ENABLE_HARDWARE_WALKER`，PTBR 由产品集成参数提供。
+
 - 两级、4KB 页，VA 分解为 `[31:22] / [21:12] / [11:0]`。
 - `PTBR[31:12]` 指向 4KB 对齐根表；每级 PTE 为 32 bit、按 4 byte 索引。
 - 非叶 PTE 要求 `V=1,TABLE=1`；叶 PTE 要求 `V=1,TABLE=0`、`PFN[31:12]`，权限位为 `W[1]`、`X[2]`、`U[3]`。

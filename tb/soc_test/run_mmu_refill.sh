@@ -17,6 +17,7 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/soc_test/mmu_refill"}
 FW_DIR="${ROOT_DIR}/tb/soc_test/fw/tests/mmu_refill"
 FW_HEX="${FW_DIR}/firmware.hex"
+HW_WALKER=${HW_WALKER:-0}
 
 export MODULES_PAGER=cat PAGER=cat TERM=dumb
 source /etc/profile.d/modules.sh
@@ -24,7 +25,11 @@ if [ -d /tool/module ]; then module use /tool/module; fi
 module load vcs
 
 echo "--- Building mmu_refill firmware ---"
-make -C "${FW_DIR}"
+if [ "${HW_WALKER}" = 1 ]; then
+    make -C "${FW_DIR}" EXTRA_CFLAGS=-DSOC_HW_WALKER clean all
+else
+    make -C "${FW_DIR}"
+fi
 
 if [ ! -f "$FW_HEX" ]; then
     echo "ERROR: firmware build did not produce ${FW_HEX}"
@@ -38,8 +43,12 @@ cd "$RUN_DIR"
 echo "Run directory: $RUN_DIR"
 echo "Firmware: $FW_HEX_ABS"
 
-vcs -full64 -sverilog -timescale=1ns/1ps \
-    +define+SOC_MMU_ENABLE=1 +define+SOC_MMU_BOOTSTRAP_ENABLE=1 \
+VCS_DEFINES=(+define+SOC_MMU_ENABLE=1 +define+SOC_MMU_BOOTSTRAP_ENABLE=1)
+if [ "${HW_WALKER}" = 1 ]; then
+    VCS_DEFINES+=(+define+SOC_HARDWARE_WALKER_ENABLE=1 +define+SOC_HW_WALKER=1)
+fi
+
+vcs -full64 -sverilog -timescale=1ns/1ps "${VCS_DEFINES[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
     +incdir+"${ROOT_DIR}"/tb/soc_test \
@@ -50,7 +59,12 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
 
 ./simv +FW_HEX="$FW_HEX_ABS" -l sim.log
 
-if grep -q "REGRESSION_TEST_SUCCESS" sim.log && grep -q "mmu_refill: PASS" sim.log; then
+if [ "${HW_WALKER}" = 1 ]; then
+    PASS_MARKER="mmu_hw_walker: PASS"
+else
+    PASS_MARKER="mmu_refill: PASS"
+fi
+if grep -q "REGRESSION_TEST_SUCCESS" sim.log && grep -q "${PASS_MARKER}" sim.log; then
     echo "SUCCESS: MMU REFILL GATE PASSED"
     exit 0
 else

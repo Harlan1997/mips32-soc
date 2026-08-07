@@ -231,11 +231,11 @@ module mips_cpu #(
 
     wire hw_walker_i_miss = (hardware_walker_enable === 1'b1) &&
                              inst_req && !mmu_i_ok &&
-                             (mmu_i_fault_type == 3'b001) && !mmu_ilookup_hit;
+                             (mmu_i_fault_type == 3'b001);
     wire hw_walker_d_miss = (hardware_walker_enable === 1'b1) &&
                              dmem_translate_req && !mmu_d_ok &&
                              ((mmu_d_fault_type == 3'b001) ||
-                             (mmu_d_fault_type == 3'b010)) && !mmu_dlookup_hit;
+                             (mmu_d_fault_type == 3'b010));
     assign walker_d_stall = hw_walker_d_miss && !ptw_fault_pending;
     wire ptw_req_valid = !ptw_busy && !ptw_refill_pending && !ptw_fault_pending &&
                          (hw_walker_i_miss || hw_walker_d_miss);
