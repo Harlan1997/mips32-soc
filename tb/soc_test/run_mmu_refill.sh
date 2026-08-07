@@ -39,7 +39,7 @@ echo "Run directory: $RUN_DIR"
 echo "Firmware: $FW_HEX_ABS"
 
 vcs -full64 -sverilog -timescale=1ns/1ps \
-    +define+SOC_MMU_ENABLE=1 \
+    +define+SOC_MMU_ENABLE=1 +define+SOC_MMU_BOOTSTRAP_ENABLE=1 \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
     +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips \
     +incdir+"${ROOT_DIR}"/tb/soc_test \

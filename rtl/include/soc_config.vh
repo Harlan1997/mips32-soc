@@ -268,6 +268,13 @@
 `define SOC_MMU_ENABLE             0
 `endif
 
+// Explicit opt-in for the prototype kseg0 reset/vector firmware contract.
+// MMU unit tests and other synthetic CPU users retain their normal reset PC
+// unless they also request a preload image linked for kseg0.
+`ifndef SOC_MMU_BOOTSTRAP_ENABLE
+`define SOC_MMU_BOOTSTRAP_ENABLE   0
+`endif
+
 // -----------------------------------------------------------------------------
 // Branch Predictor (Phase B.6 series). See docs/block_specs/bpu_spec.md.
 // -----------------------------------------------------------------------------

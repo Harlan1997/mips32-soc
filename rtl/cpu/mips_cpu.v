@@ -154,7 +154,7 @@ module mips_cpu #(
                                               ((take_interrupt && cp0_vint_enabled) ?
                                                (ebase_out + cp0_vint_offset) :
                                                (ebase_out + 32'h0000_0180))))) :
-                                  (`SOC_MMU_ENABLE != 0) ? 32'h8000_0180 :
+                                  (`SOC_MMU_BOOTSTRAP_ENABLE != 0) ? 32'h8000_0180 :
                                   32'h0000_0180;
     
     // ID stage outputs (for flush logic)
@@ -259,15 +259,20 @@ module mips_cpu #(
     wire [5:0] hw_tlb_wr_index = {2'b00, ptw_va_q[16:13]};
     wire hw_walker_i_fault = ptw_fault_pending && !ptw_fault_is_data;
     wire hw_walker_d_fault = ptw_fault_pending && ptw_fault_is_data;
-    wire [31:0] hw_tlb_entrylo = {2'b0, 4'b0, ptw_leaf_pte[31:12],
-                                  3'b011, ptw_leaf_pte[1], ptw_leaf_pte[0], 1'b0};
+    // The walker owns one 4KB leaf at a time.  Do not mirror that PFN into
+    // both halves of the 8KB TLB pair: doing so aliases the adjacent page and
+    // prevents a later fault/refill for the other half.
+    wire [31:0] hw_tlb_entrylo_leaf = {2'b0, 4'b0, ptw_leaf_pte[31:12],
+                                       3'b011, ptw_leaf_pte[1], ptw_leaf_pte[0], 1'b0};
+    wire [31:0] hw_tlb_entrylo0 = ptw_va_q[12] ? 32'd0 : hw_tlb_entrylo_leaf;
+    wire [31:0] hw_tlb_entrylo1 = ptw_va_q[12] ? hw_tlb_entrylo_leaf : 32'd0;
     
     // =========================================================================
     // IF Stage
     // =========================================================================
     mips_if_stage #(
         .RESET_ADDR((`SOC_PRODUCT_BOOT_ENABLE != 0) ? `SOC_BOOT_ROM_KSEG1 :
-                    ((`SOC_MMU_ENABLE != 0) ? 32'h8000_0000 : `SOC_BOOT_BASE))
+                    ((`SOC_MMU_BOOTSTRAP_ENABLE != 0) ? 32'h8000_0000 : `SOC_BOOT_BASE))
     ) u_mips_if_stage (
         .clk              (clk),
         .rst_n            (rst_n),
@@ -1004,8 +1009,8 @@ module mips_cpu #(
         .hw_tlb_wr_vpn2(ptw_va_q[31:13]),
         .hw_tlb_wr_asid(cp0_asid),
         .hw_tlb_wr_mask(16'd0),
-        .hw_tlb_wr_entrylo0(hw_tlb_entrylo),
-        .hw_tlb_wr_entrylo1(hw_tlb_entrylo),
+        .hw_tlb_wr_entrylo0(hw_tlb_entrylo0),
+        .hw_tlb_wr_entrylo1(hw_tlb_entrylo1),
         .hw_tlb_wr_ready(hw_tlb_wr_ready),
         .tlb_inv_en   (tlb_inv_en),
         .tlb_inv_vpn2 (tlb_inv_vpn2),
