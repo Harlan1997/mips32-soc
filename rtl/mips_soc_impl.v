@@ -14,7 +14,9 @@ module mips_soc_impl #(
     parameter ENABLE_QSPI_QUAD = 1'b0,
     parameter ENABLE_DDR4_STATUS = 1'b0,
     parameter ENABLE_DDR4_STATUS_FATAL = 1'b0,
-    parameter ENABLE_VEIC = 1'b0
+    parameter ENABLE_VEIC = 1'b0,
+    parameter ENABLE_HARDWARE_WALKER = 1'b0,
+    parameter [31:0] HARDWARE_WALKER_PTBR = 32'd0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -569,7 +571,9 @@ module mips_soc_impl #(
     // Instantiations
     // =========================================================================
 
-    soc_core_subsystem #(.ENABLE_COHERENCY(ENABLE_DUAL_CORE), .ENABLE_VEIC(ENABLE_VEIC)) u_core_subsystem (
+    soc_core_subsystem #(.ENABLE_COHERENCY(ENABLE_DUAL_CORE), .ENABLE_VEIC(ENABLE_VEIC),
+        .ENABLE_HARDWARE_WALKER(ENABLE_HARDWARE_WALKER),
+        .HARDWARE_WALKER_PTBR(HARDWARE_WALKER_PTBR)) u_core_subsystem (
         .clk             (clk),
         .rst_n           (soc_rst_n),
         .cpu_int         (cpu_int),

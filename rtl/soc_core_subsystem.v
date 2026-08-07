@@ -5,7 +5,9 @@
 
 module soc_core_subsystem #(
     parameter ENABLE_COHERENCY = 1'b0,
-    parameter ENABLE_VEIC = 1'b0
+    parameter ENABLE_VEIC = 1'b0,
+    parameter ENABLE_HARDWARE_WALKER = 1'b0,
+    parameter [31:0] HARDWARE_WALKER_PTBR = 32'd0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -97,6 +99,48 @@ module soc_core_subsystem #(
     output wire        debug_flush
 );
 
+    // The walker is an opt-in client of the D-side AXI read channel.  CPU
+    // walker activity stalls the pipeline, so this single outstanding bridge
+    // cannot overlap a cache read and does not need an extra fabric master.
+    wire core_ptw_mem_valid;
+    wire [31:0] core_ptw_mem_addr;
+    wire core_ptw_mem_ready;
+    wire [31:0] core_ptw_mem_rdata;
+    wire core_ptw_mem_error;
+    wire core_ptw_fault_valid;
+    wire [2:0] core_ptw_fault_code;
+    reg ptw_axi_busy;
+    wire ptw_axi_response = ptw_axi_busy && data_rvalid && data_rlast;
+
+    wire [3:0] core_data_awid;
+    wire [31:0] core_data_awaddr;
+    wire [7:0] core_data_awlen;
+    wire [2:0] core_data_awsize;
+    wire [1:0] core_data_awburst;
+    wire [1:0] core_data_awlock;
+    wire [3:0] core_data_awcache;
+    wire [2:0] core_data_awprot;
+    wire core_data_awvalid, core_data_awready;
+    wire [31:0] core_data_wdata;
+    wire [3:0] core_data_wstrb;
+    wire core_data_wlast, core_data_wvalid, core_data_wready;
+    wire [3:0] core_data_bid;
+    wire [1:0] core_data_bresp;
+    wire core_data_bvalid, core_data_bready;
+    wire [3:0] core_data_arid;
+    wire [31:0] core_data_araddr;
+    wire [7:0] core_data_arlen;
+    wire [2:0] core_data_arsize;
+    wire [1:0] core_data_arburst;
+    wire [1:0] core_data_arlock;
+    wire [3:0] core_data_arcache;
+    wire [2:0] core_data_arprot;
+    wire core_data_arvalid, core_data_arready;
+    wire [3:0] core_data_rid;
+    wire [31:0] core_data_rdata;
+    wire [1:0] core_data_rresp;
+    wire core_data_rlast, core_data_rvalid, core_data_rready;
+
     mips_core #(.ENABLE_COHERENCY(ENABLE_COHERENCY), .ENABLE_VEIC(ENABLE_VEIC)) u_core (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -118,10 +162,10 @@ module soc_core_subsystem #(
         .scheduler_ipi_resched(1'b0),
         .scheduler_yield_req(1'b0),
         .scheduler_active_mask(4'b0001),
-        .hardware_walker_enable(1'b0), .hardware_walker_ptbr(32'd0),
-        .ptw_mem_valid(), .ptw_mem_addr(), .ptw_mem_ready(1'b0),
-        .ptw_mem_rdata(32'd0), .ptw_mem_error(1'b0),
-        .ptw_fault_valid(), .ptw_fault_code(),
+        .hardware_walker_enable(ENABLE_HARDWARE_WALKER), .hardware_walker_ptbr(HARDWARE_WALKER_PTBR),
+        .ptw_mem_valid(core_ptw_mem_valid), .ptw_mem_addr(core_ptw_mem_addr), .ptw_mem_ready(core_ptw_mem_ready),
+        .ptw_mem_rdata(core_ptw_mem_rdata), .ptw_mem_error(core_ptw_mem_error),
+        .ptw_fault_valid(core_ptw_fault_valid), .ptw_fault_code(core_ptw_fault_code),
 
         .inst_awid       (inst_awid),
         .inst_awaddr     (inst_awaddr),
@@ -159,44 +203,55 @@ module soc_core_subsystem #(
         .inst_rvalid     (inst_rvalid),
         .inst_rready     (inst_rready),
 
-        .data_awid       (data_awid),
-        .data_awaddr     (data_awaddr),
-        .data_awlen      (data_awlen),
-        .data_awsize     (data_awsize),
-        .data_awburst    (data_awburst),
-        .data_awlock     (data_awlock),
-        .data_awcache    (data_awcache),
-        .data_awprot     (data_awprot),
-        .data_awvalid    (data_awvalid),
-        .data_awready    (data_awready),
-        .data_wdata      (data_wdata),
-        .data_wstrb      (data_wstrb),
-        .data_wlast      (data_wlast),
-        .data_wvalid     (data_wvalid),
-        .data_wready     (data_wready),
-        .data_bid        (data_bid),
-        .data_bresp      (data_bresp),
-        .data_bvalid     (data_bvalid),
-        .data_bready     (data_bready),
-        .data_arid       (data_arid),
-        .data_araddr     (data_araddr),
-        .data_arlen      (data_arlen),
-        .data_arsize     (data_arsize),
-        .data_arburst    (data_arburst),
-        .data_arlock     (data_arlock),
-        .data_arcache    (data_arcache),
-        .data_arprot     (data_arprot),
-        .data_arvalid    (data_arvalid),
-        .data_arready    (data_arready),
-        .data_rid        (data_rid),
-        .data_rdata      (data_rdata),
-        .data_rresp      (data_rresp),
-        .data_rlast      (data_rlast),
-        .data_rvalid     (data_rvalid),
-        .data_rready     (data_rready),
+        .data_awid       (core_data_awid), .data_awaddr(core_data_awaddr), .data_awlen(core_data_awlen),
+        .data_awsize     (core_data_awsize), .data_awburst(core_data_awburst), .data_awlock(core_data_awlock),
+        .data_awcache    (core_data_awcache), .data_awprot(core_data_awprot), .data_awvalid(core_data_awvalid),
+        .data_awready    (core_data_awready), .data_wdata(core_data_wdata), .data_wstrb(core_data_wstrb),
+        .data_wlast      (core_data_wlast), .data_wvalid(core_data_wvalid), .data_wready(core_data_wready),
+        .data_bid        (core_data_bid), .data_bresp(core_data_bresp), .data_bvalid(core_data_bvalid),
+        .data_bready     (core_data_bready), .data_arid(core_data_arid), .data_araddr(core_data_araddr),
+        .data_arlen      (core_data_arlen), .data_arsize(core_data_arsize), .data_arburst(core_data_arburst),
+        .data_arlock     (core_data_arlock), .data_arcache(core_data_arcache), .data_arprot(core_data_arprot),
+        .data_arvalid    (core_data_arvalid), .data_arready(core_data_arready), .data_rid(core_data_rid),
+        .data_rdata      (core_data_rdata), .data_rresp(core_data_rresp), .data_rlast(core_data_rlast),
+        .data_rvalid     (core_data_rvalid), .data_rready(core_data_rready),
 
         .debug_stall     (debug_stall),
         .debug_flush     (debug_flush)
     );
+
+    assign data_awid = core_data_awid; assign data_awaddr = core_data_awaddr;
+    assign data_awlen = core_data_awlen; assign data_awsize = core_data_awsize;
+    assign data_awburst = core_data_awburst; assign data_awlock = core_data_awlock;
+    assign data_awcache = core_data_awcache; assign data_awprot = core_data_awprot;
+    assign data_awvalid = core_data_awvalid; assign core_data_awready = data_awready;
+    assign data_wdata = core_data_wdata; assign data_wstrb = core_data_wstrb;
+    assign data_wlast = core_data_wlast; assign data_wvalid = core_data_wvalid;
+    assign core_data_wready = data_wready; assign core_data_bid = data_bid;
+    assign core_data_bresp = data_bresp; assign core_data_bvalid = data_bvalid;
+    assign data_bready = core_data_bready; assign data_arid = core_ptw_mem_valid ? 4'd0 : core_data_arid;
+    assign data_araddr = core_ptw_mem_valid ? core_ptw_mem_addr : core_data_araddr;
+    assign data_arlen = core_ptw_mem_valid ? 8'd0 : core_data_arlen;
+    assign data_arsize = core_ptw_mem_valid ? 3'd2 : core_data_arsize;
+    assign data_arburst = core_ptw_mem_valid ? 2'd1 : core_data_arburst;
+    assign data_arlock = core_ptw_mem_valid ? 2'd0 : core_data_arlock;
+    assign data_arcache = core_ptw_mem_valid ? 4'd0 : core_data_arcache;
+    assign data_arprot = core_ptw_mem_valid ? 3'b010 : core_data_arprot;
+    assign data_arvalid = core_ptw_mem_valid && !ptw_axi_busy ? 1'b1 : core_data_arvalid && !ptw_axi_busy;
+    assign core_data_arready = !ptw_axi_busy && !core_ptw_mem_valid && data_arready;
+    assign core_data_rid = data_rid; assign core_data_rdata = data_rdata;
+    assign core_data_rresp = data_rresp; assign core_data_rlast = data_rlast;
+    assign core_data_rvalid = data_rvalid && !ptw_axi_busy;
+    assign data_rready = ptw_axi_busy ? 1'b1 : core_data_rready;
+    assign core_ptw_mem_ready = ptw_axi_response;
+    assign core_ptw_mem_rdata = data_rdata;
+    assign core_ptw_mem_error = data_rresp != 2'b00;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) ptw_axi_busy <= 1'b0;
+        else if (!ptw_axi_busy && ENABLE_HARDWARE_WALKER && core_ptw_mem_valid && data_arready)
+            ptw_axi_busy <= 1'b1;
+        else if (ptw_axi_response)
+            ptw_axi_busy <= 1'b0;
+    end
 
 endmodule

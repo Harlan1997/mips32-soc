@@ -13,7 +13,9 @@ module mips_soc #(
     // Verification-only APB error source. Keep disabled for product builds;
     // directed CacheErr recovery tests opt in explicitly at the top level.
     parameter ENABLE_APB_FAULT_INJECTOR = 1'b0,
-    parameter ENABLE_VEIC = 1'b0
+    parameter ENABLE_VEIC = 1'b0,
+    parameter ENABLE_HARDWARE_WALKER = 1'b0,
+    parameter [31:0] HARDWARE_WALKER_PTBR = 32'd0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -61,6 +63,8 @@ module mips_soc #(
         .ENABLE_FLASH_IMAGE_MODEL  (1'b0),
         .ENABLE_DDR4_STATUS        (ENABLE_DDR4_STATUS),
         .ENABLE_DDR4_STATUS_FATAL  (ENABLE_DDR4_STATUS_FATAL),
+        .ENABLE_HARDWARE_WALKER    (ENABLE_HARDWARE_WALKER),
+        .HARDWARE_WALKER_PTBR      (HARDWARE_WALKER_PTBR),
         .ENABLE_UART_PINS          (ENABLE_UART_PINS),
         .SPI_READ_TIMEOUT_CYCLES   (SPI_READ_TIMEOUT_CYCLES),
         .ENABLE_QSPI_QUAD          (ENABLE_QSPI_QUAD)
