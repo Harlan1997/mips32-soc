@@ -25,6 +25,7 @@ SECTIONS
     .pt_root 0x80001000 : { KEEP(*(.pt_root)) } > SRAM
     .pt_l2   0x80002000 : { KEEP(*(.pt_l2)) } > SRAM
     .page_data 0x80006000 : { KEEP(*(.page_data)) } > SRAM
+    .page_ro 0x80008000 : { KEEP(*(.page_ro)) } > SRAM
 
     .text : { *(.text .text.*) } > SRAM
     .rodata : { *(.rodata .rodata.*) } > SRAM
