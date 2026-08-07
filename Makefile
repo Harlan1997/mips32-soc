@@ -70,6 +70,7 @@ CPU_SCHEDULER_INTEGRATION_DIR ?= $(BUILD_DIR)/unit_tb/cpu_scheduler_integration
 CPU_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_hardware_walker
 CPU_DSIDE_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_dside_hardware_walker
 MMU_PAGE_TABLE_ALLOCATOR_DIR ?= $(BUILD_DIR)/unit_tb/mmu_page_table_allocator
+MMU_REFILL_DIR ?= $(BUILD_DIR)/soc_test/mmu_refill_bootstrap
 PRODUCT_CACHEERR_DIR ?= $(BUILD_DIR)/unit_tb/product_cacheerr
 WDT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/wdt
 WDT_PERIPHERAL_DIR ?= $(BUILD_DIR)/unit_tb/wdt_peripheral
@@ -429,6 +430,9 @@ cpu-cp0-gate: firmware
 
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
+
+mmu-refill-gate:
+	RUN_DIR=$(MMU_REFILL_DIR) tb/soc_test/run_mmu_refill.sh
 
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate

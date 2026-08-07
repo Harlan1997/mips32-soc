@@ -7,7 +7,7 @@
  *
  * This does NOT implement real demand paging. On any TLB miss (TLBL/TLBS),
  * the exception handler installs a single identity-mapped 4KB entry for the
- * faulting page (PA == VA, uncached-safe C=3'b011 cacheable WB, valid,
+ * faulting page (PA == VA, uncached C=3'b010, valid,
  * dirty, global) via TLBWR, then ERETs to retry the faulting instruction.
  * This is enough to prove the CP0/TLB/mips_mmu translation path actually
  * works under real firmware, without taking on page-table-based paging.
@@ -30,17 +30,19 @@ static volatile unsigned int refill_count = 0;
 static volatile unsigned int unexpected_exc = 0;
 
 /* Install an identity mapping for the 4KB page containing bad_vaddr and
- * retry. EntryLo0/1 share PFN/attrs here since we don't care which TLB
- * "half" (VA[12]) the fault landed in for an identity map. */
+ * retry. EntryLo0/1 cover the even/odd 4KB halves of the 8KB TLB pair so
+ * identity mapping preserves the page offset across VA[12]. */
 static void install_identity_entry(unsigned int bad_vaddr) {
     unsigned int vpn2  = bad_vaddr & 0xFFFFE000u;   /* VA[31:13], EntryHi field */
     unsigned int pfn   = (bad_vaddr >> 12) & 0xFFFFFu; /* identity: PFN = VA>>12 */
-    unsigned int lo     = (pfn << 6) | (3u << 3) /* C=cacheable WB */
+    unsigned int lo0    = (pfn << 6) | (2u << 3) /* C=uncached */
                          | (1u << 2) /* D */ | (1u << 1) /* V */ | (1u << 0); /* G */
+    unsigned int lo1    = ((pfn + 1u) << 6) | (2u << 3)
+                         | (1u << 2) | (1u << 1) | (1u << 0);
 
     asm volatile("mtc0 %0, $10, 0" :: "r"(vpn2));   /* EntryHi: VPN2 (ASID=0) */
-    asm volatile("mtc0 %0, $2,  0" :: "r"(lo));      /* EntryLo0 */
-    asm volatile("mtc0 %0, $3,  0" :: "r"(lo));      /* EntryLo1 (same, identity) */
+    asm volatile("mtc0 %0, $2,  0" :: "r"(lo0));     /* EntryLo0 */
+    asm volatile("mtc0 %0, $3,  0" :: "r"(lo1));     /* EntryLo1 */
     asm volatile("mtc0 %0, $5,  0" :: "r"(0));       /* PageMask: 4KB (mask=0) */
     asm volatile("tlbwr");
     refill_count++;
@@ -73,13 +75,10 @@ int main(void) {
      * exercise multiple TLB misses/refills, not just one lucky entry. */
     volatile unsigned int *p;
     unsigned int i, ok = 1;
-    /* Use useg VAs inside the DDR window (0x0800_0000+, Phase C.4) --
-     * identity-mapping VA==PA lands on real backed memory there. Any
-     * plain useg address without real backing (e.g. SRAM's unused range)
-     * would still take a TLB miss/refill correctly, but the subsequent
-     * store would DECERR at the fabric -- unrelated to what this test is
-     * checking. */
-    unsigned int bases[4] = { 0x08000000u, 0x08001000u, 0x08002000u, 0x08003000u };
+    /* Use four useg pages in the backed SRAM window. The product DDR refill
+     * path has its own gate; keeping this bootstrap gate on SRAM isolates the
+     * reset/vector/TLB/ERET contract from DDR controller behavior. */
+    unsigned int bases[4] = { 0x00006000u, 0x00007000u, 0x00008000u, 0x00009000u };
 
     for (i = 0; i < 4; i++) {
         p = (volatile unsigned int *)bases[i];

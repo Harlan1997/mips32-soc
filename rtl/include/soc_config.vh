@@ -261,7 +261,9 @@
 // +define+SOC_MMU_ENABLE=1 on the vcs command line without changing this
 // project-wide default (which every other firmware/test still compiles
 // against). KNOWN BLOCKED: see docs/block_specs/mmu_tlb_spec.md Phase B.3.2
-// note -- flipping this on breaks boot today (useg vector placement).
+// note -- prototype MMU firmware must use the kseg0 bootstrap linker contract
+// (reset 0x80000000, general vector 0x80000180); the legacy useg image remains
+// valid only when MMU translation is disabled.
 `ifndef SOC_MMU_ENABLE
 `define SOC_MMU_ENABLE             0
 `endif
