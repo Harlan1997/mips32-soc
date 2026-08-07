@@ -36,7 +36,7 @@ stage1_entry:
     nop
     nop
     lui     $t1, 0x0100
-    ori     $t1, $t1, 0x0017
+    ori     $t1, $t1, 0x0297
     mtc0    $t1, $2
     nop
     nop
