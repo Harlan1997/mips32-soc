@@ -40,6 +40,7 @@
 module mips_mdu (
     input  wire        clk,
     input  wire        rst_n,
+    input  wire        flush,
 
     input  wire        issue_valid,
     input  wire [3:0]  op,
@@ -135,7 +136,20 @@ module mips_mdu (
         end else begin
             done_pulse <= 1'b0;
 
-            case (state)
+            // A pipeline flush cancels an uncommitted operation. HI/LO are
+            // intentionally untouched because the in-flight result has not
+            // reached architectural state.
+            if (flush) begin
+                state             <= ST_IDLE;
+                op_r              <= 4'h0;
+                rs_r              <= 32'h0;
+                rt_r              <= 32'h0;
+                mul_pipe          <= 2'h0;
+                div_ctr           <= 6'h0;
+                div_ws            <= 64'h0;
+                div_divisor       <= 32'h0;
+                div_dividend_orig <= 32'h0;
+            end else case (state)
                 //=============================================================
                 ST_IDLE: begin
                     if (issue_valid) begin

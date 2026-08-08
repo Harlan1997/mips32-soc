@@ -150,7 +150,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [ ] Radix-2 除法 18-cycle，早退出到 3 cycle（当前为最多 32 次迭代）
 - [x] MADD/MADDU/MSUB/MSUBU + MUL 实现；CLO/CLZ 保持在 ALU 路径
 - [x] MFHI/MFLO stall 遇 busy MDU（由 CPU MDU hazard/stall 路径和 CPU 门禁覆盖）
-- [ ] Flush-to-IDLE 语义（当前 MDU 接口尚无 flush 输入，异常/mispredict 取消仍未定义）
+- [x] Flush-to-IDLE 语义 —— `mips_mdu.flush` 接入 CPU `exception_flush | ctx_restore_req`；在途乘法/除法取消后回到 IDLE、保持 HI/LO、抑制完成脉冲，`make mdu-flush-gate` 覆盖取消与重新发射；BPU 无独立 flush 输入仍属当前架构边界
 - [ ] MDU stall 占正常 workload < 5% cycles（缺少 CoreMark/Dhrystone 性能基准）
 
 当前可签收范围：`make mdu-cpu-gate` 与 `make dut-block-unit-gate` 的 MDU 子项均通过，覆盖
@@ -208,7 +208,12 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
   CPU/L1 hit-under-miss（见 `docs/block_specs/dcache_spec.md` 依赖链）才能兑现——当前 L1 阻塞，SoC 层每次
   只发一个请求，为正确 drop-in、无 perf delta。
 - [ ] Snoop 端口 tie-off 且无副作用
-- [ ] L1→L2→DDR 三级 miss 端到端通
+- [x] L1→L2→DDR 三级数据路径端到端通 —— `make l2-end-to-end-gate` 与
+  `make l2-end-to-end-gate L2_WRITEBACK=1` 均通过；focused SoC gate 覆盖
+  cold refill、L1 conflict eviction、L2 hit 和 WT/WB readback。L2 8-way
+  capacity eviction 与 WB dirty victim 的完整 downstream AW/W/B 仍由
+  `dut-block-unit-gate` 覆盖，当前 128KB behavioral DDR 地址窗口不作为
+  SoC capacity-eviction 证据。
 - [ ] CoreMark L2 hit rate ≥ 80% (L1 miss 的 80% 命中 L2)
 
 ### C.3 多 outstanding AXI Fabric

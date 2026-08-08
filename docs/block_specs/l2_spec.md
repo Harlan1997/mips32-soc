@@ -16,6 +16,12 @@
 > `tb/unit/l2/tb_l2_wt.v` 与 SoC 级回归验证。（silicon 注意：真实 valid 位在真正冷启动需
 > power-on reset 做 flash-invalidate；行为模型用 `initial` 块承担该职责。）
 > **write-back 已于 v1.4 完成 SoC 级签核**（构建开关 `L2_WRITEBACK=1`，详见版本记录）。
+
+> 端到端边界：`l2-end-to-end-gate` 在真实 CPU/L1/L2/DDR 连接上验证 cold
+> refill、L1 conflict eviction 后的 L2 hit，以及 WT/WB 数据读回。由于当前
+> `axi_ddr_model` 使用 128KB behavioral 地址窗口，L2 8-way capacity eviction
+> 和完整 dirty-victim downstream `AW/W/B` 序列仍以 `tb/unit/l2` 的 directed
+> evidence 为准，不由该 focused SoC gate 宣称。
 >
 > 两种实现均为 blocking single-outstanding：对齐 word-INCR 突发（含跨 line，逐 beat
 > 重新查表）正确服务，仅对真正非法请求（非 32 位、非对齐、非 INCR、len>7）返回 `SLVERR`。

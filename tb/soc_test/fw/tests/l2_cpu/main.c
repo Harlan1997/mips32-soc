@@ -8,19 +8,20 @@
  *   3. L2 set conflict and eviction sweep stressing 4KB set-strided BSS addresses
  *      in sweep_buffer (sweep_buffer[0], sweep_buffer[1024]), forcing L1 dirty eviction
  *      into L2 and L2 hit refill readback.
- *   4. Cached (0x80000000 KSEG0) vs uncached (0xA0000000 KSEG1) alias
- *      interactions. Note: MIPS CPU/L1 cache lacks hardware alias coherency /
- *      flush instructions in this hardware baseline, so uncached writes bypass
- *      L1/L2 and read direct SRAM, while cached reads hit resident L1/L2 lines.
- *      Alias behavior is explicitly documented herein.
+ *   4. Cacheable physical vs uncached (0xA0000000 KSEG1) alias readback after
+ *      L1 conflict eviction. Note: MIPS CPU/L1 cache lacks hardware alias
+ *      coherency / flush instructions in this hardware baseline, so the test
+ *      evicts the dirty cached line before checking durable KSEG1 data.
  * -------------------------------------------------------------------------- */
 #include <stdint.h>
 #include "soc_addr.h"
 #include "print.h"
 
-static uint32_t sweep_buffer[2048] __attribute__((aligned(32))); // 8 KB = 256 cache lines
-static uint32_t merge_buffer[8]    __attribute__((aligned(32)));
-static uint32_t alias_buffer[8]    __attribute__((aligned(32)));
+/* Keep the long sweep in the explicit behavioral-DDR window used by the
+ * focused SoC gate, away from the firmware image and exception vectors. */
+#define SWEEP_PHYS_BASE 0x00008000U
+#define MERGE_PHYS_BASE 0x0000A000U
+#define ALIAS_PHYS_BASE 0x0000A040U
 
 static void mailbox_fail(void) {
     *((volatile uint32_t*)0xA000FFFC) = 0xDEADDEAD;
@@ -29,7 +30,7 @@ static void mailbox_fail(void) {
 
 // 1. Cached memory data integrity sweep (8 KB = 2048 words, 256 lines)
 static int test_cached_memory_integrity(void) {
-    volatile uint32_t *cached_ptr = (volatile uint32_t *)((uint32_t)sweep_buffer | 0x80000000U);
+    volatile uint32_t *cached_ptr = (volatile uint32_t *)SWEEP_PHYS_BASE;
     const uint32_t words = 2048; // 8 KB = 256 cache lines of 32B
     uint32_t i;
 
@@ -63,7 +64,7 @@ static int test_cached_memory_integrity(void) {
 
 // 2. Sub-word (byte / halfword / word) store merge correctness
 static int test_store_merge_correctness(void) {
-    volatile uint32_t *word_ptr = (volatile uint32_t *)((uint32_t)merge_buffer | 0x80000000U);
+    volatile uint32_t *word_ptr = (volatile uint32_t *)MERGE_PHYS_BASE;
     volatile uint8_t  *byte_ptr = (volatile uint8_t  *)(word_ptr + 1);
     volatile uint16_t *half_ptr = (volatile uint16_t *)(word_ptr + 2);
 
@@ -96,10 +97,10 @@ static int test_store_merge_correctness(void) {
     return 0;
 }
 
-// 3. L2 set conflict and eviction sweep using BSS sweep_buffer
+// 3. L2 set conflict and eviction sweep using explicit SRAM lines
 static int test_l2_conflict_eviction(void) {
-    volatile uint32_t *p0 = (volatile uint32_t *)((uint32_t)&sweep_buffer[0] | 0x80000000U);
-    volatile uint32_t *p1 = (volatile uint32_t *)((uint32_t)&sweep_buffer[1024] | 0x80000000U); // 4KB stride
+    volatile uint32_t *p0 = (volatile uint32_t *)SWEEP_PHYS_BASE;
+    volatile uint32_t *p1 = (volatile uint32_t *)(SWEEP_PHYS_BASE + 4096U); // 4KB stride
 
     uint32_t orig0 = *p0;
     uint32_t orig1 = *p1;
@@ -118,23 +119,27 @@ static int test_l2_conflict_eviction(void) {
     return 0;
 }
 
-// 4. Cached (KSEG0) vs Uncached (KSEG1) alias interaction documentation & test
+// 4. Cached vs uncached alias readback after a durable cached store
 static int test_alias_interaction(void) {
-    uint32_t phys_addr = ((uint32_t)alias_buffer) & 0xFFFFU;
-    volatile uint32_t *cached_ptr   = (volatile uint32_t *)(0x80000000U | phys_addr);
+    uint32_t phys_addr = ALIAS_PHYS_BASE;
+    volatile uint32_t *cached_ptr   = (volatile uint32_t *)phys_addr;
     volatile uint32_t *uncached_ptr = (volatile uint32_t *)(0xA0000000U | phys_addr);
 
-    // Step 1: Write & read via uncached alias (bypasses L1, updates L2/backing memory)
-    *uncached_ptr = 0x55AA55AAU;
-    if (*uncached_ptr != 0x55AA55AAU) {
-        print_str("FAIL: uncached direct write/read failed\n");
-        return -1;
-    }
-
-    // Step 2: Write & read via cached alias (updates resident L1 line)
+    // Step 1: Write & read via the cacheable physical alias.
     *cached_ptr = 0x99887766U;
     if (*cached_ptr != 0x99887766U) {
         print_str("FAIL: cached write readback failed\n");
+        return -1;
+    }
+
+    // Evict the L1 line so its dirty data reaches L2/backing memory before
+    // checking the uncached alias.
+    for (uint32_t i = 1; i <= 4; i++)
+        (void)*(volatile uint32_t *)(phys_addr + i * 0x800U);
+
+    // Step 2: Read via KSEG1 and confirm durable backing data.
+    if (*uncached_ptr != 0x99887766U) {
+        print_str("FAIL: uncached alias readback failed\n");
         return -1;
     }
 

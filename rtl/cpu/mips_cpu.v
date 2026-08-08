@@ -709,6 +709,7 @@ module mips_cpu #(
     mips_ex_stage u_mips_ex_stage (
         .clk         (clk),
         .rst_n       (rst_n),
+        .flush       (exception_flush | ctx_restore_req),
         .op_a        (ex_op_a),
         .op_b        (ex_op_b),
         .sa          (ex_sa),

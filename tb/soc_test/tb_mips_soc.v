@@ -35,6 +35,15 @@ module tb_mips_soc;
     integer dual_core_reverse_ipi_count;
     integer dual_core_reset_count;
     integer dual_core_exception_count;
+`ifdef SOC_L2_E2E
+    integer l2_e2e_ar_total;
+    integer l2_e2e_aw_total;
+    integer l2_e2e_w_total;
+    integer l2_e2e_b_total;
+    integer l2_e2e_ar_target;
+    integer l2_e2e_aw_target;
+    localparam [31:0] L2_E2E_TARGET_LINE = 32'h00008000;
+`endif
     
     wire [31:0] gpio_pins;
 `ifdef SOC_UART_EXTERNAL_RX_WAVEFORM
@@ -184,6 +193,7 @@ module tb_mips_soc;
 
 `ifndef SOC_COHERENCY_LL_SC
 `ifndef SOC_COHERENCY_FW_STRESS
+`ifndef SOC_L2_E2E
     initial begin
         wait (rst_n === 1'b1);
         repeat (200) @(posedge clk);
@@ -194,6 +204,9 @@ module tb_mips_soc;
         $display("DUAL_CORE_CORE1_EXCEPTION_INJECTED code=0A");
     end
 `endif
+
+`endif
+
 `endif
 
 `endif
@@ -243,6 +256,8 @@ module tb_mips_soc;
 
     initial begin
 `ifdef SOC_COHERENCY_FW_STRESS
+        #20000000;
+`elsif SOC_L2_CPU_GATE
         #20000000;
 `else
         #5000000;
@@ -303,6 +318,25 @@ module tb_mips_soc;
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+`ifdef SOC_L2_E2E
+                if (l2_e2e_ar_target < 1) begin
+                    $display("L2_E2E_COUNTER_MISMATCH target_ar=%0d total_ar=%0d",
+                             l2_e2e_ar_target, l2_e2e_ar_total);
+                    $finish;
+                end
+`ifdef SOC_L2_WRITEBACK
+                $display("L2_E2E_WB_L1_EVICTION target_aw=%0d w=%0d b=%0d",
+                         l2_e2e_aw_target, l2_e2e_w_total, l2_e2e_b_total);
+`endif
+                $display("L2_E2E_TEST_SUCCESS policy=%s target_ar=%0d target_aw=%0d w=%0d b=%0d",
+`ifdef SOC_L2_WRITEBACK
+                         "write-back",
+`else
+                         "write-through",
+`endif
+                         l2_e2e_ar_target, l2_e2e_aw_target,
+                         l2_e2e_w_total, l2_e2e_b_total);
+`endif
 `ifdef SOC_COHERENCY_LL_SC
                 if (!llsc_coherency_injected || !llsc_coherency_observed) begin
                     $display("REGRESSION_TEST_FAILED LL/SC peer coherency notification not injected/observed");
@@ -341,10 +375,12 @@ module tb_mips_soc;
                 end
 `endif
 `ifndef SOC_ENABLE_DUAL_CORE
+`ifndef SOC_L2_E2E
                 if (!uart_tx_seen_low) begin
                     $display("REGRESSION_TEST_FAILED UART TX pin never asserted");
                     $finish;
                 end
+`endif
 `endif
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
@@ -572,6 +608,8 @@ module tb_mips_soc;
     endtask
 
 `ifndef SOC_COHERENCY_FW_STRESS
+`ifndef SOC_L2_E2E
+`ifndef SOC_L2_CPU_GATE
     initial begin
         // Let system reset finish
         #1500;
@@ -822,6 +860,49 @@ module tb_mips_soc;
         #50 rst_n = 1;
 `endif
         
+    end
+`endif
+`endif
+`endif
+
+`ifdef SOC_L2_E2E
+    initial begin
+        l2_e2e_ar_total = 0;
+        l2_e2e_aw_total = 0;
+        l2_e2e_w_total = 0;
+        l2_e2e_b_total = 0;
+        l2_e2e_ar_target = 0;
+        l2_e2e_aw_target = 0;
+    end
+
+    always @(posedge clk) begin
+        if (rst_n) begin
+            if (u_soc.u_impl.u_memory_subsystem.l2m_arvalid &&
+                u_soc.u_impl.u_memory_subsystem.l2m_arready) begin
+                l2_e2e_ar_total = l2_e2e_ar_total + 1;
+                if (l2_e2e_ar_total < 40)
+                    $display("L2_E2E_AR addr=%08h len=%0d",
+                             u_soc.u_impl.u_memory_subsystem.l2m_araddr,
+                             u_soc.u_impl.u_memory_subsystem.l2m_arlen);
+                if ((u_soc.u_impl.u_memory_subsystem.l2m_araddr & 32'hffffffe0) ==
+                    L2_E2E_TARGET_LINE)
+                    l2_e2e_ar_target = l2_e2e_ar_target + 1;
+            end
+            if (u_soc.u_impl.u_memory_subsystem.l2m_awvalid &&
+                u_soc.u_impl.u_memory_subsystem.l2m_awready) begin
+                l2_e2e_aw_total = l2_e2e_aw_total + 1;
+                if ((u_soc.u_impl.u_memory_subsystem.l2m_awaddr & 32'hffffffe0) ==
+                    L2_E2E_TARGET_LINE)
+                    l2_e2e_aw_target = l2_e2e_aw_target + 1;
+            end
+            if (u_soc.u_impl.u_memory_subsystem.l2m_wvalid &&
+                u_soc.u_impl.u_memory_subsystem.l2m_wready)
+                l2_e2e_w_total = l2_e2e_w_total + 1;
+            if (u_soc.u_impl.u_memory_subsystem.l2m_bvalid &&
+                u_soc.u_impl.u_memory_subsystem.l2m_bready)
+                l2_e2e_b_total = l2_e2e_b_total + 1;
+
+        end
     end
 `endif
 
