@@ -129,8 +129,11 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 ### 3.4 异常与冲刷
 
 - 无异常（MIPS spec 定义除 0 不异常）。
-- 流水线冲刷（异常/mispredict）下的精确取消语义不是 Phase 4A 已闭合项；
-  后续 CPU/异常完备性阶段需要用 firmware/UVM 明确定义 kill 后 HI/LO 是否更新。
+- `flush` 对在途 MDU 操作具有最高优先级：采样到 `flush` 时回到
+  `ST_IDLE`，清除乘法/除法中间状态，不更新 HI/LO，也不产生 `done_pulse`。
+- 当前 CPU 将 `exception_flush | ctx_restore_req` 连接到 `flush`，覆盖异常、ERET、
+  中断和上下文恢复冲刷。取消后下一周期可重新发射；BPU 误预测没有独立 flush
+  输入，仍遵循当前延迟槽/resolve 恢复路径。
 
 ---
 
@@ -185,7 +188,8 @@ module mips_mdu #(
 - 早退出乘法：小操作数命中/未命中。
 - MADD/MSUB 覆盖 HI/LO 初值 0 与非 0。
 - MFHI/MFLO 遇 busy stall 循环。
-- Flush during MDU busy：后续 CPU 精确异常/flush 合同闭合项。
+- Flush during MDU busy：`make mdu-flush-gate` 覆盖乘法/除法取消、HI/LO 保持、
+  完成脉冲抑制和取消后重新发射。
 
 **SoC 级 firmware**：
 

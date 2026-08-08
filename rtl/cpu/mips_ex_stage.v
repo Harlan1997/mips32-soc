@@ -12,6 +12,7 @@
 module mips_ex_stage (
     input  wire        clk,
     input  wire        rst_n,
+    input  wire        flush,
     
     // Operands and Control
     input  wire [31:0] op_a,        // Operand A
@@ -54,6 +55,7 @@ module mips_ex_stage (
     mips_mdu u_mips_mdu (
         .clk        (clk),
         .rst_n      (rst_n),
+        .flush      (flush),
         .issue_valid(mdu_start),
         .op         (mdu_op),
         .rs_val     (op_a),

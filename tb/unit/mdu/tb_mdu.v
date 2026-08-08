@@ -2,6 +2,7 @@
 module tb_mdu;
     reg         clk = 0;
     reg         rst_n = 0;
+    reg         flush = 0;
     reg         issue_valid = 0;
     reg  [3:0]  op = 0;
     reg  [31:0] rs_val = 0;
@@ -15,6 +16,7 @@ module tb_mdu;
 
     mips_mdu dut (
         .clk(clk), .rst_n(rst_n),
+        .flush(flush),
         .issue_valid(issue_valid), .op(op),
         .rs_val(rs_val), .rt_val(rt_val),
         .hi_out(hi_out), .lo_out(lo_out),
@@ -28,6 +30,23 @@ module tb_mdu;
         issue_valid = 0;
         wait (done_pulse == 1);
         @(negedge clk);
+    end
+    endtask
+
+    task cancel_op(input [3:0] o, input [31:0] a, input [31:0] b);
+    begin
+        @(negedge clk);
+        issue_valid = 1; op = o; rs_val = a; rt_val = b;
+        @(negedge clk);
+        issue_valid = 0;
+        @(negedge clk);
+        flush = 1;
+        @(negedge clk);
+        flush = 0;
+        if (busy !== 1'b0 || done_pulse !== 1'b0) begin
+            $display("FAIL cancel op=%0d: busy=%b done=%b", o, busy, done_pulse);
+            errs = errs + 1;
+        end
     end
     endtask
 
@@ -53,6 +72,18 @@ module tb_mdu;
     initial begin
         #12 rst_n = 1;
         @(negedge clk);
+
+        // ---- Flush cancellation: in-flight work must not commit HI/LO ----
+        issue_op(4'd6, 32'h1357_9BDF, 32'h0);
+        issue_op(4'd7, 32'h2468_ACE0, 32'h0);
+        cancel_op(4'd0, 32'hFFFF_FFFF, 32'h0000_0003);
+        check_hilo(32'h1357_9BDF, 32'h2468_ACE0, "flush cancelled MULT");
+        cancel_op(4'd2, 32'h7FFF_FFFF, 32'h0000_0003);
+        check_hilo(32'h1357_9BDF, 32'h2468_ACE0, "flush cancelled DIV");
+
+        // A cancelled operation must leave the unit reusable.
+        issue_op(4'd1, 32'd7, 32'd8);
+        check_hilo(32'h0, 32'd56, "post-flush MULTU");
 
         // ---- MULTU: small × small early-exit path ----
         issue_op(4'd1, 32'd123, 32'd456);

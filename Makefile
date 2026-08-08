@@ -86,6 +86,7 @@ DDR4_CONTROLLER_DIR ?= $(BUILD_DIR)/unit_tb/axi_ddr4_controller
 SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
 MDU_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/mdu_cpu
 MDU_CPU_FW_HEX ?= $(MDU_CPU_FW_DIR)/firmware.hex
+MDU_FLUSH_DIR ?= $(BUILD_DIR)/unit_tb/mdu_flush
 
 SOC_TEST_DMA_CPU_DIR ?= $(BUILD_DIR)/soc_test/dma_cpu_gate
 DMA_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/dma_cpu
@@ -111,6 +112,9 @@ DDR4_STATUS_FW_DIR ?= $(BUILD_DIR)/firmware/ddr4_status
 SOC_TEST_L2_CPU_DIR ?= $(BUILD_DIR)/soc_test/l2_cpu_gate
 L2_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/l2_cpu
 L2_CPU_FW_HEX ?= $(L2_CPU_FW_DIR)/firmware.hex
+SOC_TEST_L2_E2E_DIR ?= $(BUILD_DIR)/soc_test/l2_end_to_end
+L2_E2E_FW_DIR ?= $(BUILD_DIR)/firmware/l2_e2e
+L2_E2E_FW_HEX ?= $(L2_E2E_FW_DIR)/firmware.hex
 
 SOC_TEST_LLSC_DIR ?= $(BUILD_DIR)/soc_test/llsc_gate
 SOC_TEST_LLSC_COHERENCY_DIR ?= $(BUILD_DIR)/soc_test/llsc_coherency_gate
@@ -131,7 +135,10 @@ bpu-redirect-gate:
 sva-gate: firmware
 	RUN_ROOT=$(SVA_DIR) FW_HEX=$(FW_HEX) tb/sva/run_sva_gate.sh
 
-.PHONY: bpu-redirect-gate sva-gate firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate mmu-hardware-walker-soc-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate coverage-strict-clean-gate linux-boot-dependency-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+mdu-flush-gate:
+	RUN_DIR=$(MDU_FLUSH_DIR) tb/unit/mdu/run_flush_gate.sh
+
+.PHONY: bpu-redirect-gate sva-gate mdu-flush-gate firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate l2-end-to-end-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate mmu-hardware-walker-soc-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate coverage-strict-clean-gate linux-boot-dependency-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 linux-boot-dependency-gate:
 	bash tb/linux_boot/check_dependencies.sh
@@ -173,6 +180,10 @@ ddr4-status-soc-gate:
 l2-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=l2_cpu OUT_DIR=$(L2_CPU_FW_DIR) FW_BASE=firmware all
 	FW_HEX=$(L2_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_L2_CPU_DIR) tb/soc_test/run_l2_cpu_gate.sh
+
+l2-end-to-end-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=l2_e2e OUT_DIR=$(L2_E2E_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(L2_E2E_FW_HEX) RUN_DIR=$(SOC_TEST_L2_E2E_DIR) tb/soc_test/run_l2_end_to_end_gate.sh
 
 llsc-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=llsc OUT_DIR=$(abspath $(LLSC_FW_DIR)) FW_BASE=firmware all

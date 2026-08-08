@@ -11,7 +11,9 @@ if [ ! -f "$FW_HEX" ]; then
     make -C "${ROOT_DIR}/tb/soc_test/fw" FW_NAME=l2_cpu OUT_DIR="${ROOT_DIR}/build/firmware/l2_cpu" FW_BASE=firmware all
 fi
 
-FW_HEX="$FW_HEX" RUN_DIR="$RUN_DIR" "${SCRIPT_DIR}/run.sh"
+FW_HEX="$FW_HEX" RUN_DIR="$RUN_DIR" \
+VCS_EXTRA_ARGS="${VCS_EXTRA_ARGS:+${VCS_EXTRA_ARGS} }+define+SOC_L2_CPU_GATE" \
+"${SCRIPT_DIR}/run.sh"
 
 SIM_LOG="${RUN_DIR}/sim.log"
 if [ ! -f "$SIM_LOG" ]; then

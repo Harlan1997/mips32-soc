@@ -428,6 +428,7 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | 2026-08-05 | `integration/function-contract` dual-core IPI APB control slice | `make mmu-ipi-shootdown-gate`；`make apb-mmu-ipi-status-gate` | PASS：standalone IPI controller；APB register/control gate | 新增 vendor-neutral APB IPI 控制面：目标核/代次、ASID/VPN/scope 配置，send 命令，busy/pending/done/timeout/rejected/stale-ack 状态和 W1C 清除；外部 target-present/ack 端点验证 payload、匹配 ACK 与目标不存在超时。该切片尚未接入 `soc_peripheral_subsystem`/双核 CPU，不升级为 SoC 多核功能完成。 |
 | 2026-08-05 | `integration/function-contract` IPI APB optional SoC wiring recheck | `make rtl-frontend-compile RUN_ROOT=build/unit_tb/rtl_frontend_ipi_integration`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_after_ipi_apb`；`build/cpu_mmu_ipi_recheck_20260805.log` | PASS：RTL frontend `3/3`；default SoC smoke；CPU/MMU/IPI recheck all gates | `soc_peripheral_subsystem` 增加 `ENABLE_DUAL_CORE_IPI=0` 默认关闭的 `0x4000_A000` APB 窗口和外部 target/ack/invalidate 端点；默认单核 CPU、MMU context window 和既有 firmware 不变。重跑 IPI、APB IPI、TLB policy/invalidate、CPU context、ASID context、process pressure、EBase Mod、CacheErr gates 均通过。该证据仍不等同于双核 CPU、共享内存一致性或 OS scheduler 完成。 |
 | 2026-08-05 | `integration/function-contract` full functional closure batch | `build/functional_closure_20260805.log` | PASS：CPU/CP0、TLB/MMU、IPI、cache-error、kseg0 runtime、DDR4 behavioral、QSPI/XIP behavioral 共 `38` 个 gate | 从干净编译状态重新执行当前 RTL 功能范围内的 CPU/MMU、Boot、cache、DDR4 behavioral 和 QSPI/XIP gate；期间修复 `tb_mmu_context_status.sv` 的 `.*` 输出声明缺失，避免旧 sim 日志掩盖当前 HEAD 的编译失败。该批次闭合当前 vendor-neutral RTL/仿真范围，不改变双核一致性与 production boot 等未纳入范围。 |
+| 2026-08-08 | `integration/function-contract` MDU flush-to-IDLE closure | `make mdu-flush-gate`；后续 `make rtl-frontend-compile mdu-cpu-gate soc-smoke` | PASS：MDU flush gate；乘法/除法在途取消、HI/LO 保持、`done_pulse` 抑制及取消后重新发射均通过 | `mips_mdu.flush` 已接入 `mips_ex_stage`，由 CPU 当前 `exception_flush | ctx_restore_req` 驱动；该证据闭合异常/ERET/IRQ/上下文恢复期间的未提交 MDU 取消。BPU 无独立 flush 输入；Booth/radix-4、低延迟除法和 workload 性能仍 deferred。 |
 | 2026-08-05 | `integration/function-contract` Phase closure rerun | `build/phase_closure_20260805.log`；`make phase2-complete`；`make phase3-complete`；`make phase3b-complete`；`make phase3c-complete` | PASS：Phase 2、3A、3B、3C 全部完成 | 汇总回归在当前 HEAD 重新通过，确认 APB IPI 接入和 context-status TB 修复没有破坏既有 DMA/timer/PIC、UART/flash/APB stress、CPU/CP0、PIC arbitration 和 firmware gates。覆盖率数值仍不是本阶段功能完整性判据。 |
 | 2026-08-05 | `integration/function-contract` CPU/MMU unified completion gate | `make cpu-mmu-complete` | PASS：统一报告中的 21 个已冻结 CPU/MMU gate 全部通过；报告 `build/cpu_mmu_complete/cpu_mmu_completion_report.md` | 当前单核 MIPS32 software-managed MMU/TLB RTL contract、CP0 异常/返回、ASID/context/shootdown、MMU boot/kseg0 runtime、CacheErr/CacheOp/Tag、vectored interrupt、MDU、LL/SC 及 standalone dual-core IPI/APB contract 已闭合。Linux/OS boot、硬件 page-table walker、双核 CPU/共享内存 coherency、ECC、production EIC/VEIC 和 full ISA compliance 尚未实现，需求归属与架构规格待确认。 |
 | 2026-08-05 | `integration/function-contract` dual-core CPU opt-in RTL integration | `make dual-core-frontend-compile` | PASS：`soc_top.ENABLE_DUAL_CORE=1` VCS elaboration；报告 `build/dual_core_frontend/dual_core_frontend_report.md` | 新增核 1 CPU/MMU/L1 实例、核 1 I/D read arbitration、dual-core opt-in 参数和核 0 APB IPI 到核 1 local invalidate/interrupt 接线；默认单核配置不变。双核 firmware execution、反向 shootdown、shared-memory coherency 和 scheduler 仍未签收。 |
@@ -514,6 +515,24 @@ lint, and final assertion-coverage signoff remain deferred.
 
 本计划只记录 RTL、前端编译/elaboration、unit/firmware/SoC/UVM 仿真、协议检查、错误路径、
 复位、背压、覆盖率和可追溯报告。未列入本阶段的项目不作为当前 P0/P1 任务、依赖或关闭条件。
+
+### L2 CPU/L1/DDR focused closure (2026-08-08)
+
+`make l2-end-to-end-gate` and `make l2-end-to-end-gate L2_WRITEBACK=1` both
+pass with `L2_E2E_TEST_SUCCESS`. The focused firmware drives a real cached
+line cold read, same-line hit, L1 conflict/eviction, and WT/WB KSEG1 readback;
+the testbench counts downstream L2-to-DDR AXI handshakes and logs target-line
+read/write activity. L2 8-way capacity eviction and complete WB dirty-victim
+`AW/W/B` evidence remain covered by the L2 block gate because the current
+behavioral DDR model exposes a 128KB address window; no SoC-level capacity or
+performance claim is made here.
+
+The `l2-cpu-gate` uses `SOC_L2_CPU_GATE` to run the complete L2 firmware without
+the generic late JTAG/reset stress sequence. That sequence remains covered by
+the general reset-recovery gates; keeping it out of this long firmware run
+prevents the late reset from restarting the test after the shared watchdog
+budget has mostly elapsed. The gate uses a 20 ms watchdog for the deliberately
+long 8 KB cache sweep; the default SoC watchdog remains 5 ms.
 # Current closure boundary
 
 The active phase is RTL and simulation only. The recent closure work verifies
