@@ -52,10 +52,11 @@ DTS, U-Boot loader, or Linux driver model.
 The opt-in `make linux-boot-build-gate` target builds a pinned generic MIPS
 32r2 little-endian Linux kernel, a project DTS, and a minimal initramfs, then
 boots them on the project-built `mips32-soc-ref` machine. The gate currently
-passes the kernel-to-init boundary: Linux prints its version and reaches
-`/init`. It does not claim a complete userspace boot because the custom
-machine's ordinary 8250 device node is not yet registered, so `/init` cannot
-write a final UART marker through standard file descriptor output.
+passes the kernel-to-userspace marker: Linux prints its version, registers
+`ttyS0`, reaches `/init`, and emits `MIPS32_SOC_LINUX_BOOT_SUCCESS`. It does
+not claim a complete product Linux boot because U-Boot, real QSPI/DDR devices,
+the full device-driver set, and RTL system-mode Linux differential remain
+outside this gate.
 
 ## Boot flow (target)
 

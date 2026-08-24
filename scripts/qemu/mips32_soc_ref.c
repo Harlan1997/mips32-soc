@@ -345,6 +345,11 @@ static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
     MIPS32SocRefState *s = opaque;
     unsigned reg = addr >> 2;
 
+    if (reg == 2) {
+        /* IIR: report a pending THRE interrupt while the transmitter is
+         * empty and the corresponding IER bit is enabled. */
+        return (s->uart_regs[1] & 0x2) ? 0x2 : 0x1;
+    }
     if (reg == 5) {
         /* 16550 LSR: transmitter holding register and transmitter empty. */
         return 0x60;
@@ -353,6 +358,15 @@ static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
         return s->uart_regs[reg];
     }
     return 0;
+}
+
+static void soc_ref_uart_update_irq(MIPS32SocRefState *s)
+{
+    if (!s->cpu)
+        return;
+    /* Linux uses the CPU interrupt-controller line directly for this UART.
+     * IER.THRI plus an empty holding register produces a level interrupt. */
+    qemu_set_irq(s->cpu->env.irq[4], (s->uart_regs[1] & 0x2) != 0);
 }
 
 static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
@@ -365,10 +379,13 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
         uint8_t ch = data & 0xff;
         putchar(ch);
         fflush(stdout);
+        soc_ref_uart_update_irq(s);
         return;
     }
     if (reg < ARRAY_SIZE(s->uart_regs)) {
         s->uart_regs[reg] = data;
+        if (reg == 1)
+            soc_ref_uart_update_irq(s);
     }
 }
 

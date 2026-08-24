@@ -20,17 +20,20 @@ if ! rg -q "Run /init as init process" "${RUN_DIR}/qemu_stdout.log"; then
     echo "Linux boot gate: kernel did not reach initramfs /init (status ${status})" >&2
     exit 1
 fi
+if ! rg -q "MIPS32_SOC_LINUX_BOOT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: kernel reached /init but userspace marker was not observed (status ${status})" >&2
+    exit 1
+fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # MIPS32 SoC Linux Boot Gate
 
-- Result: PASS (kernel-to-init boundary)
+- Result: PASS (kernel-to-userspace marker)
 - Kernel: ${RUN_DIR}/kernel/vmlinux
 - Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
 - Boot protocol: MIPS UHI with an opaque DTB
-- Evidence: Linux printed its version, registered/enabled ttyS0, and reached
-  the initramfs /init process. The final userspace UART marker is still a
-  separate open item because this simplified UART model does not yet provide
-  a stable user-write observation.
+- Evidence: Linux printed its version, registered/enabled ttyS0, reached the
+  initramfs /init process, and emitted MIPS32_SOC_LINUX_BOOT_SUCCESS through
+  the modeled UART.
 - Linux console log: $([[ -s "${RUN_DIR}/qemu_stdout.log" ]] && rg -q "Linux version" "${RUN_DIR}/qemu_stdout.log" && echo present || echo absent)
 - Scope: generic MIPS kernel boot and UART/initramfs execution on the QEMU
   reference machine; U-Boot, real QSPI/DDR devices, Linux drivers beyond the
