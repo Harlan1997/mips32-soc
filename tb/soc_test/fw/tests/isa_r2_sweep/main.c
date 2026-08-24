@@ -2,7 +2,7 @@
  * isa_r2_sweep — isolated ISA R2 instruction sweep (Phase A coverage helper).
  *
  * Exercises MIPS32 R2 additions the base firmware doesn't reach: CLZ / CLO /
- * SEB / SEH / WSBH / BITSWAP / ROTR / ROTRV / MOVN / MOVZ / BAL. Plus a static MFC0
+ * SEB / SEH / WSBH / BITSWAP / ALIGN / ROTR / ROTRV / MOVN / MOVZ / BAL. Plus a static MFC0
  * of PRId / Config / Config1 / EBase to hit CP0 read paths.
  *
  * Terminates via mailbox exit; uses weak default exception handler.
@@ -13,7 +13,7 @@
 
 static uint32_t isa_r2_sweep(void) {
     uint32_t clz_r, clo_r, seb_r, seh_r, wsbh_r, bitswap_r, rotr_r, rotrv_r;
-    uint32_t ext_r, ins_r;
+    uint32_t ext_r, ins_r, align0_r, align1_r, align2_r, align3_r;
     uint32_t movn_r, movz_r, bal_r;
     uint32_t prid_v, cfg0_v, cfg1_v, ebase_v;
     uint32_t rdhwr_step, rdhwr_cpunum, rdhwr_ccres;
@@ -37,6 +37,23 @@ static uint32_t isa_r2_sweep(void) {
     register uint32_t bitswap_out asm("$t1");
     asm volatile(".word 0x7c084820" : "=r"(bitswap_out) : "r"(bitswap_in));
     bitswap_r = bitswap_out;
+    /* ALIGN is SPECIAL3/BSHFL with sa=8..11.  Keep the operands in fixed
+     * registers so the raw encodings remain unambiguous across assemblers. */
+    register uint32_t align_rs asm("$t0") = 0x11223344U;
+    register uint32_t align_rt asm("$t1") = 0xAABBCCDDU;
+    register uint32_t align0_out asm("$s0");
+    register uint32_t align1_out asm("$s1");
+    register uint32_t align2_out asm("$s2");
+    register uint32_t align3_out asm("$s3");
+    asm volatile("nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop" ::: "memory");
+    asm volatile(".word 0x7d095220\n\tmove $s0, $t2" : "=r"(align0_out) : "r"(align_rs), "r"(align_rt) : "$t2");
+    asm volatile(".word 0x7d095260\n\tmove $s1, $t2" : "=r"(align1_out) : "r"(align_rs), "r"(align_rt) : "$t2");
+    asm volatile(".word 0x7d0952a0\n\tmove $s2, $t2" : "=r"(align2_out) : "r"(align_rs), "r"(align_rt) : "$t2");
+    asm volatile(".word 0x7d0952e0\n\tmove $s3, $t2" : "=r"(align3_out) : "r"(align_rs), "r"(align_rt) : "$t2");
+    align0_r = align0_out;
+    align1_r = align1_out;
+    align2_r = align2_out;
+    align3_r = align3_out;
     asm volatile(".set push; .set mips32r2; rotr %0, %1, 8; .set pop"
                  : "=r"(rotr_r) : "r"(0xAABBCCDDU));
     asm volatile(".set push; .set mips32r2; rotrv %0, %1, %2; .set pop"
@@ -127,12 +144,22 @@ static uint32_t isa_r2_sweep(void) {
     if (rdhwr_step != 32U || rdhwr_cpunum != 0U || rdhwr_ccres != 2U ||
         seb_r != 0xFFFFFF80U || seh_r != 0xFFFF8000U ||
         wsbh_r != 0x22114433U || bitswap_r != 0x80C4A2E6U ||
+        align0_r != 0xAABBCCDDU || align1_r != 0xBBCCDD11U ||
+        align2_r != 0xCCDD1122U || align3_r != 0xDD112233U ||
         rotr_r != 0xDDAABBCCU || rotrv_r != 0x41122334U ||
         jr_hb_marker != 0x1111U || jalr_hb_link == 0U)
+        {
+        print_str("R2V="); print_hex(clz_r); print_hex(clo_r);
+        print_hex(seb_r); print_hex(seh_r); print_hex(wsbh_r);
+        print_hex(bitswap_r); print_hex(rotr_r); print_hex(rotrv_r);
+        print_hex(align0_r); print_hex(align1_r); print_hex(align2_r);
+        print_hex(align3_r); print_hex(jr_hb_marker); print_hex(jalr_hb_link);
         print_str("ISA_R2_SPECIAL_FAIL\n");
+        }
 
     return clz_r ^ clo_r ^ seb_r ^ seh_r ^ wsbh_r ^ bitswap_r ^ rotr_r ^ rotrv_r
          ^ movn_r ^ movz_r ^ bal_r
+         ^ align0_r ^ align1_r ^ align2_r ^ align3_r
          ^ prid_v ^ cfg0_v ^ cfg1_v ^ ebase_v ^ rdhwr_step ^
            rdhwr_cpunum ^ rdhwr_ccres;
 }

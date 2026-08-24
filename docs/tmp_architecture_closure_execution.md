@@ -1359,3 +1359,15 @@ remains the compatibility baseline.
 - The unified SVA SoC compile also enables `vic_priority_checker` and its bind;
   the smoke run passes without a priority/vector/pending mismatch. This does
   not claim a formal interrupt-priority proof.
+# 2026-08-24 execution update: SPECIAL3 ALIGN
+
+- Added RTL decode and ALU support for MIPS32r2 `ALIGN` byte positions 0..3.
+- Added true source-register hazard tracking for SPECIAL3 merge operations and
+  a firmware sweep with independent expected results:
+  `AABBCCDD`, `BBCCDD11`, `CCDD1122`, `DD112233`.
+- Tightened `tb/soc_test/run_isa_r2_gate.sh` so `ISA_R2_SPECIAL_FAIL` is a
+  hard failure; the gate passes with the current RTL.
+- `qemu-system-isa-r2-differential-gate` remains failing before the ALIGN
+  corpus at the existing exception-handler startup trace mismatch
+  (`rtl 27bdff88` versus QEMU `27bdffa0`). This is recorded as residual work,
+  not claimed as differential closure.

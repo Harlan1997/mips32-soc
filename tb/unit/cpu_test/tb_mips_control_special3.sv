@@ -96,6 +96,10 @@ module tb_mips_control_special3;
         expect_valid(special3(5'd1, 5'd2, 5'd7, 5'd0, 6'b000100));
         expect_valid(special3(5'd3, 5'd2, 5'd0, 5'd0, 6'b111011));
         expect_valid(special3(5'd0, 5'd2, 5'd0, 5'b00010, 6'b100000));
+        // ALIGN consumes both rs and rt; all four byte positions are legal.
+        for (integer bp = 8; bp < 12; bp = bp + 1)
+            expect_bshfl_valid(bp[4:0], 5'b11010);
+        expect_bshfl_valid(5'b01001, 5'b11010);
         expect_reserved(special3(5'd1, 5'd2, 5'd31, 5'd1, 6'b000000));
         expect_reserved(special3(5'd1, 5'd2, 5'd7, 5'd8, 6'b000100));
         expect_reserved(special3(5'd1, 5'd2, 5'd0, 5'd0, 6'b000001));
@@ -111,10 +115,11 @@ module tb_mips_control_special3;
         expect_bshfl_valid(5'b10000, 5'b10010); // SEB
         expect_bshfl_valid(5'b11000, 5'b10011); // SEH
         for (integer subop = 0; subop < 32; subop = subop + 1) begin
-            if (subop != 0 && subop != 2 && subop != 16 && subop != 24)
+            if (subop != 0 && subop != 2 && subop != 8 && subop != 9 &&
+                subop != 10 && subop != 11 && subop != 16 && subop != 24)
                 expect_reserved(special3(5'd0, 5'd2, 5'd3, subop[4:0], 6'b100000));
         end
-        // rs is reserved for BSHFL and must not become an alternate encoding.
+        // rs remains reserved for the non-ALIGN BSHFL operations.
         expect_reserved(special3(5'd1, 5'd2, 5'd3, 5'b00010, 6'b100000));
 
         if (failures == 0)

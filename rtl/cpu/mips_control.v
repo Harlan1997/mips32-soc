@@ -795,10 +795,24 @@ module mips_control (
                     6'b100000: begin  // BSHFL family — sub-op in sa field (bits 10:6)
                         // BSHFL has rs fixed to zero; the sa field selects the
                         // sub-operation.  Keep all other encodings reserved.
-                        if (rs != 5'b00000) begin
+                        // ALIGN is the BSHFL sub-family that deliberately
+                        // consumes both rs and rt.  The remaining BSHFL
+                        // operations use the architectural fixed rs=0.
+                        if (rs != 5'b00000 &&
+                            !(inst[10:6] >= 5'b01000 &&
+                              inst[10:6] <= 5'b01011)) begin
                             illegal_inst = 1'b1;
                         end else begin
                             case (inst[10:6])
+                                5'b01000,  // ALIGN rd, rs, rt, bp=0
+                                5'b01001,  // ALIGN rd, rs, rt, bp=1
+                                5'b01010,  // ALIGN rd, rs, rt, bp=2
+                                5'b01011: begin // ALIGN rd, rs, rt, bp=3
+                                    alu_op    = 5'b11010;  // OP_ALIGN
+                                    reg_write = 1'b1;
+                                    reg_dst   = 2'b01;
+                                    alu_src   = 1'b0;       // op_b = rt
+                                end
                                 5'b00000: begin  // BITSWAP rd, rt (R2)
                                     alu_op    = 5'b11001;
                                     reg_write = 1'b1;

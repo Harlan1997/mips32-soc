@@ -12,6 +12,10 @@ if grep -a -q "ISA_R2_EXT_INS_FAIL" "${RUN_DIR}/sim.log"; then
     echo "ISA R2 EXT/INS: FAIL" >&2
     exit 1
 fi
+if grep -a -q "ISA_R2_SPECIAL_FAIL" "${RUN_DIR}/sim.log"; then
+    echo "ISA R2 SPECIAL/ALIGN: FAIL" >&2
+    exit 1
+fi
 grep -a -q "REGRESSION_TEST_SUCCESS" "${RUN_DIR}/sim.log"
 grep -a -q "CPU_CP0_SUMMARY.*ri=0" "${RUN_DIR}/sim.log"
 echo "ISA R2 implemented-subset gate: PASS"
