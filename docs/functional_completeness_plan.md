@@ -817,3 +817,13 @@ APB W1C control, and verifies cached and uncached DDR window access afterward.
 Default mode `0` remains unchanged. This closes the QEMU reference status
 slice only; real PHY/JEDEC failure timing, ECC injection, refresh behavior and
 board-level DDR signoff remain open.
+
+### 2026-08-24 RDHWR implemented-subset closure
+
+`make cp0-rdhwr-gate` passes on the real CPU/SoC path. The gate verifies
+standard MIPS32 R2 `RDHWR` targets `$0` (CPUNum), `$1` (SYNCI_Step), `$2`
+(Count), `$3` (CCRes), and `$29` (UserLocal), including kernel setup,
+user-mode HWREna-disabled CpU exceptions, re-enabled user reads, and a real
+UserLocal/TLS read-write sequence. This closes the bounded RDHWR implementation
+slice and updates the ISA/front-end matrices; full privileged ISA compliance,
+dynamic Count semantics, OS TLS ABI and Linux boot remain open.

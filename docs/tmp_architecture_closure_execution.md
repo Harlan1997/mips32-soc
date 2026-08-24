@@ -1334,3 +1334,11 @@ remains the compatibility baseline.
 - Default `ddr-fault-mode=0` remains the READY/no-error behavior. Physical
   PHY/JEDEC fault timing, ECC injection, refresh scheduling and board-level
   DDR signoff remain open.
+
+### 2026-08-24 RDHWR implemented-subset closure
+
+- `make cp0-rdhwr-gate` passes on the real CPU/SoC path.
+- The gate covers `RDHWR $0/$1/$2/$3/$29`, HWREna-disabled user CpU
+  exceptions, re-enabled user-mode reads, and UserLocal/TLS read/write.
+- This closes only the bounded MIPS32 R2 RDHWR slice. Full privileged ISA,
+  dynamic Count semantics, OS TLS/scheduler ABI and Linux boot remain open.

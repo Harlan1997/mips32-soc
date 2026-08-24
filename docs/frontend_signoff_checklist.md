@@ -123,7 +123,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 - [x] User 模式访问 kseg0/1/2/3 → AdEL/AdES (MMU 硬架构性检查)
 - [x] User 模式访问 CP0 → Coprocessor Unusable 异常 (id_cpu_unusable 门)
 - [x] Status.CU0 使能允许 User 模式访问 CP0
-- [ ] RDHWR $rd, sel 指令 (Count/CPUNum/UserLocal) — B.4.2 defer
+- [x] RDHWR $rd, sel 指令 (Count/CPUNum/UserLocal) —— `$0/$1/$2/$3/$29` 解码、HWREna 用户权限、CpU 负例和 TLS runtime 已由 `make cp0-rdhwr-gate` 验证；完整 privileged ISA 仍 deferred
 
 ### B.5 精确异常 (commit d3e0fd5)
 - [x] BD-in-pipeline: 前一 cycle branch/jump → 下一 cycle ID 指令标 delay slot
@@ -176,7 +176,7 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 | B.1 静态寄存器 | ✅ core done | Claude | 2026-07-26 | 存储/写掩码/读回全套；RDHWR defer B.4.2 |
 | B.2 Timer      | ✅ core done | Claude | 2026-07-26 | Count/Compare/TI/DC/IPTI 全落地；VS 向量化 defer |
 | B.3 MMU/TLB    | ⚠ partial   | Claude | 2026-07-26 | Register+array+lookup+fault path 全套；micro-TLB / PageMask 变尺度 / Linux boot defer |
-| B.4 用户态     | ✅ core done | Claude | 2026-07-26 | KSU/CU0/kseg 保护/CpU 全套；RDHWR defer |
+| B.4 用户态     | ✅ core done | Claude | 2026-08-24 | KSU/CU0/kseg 保护/CpU 与 RDHWR HWREna 用户权限、UserLocal/TLS runtime 已验证；完整 privileged ISA deferred |
 | B.5 精确异常   | ⚠ partial   | Claude | 2026-07-26 | BD-in-pipeline + ErrorEPC/ERL 落地；EBase-vector defer |
 | B.6 BPU        | ⚠ partial   | Codex | 2026-08-08 | BTB/BHT/RAS 与 opt-in IF redirect 已验证；CoreMark/Dhrystone 命中率、fetch queue、多在途恢复和 formal 仍 deferred |
 | B.7 MDU 多周期 | ⚠ partial   | Codex | 2026-08-08 | CPU-visible MDU 已闭合；Booth/除法低延迟、flush 取消和 workload 性能仍 deferred |
