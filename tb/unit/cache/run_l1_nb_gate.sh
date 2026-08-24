@@ -19,6 +19,8 @@ Result: PASS
 - One secondary request to an outstanding line merges into its MSHR and both
   request IDs receive a response after the shared refill.
 - Request IDs are preserved across out-of-order distinct-line responses.
-- Default SoC dcache remains blocking; CPU late-response integration and dirty
-  eviction enqueue are open follow-up items.
+- Four dirty victims fill the writeback queue under downstream backpressure;
+  the next dirty request is held until all queued writebacks drain.
+- Default SoC dcache remains blocking; CPU late-response integration,
+  maintenance/coherence and error-policy extensions remain separate items.
 EOF

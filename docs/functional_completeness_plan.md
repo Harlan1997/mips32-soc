@@ -578,6 +578,13 @@ block remains disconnected from the CPU's blocking D-cache interface, so
 full CPU hit-under-miss, maintenance, coherence and error-backpressure
 closure remain open.
 
+The L1 transaction unit gate now also holds the downstream line port in
+backpressure while four dirty victims occupy the fixed four-entry writeback
+queue, rejects the fifth dirty replacement, and verifies all queued writebacks
+drain after readiness returns. This closes the standalone WB full/empty
+contract; it does not claim CPU default-path switching, nonblocking maintenance,
+coherence, or unrestricted error/reset timing.
+
 ### L1 CPU error/reset closure update (2026-08-20)
 
 The opt-in CPU/D-cache path now passes the full-ROB same-cycle error/retire/tag
