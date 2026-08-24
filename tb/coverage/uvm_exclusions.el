@@ -43,14 +43,14 @@ Branch 12 "3654256095" "(opcode == 6'b0)" (1) "(opcode == 6'b0) 0"
 
 // ID: EXCL-UVM-0003
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "2018139936 112253211"
+// CHECKSUM: "969746712 3733047277"
 MODULE: mips_cpu
-Branch 7 "2454717213" "ptw_va_q[12]"
-Branch 7 "2454717213" "ptw_va_q[12]" (0) "ptw_va_q[12] 1"
-Branch 7 "2454717213" "ptw_va_q[12]" (1) "ptw_va_q[12] 0"
-Branch 8 "2454717213" "ptw_va_q[12]"
-Branch 8 "2454717213" "ptw_va_q[12]" (0) "ptw_va_q[12] 1"
-Branch 8 "2454717213" "ptw_va_q[12]" (1) "ptw_va_q[12] 0"
+Branch 7 "3295635915" "hw_tlb_odd"
+Branch 7 "3295635915" "hw_tlb_odd" (0) "hw_tlb_odd 1"
+Branch 7 "3295635915" "hw_tlb_odd" (1) "hw_tlb_odd 0"
+Branch 8 "3295635915" "hw_tlb_odd"
+Branch 8 "3295635915" "hw_tlb_odd" (0) "hw_tlb_odd 1"
+Branch 8 "3295635915" "hw_tlb_odd" (1) "hw_tlb_odd 0"
 Branch 22 "2739533567" "mem_except_req"
 Branch 22 "2739533567" "mem_except_req" (0) "mem_except_req 1"
 Branch 22 "2739533567" "mem_except_req" (1) "mem_except_req 0"
@@ -66,7 +66,7 @@ Branch 31 "3479497108" "effective_except_req" (1) "effective_except_req 0"
 
 // ID: EXCL-UVM-0004
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3907405402 3653400919"
+// CHECKSUM: "440421165 2156383709"
 MODULE: mips_page_table_tlb_refill
 Branch 0 "387627406" "va_q[12]"
 Branch 0 "387627406" "va_q[12]" (0) "va_q[12] 1"
@@ -74,18 +74,18 @@ Branch 0 "387627406" "va_q[12]" (1) "va_q[12] 0"
 Branch 1 "387627406" "va_q[12]"
 Branch 1 "387627406" "va_q[12]" (0) "va_q[12] 1"
 Branch 1 "387627406" "va_q[12]" (1) "va_q[12] 0"
-Branch 2 "3446146769" "(!rst_n)"
-Branch 2 "3446146769" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-"
-Branch 2 "3446146769" "(!rst_n)" (1) "(!rst_n) 0,1,-,-,-,-"
-Branch 2 "3446146769" "(!rst_n)" (2) "(!rst_n) 0,0,-,-,-,-"
-Branch 2 "3446146769" "(!rst_n)" (3) "(!rst_n) 0,-,1,-,-,-"
-Branch 2 "3446146769" "(!rst_n)" (4) "(!rst_n) 0,-,0,-,-,-"
-Branch 2 "3446146769" "(!rst_n)" (5) "(!rst_n) 0,-,-,1,-,-"
-Branch 2 "3446146769" "(!rst_n)" (6) "(!rst_n) 0,-,-,0,-,-"
-Branch 2 "3446146769" "(!rst_n)" (7) "(!rst_n) 0,-,-,-,1,-"
-Branch 2 "3446146769" "(!rst_n)" (8) "(!rst_n) 0,-,-,-,0,-"
-Branch 2 "3446146769" "(!rst_n)" (9) "(!rst_n) 0,-,-,-,-,1"
-Branch 2 "3446146769" "(!rst_n)" (10) "(!rst_n) 0,-,-,-,-,0"
+Branch 2 "1946087420" "(!rst_n)"
+Branch 2 "1946087420" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-"
+Branch 2 "1946087420" "(!rst_n)" (1) "(!rst_n) 0,1,-,-,-,-"
+Branch 2 "1946087420" "(!rst_n)" (2) "(!rst_n) 0,0,-,-,-,-"
+Branch 2 "1946087420" "(!rst_n)" (3) "(!rst_n) 0,-,1,-,-,-"
+Branch 2 "1946087420" "(!rst_n)" (4) "(!rst_n) 0,-,0,-,-,-"
+Branch 2 "1946087420" "(!rst_n)" (5) "(!rst_n) 0,-,-,1,-,-"
+Branch 2 "1946087420" "(!rst_n)" (6) "(!rst_n) 0,-,-,0,-,-"
+Branch 2 "1946087420" "(!rst_n)" (7) "(!rst_n) 0,-,-,-,1,-"
+Branch 2 "1946087420" "(!rst_n)" (8) "(!rst_n) 0,-,-,-,0,-"
+Branch 2 "1946087420" "(!rst_n)" (9) "(!rst_n) 0,-,-,-,-,1"
+Branch 2 "1946087420" "(!rst_n)" (10) "(!rst_n) 0,-,-,-,-,0"
 
 // ID: EXCL-UVM-0005
 // CATEGORY: Debug & Observability
@@ -157,7 +157,7 @@ Branch 2 "4275884144" "cmd_grant" (2) "cmd_grant 0,0"
 
 // ID: EXCL-UVM-0008
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3319620102 30169383"
+// CHECKSUM: "2380524072 30169383"
 MODULE: mips_cp0
 Branch 5 "3765082417" "hw_tlb_wr_en"
 Branch 5 "3765082417" "hw_tlb_wr_en" (0) "hw_tlb_wr_en 1"
@@ -177,7 +177,7 @@ Branch 9 "3765082417" "hw_tlb_wr_en" (1) "hw_tlb_wr_en 0"
 
 // ID: EXCL-UVM-0009
 // CATEGORY: Cache & Memory Subsystem
-// CHECKSUM: "3943920266 3501916716"
+// CHECKSUM: "586324309 1663844872"
 MODULE: dcache
 Branch 0 "1185889467" "cache_op_valid"
 Branch 0 "1185889467" "cache_op_valid" (0) "cache_op_valid 1,-"
@@ -196,7 +196,7 @@ Branch 3 "3296479826" "uncacheable" (1) "uncacheable 0"
 
 // ID: EXCL-UVM-0010
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "892611322 3942765460"
+// CHECKSUM: "1888420073 645283025"
 MODULE: mips_soc_impl
 Branch 0 "1363461886" "ipi_core1_core0_invalidate"
 Branch 0 "1363461886" "ipi_core1_core0_invalidate" (0) "ipi_core1_core0_invalidate 1,-"
@@ -235,14 +235,14 @@ Branch 0 "1067463515" "(!rst_n)" (4) "(!rst_n) 0,-,0"
 
 // ID: EXCL-UVM-0013
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3979373752 2607956842"
+// CHECKSUM: "2577213487 1168924717"
 MODULE: mips_fpu
-Branch 8 "2194295273" "mode"
-Branch 8 "2194295273" "mode" (0) "mode 2'b01 ,-"
-Branch 8 "2194295273" "mode" (1) "mode 2'b10 ,-"
-Branch 8 "2194295273" "mode" (2) "mode 2'b11 ,-"
-Branch 8 "2194295273" "mode" (3) "mode default,1"
-Branch 8 "2194295273" "mode" (4) "mode default,0"
+Branch 9 "2194295273" "mode"
+Branch 9 "2194295273" "mode" (0) "mode 2'b01 ,-"
+Branch 9 "2194295273" "mode" (1) "mode 2'b10 ,-"
+Branch 9 "2194295273" "mode" (2) "mode 2'b11 ,-"
+Branch 9 "2194295273" "mode" (3) "mode default,1"
+Branch 9 "2194295273" "mode" (4) "mode default,0"
 
 // ID: EXCL-UVM-0014
 // CATEGORY: General Module Coverage Exclusions
@@ -337,6 +337,26 @@ Branch 2 "1917270758" "(!rst_n)" (16) "(!rst_n) 0,MISSING_DEFAULT,-,-,-,-,-,-,-,
 
 // ID: EXCL-UVM-0018
 // CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3681053710 3714924530"
+MODULE: mips_page_table_walker
+Branch 1 "1968396540" "PAGE_MASK"
+Branch 1 "1968396540" "PAGE_MASK" (0) "PAGE_MASK 16'h0003 "
+Branch 1 "1968396540" "PAGE_MASK" (1) "PAGE_MASK 16'h000f "
+Branch 1 "1968396540" "PAGE_MASK" (2) "PAGE_MASK 16'h003f "
+Branch 1 "1968396540" "PAGE_MASK" (3) "PAGE_MASK default"
+Branch 2 "1968396540" "PAGE_MASK"
+Branch 2 "1968396540" "PAGE_MASK" (0) "PAGE_MASK 16'h0003 "
+Branch 2 "1968396540" "PAGE_MASK" (1) "PAGE_MASK 16'h000f "
+Branch 2 "1968396540" "PAGE_MASK" (2) "PAGE_MASK 16'h003f "
+Branch 2 "1968396540" "PAGE_MASK" (3) "PAGE_MASK default"
+Branch 3 "1968396540" "PAGE_MASK"
+Branch 3 "1968396540" "PAGE_MASK" (0) "PAGE_MASK 16'h0003 "
+Branch 3 "1968396540" "PAGE_MASK" (1) "PAGE_MASK 16'h000f "
+Branch 3 "1968396540" "PAGE_MASK" (2) "PAGE_MASK 16'h003f "
+Branch 3 "1968396540" "PAGE_MASK" (3) "PAGE_MASK default"
+
+// ID: EXCL-UVM-0019
+// CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1363931416 3329538642"
 MODULE: qspi_cmd_behavioral
 Branch 6 "3897064584" "data_write"
@@ -357,7 +377,7 @@ Branch 9 "1579987030" "lane" (0) "lane 3'd2 "
 Branch 9 "1579987030" "lane" (1) "lane 3'd4 "
 Branch 9 "1579987030" "lane" (2) "lane default"
 
-// ID: EXCL-UVM-0019
+// ID: EXCL-UVM-0020
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2772071125 974297877"
 MODULE: uart_pad_wrapper
@@ -386,7 +406,7 @@ Branch 7 "303657313" "enable"
 Branch 7 "303657313" "enable" (0) "enable 1"
 Branch 7 "303657313" "enable" (1) "enable 0"
 
-// ID: EXCL-UVM-0020
+// ID: EXCL-UVM-0021
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2914053452 3648211878"
 MODULE: l2_cache_caching
@@ -481,7 +501,7 @@ Branch 5 "1209729376" "(w < 3'h4)" (9) "(w < 3'h4) 0,-,-,-,-,-,1,0,-"
 Branch 5 "1209729376" "(w < 3'h4)" (10) "(w < 3'h4) 0,-,-,-,-,-,0,-,1"
 Branch 5 "1209729376" "(w < 3'h4)" (11) "(w < 3'h4) 0,-,-,-,-,-,0,-,0"
 
-// ID: EXCL-UVM-0021
+// ID: EXCL-UVM-0022
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2568128339 1339472887"
 MODULE: qspi_soc_pad_mux
@@ -502,7 +522,7 @@ Branch 3 "2040227978" "selected_cmd" (0) "selected_cmd 1,-"
 Branch 3 "2040227978" "selected_cmd" (1) "selected_cmd 0,1"
 Branch 3 "2040227978" "selected_cmd" (2) "selected_cmd 0,0"
 
-// ID: EXCL-UVM-0022
+// ID: EXCL-UVM-0023
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "832457901 216263769"
 MODULE: qspi_apb_integration
@@ -517,7 +537,7 @@ Branch 2 "2738946915" "status_sel" (1) "status_sel 0,1,1"
 Branch 2 "2738946915" "status_sel" (2) "status_sel 0,1,0"
 Branch 2 "2738946915" "status_sel" (3) "status_sel 0,0,-"
 
-// ID: EXCL-UVM-0023
+// ID: EXCL-UVM-0024
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "1633348978 3926032461"
 MODULE: soc_core_subsystem
@@ -546,7 +566,7 @@ Branch 7 "2359770844" "core_ptw_mem_valid"
 Branch 7 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
 Branch 7 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
 
-// ID: EXCL-UVM-0024
+// ID: EXCL-UVM-0025
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "314633967 1465953843"
 MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )
@@ -599,7 +619,7 @@ Branch 2 "3607565542" "uart_sel" (12) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,1,-"
 Branch 2 "3607565542" "uart_sel" (13) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,1"
 Branch 2 "3607565542" "uart_sel" (14) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,0"
 
-// ID: EXCL-UVM-0025
+// ID: EXCL-UVM-0026
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "314633967 3536002271"
 MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )
@@ -656,7 +676,7 @@ Branch 3 "3018116165" "(!periph_rst_n)" (0) "(!periph_rst_n) 1,-"
 Branch 3 "3018116165" "(!periph_rst_n)" (1) "(!periph_rst_n) 0,1"
 Branch 3 "3018116165" "(!periph_rst_n)" (2) "(!periph_rst_n) 0,0"
 
-// ID: EXCL-UVM-0026
+// ID: EXCL-UVM-0027
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1379674422 4237342123"
 MODULE: mips_mem_wb_reg
@@ -666,7 +686,7 @@ Branch 0 "581323052" "(!rst_n)" (1) "(!rst_n) 0,1,-"
 Branch 0 "581323052" "(!rst_n)" (2) "(!rst_n) 0,0,1"
 Branch 0 "581323052" "(!rst_n)" (3) "(!rst_n) 0,0,0"
 
-// ID: EXCL-UVM-0027
+// ID: EXCL-UVM-0028
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "840303087 6742992"
 MODULE: qspi_pad_wrapper
@@ -683,7 +703,7 @@ Branch 3 "3730940211" "spi_io_oe[3]"
 Branch 3 "3730940211" "spi_io_oe[3]" (0) "spi_io_oe[3] 1"
 Branch 3 "3730940211" "spi_io_oe[3]" (1) "spi_io_oe[3] 0"
 
-// ID: EXCL-UVM-0028
+// ID: EXCL-UVM-0029
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "63469976 3059061009"
 MODULE: l2_cache_nb
@@ -780,7 +800,7 @@ Branch 8 "1209729376" "(w < 3'h4)" (9) "(w < 3'h4) 0,-,-,-,-,-,1,0,-"
 Branch 8 "1209729376" "(w < 3'h4)" (10) "(w < 3'h4) 0,-,-,-,-,-,0,-,1"
 Branch 8 "1209729376" "(w < 3'h4)" (11) "(w < 3'h4) 0,-,-,-,-,-,0,-,0"
 
-// ID: EXCL-UVM-0029
+// ID: EXCL-UVM-0030
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "469529741 108696597"
 MODULE: axi_read_timeout_guard
@@ -822,7 +842,7 @@ Branch 6 "2277209086" "(!rst_n)" (15) "(!rst_n) 0,ST_DRAIN ,-,-,-,-,-,-,-,-,-,-,
 Branch 6 "2277209086" "(!rst_n)" (16) "(!rst_n) 0,ST_DRAIN ,-,-,-,-,-,-,-,-,-,-,0"
 Branch 6 "2277209086" "(!rst_n)" (17) "(!rst_n) 0,default,-,-,-,-,-,-,-,-,-,-,-"
 
-// ID: EXCL-UVM-0030
+// ID: EXCL-UVM-0031
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4146882487 1160890353"
 MODULE: spi_flash_behavioral
@@ -860,7 +880,7 @@ Branch 4 "2167418555" "(!rst_n)" (1) "(!rst_n) 0,1,1"
 Branch 4 "2167418555" "(!rst_n)" (2) "(!rst_n) 0,1,0"
 Branch 4 "2167418555" "(!rst_n)" (3) "(!rst_n) 0,0,-"
 
-// ID: EXCL-UVM-0031
+// ID: EXCL-UVM-0032
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1906454295 472842391"
 MODULE: qspi_flash_quad_behavioral
@@ -883,7 +903,7 @@ Branch 6 "2378686131" "(!rst_n)" (2) "(!rst_n) 0,0,1,1"
 Branch 6 "2378686131" "(!rst_n)" (3) "(!rst_n) 0,0,1,0"
 Branch 6 "2378686131" "(!rst_n)" (4) "(!rst_n) 0,0,0,-"
 
-// ID: EXCL-UVM-0032
+// ID: EXCL-UVM-0033
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3064912425 1043449271"
 MODULE: apb_vic
@@ -894,7 +914,7 @@ Branch 5 "152886533" "(!rst_n)"
 Branch 5 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
 Branch 5 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
 
-// ID: EXCL-UVM-0033
+// ID: EXCL-UVM-0034
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1149415544 2767828641"
 MODULE: apb_boot_status
@@ -905,7 +925,7 @@ Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
 Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
 Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0034
+// ID: EXCL-UVM-0035
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "299010489 3333802687"
 MODULE: axi_boot_rom
@@ -944,7 +964,7 @@ Condition 14 "2303617017" "(((!wr_busy)) && ((!wr_resp_valid))) 1 -1" (2 "10")
 Condition 15 "3049590594" "(wr_busy && ((!wr_resp_valid))) 1 -1" (2 "10")
 Condition 15 "3049590594" "(wr_busy && ((!wr_resp_valid))) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0035
+// ID: EXCL-UVM-0036
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1384839261 2280763513"
 MODULE: mips_mdu
@@ -975,7 +995,7 @@ Condition 29 "1515992418" "((div_ctr == 6'd32) && (div_divisor > div_dividend_or
 Condition 31 "1941792605" "(result_neg_rem ? (((~div_dividend_orig) + 1'b1)) : div_dividend_orig) 1 -1" (1 "0")
 Condition 31 "1941792605" "(result_neg_rem ? (((~div_dividend_orig) + 1'b1)) : div_dividend_orig) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0036
+// ID: EXCL-UVM-0037
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2521688486 2726079799"
 MODULE: mips_mmu
@@ -990,7 +1010,7 @@ Condition 5 "3639493283" "(req_is_store && ((!tlb_lookup_d))) 1 -1" (1 "01")
 Condition 5 "3639493283" "(req_is_store && ((!tlb_lookup_d))) 1 -1" (2 "10")
 Condition 5 "3639493283" "(req_is_store && ((!tlb_lookup_d))) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0037
+// ID: EXCL-UVM-0038
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1806501640 849174631"
 MODULE: mips_micro_tlb
@@ -1073,7 +1093,7 @@ Condition 33 "3452630661" "(global_d[3] || (asid_d[3] == d_asid)) 1 -1" (2 "01")
 Condition 33 "3452630661" "(global_d[3] || (asid_d[3] == d_asid)) 1 -1" (3 "10")
 Condition 34 "880232134" "(asid_d[3] == d_asid) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0038
+// ID: EXCL-UVM-0039
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "2069035916 3637372209"
 MODULE: mips_id_stage
@@ -1104,7 +1124,7 @@ Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00
 Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (3 "1101")
 Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (4 "1110")
 
-// ID: EXCL-UVM-0039
+// ID: EXCL-UVM-0040
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "1189874766 2313788180"
 MODULE: apb_timer
@@ -1112,7 +1132,7 @@ Condition 9 "3412772268" "(psel & penable & pwrite & pready) 1 -1" (1 "0111")
 Condition 9 "3412772268" "(psel & penable & pwrite & pready) 1 -1" (2 "1011")
 Condition 10 "1424838937" "(psel & ((~pwrite)) & pready) 1 -1" (1 "011")
 
-// ID: EXCL-UVM-0040
+// ID: EXCL-UVM-0041
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1947636165 3163455007"
 MODULE: mips_if_stage
@@ -1125,9 +1145,9 @@ Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken 
 Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (5 "11110")
 Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (6 "11111")
 
-// ID: EXCL-UVM-0041
+// ID: EXCL-UVM-0042
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "2018139936 2807625516"
+// CHECKSUM: "969746712 440843803"
 MODULE: mips_cpu
 Condition 1 "3815813165" "(interrupt_accept || ctx_restore_req || exception_flush) 1 -1" (3 "010")
 Condition 1 "3815813165" "(interrupt_accept || ctx_restore_req || exception_flush) 1 -1" (4 "100")
@@ -1135,494 +1155,486 @@ Condition 2 "4066862370" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020
 Condition 2 "4066862370" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (2 "101")
 Condition 2 "4066862370" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (4 "111")
 Condition 3 "979942292" "(wb_inst == 32'h42000020) 1 -1" (2 "1")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (1 "011111")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (2 "101111")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (3 "110111")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (4 "111011")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (5 "111101")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (6 "111110")
-Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (7 "111111")
-Condition 5 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (1 "01")
-Condition 5 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (2 "10")
-Condition 5 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (3 "11")
-Condition 6 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (1 "00")
-Condition 6 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (2 "01")
-Condition 6 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (3 "10")
-Condition 7 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (1 "01")
-Condition 7 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (2 "10")
-Condition 7 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (3 "11")
-Condition 8 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (1 "01")
-Condition 8 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (2 "10")
-Condition 8 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (3 "11")
-Condition 12 "3770143978" "(id_control_taken ? id_control_target : ((id_pc_plus_4 + 32'd4))) 1 -1" (1 "0")
-Condition 13 "1775094305" "(coh_snoop_valid && (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) 1 -1" (2 "10")
-Condition 13 "1775094305" "(coh_snoop_valid && (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) 1 -1" (3 "11")
-Condition 14 "2474010433" "(ll_reservation_addr[31:5] == coh_snoop_addr[31:5]) 1 -1" (1 "0")
-Condition 16 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (1 "00")
-Condition 16 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (2 "01")
-Condition 16 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (3 "10")
-Condition 19 "2322176586" "(rob_alloc_valid && rob_alloc_ready && ((!rob_stall)) && mem_reg_write && (mem_waddr != 5'b0)) 1 -1" (1 "01111")
-Condition 19 "2322176586" "(rob_alloc_valid && rob_alloc_ready && ((!rob_stall)) && mem_reg_write && (mem_waddr != 5'b0)) 1 -1" (2 "10111")
-Condition 21 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (1 "00")
-Condition 21 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (2 "01")
-Condition 21 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (3 "10")
-Condition 22 "2132554150" "(ptw_req_valid && ptw_req_ready) 1 -1" (2 "10")
-Condition 22 "2132554150" "(ptw_req_valid && ptw_req_ready) 1 -1" (3 "11")
-Condition 23 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (1 "01")
-Condition 23 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (2 "10")
-Condition 23 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (3 "11")
-Condition 24 "529034180" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (2 "10")
-Condition 24 "529034180" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (3 "11")
-Condition 25 "2157151922" "(ptw_fault_pending && wb_except_req) 1 -1" (2 "10")
-Condition 25 "2157151922" "(ptw_fault_pending && wb_except_req) 1 -1" (3 "11")
-Condition 27 "2152240536" "(inst_req && inst_addr_ok && ((!inst_data_ok))) 1 -1" (1 "011")
-Condition 30 "2441854792" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
-Condition 31 "1145698525" "(dmem_request_blocked | mem_double_align_fault) 1 -1" (2 "01")
-Condition 31 "1145698525" "(dmem_request_blocked | mem_double_align_fault) 1 -1" (3 "10")
-Condition 32 "622198642" "(wb_cp0_we && wb_arch_valid && ( ! (wb_except_req && wb_arch_valid) )) 1 -1" (3 "110")
-Condition 34 "2110347513" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
-Condition 40 "2092755730" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
-Condition 41 "3195834383" "(data_data_ok && ((!tagged_data_response))) 1 -1" (2 "10")
-Condition 42 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (2 "101")
-Condition 42 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (3 "110")
-Condition 42 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (4 "111")
-Condition 43 "334710447" "(data_bus_error && ((!tagged_data_response))) 1 -1" (2 "10")
-Condition 43 "334710447" "(data_bus_error && ((!tagged_data_response))) 1 -1" (3 "11")
-Condition 44 "2603285835" "(data_cache_error && ((!tagged_data_response))) 1 -1" (2 "10")
-Condition 44 "2603285835" "(data_cache_error && ((!tagged_data_response))) 1 -1" (3 "11")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (2 "0000000001")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (3 "0000000010")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (4 "0000000100")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (5 "0000001000")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (6 "0000010000")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (7 "0000100000")
-Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (9 "0010000000")
-Condition 46 "1738874922" "(wb_except_req & wb_except_is_tlb_refill) 1 -1" (1 "01")
-Condition 46 "1738874922" "(wb_except_req & wb_except_is_tlb_refill) 1 -1" (3 "11")
-Condition 47 "1823806386" "((wb_except_req && wb_arch_valid) | sim_exception_active) 1 -1" (2 "01")
-Condition 48 "110700306" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
-Condition 49 "3839139285" "(sim_exception_active ? sim_exception_code : wb_except_code) 1 -1" (2 "1")
-Condition 50 "1266772894" "((((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) ? 2'b1 : 2'b0) 1 -1" (2 "1")
-Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (1 "011")
-Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (2 "101")
-Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (4 "111")
-Condition 53 "979795848" "(wb_inst[31:26] == 6'b010001) 1 -1" (2 "1")
-Condition 54 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (2 "1011")
-Condition 54 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (3 "1101")
-Condition 54 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (4 "1110")
-Condition 55 "3294113527" "( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) 1 -1" (2 "1")
-Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (2 "0001")
-Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (3 "0010")
-Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (4 "0100")
-Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (5 "1000")
-Condition 57 "3299814388" "(ex_inst == 32'h42000020) 1 -1" (2 "1")
-Condition 58 "2530419475" "(mem_inst == 32'h42000020) 1 -1" (2 "1")
-Condition 59 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (1 "011")
-Condition 59 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (2 "101")
-Condition 59 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (4 "111")
-Condition 60 "2050282359" "(wb_inst == 32'h42000020) 1 -1" (2 "1")
-Condition 62 "1504360980" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
-Condition 63 "1932525238" "(interrupt_accept && ( ! (wb_except_req && wb_arch_valid && ((!cp0_exl))) ) && ( ! (wb_is_eret && wb_arch_valid) )) 1 -1" (2 "101")
-Condition 63 "1932525238" "(interrupt_accept && ( ! (wb_except_req && wb_arch_valid && ((!cp0_exl))) ) && ( ! (wb_is_eret && wb_arch_valid) )) 1 -1" (3 "110")
-Condition 65 "626122713" "(wb_except_req && wb_arch_valid && ((!cp0_exl))) 1 -1" (2 "101")
-Condition 67 "1413262546" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
-Condition 68 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (1 "011")
-Condition 68 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (2 "101")
-Condition 68 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (4 "111")
-Condition 69 "1044202763" "(wb_except_code == 5'h1e) 1 -1" (2 "1")
-Condition 73 "347464108" "(id_bpu_taken ? id_bpu_target : id_pc_plus_4) 1 -1" (2 "1")
-Condition 75 "1206748768" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
-Condition 76 "3687783909" "(exception_flush | ctx_restore_req | id_branch_likely_annul | id_branch_likely_taken) 1 -1" (2 "0001")
-Condition 76 "3687783909" "(exception_flush | ctx_restore_req | id_branch_likely_annul | id_branch_likely_taken) 1 -1" (4 "0100")
-Condition 77 "2533639590" "((stall_req_id & ((~global_stall))) | exception_flush | ctx_restore_req) 1 -1" (2 "001")
-Condition 79 "3137361802" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
-Condition 80 "1730621136" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
-Condition 81 "470606175" "(hw_walker_d_miss && ((!ptw_fault_pending))) 1 -1" (2 "10")
-Condition 81 "470606175" "(hw_walker_d_miss && ((!ptw_fault_pending))) 1 -1" (3 "11")
-Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (1 "0111")
-Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (2 "1011")
-Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (3 "1101")
-Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (5 "1111")
-Condition 83 "232302809" "(hw_walker_i_miss || hw_walker_d_miss) 1 -1" (2 "01")
-Condition 83 "232302809" "(hw_walker_i_miss || hw_walker_d_miss) 1 -1" (3 "10")
-Condition 84 "1405381284" "(hw_walker_i_miss ? if_vaddr : mem_vaddr) 1 -1" (2 "1")
-Condition 85 "2131703511" "(hw_walker_i_miss ? 2'b0 : (data_we ? 2'd2 : 2'b1)) 1 -1" (2 "1")
-Condition 87 "2906999794" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (2 "10")
-Condition 87 "2906999794" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (3 "11")
-Condition 88 "1017437882" "(ptw_fault_pending && ((!ptw_fault_is_data))) 1 -1" (2 "10")
-Condition 88 "1017437882" "(ptw_fault_pending && ((!ptw_fault_is_data))) 1 -1" (3 "11")
-Condition 89 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (1 "01")
-Condition 89 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (2 "10")
-Condition 89 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (3 "11")
-Condition 90 "828116303" "(ptw_va_q[12] ? 32'b0 : hw_tlb_entrylo_leaf) 1 -1" (2 "1")
-Condition 91 "1055365426" "(ptw_va_q[12] ? hw_tlb_entrylo_leaf : 32'b0) 1 -1" (2 "1")
-Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (2 "00001")
-Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (3 "00010")
-Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (4 "00100")
-Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (5 "01000")
-Condition 93 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (2 "101")
-Condition 93 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (3 "110")
-Condition 93 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (4 "111")
-Condition 94 "3708680549" "(hw_walker_i_fault ? 5'h02 : (if_adel_exception ? 5'h04 : (if_cache_fault ? 5'h1e : (if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)))))) 1 -1" (2 "1")
-Condition 96 "1966905597" "(if_cache_fault ? 5'h1e : (if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)))) 1 -1" (2 "1")
-Condition 97 "1789623906" "(if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02))) 1 -1" (2 "1")
-Condition 98 "2785742252" "((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)) 1 -1" (2 "1")
-Condition 99 "3261199018" "(mmu_i_fault_type == 3'b110) 1 -1" (2 "1")
-Condition 100 "1069509999" "((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02) 1 -1" (2 "1")
-Condition 101 "21583604" "(mmu_i_fault_type == 3'b100) 1 -1" (2 "1")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (1 "011111")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (2 "101111")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (3 "110111")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (4 "111011")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (5 "111101")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (6 "111110")
-Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (7 "111111")
-Condition 103 "1167950432" "(mmu_i_fault_type == 3'b1) 1 -1" (2 "1")
-Condition 104 "1789976431" "(id_inst[31:26] == 6'b010011) 1 -1" (2 "1")
-Condition 105 "1024873693" "(id_inst[31:26] == 6'b010001) 1 -1" (2 "1")
-Condition 106 "628251197" "(fpu_id_cop1 && (id_inst[25:21] == 5'b0)) 1 -1" (2 "10")
-Condition 106 "628251197" "(fpu_id_cop1 && (id_inst[25:21] == 5'b0)) 1 -1" (3 "11")
-Condition 108 "1717426483" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00010)) 1 -1" (2 "10")
-Condition 108 "1717426483" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00010)) 1 -1" (3 "11")
-Condition 110 "319954316" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00100)) 1 -1" (2 "10")
-Condition 110 "319954316" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00100)) 1 -1" (3 "11")
-Condition 112 "1396193160" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00110)) 1 -1" (2 "10")
-Condition 112 "1396193160" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00110)) 1 -1" (3 "11")
-Condition 114 "992393345" "(fpu_id_cop1x || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100)))) 1 -1" (2 "01")
-Condition 114 "992393345" "(fpu_id_cop1x || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100)))) 1 -1" (3 "10")
-Condition 115 "1716338742" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100))) 1 -1" (2 "10")
-Condition 115 "1716338742" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100))) 1 -1" (3 "11")
-Condition 120 "3997407567" "(fpu_id_cop1 && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (2 "10")
-Condition 120 "3997407567" "(fpu_id_cop1 && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
-Condition 124 "3547364985" "(((!fpu_id_cond_move)) || ((id_inst[5:0] == 6'h12) ? (id_val_rt == 32'b0) : (id_val_rt != 32'b0))) 1 -1" (1 "00")
-Condition 124 "3547364985" "(((!fpu_id_cond_move)) || ((id_inst[5:0] == 6'h12) ? (id_val_rt == 32'b0) : (id_val_rt != 32'b0))) 1 -1" (2 "01")
-Condition 129 "3487059110" "((fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) || (fpu_id_cop1x && id_inst[0])) 1 -1" (2 "01")
-Condition 129 "3487059110" "((fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) || (fpu_id_cop1x && id_inst[0])) 1 -1" (3 "10")
-Condition 130 "1331025628" "(fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) 1 -1" (2 "10")
-Condition 130 "1331025628" "(fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) 1 -1" (3 "11")
-Condition 132 "2762903782" "(fpu_id_cop1x && id_inst[0]) 1 -1" (2 "10")
-Condition 132 "2762903782" "(fpu_id_cop1x && id_inst[0]) 1 -1" (3 "11")
-Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (2 "00001")
-Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (3 "00010")
-Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (4 "00100")
-Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (5 "01000")
-Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (6 "10000")
-Condition 134 "1092014378" "(fpu_id_cop1x && id_inst[0]) 1 -1" (2 "10")
-Condition 134 "1092014378" "(fpu_id_cop1x && id_inst[0]) 1 -1" (3 "11")
-Condition 135 "3532652408" "(fpu_id_double && (id_inst[5:0] <= 6'h07)) 1 -1" (2 "10")
-Condition 135 "3532652408" "(fpu_id_double && (id_inst[5:0] <= 6'h07)) 1 -1" (3 "11")
-Condition 136 "2148932451" "(fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (2 "10")
-Condition 136 "2148932451" "(fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
-Condition 140 "1987127180" "(fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) 1 -1" (2 "10")
-Condition 140 "1987127180" "(fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) 1 -1" (3 "11")
-Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (1 "011")
-Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (2 "101")
-Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "110")
-Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (4 "111")
-Condition 149 "533304895" "(fpu_id_mfc1 | fpu_id_cfc1) 1 -1" (2 "01")
-Condition 149 "533304895" "(fpu_id_mfc1 | fpu_id_cfc1) 1 -1" (3 "10")
-Condition 150 "1750401555" "(fpu_id_gpr_write && wb_reg_write) 1 -1" (2 "10")
-Condition 150 "1750401555" "(fpu_id_gpr_write && wb_reg_write) 1 -1" (3 "11")
-Condition 151 "2569817436" "((fpu_id_valid || fpu_mem_id_valid) && ((!cpu_cu1))) 1 -1" (2 "10")
-Condition 151 "2569817436" "((fpu_id_valid || fpu_mem_id_valid) && ((!cpu_cu1))) 1 -1" (3 "11")
-Condition 152 "2047749590" "(fpu_id_valid || fpu_mem_id_valid) 1 -1" (2 "01")
-Condition 152 "2047749590" "(fpu_id_valid || fpu_mem_id_valid) 1 -1" (3 "10")
-Condition 153 "2255384730" "((ex_inst[31:26] == 6'b110001) || (ex_inst[31:26] == 6'b110101)) 1 -1" (2 "01")
-Condition 153 "2255384730" "((ex_inst[31:26] == 6'b110001) || (ex_inst[31:26] == 6'b110101)) 1 -1" (3 "10")
-Condition 154 "728135857" "(ex_inst[31:26] == 6'b110001) 1 -1" (2 "1")
-Condition 155 "676351891" "(ex_inst[31:26] == 6'b110101) 1 -1" (2 "1")
-Condition 156 "3736871660" "((mem_inst[31:26] == 6'b110001) || (mem_inst[31:26] == 6'b110101)) 1 -1" (2 "01")
-Condition 156 "3736871660" "((mem_inst[31:26] == 6'b110001) || (mem_inst[31:26] == 6'b110101)) 1 -1" (3 "10")
-Condition 157 "3601832014" "(mem_inst[31:26] == 6'b110001) 1 -1" (2 "1")
-Condition 158 "3583618924" "(mem_inst[31:26] == 6'b110101) 1 -1" (2 "1")
-Condition 159 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (1 "01")
-Condition 159 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (2 "10")
-Condition 159 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (3 "11")
-Condition 160 "51567890" "((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16])))) 1 -1" (2 "01")
-Condition 160 "51567890" "((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16])))) 1 -1" (3 "10")
-Condition 161 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (2 "101")
-Condition 161 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (3 "110")
-Condition 161 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (4 "111")
-Condition 166 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (2 "101")
-Condition 166 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (3 "110")
-Condition 166 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (4 "111")
-Condition 171 "2378667703" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) ? 5'd25 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) ? 5'd26 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))))))) 1 -1" (2 "1")
-Condition 172 "2444583232" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) 1 -1" (2 "10")
-Condition 172 "2444583232" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) 1 -1" (3 "11")
-Condition 176 "2077967465" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) ? 5'd26 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))))))) 1 -1" (2 "1")
-Condition 177 "3046750032" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) 1 -1" (2 "10")
-Condition 177 "3046750032" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) 1 -1" (3 "11")
-Condition 178 "568116053" "((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29)) 1 -1" (2 "01")
-Condition 180 "1001292323" "(id_inst[5:0] == 6'h29) 1 -1" (2 "1")
-Condition 181 "4125913370" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))))) 1 -1" (2 "1")
-Condition 182 "2088693974" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) 1 -1" (2 "10")
-Condition 182 "2088693974" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) 1 -1" (3 "11")
-Condition 186 "2547061776" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))))) 1 -1" (2 "1")
-Condition 187 "3666978225" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) 1 -1" (2 "10")
-Condition 187 "3666978225" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) 1 -1" (3 "11")
-Condition 191 "2815034548" "(((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))) 1 -1" (2 "1")
-Condition 192 "3131213048" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) 1 -1" (3 "11")
-Condition 195 "1225630910" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))) 1 -1" (2 "1")
-Condition 196 "3337437091" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) 1 -1" (3 "11")
-Condition 199 "3921318554" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))) 1 -1" (2 "1")
-Condition 200 "2725710595" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "11")
-Condition 203 "3865946448" "(((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))) 1 -1" (2 "1")
-Condition 204 "2564018948" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "11")
-Condition 207 "3202424828" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))) 1 -1" (2 "1")
-Condition 208 "1988688550" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) 1 -1" (3 "11")
-Condition 211 "1057160093" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))) 1 -1" (2 "1")
-Condition 212 "2883241246" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) 1 -1" (3 "11")
-Condition 215 "3262277806" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))) 1 -1" (2 "1")
-Condition 216 "478094329" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) 1 -1" (3 "11")
-Condition 219 "1433245845" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))) 1 -1" (2 "1")
-Condition 220 "4222219862" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) 1 -1" (3 "11")
-Condition 223 "4231739172" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))) 1 -1" (2 "1")
-Condition 224 "693662938" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) 1 -1" (3 "11")
-Condition 231 "1506562391" "((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))) 1 -1" (2 "1")
-Condition 232 "1406847378" "(((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
-Condition 239 "1074633237" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))) 1 -1" (2 "1")
-Condition 240 "829823318" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) 1 -1" (3 "11")
-Condition 243 "3725682822" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))) 1 -1" (2 "1")
-Condition 244 "1335464108" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) 1 -1" (3 "11")
-Condition 247 "744782425" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))) 1 -1" (2 "1")
-Condition 248 "309120697" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) 1 -1" (3 "11")
-Condition 251 "2388598780" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))) 1 -1" (2 "1")
-Condition 252 "1521187343" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) 1 -1" (3 "11")
-Condition 255 "3784676099" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))) 1 -1" (2 "1")
-Condition 256 "4108961803" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) 1 -1" (3 "11")
-Condition 260 "2887074330" "((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31) 1 -1" (2 "1")
-Condition 261 "252279689" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (2 "10")
-Condition 261 "252279689" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (3 "11")
-Condition 262 "3285074142" "(fpu_id_cop1x ? id_inst[25:21] : id_inst[10:6]) 1 -1" (2 "1")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (2 "101111111")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (3 "110111111")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (4 "111011111")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (5 "111101111")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (6 "111110111")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (7 "111111011")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (8 "111111101")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (9 "111111110")
-Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (10 "111111111")
-Condition 264 "2883948031" "(fpu_id_gpr_write ? id_inst[20:16] : wb_waddr) 1 -1" (2 "1")
-Condition 265 "3913614814" "(fpu_id_mfc1 ? fpr[id_inst[15:11]] : (fpu_id_cfc1 ? fcsr : wb_wdata)) 1 -1" (2 "1")
-Condition 266 "1173763703" "(fpu_id_cfc1 ? fcsr : wb_wdata) 1 -1" (2 "1")
-Condition 267 "1725485473" "((fpu_id_gpr_write && ((!wb_reg_write))) ? (((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) : (wb_reg_write && wb_arch_valid && ( ! (wb_except_req && wb_arch_valid) ))) 1 -1" (2 "1")
-Condition 268 "1963936839" "(fpu_id_gpr_write && ((!wb_reg_write))) 1 -1" (2 "10")
-Condition 268 "1963936839" "(fpu_id_gpr_write && ((!wb_reg_write))) 1 -1" (3 "11")
-Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (1 "0111")
-Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (2 "1011")
-Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (3 "1101")
-Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (4 "1110")
-Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (5 "1111")
-Condition 272 "1674202903" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
-Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (1 "0111")
-Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (2 "1011")
-Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (3 "1101")
-Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (4 "1110")
-Condition 288 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (2 "00001")
-Condition 288 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (4 "00100")
-Condition 288 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (5 "01000")
-Condition 289 "1747599122" "(id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | ((|id_tlb_op))) 1 -1" (2 "00001")
-Condition 289 "1747599122" "(id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | ((|id_tlb_op))) 1 -1" (3 "00010")
-Condition 291 "2258116929" "(id_is_priv & ((~cpu_kernel_mode)) & ((~cpu_cu0)) & ((~id_rdhwr_allowed))) 1 -1" (3 "1101")
-Condition 292 "2624586724" "((id_inst[31:26] == 6'b1) && (id_trap_op >= 4'd6)) 1 -1" (1 "01")
-Condition 292 "2624586724" "((id_inst[31:26] == 6'b1) && (id_trap_op >= 4'd6)) 1 -1" (3 "11")
-Condition 294 "1347468500" "(id_trap_imm ? id_imm_ext : id_val_rt) 1 -1" (2 "1")
-Condition 295 "1574028679" "(id_is_trap && (((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))))) 1 -1" (2 "10")
-Condition 295 "1574028679" "(id_is_trap && (((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))))) 1 -1" (3 "11")
-Condition 296 "2185616935" "(((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))))) 1 -1" (1 "0")
-Condition 297 "2134721658" "((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) 1 -1" (1 "00")
-Condition 297 "2134721658" "((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) 1 -1" (2 "01")
-Condition 299 "2093505490" "(id_trap_op == 4'd6) 1 -1" (2 "1")
-Condition 300 "2175844751" "(((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))) 1 -1" (1 "0")
-Condition 300 "2175844751" "(((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))) 1 -1" (2 "1")
-Condition 301 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (1 "00")
-Condition 301 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (2 "01")
-Condition 301 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (3 "10")
-Condition 302 "1085046468" "(id_trap_op == 4'b1) 1 -1" (1 "0")
-Condition 302 "1085046468" "(id_trap_op == 4'b1) 1 -1" (2 "1")
-Condition 303 "2671547871" "(id_trap_op == 4'd7) 1 -1" (1 "0")
-Condition 303 "2671547871" "(id_trap_op == 4'd7) 1 -1" (2 "1")
-Condition 304 "400490397" "(((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))) 1 -1" (1 "0")
-Condition 304 "400490397" "(((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))) 1 -1" (2 "1")
-Condition 305 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (1 "00")
-Condition 305 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (2 "01")
-Condition 305 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (3 "10")
-Condition 306 "146256684" "(id_trap_op == 4'd2) 1 -1" (1 "0")
-Condition 306 "146256684" "(id_trap_op == 4'd2) 1 -1" (2 "1")
-Condition 307 "429672102" "(id_trap_op == 4'd8) 1 -1" (1 "0")
-Condition 307 "429672102" "(id_trap_op == 4'd8) 1 -1" (2 "1")
-Condition 308 "2988517596" "(((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))) 1 -1" (1 "0")
-Condition 308 "2988517596" "(((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))) 1 -1" (2 "1")
-Condition 309 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (1 "00")
-Condition 309 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (2 "01")
-Condition 309 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (3 "10")
-Condition 310 "1091748303" "(id_trap_op == 4'd3) 1 -1" (1 "0")
-Condition 310 "1091748303" "(id_trap_op == 4'd3) 1 -1" (2 "1")
-Condition 311 "1347383918" "(id_trap_op == 4'd9) 1 -1" (1 "0")
-Condition 311 "1347383918" "(id_trap_op == 4'd9) 1 -1" (2 "1")
-Condition 312 "2766917152" "(((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)) 1 -1" (1 "0")
-Condition 312 "2766917152" "(((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)) 1 -1" (2 "1")
-Condition 313 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (1 "00")
-Condition 313 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (2 "01")
-Condition 313 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (3 "10")
-Condition 314 "1107162085" "(id_trap_op == 4'd4) 1 -1" (1 "0")
-Condition 314 "1107162085" "(id_trap_op == 4'd4) 1 -1" (2 "1")
-Condition 315 "3558771074" "(id_trap_op == 4'd10) 1 -1" (1 "0")
-Condition 315 "3558771074" "(id_trap_op == 4'd10) 1 -1" (2 "1")
-Condition 316 "446836902" "(id_val_rs == id_trap_rhs) 1 -1" (1 "0")
-Condition 316 "446836902" "(id_val_rs == id_trap_rhs) 1 -1" (2 "1")
-Condition 317 "1077299512" "(id_val_rs != id_trap_rhs) 1 -1" (1 "0")
-Condition 317 "1077299512" "(id_val_rs != id_trap_rhs) 1 -1" (2 "1")
-Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (2 "00000001")
-Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (3 "00000010")
-Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (5 "00001000")
-Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (6 "00010000")
-Condition 321 "657916739" "(id_cpu_unusable || id_fpu_unusable) 1 -1" (2 "01")
-Condition 322 "2896691429" "(id_fpu_exception ? 5'h0f : (id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0))))) 1 -1" (2 "1")
-Condition 323 "625210968" "(id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0)))) 1 -1" (2 "1")
-Condition 324 "4174750399" "(id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0))) 1 -1" (2 "1")
-Condition 327 "867989384" "(id_except_req_in & id_except_is_tlb_refill_in) 1 -1" (1 "01")
-Condition 327 "867989384" "(id_except_req_in & id_except_is_tlb_refill_in) 1 -1" (3 "11")
-Condition 329 "3382750350" "(mem_double_mem && (mem_ex_out[2:0] != 3'b0)) 1 -1" (2 "10")
-Condition 329 "3382750350" "(mem_double_mem && (mem_ex_out[2:0] != 3'b0)) 1 -1" (3 "11")
-Condition 331 "1971538481" "(((mem_mem_read | mem_mem_write) & ((~mem_done))) | (mem_cache_op_valid & ((~mem_done)))) 1 -1" (2 "01")
-Condition 334 "2024414129" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (2 "10")
-Condition 334 "2024414129" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (3 "11")
-Condition 335 "3877122599" "((((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) || hw_walker_d_fault) 1 -1" (2 "01")
-Condition 335 "3877122599" "((((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) || hw_walker_d_fault) 1 -1" (3 "10")
-Condition 336 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (2 "101")
-Condition 336 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (3 "110")
-Condition 336 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (4 "111")
-Condition 337 "794176499" "(dmem_translation_fault | hw_walker_d_miss) 1 -1" (2 "01")
-Condition 337 "794176499" "(dmem_translation_fault | hw_walker_d_miss) 1 -1" (3 "10")
-Condition 338 "4261830928" "(fpu_mem_swc1 ? fpr[mem_inst[20:16]] : ((mem_double_mem && (mem_inst[31:26] == 6'b111101)) ? (mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) : mem_val_rt)) 1 -1" (2 "1")
-Condition 339 "3681018732" "((mem_double_mem && (mem_inst[31:26] == 6'b111101)) ? (mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) : mem_val_rt) 1 -1" (2 "1")
-Condition 340 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (1 "01")
-Condition 340 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (2 "10")
-Condition 340 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (3 "11")
-Condition 341 "217134223" "(mem_inst[31:26] == 6'b111101) 1 -1" (2 "1")
-Condition 342 "520531557" "(mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) 1 -1" (1 "0")
-Condition 342 "520531557" "(mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) 1 -1" (2 "1")
-Condition 343 "3288803265" "(mem_mem_read && (mem_mem_op == 3'b111)) 1 -1" (1 "01")
-Condition 343 "3288803265" "(mem_mem_read && (mem_mem_op == 3'b111)) 1 -1" (3 "11")
-Condition 344 "284899406" "(mem_mem_op == 3'b111) 1 -1" (2 "1")
-Condition 345 "3540056314" "(mem_mem_write && (mem_mem_op == 3'b111)) 1 -1" (1 "01")
-Condition 345 "3540056314" "(mem_mem_write && (mem_mem_op == 3'b111)) 1 -1" (3 "11")
-Condition 346 "1862473741" "(mem_mem_op == 3'b111) 1 -1" (2 "1")
-Condition 347 "3268878894" "(ll_reservation_valid && (ll_reservation_addr == {mem_vaddr[31:2], 2'b0})) 1 -1" (2 "10")
-Condition 347 "3268878894" "(ll_reservation_valid && (ll_reservation_addr == {mem_vaddr[31:2], 2'b0})) 1 -1" (3 "11")
-Condition 349 "3774800540" "(data_we_raw && (((!is_sc_mem)) || sc_reservation_match)) 1 -1" (2 "10")
-Condition 350 "2061949656" "(((!is_sc_mem)) || sc_reservation_match) 1 -1" (1 "00")
-Condition 350 "2061949656" "(((!is_sc_mem)) || sc_reservation_match) 1 -1" (2 "01")
-Condition 351 "1326531753" "(is_sc_mem ? ({31'b0, sc_reservation_match}) : mem_ex_out) 1 -1" (2 "1")
-Condition 352 "2581142053" "(hw_walker_d_fault ? (mem_mem_write ? 5'h03 : 5'h02) : ((mmu_d_fault_type == 3'b010) ? 5'h03 : ((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)))))) 1 -1" (2 "1")
-Condition 353 "780517336" "(mem_mem_write ? 5'h03 : 5'h02) 1 -1" (1 "0")
-Condition 353 "780517336" "(mem_mem_write ? 5'h03 : 5'h02) 1 -1" (2 "1")
-Condition 354 "522421787" "((mmu_d_fault_type == 3'b010) ? 5'h03 : ((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02))))) 1 -1" (2 "1")
-Condition 355 "1176655220" "(mmu_d_fault_type == 3'b010) 1 -1" (2 "1")
-Condition 356 "1496348898" "((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)))) 1 -1" (2 "1")
-Condition 357 "3514290923" "(mmu_d_fault_type == 3'b011) 1 -1" (2 "1")
-Condition 358 "2644657107" "((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02))) 1 -1" (2 "1")
-Condition 359 "853291444" "(mmu_d_fault_type == 3'b110) 1 -1" (2 "1")
-Condition 360 "3059754714" "((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)) 1 -1" (2 "1")
-Condition 361 "3964673423" "(mmu_d_fault_type == 3'b100) 1 -1" (2 "1")
-Condition 362 "3563783192" "((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02) 1 -1" (2 "1")
-Condition 363 "1869072033" "(mmu_d_fault_type == 3'b101) 1 -1" (2 "1")
-Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (1 "0111")
-Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (2 "1011")
-Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (3 "1101")
-Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (4 "1110")
-Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (5 "1111")
-Condition 365 "2777254302" "((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) 1 -1" (2 "01")
-Condition 365 "2777254302" "((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) 1 -1" (3 "10")
-Condition 366 "3286471098" "(mmu_d_fault_type == 3'b1) 1 -1" (2 "1")
-Condition 367 "2027172281" "(mmu_d_fault_type == 3'b010) 1 -1" (2 "1")
-Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (3 "00000010")
-Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (4 "00000100")
-Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (5 "00001000")
-Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (6 "00010000")
-Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (7 "00100000")
-Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (8 "01000000")
-Condition 370 "451381898" "(mem_mmu_fault ? mem_mmu_fault_code : (mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04) : ((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)))))) 1 -1" (2 "1")
-Condition 371 "3450897922" "(mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04) : ((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0))))) 1 -1" (2 "1")
-Condition 372 "4050516216" "(mem_mem_write ? 5'h05 : 5'h04) 1 -1" (1 "0")
-Condition 372 "4050516216" "(mem_mem_write ? 5'h05 : 5'h04) 1 -1" (2 "1")
-Condition 373 "7117464" "((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)))) 1 -1" (2 "1")
-Condition 374 "1467123040" "(mem_cache_fault || mem_cache_op_fault_seen) 1 -1" (2 "01")
-Condition 374 "1467123040" "(mem_cache_fault || mem_cache_op_fault_seen) 1 -1" (3 "10")
-Condition 375 "1249200825" "(mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0))) 1 -1" (2 "1")
-Condition 376 "3648606361" "(mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)) 1 -1" (2 "1")
-Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (2 "1011")
-Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (3 "1101")
-Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (4 "1110")
-Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (5 "1111")
-Condition 383 "1918770668" "(global_stall && ((!rob_head_ready)) && ((!nb_rob_issue)) && ((!blocking_response_commit))) 1 -1" (2 "1011")
-Condition 383 "1918770668" "(global_stall && ((!rob_head_ready)) && ((!nb_rob_issue)) && ((!blocking_response_commit))) 1 -1" (3 "1101")
-Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (1 "011")
-Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (2 "101")
-Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (3 "110")
-Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (4 "111")
-Condition 385 "291044777" "(data_req_raw && ((!nb_rob_block))) 1 -1" (2 "10")
-Condition 386 "537778979" "(data_addr_ok && ((!nb_rob_block))) 1 -1" (2 "10")
-Condition 387 "3912179360" "(dmem_translation_fault || mem_adel_exception || mem_ades_exception || (data_req && data_addr_ok_effective)) 1 -1" (4 "0100")
-Condition 387 "3912179360" "(dmem_translation_fault || mem_adel_exception || mem_ades_exception || (data_req && data_addr_ok_effective)) 1 -1" (5 "1000")
-Condition 390 "304802486" "((mem_enable_nb_load && mem_mem_read) ? nb_load_alloc_eligible : (mem_mem_read ? (mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) : (((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception))) 1 -1" (2 "1")
-Condition 391 "3565764091" "(mem_enable_nb_load && mem_mem_read) 1 -1" (2 "10")
-Condition 391 "3565764091" "(mem_enable_nb_load && mem_mem_read) 1 -1" (3 "11")
-Condition 393 "3815996779" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (2 "00001")
-Condition 393 "3815996779" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (3 "00010")
-Condition 393 "3815996779" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (4 "00100")
-Condition 394 "2984465608" "(((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (3 "000010")
-Condition 394 "2984465608" "(((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (4 "000100")
-Condition 395 "2703422689" "(((!mem_mem_read)) || (((!mem_enable_nb_load)) && data_data_ok_current) || mem_done || dmem_translation_fault || mem_adel_exception) 1 -1" (2 "00001")
-Condition 395 "2703422689" "(((!mem_mem_read)) || (((!mem_enable_nb_load)) && data_data_ok_current) || mem_done || dmem_translation_fault || mem_adel_exception) 1 -1" (3 "00010")
-Condition 396 "2442812977" "(((!mem_enable_nb_load)) && data_data_ok_current) 1 -1" (1 "01")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (1 "01111111")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (2 "10111111")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (3 "11011111")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (4 "11101111")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (6 "11111011")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (7 "11111101")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (8 "11111110")
-Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (9 "11111111")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (1 "01111111")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (2 "10111111")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (3 "11011111")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (4 "11101111")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (5 "11110111")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (6 "11111011")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (7 "11111101")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (8 "11111110")
-Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (9 "11111111")
-Condition 410 "3342095481" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
-Condition 412 "3021700550" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
-Condition 414 "2306456917" "(wb_bd && (wb_delay_slot_next_pc != 32'b0)) 1 -1" (1 "01")
-Condition 422 "2430167356" "(sim_exception_active ? inst_addr : ((interrupt_accept && wait_state) ? wait_interrupt_epc : ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc))) 1 -1" (2 "1")
-Condition 423 "895010287" "((interrupt_accept && wait_state) ? wait_interrupt_epc : ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc)) 1 -1" (2 "1")
-Condition 424 "1456569219" "(interrupt_accept && wait_state) 1 -1" (1 "01")
-Condition 424 "1456569219" "(interrupt_accept && wait_state) 1 -1" (3 "11")
-Condition 426 "539237239" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
-Condition 428 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (1 "01")
-Condition 428 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (2 "10")
-Condition 428 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (3 "11")
-Condition 430 "1282142957" "((mem_vaddr[31:28] == 4'h4) || (mem_vaddr[31:28] == 4'ha) || (data_addr[31:28] == 4'h4) || (data_addr[31:28] == 4'ha)) 1 -1" (2 "0001")
-Condition 430 "1282142957" "((mem_vaddr[31:28] == 4'h4) || (mem_vaddr[31:28] == 4'ha) || (data_addr[31:28] == 4'h4) || (data_addr[31:28] == 4'ha)) 1 -1" (4 "0100")
-Condition 435 "605695529" "((mmu_d_cache_attr == 3'b010) || legacy_data_uncacheable) 1 -1" (3 "10")
-Condition 436 "1518974298" "(mmu_d_cache_attr == 3'b010) 1 -1" (2 "1")
-Condition 437 "4136875954" "(data_cache_op_valid && ((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000))) 1 -1" (2 "10")
-Condition 437 "4136875954" "(data_cache_op_valid && ((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000))) 1 -1" (3 "11")
-Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (1 "0000")
-Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (2 "0001")
-Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (3 "0010")
-Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (4 "0100")
-Condition 440 "2432497317" "(data_cache_op == 5'b00100) 1 -1" (2 "1")
-Condition 441 "793864136" "(data_cache_op == 5'b01000) 1 -1" (2 "1")
-Condition 442 "1660992844" "(data_cache_op == 5'b10000) 1 -1" (2 "1")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (1 "011111")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (2 "101111")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (3 "110111")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (4 "111011")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (5 "111101")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (6 "111110")
+Condition 5 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (7 "111111")
+Condition 6 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (1 "01")
+Condition 6 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (2 "10")
+Condition 6 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (3 "11")
+Condition 7 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (1 "00")
+Condition 7 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (2 "01")
+Condition 7 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (3 "10")
+Condition 8 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (1 "01")
+Condition 8 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (2 "10")
+Condition 8 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (3 "11")
+Condition 9 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (1 "01")
+Condition 9 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (2 "10")
+Condition 9 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (3 "11")
+Condition 13 "3770143978" "(id_control_taken ? id_control_target : ((id_pc_plus_4 + 32'd4))) 1 -1" (1 "0")
+Condition 14 "2165678222" "(coh_snoop_valid && (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) 1 -1" (2 "10")
+Condition 14 "2165678222" "(coh_snoop_valid && (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) 1 -1" (3 "11")
+Condition 15 "4237145726" "(ll_reservation_addr[31:5] == coh_snoop_addr[31:5]) 1 -1" (1 "0")
+Condition 17 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (1 "00")
+Condition 17 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (2 "01")
+Condition 17 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (3 "10")
+Condition 20 "2322176586" "(rob_alloc_valid && rob_alloc_ready && ((!rob_stall)) && mem_reg_write && (mem_waddr != 5'b0)) 1 -1" (2 "10111")
+Condition 20 "2322176586" "(rob_alloc_valid && rob_alloc_ready && ((!rob_stall)) && mem_reg_write && (mem_waddr != 5'b0)) 1 -1" (3 "11011")
+Condition 22 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (1 "00")
+Condition 22 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (2 "01")
+Condition 22 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (3 "10")
+Condition 23 "2132554150" "(ptw_req_valid && ptw_req_ready) 1 -1" (2 "10")
+Condition 23 "2132554150" "(ptw_req_valid && ptw_req_ready) 1 -1" (3 "11")
+Condition 24 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (1 "01")
+Condition 24 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (2 "10")
+Condition 24 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (3 "11")
+Condition 25 "529034180" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (2 "10")
+Condition 25 "529034180" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (3 "11")
+Condition 26 "2157151922" "(ptw_fault_pending && wb_except_req) 1 -1" (2 "10")
+Condition 26 "2157151922" "(ptw_fault_pending && wb_except_req) 1 -1" (3 "11")
+Condition 28 "2152240536" "(inst_req && inst_addr_ok && ((!inst_data_ok))) 1 -1" (1 "011")
+Condition 31 "2441854792" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 32 "1145698525" "(dmem_request_blocked | mem_double_align_fault) 1 -1" (2 "01")
+Condition 32 "1145698525" "(dmem_request_blocked | mem_double_align_fault) 1 -1" (3 "10")
+Condition 33 "622198642" "(wb_cp0_we && wb_arch_valid && ( ! (wb_except_req && wb_arch_valid) )) 1 -1" (3 "110")
+Condition 35 "2110347513" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 41 "2092755730" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 42 "3195834383" "(data_data_ok && ((!tagged_data_response))) 1 -1" (2 "10")
+Condition 43 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (2 "101")
+Condition 43 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (3 "110")
+Condition 43 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (4 "111")
+Condition 44 "334710447" "(data_bus_error && ((!tagged_data_response))) 1 -1" (2 "10")
+Condition 44 "334710447" "(data_bus_error && ((!tagged_data_response))) 1 -1" (3 "11")
+Condition 45 "2603285835" "(data_cache_error && ((!tagged_data_response))) 1 -1" (2 "10")
+Condition 45 "2603285835" "(data_cache_error && ((!tagged_data_response))) 1 -1" (3 "11")
+Condition 46 "1319416756" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | wait_state) 1 -1" (2 "000000001")
+Condition 46 "1319416756" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | wait_state) 1 -1" (3 "000000010")
+Condition 46 "1319416756" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | wait_state) 1 -1" (4 "000000100")
+Condition 46 "1319416756" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | wait_state) 1 -1" (5 "000001000")
+Condition 46 "1319416756" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | wait_state) 1 -1" (6 "000010000")
+Condition 46 "1319416756" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | wait_state) 1 -1" (8 "001000000")
+Condition 47 "1601602972" "(global_stall_pre_rob | rob_backpressure) 1 -1" (2 "01")
+Condition 48 "1738874922" "(wb_except_req & wb_except_is_tlb_refill) 1 -1" (1 "01")
+Condition 48 "1738874922" "(wb_except_req & wb_except_is_tlb_refill) 1 -1" (3 "11")
+Condition 49 "2789453534" "(wb_valid || wb_except_req || wb_is_eret) 1 -1" (2 "001")
+Condition 49 "2789453534" "(wb_valid || wb_except_req || wb_is_eret) 1 -1" (3 "010")
+Condition 50 "1823806386" "((wb_except_req && wb_arch_valid) | sim_exception_active) 1 -1" (2 "01")
+Condition 51 "110700306" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 52 "3839139285" "(sim_exception_active ? sim_exception_code : wb_except_code) 1 -1" (2 "1")
+Condition 53 "1266772894" "((((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) ? 2'b1 : 2'b0) 1 -1" (2 "1")
+Condition 54 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (1 "011")
+Condition 54 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (2 "101")
+Condition 54 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (4 "111")
+Condition 56 "979795848" "(wb_inst[31:26] == 6'b010001) 1 -1" (2 "1")
+Condition 57 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (2 "1011")
+Condition 57 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (3 "1101")
+Condition 57 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (4 "1110")
+Condition 58 "3294113527" "( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) 1 -1" (2 "1")
+Condition 59 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (2 "0001")
+Condition 59 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (3 "0010")
+Condition 59 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (4 "0100")
+Condition 59 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (5 "1000")
+Condition 60 "3299814388" "(ex_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 61 "2530419475" "(mem_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 62 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (1 "011")
+Condition 62 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (2 "101")
+Condition 62 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (4 "111")
+Condition 63 "2050282359" "(wb_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 65 "1504360980" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 66 "1932525238" "(interrupt_accept && ( ! (wb_except_req && wb_arch_valid && ((!cp0_exl))) ) && ( ! (wb_is_eret && wb_arch_valid) )) 1 -1" (2 "101")
+Condition 66 "1932525238" "(interrupt_accept && ( ! (wb_except_req && wb_arch_valid && ((!cp0_exl))) ) && ( ! (wb_is_eret && wb_arch_valid) )) 1 -1" (3 "110")
+Condition 68 "626122713" "(wb_except_req && wb_arch_valid && ((!cp0_exl))) 1 -1" (2 "101")
+Condition 70 "1413262546" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 71 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (1 "011")
+Condition 71 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (2 "101")
+Condition 71 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (4 "111")
+Condition 72 "1044202763" "(wb_except_code == 5'h1e) 1 -1" (2 "1")
+Condition 76 "347464108" "(id_bpu_taken ? id_bpu_target : id_pc_plus_4) 1 -1" (2 "1")
+Condition 78 "1206748768" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 79 "3687783909" "(exception_flush | ctx_restore_req | id_branch_likely_annul | id_branch_likely_taken) 1 -1" (2 "0001")
+Condition 79 "3687783909" "(exception_flush | ctx_restore_req | id_branch_likely_annul | id_branch_likely_taken) 1 -1" (4 "0100")
+Condition 80 "2533639590" "((stall_req_id & ((~global_stall))) | exception_flush | ctx_restore_req) 1 -1" (2 "001")
+Condition 82 "3137361802" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 83 "1730621136" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 84 "470606175" "(hw_walker_d_miss && ((!ptw_fault_pending))) 1 -1" (2 "10")
+Condition 84 "470606175" "(hw_walker_d_miss && ((!ptw_fault_pending))) 1 -1" (3 "11")
+Condition 85 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (1 "0111")
+Condition 85 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (2 "1011")
+Condition 85 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (3 "1101")
+Condition 85 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (5 "1111")
+Condition 86 "232302809" "(hw_walker_i_miss || hw_walker_d_miss) 1 -1" (2 "01")
+Condition 86 "232302809" "(hw_walker_i_miss || hw_walker_d_miss) 1 -1" (3 "10")
+Condition 87 "1405381284" "(hw_walker_i_miss ? if_vaddr : mem_vaddr) 1 -1" (2 "1")
+Condition 88 "2131703511" "(hw_walker_i_miss ? 2'b0 : (data_we ? 2'd2 : 2'b1)) 1 -1" (2 "1")
+Condition 90 "2906999794" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (2 "10")
+Condition 90 "2906999794" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (3 "11")
+Condition 91 "1017437882" "(ptw_fault_pending && ((!ptw_fault_is_data))) 1 -1" (2 "10")
+Condition 91 "1017437882" "(ptw_fault_pending && ((!ptw_fault_is_data))) 1 -1" (3 "11")
+Condition 92 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (1 "01")
+Condition 92 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (2 "10")
+Condition 92 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (3 "11")
+Condition 93 "1575172674" "(hw_tlb_odd ? 32'b0 : hw_tlb_entrylo_leaf) 1 -1" (2 "1")
+Condition 94 "1381543487" "(hw_tlb_odd ? hw_tlb_entrylo_leaf : 32'b0) 1 -1" (2 "1")
+Condition 95 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (2 "00001")
+Condition 95 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (3 "00010")
+Condition 95 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (4 "00100")
+Condition 95 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (5 "01000")
+Condition 96 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (2 "101")
+Condition 96 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (3 "110")
+Condition 96 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (4 "111")
+Condition 97 "3708680549" "(hw_walker_i_fault ? 5'h02 : (if_adel_exception ? 5'h04 : (if_cache_fault ? 5'h1e : (if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)))))) 1 -1" (2 "1")
+Condition 99 "1966905597" "(if_cache_fault ? 5'h1e : (if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)))) 1 -1" (2 "1")
+Condition 100 "1789623906" "(if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02))) 1 -1" (2 "1")
+Condition 101 "2785742252" "((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)) 1 -1" (2 "1")
+Condition 102 "3261199018" "(mmu_i_fault_type == 3'b110) 1 -1" (2 "1")
+Condition 103 "1069509999" "((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02) 1 -1" (2 "1")
+Condition 104 "21583604" "(mmu_i_fault_type == 3'b100) 1 -1" (2 "1")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (1 "011111")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (2 "101111")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (3 "110111")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (4 "111011")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (5 "111101")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (6 "111110")
+Condition 105 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (7 "111111")
+Condition 106 "1167950432" "(mmu_i_fault_type == 3'b1) 1 -1" (2 "1")
+Condition 108 "1024873693" "(id_inst[31:26] == 6'b010001) 1 -1" (2 "1")
+Condition 109 "628251197" "(fpu_id_cop1 && (id_inst[25:21] == 5'b0)) 1 -1" (2 "10")
+Condition 109 "628251197" "(fpu_id_cop1 && (id_inst[25:21] == 5'b0)) 1 -1" (3 "11")
+Condition 111 "1717426483" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00010)) 1 -1" (2 "10")
+Condition 111 "1717426483" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00010)) 1 -1" (3 "11")
+Condition 113 "319954316" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00100)) 1 -1" (2 "10")
+Condition 113 "319954316" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00100)) 1 -1" (3 "11")
+Condition 115 "1396193160" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00110)) 1 -1" (2 "10")
+Condition 115 "1396193160" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00110)) 1 -1" (3 "11")
+Condition 117 "992393345" "(fpu_id_cop1x || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100)))) 1 -1" (2 "01")
+Condition 118 "1716338742" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100))) 1 -1" (2 "10")
+Condition 118 "1716338742" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100))) 1 -1" (3 "11")
+Condition 123 "3997407567" "(fpu_id_cop1 && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (2 "10")
+Condition 123 "3997407567" "(fpu_id_cop1 && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
+Condition 127 "3547364985" "(((!fpu_id_cond_move)) || ((id_inst[5:0] == 6'h12) ? (id_val_rt == 32'b0) : (id_val_rt != 32'b0))) 1 -1" (1 "00")
+Condition 127 "3547364985" "(((!fpu_id_cond_move)) || ((id_inst[5:0] == 6'h12) ? (id_val_rt == 32'b0) : (id_val_rt != 32'b0))) 1 -1" (2 "01")
+Condition 132 "3487059110" "((fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) || (fpu_id_cop1x && id_inst[0])) 1 -1" (3 "10")
+Condition 133 "1331025628" "(fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) 1 -1" (2 "10")
+Condition 133 "1331025628" "(fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) 1 -1" (3 "11")
+Condition 135 "2762903782" "(fpu_id_cop1x && id_inst[0]) 1 -1" (2 "10")
+Condition 136 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (2 "00001")
+Condition 136 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (3 "00010")
+Condition 136 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (4 "00100")
+Condition 136 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (5 "01000")
+Condition 137 "1092014378" "(fpu_id_cop1x && id_inst[0]) 1 -1" (2 "10")
+Condition 138 "3532652408" "(fpu_id_double && (id_inst[5:0] <= 6'h07)) 1 -1" (3 "11")
+Condition 139 "2148932451" "(fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
+Condition 143 "1987127180" "(fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) 1 -1" (3 "11")
+Condition 147 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (1 "011")
+Condition 147 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (2 "101")
+Condition 147 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "110")
+Condition 147 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (4 "111")
+Condition 152 "533304895" "(fpu_id_mfc1 | fpu_id_cfc1) 1 -1" (2 "01")
+Condition 152 "533304895" "(fpu_id_mfc1 | fpu_id_cfc1) 1 -1" (3 "10")
+Condition 153 "1750401555" "(fpu_id_gpr_write && wb_reg_write) 1 -1" (2 "10")
+Condition 153 "1750401555" "(fpu_id_gpr_write && wb_reg_write) 1 -1" (3 "11")
+Condition 154 "2569817436" "((fpu_id_valid || fpu_mem_id_valid) && ((!cpu_cu1))) 1 -1" (2 "10")
+Condition 154 "2569817436" "((fpu_id_valid || fpu_mem_id_valid) && ((!cpu_cu1))) 1 -1" (3 "11")
+Condition 155 "2047749590" "(fpu_id_valid || fpu_mem_id_valid) 1 -1" (2 "01")
+Condition 155 "2047749590" "(fpu_id_valid || fpu_mem_id_valid) 1 -1" (3 "10")
+Condition 156 "2255384730" "((ex_inst[31:26] == 6'b110001) || (ex_inst[31:26] == 6'b110101)) 1 -1" (2 "01")
+Condition 156 "2255384730" "((ex_inst[31:26] == 6'b110001) || (ex_inst[31:26] == 6'b110101)) 1 -1" (3 "10")
+Condition 157 "728135857" "(ex_inst[31:26] == 6'b110001) 1 -1" (2 "1")
+Condition 158 "676351891" "(ex_inst[31:26] == 6'b110101) 1 -1" (2 "1")
+Condition 159 "3736871660" "((mem_inst[31:26] == 6'b110001) || (mem_inst[31:26] == 6'b110101)) 1 -1" (2 "01")
+Condition 159 "3736871660" "((mem_inst[31:26] == 6'b110001) || (mem_inst[31:26] == 6'b110101)) 1 -1" (3 "10")
+Condition 160 "3601832014" "(mem_inst[31:26] == 6'b110001) 1 -1" (2 "1")
+Condition 161 "3583618924" "(mem_inst[31:26] == 6'b110101) 1 -1" (2 "1")
+Condition 162 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (1 "01")
+Condition 162 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (2 "10")
+Condition 162 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (3 "11")
+Condition 163 "51567890" "((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16])))) 1 -1" (2 "01")
+Condition 163 "51567890" "((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16])))) 1 -1" (3 "10")
+Condition 164 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (2 "101")
+Condition 164 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (3 "110")
+Condition 164 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (4 "111")
+Condition 169 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (2 "101")
+Condition 169 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (3 "110")
+Condition 169 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (4 "111")
+Condition 174 "2378667703" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) ? 5'd25 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) ? 5'd26 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))))))) 1 -1" (2 "1")
+Condition 175 "2444583232" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) 1 -1" (3 "11")
+Condition 179 "2077967465" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) ? 5'd26 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))))))) 1 -1" (2 "1")
+Condition 180 "3046750032" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) 1 -1" (3 "11")
+Condition 181 "568116053" "((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29)) 1 -1" (2 "01")
+Condition 183 "1001292323" "(id_inst[5:0] == 6'h29) 1 -1" (2 "1")
+Condition 184 "4125913370" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))))) 1 -1" (2 "1")
+Condition 185 "2088693974" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) 1 -1" (3 "11")
+Condition 189 "2547061776" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))))) 1 -1" (2 "1")
+Condition 190 "3666978225" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) 1 -1" (3 "11")
+Condition 194 "2815034548" "(((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))) 1 -1" (2 "1")
+Condition 195 "3131213048" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) 1 -1" (3 "11")
+Condition 198 "1225630910" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))) 1 -1" (2 "1")
+Condition 199 "3337437091" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) 1 -1" (3 "11")
+Condition 202 "3921318554" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))) 1 -1" (2 "1")
+Condition 203 "2725710595" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "11")
+Condition 206 "3865946448" "(((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))) 1 -1" (2 "1")
+Condition 207 "2564018948" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "11")
+Condition 210 "3202424828" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))) 1 -1" (2 "1")
+Condition 211 "1988688550" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) 1 -1" (3 "11")
+Condition 214 "1057160093" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))) 1 -1" (2 "1")
+Condition 215 "2883241246" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) 1 -1" (3 "11")
+Condition 218 "3262277806" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))) 1 -1" (2 "1")
+Condition 219 "478094329" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) 1 -1" (3 "11")
+Condition 222 "1433245845" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))) 1 -1" (2 "1")
+Condition 223 "4222219862" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) 1 -1" (3 "11")
+Condition 226 "4231739172" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))) 1 -1" (2 "1")
+Condition 227 "693662938" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) 1 -1" (3 "11")
+Condition 234 "1506562391" "((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))) 1 -1" (2 "1")
+Condition 235 "1406847378" "(((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
+Condition 242 "1074633237" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))) 1 -1" (2 "1")
+Condition 243 "829823318" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) 1 -1" (3 "11")
+Condition 246 "3725682822" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))) 1 -1" (2 "1")
+Condition 247 "1335464108" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) 1 -1" (3 "11")
+Condition 250 "744782425" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))) 1 -1" (2 "1")
+Condition 251 "309120697" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) 1 -1" (3 "11")
+Condition 254 "2388598780" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))) 1 -1" (2 "1")
+Condition 255 "1521187343" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) 1 -1" (3 "11")
+Condition 258 "3784676099" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))) 1 -1" (2 "1")
+Condition 259 "4108961803" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) 1 -1" (3 "11")
+Condition 263 "2887074330" "((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31) 1 -1" (2 "1")
+Condition 264 "252279689" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (2 "10")
+Condition 264 "252279689" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (3 "11")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (2 "101111111")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (3 "110111111")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (4 "111011111")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (5 "111101111")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (6 "111110111")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (7 "111111011")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (8 "111111101")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (9 "111111110")
+Condition 266 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (10 "111111111")
+Condition 267 "2883948031" "(fpu_id_gpr_write ? id_inst[20:16] : wb_waddr) 1 -1" (2 "1")
+Condition 268 "3913614814" "(fpu_id_mfc1 ? fpr[id_inst[15:11]] : (fpu_id_cfc1 ? fcsr : wb_wdata)) 1 -1" (2 "1")
+Condition 269 "1173763703" "(fpu_id_cfc1 ? fcsr : wb_wdata) 1 -1" (2 "1")
+Condition 270 "1725485473" "((fpu_id_gpr_write && ((!wb_reg_write))) ? (((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) : (wb_reg_write && wb_arch_valid && ( ! (wb_except_req && wb_arch_valid) ))) 1 -1" (2 "1")
+Condition 271 "1963936839" "(fpu_id_gpr_write && ((!wb_reg_write))) 1 -1" (2 "10")
+Condition 271 "1963936839" "(fpu_id_gpr_write && ((!wb_reg_write))) 1 -1" (3 "11")
+Condition 272 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (1 "0111")
+Condition 272 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (2 "1011")
+Condition 272 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (3 "1101")
+Condition 272 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (4 "1110")
+Condition 272 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (5 "1111")
+Condition 275 "1674202903" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 276 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (1 "0111")
+Condition 276 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (2 "1011")
+Condition 276 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (3 "1101")
+Condition 276 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (4 "1110")
+Condition 291 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (2 "00001")
+Condition 291 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (4 "00100")
+Condition 291 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (5 "01000")
+Condition 292 "1747599122" "(id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | ((|id_tlb_op))) 1 -1" (2 "00001")
+Condition 292 "1747599122" "(id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | ((|id_tlb_op))) 1 -1" (3 "00010")
+Condition 294 "2258116929" "(id_is_priv & ((~cpu_kernel_mode)) & ((~cpu_cu0)) & ((~id_rdhwr_allowed))) 1 -1" (3 "1101")
+Condition 295 "2624586724" "((id_inst[31:26] == 6'b1) && (id_trap_op >= 4'd6)) 1 -1" (1 "01")
+Condition 295 "2624586724" "((id_inst[31:26] == 6'b1) && (id_trap_op >= 4'd6)) 1 -1" (3 "11")
+Condition 297 "1347468500" "(id_trap_imm ? id_imm_ext : id_val_rt) 1 -1" (2 "1")
+Condition 298 "1574028679" "(id_is_trap && (((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))))) 1 -1" (2 "10")
+Condition 298 "1574028679" "(id_is_trap && (((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))))) 1 -1" (3 "11")
+Condition 299 "2185616935" "(((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))))) 1 -1" (1 "0")
+Condition 300 "2134721658" "((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) 1 -1" (1 "00")
+Condition 300 "2134721658" "((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) 1 -1" (2 "01")
+Condition 302 "2093505490" "(id_trap_op == 4'd6) 1 -1" (2 "1")
+Condition 303 "2175844751" "(((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))) 1 -1" (1 "0")
+Condition 303 "2175844751" "(((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))) 1 -1" (2 "1")
+Condition 304 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (1 "00")
+Condition 304 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (2 "01")
+Condition 304 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (3 "10")
+Condition 305 "1085046468" "(id_trap_op == 4'b1) 1 -1" (1 "0")
+Condition 305 "1085046468" "(id_trap_op == 4'b1) 1 -1" (2 "1")
+Condition 306 "2671547871" "(id_trap_op == 4'd7) 1 -1" (1 "0")
+Condition 306 "2671547871" "(id_trap_op == 4'd7) 1 -1" (2 "1")
+Condition 307 "400490397" "(((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))) 1 -1" (1 "0")
+Condition 307 "400490397" "(((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))) 1 -1" (2 "1")
+Condition 308 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (1 "00")
+Condition 308 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (2 "01")
+Condition 308 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (3 "10")
+Condition 309 "146256684" "(id_trap_op == 4'd2) 1 -1" (1 "0")
+Condition 309 "146256684" "(id_trap_op == 4'd2) 1 -1" (2 "1")
+Condition 310 "429672102" "(id_trap_op == 4'd8) 1 -1" (1 "0")
+Condition 310 "429672102" "(id_trap_op == 4'd8) 1 -1" (2 "1")
+Condition 311 "2988517596" "(((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))) 1 -1" (1 "0")
+Condition 311 "2988517596" "(((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))) 1 -1" (2 "1")
+Condition 312 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (1 "00")
+Condition 312 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (2 "01")
+Condition 312 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (3 "10")
+Condition 313 "1091748303" "(id_trap_op == 4'd3) 1 -1" (1 "0")
+Condition 313 "1091748303" "(id_trap_op == 4'd3) 1 -1" (2 "1")
+Condition 314 "1347383918" "(id_trap_op == 4'd9) 1 -1" (1 "0")
+Condition 314 "1347383918" "(id_trap_op == 4'd9) 1 -1" (2 "1")
+Condition 315 "2766917152" "(((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)) 1 -1" (1 "0")
+Condition 315 "2766917152" "(((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)) 1 -1" (2 "1")
+Condition 316 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (1 "00")
+Condition 316 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (2 "01")
+Condition 316 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (3 "10")
+Condition 317 "1107162085" "(id_trap_op == 4'd4) 1 -1" (1 "0")
+Condition 317 "1107162085" "(id_trap_op == 4'd4) 1 -1" (2 "1")
+Condition 318 "3558771074" "(id_trap_op == 4'd10) 1 -1" (1 "0")
+Condition 318 "3558771074" "(id_trap_op == 4'd10) 1 -1" (2 "1")
+Condition 319 "446836902" "(id_val_rs == id_trap_rhs) 1 -1" (1 "0")
+Condition 319 "446836902" "(id_val_rs == id_trap_rhs) 1 -1" (2 "1")
+Condition 320 "1077299512" "(id_val_rs != id_trap_rhs) 1 -1" (1 "0")
+Condition 320 "1077299512" "(id_val_rs != id_trap_rhs) 1 -1" (2 "1")
+Condition 321 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (2 "00000001")
+Condition 321 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (3 "00000010")
+Condition 321 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (5 "00001000")
+Condition 321 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (6 "00010000")
+Condition 324 "657916739" "(id_cpu_unusable || id_fpu_unusable) 1 -1" (2 "01")
+Condition 325 "2896691429" "(id_fpu_exception ? 5'h0f : (id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0))))) 1 -1" (2 "1")
+Condition 326 "625210968" "(id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0)))) 1 -1" (2 "1")
+Condition 327 "4174750399" "(id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0))) 1 -1" (2 "1")
+Condition 330 "867989384" "(id_except_req_in & id_except_is_tlb_refill_in) 1 -1" (1 "01")
+Condition 330 "867989384" "(id_except_req_in & id_except_is_tlb_refill_in) 1 -1" (3 "11")
+Condition 332 "3382750350" "(mem_double_mem && (mem_ex_out[2:0] != 3'b0)) 1 -1" (2 "10")
+Condition 332 "3382750350" "(mem_double_mem && (mem_ex_out[2:0] != 3'b0)) 1 -1" (3 "11")
+Condition 338 "3877122599" "((((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) || hw_walker_d_fault) 1 -1" (2 "01")
+Condition 338 "3877122599" "((((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) || hw_walker_d_fault) 1 -1" (3 "10")
+Condition 339 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (2 "101")
+Condition 339 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (3 "110")
+Condition 339 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (4 "111")
+Condition 340 "794176499" "(dmem_translation_fault | hw_walker_d_miss) 1 -1" (2 "01")
+Condition 340 "794176499" "(dmem_translation_fault | hw_walker_d_miss) 1 -1" (3 "10")
+Condition 341 "4261830928" "(fpu_mem_swc1 ? fpr[mem_inst[20:16]] : ((mem_double_mem && (mem_inst[31:26] == 6'b111101)) ? (mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) : mem_val_rt)) 1 -1" (2 "1")
+Condition 342 "3681018732" "((mem_double_mem && (mem_inst[31:26] == 6'b111101)) ? (mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) : mem_val_rt) 1 -1" (2 "1")
+Condition 343 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (1 "01")
+Condition 343 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (2 "10")
+Condition 343 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (3 "11")
+Condition 344 "217134223" "(mem_inst[31:26] == 6'b111101) 1 -1" (2 "1")
+Condition 345 "520531557" "(mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) 1 -1" (1 "0")
+Condition 345 "520531557" "(mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) 1 -1" (2 "1")
+Condition 346 "3288803265" "(mem_mem_read && (mem_mem_op == 3'b111)) 1 -1" (1 "01")
+Condition 346 "3288803265" "(mem_mem_read && (mem_mem_op == 3'b111)) 1 -1" (3 "11")
+Condition 347 "284899406" "(mem_mem_op == 3'b111) 1 -1" (2 "1")
+Condition 348 "3540056314" "(mem_mem_write && (mem_mem_op == 3'b111)) 1 -1" (1 "01")
+Condition 348 "3540056314" "(mem_mem_write && (mem_mem_op == 3'b111)) 1 -1" (3 "11")
+Condition 349 "1862473741" "(mem_mem_op == 3'b111) 1 -1" (2 "1")
+Condition 350 "3268878894" "(ll_reservation_valid && (ll_reservation_addr == {mem_vaddr[31:2], 2'b0})) 1 -1" (2 "10")
+Condition 350 "3268878894" "(ll_reservation_valid && (ll_reservation_addr == {mem_vaddr[31:2], 2'b0})) 1 -1" (3 "11")
+Condition 352 "3774800540" "(data_we_raw && (((!is_sc_mem)) || sc_reservation_match)) 1 -1" (2 "10")
+Condition 353 "2061949656" "(((!is_sc_mem)) || sc_reservation_match) 1 -1" (1 "00")
+Condition 353 "2061949656" "(((!is_sc_mem)) || sc_reservation_match) 1 -1" (2 "01")
+Condition 354 "1326531753" "(is_sc_mem ? ({31'b0, sc_reservation_match}) : mem_ex_out) 1 -1" (2 "1")
+Condition 355 "2581142053" "(hw_walker_d_fault ? (mem_mem_write ? 5'h03 : 5'h02) : ((mmu_d_fault_type == 3'b010) ? 5'h03 : ((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)))))) 1 -1" (2 "1")
+Condition 356 "780517336" "(mem_mem_write ? 5'h03 : 5'h02) 1 -1" (1 "0")
+Condition 356 "780517336" "(mem_mem_write ? 5'h03 : 5'h02) 1 -1" (2 "1")
+Condition 357 "522421787" "((mmu_d_fault_type == 3'b010) ? 5'h03 : ((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02))))) 1 -1" (2 "1")
+Condition 358 "1176655220" "(mmu_d_fault_type == 3'b010) 1 -1" (2 "1")
+Condition 359 "1496348898" "((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)))) 1 -1" (2 "1")
+Condition 360 "3514290923" "(mmu_d_fault_type == 3'b011) 1 -1" (2 "1")
+Condition 361 "2644657107" "((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02))) 1 -1" (2 "1")
+Condition 362 "853291444" "(mmu_d_fault_type == 3'b110) 1 -1" (2 "1")
+Condition 363 "3059754714" "((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)) 1 -1" (2 "1")
+Condition 364 "3964673423" "(mmu_d_fault_type == 3'b100) 1 -1" (2 "1")
+Condition 365 "3563783192" "((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02) 1 -1" (2 "1")
+Condition 366 "1869072033" "(mmu_d_fault_type == 3'b101) 1 -1" (2 "1")
+Condition 367 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (1 "0111")
+Condition 367 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (2 "1011")
+Condition 367 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (3 "1101")
+Condition 367 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (4 "1110")
+Condition 367 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (5 "1111")
+Condition 368 "2777254302" "((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) 1 -1" (2 "01")
+Condition 368 "2777254302" "((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) 1 -1" (3 "10")
+Condition 369 "3286471098" "(mmu_d_fault_type == 3'b1) 1 -1" (2 "1")
+Condition 370 "2027172281" "(mmu_d_fault_type == 3'b010) 1 -1" (2 "1")
+Condition 371 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (3 "00000010")
+Condition 371 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (4 "00000100")
+Condition 371 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (5 "00001000")
+Condition 371 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (6 "00010000")
+Condition 371 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (7 "00100000")
+Condition 371 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (8 "01000000")
+Condition 373 "451381898" "(mem_mmu_fault ? mem_mmu_fault_code : (mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04) : ((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)))))) 1 -1" (2 "1")
+Condition 374 "3450897922" "(mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04) : ((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0))))) 1 -1" (2 "1")
+Condition 375 "4050516216" "(mem_mem_write ? 5'h05 : 5'h04) 1 -1" (1 "0")
+Condition 375 "4050516216" "(mem_mem_write ? 5'h05 : 5'h04) 1 -1" (2 "1")
+Condition 376 "7117464" "((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)))) 1 -1" (2 "1")
+Condition 377 "1467123040" "(mem_cache_fault || mem_cache_op_fault_seen) 1 -1" (2 "01")
+Condition 377 "1467123040" "(mem_cache_fault || mem_cache_op_fault_seen) 1 -1" (3 "10")
+Condition 378 "1249200825" "(mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0))) 1 -1" (2 "1")
+Condition 379 "3648606361" "(mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)) 1 -1" (2 "1")
+Condition 383 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (2 "1011")
+Condition 383 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (3 "1101")
+Condition 383 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (4 "1110")
+Condition 383 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (5 "1111")
+Condition 386 "1918770668" "(global_stall && ((!rob_head_ready)) && ((!nb_rob_issue)) && ((!blocking_response_commit))) 1 -1" (2 "1011")
+Condition 386 "1918770668" "(global_stall && ((!rob_head_ready)) && ((!nb_rob_issue)) && ((!blocking_response_commit))) 1 -1" (3 "1101")
+Condition 387 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (1 "011")
+Condition 387 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (2 "101")
+Condition 387 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (3 "110")
+Condition 387 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (4 "111")
+Condition 388 "291044777" "(data_req_raw && ((!nb_rob_block))) 1 -1" (2 "10")
+Condition 389 "537778979" "(data_addr_ok && ((!nb_rob_block))) 1 -1" (2 "10")
+Condition 390 "3912179360" "(dmem_translation_fault || mem_adel_exception || mem_ades_exception || (data_req && data_addr_ok_effective)) 1 -1" (4 "0100")
+Condition 390 "3912179360" "(dmem_translation_fault || mem_adel_exception || mem_ades_exception || (data_req && data_addr_ok_effective)) 1 -1" (5 "1000")
+Condition 392 "505838211" "(((!global_stall_pre_rob)) || (mem_enable_nb_load && mem_mem_read && ((!mem_done)) && data_addr_ok_effective)) 1 -1" (2 "01")
+Condition 393 "831991507" "(mem_enable_nb_load && mem_mem_read && ((!mem_done)) && data_addr_ok_effective) 1 -1" (2 "1011")
+Condition 393 "831991507" "(mem_enable_nb_load && mem_mem_read && ((!mem_done)) && data_addr_ok_effective) 1 -1" (3 "1101")
+Condition 393 "831991507" "(mem_enable_nb_load && mem_mem_read && ((!mem_done)) && data_addr_ok_effective) 1 -1" (4 "1110")
+Condition 393 "831991507" "(mem_enable_nb_load && mem_mem_read && ((!mem_done)) && data_addr_ok_effective) 1 -1" (5 "1111")
+Condition 395 "3179731492" "((mem_enable_nb_load && mem_mem_read) ? nb_load_alloc_eligible : (mem_mem_read ? (mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) : (((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception))) 1 -1" (2 "1")
+Condition 396 "3211233527" "(mem_enable_nb_load && mem_mem_read) 1 -1" (2 "10")
+Condition 396 "3211233527" "(mem_enable_nb_load && mem_mem_read) 1 -1" (3 "11")
+Condition 398 "1289702905" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (2 "00001")
+Condition 398 "1289702905" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (3 "00010")
+Condition 398 "1289702905" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (4 "00100")
+Condition 399 "1298276181" "(((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (3 "000010")
+Condition 399 "1298276181" "(((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (4 "000100")
+Condition 400 "2703422689" "(((!mem_mem_read)) || (((!mem_enable_nb_load)) && data_data_ok_current) || mem_done || dmem_translation_fault || mem_adel_exception) 1 -1" (2 "00001")
+Condition 400 "2703422689" "(((!mem_mem_read)) || (((!mem_enable_nb_load)) && data_data_ok_current) || mem_done || dmem_translation_fault || mem_adel_exception) 1 -1" (3 "00010")
+Condition 401 "2442812977" "(((!mem_enable_nb_load)) && data_data_ok_current) 1 -1" (1 "01")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (1 "01111111")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (2 "10111111")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (3 "11011111")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (4 "11101111")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (6 "11111011")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (7 "11111101")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (8 "11111110")
+Condition 402 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (9 "11111111")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (1 "01111111")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (2 "10111111")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (3 "11011111")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (4 "11101111")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (5 "11110111")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (6 "11111011")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (7 "11111101")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (8 "11111110")
+Condition 408 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (9 "11111111")
+Condition 415 "3342095481" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 417 "3021700550" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 419 "2306456917" "(wb_bd && (wb_delay_slot_next_pc != 32'b0)) 1 -1" (1 "01")
+Condition 427 "2430167356" "(sim_exception_active ? inst_addr : ((interrupt_accept && wait_state) ? wait_interrupt_epc : ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc))) 1 -1" (2 "1")
+Condition 428 "895010287" "((interrupt_accept && wait_state) ? wait_interrupt_epc : ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc)) 1 -1" (2 "1")
+Condition 429 "1456569219" "(interrupt_accept && wait_state) 1 -1" (1 "01")
+Condition 429 "1456569219" "(interrupt_accept && wait_state) 1 -1" (3 "11")
+Condition 431 "539237239" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 432 "899790699" "(((!wb_except_is_data)) && ((wb_except_code == 5'h02) || (wb_except_code == 5'h03) || (wb_except_code == 5'h04))) 1 -1" (1 "01")
+Condition 433 "3702869938" "((wb_except_code == 5'h02) || (wb_except_code == 5'h03) || (wb_except_code == 5'h04)) 1 -1" (3 "010")
+Condition 433 "3702869938" "((wb_except_code == 5'h02) || (wb_except_code == 5'h03) || (wb_except_code == 5'h04)) 1 -1" (4 "100")
+Condition 434 "318225547" "(wb_except_code == 5'h02) 1 -1" (2 "1")
+Condition 435 "1970517324" "(wb_except_code == 5'h03) 1 -1" (2 "1")
+Condition 440 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (1 "01")
+Condition 440 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (2 "10")
+Condition 440 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (3 "11")
+Condition 442 "1282142957" "((mem_vaddr[31:28] == 4'h4) || (mem_vaddr[31:28] == 4'ha) || (data_addr[31:28] == 4'h4) || (data_addr[31:28] == 4'ha)) 1 -1" (2 "0001")
+Condition 442 "1282142957" "((mem_vaddr[31:28] == 4'h4) || (mem_vaddr[31:28] == 4'ha) || (data_addr[31:28] == 4'h4) || (data_addr[31:28] == 4'ha)) 1 -1" (4 "0100")
+Condition 447 "605695529" "((mmu_d_cache_attr == 3'b010) || legacy_data_uncacheable) 1 -1" (3 "10")
+Condition 448 "1518974298" "(mmu_d_cache_attr == 3'b010) 1 -1" (2 "1")
+Condition 449 "4136875954" "(data_cache_op_valid && ((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000))) 1 -1" (2 "10")
+Condition 450 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (1 "0000")
+Condition 450 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (3 "0010")
+Condition 450 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (4 "0100")
+Condition 452 "2432497317" "(data_cache_op == 5'b00100) 1 -1" (2 "1")
+Condition 453 "793864136" "(data_cache_op == 5'b01000) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0042
+// ID: EXCL-UVM-0043
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3907405402 3718577915"
+// CHECKSUM: "440421165 4254341566"
 MODULE: mips_page_table_tlb_refill
 Condition 1 "1220367454" "(miss_valid && miss_ready) 1 -1" (1 "01")
 Condition 1 "1220367454" "(miss_valid && miss_ready) 1 -1" (2 "10")
@@ -1630,12 +1642,11 @@ Condition 1 "1220367454" "(miss_valid && miss_ready) 1 -1" (3 "11")
 Condition 2 "2247433216" "(((!resp_valid)) && ((!refill_pending))) 1 -1" (1 "01")
 Condition 2 "2247433216" "(((!resp_valid)) && ((!refill_pending))) 1 -1" (2 "10")
 Condition 2 "2247433216" "(((!resp_valid)) && ((!refill_pending))) 1 -1" (3 "11")
-Condition 3 "1943482081" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!tlb_wr_ready)) && ((!resp_seen))) 1 -1" (1 "01111")
-Condition 3 "1943482081" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!tlb_wr_ready)) && ((!resp_seen))) 1 -1" (2 "10111")
-Condition 3 "1943482081" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!tlb_wr_ready)) && ((!resp_seen))) 1 -1" (3 "11011")
-Condition 3 "1943482081" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!tlb_wr_ready)) && ((!resp_seen))) 1 -1" (4 "11101")
-Condition 3 "1943482081" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!tlb_wr_ready)) && ((!resp_seen))) 1 -1" (5 "11110")
-Condition 3 "1943482081" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!tlb_wr_ready)) && ((!resp_seen))) 1 -1" (6 "11111")
+Condition 3 "2584183315" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!resp_seen))) 1 -1" (1 "0111")
+Condition 3 "2584183315" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!resp_seen))) 1 -1" (2 "1011")
+Condition 3 "2584183315" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!resp_seen))) 1 -1" (3 "1101")
+Condition 3 "2584183315" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!resp_seen))) 1 -1" (4 "1110")
+Condition 3 "2584183315" "(resp_valid && ((!fault_valid)) && ((!refill_pending)) && ((!resp_seen))) 1 -1" (5 "1111")
 Condition 4 "1719114535" "(refill_pending && tlb_wr_ready) 1 -1" (1 "01")
 Condition 4 "1719114535" "(refill_pending && tlb_wr_ready) 1 -1" (2 "10")
 Condition 4 "1719114535" "(refill_pending && tlb_wr_ready) 1 -1" (3 "11")
@@ -1656,7 +1667,7 @@ Condition 9 "3023535316" "(va_q[12] ? 32'b0 : entrylo) 1 -1" (2 "1")
 Condition 10 "1072353557" "(va_q[12] ? entrylo : 32'b0) 1 -1" (1 "0")
 Condition 10 "1072353557" "(va_q[12] ? entrylo : 32'b0) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0043
+// ID: EXCL-UVM-0044
 // CATEGORY: Debug & Observability
 // CHECKSUM: "1978932013 1326802205"
 MODULE: jtag_debug_top
@@ -1672,7 +1683,7 @@ Condition 40 "2520363317" "(m_rvalid && m_rready) 1 -1" (2 "10")
 Condition 41 "2102856218" "((axi_state == ST_R) && m_rvalid && m_rready) 1 -1" (1 "011")
 Condition 41 "2102856218" "((axi_state == ST_R) && m_rvalid && m_rready) 1 -1" (3 "110")
 
-// ID: EXCL-UVM-0044
+// ID: EXCL-UVM-0045
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3798910544 153015984"
 MODULE: apb_uart_16550
@@ -1798,7 +1809,7 @@ Condition 93 "1989212686" "(mcr_r[5] & (rx_count >= rx_trig_level)) 1 -1" (1 "01
 Condition 93 "1989212686" "(mcr_r[5] & (rx_count >= rx_trig_level)) 1 -1" (3 "11")
 Condition 94 "2152693204" "(((~mcr_r[1])) | auto_rts_deassert) 1 -1" (2 "01")
 
-// ID: EXCL-UVM-0045
+// ID: EXCL-UVM-0046
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3763908232 705477589"
 MODULE: qspi_shared_pin_arbiter
@@ -1812,7 +1823,7 @@ Condition 7 "891071413" "(cmd_grant ? cmd_sclk : (mem_grant ? mem_sclk : 1'b0)) 
 Condition 9 "162337268" "(cmd_grant ? cmd_cs_n : (mem_grant ? mem_cs_n : 1'b1)) 1 -1" (2 "1")
 Condition 11 "230246612" "(cmd_grant ? cmd_mosi : (mem_grant ? mem_mosi : 1'b0)) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0046
+// ID: EXCL-UVM-0047
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "3599225912 3546751060"
 MODULE: mips_alu
@@ -1822,14 +1833,13 @@ Condition 20 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (3 "1
 Condition 21 "2041577695" "(sign_a != sign_b) 1 -1" (2 "1")
 Condition 22 "1025947488" "(sign_r != sign_a) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0047
+// ID: EXCL-UVM-0048
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3319620102 1781645666"
+// CHECKSUM: "2380524072 1781645666"
 MODULE: mips_cp0
 Condition 3 "4262283065" "(we && ({waddr, wsel} == {5'd9, 3'b0})) 1 -1" (3 "11")
 Condition 6 "3354819029" "(we && ({waddr, wsel} == {5'd6, 3'b0})) 1 -1" (3 "11")
 Condition 8 "389043934" "(cache_op_done && ((cache_op == 5'b00101) || (cache_op == 5'b00100))) 1 -1" (1 "01")
-Condition 8 "389043934" "(cache_op_done && ((cache_op == 5'b00101) || (cache_op == 5'b00100))) 1 -1" (2 "10")
 Condition 8 "389043934" "(cache_op_done && ((cache_op == 5'b00101) || (cache_op == 5'b00100))) 1 -1" (3 "11")
 Condition 9 "3059225549" "((cache_op == 5'b00101) || (cache_op == 5'b00100)) 1 -1" (2 "01")
 Condition 9 "3059225549" "((cache_op == 5'b00101) || (cache_op == 5'b00100)) 1 -1" (3 "10")
@@ -1898,9 +1908,9 @@ Condition 63 "2849278350" "(hw_tlb_wr_en ? hw_tlb_wr_mask : cp0_pagemask_mask) 1
 Condition 64 "1687710842" "(hw_tlb_wr_en ? hw_tlb_wr_entrylo0 : cp0_entrylo0) 1 -1" (2 "1")
 Condition 65 "279720151" "(hw_tlb_wr_en ? hw_tlb_wr_entrylo1 : cp0_entrylo1) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0048
+// ID: EXCL-UVM-0049
 // CATEGORY: Cache & Memory Subsystem
-// CHECKSUM: "3943920266 1926259864"
+// CHECKSUM: "586324309 1634836453"
 MODULE: dcache
 Condition 2 "3008937002" "((addr[31:28] == 4'ha) && (addr[27:16] == 12'b0)) 1 -1" (2 "10")
 Condition 10 "3458973300" "(cpu_req || req_buf_valid) 1 -1" (2 "01")
@@ -2012,109 +2022,116 @@ Condition 63 "3771146233" "(maint_index_wbi || maint_hit_inv || maint_hit_wb_inv
 Condition 64 "1611495313" "(maint_clear_valid || maint_clear_dirty) 1 -1" (1 "00")
 Condition 64 "1611495313" "(maint_clear_valid || maint_clear_dirty) 1 -1" (2 "01")
 Condition 64 "1611495313" "(maint_clear_valid || maint_clear_dirty) 1 -1" (3 "10")
-Condition 65 "1329996258" "(awready && awvalid) 1 -1" (1 "01")
-Condition 65 "1329996258" "(awready && awvalid) 1 -1" (2 "10")
-Condition 65 "1329996258" "(awready && awvalid) 1 -1" (3 "11")
-Condition 66 "3656494972" "(wready && wvalid) 1 -1" (1 "01")
-Condition 66 "3656494972" "(wready && wvalid) 1 -1" (2 "10")
-Condition 66 "3656494972" "(wready && wvalid) 1 -1" (3 "11")
-Condition 67 "1524110410" "(word_cnt == 3'd6) 1 -1" (1 "0")
-Condition 67 "1524110410" "(word_cnt == 3'd6) 1 -1" (2 "1")
-Condition 68 "3472728015" "(bready && bvalid) 1 -1" (1 "01")
-Condition 68 "3472728015" "(bready && bvalid) 1 -1" (2 "10")
-Condition 68 "3472728015" "(bready && bvalid) 1 -1" (3 "11")
-Condition 69 "3312478328" "(bresp != 2'b0) 1 -1" (1 "0")
-Condition 69 "3312478328" "(bresp != 2'b0) 1 -1" (2 "1")
-Condition 70 "2186825407" "(awready && awvalid) 1 -1" (2 "10")
-Condition 71 "3679989018" "(wready && wvalid) 1 -1" (2 "10")
-Condition 72 "1105181552" "((((!awvalid)) || awready) && (((!wvalid)) || wready)) 1 -1" (1 "01")
-Condition 74 "3670118411" "(((!wvalid)) || wready) 1 -1" (3 "10")
-Condition 75 "3428064681" "(bready && bvalid) 1 -1" (1 "01")
-Condition 76 "3291719706" "(rready && rvalid) 1 -1" (1 "01")
-Condition 77 "2380975339" "(arready && arvalid) 1 -1" (2 "10")
-Condition 78 "505111255" "(awready && awvalid) 1 -1" (2 "10")
-Condition 79 "4175703244" "(wready && wvalid) 1 -1" (2 "10")
-Condition 81 "4024966271" "(bready && bvalid) 1 -1" (1 "01")
-Condition 82 "2778556640" "(bresp != 2'b0) 1 -1" (2 "1")
-Condition 83 "2087181251" "(arready && arvalid) 1 -1" (2 "10")
-Condition 84 "87587153" "(rready && rvalid) 1 -1" (1 "01")
-Condition 85 "3303286038" "(rresp != 2'b0) 1 -1" (2 "1")
-Condition 86 "1440574080" "(cache_op_valid ? 8'd7 : (uncacheable ? 8'b0 : 8'd7)) 1 -1" (2 "1")
-Condition 88 "3147668225" "(cache_op_valid ? 4'b0010 : (uncacheable ? 4'b0 : 4'b0010)) 1 -1" (2 "1")
-Condition 92 "833623697" "(((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) ? maint_addr : (req_buf_valid ? req_buf_addr : cpu_addr)) 1 -1" (2 "1")
-Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (2 "00001")
-Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (3 "00010")
-Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (4 "00100")
-Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (5 "01000")
-Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (6 "10000")
-Condition 94 "4278298376" "(state == CACHE_LOOKUP) 1 -1" (2 "1")
-Condition 95 "49332438" "(state == CACHE_WB_REQ) 1 -1" (2 "1")
-Condition 96 "3248935753" "(state == CACHE_WB_DATA) 1 -1" (2 "1")
-Condition 97 "877805972" "(state == CACHE_WB_RESP) 1 -1" (2 "1")
-Condition 98 "2608178621" "(state == CACHE_DONE) 1 -1" (2 "1")
-Condition 100 "513843850" "(legacy_addr_uncacheable && ((cpu_addr[31:28] == 4'h4) || (cpu_addr[31:28] == 4'ha))) 1 -1" (1 "01")
-Condition 104 "3115373619" "(legacy_addr_uncacheable && ((req_buf_addr[31:28] == 4'h4) || (req_buf_addr[31:28] == 4'ha))) 1 -1" (1 "01")
-Condition 109 "4229207473" "(req_buf_uncacheable || legacy_req_uncacheable || ((ENABLE_COHERENCY && req_buf_we))) 1 -1" (2 "001")
-Condition 110 "2185559669" "(cpu_uncacheable || legacy_cpu_uncacheable || ((ENABLE_COHERENCY && cpu_we))) 1 -1" (2 "001")
-Condition 110 "2185559669" "(cpu_uncacheable || legacy_cpu_uncacheable || ((ENABLE_COHERENCY && cpu_we))) 1 -1" (3 "010")
-Condition 111 "455490193" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && ((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))) 1 -1" (3 "11")
-Condition 112 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (2 "0001")
-Condition 112 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (3 "0010")
-Condition 112 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (4 "0100")
-Condition 114 "1726770860" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
-Condition 116 "2075727869" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
-Condition 118 "2827438803" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
-Condition 120 "1958135573" "(coh_refill_snoop_pending || (((((ENABLE_COHERENCY && coh_snoop_valid) && req_buf_valid) && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))) 1 -1" (2 "01")
-Condition 120 "1958135573" "(coh_refill_snoop_pending || (((((ENABLE_COHERENCY && coh_snoop_valid) && req_buf_valid) && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))) 1 -1" (3 "10")
-Condition 121 "4164461971" "(cache_hit && ((!coh_snoop_hits_lookup)) && ((!coh_snoop_block))) 1 -1" (2 "101")
-Condition 121 "4164461971" "(cache_hit && ((!coh_snoop_hits_lookup)) && ((!coh_snoop_block))) 1 -1" (3 "110")
-Condition 122 "4020448731" "(victim_tag_entry[(TAG_BITS + 1)] && victim_tag_entry[TAG_BITS]) 1 -1" (1 "01")
-Condition 123 "1421357505" "(((!coh_snoop_valid)) && (((state == IDLE) && ((cpu_req && ((!uncacheable))) || cache_op_valid)) || ((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))))) 1 -1" (1 "01")
-Condition 127 "282309210" "((cpu_req && ((!uncacheable))) || cache_op_valid) 1 -1" (2 "01")
-Condition 129 "1481050654" "((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))) 1 -1" (3 "11011")
-Condition 135 "3652380112" "(((state == COMPARE) && cache_hit_for_request && ((!uncacheable))) || ((state == UC_WRESP) && bvalid) || ((state == UC_RDATA) && rvalid) || (state == ERROR_RESP)) 1 -1" (2 "0001")
-Condition 142 "2151186789" "(state == ERROR_RESP) 1 -1" (2 "1")
-Condition 143 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (2 "001")
-Condition 143 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (3 "010")
-Condition 143 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (4 "100")
-Condition 144 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (1 "011")
-Condition 144 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (2 "101")
-Condition 144 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (4 "111")
-Condition 146 "4066300739" "(bresp != 2'b0) 1 -1" (2 "1")
-Condition 147 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (1 "011")
-Condition 147 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (2 "101")
-Condition 147 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (4 "111")
-Condition 149 "3855396601" "(rresp != 2'b0) 1 -1" (2 "1")
-Condition 150 "1853467482" "(state == ERROR_RESP) 1 -1" (2 "1")
-Condition 151 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (1 "01")
-Condition 151 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (2 "10")
-Condition 151 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (3 "11")
-Condition 152 "3584445389" "(state == ERROR_RESP) 1 -1" (2 "1")
-Condition 153 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (1 "01")
-Condition 155 "3574179587" "(state == CACHE_DONE) 1 -1" (2 "1")
-Condition 156 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (1 "01")
-Condition 156 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (2 "10")
-Condition 156 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (3 "11")
-Condition 157 "3370719861" "(state == CACHE_DONE) 1 -1" (2 "1")
-Condition 158 "3093761226" "(maint_op == 5'b1) 1 -1" (2 "1")
-Condition 159 "2575154474" "(maint_op == 5'b00101) 1 -1" (2 "1")
-Condition 160 "607010893" "(maint_op == 5'b01001) 1 -1" (2 "1")
-Condition 161 "1678095782" "(maint_index_load_tag || maint_index_store_tag) 1 -1" (2 "01")
-Condition 161 "1678095782" "(maint_index_load_tag || maint_index_store_tag) 1 -1" (3 "10")
-Condition 162 "3234652410" "(maint_op == 5'b10101) 1 -1" (2 "1")
-Condition 163 "1099912446" "(maint_op == 5'b11001) 1 -1" (2 "1")
-Condition 164 "3593998666" "(maint_op == 5'b11101) 1 -1" (2 "1")
-Condition 165 "3697254965" "((maint_index_wbi || maint_index_tag) ? maint_way : hit_way) 1 -1" (2 "1")
-Condition 166 "3200327930" "(maint_index_wbi || maint_index_tag) 1 -1" (2 "01")
-Condition 166 "3200327930" "(maint_index_wbi || maint_index_tag) 1 -1" (3 "10")
-Condition 167 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (2 "101")
-Condition 167 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (3 "110")
-Condition 167 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (4 "111")
-Condition 168 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (2 "001")
-Condition 168 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (3 "010")
-Condition 168 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (4 "100")
+Condition 65 "1079991124" "(maint_clear_valid ? ((^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]})) : ((^{1'b1, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]}))) 1 -1" (1 "0")
+Condition 65 "1079991124" "(maint_clear_valid ? ((^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]})) : ((^{1'b1, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]}))) 1 -1" (2 "1")
+Condition 66 "1329996258" "(awready && awvalid) 1 -1" (1 "01")
+Condition 66 "1329996258" "(awready && awvalid) 1 -1" (2 "10")
+Condition 66 "1329996258" "(awready && awvalid) 1 -1" (3 "11")
+Condition 67 "3656494972" "(wready && wvalid) 1 -1" (1 "01")
+Condition 67 "3656494972" "(wready && wvalid) 1 -1" (2 "10")
+Condition 67 "3656494972" "(wready && wvalid) 1 -1" (3 "11")
+Condition 68 "1524110410" "(word_cnt == 3'd6) 1 -1" (1 "0")
+Condition 68 "1524110410" "(word_cnt == 3'd6) 1 -1" (2 "1")
+Condition 69 "3472728015" "(bready && bvalid) 1 -1" (1 "01")
+Condition 69 "3472728015" "(bready && bvalid) 1 -1" (2 "10")
+Condition 69 "3472728015" "(bready && bvalid) 1 -1" (3 "11")
+Condition 70 "3312478328" "(bresp != 2'b0) 1 -1" (1 "0")
+Condition 70 "3312478328" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 71 "2556878815" "(maint_clear_valid ? ((^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]})) : ((^{tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)], 1'b0, tag_ram[maint_target_way][lookup_index][(TAG_BITS - 1):0]}))) 1 -1" (1 "0")
+Condition 71 "2556878815" "(maint_clear_valid ? ((^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]})) : ((^{tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)], 1'b0, tag_ram[maint_target_way][lookup_index][(TAG_BITS - 1):0]}))) 1 -1" (2 "1")
+Condition 72 "2186825407" "(awready && awvalid) 1 -1" (2 "10")
+Condition 73 "3679989018" "(wready && wvalid) 1 -1" (2 "10")
+Condition 74 "1105181552" "((((!awvalid)) || awready) && (((!wvalid)) || wready)) 1 -1" (1 "01")
+Condition 76 "3670118411" "(((!wvalid)) || wready) 1 -1" (3 "10")
+Condition 77 "3428064681" "(bready && bvalid) 1 -1" (1 "01")
+Condition 78 "3291719706" "(rready && rvalid) 1 -1" (1 "01")
+Condition 79 "2380975339" "(arready && arvalid) 1 -1" (2 "10")
+Condition 80 "505111255" "(awready && awvalid) 1 -1" (2 "10")
+Condition 81 "4175703244" "(wready && wvalid) 1 -1" (2 "10")
+Condition 83 "4024966271" "(bready && bvalid) 1 -1" (1 "01")
+Condition 84 "2778556640" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 85 "2087181251" "(arready && arvalid) 1 -1" (2 "10")
+Condition 86 "87587153" "(rready && rvalid) 1 -1" (1 "01")
+Condition 87 "3303286038" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 88 "1440574080" "(cache_op_valid ? 8'd7 : (uncacheable ? 8'b0 : 8'd7)) 1 -1" (2 "1")
+Condition 90 "3147668225" "(cache_op_valid ? 4'b0010 : (uncacheable ? 4'b0 : 4'b0010)) 1 -1" (2 "1")
+Condition 94 "833623697" "(((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) ? maint_addr : (req_buf_valid ? req_buf_addr : cpu_addr)) 1 -1" (2 "1")
+Condition 95 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (2 "00001")
+Condition 95 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (3 "00010")
+Condition 95 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (4 "00100")
+Condition 95 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (5 "01000")
+Condition 95 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (6 "10000")
+Condition 96 "4278298376" "(state == CACHE_LOOKUP) 1 -1" (2 "1")
+Condition 97 "49332438" "(state == CACHE_WB_REQ) 1 -1" (2 "1")
+Condition 98 "3248935753" "(state == CACHE_WB_DATA) 1 -1" (2 "1")
+Condition 99 "877805972" "(state == CACHE_WB_RESP) 1 -1" (2 "1")
+Condition 100 "2608178621" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 102 "513843850" "(legacy_addr_uncacheable && ((cpu_addr[31:28] == 4'h4) || (cpu_addr[31:28] == 4'ha))) 1 -1" (1 "01")
+Condition 106 "3115373619" "(legacy_addr_uncacheable && ((req_buf_addr[31:28] == 4'h4) || (req_buf_addr[31:28] == 4'ha))) 1 -1" (1 "01")
+Condition 111 "4229207473" "(req_buf_uncacheable || legacy_req_uncacheable || ((ENABLE_COHERENCY && req_buf_we))) 1 -1" (2 "001")
+Condition 112 "2185559669" "(cpu_uncacheable || legacy_cpu_uncacheable || ((ENABLE_COHERENCY && cpu_we))) 1 -1" (2 "001")
+Condition 112 "2185559669" "(cpu_uncacheable || legacy_cpu_uncacheable || ((ENABLE_COHERENCY && cpu_we))) 1 -1" (3 "010")
+Condition 113 "455490193" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && ((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))) 1 -1" (3 "11")
+Condition 114 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (2 "0001")
+Condition 114 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (3 "0010")
+Condition 114 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (4 "0100")
+Condition 116 "1726770860" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 118 "2075727869" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 120 "2827438803" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 122 "1958135573" "(coh_refill_snoop_pending || (((((ENABLE_COHERENCY && coh_snoop_valid) && req_buf_valid) && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))) 1 -1" (2 "01")
+Condition 122 "1958135573" "(coh_refill_snoop_pending || (((((ENABLE_COHERENCY && coh_snoop_valid) && req_buf_valid) && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))) 1 -1" (3 "10")
+Condition 123 "4040199138" "(((|tag_parity_bad)) || ((|data_parity_bad))) 1 -1" (2 "01")
+Condition 123 "4040199138" "(((|tag_parity_bad)) || ((|data_parity_bad))) 1 -1" (3 "10")
+Condition 124 "4164461971" "(cache_hit && ((!coh_snoop_hits_lookup)) && ((!coh_snoop_block))) 1 -1" (2 "101")
+Condition 124 "4164461971" "(cache_hit && ((!coh_snoop_hits_lookup)) && ((!coh_snoop_block))) 1 -1" (3 "110")
+Condition 125 "4020448731" "(victim_tag_entry[(TAG_BITS + 1)] && victim_tag_entry[TAG_BITS]) 1 -1" (1 "01")
+Condition 126 "1421357505" "(((!coh_snoop_valid)) && (((state == IDLE) && ((cpu_req && ((!uncacheable))) || cache_op_valid)) || ((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))))) 1 -1" (1 "01")
+Condition 130 "282309210" "((cpu_req && ((!uncacheable))) || cache_op_valid) 1 -1" (2 "01")
+Condition 132 "1481050654" "((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))) 1 -1" (3 "11011")
+Condition 138 "3340673399" "(((state == COMPARE) && cache_hit_for_request && ((!uncacheable)) && ((!dcache_parity_error))) || ((state == UC_WRESP) && bvalid) || ((state == UC_RDATA) && rvalid) || (state == ERROR_RESP)) 1 -1" (2 "0001")
+Condition 139 "3723257552" "((state == COMPARE) && cache_hit_for_request && ((!uncacheable)) && ((!dcache_parity_error))) 1 -1" (4 "1110")
+Condition 145 "2076647098" "(state == ERROR_RESP) 1 -1" (2 "1")
+Condition 146 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (2 "001")
+Condition 146 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (3 "010")
+Condition 146 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (4 "100")
+Condition 147 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (1 "011")
+Condition 147 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (2 "101")
+Condition 147 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (4 "111")
+Condition 149 "4066300739" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 150 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (1 "011")
+Condition 150 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (2 "101")
+Condition 150 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (4 "111")
+Condition 152 "3855396601" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 153 "1853467482" "(state == ERROR_RESP) 1 -1" (2 "1")
+Condition 154 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (1 "01")
+Condition 154 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (2 "10")
+Condition 154 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (3 "11")
+Condition 155 "3584445389" "(state == ERROR_RESP) 1 -1" (2 "1")
+Condition 156 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (1 "01")
+Condition 158 "3574179587" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 159 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (1 "01")
+Condition 159 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (2 "10")
+Condition 159 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (3 "11")
+Condition 160 "3370719861" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 161 "3093761226" "(maint_op == 5'b1) 1 -1" (2 "1")
+Condition 162 "2575154474" "(maint_op == 5'b00101) 1 -1" (2 "1")
+Condition 163 "607010893" "(maint_op == 5'b01001) 1 -1" (2 "1")
+Condition 164 "1678095782" "(maint_index_load_tag || maint_index_store_tag) 1 -1" (2 "01")
+Condition 164 "1678095782" "(maint_index_load_tag || maint_index_store_tag) 1 -1" (3 "10")
+Condition 165 "3234652410" "(maint_op == 5'b10101) 1 -1" (2 "1")
+Condition 166 "1099912446" "(maint_op == 5'b11001) 1 -1" (2 "1")
+Condition 167 "3593998666" "(maint_op == 5'b11101) 1 -1" (2 "1")
+Condition 168 "3697254965" "((maint_index_wbi || maint_index_tag) ? maint_way : hit_way) 1 -1" (2 "1")
+Condition 169 "3200327930" "(maint_index_wbi || maint_index_tag) 1 -1" (2 "01")
+Condition 169 "3200327930" "(maint_index_wbi || maint_index_tag) 1 -1" (3 "10")
+Condition 170 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (2 "101")
+Condition 170 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (3 "110")
+Condition 170 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (4 "111")
+Condition 171 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (2 "001")
+Condition 171 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (3 "010")
+Condition 171 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (4 "100")
 
-// ID: EXCL-UVM-0049
+// ID: EXCL-UVM-0050
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1536517759 4142021445"
 MODULE: l2_cache_wt
@@ -2157,7 +2174,7 @@ Condition 33 "3452629743" "(snoop_valid && (beat_index == snoop_index) && (beat_
 Condition 33 "3452629743" "(snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) 1 -1" (3 "110")
 Condition 33 "3452629743" "(snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0050
+// ID: EXCL-UVM-0051
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2910715491 4149260386"
 MODULE: apb_wdt
@@ -2172,7 +2189,7 @@ Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
 Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
 Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0051
+// ID: EXCL-UVM-0052
 // CATEGORY: Cache & Memory Subsystem
 // CHECKSUM: "3975723183 102336547"
 MODULE: icache
@@ -2188,16 +2205,13 @@ Condition 10 "634915445" "(refill_error || (rresp != 2'b0)) 1 -1" (3 "10")
 Condition 11 "3020453582" "(rresp != 2'b0) 1 -1" (2 "1")
 Condition 12 "1047006440" "(maint_req && ((!cpu_req))) 1 -1" (1 "01")
 Condition 12 "1047006440" "(maint_req && ((!cpu_req))) 1 -1" (2 "10")
-Condition 12 "1047006440" "(maint_req && ((!cpu_req))) 1 -1" (3 "11")
 Condition 13 "1537418234" "(arready && arvalid) 1 -1" (2 "10")
 Condition 14 "2306790429" "(rvalid && rready) 1 -1" (2 "10")
 Condition 15 "724934748" "(rresp != 2'b0) 1 -1" (2 "1")
 Condition 20 "4043950739" "(maint_op == 5'b00100) 1 -1" (2 "1")
 Condition 21 "2275621262" "(maint_op == 5'b01000) 1 -1" (2 "1")
-Condition 22 "1773354118" "(maint_op == 5'b10000) 1 -1" (2 "1")
 Condition 24 "1706224794" "((state == IDLE) && (cpu_req || maint_req)) 1 -1" (2 "10")
 Condition 26 "1214819370" "(cpu_req || maint_req) 1 -1" (1 "00")
-Condition 26 "1214819370" "(cpu_req || maint_req) 1 -1" (2 "01")
 Condition 27 "105296432" "((state == LOOKUP) && cpu_req && cpu_addr_ok) 1 -1" (2 "101")
 Condition 29 "3903685141" "((state == REFILL) && rvalid && rlast && ( ! (refill_error || (rresp != 2'b0)) )) 1 -1" (2 "1011")
 Condition 29 "3903685141" "((state == REFILL) && rvalid && rlast && ( ! (refill_error || (rresp != 2'b0)) )) 1 -1" (4 "1110")
@@ -2205,27 +2219,18 @@ Condition 31 "3410770109" "( ! (refill_error || (rresp != 2'b0)) ) 1 -1" (2 "1")
 Condition 32 "2143926841" "(refill_error || (rresp != 2'b0)) 1 -1" (2 "01")
 Condition 32 "2143926841" "(refill_error || (rresp != 2'b0)) 1 -1" (3 "10")
 Condition 33 "4020833575" "(rresp != 2'b0) 1 -1" (2 "1")
-Condition 35 "4294910825" "(((state == IDLE) && maint_req) ? cache_op_addr[10:5] : (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5])) 1 -1" (2 "1")
-Condition 36 "3621298047" "((state == IDLE) && maint_req) 1 -1" (1 "01")
-Condition 36 "3621298047" "((state == IDLE) && maint_req) 1 -1" (3 "11")
 Condition 39 "2228007650" "(((|tag_parity_bad)) || ((|data_parity_bad))) 1 -1" (2 "01")
 Condition 39 "2228007650" "(((|tag_parity_bad)) || ((|data_parity_bad))) 1 -1" (3 "10")
-Condition 41 "3823703787" "((state == IDLE) && ((!maint_req))) 1 -1" (2 "10")
 Condition 45 "1006472646" "(((state == LOOKUP) && cache_hit) || (state == ERROR)) 1 -1" (2 "01")
 Condition 48 "2393135638" "(state == ERROR) 1 -1" (2 "1")
 Condition 49 "4195072364" "(state == ERROR) 1 -1" (2 "1")
 Condition 50 "1962533762" "(state == ERROR) 1 -1" (2 "1")
-Condition 51 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (1 "01")
-Condition 51 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (3 "11")
-Condition 53 "3574179587" "(state == CACHE_DONE) 1 -1" (2 "1")
 Condition 54 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (1 "01")
-Condition 54 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (2 "10")
 Condition 54 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (3 "11")
-Condition 55 "3370719861" "(state == CACHE_DONE) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0052
+// ID: EXCL-UVM-0053
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "892611322 4064681054"
+// CHECKSUM: "1888420073 1730744806"
 MODULE: mips_soc_impl
 Condition 1 "3253009356" "(tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate) 1 -1" (2 "001")
 Condition 1 "3253009356" "(tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate) 1 -1" (3 "010")
@@ -2247,15 +2252,13 @@ Condition 12 "3900324519" "(ipi_core1_invalidate_valid && ipi_core1_invalidate_t
 Condition 12 "3900324519" "(ipi_core1_invalidate_valid && ipi_core1_invalidate_target) 1 -1" (2 "10")
 Condition 12 "3900324519" "(ipi_core1_invalidate_valid && ipi_core1_invalidate_target) 1 -1" (3 "11")
 Condition 13 "3014300374" "(rst_n & ((~wdt_reset))) 1 -1" (2 "10")
-Condition 14 "2660777202" "(ipi_core1_invalidate_valid && ((!ipi_core1_invalidate_target))) 1 -1" (2 "10")
-Condition 14 "2660777202" "(ipi_core1_invalidate_valid && ((!ipi_core1_invalidate_target))) 1 -1" (3 "11")
-Condition 15 "3169431388" "((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate) 1 -1" (2 "01")
-Condition 15 "3169431388" "((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate) 1 -1" (3 "10")
-Condition 16 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (1 "01")
-Condition 16 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (2 "10")
-Condition 16 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (3 "11")
+Condition 14 "3169431388" "((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate) 1 -1" (2 "01")
+Condition 14 "3169431388" "((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate) 1 -1" (3 "10")
+Condition 15 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (1 "01")
+Condition 15 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (2 "10")
+Condition 15 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0053
+// ID: EXCL-UVM-0054
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "41468714 2059093108"
 MODULE: axi_crossbar
@@ -2430,7 +2433,7 @@ Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (2 "
 Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (3 "110")
 Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0054
+// ID: EXCL-UVM-0055
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2806492800 3075083106"
 MODULE: axi_id_tracker
@@ -2441,37 +2444,28 @@ Condition 2 "861807295" "(retire_valid && retire_hit) 1 -1" (1 "01")
 Condition 2 "861807295" "(retire_valid && retire_hit) 1 -1" (2 "10")
 Condition 2 "861807295" "(retire_valid && retire_hit) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0055
+// ID: EXCL-UVM-0056
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3979373752 1255268996"
+// CHECKSUM: "2577213487 3982410587"
 MODULE: mips_fpu
 Condition 1 "2765105362" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (1 "01")
 Condition 1 "2765105362" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (2 "10")
 Condition 1 "2765105362" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (3 "11")
-Condition 2 "2326273930" "(a_double[62:52] == 11'h7ff) 1 -1" (1 "0")
 Condition 2 "2326273930" "(a_double[62:52] == 11'h7ff) 1 -1" (2 "1")
-Condition 3 "1088454107" "(a_double[51:0] != 0) 1 -1" (1 "0")
 Condition 3 "1088454107" "(a_double[51:0] != 0) 1 -1" (2 "1")
 Condition 4 "1696843991" "((b_double[62:52] == 11'h7ff) && (b_double[51:0] != 0)) 1 -1" (1 "01")
 Condition 4 "1696843991" "((b_double[62:52] == 11'h7ff) && (b_double[51:0] != 0)) 1 -1" (2 "10")
 Condition 4 "1696843991" "((b_double[62:52] == 11'h7ff) && (b_double[51:0] != 0)) 1 -1" (3 "11")
-Condition 5 "2576155957" "(b_double[62:52] == 11'h7ff) 1 -1" (1 "0")
 Condition 5 "2576155957" "(b_double[62:52] == 11'h7ff) 1 -1" (2 "1")
-Condition 6 "2747917017" "(b_double[51:0] != 0) 1 -1" (1 "0")
 Condition 6 "2747917017" "(b_double[51:0] != 0) 1 -1" (2 "1")
-Condition 7 "852089499" "(a_nan || b_nan) 1 -1" (1 "00")
 Condition 7 "852089499" "(a_nan || b_nan) 1 -1" (2 "01")
 Condition 7 "852089499" "(a_nan || b_nan) 1 -1" (3 "10")
-Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (1 "011")
 Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (2 "101")
 Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (3 "110")
 Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (4 "111")
-Condition 9 "1346141122" "(op == OP_DIV) 1 -1" (1 "0")
 Condition 9 "1346141122" "(op == OP_DIV) 1 -1" (2 "1")
 Condition 10 "2116365228" "(b_double[62:52] == 11'b0) 1 -1" (1 "0")
-Condition 10 "2116365228" "(b_double[62:52] == 11'b0) 1 -1" (2 "1")
 Condition 11 "532431330" "(b_double[51:0] == 0) 1 -1" (1 "0")
-Condition 11 "532431330" "(b_double[51:0] == 0) 1 -1" (2 "1")
 Condition 12 "3228047021" "(((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))) 1 -1" (1 "00")
 Condition 12 "3228047021" "(((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))) 1 -1" (2 "01")
 Condition 12 "3228047021" "(((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))) 1 -1" (3 "10")
@@ -2659,8 +2653,24 @@ Condition 143 "569758450" "(op == OP_MADD) 1 -1" (2 "1")
 Condition 144 "1416387357" "(op == OP_MSUB) 1 -1" (2 "1")
 Condition 145 "3061031239" "(op == OP_NMADD) 1 -1" (2 "1")
 Condition 146 "3870888912" "(op == OP_NMSUB) 1 -1" (2 "1")
+Condition 147 "950057896" "(fmt_double && (op == OP_MUL) && (((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) && ((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff))) 1 -1" (1 "0111")
+Condition 147 "950057896" "(fmt_double && (op == OP_MUL) && (((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) && ((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff))) 1 -1" (2 "1011")
+Condition 147 "950057896" "(fmt_double && (op == OP_MUL) && (((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) && ((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff))) 1 -1" (3 "1101")
+Condition 147 "950057896" "(fmt_double && (op == OP_MUL) && (((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) && ((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff))) 1 -1" (4 "1110")
+Condition 147 "950057896" "(fmt_double && (op == OP_MUL) && (((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) && ((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff))) 1 -1" (5 "1111")
+Condition 149 "512571873" "(((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) 1 -1" (2 "01")
+Condition 149 "512571873" "(((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) || ((b_double[62:52] == 11'b0) && (b_double[51:0] != 0))) 1 -1" (3 "10")
+Condition 150 "2044736290" "((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) 1 -1" (1 "01")
+Condition 150 "2044736290" "((a_double[62:52] == 11'b0) && (a_double[51:0] != 0)) 1 -1" (3 "11")
+Condition 152 "1617190056" "(a_double[51:0] != 0) 1 -1" (2 "1")
+Condition 153 "3520652059" "((b_double[62:52] == 11'b0) && (b_double[51:0] != 0)) 1 -1" (1 "01")
+Condition 153 "3520652059" "((b_double[62:52] == 11'b0) && (b_double[51:0] != 0)) 1 -1" (3 "11")
+Condition 155 "718412294" "(b_double[51:0] != 0) 1 -1" (2 "1")
+Condition 156 "2202182601" "((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff)) 1 -1" (1 "00")
+Condition 156 "2202182601" "((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff)) 1 -1" (2 "01")
+Condition 156 "2202182601" "((a_double[62:52] < 11'h3ff) || (b_double[62:52] < 11'h3ff)) 1 -1" (3 "10")
 
-// ID: EXCL-UVM-0056
+// ID: EXCL-UVM-0057
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2071608225 1916506458"
 MODULE: ddr4_phy_behavioral
@@ -2681,7 +2691,7 @@ Condition 5 "1746924362" "((state == ST_READY) && ((!rd_valid))) 1 -1" (3 "11")
 Condition 6 "744500721" "(state == ST_READY) 1 -1" (2 "1")
 Condition 7 "3058410147" "(state == ST_REFRESH) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0057
+// ID: EXCL-UVM-0058
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "1341811719 1637099011"
 MODULE: apb_axi_dma
@@ -2721,7 +2731,7 @@ Condition 31 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (3 "11")
 Condition 32 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (2 "01")
 Condition 32 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (3 "10")
 
-// ID: EXCL-UVM-0058
+// ID: EXCL-UVM-0059
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1159426980 2213130587"
 MODULE: mips_tlb
@@ -4844,7 +4854,7 @@ Condition 964 "1388825724" "(g_lookup1[63].vpn2_match1 && g_lookup1[63].asid_mat
 Condition 964 "1388825724" "(g_lookup1[63].vpn2_match1 && g_lookup1[63].asid_match1) 1 -1" (2 "10")
 Condition 964 "1388825724" "(g_lookup1[63].vpn2_match1 && g_lookup1[63].asid_match1) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0059
+// ID: EXCL-UVM-0060
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2985369504 210868498"
 MODULE: axi_ddr_behavioral
@@ -4870,9 +4880,9 @@ Condition 8 "2108852241" "(s_bvalid && s_bready) 1 -1" (1 "01")
 Condition 8 "2108852241" "(s_bvalid && s_bready) 1 -1" (2 "10")
 Condition 8 "2108852241" "(s_bvalid && s_bready) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0060
+// ID: EXCL-UVM-0061
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3371145080 768270639"
+// CHECKSUM: "3681053710 2720478246"
 MODULE: mips_page_table_walker
 Condition 1 "1494751667" "(pte[0] && (((!u)) || pte[3]) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]))) 1 -1" (1 "011")
 Condition 1 "1494751667" "(pte[0] && (((!u)) || pte[3]) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]))) 1 -1" (2 "101")
@@ -4892,14 +4902,20 @@ Condition 6 "530369116" "(a == 2'b1) 1 -1" (2 "1")
 Condition 7 "3342862110" "(pte[1] || pte[2]) 1 -1" (1 "00")
 Condition 7 "3342862110" "(pte[1] || pte[2]) 1 -1" (2 "01")
 Condition 7 "3342862110" "(pte[1] || pte[2]) 1 -1" (3 "10")
-Condition 8 "3901402235" "(mem_valid && mem_ready) 1 -1" (1 "01")
-Condition 8 "3901402235" "(mem_valid && mem_ready) 1 -1" (2 "10")
-Condition 8 "3901402235" "(mem_valid && mem_ready) 1 -1" (3 "11")
-Condition 9 "865928428" "(mem_valid && mem_ready) 1 -1" (1 "01")
-Condition 9 "865928428" "(mem_valid && mem_ready) 1 -1" (2 "10")
-Condition 9 "865928428" "(mem_valid && mem_ready) 1 -1" (3 "11")
+Condition 8 "4143952170" "(pte[13:12] == 2'b0) 1 -1" (1 "0")
+Condition 8 "4143952170" "(pte[13:12] == 2'b0) 1 -1" (2 "1")
+Condition 9 "4125943496" "(pte[15:12] == 4'b0) 1 -1" (1 "0")
+Condition 9 "4125943496" "(pte[15:12] == 4'b0) 1 -1" (2 "1")
+Condition 10 "2911840853" "(pte[17:12] == 6'b0) 1 -1" (1 "0")
+Condition 10 "2911840853" "(pte[17:12] == 6'b0) 1 -1" (2 "1")
+Condition 11 "3901402235" "(mem_valid && mem_ready) 1 -1" (1 "01")
+Condition 11 "3901402235" "(mem_valid && mem_ready) 1 -1" (2 "10")
+Condition 11 "3901402235" "(mem_valid && mem_ready) 1 -1" (3 "11")
+Condition 12 "865928428" "(mem_valid && mem_ready) 1 -1" (1 "01")
+Condition 12 "865928428" "(mem_valid && mem_ready) 1 -1" (2 "10")
+Condition 12 "865928428" "(mem_valid && mem_ready) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0061
+// ID: EXCL-UVM-0062
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3173670910 3574324562"
 MODULE: retire_trace_capture
@@ -4908,7 +4924,7 @@ Condition 2 "2621736949" "(rst_n && obs_if.retire_valid) 1 -1" (1 "01")
 Condition 2 "2621736949" "(rst_n && obs_if.retire_valid) 1 -1" (3 "11")
 Condition 3 "628755860" "(fd != 0) 1 -1" (1 "0")
 
-// ID: EXCL-UVM-0062
+// ID: EXCL-UVM-0063
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1363931416 2109814194"
 MODULE: qspi_cmd_behavioral
@@ -5049,7 +5065,7 @@ Condition 69 "2970649885" "(irq_en_r[0] & irq_pending_r) 1 -1" (1 "01")
 Condition 69 "2970649885" "(irq_en_r[0] & irq_pending_r) 1 -1" (2 "10")
 Condition 69 "2970649885" "(irq_en_r[0] & irq_pending_r) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0063
+// ID: EXCL-UVM-0064
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2772071125 3425521730"
 MODULE: uart_pad_wrapper
@@ -5062,7 +5078,7 @@ Condition 6 "3526577848" "(enable ? uart_dsr_n_pad : 1'b0) 1 -1" (1 "0")
 Condition 7 "2991534556" "(enable ? uart_dcd_n_pad : 1'b0) 1 -1" (1 "0")
 Condition 8 "1581281772" "(enable ? uart_ri_n_pad : 1'b1) 1 -1" (1 "0")
 
-// ID: EXCL-UVM-0064
+// ID: EXCL-UVM-0065
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4288013028 879894472"
 MODULE: axi_ddr4_controller
@@ -5200,7 +5216,7 @@ Condition 62 "1133107358" "((state == ST_WRITE_DATA) && write_active) 1 -1" (2 "
 Condition 62 "1133107358" "((state == ST_WRITE_DATA) && write_active) 1 -1" (3 "11")
 Condition 63 "366057905" "(state == ST_WRITE_DATA) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0065
+// ID: EXCL-UVM-0066
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1581893224 2639902673"
 MODULE: apb_mmu_context_status
@@ -5222,7 +5238,7 @@ Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (2 "10
 Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (3 "110")
 Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0066
+// ID: EXCL-UVM-0067
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3915859991 874556294"
 MODULE: apb_ddr4_status
@@ -5249,7 +5265,7 @@ Condition 9 "963958220" "(fatal_error && (error_code != 16'b0)) 1 -1" (2 "10")
 Condition 9 "963958220" "(fatal_error && (error_code != 16'b0)) 1 -1" (3 "11")
 Condition 10 "1086754690" "(error_code != 16'b0) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0067
+// ID: EXCL-UVM-0068
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2914053452 4054228083"
 MODULE: l2_cache_caching
@@ -5367,7 +5383,7 @@ Condition 54 "383524713" "(s_arsize != 3'b010) 1 -1" (2 "1")
 Condition 55 "45696949" "(s_araddr[1:0] != 2'b0) 1 -1" (2 "1")
 Condition 56 "4226512845" "(s_arburst != 2'b1) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0068
+// ID: EXCL-UVM-0069
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3372399530 699666711"
 MODULE: cpu_scheduler
@@ -5397,7 +5413,7 @@ Condition 13 "951481872" "((state == ST_RESTORE) && ctx_restore_ack) 1 -1" (2 "1
 Condition 13 "951481872" "((state == ST_RESTORE) && ctx_restore_ack) 1 -1" (3 "11")
 Condition 14 "2599305210" "(state == ST_RESTORE) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0069
+// ID: EXCL-UVM-0070
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1135157623 1695377700"
 MODULE: mips_regfile
@@ -5414,7 +5430,7 @@ Condition 20 "4049338826" "(shadow_we && (shadow_wset == active_prev_set) && (sh
 Condition 20 "4049338826" "(shadow_we && (shadow_wset == active_prev_set) && (shadow_waddr == shadow_raddr)) 1 -1" (4 "111")
 Condition 21 "3540263937" "(shadow_wset == active_prev_set) 1 -1" (1 "0")
 
-// ID: EXCL-UVM-0070
+// ID: EXCL-UVM-0071
 // CATEGORY: Bus & Fabric Interconnect
 // CHECKSUM: "1023251519 3582447580"
 MODULE: axi2apb_bridge
@@ -5435,7 +5451,7 @@ Condition 25 "314855942" "(state == IDLE) 1 -1" (1 "0")
 Condition 26 "1859129159" "(s_wvalid ? s_wstrb : wstrb_latch) 1 -1" (1 "0")
 Condition 34 "2472809258" "((arburst_latch == 2'b1) ? ((araddr_latch + ({24'b0, read_setup_beat} << arsize_latch))) : araddr_latch) 1 -1" (1 "0")
 
-// ID: EXCL-UVM-0071
+// ID: EXCL-UVM-0072
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3303551202 1759799712"
 MODULE: apb_perf_counters
@@ -5443,7 +5459,7 @@ Condition 1 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
 Condition 1 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
 Condition 1 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0072
+// ID: EXCL-UVM-0073
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2568128339 1247539676"
 MODULE: qspi_soc_pad_mux
@@ -5457,7 +5473,7 @@ Condition 11 "2980518480" "(qspi_io_oe[1] ? qspi_io_o[1] : 1'bz) 1 -1" (2 "1")
 Condition 12 "3721008354" "(qspi_io_oe[2] ? qspi_io_o[2] : 1'bz) 1 -1" (2 "1")
 Condition 13 "1293603624" "(qspi_io_oe[3] ? qspi_io_o[3] : 1'bz) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0073
+// ID: EXCL-UVM-0074
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "832457901 1759081225"
 MODULE: qspi_apb_integration
@@ -5493,7 +5509,7 @@ Condition 17 "1531429977" "(ENABLE_SHARED_ARB && (trigger_access || active)) 1 -
 Condition 18 "3171519770" "(trigger_access || active) 1 -1" (2 "01")
 Condition 18 "3171519770" "(trigger_access || active) 1 -1" (3 "10")
 
-// ID: EXCL-UVM-0074
+// ID: EXCL-UVM-0075
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "1633348978 3494448046"
 MODULE: soc_core_subsystem
@@ -5518,7 +5534,7 @@ Condition 14 "1746375194" "(data_rvalid && ((!ptw_axi_busy))) 1 -1" (2 "10")
 Condition 15 "341463080" "(ptw_axi_busy ? 1'b1 : core_data_rready) 1 -1" (2 "1")
 Condition 16 "2056329113" "(data_rresp != 2'b0) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0075
+// ID: EXCL-UVM-0076
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "314633967 3274379810"
 MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )
@@ -5668,7 +5684,7 @@ Condition 66 "4278448155" "(ddr4_fatal_error | ddr4_ecc_uncorrectable_error) 1 -
 Condition 66 "4278448155" "(ddr4_fatal_error | ddr4_ecc_uncorrectable_error) 1 -1" (2 "01")
 Condition 66 "4278448155" "(ddr4_fatal_error | ddr4_ecc_uncorrectable_error) 1 -1" (3 "10")
 
-// ID: EXCL-UVM-0076
+// ID: EXCL-UVM-0077
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "314633967 2472304628"
 MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )
@@ -5831,9 +5847,9 @@ Condition 70 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault
 Condition 70 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault_wait) 1 -1" (3 "110")
 Condition 70 "2081796206" "(fault_sel & apb_penable & g_apb_fault_injector.fault_wait) 1 -1" (4 "111")
 
-// ID: EXCL-UVM-0077
+// ID: EXCL-UVM-0078
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3949678489 1134209161"
+// CHECKSUM: "1408932106 686539266"
 MODULE: mips_control
 Condition 3 "1455547439" "((rt == 5'b0) && (rd == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (1 "011")
 Condition 3 "1455547439" "((rt == 5'b0) && (rd == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (2 "101")
@@ -5885,92 +5901,94 @@ Condition 37 "1483952554" "(func == 6'b0) 1 -1" (1 "0")
 Condition 37 "1483952554" "(func == 6'b0) 1 -1" (2 "1")
 Condition 38 "1324418314" "(func == 6'b100000) 1 -1" (1 "0")
 Condition 38 "1324418314" "(func == 6'b100000) 1 -1" (2 "1")
-Condition 39 "759263214" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (1 "01")
-Condition 39 "759263214" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (2 "10")
-Condition 39 "759263214" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (3 "11")
-Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (1 "0000")
-Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (2 "0001")
-Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (3 "0010")
-Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (4 "0100")
-Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (5 "1000")
-Condition 41 "2565516427" "( ! ((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) ) 1 -1" (1 "0")
-Condition 41 "2565516427" "( ! ((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) ) 1 -1" (2 "1")
-Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (1 "0000")
-Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (2 "0001")
-Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (3 "0010")
-Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (4 "0100")
-Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (5 "1000")
-Condition 43 "1675736405" "(rt == 5'b0) 1 -1" (1 "0")
-Condition 43 "1675736405" "(rt == 5'b0) 1 -1" (2 "1")
-Condition 44 "1163564436" "(rt == 5'b1) 1 -1" (1 "0")
-Condition 44 "1163564436" "(rt == 5'b1) 1 -1" (2 "1")
-Condition 45 "2333632173" "(rt == 5'd2) 1 -1" (1 "0")
-Condition 45 "2333632173" "(rt == 5'd2) 1 -1" (2 "1")
-Condition 46 "1719504141" "(rt == 5'd3) 1 -1" (1 "0")
-Condition 46 "1719504141" "(rt == 5'd3) 1 -1" (2 "1")
-Condition 47 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (1 "00")
-Condition 47 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (2 "01")
-Condition 47 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (3 "10")
-Condition 48 "205629015" "(inst[10:0] != 11'b0) 1 -1" (1 "0")
-Condition 48 "205629015" "(inst[10:0] != 11'b0) 1 -1" (2 "1")
-Condition 49 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (1 "01")
-Condition 49 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (2 "10")
-Condition 49 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (3 "11")
-Condition 50 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (1 "00")
-Condition 50 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (2 "01")
-Condition 50 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (3 "10")
-Condition 51 "3388376515" "(rs == 5'b00010) 1 -1" (1 "0")
-Condition 51 "3388376515" "(rs == 5'b00010) 1 -1" (2 "1")
-Condition 52 "3606998494" "(rs == 5'b00110) 1 -1" (1 "0")
-Condition 52 "3606998494" "(rs == 5'b00110) 1 -1" (2 "1")
-Condition 53 "3441580578" "(inst[15:11] != 5'd31) 1 -1" (1 "0")
-Condition 53 "3441580578" "(inst[15:11] != 5'd31) 1 -1" (2 "1")
-Condition 54 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (1 "01")
-Condition 54 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (2 "10")
-Condition 54 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (3 "11")
-Condition 55 "1602123450" "(rs == 5'b10001) 1 -1" (1 "0")
-Condition 55 "1602123450" "(rs == 5'b10001) 1 -1" (2 "1")
-Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (1 "000")
-Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (2 "001")
-Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (3 "010")
-Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (4 "100")
-Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (1 "011")
-Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (2 "101")
-Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (3 "110")
-Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (4 "111")
-Condition 58 "2463493148" "(func != 6'h12) 1 -1" (1 "0")
-Condition 58 "2463493148" "(func != 6'h12) 1 -1" (2 "1")
-Condition 59 "4208424476" "(func != 6'h13) 1 -1" (1 "0")
-Condition 59 "4208424476" "(func != 6'h13) 1 -1" (2 "1")
-Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (1 "011")
-Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (2 "101")
-Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (3 "110")
-Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (4 "111")
-Condition 61 "3938458045" "(rs == 5'b10100) 1 -1" (1 "0")
-Condition 61 "3938458045" "(rs == 5'b10100) 1 -1" (2 "1")
-Condition 62 "1544494983" "(func != 6'h20) 1 -1" (1 "0")
-Condition 62 "1544494983" "(func != 6'h20) 1 -1" (2 "1")
-Condition 63 "2454580414" "(func != 6'h21) 1 -1" (1 "0")
-Condition 63 "2454580414" "(func != 6'h21) 1 -1" (2 "1")
-Condition 64 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (1 "00")
-Condition 64 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (2 "01")
-Condition 64 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (3 "10")
-Condition 65 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (1 "01")
-Condition 65 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (2 "10")
-Condition 65 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (3 "11")
-Condition 66 "3074271552" "(rs == 5'b10000) 1 -1" (1 "0")
-Condition 66 "3074271552" "(rs == 5'b10000) 1 -1" (2 "1")
-Condition 67 "2467127709" "(func == 6'h20) 1 -1" (1 "0")
-Condition 67 "2467127709" "(func == 6'h20) 1 -1" (2 "1")
-Condition 68 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (1 "01")
-Condition 68 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (2 "10")
-Condition 68 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (3 "11")
-Condition 69 "3494240371" "(rs == 5'b10001) 1 -1" (1 "0")
-Condition 69 "3494240371" "(rs == 5'b10001) 1 -1" (2 "1")
-Condition 70 "365623692" "(func == 6'h21) 1 -1" (1 "0")
-Condition 70 "365623692" "(func == 6'h21) 1 -1" (2 "1")
+Condition 39 "2690739902" "(func == 6'h0f) 1 -1" (1 "0")
+Condition 40 "3767516454" "(sa != 5'b0) 1 -1" (2 "1")
+Condition 41 "2476197469" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (1 "01")
+Condition 41 "2476197469" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (2 "10")
+Condition 41 "2476197469" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (3 "11")
+Condition 42 "1157534527" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (1 "0000")
+Condition 42 "1157534527" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (2 "0001")
+Condition 42 "1157534527" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (3 "0010")
+Condition 42 "1157534527" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (4 "0100")
+Condition 42 "1157534527" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (5 "1000")
+Condition 43 "2565516427" "( ! ((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) ) 1 -1" (1 "0")
+Condition 43 "2565516427" "( ! ((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) ) 1 -1" (2 "1")
+Condition 44 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (1 "0000")
+Condition 44 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (2 "0001")
+Condition 44 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (3 "0010")
+Condition 44 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (4 "0100")
+Condition 44 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (5 "1000")
+Condition 45 "1675736405" "(rt == 5'b0) 1 -1" (1 "0")
+Condition 45 "1675736405" "(rt == 5'b0) 1 -1" (2 "1")
+Condition 46 "1163564436" "(rt == 5'b1) 1 -1" (1 "0")
+Condition 46 "1163564436" "(rt == 5'b1) 1 -1" (2 "1")
+Condition 47 "2333632173" "(rt == 5'd2) 1 -1" (1 "0")
+Condition 47 "2333632173" "(rt == 5'd2) 1 -1" (2 "1")
+Condition 48 "1719504141" "(rt == 5'd3) 1 -1" (1 "0")
+Condition 48 "1719504141" "(rt == 5'd3) 1 -1" (2 "1")
+Condition 49 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (1 "00")
+Condition 49 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (2 "01")
+Condition 49 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (3 "10")
+Condition 50 "205629015" "(inst[10:0] != 11'b0) 1 -1" (1 "0")
+Condition 50 "205629015" "(inst[10:0] != 11'b0) 1 -1" (2 "1")
+Condition 51 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (1 "01")
+Condition 51 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (2 "10")
+Condition 51 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (3 "11")
+Condition 52 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (1 "00")
+Condition 52 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (2 "01")
+Condition 52 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (3 "10")
+Condition 53 "3388376515" "(rs == 5'b00010) 1 -1" (1 "0")
+Condition 53 "3388376515" "(rs == 5'b00010) 1 -1" (2 "1")
+Condition 54 "3606998494" "(rs == 5'b00110) 1 -1" (1 "0")
+Condition 54 "3606998494" "(rs == 5'b00110) 1 -1" (2 "1")
+Condition 55 "3441580578" "(inst[15:11] != 5'd31) 1 -1" (1 "0")
+Condition 55 "3441580578" "(inst[15:11] != 5'd31) 1 -1" (2 "1")
+Condition 56 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (1 "01")
+Condition 56 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (2 "10")
+Condition 56 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (3 "11")
+Condition 57 "1602123450" "(rs == 5'b10001) 1 -1" (1 "0")
+Condition 57 "1602123450" "(rs == 5'b10001) 1 -1" (2 "1")
+Condition 58 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (1 "000")
+Condition 58 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (2 "001")
+Condition 58 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (3 "010")
+Condition 58 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (4 "100")
+Condition 59 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (1 "011")
+Condition 59 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (2 "101")
+Condition 59 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (3 "110")
+Condition 59 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (4 "111")
+Condition 60 "2463493148" "(func != 6'h12) 1 -1" (1 "0")
+Condition 60 "2463493148" "(func != 6'h12) 1 -1" (2 "1")
+Condition 61 "4208424476" "(func != 6'h13) 1 -1" (1 "0")
+Condition 61 "4208424476" "(func != 6'h13) 1 -1" (2 "1")
+Condition 62 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (1 "011")
+Condition 62 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (2 "101")
+Condition 62 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (3 "110")
+Condition 62 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (4 "111")
+Condition 63 "3938458045" "(rs == 5'b10100) 1 -1" (1 "0")
+Condition 63 "3938458045" "(rs == 5'b10100) 1 -1" (2 "1")
+Condition 64 "1544494983" "(func != 6'h20) 1 -1" (1 "0")
+Condition 64 "1544494983" "(func != 6'h20) 1 -1" (2 "1")
+Condition 65 "2454580414" "(func != 6'h21) 1 -1" (1 "0")
+Condition 65 "2454580414" "(func != 6'h21) 1 -1" (2 "1")
+Condition 66 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (1 "00")
+Condition 66 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (2 "01")
+Condition 66 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (3 "10")
+Condition 67 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (1 "01")
+Condition 67 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (2 "10")
+Condition 67 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (3 "11")
+Condition 68 "3074271552" "(rs == 5'b10000) 1 -1" (1 "0")
+Condition 68 "3074271552" "(rs == 5'b10000) 1 -1" (2 "1")
+Condition 69 "2467127709" "(func == 6'h20) 1 -1" (1 "0")
+Condition 69 "2467127709" "(func == 6'h20) 1 -1" (2 "1")
+Condition 70 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (1 "01")
+Condition 70 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (2 "10")
+Condition 70 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (3 "11")
+Condition 71 "3494240371" "(rs == 5'b10001) 1 -1" (1 "0")
+Condition 71 "3494240371" "(rs == 5'b10001) 1 -1" (2 "1")
+Condition 72 "365623692" "(func == 6'h21) 1 -1" (1 "0")
+Condition 72 "365623692" "(func == 6'h21) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0078
+// ID: EXCL-UVM-0079
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "840303087 1659190260"
 MODULE: qspi_pad_wrapper
@@ -5984,7 +6002,7 @@ Condition 4 "2567018488" "(spi_io_oe[3] ? spi_io_o[3] : 1'bz) 1 -1" (1 "0")
 Condition 4 "2567018488" "(spi_io_oe[3] ? spi_io_o[3] : 1'bz) 1 -1" (2 "1")
 Condition 5 "2839759063" "(spi_cs_n[0] == 1'b0) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0079
+// ID: EXCL-UVM-0080
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "63469976 2771160044"
 MODULE: l2_cache_nb
@@ -6129,7 +6147,7 @@ Condition 59 "1852338853" "(want_aw && s_awready) 1 -1" (1 "01")
 Condition 59 "1852338853" "(want_aw && s_awready) 1 -1" (2 "10")
 Condition 59 "1852338853" "(want_aw && s_awready) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0080
+// ID: EXCL-UVM-0081
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "97997737 3604279739"
 MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )
@@ -6146,7 +6164,7 @@ Condition 4 "1279309280" "(effective_spi_grant && g_spi_flash_controller.flash_g
 Condition 4 "1279309280" "(effective_spi_grant && g_spi_flash_controller.flash_guard_arready) 1 -1" (2 "10")
 Condition 4 "1279309280" "(effective_spi_grant && g_spi_flash_controller.flash_guard_arready) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0081
+// ID: EXCL-UVM-0082
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "97997737 3326823634"
 MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )
@@ -6163,7 +6181,7 @@ Condition 4 "2521372605" "(effective_spi_grant && g_flash_image_model.flash_mode
 Condition 4 "2521372605" "(effective_spi_grant && g_flash_image_model.flash_model_arready) 1 -1" (2 "10")
 Condition 4 "2521372605" "(effective_spi_grant && g_flash_image_model.flash_model_arready) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0082
+// ID: EXCL-UVM-0083
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4202099251 689297576"
 MODULE: ecc_secded_32
@@ -6178,7 +6196,7 @@ Condition 5 "1599487091" "(((!parity)) && (syndrome != 0)) 1 -1" (1 "01")
 Condition 5 "1599487091" "(((!parity)) && (syndrome != 0)) 1 -1" (3 "11")
 Condition 6 "2375736019" "(syndrome != 0) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0083
+// ID: EXCL-UVM-0084
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "886703037 2567747547"
 MODULE: mmu_tlb_shootdown_mailbox
@@ -6189,7 +6207,7 @@ Condition 2 "3332327411" "(((!target_present)) || (count >= (TIMEOUT_CYCLES - 1)
 Condition 2 "3332327411" "(((!target_present)) || (count >= (TIMEOUT_CYCLES - 1))) 1 -1" (2 "01")
 Condition 2 "3332327411" "(((!target_present)) || (count >= (TIMEOUT_CYCLES - 1))) 1 -1" (3 "10")
 
-// ID: EXCL-UVM-0084
+// ID: EXCL-UVM-0085
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "469529741 575978489"
 MODULE: axi_read_timeout_guard
@@ -6243,7 +6261,7 @@ Condition 24 "663954832" "(state == ST_R) 1 -1" (2 "1")
 Condition 25 "1717593992" "(state == ST_DRAIN) 1 -1" (1 "0")
 Condition 25 "1717593992" "(state == ST_DRAIN) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0085
+// ID: EXCL-UVM-0086
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2624281472 3849405154"
 MODULE: apb_qspi_status
@@ -6261,23 +6279,20 @@ Condition 5 "2537173076" "(xip_timeout_sticky & ((~source_seen_r))) 1 -1" (3 "11
 Condition 6 "3629936129" "(error_event & ((~error_seen_r))) 1 -1" (2 "10")
 Condition 6 "3629936129" "(error_event & ((~error_seen_r))) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0086
+// ID: EXCL-UVM-0087
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "827148926 3197185322"
 MODULE: mips_mem_stage
 Condition 1 "3084881795" "((mem_read | mem_write) & ((~adel_exception)) & ((~ades_exception)) & ((~translation_fault)) & ((~mem_done))) 1 -1" (2 "10111")
 Condition 1 "3084881795" "((mem_read | mem_write) & ((~adel_exception)) & ((~ades_exception)) & ((~translation_fault)) & ((~mem_done))) 1 -1" (4 "11101")
-Condition 3 "2117908948" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (2 "10")
-Condition 3 "2117908948" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (3 "11")
 Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (1 "011")
 Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (2 "101")
-Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (3 "110")
 Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (4 "111")
 Condition 5 "1223484174" "(((mem_op == 3'b010) || (mem_op == 3'b011)) && (addr_align[0] != 1'b0)) 1 -1" (3 "11")
 Condition 13 "180770412" "(bad_align_h | bad_align_w) 1 -1" (3 "10")
 Condition 14 "1817015435" "(mem_read & bad_align) 1 -1" (3 "11")
 
-// ID: EXCL-UVM-0087
+// ID: EXCL-UVM-0088
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4146882487 3707477054"
 MODULE: spi_flash_behavioral
@@ -6339,7 +6354,7 @@ Condition 23 "3212475552" "((bit_count_r == 6'h07) ? wip_r : 1'b0) 1 -1" (2 "1")
 Condition 24 "1346812645" "(bit_count_r == 6'h07) 1 -1" (1 "0")
 Condition 24 "1346812645" "(bit_count_r == 6'h07) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0088
+// ID: EXCL-UVM-0089
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1906454295 1298584048"
 MODULE: qspi_flash_quad_behavioral
@@ -6374,7 +6389,7 @@ Condition 14 "3519036674" "(io_oe_r[1] ? io_o_r[1] : 1'bz) 1 -1" (2 "1")
 Condition 15 "1147598083" "(io_oe_r[2] ? io_o_r[2] : 1'bz) 1 -1" (2 "1")
 Condition 16 "3161964598" "(io_oe_r[3] ? io_o_r[3] : 1'bz) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0089
+// ID: EXCL-UVM-0090
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3064912425 1617334675"
 MODULE: apb_vic
@@ -6396,13 +6411,13 @@ Condition 15 "796496142" "(any_pend_r && (((!any_active_r)) || (best_pri_r > run
 Condition 16 "3151458438" "(((!any_active_r)) || (best_pri_r > running_prio_r)) 1 -1" (1 "00")
 Condition 16 "3151458438" "(((!any_active_r)) || (best_pri_r > running_prio_r)) 1 -1" (2 "01")
 
-// ID: EXCL-UVM-0090
+// ID: EXCL-UVM-0091
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "609989151 1235140111"
 MODULE: mips_perf_counters
 Condition 1 "3093334197" "(((!rst_n)) || clear) 1 -1" (2 "01")
 
-// ID: EXCL-UVM-0091
+// ID: EXCL-UVM-0092
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1192777547 1229127467"
 MODULE: mips_ex_mem_reg
@@ -6427,7 +6442,7 @@ Condition 12 "824696970" "((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] ==
 Condition 13 "2377926341" "(mem_inst[31:26] == 6'b110101) 1 -1" (2 "1")
 Condition 14 "1158594582" "(mem_inst[31:26] == 6'b111101) 1 -1" (2 "1")
 
-// ID: EXCL-UVM-0092
+// ID: EXCL-UVM-0093
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2071608225 2575809155"
 MODULE: ddr4_phy_behavioral
@@ -6454,7 +6469,7 @@ Transition ST_TRAIN->ST_FATAL "2->5"
 Transition ST_TRAIN->ST_READY "2->3"
 Transition ST_TRAIN->ST_RESET "2->0"
 
-// ID: EXCL-UVM-0093
+// ID: EXCL-UVM-0094
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2985369504 3668551991"
 MODULE: axi_ddr_behavioral
@@ -6467,7 +6482,7 @@ Transition W_DATA->W_RESP "1->2"
 Transition W_IDLE->W_DATA "0->1"
 Transition W_RESP->W_IDLE "2->0"
 
-// ID: EXCL-UVM-0094
+// ID: EXCL-UVM-0095
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2914053452 1497274622"
 MODULE: l2_cache_caching
@@ -6528,7 +6543,7 @@ Transition ST_W_HIT_MERGE->ST_W_ACCEPT "4->1"
 Transition ST_W_HIT_MERGE->ST_W_RESP "4->11"
 Transition ST_W_RESP->ST_IDLE "11->0"
 
-// ID: EXCL-UVM-0095
+// ID: EXCL-UVM-0096
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "63469976 2741105997"
 MODULE: l2_cache_nb
@@ -6559,7 +6574,7 @@ Transition ME_REFILL_AR->ME_IDLE "4->0"
 Transition ME_REFILL_AR->ME_REFILL_R "4->5"
 Transition ME_REFILL_R->ME_IDLE "5->0"
 
-// ID: EXCL-UVM-0096
+// ID: EXCL-UVM-0097
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "469529741 1438362967"
 MODULE: axi_read_timeout_guard
@@ -6579,7 +6594,7 @@ Transition ST_IDLE->ST_AR "0->1"
 Transition ST_R->ST_ERROR "2->3"
 Transition ST_R->ST_IDLE "2->0"
 
-// ID: EXCL-UVM-0097
+// ID: EXCL-UVM-0098
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4146882487 2552661359"
 MODULE: spi_flash_behavioral
@@ -6607,7 +6622,7 @@ Transition ST_PROGRAM->ST_CMD "5->0"
 Transition ST_READ->ST_CMD "2->0"
 Transition ST_STATUS->ST_CMD "3->0"
 
-// ID: EXCL-UVM-0098
+// ID: EXCL-UVM-0099
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1906454295 2402717676"
 MODULE: qspi_flash_quad_behavioral
@@ -6626,7 +6641,7 @@ Transition ST_DATA_ARM->ST_CMD "3->0"
 Transition ST_DATA_ARM->ST_DATA "3->2"
 Transition ST_IGNORE->ST_CMD "4->0"
 
-// ID: EXCL-UVM-0099
+// ID: EXCL-UVM-0100
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1149415544 3728872850"
 MODULE: apb_boot_status
@@ -6641,7 +6656,7 @@ Block 15 "474479599" "prdata = failure_r;"
 Block 16 "3174193844" "prdata = {30'b0, reset_cause_r};"
 Block 17 "2419579025" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0100
+// ID: EXCL-UVM-0101
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "299010489 1630025265"
 MODULE: axi_boot_rom
@@ -6662,7 +6677,7 @@ Block 32 "2425210529" "wr_busy <= 1'b0;"
 Block 33 "834937553" "wr_beat <= (wr_beat + 8'b1);"
 Block 36 "1188821629" "wr_resp_valid <= 1'b0;"
 
-// ID: EXCL-UVM-0101
+// ID: EXCL-UVM-0102
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "821264661 658587359"
 MODULE: mmu_asid_allocator
@@ -6675,7 +6690,7 @@ Block 12 "2224322843" "used[i] <= 1;"
 Block 14 "4146106111" "if ((!found))"
 Block 15 "3862200805" "alloc_fail <= 1;"
 
-// ID: EXCL-UVM-0102
+// ID: EXCL-UVM-0103
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1384839261 1235642304"
 MODULE: mips_mdu
@@ -6692,7 +6707,7 @@ Block 38 "1089440602" "{hi_r, lo_r} <= acc_tmp;"
 Block 40 "3577087196" "lo_r <= 32'b0;"
 Block 52 "3464918496" "state <= ST_IDLE;"
 
-// ID: EXCL-UVM-0103
+// ID: EXCL-UVM-0104
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2521688486 1130670477"
 MODULE: mips_mmu
@@ -6711,7 +6726,7 @@ Block 16 "1841346855" "if ((req_is_store && (!tlb_lookup_d)))"
 Block 17 "3467242389" "ok_r = 1'b0;"
 Block 18 "699261461" "pa_r = pa_tlb;"
 
-// ID: EXCL-UVM-0104
+// ID: EXCL-UVM-0105
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1806501640 3054984617"
 MODULE: mips_micro_tlb
@@ -6738,13 +6753,13 @@ Block 31 "1796193815" "valid_i[k] <= 1'b0;"
 Block 33 "385063678" "valid_i[next_i] <= 1'b1;"
 Block 36 "3190696720" "valid_d[next_d] <= 1'b1;"
 
-// ID: EXCL-UVM-0105
+// ID: EXCL-UVM-0106
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "2069035916 3162750358"
 MODULE: mips_id_stage
 Block 8 "3024014638" "br_taken = (fpu_condition[fpu_condition_code] ^ fpu_branch_invert);"
 
-// ID: EXCL-UVM-0106
+// ID: EXCL-UVM-0107
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "1189874766 809968344"
 MODULE: apb_timer
@@ -6752,7 +6767,7 @@ Block 1 "3323447681" "if ((!presetn))"
 Block 16 "3323447681" "if ((!presetn))"
 Block 33 "3323447681" "if ((!presetn))"
 
-// ID: EXCL-UVM-0107
+// ID: EXCL-UVM-0108
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1947636165 2913175166"
 MODULE: mips_if_stage
@@ -6766,63 +6781,67 @@ Block 31 "3820473033" "branch_likely_delay_pending <= 1'b1;"
 Block 34 "3374305962" "bpu_delay_pending <= 1'b0;"
 Block 36 "892874724" "bpu_delay_pending <= 1'b1;"
 
-// ID: EXCL-UVM-0108
+// ID: EXCL-UVM-0109
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "2018139936 3941964472"
+// CHECKSUM: "969746712 1194077981"
 MODULE: mips_cpu
 Block 1 "1335899302" "if ((!rst_n))"
 Block 6 "3219282387" "wait_state <= 1'b1;"
-Block 8 "1335899302" "if ((!rst_n))"
-Block 11 "2556374643" "if (ctx_restore_req)"
-Block 12 "328302385" "fcsr <= ctx_restore_fcsr;"
-Block 13 "762625665" "fpr[fpu_i] <= ctx_restore_fpr[(fpu_i * 32)+:32];"
-Block 15 "3735413784" "fpu_double_low <= mem_rdata_fmt;"
-Block 17 "2378086539" "fpr[mem_inst[20:16]] <= mem_rdata_fmt;"
-Block 19 "3461033878" "fpr[mem_inst[20:16]] <= fpu_double_low;"
-Block 21 "3691782975" "fcsr[6:2] <= (fcsr[6:2] | fpu_exception_flags);"
-Block 23 "4186918711" "if (fpu_id_mtc1)"
-Block 24 "3399234731" "fpr[id_inst[15:11]] <= id_val_rt;"
-Block 25 "1125229646" "if (fpu_id_ctc1)"
-Block 26 "3316989418" "fcsr <= id_val_rt;"
-Block 27 "385864305" "if (fpu_id_arith)"
-Block 28 "1790976144" "if ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)))"
-Block 29 "1146992842" "case (id_inst[10:8])"
-Block 30 "3161084785" "fcsr[23] <= fpu_compare_true;"
-Block 31 "3001348409" "fcsr[25] <= fpu_compare_true;"
-Block 32 "1981674430" "fcsr[26] <= fpu_compare_true;"
-Block 33 "234468549" "fcsr[27] <= fpu_compare_true;"
-Block 34 "1252000904" "fcsr[28] <= fpu_compare_true;"
-Block 35 "826557427" "fcsr[29] <= fpu_compare_true;"
-Block 36 "3396294981" "fcsr[30] <= fpu_compare_true;"
-Block 37 "2978684478" "fcsr[31] <= fpu_compare_true;"
-Block 39 "2064099880" "if (fpu_id_double_result)"
-Block 40 "3405504695" "fpr[id_inst[10:6]] <= fpu_result_double[31:0];"
-Block 41 "3849705358" "if ((((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))))"
-Block 42 "3259121525" "fpr[id_inst[10:6]] <= fpu_result_word;"
-Block 43 "1064269804" "fpr[id_inst[10:6]] <= fpu_result;"
-Block 44 "168989263" "fcsr[6:2] <= (fcsr[6:2] | fpu_exception_flags);"
-Block 47 "1335899302" "if ((!rst_n))"
-Block 61 "1335899302" "if ((!rst_n))"
-Block 63 "2556374643" "if (ctx_restore_req)"
-Block 64 "1284105813" "ll_reservation_valid <= 1'b0;"
-Block 66 "4104381284" "ll_reservation_valid <= 1'b0;"
-Block 69 "3582503382" "ll_reservation_valid <= 1'b1;"
-Block 74 "1335899302" "if ((!rst_n))"
-Block 79 "3323406010" "if (((!rst_n) || flush_mem_wb))"
-Block 87 "3323406010" "if (((!rst_n) || flush_mem_wb))"
-Block 91 "3655976209" "nb_load_busy <= 4'b0;"
-Block 97 "2172152490" "nb_load_busy[rob_alloc_tag] <= 1'b1;"
-Block 99 "1335899302" "if ((!rst_n))"
-Block 102 "3649352009" "ptw_busy <= 1'b1;"
-Block 105 "2350445706" "if (ptw_fault_i)"
-Block 106 "2315978826" "ptw_busy <= 1'b0;"
-Block 107 "2801400699" "ptw_refill_pending <= 1'b1;"
-Block 110 "338680599" "ptw_refill_pending <= 1'b0;"
-Block 113 "49517173" "ptw_fault_pending <= 1'b0;"
+Block 9 "120906064" "hw_page_odd_bit = 6'd14;"
+Block 10 "96068010" "hw_page_odd_bit = 6'd16;"
+Block 11 "1023457022" "hw_page_odd_bit = 6'd18;"
+Block 13 "1335899302" "if ((!rst_n))"
+Block 20 "1335899302" "if ((!rst_n))"
+Block 23 "2556374643" "if (ctx_restore_req)"
+Block 24 "328302385" "fcsr <= ctx_restore_fcsr;"
+Block 25 "762625665" "fpr[fpu_i] <= ctx_restore_fpr[(fpu_i * 32)+:32];"
+Block 27 "3735413784" "fpu_double_low <= mem_rdata_fmt;"
+Block 29 "2378086539" "fpr[mem_inst[20:16]] <= mem_rdata_fmt;"
+Block 31 "3461033878" "fpr[mem_inst[20:16]] <= fpu_double_low;"
+Block 33 "3691782975" "fcsr[6:2] <= (fcsr[6:2] | fpu_exception_flags);"
+Block 35 "4186918711" "if (fpu_id_mtc1)"
+Block 36 "3399234731" "fpr[id_inst[15:11]] <= id_val_rt;"
+Block 37 "1125229646" "if (fpu_id_ctc1)"
+Block 38 "3316989418" "fcsr <= id_val_rt;"
+Block 39 "385864305" "if (fpu_id_arith)"
+Block 40 "1790976144" "if ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)))"
+Block 41 "1146992842" "case (id_inst[10:8])"
+Block 42 "3161084785" "fcsr[23] <= fpu_compare_true;"
+Block 43 "3001348409" "fcsr[25] <= fpu_compare_true;"
+Block 44 "1981674430" "fcsr[26] <= fpu_compare_true;"
+Block 45 "234468549" "fcsr[27] <= fpu_compare_true;"
+Block 46 "1252000904" "fcsr[28] <= fpu_compare_true;"
+Block 47 "826557427" "fcsr[29] <= fpu_compare_true;"
+Block 48 "3396294981" "fcsr[30] <= fpu_compare_true;"
+Block 49 "2978684478" "fcsr[31] <= fpu_compare_true;"
+Block 51 "2064099880" "if (fpu_id_double_result)"
+Block 52 "3405504695" "fpr[id_inst[10:6]] <= fpu_result_double[31:0];"
+Block 53 "3849705358" "if ((((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))))"
+Block 54 "3259121525" "fpr[id_inst[10:6]] <= fpu_result_word;"
+Block 55 "1064269804" "fpr[id_inst[10:6]] <= fpu_result;"
+Block 56 "168989263" "fcsr[6:2] <= (fcsr[6:2] | fpu_exception_flags);"
+Block 59 "1335899302" "if ((!rst_n))"
+Block 73 "1335899302" "if ((!rst_n))"
+Block 75 "2556374643" "if (ctx_restore_req)"
+Block 76 "1284105813" "ll_reservation_valid <= 1'b0;"
+Block 80 "2606248539" "ll_reservation_valid <= 1'b0;"
+Block 83 "2342741702" "ll_reservation_valid <= 1'b1;"
+Block 88 "1335899302" "if ((!rst_n))"
+Block 93 "3323406010" "if (((!rst_n) || flush_mem_wb))"
+Block 101 "3323406010" "if (((!rst_n) || flush_mem_wb))"
+Block 105 "3655976209" "nb_load_busy <= 4'b0;"
+Block 111 "2172152490" "nb_load_busy[rob_alloc_tag] <= 1'b1;"
+Block 113 "1335899302" "if ((!rst_n))"
+Block 116 "3649352009" "ptw_busy <= 1'b1;"
+Block 119 "2350445706" "if (ptw_fault_i)"
+Block 120 "2315978826" "ptw_busy <= 1'b0;"
+Block 121 "2801400699" "ptw_refill_pending <= 1'b1;"
+Block 124 "338680599" "ptw_refill_pending <= 1'b0;"
+Block 127 "49517173" "ptw_fault_pending <= 1'b0;"
 
-// ID: EXCL-UVM-0109
+// ID: EXCL-UVM-0110
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3907405402 8951163"
+// CHECKSUM: "440421165 3438166674"
 MODULE: mips_page_table_tlb_refill
 Block 1 "1335899302" "if ((!rst_n))"
 Block 2 "3295567122" "refill_pending <= 1'b0;"
@@ -6832,12 +6851,12 @@ Block 6 "2440895514" "if ((!resp_valid))"
 Block 7 "2482728831" "resp_seen <= 1'b0;"
 Block 9 "408681806" "if (((!resp_valid) && (!refill_pending)))"
 Block 10 "1388079075" "grant_seen <= 1'b0;"
-Block 12 "2918569607" "if (((((resp_valid && (!fault_valid)) && (!refill_pending)) && (!tlb_wr_ready)) && (!resp_seen)))"
-Block 13 "389914027" "refill_pending <= 1'b1;"
+Block 12 "2879692050" "if ((((resp_valid && (!fault_valid)) && (!refill_pending)) && (!resp_seen)))"
+Block 13 "1043396414" "refill_pending <= 1'b1;"
 Block 15 "1852898287" "if ((refill_pending && tlb_wr_ready))"
 Block 16 "4012885892" "refill_pending <= 1'b0;"
 
-// ID: EXCL-UVM-0110
+// ID: EXCL-UVM-0111
 // CATEGORY: Debug & Observability
 // CHECKSUM: "1978932013 2125241390"
 MODULE: jtag_debug_top
@@ -6854,7 +6873,7 @@ Block 74 "3685437455" "axi_state <= ST_IDLE;"
 Block 97 "1309846331" "next_axi_state = ST_IDLE;"
 Block 98 "1335899302" "if ((!rst_n))"
 
-// ID: EXCL-UVM-0111
+// ID: EXCL-UVM-0112
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "3032547841 467624506"
 MODULE: apb_gpio
@@ -6862,7 +6881,7 @@ Block 1 "3323447681" "if ((!presetn))"
 Block 7 "3482919161" ";"
 Block 9 "3323447681" "if ((!presetn))"
 
-// ID: EXCL-UVM-0112
+// ID: EXCL-UVM-0113
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3798910544 2579913623"
 MODULE: apb_uart_16550
@@ -6932,7 +6951,7 @@ Block 158 "1335899302" "if ((!rst_n))"
 Block 170 "2505717080" "d_ri <= 1'b1;"
 Block 185 "2088859014" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0113
+// ID: EXCL-UVM-0114
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3763908232 1743002504"
 MODULE: qspi_shared_pin_arbiter
@@ -6944,15 +6963,15 @@ Block 12 "3885480740" "owner_r <= OWNER_IDLE;"
 Block 16 "30389959" "owner_r <= OWNER_CMD;"
 Block 19 "1608952519" "owner_r <= OWNER_IDLE;"
 
-// ID: EXCL-UVM-0114
+// ID: EXCL-UVM-0115
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "3599225912 400308336"
 MODULE: mips_alu
 Block 33 "422754686" "alu_out = 32'b0;"
 
-// ID: EXCL-UVM-0115
+// ID: EXCL-UVM-0116
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3319620102 2884182956"
+// CHECKSUM: "2380524072 3542729549"
 MODULE: mips_cp0
 Block 2 "2362509331" "highest_enabled_pending_ip = 3'd7;"
 Block 4 "2560905208" "highest_enabled_pending_ip = 3'd6;"
@@ -6967,6 +6986,7 @@ Block 24 "54143033" "vint_srs_set = cp0_srs_map[31:28];"
 Block 40 "3093343542" "rdata = intctl_val;"
 Block 41 "2156441850" "rdata = srsctl_val;"
 Block 42 "2125098168" "rdata = srsmap_val;"
+Block 50 "2886661848" "rdata = lladdr_in;"
 Block 56 "95401731" "rdata = cp0_taghi;"
 Block 64 "1303214116" "cp0_cause[30] <= 1'b1;"
 Block 67 "3870470318" "cp0_count <= wdata;"
@@ -7010,77 +7030,81 @@ Block 152 "126752008" "cp0_taglo <= wdata;"
 Block 153 "1153336496" "cp0_taghi <= wdata;"
 Block 155 "1234061512" ";"
 
-// ID: EXCL-UVM-0116
-// CATEGORY: Cache & Memory Subsystem
-// CHECKSUM: "3943920266 2024805975"
-MODULE: dcache
-Block 36 "4175153508" "next_state = CACHE_LOOKUP;"
-Block 67 "4019961406" "next_state = IDLE;"
-Block 68 "3128736384" "next_state = (maint_needs_wb ? CACHE_WB_REQ : CACHE_DONE);"
-Block 69 "963813433" "if ((awready && awvalid))"
-Block 70 "163806343" "next_state = CACHE_WB_DATA;"
-Block 72 "729213329" "if (((wready && wvalid) && wlast))"
-Block 73 "546970840" "next_state = CACHE_WB_RESP;"
-Block 75 "3785695783" "if ((bready && bvalid))"
-Block 76 "119910095" "next_state = CACHE_DONE;"
-Block 78 "2743818530" "next_state = IDLE;"
-Block 91 "3106759765" "tag_rdata[0][(TAG_BITS + 1)] <= 1'b0;"
-Block 92 "1225045441" "tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
-Block 93 "2638796252" "tag_rdata[0][(TAG_BITS + 1)] <= 1'b0;"
-Block 96 "3527263987" "if ((tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
-Block 97 "2057194043" "tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
-Block 98 "218941829" "tag_rdata[1][(TAG_BITS + 1)] <= 1'b0;"
-Block 101 "3373940395" "if ((tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
-Block 102 "3705146530" "tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
-Block 103 "1555712385" "tag_rdata[2][(TAG_BITS + 1)] <= 1'b0;"
-Block 106 "3724051237" "if ((tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
-Block 107 "4014142296" "tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
-Block 108 "3439220184" "tag_rdata[3][(TAG_BITS + 1)] <= 1'b0;"
-Block 111 "510579021" "if (((req_buf_valid && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))"
-Block 112 "1856515408" "coh_refill_snoop_pending <= 1'b1;"
-Block 119 "1236527527" "maint_addr <= cache_op_addr;"
-Block 121 "3974474359" "if ((!maint_needs_wb))"
-Block 122 "2074668288" "if (maint_index_store_tag)"
-Block 123 "617521029" "tag_ram[maint_target_way][lookup_index] <= maint_tag_wdata[22:0];"
-Block 124 "645714639" "if ((((((maint_index_wbi || maint_hit_inv) || maint_hit_wb_inv) || maint_hit_wb) && maint_target_valid) && (maint_clear_valid || maint_clear_dirty)))"
-Block 125 "62233001" "if (maint_clear_valid)"
-Block 126 "701838685" "tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)] <= 1'b0;"
-Block 127 "796141109" "if (maint_clear_dirty)"
-Block 128 "118878061" "tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;"
-Block 131 "2290437466" "maint_line <= data_rdata[maint_target_way];"
-Block 132 "2092187488" "if ((awready && awvalid))"
-Block 133 "2105273728" "awvalid <= 1'b0;"
-Block 135 "643309110" "if ((wready && wvalid))"
-Block 136 "3035562070" "if (wlast)"
-Block 137 "3513133805" "wvalid <= 1'b0;"
-Block 138 "2503586087" "word_cnt <= (word_cnt + 1'b1);"
-Block 139 "3905572046" "wlast <= 1'b1;"
-Block 141 "687800753" "wdata <= maint_line[((word_cnt + 1'b1) * 32)+:32];"
-Block 143 "75063355" "if ((bready && bvalid))"
-Block 144 "1322202547" "bready <= 1'b0;"
-Block 145 "226439602" "maint_error <= 1'b1;"
-Block 146 "2889973514" "if (maint_clear_valid)"
-Block 147 "1247964446" "tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)] <= 1'b0;"
-Block 148 "1738831976" "if (maint_clear_dirty)"
-Block 149 "2212334490" "tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;"
-Block 166 "3757593131" "for (sw = 0; (sw < WAYS); sw = (sw + 1))"
-Block 167 "2099415160" "if ((tag_ram[sw][req_buf_addr[10:5]][(TAG_BITS + 1)] && (tag_ram[sw][req_buf_addr[10:5]][(TAG_BITS - 1):0] == $$commaassign(_vcs_func, normalize_coh_addr(req_buf_addr), _vcs_func, 1)[31:11])))"
-Block 168 "1834692788" "if (req_buf_be[0])"
-Block 169 "879547395" "data_ram[sw][req_buf_addr[10:5]][(req_buf_addr[4:2] * 32)+:8] <= req_buf_wdata[7:0];"
-Block 171 "254948237" "if (req_buf_be[1])"
-Block 172 "2245045438" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 8)+:8] <= req_buf_wdata[15:8];"
-Block 174 "2312308624" "if (req_buf_be[2])"
-Block 175 "1207071671" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 16)+:8] <= req_buf_wdata[23:16];"
-Block 177 "3954836649" "if (req_buf_be[3])"
-Block 178 "4091589642" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 24)+:8] <= req_buf_wdata[31:24];"
-Block 180 "500997163" "tag_ram[sw][req_buf_addr[10:5]] <= {1'b1, 1'b0, $$commaassign(_vcs_func_0, normalize_coh_addr(req_buf_addr), _vcs_func_0, 1)[31:11]};"
-Block 211 "2024556994" "cache_error_pending <= 1'b1;"
-Block 219 "1235514936" "refill_error <= 1'b1;"
-Block 226 "3985096155" "if (cache_error_pending)"
-Block 227 "701379638" "tag_ram[victim_way][lookup_index] <= {(TAG_BITS + 2) {1'b0}};"
-Block 229 "1429237606" "req_buf_valid <= 1'b0;"
-
 // ID: EXCL-UVM-0117
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "586324309 3160124116"
+MODULE: dcache
+Block 38 "4175153508" "next_state = CACHE_LOOKUP;"
+Block 41 "3643911127" "next_state = ERROR_RESP;"
+Block 71 "4019961406" "next_state = IDLE;"
+Block 72 "3128736384" "next_state = (maint_needs_wb ? CACHE_WB_REQ : CACHE_DONE);"
+Block 73 "963813433" "if ((awready && awvalid))"
+Block 74 "163806343" "next_state = CACHE_WB_DATA;"
+Block 76 "729213329" "if (((wready && wvalid) && wlast))"
+Block 77 "546970840" "next_state = CACHE_WB_RESP;"
+Block 79 "3785695783" "if ((bready && bvalid))"
+Block 80 "119910095" "next_state = CACHE_DONE;"
+Block 82 "2743818530" "next_state = IDLE;"
+Block 95 "3106759765" "tag_rdata[0][(TAG_BITS + 1)] <= 1'b0;"
+Block 96 "1225045441" "tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 97 "2638796252" "tag_rdata[0][(TAG_BITS + 1)] <= 1'b0;"
+Block 100 "3527263987" "if ((tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
+Block 101 "2057194043" "tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 102 "218941829" "tag_rdata[1][(TAG_BITS + 1)] <= 1'b0;"
+Block 105 "3373940395" "if ((tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
+Block 106 "3705146530" "tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 107 "1555712385" "tag_rdata[2][(TAG_BITS + 1)] <= 1'b0;"
+Block 110 "3724051237" "if ((tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
+Block 111 "4014142296" "tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 112 "3439220184" "tag_rdata[3][(TAG_BITS + 1)] <= 1'b0;"
+Block 115 "510579021" "if (((req_buf_valid && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))"
+Block 116 "1856515408" "coh_refill_snoop_pending <= 1'b1;"
+Block 123 "1236527527" "maint_addr <= cache_op_addr;"
+Block 125 "3974474359" "if ((!maint_needs_wb))"
+Block 126 "2074668288" "if (maint_index_store_tag)"
+Block 127 "2541134121" "tag_ram[maint_target_way][lookup_index] <= maint_tag_wdata[22:0];"
+Block 128 "645714639" "if ((((((maint_index_wbi || maint_hit_inv) || maint_hit_wb_inv) || maint_hit_wb) && maint_target_valid) && (maint_clear_valid || maint_clear_dirty)))"
+Block 129 "62233001" "if (maint_clear_valid)"
+Block 130 "701838685" "tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)] <= 1'b0;"
+Block 131 "796141109" "if (maint_clear_dirty)"
+Block 132 "118878061" "tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;"
+Block 134 "550801605" "tag_parity_ram[maint_target_way][lookup_index] <= (maint_clear_valid ? (^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]}) : (^{1'b1, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]}));"
+Block 136 "2290437466" "maint_line <= data_rdata[maint_target_way];"
+Block 137 "2092187488" "if ((awready && awvalid))"
+Block 138 "2105273728" "awvalid <= 1'b0;"
+Block 140 "643309110" "if ((wready && wvalid))"
+Block 141 "3035562070" "if (wlast)"
+Block 142 "3513133805" "wvalid <= 1'b0;"
+Block 143 "2503586087" "word_cnt <= (word_cnt + 1'b1);"
+Block 144 "3905572046" "wlast <= 1'b1;"
+Block 146 "687800753" "wdata <= maint_line[((word_cnt + 1'b1) * 32)+:32];"
+Block 148 "75063355" "if ((bready && bvalid))"
+Block 149 "1322202547" "bready <= 1'b0;"
+Block 150 "226439602" "maint_error <= 1'b1;"
+Block 151 "2889973514" "if (maint_clear_valid)"
+Block 152 "1247964446" "tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)] <= 1'b0;"
+Block 153 "1738831976" "if (maint_clear_dirty)"
+Block 154 "2212334490" "tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;"
+Block 156 "1596315824" "tag_parity_ram[maint_target_way][lookup_index] <= (maint_clear_valid ? (^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]}) : (^{tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)], 1'b0, tag_ram[maint_target_way][lookup_index][(TAG_BITS - 1):0]}));"
+Block 172 "3757593131" "for (sw = 0; (sw < WAYS); sw = (sw + 1))"
+Block 173 "2099415160" "if ((tag_ram[sw][req_buf_addr[10:5]][(TAG_BITS + 1)] && (tag_ram[sw][req_buf_addr[10:5]][(TAG_BITS - 1):0] == $$commaassign(_vcs_func, normalize_coh_addr(req_buf_addr), _vcs_func, 1)[31:11])))"
+Block 174 "1834692788" "if (req_buf_be[0])"
+Block 175 "879547395" "data_ram[sw][req_buf_addr[10:5]][(req_buf_addr[4:2] * 32)+:8] <= req_buf_wdata[7:0];"
+Block 177 "254948237" "if (req_buf_be[1])"
+Block 178 "2245045438" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 8)+:8] <= req_buf_wdata[15:8];"
+Block 180 "2312308624" "if (req_buf_be[2])"
+Block 181 "1207071671" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 16)+:8] <= req_buf_wdata[23:16];"
+Block 183 "3954836649" "if (req_buf_be[3])"
+Block 184 "4091589642" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 24)+:8] <= req_buf_wdata[31:24];"
+Block 186 "500997163" "tag_ram[sw][req_buf_addr[10:5]] <= {1'b1, 1'b0, $$commaassign(_vcs_func_0, normalize_coh_addr(req_buf_addr), _vcs_func_0, 1)[31:11]};"
+Block 197 "3422263909" "cache_error_pending <= 1'b1;"
+Block 219 "2024556994" "cache_error_pending <= 1'b1;"
+Block 227 "1235514936" "refill_error <= 1'b1;"
+Block 234 "3985096155" "if (cache_error_pending)"
+Block 235 "701379638" "tag_ram[victim_way][lookup_index] <= {(TAG_BITS + 2) {1'b0}};"
+Block 237 "1429237606" "req_buf_valid <= 1'b0;"
+
+// ID: EXCL-UVM-0118
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1536517759 1864523850"
 MODULE: l2_cache_wt
@@ -7098,7 +7122,7 @@ Block 67 "2011185801" "beat_cnt <= 8'b0;"
 Block 68 "1385666286" "beat_cnt <= (beat_cnt + 1'b1);"
 Block 90 "113343392" "state <= ST_IDLE;"
 
-// ID: EXCL-UVM-0118
+// ID: EXCL-UVM-0119
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2910715491 3298731929"
 MODULE: apb_wdt
@@ -7123,34 +7147,25 @@ Block 30 "3581517181" "prdata = val_r;"
 Block 31 "1198742539" "prdata = {31'b0, expired_r};"
 Block 32 "2419579025" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0119
+// ID: EXCL-UVM-0120
 // CATEGORY: Cache & Memory Subsystem
 // CHECKSUM: "3975723183 3850497307"
 MODULE: icache
 Block 10 "4123884699" "for (wi = 0; (wi < WAYS); wi = (wi + 1))"
 Block 12 "4123884699" "for (wi = 0; (wi < WAYS); wi = (wi + 1))"
-Block 40 "1486647595" "if (maint_req)"
-Block 41 "895618987" "next_state = CACHE_LOOKUP;"
 Block 44 "445834940" "next_state = ERROR;"
 Block 47 "1185527947" "next_state = IDLE;"
 Block 56 "364834295" "next_state = IDLE;"
-Block 57 "3156070028" "next_state = CACHE_DONE;"
-Block 58 "2743818530" "next_state = IDLE;"
-Block 66 "3088858374" "maint_addr <= cache_op_addr;"
 Block 73 "3340886318" "req_buf_valid <= 1'b0;"
 Block 80 "2533613869" "refill_error <= 1'b1;"
 Block 86 "197267443" "req_buf_valid <= 1'b0;"
-Block 87 "3736712995" "if (maint_index_invalidate)"
 Block 88 "4055411379" "tag_ram[maint_way][maint_index][TAG_BITS] <= 1'b0;"
-Block 89 "3412728399" "if (maint_hit_invalidate)"
-Block 90 "1452161900" "if (maint_hit)"
-Block 91 "2695423578" "tag_ram[maint_hit_way][maint_index][TAG_BITS] <= 1'b0;"
 Block 93 "2630775323" "if (maint_store_tag)"
 Block 94 "3115702638" "tag_ram[maint_way][maint_index] <= {maint_tag_wdata[22], maint_tag_wdata[20:0]};"
 Block 95 "777039892" "if ((!maint_load_tag))"
 Block 96 "2006529409" "maint_error <= 1'b1;"
 
-// ID: EXCL-UVM-0120
+// ID: EXCL-UVM-0121
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "41468714 2432982259"
 MODULE: axi_crossbar
@@ -7177,7 +7192,7 @@ Block 127 "2006546782" "for (i = 0; (i < N_S); i = (i + 1))"
 Block 134 "3021364694" "for (am = 0; (am < N_M); am = (am + 1))"
 Block 139 "1335899302" "if ((!rst_n))"
 
-// ID: EXCL-UVM-0121
+// ID: EXCL-UVM-0122
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2806492800 1961970993"
 MODULE: axi_id_tracker
@@ -7193,9 +7208,9 @@ Block 13 "1044229404" "slot_valid_r[free_slot] <= 1'b1;"
 Block 15 "2871568938" "if ((retire_valid && retire_hit))"
 Block 16 "4071890092" "slot_valid_r[retire_slot] <= 1'b0;"
 
-// ID: EXCL-UVM-0122
+// ID: EXCL-UVM-0123
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3979373752 3189971460"
+// CHECKSUM: "2577213487 3963426329"
 MODULE: mips_fpu
 Block 1 "1787523310" "case (mode)"
 Block 2 "3783524461" "rounded = $rtoi(value);"
@@ -7205,13 +7220,10 @@ Block 5 "557525588" "lower = $floor(value);"
 Block 6 "307754551" "rounded = (base + 1);"
 Block 7 "926778701" "rounded = base;"
 Block 8 "3861393705" "round_real_to_word = rounded;"
-Block 10 "3868416685" "a_nan = ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0));"
 Block 11 "2530526843" "exception_flags[4] = 1'b1;"
-Block 13 "1868514106" "if ((((op == OP_DIV) && (b_double[62:52] == 11'b0)) && (b_double[51:0] == 0)))"
 Block 14 "3495808058" "if ((((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))))"
 Block 15 "2591683062" "exception_flags[4] = 1'b1;"
 Block 16 "3158227399" "exception_flags[3] = 1'b1;"
-Block 18 "3766537262" "case (op)"
 Block 19 "3933069818" "rr_double = (ar_double + br_double);"
 Block 20 "3068254151" "rr_double = (ar_double - br_double);"
 Block 21 "2265462624" "rr_double = (ar_double * br_double);"
@@ -7241,16 +7253,16 @@ Block 45 "2347020808" "if (a_nan)"
 Block 46 "3305642509" "rr = ar_double;"
 Block 47 "158045611" "rr = ar_double;"
 Block 48 "2380812498" "exception_flags[0] = 1'b1;"
-Block 50 "2010192998" "if (a_nan)"
-Block 51 "1895999688" "result_word = 32'h80000000;"
-Block 52 "1154137821" "case (op)"
-Block 53 "2438892112" "result_word = round_real_to_word(ar_double, rounding_mode);"
-Block 54 "4107005709" "result_word = round_real_to_word(ar_double, 2'b1);"
-Block 55 "947371135" "result_word = round_real_to_word(ar_double, 2'b0);"
-Block 56 "2019439155" "result_word = round_real_to_word(ar_double, 2'b10);"
-Block 57 "924629216" "result_word = round_real_to_word(ar_double, 2'b11);"
-Block 58 "3260387255" "if ((ar_double != $itor($rtoi(ar_double))))"
-Block 59 "3060903426" "exception_flags[0] = 1'b1;"
+Block 50 "556844954" "if ((((a_nan || (a_double[62:52] == 11'h7ff)) || (ar_double >= 2147483648.0000000)) || (ar_double < (-2147483648.0000000))))"
+Block 51 "2688121830" "result_word = 32'h80000000;"
+Block 52 "933759838" "case (op)"
+Block 53 "773501273" "result_word = round_real_to_word(ar_double, rounding_mode);"
+Block 54 "3887702307" "result_word = round_real_to_word(ar_double, 2'b1);"
+Block 55 "721810001" "result_word = round_real_to_word(ar_double, 2'b0);"
+Block 56 "3105098736" "result_word = round_real_to_word(ar_double, 2'b10);"
+Block 57 "4041678368" "result_word = round_real_to_word(ar_double, 2'b11);"
+Block 58 "4018194269" "if ((ar_double != $itor($rtoi(ar_double))))"
+Block 59 "3306363777" "exception_flags[0] = 1'b1;"
 Block 61 "1363804829" "rr_double = 0.0000000000000000;"
 Block 62 "746483026" "case (compare_condition)"
 Block 63 "34890958" "compare_true = 1'b0;"
@@ -7269,7 +7281,6 @@ Block 75 "1687544343" "compare_true = (unordered || (ar_double < br_double));"
 Block 76 "1806348480" "compare_true = ((!unordered) && (ar_double <= br_double));"
 Block 77 "3206575031" "compare_true = (unordered || (ar_double <= br_double));"
 Block 78 "3017212598" "compare_true = 1'b0;"
-Block 79 "2682367731" "rr_double = 0.0000000000000000;"
 Block 81 "4016485140" "exception_flags[4] = 1'b1;"
 Block 86 "3473021337" "exception_flags[3] = 1'b1;"
 Block 94 "743392807" "rr = ar;"
@@ -7285,26 +7296,26 @@ Block 114 "269717551" "rr = (1.0000000000000000 / $sqrt(ar));"
 Block 115 "373271744" "rr = $itor($signed(a));"
 Block 116 "1509451677" "rr_double = ar;"
 Block 117 "1051290045" "rr_double = $itor($signed(a));"
-Block 118 "1494433046" "if (a_nan)"
-Block 119 "1703152175" "result_word = 32'h80000000;"
-Block 120 "56566241" "result_word = round_real_to_word(ar, rounding_mode);"
-Block 121 "1485030735" "exception_flags[0] = 1'b1;"
-Block 123 "628418925" "if (a_nan)"
-Block 124 "2158102969" "result_word = 32'h80000000;"
-Block 125 "2395764868" "result_word = round_real_to_word(ar, 2'b0);"
-Block 126 "397519433" "exception_flags[0] = 1'b1;"
-Block 128 "3495562511" "if (a_nan)"
-Block 129 "56843788" "result_word = 32'h80000000;"
-Block 130 "150926094" "result_word = round_real_to_word(ar, 2'b1);"
-Block 131 "2259059917" "exception_flags[0] = 1'b1;"
-Block 133 "3742008211" "if (a_nan)"
-Block 134 "2038138601" "result_word = 32'h80000000;"
-Block 135 "4027646019" "result_word = round_real_to_word(ar, 2'b10);"
-Block 136 "2538095318" "exception_flags[0] = 1'b1;"
-Block 138 "253669683" "if (a_nan)"
-Block 139 "1878423771" "result_word = 32'h80000000;"
-Block 140 "4112759082" "result_word = round_real_to_word(ar, 2'b11);"
-Block 141 "93094241" "exception_flags[0] = 1'b1;"
+Block 118 "3064687374" "if ((((a_nan || (a[30:23] == 8'hff)) || (ar >= 2147483648.0000000)) || (ar < (-2147483648.0000000))))"
+Block 119 "3648886852" "result_word = 32'h80000000;"
+Block 120 "3791680704" "result_word = round_real_to_word(ar, rounding_mode);"
+Block 121 "1622762770" "exception_flags[0] = 1'b1;"
+Block 123 "3402415989" "if ((((a_nan || (a[30:23] == 8'hff)) || (ar >= 2147483648.0000000)) || (ar < (-2147483648.0000000))))"
+Block 124 "1012636626" "result_word = 32'h80000000;"
+Block 125 "1871916453" "result_word = round_real_to_word(ar, 2'b0);"
+Block 126 "797641236" "exception_flags[0] = 1'b1;"
+Block 128 "1071799063" "if ((((a_nan || (a[30:23] == 8'hff)) || (ar >= 2147483648.0000000)) || (ar < (-2147483648.0000000))))"
+Block 129 "3214593127" "result_word = 32'h80000000;"
+Block 130 "3919685167" "result_word = round_real_to_word(ar, 2'b1);"
+Block 131 "3197904016" "exception_flags[0] = 1'b1;"
+Block 133 "817026443" "if ((((a_nan || (a[30:23] == 8'hff)) || (ar >= 2147483648.0000000)) || (ar < (-2147483648.0000000))))"
+Block 134 "3313636482" "result_word = 32'h80000000;"
+Block 135 "290346338" "result_word = round_real_to_word(ar, 2'b10);"
+Block 136 "2943541899" "exception_flags[0] = 1'b1;"
+Block 138 "3769034539" "if ((((a_nan || (a[30:23] == 8'hff)) || (ar >= 2147483648.0000000)) || (ar < (-2147483648.0000000))))"
+Block 139 "3541035696" "result_word = 32'h80000000;"
+Block 140 "343731211" "result_word = round_real_to_word(ar, 2'b11);"
+Block 141 "1035346236" "exception_flags[0] = 1'b1;"
 Block 143 "3323659840" "case (compare_condition)"
 Block 144 "3456573710" "compare_true = 1'b0;"
 Block 145 "259082002" "compare_true = unordered;"
@@ -7335,8 +7346,9 @@ Block 185 "1838386956" "exception_flags[2] = 1'b1;"
 Block 188 "324292559" "exception_flags[2] = 1'b1;"
 Block 191 "3164383789" "exception_flags[4] = 1'b1;"
 Block 197 "1722498912" "exception_flags[1] = 1'b1;"
+Block 200 "2783014404" "exception_flags[1] = 1'b1;"
 
-// ID: EXCL-UVM-0123
+// ID: EXCL-UVM-0124
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4266736862 21306137"
 MODULE: mips_bpu
@@ -7349,7 +7361,7 @@ Block 7 "1572402736" ";"
 Block 17 "3678002153" "if (resolve_taken)"
 Block 20 "3678002153" "if (resolve_taken)"
 
-// ID: EXCL-UVM-0124
+// ID: EXCL-UVM-0125
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2071608225 118752880"
 MODULE: ddr4_phy_behavioral
@@ -7394,7 +7406,7 @@ Block 47 "3431638876" "state <= ST_READY;"
 Block 48 "925312582" "state <= ST_FATAL;"
 Block 49 "411764597" "state <= ST_FATAL;"
 
-// ID: EXCL-UVM-0125
+// ID: EXCL-UVM-0126
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "1341811719 3939855581"
 MODULE: apb_axi_dma
@@ -7468,7 +7480,7 @@ Block 163 "3179930274" "prdata = cur_len_r[apb_ch];"
 Block 164 "3807088984" "prdata = desc_ptr_r[apb_ch];"
 Block 165 "3022553672" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0126
+// ID: EXCL-UVM-0127
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3402720095 673626811"
 MODULE: mmu_page_table_allocator
@@ -7489,7 +7501,7 @@ Block 16 "2657070523" "used[i] <= 1'b1;"
 Block 18 "4146106111" "if ((!found))"
 Block 19 "3802704828" "alloc_fail <= 1'b1;"
 
-// ID: EXCL-UVM-0127
+// ID: EXCL-UVM-0128
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1159426980 2850905086"
 MODULE: mips_tlb
@@ -7528,13 +7540,13 @@ Block 53 "1117296976" "inv_match = 1'b0;"
 Block 55 "1982992983" "if (inv_match)"
 Block 56 "1769873923" "tlb_valid[k] <= 1'b0;"
 
-// ID: EXCL-UVM-0128
+// ID: EXCL-UVM-0129
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "788579723 2864553020"
 MODULE: mips_wb_stage
 Block 6 "470869113" "wb_wdata = ex_out;"
 
-// ID: EXCL-UVM-0129
+// ID: EXCL-UVM-0130
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2985369504 3704947671"
 MODULE: axi_ddr_behavioral
@@ -7570,31 +7582,46 @@ Block 41 "2157957885" "w_addr <= (w_addr + 32'd4);"
 Block 43 "3757803407" "if ((s_bvalid && s_bready))"
 Block 44 "790952184" "s_bvalid <= 1'b0;"
 
-// ID: EXCL-UVM-0130
+// ID: EXCL-UVM-0131
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3371145080 2366951397"
+// CHECKSUM: "3681053710 3494343696"
 MODULE: mips_page_table_walker
 Block 1 "2047728511" "leaf_allowed = ((pte[0] && ((!u) || pte[3])) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1])));"
-Block 6 "4171626083" "fault_valid <= 1'b0;"
-Block 8 "206283865" "if ((mem_valid && mem_ready))"
-Block 9 "330801409" "mem_valid <= 1'b0;"
-Block 10 "3761771823" "fault_valid <= 1'b1;"
-Block 11 "355738030" "if ((!mem_rdata[0]))"
-Block 12 "4106025774" "fault_valid <= 1'b1;"
-Block 13 "4239410504" "if ((!mem_rdata[1]))"
-Block 14 "3553025580" "fault_valid <= 1'b1;"
-Block 15 "1748755375" "mem_addr <= ({mem_rdata[31:12], 12'b0} + {20'b0, va_q[21:12], 2'b0});"
-Block 17 "3719437418" "if ((mem_valid && mem_ready))"
-Block 18 "1885773600" "mem_valid <= 1'b0;"
-Block 19 "2855493452" "fault_valid <= 1'b1;"
-Block 20 "186169669" "if ((!mem_rdata[0]))"
-Block 21 "1786654967" "fault_valid <= 1'b1;"
-Block 22 "2194476326" "if ((!leaf_allowed(mem_rdata, access_q, user_q)))"
-Block 23 "2921499931" "fault_valid <= 1'b1;"
-Block 24 "1332630374" "leaf_pte <= mem_rdata;"
-Block 26 "3480616904" "resp_valid <= 1'b1;"
+Block 2 "1163595451" "case (PAGE_MASK)"
+Block 3 "1648408646" "l2_index_offset = {20'b0, v[21:14], 4'b0};"
+Block 4 "1204055286" "l2_index_offset = {20'b0, v[21:16], 6'b0};"
+Block 5 "2699321239" "l2_index_offset = {20'b0, v[21:18], 8'b0};"
+Block 6 "2005831181" "l2_index_offset = {20'b0, v[21:12], 2'b0};"
+Block 7 "1163595451" "case (PAGE_MASK)"
+Block 8 "1450123245" "leaf_format_valid = (pte[13:12] == 2'b0);"
+Block 9 "4265996615" "leaf_format_valid = (pte[15:12] == 4'b0);"
+Block 10 "507812046" "leaf_format_valid = (pte[17:12] == 6'b0);"
+Block 11 "1967828743" "leaf_format_valid = 1'b1;"
+Block 12 "1163595451" "case (PAGE_MASK)"
+Block 13 "149042848" "leaf_pa = {pte[31:14], v[13:0]};"
+Block 14 "540650027" "leaf_pa = {pte[31:16], v[15:0]};"
+Block 15 "3152281973" "leaf_pa = {pte[31:18], v[17:0]};"
+Block 16 "661762161" "leaf_pa = {pte[31:12], v[11:0]};"
+Block 21 "4171626083" "fault_valid <= 1'b0;"
+Block 23 "206283865" "if ((mem_valid && mem_ready))"
+Block 24 "330801409" "mem_valid <= 1'b0;"
+Block 25 "3761771823" "fault_valid <= 1'b1;"
+Block 26 "355738030" "if ((!mem_rdata[0]))"
+Block 27 "4106025774" "fault_valid <= 1'b1;"
+Block 28 "4239410504" "if ((!mem_rdata[1]))"
+Block 29 "3553025580" "fault_valid <= 1'b1;"
+Block 30 "1378431476" "mem_addr <= ({mem_rdata[31:12], 12'b0} + l2_index_offset(va_q));"
+Block 32 "3719437418" "if ((mem_valid && mem_ready))"
+Block 33 "1885773600" "mem_valid <= 1'b0;"
+Block 34 "2855493452" "fault_valid <= 1'b1;"
+Block 35 "186169669" "if ((!mem_rdata[0]))"
+Block 36 "1786654967" "fault_valid <= 1'b1;"
+Block 37 "92080701" "if (((!leaf_format_valid(mem_rdata)) || (!leaf_allowed(mem_rdata, access_q, user_q))))"
+Block 38 "1958036567" "fault_valid <= 1'b1;"
+Block 39 "3648360412" "leaf_pte <= mem_rdata;"
+Block 41 "3480616904" "resp_valid <= 1'b1;"
 
-// ID: EXCL-UVM-0131
+// ID: EXCL-UVM-0132
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3173670910 2083894911"
 MODULE: retire_trace_capture
@@ -7603,13 +7630,13 @@ Block 2 "2357219113" "known_bit = ((value === 1'b1) ? 1 : 0);"
 Block 7 "3400757251" "$fatal(1, \"cannot open RETIRE_TRACE=%s\", trace_path);"
 Block 10 "2969639648" "$fdisplay(fd, \"{\\"schema\\":\\"%08x\\",\\"pc\\":\\"%08x\\",\\"instr\\":\\"%08x\\",\\"next_pc\\":\\"%08x\\",\\"gpr_we\\":%0d,\\"gpr_addr\\":%0d,\\"gpr_data\\":\\"%08x\\",\\"cp0_we\\":%0d,\\"cp0_addr\\":%0d,\\"cp0_sel\\":%0d,\\"cp0_data\\":\\"%08x\\",\\"mem_valid\\":%0d,\\"mem_read\\":%0d,\\"mem_write\\":%0d,\\"mem_addr\\":\\"%08x\\",\\"mem_wdata\\":\\"%08x\\",\\"mem_be\\":\\"%x\\",\\"mem_rdata\\":\\"%08x\\",\\"except\\":%0d,\\"except_code\\":%0d,\\"bd\\":%0d,\\"eret\\":%0d}\", known_int(obs_if.retire_schema), known_int(obs_if.retire_pc), known_int(obs_if.retire_instr), known_int(obs_if.retire_next_pc), known_bit(obs_if.retire_gpr_we), known_int(obs_if.retire_gpr_addr), known_int(obs_if.retire_gpr_data), known_bit(obs_if.retire_cp0_we), known_int(obs_if.retire_cp0_addr), known_int(obs_if.retire_cp0_sel), known_int(obs_if.retire_cp0_data), known_bit(obs_if.retire_mem_valid), known_bit(obs_if.retire_mem_read), known_bit(obs_if.retire_mem_write), obs_if.retire_mem_addr, obs_if.retire_mem_wdata, obs_if.retire_mem_be, obs_if.retire_mem_rdata, known_bit(obs_if.retire_except), known_int(obs_if.retire_except_code), known_bit(obs_if.retire_bd), known_bit(obs_if.retire_eret));"
 
-// ID: EXCL-UVM-0132
+// ID: EXCL-UVM-0133
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "2186720845 792766066"
 MODULE: mips_ex_stage
 Block 4 "3672088284" "mdu_out_r = lo_val;"
 
-// ID: EXCL-UVM-0133
+// ID: EXCL-UVM-0134
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1363931416 4264086090"
 MODULE: qspi_cmd_behavioral
@@ -7723,7 +7750,7 @@ Block 147 "4013726610" "prdata = {17'b0, rx_count_r, 1'b0, tx_count_r};"
 Block 148 "4137047827" "if (((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))))"
 Block 149 "2837528424" "prdata = lut_r[((paddr - A_LUT_BASE) >> 2)];"
 
-// ID: EXCL-UVM-0134
+// ID: EXCL-UVM-0135
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4288013028 138626815"
 MODULE: axi_ddr4_controller
@@ -7779,7 +7806,7 @@ Block 81 "3830152208" "phy_cmd_valid <= 1'b1;"
 Block 85 "674071404" "state <= ST_FATAL;"
 Block 86 "2287936570" "state <= ST_FATAL;"
 
-// ID: EXCL-UVM-0135
+// ID: EXCL-UVM-0136
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1581893224 2701593082"
 MODULE: apb_mmu_context_status
@@ -7801,7 +7828,7 @@ Block 36 "3138244981" "event_r <= (event_r & (~pwdata[3:0]));"
 Block 37 "1719022400" ";"
 Block 45 "2570929175" "prdata = {27'b0, sd_status_r[4], sd_status_r[3], sd_status_r[2], sd_status_r[1], sd_busy};"
 
-// ID: EXCL-UVM-0136
+// ID: EXCL-UVM-0137
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3915859991 798573499"
 MODULE: apb_ddr4_status
@@ -7817,7 +7844,7 @@ Block 20 "1616592677" "prdata = {26'b0, ecc_uncorrectable_error, ecc_correctable
 Block 21 "2722171912" "prdata = error_r;"
 Block 22 "2419579025" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0137
+// ID: EXCL-UVM-0138
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2914053452 1722543953"
 MODULE: l2_cache_caching
@@ -7945,7 +7972,7 @@ Block 141 "795084933" "if (s_bready)"
 Block 142 "3625231844" "beat_cnt <= 8'b0;"
 Block 144 "113343392" "state <= ST_IDLE;"
 
-// ID: EXCL-UVM-0138
+// ID: EXCL-UVM-0139
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3372399530 1051723761"
 MODULE: cpu_scheduler
@@ -7958,7 +7985,7 @@ Block 18 "199959217" "pc_bank[current_r] <= ctx_save_pc;"
 Block 20 "416462005" "if (ctx_restore_ack)"
 Block 21 "3581525068" "current_r <= next_r;"
 
-// ID: EXCL-UVM-0139
+// ID: EXCL-UVM-0140
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1135157623 2394591942"
 MODULE: mips_regfile
@@ -7970,7 +7997,7 @@ Block 9 "1802251450" "regs[i] <= ((i[4:0] == 5'b0) ? 32'b0 : ctx_restore_srs_dat
 Block 12 "3892603082" "regs[shadow_widx] <= shadow_wdata;"
 Block 13 "834171604" "regs[{active_set, waddr}] <= wdata;"
 
-// ID: EXCL-UVM-0140
+// ID: EXCL-UVM-0141
 // CATEGORY: Bus & Fabric Interconnect
 // CHECKSUM: "1023251519 4037413863"
 MODULE: axi2apb_bridge
@@ -7981,7 +8008,7 @@ Block 27 "1335899302" "if ((!rst_n))"
 Block 51 "1335899302" "if ((!rst_n))"
 Block 61 "2514280839" "psel <= 1'b0;"
 
-// ID: EXCL-UVM-0141
+// ID: EXCL-UVM-0142
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3303551202 1076699656"
 MODULE: apb_perf_counters
@@ -7995,14 +8022,14 @@ Block 8 "2222351966" "prdata = mdu_stall_count;"
 Block 9 "3994425090" "prdata = VERSION;"
 Block 10 "4133043529" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0142
+// ID: EXCL-UVM-0143
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "1633348978 4093611459"
 MODULE: soc_core_subsystem
 Block 4 "3245769326" "ptw_axi_busy <= 1'b1;"
 Block 6 "1705287202" "ptw_axi_busy <= 1'b0;"
 
-// ID: EXCL-UVM-0143
+// ID: EXCL-UVM-0144
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1379674422 3413556816"
 MODULE: mips_mem_wb_reg
@@ -8013,9 +8040,9 @@ Block 4 "2146485026" "wb_rdata_fmt <= 32'b0;"
 Block 5 "1227602061" "if ((!stall))"
 Block 6 "774506677" "wb_rdata_fmt <= mem_rdata_fmt;"
 
-// ID: EXCL-UVM-0144
+// ID: EXCL-UVM-0145
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3949678489 3492419537"
+// CHECKSUM: "1408932106 527482680"
 MODULE: mips_control
 Block 12 "273635901" "is_break = 1'b1;"
 Block 13 "2414480614" "is_trap = 1'b1;"
@@ -8051,7 +8078,6 @@ Block 93 "1637479798" "branch_op = 3'b100;"
 Block 98 "1692804603" "branch_op = 3'b110;"
 Block 100 "739025798" "branch_op = 3'b101;"
 Block 102 "2260895733" "branch_op = 3'b110;"
-Block 103 "611712993" "alu_op = 5'b1;"
 Block 104 "541504484" "is_trap = 1'b1;"
 Block 105 "1135869475" "is_trap = 1'b1;"
 Block 106 "3524520249" "is_trap = 1'b1;"
@@ -8099,31 +8125,32 @@ Block 171 "115321053" "illegal_inst = 1'b1;"
 Block 172 "710369463" "if ((((0 != 0) && (sa == 5'b0)) && (func == 6'b0)))"
 Block 173 "3492776313" "is_wrpgpr = 1'b1;"
 Block 174 "3087094837" "illegal_inst = 1'b1;"
-Block 176 "584500581" "if ((0 == 0))"
-Block 177 "2967247276" "illegal_inst = 1'b1;"
-Block 178 "1179350564" "case (func)"
-Block 179 "3991448320" "if ((func[0] && (((rs[0] || rt[0]) || rd[0]) || sa[0])))"
-Block 180 "1212734922" "illegal_inst = 1'b1;"
-Block 182 "3490786313" "illegal_inst = 1'b1;"
-Block 183 "657889308" "if ((0 == 0))"
-Block 184 "3207684000" "illegal_inst = 1'b1;"
-Block 185 "1634134510" "case (rs)"
-Block 186 "3517621175" "if ((!((((rt == 5'b0) || (rt == 5'b1)) || (rt == 5'd2)) || (rt == 5'd3))))"
-Block 187 "2187680029" "illegal_inst = 1'b1;"
-Block 188 "4083511707" "branch_op = 3'b111;"
-Block 189 "43203966" "if (((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))))"
-Block 190 "1260893334" "illegal_inst = 1'b1;"
-Block 192 "3014475917" "case (func)"
-Block 193 "771317319" "illegal_inst = 1'b1;"
-Block 194 "4192367079" "if (((rs == 5'b10001) && ((inst[6] || inst[11]) || (((func != 6'h12) && (func != 6'h13)) && inst[16]))))"
-Block 195 "3897602470" "illegal_inst = 1'b1;"
-Block 197 "2832956632" "if ((((rs == 5'b10100) && (func != 6'h20)) && (func != 6'h21)))"
-Block 198 "2426018490" "illegal_inst = 1'b1;"
-Block 200 "3125852456" "if ((((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))))"
-Block 201 "2811114537" "illegal_inst = 1'b1;"
-Block 203 "814954590" "illegal_inst = 1'b1;"
+Block 178 "4266598329" "illegal_inst = 1'b1;"
+Block 180 "3813283018" "if ((0 == 0))"
+Block 181 "1622232158" "illegal_inst = 1'b1;"
+Block 182 "3629751241" "case (func)"
+Block 183 "2460361730" "if ((func[0] && (((rs[0] || rt[0]) || rd[0]) || sa[0])))"
+Block 184 "57799142" "illegal_inst = 1'b1;"
+Block 186 "2884415764" "illegal_inst = 1'b1;"
+Block 187 "657889308" "if ((0 == 0))"
+Block 188 "3207684000" "illegal_inst = 1'b1;"
+Block 189 "1634134510" "case (rs)"
+Block 190 "3517621175" "if ((!((((rt == 5'b0) || (rt == 5'b1)) || (rt == 5'd2)) || (rt == 5'd3))))"
+Block 191 "2187680029" "illegal_inst = 1'b1;"
+Block 192 "4083511707" "branch_op = 3'b111;"
+Block 193 "43203966" "if (((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))))"
+Block 194 "1260893334" "illegal_inst = 1'b1;"
+Block 196 "3014475917" "case (func)"
+Block 197 "771317319" "illegal_inst = 1'b1;"
+Block 198 "4192367079" "if (((rs == 5'b10001) && ((inst[6] || inst[11]) || (((func != 6'h12) && (func != 6'h13)) && inst[16]))))"
+Block 199 "3897602470" "illegal_inst = 1'b1;"
+Block 201 "2832956632" "if ((((rs == 5'b10100) && (func != 6'h20)) && (func != 6'h21)))"
+Block 202 "2426018490" "illegal_inst = 1'b1;"
+Block 204 "3125852456" "if ((((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))))"
+Block 205 "2811114537" "illegal_inst = 1'b1;"
+Block 207 "814954590" "illegal_inst = 1'b1;"
 
-// ID: EXCL-UVM-0145
+// ID: EXCL-UVM-0146
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "63469976 3360163559"
 MODULE: l2_cache_nb
@@ -8282,7 +8309,7 @@ Block 195 "4025270485" "mshr_refd = 1'b1;"
 Block 197 "3287821347" "if ((!mshr_refd))"
 Block 198 "871867964" "mshr_valid[fk] <= 1'b0;"
 
-// ID: EXCL-UVM-0146
+// ID: EXCL-UVM-0147
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4202099251 3630874457"
 MODULE: ecc_secded_32
@@ -8297,7 +8324,7 @@ Block 26 "100178908" "fixed[0] = (~fixed[0]);"
 Block 28 "747349988" "uncorrectable_error = 1'b1;"
 Block 31 "1253723512" "if (((((((p != 1) && (p != 2)) && (p != 4)) && (p != 8)) && (p != 16)) && (p != 32)))"
 
-// ID: EXCL-UVM-0147
+// ID: EXCL-UVM-0148
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "886703037 3829022734"
 MODULE: mmu_tlb_shootdown_mailbox
@@ -8314,7 +8341,7 @@ Block 17 "4079672976" "if (((!target_present) || (count >= (TIMEOUT_CYCLES - 1))
 Block 18 "1065665816" "busy <= 0;"
 Block 19 "4241017940" "count <= (count + 1'b1);"
 
-// ID: EXCL-UVM-0148
+// ID: EXCL-UVM-0149
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "469529741 936353763"
 MODULE: axi_read_timeout_guard
@@ -8344,7 +8371,7 @@ Block 26 "1301808176" "if (((m_rvalid && m_rready) && m_rlast))"
 Block 27 "3195740846" "downstream_active <= 1'b0;"
 Block 29 "113343392" "state <= ST_IDLE;"
 
-// ID: EXCL-UVM-0149
+// ID: EXCL-UVM-0150
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2624281472 2344172439"
 MODULE: apb_qspi_status
@@ -8358,7 +8385,7 @@ Block 16 "1701807708" "prdata = last_error_r;"
 Block 17 "3627112265" "prdata = 32'b0;"
 Block 18 "2419579025" "prdata = 32'b0;"
 
-// ID: EXCL-UVM-0150
+// ID: EXCL-UVM-0151
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "827148926 1821975066"
 MODULE: mips_mem_stage
@@ -8375,7 +8402,7 @@ Block 56 "2555691861" "mem_rdata_ext = dmem_rdata;"
 Block 62 "2256034750" "mem_rdata_ext = dmem_rdata;"
 Block 63 "3664169720" "mem_rdata_ext = dmem_rdata;"
 
-// ID: EXCL-UVM-0151
+// ID: EXCL-UVM-0152
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4146882487 74704671"
 MODULE: spi_flash_behavioral
@@ -8441,7 +8468,7 @@ Block 69 "1293659521" "spi_miso = JEDEC_TYPE[(7 - bit_count_r)];"
 Block 70 "1788856583" "spi_miso = JEDEC_DENS[(7 - bit_count_r)];"
 Block 71 "3616152078" "spi_miso = 1'b0;"
 
-// ID: EXCL-UVM-0152
+// ID: EXCL-UVM-0153
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1906454295 1128201360"
 MODULE: qspi_flash_quad_behavioral
@@ -8477,7 +8504,7 @@ Block 32 "3889183727" "io_oe_r = 4'hf;"
 Block 33 "1976945713" "io_o_r = mem[mem_index(active_addr_r, byte_count_r)][7:4];"
 Block 34 "3353300404" "io_o_r = mem[mem_index(active_addr_r, byte_count_r)][3:0];"
 
-// ID: EXCL-UVM-0153
+// ID: EXCL-UVM-0154
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3064912425 3546527451"
 MODULE: apb_vic
@@ -8519,7 +8546,7 @@ Block 80 "1487133630" "prdata = {28'b0, running_prio_r};"
 Block 81 "3377131709" "if (((paddr[11:8] == 4'b1) && (paddr[7:2] < NUM_SOURCES)))"
 Block 82 "951521844" "prdata = {28'b0, prio_r[paddr[7:2]]};"
 
-// ID: EXCL-UVM-0154
+// ID: EXCL-UVM-0155
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "609989151 1778645496"
 MODULE: mips_perf_counters
@@ -8534,13 +8561,13 @@ Block 14 "2038158509" "branch_mispredict_count <= (branch_mispredict_count + 32'
 Block 16 "1888681720" "if (mdu_stall_event)"
 Block 17 "3264050938" "mdu_stall_count <= (mdu_stall_count + 32'b1);"
 
-// ID: EXCL-UVM-0155
+// ID: EXCL-UVM-0156
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1192777547 1762629917"
 MODULE: mips_ex_mem_reg
 Block 9 "1065687192" "mem_double_phase <= 1'b1;"
 
-// ID: EXCL-UVM-0156
+// ID: EXCL-UVM-0157
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1149415544 694187602"
 MODULE: apb_boot_status
@@ -8555,7 +8582,7 @@ Toggle reset_cause_r "reg reset_cause_r[1:0]"
 Toggle wr "net wr"
 Toggle rd "net rd"
 
-// ID: EXCL-UVM-0157
+// ID: EXCL-UVM-0158
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "299010489 4201910152"
 MODULE: axi_boot_rom
@@ -8608,7 +8635,7 @@ Toggle wr_id "reg wr_id[3:0]"
 Toggle wr_len "reg wr_len[7:0]"
 Toggle wr_beat "reg wr_beat[7:0]"
 
-// ID: EXCL-UVM-0158
+// ID: EXCL-UVM-0159
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "821264661 2845057815"
 MODULE: mmu_asid_allocator
@@ -8623,7 +8650,7 @@ Toggle release_reject "reg release_reject"
 Toggle used "reg used[4:0]"
 Toggle found "reg found"
 
-// ID: EXCL-UVM-0159
+// ID: EXCL-UVM-0160
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1384839261 2340100396"
 MODULE: mips_mdu
@@ -8632,7 +8659,7 @@ Toggle is_acc "reg is_acc"
 Toggle result_neg_mul "reg result_neg_mul"
 Toggle acc_tmp "reg acc_tmp[63:0]"
 
-// ID: EXCL-UVM-0160
+// ID: EXCL-UVM-0161
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2521688486 3631994551"
 MODULE: mips_mmu
@@ -8658,7 +8685,7 @@ Toggle ok_r "reg ok_r"
 Toggle fault_r "reg fault_r[2:0]"
 Toggle _unused_ok "net _unused_ok"
 
-// ID: EXCL-UVM-0161
+// ID: EXCL-UVM-0162
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1806501640 4024217109"
 MODULE: mips_micro_tlb
@@ -8706,7 +8733,7 @@ Toggle d_mask_sel "net d_mask_sel[15:0]"
 Toggle i_lo "net i_lo[31:0]"
 Toggle d_lo "net d_lo[31:0]"
 
-// ID: EXCL-UVM-0162
+// ID: EXCL-UVM-0163
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "2069035916 2591197263"
 MODULE: mips_id_stage
@@ -8724,8 +8751,6 @@ Toggle ctx_restore_srs_data "net ctx_restore_srs_data[16383:0]"
 Toggle ctx_restore_set "net ctx_restore_set[3:0]"
 Toggle ctx_restore_done "net ctx_restore_done"
 Toggle branch_likely_taken "net branch_likely_taken"
-Toggle cache_op_valid "net cache_op_valid"
-Toggle cache_op "net cache_op[4:0]"
 Toggle is_break "net is_break"
 Toggle is_di "net is_di"
 Toggle is_ei "net is_ei"
@@ -8741,13 +8766,13 @@ Toggle is_wrpgpr "net is_wrpgpr"
 Toggle special2_reads_rt "net special2_reads_rt"
 Toggle nb_pending_hazard "net nb_pending_hazard"
 
-// ID: EXCL-UVM-0163
+// ID: EXCL-UVM-0164
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "1189874766 800452700"
 MODULE: apb_timer
 Toggle pslverr "net pslverr"
 
-// ID: EXCL-UVM-0164
+// ID: EXCL-UVM-0165
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1947636165 2129061313"
 MODULE: mips_if_stage
@@ -8767,18 +8792,14 @@ Toggle bpu_delay_target "reg bpu_delay_target[31:0]"
 Toggle branch_likely_delay_pending "reg branch_likely_delay_pending"
 Toggle branch_likely_delay_target "reg branch_likely_delay_target[31:0]"
 
-// ID: EXCL-UVM-0165
+// ID: EXCL-UVM-0166
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "2018139936 2350146051"
+// CHECKSUM: "969746712 745226161"
 MODULE: mips_cpu
 Toggle inst_req "net inst_req"
 Toggle inst_bus_error "net inst_bus_error"
 Toggle inst_cache_error "net inst_cache_error"
 Toggle data_req_id "net data_req_id[3:0]"
-Toggle data_cache_op_valid "net data_cache_op_valid"
-Toggle data_cache_op "net data_cache_op[4:0]"
-Toggle data_cache_op_is_icache "net data_cache_op_is_icache"
-Toggle data_cache_op_done "net data_cache_op_done"
 Toggle data_cache_op_error "net data_cache_op_error"
 Toggle data_resp_id "net data_resp_id[3:0]"
 Toggle data_bus_error "net data_bus_error"
@@ -8910,14 +8931,13 @@ Toggle hw_tlb_wr_index "net hw_tlb_wr_index[5:0]"
 Toggle hw_walker_i_fault "net hw_walker_i_fault"
 Toggle hw_walker_d_fault "net hw_walker_d_fault"
 Toggle hw_tlb_entrylo_leaf "net hw_tlb_entrylo_leaf[31:0]"
+Toggle hw_tlb_odd "net hw_tlb_odd"
 Toggle hw_tlb_entrylo0 "net hw_tlb_entrylo0[31:0]"
 Toggle hw_tlb_entrylo1 "net hw_tlb_entrylo1[31:0]"
 Toggle id_except_is_tlb_refill_in "net id_except_is_tlb_refill_in"
 Toggle if_bus_fault "net if_bus_fault"
 Toggle if_cache_fault "net if_cache_fault"
 Toggle if_except_is_tlb_refill "net if_except_is_tlb_refill"
-Toggle id_cache_op_valid "net id_cache_op_valid"
-Toggle id_cache_op "net id_cache_op[4:0]"
 Toggle id_is_break "net id_is_break"
 Toggle id_is_di "net id_is_di"
 Toggle id_is_ei "net id_is_ei"
@@ -8927,8 +8947,6 @@ Toggle id_tlb_op "net id_tlb_op[2:0]"
 Toggle ex_tlb_op "net ex_tlb_op[2:0]"
 Toggle mem_tlb_op "net mem_tlb_op[2:0]"
 Toggle wb_tlb_op "net wb_tlb_op[2:0]"
-Toggle mem_cache_op_valid "net mem_cache_op_valid"
-Toggle mem_cache_op "net mem_cache_op[4:0]"
 Toggle ex_except_is_data "net ex_except_is_data"
 Toggle mem_except_is_data "net mem_except_is_data"
 Toggle ex_except_is_tlb_refill "net ex_except_is_tlb_refill"
@@ -8937,7 +8955,6 @@ Toggle fpu_mem_lwc1 "net fpu_mem_lwc1"
 Toggle fpu_mem_swc1 "net fpu_mem_swc1"
 Toggle fpu_mem_lwc1_commit "net fpu_mem_lwc1_commit"
 Toggle fpu_mem_ldc1_commit "net fpu_mem_ldc1_commit"
-Toggle fpu_id_cop1x "net fpu_id_cop1x"
 Toggle fpu_id_cop1 "net fpu_id_cop1"
 Toggle fpu_id_valid "net fpu_id_valid"
 Toggle fpu_mem_id_valid "net fpu_mem_id_valid"
@@ -8945,11 +8962,8 @@ Toggle fpu_id_mfc1 "net fpu_id_mfc1"
 Toggle fpu_id_cfc1 "net fpu_id_cfc1"
 Toggle fpu_id_mtc1 "net fpu_id_mtc1"
 Toggle fpu_id_ctc1 "net fpu_id_ctc1"
-Toggle fpu_id_arith "net fpu_id_arith"
 Toggle fpu_id_cond_move "net fpu_id_cond_move"
 Toggle fpu_id_cond_move_ok "net fpu_id_cond_move_ok"
-Toggle fpu_id_double "net fpu_id_double"
-Toggle fpu_id_double_result "net fpu_id_double_result"
 Toggle fpu_id_gpr_write "net fpu_id_gpr_write"
 Toggle fpu_rf_conflict "net fpu_rf_conflict"
 Toggle id_fpu_unusable "net id_fpu_unusable"
@@ -8973,8 +8987,6 @@ Toggle nb_load_use_hazard "net nb_load_use_hazard"
 Toggle id_trap_imm "net id_trap_imm"
 Toggle id_trap_taken "net id_trap_taken"
 Toggle id_except_is_tlb_refill_out "net id_except_is_tlb_refill_out"
-Toggle ex_cache_op_valid "net ex_cache_op_valid"
-Toggle ex_cache_op "net ex_cache_op[4:0]"
 Toggle mem_double_align_fault "net mem_double_align_fault"
 Toggle mem_enable_nb_load "net mem_enable_nb_load"
 Toggle mem_adel_exception "net mem_adel_exception"
@@ -9000,9 +9012,9 @@ Toggle wb_ei "net wb_ei"
 Toggle wait_interrupt_epc "net wait_interrupt_epc[31:0]"
 Toggle _mmu_unused "net _mmu_unused"
 
-// ID: EXCL-UVM-0166
+// ID: EXCL-UVM-0167
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3907405402 1285071110"
+// CHECKSUM: "440421165 1285071110"
 MODULE: mips_page_table_tlb_refill
 Toggle clk "net clk"
 Toggle rst_n "net rst_n"
@@ -9042,7 +9054,7 @@ Toggle va_q "reg va_q[31:0]"
 Toggle asid_q "reg asid_q[7:0]"
 Toggle entrylo "net entrylo[31:0]"
 
-// ID: EXCL-UVM-0167
+// ID: EXCL-UVM-0168
 // CATEGORY: Debug & Observability
 // CHECKSUM: "1978932013 3191789618"
 MODULE: jtag_debug_top
@@ -9067,14 +9079,14 @@ Toggle idcode_reg "reg idcode_reg[31:0]"
 Toggle bypass_reg "reg bypass_reg[31:0]"
 Toggle axi_rvalid_sync "net axi_rvalid_sync"
 
-// ID: EXCL-UVM-0168
+// ID: EXCL-UVM-0169
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "3032547841 439783866"
 MODULE: apb_gpio
 Toggle pready "net pready"
 Toggle pslverr "net pslverr"
 
-// ID: EXCL-UVM-0169
+// ID: EXCL-UVM-0170
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3798910544 2609142321"
 MODULE: apb_uart_16550
@@ -9118,7 +9130,7 @@ Toggle modem_int "net modem_int"
 Toggle iir_fifo_bits "net iir_fifo_bits[1:0]"
 Toggle auto_rts_deassert "net auto_rts_deassert"
 
-// ID: EXCL-UVM-0170
+// ID: EXCL-UVM-0171
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3763908232 969713247"
 MODULE: qspi_shared_pin_arbiter
@@ -9138,13 +9150,11 @@ Toggle spi_mosi "net spi_mosi"
 Toggle conflict "net conflict"
 Toggle cmd_claim "net cmd_claim"
 
-// ID: EXCL-UVM-0171
+// ID: EXCL-UVM-0172
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3319620102 2701336355"
+// CHECKSUM: "2380524072 2701336355"
 MODULE: mips_cp0
 Toggle tlb_op "net tlb_op[2:0]"
-Toggle cache_op_done "net cache_op_done"
-Toggle cache_op "net cache_op[4:0]"
 Toggle except_ce "net except_ce[1:0]"
 Toggle di "net di"
 Toggle ei "net ei"
@@ -9216,7 +9226,6 @@ Toggle cp0_entrylo0 "reg cp0_entrylo0[31:0]"
 Toggle cp0_entrylo1 "reg cp0_entrylo1[31:0]"
 Toggle cp0_context_ptebase "reg cp0_context_ptebase[8:0]"
 Toggle cp0_pagemask_mask "reg cp0_pagemask_mask[15:0]"
-Toggle cp0_entryhi_vpn2 "reg cp0_entryhi_vpn2[18:0]"
 Toggle cp0_entryhi_asid "reg cp0_entryhi_asid[7:0]"
 Toggle cp0_taglo "reg cp0_taglo[31:0]"
 Toggle cp0_taghi "reg cp0_taghi[31:0]"
@@ -9235,7 +9244,6 @@ Toggle intctl_val "net intctl_val[31:0]"
 Toggle index_val "net index_val[31:0]"
 Toggle wired_val "net wired_val[31:0]"
 Toggle pagemask_val "net pagemask_val[31:0]"
-Toggle entryhi_val "net entryhi_val[31:0]"
 Toggle srsctl_val "net srsctl_val[31:0]"
 Toggle srsmap_val "net srsmap_val[31:0]"
 Toggle timer_ip_active "net timer_ip_active"
@@ -9249,20 +9257,23 @@ Toggle tlb_wr_en_raw "net tlb_wr_en_raw"
 Toggle tlb_wr_en_sw "net tlb_wr_en_sw"
 Toggle tlb_wr_en "net tlb_wr_en"
 Toggle micro_tlb_context_flush "net micro_tlb_context_flush"
-Toggle tlb_wr_vpn2 "net tlb_wr_vpn2[18:0]"
 Toggle tlb_wr_asid "net tlb_wr_asid[7:0]"
 Toggle tlb_wr_mask "net tlb_wr_mask[15:0]"
 Toggle tlb_wr_entrylo0 "net tlb_wr_entrylo0[31:0]"
 Toggle tlb_wr_entrylo1 "net tlb_wr_entrylo1[31:0]"
 
-// ID: EXCL-UVM-0172
+// ID: EXCL-UVM-0173
 // CATEGORY: Cache & Memory Subsystem
-// CHECKSUM: "3943920266 2674090628"
+// CHECKSUM: "586324309 31449104"
 MODULE: dcache
 Toggle cpu_bus_error "net cpu_bus_error"
 Toggle cpu_cache_error "net cpu_cache_error"
+Toggle sim_parity_inject_valid "net sim_parity_inject_valid"
+Toggle sim_parity_inject_tag "net sim_parity_inject_tag"
+Toggle sim_parity_inject_data "net sim_parity_inject_data"
+Toggle sim_parity_inject_way "net sim_parity_inject_way[1:0]"
+Toggle sim_parity_inject_index "net sim_parity_inject_index[5:0]"
 Toggle cache_op_valid "net cache_op_valid"
-Toggle cache_op "net cache_op[4:0]"
 Toggle cache_op_done "net cache_op_done"
 Toggle cache_op_error "net cache_op_error"
 Toggle cache_tag_wdata "net cache_tag_wdata[31:0]"
@@ -9297,6 +9308,10 @@ Toggle legacy_addr_uncacheable "net legacy_addr_uncacheable"
 Toggle coh_snoop_addr_norm "net coh_snoop_addr_norm[31:0]"
 Toggle coh_snoop_index_hit "net coh_snoop_index_hit"
 Toggle coh_refill_collision "net coh_refill_collision"
+Toggle sim_parity_target "net sim_parity_target"
+Toggle tag_parity_bad "reg tag_parity_bad[3:0]"
+Toggle data_parity_bad "reg data_parity_bad[3:0]"
+Toggle dcache_parity_error "net dcache_parity_error"
 Toggle coh_snoop_hits_lookup "net coh_snoop_hits_lookup"
 Toggle refill_error "reg refill_error"
 Toggle cache_error_pending "reg cache_error_pending"
@@ -9309,7 +9324,7 @@ Toggle maint_hit_wb_inv "net maint_hit_wb_inv"
 Toggle maint_hit_wb "net maint_hit_wb"
 Toggle maint_needs_wb "net maint_needs_wb"
 
-// ID: EXCL-UVM-0173
+// ID: EXCL-UVM-0174
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3793966820 948543986"
 MODULE: soc_fabric
@@ -9488,7 +9503,7 @@ Toggle xs_arsize "net xs_arsize[14:0]"
 Toggle xs_arburst "net xs_arburst[9:0]"
 Toggle xs_arlock "net xs_arlock[9:0]"
 
-// ID: EXCL-UVM-0174
+// ID: EXCL-UVM-0175
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1536517759 1897099756"
 MODULE: l2_cache_wt
@@ -9507,7 +9522,7 @@ Toggle snoop_tag "net snoop_tag[14:0]"
 Toggle refill_error "reg refill_error[1:0]"
 Toggle snoop_invalidate_pending "reg snoop_invalidate_pending"
 
-// ID: EXCL-UVM-0175
+// ID: EXCL-UVM-0176
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2910715491 2474013807"
 MODULE: apb_wdt
@@ -9524,17 +9539,12 @@ Toggle expired_r "reg expired_r"
 Toggle wr "net wr"
 Toggle rd "net rd"
 
-// ID: EXCL-UVM-0176
+// ID: EXCL-UVM-0177
 // CATEGORY: Cache & Memory Subsystem
 // CHECKSUM: "3975723183 1825931879"
 MODULE: icache
-Toggle cpu_req "net cpu_req"
 Toggle cpu_bus_error "net cpu_bus_error"
 Toggle cpu_cache_error "net cpu_cache_error"
-Toggle cache_op_valid "net cache_op_valid"
-Toggle cache_op "net cache_op[4:0]"
-Toggle cache_op_ready "net cache_op_ready"
-Toggle cache_op_done "net cache_op_done"
 Toggle cache_op_error "net cache_op_error"
 Toggle cache_tag_wdata "net cache_tag_wdata[31:0]"
 Toggle sim_parity_inject_valid "net sim_parity_inject_valid"
@@ -9552,25 +9562,21 @@ Toggle arprot "net arprot[2:0]"
 Toggle rid "net rid[3:0]"
 Toggle rresp "net rresp[1:0]"
 Toggle refill_error "reg refill_error"
-Toggle maint_req "net maint_req"
 Toggle maint_addr "reg maint_addr[31:0]"
-Toggle maint_op "reg maint_op[4:0]"
 Toggle maint_way "reg maint_way[1:0]"
 Toggle maint_tag_wdata "reg maint_tag_wdata[31:0]"
 Toggle maint_error "reg maint_error"
 Toggle maint_index "net maint_index[5:0]"
-Toggle maint_index_invalidate "net maint_index_invalidate"
 Toggle maint_load_tag "net maint_load_tag"
 Toggle maint_store_tag "net maint_store_tag"
-Toggle maint_hit_invalidate "net maint_hit_invalidate"
 Toggle sim_parity_target "net sim_parity_target"
 Toggle tag_parity_bad "reg tag_parity_bad[3:0]"
 Toggle data_parity_bad "reg data_parity_bad[3:0]"
 Toggle icache_parity_error "net icache_parity_error"
 
-// ID: EXCL-UVM-0177
+// ID: EXCL-UVM-0178
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "892611322 2542372638"
+// CHECKSUM: "1888420073 3435337693"
 MODULE: mips_soc_impl
 Toggle uart_rx "net uart_rx"
 Toggle uart_cts_n "net uart_cts_n"
@@ -9805,6 +9811,12 @@ Toggle core1_coh_store_valid "net core1_coh_store_valid"
 Toggle core1_coh_store_addr "net core1_coh_store_addr[31:0]"
 Toggle ipi_core1_core0_invalidate "net ipi_core1_core0_invalidate"
 Toggle ipi_core1_core1_invalidate "net ipi_core1_core1_invalidate"
+Toggle ipi_ack_valid_r "reg ipi_ack_valid_r"
+Toggle ipi_ack_target_r "reg ipi_ack_target_r"
+Toggle ipi_ack_generation_r "reg ipi_ack_generation_r[7:0]"
+Toggle ipi_core1_ack_valid_r "reg ipi_core1_ack_valid_r"
+Toggle ipi_core1_ack_target_r "reg ipi_core1_ack_target_r"
+Toggle ipi_core1_ack_generation_r "reg ipi_core1_ack_generation_r[7:0]"
 Toggle tlb_inv_en "net tlb_inv_en"
 Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
 Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
@@ -9846,7 +9858,7 @@ Toggle uart_dsr_n_int "net uart_dsr_n_int"
 Toggle uart_dcd_n_int "net uart_dcd_n_int"
 Toggle uart_ri_n_int "net uart_ri_n_int"
 
-// ID: EXCL-UVM-0178
+// ID: EXCL-UVM-0179
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "41468714 3893246269"
 MODULE: axi_crossbar
@@ -9869,7 +9881,7 @@ Toggle s_arlock "net s_arlock[9:0]"
 Toggle rd_alloc_found "reg rd_alloc_found"
 Toggle wr_alloc_found "reg wr_alloc_found"
 
-// ID: EXCL-UVM-0179
+// ID: EXCL-UVM-0180
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2806492800 430751152"
 MODULE: axi_id_tracker
@@ -9893,14 +9905,13 @@ Toggle free_found "reg free_found"
 Toggle retire_slot "reg retire_slot[2:0]"
 Toggle retire_hit "reg retire_hit"
 
-// ID: EXCL-UVM-0180
+// ID: EXCL-UVM-0181
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3979373752 3777224270"
+// CHECKSUM: "2577213487 3777224270"
 MODULE: mips_fpu
 Toggle a "net a[31:0]"
 Toggle b "net b[31:0]"
 Toggle compare_true "reg compare_true"
-Toggle fmt_double "net fmt_double"
 Toggle rounding_mode "net rounding_mode[1:0]"
 Toggle a_double "net a_double[63:0]"
 Toggle b_double "net b_double[63:0]"
@@ -9912,7 +9923,7 @@ Toggle a_nan "reg a_nan"
 Toggle b_nan "reg b_nan"
 Toggle unordered "reg unordered"
 
-// ID: EXCL-UVM-0181
+// ID: EXCL-UVM-0182
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4266736862 1526955267"
 MODULE: mips_bpu
@@ -9925,7 +9936,7 @@ Toggle btb_hit "net btb_hit"
 Toggle taken_r "reg taken_r"
 Toggle _unused_ok "net _unused_ok"
 
-// ID: EXCL-UVM-0182
+// ID: EXCL-UVM-0183
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2071608225 3479136261"
 MODULE: ddr4_phy_behavioral
@@ -9955,7 +9966,7 @@ Toggle error_code "reg error_code[15:0]"
 Toggle state "reg state[2:0]"
 Toggle phase_count "reg phase_count[31:0]"
 
-// ID: EXCL-UVM-0183
+// ID: EXCL-UVM-0184
 // CATEGORY: Debug & Observability
 // CHECKSUM: "3637738929 3193612777"
 MODULE: soc_debug_subsystem
@@ -9977,7 +9988,7 @@ Toggle m_arcache "net m_arcache[3:0]"
 Toggle m_arprot "net m_arprot[2:0]"
 Toggle m_rresp "net m_rresp[1:0]"
 
-// ID: EXCL-UVM-0184
+// ID: EXCL-UVM-0185
 // CATEGORY: Peripherals & Subsystems
 // CHECKSUM: "1341811719 2621596314"
 MODULE: apb_axi_dma
@@ -10002,7 +10013,7 @@ Toggle cand_ch "reg cand_ch[1:0]"
 Toggle act_ch "reg act_ch[1:0]"
 Toggle act_ch_q "reg act_ch_q[1:0]"
 
-// ID: EXCL-UVM-0185
+// ID: EXCL-UVM-0186
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3402720095 390193508"
 MODULE: mmu_page_table_allocator
@@ -10021,7 +10032,7 @@ Toggle release_reject "reg release_reject"
 Toggle used "reg used[3:0]"
 Toggle found "reg found"
 
-// ID: EXCL-UVM-0186
+// ID: EXCL-UVM-0187
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1023533041 4123233221"
 MODULE: mips_if_id_reg
@@ -10032,12 +10043,11 @@ Toggle id_except_is_tlb_refill "reg id_except_is_tlb_refill"
 Toggle id_bpu_valid "reg id_bpu_valid"
 Toggle id_bpu_taken "reg id_bpu_taken"
 
-// ID: EXCL-UVM-0187
+// ID: EXCL-UVM-0188
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1159426980 628970833"
 MODULE: mips_tlb
 Toggle wr_en "net wr_en"
-Toggle wr_vpn2 "net wr_vpn2[18:0]"
 Toggle wr_asid "net wr_asid[7:0]"
 Toggle wr_mask "net wr_mask[15:0]"
 Toggle wr_entrylo0 "net wr_entrylo0[31:0]"
@@ -10054,7 +10064,6 @@ Toggle rd_asid "net rd_asid[7:0]"
 Toggle rd_mask "net rd_mask[15:0]"
 Toggle rd_entrylo0 "net rd_entrylo0[31:0]"
 Toggle rd_entrylo1 "net rd_entrylo1[31:0]"
-Toggle probe_vpn2 "net probe_vpn2[18:0]"
 Toggle probe_asid "net probe_asid[7:0]"
 Toggle probe_hit "net probe_hit"
 Toggle probe_index "net probe_index[5:0]"
@@ -10680,7 +10689,7 @@ Toggle g_lookup1[63].cmp1_mask "net g_lookup1[63].cmp1_mask[18:0]"
 Toggle g_lookup1[63].vpn2_match1 "net g_lookup1[63].vpn2_match1"
 Toggle g_lookup1[63].asid_match1 "net g_lookup1[63].asid_match1"
 
-// ID: EXCL-UVM-0188
+// ID: EXCL-UVM-0189
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2985369504 3591773181"
 MODULE: axi_ddr_behavioral
@@ -10725,9 +10734,9 @@ Toggle w_addr "reg w_addr[31:0]"
 Toggle w_len "reg w_len[7:0]"
 Toggle w_id "reg w_id[3:0]"
 
-// ID: EXCL-UVM-0189
+// ID: EXCL-UVM-0190
 // CATEGORY: General Module Coverage Exclusions
-// CHECKSUM: "3371145080 4062230476"
+// CHECKSUM: "3681053710 4062230476"
 MODULE: mips_page_table_walker
 Toggle req_valid "net req_valid"
 Toggle req_ready "net req_ready"
@@ -10747,7 +10756,7 @@ Toggle ptbr_q "reg ptbr_q[31:0]"
 Toggle access_q "reg access_q[1:0]"
 Toggle user_q "reg user_q"
 
-// ID: EXCL-UVM-0190
+// ID: EXCL-UVM-0191
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1363931416 1788776457"
 MODULE: qspi_cmd_behavioral
@@ -10824,7 +10833,7 @@ Toggle cs_n_r "reg cs_n_r[3:0]"
 Toggle io_o_r "reg io_o_r[3:0]"
 Toggle io_oe_r "reg io_oe_r[3:0]"
 
-// ID: EXCL-UVM-0191
+// ID: EXCL-UVM-0192
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2772071125 1505188873"
 MODULE: uart_pad_wrapper
@@ -10846,7 +10855,7 @@ Toggle uart_dsr_n_o "net uart_dsr_n_o"
 Toggle uart_dcd_n_o "net uart_dcd_n_o"
 Toggle uart_ri_n_o "net uart_ri_n_o"
 
-// ID: EXCL-UVM-0192
+// ID: EXCL-UVM-0193
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4288013028 2334103481"
 MODULE: axi_ddr4_controller
@@ -10916,7 +10925,7 @@ Toggle ecc_merged_write_data "net ecc_merged_write_data[31:0]"
 Toggle ecc_write_code "net ecc_write_code[38:0]"
 Toggle image_hex "reg image_hex[1023:0]"
 
-// ID: EXCL-UVM-0193
+// ID: EXCL-UVM-0194
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1581893224 3269967297"
 MODULE: apb_mmu_context_status
@@ -10953,7 +10962,7 @@ Toggle sd_invalidate_asid "net sd_invalidate_asid[7:0]"
 Toggle sd_invalidate_vpn "net sd_invalidate_vpn[19:0]"
 Toggle sd_invalidate_scope "net sd_invalidate_scope[1:0]"
 
-// ID: EXCL-UVM-0194
+// ID: EXCL-UVM-0195
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3379064563 2636761320"
 MODULE: mips_soc
@@ -10989,7 +10998,7 @@ Toggle ext_rresp "net ext_rresp[1:0]"
 Toggle ext_rlast "net ext_rlast"
 Toggle ext_rvalid "net ext_rvalid"
 
-// ID: EXCL-UVM-0195
+// ID: EXCL-UVM-0196
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3915859991 4074997514"
 MODULE: apb_ddr4_status
@@ -11011,7 +11020,7 @@ Toggle wr "net wr"
 Toggle rd "net rd"
 Toggle error_active "net error_active"
 
-// ID: EXCL-UVM-0196
+// ID: EXCL-UVM-0197
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2914053452 1386343405"
 MODULE: l2_cache_caching
@@ -11106,7 +11115,7 @@ Toggle valids_of_index "reg valids_of_index[7:0]"
 Toggle hit "net hit"
 Toggle hit_way "reg hit_way[2:0]"
 
-// ID: EXCL-UVM-0197
+// ID: EXCL-UVM-0198
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3372399530 379756662"
 MODULE: cpu_scheduler
@@ -11148,7 +11157,7 @@ Toggle trigger "net trigger"
 Toggle eligible "net eligible[3:0]"
 Toggle selected "reg selected[7:0]"
 
-// ID: EXCL-UVM-0198
+// ID: EXCL-UVM-0199
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1135157623 2466247052"
 MODULE: mips_regfile
@@ -11167,7 +11176,7 @@ Toggle active_set "net active_set[3:0]"
 Toggle active_prev_set "net active_prev_set[3:0]"
 Toggle restore_set "net restore_set[3:0]"
 
-// ID: EXCL-UVM-0199
+// ID: EXCL-UVM-0200
 // CATEGORY: Bus & Fabric Interconnect
 // CHECKSUM: "1023251519 706408668"
 MODULE: axi2apb_bridge
@@ -11183,7 +11192,7 @@ Toggle arburst_latch "reg arburst_latch[1:0]"
 Toggle aw_done "net aw_done"
 Toggle w_done "net w_done"
 
-// ID: EXCL-UVM-0200
+// ID: EXCL-UVM-0201
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3303551202 3390719663"
 MODULE: apb_perf_counters
@@ -11199,7 +11208,7 @@ Toggle branch_mispredict_count "net branch_mispredict_count[31:0]"
 Toggle mdu_stall_count "net mdu_stall_count[31:0]"
 Toggle rd "net rd"
 
-// ID: EXCL-UVM-0201
+// ID: EXCL-UVM-0202
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2568128339 389552831"
 MODULE: qspi_soc_pad_mux
@@ -11221,7 +11230,7 @@ Toggle qspi_io_oe "net qspi_io_oe[3:0]"
 Toggle qspi_io "net qspi_io[3:0]"
 Toggle selected_cmd "net selected_cmd"
 
-// ID: EXCL-UVM-0202
+// ID: EXCL-UVM-0203
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "832457901 2783702265"
 MODULE: qspi_apb_integration
@@ -11264,7 +11273,7 @@ Toggle trigger_access "net trigger_access"
 Toggle arbiter_wait "net arbiter_wait"
 Toggle cmd_engine_sel "net cmd_engine_sel"
 
-// ID: EXCL-UVM-0203
+// ID: EXCL-UVM-0204
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "1633348978 1444263448"
 MODULE: soc_core_subsystem
@@ -11347,7 +11356,7 @@ Toggle core_data_arprot "net core_data_arprot[2:0]"
 Toggle core_data_rid "net core_data_rid[3:0]"
 Toggle core_data_rresp "net core_data_rresp[1:0]"
 
-// ID: EXCL-UVM-0204
+// ID: EXCL-UVM-0205
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "314633967 1860982472"
 MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )
@@ -11566,7 +11575,7 @@ Toggle ddr4_ecc_irq "net ddr4_ecc_irq"
 Toggle irq_sources "net irq_sources[31:0]"
 Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
 
-// ID: EXCL-UVM-0205
+// ID: EXCL-UVM-0206
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "314633967 1688562076"
 MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )
@@ -11786,7 +11795,7 @@ Toggle irq_sources "net irq_sources[31:0]"
 Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
 Toggle g_apb_fault_injector.fault_wait "reg g_apb_fault_injector.fault_wait"
 
-// ID: EXCL-UVM-0206
+// ID: EXCL-UVM-0207
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1379674422 1705860525"
 MODULE: mips_mem_wb_reg
@@ -11829,12 +11838,10 @@ Toggle wb_except_is_tlb_refill "reg wb_except_is_tlb_refill"
 Toggle wb_bd "reg wb_bd"
 Toggle wb_mem_to_reg "reg wb_mem_to_reg[1:0]"
 
-// ID: EXCL-UVM-0207
+// ID: EXCL-UVM-0208
 // CATEGORY: CPU Core & Pipeline
-// CHECKSUM: "3949678489 1097251867"
+// CHECKSUM: "1408932106 1097251867"
 MODULE: mips_control
-Toggle cache_op_valid "reg cache_op_valid"
-Toggle cache_op "reg cache_op[4:0]"
 Toggle fpu_branch_invert "reg fpu_branch_invert"
 Toggle is_break "reg is_break"
 Toggle is_di "reg is_di"
@@ -11849,7 +11856,7 @@ Toggle is_rdpgpr "reg is_rdpgpr"
 Toggle is_wrpgpr "reg is_wrpgpr"
 Toggle fpu_condition_code "reg fpu_condition_code[2:0]"
 
-// ID: EXCL-UVM-0208
+// ID: EXCL-UVM-0209
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3250824396 1906107907"
 MODULE: l2_cache
@@ -11864,7 +11871,7 @@ Toggle snoop_valid "net snoop_valid"
 Toggle snoop_ack "net snoop_ack"
 Toggle snoop_hit "net snoop_hit"
 
-// ID: EXCL-UVM-0209
+// ID: EXCL-UVM-0210
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "840303087 2361128015"
 MODULE: qspi_pad_wrapper
@@ -11890,7 +11897,7 @@ Toggle spi_io_i "net spi_io_i[3:0]"
 Toggle cmd_error_event "net cmd_error_event"
 Toggle cmd_error_value "net cmd_error_value[31:0]"
 
-// ID: EXCL-UVM-0210
+// ID: EXCL-UVM-0211
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "63469976 2052000697"
 MODULE: l2_cache_nb
@@ -12011,7 +12018,7 @@ Toggle acc_merge_now "net acc_merge_now"
 Toggle acc_merge_idx "net acc_merge_idx[2:0]"
 Toggle mshr_refd "reg mshr_refd"
 
-// ID: EXCL-UVM-0211
+// ID: EXCL-UVM-0212
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "97997737 1325137312"
 MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )
@@ -12242,7 +12249,7 @@ Toggle g_spi_flash_controller.flash_rvalid "net g_spi_flash_controller.flash_rva
 Toggle g_spi_flash_controller.flash_rready "net g_spi_flash_controller.flash_rready"
 Toggle g_spi_flash_controller.flash_timeout_sticky "net g_spi_flash_controller.flash_timeout_sticky"
 
-// ID: EXCL-UVM-0212
+// ID: EXCL-UVM-0213
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "97997737 2700404519"
 MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )
@@ -12456,7 +12463,7 @@ Toggle ddr4_last_row_miss_i "net ddr4_last_row_miss_i"
 Toggle spi_transaction_active "net spi_transaction_active"
 Toggle g_flash_image_model.flash_model_arready "net g_flash_image_model.flash_model_arready"
 
-// ID: EXCL-UVM-0213
+// ID: EXCL-UVM-0214
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4202099251 1000455489"
 MODULE: ecc_secded_32
@@ -12468,7 +12475,7 @@ Toggle correctable_error "reg correctable_error"
 Toggle uncorrectable_error "reg uncorrectable_error"
 Toggle fixed "reg fixed[38:0]"
 
-// ID: EXCL-UVM-0214
+// ID: EXCL-UVM-0215
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "886703037 1822891761"
 MODULE: mmu_tlb_shootdown_mailbox
@@ -12489,7 +12496,7 @@ Toggle rejected "reg rejected"
 Toggle count "reg count[6:0]"
 Toggle issued "reg issued"
 
-// ID: EXCL-UVM-0215
+// ID: EXCL-UVM-0216
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "469529741 3226638645"
 MODULE: axi_read_timeout_guard
@@ -12544,7 +12551,7 @@ Toggle downstream_active "reg downstream_active"
 Toggle timeout_enabled "net timeout_enabled"
 Toggle timeout_expired "net timeout_expired"
 
-// ID: EXCL-UVM-0216
+// ID: EXCL-UVM-0217
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2624281472 4118275935"
 MODULE: apb_qspi_status
@@ -12565,24 +12572,19 @@ Toggle rd "net rd"
 Toggle timeout_rise "net timeout_rise"
 Toggle error_rise "net error_rise"
 
-// ID: EXCL-UVM-0217
+// ID: EXCL-UVM-0218
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "827148926 1307555902"
 MODULE: mips_mem_stage
 Toggle enable_nonblocking_load "net enable_nonblocking_load"
-Toggle mem_cache_op_valid "net mem_cache_op_valid"
-Toggle mem_cache_op "net mem_cache_op[4:0]"
 Toggle translation_fault "net translation_fault"
-Toggle cache_op_done "net cache_op_done"
 Toggle cache_op_error "net cache_op_error"
-Toggle cache_op_valid "net cache_op_valid"
-Toggle cache_op "net cache_op[4:0]"
 Toggle cache_op_fault "net cache_op_fault"
 Toggle adel_exception "net adel_exception"
 Toggle ades_exception "net ades_exception"
 Toggle bad_align_h "net bad_align_h"
 
-// ID: EXCL-UVM-0218
+// ID: EXCL-UVM-0219
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "4146882487 3149925033"
 MODULE: spi_flash_behavioral
@@ -12604,7 +12606,7 @@ Toggle wel_r "reg wel_r"
 Toggle wip_r "reg wip_r"
 Toggle unused_clk "net unused_clk"
 
-// ID: EXCL-UVM-0219
+// ID: EXCL-UVM-0220
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "2384024518 3480392512"
 MODULE: mips_rob
@@ -12613,7 +12615,7 @@ Toggle mem_except_is_tlb_refill "net mem_except_is_tlb_refill"
 Toggle wb_tlb_op "reg wb_tlb_op[2:0]"
 Toggle wb_except_is_tlb_refill "reg wb_except_is_tlb_refill"
 
-// ID: EXCL-UVM-0220
+// ID: EXCL-UVM-0221
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "1906454295 1969027182"
 MODULE: qspi_flash_quad_behavioral
@@ -12633,22 +12635,18 @@ Toggle io_o_r "reg io_o_r[3:0]"
 Toggle io_oe_r "reg io_oe_r[3:0]"
 Toggle unused_clk "net unused_clk"
 
-// ID: EXCL-UVM-0221
+// ID: EXCL-UVM-0222
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "3473284045 1121928539"
 MODULE: mips_id_ex_reg
 Toggle id_except_is_data "net id_except_is_data"
 Toggle id_except_is_tlb_refill "net id_except_is_tlb_refill"
 Toggle id_tlb_op "net id_tlb_op[2:0]"
-Toggle id_cache_op_valid "net id_cache_op_valid"
-Toggle id_cache_op "net id_cache_op[4:0]"
 Toggle ex_except_is_data "reg ex_except_is_data"
 Toggle ex_except_is_tlb_refill "reg ex_except_is_tlb_refill"
 Toggle ex_tlb_op "reg ex_tlb_op[2:0]"
-Toggle ex_cache_op_valid "reg ex_cache_op_valid"
-Toggle ex_cache_op "reg ex_cache_op[4:0]"
 
-// ID: EXCL-UVM-0222
+// ID: EXCL-UVM-0223
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "3064912425 1299116686"
 MODULE: apb_vic
@@ -12663,7 +12661,7 @@ Toggle best_pri_r "reg best_pri_r[3:0]"
 Toggle running_prio_r "reg running_prio_r[3:0]"
 Toggle any_active_r "reg any_active_r"
 
-// ID: EXCL-UVM-0223
+// ID: EXCL-UVM-0224
 // CATEGORY: General Module Coverage Exclusions
 // CHECKSUM: "609989151 248031311"
 MODULE: mips_perf_counters
@@ -12677,25 +12675,20 @@ Toggle dcache_miss_count "reg dcache_miss_count[31:0]"
 Toggle branch_mispredict_count "reg branch_mispredict_count[31:0]"
 Toggle mdu_stall_count "reg mdu_stall_count[31:0]"
 
-// ID: EXCL-UVM-0224
+// ID: EXCL-UVM-0225
 // CATEGORY: CPU Core & Pipeline
 // CHECKSUM: "1192777547 1251424683"
 MODULE: mips_ex_mem_reg
 Toggle enable_nonblocking_load "net enable_nonblocking_load"
-Toggle cache_op_done "net cache_op_done"
 Toggle ex_tlb_op "net ex_tlb_op[2:0]"
 Toggle ex_except_is_data "net ex_except_is_data"
 Toggle ex_except_is_tlb_refill "net ex_except_is_tlb_refill"
-Toggle ex_cache_op_valid "net ex_cache_op_valid"
-Toggle ex_cache_op "net ex_cache_op[4:0]"
 Toggle mem_tlb_op "reg mem_tlb_op[2:0]"
 Toggle mem_except_is_data "reg mem_except_is_data"
 Toggle mem_except_is_tlb_refill "reg mem_except_is_tlb_refill"
-Toggle mem_cache_op_valid "reg mem_cache_op_valid"
-Toggle mem_cache_op "reg mem_cache_op[4:0]"
 Toggle mem_double_phase "reg mem_double_phase"
 
-// ID: EXCL-UVM-0225
+// ID: EXCL-UVM-0226
 // CATEGORY: SoC Integration & Subsystems
 // CHECKSUM: "13862731 2681435553"
 MODULE: soc_top

@@ -178,9 +178,17 @@ urg -dir "${PHASE2_ROOT}/directed_cov/directed.vdb" \
 # Refine exclusions directly from fresh VDBs
 python3 "${ROOT_DIR}/tb/coverage/refine_exclusions.py" "${MERGED_COV_DIR}/merged.vdb" "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb"
 
-# Refresh Product textReportFinal using freshly refined product_exclusions.el
+# URG requires one strict exclusion file per metric when a merged VDB contains
+# multiple elaboration/configuration variants.  Generate these files directly
+# from the fresh VDBs so checksums and object sets cannot become stale.
+UVM_STRICT_ELFILELIST=$(python3 "${ROOT_DIR}/tb/coverage/dump_strict_exclusions.py" \
+    "${MERGED_COV_DIR}/merged.vdb" "${MERGED_COV_DIR}/strict_exclusions" uvm)
+PRODUCT_STRICT_ELFILELIST=$(python3 "${ROOT_DIR}/tb/coverage/dump_strict_exclusions.py" \
+    "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" "${PHASE3_ROOT}/cpu_cp0_gate/strict_exclusions" product)
+
+# Refresh Product textReportFinal using fresh strict per-metric exclusions
 urg -dir "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" \
-    -elfile "${ROOT_DIR}/tb/coverage/product_exclusions.el" \
+    -elfilelist "${PRODUCT_STRICT_ELFILELIST}" \
     -excl_strict \
     -format text \
     -report "${PHASE3_ROOT}/cpu_cp0_gate/textReportFinal" \
@@ -188,7 +196,7 @@ urg -dir "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" \
 
 # Generate final adjusted report with strict exclusions
 urg -dir "${MERGED_COV_DIR}/merged.vdb" \
-    -elfile "${ROOT_DIR}/tb/coverage/uvm_exclusions.el" \
+    -elfilelist "${UVM_STRICT_ELFILELIST}" \
     -excl_strict \
     -format both \
     -report "${MERGED_COV_DIR}/urgReport" \

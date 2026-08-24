@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-24 strict URG exclusion metadata closure
+
+- `make coverage-strict-clean-gate` now passes for both the merged UVM VDB and
+  product CPU/CP0 VDB. The gate dumps exclusions fresh from each VDB, changes
+  only the URG mode marker from `default` to `strict`, and loads line/FSM/
+  condition/toggle/branch files through `-elfilelist`.
+- This avoids mixed-VDB checksum and cross-metric parser ambiguity while
+  preserving the existing exclusion semantics and 99% threshold. The gate
+  reports zero URG metadata warnings and emits auditable run-local files under
+  `build/coverage/strict_clean/`.
+- This closes metadata hygiene, not measured coverage percentage: current
+  UVM/product scores remain below the 99% policy and full coverage signoff is
+  still open.
+
 ## Current Phase
 
 ### 2026-08-23 SRSMap state slice
