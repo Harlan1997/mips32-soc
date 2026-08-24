@@ -1219,18 +1219,21 @@ static void soc_ref_cpu_reset(void *opaque)
      * guest's normal MTC0 Status sequence to enable COP1. */
     env->CP0_Status_rw_bitmask |= (1U << CP0St_CU1);
 
-    /* Match the vendor-neutral RTL CP0 static identity/geometry contract.
-     * These values are architectural inputs to the differential guest, not
-     * an attempt to model the host CPU implementation. */
-    env->CP0_PRid = 0x00008010;
-    env->CP0_Config0 = 0x80000503;
-    env->CP0_Config1 = 0xFEA83480;
-    if (reset->cpu_has_fpu) {
-        /* COP1 availability is controlled by Status.CU1 after reset. */
-        env->CP0_Config1 |= (1U << CP0C1_FP);
+    /* Bare-metal differential guests use the RTL's fixed CP0 identity and
+     * geometry. UHI/Linux guests must retain the selected QEMU CPU's native
+     * identification: Linux cpu_probe uses PRid/Config to select errata and
+     * traps if the prototype values describe an unknown processor. */
+    if (!reset->fdt_loaded) {
+        env->CP0_PRid = 0x00008010;
+        env->CP0_Config0 = 0x80000503;
+        env->CP0_Config1 = 0xFEA83480;
+        if (reset->cpu_has_fpu) {
+            /* COP1 availability is controlled by Status.CU1 after reset. */
+            env->CP0_Config1 |= (1U << CP0C1_FP);
+        }
+        env->CP0_Config2 = 0x80000000;
+        env->CP0_Config3 = 0x00002008;
     }
-    env->CP0_Config2 = 0x80000000;
-    env->CP0_Config3 = 0x00002008;
 
     if (reset->fdt_loaded) {
         /* Linux generic MIPS consumes the UHI FDT contract before C code:

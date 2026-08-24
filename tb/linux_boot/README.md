@@ -47,6 +47,16 @@ opaque blob in guest RAM and supplies the MIPS UHI arguments (`a0=-2`, kseg0
 This is not a Linux kernel boot test and does not provide a device-specific
 DTS, U-Boot loader, or Linux driver model.
 
+## Generic Linux kernel gate
+
+The opt-in `make linux-boot-build-gate` target builds a pinned generic MIPS
+32r2 little-endian Linux kernel, a project DTS, and a minimal initramfs, then
+boots them on the project-built `mips32-soc-ref` machine. The gate currently
+passes the kernel-to-init boundary: Linux prints its version and reaches
+`/init`. It does not claim a complete userspace boot because the custom
+machine's ordinary 8250 device node is not yet registered, so `/init` cannot
+write a final UART marker through standard file descriptor output.
+
 ## Boot flow (target)
 
 ```
