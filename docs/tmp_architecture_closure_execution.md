@@ -1367,7 +1367,11 @@ remains the compatibility baseline.
   `AABBCCDD`, `BBCCDD11`, `CCDD1122`, `DD112233`.
 - Tightened `tb/soc_test/run_isa_r2_gate.sh` so `ISA_R2_SPECIAL_FAIL` is a
   hard failure; the gate passes with the current RTL.
-- `qemu-system-isa-r2-differential-gate` remains failing before the ALIGN
-  corpus at the existing exception-handler startup trace mismatch
-  (`rtl 27bdff88` versus QEMU `27bdffa0`). This is recorded as residual work,
-  not claimed as differential closure.
+- Fixed the QEMU system capture wrapper to remove run-owned event/state files
+  before every invocation, so a timeout cannot reuse stale QEMU events.
+- Added the project QEMU 9.2 patch that selects the MIPS32r2 32-bit ALIGN
+  generator for the legacy SPECIAL3 encoding; upstream QEMU routes this
+  encoding through the MIPS32r6-only path on `24Kc`.
+- Fresh `make qemu-system-isa-r2-differential-gate` now passes with
+  `TRACE_COMPARE_PASS records=447`, including all four ALIGN positions.
+  Full ISA, privileged/MMU and Linux differential remain open.

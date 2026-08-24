@@ -28,6 +28,7 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/mips32_soc_core.xml" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-branch-likely-link.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-srs.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-align-r2.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-bitswap-r2.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-fpu-int32-indefinite.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch" \
@@ -39,6 +40,7 @@ project_inputs_hash() {
 PROJECT_INPUTS_HASH=$(project_inputs_hash)
 if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
@@ -182,8 +184,17 @@ if ! rg -q 'srs_gpr\[16\]\[32\]' "${QEMU_SRC}/target/mips/cpu.h"; then
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-srs.patch"
 fi
 
+if ! rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    perl -0pi -e 's{(    case OPC_BSHFL:\n        op2 = MASK_BSHFL\(ctx->opcode\);\n        switch \(op2\) \{\n        case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n)            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);}{$1            check_insn(ctx, ISA_MIPS_R2); /* SOC_REF_ALIGN_R2 */\n            gen_align(ctx, 32, rd, rs, rt, sa \& 3);}' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+fi
+
 if ! rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n        case OPC_BITSWAP:\n            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);\n            break;}{case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n            check_insn(ctx, ISA_MIPS_R6);\n            decode_opc_special3_r6(env, ctx);\n            break;\n        case OPC_BITSWAP:\n            /* SOC_REF_BITSWAP_R2: legacy MIPS32 R2 encoding. */\n            check_insn(ctx, ISA_MIPS_R2);\n            gen_bitswap(ctx, op2, rd, rt);\n            break;}s' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+    # ALIGN is applied first above, so a clean upstream tree reaches this
+    # second shape instead of the original combined R6 ALIGN/BITSWAP case.
+    perl -0pi -e 's{(        case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n            check_insn\(ctx, ISA_MIPS_R2\); /\* SOC_REF_ALIGN_R2 \*/\n            gen_align\(ctx, 32, rd, rs, rt, sa & 3\);\n            break;\n)        case OPC_BITSWAP:\n            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);\n            break;}{$1        case OPC_BITSWAP:\n            /* SOC_REF_BITSWAP_R2: legacy MIPS32 R2 encoding. */\n            check_insn(ctx, ISA_MIPS_R2);\n            gen_bitswap(ctx, op2, rd, rt);\n            break;}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 

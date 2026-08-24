@@ -27,6 +27,17 @@ MAX_QEMU_CAPTURE_BYTES=${MAX_QEMU_CAPTURE_BYTES:-268435456}
 mkdir -p "${RUN_DIR}"
 [[ -x "${QEMU_BIN}" && -s "${FW_ELF}" ]]
 
+# A timed-out QEMU process can leave a complete-looking capture from an older
+# invocation in place.  Remove every run-owned artifact before starting so a
+# retry can never convert stale events/state into a fresh retire trace.
+rm -f "${RUN_DIR}/qemu_instruction_events.jsonl" \
+      "${RUN_DIR}/qemu_state.jsonl" \
+      "${RUN_DIR}/qemu_registers.txt" \
+      "${RUN_DIR}/qemu_retire.jsonl" \
+      "${RUN_DIR}/qemu_trace_capture.log" \
+      "${RUN_DIR}/trace_compare.log" \
+      "${RUN_DIR}/qemu_capture_guard.log"
+
 if [[ -z "${PLUGIN_INCLUDE}" ]]; then
     for candidate in \
         "${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-bundle/usr/local/include" \
