@@ -16,6 +16,21 @@ module tb_l1_cache_nb;
   begin @(negedge clk);mem_rsp_addr=addr;mem_rsp_data=0;mem_rsp_data[(addr[4:2])*32 +: 32]=word;mem_rsp_valid=1;
    @(negedge clk);mem_rsp_valid=0; end
  endtask
+ task issue_write(input [3:0] id,input [31:0] addr,input [31:0] data);
+  begin @(negedge clk);cpu_id=id;cpu_addr=addr;cpu_wdata=data;cpu_be=4'hf;cpu_we=1;cpu_valid=1;
+   while(!cpu_ready) @(negedge clk); @(negedge clk);cpu_valid=0;cpu_we=0; end
+ endtask
+ task wait_wb_empty;
+  integer n;
+  begin
+   for (n=0; n<20 && wb_occupancy != 0; n=n+1) @(negedge clk);
+   #1;
+   if (wb_occupancy != 0) begin
+    $display("FAIL writeback queue did not drain occupancy=%0d",wb_occupancy);
+    errors=errors+1;
+   end
+  end
+ endtask
  initial begin
   repeat(2) @(posedge clk);rst_n=1;
   // Two requests to the same line must merge into one refill while retaining
@@ -36,6 +51,32 @@ module tb_l1_cache_nb;
   @(negedge clk);rsp_ready=1;
   return_line(32'h000000c0,32'hcccc0001);#1;
   if(!rsp_valid||rsp_id!=4'hc||rsp_rdata!=32'hcccc0001) begin $display("FAIL rsp c id=%h data=%h",rsp_id,rsp_rdata);errors=errors+1;end
+
+  // Fill one dirty line in each set, then hold the memory port blocked while
+  // four conflicting misses enqueue dirty victims.  The fifth dirty victim
+  // must remain backpressured until the writeback queue drains.
+  issue_write(4'h1,32'h00000200,32'hd0000001); return_line(32'h00000200,32'h10000001);
+  issue_write(4'h2,32'h00000220,32'hd0000002); return_line(32'h00000220,32'h10000002);
+  issue_write(4'h3,32'h00000240,32'hd0000003); return_line(32'h00000240,32'h10000003);
+  issue_write(4'h4,32'h00000260,32'hd0000004); return_line(32'h00000260,32'h10000004);
+  mem_req_ready=0;
+  issue_write(4'h5,32'h00000600,32'he0000001); return_line(32'h00000600,32'h20000001);
+  issue_write(4'h6,32'h00000620,32'he0000002); return_line(32'h00000620,32'h20000002);
+  issue_write(4'h7,32'h00000640,32'he0000003); return_line(32'h00000640,32'h20000003);
+  issue_write(4'h8,32'h00000660,32'he0000004); return_line(32'h00000660,32'h20000004);
+  #1;
+  if (wb_occupancy != 4) begin
+   $display("FAIL writeback queue fill occupancy=%0d expected=4",wb_occupancy);
+   errors=errors+1;
+  end
+  @(negedge clk);cpu_id=4'h9;cpu_addr=32'h00000a00;cpu_wdata=32'hf0000001;cpu_we=1;cpu_valid=1;
+  #1;
+  if (cpu_ready) begin
+   $display("FAIL fifth dirty victim was accepted while WB queue full");
+   errors=errors+1;
+  end
+  cpu_valid=0;cpu_we=0;mem_req_ready=1;
+  wait_wb_empty();
   if(errors==0)$display("REGRESSION_TEST_SUCCESS l1nb mshr=2 wb=4");else $display("REGRESSION_TEST_FAILED l1nb errors=%0d",errors);$finish;
  end
 endmodule
