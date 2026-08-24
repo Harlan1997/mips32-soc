@@ -44,6 +44,7 @@ module mips_alu (
     localparam OP_EXT      = 5'b10111; // Extract size=(rd+1) bits at pos
     localparam OP_INS      = 5'b11000; // Insert bits [rd:pos]
     localparam OP_BITSWAP  = 5'b11001; // Reverse bit order within each byte
+    localparam OP_ALIGN    = 5'b11010; // MIPS32r2 ALIGN byte merge
 
     // SPECIAL3 EXT uses rd as size-1; INS uses rd as the high bit. The EX
     // wrapper supplies rd separately from the ALU shift amount.
@@ -180,6 +181,19 @@ module mips_alu (
                     alu_out[bi*8 + 6] = op_b[bi*8 + 1];
                     alu_out[bi*8 + 7] = op_b[bi*8 + 0];
                 end
+            end
+            OP_ALIGN: begin
+                // ALIGN rd, rs, rt, bp selects a byte-aligned 32-bit
+                // window spanning rt (high bytes) and rs (low bytes).
+                // SPECIAL3 encodes bp as sa=8..11; use only the low two
+                // bits after the decoder has validated the encoding.
+                case (sa[1:0])
+                    2'd0: alu_out = op_b;
+                    2'd1: alu_out = {op_b[23:0], op_a[31:24]};
+                    2'd2: alu_out = {op_b[15:0], op_a[31:16]};
+                    2'd3: alu_out = {op_b[7:0],  op_a[31:8]};
+                    default: alu_out = 32'd0;
+                endcase
             end
             default: begin
                 alu_out = 32'd0;
