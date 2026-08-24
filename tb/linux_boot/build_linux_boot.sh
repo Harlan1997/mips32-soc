@@ -21,6 +21,16 @@ mkdir -p "${BUILD_DIR}/rootfs/dev"
     -o "${BUILD_DIR}/rootfs/init" "${SCRIPT_DIR}/init.S"
 chmod 0755 "${BUILD_DIR}/rootfs/init"
 
+# Let the kernel's gen_init_cpio create device nodes without requiring the
+# build host to permit mknod in the output directory.
+initramfs_list="${BUILD_DIR}/initramfs.list"
+{
+    printf 'dir /dev 0755 0 0\n'
+    printf 'nod /dev/console 0600 0 0 c 5 1\n'
+    printf 'nod /dev/ttyS0 0600 0 0 c 4 64\n'
+    printf 'file /init %s 0755 0 0\n' "${BUILD_DIR}/rootfs/init"
+} >"${initramfs_list}"
+
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
     ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" 32r2el_defconfig
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
@@ -33,7 +43,7 @@ test -x "${scripts_config}"
     --enable CONFIG_DEVTMPFS \
     --enable CONFIG_DEVTMPFS_MOUNT \
     --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
-    --set-str CONFIG_INITRAMFS_SOURCE "${BUILD_DIR}/rootfs" \
+    --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_list}" \
     --enable CONFIG_CMDLINE_BOOL \
     --set-str CONFIG_CMDLINE "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init"
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \

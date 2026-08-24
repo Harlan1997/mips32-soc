@@ -11,13 +11,26 @@ _start:
 	li	$v0, 4004
 	syscall
 	nop
-2:
-	wait
-	b	2b
+	la	$a0, console_path
+	li	$a1, 1
+	li	$a2, 0
+	li	$v0, 4005
+	syscall
+	move	$s0, $v0
+	move	$a0, $s0
+	la	$a1, boot_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 0
+	li	$v0, 4001
+	syscall
 	nop
 	.set	at
 	.end _start
 	.section .rodata
+console_path:
+	.ascii "/dev/ttyS0\0"
 boot_marker:
 	.ascii "MIPS32_SOC_LINUX_BOOT_SUCCESS\n"
 boot_marker_end:
