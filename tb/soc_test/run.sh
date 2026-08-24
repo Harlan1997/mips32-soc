@@ -51,12 +51,14 @@ sva_args=()
 sva_sources=()
 cm_args="line+cond+fsm+branch+tgl"
 if [ "${SVA_ENABLE:-0}" = "1" ]; then
-    sva_args=(+define+SVA_ENABLE)
+    sva_args=(+define+SVA_ENABLE +define+VIC_PRIORITY_CHECKER_ENABLE)
     sva_sources=(
         "${ROOT_DIR}/rtl/clock/reset_sync.v"
         "${ROOT_DIR}/tb/sva/axi4_protocol_props.sv"
         "${ROOT_DIR}/tb/sva/apb_protocol_props.sv"
         "${ROOT_DIR}/tb/sva/cache_state_props.sv"
+        "${ROOT_DIR}/tb/sva/vic_priority_checker.sv"
+        "${ROOT_DIR}/tb/sva/vic_priority_bind.sv"
         "${ROOT_DIR}/tb/sva/l1_maintenance_props.sv"
         "${ROOT_DIR}/tb/sva/l1_resource_props.sv"
         "${ROOT_DIR}/tb/sva/reset_sync_props.sv"
