@@ -6,6 +6,7 @@
 #define PIC_RAW    APB32(0x40004000)
 #define PIC_ENABLE APB32(0x40004004)
 #define PIC_MASKED APB32(0x40004008)
+#define PIC_MASK   PIC_ENABLE
 #define PIC_SOFT   APB32(0x4000401c)
 #define PIC_SOFT_CLR APB32(0x40004020)
 #define PIC_PRIO0  APB32(0x40004100)
@@ -28,16 +29,42 @@ static int fail(const char *name)
 
 int main(void)
 {
+#ifdef QEMU_GPIO_INPUT_TEST
+    GPIO_DIR = 0;
+    if (GPIO_DATA != QEMU_GPIO_EXPECTED)
+        return fail("GPIO_INPUT");
+    print_str("QEMU_SYSTEM_PERIPH: GPIO_INPUT_PASS\n");
+#else
     GPIO_DIR = 0xffffffff;
     GPIO_DATA = 0x5a5aa5a5;
     if (GPIO_DATA != 0x5a5aa5a5) return fail("GPIO");
     print_str("QEMU_SYSTEM_PERIPH: GPIO_PASS\n");
+#endif
 
     TIMER_LOAD = 0x7fffffff;
     TIMER_CTRL = 1;
     if (TIMER_CTRL != 1) return fail("TIMER");
     TIMER_CTRL = 0;
     print_str("QEMU_SYSTEM_PERIPH: TIMER_PASS\n");
+
+#ifdef QEMU_TIMER_IRQ_TEST
+    PIC_MASK = 1u << 2;
+    TIMER_LOAD = 4;
+    TIMER_CTRL = 3;
+    unsigned int timer_poll;
+    for (timer_poll = 0; timer_poll != 100000; ++timer_poll) {
+        if (APB32(0x4000100c) & 1u)
+            break;
+    }
+    if (timer_poll == 100000 || !(PIC_MASKED & (1u << 2)))
+        return fail("TIMER_IRQ");
+    APB32(0x4000100c) = 1;
+    if (APB32(0x4000100c) & 1u)
+        return fail("TIMER_W1C");
+    TIMER_CTRL = 0;
+    PIC_MASK = 0;
+    print_str("QEMU_SYSTEM_PERIPH: TIMER_IRQ_PASS\n");
+#endif
 
     APB32(0xA0000100) = 0xc001d00d;
     APB32(0xA0000200) = 0;

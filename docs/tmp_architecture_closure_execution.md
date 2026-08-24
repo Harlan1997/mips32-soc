@@ -1306,3 +1306,20 @@ remains the compatibility baseline.
 - This closes the reference-model fault classification slice only. Physical
   DDR/AXI timing, reset-in-flight, arbitrary multi-channel error interleavings
   and production DMA signoff remain open.
+
+### 2026-08-24 QEMU GPIO input and timer IRQ model
+
+- Added the opt-in `gpio-input` machine property and mixed-direction GPIO
+  readback to `mips32-soc-ref`; `GPIO_DIR=0` now observes the configured
+  external input value while output bits retain the driven value.
+- Corrected timer source mapping to VIC source 2, honored timer interrupt
+  enable, preserved sticky INT state when disabling the timer, implemented
+  periodic reload behavior, and added APB INT W1C clearing. Legacy DMA and
+  QSPI source mappings now match the RTL source vector as well.
+- `make qemu-system-gpio-input-gate` passes the GPIO input, timer IRQ, timer
+  W1C and peripheral-model checks. The existing
+  `qemu-system-peripheral-differential-gate` also passes after the mapping
+  correction.
+- This closes the selected QEMU peripheral-model slice only; external GPIO
+  synchronization, physical clock/timer accuracy and board-level I/O remain
+  open.

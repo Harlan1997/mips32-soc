@@ -93,6 +93,13 @@ QSPI/XIP. Pass `-M mips32-soc-ref,qspi-image=/path/image.bin` to populate the
 an access to its aliased physical address: ordinary firmware stacks may use
 `0x0000fffc`.
 
+The reference machine accepts the opt-in `gpio-input=0x<value>` property for
+external GPIO input readback. GPIO bits with `GPIO_DIR=0` read this value,
+while output bits continue to read the driven `GPIO_DATA` value. The timer
+model follows the RTL source-2 interrupt, sticky `0x4000100c` status and W1C
+clear contract. Run `make qemu-system-gpio-input-gate` for the combined
+GPIO-input/timer-IRQ reference-model check.
+
 The current system RTL retire gates are:
 
 ```bash
