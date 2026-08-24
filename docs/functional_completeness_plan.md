@@ -794,3 +794,15 @@ propagation and DONE/ERR W1C re-arm. Default `dma-fault-mode=0` behavior is
 unchanged. This closes the vendor-neutral reference-model fault taxonomy
 slice only; physical DDR/AXI response timing, reset-in-flight, arbitrary
 multi-channel interleavings and production DMA signoff remain open.
+
+### 2026-08-24 QEMU GPIO input and timer IRQ model
+
+The `mips32-soc-ref` machine now accepts the opt-in `gpio-input` property and
+implements RTL-compatible mixed GPIO readback: driven values are returned for
+output bits and the configured external value for input bits. Its timer model
+now honors the interrupt-enable bit, asserts the RTL VIC source 2, preserves
+the sticky INT status across disable, and clears it through the APB W1C
+register. `make qemu-system-gpio-input-gate` passes GPIO input, timer IRQ,
+timer W1C and the existing peripheral checks. Board-level GPIO synchronization,
+physical clock accuracy and RTL pin timing remain outside this reference-model
+gate.

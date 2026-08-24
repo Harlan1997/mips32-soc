@@ -167,7 +167,7 @@ dcache-parity-gate:
 .PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate
 .PHONY: l1-nonblocking-maintenance-compat-gate l1-nonblocking-ddr-gate qemu-system-l1-ddr-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
-.PHONY: qemu-system-mmu-os-pressure-gate
+.PHONY: qemu-system-mmu-os-pressure-gate qemu-system-gpio-input-gate
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
@@ -675,6 +675,11 @@ qemu-system-mmu-os-pressure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
 	OS_PRESSURE=1 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_os_pressure \
 		tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
+
+qemu-system-gpio-input-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_gpio_input_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_gpio_input \
+		tb/isa_ref/run_qemu_system_gpio_input_gate.sh
 
 qemu-system-mmu-pagemask-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_pagemask_differential_gate.sh

@@ -54,10 +54,12 @@ typedef struct MIPS32SocRefState {
     uint32_t uart_regs[8];
     uint32_t timer_ctrl;
     uint32_t timer_load;
+    uint32_t timer_int;
     uint64_t timer_deadline;
     QEMUTimer *timer;
     uint32_t gpio_data;
     uint32_t gpio_dir;
+    uint32_t gpio_input;
     uint32_t dma_src;
     uint32_t dma_dst;
     uint32_t dma_len;
@@ -139,6 +141,7 @@ static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
 static char *soc_ref_dma_event_trace_path;
 static uint32_t soc_ref_dma_fault_mode;
+static uint32_t soc_ref_gpio_input;
 static bool soc_ref_software_mmu_guest;
 static bool soc_ref_software_mmu_bootrom_guest;
 static MIPS32SocRefState *soc_ref_active_state;
@@ -516,8 +519,17 @@ static void soc_ref_timer_cb(void *opaque)
 {
     MIPS32SocRefState *s = opaque;
     if (s->timer_ctrl & 1) {
-        s->pic_raw |= 1U;
+        if (s->timer_ctrl & 2) {
+            s->timer_int = 1;
+            /* RTL irq_sources maps timer_int to VIC source 2. */
+            s->pic_raw |= 1U << 2;
+        }
         soc_ref_update_irq(s);
+        if (s->timer_load) {
+            s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                                 (uint64_t)s->timer_load * 20;
+            timer_mod(s->timer, s->timer_deadline);
+        }
     }
 }
 
@@ -722,7 +734,8 @@ static void soc_ref_qspi_complete(MIPS32SocRefState *s, bool error,
     if (error)
         s->qspi_timeout = error_code == 0x00010001;
     if (s->qspi_irq_en & 1)
-        s->pic_raw |= 1U << 5;
+        /* RTL irq_sources maps qspi_irq to VIC source 4. */
+        s->pic_raw |= 1U << 4;
     soc_ref_update_irq(s);
 }
 
@@ -805,8 +818,9 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
     case 0x1000: value = s->timer_ctrl; break;
     case 0x1004: value = s->timer_load; break;
     case 0x1008: value = soc_ref_timer_value(s); break;
-    case 0x100c: value = (s->pic_raw & 1) ? 1 : 0; break;
-    case 0x2000: value = s->gpio_data; break;
+    case 0x100c: value = s->timer_int; break;
+    case 0x2000: value = (s->gpio_data & s->gpio_dir) |
+                              (s->gpio_input & ~s->gpio_dir); break;
     case 0x2004: value = s->gpio_dir; break;
     case 0x3000: value = s->dma_src; break;
     case 0x3004: value = s->dma_dst; break;
@@ -820,7 +834,7 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
                     soc_ref_dma_event_legacy(s, "DONE", (s->dma_status & 0x10) != 0,
                                              (s->dma_status & 0x10) ? 2 : 0);
                 if (s->dma_ctrl & 2) {
-                    s->pic_raw |= 4U; /* RTL DMA source is VIC bit 2. */
+                    s->pic_raw |= 1U << 3; /* RTL legacy DMA source is VIC bit 3. */
                     soc_ref_update_irq(s);
                     soc_ref_dma_event(s, "IRQ", 0, 0, 0, 1);
                 }
@@ -1069,14 +1083,22 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
         s->timer_ctrl = value;
         if (!(value & 1)) {
             s->timer_deadline = 0;
+            timer_del(s->timer);
         } else if (s->timer_load) {
             s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
                                  (uint64_t)s->timer_load * 20;
             timer_mod(s->timer, s->timer_deadline);
         }
+        soc_ref_update_irq(s);
         break;
     case 0x1004: s->timer_load = value; s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + (uint64_t)value * 20; if (s->timer_ctrl & 1) timer_mod(s->timer, s->timer_deadline); break;
-    case 0x100c: if (value & 1) { s->pic_raw &= ~1U; soc_ref_update_irq(s); } break;
+    case 0x100c:
+        if (value & 1) {
+            s->timer_int = 0;
+            s->pic_raw &= ~(1U << 2);
+            soc_ref_update_irq(s);
+        }
+        break;
     case 0x2000: s->gpio_data = value; break;
     case 0x2004: s->gpio_dir = value; break;
     case 0x3000: s->dma_src = value; break;
@@ -1138,6 +1160,8 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
             if (value & 1) s->qspi_status &= ~(1U << 3);
             if (value & 2) s->qspi_status &= ~(1U << 5);
             if (value & 4) s->qspi_status &= ~(1U << 6);
+            if (value & 1) s->pic_raw &= ~(1U << 4);
+            soc_ref_update_irq(s);
         } else if (qoff == 0x018) s->qspi_timeout_limit = value;
         else if (qoff >= 0x020 && qoff < 0x040)
             s->qspi_lut[(qoff - 0x020) >> 2] = value;
@@ -1251,6 +1275,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->cpu = cpu;
     state->irq_replay_pic_mask = soc_ref_irq_replay_pic_mask;
     state->sram = machine->ram;
+    state->gpio_input = soc_ref_gpio_input;
     state->dma_fault_mode = soc_ref_dma_fault_mode;
     soc_ref_load_irq_schedule(state);
     soc_ref_active_state = state;
@@ -1390,6 +1415,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
                                   soc_ref_set_dma_event_trace);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "dma-fault-mode",
                                          &soc_ref_dma_fault_mode,
+                                         OBJ_PROP_FLAG_WRITE);
+    object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "gpio-input",
+                                         &soc_ref_gpio_input,
                                          OBJ_PROP_FLAG_WRITE);
     object_class_property_add_bool(OBJECT_CLASS(mc), "software-mmu-guest",
                                    soc_ref_get_software_mmu_guest,
