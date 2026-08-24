@@ -1293,3 +1293,16 @@ remains the compatibility baseline.
   `QEMU system RTL retire differential: PASS`.
 - Residual: this is a selected FPU boundary only; complete IEEE-754 tininess,
   full COP1 compliance, OS FPU ABI, Linux boot and formal signoff remain open.
+
+### 2026-08-24 QEMU DMA fault classification
+
+- Added opt-in `dma-fault-mode=1/2` properties to `mips32-soc-ref` to force
+  vendor-neutral DMA AXI read/write response failures while leaving mode `0`
+  unchanged.
+- `make qemu-system-dma-fault-gate` passes both firmware cases with distinct
+  `ERR_AXI_READ=2` and `ERR_AXI_WRITE=3`, channel IRQ and PIC propagation, and
+  DONE/ERR W1C re-arm. The QEMU DMA `IRQ_STATUS` readback is part of this
+  evidence.
+- This closes the reference-model fault classification slice only. Physical
+  DDR/AXI timing, reset-in-flight, arbitrary multi-channel error interleavings
+  and production DMA signoff remain open.

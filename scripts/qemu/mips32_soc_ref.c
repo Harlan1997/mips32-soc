@@ -73,6 +73,8 @@ typedef struct MIPS32SocRefState {
     uint32_t dma_v2_status[4];
     uint32_t dma_v2_err_code[4];
     uint32_t dma_v2_polls_remaining[4];
+    /* Opt-in model hook: 0=normal, 1=read response error, 2=write response error. */
+    uint32_t dma_fault_mode;
     FILE *dma_event_trace;
     uint32_t pic_raw;
     uint32_t pic_mask;
@@ -136,6 +138,7 @@ static char *soc_ref_qspi_image;
 static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
 static char *soc_ref_dma_event_trace_path;
+static uint32_t soc_ref_dma_fault_mode;
 static bool soc_ref_software_mmu_guest;
 static bool soc_ref_software_mmu_bootrom_guest;
 static MIPS32SocRefState *soc_ref_active_state;
@@ -572,6 +575,7 @@ static void soc_ref_dma_v2_start(MIPS32SocRefState *s, unsigned ch)
     hwaddr src = soc_ref_dma_addr(s->dma_v2_src[ch]);
     hwaddr dst = soc_ref_dma_addr(s->dma_v2_dst[ch]);
     MemTxResult result = MEMTX_OK;
+    bool read_failed = false;
 
     s->dma_v2_status[ch] = 1; /* BUSY */
     soc_ref_dma_event(s, "START", ch, 0, 0, 0);
@@ -606,17 +610,27 @@ static void soc_ref_dma_v2_start(MIPS32SocRefState *s, unsigned ch)
             dst = soc_ref_dma_addr(words[1]);
             while (left) {
                 uint32_t n = MIN(left, (uint32_t)sizeof(buf));
-                result = address_space_read(&address_space_memory, src,
-                                            MEMTXATTRS_UNSPECIFIED, buf, n);
+                if (s->dma_fault_mode == 1) {
+                    result = MEMTX_ERROR;
+                    read_failed = true;
+                } else {
+                    result = address_space_read(&address_space_memory, src,
+                                                MEMTXATTRS_UNSPECIFIED, buf, n);
+                    read_failed = result != MEMTX_OK;
+                }
                 if (result != MEMTX_OK) break;
-                result = address_space_write(&address_space_memory, dst,
-                                             MEMTXATTRS_UNSPECIFIED, buf, n);
+                if (s->dma_fault_mode == 2) {
+                    result = MEMTX_ERROR;
+                } else {
+                    result = address_space_write(&address_space_memory, dst,
+                                                 MEMTXATTRS_UNSPECIFIED, buf, n);
+                }
                 if (result != MEMTX_OK) break;
                 src += n; dst += n; left -= n;
             }
             if (result != MEMTX_OK) {
                 s->dma_v2_status[ch] = 2 | 4;
-                s->dma_v2_err_code[ch] = 2;
+                s->dma_v2_err_code[ch] = read_failed ? 2 : 3;
                 break;
             }
             desc = words[3];
@@ -643,11 +657,21 @@ static void soc_ref_dma_v2_start(MIPS32SocRefState *s, unsigned ch)
     } else {
         while (left) {
             uint32_t n = MIN(left, (uint32_t)sizeof(buf));
-            result = address_space_read(&address_space_memory, src,
-                                        MEMTXATTRS_UNSPECIFIED, buf, n);
+            if (s->dma_fault_mode == 1) {
+                result = MEMTX_ERROR;
+                read_failed = true;
+            } else {
+                result = address_space_read(&address_space_memory, src,
+                                            MEMTXATTRS_UNSPECIFIED, buf, n);
+                read_failed = result != MEMTX_OK;
+            }
             if (result != MEMTX_OK) break;
-            result = address_space_write(&address_space_memory, dst,
-                                         MEMTXATTRS_UNSPECIFIED, buf, n);
+            if (s->dma_fault_mode == 2) {
+                result = MEMTX_ERROR;
+            } else {
+                result = address_space_write(&address_space_memory, dst,
+                                             MEMTXATTRS_UNSPECIFIED, buf, n);
+            }
             if (result != MEMTX_OK) break;
             src += n;
             dst += n;
@@ -655,8 +679,8 @@ static void soc_ref_dma_v2_start(MIPS32SocRefState *s, unsigned ch)
         }
         if (result != MEMTX_OK) {
             s->dma_v2_status[ch] = 2 | 4;
-            s->dma_v2_err_code[ch] = 2; /* AXI read/write model error */
-            soc_ref_dma_event(s, "DONE", ch, 1, 2, 0);
+            s->dma_v2_err_code[ch] = read_failed ? 2 : 3;
+            soc_ref_dma_event(s, "DONE", ch, 1, s->dma_v2_err_code[ch], 0);
         }
     }
     if ((s->dma_v2_ctrl[ch] & 4) && (s->dma_v2_status[ch] & (2 | 4))) {
@@ -803,6 +827,15 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
             }
         }
         break;
+    case 0x3104:
+        /* DMA v2 IRQ_STATUS: INT_EN & (DONE | ERR), one bit per channel. */
+        value = 0;
+        for (unsigned irq_ch = 0; irq_ch < 4; ++irq_ch) {
+            if ((s->dma_v2_ctrl[irq_ch] & 4) &&
+                (s->dma_v2_status[irq_ch] & (2 | 4)))
+                value |= 1U << irq_ch;
+        }
+        break;
     case 0x3010: value = 0; break; /* no legacy status register in RTL */
     default:
         if (off >= 0x3040 && off < 0x3140) {
@@ -834,7 +867,8 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
                                       value = (s->dma_v2_status[ch] & 1) |
                                       (s->dma_v2_status[ch] & 2) |
                                       (s->dma_v2_status[ch] & 4) |
-                                      (s->dma_v2_err_code[ch] << 3); break;
+                                      ((s->dma_v2_status[ch] & 4) ?
+                                       (s->dma_v2_err_code[ch] << 3) : 0); break;
                 default: value = 0; break;
                 }
             }
@@ -956,6 +990,7 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
                 }
                 if (value & 0x10) {
                     s->dma_v2_status[ch] &= ~4U;
+                    s->dma_v2_err_code[ch] = 0;
                     s->pic_raw &= ~(1U << (3 + ch));
                 }
                 soc_ref_update_irq(s);
@@ -1216,6 +1251,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->cpu = cpu;
     state->irq_replay_pic_mask = soc_ref_irq_replay_pic_mask;
     state->sram = machine->ram;
+    state->dma_fault_mode = soc_ref_dma_fault_mode;
     soc_ref_load_irq_schedule(state);
     soc_ref_active_state = state;
     if (soc_ref_dma_event_trace_path) {
@@ -1352,6 +1388,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_str(OBJECT_CLASS(mc), "dma-event-trace",
                                   soc_ref_get_dma_event_trace,
                                   soc_ref_set_dma_event_trace);
+    object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "dma-fault-mode",
+                                         &soc_ref_dma_fault_mode,
+                                         OBJ_PROP_FLAG_WRITE);
     object_class_property_add_bool(OBJECT_CLASS(mc), "software-mmu-guest",
                                    soc_ref_get_software_mmu_guest,
                                    soc_ref_set_software_mmu_guest);

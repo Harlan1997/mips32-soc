@@ -783,3 +783,14 @@ RTL/QEMU retire comparison. This closes the selected capture robustness and
 FPU boundary evidence only. Full IEEE-754, complete ISA/FPU compliance,
 Linux/OS boot and formal signoff remain explicitly outside the current
 contract.
+
+### 2026-08-24 QEMU DMA fault classification
+
+The opt-in `mips32-soc-ref` DMA model now supports `dma-fault-mode=1` for a
+forced AXI read failure and `dma-fault-mode=2` for a forced AXI write failure.
+`make qemu-system-dma-fault-gate` passes both firmware cases, including the
+distinct `ERR_AXI_READ=2`/`ERR_AXI_WRITE=3` codes, channel IRQ, PIC source
+propagation and DONE/ERR W1C re-arm. Default `dma-fault-mode=0` behavior is
+unchanged. This closes the vendor-neutral reference-model fault taxonomy
+slice only; physical DDR/AXI response timing, reset-in-flight, arbitrary
+multi-channel interleavings and production DMA signoff remain open.
