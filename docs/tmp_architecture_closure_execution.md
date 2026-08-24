@@ -1351,3 +1351,7 @@ remains the compatibility baseline.
   the bound includes legal SoC backpressure and is verified by `make sva-gate`.
 - The SVA runner now treats the checker error text as a failure marker. This
   remains simulation assertion evidence, not formal/CDC/RDC/lint signoff.
+
+- The unified SVA SoC compile also enables `vic_priority_checker` and its bind;
+  the smoke run passes without a priority/vector/pending mismatch. This does
+  not claim a formal interrupt-priority proof.

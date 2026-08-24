@@ -837,3 +837,8 @@ includes the current SoC's legal AXI/APB backpressure. `make sva-gate` passes
 and the gate now rejects the checker error text as well as explicit `SVA_FAIL`
 markers. This is simulation assertion evidence only; formal proof, CDC/RDC,
 lint and product coverage signoff remain open.
+
+The same unified SVA compile now enables the existing 32-source VIC priority
+checker (`VIC_PRIORITY_CHECKER_ENABLE`) and includes its bind/source files.
+`make sva-gate` remains green with no priority, vector or pending-source
+mismatch; this is simulation evidence, not a formal interrupt-priority proof.
