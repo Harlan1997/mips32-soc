@@ -10,10 +10,15 @@ module tb_cpu_hardware_walker;
   reg permission_mode=1'b0;
   always #5 clk=~clk;
 
+  wire [31:0] walker_leaf_base = (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h0003) ? 32'h0000_4000 :
+                                  (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h000f) ? 32'h0001_0000 :
+                                  (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h003f) ? 32'h0004_0000 :
+                                  32'h0000_3000;
+
   wire [31:0] zero32 = 32'd0;
   wire [31:0] ptw_rdata = (ptw_mem_addr == 32'h0000_1000) ? 32'h0000_2003 :
                            (ptw_mem_addr == 32'h0000_2000) ?
-                           (permission_mode ? 32'h0000_3003 : 32'h0000_3007) :
+                           (walker_leaf_base | (permission_mode ? 32'h3 : 32'h7)) :
                            32'd0;
 
   always @(posedge clk) if (ptw_mem_valid) reads = reads + 1;
@@ -40,12 +45,13 @@ module tb_cpu_hardware_walker;
   initial begin
     repeat (3) @(posedge clk);
     rst_n=1'b1;
-    while ((reads < 2 || u_cpu.inst_addr[31:12] !== 20'h00003) && cycles < 200) begin
+    while ((reads < 2 ||
+            u_cpu.inst_addr[31:12] !== (walker_leaf_base[31:12])) && cycles < 200) begin
       @(posedge clk); cycles=cycles+1;
     end
     #1;
     if (reads != 2) errors = errors + 1;
-    if (u_cpu.inst_addr[31:12] !== 20'h00003) errors = errors + 1;
+    if (u_cpu.inst_addr[31:12] !== walker_leaf_base[31:12]) errors = errors + 1;
     if (ptw_fault_valid || ptw_fault_code !== 3'd0) errors = errors + 1;
     if (u_cpu.u_mips_cp0.cp0_status[1]) errors = errors + 1;
     permission_mode = 1'b1;

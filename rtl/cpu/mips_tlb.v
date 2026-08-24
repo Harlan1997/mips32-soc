@@ -45,6 +45,12 @@ module mips_tlb #(
     input  wire [1:0]            inv_scope,
     input  wire [INDEX_BITS-1:0] inv_wired_floor,
 
+    // Architectural context changes invalidate translations that may have
+    // been cached below the main TLB.  This is separate from inv_en so an
+    // ASID/PageMask MTC0 or a scheduler context restore cannot leave stale
+    // micro-TLB state behind.
+    input  wire                   context_flush,
+
     // Read port (TLBR): combinational
     input  wire [INDEX_BITS-1:0] rd_index,
     output wire [18:0]           rd_vpn2,
@@ -245,16 +251,26 @@ module mips_tlb #(
             end
         end
     end
-    assign lookup0_hit = lookup0_hit_r;
-    assign lookup0_multi_hit = lookup0_multi_hit_r;
+    wire micro_i_hit, micro_i_multi, micro_i_v, micro_i_d;
+    wire [2:0] micro_i_c;
+    wire [19:0] micro_i_pfn;
+    wire micro_d_hit, micro_d_multi, micro_d_v, micro_d_d;
+    wire [2:0] micro_d_c;
+    wire [19:0] micro_d_pfn;
+
+    assign lookup0_hit = (`SOC_MICRO_TLB_ENABLE) ?
+                         (micro_i_hit | lookup0_hit_r) : lookup0_hit_r;
+    assign lookup0_multi_hit = (`SOC_MICRO_TLB_ENABLE && micro_i_hit) ?
+                               micro_i_multi : lookup0_multi_hit_r;
     wire [5:0] lookup0_odd_bit = page_odd_bit_index(tlb_mask[lookup0_hit_index_r]);
     wire        lookup0_odd = lookup0_va[lookup0_odd_bit];
     wire [31:0] sel_lo0 = lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r]
                                       : tlb_entrylo0[lookup0_hit_index_r];
-    assign lookup0_v   = sel_lo0[1];
-    assign lookup0_d   = sel_lo0[2];
-    assign lookup0_c   = sel_lo0[5:3];
-    assign lookup0_pfn = effective_pfn(sel_lo0[25:6], lookup0_va,
+    assign lookup0_v   = (`SOC_MICRO_TLB_ENABLE && micro_i_hit) ? micro_i_v : sel_lo0[1];
+    assign lookup0_d   = (`SOC_MICRO_TLB_ENABLE && micro_i_hit) ? micro_i_d : sel_lo0[2];
+    assign lookup0_c   = (`SOC_MICRO_TLB_ENABLE && micro_i_hit) ? micro_i_c : sel_lo0[5:3];
+    assign lookup0_pfn = (`SOC_MICRO_TLB_ENABLE && micro_i_hit) ? micro_i_pfn :
+                         effective_pfn(sel_lo0[25:6], lookup0_va,
                                        tlb_mask[lookup0_hit_index_r]);
 
     // Port 1 (D-side)
@@ -291,17 +307,45 @@ module mips_tlb #(
             end
         end
     end
-    assign lookup1_hit = lookup1_hit_r;
-    assign lookup1_multi_hit = lookup1_multi_hit_r;
+    assign lookup1_hit = (`SOC_MICRO_TLB_ENABLE) ?
+                         (micro_d_hit | lookup1_hit_r) : lookup1_hit_r;
+    assign lookup1_multi_hit = (`SOC_MICRO_TLB_ENABLE && micro_d_hit) ?
+                               micro_d_multi : lookup1_multi_hit_r;
     wire [5:0] lookup1_odd_bit = page_odd_bit_index(tlb_mask[lookup1_hit_index_r]);
     wire        lookup1_odd = lookup1_va[lookup1_odd_bit];
     wire [31:0] sel_lo1 = lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r]
                                       : tlb_entrylo0[lookup1_hit_index_r];
-    assign lookup1_v   = sel_lo1[1];
-    assign lookup1_d   = sel_lo1[2];
-    assign lookup1_c   = sel_lo1[5:3];
-    assign lookup1_pfn = effective_pfn(sel_lo1[25:6], lookup1_va,
+    assign lookup1_v   = (`SOC_MICRO_TLB_ENABLE && micro_d_hit) ? micro_d_v : sel_lo1[1];
+    assign lookup1_d   = (`SOC_MICRO_TLB_ENABLE && micro_d_hit) ? micro_d_d : sel_lo1[2];
+    assign lookup1_c   = (`SOC_MICRO_TLB_ENABLE && micro_d_hit) ? micro_d_c : sel_lo1[5:3];
+    assign lookup1_pfn = (`SOC_MICRO_TLB_ENABLE && micro_d_hit) ? micro_d_pfn :
+                         effective_pfn(sel_lo1[25:6], lookup1_va,
                                        tlb_mask[lookup1_hit_index_r]);
+
+    // Optional I/D micro-TLB.  The main array remains the source of truth;
+    // this block only caches successful lookups and is flushed by every
+    // architectural write/invalidate operation.  Keeping the mux here makes
+    // SOC_MICRO_TLB_ENABLE=0 behavior identical to the original path.
+    wire micro_flush = wr_en | inv_en | context_flush;
+    mips_micro_tlb #(.ENTRIES(4), .INDEX_BITS(2)) u_micro_tlb (
+        .clk(clk), .rst_n(rst_n), .flush(micro_flush),
+        .i_va(lookup0_va), .i_asid(lookup0_asid),
+        .i_main_hit(lookup0_hit_r), .i_main_multi_hit(lookup0_multi_hit_r),
+        .i_main_mask(tlb_mask[lookup0_hit_index_r]),
+        .i_main_vpn2(tlb_vpn2[lookup0_hit_index_r]), .i_main_g(tlb_g[lookup0_hit_index_r]),
+        .i_main_lo0(tlb_entrylo0[lookup0_hit_index_r]),
+        .i_main_lo1(tlb_entrylo1[lookup0_hit_index_r]),
+        .d_va(lookup1_va), .d_asid(lookup1_asid),
+        .d_main_hit(lookup1_hit_r), .d_main_multi_hit(lookup1_multi_hit_r),
+        .d_main_mask(tlb_mask[lookup1_hit_index_r]),
+        .d_main_vpn2(tlb_vpn2[lookup1_hit_index_r]), .d_main_g(tlb_g[lookup1_hit_index_r]),
+        .d_main_lo0(tlb_entrylo0[lookup1_hit_index_r]),
+        .d_main_lo1(tlb_entrylo1[lookup1_hit_index_r]),
+        .i_hit(micro_i_hit), .i_multi_hit(micro_i_multi), .i_v(micro_i_v),
+        .i_d(micro_i_d), .i_c(micro_i_c), .i_pfn(micro_i_pfn),
+        .d_hit(micro_d_hit), .d_multi_hit(micro_d_multi), .d_v(micro_d_v),
+        .d_d(micro_d_d), .d_c(micro_d_c), .d_pfn(micro_d_pfn)
+    );
 
     // -------------------------------------------------------------------------
     // Write (TLBWI / TLBWR): synchronous, one entry per cycle.
@@ -322,6 +366,11 @@ module mips_tlb #(
             tlb_entrylo0[wr_index] <= wr_entrylo0;
             tlb_entrylo1[wr_index] <= wr_entrylo1;
             tlb_g       [wr_index] <= wr_entrylo0[0] & wr_entrylo1[0];
+            // TLBWI installs a matching slot even when both EntryLo.V bits are
+            // clear.  The slot must still report hit=1/v=0 so the MMU can
+            // distinguish a matching Invalid entry from a refill miss.  The
+            // explicit invalidate port clears tlb_valid and removes the slot
+            // from matching altogether.
             tlb_valid   [wr_index] <= 1'b1;
         end else if (inv_en) begin
             for (k = 0; k < TLB_ENTRIES; k = k + 1) begin

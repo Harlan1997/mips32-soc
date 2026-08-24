@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "soc_config.vh"
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "../agents/axi_if.sv"
@@ -6,6 +7,7 @@ import uvm_pkg::*;
 `include "../checkers/axi_protocol_checker.sv"
 `include "soc_observation_if.sv"
 `include "soc_observation_bind.sv"
+`include "../../isa_ref/retire_trace_capture.sv"
 `include "../tests/soc_base_test.sv"
 `include "../tests/soc_bus_stress_test.sv"
 `include "../tests/soc_unmapped_error_test.sv"
@@ -90,6 +92,47 @@ import uvm_pkg::*;
 
 bind soc_verif_top soc_observation_bind u_soc_observation_bind (
     .obs_if               (obs_if),
+    .retire_schema        (`SOC_RETIRE_TRACE_SCHEMA),
+    .retire_valid         ((`SOC_RETIRE_TRACE_ENABLE != 0) &&
+                           u_dut.u_core_subsystem.u_core.u_cpu.wb_valid),
+    .retire_pc            (u_dut.u_core_subsystem.u_core.u_cpu.wb_pc),
+    .retire_instr         (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst),
+    .retire_next_pc       (u_dut.u_core_subsystem.u_core.u_cpu.wb_next_pc),
+    .retire_gpr_we        ((u_dut.u_core_subsystem.u_core.u_cpu.wb_reg_write ||
+                           ((`SOC_FPU_ENABLE != 0) &&
+                            (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b010001) &&
+                            ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00000) ||
+                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00010)))) &&
+                           (u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
+    .retire_gpr_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr),
+    .retire_gpr_data      (u_dut.u_core_subsystem.u_core.u_cpu.wb_wdata),
+    .retire_cp0_we        (u_dut.u_core_subsystem.u_core.u_cpu.wb_cp0_we),
+    .retire_cp0_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_rd_addr),
+    .retire_cp0_sel       (u_dut.u_core_subsystem.u_core.u_cpu.wb_cp0_sel),
+    .retire_cp0_data      (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
+    .retire_mem_valid     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace ||
+                           u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
+    .retire_mem_read      (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace),
+    .retire_mem_write     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
+    .retire_mem_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
+    .retire_mem_wdata     (u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt),
+    // Derive the observed byte lanes from the retired opcode.  This keeps
+    // the trace contract tied to the architectural access size even when a
+    // future internal mem_op encoding is added or reused.
+    .retire_mem_be        (((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b100000) ||
+                            (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b100100) ||
+                            (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b101000)) ?
+                           (4'b0001 << u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out[1:0]) :
+                           (((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b100001) ||
+                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b100101) ||
+                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b101001)) ?
+                            (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out[1] ? 4'b1100 : 4'b0011) :
+                            4'b1111)),
+    .retire_mem_rdata     (u_dut.u_core_subsystem.u_core.u_cpu.wb_rdata_selected),
+    .retire_except        (u_dut.u_core_subsystem.u_core.u_cpu.wb_except_req),
+    .retire_except_code   (u_dut.u_core_subsystem.u_core.u_cpu.wb_except_code),
+    .retire_bd            (u_dut.u_core_subsystem.u_core.u_cpu.wb_bd),
+    .retire_eret          (u_dut.u_core_subsystem.u_core.u_cpu.wb_is_eret),
     // Phase B.3.c + Phase C.1: watch VA (mem_vaddr) rather than post-MMU PA
     // (data_addr). See tb/soc_test/tb_mips_soc.v for rationale.
     .mailbox_valid        (u_dut.u_core_subsystem.u_core.u_cpu.data_req &&
@@ -123,6 +166,49 @@ module tb_top;
     axi_if        axi_vif(clk, rst_n);        // Passive monitor for SoC SRAM AXI port
     axi_master_if axi_master_vif(clk, rst_n); // Active verification master
     soc_observation_if soc_obs_if(clk, rst_n);
+    retire_trace_capture u_retire_trace_capture (
+        .clk(clk), .rst_n(rst_n), .obs_if(soc_obs_if)
+    );
+
+    // Optional timing probe for system-mode retire differential failures.
+    // Keep this behind a plusarg so normal UVM logs and performance are
+    // unchanged.  The probe spans the CPU uncached request, APB bridge, and
+    // VIC state in one clock-domain view.
+    initial begin
+        if ($test$plusargs("VIC_DEBUG")) begin
+            forever begin
+                @(posedge clk);
+                if (u_soc.u_dut.u_core_subsystem.u_core.u_cpu.data_req ||
+                    u_soc.u_dut.u_peripheral_subsystem.u_axi2apb.psel ||
+                    u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.rd ||
+                    u_soc.u_dut.u_core_subsystem.u_core.u_cpu.wb_valid) begin
+                    $display("VIC_DEBUG t=%0t pc=%08x dreq=%b daddr=%08x dok=%b drdata=%08x arv=%b arvdy=%b araddr=%08x rvalid=%b rready=%b rdata=%08x apb_psel=%b pen=%b paddr=%08x prdata=%08x vic_rd=%b irq=%b vec=%0d best=%0d active=%08x soft=%08x mask=%08x gprwe=%b wa=%0d wdata=%08x",
+                        $time,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.wb_pc,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.data_req,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.data_addr,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.data_data_ok,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.data_rdata,
+                        u_soc.u_dut.m1_arvalid, u_soc.u_dut.m1_arready, u_soc.u_dut.m1_araddr,
+                        u_soc.u_dut.m1_rvalid, u_soc.u_dut.m1_rready, u_soc.u_dut.m1_rdata,
+                        u_soc.u_dut.u_peripheral_subsystem.u_axi2apb.psel,
+                        u_soc.u_dut.u_peripheral_subsystem.u_axi2apb.penable,
+                        u_soc.u_dut.u_peripheral_subsystem.u_axi2apb.paddr,
+                        u_soc.u_dut.u_peripheral_subsystem.u_axi2apb.prdata,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.rd,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.irq,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.vec_id,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.best_id_r,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.active_r,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.soft_r,
+                        u_soc.u_dut.u_peripheral_subsystem.u_apb_pic.enable_r,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                        u_soc.u_dut.u_core_subsystem.u_core.u_cpu.wb_wdata);
+                end
+            end
+        end
+    end
 
     wire [3:0]  mon_s0_awid;
     wire [31:0] mon_s0_awaddr;
@@ -177,7 +263,9 @@ module tb_top;
     logic       jtag_reset_at_ar_done;
     logic       jtag_tap_reset_sequence_done;
     logic       jtag_stim_done;
+    string      selected_uvm_test;
     logic       mailbox_finish_enable;
+    logic       retire_mailbox_finish_pending;
     logic [7:0] reset_recovery_pulse_count;
     logic       cpu_cp0_mailbox_success_seen;
     logic       cpu_cp0_exception_entry_seen;
@@ -210,6 +298,7 @@ module tb_top;
         jtag_tap_reset_sequence_done = 1'b0;
         jtag_stim_done = 1'b0;
         mailbox_finish_enable = 1'b1;
+        retire_mailbox_finish_pending = 1'b0;
         reset_recovery_pulse_count = 8'd0;
         cpu_cp0_mailbox_success_seen = 1'b0;
         cpu_cp0_exception_entry_seen = 1'b0;
@@ -301,6 +390,11 @@ module tb_top;
     endtask
 
     initial begin
+        if (!$value$plusargs("UVM_TESTNAME=%s", selected_uvm_test))
+            selected_uvm_test = "";
+        if (selected_uvm_test != "soc_jtag_reset_recovery_test") begin
+            jtag_stim_done = 1'b1;
+        end else begin
         #100;
         // From RESET to IDLE
         jtag_tick(0, 0); // RUN_TEST_IDLE
@@ -461,6 +555,7 @@ module tb_top;
         // Wait a bit before firmware continues
         #100;
         jtag_stim_done = 1'b1;
+        end
     end
 
     // Instantiate verification SoC wrapper
@@ -567,7 +662,18 @@ module tb_top;
 
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
-        if (mailbox_valid && mailbox_finish_enable) begin
+        if (`SOC_RETIRE_TRACE_ENABLE && retire_mailbox_finish_pending) begin
+            $display("REGRESSION_TEST_SUCCESS");
+            $finish;
+        end
+        if (`SOC_RETIRE_TRACE_ENABLE && soc_obs_if.retire_valid &&
+            soc_obs_if.retire_mem_valid && soc_obs_if.retire_mem_write &&
+            ((soc_obs_if.retire_mem_addr == 32'ha000_fffc) ||
+             (soc_obs_if.retire_mem_addr == 32'h0000_fffc)) &&
+            soc_obs_if.retire_mem_wdata == 32'hdeadbeef) begin
+            retire_mailbox_finish_pending <= 1'b1;
+        end
+        if (mailbox_valid && mailbox_finish_enable && !`SOC_RETIRE_TRACE_ENABLE) begin
             if (mailbox_wdata == 32'hdeadbeef) begin
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
@@ -576,6 +682,15 @@ module tb_top;
                 $finish;
             end
         end
+    end
+
+    // A system-mode retire trace must distinguish an architectural redirect
+    // from an aggregate SoC reset. Keep this diagnostic opt-in with the trace
+    // path so ordinary UVM logs and DUT behavior are unchanged.
+    always @(negedge u_soc.u_dut.soc_rst_n) begin
+        if (`SOC_RETIRE_TRACE_ENABLE)
+            $display("RETIRE_TRACE_SOC_RESET time=%0t wdt_reset=%0b",
+                     $time, u_soc.u_dut.wdt_reset);
     end
 
     always @(posedge clk or negedge rst_n) begin

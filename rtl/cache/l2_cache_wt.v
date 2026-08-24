@@ -47,6 +47,7 @@ module l2_cache_wt #(
     input  wire [7:0]            s_awlen,
     input  wire [2:0]            s_awsize,
     input  wire [1:0]            s_awburst,
+    input  wire [3:0]            s_awcache,
     input  wire                  s_awvalid,
     output reg                   s_awready,
     input  wire [DATA_WIDTH-1:0] s_wdata,
@@ -63,6 +64,7 @@ module l2_cache_wt #(
     input  wire [7:0]            s_arlen,
     input  wire [2:0]            s_arsize,
     input  wire [1:0]            s_arburst,
+    input  wire [3:0]            s_arcache,
     input  wire                  s_arvalid,
     output reg                   s_arready,
     output reg  [ID_WIDTH-1:0]   s_rid,
@@ -145,12 +147,14 @@ module l2_cache_wt #(
     localparam ST_R_HIT_LOOP = 4'd2;
     localparam ST_R_MISS_AR  = 4'd3;
     localparam ST_R_MISS_R   = 4'd4;
+    localparam ST_R_ERR_RESP = 4'd10;  // drain downstream error, then report
     // Write path (write-through, no allocate)
     localparam ST_W_ACCEPT   = 4'd5;   // wait for W beats
     localparam ST_W_AW_FWD   = 4'd6;   // forward AW downstream
     localparam ST_W_W_FWD    = 4'd7;   // forward W beat downstream
     localparam ST_W_B_WAIT   = 4'd8;   // wait downstream B
     localparam ST_W_RESP     = 4'd9;   // send upstream B
+    localparam ST_UC_R       = 4'd11;  // uncached read-through
 
     reg [3:0] state;
 
@@ -161,6 +165,9 @@ module l2_cache_wt #(
     reg [2:0]            req_size;
     reg [1:0]            req_burst;
     reg [7:0]            beat_cnt;
+    reg [1:0]            refill_error;
+    reg                  req_uncached;
+    reg                  uc_ar_sent;
 
     // Write-path W-beat FIFO (single entry — accept next W only when
     // downstream ready). Simpler than a real FIFO.
@@ -202,7 +209,7 @@ module l2_cache_wt #(
         s_bid     = req_id;
         s_rid     = req_id;
         s_rdata   = data_ram[beat_index][beat_wordoff];
-        s_rresp   = 2'b00;
+        s_rresp   = (state == ST_R_ERR_RESP) ? refill_error : 2'b00;
         s_bresp   = 2'b00;
 
         m_awvalid = 1'b0;
@@ -250,6 +257,22 @@ module l2_cache_wt #(
                 // upstream here (upstream is served from cache after the fill).
                 m_rready = 1'b1;
             end
+            ST_R_ERR_RESP: begin
+                // Report the complete upstream burst after the downstream
+                // refill has been drained. The L1 bridge records the error
+                // from any beat and retires one precise response.
+                s_rvalid = 1'b1;
+                s_rdata  = {DATA_WIDTH{1'b0}};
+                s_rlast  = is_last_beat;
+            end
+            ST_UC_R: begin
+                m_arvalid = !uc_ar_sent;
+                m_rready  = s_rready;
+                s_rvalid  = m_rvalid;
+                s_rdata   = m_rdata;
+                s_rresp   = m_rresp;
+                s_rlast   = m_rlast;
+            end
             ST_W_ACCEPT: begin
                 s_wready = ~w_buf_valid;
             end
@@ -286,6 +309,9 @@ module l2_cache_wt #(
             req_burst   <= 2'h0;
             beat_cnt    <= 8'h0;
             fill_idx    <= {WORD_BITS{1'b0}};
+            refill_error <= 2'b00;
+            req_uncached <= 1'b0;
+            uc_ar_sent   <= 1'b0;
             w_buf_valid <= 1'b0;
             w_buf_data  <= {DATA_WIDTH{1'b0}};
             w_buf_strb  <= 4'hF;
@@ -307,12 +333,15 @@ module l2_cache_wt #(
                     beat_cnt  <= 8'h0;
                     m_aw_sent <= 1'b0;
                     m_b_rcvd  <= 1'b0;
+                    refill_error <= 2'b00;
+                    uc_ar_sent <= 1'b0;
                     if (s_awvalid) begin
                         req_id    <= s_awid;
                         req_addr  <= s_awaddr;
                         req_len   <= s_awlen;
                         req_size  <= s_awsize;
                         req_burst <= s_awburst;
+                        req_uncached <= (s_awcache === 4'b0000);
                         state     <= ST_W_ACCEPT;
                     end else if (s_arvalid) begin
                         req_id    <= s_arid;
@@ -320,7 +349,21 @@ module l2_cache_wt #(
                         req_len   <= s_arlen;
                         req_size  <= s_arsize;
                         req_burst <= s_arburst;
-                        state     <= ST_R_LOOKUP;
+                        req_uncached <= (s_arcache === 4'b0000);
+                        state     <= (s_arcache === 4'b0000) ? ST_UC_R : ST_R_LOOKUP;
+                    end
+                end
+                ST_UC_R: begin
+                    if (!uc_ar_sent && m_arready)
+                        uc_ar_sent <= 1'b1;
+                    if (m_rvalid && s_rready) begin
+                        if (m_rlast || is_last_beat) begin
+                            beat_cnt   <= 8'd0;
+                            uc_ar_sent <= 1'b0;
+                            state      <= ST_IDLE;
+                        end else begin
+                            beat_cnt <= beat_cnt + 1'b1;
+                        end
                     end
                 end
                 //--------------------------------------------------
@@ -361,15 +404,36 @@ module l2_cache_wt #(
                     // serve the upstream read from cache (ST_R_HIT_LOOP).
                     if (m_rvalid) begin
                         data_ram[line_index][fill_idx] <= m_rdata;
+                        if (m_rresp != 2'b00 && refill_error == 2'b00)
+                            refill_error <= m_rresp;
                         if (m_rlast || (fill_idx == WORDS_PER_LN-1)) begin
                             tag_ram[line_index]   <= line_tag;
-                            valid_ram[line_index] <= 1'b1;
-                            // Resume serving at the current beat (do NOT reset
-                            // beat_cnt: a mid-burst refill must continue the
-                            // upstream burst where it left off).
-                            state                 <= ST_R_HIT_LOOP;
+                            if (refill_error != 2'b00 || m_rresp != 2'b00) begin
+                                // Do not install a poisoned line. Continue
+                                // draining the downstream burst, then return a
+                                // complete error burst to the upstream cache.
+                                valid_ram[line_index] <= 1'b0;
+                                beat_cnt <= 8'h0;
+                                state <= ST_R_ERR_RESP;
+                            end else begin
+                                valid_ram[line_index] <= 1'b1;
+                                // Resume serving at the current beat (do NOT
+                                // reset beat_cnt: a mid-burst refill must
+                                // continue the upstream burst where it left off).
+                                state <= ST_R_HIT_LOOP;
+                            end
                         end else begin
                             fill_idx <= fill_idx + 1'b1;
+                        end
+                    end
+                end
+                ST_R_ERR_RESP: begin
+                    if (s_rready) begin
+                        if (is_last_beat) begin
+                            beat_cnt <= 8'h0;
+                            state <= ST_IDLE;
+                        end else begin
+                            beat_cnt <= beat_cnt + 1'b1;
                         end
                     end
                 end
@@ -383,7 +447,8 @@ module l2_cache_wt #(
                         w_buf_valid <= 1'b1;
                         // Write-through: update cache if hit at THIS beat's
                         // address. (beat_cnt starts at 0 for first W.)
-                        if (valid_ram[beat_index] && (tag_ram[beat_index] == beat_tag)) begin
+                        if (!req_uncached && valid_ram[beat_index] &&
+                            (tag_ram[beat_index] == beat_tag)) begin
                             data_ram[beat_index][beat_wordoff] <= {
                                 s_wstrb[3] ? s_wdata[31:24] : data_ram[beat_index][beat_wordoff][31:24],
                                 s_wstrb[2] ? s_wdata[23:16] : data_ram[beat_index][beat_wordoff][23:16],

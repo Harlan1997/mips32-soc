@@ -35,7 +35,7 @@ require_text() {
     require_text "docs/ddr_integration_inputs.md" "DDR_ENTRY_READY=0" "input manifest blocked"
     require_text "docs/ddr_integration_inputs.md" "Target route: \*\*ASIC Profile C1 DDR4 \(selected\)\*\*" "ASIC Profile C1 DDR4 selected"
     require_text "docs/asic_ddr_input_acquisition.md" "C1_SELECTED / DDR4_MEMORY_ENTRY_BLOCKED" "C1 DDR4 acquisition plan"
-    require_text "docs/block_specs/ddr4_spec.md" "DDR4.*v0\.[12]|v0\.[12]" "DDR4 contract candidate present"
+    require_text "docs/block_specs/ddr4_spec.md" "DDR4.*v1\.0|v1\.0" "DDR4 contract candidate present"
     require_text "rtl/perips/ddr4_phy_behavioral.v" "[Vv]endor-neutral DDR4 abstract PHY" "F1 abstract PHY model present"
     require_text "docs/ddr4_integration_inputs.md" "DDR4_ENTRY_READY=0" "DDR4 input manifest blocked"
     require_text "docs/asic_c1_ddr4_parameter_decision.md" "BASELINE_ACCEPTED / A-02-A-09_OPEN / B_RFQ_PREPARATION" "ASIC parameter baseline stage"

@@ -210,6 +210,7 @@ module axi2apb_bridge (
             end
         end
     end
+
     
     assign s_bvalid  = (state == W_RESP);
     assign s_bresp   = bresp_latch;
@@ -220,6 +221,7 @@ module axi2apb_bridge (
     assign s_rresp   = rresp_latch;
     assign s_rlast   = rlast_latch;
     assign s_rid     = arid_latch;
+
 
     wire [7:0]  read_setup_beat = (state == R_RESP && s_rready && !rlast_latch) ?
                                    (rbeat_latch + 8'd1) : rbeat_latch;

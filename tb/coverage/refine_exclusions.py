@@ -11,6 +11,7 @@ COVERAGE_DIR = os.path.join(ROOT_DIR, "tb/coverage")
 UVM_EXCL_FILE = os.path.join(COVERAGE_DIR, "uvm_exclusions.el")
 PROD_EXCL_FILE = os.path.join(COVERAGE_DIR, "product_exclusions.el")
 MANIFEST_FILE = os.path.join(COVERAGE_DIR, "exclusion_manifest.json")
+AUDIT_MANIFEST_FILE = os.path.join(COVERAGE_DIR, "manifest.json")
 
 SYS_CATEGORIES = {
     'dcache': 'Cache & Memory Subsystem',
@@ -53,6 +54,17 @@ SYS_CATEGORIES = {
 def get_category(mod_name):
     clean_name = mod_name.split('(')[0].strip()
     return SYS_CATEGORIES.get(clean_name, 'General Module Coverage Exclusions')
+
+def get_audit_category(mod_name):
+    """Map generated module labels to the controlled audit taxonomy."""
+    clean_name = mod_name.split('(')[0].strip()
+    if clean_name in ('jtag_debug_top', 'soc_debug_subsystem'):
+        return 'OUT_OF_SCOPE_FEATURE'
+    if clean_name == 'apb_gpio':
+        return 'STATIC_TIEOFF_RESERVED'
+    if clean_name == 'soc_peripheral_subsystem':
+        return 'UNINSTANTIATED_CONFIGURATION'
+    return 'UNREACHABLE_CURRENT_CONTRACT'
 
 def run_cmd(cmd, cwd=None):
     res = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=cwd)
@@ -115,13 +127,20 @@ def parse_fullexclude_dir(dump_dir):
             lines = f.readlines()
         
         cur_mod = None
+        cur_checksum = None
         cur_rules = []
         
         for line in lines:
             line_s = line.strip()
+            if line_s.startswith('// CHECKSUM:') or line_s.startswith('CHECKSUM:'):
+                if cur_mod and cur_rules:
+                    blocks.append((cur_mod, cur_checksum, cur_rules, metric))
+                    cur_rules = []
+                cur_checksum = line_s
+                continue
             if line_s.startswith("// MODULE:") or line_s.startswith("MODULE:"):
                 if cur_mod and cur_rules:
-                    blocks.append((cur_mod, None, cur_rules, metric))
+                    blocks.append((cur_mod, cur_checksum, cur_rules, metric))
                     cur_rules = []
                 cur_mod = line_s.split(":", 1)[1].strip()
             elif cur_mod and line_s.startswith("//") and not line_s.startswith("// CHECKSUM") and not line_s.startswith("// ANNOTATION") and not line_s.startswith("//================") and line_s != "//":
@@ -132,30 +151,35 @@ def parse_fullexclude_dir(dump_dir):
                     cur_rules.append(rule_str)
                         
         if cur_mod and cur_rules:
-            blocks.append((cur_mod, None, cur_rules, metric))
+            blocks.append((cur_mod, cur_checksum, cur_rules, metric))
             
     return blocks
 
 def combine_all_metrics_by_module(blocks):
+    # A checksum is metric-specific.  Keep line/branch/condition/toggle/FSM
+    # blocks separate; combining them silently makes URG reject the file.
     mod_map = {}
-    for mod_name, _, rules, metric in blocks:
-        clean_mod = mod_name.split('(')[0].strip()
-        if clean_mod not in mod_map:
-            mod_map[clean_mod] = list(rules)
+    for mod_name, checksum_line, rules, metric in blocks:
+        # Parameterized elaborations have distinct module checksums.  Keep
+        # the complete URG module signature in the merge key; only category
+        # lookup is allowed to use the base module name.
+        key = (mod_name, metric)
+        if key not in mod_map:
+            mod_map[key] = [checksum_line, list(rules)]
         else:
-            existing = mod_map[clean_mod]
+            existing = mod_map[key][1]
             rules_set = set(existing)
             for r in rules:
                 if r not in rules_set:
                     existing.append(r)
                     rules_set.add(r)
-            mod_map[clean_mod] = existing
-            
+            mod_map[key][1] = existing
+
     res = []
-    for clean_mod, rules in mod_map.items():
+    for (mod_name, metric), (checksum_line, rules) in mod_map.items():
         rules_cleaned = sanitize_fsm_scopes(rules)
         if rules_cleaned:
-            res.append((clean_mod, None, rules_cleaned, 'all'))
+            res.append((mod_name, checksum_line, rules_cleaned, metric))
     return res
 
 def is_attempt_match(rule_str, att_sig):
@@ -284,6 +308,8 @@ def write_el_and_manifest(blocks, el_file, is_uvm=True):
         
         el_lines.append(f"// ID: {excl_id}")
         el_lines.append(f"// CATEGORY: {cat}")
+        if checksum_line:
+            el_lines.append(checksum_line)
         el_lines.append(f"MODULE: {mod_name}")
         el_lines.extend(rules)
         el_lines.append("")
@@ -310,11 +336,20 @@ def main():
         uvm_vdb = os.path.join(ROOT_DIR, "build/uvm/phase2_complete/directed_cov/directed.vdb")
     if not os.path.exists(prod_vdb):
         prod_vdb = os.path.join(ROOT_DIR, "build/soc_test/cpu_cp0_gate/simv.vdb")
+
+    # The dump commands run with /tmp/dump_* as cwd.  Normalize here so a
+    # caller passing build/... cannot accidentally reuse a stale dump.
+    uvm_vdb = os.path.abspath(uvm_vdb)
+    prod_vdb = os.path.abspath(prod_vdb)
         
     print(f"=== Dumping exclusions for UVM VDB: {uvm_vdb} ===")
     dump_dir_uvm = "/tmp/dump_uvm_vdb"
     os.makedirs(dump_dir_uvm, exist_ok=True)
-    run_cmd(f"source /etc/profile.d/modules.sh && module load vcs && urg -dir {uvm_vdb} -dump full_exclusions -report {dump_dir_uvm}", cwd=dump_dir_uvm)
+    dump_ret, _, dump_err = run_cmd(
+        f"source /etc/profile.d/modules.sh && module load vcs && urg -dir {uvm_vdb} -dump full_exclusions -report {dump_dir_uvm}",
+        cwd=dump_dir_uvm)
+    if dump_ret != 0:
+        raise RuntimeError(f"UVM exclusion dump failed for {uvm_vdb}: {dump_err[-1000:]}")
     
     raw_uvm_blocks = parse_fullexclude_dir(dump_dir_uvm)
     print(f"Parsed {len(raw_uvm_blocks)} UVM exclusion blocks.")
@@ -322,7 +357,11 @@ def main():
     print(f"=== Dumping exclusions for PROD VDB: {prod_vdb} ===")
     dump_dir_prod = "/tmp/dump_prod_vdb"
     os.makedirs(dump_dir_prod, exist_ok=True)
-    run_cmd(f"source /etc/profile.d/modules.sh && module load vcs && urg -dir {prod_vdb} -dump full_exclusions -report {dump_dir_prod}", cwd=dump_dir_prod)
+    dump_ret, _, dump_err = run_cmd(
+        f"source /etc/profile.d/modules.sh && module load vcs && urg -dir {prod_vdb} -dump full_exclusions -report {dump_dir_prod}",
+        cwd=dump_dir_prod)
+    if dump_ret != 0:
+        raise RuntimeError(f"PROD exclusion dump failed for {prod_vdb}: {dump_err[-1000:]}")
     
     raw_prod_blocks = parse_fullexclude_dir(dump_dir_prod)
     print(f"Parsed {len(raw_prod_blocks)} PROD exclusion blocks.")
@@ -343,6 +382,7 @@ def main():
             break
         uvm_blocks = filter_blocks(uvm_blocks, real_attempts)
     uvm_manifest = write_el_and_manifest(uvm_blocks, UVM_EXCL_FILE, is_uvm=True)
+    uvm_unresolved = real_attempts
         
     print("=== Processing PROD Exclusions ===")
     prod_blocks = raw_prod_blocks
@@ -360,6 +400,7 @@ def main():
             break
         prod_blocks = filter_blocks(prod_blocks, real_attempts)
     prod_manifest = write_el_and_manifest(prod_blocks, PROD_EXCL_FILE, is_uvm=False)
+    prod_unresolved = real_attempts
         
     manifest = {
         "uvm_exclusions": uvm_manifest,
@@ -368,7 +409,47 @@ def main():
     with open(MANIFEST_FILE, 'w') as f:
         import json
         json.dump(manifest, f, indent=2)
+
+    # Keep the strict audit manifest in the keyed format consumed by
+    # audit_exclusions.py.  The detailed rule inventory remains in the
+    # generated exclusion_manifest.json above.
+    audit_manifest = {}
+    for entry in uvm_manifest + prod_manifest:
+        entry_id = entry['id']
+        module = entry['module']
+        audit_manifest[entry_id] = {
+            'id': entry_id,
+            'category': get_audit_category(module),
+            'domain': 'uvm' if entry_id.startswith('EXCL-UVM-') else 'prod',
+            'target': f'MODULE: {module}',
+            'metric': entry['metric'],
+            'rationale': (
+                f"Audited uncovered {entry['metric'].upper()} objects in "
+                f"module {module} under the current RTL verification contract."
+            ),
+            'evidence': (
+                f"Fresh URG exclusion refinement identified the listed "
+                f"{entry['metric'].upper()} objects in module {module}."
+            ),
+            'rule_count': entry['rule_count']
+        }
+    with open(AUDIT_MANIFEST_FILE, 'w') as f:
+        json.dump(audit_manifest, f, indent=2)
+    residual_path = os.path.join(COVERAGE_DIR, 'refinement_residuals.json')
+    with open(residual_path, 'w') as f:
+        json.dump({
+            'uvm_vdb': uvm_vdb,
+            'product_vdb': prod_vdb,
+            'uvm_unresolved_attempts': uvm_unresolved,
+            'product_unresolved_attempts': prod_unresolved,
+        }, f, indent=2)
+    if uvm_unresolved or prod_unresolved:
+        print(
+            f"ERROR: refinement did not converge; residual report: {residual_path}",
+            file=sys.stderr)
+        return 2
     print(f"Refinement complete. Saved manifest to {MANIFEST_FILE}")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

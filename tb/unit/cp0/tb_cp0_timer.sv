@@ -25,9 +25,12 @@ module tb_cp0_timer;
     reg  [2:0]  tlb_op = 3'b000;
     reg         except_req = 0;
     reg  [4:0]  except_code = 0;
+    reg  [1:0]  except_ce = 0;
     reg  [31:0] except_pc = 0;
     reg         except_bd = 0;
     reg         eret = 0;
+    reg         di = 0;
+    reg         ei = 0;
     reg  [31:0] bad_vaddr = 0;
     reg  [31:0] lladdr_in = 0;
 
@@ -35,7 +38,11 @@ module tb_cp0_timer;
     // required for `.*` wildcard connectivity).
     wire        kernel_mode;
     wire        cu0_enable;
+    wire        cu1_enable;
+    wire        exl_out;
     wire [31:0]  hwrena_out;
+    wire [3:0]   srs_current_set_out;
+    wire [3:0]   srs_previous_set_out;
 
     // Phase B.3.c MMU pass-through signals (unused inside this timer/TLB tb but
     // required for `.*` wildcard connectivity to mips_cp0's post-B.3.c ports).
@@ -61,6 +68,7 @@ module tb_cp0_timer;
     wire        intr_req;
     wire        vint_enabled_out;
     wire [31:0] vint_offset_out;
+    wire [3:0]   vint_srs_set_out;
     wire [31:0] taglo_out;
     wire [31:0] taghi_out;
     reg         tlb_inv_en = 1'b0;
@@ -71,6 +79,26 @@ module tb_cp0_timer;
     reg         cache_op_done = 1'b0;
     reg  [4:0]  cache_op = 5'd0;
     reg  [31:0] cache_tag_rdata = 32'd0;
+    reg         ctx_save_req = 1'b0;
+    wire        ctx_save_done;
+    wire [31:0] ctx_save_status;
+    wire [7:0]  ctx_save_asid;
+    wire [31:0] ctx_save_srsctl;
+    reg         ctx_restore_req = 1'b0;
+    reg  [31:0] ctx_restore_status = 32'd0;
+    reg  [7:0]  ctx_restore_asid = 8'd0;
+    reg  [31:0] ctx_restore_srsctl = 32'd0;
+    wire        ctx_restore_done;
+    reg  [3:0]  interrupt_srs_set = 4'd0;
+    reg         interrupt_accept_in = 1'b0;
+    reg         hw_tlb_wr_en = 1'b0;
+    reg  [5:0]  hw_tlb_wr_index = 6'd0;
+    reg  [18:0] hw_tlb_wr_vpn2 = 19'd0;
+    reg  [7:0]  hw_tlb_wr_asid = 8'd0;
+    reg  [15:0] hw_tlb_wr_mask = 16'd0;
+    reg  [31:0] hw_tlb_wr_entrylo0 = 32'd0;
+    reg  [31:0] hw_tlb_wr_entrylo1 = 32'd0;
+    wire        hw_tlb_wr_ready;
 
     integer errors = 0;
 
@@ -493,6 +521,35 @@ module tb_cp0_timer;
         lladdr_in = 32'h8123_4560;
         mfc0(5'd17, 3'd0, rd);
         check("LLAddr reports reservation address", rd == 32'h8123_4560);
+`ifdef SRS_MAP_TEST
+        // SRSMap is an opt-in CP0 state register. All eight IP mappings are
+        // writable; the selected Cause.IP level drives the exported set.
+        mfc0(5'd12, 3'd3, rd);
+        check("SRSMap reset = 0", rd == 32'd0);
+        mtc0(5'd12, 3'd3, 32'h8765_4321);
+        mfc0(5'd12, 3'd3, rd);
+        check("SRSMap keeps eight mapping nibbles", rd == 32'h8765_4321);
+        hw_int = 6'b000001; // external hw_int[0] is Cause.IP2
+        mtc0(5'd12, 3'd0, 32'h0000_0401); // IE + IM2
+        @(posedge clk);
+        check("SRSMap selects IP2 shadow set", vint_srs_set_out == 4'd3);
+        interrupt_srs_set = vint_srs_set_out;
+        hw_int = 6'b000000;
+        mtc0(5'd12, 3'd0, 32'h0000_0001); // clear EXL and leave IE enabled
+        except_code = 5'd0;
+        except_pc = 32'h8000_0200;
+        except_req = 1'b1;
+        interrupt_accept_in = 1'b1;
+        @(posedge clk);
+        except_req = 1'b0;
+        interrupt_accept_in = 1'b0;
+        check("interrupt entry selects mapped shadow set",
+              dut.cp0_srs_css == 4'd3 && dut.cp0_srs_pss == 4'd0);
+        eret = 1'b1;
+        @(posedge clk);
+        eret = 1'b0;
+        check("ERET restores pre-interrupt shadow set", dut.cp0_srs_css == 4'd0);
+`endif
         mtc0(5'd12, 3'd0, 32'd0);
         mfc0(5'd12, 3'd0, rd);
         check("Status write cannot clear TS", rd[21] == 1'b1);

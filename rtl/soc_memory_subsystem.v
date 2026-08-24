@@ -208,12 +208,14 @@ module soc_memory_subsystem #(
         // Upstream slave = original s0 (from fabric)
         .s_awid(s0_awid), .s_awaddr(s0_awaddr), .s_awlen(s0_awlen),
         .s_awsize(s0_awsize), .s_awburst(s0_awburst),
+        .s_awcache(s0_awcache),
         .s_awvalid(s0_awvalid), .s_awready(s0_awready),
         .s_wdata(s0_wdata), .s_wstrb(s0_wstrb), .s_wlast(s0_wlast),
         .s_wvalid(s0_wvalid), .s_wready(s0_wready),
         .s_bid(s0_bid), .s_bresp(s0_bresp), .s_bvalid(s0_bvalid), .s_bready(s0_bready),
         .s_arid(s0_arid), .s_araddr(s0_araddr), .s_arlen(s0_arlen),
         .s_arsize(s0_arsize), .s_arburst(s0_arburst),
+        .s_arcache(s0_arcache),
         .s_arvalid(s0_arvalid), .s_arready(s0_arready),
         .s_rid(s0_rid), .s_rdata(s0_rdata), .s_rresp(s0_rresp),
         .s_rlast(s0_rlast), .s_rvalid(s0_rvalid), .s_rready(s0_rready),
@@ -234,7 +236,9 @@ module soc_memory_subsystem #(
     );
 
     axi_ddr_model #(
-        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS)
+        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS),
+        .INJECT_RESP_ERROR (`SOC_AXI_RESP_ERROR_INJECT_ENABLE != 0),
+        .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0)
     ) u_axi_sram (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -270,7 +274,9 @@ module soc_memory_subsystem #(
     );
 `else
     axi_ddr_model #(
-        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS)
+        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS),
+        .INJECT_RESP_ERROR (`SOC_AXI_RESP_ERROR_INJECT_ENABLE != 0),
+        .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0)
     ) u_axi_sram (
         .clk             (clk),
         .rst_n           (rst_n),

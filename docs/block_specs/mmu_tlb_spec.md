@@ -116,7 +116,13 @@ MIPS32 硬编码 4 段：
 | A. 单份 64-entry CAM，双读端口 | 直接支持 I/D 双 lookup | 结构简单 |
 | **B. Micro-TLB 分离 (推荐)** | 4-entry ITLB + 8-entry DTLB fully-assoc micro-TLB；主 TLB 64-entry 单端口，miss 时 fill micro-TLB | 二级 lookup，吞吐更高 |
 
-**当前 RTL 基线**：采用方案 A 的 direct dual-lookup 变体。`mips_tlb` 保持一份主 TLB array，并为 I/D 两侧提供组合 lookup；当前没有独立 micro-TLB fill/flush 状态机。方案 B（I/D micro-TLB）作为后续性能优化，不属于当前 RTL 功能闭合条件；主 TLB miss 仍由软件 refill 处理。
+**当前 RTL 基线**：默认配置仍采用方案 A 的 direct dual-lookup 变体。启用
+`SOC_MICRO_TLB_ENABLE=1` 时，`mips_tlb` 在主 TLB 两个组合 lookup 端口前增加
+独立的 4-entry I-side 和 4-entry D-side fully-associative micro-TLB；主 TLB
+仍是唯一权威来源，主 TLB 成功 lookup 后按 I/D 端分别 refill。TLBWI/TLBWR、显式
+invalidate、EntryHi/PageMask context change 和 context restore 清空两个 micro-TLB。
+主 TLB miss 仍由软件 refill 处理。该 opt-in 路径已有 CPU/SoC 启动和向量 gate，
+但不代表性能、shootdown latency 或 OS 长压 signoff。
 
 ### 4.4 TLB 指令 (TLBR/TLBWI/TLBWR/TLBP)
 
@@ -127,7 +133,9 @@ MIPS32 硬编码 4 段：
 - **TLBWI**：把 `EntryHi/EntryLo0/EntryLo1/PageMask` 写入主 TLB `[Index]`。
 - **TLBWR**：同 TLBWI 但索引 = `Random`。
 
-**执行时序**：单周期发射；当前无 micro-TLB 清空泡，lookup 直接观察主 TLB array。
+**执行时序**：单周期发射；micro-TLB hit 直接返回，miss 同周期回退主 TLB，成功
+结果在时钟边沿填充；架构 flush 不插入额外可见指令，但下一次 lookup 必须重新
+观察主 TLB。
 
 ---
 
@@ -221,7 +229,9 @@ VPN pair even/odd、wired global 保留、非 wired flush 以及 ASID 1..255 回
 的 16 KiB even/odd 选择及 `VA[12]` offset 保持，以及重叠 valid 项的 MCheck 分类；其余页尺度尚未由 SoC/OS 压力覆盖。新增
 `tb/soc_test/run_product_mmu_asid_context.sh` 在真实 SoC firmware 上验证 ASID 1/2
 同 VA 不同 PFN、切回命中、`TLBWI` 清空动态槽、wired APB 保留和重新 refill。可变页大小、
-micro-TLB、TLB shootdown/IPI 和 SoC/OS 级 allocator 压力仍未实现或未验证。
+TLB shootdown/IPI 的长期策略和 SoC/OS 级 allocator 压力仍未闭合；opt-in
+micro-TLB 的 block 及 I/D SoC hit 证据已由 `make product-mmu-micro-tlb-gate`
+提供。可变页大小的完整 SoC/OS 压力仍未闭合。
 
 **SoC 级**：
 - Linux boot：kernel 早期 head.S 建映射 → paging on → init 进程 → busybox shell。
@@ -305,6 +315,7 @@ page-table ownership、权限、长期压力和系统软件验收。
 - v0.1 (2026-07-30)：记录 `SOC_MMU_ENABLE=1` 架构级阻塞点（useg 向量死锁），见 §10.1。
 - v0.2 (2026-08-01)：产品 opt-in 实现并验证 refill 与 Invalid 的 BEV/EBase 向量分派；产品 linker 和 handler 继续为 P0。
 - v0.3 (2026-08-02)：新增并通过 `product-mmu-process-pressure-gate`，覆盖 ASID 1..4 round-robin、动态 TLB shootdown 和清空后的重新 refill；完整 OS allocator/scheduler/IPI 仍为后续任务。
+- v0.5 (2026-08-10)：实现并验证 opt-in 4-entry I/D micro-TLB 的主 TLB refill、flush/invalidate 及 CPU/SoC I/D hit 路径；默认配置仍关闭，OS 长压和性能 signoff 保持 deferred。
 - v0.3 (2026-08-01)：新增 `tlb_asid_policy` directed gate，闭合 4KB ASID/Global/Invalid/Modified
   翻译边界；不扩大对可变页、multi-hit、micro-TLB 或 Linux/ASID rollover 的功能声明。
 - v0.4 (2026-08-01)：新增 MMU-enabled kseg0 stage-1 instruction handoff gate，证明

@@ -10,7 +10,8 @@ module mips_core #(
     parameter ENABLE_COHERENCY = 1'b0,
     parameter ENABLE_SCHEDULER = 1'b0,
     parameter ENABLE_VEIC = 1'b0,
-    parameter [9:0] CPUNUM = 10'd0
+    parameter [9:0] CPUNUM = 10'd0,
+    parameter ENABLE_PERF_COUNTERS = (`SOC_PERF_COUNTERS != 0)
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -126,7 +127,13 @@ module mips_core #(
     
     // Debug interface
     output wire        debug_stall,
-    output wire        debug_flush
+    output wire        debug_flush,
+    output wire [31:0] perf_cycle_count,
+    output wire [31:0] perf_retire_count,
+    output wire [31:0] perf_icache_miss_count,
+    output wire [31:0] perf_dcache_miss_count,
+    output wire [31:0] perf_branch_mispredict_count,
+    output wire [31:0] perf_mdu_stall_count
 );
 
     // CPU to I-Cache Interface
@@ -140,6 +147,8 @@ module mips_core #(
     
     // CPU to D-Cache Interface
     wire        cpu_data_req;
+    wire [3:0]  cpu_data_req_id;
+    wire [3:0]  cpu_data_resp_id;
     wire        cpu_data_we;
     wire [31:0] cpu_data_addr;
     wire [31:0] cpu_data_wdata;
@@ -188,12 +197,20 @@ module mips_core #(
     wire [7:0] sched_save_task;
     wire [31:0] sched_save_pc, sched_save_sp, sched_save_status;
     wire [7:0] sched_save_asid;
+    wire [31:0] sched_save_srsctl;
     wire [1023:0] sched_save_gpr;
+    wire [16383:0] sched_save_srs_gpr;
+    wire [1023:0] sched_save_fpr;
+    wire [31:0] sched_save_fcsr;
     wire sched_restore_req, sched_restore_ack;
     wire [7:0] sched_restore_task;
     wire [31:0] sched_restore_pc, sched_restore_sp, sched_restore_status;
     wire [7:0] sched_restore_asid;
+    wire [31:0] sched_restore_srsctl;
     wire [1023:0] sched_restore_gpr;
+    wire [16383:0] sched_restore_srs_gpr;
+    wire [1023:0] sched_restore_fpr;
+    wire [31:0] sched_restore_fcsr;
     wire sched_unused_ack;
 
     // SP is architecturally GPR29; keep the scheduler's explicit SP field
@@ -211,15 +228,22 @@ module mips_core #(
         .ctx_save_req(sched_save_req), .ctx_save_task(sched_save_task),
         .ctx_save_done(sched_save_done), .ctx_save_pc(sched_save_pc),
         .ctx_save_sp(sched_save_sp), .ctx_save_status(sched_save_status),
-        .ctx_save_asid(sched_save_asid), .ctx_save_gpr(sched_save_gpr),
+        .ctx_save_asid(sched_save_asid), .ctx_save_srsctl(sched_save_srsctl),
+        .ctx_save_gpr(sched_save_gpr),
+        .ctx_save_srs_gpr(sched_save_srs_gpr),
+        .ctx_save_fpr(sched_save_fpr), .ctx_save_fcsr(sched_save_fcsr),
         .ctx_restore_req(sched_restore_req), .ctx_restore_task(sched_restore_task),
         .ctx_restore_ack(sched_restore_ack), .ctx_restore_pc(sched_restore_pc),
         .ctx_restore_sp(sched_restore_sp), .ctx_restore_status(sched_restore_status),
-        .ctx_restore_asid(sched_restore_asid), .ctx_restore_gpr(sched_restore_gpr)
+        .ctx_restore_asid(sched_restore_asid), .ctx_restore_srsctl(sched_restore_srsctl),
+        .ctx_restore_gpr(sched_restore_gpr),
+        .ctx_restore_srs_gpr(sched_restore_srs_gpr),
+        .ctx_restore_fpr(sched_restore_fpr), .ctx_restore_fcsr(sched_restore_fcsr)
     );
     
     // Instantiating the CPU Pipeline
-    mips_cpu #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_cpu (
+    mips_cpu #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM),
+               .ENABLE_PERF_COUNTERS(ENABLE_PERF_COUNTERS)) u_cpu (
         .clk             (clk),
         .rst_n           (rst_n),
         
@@ -232,6 +256,7 @@ module mips_core #(
         .inst_rdata      (cpu_inst_rdata),
         
         .data_req        (cpu_data_req),
+        .data_req_id     (cpu_data_req_id),
         .data_we         (cpu_data_we),
         .data_addr       (cpu_data_addr),
         .ext_int         (ext_int),
@@ -245,10 +270,17 @@ module mips_core #(
         .external_vec_id(external_vec_id),
         .ctx_save_req(sched_save_req), .ctx_save_done(sched_save_done),
         .ctx_save_pc(sched_save_pc), .ctx_save_status(sched_save_status),
-        .ctx_save_asid(sched_save_asid), .ctx_save_gpr(sched_save_gpr),
+        .ctx_save_asid(sched_save_asid), .ctx_save_srsctl(sched_save_srsctl),
+        .ctx_save_gpr(sched_save_gpr),
+        .ctx_save_srs_gpr(sched_save_srs_gpr),
+        .ctx_save_fpr(sched_save_fpr), .ctx_save_fcsr(sched_save_fcsr),
         .ctx_restore_req(sched_restore_req), .ctx_restore_pc(sched_restore_pc),
         .ctx_restore_status(sched_restore_status), .ctx_restore_asid(sched_restore_asid),
-        .ctx_restore_gpr(sched_restore_gpr), .ctx_restore_ack(sched_restore_ack),
+        .ctx_restore_srsctl(sched_restore_srsctl),
+        .ctx_restore_gpr(sched_restore_gpr), .ctx_restore_srs_gpr(sched_restore_srs_gpr),
+        .ctx_restore_set(sched_restore_srsctl[3:0]),
+        .ctx_restore_fpr(sched_restore_fpr),
+        .ctx_restore_fcsr(sched_restore_fcsr), .ctx_restore_ack(sched_restore_ack),
         .hardware_walker_enable(hardware_walker_enable),
         .hardware_walker_ptbr(hardware_walker_ptbr),
         .ptw_mem_valid(ptw_mem_valid), .ptw_mem_addr(ptw_mem_addr),
@@ -270,12 +302,19 @@ module mips_core #(
         .data_cache_tag_wdata(cpu_data_cache_tag_wdata),
         .data_addr_ok    (cpu_data_addr_ok),
         .data_data_ok    (cpu_data_data_ok),
+        .data_resp_id    (cpu_data_resp_id),
         .data_bus_error  (cpu_data_bus_error),
         .data_cache_error(cpu_data_cache_error),
         .data_rdata      (cpu_data_rdata),
         
         .debug_stall     (debug_stall),
-        .debug_flush     (debug_flush)
+        .debug_flush     (debug_flush),
+        .perf_cycle_count(perf_cycle_count),
+        .perf_retire_count(perf_retire_count),
+        .perf_icache_miss_count(perf_icache_miss_count),
+        .perf_dcache_miss_count(perf_dcache_miss_count),
+        .perf_branch_mispredict_count(perf_branch_mispredict_count),
+        .perf_mdu_stall_count(perf_mdu_stall_count)
     );
     
     // Instantiating the I-Cache
@@ -317,6 +356,12 @@ module mips_core #(
         .cache_op_error(icache_op_error),
         .cache_tag_wdata(cpu_data_cache_tag_wdata),
         .cache_tag_rdata(icache_tag_rdata),
+
+        .sim_parity_inject_valid(1'b0),
+        .sim_parity_inject_tag  (1'b0),
+        .sim_parity_inject_data (1'b0),
+        .sim_parity_inject_way  (2'b0),
+        .sim_parity_inject_index(6'b0),
         
         .arid         (inst_arid),
         .araddr       (inst_araddr),
@@ -337,7 +382,52 @@ module mips_core #(
         .rready       (inst_rready)
     );
     
-    // Instantiating the D-Cache
+    // The nonblocking cache is opt-in.  Its uncached and maintenance traffic
+    // remains on the legacy dcache inside the adapter, preserving the default
+    // CPU/AXI contract while allowing cacheable misses to complete late.
+    generate
+    if ((`SOC_L1_NONBLOCKING_ENABLE != 0) &&
+        (`SOC_CPU_NONBLOCKING_ENABLE != 0)) begin : g_l1_nonblocking
+        l1_cache_nb_cpu_axi #(
+            .ENABLE_LEGACY_ADDR_HEURISTIC((`SOC_MMU_ENABLE == 0) &&
+                                           (`SOC_PRODUCT_BOOT_ENABLE == 0)),
+            .ENABLE_COHERENCY(ENABLE_COHERENCY),
+            .ENABLE_L1((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
+                       (`SOC_L1_NONBLOCKING_ENABLE != 0)),
+            .ENABLE_MULTI_OUTSTANDING((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
+                                       (`SOC_ROB_FIFO_ENABLE != 0))
+        ) u_dcache (
+            .clk(clk), .rst_n(rst_n), .cpu_req(cpu_data_req),
+            .cpu_id(cpu_data_req_id),
+            .cpu_we(cpu_data_we), .cpu_addr(cpu_data_addr),
+            .cpu_wdata(cpu_data_wdata), .cpu_be(cpu_data_be),
+            .cpu_uncacheable(cpu_data_uncacheable),
+            .cpu_rdata(cpu_data_rdata), .cpu_addr_ok(cpu_data_addr_ok),
+            .cpu_data_ok(cpu_data_data_ok), .cpu_bus_error(cpu_data_bus_error),
+            .cpu_cache_error(cpu_data_cache_error),
+            .cpu_response_id(cpu_data_resp_id),
+            .cache_op_valid(dcache_op_valid), .cache_op(cpu_data_cache_op),
+            .cache_op_addr(cpu_data_cache_op_addr), .cache_op_ready(),
+            .cache_op_done(dcache_op_done), .cache_op_error(dcache_op_error),
+            .cache_tag_wdata(cpu_data_cache_tag_wdata),
+            .cache_tag_rdata(cpu_data_cache_tag_rdata_d),
+            .awid(data_awid), .awaddr(data_awaddr), .awlen(data_awlen),
+            .awsize(data_awsize), .awburst(data_awburst), .awlock(data_awlock),
+            .awcache(data_awcache), .awprot(data_awprot), .awvalid(data_awvalid),
+            .awready(data_awready), .wdata(data_wdata), .wstrb(data_wstrb),
+            .wlast(data_wlast), .wvalid(data_wvalid), .wready(data_wready),
+            .bid(data_bid), .bresp(data_bresp), .bvalid(data_bvalid),
+            .bready(data_bready), .arid(data_arid), .araddr(data_araddr),
+            .arlen(data_arlen), .arsize(data_arsize), .arburst(data_arburst),
+            .arlock(data_arlock), .arcache(data_arcache), .arprot(data_arprot),
+            .arvalid(data_arvalid), .arready(data_arready), .rid(data_rid),
+            .rdata(data_rdata), .rresp(data_rresp), .rlast(data_rlast),
+            .rvalid(data_rvalid), .rready(data_rready),
+            .coh_store_valid(coh_store_valid), .coh_store_addr(coh_store_addr),
+            .coh_snoop_valid(coh_snoop_valid), .coh_snoop_addr(coh_snoop_addr)
+        );
+    end else begin : g_blocking
+    // Instantiating the legacy blocking D-Cache
     dcache #(
         .ENABLE_LEGACY_ADDR_HEURISTIC ((`SOC_MMU_ENABLE == 0) &&
                                         (`SOC_PRODUCT_BOOT_ENABLE == 0)),
@@ -357,6 +447,9 @@ module mips_core #(
         .cpu_data_ok  (cpu_data_data_ok),
         .cpu_bus_error(cpu_data_bus_error),
         .cpu_cache_error(cpu_data_cache_error),
+        .sim_parity_inject_valid(1'b0), .sim_parity_inject_tag(1'b0),
+        .sim_parity_inject_data(1'b0), .sim_parity_inject_way(2'b0),
+        .sim_parity_inject_index(6'b0),
         .cache_op_valid(dcache_op_valid),
         .cache_op      (cpu_data_cache_op),
         .cache_op_addr (cpu_data_cache_op_addr),
@@ -410,5 +503,8 @@ module mips_core #(
         .coh_snoop_valid(coh_snoop_valid),
         .coh_snoop_addr (coh_snoop_addr)
     );
+    assign cpu_data_resp_id = 4'd0;
+    end
+    endgenerate
 
 endmodule

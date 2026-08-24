@@ -13,6 +13,11 @@ module tb_page_table_tlb_refill;
     if(!tlb_wr_valid||tlb_wr_vpn2!==19'd0||tlb_wr_asid!==8'h2||tlb_wr_entrylo0[29:6]!==24'h000003)errors=errors+1;
     if(tlb_wr_entrylo1[1] !== 1'b0) errors=errors+1;
     @(negedge clk);tlb_wr_ready=1;repeat(2)@(posedge clk);@(negedge clk);tlb_wr_ready=0;@(posedge clk);if(tlb_wr_valid)errors=errors+1;
+    /* A permanently-ready TLB must still observe the refill transaction. */
+    mem[2048]=32'h0000_300f; miss_access=2'd1; tlb_wr_ready=1; run_walk;
+    if(!tlb_wr_valid || tlb_wr_entrylo0[29:6]!==24'h000003) errors=errors+1;
+    @(posedge clk); #1; if(tlb_wr_valid) errors=errors+1;
+    @(negedge clk);tlb_wr_ready=0;
     /* An odd 4KB leaf must occupy EntryLo1 only; EntryLo0 must not alias it. */
     mem[2049]=32'h0000_500f; miss_va=32'h0000_1123; run_walk;
     if(!tlb_wr_valid || tlb_wr_entrylo0[1]!==1'b0 ||

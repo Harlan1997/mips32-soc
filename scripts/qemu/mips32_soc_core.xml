@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!-- Project-local MIPS32 GDB register description for system-mode plugins. -->
+<!DOCTYPE feature SYSTEM "gdb-target.dtd">
+<feature name="org.gnu.gdb.mips32.soc.core">
+  <reg name="r0" bitsize="32" regnum="0"/>
+  <reg name="r1" bitsize="32"/><reg name="r2" bitsize="32"/>
+  <reg name="r3" bitsize="32"/><reg name="r4" bitsize="32"/>
+  <reg name="r5" bitsize="32"/><reg name="r6" bitsize="32"/>
+  <reg name="r7" bitsize="32"/><reg name="r8" bitsize="32"/>
+  <reg name="r9" bitsize="32"/><reg name="r10" bitsize="32"/>
+  <reg name="r11" bitsize="32"/><reg name="r12" bitsize="32"/>
+  <reg name="r13" bitsize="32"/><reg name="r14" bitsize="32"/>
+  <reg name="r15" bitsize="32"/><reg name="r16" bitsize="32"/>
+  <reg name="r17" bitsize="32"/><reg name="r18" bitsize="32"/>
+  <reg name="r19" bitsize="32"/><reg name="r20" bitsize="32"/>
+  <reg name="r21" bitsize="32"/><reg name="r22" bitsize="32"/>
+  <reg name="r23" bitsize="32"/><reg name="r24" bitsize="32"/>
+  <reg name="r25" bitsize="32"/><reg name="r26" bitsize="32"/>
+  <reg name="r27" bitsize="32"/><reg name="r28" bitsize="32"/>
+  <reg name="r29" bitsize="32"/><reg name="r30" bitsize="32"/>
+  <reg name="r31" bitsize="32"/>
+  <reg name="status" bitsize="32"/><reg name="lo" bitsize="32"/>
+  <reg name="hi" bitsize="32"/><reg name="badvaddr" bitsize="32"/>
+  <reg name="cause" bitsize="32"/><reg name="pc" bitsize="32"/>
+  <reg name="fpr0" bitsize="32"/><reg name="fpr1" bitsize="32"/>
+  <reg name="fpr2" bitsize="32"/><reg name="fpr3" bitsize="32"/>
+  <reg name="fpr4" bitsize="32"/><reg name="fpr5" bitsize="32"/>
+  <reg name="fpr6" bitsize="32"/><reg name="fpr7" bitsize="32"/>
+  <reg name="fpr8" bitsize="32"/><reg name="fpr9" bitsize="32"/>
+  <reg name="fpr10" bitsize="32"/><reg name="fpr11" bitsize="32"/>
+  <reg name="fpr12" bitsize="32"/><reg name="fpr13" bitsize="32"/>
+  <reg name="fpr14" bitsize="32"/><reg name="fpr15" bitsize="32"/>
+  <reg name="fpr16" bitsize="32"/><reg name="fpr17" bitsize="32"/>
+  <reg name="fpr18" bitsize="32"/><reg name="fpr19" bitsize="32"/>
+  <reg name="fpr20" bitsize="32"/><reg name="fpr21" bitsize="32"/>
+  <reg name="fpr22" bitsize="32"/><reg name="fpr23" bitsize="32"/>
+  <reg name="fpr24" bitsize="32"/><reg name="fpr25" bitsize="32"/>
+  <reg name="fpr26" bitsize="32"/><reg name="fpr27" bitsize="32"/>
+  <reg name="fpr28" bitsize="32"/><reg name="fpr29" bitsize="32"/>
+  <reg name="fpr30" bitsize="32"/><reg name="fpr31" bitsize="32"/>
+  <reg name="fcsr" bitsize="32"/><reg name="fir" bitsize="32"/>
+  <reg name="fp" bitsize="32"/>
+  <reg name="epc" bitsize="32"/><reg name="index" bitsize="32"/>
+  <reg name="entryhi" bitsize="32"/><reg name="pagemask" bitsize="32"/>
+</feature>

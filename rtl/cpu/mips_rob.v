@@ -45,6 +45,11 @@ module mips_rob #(
     input  wire [31:0] mem_rdata_fmt,
     input  wire [31:0] mem_ex_out,
     input  wire [31:0] mem_pc_plus_8,
+    input  wire [31:0] mem_inst,
+    input  wire [31:0] mem_val_rt,
+    input  wire        mem_mem_read,
+    input  wire        mem_mem_write,
+    input  wire [2:0]  mem_mem_op,
     input  wire [4:0]  mem_waddr,
     input  wire [4:0]  mem_rd_addr,
     input  wire [4:0]  mem_cp0_raddr,
@@ -58,12 +63,19 @@ module mips_rob #(
     input  wire        mem_except_is_data,
     input  wire        mem_except_is_tlb_refill,
     input  wire        mem_bd,
+    input  wire [31:0] mem_delay_slot_next_pc,
     input  wire [1:0]  mem_mem_to_reg,
 
     // Commit outputs (to WB / CP0 / RF) — same names/semantics as wb_* ---------
     output reg  [31:0] wb_rdata_fmt,
     output reg  [31:0] wb_ex_out,
     output reg  [31:0] wb_pc_plus_8,
+    output reg  [31:0] wb_inst,
+    output reg  [31:0] wb_val_rt,
+    output reg         wb_mem_read,
+    output reg         wb_mem_write,
+    output reg  [2:0]  wb_mem_op,
+    output reg         wb_valid,
     output reg  [4:0]  wb_waddr,
     output reg  [4:0]  wb_rd_addr,
     output reg  [4:0]  wb_cp0_raddr,
@@ -77,6 +89,7 @@ module mips_rob #(
     output reg         wb_except_is_data,
     output reg         wb_except_is_tlb_refill,
     output reg         wb_bd,
+    output reg  [31:0] wb_delay_slot_next_pc,
     output reg  [1:0]  wb_mem_to_reg
 );
 
@@ -94,6 +107,12 @@ module mips_rob #(
                 wb_rdata_fmt      <= 32'd0;
                 wb_ex_out         <= 32'd0;
                 wb_pc_plus_8      <= 32'd0;
+                wb_inst           <= 32'd0;
+                wb_val_rt         <= 32'd0;
+                wb_mem_read       <= 1'b0;
+                wb_mem_write      <= 1'b0;
+                wb_mem_op         <= 3'd0;
+                wb_valid          <= 1'b0;
                 wb_waddr          <= 5'd0;
                 wb_rd_addr        <= 5'd0;
                 wb_cp0_raddr      <= 5'd0;
@@ -108,10 +127,23 @@ module mips_rob #(
                 wb_except_is_data <= 1'b0;
                 wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
-            end else if (!stall) begin
+                wb_delay_slot_next_pc <= 32'd0;
+            end else begin
+                wb_valid          <= 1'b0;
+                if (!stall) begin
                 wb_rdata_fmt      <= mem_rdata_fmt;
                 wb_ex_out         <= mem_ex_out;
                 wb_pc_plus_8      <= mem_pc_plus_8;
+                wb_inst           <= mem_inst;
+                wb_val_rt         <= mem_val_rt;
+                wb_mem_read       <= mem_mem_read;
+                wb_mem_write      <= mem_mem_write;
+                wb_mem_op         <= mem_mem_op;
+                // A held MEM bundle may be observed across a response/stall
+                // boundary. Commit it once; repeated observation is not a
+                // second architectural retirement.
+                wb_valid          <= (mem_pc_plus_8 >= 32'd8) &&
+                                     (mem_pc_plus_8 != wb_pc_plus_8);
                 wb_waddr          <= mem_waddr;
                 wb_rd_addr        <= mem_rd_addr;
                 wb_cp0_raddr      <= mem_cp0_raddr;
@@ -125,7 +157,9 @@ module mips_rob #(
                 wb_except_is_data <= mem_except_is_data;
                 wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd             <= mem_bd;
+                wb_delay_slot_next_pc <= mem_delay_slot_next_pc;
                 wb_mem_to_reg     <= mem_mem_to_reg;
+                end
             end
         end
     end endgenerate
@@ -185,6 +219,12 @@ module mips_rob #(
                 wb_rdata_fmt      <= 32'd0;
                 wb_ex_out         <= 32'd0;
                 wb_pc_plus_8      <= 32'd0;
+                wb_inst           <= 32'd0;
+                wb_val_rt         <= 32'd0;
+                wb_mem_read       <= 1'b0;
+                wb_mem_write      <= 1'b0;
+                wb_mem_op         <= 3'd0;
+                wb_valid          <= 1'b0;
                 wb_waddr          <= 5'd0;
                 wb_rd_addr        <= 5'd0;
                 wb_cp0_raddr      <= 5'd0;
@@ -199,6 +239,7 @@ module mips_rob #(
                 wb_except_is_data <= 1'b0;
                 wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
+                wb_delay_slot_next_pc <= 32'd0;
             end else if (flush) begin
                 rob_head <= {PTR_W{1'b0}};
                 rob_tail <= {PTR_W{1'b0}};
@@ -209,6 +250,12 @@ module mips_rob #(
                 wb_rdata_fmt      <= 32'd0;
                 wb_ex_out         <= 32'd0;
                 wb_pc_plus_8      <= 32'd0;
+                wb_inst           <= 32'd0;
+                wb_val_rt         <= 32'd0;
+                wb_mem_read       <= 1'b0;
+                wb_mem_write      <= 1'b0;
+                wb_mem_op         <= 3'd0;
+                wb_valid          <= 1'b0;
                 wb_waddr          <= 5'd0;
                 wb_rd_addr        <= 5'd0;
                 wb_cp0_raddr      <= 5'd0;
@@ -223,7 +270,10 @@ module mips_rob #(
                 wb_except_is_data <= 1'b0;
                 wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
-            end else if (!stall) begin
+                wb_delay_slot_next_pc <= 32'd0;
+            end else begin
+                wb_valid          <= 1'b0;
+                if (!stall) begin
                 // Bookkeeping-only: store the bundle and walk both pointers
                 // one slot forward. rob_valid/rob_ready are deliberately left
                 // clear -- see header comment; nothing reads rob_slot back
@@ -236,6 +286,13 @@ module mips_rob #(
                 wb_rdata_fmt      <= mem_rdata_fmt;
                 wb_ex_out         <= mem_ex_out;
                 wb_pc_plus_8      <= mem_pc_plus_8;
+                wb_inst           <= mem_inst;
+                wb_val_rt         <= mem_val_rt;
+                wb_mem_read       <= mem_mem_read;
+                wb_mem_write      <= mem_mem_write;
+                wb_mem_op         <= mem_mem_op;
+                wb_valid          <= (mem_pc_plus_8 >= 32'd8) &&
+                                     (mem_pc_plus_8 != wb_pc_plus_8);
                 wb_waddr          <= mem_waddr;
                 wb_rd_addr        <= mem_rd_addr;
                 wb_cp0_raddr      <= mem_cp0_raddr;
@@ -249,7 +306,9 @@ module mips_rob #(
                 wb_except_is_data <= mem_except_is_data;
                 wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd             <= mem_bd;
+                wb_delay_slot_next_pc <= mem_delay_slot_next_pc;
                 wb_mem_to_reg     <= mem_mem_to_reg;
+                end
             end
         end
     end endgenerate

@@ -13,7 +13,15 @@ Defaults:
 MIPS_CROSS_COMPILE=mips64-linux-gnu-
 UBOOT_SOURCE_DIR=third_party/u-boot
 LINUX_SOURCE_DIR=third_party/linux
+QEMU_SYSTEM_BIN=build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel
+QEMU_USER_BIN=build/deps/src/qemu-9.2.0/build-mipsel-linux-user/qemu-mipsel
 ```
+
+The dependency checker accepts the project-built `qemu-system-mipsel` binary
+for the `mips32-soc-ref` custom machine. `qemu-mipsel` remains a separate
+linux-user binary; build it from the same official QEMU source with
+`scripts/qemu/build_mips32_linux_user.sh`. System-mode QEMU is not substituted
+for linux-user execution.
 
 ## Boot flow (target)
 

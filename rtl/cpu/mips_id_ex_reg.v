@@ -17,6 +17,7 @@ module mips_id_ex_reg (
     input  wire [31:0] id_val_rt,
     input  wire [31:0] id_imm_ext,
     input  wire [31:0] id_pc_plus_8,
+    input  wire [31:0] id_inst,
     input  wire [4:0]  id_waddr,
     input  wire [4:0]  id_rd_addr,
     input  wire [4:0]  id_cp0_raddr,
@@ -33,6 +34,7 @@ module mips_id_ex_reg (
     input  wire        id_except_is_data,   // Phase B.3.d: mark MEM-side origin
     input  wire        id_except_is_tlb_refill,
     input  wire        id_bd,               // Phase B.5: 1 = ID inst is in a branch/jump delay slot
+    input  wire [31:0] id_delay_slot_next_pc,
     input  wire        id_cp0_we,
     input  wire        id_is_eret,
     input  wire [2:0]  id_tlb_op,
@@ -52,6 +54,7 @@ module mips_id_ex_reg (
     output reg  [31:0] ex_val_rt,
     output reg  [31:0] ex_imm_ext,
     output reg  [31:0] ex_pc_plus_8,
+    output reg  [31:0] ex_inst,
     output reg  [4:0]  ex_waddr,
     output reg  [4:0]  ex_rd_addr,
     output reg  [4:0]  ex_cp0_raddr,
@@ -68,6 +71,7 @@ module mips_id_ex_reg (
     output reg         ex_except_is_data,
     output reg         ex_except_is_tlb_refill,
     output reg         ex_bd,
+    output reg  [31:0] ex_delay_slot_next_pc,
     output reg         ex_cp0_we,
     output reg         ex_is_eret,
     output reg  [2:0]  ex_tlb_op,
@@ -88,6 +92,7 @@ module mips_id_ex_reg (
             ex_val_rt      <= 32'd0;
             ex_imm_ext     <= 32'd0;
             ex_pc_plus_8   <= 32'd0;
+            ex_inst        <= 32'd0;
             ex_waddr       <= 5'd0;
             ex_rd_addr     <= 5'd0;
             ex_cp0_raddr   <= 5'd0;
@@ -103,6 +108,7 @@ module mips_id_ex_reg (
             ex_except_is_data <= 1'b0;
             ex_except_is_tlb_refill <= 1'b0;
             ex_bd          <= 1'b0;
+            ex_delay_slot_next_pc <= 32'd0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
             ex_tlb_op      <= 3'd0;
@@ -120,6 +126,7 @@ module mips_id_ex_reg (
             ex_val_rt      <= 32'd0;
             ex_imm_ext     <= 32'd0;
             ex_pc_plus_8   <= 32'd0;
+            ex_inst        <= 32'd0;
             ex_waddr       <= 5'd0;
             ex_rd_addr     <= 5'd0;
             ex_cp0_raddr   <= 5'd0;
@@ -135,6 +142,7 @@ module mips_id_ex_reg (
             ex_except_is_data <= 1'b0;
             ex_except_is_tlb_refill <= 1'b0;
             ex_bd          <= 1'b0;
+            ex_delay_slot_next_pc <= 32'd0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
             ex_tlb_op      <= 3'd0;
@@ -157,6 +165,7 @@ module mips_id_ex_reg (
             ex_val_rt      <= id_val_rt;
             ex_imm_ext     <= id_imm_ext;
             ex_pc_plus_8   <= id_pc_plus_8;
+            ex_inst        <= id_inst;
             ex_waddr       <= id_waddr;
             ex_rd_addr     <= id_rd_addr;
             ex_cp0_raddr   <= id_cp0_raddr;
@@ -172,6 +181,7 @@ module mips_id_ex_reg (
             ex_except_is_data <= id_except_is_data;
             ex_except_is_tlb_refill <= id_except_is_tlb_refill;
             ex_bd          <= id_bd;
+            ex_delay_slot_next_pc <= id_delay_slot_next_pc;
             ex_cp0_we      <= id_cp0_we;
             ex_is_eret     <= id_is_eret;
             ex_tlb_op      <= id_tlb_op;

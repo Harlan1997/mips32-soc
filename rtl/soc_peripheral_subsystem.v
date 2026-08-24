@@ -74,6 +74,13 @@ module soc_peripheral_subsystem #(
     output wire        qspi_active,
     output wire        qspi_cmd_req,
 
+    input  wire [31:0] perf_cycle_count,
+    input  wire [31:0] perf_retire_count,
+    input  wire [31:0] perf_icache_miss_count,
+    input  wire [31:0] perf_dcache_miss_count,
+    input  wire [31:0] perf_branch_mispredict_count,
+    input  wire [31:0] perf_mdu_stall_count,
+
     input  wire [3:0]  s_awid,
     input  wire [31:0] s_awaddr,
     input  wire [7:0]  s_awlen,
@@ -226,11 +233,12 @@ module soc_peripheral_subsystem #(
     wire mmu_context_sel = apb_psel & (apb_paddr[15:12] == 4'h9); // 0x4000_9000
     wire ipi_sel = ENABLE_DUAL_CORE_IPI & apb_psel & (apb_paddr[15:12] == 4'hA); // 0x4000_A000
     wire ipi_core1_sel = ENABLE_DUAL_CORE_IPI & apb_psel & (apb_paddr[15:12] == 4'hB); // 0x4000_B000
+    wire perf_sel = apb_psel & (apb_paddr[15:12] == 4'hC); // 0x4000_C000
     wire fault_sel = ENABLE_APB_FAULT_INJECTOR & apb_psel & (apb_paddr[15:12] == 4'hF); // 0x4000_F000
 
-    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, fault_prdata, ipi_prdata, ipi_core1_prdata;
-    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, ddr4_status_pready, wdt_pready, boot_status_pready, fault_pready, ipi_pready, ipi_core1_pready;
-    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, ddr4_status_pslverr, wdt_pslverr, boot_status_pslverr, fault_pslverr, ipi_pslverr, ipi_core1_pslverr;
+    wire [31:0] uart_prdata, timer_prdata, gpio_prdata, dma_prdata, pic_prdata, qspi_prdata, ddr4_status_prdata, wdt_prdata, boot_status_prdata, perf_prdata, fault_prdata, ipi_prdata, ipi_core1_prdata;
+    wire uart_pready, timer_pready, gpio_pready, dma_pready, pic_pready, qspi_pready, ddr4_status_pready, wdt_pready, boot_status_pready, perf_pready, fault_pready, ipi_pready, ipi_core1_pready;
+    wire uart_pslverr, timer_pslverr, gpio_pslverr, dma_pslverr, pic_pslverr, qspi_pslverr, ddr4_status_pslverr, wdt_pslverr, boot_status_pslverr, perf_pslverr, fault_pslverr, ipi_pslverr, ipi_core1_pslverr;
 
     assign apb_prdata  = uart_sel ? uart_prdata :
                          timer_sel ? timer_prdata :
@@ -244,6 +252,7 @@ module soc_peripheral_subsystem #(
                          mmu_context_sel ? mmu_context_prdata :
                          ipi_sel ? ipi_prdata :
                          ipi_core1_sel ? ipi_core1_prdata :
+                         perf_sel ? perf_prdata :
                          fault_sel ? fault_prdata : 32'd0;
     assign apb_pready  = uart_sel ? uart_pready :
                          timer_sel ? timer_pready :
@@ -257,6 +266,7 @@ module soc_peripheral_subsystem #(
                          mmu_context_sel ? mmu_context_pready :
                          ipi_sel ? ipi_pready :
                          ipi_core1_sel ? ipi_core1_pready :
+                         perf_sel ? perf_pready :
                          fault_sel ? fault_pready : 1'b1;
     assign apb_pslverr = uart_sel ? uart_pslverr :
                          timer_sel ? timer_pslverr :
@@ -270,6 +280,7 @@ module soc_peripheral_subsystem #(
                          mmu_context_sel ? mmu_context_pslverr :
                          ipi_sel ? ipi_pslverr :
                          ipi_core1_sel ? ipi_core1_pslverr :
+                         perf_sel ? perf_pslverr :
                          fault_sel ? fault_pslverr : 1'b0;
 
     wire uart_tx_int;
@@ -394,6 +405,17 @@ module soc_peripheral_subsystem #(
         .invalidate_asid(tlb_inv_asid), .invalidate_vpn(tlb_inv_vpn2),
         .invalidate_scope(tlb_inv_scope));
     assign tlb_inv_wired_floor = 6'd2;
+
+    apb_perf_counters u_apb_perf_counters (
+        .psel(perf_sel), .penable(apb_penable), .pwrite(apb_pwrite),
+        .paddr(apb_paddr[7:0]), .prdata(perf_prdata),
+        .pready(perf_pready), .pslverr(perf_pslverr),
+        .cycle_count(perf_cycle_count), .retire_count(perf_retire_count),
+        .icache_miss_count(perf_icache_miss_count),
+        .dcache_miss_count(perf_dcache_miss_count),
+        .branch_mispredict_count(perf_branch_mispredict_count),
+        .mdu_stall_count(perf_mdu_stall_count)
+    );
 
     generate
         if (ENABLE_DUAL_CORE_IPI) begin : g_dual_core_ipi

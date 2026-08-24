@@ -3,13 +3,15 @@
 > 状态：v1 已实现（Phase C.3 DELIVERED）。级联 2×1 arbiter + 1×3 decoder 已被真正的
 > M×N crossbar `rtl/axi/axi_crossbar.v` 取代（旧 `axi_arbiter_2x1*.v` / `axi_decoder_1x3.v`
 > 已删除），封装在 `soc_fabric.v`（扁平端口与 `ENABLE_EXT_AXI_MASTER` 参数不变）。
-> 已交付：不同 slave 并发事务、per-slave QoS 优先 + RR 平局仲裁、per-slave outstanding
-> FIFO {master_idx,id} 按序回路、合成 DECERR slave、AR/AW 授权锁保证地址通道 payload 稳定。
+> 已交付：不同 slave 并发事务、per-slave QoS 优先 + RR 平局仲裁、per-slave 4-entry
+> bounded transaction table、RID/BID response matching（不同 ID 可乱序、同 ID 保序）、
+> 合成 DECERR slave、AR/AW 授权锁保证地址通道 payload 稳定。
 >
-> **诚实范围**：per-slave `SOC_XBAR_N_OT=4` 深度在 crossbar 边界实现；端到端同-slave 深度
+> **诚实范围**：per-slave `SOC_XBAR_N_OT=4` 深度与 bounded ID-based response routing 在
+> crossbar 边界实现；端到端同-slave 深度
 > 仍受当前单-outstanding L2/APB/flash 限制为 1（跨-slave 并发已实现，同-slave 吞吐待非阻塞
 > slave / L2 MSHR）。QoS 为静态 per-master class（master 尚未输出 AxQOS）。无 formal 证明、
-> 无商用 VIP compliance。验证：`make fabric-unit-gate` 3/3 +
+> 无商用 VIP compliance。验证：`make fabric-unit-gate` 5/5 +
 > SoC 回归（phase2 16/16、phase3-complete、uvm、soc-smoke）全绿。当前回归和功能边界以
 > `docs/functional_completeness_plan.md` 与
 > `docs/functional_evidence_registry.md` 为准。下文 §0 起为原始设计目标（v0）；
@@ -20,7 +22,8 @@
 ## 0. 目标
 
 - **多 outstanding**：per-master 至少 4 未完成事务（可参数化 8/16）
-- **乱序响应**：AXI ID tag 追踪，允许 slave 乱序返回，fabric 保序合并
+- **乱序响应**：bounded 4-entry AXI ID tag 追踪，允许不同 ID 的 slave 响应乱序返回，
+  fabric 按 ID 路由并保持同一 ID 的响应顺序
 - **Crossbar**：M×N 全连接 (M master, N slave)，非仲裁瓶颈
 - **QoS 感知**：4-bit AXI QoS 影响 arbiter 优先级
 - **PROT/CACHE 转发**：透明传递给 slave 无篡改

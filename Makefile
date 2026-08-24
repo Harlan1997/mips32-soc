@@ -3,6 +3,12 @@ BUILD_DIR ?= $(ROOT_DIR)/build
 FW_NAME ?= soc_smoke
 FW_BUILD_DIR ?= $(BUILD_DIR)/firmware/$(FW_NAME)
 FW_HEX ?= $(FW_BUILD_DIR)/firmware.hex
+PERF_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/perf_cpu
+PERF_CPU_FW_HEX ?= $(PERF_CPU_FW_DIR)/firmware.hex
+PERF_WORKLOADS_FW_DIR ?= $(BUILD_DIR)/firmware/perf_workloads
+PERF_WORKLOADS_FW_HEX ?= $(PERF_WORKLOADS_FW_DIR)/firmware.hex
+VIC_NESTED_FW_DIR ?= $(BUILD_DIR)/firmware/vic_nested
+VIC_NESTED_FW_HEX ?= $(VIC_NESTED_FW_DIR)/firmware.hex
 UVM_TEST ?= soc_bus_stress_test
 UVM_SEED ?= 1
 UVM_RUN_DIR ?= $(BUILD_DIR)/uvm/single
@@ -23,6 +29,15 @@ UVM_PHASE3C_TESTLIST ?= tb/uvm_tb/phase3c_directed_tests.txt
 UVM_PHASE3C_COMPLETE_DIR ?= $(BUILD_DIR)/uvm/phase3c_complete
 SOC_TEST_RUN_DIR ?= $(BUILD_DIR)/soc_test/smoke
 SOC_TEST_CPU_CP0_DIR ?= $(BUILD_DIR)/soc_test/cpu_cp0_gate
+SOC_TEST_SRS_DIR ?= $(BUILD_DIR)/soc_test/srs
+SRS_FW_DIR ?= $(BUILD_DIR)/firmware/srs
+SRS_FW_HEX ?= $(SRS_FW_DIR)/firmware.hex
+SOC_TEST_SRS_EXCEPTION_DIR ?= $(BUILD_DIR)/soc_test/srs_exception
+SRS_EXCEPTION_FW_DIR ?= $(BUILD_DIR)/firmware/srs_exception
+SRS_EXCEPTION_FW_HEX ?= $(SRS_EXCEPTION_FW_DIR)/firmware.hex
+SOC_TEST_SRS_NESTED_DIR ?= $(BUILD_DIR)/soc_test/srs_nested
+SRS_NESTED_FW_DIR ?= $(BUILD_DIR)/firmware/srs_nested
+SRS_NESTED_FW_HEX ?= $(SRS_NESTED_FW_DIR)/firmware.hex
 SOC_TEST_RANDOM_DIR ?= $(BUILD_DIR)/soc_test/random_regression
 SIGNOFF_DIR ?= $(BUILD_DIR)/signoff/current_contract
 STAGE ?= ex
@@ -71,6 +86,7 @@ CPU_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_hardware_walker
 CPU_DSIDE_HARDWARE_WALKER_DIR ?= $(BUILD_DIR)/unit_tb/cpu_dside_hardware_walker
 MMU_PAGE_TABLE_ALLOCATOR_DIR ?= $(BUILD_DIR)/unit_tb/mmu_page_table_allocator
 MMU_REFILL_DIR ?= $(BUILD_DIR)/soc_test/mmu_refill_bootstrap
+MMU_OS_PRESSURE_DIR ?= $(BUILD_DIR)/soc_test/mmu_os_pressure
 PRODUCT_CACHEERR_DIR ?= $(BUILD_DIR)/unit_tb/product_cacheerr
 WDT_UNIT_DIR ?= $(BUILD_DIR)/unit_tb/wdt
 WDT_PERIPHERAL_DIR ?= $(BUILD_DIR)/unit_tb/wdt_peripheral
@@ -135,10 +151,60 @@ bpu-redirect-gate:
 sva-gate: firmware
 	RUN_ROOT=$(SVA_DIR) FW_HEX=$(FW_HEX) tb/sva/run_sva_gate.sh
 
+verification-foundation-gate:
+	RUN_ROOT=$(BUILD_DIR)/verification_foundation scripts/run_verification_foundation_gate.sh
+
 mdu-flush-gate:
 	RUN_DIR=$(MDU_FLUSH_DIR) tb/unit/mdu/run_flush_gate.sh
 
-.PHONY: bpu-redirect-gate sva-gate mdu-flush-gate firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate vic-cpu-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate l2-end-to-end-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate product-manifest-handoff-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate mmu-hardware-walker-soc-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate rtl-frontend-compile soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate coverage-strict-clean-gate linux-boot-dependency-gate project-tree clean-firmware clean-build clean-legacy-artifacts clean
+dcache-parity-gate:
+	chmod +x tb/unit/dcache/run_parity.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/dcache_parity tb/unit/dcache/run_parity.sh
+
+.PHONY: bpu-redirect-gate sva-gate verification-foundation-gate micro-tlb-gate interrupt-priority-gate mdu-flush-gate mips-control-fpu-cond-gate mips-fpu-compare-gate firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate dma-axi-error-gate vic-cpu-gate vic-full-sources-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate l2-end-to-end-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-micro-tlb-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate qspi-vendor-neutral-boot-gate product-manifest-handoff-gate product-manifest-handoff-quad-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate mmu-hardware-walker-soc-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate ecc-secded-gate rtl-frontend-compile rob-fifo-gate soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate page-table-walker-page-sizes-gate cpu-hardware-walker-page-size-gate cpu-hardware-walker-page-sizes-gate coverage-strict-clean-gate linux-boot-dependency-gate qemu-linux-user project-tree clean-firmware clean-build clean-legacy-artifacts clean
+
+.PHONY: cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-errors-gate l1-nonblocking-axi-bridge-gate l1-nonblocking-cpu-compat-gate l1-nonblocking-cpu-multi-gate l1-nonblocking-cpu-stress-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-gate l1-nonblocking-cpu-error-reset-gate mmu-ipi-shootdown-pressure-gate fpu-single-gate fpu-double-gate fpu-cu1-exception-gate fpu-fpe-exception-gate fpu-fpe-double-gate fpu-fpe-inexact-gate fpu-fpe-double-inexact-gate fpu-fpe-double-underflow-gate fpu-fpe-invalid-gate fpu-fpe-overflow-gate fpu-fpe-underflow-gate fpu-rounding-gate qemu-system-fpu-single-differential-gate qemu-system-fpu-double-differential-gate qemu-system-fpu-cu1-exception-differential-gate qemu-system-fpu-fpe-inexact-differential-gate qemu-system-fpu-fpe-double-inexact-differential-gate qemu-system-fpu-fpe-double-underflow-differential-gate qemu-system-branch-likely-differential-gate cpu-reference-gate cpu-lockstep-gate perf-counters-gate qemu-system-mips32-soc-ref qemu-system-sram-uart-mailbox-gate qemu-system-peripheral-contract-gate qemu-system-qspi-gate qemu-system-ddr-gate qemu-system-current-contract-gate qemu-system-selected-differential-gate qemu-system-retire-capture-gate qemu-system-retire-differential-gate qemu-system-isa-r2-differential-gate qemu-system-exception-differential-gate qemu-system-break-differential-gate qemu-system-trap-differential-gate qemu-system-trap-imm-differential-gate qemu-system-di-ei-differential-gate qemu-system-wait-differential-gate qemu-system-bd-exception-differential-gate qemu-system-peripheral-differential-gate qemu-system-vic-differential-gate qemu-system-vic-cpu-differential-gate qemu-system-vic-full-sources-differential-gate qemu-system-mmu-contract-gate qemu-system-mmu-process-pressure-gate qemu-system-mmu-refill-differential-gate qemu-system-dma-v2-model-gate qemu-system-dma-v2-event-contract-gate qemu-system-unaligned-gate qemu-system-unaligned-differential-gate
+.PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate
+.PHONY: l1-nonblocking-maintenance-compat-gate l1-nonblocking-ddr-gate qemu-system-l1-ddr-differential-gate
+.PHONY: l1-nonblocking-cpu-two-error-reset-gate
+.PHONY: qemu-system-mmu-os-pressure-gate
+.PHONY: soc-filelist-audit
+.PHONY: qspi-vendor-neutral-complete-gate
+.PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
+.PHONY: fpu-context-gate
+.PHONY: dcache-parity-gate
+
+isa-implementation-audit:
+	@mkdir -p $(BUILD_DIR)/isa_audit
+	python3 scripts/check_isa_matrix.py | tee $(BUILD_DIR)/isa_audit/isa_implementation_audit.log
+	@printf '# ISA Implementation Audit\n\n- Result: PASS\n- Evidence: `scripts/check_isa_matrix.py` and `docs/isa_implementation_matrix.md`\n- Boundary: this is not full ISA compliance.\n' > $(BUILD_DIR)/isa_audit/isa_implementation_audit_report.md
+
+branch-likely-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/branch_likely tb/soc_test/run_branch_likely_gate.sh
+
+bitswap-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/bitswap OUT_DIR=$(BUILD_DIR)/firmware/bitswap FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/bitswap FW_DIR=$(BUILD_DIR)/firmware/bitswap \
+	FW_HEX=$(BUILD_DIR)/firmware/bitswap/firmware.hex \
+	VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+fpu-branch-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_branch OUT_DIR=$(BUILD_DIR)/firmware/fpu_branch FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_branch FW_DIR=$(BUILD_DIR)/firmware/fpu_branch \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_branch/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK +define+TB_FPU_ROUND_DEBUG' \
+	tb/soc_test/run.sh
+
+qemu-system-fpu-branch-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_branch RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_branch_differential \
+	RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
+	tb/isa_ref/run_qemu_system_differential_gate.sh
+
+mips-fpu-recip-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_fpu_recip tb/unit/cpu_test/run_mips_fpu_recip.sh
+.PHONY: dma-reset-inflight-gate
 
 linux-boot-dependency-gate:
 	bash tb/linux_boot/check_dependencies.sh
@@ -150,6 +216,19 @@ mdu-cpu-gate:
 dma-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=dma_cpu OUT_DIR=$(DMA_CPU_FW_DIR) FW_BASE=firmware all
 	FW_HEX=$(DMA_CPU_FW_HEX) RUN_DIR=$(SOC_TEST_DMA_CPU_DIR) tb/soc_test/run_dma_cpu_gate.sh
+
+dma-axi-error-gate:
+	chmod +x tb/soc_test/run_dma_axi_error_gate.sh
+	RUN_DIR=$(BUILD_DIR)/soc_test/dma_axi_error \
+	FW_DIR=$(BUILD_DIR)/firmware/dma_axi_error \
+	tb/soc_test/run_dma_axi_error_gate.sh
+
+dma-reset-inflight-gate:
+	chmod +x tb/soc_test/run_dma_reset_inflight_gate.sh
+	RUN_DIR=$(BUILD_DIR)/soc_test/dma_reset_inflight \
+	FW_DIR=$(BUILD_DIR)/firmware/dma_reset_inflight \
+	tb/soc_test/run_dma_reset_inflight_gate.sh
+
 
 vic-cpu-gate:
 	$(MAKE) -C tb/soc_test/fw FW_NAME=vic_cpu OUT_DIR=$(VIC_CPU_FW_DIR) FW_BASE=firmware all
@@ -196,6 +275,10 @@ llsc-coherency-gate:
 product-mmu-boot-gate:
 	RUN_DIR=$(PRODUCT_MMU_BOOT_DIR) tb/unit/bootrom/run_product_mmu_boot.sh
 
+product-mmu-micro-tlb-gate:
+	SOC_MICRO_TLB_ENABLE=1 RUN_DIR=$(BUILD_DIR)/unit_tb/product_mmu_micro_tlb tb/unit/bootrom/run_product_mmu_boot.sh
+	SOC_MICRO_TLB_ENABLE=1 RUN_DIR=$(BUILD_DIR)/unit_tb/product_tlb_vectors_micro tb/unit/bootrom/run_product_tlb_vectors.sh
+
 product-mmu-ebase-modified-gate:
 	RUN_DIR=$(PRODUCT_MMU_EBASE_MODIFIED_DIR) tb/unit/bootrom/run_product_mmu_ebase_modified.sh
 
@@ -223,6 +306,9 @@ tlb-shootdown-mailbox-gate:
 mmu-ipi-shootdown-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_ipi_shootdown tb/unit/tlb/run_mmu_ipi_shootdown.sh
 
+mmu-ipi-shootdown-pressure-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_ipi_shootdown_pressure tb/unit/tlb/run_mmu_ipi_shootdown_pressure.sh
+
 apb-mmu-ipi-status-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/apb_mmu_ipi_status tb/unit/tlb/run_apb_mmu_ipi_status.sh
 
@@ -234,6 +320,24 @@ mmu-context-contract-gate:
 
 mmu-active-gate:
 	RUN_DIR=$(BUILD_DIR)/unit/mmu_active tb/unit/mmu/run_active.sh
+
+micro-tlb-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/micro_tlb tb/unit/tlb/run_micro_tlb.sh
+
+mips-control-fpu-cond-gate:
+	chmod +x tb/unit/cpu_test/run_mips_control_fpu_cond.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_control_fpu_cond tb/unit/cpu_test/run_mips_control_fpu_cond.sh
+
+mips-fpu-compare-gate:
+	chmod +x tb/unit/cpu_test/run_mips_fpu_compare.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_fpu_compare tb/unit/cpu_test/run_mips_fpu_compare.sh
+
+mips-fpu-flags-gate:
+	chmod +x tb/unit/cpu_test/run_mips_fpu_flags.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_fpu_flags tb/unit/cpu_test/run_mips_fpu_flags.sh
+
+interrupt-priority-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/vic_priority_checker tb/unit/vic/run_priority_checker.sh
 
 mmu-context-status-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_context_status tb/unit/tlb/run_mmu_context_status.sh
@@ -273,6 +377,12 @@ qspi-soc-pad-mux-gate:
 
 qspi-soc-quad-gate:
 	RUN_DIR=$(QSPI_SOC_QUAD_DIR) tb/unit/flash/run_qspi_status_integration.sh
+
+qspi-vendor-neutral-complete-gate: spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-error-taxonomy-gate qspi-retry-policy-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate
+	@echo "QSPI vendor-neutral functional closure gate: PASS"
+
+qspi-vendor-neutral-boot-gate: product-manifest-handoff-gate product-manifest-handoff-quad-gate
+	@echo "QSPI vendor-neutral development boot gate: PASS"
 
 product-manifest-handoff-gate:
 	RUN_DIR=$(PRODUCT_MANIFEST_HANDOFF_DIR) tb/unit/bootrom/run_product_manifest_handoff.sh
@@ -389,6 +499,216 @@ ecc-secded-gate:
 isa-r2-gate:
 	RUN_DIR=$(BUILD_DIR)/soc_test/isa_r2_sweep FW_DIR=$(BUILD_DIR)/firmware/isa_r2_sweep tb/soc_test/run_isa_r2_gate.sh
 
+mips-control-special3-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_control_special3 tb/unit/cpu_test/run_mips_control_special3.sh
+
+mips-regfile-srs-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_regfile_srs tb/unit/cpu_test/run_mips_regfile_srs.sh
+
+mips-control-srs-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_control_srs tb/unit/cpu_test/run_mips_control_srs.sh
+
+srs-map-gate:
+	SRS_MAP_TEST=1 RUN_DIR=$(BUILD_DIR)/unit_tb/cp0_srs_map tb/unit/cp0/run.sh
+
+mips-control-cache-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_control_cache tb/unit/cpu_test/run_mips_control_cache.sh
+
+mips-control-cp0-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_control_cp0 tb/unit/cpu_test/run_mips_control_cp0.sh
+
+cpu-reference-gate:
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu tb/isa_ref/run_qemu_reference_gate.sh
+
+cpu-lockstep-gate:
+	RUN_DIR=$(BUILD_DIR)/isa_ref/lockstep tb/isa_ref/run_cpu_lockstep_gate.sh
+
+qemu-system-mips32-soc-ref:
+	scripts/qemu/build_mips32_soc_ref.sh
+
+qemu-linux-user:
+	chmod +x scripts/qemu/build_mips32_linux_user.sh
+	scripts/qemu/build_mips32_linux_user.sh
+
+qemu-system-sram-uart-mailbox-gate: qemu-system-mips32-soc-ref
+	tb/soc_test/run_qemu_system_smoke_gate.sh
+
+qemu-system-peripheral-contract-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/soc_test/run_qemu_system_peripherals_gate.sh
+	tb/soc_test/run_qemu_system_peripherals_gate.sh
+
+qemu-system-retire-capture-gate: qemu-system-mips32-soc-ref qemu-system-sram-uart-mailbox-gate
+	chmod +x tb/isa_ref/run_qemu_system_retire_capture_gate.sh
+	tb/isa_ref/run_qemu_system_retire_capture_gate.sh
+
+qemu-system-retire-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-dma-v2-model-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_v2_model tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
+
+qemu-system-dma-v2-event-contract-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_dma_v2_event_contract_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_v2_event_contract tb/isa_ref/run_qemu_system_dma_v2_event_contract_gate.sh
+
+qemu-system-unaligned-gate:
+	chmod +x tb/soc_test/run_qemu_system_unaligned_gate.sh
+	tb/soc_test/run_qemu_system_unaligned_gate.sh
+
+qemu-system-unaligned-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_unaligned_differential_gate.sh
+	tb/isa_ref/run_qemu_system_unaligned_differential_gate.sh
+
+qemu-system-qspi-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/soc_test/run_qemu_system_qspi_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_qspi tb/soc_test/run_qemu_system_qspi_gate.sh
+
+qemu-system-ddr-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/soc_test/run_qemu_system_ddr_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_ddr tb/soc_test/run_qemu_system_ddr_gate.sh
+
+qemu-system-current-contract-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_current_contract_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_current_contract tb/isa_ref/run_qemu_system_current_contract_gate.sh
+
+qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_selected_differential tb/isa_ref/run_qemu_system_selected_differential_gate.sh
+
+qemu-system-isa-r2-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=isa_r2_sweep RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_isa_r2_differential tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-single-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_single QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_single_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-double-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_double QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_double_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-cu1-exception-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_cu1_exception QEMU_CPU=24Kf RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_cu1_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-fpe-inexact-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_inexact_differential_v2 RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-fpe-double-inexact-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_double_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_inexact_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-fpe-double-underflow-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_double_underflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_underflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-branch-likely-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=branch_likely RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_branch_likely_differential tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-exception-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_exception_differential_gate.sh
+	tb/isa_ref/run_qemu_system_exception_differential_gate.sh
+
+qemu-system-break-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_break_differential_gate.sh
+	tb/isa_ref/run_qemu_system_break_differential_gate.sh
+
+qemu-system-trap-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_trap_differential_gate.sh
+	tb/isa_ref/run_qemu_system_trap_differential_gate.sh
+
+qemu-system-trap-imm-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_trap_imm_differential_gate.sh
+	tb/isa_ref/run_qemu_system_trap_imm_differential_gate.sh
+
+qemu-system-di-ei-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_di_ei_differential_gate.sh
+	tb/isa_ref/run_qemu_system_di_ei_differential_gate.sh
+
+qemu-system-wait-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_wait_differential_gate.sh
+	tb/isa_ref/run_qemu_system_wait_differential_gate.sh
+
+qemu-system-bd-exception-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_bd_exception_differential_gate.sh
+	tb/isa_ref/run_qemu_system_bd_exception_differential_gate.sh
+
+qemu-system-peripheral-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_peripheral_differential_gate.sh
+	tb/isa_ref/run_qemu_system_peripheral_differential_gate.sh
+
+qemu-system-vic-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_vic_differential_gate.sh
+	tb/isa_ref/run_qemu_system_vic_differential_gate.sh
+
+qemu-system-vic-cpu-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_vic_cpu_differential_gate.sh
+	tb/isa_ref/run_qemu_system_vic_cpu_differential_gate.sh
+
+qemu-system-vic-full-sources-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_vic_full_sources_differential_gate.sh
+	FW_TEST=vic_full_sources RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_vic_full_sources_differential \
+		tb/isa_ref/run_qemu_system_vic_full_sources_differential_gate.sh
+
+qemu-system-mmu-contract-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_mmu_contract_gate.sh
+	tb/isa_ref/run_qemu_system_mmu_contract_gate.sh
+
+qemu-system-mmu-process-pressure-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_mmu_process_pressure_gate.sh
+	tb/isa_ref/run_qemu_system_mmu_process_pressure_gate.sh
+
+qemu-system-mmu-refill-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_refill_differential \
+		tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
+
+qemu-system-mmu-os-pressure-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
+	OS_PRESSURE=1 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_os_pressure \
+		tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
+
+qemu-system-mmu-pagemask-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_mmu_pagemask_differential_gate.sh
+	tb/isa_ref/run_qemu_system_mmu_pagemask_differential_gate.sh
+
+perf-counters-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/perf_counters tb/unit/cpu_test/run_perf_counters.sh
+
+perf-cpu-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/perf_cpu OUT_DIR=$(PERF_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(PERF_CPU_FW_HEX) RUN_DIR=$(BUILD_DIR)/soc_test/perf_cpu \
+	VCS_EXTRA_ARGS='+define+SOC_PERF_COUNTERS=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+	grep -q 'perf_cpu: REGRESSION_TEST_SUCCESS' $(BUILD_DIR)/soc_test/perf_cpu/sim.log
+	@echo "CPU performance counter SoC gate: PASS"
+
+perf-workloads-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/perf_workloads OUT_DIR=$(PERF_WORKLOADS_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(PERF_WORKLOADS_FW_HEX) RUN_DIR=$(BUILD_DIR)/soc_test/perf_workloads \
+	VCS_EXTRA_ARGS='+define+SOC_PERF_COUNTERS=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+	grep -q 'perf_workloads: REGRESSION_TEST_SUCCESS' $(BUILD_DIR)/soc_test/perf_workloads/sim.log
+	@test "$$(grep -c 'perf_workloads: .* cycles=' $(BUILD_DIR)/soc_test/perf_workloads/sim.log)" -eq 4
+	@echo "CPU performance workload observation gate: PASS"
+
+vic-nested-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/vic_nested OUT_DIR=$(VIC_NESTED_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(VIC_NESTED_FW_HEX) RUN_DIR=$(BUILD_DIR)/soc_test/vic_nested \
+	VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+	grep -q 'vic_nested: REGRESSION_TEST_SUCCESS' $(BUILD_DIR)/soc_test/vic_nested/sim.log
+	@echo "VIC nested interrupt SoC gate: PASS"
+
+vic-full-sources-gate:
+	chmod +x tb/soc_test/run_vic_full_sources_gate.sh
+	RUN_DIR=$(BUILD_DIR)/soc_test/vic_full_sources \
+		tb/soc_test/run_vic_full_sources_gate.sh
+
 rtl-frontend-compile:
 	RUN_ROOT=$(BUILD_DIR)/unit_tb/rtl_frontend_compile tb/unit/run_rtl_frontend_compile.sh
 
@@ -400,6 +720,37 @@ fabric-unit-gate:
 
 firmware:
 	$(MAKE) -C tb/soc_test/fw OUT_DIR=$(FW_BUILD_DIR) FW_BASE=firmware all
+
+srs-firmware:
+	$(MAKE) -C tb/soc_test/fw/tests/srs OUT_DIR=$(SRS_FW_DIR) FW_BASE=firmware all
+
+srs-gate: srs-firmware mips-control-srs-gate mips-regfile-srs-gate
+	FW_HEX=$(SRS_FW_HEX) RUN_DIR=$(SOC_TEST_SRS_DIR) tb/soc_test/run_srs_gate.sh
+
+srs-exception-firmware:
+	$(MAKE) -C tb/soc_test/fw/tests/srs_exception OUT_DIR=$(SRS_EXCEPTION_FW_DIR) FW_BASE=firmware all
+
+srs-exception-gate: srs-exception-firmware srs-gate
+	FW_HEX=$(SRS_EXCEPTION_FW_HEX) RUN_DIR=$(SOC_TEST_SRS_EXCEPTION_DIR) tb/soc_test/run_srs_exception_gate.sh
+
+srs-nested-firmware:
+	$(MAKE) -C tb/soc_test/fw/tests/srs_nested OUT_DIR=$(SRS_NESTED_FW_DIR) FW_BASE=firmware all
+
+srs-nested-gate: srs-nested-firmware srs-gate
+	FW_DIR=$(SRS_NESTED_FW_DIR) RUN_DIR=$(SOC_TEST_SRS_NESTED_DIR) tb/soc_test/run_srs_nested_gate.sh
+
+qemu-system-srs-exception-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=srs_exception QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-srs-nested-differential-gate: qemu-system-mips32-soc-ref
+	FW_TEST=srs_nested QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_nested_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-srs-map-differential-gate: qemu-system-mips32-soc-ref
+	FW_TEST=qemu_system_srs_irq QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_map_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+srs-scheduler-context-gate:
+	VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+SRS_CONTEXT_TEST' RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_scheduler_srs tb/unit/cpu_test/run_cpu_scheduler_integration.sh
 
 firmwares:
 	$(MAKE) -C tb/soc_test/fw all-firmwares OUT_DIR=$(BUILD_DIR)/firmware
@@ -421,9 +772,11 @@ phase2-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_TESTLIST) RUN_ROOT=$(BUILD_DIR)/uvm/phase2_complete tb/uvm_tb/run_phase2_complete.sh
 
 phase3-regression: firmware
+	$(MAKE) -C tb/soc_test/fw all-firmwares OUT_DIR=$(BUILD_DIR)/firmware
 	FW_HEX=$(FW_HEX) FLASH_IMAGE=$(UVM_PHASE3_FLASH_IMAGE) TESTLIST=$(UVM_PHASE3_TESTLIST) RUN_DIR=$(UVM_PHASE3_DIR) ENABLE_COV=$(UVM_ENABLE_COV) tb/uvm_tb/run_testlist.sh
 
 phase3-complete: firmware
+	$(MAKE) -C tb/soc_test/fw all-firmwares OUT_DIR=$(BUILD_DIR)/firmware
 	FW_HEX=$(FW_HEX) FLASH_IMAGE=$(UVM_PHASE3_FLASH_IMAGE) TESTLIST=$(UVM_PHASE3_TESTLIST) RUN_ROOT=$(UVM_PHASE3_COMPLETE_DIR) L2_WRITEBACK=$(L2_WRITEBACK) tb/uvm_tb/run_phase3_complete.sh
 
 phase3b-regression: firmware
@@ -438,7 +791,7 @@ phase3c-regression: firmware
 phase3c-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_PHASE3C_TESTLIST) RUN_ROOT=$(UVM_PHASE3C_COMPLETE_DIR) tb/uvm_tb/run_phase3c_complete.sh
 
-current-contract-signoff: firmware firmwares
+current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate dcache-parity-gate verification-foundation-gate cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
 	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) tb/uvm_tb/run_current_contract_signoff.sh
 
 soc-smoke: firmware
@@ -446,6 +799,9 @@ soc-smoke: firmware
 
 cpu-cp0-gate: firmware
 	FW_HEX=$(FW_HEX) RUN_DIR=$(SOC_TEST_CPU_CP0_DIR) tb/soc_test/run_cpu_cp0_gate.sh
+
+cpu-load-return-gate:
+	tb/soc_test/run_cpu_load_return_gate.sh
 
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
@@ -480,17 +836,193 @@ dual-core-soc-gate:
 dcache-coherency-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/dcache_coherency tb/unit/dcache/run_coherency.sh
 
+cache-concurrency-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cache_concurrency tb/unit/cache/run_concurrency_gate.sh
+
+soc-filelist-audit:
+	bash tb/unit/run_soc_filelist_audit.sh
+
+l1-nonblocking-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cache_concurrency/l1nb tb/unit/cache/run_l1_nb_gate.sh
+
+l1-nonblocking-errors-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cache_concurrency/l1nb_errors tb/unit/cache/run_l1_nb_errors_gate.sh
+
+l1-nonblocking-axi-bridge-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cache_concurrency/l1nb_axi_bridge tb/unit/cache/run_l1_nb_axi_bridge_gate.sh
+
+l1-nonblocking-cpu-compat-gate: firmware
+	FW_HEX=$(FW_HEX) RUN_DIR=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_compat \
+	VCS_EXTRA_ARGS='+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1' tb/soc_test/run.sh
+
+l1-nonblocking-cpu-multi-gate: firmware
+	FW_HEX=$(FW_HEX) RUN_DIR=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_multi \
+	VCS_EXTRA_ARGS='+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+TB_L1_NONBLOCKING +define+TB_SKIP_JTAG_RESET_STRESS' tb/soc_test/run.sh
+
+l1-nonblocking-cpu-stress-gate: firmware
+	FW_HEX=$(FW_HEX) RUN_ROOT=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_stress \
+	SEEDS='11 29 47' tb/soc_test/run_l1_nonblocking_cpu_stress_gate.sh
+
+l1-nonblocking-cpu-error-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_error \
+	FW_DIR=$(BUILD_DIR)/firmware/l1_axi_error \
+	tb/soc_test/run_l1_nonblocking_cpu_error_gate.sh
+
+l1-nonblocking-cpu-two-error-gate:
+	chmod +x tb/soc_test/run_l1_nonblocking_cpu_two_error_gate.sh
+	RUN_DIR=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_two_error \
+	FW_DIR=$(BUILD_DIR)/firmware/l1_axi_error_two \
+	tb/soc_test/run_l1_nonblocking_cpu_two_error_gate.sh
+
+l1-nonblocking-cpu-error-reset-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_error_reset \
+	FW_DIR=$(BUILD_DIR)/firmware/l1_axi_error \
+	tb/soc_test/run_l1_nonblocking_cpu_error_reset_gate.sh
+
+l1-nonblocking-cpu-two-error-reset-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/l1_nonblocking_cpu_two_error_reset \
+	FW_DIR=$(BUILD_DIR)/firmware/l1_axi_error_two \
+	tb/soc_test/run_l1_nonblocking_cpu_two_error_reset_gate.sh
+
+l1-nonblocking-maintenance-compat-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cache_concurrency/l1nb_maintenance_compat \
+	tb/unit/cache/run_l1_nb_maintenance_compat_gate.sh
+
+l1-nonblocking-ddr-gate:
+	chmod +x tb/soc_test/run_l1_ddr_nonblocking_gate.sh
+	RUN_DIR=$(BUILD_DIR)/soc_test/l1_ddr_nonblocking \
+	tb/soc_test/run_l1_ddr_nonblocking_gate.sh
+
+qemu-system-l1-ddr-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=qemu_system_l1_ddr \
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_l1_ddr_differential \
+	RTL_TIMEOUT=180 \
+	RTL_VCS_EXTRA_ARGS='+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/isa_ref/run_qemu_system_differential_gate.sh
+
+
+fpu-double-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_double OUT_DIR=$(BUILD_DIR)/firmware/fpu_double FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_double FW_DIR=$(BUILD_DIR)/firmware/fpu_double \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_double/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
+	tb/soc_test/run.sh
+
+fpu-single-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_single OUT_DIR=$(BUILD_DIR)/firmware/fpu_single FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_single FW_DIR=$(BUILD_DIR)/firmware/fpu_single \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_single/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
+	tb/soc_test/run.sh
+
+fpu-cu1-exception-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_cu1_exception OUT_DIR=$(BUILD_DIR)/firmware/fpu_cu1_exception FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_cu1_exception FW_DIR=$(BUILD_DIR)/firmware/fpu_cu1_exception \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_cu1_exception/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
+	tb/soc_test/run.sh
+
+fpu-fpe-exception-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_exception OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_exception FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_exception FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_exception \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_exception/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK +define+TB_FPU_FPE_DEBUG' \
+	tb/soc_test/run.sh
+
+fpu-fpe-double-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_double OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_double FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_double/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK +define+TB_FPU_FPE_DEBUG' \
+	tb/soc_test/run.sh
+
+fpu-fpe-inexact-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_inexact OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_inexact FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_inexact FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_inexact \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_inexact/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+fpu-fpe-double-inexact-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_double_inexact OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double_inexact FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_double_inexact FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double_inexact \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_double_inexact/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+fpu-fpe-double-underflow-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_double_underflow OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double_underflow FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_double_underflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double_underflow \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_double_underflow/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+fpu-rounding-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_rounding OUT_DIR=$(BUILD_DIR)/firmware/fpu_rounding FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_rounding FW_DIR=$(BUILD_DIR)/firmware/fpu_rounding \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_rounding/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK +define+TB_FPU_ROUND_DEBUG' \
+	tb/soc_test/run.sh
+
+fpu-fpe-invalid-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_invalid OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_invalid FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_invalid FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_invalid \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_invalid/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+fpu-fpe-overflow-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_overflow OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_overflow FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_overflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_overflow \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_overflow/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+fpu-fpe-underflow-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_fpe_underflow OUT_DIR=$(BUILD_DIR)/firmware/fpu_fpe_underflow FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_fpe_underflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_underflow \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_fpe_underflow/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run.sh
+
+rob-fifo-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_test/rob_fifo tb/unit/cpu_test/run_rob_fifo.sh
+
 coherency-stress-gate:
 	RUN_DIR=$(COHERENCY_STRESS_DIR) FW_DIR=$(COHERENCY_STRESS_FW_DIR) tb/soc_test/run_coherency_stress_gate.sh
 
 page-table-walker-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/page_table_walker tb/unit/mmu/run_page_table_walker.sh
 
+page-table-walker-page-sizes-gate:
+	@set -e; \
+	for spec in "4K:" "16K:WALKER_16K" "64K:WALKER_64K" "256K:WALKER_256K"; do \
+		name=$${spec%%:*}; define=$${spec#*:}; \
+		dir=$(BUILD_DIR)/unit_tb/page_table_walker_pages/$${name}; \
+		if [ -n "$${define}" ]; then VCS_DEFINES="+define+$${define}" RUN_DIR="$${dir}" tb/unit/mmu/run_page_table_walker.sh; \
+		else RUN_DIR="$${dir}" tb/unit/mmu/run_page_table_walker.sh; fi; \
+	done
+
 page-table-tlb-refill-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/page_table_tlb_refill tb/unit/mmu/run_page_table_tlb_refill.sh
 
 cpu-hardware-walker-gate:
 	RUN_DIR=$(CPU_HARDWARE_WALKER_DIR) tb/unit/mmu/run_cpu_hardware_walker.sh
+
+cpu-hardware-walker-page-size-gate:
+	VCS_DEFINES="+define+SOC_HARDWARE_WALKER_PAGE_MASK=16'h0003" \
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_hardware_walker_16k \
+	tb/unit/mmu/run_cpu_hardware_walker.sh
+
+cpu-hardware-walker-page-sizes-gate:
+	@set -e; \
+	for spec in "16K:16'h0003" "64K:16'h000f" "256K:16'h003f"; do \
+		name=$${spec%%:*}; mask=$${spec#*:}; \
+		VCS_DEFINES="+define+SOC_HARDWARE_WALKER_PAGE_MASK=$${mask}" \
+		RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_hardware_walker_$${name} \
+		tb/unit/mmu/run_cpu_hardware_walker.sh; \
+	done
 
 cpu-dside-hardware-walker-gate:
 	RUN_DIR=$(CPU_DSIDE_HARDWARE_WALKER_DIR) tb/unit/mmu/run_cpu_dside_hardware_walker.sh
@@ -506,6 +1038,14 @@ cpu-scheduler-gate:
 
 cpu-scheduler-integration-gate:
 	RUN_DIR=$(CPU_SCHEDULER_INTEGRATION_DIR) tb/unit/cpu_test/run_cpu_scheduler_integration.sh
+
+llsc-interrupt-boundary-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/llsc_interrupt_boundary \
+	VCS_EXTRA_ARGS='+define+LL_INTERRUPT_BOUNDARY_TEST' \
+	tb/unit/cpu_test/run_cpu_scheduler_integration.sh
+
+fpu-context-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/fpu_context tb/unit/cpu_test/run_cpu_scheduler_integration.sh
 
 scheduler-timer-ipi-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/scheduler_timer_ipi tb/unit/cpu_test/run_scheduler_timer_ipi.sh

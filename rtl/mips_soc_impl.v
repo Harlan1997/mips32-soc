@@ -140,6 +140,13 @@ module mips_soc_impl #(
     wire        m0_rvalid;
     wire        m0_rready;
 
+    wire [31:0] perf_cycle_count;
+    wire [31:0] perf_retire_count;
+    wire [31:0] perf_icache_miss_count;
+    wire [31:0] perf_dcache_miss_count;
+    wire [31:0] perf_branch_mispredict_count;
+    wire [31:0] perf_mdu_stall_count;
+
     // =========================================================================
     // D-Cache AXI4 Master Interface (M1)
     // =========================================================================
@@ -485,6 +492,16 @@ module mips_soc_impl #(
     wire [31:0] core1_coh_store_addr;
     wire        ipi_core1_core0_invalidate = ipi_core1_invalidate_valid && !ipi_core1_invalidate_target;
     wire        ipi_core1_core1_invalidate = ipi_core1_invalidate_valid && ipi_core1_invalidate_target;
+    // A shootdown ACK is emitted after the selected target has observed the
+    // invalidate pulse.  Keeping this registered prevents the sender from
+    // completing on its own issue event and makes the APB mailbox a real
+    // target-acceptance handshake.
+    reg         ipi_ack_valid_r;
+    reg         ipi_ack_target_r;
+    reg [7:0]   ipi_ack_generation_r;
+    reg         ipi_core1_ack_valid_r;
+    reg         ipi_core1_ack_target_r;
+    reg [7:0]   ipi_core1_ack_generation_r;
     wire        tlb_inv_en;
     wire [18:0] tlb_inv_vpn2;
     wire [7:0]  tlb_inv_asid;
@@ -583,6 +600,12 @@ module mips_soc_impl #(
         .tlb_inv_asid    (ipi_core1_core0_invalidate ? ipi_core1_invalidate_asid : (ipi_core0_invalidate ? ipi_invalidate_asid : tlb_inv_asid)),
         .tlb_inv_scope   (ipi_core1_core0_invalidate ? ipi_core1_invalidate_scope : (ipi_core0_invalidate ? ipi_invalidate_scope : tlb_inv_scope)),
         .tlb_inv_wired_floor(tlb_inv_wired_floor),
+        .perf_cycle_count(perf_cycle_count),
+        .perf_retire_count(perf_retire_count),
+        .perf_icache_miss_count(perf_icache_miss_count),
+        .perf_dcache_miss_count(perf_dcache_miss_count),
+        .perf_branch_mispredict_count(perf_branch_mispredict_count),
+        .perf_mdu_stall_count(perf_mdu_stall_count),
         .coh_store_valid(core0_coh_store_valid),
         .coh_store_addr(core0_coh_store_addr),
         .coh_snoop_valid(ENABLE_DUAL_CORE && core1_coh_store_valid),
@@ -717,12 +740,30 @@ module mips_soc_impl #(
     assign ext_rlast   = ENABLE_DUAL_CORE ? 1'b0 : fx_rlast;
     assign ext_rvalid  = ENABLE_DUAL_CORE ? 1'b0 : fx_rvalid;
 
-    assign ipi_ack_valid = ipi_invalidate_valid;
-    assign ipi_ack_target = ipi_invalidate_target;
-    assign ipi_ack_generation = ipi_invalidate_generation;
-    assign ipi_core1_ack_valid = ipi_core1_invalidate_valid && !ipi_core1_invalidate_target;
-    assign ipi_core1_ack_target = ipi_core1_invalidate_target;
-    assign ipi_core1_ack_generation = ipi_core1_invalidate_generation;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ipi_ack_valid_r <= 1'b0;
+            ipi_ack_target_r <= 1'b0;
+            ipi_ack_generation_r <= 8'd0;
+            ipi_core1_ack_valid_r <= 1'b0;
+            ipi_core1_ack_target_r <= 1'b0;
+            ipi_core1_ack_generation_r <= 8'd0;
+        end else begin
+            ipi_ack_valid_r <= ipi_invalidate_valid;
+            ipi_ack_target_r <= ipi_invalidate_target;
+            ipi_ack_generation_r <= ipi_invalidate_generation;
+            ipi_core1_ack_valid_r <= ipi_core1_invalidate_valid;
+            ipi_core1_ack_target_r <= ipi_core1_invalidate_target;
+            ipi_core1_ack_generation_r <= ipi_core1_invalidate_generation;
+        end
+    end
+
+    assign ipi_ack_valid = ipi_ack_valid_r;
+    assign ipi_ack_target = ipi_ack_target_r;
+    assign ipi_ack_generation = ipi_ack_generation_r;
+    assign ipi_core1_ack_valid = ipi_core1_ack_valid_r;
+    assign ipi_core1_ack_target = ipi_core1_ack_target_r;
+    assign ipi_core1_ack_generation = ipi_core1_ack_generation_r;
     assign core1_ipi_int = (ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate;
 
     soc_fabric #(
@@ -1329,6 +1370,12 @@ module mips_soc_impl #(
         .qspi_io_oe   (qspi_cmd_io_oe),
         .qspi_active  (qspi_cmd_active),
         .qspi_cmd_req (qspi_cmd_req),
+        .perf_cycle_count(perf_cycle_count),
+        .perf_retire_count(perf_retire_count),
+        .perf_icache_miss_count(perf_icache_miss_count),
+        .perf_dcache_miss_count(perf_dcache_miss_count),
+        .perf_branch_mispredict_count(perf_branch_mispredict_count),
+        .perf_mdu_stall_count(perf_mdu_stall_count),
 
         .s_awid       (s1_awid),
         .s_awaddr     (s1_awaddr),

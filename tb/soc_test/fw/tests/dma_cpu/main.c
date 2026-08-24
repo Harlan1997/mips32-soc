@@ -32,6 +32,9 @@
 #define DMA_V2_CH1_DST      (DMA_BASE + 0x88)
 #define DMA_V2_CH1_LEN      (DMA_BASE + 0x8C)
 #define DMA_V2_CH1_STATUS   (DMA_BASE + 0x94)
+#define DMA_V2_CH2_CTRL     (DMA_BASE + 0xC0)
+#define DMA_V2_CH2_DESC     (DMA_BASE + 0xD0)
+#define DMA_V2_CH2_STATUS   (DMA_BASE + 0xD4)
 
 #define DMA_GLOBAL_CTRL     (DMA_BASE + 0x100)
 #define DMA_IRQ_STATUS      (DMA_BASE + 0x104)
@@ -42,6 +45,7 @@
 
 static uint32_t src_buffer[8] __attribute__((aligned(4)));
 static uint32_t dst_buffer[8] __attribute__((aligned(4)));
+static uint32_t sg_desc[8] __attribute__((aligned(16)));
 
 static void mailbox_fail(void) {
     *((volatile uint32_t*)0xA000FFFC) = 0xDEADDEAD;
@@ -167,6 +171,51 @@ static int test_zero_length_completion(void) {
     return 0;
 }
 
+static int test_sg_copy(void) {
+    volatile uint32_t *src = (volatile uint32_t*)((uint32_t)src_buffer | 0xA0000000);
+    volatile uint32_t *dst = (volatile uint32_t*)((uint32_t)dst_buffer | 0xA0000000);
+    volatile uint32_t *desc = (volatile uint32_t*)((uint32_t)sg_desc | 0xA0000000);
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        src[i] = 0x5A5A0000 + i;
+        dst[i] = 0;
+    }
+    /* Two 16-byte descriptors, linked by NEXT; cover all 8 words. */
+    desc[0] = (uint32_t)src;
+    desc[1] = (uint32_t)dst;
+    desc[2] = 16;
+    desc[3] = (uint32_t)(desc + 4);
+    desc[4] = (uint32_t)(src + 4);
+    desc[5] = (uint32_t)(dst + 4);
+    desc[6] = 16;
+    desc[7] = 0;
+
+    REG32(DMA_V2_CH2_DESC) = (uint32_t)desc;
+    REG32(DMA_V2_CH2_CTRL) = 0x3; /* EN=1, SG_MODE=1 */
+    int timeout = 20000;
+    while (timeout > 0) {
+        if (REG32(DMA_V2_CH2_STATUS) & 0x2) break;
+        timeout--;
+    }
+    if (timeout == 0) {
+        print_str("FAIL: SG transfer timed out\n");
+        return -1;
+    }
+    for (i = 0; i < 8; i++) {
+        if (dst[i] != src[i]) {
+            print_str("FAIL: SG copy mismatch at word "); print_hex(i); print_str("\n");
+            return -1;
+        }
+    }
+    if (REG32(DMA_V2_CH2_STATUS) & 0x1c) {
+        print_str("FAIL: SG status error\n");
+        return -1;
+    }
+    REG32(DMA_V2_CH2_CTRL) = (1 << 3);
+    return 0;
+}
+
 static int test_w1c_rearm(void) {
     volatile uint32_t *src = (volatile uint32_t*)((uint32_t)src_buffer | 0xA0000000);
     volatile uint32_t *dst = (volatile uint32_t*)((uint32_t)dst_buffer | 0xA0000000);
@@ -256,6 +305,12 @@ int main(void) {
         return 1;
     }
 
+    if (test_sg_copy() != 0) {
+        print_str("dma_cpu test: FAILED SG copy\n");
+        mailbox_fail();
+        return 1;
+    }
+
     if (test_w1c_rearm() != 0) {
         print_str("dma_cpu test: FAILED W1C rearm\n");
         mailbox_fail();
@@ -272,4 +327,3 @@ int main(void) {
     mailbox_exit();
     return 0;
 }
-

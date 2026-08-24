@@ -34,6 +34,7 @@ module tb_product_tlb_vectors;
     reg ebase_refill_fetch_seen;
     reg ebase_invalid_seen;
     reg ebase_general_fetch_seen;
+    reg micro_i_hit_seen;
 
     genvar i;
     generate
@@ -78,8 +79,13 @@ module tb_product_tlb_vectors;
             ebase_refill_fetch_seen = 1'b0;
             ebase_invalid_seen = 1'b0;
             ebase_general_fetch_seen = 1'b0;
+            micro_i_hit_seen = 1'b0;
         end else begin
             cycles = cycles + 1;
+
+            if (`SOC_MICRO_TLB_ENABLE &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.micro_i_hit)
+                micro_i_hit_seen = 1'b1;
 
             // A hit with V=0 is deliberately kept separate from a true miss.
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr == 32'h0000_0000 &&
@@ -121,6 +127,11 @@ module tb_product_tlb_vectors;
             if (bev_refill_seen && bev_refill_fetch_seen && bev_invalid_seen &&
                 bev_general_fetch_seen && ebase_mode_seen && ebase_refill_seen &&
                 ebase_refill_fetch_seen && ebase_invalid_seen && ebase_general_fetch_seen) begin
+                if (`SOC_MICRO_TLB_ENABLE && !micro_i_hit_seen) begin
+                    $display("ERROR: enabled MMU vector test did not observe an I-side micro-TLB hit");
+                    $display("REGRESSION_TEST_FAILED product_tlb_vectors");
+                    $finish;
+                end
                 $display("REGRESSION_TEST_SUCCESS product_tlb_vectors");
                 $finish;
             end

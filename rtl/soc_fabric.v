@@ -4,7 +4,8 @@
 // =============================================================================
 
 module soc_fabric #(
-    parameter ENABLE_EXT_AXI_MASTER = 1'b0
+    parameter ENABLE_EXT_AXI_MASTER = 1'b0,
+    parameter ENABLE_SOC_W_SERIALIZE = 1'b1
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -510,7 +511,8 @@ module soc_fabric #(
 
     axi_crossbar #(
         .N_M(NM), .N_S(NS), .N_OT(`SOC_XBAR_N_OT),
-        .IDW(4), .AW(32), .DW(32), .QW(4)
+        .IDW(4), .AW(32), .DW(32), .QW(4),
+        .SERIALIZE_W_PER_MASTER(ENABLE_SOC_W_SERIALIZE)
     ) u_xbar (
         .clk(clk), .rst_n(rst_n), .m_enable(xm_enable),
         .m_awid(xm_awid), .m_awaddr(xm_awaddr), .m_awlen(xm_awlen), .m_awsize(xm_awsize),

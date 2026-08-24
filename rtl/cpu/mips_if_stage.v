@@ -19,6 +19,8 @@ module mips_if_stage #(
     
     // Control Decisions (from Decode stage)
     input  wire        branch_taken,     // Branch condition met
+    input  wire        branch_likely_annul, // Not-taken branch-likely skips delay slot
+    input  wire        branch_likely_taken, // Taken branch-likely executes delay slot
     input  wire [31:0] branch_target,    // Branch target PC
     input  wire        jump_taken,       // Jump instruction detected
     input  wire [31:0] jump_target,       // Jump target PC
@@ -56,6 +58,8 @@ module mips_if_stage #(
     reg [31:0] next_pc;
     reg        bpu_delay_pending;
     reg [31:0] bpu_delay_target;
+    reg        branch_likely_delay_pending;
+    reg [31:0] branch_likely_delay_target;
 
     // Next PC selection logic
     always @(*) begin
@@ -65,6 +69,18 @@ module mips_if_stage #(
             next_pc = pc;
         end else if (bpu_recover) begin
             next_pc = bpu_recover_target;
+        end else if (branch_likely_annul) begin
+            // `pc` is the look-ahead/delay-slot fetch address when the
+            // branch is resolved in ID.  Advancing one word skips that
+            // already-fetched slot and lands on the sequential target.
+            next_pc = pc + 32'd4;
+        end else if (branch_likely_delay_pending) begin
+            next_pc = branch_likely_delay_target;
+        end else if (branch_likely_taken) begin
+            // Fetch the architectural delay slot first; redirect on the
+            // following cycle using the saved branch target.
+            // `pc` is the architectural delay-slot address here.
+            next_pc = pc;
         end else if (branch_taken) begin
             next_pc = branch_target;
         end else if (jump_taken) begin
@@ -82,6 +98,8 @@ module mips_if_stage #(
             pc <= RESET_ADDR;
             bpu_delay_pending <= 1'b0;
             bpu_delay_target <= 32'd0;
+            branch_likely_delay_pending <= 1'b0;
+            branch_likely_delay_target <= 32'd0;
         end else begin
             if (ctx_restore_req)
                 pc <= ctx_restore_pc;
@@ -90,7 +108,14 @@ module mips_if_stage #(
 
             if (ctx_restore_req || exception_req || bpu_recover) begin
                 bpu_delay_pending <= 1'b0;
+                branch_likely_delay_pending <= 1'b0;
+            end else if (branch_likely_delay_pending) begin
+                branch_likely_delay_pending <= 1'b0;
             end else if (!stall) begin
+                if (branch_likely_taken) begin
+                    branch_likely_delay_pending <= 1'b1;
+                    branch_likely_delay_target <= branch_target;
+                end
                 if (bpu_delay_pending) begin
                     bpu_delay_pending <= 1'b0;
                 end else if (bpu_enable && bpu_predict_valid &&
@@ -102,6 +127,17 @@ module mips_if_stage #(
             end
         end
     end
+
+`ifdef DEBUG_BRANCH_LIKELY
+    always @(posedge clk) begin
+        if (rst_n && (branch_likely_annul || branch_likely_taken ||
+                      branch_likely_delay_pending))
+            $display("BRLIKELY t=%0t pc=%08h next=%08h taken=%b annul=%b pending=%b target=%08h",
+                     $time, pc, next_pc, branch_likely_taken,
+                     branch_likely_annul, branch_likely_delay_pending,
+                     branch_likely_delay_target);
+    end
+`endif
 
     // Cache Interface
     assign inst_req  = 1'b1; // Always trying to fetch

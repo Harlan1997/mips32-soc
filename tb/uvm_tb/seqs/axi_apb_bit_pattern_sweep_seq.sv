@@ -56,6 +56,11 @@ class axi_apb_bit_pattern_sweep_seq extends uvm_sequence#(axi_transaction);
             `uvm_error("APB_BIT_SWEEP",
                        $sformatf("%s addr=0x%08h wdata=0x%08h resp=%0h",
                                  tag, addr, wdata, tr.resp[0]))
+        // Keep a full clock of turnaround between an AXI write response and
+        // the following APB access.  This makes the directed sweep explicit
+        // about the bridge transaction boundary and prevents a same-edge
+        // read from observing the preceding APB register value.
+        #20ns;
     endtask
 
     task apb_read_check(string tag,

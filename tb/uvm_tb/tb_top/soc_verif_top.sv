@@ -99,7 +99,17 @@ module soc_verif_top (
     mips_soc_impl #(
         .ENABLE_EXT_AXI_MASTER (1'b1),
         .ENABLE_APB_FAULT_INJECTOR (1'b1),
-        .ENABLE_FLASH_IMAGE_MODEL (1'b1)
+        .ENABLE_FLASH_IMAGE_MODEL (1'b1),
+`ifdef SOC_ENABLE_DDR4_STATUS
+        .ENABLE_DDR4_STATUS (1'b1),
+`else
+        .ENABLE_DDR4_STATUS (1'b0),
+`endif
+`ifdef SOC_DDR4_STATUS_FATAL
+        .ENABLE_DDR4_STATUS_FATAL (1'b1)
+`else
+        .ENABLE_DDR4_STATUS_FATAL (1'b0)
+`endif
     ) u_dut (
         .clk          (clk),
         .rst_n        (rst_n),

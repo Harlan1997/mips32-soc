@@ -68,16 +68,21 @@ run_ddr4_compile() {
 
 run_soc_compile default
 run_soc_compile product_mmu +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1
+run_soc_compile micro_tlb +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1 +define+SOC_MICRO_TLB_ENABLE=1
+run_soc_compile l2_nonblocking +define+SOC_USE_L2_CACHE=1 +define+SOC_L2_CACHING=1 +define+SOC_L2_NONBLOCKING=1
+run_soc_compile l1_nonblocking +define+SOC_L1_NONBLOCKING_ENABLE=1
+run_soc_compile cpu_nonblocking +define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1
+run_soc_compile fpu_opt_in +define+SOC_FPU_ENABLE=1
 if [[ "${SOC_BPU_ENABLE:-0}" == "1" ]]; then
     run_soc_compile bpu_opt_in +define+SOC_BPU_ENABLE=1
 fi
 run_ddr4_compile
 
-FRONTEND_CONFIGS="default,product_mmu,ddr4_controller"
-FRONTEND_COUNT=3
+FRONTEND_CONFIGS="default,product_mmu,micro_tlb,l2_nonblocking,l1_nonblocking,cpu_nonblocking,fpu_opt_in,ddr4_controller"
+FRONTEND_COUNT=8
 if [[ "${SOC_BPU_ENABLE:-0}" == "1" ]]; then
-    FRONTEND_CONFIGS="default,product_mmu,bpu_opt_in,ddr4_controller"
-    FRONTEND_COUNT=4
+    FRONTEND_CONFIGS="default,product_mmu,micro_tlb,l2_nonblocking,l1_nonblocking,cpu_nonblocking,fpu_opt_in,bpu_opt_in,ddr4_controller"
+    FRONTEND_COUNT=9
 fi
 
 cat > "${RUN_ROOT}/rtl_frontend_compile_report.md" <<EOF

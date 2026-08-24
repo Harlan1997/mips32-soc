@@ -174,7 +174,7 @@ cpu_cp0_summary=$(grep 'Summary:' "${CPU_CP0_DIR}/cpu_cp0_summary.txt" | head -n
     echo
     echo "## Still Out Of Phase 3A"
     echo
-    echo "- RTL multi-outstanding fabric support remains open and must not be claimed while the fabric checkers enforce single-outstanding."
+echo "- Bounded 4-entry fabric multi-outstanding and ID-based response routing are closed by fabric-unit-gate; end-to-end L1/L2/APB/flash multi-outstanding remains outside Phase 3."
     echo "- CPU/CP0 has a firmware smoke gate here; UVM-visible exception-entry/return coverage is outside Phase 3A and closed by the Phase 3B gate."
     echo "- SPI-serial flash protocol modeling remains future work; Phase 3A signs off the loadable AXI flash-image/XIP window used by verification."
 } > "$REPORT"

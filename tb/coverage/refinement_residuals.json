@@ -1,0 +1,6 @@
+{
+  "uvm_vdb": "/home/admin/mips32-soc/build/signoff/current_contract/coverage/merged.vdb",
+  "product_vdb": "/home/admin/mips32-soc/build/signoff/current_contract/phase3_complete/cpu_cp0_gate/simv.vdb",
+  "uvm_unresolved_attempts": [],
+  "product_unresolved_attempts": []
+}

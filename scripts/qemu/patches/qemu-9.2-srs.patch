@@ -1,0 +1,164 @@
+diff --git a/target/mips/cpu.h b/target/mips/cpu.h
+--- a/target/mips/cpu.h
++++ b/target/mips/cpu.h
+@@ -461,6 +461,8 @@ struct TCState {
+ struct TCState {
+     target_ulong gpr[32];
++    /* Project mips32-soc-ref shadow register sets (SRS 0..15). */
++    target_ulong srs_gpr[16][32];
+ #if defined(TARGET_MIPS64)
+diff --git a/target/mips/internal.h b/target/mips/internal.h
+--- a/target/mips/internal.h
++++ b/target/mips/internal.h
+@@ -208,6 +208,8 @@ void cpu_mips_start_count(CPUMIPSState *env);
+ void cpu_mips_stop_count(CPUMIPSState *env);
+ void cpu_mips_store_compare(CPUMIPSState *env, uint32_t value);
++void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt);
++void mips_srs_exception_return(CPUMIPSState *env);
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -1241,7 +1241,8 @@ static inline void gen_load_srsgpr(int from, int to)
+         tcg_gen_andi_i32(t2, t2, 0xf);
+         tcg_gen_muli_i32(t2, t2, sizeof(target_ulong) * 32);
+         tcg_gen_ext_i32_ptr(addr, t2);
+         tcg_gen_add_ptr(addr, tcg_env, addr);
++        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));
+ 
+         tcg_gen_ld_tl(t0, addr, sizeof(target_ulong) * from);
+@@ -1258,7 +1259,8 @@ static inline void gen_store_srsgpr(int from, int to)
+         tcg_gen_andi_i32(t2, t2, 0xf);
+         tcg_gen_muli_i32(t2, t2, sizeof(target_ulong) * 32);
+         tcg_gen_ext_i32_ptr(addr, t2);
+         tcg_gen_add_ptr(addr, tcg_env, addr);
++        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));
+ 
+         tcg_gen_st_tl(t0, addr, sizeof(target_ulong) * to);
+diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_helper.c
+--- a/target/mips/tcg/sysemu/tlb_helper.c
++++ b/target/mips/tcg/sysemu/tlb_helper.c
+@@ -1027,6 +1027,40 @@ static void set_hflags_for_handler(CPUMIPSState *env)
+     }
+ }
++
++void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt)
++{
++    uint32_t css = extract32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4);
++    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);
++    uint32_t ess = extract32(env->CP0_SRSCtl, CP0SRSCtl_ESS, 4);
++
++    if (interrupt) {
++        uint32_t pending = (env->CP0_Cause & CP0Ca_IP_mask) >> CP0Ca_IP;
++        uint32_t enabled = (env->CP0_Status >> CP0St_IM) & 0xff;
++        uint32_t active = pending & enabled;
++        int ip;
++
++        /* The project CPU selects the highest enabled Cause.IP level for
++         * IP-based vectored interrupts. SRSMap is indexed by that IP
++         * number, including the architecturally unused low fields. */
++        for (ip = 7; ip >= 0 && !(active & (1U << ip)); --ip) {
++            ;
++        }
++        if (ip >= 0) {
++            ess = extract32(env->CP0_SRSMap, ip * 4, 4);
++        }
++    }
++
++    if (css >= 16 || pss >= 16 || ess >= 16) {
++        return;
++    }
++    memcpy(env->active_tc.srs_gpr[css], env->active_tc.gpr,
++           sizeof(env->active_tc.gpr));
++    memcpy(env->active_tc.gpr, env->active_tc.srs_gpr[ess],
++           sizeof(env->active_tc.gpr));
++    env->active_tc.gpr[0] = 0;
++    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4, css);
++    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4, ess);
++}
++
++void mips_srs_exception_return(CPUMIPSState *env)
++{
++    uint32_t css = extract32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4);
++    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);
++
++    if (css >= 16 || pss >= 16) {
++        return;
++    }
++    memcpy(env->active_tc.srs_gpr[css], env->active_tc.gpr,
++           sizeof(env->active_tc.gpr));
++    memcpy(env->active_tc.gpr, env->active_tc.srs_gpr[pss],
++           sizeof(env->active_tc.gpr));
++    env->active_tc.gpr[0] = 0;
++    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4, pss);
++}
+@@ -1350,6 +1384,7 @@ set_EPC:
+             env->hflags &= ~(MIPS_HFLAG_KSU);
+         }
++        mips_srs_exception_entry(env,
++                                 cs->exception_index == EXCP_EXT_INTERRUPT);
+         env->hflags &= ~MIPS_HFLAG_BMASK;
+ diff --git a/target/mips/tcg/sysemu/special_helper.c b/target/mips/tcg/sysemu/special_helper.c
+--- a/target/mips/tcg/sysemu/special_helper.c
++++ b/target/mips/tcg/sysemu/special_helper.c
+@@ -111,6 +111,7 @@ static inline void exception_return(CPUMIPSState *env)
+         mips_env_set_pc(env, env->CP0_EPC);
+         env->CP0_Status &= ~(1 << CP0St_EXL);
+     }
++    mips_srs_exception_return(env);
+     compute_hflags(env);
+diff --git a/target/mips/helper.h b/target/mips/helper.h
+--- a/target/mips/helper.h
++++ b/target/mips/helper.h
+@@ -1,3 +1,5 @@
+ DEF_HELPER_1(raise_exception_debug, noreturn, env)
++DEF_HELPER_2(rdpgpr, tl, env, i32)
++DEF_HELPER_3(wrpgpr, void, env, tl, i32)
+diff --git a/target/mips/tcg/sysemu/special_helper.c b/target/mips/tcg/sysemu/special_helper.c
+--- a/target/mips/tcg/sysemu/special_helper.c
++++ b/target/mips/tcg/sysemu/special_helper.c
+@@ -45,6 +45,20 @@ target_ulong helper_ei(CPUMIPSState *env)
+     return t0;
+ }
++
++target_ulong helper_rdpgpr(CPUMIPSState *env, uint32_t reg)
++{
++    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);
++
++    return pss < 16 && reg < 32 ? env->active_tc.srs_gpr[pss][reg] : 0;
++}
++
++void helper_wrpgpr(CPUMIPSState *env, target_ulong value, uint32_t reg)
++{
++    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);
++
++    if (pss < 16 && reg != 0 && reg < 32) {
++        env->active_tc.srs_gpr[pss][reg] = value;
++    }
++}
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -1231,42 +1231,16 @@ static inline void gen_load_srsgpr(int from, int to)
+ static inline void gen_load_srsgpr(int from, int to)
+ {
+     TCGv t0 = tcg_temp_new();
++    gen_helper_rdpgpr(t0, tcg_env, tcg_constant_i32(from));
+     gen_store_gpr(t0, to);
+ }
+ 
+ static inline void gen_store_srsgpr(int from, int to)
+ {
++    TCGv t0 = tcg_temp_new();
++    gen_load_gpr(t0, from);
++    gen_helper_wrpgpr(tcg_env, t0, tcg_constant_i32(to));
+ }
+diff --git a/hw/mips/mips32_soc_ref.c b/hw/mips/mips32_soc_ref.c
+--- a/hw/mips/mips32_soc_ref.c
++++ b/hw/mips/mips32_soc_ref.c
+@@ -1070,6 +1070,9 @@ static void soc_ref_cpu_reset(void *opaque)
+     CPUMIPSState *env = &reset->cpu->env;
+ 
+     cpu_reset(CPU(reset->cpu));
++    /* Match the opt-in RTL SRSCtl static HSS field.  CSS/PSS/ESS remain
++     * software and exception controlled below this implementation. */
++    env->CP0_SRSCtl = (0xfU << 23);

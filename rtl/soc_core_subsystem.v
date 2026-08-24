@@ -96,7 +96,13 @@ module soc_core_subsystem #(
     output wire        data_rready,
 
     output wire        debug_stall,
-    output wire        debug_flush
+    output wire        debug_flush,
+    output wire [31:0] perf_cycle_count,
+    output wire [31:0] perf_retire_count,
+    output wire [31:0] perf_icache_miss_count,
+    output wire [31:0] perf_dcache_miss_count,
+    output wire [31:0] perf_branch_mispredict_count,
+    output wire [31:0] perf_mdu_stall_count
 );
 
     // The walker is an opt-in client of the D-side AXI read channel.  CPU
@@ -217,7 +223,13 @@ module soc_core_subsystem #(
         .data_rvalid     (core_data_rvalid), .data_rready(core_data_rready),
 
         .debug_stall     (debug_stall),
-        .debug_flush     (debug_flush)
+        .debug_flush     (debug_flush),
+        .perf_cycle_count(perf_cycle_count),
+        .perf_retire_count(perf_retire_count),
+        .perf_icache_miss_count(perf_icache_miss_count),
+        .perf_dcache_miss_count(perf_dcache_miss_count),
+        .perf_branch_mispredict_count(perf_branch_mispredict_count),
+        .perf_mdu_stall_count(perf_mdu_stall_count)
     );
 
     assign data_awid = core_data_awid; assign data_awaddr = core_data_awaddr;

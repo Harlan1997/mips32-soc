@@ -98,9 +98,9 @@ secure boot、Linux/U-Boot、完整 OS、长期压力和生产级软件策略不
 | `phase-c3-axi-crossbar`、`phase4-dut-block-commercial-closure` | 已为 `master` 祖先 | 只保留历史引用，禁止重复合并 |
 | D-cache NB WIP（已废弃） | `dcache_nb.v`、对应 TB、spec/roadmap/checklist、gate 和 coverage WIP 已从当前工作区移除；`feature/dcache-nb-stage3` 已删除 | 不属于当前产品 baseline；保留阻塞式 `rtl/cache/dcache.v` 作为 D-cache 功能基线，不再安排 CPU/SoC 接入或合入 |
 | 本轮功能修复/验证改动 | JTAG `7f74345`、firmware `1288681`、gate 隔离 `324d663`、原始计划 `fcfc9c1` 已分别提交 | 已进入集成线父线；不再与 D-cache NB WIP 关联 |
-| Coverage 生成工件 | exclusion metadata 已清空并通过 strict URG metadata gate；审计结果为 0 条规则 | 生成工件仍不作为整体百分比 signoff；每次新 VDB 必须重跑 `make coverage-strict-clean-gate` |
+| Coverage 生成工件 | fresh current-contract VDB 上的 exclusion refinement 收敛，审计当前为 430 条规则；严格 URG metadata 对齐仍需随最终 VDB 重跑确认 | 生成工件仍不作为整体百分比 signoff；每次新 VDB 必须重跑 `make coverage-strict-clean-gate` |
 | `stash@{0}` | C3 遗留 WIP，含旧 fabric/coverage 变更 | 审计后 apply 或归档，禁止盲删 |
-| 最新 full signoff | 当前 P1 聚合报告 `build/p1_complete/p1_completion_report.md` 为 PASS；strict URG metadata gate 和 exclusion audit 均通过 | 当前 RTL/simulation contract 可发布为 `CONTRACT_CLOSED`；整体 coverage 百分比和产品级扩展仍单独跟踪 |
+| 最新 full signoff | fresh current-contract 功能阶段和 10-seed stress 全部通过；最终仍失败于 99% coverage threshold（UVM SCORE 61.74%，product SCORE 59.70%） | 当前 RTL/simulation contract 可发布为 `CONTRACT_CLOSED`；整体 coverage 百分比和产品级扩展仍单独跟踪 |
 
 ### DDR4 RTL 功能状态
 
@@ -117,15 +117,15 @@ controller、协议 checker、AXI/APB 错误路径和 burst/refresh 压力场景
 | 域 | 当前产品集成 | 已有测试证据 | 商用功能结论 |
 |---|---|---|---|
 | CPU/CP0 | 已接入；默认 `SOC_MMU_ENABLE=0`；产品模式区分 CacheErr、TLB miss refill、invalid/general、IP-based vectored interrupt 和 opt-in VIC/VEIC source vector 的 BEV/EBase 向量 | smoke 与 Phase 3A/3B CPU/CP0 gate 通过；CP0 timer/TLB 单测验证 `IV/VS`；产品 directed 覆盖 I-side BEV=1/0 miss/invalid、D-side BEV=1 miss/invalid、EBase `Mod` precise state/recovery、CacheErr `ExcCode=30`/`ERL`/`ErrorEPC`/`EBase+0x100`、软件 IP-based vector，以及真实 VIC source 8 -> Cause.IP2 -> `EBase+0x300`；`product-cacheerr-gate` 还覆盖真实 MMU/D-cache/APB SLVERR 到 handler/ERET；新增产品启动 I-cache 首笔 `SLVERR` -> `BFC0_0100`/`1FC0_0100` -> `ERET`/ErrorEPC 重取 gate | refill/invalid、最小 kernel-mode `Mod` recovery、CacheErr hardware contract、复位时 ERL=1 的首个 CacheErr ErrorEPC 捕获、注入式 production handler/recovery 和有限 EIC/VEIC source-vector slice 已验证；ECC/多级 cache recovery、完整 Modified policy、ISA reference/compliance 和 MMU 产品启动仍未闭合 |
-| L1 cache | 阻塞式 D-cache 在 DUT；4-way I-cache 已合入 `integration/function-contract` | D-cache unit、`cache_sweep` 与 smoke 通过；IF/I-cache response-PC 的默认和 Boot ROM reset-branch directed tests、合入后 unit gate `10/10`、SoC smoke 和 seed 10 UVM stress 通过；`mips_core` CPU/AXI execution gate 覆盖六个同 set tag 的 refill/eviction、普通模式 `SLVERR`/CacheErr/ERL、产品启动首笔 `SLVERR`/vector/ERET retry，以及 320-line/5-tag-per-set/3-pass AR-backpressure stress | I-cache 已有 CPU/AXI 集成、普通/产品启动错误和长期压力 slice，但 I-cache maintenance/tag ABI、parity/ECC 仍不足，不能标为 `CONTRACT_CLOSED` |
+| L1 cache | 阻塞式 D-cache 在 DUT；4-way I-cache 已合入 `integration/function-contract` | D-cache unit、`cache_sweep` 与 smoke 通过；IF/I-cache response-PC 的默认和 Boot ROM reset-branch directed tests、合入后 unit gate `10/10`、SoC smoke 和 seed 10 UVM stress 通过；`mips_core` CPU/AXI execution gate 覆盖六个同 set tag 的 refill/eviction、普通模式 `SLVERR`/CacheErr/ERL、产品启动首笔 `SLVERR`/vector/ERET retry，以及 320-line/5-tag-per-set/3-pass AR-backpressure stress；2026-08-09 parity unit 与五个 CPU I-cache gate 重跑通过 | I-cache parity 仅为仿真注入/CacheErr contract，不宣称硅上 ECC 或完整 OS cache ABI；此前动态二维 memory `force/release` 导致 VCS OOM，已由显式注入端口替换并确认无异常内存增长 |
 | L2 cache | 默认 write-through L2 已接入；write-back 为 opt-in | L2 unit、L2 firmware、Phase 2/3 与 smoke 通过 | 当前 blocking L2 契约可用；不具备 coherency/ECC/生产性能闭合 |
-| AXI fabric | C3 crossbar 已在 `master`；DDR 是 S3 slave | fabric unit `4/4`，Phase 2/3、10-seed stress 通过 | cross-slave 并发已验证；同一 slave 仍受单 outstanding slave 限制 |
+| AXI fabric | C3 crossbar 已在 `master`；DDR 是 S3 slave；bounded RID/BID response matching 已接入 | fabric unit `5/5`（含 `tb_xbar_ooo`），Phase 2/3、10-seed stress 通过 | cross-slave 并发与 bounded 不同 ID 乱序已验证；端到端同一 slave 仍受单 outstanding L2/APB/flash 限制 |
 | DMA | 已接入 APB/AXI | DMA unit、DMA firmware、DMA copy/IRQ UVM 通过；grant stability 修复已在 C2 集成父线 | 当前 direct-copy/IRQ 契约有证据；不可宣称 IOMMU/coherency 或完整系统 DMA 生态 |
 | VIC/interrupt | 已接入 CPU 单 IRQ 线，源为 UART RX/TX、TIMER/DMA；CPU 侧支持按 `Cause.IP` 的 `Cause.IV/IntCtl.VS` 向量，`ENABLE_VEIC=1` 时支持 VIC source ID 向量 | VIC unit、VIC firmware、PIC mask UVM、IP-based vectored-interrupt SoC gate、真实 VIC source 8 -> IP2 -> VEIC vector SoC gate 和 UART 外部 RX SoC gate 通过 | mask/active、CPU IP-based vector、UART RX source 和有限 EIC/VEIC source-vector contract 已验证；嵌套抢占策略、全源覆盖和完整 MIPS compliance 仍未闭合 |
 | UART | `apb_uart_16550` 已接入 APB；`soc_top` 已暴露 UART TX/RX、RTS/CTS、DTR/DSR、DCD/RI 接口；PIC bit0 为 RX-specific IRQ，bit1 保留历史 aggregate IRQ 语义；legacy/UVM 配置仍可关闭接口 wiring | UART unit、UART CPU loopback gate、block aggregate `10/10`、`uart-external-rx-gate`、`uart-external-rx-soc-gate` 和 `uart-pad-wrapper-gate` 通过；UART unit Case 17 覆盖 FIFO 水位 4 的 auto-RTS 撤销/恢复；SoC gate 由 firmware 配置 FIFO/IER/VIC，testbench 注入异步 8N1 `0x5A`，CPU 读取 RBR 并确认 RX IRQ 清除 | 已达到 `SOC_INTEGRATED` 的 behavioral RX/TX/CTS/auto-RTS slice 和 vendor-neutral interface boundary |
 | DDR | S3 已替换为 `axi_ddr4_controller` 协议级 RTL；内部包含初始化、ACT/READ/WRITE/PRE、open-row hit/miss、refresh、完整 AXI burst/4KB/地址检查、背压和错误响应；opt-in status 配置接入 SECDED 纠错/双 bit 检测状态，并路由 `ddr4_fatal_error || ddr4_ecc_uncorrectable_error` 至 PIC source 5 | `ddr4-controller-gate`、`ddr4-controller-stress-gate`、`ecc-secded-gate`、`ddr4-status-gate`、`ddr4-pic-integration-gate`、`fabric-unit-gate`、`soc-smoke` 和 `rtl-frontend-compile` 通过；controller gate 覆盖四 beat 读写、row hit、row miss 的 `PRE->ACT`、command pulse 顺序、非法地址/跨 4KB burst、错误 WLAST、reset flush、DECERR、refresh 背压/恢复；APB `0x4000_6000` status slice 覆盖 correctable/uncorrectable 分类与 W1C；`ddr4-pic-integration-gate` 覆盖 PIC source 5 raw/masked/CPU IRQ 与 APB status/W1C | 当前达到 `RTL_FUNCTIONAL_SIM_READY` 的 vendor-neutral controller 与 PIC IRQ escalation contract；DDR4 controller、ECC/APB status 与 PIC source 5 IRQ 范围已验证，物理 DRAM ECC timing、多 rank、低功耗状态和完整软件启动仍是明确边界 |
 | Flash/boot | `axi_spi_flash` 支持默认单线 SPI read XIP；独立只读 Boot ROM 已作为 S4 接入产品配置。产品 XIP read 以 AXI guard 限时，uncached 非 OKAY response 经 CPU 转 IBE/DBE，cached refill/writeback 错误经 CacheErr sideband 转 ExcCode=30；开发 Boot ROM 可读取 manifest/payload、CRC 校验、拷贝 Boot SRAM 并转交 kseg0 stage 1。`qspi_apb_integration` 已接入外设 APB；`qspi_shared_pin_arbiter` 统一 command 与 memory owner。新增 `soc_memory_subsystem.ENABLE_QSPI_QUAD=1` opt-in 将 vendor-neutral `qspi_axi_xip` 接入同一 S2 AXI memory path、guard 和四线边界，默认仍保持 x1 | Boot ROM、XIP guard、CacheErr/ERL、manifest/CRC、command timeout/abort/WDT、x1/quad standalone bridge、SoC APB quad command、SoC S2 quad memory gate、quad endian ABI、quad no-preload manifest handoff、flash endpoint、SoC smoke 和 RTL frontend `3/3` 均有通过证据；manifest invalid 与 XIP bus/timeout 现分别写入 always-on boot-status `0xB0070003`/`0xB0070004`，并由 no-preload gate 检查；S2 gate 覆盖单拍/两拍 burst、ID/RLAST/RRESP、quad flash readback、AXI write `SLVERR` 和 idle pins；quad handoff 覆盖有效镜像、11 个 header/CRC 负例和 timeout-to-DBE | 当前可声明有限 `SOC_INTEGRATED` 单线 XIP/APB slice、vendor-neutral quad AXI/XIP opt-in memory integration、development boot handoff 和两类 failure-code mapping |
-| MMU/TLB | RTL 与 unit TB 存在，默认关闭；产品 opt-in 具备 CacheErr、refill/invalid vector routing、最小 Boot ROM kseg1 linker、BEV refill handler、wired kseg2-APB map，以及复制到 SRAM 的 EBase `Mod` handler | MMU/CP0 unit、`make tlb-asid-policy-gate`、`make tlb-os-context-gate`、`make product-mmu-asid-context-gate`、`make product-mmu-process-pressure-gate`、`make product-mmu-pagemask-gate`、`make product-mmu-context-cpu-gate`、`make tlb-invalidate-gate`、`make cpu-cache-error-gate`、`make product-cacheerr-gate`、完整 SoC I/D vector directed、`make product-mmu-boot-gate` 和 `make product-mmu-ebase-modified-gate` 通过；ASID gate 覆盖 4KB 非 Global 隔离、Global 跨 ASID、matching-invalid 的 TLBL/TLBS 和 clean-store 的 Modified；OS-context gate 覆盖软件页表 walk、同 VA 不同 ASID/PFN、wired global 保留、非 wired flush 和 1..255 回卷；SoC gate 覆盖真实 firmware 的 ASID 1/2 映射、mailbox page/ASID shootdown、wired APB 保留和重新 refill；process-pressure gate 覆盖 ASID 1..4 round-robin、四个 PFN 隔离、动态清空后的 8 次 refill 和 wired 映射保留；PageMask gate 覆盖真实 CPU/DDR behavioral path 的 16KB even/odd halves、页内偏移 PFN folding、单次 refill、ASID 和 TLB mask/PFN；后者覆盖 DTLB `Mod`、CP0 precise state、EBase handler relocation、`D` bit repair 和 `ERET` retry；`product-cacheerr-gate` 覆盖 cacheable kseg2 APB refill、AXI SLVERR、`Cause.ExcCode=30`、ERL/ErrorEPC、单次 handler marker 和 ERET；IP-based 和真实 VIC source-vector gate 均通过 | 最小 BEV 启动、4KB/16KB ASID/异常分类、软件管理 TLB context-switch/shootdown、真实单核 mailbox TLB invalidation/refill、bounded 4-ASID process-pressure、CacheErr hardware contract、注入式 handler/recovery、单一 EBase `Mod` recovery、CPU vector table 和有限 EIC/VEIC source-vector slice 已有证据；完整 kseg0 runtime、SoC page-table allocator、scheduler/多进程长期压力、真实多核 TLB shootdown IPI、ECC policy、kernel/OS boot 仍未闭合 |
+| MMU/TLB | RTL 与 unit TB 存在，默认关闭；产品 opt-in 具备 CacheErr、refill/invalid vector routing、最小 Boot ROM kseg1 linker、BEV refill handler、wired kseg2-APB map，以及复制到 SRAM 的 EBase `Mod` handler | MMU/CP0 unit、`make tlb-asid-policy-gate`、`make tlb-os-context-gate`、`make product-mmu-asid-context-gate`、`make product-mmu-process-pressure-gate`、`make product-mmu-pagemask-gate`、`make product-mmu-context-cpu-gate`、`make tlb-invalidate-gate`、`make cpu-cache-error-gate`、`make product-cacheerr-gate`、完整 SoC I/D vector directed、`make product-mmu-boot-gate` 和 `make product-mmu-ebase-modified-gate` 通过；ASID gate 覆盖 4KB 非 Global 隔离、Global 跨 ASID、matching-invalid 的 TLBL/TLBS 和 clean-store 的 Modified；OS-context gate 覆盖软件页表 walk、同 VA 不同 ASID/PFN、wired global 保留、非 wired flush 和 1..255 回卷；SoC gate 覆盖真实 firmware 的 ASID 1/2 映射、mailbox page/ASID shootdown、wired APB 保留和重新 refill；process-pressure gate 覆盖 ASID 1..4 round-robin、四个 PFN 隔离、动态清空后的 8 次 refill 和 wired 映射保留；PageMask gate 现覆盖真实 CPU/DDR behavioral path 的 4KB/16KB/64KB/256KB demand-refill/data-access、even/odd halves、非零页内偏移 PFN folding、ASID 和 TLB mask/PFN；后者覆盖 DTLB `Mod`、CP0 precise state、EBase handler relocation、`D` bit repair 和 `ERET` retry；`product-cacheerr-gate` 覆盖 cacheable kseg2 APB refill、AXI SLVERR、`Cause.ExcCode=30`、ERL/ErrorEPC、单次 handler marker 和 ERET；IP-based 和真实 VIC source-vector gate 均通过 | 最小 BEV 启动、4KB/16KB/64KB/256KB ASID/异常分类、软件管理 TLB context-switch/shootdown、真实单核 mailbox TLB invalidation/refill、bounded 4-ASID process-pressure、CacheErr hardware contract、注入式 handler/recovery、单一 EBase `Mod` recovery、CPU vector table 和有限 EIC/VEIC source-vector slice 已有证据；完整 kseg0 runtime、SoC page-table allocator、scheduler/多进程长期压力、真实多核 TLB shootdown IPI、ECC policy、kernel/OS boot、硬件 walker 的 4KB-only OS contract 仍未闭合 |
 | WDT/clock/reset | `apb_wdt` 已映射到 APB `0x4000_7000`；到期产生一次性 `wdt_reset`，`mips_soc_impl` 以 `soc_rst_n = rst_n & ~wdt_reset` 复位 SoC；WDT 与 boot-status 均留在 always-on 域 | WDT unit、boot-status unit、外设子系统 AXI/APB retention gate、默认 SoC smoke、预加载 firmware retention 和无 SRAM preload 的 Boot ROM WDT failure gate 均通过；gate 验证 wired APB map、stage/failure、POR|WDT cause 和第二次 Boot ROM 入口 | APB/reset、stage/failure retention 和软件/Boot ROM reset path 已有证据；由 manifest/QSPI/DDR 真实故障触发的失败分类、外部系统 reset 观测和量产 ROM 仍未闭合 |
 | Debug/JTAG | 产品 top 接入 JTAG | JTAG reset-recovery UVM 与合入后 seed 10 bus stress 通过；AXI payload 锁存修复为 `7f74345` | 当前仿真功能可用；产品级 debug security/authentication 和量产工具链仍未定义 |
 
@@ -146,7 +146,7 @@ budget）、CTRL[2]/清 enable abort、timeout/abort W1C、standalone AXI comman
 | `test(clean-run-gates)` | 四个 `tb/uvm_tb/run_phase*_complete.sh` | commit `324d663`；`bash -n` 与 Phase 2 hardened run 通过 | 已进入集成线父线；这是证据可复现性修复，不是 RTL feature |
 | `feat(dcache-nb-stage3)`（已废弃） | 原 `dcache_nb` RTL/TB、D-cache spec/roadmap/checklist、gate 与 coverage WIP | 历史 block gate 曾报告 `9/9`，但该实现未接入 CPU/SoC，现已删除源码、TB 和本地 WIP；feature branch 已删除 | 不再保留或合入；产品默认路径只使用阻塞式 `dcache.v` |
 | `docs(functional-readiness)` | `docs/functional_completeness_plan.md` | `fcfc9c1` 为初版；本次集成证据以独立文档提交记录 | 文档不与 RTL feature 或 D-cache NB WIP 混合 |
-| `coverage-generated-artifacts` | `tb/coverage/exclusion_manifest.json`、`product_exclusions.el`、`uvm_exclusions.el` | 自动生成；当前 strict URG metadata gate 和 0-entry exclusion audit 已通过 | 不把生成工件当作整体 coverage 百分比 signoff；新 VDB 必须通过 strict gate 后才可用于证据 |
+| `coverage-generated-artifacts` | `tb/coverage/exclusion_manifest.json`、`product_exclusions.el`、`uvm_exclusions.el` | 自动生成；fresh VDB refinement 和 exclusion audit 通过，规则数随 VDB 变化；strict URG metadata gate 仍是独立验收项 | 不把生成工件当作整体 coverage 百分比 signoff；新 VDB 必须通过 strict gate 后才可用于证据 |
 
 1. 已冻结并分类：已废弃的 D-cache NB WIP、JTAG/firmware/gate commits、coverage 生成工件和文档彼此隔离；D-cache NB 不再进入后续集成。
 2. `integration/function-contract` 已从 `phase-c2-l2-nonblocking@fcfc9c1` 建立。C2 的 L2-NB、ROB skeleton、DDR placeholder、MMU 脚手架和 DMA 修复仍按产品接入状态分项判断，不能整体标记为“商用缓存/DDR/MMU完成”。
@@ -210,6 +210,7 @@ XIP/WDT/UART、ASID context-switch 和 DDR4 controller 行为证据。
 ### Phase 3：CPU、缓存和总线功能闭合
 
 - 4-way I-cache 已合入并完成通用 unit/SoC 证据；`mips_core` CPU/AXI execution gate 覆盖 reset 后真实取指、六个同 set tag 的 line refill、四路容量压力和后续 eviction/refill，error gate 覆盖指定 refill 的 `SLVERR` -> I-cache CacheErr -> CP0 `ExcCode=30/ERL`，产品 error gate 覆盖 `BFC0_0000`/`1FC0_0000` 首笔失败、`BFC0_0100`/`1FC0_0100` vector、精确 ErrorEPC、ERET 和重取，stress gate 覆盖 320 条 line、5 tags/set、3 passes 与 AR 背压；I-cache index TagLo ABI 也已接入并有 CPU/集成证据；parity/ECC 和更完整系统软件路径仍未闭合，不能标为 `CONTRACT_CLOSED`。
+- 2026-08-09 I-cache OOM 修复收尾：`tb/unit/icache/tb_icache.v` 的 parity unit 输出 `REGRESSION_TEST_SUCCESS icache`；串行五个 CPU I-cache Make gate 分别通过，marker 为 `ar_count=7`、`ar_count=6`、`ar_count=3 boot_ar_count=2 vector_ar_count=1`、`ar_count=895 unique_lines=320 line_pc_count=960`、`ops=4 ar_count=2`。修复移除了动态二维 memory `force/release`，改为显式仿真 parity 注入端口，`mips_core` 生产实例全部 tie-off；五个 VCS gate 的最大 RSS 约 206--207 MB，未复现 OOM。该记录不引入 cgroup，也不改变其他 EDA gate 的启动方式。
 - 将 C.2 变更拆成 L2-NB、ROB、DDR placeholder、DMA 修复四个可审阅主题。
 - 当前 D-cache 产品路径使用阻塞式 `rtl/cache/dcache.v`；`dcache_nb.v` 及其 Stage 4 CPU/ROB 接入计划已废弃，不作为功能完整性前置条件。
 - CACHE 六种 D-cache maintenance operation、I/D-cache 有限 TagLo 读写、TagHi 读写和 SYNC ordered-no-op 已有独立 CPU/block/集成证据；parity/ECC、复杂 outstanding/store-buffer 的 SYNC 语义和生产 OS ABI 仍未闭合。
@@ -368,6 +369,7 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | 2026-08-04 | `integration/function-contract` SoC TLB invalidate wiring slice | `make rtl-frontend-compile RUN_ROOT=build/unit_tb/rtl_frontend_tlb_connected`；`make product-mmu-context-cpu-gate` | PASS：frontend `3/3`；CPU/MMU context firmware PASS | APB mailbox `invalidate_valid/{VPN,ASID,scope}` 现已通过 `soc_peripheral_subsystem -> mips_soc_impl -> soc_core_subsystem -> mips_core -> mips_cpu -> mips_cp0 -> mips_tlb` 连接，默认 wired floor 为 2；随后由 real CPU mailbox shootdown/refill gate 覆盖动态 entry 清除和重新 refill。仍未实现真实多核 IPI/page-table walker。 |
 | 2026-08-04 | `integration/function-contract` real CPU mailbox shootdown/refill gate | `make product-mmu-asid-context-gate PRODUCT_MMU_ASID_CONTEXT_DIR=build/soc_test/product_mmu_asid_context_tlb_shootdown` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_asid_context refills=3` | 真实 CPU firmware 建立 ASID 1/2 同 VA 不同 PFN，切回命中后通过 `0x4000_9000` mailbox 设置 VPN/ASID/scope、submit/ACK，清除 ASID 1 dynamic TLB entry；再次访问触发第三次 refill，同时验证 wired APB mapping 保留。仍不代表多核 IPI、完整 page-table walker 或 scheduler。 |
 | 2026-08-04 | `integration/function-contract` MMU real-shootdown regression | `make product-mmu-asid-context-gate PRODUCT_MMU_ASID_CONTEXT_DIR=build/soc_test/mmu_asid_context_after_real_shootdown`；`make product-mmu-process-pressure-gate PRODUCT_MMU_PROCESS_PRESSURE_DIR=build/soc_test/mmu_pressure_after_real_shootdown`；`make product-mmu-context-cpu-gate`；`make tlb-invalidate-gate` | PASS：ASID context `refills=3`、process pressure `refills=8`、CPU context、TLB invalidate unit | 新增 TLB sideband 连接后重跑完整相关回归，确认真实单核 shootdown/refill、四 ASID 压力、APB context control 与 TLB unit 均无回归。 |
+| 2026-08-15 | `integration/function-contract` TLB invalidate + micro-TLB stale-entry slice | `RUN_DIR=build/unit_tb/tlb_invalidate_micro2 tb/unit/tlb/run_tlb_invalidate.sh` | PASS：`REGRESSION_TEST_SUCCESS tlb_invalidate`；I/D micro-TLB page-scope invalidation、ASID/all-dynamic invalidation、wired/global preservation 和 context-flush recovery | invalidate gate 现在以 `SOC_MICRO_TLB_ENABLE=1` 编译，先形成 I/D 两侧 cached translation，再验证 architectural invalidation 不保留 stale hit；context flush 保留主 TLB entry 并允许 I/D micro miss 从主 TLB重新填充。该 unit 证据不等同于 PTE 修改后 CPU refill handler 穿过 D-cache/L2 的系统级闭合。 |
 | 2026-08-03 | `integration/function-contract` MMU refill script entry audit | `RUN_DIR=/tmp/soc_mmu_refill_qspi_arbiter_fix tb/soc_test/run_mmu_refill.sh`；baseline comparison `RUN_DIR=/tmp/soc_mmu_refill_baseline` | PARTIAL：补齐 `axi_boot_rom.v` 后 VCS compile/elaboration 通过，但 legacy `mmu_refill` firmware 在本线和未接仲裁基线均于 5 ms timeout，未产生 `mmu_refill: PASS` | 该入口原先漏列 Boot ROM 源文件，现已修复；仿真 timeout 是既有 MMU refill gate 问题，不归因于本轮 QSPI arbiter，也不作为当前 MMU 产品证据。继续使用已通过的 `product-mmu-boot-gate`、ASID/context 和 process-pressure gates。 |
 | 2026-08-03 | `integration/function-contract` UVM image-model regression smoke | `make uvm UVM_RUN_DIR=/tmp/uvm_qspi_arbiter_smoke` | PASS：`REGRESSION_TEST_SUCCESS` | `ENABLE_FLASH_IMAGE_MODEL=1` 配置下的 UVM `soc_bus_stress_test` 通过，确认 grant-gated image-model `ARVALID/ARREADY` 没有回归默认 UVM smoke。 |
 | 2026-08-03 | `integration/function-contract` QSPI command timeout/abort/reset-in-flight slice | `make qspi-cmd-behavioral-gate QSPI_CMD_BEHAVIORAL_DIR=/tmp/qspi_cmd_timeout_v1`；`make qspi-status-integration-gate QSPI_STATUS_INTEGRATION_DIR=/tmp/qspi_status_timeout_v2`；`make qspi-flash-behavioral-gate QSPI_FLASH_BEHAVIORAL_DIR=/tmp/qspi_flash_timeout_v1`；`make qspi-pad-wrapper-gate QSPI_PAD_WRAPPER_DIR=/tmp/qspi_pad_timeout_v1`；`make qspi-axi-xip-gate QSPI_AXI_XIP_DIR=/tmp/qspi_axi_timeout_v1`；`make qspi-shared-pin-arbiter-gate QSPI_SHARED_PIN_ARBITER_DIR=/tmp/qspi_arb_timeout_v1`；`make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_qspi_timeout_v1`；`make soc-smoke SOC_TEST_RUN_DIR=/tmp/soc_smoke_qspi_timeout_v1` | PASS：QSPI command/status/flash/pad/AXI/arbiter gates、RTL frontend `3/3`、SoC smoke | `qspi_cmd_behavioral` 新增非零 `TIMEOUT` budget、CTRL[2]/清 enable abort、timeout/abort W1C 和 reset-in-flight pin-safe semantics；状态位保持 busy/tx/rx/done/error，并增加 timeout bit5、aborted bit6。`qspi_axi_xip` 将 command timeout/error 转为 AXI `SLVERR`；SoC-peripheral gate 验证 command timeout、W1C、WDT 中断 active command 后 `CS_N=1/SCLK=0` 和 WDT expiry retention。证据关闭 `SOC_INTEGRATED` 的 command failure/reset slice，但仍不是商用 QSPI/接口/flash/boot。 |
@@ -400,6 +402,7 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | 2026-08-03 | `integration/function-contract` UART auto-RTS watermark slice | `make dut-block-unit-gate DUT_BLOCK_UNIT_DIR=build/unit_tb/uart_rts_block_aggregate`；UART unit log `build/unit_tb/uart_rts_block_aggregate/uart/sim.log` | PASS：UART Case 17 与 block aggregate `10/10`；`REGRESSION_TEST_SUCCESS uart_16550` | UART loopback 在 MCR[1]/MCR[5] 开启、FIFO trigger=4 时，验证 RX FIFO 达到阈值后 `uart_rts_n` 由有效低撤销为高，读空 FIFO 后重新有效；该证据关闭 RTL auto-RTS 水位行为，不覆盖 接口单元、外部接口/外部系统 timing、接口行为 或软件 driver policy。 |
 | 2026-08-08 | `integration/function-contract` DUT block readiness rerun after testbench observer fixes | `source /etc/profile.d/modules.sh && module load vcs && RUN_ROOT=build/unit_tb/dut_block_readiness_fixed2_20260808 tb/unit/run_dut_block_unit_gate.sh`；`RUN_DIR=build/unit_tb/product_tlb_data_vectors_fixed_20260808 tb/unit/bootrom/run_product_tlb_data_vectors.sh` | PASS：DUT block gate `10/10`；`REGRESSION_TEST_SUCCESS dcache`；`REGRESSION_TEST_SUCCESS product_tlb_data_vectors` | D-cache unit TB 将新增 coherency 输入显式 tie-off，消除未连接输入造成的 X 状态；product TLB data-vector TB 改观察 MEM-side `dmem_translate_req`，覆盖 translation fault 抑制外部 cache request 的当前 CPU contract。该记录是验证/observer 修复，不扩大 D-cache ECC/coherency、完整 MMU 或产品启动承诺。 |
 | 2026-08-08 | `integration/function-contract` BPU opt-in IF redirect closure slice | `make bpu-redirect-gate`；`VCS_EXTRA_ARGS='+define+SOC_BPU_ENABLE=1' FW_HEX=build/firmware/soc_smoke/firmware.hex RUN_DIR=build/soc_test/bpu_opt_in2 tb/soc_test/run.sh`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_after_bpu` | PASS：BPU unit；frontend opt-in `4/4`；BPU opt-in SoC smoke；默认 SoC smoke | BPU 的 BTB/BHT/RAS 预测经 IF delay-slot pending path 接入，ID resolve 作为架构真值，wrong direction/target 通过 recovery target 修正；J/JAL、JR/JALR 分类和 not-taken BHT 更新已接线。CoreMark/Dhrystone 命中率、fetch queue、多在途分支、完整 mispredict 性能和 formal 仍 deferred。 |
+| 2026-08-23 | `integration/function-contract` CPU performance workload observation slice | `make perf-workloads-gate`；`build/soc_test/perf_workloads/sim.log` | PASS：真实 CPU/APB `SOC_PERF_COUNTERS=1`；四条 sequential/strided/branch-mixed/MDU workload 均输出 cycle、retire、I/D miss、branch 和 MDU delta，版本 `0x50430001`，并达到 `REGRESSION_TEST_SUCCESS` | 这是可重复的微架构观测基线，不是官方 CoreMark/Dhrystone/STREAM 成绩、CPI 精度保证或商用性能 signoff；标准 benchmark 源码/性能目标仍 deferred。 |
 | 2026-08-03 | `integration/function-contract` UART vendor-neutral pad wrapper | `make uart-pad-wrapper-gate` | PASS：`REGRESSION_TEST_SUCCESS uart_pad_wrapper` | 固化 UART pin enable contract：disabled 时 TX/RTS/DTR 为安全 idle，RX/CTS/DSR/DCD/RI 返回 inactive；enabled 时双向信号透传。该 gate 只覆盖 RTL pad boundary，不覆盖 外部接口单元、接口行为、IO 外部时序或外部系统模型。 |
 | 2026-08-03 | `integration/function-contract` UART pad wrapper SoC integration | `make uart-cts-soc-gate SOC_TEST_UART_CTS_DIR=build/soc_test/uart_cts_pad_integrated UART_CTS_FW_DIR=build/firmware/uart_cts_pad_integrated` | PASS：UART CTS SoC gate；RTL/SoC compile and simulation completed | `ENABLE_UART_PINS=1` 的真实 `mips_soc_impl` 路径已经过 `uart_pad_wrapper`，CTS hold/release 行为保持通过；`ENABLE_UART_PINS=0` 仍走 legacy bypass。该集成仍不覆盖 外部接口单元、接口行为、接口时序 或外部系统模型。 |
 | 2026-08-03 | `integration/function-contract` UART pad wrapper RX integration | `make uart-external-rx-soc-gate SOC_TEST_UART_EXTERNAL_RX_DIR=build/soc_test/uart_external_rx_pad_integrated UART_EXTERNAL_RX_FW_DIR=build/firmware/uart_external_rx_pad_integrated`；`make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_uart_pad_integrated` | PASS：external RX SoC gate、默认 SoC smoke | 异步 8N1 `0x5A` 经过 `uart_pad_wrapper`、RX synchronizer/FIFO/PIC/RBR 后由 CPU 读回；默认 smoke 无回归。修正 `uart-external-rx-soc-gate` firmware 输出目录使用相对路径导致的错误。 |
@@ -423,6 +426,13 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | 2026-08-05 | `integration/function-contract` TLBP duplicate-hit detection and reset recovery | `make tlb-asid-policy-gate TLB_ASID_POLICY_DIR=build/unit_tb/tlb_asid_policy_probe_mcheck`；`tb/unit/cp0/run.sh`；`make rtl-frontend-compile RUN_ROOT=build/unit_tb/rtl_frontend_probe_mcheck` | PASS：TLB gate；CP0 timer gate；RTL frontend `3/3` | `TLBP` 现在同时报告 `probe_multi_hit`；CP0 在重复 probe 时置位 sticky `Status.TS`，同时保留最低索引作为诊断值。CP0 gate 验证 MTC0 不能清 TS、复位可清 TS；lookup/probe multi-hit 语义一致。micro-TLB/OS 级恢复策略仍 deferred。 |
 | 2026-08-05 | `integration/function-contract` MMU/TLB baseline reconciliation | 文档审计：`docs/block_specs/mmu_tlb_spec.md` 与 `mips_tlb` RTL 对照 | PASS：规格明确当前为 direct dual-lookup 主 TLB；micro-TLB 不再被误标为已采用 | 修正规格中的架构状态：当前功能基线没有独立 micro-TLB，也没有 micro-TLB flush bubble；I/D 两端直接组合查询主 TLB。micro-TLB 仅作为后续性能/功耗优化，不影响当前 `RTL_FUNCTIONAL_SIM_READY` 结论。 |
 | 2026-08-06 | `integration/function-contract` SoC 16KB PageMask runtime slice | `make product-mmu-pagemask-gate PRODUCT_MMU_PAGEMASK_DIR=build/soc_test/product_mmu_pagemask_pass` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_pagemask refills=1` | 真实 CPU/SoC 固件写入 PageMask[28:13]=`0x0003`，验证 ASID 7 下同一 32KB pair 的 even/odd 16KB EntryLo、页内偏移 PFN folding、数据读写完整性和成功/失败 mailbox；硬件 walker 仍保持当前明确的 4KB-only 合约。 |
+| 2026-08-23 | `integration/function-contract` SoC PageMask four-size data-path recheck | `make product-mmu-pagemask-gate PRODUCT_MMU_PAGEMASK_DIR=build/soc_test/product_mmu_pagemask_current` | PASS：`REGRESSION_TEST_SUCCESS product_mmu_pagemask refills=3` | 当前 HEAD 的真实 CPU/SoC firmware 在 4KB/16KB/64KB/256KB 四个 demand-refill/data-access 阶段完成后才写入最终成功 mailbox；覆盖 distinct ASID、even/odd half、非零页内偏移和 PFN folding。Linux VM/page-table ownership、硬件 walker 的 4KB-only contract 和完整 OS 压力仍未闭合。 |
+| 2026-08-23 | `integration/function-contract` QEMU system MMU PageMask RTL retire differential | `make qemu-system-mmu-pagemask-gate` | PASS：`TRACE_COMPARE_PASS records=276`；`QEMU system MMU PageMask architectural gate: PASS` | 同一份 PageMask firmware 在 RTL boot-ROM testbench 和 `mips32-soc-ref` 之间逐条 retire 比较通过，使用 BFC00200 RTL-compatible exception vector，覆盖 4KB/16KB/64KB/256KB、ASID 4-7、even/odd half、非零偏移、PFN folding 和显式 PageMask completion marker。为闭合该差异修复了 RTL address-exception 的 EntryHi.VPN2 更新，并通过 `cpu-cp0-gate`、`tlb-invalidate-gate` 回归。状态升级为 `SYSTEM_DIFFERENTIAL`（bounded corpus）；Linux VM ownership、多核 shootdown、完整 privileged/MMU 和 full ISA/QEMU differential 仍未闭合。 |
+| 2026-08-23 | `integration/function-contract` QEMU system MMU process-pressure RTL retire differential | `make qemu-system-mmu-process-pressure-gate` | PASS：`TRACE_COMPARE_PASS records=1555`；RTL `REGRESSION_TEST_SUCCESS product_mmu_process_pressure refills=8` | standalone boot-ROM testbench 接入统一 retire schema；同一 firmware 在 RTL/QEMU 之间逐条比较通过，覆盖四个 software ASID、distinct PFN、context reuse、dynamic TLB shootdown、wired retention 和 post-shootdown refill。状态升级为 `SYSTEM_DIFFERENTIAL`（single-core bounded corpus）；OS scheduler/page-table ownership、多核 shootdown、Linux VM 和 full privileged/MMU differential 仍未闭合。 |
+| 2026-08-24 | `integration/function-contract` QEMU system MMU context/shootdown RTL retire differential | `make qemu-system-mmu-contract-gate` | PASS：`TRACE_COMPARE_PASS`；`build/isa_ref/qemu_system_mmu_contract/completion_report.md` | 同一 ASID context firmware 在 RTL 与 `mips32-soc-ref` 之间逐条 retire 比较通过，覆盖 ASID-specific refill、ASID reuse、wired APB mapping、sticky invalidate+done、shootdown ACK 后架构 TLB 清除及 post-shootdown refill。修复 QEMU custom machine 在 ACK 时只清 host translation cache、未清 architecture TLB 的差异；保留 global/wired 项。状态升级为 `SYSTEM_DIFFERENTIAL`（single-core bounded corpus）；OS page-table ownership、scheduler、多核 IPI、Linux VM 和 full privileged/MMU 仍未闭合。 |
+| 2026-08-24 | `integration/function-contract` QEMU system MMU OS page-table pressure differential | `make qemu-system-mmu-os-pressure-gate` | PASS：`TRACE_COMPARE_PASS`；RTL `mmu_os_pressure: PASS`；`refills=0x15`、`page_allocs=6`、task0/1/2 各 2 页 | 新增 opt-in `SOC_MMU_OS_PRESSURE` workload：三套独立 root/L2 页表、同一虚拟页的 task-specific PFN、三 ASID context switch、每次切换清理软件 pair snapshot，以及当前 task shootdown 后重新 demand refill；RTL 与 `mips32-soc-ref` 逐条 retire 比较通过。状态升级为 `SYSTEM_DIFFERENTIAL`（single-core bounded OS-style pressure）；Linux VM、production allocator/scheduler ABI、多核 shootdown、full privileged/MMU 仍未闭合。 |
+| 2026-08-24 | `integration/function-contract` dual-core MMU shootdown target ACK | `make dual-core-soc-gate mmu-ipi-shootdown-pressure-gate rtl-frontend-compile` | PASS：dual-core SoC firmware、standalone IPI pressure、RTL frontend `8/8` | 修正双核 IPI ACK 语义：发送端不再直连自发 ACK，而是由目标侧 invalidate 事件打一拍后返回原 target/generation；双向 APB alias、target-1/target-0 路径和现有 stale/busy/timeout pressure 均通过。状态为 `SOC_INTEGRATED`（opt-in handshake）；Linux page-table owner/scheduler、完整多核 coherency protocol、Linux VM 与 full privileged/MMU 仍未闭合。 |
+| 2026-08-24 | `integration/function-contract` L1 nonblocking real DDR + RTL/QEMU differential | `make l1-nonblocking-ddr-gate qemu-system-l1-ddr-differential-gate l1-nonblocking-cpu-stress-gate l1-nonblocking-cpu-two-error-reset-gate rtl-frontend-compile` | PASS：real CPU/L1/AXI/DDR4 controller、QEMU `mips32-soc-ref` retire differential、3-seed stress、two-error/reset recovery、frontend `8/8` | 新增 `SOC_L1_NONBLOCKING_DDR_ENABLE=1` 并修复 nonblocking CPU/ROB 在 IF-side stall 下重复 allocation 的提交 bug；firmware 覆盖两条 store、同 line merge/readback、第二条 line refill、最终 hit、late response/error/reset。状态为 `SYSTEM_DIFFERENTIAL`（opt-in bounded DDR path）；完整 maintenance/coherency、物理 PHY timing、Linux cache ABI 仍未闭合。 |
 | 2026-08-07 | `integration/function-contract` hardware walker permission fault integration | `make cpu-hardware-walker-gate CPU_HARDWARE_WALKER_DIR=build/unit_tb/cpu_hardware_walker_permission`；`make page-table-walker-gate` | PASS：`REGRESSION_TEST_SUCCESS cpu_hardware_walker permission_faults=1`；`REGRESSION_TEST_SUCCESS page_table_walker` | CPU opt-in hardware walker 在成功 refill 后切换到无 X 权限 leaf，验证 permission fault 被锁存、不会重复发起同一 walker request，并进入 TLBL fault路径；walker 单测补齐 kernel/user load/store allow/deny 矩阵；CPU demand paging 及 OS page-table ownership 仍需独立 gate。 |
 | 2026-08-05 | `integration/function-contract` TLB duplicate-write semantic fix | `make rtl-frontend-compile`；`make soc-smoke`；`make tlb-asid-policy-gate`；`make product-mmu-process-pressure-gate`；`make product-mmu-asid-context-gate` | PASS：RTL frontend `3/3`；SoC smoke；TLB policy；process pressure；ASID context (`refills=3`) | 修正 TLB multi-hit 判定：CPU refill 过程中产生的完全相同 VPN/ASID/PageMask/EntryLo 重复项视为幂等副本，不触发 MCheck；只有匹配范围或物理映射不同的冲突项才触发 lookup/probe multi-hit、MCheck 和 sticky `Status.TS`。移除临时 debug 输出并恢复 TLBP 的 TS 置位逻辑。 |
 | 2026-08-05 | `integration/function-contract` dual-core IPI APB control slice | `make mmu-ipi-shootdown-gate`；`make apb-mmu-ipi-status-gate` | PASS：standalone IPI controller；APB register/control gate | 新增 vendor-neutral APB IPI 控制面：目标核/代次、ASID/VPN/scope 配置，send 命令，busy/pending/done/timeout/rejected/stale-ack 状态和 W1C 清除；外部 target-present/ack 端点验证 payload、匹配 ACK 与目标不存在超时。该切片尚未接入 `soc_peripheral_subsystem`/双核 CPU，不升级为 SoC 多核功能完成。 |
@@ -446,6 +456,11 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | 2026-08-05 | `integration/function-contract` MMU fault retirement and CPU/MMU closure rerun | `make product-mmu-ebase-modified-gate`；`make cpu-mmu-complete` | PASS：Modified fault -> EBase handler -> D-bit repair -> ERET retry；CPU/MMU unified report 全部通过 | 修正 MEM 阶段在 MMU fault 时继续等待 cache `data_ok` 的死锁：translation fault 阻断 cache 请求并直接进入 CP0 异常路径。ASID pressure firmware 的过程页明确使用 dirty/valid、cacheable C=3 属性，避免把 uncached DDR response 路径混入 ASID/shootdown gate；该 gate 仍不声明 uncached DDR backend 完整性。 |
 | 2026-08-06 | `integration/function-contract` P0 closure rerun | `source /etc/profile.d/modules.sh && module load vcs && make phase3-complete dual-core-soc-gate isa-r2-gate`；前置 `make rtl-frontend-compile cpu-mmu-complete ddr4-complete-gate` | PASS：Phase 3A `8/8`、Phase 3 coverage directed、CPU/CP0 firmware、双核 SoC、ISA R2 implemented subset 全部通过；联合命令退出码 `0`。报告：`build/uvm/phase3_complete/phase3_completion_report.md`、`build/cpu_mmu_complete/cpu_mmu_completion_report.md`、`build/soc_test/dual_core/sim.log`、`build/soc_test/isa_r2_sweep/sim.log` | 当前 P0 RTL/仿真 contract 的功能证据已重跑闭合。URG exclusion/checksum 和 coverage hierarchy 警告仍为 P3，不作为 RTL 功能失败；不扩展为物理实现、后端、Linux/OS 或完整 ISA 合规承诺。 |
 | 2026-08-06 | `integration/function-contract` CPU/firmware LL/SC peer store coherency gate | `make llsc-coherency-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`LLSC_COHERENCY_PEER_NOTIF_INJECTED`；`LLSC_COHERENCY_PEER_INVALIDATED_SC_FAILED` | 验证在 dual-core opt-in + `SOC_COHERENCY_LL_SC` 下注入 peer store notification 时，core 0 的 LL/SC reservation 被正确清除，后续 SC 返回 0 且内存未写。不宣称 MESI/MOESI 或全共享内存 coherency。 |
+| 2026-08-24 | `integration/function-contract` LL/SC exception-boundary and peer-notification recheck | `make llsc-gate llsc-coherency-gate`；`make dcache-coherency-gate`；`make rtl-frontend-compile` | PASS：单核 `LL -> SYSCALL -> ERET -> SC=0`；双核 peer notification `SC=0` 且内存保持；D-cache coherency `v0.3`；RTL frontend 通过 | CPU reservation 在 accepted exception/interrupt flush、context restore、普通 store 和 peer line notification 时清除。修正 coherency testbench 原先在第 3 次 LL 后注入、实际第 4 次 coherency LL 尚未建立的同步错误，避免误报；完整 memory ordering、原子性和 MESI/directory 仍未闭合。 |
+| 2026-08-24 | `integration/function-contract` CPU load-return forwarding boundary | `make cpu-load-return-gate rtl-frontend-compile` | PASS：`CPU helper load-return forwarding gate: PASS`；RTL frontend `8/8` | 默认 blocking CPU/SoC 真实执行 helper 内 MMIO `LW`、返回后首个 caller consumer，并以 pass mailbox 证明 load-return 数据路径无软件 bubble；这是 bounded load-use/return 证据，不扩展为任意多在途 load forwarding、完整 ISA 或 Linux ABI。 |
+| 2026-08-24 | `integration/function-contract` VIC full 32-source priority/ACK differential | `make vic-full-sources-gate qemu-system-vic-full-sources-differential-gate` | PASS：RTL `VIC_FULL_SOURCES_PASS sources=32 tie=lower-id`；QEMU `TRACE_COMPARE_PASS records=1166` | 真实 RTL 与 `mips32-soc-ref` guest 覆盖 32 个 software-pending source、4-bit priority、最高优先级选择、同优先级 lower-ID deterministic tie-break、ACTIVE/RUNNING_PRIO、ACK/W1C drain 和 source 31 enable mask。任意深度嵌套、多核 IRQ ownership、外部电气时序和 Linux IRQ ABI 仍未闭合。 |
+| 2026-08-24 | `integration/function-contract` D-cache parity/CacheErr propagation | `make dcache-parity-gate` | PASS：`REGRESSION_TEST_SUCCESS dcache`；D-cache parity/CacheErr gate PASS | 显式仿真注入覆盖 D-cache tag parity 与 256-bit data-line parity；检测到 fault 时抑制 `cpu_data_ok`、拉起 `cpu_cache_error` 并进入 error response，清除注入后可重新读取 line。仅为 single-fault parity/error propagation contract，不宣称 SECDED correction、multi-bit ECC、L2 propagation、silicon reliability 或 OS cache-error policy。 |
+| 2026-08-24 | `integration/function-contract` LL/SC interrupt-boundary directed slice | `make llsc-interrupt-boundary-gate` | PASS：`REGRESSION_TEST_SUCCESS llsc_interrupt_boundary`；`build/unit_tb/llsc_interrupt_boundary/sim.log` | 真实 CPU `interrupt_accept` 驱动 common exception flush，预置 reservation 在中断接受后清除；与 syscall exception gate 共同覆盖同步/异步边界。完整中断嵌套、memory ordering、原子性和 MESI/directory 仍未闭合。 |
 | 2026-08-06 | `integration/function-contract` dcache coherency v0.3 ordering/reset/refill-collision slice | `make dcache-coherency-gate` | PASS：`REGRESSION_TEST_SUCCESS dcache_coherency_v03 notifications=4` | directed gate 覆盖双向同 line store visibility、accepted notification 顺序、partial-byte store、reset 后双核重新 refill、refill collision stale-line suppression 和 AXI error no-notification；仍不覆盖完整并发总序、写回 coherency 或 MESI/directory。 |
 
 ## 10. 已知未决问题
@@ -463,13 +478,29 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | QSPI retry policy | `make qspi-retry-policy-gate` | PASS | timeout/init 一次 retry、retry exhaustion、CRC no-retry 已验证；尚未接入真实 controller/flash status |
 | MMU APB context window | `0x4000_9000`；可选 dual-core IPI `0x4000_A000` | `make mmu-context-status-gate`、`make product-mmu-context-cpu-gate`、`make product-mmu-asid-context-gate`、`make mmu-ipi-shootdown-gate`、`make apb-mmu-ipi-status-gate`、`make dual-core-frontend-compile` PASS | 原 context window 保持兼容；`ENABLE_DUAL_CORE_IPI` 在 dual-core opt-in 下提供目标/代次/payload/send/status/W1C，并接入核 1 invalidate/interrupt；默认配置仍关闭。双核 scheduler、反向 shootdown 和共享内存一致性之外的扩展需求待确认，不能由本表单方面标为后置 |
 
+### FPU 增量执行证据（2026-08-14）
+
+| 项目 | 命令 | 结果 | 结论 |
+|---|---|---|---|
+| 精确 FPE Divide-by-zero slice | `make fpu-fpe-exception-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`build/soc_test/fpu_fpe_exception/sim.log` | `SOC_FPU_ENABLE=1` 下 CU1 与 FCSR Enable[div0] 开启，真实 CPU 执行 `DIV.S 1.0/0.0` 进入 ExcCode 15 handler；handler 读取 FCSR Cause/Flags=`0x00008420`，并确认 FPR4 未提交。该 gate 不覆盖完整 IEEE-754、其余 exception classes、rounding modes 或 OS FPU context。 |
+| 精确 FPE Invalid slice | `make fpu-fpe-invalid-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`build/soc_test/fpu_fpe_invalid/sim.log` | `SOC_FPU_ENABLE=1` 下 CU1 与 FCSR Enable[invalid] 开启，真实 CPU 执行 `DIV.S 0.0/0.0` 进入 ExcCode 15 handler；handler 检查 Invalid Cause/Flags 并确认 FPR4 未提交。其余 exception classes、OS context 和完整 IEEE-754 仍未闭合。 |
+| 精确 FPE Overflow slice | `make fpu-fpe-overflow-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`build/soc_test/fpu_fpe_overflow/sim.log` | 真实 CPU 执行最大有限 single `MUL.S` 乘 2，FCSR Enable[overflow] 触发 ExcCode 15；handler 检查 Overflow Cause/Flags 并确认 FPR4 未提交。完整 range policy、double FPE 和 OS FPU context 仍未闭合。 |
+| Opt-in FPU scheduler context slice | `make fpu-context-gate rtl-frontend-compile` | PASS：`REGRESSION_TEST_SUCCESS cpu_scheduler_integration`；`build/unit_tb/fpu_context/sim.log`；frontend `8/8` | scheduler context bank 现保存/恢复完整 32×FPR 与 FCSR；真实 CPU integration 检查 task-0 FPR/FCSR preservation 和 task-1 restore。该切片不等于 Linux lazy-FPU、signal-frame、ABI 或完整 COP1 context 语义。 |
+| 精确 FPE Double 三类 slice | `make fpu-fpe-double-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`build/soc_test/fpu_fpe_double/sim.log` | 真实 CPU 分别执行 `DIV.D` 除零、`DIV.D 0/0` invalid、最大有限 double `MUL.D` 乘 2 overflow；三类均进入 ExcCode 15，Cause/Flags 一致，目标 double pair 未提交，并经 ERET 进入下一向量。该 gate 使用 FCSR Cause 识别连续向量；异常现场确认 CP0 输入 `except_pc` 已正确指向 faulting instruction，先前观察到的 `cp0_epc=0` 是同一 posedge 读取 NBA 更新前旧值。完整 IEEE-754、inexact/underflow、FPU OS context/ABI 仍未闭合。 |
+| 精确 FPE Double Inexact slice | `make fpu-fpe-double-inexact-gate`；独立 system capture + `trace_compare.py --stop-after-mailbox` | PASS：RTL `REGRESSION_TEST_SUCCESS`；`TRACE_COMPARE_PASS records=49`；RTL trace 50 条 | 新增 `CVT.W.D 1.5` enabled-Inexact guest，真实 CPU/SoC 进入 ExcCode 15，Cause/Flags 均为 Inexact (`FCSR=0x00001084`)，double destination pair 不提交；QEMU `mips32-soc-ref` 独立捕获 50 条 retire 与 RTL 严格比较通过。标准 wrapper 在当前 host 偶发 QEMU timeout，但完整 artifacts 与 comparator 结果可复现；完整 double IEEE-754、OS FPU context/ABI 和 full COP1 compliance 仍未闭合。 |
+| 精确 FPE Double Underflow boundary slice | `make fpu-fpe-double-underflow-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`build/soc_test/fpu_fpe_double_underflow/sim.log` | 最小正 double subnormal 乘 `0.5`，真实 CPU/SoC 进入 ExcCode 15，启用 Underflow Cause/Flags index 1，double destination pair 不提交；增加 operand-field fallback 处理 host real flush-to-zero。该 gate 不宣称 exact tininess/inexact policy、QEMU differential、完整 IEEE-754 或 OS FPU ABI。 |
+| 精确 FPE Underflow boundary slice | `make fpu-fpe-underflow-gate` | PASS：`REGRESSION_TEST_SUCCESS`；`build/soc_test/fpu_fpe_underflow/sim.log` | 真实 CPU 执行涉及最小正 single subnormal 的 `MUL.S`，验证选定 underflow/inexact Flags/Cause 与 enabled trap/no-commit 路径。该单向量不等同于完整 tininess、rounding、inexact 或 IEEE-754 policy。 |
+| FCSR rounding mode SoC slice | `make fpu-rounding-gate`、`make mips-fpu-compare-gate` | PASS：`REGRESSION_TEST_SUCCESS`；SoC log 记录 RM `00/01/10/11` 结果 `2/2/-1/2/-2`，primitive gate PASS | `CVT.W.S` 现在使用 FCSR.RM[1:0] 的 nearest-even、RZ、RP、RM；固定 `ROUND.W.S` 不受 RM 改变。范围边界和完整 IEEE-754 exception signaling 仍未闭合。 |
+| FPU invalid/underflow primitive boundary | `make mips-fpu-flags-gate` | PASS：`REGRESSION_TEST_SUCCESS mips_fpu_flags invalid=3 underflow=1`；`build/unit_tb/mips_fpu_flags/sim.log` | 补齐 behavioral primitive 对 single `Inf-Inf`、double `Inf/Inf`、double `0*Inf` invalid 和 minimum-normal-times-half double underflow 的分类；不扩展为完整 IEEE-754、double precise FPE 或 OS FPU ABI。 |
+| QEMU FPU W-conversion indefinite boundary | `make fpu-single-gate qemu-system-fpu-single-differential-gate` | PASS：RTL `FPU PASS`；QEMU system-mode direct run `FPU PASS`；`TRACE_COMPARE_PASS records=1248` | 项目自有 QEMU 9.2 patch 将 invalid/overflow 的 `CVT/ROUND/TRUNC/CEIL/FLOOR.W.{S,D}` 结果统一为 MIPS indefinite `0x80000000`，并纳入 custom-machine 构建输入 hash；完整 IEEE-754 和 FPU OS/ABI 仍未闭合。 |
+
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|
 | P0 | 当前 RTL/仿真功能闭合：Boot ROM/异常向量、MMU 基础路径、DDR4 controller、QSPI/XIP、UART、WDT 和 CPU/MMU gate | **已完成当前冻结 contract**：本次 Phase 3、CPU/MMU、DDR4 和前端 gate 重跑通过 | 仅在 RTL contract 发生变更时增量重跑对应 gate；不新增物理实现任务 |
 | P0 | 双核 CPU/MMU 运行时闭合：核 0/1 firmware execution、core 0/1 IPI 发起、双核 uncached mailbox、复位/异常隔离和 AXI response routing | **已完成已冻结的 TLB/IPI/异常基础子集**：双核 opt-in firmware 已验证两个独立 IPI controller、核 0/核 1 local invalidate、generation ack、SoC target timeout、stale-ack、busy re-entry rejection、core-1 reset isolation 和 core-1 exception isolation | shared-memory coherency、page-table walker、scheduler/OS 等不属于当前 P0 contract；另立需求后再实现 |
 | P1 | CPU/MMU 与 ISA/系统软件扩展：共享内存 coherency、更多页尺度 SoC/OS 压力、长期 scheduler/shootdown、权限/多段 runtime、完整 ISA compliance 和 kernel/OS boot | **当前 RTL/仿真 bundle 已由 `make p1-current-complete` 闭合；产品级扩展仍 ACTIVE** | 每项单独冻结 RTL/firmware contract 和验收 gate；不得以当前 bundle gate 代替完整 MESI/directory、完整 ISA/FPU 或 Linux/OS gate |
 | P0 | UART RTL pins/IRQ wiring、外部 RX waveform、SoC RX/PIC/RBR behavioral 路径和 CTS flow-control SoC 集成已有证据；WDT APB/reset pulse、boot-status retention 和 Boot ROM failure slice 已通过 | **已完成当前 RTL/仿真 contract** | 仅在 UART/WDT contract 发生变更时增量重跑负例、超时、复位和错误分类 gate |
-| P3 | coverage 数值仍低于 99%，但当前 exclusion metadata 已清空并由 strict URG 独立 gate 验证，无 stale/invalid/checksum/illegal exclusion 或 scope warning | 不以 coverage 百分比作为本轮功能退出条件；不得将当前 gate 宣称为 99% code-coverage signoff | `make coverage-strict-clean-gate`；报告位于 `build/coverage/strict_clean/` |
+| P3 | coverage 数值仍低于 99%；fresh refinement/audit 已同步，但最终 current-contract URG 仍报告 checksum/invalid-vector metadata residuals | 不以 coverage 百分比或当前 exclusion 文件宣称 signoff；必须完成对象级 exclusion 与最终 VDB metadata 对齐 | `python3 tb/coverage/audit_exclusions.py` PASS；fresh `make current-contract-signoff` 的 threshold report 位于 `build/signoff/current_contract/current_contract_signoff_report.md` |
 | P1 | standalone x1/quad AXI/XIP bridge、shared-pin arbiter、SoC memory quad opt-in 和 development handoff 已通过；APB command、AXI acceptance、request/grant、timeout/abort/recovery 和 endian ABI 均有证据 | **CONTRACT_CLOSED（当前 RTL/仿真范围）** | 仅在当前 contract 变更时增量回归；production boot、device-specific status 和 secure-boot policy 不属于当前范围 |
 | P2 | `dcache_nb` 与其 TB 已废弃并从当前集成线移除 | 不属于当前 RTL 功能计划或产品 baseline | 无后续接入任务；阻塞式 `dcache.v` 继续作为 D-cache 基线 |
 | P1 | 当前 RTL contract 之外的扩展：shared-memory coherency、ECC/完整 cache-error policy、嵌套/全源 EIC/VEIC、更多 outstanding、MMU/Linux boot | 不阻塞 `RTL_FUNCTIONAL_SIM_READY`；当前基础 contract 不能替代这些扩展的独立验收 | 每项建立独立 spec/RTL/firmware/UVM 变更集，并按本计划的五级状态推进 |
@@ -484,10 +515,10 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | P1 | 双核 shared-memory coherency v0.4 | `multicore_coherency_spec.md` 已升级；`dcache-coherency-gate`、`llsc-coherency-gate` 和独立双核 firmware stress gate 已通过；完整 MESI/directory 和并发总序仍属于后续扩展 | 当前 evidence 覆盖双向 store visibility、accepted notification order、reset/refill、refill collision、partial-byte/error boundary、L1/L2 stale-line invalidation、LL/SC reservation invalidation 和 8 轮双核 shared-memory stress |
 | P1 | MMU/运行时扩展 | 多段 runtime/W^X loader、PIC/GOT-style 单 relocation、walker/refill permission matrix、bounded page-table root allocator、TLS linker/runtime、连续 UserLocal context-switch slice 和 opt-in SoC hardware-walker AXI refill 已通过；完整 ELF GOT/PLT、TLS relocation/model、CPU 执行级 demand paging、更多页尺度 SoC/OS 压力、长期 scheduler/shootdown 和 production page-table ownership 仍未闭合 | `build/unit_tb/product_kseg0_runtime_multi_picgot_final/sim.log`、`sim_multi_wx.log`、`build/unit_tb/page_table_walker/sim.log`、`build/unit_tb/page_table_tlb_refill/sim.log`、`build/unit_tb/mmu_page_table_allocator/sim.log`、`build/soc_test/mmu_hardware_walker_soc/sim.log` 与 `build/soc_test/cp0_rdhwr/sim.log`；后续继续补完整 loader、CPU demand paging 和 OS 压力 gate |
 | P1 | 中断与缓存错误扩展 | 有限 VEIC source-vector 和 cache-error/SECDED primitive 已验证；嵌套/全源 EIC/VEIC、完整 cache ECC policy、SoC IRQ escalation 仍未闭合 | 独立 source/priority/nesting、ECC fault injection、IRQ/status/recovery gate |
-| P1 | ISA 与系统软件扩展 | ISA R2 implemented subset 已通过；完整 ISA compliance/reference-model lockstep、FPU、kernel/OS boot 仍未实现 | compliance sweep、reference-model comparison 和最小 kernel/OS firmware gate |
+| P1 | ISA 与系统软件扩展 | ISA R2 implemented subset 已通过；QEMU 逐 retire differential harness 已接入，但完整 ISA compliance、FPU、kernel/OS boot 和长期 mismatch signoff 仍未闭合 | 扩展同一 guest image 的 RTL/QEMU trace 回归，并建立 privileged/异常覆盖证据 |
 | P2 | 阻塞式 D-cache 与默认基线维护 | `rtl/cache/dcache.v` 是默认路径，D-cache NB 已废弃；只维护现有 block/CPU/SoC 证据 | RTL 变更后重跑 `make rtl-frontend-compile soc-smoke phase3-complete` 及受影响 gate |
 | P2 | 当前 contract 的证据维护 | registry、Phase 报告和 commit 已建立；后续 RTL 变更需要同步更新命令、日志、基线和残余风险 | `docs/functional_evidence_registry.md` 与 `docs/functional_completeness_plan.md` 可追溯 |
-| P3 | coverage/exclusion 治理 | strict URG metadata hygiene 已闭合；整体 coverage 百分比仍单独跟踪 | 新 coverage VDB 必须使用 `make coverage-strict-clean-gate` 验证；百分比不作为本轮 99% signoff |
+| P3 | coverage/exclusion 治理 | manifest synchronization 已闭合；strict URG metadata hygiene 和整体 coverage 百分比仍 OPEN | 新 coverage VDB 必须使用 `make coverage-strict-clean-gate` 验证；不得降低阈值或用 stale exclusion 掩盖未覆盖对象 |
 
 `p1-current-complete` 是当前唯一集成线上的 P1 RTL/仿真聚合验收入口。它串联
 frontend compile、CPU/MMU、双核、coherency v0.1、walker、scheduler、SECDED、
@@ -533,7 +564,101 @@ the general reset-recovery gates; keeping it out of this long firmware run
 prevents the late reset from restarting the test after the shared watchdog
 budget has mostly elapsed. The gate uses a 20 ms watchdog for the deliberately
 long 8 KB cache sweep; the default SoC watchdog remains 5 ms.
+
+### Micro-TLB and L1 transaction closure update (2026-08-10)
+
+`make product-mmu-micro-tlb-gate` now compiles the real SoC with
+`SOC_MICRO_TLB_ENABLE=1` and verifies D-side hits in the product MMU boot
+workload and I-side hits in the translated-instruction vector workload. The
+default MMU boot and `make rtl-frontend-compile` matrix were rerun. The
+standalone L1 transaction block was also corrected so one secondary request
+per MSHR is retained and receives a response after the shared refill;
+`make l1-nonblocking-gate` and `make cache-concurrency-gate` pass. The L1
+block remains disconnected from the CPU's blocking D-cache interface, so
+full CPU hit-under-miss, maintenance, coherence and error-backpressure
+closure remain open.
+
+### L1 CPU error/reset closure update (2026-08-20)
+
+The opt-in CPU/D-cache path now passes the full-ROB same-cycle error/retire/tag
+reuse regression, sequential two-line error recovery, three-seed stress and a
+dedicated `make l1-nonblocking-cpu-error-reset-gate`. The latter waits for a
+real L1 MSHR, resets before the refill response, then verifies post-reset
+SLVERR injection and precise CacheErr/ErrorEPC recovery. The two-line gate now
+also issues two independent misses back-to-back and verifies simultaneous
+responses obey precise exception semantics: the first CacheErr retires, the
+younger request is flushed, and replay reaches the success mailbox. The new
+`make l1-nonblocking-cpu-two-error-reset-gate` asserts reset after both MSHRs
+are active and verifies both faults are re-injected after reset before recovery
+reaches the mailbox. Three-or-more errors, arbitrary reset/error timing,
+maintenance/coherence, physical DDR failures and default-path switching remain
+open.
+
+### L1 maintenance compatibility closure update (2026-08-20)
+
+`make l1-nonblocking-maintenance-compat-gate` passes the CPU CACHE completion
+and stall contract plus CP0 TagLo/TagHi/SYNC tests, and audits that the opt-in
+L1 adapter routes `cache_op_*` to the legacy dcache. The adapter now holds the
+maintenance issue until L1 bridge traffic, response FIFO, active request and
+outstanding count are idle, preventing an in-flight MSHR from being cleared.
+This closes the explicit compatibility boundary while nonblocking maintenance,
+concurrent maintenance with outstanding L1 responses, full ordering, and OS
+cache ABI remain open.
+
+The opt-in SVA checker is included in `make sva-gate` and the L1 error/reset
+gate was rerun with `SVA_ENABLE=1`; no maintenance-idle assertion fired. This
+is simulation assertion evidence, not formal signoff.
+
+The same SVA configuration now checks L1 response FIFO depth, two-MSHR and
+four-entry writeback bounds, and reset resource flush. These checks remain
+simulation assertions rather than formal signoff. The aggregate
+`current-contract-signoff` prerequisite list now includes the maintenance
+compatibility gate, CPU error/reset gates, and `sva-gate` so the unified entry
+point executes this evidence before its existing UVM/coverage stages.
+The same aggregate now executes the vendor-neutral QSPI quad/status and DDR4
+controller/stress/status/PIC bundle; physical PHY/JEDEC/device signoff remains
+outside the aggregate.
+The QSPI portion is itself consolidated as `qspi-vendor-neutral-complete-gate`,
+covering command, flash model, retry/status, timeout, pad/arbiter and x1/quad
+XIP paths without changing the default x1 configuration.
+
+### COP0 shadow-register-set closure update (2026-08-23)
+
+The default compatibility boundary remains unchanged: with
+`SOC_SRS_ENABLE=0`, MIPS32 R2 `RDPGPR` (`rs=0x0a`) and `WRPGPR` (`rs=0x0e`)
+decode as Reserved Instruction. The opt-in path now provides sixteen 32-entry
+GPR banks, software-selected `SRSCtl.PSS/CSS` state, fixed-field decoder
+checks, and CPU writeback/readback for `WRPGPR`/`RDPGPR`.
+
+The closure evidence is reproducible with
+`make mips-control-srs-gate mips-regfile-srs-gate srs-gate`; the final gate
+uses `SOC_SRS_ENABLE=1` and a real firmware sequence that selects PSS, writes
+and reads a shadow register, and reaches the SoC mailbox. This is a bounded
+software-selected SRS subset. The follow-on `make srs-exception-gate` verifies
+exception entry `CSS -> PSS`, `ESS -> CSS`, a PSS-bank read in the handler,
+and `ERET` restoration `PSS -> CSS`. The dedicated
+`make qemu-system-srs-map-differential-gate` verifies a real VIC Cause.IP2
+interrupt maps through SRSMap to CSS=3 on both RTL and QEMU, while
+`make srs-nested-gate qemu-system-srs-nested-differential-gate` verifies the
+EXL-held nested-fault policy. External VEIC/EICSS mode and Linux SRS ABI are
+explicitly still open. The scheduler context
+ownership slice is now covered by `make srs-scheduler-context-gate`: the
+context image carries all sixteen shadow GPR banks and restores the target
+CSS/PSS/ESS together with the ordinary GPR/FPR/CP0 image.
+
 # Current closure boundary
+
+### QEMU system-mode MMU differential update (2026-08-23)
+
+`make qemu-system-mmu-refill-differential-gate` now passes the reproducible
+RTL/QEMU system-mode retire comparison for the bounded software-managed 4KB
+demand-refill guest (`TRACE_COMPARE_PASS records=3288`). The custom
+`mips32-soc-ref` machine exports the opt-in MMU guest state to QEMU's patched
+TLB helper, selects the RTL-compatible `0x80000180` exception vector, and
+uses a 64-entry reference TLB to match the RTL index contract. The default
+identity-TLB machine path remains unchanged. This evidence does not close
+full MIPS privileged/MMU compliance, OS page-table ownership, multicore
+shootdown, larger-page demand paging, Linux boot, or production signoff.
 
 The active phase is RTL and simulation only. The recent closure work verifies
 the dual-core cache notification path, bounded QSPI retry integration, the
@@ -543,3 +668,118 @@ interrupt gate. This does not constitute a complete OS/Linux port, full
 MIPS32 compliance suite, or complete production software policy. Those items
 require their own RTL and firmware evidence and must not be marked complete
 from block-level gates.
+
+### COP0 SRSMap state closure update (2026-08-23)
+
+The opt-in SRS implementation now exposes CP0 register `(12,3)` as SRSMap.
+All eight 4-bit Cause.IP-to-shadow-set mapping entries reset to zero, are
+writable through MTC0, and read back architecturally. The selected IP mapping
+is now used on interrupt entry to choose CSS, with PSS retaining the previous
+set; ERET restores CSS from PSS. The default interrupt vector path and
+`SOC_SRS_ENABLE=0` behavior remain unchanged. IP-based SRSMap mapping and the
+EXL-held nested-fault policy are closed for this bounded opt-in contract;
+external VEIC/EICSS policy and Linux SRS ABI remain open.
+
+Evidence: `make srs-map-gate`, `make srs-exception-gate`,
+`make qemu-system-srs-map-differential-gate`, and the default frontend
+compile. The CP0/SoC tests check IP2 mapping and mapped interrupt entry /
+ERET; the tests run with `SOC_SRS_ENABLE=1` and leave the default path
+unchanged.
+
+The nested policy is now independently covered by
+`make srs-nested-gate qemu-system-srs-nested-differential-gate`: a nested
+`SYSCALL` while EXL is set redirects without replacing CSS/PSS or EPC, and
+the RTL/QEMU retire traces compare through mailbox completion. External
+VEIC/EICSS policy and Linux SRS ABI remain open.
+
+### 2026-08-23 Hardware walker/TLB refill handshake
+
+`mips_page_table_tlb_refill` now holds every successful hardware-walker
+response as a TLB write transaction even when the consumer is already ready
+in the response cycle. The permanently-ready case is covered by
+`make page-table-tlb-refill-gate`; the walker unit, CPU hardware-walker
+integration, and `make rtl-frontend-compile` (8/8) were rerun successfully.
+This closes a bounded valid/ready integration hole only. The walker remains
+two-level and single-outstanding-read, with the four supported page-size masks
+covered separately; Linux VM ownership, general demand paging, and full OS
+shootdown remain open.
+
+### 2026-08-24 hardware walker page-size extension
+
+The opt-in hardware walker now supports the four contract page sizes 4KB,
+16KB, 64KB and 256KB through `SOC_HARDWARE_WALKER_PAGE_MASK` using masks
+`0x0000/0x0003/0x000f/0x003f`. The walker,
+CPU refill path and TLB refill mask use the same page-size selection, including
+L2 index calculation, PFN alignment checks, physical address offset assembly
+and even/odd page selection. `make page-table-walker-page-sizes-gate` passes
+all four unit instances, with the default remaining 4KB. This advances the
+hardware capability but does not close arbitrary demand paging, OS-owned page
+tables, Linux VM or complete privileged/MMU compliance.
+
+### 2026-08-24 MIPS32 R2 PREFX system differential
+
+`make isa-r2-gate` and the system-mode retire differential pass for the COP1X
+`PREFX` encoding (`0x4d28000f`) with `SOC_FPU_ENABLE=0`. RTL and the patched
+QEMU 9.2 custom machine treat it as an ordered integer no-op, with QEMU using
+the `ISA_MIPS_R2` capability check before optional COP1 dispatch. This is
+implemented-subset evidence only; full ISA/privileged/MMU, IEEE-754/FPU ABI,
+Linux boot, and complete ISA/QEMU differential remain open.
+
+### 2026-08-24 MIPS32 R2 RDHWR differential extension
+
+The ISA R2 sweep now enables the standard HWREna bits and executes the
+architectural `RDHWR rt,$1` (`SYNCI_Step`) encoding. The initial mnemonic
+attempt correctly exposed RI because the assembler emitted `rs=0`; the test
+now uses the exact `rs=3` encoding already used by the CP0 sweep. Both
+`make isa-r2-gate` and `make qemu-system-isa-r2-differential-gate` pass with
+`ri=0` and `TRACE_COMPARE_PASS`. Full privileged register access policy,
+user/kernel HWREna semantics and complete ISA compliance remain open. The
+same selected corpus also checks deterministic `RDHWR CPUNum=0` and
+`RDHWR CCRes=2`; dynamic Count remains intentionally outside this differential.
+
+### 2026-08-24 MIPS32 R2 SYNCI differential extension
+
+The ISA R2 firmware sweep now executes real `SYNCI 0(base)` through the RTL
+cache-maintenance path. `make isa-r2-gate qemu-system-isa-r2-differential-gate`
+passes with `ri=0` and `TRACE_COMPARE_PASS`; the QEMU reference terminates the
+translation block for the same R2 synchronization instruction. This adds
+selected SYNCI evidence only and does not close full cache ordering, complete
+privileged ISA, Linux cache ABI, or full ISA compliance.
+
+### 2026-08-24 P1/QEMU aggregate refresh
+
+Fresh aggregate verification passes `make p1-current-complete`,
+`make qemu-system-current-contract-gate`, and
+`make qemu-system-selected-differential-gate`. The first covers the current
+RTL/simulation architecture bundle; the latter two cover vendor-neutral QEMU
+peripherals and the selected RTL/QEMU retire corpus. These results do not
+upgrade the scope to full ISA, complete privileged/MMU/Linux VM semantics,
+IEEE-754/FPU ABI, MESI/directory coherency, physical DDR/QSPI timing, or
+formal/CDC/RDC/lint/product signoff.
+
+### 2026-08-24 precise FPE inexact slice
+
+`make fpu-fpe-inexact-gate` passes on the real opt-in FPU CPU/SoC path. The
+guest enables only FCSR Inexact, executes `CVT.W.S 1.5`, reaches ExcCode 15,
+checks Cause/Flags and verifies no destination FPR commit. The custom QEMU
+reference was patched to retain accrued FCSR Flags on an enabled FPE and its
+standalone capture reports `FCSR=0x00001084`. The matching
+`qemu-system-fpu-fpe-inexact-differential-gate` now passes with
+`TRACE_COMPARE_PASS records=43` through the mailbox retirement boundary. The
+gate uses a dedicated run directory because an earlier directory contained a
+cached VCS elaboration without `SOC_FPU_ENABLE=1`; the verified run explicitly
+recompiles the FPU-enabled design. Full
+IEEE-754 inexact/range policy, complete double FPE, OS context/ABI and Linux
+boot remain open.
+
+### 2026-08-24 QEMU capture OOM closure
+
+The QEMU system retire gate now bounds event/state counts and capture file
+sizes before conversion, so a guest failure loop cannot cause the converter to
+materialize an unbounded Python list and exhaust host memory. The double
+underflow guest encoding and QEMU reference FCSR boundary were corrected;
+`make qemu-system-fpu-fpe-double-underflow-differential-gate` now passes the
+RTL/QEMU retire comparison. This closes the selected capture robustness and
+FPU boundary evidence only. Full IEEE-754, complete ISA/FPU compliance,
+Linux/OS boot and formal signoff remain explicitly outside the current
+contract.

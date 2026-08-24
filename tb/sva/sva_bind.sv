@@ -40,6 +40,27 @@ bind apb_vic apb_protocol_props u_vic_apb_props (
     .pslverr (pslverr)
 );
 
+bind l1_cache_nb_cpu_axi l1_maintenance_props u_l1_maintenance_props (
+    .clk                       (clk),
+    .rst_n                     (rst_n),
+    .cache_op_valid            (cache_op_valid),
+    .maintenance_issue         (maintenance_issue),
+    .l1_bridge_active          (l1_bridge_active),
+    .l1_response_valid         (n_rsp_valid),
+    .l1_active                 (l1_active),
+    .l1_outstanding            (l1_outstanding),
+    .legacy_cache_op_valid     (u_legacy_dcache.cache_op_valid),
+    .l1_cache_maint_invalidate (u_l1.cache_maint_invalidate)
+);
+
+bind l1_cache_nb l1_resource_props u_l1_resource_props (
+    .clk             (clk),
+    .rst_n           (rst_n),
+    .rsp_count       (rsp_count),
+    .mshr_occupancy  (mshr_occupancy),
+    .wb_occupancy    (wb_occupancy)
+);
+
 bind reset_sync reset_sync_props #(.STAGES(STAGES)) u_reset_sync_props (
     .clk       (clk),
     .rst_pre_n (rst_pre_n),

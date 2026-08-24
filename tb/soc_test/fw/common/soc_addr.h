@@ -22,6 +22,14 @@
 #define PIC_MASK       (*(volatile uint32_t*)0x40004004)
 #define PIC_ACTIVE     (*(volatile uint32_t*)0x40004008)
 
+#define PERF_CYCLE_COUNT       (*(volatile uint32_t*)0x4000C000)
+#define PERF_RETIRE_COUNT      (*(volatile uint32_t*)0x4000C004)
+#define PERF_ICACHE_MISS_COUNT (*(volatile uint32_t*)0x4000C008)
+#define PERF_DCACHE_MISS_COUNT (*(volatile uint32_t*)0x4000C00C)
+#define PERF_BRANCH_MISPREDICT (*(volatile uint32_t*)0x4000C010)
+#define PERF_MDU_STALL_COUNT   (*(volatile uint32_t*)0x4000C014)
+#define PERF_VERSION           (*(volatile uint32_t*)0x4000C018)
+
 #define MAILBOX_EXIT   ((volatile uint32_t*)0xA000FFFC)
 #define MAILBOX_MAGIC  0xDEADBEEF
 

@@ -25,7 +25,7 @@
 //   - Context (4,0)   : PTEBase (SW writable) + BadVPN2 (HW updated in B.3.d)
 //   - PageMask (5,0)  : Mask field (variable page-size selector)
 //   - Wired (6,0)     : software lower bound of Random; writing it also resets Random
-//   - BadVAddr (8,0)  : read-only; hardware update deferred to B.3.d
+//   - BadVAddr (8,0)  : read-only; hardware updated on address-related faults
 //   - EntryHi (10,0)  : VPN2 + ASID (both software writable)
 //
 // Regression preservation for B.3.a:
@@ -35,8 +35,9 @@
 // Deferred to later Phase B sub-steps:
 //   - TLB data array + TLBR/TLBWI/TLBWR/TLBP instructions (B.3.b)
 //   - micro-TLB (I/D) + kseg0/1/2/3 + useg translation path (B.3.c)
-//   - TLB Refill / Invalid / Modified / MCheck exception paths + BadVAddr /
-//     Context.BadVPN2 hardware update (B.3.d)
+//   - TLB Refill / Invalid / Modified / MCheck exception paths and BadVAddr /
+//     Context.BadVPN2 hardware update are integrated in the current CPU path;
+//     full OS demand-paging ownership remains outside this RTL contract.
 //   - Linux head.S paging-on integration (B.3.e)
 //   - RDHWR $2 → Count (needs Phase B.4 user mode + instruction decode)
 //   - KSU / User mode enforcement (B.4)
@@ -80,9 +81,14 @@ module mips_cp0 #(
     // Exception Interface (from WB stage)
     input  wire        except_req,
     input  wire [4:0]  except_code,
+    input  wire [1:0]  except_ce,
     input  wire [31:0] except_pc,
     input  wire        except_bd,
     input  wire        eret,
+    // MIPS32 R2 MFMC0 operations. These retire through the ordinary MFC0
+    // read path and atomically update Status.IE after the old value is read.
+    input  wire        di,
+    input  wire        ei,
     // Phase B.3.d: faulting virtual address for BadVAddr / Context.BadVPN2
     // Latched only when except_code is address-related (1/2/3/4/5).
     input  wire [31:0] bad_vaddr,
@@ -101,6 +107,8 @@ module mips_cp0 #(
     // Phase B.4: effective privilege exports
     output wire        kernel_mode,  // 1 = current instruction executes in kernel mode
     output wire        cu0_enable,   // Status.CU0 (allows user-mode CP0 access)
+    output wire        cu1_enable,   // Status.CU1 (allows opt-in COP1 access)
+    output wire        exl_out,      // Status.EXL for CPU-side exception gating
 
     // Phase B.3.c: MMU translation pass-through. Two TLB lookup ports (I / D)
     // and CP0-owned globals the MMU needs (ASID, Config.K0). These are pure
@@ -110,6 +118,9 @@ module mips_cp0 #(
     output wire [31:0] hwrena_out,
     output wire [31:0] taglo_out,
     output wire [31:0] taghi_out,
+    output wire [3:0]  srs_current_set_out,
+    output wire [3:0]  srs_previous_set_out,
+    output wire [3:0]  vint_srs_set_out,
 
     input  wire [31:0] mmu_ilookup_va,
     output wire        mmu_ilookup_hit,
@@ -136,10 +147,14 @@ module mips_cp0 #(
     output wire       ctx_save_done,
     output wire [31:0] ctx_save_status,
     output wire [7:0]  ctx_save_asid,
+    output wire [31:0] ctx_save_srsctl,
     input wire        ctx_restore_req,
     input wire [31:0] ctx_restore_status,
     input wire [7:0]  ctx_restore_asid,
+    input wire [31:0] ctx_restore_srsctl,
     output wire       ctx_restore_done
+    ,input wire [3:0] interrupt_srs_set
+    ,input wire       interrupt_accept_in
     ,input wire       hw_tlb_wr_en
     ,input wire [5:0] hw_tlb_wr_index
     ,input wire [18:0] hw_tlb_wr_vpn2
@@ -163,7 +178,7 @@ module mips_cp0 #(
     //   5    0    PageMask   [28:13]=Mask                              (Phase B.3.a)
     //   6    0    Wired      [5:0] software lower bound on Random      (Phase B.3.a)
     //   7    0    HWREna     User RDHWR enable mask
-    //   8    0    BadVAddr   read-only; HW update deferred to B.3.d
+    //   8    0    BadVAddr   read-only; HW updated on address-related faults
     //   9    0    Count      Free-running counter (Phase B.2)
     //   10   0    EntryHi    [31:13]=VPN2, [7:0]=ASID                 (Phase B.3.a)
     //   11   0    Compare    Timer match value (Phase B.2)
@@ -233,6 +248,13 @@ module mips_cp0 #(
     reg [7:0]                 cp0_entryhi_asid;         // EntryHi[7:0]
     reg [31:0]                cp0_taglo;
     reg [31:0]                cp0_taghi;
+    reg [3:0]                 cp0_srs_css;
+    reg [3:0]                 cp0_srs_pss;
+    reg [3:0]                 cp0_srs_ess;
+    // SRSMap (CP0 12,3) stores eight software-selected shadow-set mappings,
+    // one 4-bit entry for each Cause.IP[7:0] vector level.
+    // Vector selection remains the existing IP-based contract in this slice.
+    reg [31:0]                cp0_srs_map;
 
     // -------------------------------------------------------------------------
     // Static reads (hardcoded constants from soc_config.vh)
@@ -245,6 +267,8 @@ module mips_cp0 #(
     wire [31:0] ebase_val = { 2'b10, cp0_ebase_hi, 2'b00, `SOC_CP0_CPUNUM };
     assign ebase_out = ebase_val;
     assign bev_out   = cp0_status[22];
+    assign srs_current_set_out = (`SOC_SRS_ENABLE != 0) ? cp0_srs_css : 4'd0;
+    assign srs_previous_set_out = (`SOC_SRS_ENABLE != 0) ? cp0_srs_pss : 4'd0;
     // Forward a same-cycle MTC0 write so an immediately following CACHE
     // Index_Store_Tag_D observes the architectural value at the D-cache port.
     assign taglo_out = (we && (waddr == 5'd28) && (wsel == 3'd0)) ? wdata : cp0_taglo;
@@ -324,9 +348,13 @@ module mips_cp0 #(
     //         [21]=TS (MCheck sticky), [20:16]=5b (SR/NMI/impl), [15:8]=IM,
     //         [7:5]=3b, [4:3]=KSU,
     //         [2]=ERL, [1]=EXL, [0]=IE.
-    // Phase B.4: KSU[4:3] and CU0[28] added to the writable set. Other CU bits
-    // (CU1/CU2/CU3) stay tied 0 until FPU / CP2 land.
-    wire [31:0] status_val = { 3'b0,                  // [31:29] CU3..CU1
+    // Phase B.4: KSU[4:3] and CU0[28] added to the writable set.  CU1 is
+    // a real state bit in the opt-in FPU configuration: reset leaves COP1
+    // disabled and software enables it with mtc0, matching MIPS/QEMU reset
+    // behavior and making the COP1 unusable trap architecturally observable.
+    wire [31:0] status_val = { 2'b00,
+                               ((`SOC_FPU_ENABLE != 0) ? cp0_status[29] : 1'b0),
+                                                       // [31:29] CU3..CU1
                                cp0_status[28],        // [28] CU0
                                5'b0,                  // [27:23]
                                cp0_status[22],        // [22] BEV
@@ -338,11 +366,17 @@ module mips_cp0 #(
                                cp0_status[2],         // [2]     ERL  (Phase B.5)
                                cp0_status[1],         // [1]     EXL
                                cp0_status[0] };       // [0]     IE
+    wire [31:0] srsctl_val = (`SOC_SRS_ENABLE != 0) ?
+                              {2'b0, 4'hf, 7'b0, cp0_srs_ess,
+                               2'b0, cp0_srs_pss, 2'b0, cp0_srs_css} : 32'd0;
+    wire [31:0] srsmap_val = (`SOC_SRS_ENABLE != 0) ? cp0_srs_map : 32'd0;
 
     // Phase B.4: effective privilege mode. Kernel iff ERL, EXL, or KSU != 2'b10
     // (10 = user). Supervisor (01) currently folds into kernel per B.1 note.
     assign kernel_mode = cp0_status[2] | cp0_status[1] | (cp0_status[4:3] != 2'b10);
     assign cu0_enable  = cp0_status[28];
+    assign cu1_enable  = (`SOC_FPU_ENABLE != 0) && cp0_status[29];
+    assign exl_out     = cp0_status[1];
 
     // -------------------------------------------------------------------------
     // Timer Interrupt Routing (Phase B.2)
@@ -383,6 +417,19 @@ module mips_cp0 #(
 
     wire [7:0]  enabled_pending_ip = cp0_cause[15:8] & cp0_status[15:8];
     wire [2:0]  vint_ip_number = highest_enabled_pending_ip(enabled_pending_ip);
+    reg [3:0] vint_srs_set;
+    always @(*) begin
+        case (vint_ip_number)
+            3'd0: vint_srs_set = cp0_srs_map[3:0];
+            3'd1: vint_srs_set = cp0_srs_map[7:4];
+            3'd2: vint_srs_set = cp0_srs_map[11:8];
+            3'd3: vint_srs_set = cp0_srs_map[15:12];
+            3'd4: vint_srs_set = cp0_srs_map[19:16];
+            3'd5: vint_srs_set = cp0_srs_map[23:20];
+            3'd6: vint_srs_set = cp0_srs_map[27:24];
+            default: vint_srs_set = cp0_srs_map[31:28];
+        endcase
+    end
     wire [9:0]  vint_spacing = {cp0_intctl_vs, 5'b0};
     // Extend both operands before multiplication; Verilog otherwise sizes the
     // product to the widest operand and truncates VN*VS for large VS values.
@@ -392,6 +439,7 @@ module mips_cp0 #(
 
     assign vint_enabled_out = cp0_cause[23];
     assign vint_offset_out  = {19'd0, vint_offset};
+    assign vint_srs_set_out = (`SOC_SRS_ENABLE != 0) ? vint_srs_set : 4'd0;
 
     // Phase B.5: ERET target selection — ERL=1 → ErrorEPC (Reset/NMI/CacheErr
     // return path); else EPC (ordinary exception return).
@@ -399,6 +447,7 @@ module mips_cp0 #(
     assign ctx_save_done = ctx_save_req;
     assign ctx_save_status = cp0_status;
     assign ctx_save_asid = cp0_entryhi_asid;
+    assign ctx_save_srsctl = srsctl_val;
     assign ctx_restore_done = ctx_restore_req;
 
     // -------------------------------------------------------------------------
@@ -423,6 +472,8 @@ module mips_cp0 #(
             {5'd11, 3'd0}: rdata = cp0_compare;
             {5'd12, 3'd0}: rdata = status_val;
             {5'd12, 3'd1}: rdata = intctl_val;
+            {5'd12, 3'd2}: rdata = srsctl_val;
+            {5'd12, 3'd3}: rdata = srsmap_val;
             {5'd13, 3'd0}: rdata = cp0_cause;
             {5'd14, 3'd0}: rdata = cp0_epc;
             {5'd15, 3'd0}: rdata = prid_val;
@@ -486,6 +537,10 @@ module mips_cp0 #(
             cp0_entryhi_asid    <= 8'd0;
             cp0_taglo           <= 32'd0;
             cp0_taghi           <= 32'd0;
+            cp0_srs_css         <= 4'd0;
+            cp0_srs_pss         <= 4'd0;
+            cp0_srs_ess         <= 4'd0;
+            cp0_srs_map         <= 32'd0;
         end else begin
             // -----------------------------------------------------------------
             // Cause.IP[7:2] update every cycle: mirror hw_int OR timer routing.
@@ -539,6 +594,11 @@ module mips_cp0 #(
                 cp0_status[15:8] <= ctx_restore_status[15:8];
                 cp0_status[4:0]  <= ctx_restore_status[4:0];
                 cp0_entryhi_asid <= ctx_restore_asid;
+                if (`SOC_SRS_ENABLE != 0) begin
+                    cp0_srs_css <= ctx_restore_srsctl[3:0];
+                    cp0_srs_pss <= ctx_restore_srsctl[9:6];
+                    cp0_srs_ess <= ctx_restore_srsctl[15:12];
+                end
             end else if (except_req && !cp0_status[1]) begin
                 // Take exception (only if not already in exception level)
                 // synopsys translate_off
@@ -561,7 +621,16 @@ module mips_cp0 #(
                     cp0_status[1] <= 1'b1;        // Set EXL
                     cp0_epc       <= except_pc;
                 end
+                // Opt-in shadow register set exception policy.  The current
+                // set is preserved in PSS and the software-selected ESS is
+                // made current for the handler.  The !EXL guard above keeps
+                // a nested fault from overwriting the saved set.
+                if (`SOC_SRS_ENABLE != 0) begin
+                    cp0_srs_pss <= cp0_srs_css;
+                    cp0_srs_css <= interrupt_accept_in ? interrupt_srs_set : cp0_srs_ess;
+                end
                 cp0_cause[6:2] <= except_code;
+                cp0_cause[29:28] <= except_ce;
                 cp0_cause[31]  <= except_bd;
                 if (except_code == 5'h18)
                     cp0_status[21] <= 1'b1;             // TLB multi-hit shutdown
@@ -588,6 +657,11 @@ module mips_cp0 #(
                     except_code == 5'h05) begin
                     cp0_badvaddr        <= bad_vaddr;
                     cp0_context_badvpn2 <= bad_vaddr[31:13];
+                    // MIPS updates EntryHi with the faulting VPN2 while
+                    // preserving the current ASID.  Software-managed refill
+                    // handlers consume this value before programming TLBWI;
+                    // keeping only ASID here loses the fault address.
+                    cp0_entryhi_vpn2    <= bad_vaddr[31:13];
                 end
 
             end else if (eret) begin
@@ -601,7 +675,11 @@ module mips_cp0 #(
                     end
                 else
                     cp0_status[1] <= 1'b0;
+                if (`SOC_SRS_ENABLE != 0)
+                    cp0_srs_css <= cp0_srs_pss;
 
+            end else if (di || ei) begin
+                cp0_status[0] <= ei;
             end else if (|tlb_op) begin
                 case (tlb_op)
                     3'b001: begin // TLBR: TLB[Index] → EntryHi / EntryLo0 / EntryLo1 / PageMask
@@ -668,6 +746,8 @@ module mips_cp0 #(
                         cp0_entryhi_asid <= wdata[7:0];
                     end
                     {5'd12, 3'd0}: begin
+                        if (`SOC_FPU_ENABLE != 0)
+                            cp0_status[29] <= wdata[29];  // CU1 (opt-in FPU)
                         cp0_status[28]   <= wdata[28];    // CU0 (Phase B.4)
                         cp0_status[22]   <= wdata[22];    // BEV
                         cp0_status[15:8] <= wdata[15:8];  // IM
@@ -679,6 +759,16 @@ module mips_cp0 #(
                     {5'd12, 3'd1}: begin
                         cp0_intctl_ipti  <= wdata[31:29];
                         cp0_intctl_vs    <= wdata[9:5];
+                    end
+                    {5'd12, 3'd2}: begin
+                        if (`SOC_SRS_ENABLE != 0) begin
+                            cp0_srs_pss <= wdata[9:6];
+                            cp0_srs_ess <= wdata[15:12];
+                        end
+                    end
+                    {5'd12, 3'd3}: begin
+                        if (`SOC_SRS_ENABLE != 0)
+                            cp0_srs_map <= wdata;
                     end
                     {5'd11, 3'd0}: begin
                         // Compare: sets timer match value; TI clear handled
@@ -732,6 +822,10 @@ module mips_cp0 #(
     wire        tlb_wr_en_sw  = tlb_wr_en_raw && tlb_wr_gate;
     assign hw_tlb_wr_ready = !tlb_wr_en_sw;
     wire        tlb_wr_en     = tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready);
+    wire        micro_tlb_context_flush = (we &&
+                                           ((waddr == 5'd5) ||
+                                            (waddr == 5'd10))) ||
+                                          ctx_restore_req;
     wire [TLB_IDX_BITS-1:0] tlb_wr_index = hw_tlb_wr_en ? hw_tlb_wr_index :
                                             (tlb_op == 3'b010) ? cp0_index : cp0_random;
     wire [18:0] tlb_wr_vpn2 = hw_tlb_wr_en ? hw_tlb_wr_vpn2 : cp0_entryhi_vpn2;
@@ -759,6 +853,7 @@ module mips_cp0 #(
         .inv_asid    (tlb_inv_asid),
         .inv_scope   (tlb_inv_scope),
         .inv_wired_floor(tlb_inv_wired_floor),
+        .context_flush(micro_tlb_context_flush),
 
         .rd_index    (cp0_index),
         .rd_vpn2     (tlb_rd_vpn2),

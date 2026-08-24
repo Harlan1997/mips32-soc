@@ -8,9 +8,13 @@
 //   Performs hazard detection for load-use stalls.
 // =============================================================================
 
+`include "../include/soc_config.vh"
+
 module mips_id_stage (
     input  wire        clk,
     input  wire        rst_n,
+    input  wire [7:0]  fpu_condition,
+    input  wire        fpu_branch_invert,
     
     // Instruction and PC from IF/ID Pipeline Register
     input  wire [31:0] inst,
@@ -20,11 +24,20 @@ module mips_id_stage (
     input  wire [4:0]  rf_waddr,
     input  wire [31:0] rf_wdata,
     input  wire        rf_we,
+    input  wire [3:0]  srs_current_set,
+    input  wire [3:0]  srs_previous_set,
+    input  wire        srs_shadow_we,
+    input  wire [3:0]  srs_shadow_wset,
+    input  wire [4:0]  srs_shadow_waddr,
+    input  wire [31:0] srs_shadow_wdata,
     input  wire        ctx_save_req,
     output wire        ctx_save_done,
     output wire [1023:0] ctx_save_data,
+    output wire [16383:0] ctx_save_srs_data,
     input  wire        ctx_restore_req,
     input  wire [1023:0] ctx_restore_data,
+    input  wire [16383:0] ctx_restore_srs_data,
+    input  wire [3:0]  ctx_restore_set,
     output wire        ctx_restore_done,
     
     // Forwarding paths from downstream stages for ID stage branch comparison
@@ -46,12 +59,19 @@ module mips_id_stage (
     input  wire        mem_mem_read, // MEM stage instruction is a Load
     input  wire [1:0]  ex_mem_to_reg, // EX stage mem_to_reg
     input  wire [1:0]  mem_mem_to_reg, // MEM stage mem_to_reg
+    // Destination registers already admitted to the nonblocking retirement
+    // FIFO.  These writes are no longer visible in EX/MEM forwarding, so a
+    // dependent instruction must wait for the corresponding architectural
+    // retire edge.
+    input  wire [31:0] nb_pending_reg,
     
     // Outputs to Pipeline Control / Hazard Unit
     output wire        stall_req,    // Stall request due to load-use hazard
     
     // Outputs to Fetch (IF) stage
     output wire        branch_taken, // 1: Branch condition met
+    output wire        branch_likely_annul, // Skip delay slot for not-taken likely branch
+    output wire        branch_likely_taken, // Taken likely branch retains delay slot
     output wire [31:0] branch_target,// Calculated branch target address
     output wire        jump_taken,   // 1: Jump instruction detected
     output wire [31:0] jump_target,   // Calculated jump target address
@@ -92,6 +112,12 @@ module mips_id_stage (
     output wire        is_eret,
     output wire        illegal_inst,
     output wire        is_syscall,
+    output wire        is_break,
+    output wire        is_di,
+    output wire        is_ei,
+    output wire        is_wait,
+    output wire        is_trap,
+    output wire [3:0]  trap_op,
 
     // TLB instruction op (see mips_control.v encoding)
     output wire [2:0]  tlb_op
@@ -105,6 +131,7 @@ module mips_id_stage (
     // Raw Register File Outputs
     wire [31:0] rf_rdata1;
     wire [31:0] rf_rdata2;
+    wire [31:0] shadow_rdata;
 
     // Instantiate General-Purpose Register File
     mips_regfile u_mips_regfile (
@@ -117,16 +144,28 @@ module mips_id_stage (
         .waddr  (rf_waddr),
         .wdata  (rf_wdata),
         .we     (rf_we),
+        .current_set(srs_current_set),
+        .previous_set(srs_previous_set),
+        .shadow_raddr(rt_addr),
+        .shadow_rdata(shadow_rdata),
+        .shadow_we(srs_shadow_we),
+        .shadow_wset(srs_shadow_wset),
+        .shadow_waddr(srs_shadow_waddr),
+        .shadow_wdata(srs_shadow_wdata),
         .ctx_save_req(ctx_save_req),
         .ctx_save_done(ctx_save_done),
         .ctx_save_data(ctx_save_data),
+        .ctx_save_srs_data(ctx_save_srs_data),
         .ctx_restore_req(ctx_restore_req),
         .ctx_restore_data(ctx_restore_data),
+        .ctx_restore_srs_data(ctx_restore_srs_data),
+        .ctx_restore_set(ctx_restore_set),
         .ctx_restore_done(ctx_restore_done)
     );
 
     // Instantiate Control Unit
     wire [2:0] branch_op;
+    wire       branch_likely;
     wire [1:0] jump_op;
     wire       imm_signed;
     wire       use_sa;
@@ -135,6 +174,11 @@ module mips_id_stage (
     // Phase B ISA R2: MOVN/MOVZ conditional-write gate (local to id_stage).
     wire cond_move_is_movn;
     wire cond_move_is_movz;
+    wire cond_move_is_movf;
+    wire cond_move_is_movt;
+    wire [2:0] fpu_condition_code;
+    wire       is_rdpgpr;
+    wire       is_wrpgpr;
 
     mips_control u_mips_control (
         .inst        (inst),
@@ -154,22 +198,36 @@ module mips_id_stage (
         .cache_op_valid(cache_op_valid),
         .cache_op    (cache_op),
         .branch_op   (branch_op),
+        .branch_likely(branch_likely),
+        .fpu_branch_invert(fpu_branch_invert),
         .jump_op     (jump_op),
         .illegal_inst(illegal_inst),
         .cp0_we      (cp0_we),
         .is_mfc0     (is_mfc0),
         .is_eret     (is_eret),
         .is_syscall  (is_syscall),
+        .is_break    (is_break),
+        .is_di      (is_di),
+        .is_ei      (is_ei),
+        .is_wait    (is_wait),
+        .is_trap     (is_trap),
+        .trap_op     (trap_op),
         .tlb_op      (tlb_op),
         .is_movn     (cond_move_is_movn),
-        .is_movz     (cond_move_is_movz)
+        .is_movz     (cond_move_is_movz),
+        .is_movf     (cond_move_is_movf),
+        .is_movt     (cond_move_is_movt),
+        .is_rdpgpr   (is_rdpgpr),
+        .is_wrpgpr   (is_wrpgpr),
+        .fpu_condition_code(fpu_condition_code)
     );
 
     // Forwarding logic to resolve raw dependencies for ID-stage branch comparator
-    assign val_rs = (rs_addr == 5'd0) ? 32'd0 :
+    assign val_rs = is_rdpgpr ? shadow_rdata :
+                    ((rs_addr == 5'd0) ? 32'd0 :
                     ((fw_ex_we  && (fw_ex_waddr  == rs_addr)) ? fw_ex_val :
                      ((fw_mem_we && (fw_mem_waddr == rs_addr)) ? fw_mem_val :
-                      ((fw_wb_we  && (fw_wb_waddr  == rs_addr)) ? fw_wb_val : rf_rdata1)));
+                      ((fw_wb_we  && (fw_wb_waddr  == rs_addr)) ? fw_wb_val : rf_rdata1))));
 
     assign val_rt = (rt_addr == 5'd0) ? 32'd0 :
                     ((fw_ex_we  && (fw_ex_waddr  == rt_addr)) ? fw_ex_val :
@@ -186,6 +244,7 @@ module mips_id_stage (
             3'b100:  br_taken = ($signed(val_rs) >  $signed(32'd0));     // BGTZ
             3'b101:  br_taken = ($signed(val_rs) <  $signed(32'd0));     // BLTZ
             3'b110:  br_taken = ($signed(val_rs) >= $signed(32'd0));     // BGEZ
+            3'b111:  br_taken = fpu_condition[fpu_condition_code] ^ fpu_branch_invert; // BC1T/BC1F
             default: br_taken = 1'b0;
         endcase
     end
@@ -194,6 +253,8 @@ module mips_id_stage (
     wire is_jump   = (jump_op != 2'b00);
     
     assign branch_taken = br_taken & ~stall_req;
+    assign branch_likely_annul = branch_likely & ~br_taken & ~stall_req;
+    assign branch_likely_taken = branch_likely & br_taken & ~stall_req;
 
     assign jump_taken   = is_jump & ~stall_req;
 
@@ -227,8 +288,10 @@ module mips_id_stage (
     // Phase B ISA R2 MOVN/MOVZ: if the condition on val_rt fails, redirect
     // waddr to r0 so the RF write becomes a nop (spec-defined behaviour).
     wire cond_move_ok = cond_move_is_movn ? (val_rt != 32'd0) :
-                        cond_move_is_movz ? (val_rt == 32'd0) : 1'b1;
-    assign waddr_out = cond_move_ok ? waddr_raw : 5'd0;
+                        cond_move_is_movz ? (val_rt == 32'd0) :
+                        cond_move_is_movf ? !fpu_condition[fpu_condition_code] :
+                        cond_move_is_movt ? fpu_condition[fpu_condition_code] : 1'b1;
+    assign waddr_out = (cond_move_ok && !branch_likely_annul) ? waddr_raw : 5'd0;
 
     // Shift Amount Multiplexer
     assign sa_out = use_sa ? inst[10:6] : val_rs[4:0];
@@ -245,7 +308,7 @@ module mips_id_stage (
                               func == 6'b000010 || func == 6'b000100 ||
                               func == 6'b000101);
     wire reads_rt = (opcode == 6'b000000) ? (func != 6'b001000 && func != 6'b001001 && func != 6'b010000 && func != 6'b010001 && func != 6'b010010 && func != 6'b010011) :
-                    (special2_reads_rt || opcode == 6'b101011 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101 ||
+                    (special2_reads_rt || opcode == 6'b101011 || opcode == 6'b111001 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101 ||
                      (opcode == 6'b010000 && inst[25:21] == 5'b00100));
 
 
@@ -260,11 +323,16 @@ module mips_id_stage (
     // is decoded in the same cycle as register-file writeback.  This matters
     // for APB/AXI reads where the formatted result becomes valid late in the
     // blocking transaction; forwarding alone cannot bypass the regfile edge.
-    wire wb_use_hazard = fw_wb_we && (fw_wb_waddr != 5'd0) &&
+    wire wb_use_hazard = (`SOC_CPU_NONBLOCKING_ENABLE == 0) &&
+                         fw_wb_we && (fw_wb_waddr != 5'd0) &&
                          ((reads_rs && (fw_wb_waddr == rs_addr)) ||
                           (reads_rt && (fw_wb_waddr == rt_addr)));
 
-    assign stall_req = load_use_hazard || wb_use_hazard;
+    wire nb_pending_hazard = (`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
+                              ((reads_rs && (rs_addr != 5'd0) && nb_pending_reg[rs_addr]) ||
+                               (reads_rt && (rt_addr != 5'd0) && nb_pending_reg[rt_addr]));
+
+    assign stall_req = load_use_hazard || wb_use_hazard || nb_pending_hazard;
     
     // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=3,
     // funct=0x3b; hwreg selector is rd. UserLocal (29) maps to CP0 (4,2),

@@ -45,8 +45,8 @@ MIPS32 CP0 通过 `(regnum[4:0], sel[2:0])` 8 位地址访问，共 256 槽。�
 | 11 | 0 | Compare       | COMPARE  | 32'h0000_0000 | 定时器比较器（与 Count 相等触发 IP[7]） |
 | 12 | 0 | Status        | STATUS   | 见 §3 | 全局中断使能、异常级、KSU 模式、CU 位等 |
 | 12 | 1 | IntCtl        | INTCTL   | 见 §3.4 | 向量间距 / VS |
-| 12 | 2 | SRSCtl        | SRSCTL   | 32'h0000_0000 | Shadow Register Set 控制 (只留占位，Phase B 不实现 SRS，硬件绑定 SS=0) |
-| 12 | 3 | SRSMap        | SRSMAP   | 32'h0000_0000 | SRS 映射 (占位) |
+| 12 | 2 | SRSCtl        | SRSCTL   | 32'h0000_0000 | 默认 SS=0；`SOC_SRS_ENABLE=1` 时支持软件选择的 CSS/PSS/ESS 字段子集 |
+| 12 | 3 | SRSMap        | SRSMAP   | 32'h0000_0000 | `SOC_SRS_ENABLE=1` 时 8 个 Cause.IP[7:0] 到 shadow-set 的 4-bit 映射 |
 | 13 | 0 | Cause         | CAUSE    | 32'h0000_0000 | 异常/中断原因 |
 | 14 | 0 | EPC           | EPC      | 32'hxxxx_xxxx | 异常返回地址 |
 | 15 | 0 | PRId          | PRID     | 见 §11 | 制造商/型号/版本，硬编码 |
@@ -67,6 +67,19 @@ MIPS32 CP0 通过 `(regnum[4:0], sel[2:0])` 8 位地址访问，共 256 槽。�
 - **指令**：`MFC0 rt, rd, sel`（读）；`MTC0 rt, rd, sel`（写）。
 - **特权**：只在**内核态** (`Status.KSU=00` 或 `Status.EXL=1` 或 `Status.ERL=1`) 或 `Status.CU0=1` 时可访问；否则 Coprocessor Unusable 异常 (CpU=0)。
 - **CP0 hazard**：`MTC0` 到 `Status/EPC/Cause/EBase/PageMask/EntryHi/EntryLo0/1/Wired/Compare` 之后到指令级依赖之间需 `EHB`（或 `SSNOP`×N）保证前作用可见。Phase B 实现 `EHB`（`SLL r0,r0,3`）为流水线冲刷点。
+
+### Shadow register set instructions
+
+`RDPGPR` (`COP0 rs=0x0a`) and `WRPGPR` (`COP0 rs=0x0e`) are Reserved
+Instruction when `SOC_SRS_ENABLE=0`. With `SOC_SRS_ENABLE=1`, the RTL has
+sixteen 32-register banks, software-selected `SRSCtl.PSS/CSS` access, and
+the `RDPGPR`/`WRPGPR` data path. Exception entry saves `CSS` in `PSS` and
+loads the software-selected `ESS` set; `ERET` restores `CSS` from `PSS`.
+The verified contract is deliberately bounded: SRSMap IP-to-shadow-set
+selection is covered for the opt-in IP-based interrupt path, and an EXL-held
+nested synchronous exception preserves CSS/PSS/EPC state. External VEIC/EICSS
+selection and scheduler/Linux SRS context ABI ownership remain outside this
+slice.
 
 ---
 
