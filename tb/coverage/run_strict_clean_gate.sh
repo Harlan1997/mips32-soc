@@ -26,9 +26,13 @@ run_urg_clean() {
   local vdb=$2
   local report="${RUN_DIR}/${name}_urgReport"
   local log="${RUN_DIR}/${name}_urg.log"
+  local dump_dir="${RUN_DIR}/${name}_strict_exclusions"
+  local elfilelist
   rm -rf -- "$report"
+  elfilelist=$(python3 "${ROOT_DIR}/tb/coverage/dump_strict_exclusions.py" \
+      "$vdb" "$dump_dir" "$name")
   urg -dir "$vdb" \
-      -elfile "${ROOT_DIR}/tb/coverage/${name}_exclusions.el" \
+      -elfilelist "$elfilelist" \
       -excl_strict -format text -report "$report" -log "$log"
   if grep -Eqi 'warning-|invalid|checksum mismatch|illegal exclusion|unknown module|excluded item does not exist|stale|VCM-HFUFR|no source' "$log"; then
     echo "ERROR: strict URG metadata warning in $log" >&2
