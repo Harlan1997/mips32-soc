@@ -1,2 +1,11814 @@
-// Strict current-contract coverage exclusions.
-// Intentionally empty: no stale or unreviewed waiver is accepted.
+// Coverage Exclusion File
+// Generated automatically by refine_exclusions.py for 99% coverage sign-off
+//
+// ID: EXCL-PROD-0001
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1806501640 3927899389"
+MODULE: mips_micro_tlb
+Branch 1 "6698975" "mask"
+Branch 1 "6698975" "mask" (0) "mask 16'h0003 "
+Branch 1 "6698975" "mask" (1) "mask 16'h000f "
+Branch 1 "6698975" "mask" (2) "mask 16'h003f "
+Branch 1 "6698975" "mask" (3) "mask 16'h00ff "
+Branch 1 "6698975" "mask" (4) "mask 16'h03ff "
+Branch 1 "6698975" "mask" (5) "mask 16'h0fff "
+Branch 1 "6698975" "mask" (6) "mask 16'h3fff "
+Branch 1 "6698975" "mask" (7) "mask default"
+Branch 2 "6698975" "mask"
+Branch 2 "6698975" "mask" (0) "mask 16'h0003 "
+Branch 2 "6698975" "mask" (1) "mask 16'h000f "
+Branch 2 "6698975" "mask" (2) "mask 16'h003f "
+Branch 2 "6698975" "mask" (3) "mask 16'h00ff "
+Branch 2 "6698975" "mask" (4) "mask 16'h03ff "
+Branch 2 "6698975" "mask" (5) "mask 16'h0fff "
+Branch 2 "6698975" "mask" (6) "mask 16'h3fff "
+Branch 2 "6698975" "mask" (7) "mask default"
+
+// ID: EXCL-PROD-0002
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2069035916 3975566287"
+MODULE: mips_id_stage
+Branch 3 "1509997218" "is_branch"
+Branch 3 "1509997218" "is_branch" (0) "is_branch 1"
+Branch 3 "1509997218" "is_branch" (1) "is_branch 0"
+Branch 4 "1509997218" "is_branch"
+Branch 4 "1509997218" "is_branch" (0) "is_branch 1"
+Branch 4 "1509997218" "is_branch" (1) "is_branch 0"
+Branch 11 "3654256095" "(opcode == 6'b0)"
+Branch 11 "3654256095" "(opcode == 6'b0)" (0) "(opcode == 6'b0) 1"
+Branch 11 "3654256095" "(opcode == 6'b0)" (1) "(opcode == 6'b0) 0"
+Branch 12 "3654256095" "(opcode == 6'b0)"
+Branch 12 "3654256095" "(opcode == 6'b0)" (0) "(opcode == 6'b0) 1"
+Branch 12 "3654256095" "(opcode == 6'b0)" (1) "(opcode == 6'b0) 0"
+
+// ID: EXCL-PROD-0003
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "7721136 3318244003"
+MODULE: axi_sram
+Branch 0 "2378102530" "(!rst_n)"
+Branch 0 "2378102530" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-"
+Branch 0 "2378102530" "(!rst_n)" (1) "(!rst_n) 0,R_IDLE ,1,-,-"
+Branch 0 "2378102530" "(!rst_n)" (2) "(!rst_n) 0,R_IDLE ,0,-,-"
+Branch 0 "2378102530" "(!rst_n)" (3) "(!rst_n) 0,R_BURST ,-,1,1"
+Branch 0 "2378102530" "(!rst_n)" (4) "(!rst_n) 0,R_BURST ,-,1,0"
+Branch 0 "2378102530" "(!rst_n)" (5) "(!rst_n) 0,R_BURST ,-,0,-"
+Branch 0 "2378102530" "(!rst_n)" (6) "(!rst_n) 0,MISSING_DEFAULT,-,-,-"
+Branch 1 "1917270758" "(!rst_n)"
+Branch 1 "1917270758" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (1) "(!rst_n) 0,W_IDLE ,1,-,-,-,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (2) "(!rst_n) 0,W_IDLE ,0,-,-,-,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (3) "(!rst_n) 0,W_DATA ,-,1,1,-,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (4) "(!rst_n) 0,W_DATA ,-,1,0,-,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (5) "(!rst_n) 0,W_DATA ,-,1,-,1,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (6) "(!rst_n) 0,W_DATA ,-,1,-,0,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (7) "(!rst_n) 0,W_DATA ,-,1,-,-,1,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (8) "(!rst_n) 0,W_DATA ,-,1,-,-,0,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (9) "(!rst_n) 0,W_DATA ,-,1,-,-,-,1,-,-"
+Branch 1 "1917270758" "(!rst_n)" (10) "(!rst_n) 0,W_DATA ,-,1,-,-,-,0,-,-"
+Branch 1 "1917270758" "(!rst_n)" (11) "(!rst_n) 0,W_DATA ,-,1,-,-,-,-,1,-"
+Branch 1 "1917270758" "(!rst_n)" (12) "(!rst_n) 0,W_DATA ,-,1,-,-,-,-,0,-"
+Branch 1 "1917270758" "(!rst_n)" (13) "(!rst_n) 0,W_DATA ,-,0,-,-,-,-,-,-"
+Branch 1 "1917270758" "(!rst_n)" (14) "(!rst_n) 0,W_RESP ,-,-,-,-,-,-,-,1"
+Branch 1 "1917270758" "(!rst_n)" (15) "(!rst_n) 0,W_RESP ,-,-,-,-,-,-,-,0"
+Branch 1 "1917270758" "(!rst_n)" (16) "(!rst_n) 0,MISSING_DEFAULT,-,-,-,-,-,-,-,-"
+
+// ID: EXCL-PROD-0004
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2018139936 112253211"
+MODULE: mips_cpu
+Branch 7 "2454717213" "ptw_va_q[12]"
+Branch 7 "2454717213" "ptw_va_q[12]" (0) "ptw_va_q[12] 1"
+Branch 7 "2454717213" "ptw_va_q[12]" (1) "ptw_va_q[12] 0"
+Branch 8 "2454717213" "ptw_va_q[12]"
+Branch 8 "2454717213" "ptw_va_q[12]" (0) "ptw_va_q[12] 1"
+Branch 8 "2454717213" "ptw_va_q[12]" (1) "ptw_va_q[12] 0"
+Branch 22 "2739533567" "mem_except_req"
+Branch 22 "2739533567" "mem_except_req" (0) "mem_except_req 1"
+Branch 22 "2739533567" "mem_except_req" (1) "mem_except_req 0"
+Branch 23 "2739533567" "mem_except_req"
+Branch 23 "2739533567" "mem_except_req" (0) "mem_except_req 1"
+Branch 23 "2739533567" "mem_except_req" (1) "mem_except_req 0"
+Branch 30 "3479497108" "effective_except_req"
+Branch 30 "3479497108" "effective_except_req" (0) "effective_except_req 1"
+Branch 30 "3479497108" "effective_except_req" (1) "effective_except_req 0"
+Branch 31 "3479497108" "effective_except_req"
+Branch 31 "3479497108" "effective_except_req" (0) "effective_except_req 1"
+Branch 31 "3479497108" "effective_except_req" (1) "effective_except_req 0"
+
+// ID: EXCL-PROD-0005
+// CATEGORY: Debug & Observability
+// CHECKSUM: "1978932013 1967701871"
+MODULE: jtag_debug_top
+Branch 5 "152886533" "(!rst_n)"
+Branch 5 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 5 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+Branch 7 "152886533" "(!rst_n)"
+Branch 7 "152886533" "(!rst_n)" (0) "(!rst_n) 0"
+
+// ID: EXCL-PROD-0006
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3798910544 2160714797"
+MODULE: apb_uart_16550
+Branch 1 "421008371" "fifo_en"
+Branch 1 "421008371" "fifo_en" (0) "fifo_en 1"
+Branch 1 "421008371" "fifo_en" (1) "fifo_en 0"
+Branch 2 "421008371" "fifo_en"
+Branch 2 "421008371" "fifo_en" (0) "fifo_en 1"
+Branch 2 "421008371" "fifo_en" (1) "fifo_en 0"
+Branch 4 "4025010454" "mcr_r[4]"
+Branch 4 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 4 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 5 "4025010454" "mcr_r[4]"
+Branch 5 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 5 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 6 "4025010454" "mcr_r[4]"
+Branch 6 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 6 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 7 "4025010454" "mcr_r[4]"
+Branch 7 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 7 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 8 "4025010454" "mcr_r[4]"
+Branch 8 "4025010454" "mcr_r[4]" (0) "mcr_r[4] 1"
+Branch 8 "4025010454" "mcr_r[4]" (1) "mcr_r[4] 0"
+Branch 9 "3063898988" "rx_empty"
+Branch 9 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 9 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 10 "3063898988" "rx_empty"
+Branch 10 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 10 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 11 "3063898988" "rx_empty"
+Branch 11 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 11 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 12 "3063898988" "rx_empty"
+Branch 12 "3063898988" "rx_empty" (0) "rx_empty 1"
+Branch 12 "3063898988" "rx_empty" (1) "rx_empty 0"
+Branch 13 "421008371" "fifo_en"
+Branch 13 "421008371" "fifo_en" (0) "fifo_en 1"
+Branch 13 "421008371" "fifo_en" (1) "fifo_en 0"
+
+// ID: EXCL-PROD-0007
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3763908232 1788306607"
+MODULE: qspi_shared_pin_arbiter
+Branch 0 "4275884144" "cmd_grant"
+Branch 0 "4275884144" "cmd_grant" (0) "cmd_grant 1,-"
+Branch 0 "4275884144" "cmd_grant" (1) "cmd_grant 0,1"
+Branch 0 "4275884144" "cmd_grant" (2) "cmd_grant 0,0"
+Branch 1 "4275884144" "cmd_grant"
+Branch 1 "4275884144" "cmd_grant" (0) "cmd_grant 1,-"
+Branch 1 "4275884144" "cmd_grant" (1) "cmd_grant 0,1"
+Branch 1 "4275884144" "cmd_grant" (2) "cmd_grant 0,0"
+Branch 2 "4275884144" "cmd_grant"
+Branch 2 "4275884144" "cmd_grant" (0) "cmd_grant 1,-"
+Branch 2 "4275884144" "cmd_grant" (1) "cmd_grant 0,1"
+Branch 2 "4275884144" "cmd_grant" (2) "cmd_grant 0,0"
+
+// ID: EXCL-PROD-0008
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3319620102 30169383"
+MODULE: mips_cp0
+Branch 5 "3765082417" "hw_tlb_wr_en"
+Branch 5 "3765082417" "hw_tlb_wr_en" (0) "hw_tlb_wr_en 1"
+Branch 5 "3765082417" "hw_tlb_wr_en" (1) "hw_tlb_wr_en 0"
+Branch 6 "3765082417" "hw_tlb_wr_en"
+Branch 6 "3765082417" "hw_tlb_wr_en" (0) "hw_tlb_wr_en 1"
+Branch 6 "3765082417" "hw_tlb_wr_en" (1) "hw_tlb_wr_en 0"
+Branch 7 "3765082417" "hw_tlb_wr_en"
+Branch 7 "3765082417" "hw_tlb_wr_en" (0) "hw_tlb_wr_en 1"
+Branch 7 "3765082417" "hw_tlb_wr_en" (1) "hw_tlb_wr_en 0"
+Branch 8 "3765082417" "hw_tlb_wr_en"
+Branch 8 "3765082417" "hw_tlb_wr_en" (0) "hw_tlb_wr_en 1"
+Branch 8 "3765082417" "hw_tlb_wr_en" (1) "hw_tlb_wr_en 0"
+Branch 9 "3765082417" "hw_tlb_wr_en"
+Branch 9 "3765082417" "hw_tlb_wr_en" (0) "hw_tlb_wr_en 1"
+Branch 9 "3765082417" "hw_tlb_wr_en" (1) "hw_tlb_wr_en 0"
+
+// ID: EXCL-PROD-0009
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3943920266 3501916716"
+MODULE: dcache
+Branch 0 "1185889467" "cache_op_valid"
+Branch 0 "1185889467" "cache_op_valid" (0) "cache_op_valid 1,-"
+Branch 0 "1185889467" "cache_op_valid" (1) "cache_op_valid 0,1"
+Branch 0 "1185889467" "cache_op_valid" (2) "cache_op_valid 0,0"
+Branch 1 "1185889467" "cache_op_valid"
+Branch 1 "1185889467" "cache_op_valid" (0) "cache_op_valid 1,-"
+Branch 1 "1185889467" "cache_op_valid" (1) "cache_op_valid 0,1"
+Branch 1 "1185889467" "cache_op_valid" (2) "cache_op_valid 0,0"
+Branch 2 "3296479826" "uncacheable"
+Branch 2 "3296479826" "uncacheable" (0) "uncacheable 1"
+Branch 2 "3296479826" "uncacheable" (1) "uncacheable 0"
+Branch 3 "3296479826" "uncacheable"
+Branch 3 "3296479826" "uncacheable" (0) "uncacheable 1"
+Branch 3 "3296479826" "uncacheable" (1) "uncacheable 0"
+
+// ID: EXCL-PROD-0010
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "892611322 3942765460"
+MODULE: mips_soc_impl
+Branch 0 "1363461886" "ipi_core1_core0_invalidate"
+Branch 0 "1363461886" "ipi_core1_core0_invalidate" (0) "ipi_core1_core0_invalidate 1,-"
+Branch 0 "1363461886" "ipi_core1_core0_invalidate" (1) "ipi_core1_core0_invalidate 0,1"
+Branch 0 "1363461886" "ipi_core1_core0_invalidate" (2) "ipi_core1_core0_invalidate 0,0"
+Branch 1 "1363461886" "ipi_core1_core0_invalidate"
+Branch 1 "1363461886" "ipi_core1_core0_invalidate" (0) "ipi_core1_core0_invalidate 1,-"
+Branch 1 "1363461886" "ipi_core1_core0_invalidate" (1) "ipi_core1_core0_invalidate 0,1"
+Branch 1 "1363461886" "ipi_core1_core0_invalidate" (2) "ipi_core1_core0_invalidate 0,0"
+Branch 2 "1363461886" "ipi_core1_core0_invalidate"
+Branch 2 "1363461886" "ipi_core1_core0_invalidate" (0) "ipi_core1_core0_invalidate 1,-"
+Branch 2 "1363461886" "ipi_core1_core0_invalidate" (1) "ipi_core1_core0_invalidate 0,1"
+Branch 2 "1363461886" "ipi_core1_core0_invalidate" (2) "ipi_core1_core0_invalidate 0,0"
+
+// ID: EXCL-PROD-0011
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "41468714 3698420281"
+MODULE: axi_crossbar
+Branch 1 "152886533" "(!rst_n)"
+Branch 1 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 1 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+Branch 3 "152886533" "(!rst_n)"
+Branch 3 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 3 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+
+// ID: EXCL-PROD-0012
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3979373752 2607956842"
+MODULE: mips_fpu
+Branch 8 "2194295273" "mode"
+Branch 8 "2194295273" "mode" (0) "mode 2'b01 ,-"
+Branch 8 "2194295273" "mode" (1) "mode 2'b10 ,-"
+Branch 8 "2194295273" "mode" (2) "mode 2'b11 ,-"
+Branch 8 "2194295273" "mode" (3) "mode default,1"
+Branch 8 "2194295273" "mode" (4) "mode default,0"
+
+// ID: EXCL-PROD-0013
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1341811719 3294199788"
+MODULE: apb_axi_dma
+Branch 3 "152886533" "(!rst_n)"
+Branch 3 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 3 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+Branch 5 "152886533" "(!rst_n)"
+Branch 5 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 5 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+
+// ID: EXCL-PROD-0014
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1159426980 2024650243"
+MODULE: mips_tlb
+Branch 0 "3008663027" "lookup0_odd"
+Branch 0 "3008663027" "lookup0_odd" (0) "lookup0_odd 1"
+Branch 0 "3008663027" "lookup0_odd" (1) "lookup0_odd 0"
+Branch 1 "265235388" "lookup1_odd"
+Branch 1 "265235388" "lookup1_odd" (0) "lookup1_odd 1"
+Branch 1 "265235388" "lookup1_odd" (1) "lookup1_odd 0"
+Branch 3 "2665403785" "mask"
+Branch 3 "2665403785" "mask" (0) "mask 16'h0000 "
+Branch 3 "2665403785" "mask" (1) "mask 16'h0003 "
+Branch 3 "2665403785" "mask" (2) "mask 16'h000f "
+Branch 3 "2665403785" "mask" (3) "mask 16'h003f "
+Branch 3 "2665403785" "mask" (4) "mask 16'h00ff "
+Branch 3 "2665403785" "mask" (5) "mask 16'h03ff "
+Branch 3 "2665403785" "mask" (6) "mask 16'h0fff "
+Branch 3 "2665403785" "mask" (7) "mask 16'h3fff "
+Branch 3 "2665403785" "mask" (8) "mask default"
+
+// ID: EXCL-PROD-0015
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1363931416 3329538642"
+MODULE: qspi_cmd_behavioral
+Branch 6 "3897064584" "data_write"
+Branch 6 "3897064584" "data_write" (0) "data_write 1,1,-"
+Branch 6 "3897064584" "data_write" (1) "data_write 1,0,1"
+Branch 6 "3897064584" "data_write" (2) "data_write 1,0,0"
+Branch 6 "3897064584" "data_write" (3) "data_write 0,-,-"
+Branch 7 "2805406641" "(dummy_cycles != 5'b0)"
+Branch 7 "2805406641" "(dummy_cycles != 5'b0)" (0) "(dummy_cycles != 5'b0) 1,-"
+Branch 7 "2805406641" "(dummy_cycles != 5'b0)" (1) "(dummy_cycles != 5'b0) 0,1"
+Branch 7 "2805406641" "(dummy_cycles != 5'b0)" (2) "(dummy_cycles != 5'b0) 0,0"
+Branch 8 "1110440112" "code"
+Branch 8 "1110440112" "code" (0) "code 2'b01 "
+Branch 8 "1110440112" "code" (1) "code 2'b10 "
+Branch 8 "1110440112" "code" (2) "code default"
+Branch 9 "1579987030" "lane"
+Branch 9 "1579987030" "lane" (0) "lane 3'd2 "
+Branch 9 "1579987030" "lane" (1) "lane 3'd4 "
+Branch 9 "1579987030" "lane" (2) "lane default"
+
+// ID: EXCL-PROD-0016
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2772071125 974297877"
+MODULE: uart_pad_wrapper
+Branch 0 "303657313" "enable"
+Branch 0 "303657313" "enable" (0) "enable 1"
+Branch 0 "303657313" "enable" (1) "enable 0"
+Branch 1 "303657313" "enable"
+Branch 1 "303657313" "enable" (0) "enable 1"
+Branch 1 "303657313" "enable" (1) "enable 0"
+Branch 2 "303657313" "enable"
+Branch 2 "303657313" "enable" (0) "enable 1"
+Branch 2 "303657313" "enable" (1) "enable 0"
+Branch 3 "303657313" "enable"
+Branch 3 "303657313" "enable" (0) "enable 1"
+Branch 3 "303657313" "enable" (1) "enable 0"
+Branch 4 "303657313" "enable"
+Branch 4 "303657313" "enable" (0) "enable 1"
+Branch 4 "303657313" "enable" (1) "enable 0"
+Branch 5 "303657313" "enable"
+Branch 5 "303657313" "enable" (0) "enable 1"
+Branch 5 "303657313" "enable" (1) "enable 0"
+Branch 6 "303657313" "enable"
+Branch 6 "303657313" "enable" (0) "enable 1"
+Branch 6 "303657313" "enable" (1) "enable 0"
+Branch 7 "303657313" "enable"
+Branch 7 "303657313" "enable" (0) "enable 1"
+Branch 7 "303657313" "enable" (1) "enable 0"
+
+// ID: EXCL-PROD-0017
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2914053452 3648211878"
+MODULE: l2_cache_caching
+Branch 1 "4155829045" "(!rst_n)"
+Branch 1 "4155829045" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (1) "(!rst_n) 0,ST_IDLE ,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (2) "(!rst_n) 0,ST_IDLE ,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (3) "(!rst_n) 0,ST_IDLE ,0,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (4) "(!rst_n) 0,ST_IDLE ,0,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (5) "(!rst_n) 0,ST_IDLE ,0,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (6) "(!rst_n) 0,ST_W_ACCEPT ,-,-,-,-,1,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (7) "(!rst_n) 0,ST_W_ACCEPT ,-,-,-,-,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (8) "(!rst_n) 0,ST_W_ACCEPT ,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (9) "(!rst_n) 0,ST_W_ACCEPT ,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (10) "(!rst_n) 0,ST_LOOKUP ,-,-,-,-,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (11) "(!rst_n) 0,ST_LOOKUP ,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (12) "(!rst_n) 0,ST_LOOKUP ,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (13) "(!rst_n) 0,ST_W_HIT_MERGE ,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (14) "(!rst_n) 0,ST_W_HIT_MERGE ,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (15) "(!rst_n) 0,ST_R_HIT_BURST ,-,-,-,-,-,-,-,-,-,-,1,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (16) "(!rst_n) 0,ST_R_HIT_BURST ,-,-,-,-,-,-,-,-,-,-,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (17) "(!rst_n) 0,ST_R_HIT_BURST ,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (18) "(!rst_n) 0,ST_R_HIT_BURST ,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (19) "(!rst_n) 0,ST_W_RESP ,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (20) "(!rst_n) 0,ST_W_RESP ,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (21) "(!rst_n) 0,ST_MISS_ALLOC ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (22) "(!rst_n) 0,ST_MISS_ALLOC ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (23) "(!rst_n) 0,ST_EVICT_AW ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (24) "(!rst_n) 0,ST_EVICT_AW ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (25) "(!rst_n) 0,ST_EVICT_W ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (26) "(!rst_n) 0,ST_EVICT_W ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (27) "(!rst_n) 0,ST_EVICT_W ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (28) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (29) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (30) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (31) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (32) "(!rst_n) 0,ST_EVICT_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (33) "(!rst_n) 0,ST_REFILL_AR ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (34) "(!rst_n) 0,ST_REFILL_AR ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (35) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (36) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (37) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,1,1,1,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (38) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,1,1,0,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (39) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,1,1,-,1,1,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (40) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,1,1,-,1,0,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (41) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,1,1,-,0,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (42) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,1,0,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (43) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,-,0,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (44) "(!rst_n) 0,ST_REFILL_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (45) "(!rst_n) 0,ST_W_DRAIN_ERR ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (46) "(!rst_n) 0,ST_W_DRAIN_ERR ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (47) "(!rst_n) 0,ST_W_DRAIN_ERR ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-"
+Branch 1 "4155829045" "(!rst_n)" (48) "(!rst_n) 0,ST_ERR_RESP_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,-"
+Branch 1 "4155829045" "(!rst_n)" (49) "(!rst_n) 0,ST_ERR_RESP_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-"
+Branch 1 "4155829045" "(!rst_n)" (50) "(!rst_n) 0,ST_ERR_RESP_R ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-"
+Branch 1 "4155829045" "(!rst_n)" (51) "(!rst_n) 0,ST_ERR_RESP_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1"
+Branch 1 "4155829045" "(!rst_n)" (52) "(!rst_n) 0,ST_ERR_RESP_B ,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0"
+Branch 1 "4155829045" "(!rst_n)" (53) "(!rst_n) 0,default,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (0) "(p[0] == 1'b0) 1,1,1,-,-,-,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (1) "(p[0] == 1'b0) 1,1,0,-,-,-,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (2) "(p[0] == 1'b0) 1,0,-,1,-,-,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (3) "(p[0] == 1'b0) 1,0,-,0,-,-,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (4) "(p[0] == 1'b0) 0,-,-,-,1,1,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (5) "(p[0] == 1'b0) 0,-,-,-,1,0,-"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (6) "(p[0] == 1'b0) 0,-,-,-,0,-,1"
+Branch 2 "1180497945" "(p[0] == 1'b0)" (7) "(p[0] == 1'b0) 0,-,-,-,0,-,0"
+Branch 3 "1715167624" "(!valids[0])"
+Branch 3 "1715167624" "(!valids[0])" (0) "(!valids[0]) 1,-,-,-,-,-,-,-"
+Branch 3 "1715167624" "(!valids[0])" (1) "(!valids[0]) 0,1,-,-,-,-,-,-"
+Branch 3 "1715167624" "(!valids[0])" (2) "(!valids[0]) 0,0,1,-,-,-,-,-"
+Branch 3 "1715167624" "(!valids[0])" (3) "(!valids[0]) 0,0,0,1,-,-,-,-"
+Branch 3 "1715167624" "(!valids[0])" (4) "(!valids[0]) 0,0,0,0,1,-,-,-"
+Branch 3 "1715167624" "(!valids[0])" (5) "(!valids[0]) 0,0,0,0,0,1,-,-"
+Branch 3 "1715167624" "(!valids[0])" (6) "(!valids[0]) 0,0,0,0,0,0,1,-"
+Branch 3 "1715167624" "(!valids[0])" (7) "(!valids[0]) 0,0,0,0,0,0,0,1"
+Branch 3 "1715167624" "(!valids[0])" (8) "(!valids[0]) 0,0,0,0,0,0,0,0"
+Branch 4 "527208832" "(w < 3'h4)"
+Branch 4 "527208832" "(w < 3'h4)" (0) "(w < 3'h4) 1"
+Branch 4 "527208832" "(w < 3'h4)" (1) "(w < 3'h4) 0"
+Branch 5 "1209729376" "(w < 3'h4)"
+Branch 5 "1209729376" "(w < 3'h4)" (0) "(w < 3'h4) 1,1,-,-,-,-,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (1) "(w < 3'h4) 1,0,-,-,-,-,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (2) "(w < 3'h4) 1,-,1,1,-,-,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (3) "(w < 3'h4) 1,-,1,0,-,-,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (4) "(w < 3'h4) 1,-,0,-,1,-,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (5) "(w < 3'h4) 1,-,0,-,0,-,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (6) "(w < 3'h4) 0,-,-,-,-,1,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (7) "(w < 3'h4) 0,-,-,-,-,0,-,-,-"
+Branch 5 "1209729376" "(w < 3'h4)" (8) "(w < 3'h4) 0,-,-,-,-,-,1,1,-"
+Branch 5 "1209729376" "(w < 3'h4)" (9) "(w < 3'h4) 0,-,-,-,-,-,1,0,-"
+Branch 5 "1209729376" "(w < 3'h4)" (10) "(w < 3'h4) 0,-,-,-,-,-,0,-,1"
+Branch 5 "1209729376" "(w < 3'h4)" (11) "(w < 3'h4) 0,-,-,-,-,-,0,-,0"
+
+// ID: EXCL-PROD-0018
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "2028136588 851766751"
+MODULE: axi_ddr_model
+Branch 3 "2983032496" "(rd_out >= 0)"
+Branch 3 "2983032496" "(rd_out >= 0)" (0) "(rd_out >= 0) 1"
+Branch 3 "2983032496" "(rd_out >= 0)" (1) "(rd_out >= 0) 0"
+Branch 4 "2983032496" "(rd_out >= 0)"
+Branch 4 "2983032496" "(rd_out >= 0)" (0) "(rd_out >= 0) 1"
+Branch 4 "2983032496" "(rd_out >= 0)" (1) "(rd_out >= 0) 0"
+Branch 5 "2983032496" "(rd_out >= 0)"
+Branch 5 "2983032496" "(rd_out >= 0)" (0) "(rd_out >= 0) 1"
+Branch 5 "2983032496" "(rd_out >= 0)" (1) "(rd_out >= 0) 0"
+
+// ID: EXCL-PROD-0019
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2568128339 1339472887"
+MODULE: qspi_soc_pad_mux
+Branch 0 "2040227978" "selected_cmd"
+Branch 0 "2040227978" "selected_cmd" (0) "selected_cmd 1,-"
+Branch 0 "2040227978" "selected_cmd" (1) "selected_cmd 0,1"
+Branch 0 "2040227978" "selected_cmd" (2) "selected_cmd 0,0"
+Branch 1 "2040227978" "selected_cmd"
+Branch 1 "2040227978" "selected_cmd" (0) "selected_cmd 1,-"
+Branch 1 "2040227978" "selected_cmd" (1) "selected_cmd 0,1"
+Branch 1 "2040227978" "selected_cmd" (2) "selected_cmd 0,0"
+Branch 2 "2040227978" "selected_cmd"
+Branch 2 "2040227978" "selected_cmd" (0) "selected_cmd 1,-"
+Branch 2 "2040227978" "selected_cmd" (1) "selected_cmd 0,1"
+Branch 2 "2040227978" "selected_cmd" (2) "selected_cmd 0,0"
+Branch 3 "2040227978" "selected_cmd"
+Branch 3 "2040227978" "selected_cmd" (0) "selected_cmd 1,-"
+Branch 3 "2040227978" "selected_cmd" (1) "selected_cmd 0,1"
+Branch 3 "2040227978" "selected_cmd" (2) "selected_cmd 0,0"
+
+// ID: EXCL-PROD-0020
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "832457901 216263769"
+MODULE: qspi_apb_integration
+Branch 1 "2738946915" "status_sel"
+Branch 1 "2738946915" "status_sel" (0) "status_sel 1,-,-"
+Branch 1 "2738946915" "status_sel" (1) "status_sel 0,1,1"
+Branch 1 "2738946915" "status_sel" (2) "status_sel 0,1,0"
+Branch 1 "2738946915" "status_sel" (3) "status_sel 0,0,-"
+Branch 2 "2738946915" "status_sel"
+Branch 2 "2738946915" "status_sel" (0) "status_sel 1,-,-"
+Branch 2 "2738946915" "status_sel" (1) "status_sel 0,1,1"
+Branch 2 "2738946915" "status_sel" (2) "status_sel 0,1,0"
+Branch 2 "2738946915" "status_sel" (3) "status_sel 0,0,-"
+
+// ID: EXCL-PROD-0021
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "1633348978 3926032461"
+MODULE: soc_core_subsystem
+Branch 0 "2359770844" "core_ptw_mem_valid"
+Branch 0 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 0 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 1 "2359770844" "core_ptw_mem_valid"
+Branch 1 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 1 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 2 "2359770844" "core_ptw_mem_valid"
+Branch 2 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 2 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 3 "2359770844" "core_ptw_mem_valid"
+Branch 3 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 3 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 4 "2359770844" "core_ptw_mem_valid"
+Branch 4 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 4 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 5 "2359770844" "core_ptw_mem_valid"
+Branch 5 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 5 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 6 "2359770844" "core_ptw_mem_valid"
+Branch 6 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 6 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+Branch 7 "2359770844" "core_ptw_mem_valid"
+Branch 7 "2359770844" "core_ptw_mem_valid" (0) "core_ptw_mem_valid 1"
+Branch 7 "2359770844" "core_ptw_mem_valid" (1) "core_ptw_mem_valid 0"
+
+// ID: EXCL-PROD-0022
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "314633967 1465953843"
+MODULE: soc_peripheral_subsystem
+Branch 0 "3607565542" "uart_sel"
+Branch 0 "3607565542" "uart_sel" (0) "uart_sel 1,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (1) "uart_sel 0,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (2) "uart_sel 0,0,1,-,-,-,-,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (3) "uart_sel 0,0,0,1,-,-,-,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (4) "uart_sel 0,0,0,0,1,-,-,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (5) "uart_sel 0,0,0,0,0,1,-,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (6) "uart_sel 0,0,0,0,0,0,1,-,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (7) "uart_sel 0,0,0,0,0,0,0,1,-,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (8) "uart_sel 0,0,0,0,0,0,0,0,1,-,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (9) "uart_sel 0,0,0,0,0,0,0,0,0,1,-,-,-,-"
+Branch 0 "3607565542" "uart_sel" (10) "uart_sel 0,0,0,0,0,0,0,0,0,0,1,-,-,-"
+Branch 0 "3607565542" "uart_sel" (11) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,1,-,-"
+Branch 0 "3607565542" "uart_sel" (12) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,1,-"
+Branch 0 "3607565542" "uart_sel" (13) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,1"
+Branch 0 "3607565542" "uart_sel" (14) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+Branch 1 "3607565542" "uart_sel"
+Branch 1 "3607565542" "uart_sel" (0) "uart_sel 1,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (1) "uart_sel 0,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (2) "uart_sel 0,0,1,-,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (3) "uart_sel 0,0,0,1,-,-,-,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (4) "uart_sel 0,0,0,0,1,-,-,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (5) "uart_sel 0,0,0,0,0,1,-,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (6) "uart_sel 0,0,0,0,0,0,1,-,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (7) "uart_sel 0,0,0,0,0,0,0,1,-,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (8) "uart_sel 0,0,0,0,0,0,0,0,1,-,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (9) "uart_sel 0,0,0,0,0,0,0,0,0,1,-,-,-,-"
+Branch 1 "3607565542" "uart_sel" (10) "uart_sel 0,0,0,0,0,0,0,0,0,0,1,-,-,-"
+Branch 1 "3607565542" "uart_sel" (11) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,1,-,-"
+Branch 1 "3607565542" "uart_sel" (12) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,1,-"
+Branch 1 "3607565542" "uart_sel" (13) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,1"
+Branch 1 "3607565542" "uart_sel" (14) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+Branch 2 "3607565542" "uart_sel"
+Branch 2 "3607565542" "uart_sel" (0) "uart_sel 1,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (1) "uart_sel 0,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (2) "uart_sel 0,0,1,-,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (3) "uart_sel 0,0,0,1,-,-,-,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (4) "uart_sel 0,0,0,0,1,-,-,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (5) "uart_sel 0,0,0,0,0,1,-,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (6) "uart_sel 0,0,0,0,0,0,1,-,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (7) "uart_sel 0,0,0,0,0,0,0,1,-,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (8) "uart_sel 0,0,0,0,0,0,0,0,1,-,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (9) "uart_sel 0,0,0,0,0,0,0,0,0,1,-,-,-,-"
+Branch 2 "3607565542" "uart_sel" (10) "uart_sel 0,0,0,0,0,0,0,0,0,0,1,-,-,-"
+Branch 2 "3607565542" "uart_sel" (11) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,1,-,-"
+Branch 2 "3607565542" "uart_sel" (12) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,1,-"
+Branch 2 "3607565542" "uart_sel" (13) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,1"
+Branch 2 "3607565542" "uart_sel" (14) "uart_sel 0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+
+// ID: EXCL-PROD-0023
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1379674422 4237342123"
+MODULE: mips_mem_wb_reg
+Branch 0 "581323052" "(!rst_n)"
+Branch 0 "581323052" "(!rst_n)" (0) "(!rst_n) 1,-,-"
+Branch 0 "581323052" "(!rst_n)" (1) "(!rst_n) 0,1,-"
+Branch 0 "581323052" "(!rst_n)" (2) "(!rst_n) 0,0,1"
+Branch 0 "581323052" "(!rst_n)" (3) "(!rst_n) 0,0,0"
+
+// ID: EXCL-PROD-0024
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "63469976 3059061009"
+MODULE: l2_cache_nb
+Branch 0 "3210554109" "accepting_aw"
+Branch 0 "3210554109" "accepting_aw" (0) "accepting_aw 1"
+Branch 0 "3210554109" "accepting_aw" (1) "accepting_aw 0"
+Branch 1 "1445571313" "(acc_reserved[plru_v] || (valid_ram[acc_set][plru_v] && 1'b0))"
+Branch 1 "1445571313" "(acc_reserved[plru_v] || (valid_ram[acc_set][plru_v] && 1'b0))" (0) "(acc_reserved[plru_v] || (valid_ram[acc_set][plru_v] && 1'b0)) 1"
+Branch 1 "1445571313" "(acc_reserved[plru_v] || (valid_ram[acc_set][plru_v] && 1'b0))" (1) "(acc_reserved[plru_v] || (valid_ram[acc_set][plru_v] && 1'b0)) 0"
+Branch 2 "1687504795" "((acc_state == ACC_IDLE) && acc_can_alloc)"
+Branch 2 "1687504795" "((acc_state == ACC_IDLE) && acc_can_alloc)" (0) "((acc_state == ACC_IDLE) && acc_can_alloc) 1,1,-"
+Branch 2 "1687504795" "((acc_state == ACC_IDLE) && acc_can_alloc)" (1) "((acc_state == ACC_IDLE) && acc_can_alloc) 1,0,1"
+Branch 2 "1687504795" "((acc_state == ACC_IDLE) && acc_can_alloc)" (2) "((acc_state == ACC_IDLE) && acc_can_alloc) 1,0,0"
+Branch 2 "1687504795" "((acc_state == ACC_IDLE) && acc_can_alloc)" (3) "((acc_state == ACC_IDLE) && acc_can_alloc) 0,-,-"
+Branch 3 "296950840" "me_state"
+Branch 3 "296950840" "me_state" (0) "me_state ME_EVICT_AW "
+Branch 3 "296950840" "me_state" (1) "me_state ME_EVICT_W "
+Branch 3 "296950840" "me_state" (2) "me_state ME_EVICT_B "
+Branch 3 "296950840" "me_state" (3) "me_state ME_REFILL_AR "
+Branch 3 "296950840" "me_state" (4) "me_state ME_REFILL_R "
+Branch 3 "296950840" "me_state" (5) "me_state default"
+Branch 4 "3872222596" "rsp_active"
+Branch 4 "3872222596" "rsp_active" (0) "rsp_active 1,1"
+Branch 4 "3872222596" "rsp_active" (1) "rsp_active 1,0"
+Branch 4 "3872222596" "rsp_active" (2) "rsp_active 0,-"
+Branch 5 "2671123972" "(!rst_n)"
+Branch 5 "2671123972" "(!rst_n)" (0) "(!rst_n) 1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (1) "(!rst_n) 0,1,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (2) "(!rst_n) 0,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (3) "(!rst_n) 0,1,1,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (4) "(!rst_n) 0,1,1,-,0,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (5) "(!rst_n) 0,1,1,-,0,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (6) "(!rst_n) 0,1,0,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (7) "(!rst_n) 0,1,0,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (8) "(!rst_n) 0,1,0,-,-,-,1,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (9) "(!rst_n) 0,1,0,-,-,-,1,-,0,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (10) "(!rst_n) 0,1,0,-,-,-,1,-,0,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (11) "(!rst_n) 0,1,0,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (12) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,1,1,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (13) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,1,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (14) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,1,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (15) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (16) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,0,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (17) "(!rst_n) 0,0,-,-,-,-,-,-,-,-,0,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (18) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_IDLE ,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (19) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_IDLE ,1,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (20) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_IDLE ,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (21) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_AW ,-,-,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (22) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_AW ,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (23) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_W ,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (24) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_W ,-,-,-,1,0,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (25) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_W ,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (26) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_B ,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (27) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_EVICT_B ,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (28) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_REFILL_AR ,-,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (29) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_REFILL_AR ,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (30) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_REFILL_R ,-,-,-,-,-,-,-,1,1,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (31) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_REFILL_R ,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (32) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,ME_REFILL_R ,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (33) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,default,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (34) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (35) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (36) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,-,-,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (37) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,1,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (38) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1,0,-,-,-,-"
+Branch 5 "2671123972" "(!rst_n)" (39) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,1,1,-,-"
+Branch 5 "2671123972" "(!rst_n)" (40) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,1,0,-,-"
+Branch 5 "2671123972" "(!rst_n)" (41) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,0,-,1,1"
+Branch 5 "2671123972" "(!rst_n)" (42) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,0,-,1,0"
+Branch 5 "2671123972" "(!rst_n)" (43) "(!rst_n) 0,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,0,-,0,-,0,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (0) "(p[0] == 1'b0) 1,1,1,-,-,-,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (1) "(p[0] == 1'b0) 1,1,0,-,-,-,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (2) "(p[0] == 1'b0) 1,0,-,1,-,-,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (3) "(p[0] == 1'b0) 1,0,-,0,-,-,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (4) "(p[0] == 1'b0) 0,-,-,-,1,1,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (5) "(p[0] == 1'b0) 0,-,-,-,1,0,-"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (6) "(p[0] == 1'b0) 0,-,-,-,0,-,1"
+Branch 6 "1180497945" "(p[0] == 1'b0)" (7) "(p[0] == 1'b0) 0,-,-,-,0,-,0"
+Branch 7 "527208832" "(w < 3'h4)"
+Branch 7 "527208832" "(w < 3'h4)" (0) "(w < 3'h4) 1"
+Branch 7 "527208832" "(w < 3'h4)" (1) "(w < 3'h4) 0"
+Branch 8 "1209729376" "(w < 3'h4)"
+Branch 8 "1209729376" "(w < 3'h4)" (0) "(w < 3'h4) 1,1,-,-,-,-,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (1) "(w < 3'h4) 1,0,-,-,-,-,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (2) "(w < 3'h4) 1,-,1,1,-,-,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (3) "(w < 3'h4) 1,-,1,0,-,-,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (4) "(w < 3'h4) 1,-,0,-,1,-,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (5) "(w < 3'h4) 1,-,0,-,0,-,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (6) "(w < 3'h4) 0,-,-,-,-,1,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (7) "(w < 3'h4) 0,-,-,-,-,0,-,-,-"
+Branch 8 "1209729376" "(w < 3'h4)" (8) "(w < 3'h4) 0,-,-,-,-,-,1,1,-"
+Branch 8 "1209729376" "(w < 3'h4)" (9) "(w < 3'h4) 0,-,-,-,-,-,1,0,-"
+Branch 8 "1209729376" "(w < 3'h4)" (10) "(w < 3'h4) 0,-,-,-,-,-,0,-,1"
+Branch 8 "1209729376" "(w < 3'h4)" (11) "(w < 3'h4) 0,-,-,-,-,-,0,-,0"
+
+// ID: EXCL-PROD-0025
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2802209148 1957262610"
+MODULE: mips_core
+Branch 0 "3594211351" "cpu_data_cache_op_is_icache"
+Branch 0 "3594211351" "cpu_data_cache_op_is_icache" (0) "cpu_data_cache_op_is_icache 1"
+Branch 0 "3594211351" "cpu_data_cache_op_is_icache" (1) "cpu_data_cache_op_is_icache 0"
+Branch 1 "3594211351" "cpu_data_cache_op_is_icache"
+Branch 1 "3594211351" "cpu_data_cache_op_is_icache" (0) "cpu_data_cache_op_is_icache 1"
+Branch 1 "3594211351" "cpu_data_cache_op_is_icache" (1) "cpu_data_cache_op_is_icache 0"
+Branch 2 "3594211351" "cpu_data_cache_op_is_icache"
+Branch 2 "3594211351" "cpu_data_cache_op_is_icache" (0) "cpu_data_cache_op_is_icache 1"
+Branch 2 "3594211351" "cpu_data_cache_op_is_icache" (1) "cpu_data_cache_op_is_icache 0"
+
+// ID: EXCL-PROD-0026
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "469529741 108696597"
+MODULE: axi_read_timeout_guard
+Branch 0 "2830053538" "(state == ST_R)"
+Branch 0 "2830053538" "(state == ST_R)" (0) "(state == ST_R) 1"
+Branch 0 "2830053538" "(state == ST_R)" (1) "(state == ST_R) 0"
+Branch 1 "2830053538" "(state == ST_R)"
+Branch 1 "2830053538" "(state == ST_R)" (0) "(state == ST_R) 1"
+Branch 1 "2830053538" "(state == ST_R)" (1) "(state == ST_R) 0"
+Branch 2 "2830053538" "(state == ST_R)"
+Branch 2 "2830053538" "(state == ST_R)" (0) "(state == ST_R) 1"
+Branch 2 "2830053538" "(state == ST_R)" (1) "(state == ST_R) 0"
+Branch 3 "2830053538" "(state == ST_R)"
+Branch 3 "2830053538" "(state == ST_R)" (0) "(state == ST_R) 1"
+Branch 3 "2830053538" "(state == ST_R)" (1) "(state == ST_R) 0"
+Branch 4 "2830053538" "(state == ST_R)"
+Branch 4 "2830053538" "(state == ST_R)" (0) "(state == ST_R) 1"
+Branch 4 "2830053538" "(state == ST_R)" (1) "(state == ST_R) 0"
+Branch 5 "2830053538" "(state == ST_R)"
+Branch 5 "2830053538" "(state == ST_R)" (0) "(state == ST_R) 1"
+Branch 5 "2830053538" "(state == ST_R)" (1) "(state == ST_R) 0"
+
+// ID: EXCL-PROD-0027
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3064912425 1043449271"
+MODULE: apb_vic
+Branch 0 "152886533" "(!rst_n)"
+Branch 0 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 0 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+Branch 5 "152886533" "(!rst_n)"
+Branch 5 "152886533" "(!rst_n)" (0) "(!rst_n) 1"
+Branch 5 "152886533" "(!rst_n)" (1) "(!rst_n) 0"
+
+// ID: EXCL-PROD-0028
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1149415544 2767828641"
+MODULE: apb_boot_status
+Condition 1 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 1 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 1 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+
+// ID: EXCL-PROD-0029
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "299010489 3333802687"
+MODULE: axi_boot_rom
+Condition 1 "3389892479" "((addr >= 32'h1fc00000) && (addr <= ((32'h1fc00000 + ROM_BYTES) - 4))) 1 -1" (2 "10")
+Condition 1 "3389892479" "((addr >= 32'h1fc00000) && (addr <= ((32'h1fc00000 + ROM_BYTES) - 4))) 1 -1" (3 "11")
+Condition 2 "2184676567" "(s_arvalid && s_arready) 1 -1" (2 "10")
+Condition 2 "2184676567" "(s_arvalid && s_arready) 1 -1" (3 "11")
+Condition 3 "1818511385" "(s_rvalid && s_rready) 1 -1" (1 "01")
+Condition 3 "1818511385" "(s_rvalid && s_rready) 1 -1" (2 "10")
+Condition 3 "1818511385" "(s_rvalid && s_rready) 1 -1" (3 "11")
+Condition 4 "384340934" "(rd_beat == rd_len) 1 -1" (1 "0")
+Condition 4 "384340934" "(rd_beat == rd_len) 1 -1" (2 "1")
+Condition 5 "43828554" "(rd_burst == 2'b1) 1 -1" (1 "0")
+Condition 5 "43828554" "(rd_burst == 2'b1) 1 -1" (2 "1")
+Condition 6 "4096452484" "(((!wr_busy)) && ((!wr_resp_valid)) && s_awvalid && s_awready) 1 -1" (1 "0111")
+Condition 6 "4096452484" "(((!wr_busy)) && ((!wr_resp_valid)) && s_awvalid && s_awready) 1 -1" (2 "1011")
+Condition 6 "4096452484" "(((!wr_busy)) && ((!wr_resp_valid)) && s_awvalid && s_awready) 1 -1" (4 "1110")
+Condition 6 "4096452484" "(((!wr_busy)) && ((!wr_resp_valid)) && s_awvalid && s_awready) 1 -1" (5 "1111")
+Condition 7 "3930765101" "(wr_busy && s_wvalid && s_wready) 1 -1" (1 "011")
+Condition 7 "3930765101" "(wr_busy && s_wvalid && s_wready) 1 -1" (2 "101")
+Condition 7 "3930765101" "(wr_busy && s_wvalid && s_wready) 1 -1" (3 "110")
+Condition 7 "3930765101" "(wr_busy && s_wvalid && s_wready) 1 -1" (4 "111")
+Condition 8 "3419287312" "(s_wlast || (wr_beat == wr_len)) 1 -1" (1 "00")
+Condition 8 "3419287312" "(s_wlast || (wr_beat == wr_len)) 1 -1" (2 "01")
+Condition 8 "3419287312" "(s_wlast || (wr_beat == wr_len)) 1 -1" (3 "10")
+Condition 9 "435570656" "(wr_beat == wr_len) 1 -1" (1 "0")
+Condition 9 "435570656" "(wr_beat == wr_len) 1 -1" (2 "1")
+Condition 10 "1496853924" "(wr_resp_valid && s_bready) 1 -1" (1 "01")
+Condition 10 "1496853924" "(wr_resp_valid && s_bready) 1 -1" (2 "10")
+Condition 10 "1496853924" "(wr_resp_valid && s_bready) 1 -1" (3 "11")
+Condition 11 "849940851" "(rd_error ? AXI_DECERR : AXI_OKAY) 1 -1" (1 "0")
+Condition 12 "3618705144" "(rd_busy && (rd_beat == rd_len)) 1 -1" (2 "10")
+Condition 12 "3618705144" "(rd_busy && (rd_beat == rd_len)) 1 -1" (3 "11")
+Condition 14 "2303617017" "(((!wr_busy)) && ((!wr_resp_valid))) 1 -1" (1 "01")
+Condition 14 "2303617017" "(((!wr_busy)) && ((!wr_resp_valid))) 1 -1" (2 "10")
+Condition 15 "3049590594" "(wr_busy && ((!wr_resp_valid))) 1 -1" (2 "10")
+Condition 15 "3049590594" "(wr_busy && ((!wr_resp_valid))) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0030
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1384839261 2280763513"
+MODULE: mips_mdu
+Condition 1 "2900328970" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (2 "01")
+Condition 1 "2900328970" "((op == OP_MADD) || (op == OP_MSUB)) 1 -1" (3 "10")
+Condition 2 "1613843828" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 3 "2184099630" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 4 "1050965448" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 7 "3964899405" "(rs_val[31] ^ rt_val[31]) 1 -1" (2 "01")
+Condition 7 "3964899405" "(rs_val[31] ^ rt_val[31]) 1 -1" (3 "10")
+Condition 8 "672292996" "((op == OP_MADDU) || (op == OP_MSUBU)) 1 -1" (2 "01")
+Condition 8 "672292996" "((op == OP_MADDU) || (op == OP_MSUBU)) 1 -1" (3 "10")
+Condition 9 "4076574923" "(op == OP_MADDU) 1 -1" (2 "1")
+Condition 10 "3588705732" "(op == OP_MSUBU) 1 -1" (2 "1")
+Condition 11 "2712912527" "(op == OP_MSUBU) 1 -1" (2 "1")
+Condition 18 "2914970688" "(rt_val == 32'b0) 1 -1" (2 "1")
+Condition 20 "3360610252" "((mul_a[31:16] == 16'b0) && (mul_b[31:16] == 16'b0)) 1 -1" (1 "01")
+Condition 20 "3360610252" "((mul_a[31:16] == 16'b0) && (mul_b[31:16] == 16'b0)) 1 -1" (2 "10")
+Condition 24 "3794161738" "(op_r == OP_MUL) 1 -1" (2 "1")
+Condition 25 "2941762657" "(result_neg_mul ? (((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0))) : mul_prod[63:32]) 1 -1" (1 "0")
+Condition 25 "2941762657" "(result_neg_mul ? (((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0))) : mul_prod[63:32]) 1 -1" (2 "1")
+Condition 26 "2498310219" "(result_neg_mul ? (((~mul_prod[31:0]) + 1'b1)) : mul_prod[31:0]) 1 -1" (1 "0")
+Condition 26 "2498310219" "(result_neg_mul ? (((~mul_prod[31:0]) + 1'b1)) : mul_prod[31:0]) 1 -1" (2 "1")
+Condition 27 "2719343521" "(result_neg_mul ? (((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0))) : mul_prod[63:32]) 1 -1" (2 "1")
+Condition 28 "2578149259" "(result_neg_mul ? (((~mul_prod[31:0]) + 1'b1)) : mul_prod[31:0]) 1 -1" (2 "1")
+Condition 29 "1515992418" "((div_ctr == 6'd32) && (div_divisor > div_dividend_orig)) 1 -1" (1 "01")
+Condition 29 "1515992418" "((div_ctr == 6'd32) && (div_divisor > div_dividend_orig)) 1 -1" (3 "11")
+Condition 31 "1941792605" "(result_neg_rem ? (((~div_dividend_orig) + 1'b1)) : div_dividend_orig) 1 -1" (1 "0")
+Condition 31 "1941792605" "(result_neg_rem ? (((~div_dividend_orig) + 1'b1)) : div_dividend_orig) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0031
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2521688486 2726079799"
+MODULE: mips_mmu
+Condition 1 "1517026254" "(((!is_kernel)) && req_va[31]) 1 -1" (2 "10")
+Condition 1 "1517026254" "(((!is_kernel)) && req_va[31]) 1 -1" (3 "11")
+Condition 2 "2511133160" "(req_is_store ? 3'b101 : 3'b100) 1 -1" (1 "0")
+Condition 2 "2511133160" "(req_is_store ? 3'b101 : 3'b100) 1 -1" (2 "1")
+Condition 3 "3544845002" "(req_is_store ? 3'b010 : 3'b1) 1 -1" (1 "0")
+Condition 3 "3544845002" "(req_is_store ? 3'b010 : 3'b1) 1 -1" (2 "1")
+Condition 4 "2490795987" "(req_is_store ? 3'b010 : 3'b1) 1 -1" (1 "0")
+Condition 4 "2490795987" "(req_is_store ? 3'b010 : 3'b1) 1 -1" (2 "1")
+Condition 5 "3639493283" "(req_is_store && ((!tlb_lookup_d))) 1 -1" (1 "01")
+Condition 5 "3639493283" "(req_is_store && ((!tlb_lookup_d))) 1 -1" (2 "10")
+Condition 5 "3639493283" "(req_is_store && ((!tlb_lookup_d))) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0032
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1806501640 849174631"
+MODULE: mips_micro_tlb
+Condition 1 "1410686298" "(i_main_hit && ((!i_main_multi_hit)) && ((!i_found))) 1 -1" (2 "101")
+Condition 1 "1410686298" "(i_main_hit && ((!i_main_multi_hit)) && ((!i_found))) 1 -1" (3 "110")
+Condition 1 "1410686298" "(i_main_hit && ((!i_main_multi_hit)) && ((!i_found))) 1 -1" (4 "111")
+Condition 2 "608449903" "(d_main_hit && ((!d_main_multi_hit)) && ((!d_found))) 1 -1" (2 "101")
+Condition 2 "608449903" "(d_main_hit && ((!d_main_multi_hit)) && ((!d_found))) 1 -1" (3 "110")
+Condition 2 "608449903" "(d_main_hit && ((!d_main_multi_hit)) && ((!d_found))) 1 -1" (4 "111")
+Condition 3 "3252307203" "(valid_i[0] && (((vpn_i[0] ^ i_va[31:13]) & {3'b111, (~mask_i[0])}) == 19'b0) && (global_i[0] || (asid_i[0] == i_asid))) 1 -1" (1 "011")
+Condition 3 "3252307203" "(valid_i[0] && (((vpn_i[0] ^ i_va[31:13]) & {3'b111, (~mask_i[0])}) == 19'b0) && (global_i[0] || (asid_i[0] == i_asid))) 1 -1" (2 "101")
+Condition 3 "3252307203" "(valid_i[0] && (((vpn_i[0] ^ i_va[31:13]) & {3'b111, (~mask_i[0])}) == 19'b0) && (global_i[0] || (asid_i[0] == i_asid))) 1 -1" (3 "110")
+Condition 3 "3252307203" "(valid_i[0] && (((vpn_i[0] ^ i_va[31:13]) & {3'b111, (~mask_i[0])}) == 19'b0) && (global_i[0] || (asid_i[0] == i_asid))) 1 -1" (4 "111")
+Condition 4 "3028354736" "(((vpn_i[0] ^ i_va[31:13]) & {3'b111, (~mask_i[0])}) == 19'b0) 1 -1" (2 "1")
+Condition 5 "1593611626" "(global_i[0] || (asid_i[0] == i_asid)) 1 -1" (1 "00")
+Condition 5 "1593611626" "(global_i[0] || (asid_i[0] == i_asid)) 1 -1" (2 "01")
+Condition 5 "1593611626" "(global_i[0] || (asid_i[0] == i_asid)) 1 -1" (3 "10")
+Condition 6 "2197874035" "(asid_i[0] == i_asid) 1 -1" (2 "1")
+Condition 7 "1086314679" "(valid_d[0] && (((vpn_d[0] ^ d_va[31:13]) & {3'b111, (~mask_d[0])}) == 19'b0) && (global_d[0] || (asid_d[0] == d_asid))) 1 -1" (1 "011")
+Condition 7 "1086314679" "(valid_d[0] && (((vpn_d[0] ^ d_va[31:13]) & {3'b111, (~mask_d[0])}) == 19'b0) && (global_d[0] || (asid_d[0] == d_asid))) 1 -1" (2 "101")
+Condition 7 "1086314679" "(valid_d[0] && (((vpn_d[0] ^ d_va[31:13]) & {3'b111, (~mask_d[0])}) == 19'b0) && (global_d[0] || (asid_d[0] == d_asid))) 1 -1" (3 "110")
+Condition 7 "1086314679" "(valid_d[0] && (((vpn_d[0] ^ d_va[31:13]) & {3'b111, (~mask_d[0])}) == 19'b0) && (global_d[0] || (asid_d[0] == d_asid))) 1 -1" (4 "111")
+Condition 8 "2496821743" "(((vpn_d[0] ^ d_va[31:13]) & {3'b111, (~mask_d[0])}) == 19'b0) 1 -1" (2 "1")
+Condition 9 "3773620683" "(global_d[0] || (asid_d[0] == d_asid)) 1 -1" (1 "00")
+Condition 9 "3773620683" "(global_d[0] || (asid_d[0] == d_asid)) 1 -1" (2 "01")
+Condition 9 "3773620683" "(global_d[0] || (asid_d[0] == d_asid)) 1 -1" (3 "10")
+Condition 10 "2771342415" "(asid_d[0] == d_asid) 1 -1" (2 "1")
+Condition 11 "3803765008" "(valid_i[1] && (((vpn_i[1] ^ i_va[31:13]) & {3'b111, (~mask_i[1])}) == 19'b0) && (global_i[1] || (asid_i[1] == i_asid))) 1 -1" (1 "011")
+Condition 11 "3803765008" "(valid_i[1] && (((vpn_i[1] ^ i_va[31:13]) & {3'b111, (~mask_i[1])}) == 19'b0) && (global_i[1] || (asid_i[1] == i_asid))) 1 -1" (2 "101")
+Condition 11 "3803765008" "(valid_i[1] && (((vpn_i[1] ^ i_va[31:13]) & {3'b111, (~mask_i[1])}) == 19'b0) && (global_i[1] || (asid_i[1] == i_asid))) 1 -1" (3 "110")
+Condition 11 "3803765008" "(valid_i[1] && (((vpn_i[1] ^ i_va[31:13]) & {3'b111, (~mask_i[1])}) == 19'b0) && (global_i[1] || (asid_i[1] == i_asid))) 1 -1" (4 "111")
+Condition 12 "68238657" "(((vpn_i[1] ^ i_va[31:13]) & {3'b111, (~mask_i[1])}) == 19'b0) 1 -1" (2 "1")
+Condition 13 "2858086057" "(global_i[1] || (asid_i[1] == i_asid)) 1 -1" (1 "00")
+Condition 13 "2858086057" "(global_i[1] || (asid_i[1] == i_asid)) 1 -1" (2 "01")
+Condition 13 "2858086057" "(global_i[1] || (asid_i[1] == i_asid)) 1 -1" (3 "10")
+Condition 14 "3451611162" "(asid_i[1] == i_asid) 1 -1" (2 "1")
+Condition 15 "1675445412" "(valid_d[1] && (((vpn_d[1] ^ d_va[31:13]) & {3'b111, (~mask_d[1])}) == 19'b0) && (global_d[1] || (asid_d[1] == d_asid))) 1 -1" (1 "011")
+Condition 15 "1675445412" "(valid_d[1] && (((vpn_d[1] ^ d_va[31:13]) & {3'b111, (~mask_d[1])}) == 19'b0) && (global_d[1] || (asid_d[1] == d_asid))) 1 -1" (2 "101")
+Condition 15 "1675445412" "(valid_d[1] && (((vpn_d[1] ^ d_va[31:13]) & {3'b111, (~mask_d[1])}) == 19'b0) && (global_d[1] || (asid_d[1] == d_asid))) 1 -1" (3 "110")
+Condition 15 "1675445412" "(valid_d[1] && (((vpn_d[1] ^ d_va[31:13]) & {3'b111, (~mask_d[1])}) == 19'b0) && (global_d[1] || (asid_d[1] == d_asid))) 1 -1" (4 "111")
+Condition 16 "608322078" "(((vpn_d[1] ^ d_va[31:13]) & {3'b111, (~mask_d[1])}) == 19'b0) 1 -1" (2 "1")
+Condition 17 "340433416" "(global_d[1] || (asid_d[1] == d_asid)) 1 -1" (1 "00")
+Condition 17 "340433416" "(global_d[1] || (asid_d[1] == d_asid)) 1 -1" (2 "01")
+Condition 17 "340433416" "(global_d[1] || (asid_d[1] == d_asid)) 1 -1" (3 "10")
+Condition 18 "3952400678" "(asid_d[1] == d_asid) 1 -1" (2 "1")
+Condition 19 "2496171526" "(valid_i[2] && (((vpn_i[2] ^ i_va[31:13]) & {3'b111, (~mask_i[2])}) == 19'b0) && (global_i[2] || (asid_i[2] == i_asid))) 1 -1" (1 "011")
+Condition 19 "2496171526" "(valid_i[2] && (((vpn_i[2] ^ i_va[31:13]) & {3'b111, (~mask_i[2])}) == 19'b0) && (global_i[2] || (asid_i[2] == i_asid))) 1 -1" (2 "101")
+Condition 19 "2496171526" "(valid_i[2] && (((vpn_i[2] ^ i_va[31:13]) & {3'b111, (~mask_i[2])}) == 19'b0) && (global_i[2] || (asid_i[2] == i_asid))) 1 -1" (3 "110")
+Condition 19 "2496171526" "(valid_i[2] && (((vpn_i[2] ^ i_va[31:13]) & {3'b111, (~mask_i[2])}) == 19'b0) && (global_i[2] || (asid_i[2] == i_asid))) 1 -1" (4 "111")
+Condition 20 "4048957736" "(((vpn_i[2] ^ i_va[31:13]) & {3'b111, (~mask_i[2])}) == 19'b0) 1 -1" (2 "1")
+Condition 21 "2273114599" "(global_i[2] || (asid_i[2] == i_asid)) 1 -1" (1 "00")
+Condition 21 "2273114599" "(global_i[2] || (asid_i[2] == i_asid)) 1 -1" (2 "01")
+Condition 21 "2273114599" "(global_i[2] || (asid_i[2] == i_asid)) 1 -1" (3 "10")
+Condition 22 "1558411923" "(asid_i[2] == i_asid) 1 -1" (2 "1")
+Condition 23 "363664306" "(valid_d[2] && (((vpn_d[2] ^ d_va[31:13]) & {3'b111, (~mask_d[2])}) == 19'b0) && (global_d[2] || (asid_d[2] == d_asid))) 1 -1" (1 "011")
+Condition 23 "363664306" "(valid_d[2] && (((vpn_d[2] ^ d_va[31:13]) & {3'b111, (~mask_d[2])}) == 19'b0) && (global_d[2] || (asid_d[2] == d_asid))) 1 -1" (2 "101")
+Condition 23 "363664306" "(valid_d[2] && (((vpn_d[2] ^ d_va[31:13]) & {3'b111, (~mask_d[2])}) == 19'b0) && (global_d[2] || (asid_d[2] == d_asid))) 1 -1" (3 "110")
+Condition 23 "363664306" "(valid_d[2] && (((vpn_d[2] ^ d_va[31:13]) & {3'b111, (~mask_d[2])}) == 19'b0) && (global_d[2] || (asid_d[2] == d_asid))) 1 -1" (4 "111")
+Condition 24 "3506785911" "(((vpn_d[2] ^ d_va[31:13]) & {3'b111, (~mask_d[2])}) == 19'b0) 1 -1" (2 "1")
+Condition 25 "963415366" "(global_d[2] || (asid_d[2] == d_asid)) 1 -1" (1 "00")
+Condition 25 "963415366" "(global_d[2] || (asid_d[2] == d_asid)) 1 -1" (2 "01")
+Condition 25 "963415366" "(global_d[2] || (asid_d[2] == d_asid)) 1 -1" (3 "10")
+Condition 26 "2060241839" "(asid_d[2] == d_asid) 1 -1" (2 "1")
+Condition 27 "3081376277" "(valid_i[3] && (((vpn_i[3] ^ i_va[31:13]) & {3'b111, (~mask_i[3])}) == 19'b0) && (global_i[3] || (asid_i[3] == i_asid))) 1 -1" (1 "011")
+Condition 27 "3081376277" "(valid_i[3] && (((vpn_i[3] ^ i_va[31:13]) & {3'b111, (~mask_i[3])}) == 19'b0) && (global_i[3] || (asid_i[3] == i_asid))) 1 -1" (2 "101")
+Condition 27 "3081376277" "(valid_i[3] && (((vpn_i[3] ^ i_va[31:13]) & {3'b111, (~mask_i[3])}) == 19'b0) && (global_i[3] || (asid_i[3] == i_asid))) 1 -1" (3 "110")
+Condition 27 "3081376277" "(valid_i[3] && (((vpn_i[3] ^ i_va[31:13]) & {3'b111, (~mask_i[3])}) == 19'b0) && (global_i[3] || (asid_i[3] == i_asid))) 1 -1" (4 "111")
+Condition 28 "1103497945" "(((vpn_i[3] ^ i_va[31:13]) & {3'b111, (~mask_i[3])}) == 19'b0) 1 -1" (2 "1")
+Condition 29 "1943700004" "(global_i[3] || (asid_i[3] == i_asid)) 1 -1" (1 "00")
+Condition 29 "1943700004" "(global_i[3] || (asid_i[3] == i_asid)) 1 -1" (2 "01")
+Condition 29 "1943700004" "(global_i[3] || (asid_i[3] == i_asid)) 1 -1" (3 "10")
+Condition 30 "307820538" "(asid_i[3] == i_asid) 1 -1" (2 "1")
+Condition 31 "919572385" "(valid_d[3] && (((vpn_d[3] ^ d_va[31:13]) & {3'b111, (~mask_d[3])}) == 19'b0) && (global_d[3] || (asid_d[3] == d_asid))) 1 -1" (1 "011")
+Condition 31 "919572385" "(valid_d[3] && (((vpn_d[3] ^ d_va[31:13]) & {3'b111, (~mask_d[3])}) == 19'b0) && (global_d[3] || (asid_d[3] == d_asid))) 1 -1" (2 "101")
+Condition 31 "919572385" "(valid_d[3] && (((vpn_d[3] ^ d_va[31:13]) & {3'b111, (~mask_d[3])}) == 19'b0) && (global_d[3] || (asid_d[3] == d_asid))) 1 -1" (3 "110")
+Condition 31 "919572385" "(valid_d[3] && (((vpn_d[3] ^ d_va[31:13]) & {3'b111, (~mask_d[3])}) == 19'b0) && (global_d[3] || (asid_d[3] == d_asid))) 1 -1" (4 "111")
+Condition 32 "1637184902" "(((vpn_d[3] ^ d_va[31:13]) & {3'b111, (~mask_d[3])}) == 19'b0) 1 -1" (2 "1")
+Condition 33 "3452630661" "(global_d[3] || (asid_d[3] == d_asid)) 1 -1" (1 "00")
+Condition 33 "3452630661" "(global_d[3] || (asid_d[3] == d_asid)) 1 -1" (2 "01")
+Condition 33 "3452630661" "(global_d[3] || (asid_d[3] == d_asid)) 1 -1" (3 "10")
+Condition 34 "880232134" "(asid_d[3] == d_asid) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0033
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2069035916 3637372209"
+MODULE: mips_id_stage
+Condition 3 "2225323184" "(fpu_condition[fpu_condition_code] ^ fpu_branch_invert) 1 -1" (1 "00")
+Condition 3 "2225323184" "(fpu_condition[fpu_condition_code] ^ fpu_branch_invert) 1 -1" (2 "01")
+Condition 3 "2225323184" "(fpu_condition[fpu_condition_code] ^ fpu_branch_invert) 1 -1" (3 "10")
+Condition 3 "2225323184" "(fpu_condition[fpu_condition_code] ^ fpu_branch_invert) 1 -1" (4 "11")
+Condition 4 "267963687" "(is_rdpgpr ? shadow_rdata : ((rs_addr == 5'b0) ? 32'b0 : ((fw_ex_we && (fw_ex_waddr == rs_addr)) ? fw_ex_val : ((fw_mem_we && (fw_mem_waddr == rs_addr)) ? fw_mem_val : ((fw_wb_we && (fw_wb_waddr == rs_addr)) ? fw_wb_val : rf_rdata1))))) 1 -1" (2 "1")
+Condition 30 "2356110265" "(branch_likely & ((~br_taken)) & ((~stall_req))) 1 -1" (2 "101")
+Condition 30 "2356110265" "(branch_likely & ((~br_taken)) & ((~stall_req))) 1 -1" (3 "110")
+Condition 31 "518505157" "(branch_likely & br_taken & ((~stall_req))) 1 -1" (3 "110")
+Condition 31 "518505157" "(branch_likely & br_taken & ((~stall_req))) 1 -1" (4 "111")
+Condition 32 "2003565877" "(is_jump & ((~stall_req))) 1 -1" (2 "10")
+Condition 56 "1275648394" "((reg_dst == 2'b10) ? 5'd31 : 5'b0) 1 -1" (1 "0")
+Condition 57 "1660560331" "(reg_dst == 2'b10) 1 -1" (1 "0")
+Condition 61 "3430229111" "(val_rt == 32'b0) 1 -1" (1 "0")
+Condition 62 "119275406" "(cond_move_is_movf ? ((!fpu_condition[fpu_condition_code])) : (cond_move_is_movt ? fpu_condition[fpu_condition_code] : 1'b1)) 1 -1" (2 "1")
+Condition 63 "1085314028" "(cond_move_is_movt ? fpu_condition[fpu_condition_code] : 1'b1) 1 -1" (2 "1")
+Condition 79 "1714963206" "((opcode == 6'b011100) && ((func == 6'b0) || (func == 6'b1) || (func == 6'b000010) || (func == 6'b000100) || (func == 6'b000101))) 1 -1" (3 "11")
+Condition 96 "746653365" "(special2_reads_rt || (opcode == 6'b101011) || (opcode == 6'b111001) || (opcode == 6'b101001) || (opcode == 6'b101000) || (opcode == 6'b000100) || (opcode == 6'b000101) || ((opcode == 6'b010000) && (inst[25:21] == 5'b00100))) 1 -1" (7 "00100000")
+Condition 96 "746653365" "(special2_reads_rt || (opcode == 6'b101011) || (opcode == 6'b111001) || (opcode == 6'b101001) || (opcode == 6'b101000) || (opcode == 6'b000100) || (opcode == 6'b000101) || ((opcode == 6'b010000) && (inst[25:21] == 5'b00100))) 1 -1" (9 "10000000")
+Condition 98 "353612197" "(opcode == 6'b111001) 1 -1" (2 "1")
+Condition 107 "3988973416" "((ex_mem_read || (ex_mem_to_reg == 2'b11)) && (ex_waddr != 5'b0) && ((reads_rs && (ex_waddr == rs_addr)) || (reads_rt && (ex_waddr == rt_addr)))) 1 -1" (2 "101")
+Condition 116 "2892226172" "((mem_mem_read || (mem_mem_to_reg == 2'b11)) && (fw_mem_waddr != 5'b0) && ((reads_rs && (fw_mem_waddr == rs_addr)) || (reads_rt && (fw_mem_waddr == rt_addr)))) 1 -1" (2 "101")
+Condition 132 "1964014545" "(load_use_hazard || wb_use_hazard || nb_pending_hazard) 1 -1" (2 "001")
+Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (1 "0111")
+Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (2 "1011")
+Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (3 "1101")
+Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (4 "1110")
+Condition 133 "3810992810" "((inst[31:26] == 6'b011111) && (inst[25:21] == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) && (inst[5:0] == 6'b111011)) 1 -1" (5 "1111")
+Condition 143 "1604479590" "(is_rdhwr ? ((inst[15:11] == 5'd29) ? 5'd4 : ((inst[15:11] == 5'b0) ? 5'd15 : (((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7))) : inst[15:11]) 1 -1" (2 "1")
+Condition 144 "1064862452" "((inst[15:11] == 5'd29) ? 5'd4 : ((inst[15:11] == 5'b0) ? 5'd15 : (((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7))) 1 -1" (1 "0")
+Condition 144 "1064862452" "((inst[15:11] == 5'd29) ? 5'd4 : ((inst[15:11] == 5'b0) ? 5'd15 : (((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7))) 1 -1" (2 "1")
+Condition 145 "2450010606" "(inst[15:11] == 5'd29) 1 -1" (1 "0")
+Condition 145 "2450010606" "(inst[15:11] == 5'd29) 1 -1" (2 "1")
+Condition 146 "2225130023" "((inst[15:11] == 5'b0) ? 5'd15 : (((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7)) 1 -1" (1 "0")
+Condition 146 "2225130023" "((inst[15:11] == 5'b0) ? 5'd15 : (((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7)) 1 -1" (2 "1")
+Condition 147 "1544329070" "(inst[15:11] == 5'b0) 1 -1" (1 "0")
+Condition 147 "1544329070" "(inst[15:11] == 5'b0) 1 -1" (2 "1")
+Condition 148 "2454611031" "(((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7) 1 -1" (1 "0")
+Condition 148 "2454611031" "(((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) ? 5'd9 : 5'd7) 1 -1" (2 "1")
+Condition 149 "3540951086" "((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) 1 -1" (1 "00")
+Condition 149 "3540951086" "((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) 1 -1" (2 "01")
+Condition 149 "3540951086" "((inst[15:11] == 5'd2) || (inst[15:11] == 5'd3)) 1 -1" (3 "10")
+Condition 150 "1432568519" "(inst[15:11] == 5'd2) 1 -1" (1 "0")
+Condition 150 "1432568519" "(inst[15:11] == 5'd2) 1 -1" (2 "1")
+Condition 151 "907320096" "(inst[15:11] == 5'd3) 1 -1" (1 "0")
+Condition 151 "907320096" "(inst[15:11] == 5'd3) 1 -1" (2 "1")
+Condition 152 "3423972133" "(is_rdhwr ? ((inst[15:11] == 5'd29) ? 3'd2 : ((inst[15:11] == 5'b0) ? 3'd2 : ((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0)))) : inst[2:0]) 1 -1" (2 "1")
+Condition 153 "962266558" "((inst[15:11] == 5'd29) ? 3'd2 : ((inst[15:11] == 5'b0) ? 3'd2 : ((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0)))) 1 -1" (1 "0")
+Condition 153 "962266558" "((inst[15:11] == 5'd29) ? 3'd2 : ((inst[15:11] == 5'b0) ? 3'd2 : ((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0)))) 1 -1" (2 "1")
+Condition 154 "3103728765" "(inst[15:11] == 5'd29) 1 -1" (1 "0")
+Condition 154 "3103728765" "(inst[15:11] == 5'd29) 1 -1" (2 "1")
+Condition 155 "2621770205" "((inst[15:11] == 5'b0) ? 3'd2 : ((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0))) 1 -1" (1 "0")
+Condition 155 "2621770205" "((inst[15:11] == 5'b0) ? 3'd2 : ((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0))) 1 -1" (2 "1")
+Condition 156 "3249627185" "(inst[15:11] == 5'b0) 1 -1" (1 "0")
+Condition 156 "3249627185" "(inst[15:11] == 5'b0) 1 -1" (2 "1")
+Condition 157 "3333600473" "((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0)) 1 -1" (1 "0")
+Condition 157 "3333600473" "((inst[15:11] == 5'b1) ? 3'b1 : ((inst[15:11] == 5'd3) ? 3'b1 : 3'b0)) 1 -1" (2 "1")
+Condition 158 "3186918953" "(inst[15:11] == 5'b1) 1 -1" (1 "0")
+Condition 158 "3186918953" "(inst[15:11] == 5'b1) 1 -1" (2 "1")
+Condition 159 "1881900900" "((inst[15:11] == 5'd3) ? 3'b1 : 3'b0) 1 -1" (1 "0")
+Condition 159 "1881900900" "((inst[15:11] == 5'd3) ? 3'b1 : 3'b0) 1 -1" (2 "1")
+Condition 160 "3259326057" "(inst[15:11] == 5'd3) 1 -1" (1 "0")
+Condition 160 "3259326057" "(inst[15:11] == 5'd3) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0034
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1189874766 2313788180"
+MODULE: apb_timer
+Condition 9 "3412772268" "(psel & penable & pwrite & pready) 1 -1" (1 "0111")
+Condition 9 "3412772268" "(psel & penable & pwrite & pready) 1 -1" (2 "1011")
+Condition 10 "1424838937" "(psel & ((~pwrite)) & pready) 1 -1" (1 "011")
+
+// ID: EXCL-PROD-0035
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1947636165 3163455007"
+MODULE: mips_if_stage
+Condition 1 "2621294595" "(ctx_restore_req || exception_req || bpu_recover) 1 -1" (2 "001")
+Condition 1 "2621294595" "(ctx_restore_req || exception_req || bpu_recover) 1 -1" (4 "100")
+Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (1 "01111")
+Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (2 "10111")
+Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (3 "11011")
+Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (4 "11101")
+Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (5 "11110")
+Condition 2 "1160243106" "(bpu_enable && bpu_predict_valid && bpu_predict_taken && ((!branch_taken)) && ((!jump_taken))) 1 -1" (6 "11111")
+
+// ID: EXCL-PROD-0036
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "7721136 210868498"
+MODULE: axi_sram
+Condition 1 "1084403641" "(s_arvalid && s_arready) 1 -1" (1 "01")
+Condition 1 "1084403641" "(s_arvalid && s_arready) 1 -1" (2 "10")
+Condition 1 "1084403641" "(s_arvalid && s_arready) 1 -1" (3 "11")
+Condition 2 "2741102588" "(s_arlen == 8'b0) 1 -1" (1 "0")
+Condition 2 "2741102588" "(s_arlen == 8'b0) 1 -1" (2 "1")
+Condition 3 "1569133933" "(s_rvalid && s_rready) 1 -1" (1 "01")
+Condition 3 "1569133933" "(s_rvalid && s_rready) 1 -1" (2 "10")
+Condition 3 "1569133933" "(s_rvalid && s_rready) 1 -1" (3 "11")
+Condition 4 "4025675446" "(r_len == 8'b0) 1 -1" (1 "0")
+Condition 4 "4025675446" "(r_len == 8'b0) 1 -1" (2 "1")
+Condition 5 "2968652052" "(r_len == 8'b1) 1 -1" (1 "0")
+Condition 5 "2968652052" "(r_len == 8'b1) 1 -1" (2 "1")
+Condition 6 "3913705300" "(s_awvalid && s_awready) 1 -1" (1 "01")
+Condition 6 "3913705300" "(s_awvalid && s_awready) 1 -1" (2 "10")
+Condition 6 "3913705300" "(s_awvalid && s_awready) 1 -1" (3 "11")
+Condition 7 "112268267" "(s_wvalid && s_wready) 1 -1" (1 "01")
+Condition 7 "112268267" "(s_wvalid && s_wready) 1 -1" (2 "10")
+Condition 7 "112268267" "(s_wvalid && s_wready) 1 -1" (3 "11")
+Condition 8 "2108852241" "(s_bvalid && s_bready) 1 -1" (1 "01")
+Condition 8 "2108852241" "(s_bvalid && s_bready) 1 -1" (2 "10")
+Condition 8 "2108852241" "(s_bvalid && s_bready) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0037
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2018139936 2807625516"
+MODULE: mips_cpu
+Condition 1 "3815813165" "(interrupt_accept || ctx_restore_req || exception_flush) 1 -1" (3 "010")
+Condition 1 "3815813165" "(interrupt_accept || ctx_restore_req || exception_flush) 1 -1" (4 "100")
+Condition 2 "4066862370" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (1 "011")
+Condition 2 "4066862370" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (2 "101")
+Condition 2 "4066862370" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (4 "111")
+Condition 3 "979942292" "(wb_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (1 "011111")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (2 "101111")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (3 "110111")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (4 "111011")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (5 "111101")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (6 "111110")
+Condition 4 "3276546579" "(id_fpu_exception && fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (7 "111111")
+Condition 5 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (1 "01")
+Condition 5 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (2 "10")
+Condition 5 "4097994319" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (3 "11")
+Condition 6 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (1 "00")
+Condition 6 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (2 "01")
+Condition 6 "379359092" "(((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))) 1 -1" (3 "10")
+Condition 7 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (1 "01")
+Condition 7 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (2 "10")
+Condition 7 "4049985811" "((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) 1 -1" (3 "11")
+Condition 8 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (1 "01")
+Condition 8 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (2 "10")
+Condition 8 "1077876905" "((fpu_op >= 5'd18) && (fpu_op <= 5'd22)) 1 -1" (3 "11")
+Condition 12 "3770143978" "(id_control_taken ? id_control_target : ((id_pc_plus_4 + 32'd4))) 1 -1" (1 "0")
+Condition 13 "1775094305" "(coh_snoop_valid && (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) 1 -1" (2 "10")
+Condition 13 "1775094305" "(coh_snoop_valid && (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) 1 -1" (3 "11")
+Condition 14 "2474010433" "(ll_reservation_addr[31:5] == coh_snoop_addr[31:5]) 1 -1" (1 "0")
+Condition 16 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (1 "00")
+Condition 16 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (2 "01")
+Condition 16 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (3 "10")
+Condition 19 "2322176586" "(rob_alloc_valid && rob_alloc_ready && ((!rob_stall)) && mem_reg_write && (mem_waddr != 5'b0)) 1 -1" (1 "01111")
+Condition 19 "2322176586" "(rob_alloc_valid && rob_alloc_ready && ((!rob_stall)) && mem_reg_write && (mem_waddr != 5'b0)) 1 -1" (2 "10111")
+Condition 21 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (1 "00")
+Condition 21 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (2 "01")
+Condition 21 "3123011234" "(((!rst_n)) || flush_mem_wb) 1 -1" (3 "10")
+Condition 22 "2132554150" "(ptw_req_valid && ptw_req_ready) 1 -1" (2 "10")
+Condition 22 "2132554150" "(ptw_req_valid && ptw_req_ready) 1 -1" (3 "11")
+Condition 23 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (1 "01")
+Condition 23 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (2 "10")
+Condition 23 "3921428580" "(ptw_busy && ptw_resp_valid) 1 -1" (3 "11")
+Condition 24 "529034180" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (2 "10")
+Condition 24 "529034180" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (3 "11")
+Condition 25 "2157151922" "(ptw_fault_pending && wb_except_req) 1 -1" (2 "10")
+Condition 25 "2157151922" "(ptw_fault_pending && wb_except_req) 1 -1" (3 "11")
+Condition 27 "2152240536" "(inst_req && inst_addr_ok && ((!inst_data_ok))) 1 -1" (1 "011")
+Condition 30 "2441854792" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 31 "1145698525" "(dmem_request_blocked | mem_double_align_fault) 1 -1" (2 "01")
+Condition 31 "1145698525" "(dmem_request_blocked | mem_double_align_fault) 1 -1" (3 "10")
+Condition 32 "622198642" "(wb_cp0_we && wb_arch_valid && ( ! (wb_except_req && wb_arch_valid) )) 1 -1" (3 "110")
+Condition 34 "2110347513" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 40 "2092755730" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 41 "3195834383" "(data_data_ok && ((!tagged_data_response))) 1 -1" (2 "10")
+Condition 42 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (2 "101")
+Condition 42 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (3 "110")
+Condition 42 "560305077" "(mem_double_mem && data_data_ok_current && ((!mem_done))) 1 -1" (4 "111")
+Condition 43 "334710447" "(data_bus_error && ((!tagged_data_response))) 1 -1" (2 "10")
+Condition 43 "334710447" "(data_bus_error && ((!tagged_data_response))) 1 -1" (3 "11")
+Condition 44 "2603285835" "(data_cache_error && ((!tagged_data_response))) 1 -1" (2 "10")
+Condition 44 "2603285835" "(data_cache_error && ((!tagged_data_response))) 1 -1" (3 "11")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (2 "0000000001")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (3 "0000000010")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (4 "0000000100")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (5 "0000001000")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (6 "0000010000")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (7 "0000100000")
+Condition 45 "3333890671" "(stall_req_if | stall_req_mem | double_response_stall | ((~mdu_ready)) | context_active | ptw_busy | ptw_refill_pending | walker_d_stall | rob_backpressure | wait_state) 1 -1" (9 "0010000000")
+Condition 46 "1738874922" "(wb_except_req & wb_except_is_tlb_refill) 1 -1" (1 "01")
+Condition 46 "1738874922" "(wb_except_req & wb_except_is_tlb_refill) 1 -1" (3 "11")
+Condition 47 "1823806386" "((wb_except_req && wb_arch_valid) | sim_exception_active) 1 -1" (2 "01")
+Condition 48 "110700306" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 49 "3839139285" "(sim_exception_active ? sim_exception_code : wb_except_code) 1 -1" (2 "1")
+Condition 50 "1266772894" "((((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) ? 2'b1 : 2'b0) 1 -1" (2 "1")
+Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (1 "011")
+Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (2 "101")
+Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (3 "110")
+Condition 51 "189867048" "(((!sim_exception_active)) && (effective_except_code == 5'h0b) && (wb_inst[31:26] == 6'b010001)) 1 -1" (4 "111")
+Condition 52 "1843843989" "(effective_except_code == 5'h0b) 1 -1" (2 "1")
+Condition 53 "979795848" "(wb_inst[31:26] == 6'b010001) 1 -1" (2 "1")
+Condition 54 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (2 "1011")
+Condition 54 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (3 "1101")
+Condition 54 "2000858578" "(intr_req && ( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) && ((!stall_req_mem)) && ((!((((0 != 0) && (0 != 0)) && (0 != 0)) && ((|nb_load_busy) || rob_busy))))) 1 -1" (4 "1110")
+Condition 55 "3294113527" "( ! (id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) ) 1 -1" (2 "1")
+Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (2 "0001")
+Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (3 "0010")
+Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (4 "0100")
+Condition 56 "1206567596" "(id_is_wait || (ex_inst == 32'h42000020) || (mem_inst == 32'h42000020) || (wb_valid && wb_arch_valid && (wb_inst == 32'h42000020))) 1 -1" (5 "1000")
+Condition 57 "3299814388" "(ex_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 58 "2530419475" "(mem_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 59 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (1 "011")
+Condition 59 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (2 "101")
+Condition 59 "381155384" "(wb_valid && wb_arch_valid && (wb_inst == 32'h42000020)) 1 -1" (4 "111")
+Condition 60 "2050282359" "(wb_inst == 32'h42000020) 1 -1" (2 "1")
+Condition 62 "1504360980" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 63 "1932525238" "(interrupt_accept && ( ! (wb_except_req && wb_arch_valid && ((!cp0_exl))) ) && ( ! (wb_is_eret && wb_arch_valid) )) 1 -1" (2 "101")
+Condition 63 "1932525238" "(interrupt_accept && ( ! (wb_except_req && wb_arch_valid && ((!cp0_exl))) ) && ( ! (wb_is_eret && wb_arch_valid) )) 1 -1" (3 "110")
+Condition 65 "626122713" "(wb_except_req && wb_arch_valid && ((!cp0_exl))) 1 -1" (2 "101")
+Condition 67 "1413262546" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 68 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (1 "011")
+Condition 68 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (2 "101")
+Condition 68 "2042802682" "(wb_except_req && wb_arch_valid && (wb_except_code == 5'h1e)) 1 -1" (4 "111")
+Condition 69 "1044202763" "(wb_except_code == 5'h1e) 1 -1" (2 "1")
+Condition 73 "347464108" "(id_bpu_taken ? id_bpu_target : id_pc_plus_4) 1 -1" (2 "1")
+Condition 75 "1206748768" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 76 "3687783909" "(exception_flush | ctx_restore_req | id_branch_likely_annul | id_branch_likely_taken) 1 -1" (2 "0001")
+Condition 76 "3687783909" "(exception_flush | ctx_restore_req | id_branch_likely_annul | id_branch_likely_taken) 1 -1" (4 "0100")
+Condition 77 "2533639590" "((stall_req_id & ((~global_stall))) | exception_flush | ctx_restore_req) 1 -1" (2 "001")
+Condition 79 "3137361802" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 80 "1730621136" "(exception_flush | ctx_restore_req) 1 -1" (2 "01")
+Condition 81 "470606175" "(hw_walker_d_miss && ((!ptw_fault_pending))) 1 -1" (2 "10")
+Condition 81 "470606175" "(hw_walker_d_miss && ((!ptw_fault_pending))) 1 -1" (3 "11")
+Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (1 "0111")
+Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (2 "1011")
+Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (3 "1101")
+Condition 82 "694749715" "(((!ptw_busy)) && ((!ptw_refill_pending)) && ((!ptw_fault_pending)) && (hw_walker_i_miss || hw_walker_d_miss)) 1 -1" (5 "1111")
+Condition 83 "232302809" "(hw_walker_i_miss || hw_walker_d_miss) 1 -1" (2 "01")
+Condition 83 "232302809" "(hw_walker_i_miss || hw_walker_d_miss) 1 -1" (3 "10")
+Condition 84 "1405381284" "(hw_walker_i_miss ? if_vaddr : mem_vaddr) 1 -1" (2 "1")
+Condition 85 "2131703511" "(hw_walker_i_miss ? 2'b0 : (data_we ? 2'd2 : 2'b1)) 1 -1" (2 "1")
+Condition 87 "2906999794" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (2 "10")
+Condition 87 "2906999794" "(ptw_refill_pending && hw_tlb_wr_ready) 1 -1" (3 "11")
+Condition 88 "1017437882" "(ptw_fault_pending && ((!ptw_fault_is_data))) 1 -1" (2 "10")
+Condition 88 "1017437882" "(ptw_fault_pending && ((!ptw_fault_is_data))) 1 -1" (3 "11")
+Condition 89 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (1 "01")
+Condition 89 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (2 "10")
+Condition 89 "2460760044" "(ptw_fault_pending && ptw_fault_is_data) 1 -1" (3 "11")
+Condition 90 "828116303" "(ptw_va_q[12] ? 32'b0 : hw_tlb_entrylo_leaf) 1 -1" (2 "1")
+Condition 91 "1055365426" "(ptw_va_q[12] ? hw_tlb_entrylo_leaf : 32'b0) 1 -1" (2 "1")
+Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (2 "00001")
+Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (3 "00010")
+Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (4 "00100")
+Condition 92 "3557401226" "(if_adel_exception | if_cache_fault | if_bus_fault | hw_walker_i_fault | (((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss)))) 1 -1" (5 "01000")
+Condition 93 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (2 "101")
+Condition 93 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (3 "110")
+Condition 93 "4011361673" "(((~mmu_i_ok)) & inst_req & ((!hw_walker_i_miss))) 1 -1" (4 "111")
+Condition 94 "3708680549" "(hw_walker_i_fault ? 5'h02 : (if_adel_exception ? 5'h04 : (if_cache_fault ? 5'h1e : (if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)))))) 1 -1" (2 "1")
+Condition 96 "1966905597" "(if_cache_fault ? 5'h1e : (if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)))) 1 -1" (2 "1")
+Condition 97 "1789623906" "(if_bus_fault ? 5'h06 : ((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02))) 1 -1" (2 "1")
+Condition 98 "2785742252" "((mmu_i_fault_type == 3'b110) ? 5'h18 : ((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02)) 1 -1" (2 "1")
+Condition 99 "3261199018" "(mmu_i_fault_type == 3'b110) 1 -1" (2 "1")
+Condition 100 "1069509999" "((mmu_i_fault_type == 3'b100) ? 5'h04 : 5'h02) 1 -1" (2 "1")
+Condition 101 "21583604" "(mmu_i_fault_type == 3'b100) 1 -1" (2 "1")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (1 "011111")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (2 "101111")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (3 "110111")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (4 "111011")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (5 "111101")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (6 "111110")
+Condition 102 "1172090183" "(((~if_adel_exception)) & inst_req & ((~mmu_i_ok)) & ((!hw_walker_i_fault)) & (mmu_i_fault_type == 3'b1) & ((~mmu_ilookup_hit))) 1 -1" (7 "111111")
+Condition 103 "1167950432" "(mmu_i_fault_type == 3'b1) 1 -1" (2 "1")
+Condition 104 "1789976431" "(id_inst[31:26] == 6'b010011) 1 -1" (2 "1")
+Condition 105 "1024873693" "(id_inst[31:26] == 6'b010001) 1 -1" (2 "1")
+Condition 106 "628251197" "(fpu_id_cop1 && (id_inst[25:21] == 5'b0)) 1 -1" (2 "10")
+Condition 106 "628251197" "(fpu_id_cop1 && (id_inst[25:21] == 5'b0)) 1 -1" (3 "11")
+Condition 108 "1717426483" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00010)) 1 -1" (2 "10")
+Condition 108 "1717426483" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00010)) 1 -1" (3 "11")
+Condition 110 "319954316" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00100)) 1 -1" (2 "10")
+Condition 110 "319954316" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00100)) 1 -1" (3 "11")
+Condition 112 "1396193160" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00110)) 1 -1" (2 "10")
+Condition 112 "1396193160" "(fpu_id_cop1 && (id_inst[25:21] == 5'b00110)) 1 -1" (3 "11")
+Condition 114 "992393345" "(fpu_id_cop1x || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100)))) 1 -1" (2 "01")
+Condition 114 "992393345" "(fpu_id_cop1x || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100)))) 1 -1" (3 "10")
+Condition 115 "1716338742" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100))) 1 -1" (2 "10")
+Condition 115 "1716338742" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100))) 1 -1" (3 "11")
+Condition 116 "2819601167" "((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001) || (id_inst[25:21] == 5'b10100)) 1 -1" (2 "001")
+Condition 119 "3142366864" "(id_inst[25:21] == 5'b10100) 1 -1" (2 "1")
+Condition 120 "3997407567" "(fpu_id_cop1 && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (2 "10")
+Condition 120 "3997407567" "(fpu_id_cop1 && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
+Condition 124 "3547364985" "(((!fpu_id_cond_move)) || ((id_inst[5:0] == 6'h12) ? (id_val_rt == 32'b0) : (id_val_rt != 32'b0))) 1 -1" (1 "00")
+Condition 124 "3547364985" "(((!fpu_id_cond_move)) || ((id_inst[5:0] == 6'h12) ? (id_val_rt == 32'b0) : (id_val_rt != 32'b0))) 1 -1" (2 "01")
+Condition 129 "3487059110" "((fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) || (fpu_id_cop1x && id_inst[0])) 1 -1" (2 "01")
+Condition 129 "3487059110" "((fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) || (fpu_id_cop1x && id_inst[0])) 1 -1" (3 "10")
+Condition 130 "1331025628" "(fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) 1 -1" (2 "10")
+Condition 130 "1331025628" "(fpu_id_cop1 && (id_inst[25:21] == 5'b10001)) 1 -1" (3 "11")
+Condition 132 "2762903782" "(fpu_id_cop1x && id_inst[0]) 1 -1" (2 "10")
+Condition 132 "2762903782" "(fpu_id_cop1x && id_inst[0]) 1 -1" (3 "11")
+Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (2 "00001")
+Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (3 "00010")
+Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (4 "00100")
+Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (5 "01000")
+Condition 133 "1401323019" "((fpu_id_cop1x && id_inst[0]) || (fpu_id_double && (id_inst[5:0] <= 6'h07)) || (fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) || (fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) || (fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21))) 1 -1" (6 "10000")
+Condition 134 "1092014378" "(fpu_id_cop1x && id_inst[0]) 1 -1" (2 "10")
+Condition 134 "1092014378" "(fpu_id_cop1x && id_inst[0]) 1 -1" (3 "11")
+Condition 135 "3532652408" "(fpu_id_double && (id_inst[5:0] <= 6'h07)) 1 -1" (2 "10")
+Condition 135 "3532652408" "(fpu_id_double && (id_inst[5:0] <= 6'h07)) 1 -1" (3 "11")
+Condition 136 "2148932451" "(fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (2 "10")
+Condition 136 "2148932451" "(fpu_id_double && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
+Condition 140 "1987127180" "(fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) 1 -1" (2 "10")
+Condition 140 "1987127180" "(fpu_id_double && ((id_inst[5:0] == 6'h15) || (id_inst[5:0] == 6'h16))) 1 -1" (3 "11")
+Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (1 "011")
+Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (2 "101")
+Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "110")
+Condition 144 "2007281920" "(fpu_id_cop1 && ((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) && (id_inst[5:0] == 6'h21)) 1 -1" (4 "111")
+Condition 145 "1955759650" "((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10100)) 1 -1" (2 "01")
+Condition 147 "1712096138" "(id_inst[25:21] == 5'b10100) 1 -1" (2 "1")
+Condition 149 "533304895" "(fpu_id_mfc1 | fpu_id_cfc1) 1 -1" (2 "01")
+Condition 149 "533304895" "(fpu_id_mfc1 | fpu_id_cfc1) 1 -1" (3 "10")
+Condition 150 "1750401555" "(fpu_id_gpr_write && wb_reg_write) 1 -1" (2 "10")
+Condition 150 "1750401555" "(fpu_id_gpr_write && wb_reg_write) 1 -1" (3 "11")
+Condition 151 "2569817436" "((fpu_id_valid || fpu_mem_id_valid) && ((!cpu_cu1))) 1 -1" (2 "10")
+Condition 151 "2569817436" "((fpu_id_valid || fpu_mem_id_valid) && ((!cpu_cu1))) 1 -1" (3 "11")
+Condition 152 "2047749590" "(fpu_id_valid || fpu_mem_id_valid) 1 -1" (2 "01")
+Condition 152 "2047749590" "(fpu_id_valid || fpu_mem_id_valid) 1 -1" (3 "10")
+Condition 153 "2255384730" "((ex_inst[31:26] == 6'b110001) || (ex_inst[31:26] == 6'b110101)) 1 -1" (2 "01")
+Condition 153 "2255384730" "((ex_inst[31:26] == 6'b110001) || (ex_inst[31:26] == 6'b110101)) 1 -1" (3 "10")
+Condition 154 "728135857" "(ex_inst[31:26] == 6'b110001) 1 -1" (2 "1")
+Condition 155 "676351891" "(ex_inst[31:26] == 6'b110101) 1 -1" (2 "1")
+Condition 156 "3736871660" "((mem_inst[31:26] == 6'b110001) || (mem_inst[31:26] == 6'b110101)) 1 -1" (2 "01")
+Condition 156 "3736871660" "((mem_inst[31:26] == 6'b110001) || (mem_inst[31:26] == 6'b110101)) 1 -1" (3 "10")
+Condition 157 "3601832014" "(mem_inst[31:26] == 6'b110001) 1 -1" (2 "1")
+Condition 158 "3583618924" "(mem_inst[31:26] == 6'b110101) 1 -1" (2 "1")
+Condition 159 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (1 "01")
+Condition 159 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (2 "10")
+Condition 159 "22758677" "(fpu_id_valid && ((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))))) 1 -1" (3 "11")
+Condition 160 "51567890" "((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16])))) 1 -1" (2 "01")
+Condition 160 "51567890" "((ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) || (mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16])))) 1 -1" (3 "10")
+Condition 161 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (2 "101")
+Condition 161 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (3 "110")
+Condition 161 "3581355468" "(ex_fpu_word_load && (ex_inst[20:16] != 5'b0) && ((ex_inst[20:16] == id_inst[15:11]) || (ex_inst[20:16] == id_inst[20:16]))) 1 -1" (4 "111")
+Condition 166 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (2 "101")
+Condition 166 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (3 "110")
+Condition 166 "4034795765" "(mem_fpu_word_load && (mem_inst[20:16] != 5'b0) && ((mem_inst[20:16] == id_inst[15:11]) || (mem_inst[20:16] == id_inst[20:16]))) 1 -1" (4 "111")
+Condition 171 "2378667703" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) ? 5'd25 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) ? 5'd26 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))))))) 1 -1" (2 "1")
+Condition 172 "2444583232" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) 1 -1" (2 "10")
+Condition 172 "2444583232" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h20) || (id_inst[5:0] == 6'h21))) 1 -1" (3 "11")
+Condition 176 "2077967465" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) ? 5'd26 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))))))) 1 -1" (2 "1")
+Condition 177 "3046750032" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) 1 -1" (2 "10")
+Condition 177 "3046750032" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29))) 1 -1" (3 "11")
+Condition 178 "568116053" "((id_inst[5:0] == 6'h28) || (id_inst[5:0] == 6'h29)) 1 -1" (2 "01")
+Condition 180 "1001292323" "(id_inst[5:0] == 6'h29) 1 -1" (2 "1")
+Condition 181 "4125913370" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) ? 5'd27 : ((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))))) 1 -1" (2 "1")
+Condition 182 "2088693974" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) 1 -1" (2 "10")
+Condition 182 "2088693974" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h30) || (id_inst[5:0] == 6'h31))) 1 -1" (3 "11")
+Condition 186 "2547061776" "((fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) ? 5'd28 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))))) 1 -1" (2 "1")
+Condition 187 "3666978225" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) 1 -1" (2 "10")
+Condition 187 "3666978225" "(fpu_id_cop1x && ((id_inst[5:0] == 6'h38) || (id_inst[5:0] == 6'h39))) 1 -1" (3 "11")
+Condition 191 "2815034548" "(((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) ? 5'd9 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))))) 1 -1" (2 "1")
+Condition 192 "3131213048" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) 1 -1" (2 "10")
+Condition 192 "3131213048" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h20)) 1 -1" (3 "11")
+Condition 193 "1432334529" "(id_inst[25:21] == 5'b10100) 1 -1" (2 "1")
+Condition 195 "1225630910" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) ? 5'd15 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))))) 1 -1" (2 "1")
+Condition 196 "3337437091" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h20)) 1 -1" (3 "11")
+Condition 199 "3921318554" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) ? 5'd16 : (((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))))) 1 -1" (2 "1")
+Condition 200 "2725710595" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "11")
+Condition 203 "3865946448" "(((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) ? 5'd17 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))))) 1 -1" (2 "1")
+Condition 204 "2564018948" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) 1 -1" (2 "10")
+Condition 204 "2564018948" "((id_inst[25:21] == 5'b10100) && (id_inst[5:0] == 6'h21)) 1 -1" (3 "11")
+Condition 205 "319707019" "(id_inst[25:21] == 5'b10100) 1 -1" (2 "1")
+Condition 207 "3202424828" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) ? 5'd18 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))))) 1 -1" (2 "1")
+Condition 208 "1988688550" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h24)) 1 -1" (3 "11")
+Condition 211 "1057160093" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) ? 5'd19 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))))) 1 -1" (2 "1")
+Condition 212 "2883241246" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0c)) 1 -1" (3 "11")
+Condition 215 "3262277806" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) ? 5'd20 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))))) 1 -1" (2 "1")
+Condition 216 "478094329" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0d)) 1 -1" (3 "11")
+Condition 219 "1433245845" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) ? 5'd21 : (((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))))))) 1 -1" (2 "1")
+Condition 220 "4222219862" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0e)) 1 -1" (3 "11")
+Condition 223 "4231739172" "(((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) ? 5'd22 : ((id_inst[5:0] == 6'h15) ? 5'd23 : ((id_inst[5:0] == 6'h16) ? 5'd24 : ((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))))))) 1 -1" (2 "1")
+Condition 224 "693662938" "((id_inst[25:21] == 5'b10001) && (id_inst[5:0] == 6'h0f)) 1 -1" (3 "11")
+Condition 231 "1506562391" "((((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) ? 5'd6 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))))) 1 -1" (2 "1")
+Condition 232 "1406847378" "(((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) && ((id_inst[5:0] == 6'h12) || (id_inst[5:0] == 6'h13))) 1 -1" (3 "11")
+Condition 233 "752233855" "((id_inst[25:21] == 5'b10000) || (id_inst[25:21] == 5'b10001)) 1 -1" (2 "01")
+Condition 235 "3222195929" "(id_inst[25:21] == 5'b10001) 1 -1" (2 "1")
+Condition 239 "1074633237" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) ? 5'd10 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))))) 1 -1" (2 "1")
+Condition 240 "829823318" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h24)) 1 -1" (3 "11")
+Condition 243 "3725682822" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) ? 5'd11 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))))) 1 -1" (2 "1")
+Condition 244 "1335464108" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0c)) 1 -1" (3 "11")
+Condition 247 "744782425" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) ? 5'd12 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))))) 1 -1" (2 "1")
+Condition 248 "309120697" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0d)) 1 -1" (3 "11")
+Condition 251 "2388598780" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) ? 5'd13 : (((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31)))) 1 -1" (2 "1")
+Condition 252 "1521187343" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0e)) 1 -1" (3 "11")
+Condition 255 "3784676099" "(((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) ? 5'd14 : ((id_inst[5:0] <= 6'h07) ? ({1'b0, id_inst[3:0]}) : ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31))) 1 -1" (2 "1")
+Condition 256 "4108961803" "((id_inst[25:21] == 5'b10000) && (id_inst[5:0] == 6'h0f)) 1 -1" (3 "11")
+Condition 260 "2887074330" "((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) ? 5'd8 : 5'd31) 1 -1" (2 "1")
+Condition 261 "252279689" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (2 "10")
+Condition 261 "252279689" "(fpu_id_cop1 && (id_inst[5:0] >= 6'h30)) 1 -1" (3 "11")
+Condition 262 "3285074142" "(fpu_id_cop1x ? id_inst[25:21] : id_inst[10:6]) 1 -1" (2 "1")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (2 "101111111")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (3 "110111111")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (4 "111011111")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (5 "111101111")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (6 "111110111")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (7 "111111011")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (8 "111111101")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (9 "111111110")
+Condition 263 "3394960265" "(fpu_id_valid && ((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req)) && ((!id_fpu_unusable)) && ((!id_illegal_inst)) && ((!id_fpu_exception)) && fpu_id_cond_move_ok) 1 -1" (10 "111111111")
+Condition 264 "2883948031" "(fpu_id_gpr_write ? id_inst[20:16] : wb_waddr) 1 -1" (2 "1")
+Condition 265 "3913614814" "(fpu_id_mfc1 ? fpr[id_inst[15:11]] : (fpu_id_cfc1 ? fcsr : wb_wdata)) 1 -1" (2 "1")
+Condition 266 "1173763703" "(fpu_id_cfc1 ? fcsr : wb_wdata) 1 -1" (2 "1")
+Condition 267 "1725485473" "((fpu_id_gpr_write && ((!wb_reg_write))) ? (((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) : (wb_reg_write && wb_arch_valid && ( ! (wb_except_req && wb_arch_valid) ))) 1 -1" (2 "1")
+Condition 268 "1963936839" "(fpu_id_gpr_write && ((!wb_reg_write))) 1 -1" (2 "10")
+Condition 268 "1963936839" "(fpu_id_gpr_write && ((!wb_reg_write))) 1 -1" (3 "11")
+Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (1 "0111")
+Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (2 "1011")
+Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (3 "1101")
+Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (4 "1110")
+Condition 269 "3174715141" "(((!global_stall)) && ((!stall_req_id)) && ((!exception_flush)) && ((!ctx_restore_req))) 1 -1" (5 "1111")
+Condition 272 "1674202903" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (1 "0111")
+Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (2 "1011")
+Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (3 "1101")
+Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (4 "1110")
+Condition 273 "1539291076" "((id_inst[31:26] == 6'b011111) && (id_inst[25:21] == 5'b00011) && ((id_inst[15:11] == 5'b0) || (id_inst[15:11] == 5'b1) || (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) || (id_inst[15:11] == 5'd29)) && (id_inst[5:0] == 6'b111011)) 1 -1" (5 "1111")
+Condition 288 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (2 "00001")
+Condition 288 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (4 "00100")
+Condition 288 "763277225" "(stall_req_id_raw | fpu_rf_conflict | fpu_lwc1_hazard | cp0_read_hazard | nb_load_use_hazard) 1 -1" (5 "01000")
+Condition 289 "1747599122" "(id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | ((|id_tlb_op))) 1 -1" (2 "00001")
+Condition 289 "1747599122" "(id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | ((|id_tlb_op))) 1 -1" (3 "00010")
+Condition 290 "3789599667" "(id_is_rdhwr && cpu_hwrena[id_inst[15:11]]) 1 -1" (1 "01")
+Condition 290 "3789599667" "(id_is_rdhwr && cpu_hwrena[id_inst[15:11]]) 1 -1" (2 "10")
+Condition 290 "3789599667" "(id_is_rdhwr && cpu_hwrena[id_inst[15:11]]) 1 -1" (3 "11")
+Condition 291 "2258116929" "(id_is_priv & ((~cpu_kernel_mode)) & ((~cpu_cu0)) & ((~id_rdhwr_allowed))) 1 -1" (1 "0111")
+Condition 291 "2258116929" "(id_is_priv & ((~cpu_kernel_mode)) & ((~cpu_cu0)) & ((~id_rdhwr_allowed))) 1 -1" (3 "1101")
+Condition 291 "2258116929" "(id_is_priv & ((~cpu_kernel_mode)) & ((~cpu_cu0)) & ((~id_rdhwr_allowed))) 1 -1" (4 "1110")
+Condition 291 "2258116929" "(id_is_priv & ((~cpu_kernel_mode)) & ((~cpu_cu0)) & ((~id_rdhwr_allowed))) 1 -1" (5 "1111")
+Condition 292 "2624586724" "((id_inst[31:26] == 6'b1) && (id_trap_op >= 4'd6)) 1 -1" (1 "01")
+Condition 292 "2624586724" "((id_inst[31:26] == 6'b1) && (id_trap_op >= 4'd6)) 1 -1" (3 "11")
+Condition 294 "1347468500" "(id_trap_imm ? id_imm_ext : id_val_rt) 1 -1" (2 "1")
+Condition 295 "1574028679" "(id_is_trap && (((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))))) 1 -1" (2 "10")
+Condition 295 "1574028679" "(id_is_trap && (((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))))) 1 -1" (3 "11")
+Condition 296 "2185616935" "(((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) ? ($signed(id_val_rs) >= $signed(id_trap_rhs)) : (((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))))) 1 -1" (1 "0")
+Condition 297 "2134721658" "((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) 1 -1" (1 "00")
+Condition 297 "2134721658" "((id_trap_op == 4'b0) || (id_trap_op == 4'd6)) 1 -1" (2 "01")
+Condition 299 "2093505490" "(id_trap_op == 4'd6) 1 -1" (2 "1")
+Condition 300 "2175844751" "(((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))) 1 -1" (1 "0")
+Condition 300 "2175844751" "(((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) ? (id_val_rs >= id_trap_rhs) : (((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))))) 1 -1" (2 "1")
+Condition 301 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (1 "00")
+Condition 301 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (2 "01")
+Condition 301 "1822380348" "((id_trap_op == 4'b1) || (id_trap_op == 4'd7)) 1 -1" (3 "10")
+Condition 302 "1085046468" "(id_trap_op == 4'b1) 1 -1" (1 "0")
+Condition 302 "1085046468" "(id_trap_op == 4'b1) 1 -1" (2 "1")
+Condition 303 "2671547871" "(id_trap_op == 4'd7) 1 -1" (1 "0")
+Condition 303 "2671547871" "(id_trap_op == 4'd7) 1 -1" (2 "1")
+Condition 304 "400490397" "(((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))) 1 -1" (1 "0")
+Condition 304 "400490397" "(((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) ? ($signed(id_val_rs) < $signed(id_trap_rhs)) : (((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)))) 1 -1" (2 "1")
+Condition 305 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (1 "00")
+Condition 305 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (2 "01")
+Condition 305 "3609679927" "((id_trap_op == 4'd2) || (id_trap_op == 4'd8)) 1 -1" (3 "10")
+Condition 306 "146256684" "(id_trap_op == 4'd2) 1 -1" (1 "0")
+Condition 306 "146256684" "(id_trap_op == 4'd2) 1 -1" (2 "1")
+Condition 307 "429672102" "(id_trap_op == 4'd8) 1 -1" (1 "0")
+Condition 307 "429672102" "(id_trap_op == 4'd8) 1 -1" (2 "1")
+Condition 308 "2988517596" "(((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))) 1 -1" (1 "0")
+Condition 308 "2988517596" "(((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) ? (id_val_rs < id_trap_rhs) : (((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs))) 1 -1" (2 "1")
+Condition 309 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (1 "00")
+Condition 309 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (2 "01")
+Condition 309 "1321318495" "((id_trap_op == 4'd3) || (id_trap_op == 4'd9)) 1 -1" (3 "10")
+Condition 310 "1091748303" "(id_trap_op == 4'd3) 1 -1" (1 "0")
+Condition 310 "1091748303" "(id_trap_op == 4'd3) 1 -1" (2 "1")
+Condition 311 "1347383918" "(id_trap_op == 4'd9) 1 -1" (1 "0")
+Condition 311 "1347383918" "(id_trap_op == 4'd9) 1 -1" (2 "1")
+Condition 312 "2766917152" "(((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)) 1 -1" (1 "0")
+Condition 312 "2766917152" "(((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) ? (id_val_rs == id_trap_rhs) : (id_val_rs != id_trap_rhs)) 1 -1" (2 "1")
+Condition 313 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (1 "00")
+Condition 313 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (2 "01")
+Condition 313 "2160651131" "((id_trap_op == 4'd4) || (id_trap_op == 4'd10)) 1 -1" (3 "10")
+Condition 314 "1107162085" "(id_trap_op == 4'd4) 1 -1" (1 "0")
+Condition 314 "1107162085" "(id_trap_op == 4'd4) 1 -1" (2 "1")
+Condition 315 "3558771074" "(id_trap_op == 4'd10) 1 -1" (1 "0")
+Condition 315 "3558771074" "(id_trap_op == 4'd10) 1 -1" (2 "1")
+Condition 316 "446836902" "(id_val_rs == id_trap_rhs) 1 -1" (1 "0")
+Condition 316 "446836902" "(id_val_rs == id_trap_rhs) 1 -1" (2 "1")
+Condition 317 "1077299512" "(id_val_rs != id_trap_rhs) 1 -1" (1 "0")
+Condition 317 "1077299512" "(id_val_rs != id_trap_rhs) 1 -1" (2 "1")
+Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (2 "00000001")
+Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (3 "00000010")
+Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (4 "00000100")
+Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (5 "00001000")
+Condition 318 "492604112" "(id_except_req_in | id_illegal_inst | id_is_syscall | id_is_break | id_trap_taken | id_cpu_unusable | id_fpu_unusable | id_fpu_exception) 1 -1" (6 "00010000")
+Condition 320 "3615141308" "((id_cpu_unusable || id_fpu_unusable) ? 5'h0b : (id_fpu_exception ? 5'h0f : (id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0)))))) 1 -1" (2 "1")
+Condition 321 "657916739" "(id_cpu_unusable || id_fpu_unusable) 1 -1" (2 "01")
+Condition 321 "657916739" "(id_cpu_unusable || id_fpu_unusable) 1 -1" (3 "10")
+Condition 322 "2896691429" "(id_fpu_exception ? 5'h0f : (id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0))))) 1 -1" (2 "1")
+Condition 323 "625210968" "(id_is_break ? 5'h09 : (id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0)))) 1 -1" (2 "1")
+Condition 324 "4174750399" "(id_trap_taken ? 5'h0d : (id_is_syscall ? 5'h08 : (id_illegal_inst ? 5'h0a : 5'b0))) 1 -1" (2 "1")
+Condition 327 "867989384" "(id_except_req_in & id_except_is_tlb_refill_in) 1 -1" (1 "01")
+Condition 327 "867989384" "(id_except_req_in & id_except_is_tlb_refill_in) 1 -1" (3 "11")
+Condition 329 "3382750350" "(mem_double_mem && (mem_ex_out[2:0] != 3'b0)) 1 -1" (2 "10")
+Condition 329 "3382750350" "(mem_double_mem && (mem_ex_out[2:0] != 3'b0)) 1 -1" (3 "11")
+Condition 331 "1971538481" "(((mem_mem_read | mem_mem_write) & ((~mem_done))) | (mem_cache_op_valid & ((~mem_done)))) 1 -1" (2 "01")
+Condition 334 "2024414129" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (2 "10")
+Condition 334 "2024414129" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (3 "11")
+Condition 335 "3877122599" "((((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) || hw_walker_d_fault) 1 -1" (2 "01")
+Condition 335 "3877122599" "((((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) || hw_walker_d_fault) 1 -1" (3 "10")
+Condition 336 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (2 "101")
+Condition 336 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (3 "110")
+Condition 336 "2371652861" "(((~mmu_d_ok)) & dmem_translate_req & ((!hw_walker_d_miss))) 1 -1" (4 "111")
+Condition 337 "794176499" "(dmem_translation_fault | hw_walker_d_miss) 1 -1" (2 "01")
+Condition 337 "794176499" "(dmem_translation_fault | hw_walker_d_miss) 1 -1" (3 "10")
+Condition 338 "4261830928" "(fpu_mem_swc1 ? fpr[mem_inst[20:16]] : ((mem_double_mem && (mem_inst[31:26] == 6'b111101)) ? (mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) : mem_val_rt)) 1 -1" (2 "1")
+Condition 339 "3681018732" "((mem_double_mem && (mem_inst[31:26] == 6'b111101)) ? (mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) : mem_val_rt) 1 -1" (2 "1")
+Condition 340 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (1 "01")
+Condition 340 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (2 "10")
+Condition 340 "2636526077" "(mem_double_mem && (mem_inst[31:26] == 6'b111101)) 1 -1" (3 "11")
+Condition 341 "217134223" "(mem_inst[31:26] == 6'b111101) 1 -1" (2 "1")
+Condition 342 "520531557" "(mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) 1 -1" (1 "0")
+Condition 342 "520531557" "(mem_double_phase ? fpr[(mem_inst[20:16] + 1'b1)] : fpr[mem_inst[20:16]]) 1 -1" (2 "1")
+Condition 343 "3288803265" "(mem_mem_read && (mem_mem_op == 3'b111)) 1 -1" (1 "01")
+Condition 343 "3288803265" "(mem_mem_read && (mem_mem_op == 3'b111)) 1 -1" (3 "11")
+Condition 344 "284899406" "(mem_mem_op == 3'b111) 1 -1" (2 "1")
+Condition 345 "3540056314" "(mem_mem_write && (mem_mem_op == 3'b111)) 1 -1" (1 "01")
+Condition 345 "3540056314" "(mem_mem_write && (mem_mem_op == 3'b111)) 1 -1" (3 "11")
+Condition 346 "1862473741" "(mem_mem_op == 3'b111) 1 -1" (2 "1")
+Condition 347 "3268878894" "(ll_reservation_valid && (ll_reservation_addr == {mem_vaddr[31:2], 2'b0})) 1 -1" (2 "10")
+Condition 347 "3268878894" "(ll_reservation_valid && (ll_reservation_addr == {mem_vaddr[31:2], 2'b0})) 1 -1" (3 "11")
+Condition 349 "3774800540" "(data_we_raw && (((!is_sc_mem)) || sc_reservation_match)) 1 -1" (2 "10")
+Condition 350 "2061949656" "(((!is_sc_mem)) || sc_reservation_match) 1 -1" (1 "00")
+Condition 350 "2061949656" "(((!is_sc_mem)) || sc_reservation_match) 1 -1" (2 "01")
+Condition 351 "1326531753" "(is_sc_mem ? ({31'b0, sc_reservation_match}) : mem_ex_out) 1 -1" (2 "1")
+Condition 352 "2581142053" "(hw_walker_d_fault ? (mem_mem_write ? 5'h03 : 5'h02) : ((mmu_d_fault_type == 3'b010) ? 5'h03 : ((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)))))) 1 -1" (2 "1")
+Condition 353 "780517336" "(mem_mem_write ? 5'h03 : 5'h02) 1 -1" (1 "0")
+Condition 353 "780517336" "(mem_mem_write ? 5'h03 : 5'h02) 1 -1" (2 "1")
+Condition 354 "522421787" "((mmu_d_fault_type == 3'b010) ? 5'h03 : ((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02))))) 1 -1" (2 "1")
+Condition 355 "1176655220" "(mmu_d_fault_type == 3'b010) 1 -1" (2 "1")
+Condition 356 "1496348898" "((mmu_d_fault_type == 3'b011) ? 5'b1 : ((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)))) 1 -1" (2 "1")
+Condition 357 "3514290923" "(mmu_d_fault_type == 3'b011) 1 -1" (2 "1")
+Condition 358 "2644657107" "((mmu_d_fault_type == 3'b110) ? 5'h18 : ((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02))) 1 -1" (2 "1")
+Condition 359 "853291444" "(mmu_d_fault_type == 3'b110) 1 -1" (2 "1")
+Condition 360 "3059754714" "((mmu_d_fault_type == 3'b100) ? 5'h04 : ((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02)) 1 -1" (2 "1")
+Condition 361 "3964673423" "(mmu_d_fault_type == 3'b100) 1 -1" (2 "1")
+Condition 362 "3563783192" "((mmu_d_fault_type == 3'b101) ? 5'h05 : 5'h02) 1 -1" (2 "1")
+Condition 363 "1869072033" "(mmu_d_fault_type == 3'b101) 1 -1" (2 "1")
+Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (1 "0111")
+Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (2 "1011")
+Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (3 "1101")
+Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (4 "1110")
+Condition 364 "1004767204" "(mem_mmu_fault & ((!hw_walker_d_fault)) & ((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) & ((~mmu_dlookup_hit))) 1 -1" (5 "1111")
+Condition 365 "2777254302" "((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) 1 -1" (2 "01")
+Condition 365 "2777254302" "((mmu_d_fault_type == 3'b1) || (mmu_d_fault_type == 3'b010)) 1 -1" (3 "10")
+Condition 366 "3286471098" "(mmu_d_fault_type == 3'b1) 1 -1" (2 "1")
+Condition 367 "2027172281" "(mmu_d_fault_type == 3'b010) 1 -1" (2 "1")
+Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (3 "00000010")
+Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (4 "00000100")
+Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (5 "00001000")
+Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (6 "00010000")
+Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (7 "00100000")
+Condition 368 "1189345427" "(mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault | mem_cache_op_fault_seen | mem_bus_fault | mem_adel_exception | mem_ades_exception) 1 -1" (8 "01000000")
+Condition 370 "451381898" "(mem_mmu_fault ? mem_mmu_fault_code : (mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04) : ((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)))))) 1 -1" (2 "1")
+Condition 371 "3450897922" "(mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04) : ((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0))))) 1 -1" (2 "1")
+Condition 372 "4050516216" "(mem_mem_write ? 5'h05 : 5'h04) 1 -1" (1 "0")
+Condition 372 "4050516216" "(mem_mem_write ? 5'h05 : 5'h04) 1 -1" (2 "1")
+Condition 373 "7117464" "((mem_cache_fault || mem_cache_op_fault_seen) ? 5'h1e : (mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)))) 1 -1" (2 "1")
+Condition 374 "1467123040" "(mem_cache_fault || mem_cache_op_fault_seen) 1 -1" (2 "01")
+Condition 374 "1467123040" "(mem_cache_fault || mem_cache_op_fault_seen) 1 -1" (3 "10")
+Condition 375 "1249200825" "(mem_bus_fault ? 5'h07 : (mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0))) 1 -1" (2 "1")
+Condition 376 "3648606361" "(mem_adel_exception ? 5'h04 : (mem_ades_exception ? 5'h05 : 5'b0)) 1 -1" (2 "1")
+Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (2 "1011")
+Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (3 "1101")
+Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (4 "1110")
+Condition 380 "1205606387" "(mem_enable_nb_load && data_req_raw && data_addr_ok_effective && rob_alloc_ready) 1 -1" (5 "1111")
+Condition 381 "3544452626" "(data_data_ok_current && (mem_mem_read || mem_mem_write)) 1 -1" (2 "10")
+Condition 383 "1918770668" "(global_stall && ((!rob_head_ready)) && ((!nb_rob_issue)) && ((!blocking_response_commit))) 1 -1" (2 "1011")
+Condition 383 "1918770668" "(global_stall && ((!rob_head_ready)) && ((!nb_rob_issue)) && ((!blocking_response_commit))) 1 -1" (3 "1101")
+Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (1 "011")
+Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (2 "101")
+Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (3 "110")
+Condition 384 "147386188" "(mem_enable_nb_load && data_req_raw && ((!rob_alloc_ready))) 1 -1" (4 "111")
+Condition 385 "291044777" "(data_req_raw && ((!nb_rob_block))) 1 -1" (2 "10")
+Condition 386 "537778979" "(data_addr_ok && ((!nb_rob_block))) 1 -1" (2 "10")
+Condition 387 "3912179360" "(dmem_translation_fault || mem_adel_exception || mem_ades_exception || (data_req && data_addr_ok_effective)) 1 -1" (4 "0100")
+Condition 387 "3912179360" "(dmem_translation_fault || mem_adel_exception || mem_ades_exception || (data_req && data_addr_ok_effective)) 1 -1" (5 "1000")
+Condition 390 "304802486" "((mem_enable_nb_load && mem_mem_read) ? nb_load_alloc_eligible : (mem_mem_read ? (mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) : (((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception))) 1 -1" (2 "1")
+Condition 391 "3565764091" "(mem_enable_nb_load && mem_mem_read) 1 -1" (2 "10")
+Condition 391 "3565764091" "(mem_enable_nb_load && mem_mem_read) 1 -1" (3 "11")
+Condition 393 "3815996779" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (2 "00001")
+Condition 393 "3815996779" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (3 "00010")
+Condition 393 "3815996779" "(mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (4 "00100")
+Condition 394 "2984465608" "(((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (3 "000010")
+Condition 394 "2984465608" "(((!mem_mem_write)) || mem_done || data_data_ok_current || dmem_translation_fault || mem_adel_exception || mem_ades_exception) 1 -1" (4 "000100")
+Condition 395 "2703422689" "(((!mem_mem_read)) || (((!mem_enable_nb_load)) && data_data_ok_current) || mem_done || dmem_translation_fault || mem_adel_exception) 1 -1" (2 "00001")
+Condition 395 "2703422689" "(((!mem_mem_read)) || (((!mem_enable_nb_load)) && data_data_ok_current) || mem_done || dmem_translation_fault || mem_adel_exception) 1 -1" (3 "00010")
+Condition 396 "2442812977" "(((!mem_enable_nb_load)) && data_data_ok_current) 1 -1" (1 "01")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (1 "01111111")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (2 "10111111")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (3 "11011111")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (4 "11101111")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (6 "11111011")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (7 "11111101")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (8 "11111110")
+Condition 397 "2757206565" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && ((!wb_inst[5]))) 1 -1" (9 "11111111")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (1 "01111111")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (2 "10111111")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (3 "11011111")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (4 "11101111")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (5 "11110111")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (6 "11111011")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (7 "11111101")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (8 "11111110")
+Condition 403 "3651686143" "(wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) && (wb_inst[31:26] == 6'b010000) && (wb_inst[25:21] == 5'b01011) && (wb_inst[15:11] == 5'd12) && (wb_inst[10:6] == 5'b0) && wb_inst[5]) 1 -1" (9 "11111111")
+Condition 410 "3342095481" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 412 "3021700550" "(wb_is_eret && wb_arch_valid) 1 -1" (2 "10")
+Condition 414 "2306456917" "(wb_bd && (wb_delay_slot_next_pc != 32'b0)) 1 -1" (1 "01")
+Condition 414 "2306456917" "(wb_bd && (wb_delay_slot_next_pc != 32'b0)) 1 -1" (2 "10")
+Condition 422 "2430167356" "(sim_exception_active ? inst_addr : ((interrupt_accept && wait_state) ? wait_interrupt_epc : ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc))) 1 -1" (2 "1")
+Condition 423 "895010287" "((interrupt_accept && wait_state) ? wait_interrupt_epc : ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc)) 1 -1" (2 "1")
+Condition 424 "1456569219" "(interrupt_accept && wait_state) 1 -1" (1 "01")
+Condition 424 "1456569219" "(interrupt_accept && wait_state) 1 -1" (3 "11")
+Condition 426 "539237239" "(wb_except_req && wb_arch_valid) 1 -1" (2 "10")
+Condition 428 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (1 "01")
+Condition 428 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (2 "10")
+Condition 428 "1451779005" "(ptw_resp_valid && ptw_fault_i) 1 -1" (3 "11")
+Condition 430 "1282142957" "((mem_vaddr[31:28] == 4'h4) || (mem_vaddr[31:28] == 4'ha) || (data_addr[31:28] == 4'h4) || (data_addr[31:28] == 4'ha)) 1 -1" (2 "0001")
+Condition 430 "1282142957" "((mem_vaddr[31:28] == 4'h4) || (mem_vaddr[31:28] == 4'ha) || (data_addr[31:28] == 4'h4) || (data_addr[31:28] == 4'ha)) 1 -1" (4 "0100")
+Condition 435 "605695529" "((mmu_d_cache_attr == 3'b010) || legacy_data_uncacheable) 1 -1" (3 "10")
+Condition 436 "1518974298" "(mmu_d_cache_attr == 3'b010) 1 -1" (2 "1")
+Condition 437 "4136875954" "(data_cache_op_valid && ((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000))) 1 -1" (2 "10")
+Condition 437 "4136875954" "(data_cache_op_valid && ((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000))) 1 -1" (3 "11")
+Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (1 "0000")
+Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (2 "0001")
+Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (3 "0010")
+Condition 438 "1051785900" "((data_cache_op == 5'b0) || (data_cache_op == 5'b00100) || (data_cache_op == 5'b01000) || (data_cache_op == 5'b10000)) 1 -1" (4 "0100")
+Condition 440 "2432497317" "(data_cache_op == 5'b00100) 1 -1" (2 "1")
+Condition 441 "793864136" "(data_cache_op == 5'b01000) 1 -1" (2 "1")
+Condition 442 "1660992844" "(data_cache_op == 5'b10000) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0038
+// CATEGORY: Debug & Observability
+// CHECKSUM: "1978932013 1326802205"
+MODULE: jtag_debug_top
+Condition 33 "3509471947" "((axi_state == ST_IDLE) && (start_axi_write || start_axi_read)) 1 -1" (1 "01")
+Condition 36 "1936408292" "(m_awvalid && m_awready) 1 -1" (1 "01")
+Condition 37 "1965639751" "(m_wvalid && m_wready) 1 -1" (1 "01")
+Condition 38 "642236261" "(m_bvalid && m_bready) 1 -1" (2 "10")
+Condition 39 "1917688845" "(m_arvalid && m_arready) 1 -1" (1 "01")
+Condition 40 "2520363317" "(m_rvalid && m_rready) 1 -1" (2 "10")
+Condition 41 "2102856218" "((axi_state == ST_R) && m_rvalid && m_rready) 1 -1" (1 "011")
+Condition 41 "2102856218" "((axi_state == ST_R) && m_rvalid && m_rready) 1 -1" (3 "110")
+
+// ID: EXCL-PROD-0039
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3798910544 153015984"
+MODULE: apb_uart_16550
+Condition 2 "3914937263" "(((!tx_empty)) && ((!brk_send)) && tx_cts_allowed) 1 -1" (3 "110")
+Condition 4 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (1 "011")
+Condition 4 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (2 "101")
+Condition 4 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (3 "110")
+Condition 4 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (4 "111")
+Condition 5 "4000830692" "(paddr[4:2] == 3'b010) 1 -1" (1 "0")
+Condition 5 "4000830692" "(paddr[4:2] == 3'b010) 1 -1" (2 "1")
+Condition 8 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (1 "011")
+Condition 8 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (2 "101")
+Condition 8 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (3 "110")
+Condition 8 "1418355897" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[2]) 1 -1" (4 "111")
+Condition 9 "4000830692" "(paddr[4:2] == 3'b010) 1 -1" (1 "0")
+Condition 9 "4000830692" "(paddr[4:2] == 3'b010) 1 -1" (2 "1")
+Condition 10 "2588679370" "((tx_state == TX_IDLE) && ((!tx_empty)) && ((!brk_send)) && tx_cts_allowed) 1 -1" (4 "1110")
+Condition 12 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (1 "011")
+Condition 12 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (2 "101")
+Condition 12 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (3 "110")
+Condition 12 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (4 "111")
+Condition 13 "287994983" "(paddr[4:2] == 3'b010) 1 -1" (1 "0")
+Condition 13 "287994983" "(paddr[4:2] == 3'b010) 1 -1" (2 "1")
+Condition 14 "1641431127" "(rx_bit_ctr == 4'd15) 1 -1" (2 "1")
+Condition 15 "3537776778" "(rx_bit_idx == (data_bits - 1)) 1 -1" (1 "0")
+Condition 15 "3537776778" "(rx_bit_idx == (data_bits - 1)) 1 -1" (2 "1")
+Condition 16 "1979080564" "(rx_sync2 != (~eps)) 1 -1" (1 "0")
+Condition 16 "1979080564" "(rx_sync2 != (~eps)) 1 -1" (2 "1")
+Condition 17 "454419055" "((rx_shift == 8'b0) && (((!rx_sync2)) || rx_err_fram)) 1 -1" (1 "01")
+Condition 17 "454419055" "((rx_shift == 8'b0) && (((!rx_sync2)) || rx_err_fram)) 1 -1" (2 "10")
+Condition 17 "454419055" "((rx_shift == 8'b0) && (((!rx_sync2)) || rx_err_fram)) 1 -1" (3 "11")
+Condition 18 "3714797628" "(rx_shift == 8'b0) 1 -1" (1 "0")
+Condition 18 "3714797628" "(rx_shift == 8'b0) 1 -1" (2 "1")
+Condition 19 "2452439353" "(((!rx_sync2)) || rx_err_fram) 1 -1" (1 "00")
+Condition 19 "2452439353" "(((!rx_sync2)) || rx_err_fram) 1 -1" (2 "01")
+Condition 19 "2452439353" "(((!rx_sync2)) || rx_err_fram) 1 -1" (3 "10")
+Condition 21 "4279660720" "((rx_shift == 8'b0) && (((!rx_sync2)) || rx_err_fram)) 1 -1" (1 "01")
+Condition 21 "4279660720" "((rx_shift == 8'b0) && (((!rx_sync2)) || rx_err_fram)) 1 -1" (2 "10")
+Condition 21 "4279660720" "((rx_shift == 8'b0) && (((!rx_sync2)) || rx_err_fram)) 1 -1" (3 "11")
+Condition 22 "2958057909" "(rx_shift == 8'b0) 1 -1" (1 "0")
+Condition 22 "2958057909" "(rx_shift == 8'b0) 1 -1" (2 "1")
+Condition 23 "1535655875" "(((!rx_sync2)) || rx_err_fram) 1 -1" (1 "00")
+Condition 23 "1535655875" "(((!rx_sync2)) || rx_err_fram) 1 -1" (2 "01")
+Condition 23 "1535655875" "(((!rx_sync2)) || rx_err_fram) 1 -1" (3 "10")
+Condition 24 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (1 "011")
+Condition 24 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (2 "101")
+Condition 24 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (3 "110")
+Condition 24 "1569037528" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (4 "111")
+Condition 25 "287994983" "(paddr[4:2] == 3'b010) 1 -1" (1 "0")
+Condition 25 "287994983" "(paddr[4:2] == 3'b010) 1 -1" (2 "1")
+Condition 26 "2126524876" "(rd_stb && (paddr[4:2] == 3'b0) && ((!dlab)) && ((!rx_empty))) 1 -1" (1 "0111")
+Condition 26 "2126524876" "(rd_stb && (paddr[4:2] == 3'b0) && ((!dlab)) && ((!rx_empty))) 1 -1" (2 "1011")
+Condition 26 "2126524876" "(rd_stb && (paddr[4:2] == 3'b0) && ((!dlab)) && ((!rx_empty))) 1 -1" (3 "1101")
+Condition 26 "2126524876" "(rd_stb && (paddr[4:2] == 3'b0) && ((!dlab)) && ((!rx_empty))) 1 -1" (5 "1111")
+Condition 28 "4065642719" "((rd_stb && (paddr[4:2] == 3'b0) && ((!dlab))) || (wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) || ((!fifo_en)) || rx_empty) 1 -1" (1 "0000")
+Condition 28 "4065642719" "((rd_stb && (paddr[4:2] == 3'b0) && ((!dlab))) || (wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) || ((!fifo_en)) || rx_empty) 1 -1" (2 "0001")
+Condition 28 "4065642719" "((rd_stb && (paddr[4:2] == 3'b0) && ((!dlab))) || (wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) || ((!fifo_en)) || rx_empty) 1 -1" (3 "0010")
+Condition 28 "4065642719" "((rd_stb && (paddr[4:2] == 3'b0) && ((!dlab))) || (wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) || ((!fifo_en)) || rx_empty) 1 -1" (4 "0100")
+Condition 28 "4065642719" "((rd_stb && (paddr[4:2] == 3'b0) && ((!dlab))) || (wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) || ((!fifo_en)) || rx_empty) 1 -1" (5 "1000")
+Condition 31 "1628142542" "(wr_stb && (paddr[4:2] == 3'b010) && write_data[1]) 1 -1" (3 "110")
+Condition 33 "96359254" "(fifo_en && (rx_count > 5'b0) && (rx_count < rx_trig_level)) 1 -1" (1 "011")
+Condition 33 "96359254" "(fifo_en && (rx_count > 5'b0) && (rx_count < rx_trig_level)) 1 -1" (2 "101")
+Condition 33 "96359254" "(fifo_en && (rx_count > 5'b0) && (rx_count < rx_trig_level)) 1 -1" (3 "110")
+Condition 33 "96359254" "(fifo_en && (rx_count > 5'b0) && (rx_count < rx_trig_level)) 1 -1" (4 "111")
+Condition 34 "3397737533" "(rx_state != RX_IDLE) 1 -1" (1 "0")
+Condition 34 "3397737533" "(rx_state != RX_IDLE) 1 -1" (2 "1")
+Condition 38 "3720853931" "(((~ri_n_int)) & ri_n_prev) 1 -1" (2 "10")
+Condition 38 "3720853931" "(((~ri_n_int)) & ri_n_prev) 1 -1" (3 "11")
+Condition 48 "3660222105" "(pstrb[3] ? pwdata[31:24] : pwdata[7:0]) 1 -1" (2 "1")
+Condition 49 "1307041317" "(psel & penable & pwrite & ((|pstrb))) 1 -1" (4 "1110")
+Condition 52 "2774635932" "(fifo_en ? ((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) : (tx_count >= 5'b1)) 1 -1" (2 "1")
+Condition 53 "1189724340" "((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) 1 -1" (1 "01")
+Condition 53 "1189724340" "((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) 1 -1" (2 "10")
+Condition 53 "1189724340" "((tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) && (tx_wr[TX_AW] != tx_rd[TX_AW])) 1 -1" (3 "11")
+Condition 54 "3159149320" "(tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) 1 -1" (1 "0")
+Condition 54 "3159149320" "(tx_wr[(TX_AW - 1):0] == tx_rd[(TX_AW - 1):0]) 1 -1" (2 "1")
+Condition 55 "37396203" "(tx_wr[TX_AW] != tx_rd[TX_AW]) 1 -1" (1 "0")
+Condition 55 "37396203" "(tx_wr[TX_AW] != tx_rd[TX_AW]) 1 -1" (2 "1")
+Condition 57 "3437604107" "(fifo_en ? ((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) : (rx_count >= 5'b1)) 1 -1" (2 "1")
+Condition 58 "2612658096" "((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) 1 -1" (1 "01")
+Condition 58 "2612658096" "((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) 1 -1" (2 "10")
+Condition 58 "2612658096" "((rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) && (rx_wr[RX_AW] != rx_rd[RX_AW])) 1 -1" (3 "11")
+Condition 59 "3789011308" "(rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) 1 -1" (1 "0")
+Condition 59 "3789011308" "(rx_wr[(RX_AW - 1):0] == rx_rd[(RX_AW - 1):0]) 1 -1" (2 "1")
+Condition 60 "3281785224" "(rx_wr[RX_AW] != rx_rd[RX_AW]) 1 -1" (1 "0")
+Condition 60 "3281785224" "(rx_wr[RX_AW] != rx_rd[RX_AW]) 1 -1" (2 "1")
+Condition 61 "2010771938" "(({dlm_r, dll_r} == 16'b0) ? 16'b1 : ({dlm_r, dll_r})) 1 -1" (2 "1")
+Condition 62 "138311712" "({dlm_r, dll_r} == 16'b0) 1 -1" (2 "1")
+Condition 64 "3978384898" "(((!mcr_r[5])) || ((!cts_n_int))) 1 -1" (2 "01")
+Condition 69 "1096446668" "(ier_r[0] & fifo_en & (rx_count > 5'b0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit)) 1 -1" (1 "01111")
+Condition 69 "1096446668" "(ier_r[0] & fifo_en & (rx_count > 5'b0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit)) 1 -1" (2 "10111")
+Condition 69 "1096446668" "(ier_r[0] & fifo_en & (rx_count > 5'b0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit)) 1 -1" (3 "11011")
+Condition 69 "1096446668" "(ier_r[0] & fifo_en & (rx_count > 5'b0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit)) 1 -1" (4 "11101")
+Condition 69 "1096446668" "(ier_r[0] & fifo_en & (rx_count > 5'b0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit)) 1 -1" (5 "11110")
+Condition 69 "1096446668" "(ier_r[0] & fifo_en & (rx_count > 5'b0) & (rx_count < rx_trig_level) & (timeout_cnt >= timeout_limit)) 1 -1" (6 "11111")
+Condition 70 "170505504" "(rx_empty ? 8'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][7:0]) 1 -1" (1 "0")
+Condition 71 "1995520776" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][10]) 1 -1" (1 "0")
+Condition 72 "3448720848" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][9]) 1 -1" (1 "0")
+Condition 73 "3434722890" "(rx_empty ? 1'b0 : rx_fifo[rx_rd[(RX_AW - 1):0]][8]) 1 -1" (1 "0")
+Condition 77 "2820082545" "(ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r)) 1 -1" (1 "01")
+Condition 77 "2820082545" "(ier_r[2] & (rx_head_par | rx_head_fram | rx_head_brk | overrun_r)) 1 -1" (3 "11")
+Condition 78 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (2 "0001")
+Condition 78 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (3 "0010")
+Condition 78 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (4 "0100")
+Condition 78 "375982915" "(rx_head_par | rx_head_fram | rx_head_brk | overrun_r) 1 -1" (5 "1000")
+Condition 79 "3071849982" "(ier_r[0] & (rx_count >= (fifo_en ? rx_trig_level : 4'b1))) 1 -1" (1 "01")
+Condition 79 "3071849982" "(ier_r[0] & (rx_count >= (fifo_en ? rx_trig_level : 4'b1))) 1 -1" (2 "10")
+Condition 79 "3071849982" "(ier_r[0] & (rx_count >= (fifo_en ? rx_trig_level : 4'b1))) 1 -1" (3 "11")
+Condition 81 "366302998" "(ier_r[3] & (d_cts | d_dsr | d_dcd | d_ri)) 1 -1" (2 "10")
+Condition 81 "366302998" "(ier_r[3] & (d_cts | d_dsr | d_dcd | d_ri)) 1 -1" (3 "11")
+Condition 82 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (2 "0001")
+Condition 82 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (3 "0010")
+Condition 82 "3398784169" "(d_cts | d_dsr | d_dcd | d_ri) 1 -1" (4 "0100")
+Condition 83 "3951826382" "(fifo_en ? 2'b11 : 2'b0) 1 -1" (2 "1")
+Condition 84 "2024511598" "(rx_line_err_int ? ({iir_fifo_bits, 2'b0, 4'b0110}) : (rx_data_trig_int ? ({iir_fifo_bits, 2'b0, 4'b0100}) : (rx_timeout_int ? ({iir_fifo_bits, 2'b0, 4'b1100}) : (tx_empty_int ? ({iir_fifo_bits, 2'b0, 4'b0010}) : (modem_int ? ({iir_fifo_bits, 2'b0, 4'b0}) : ({iir_fifo_bits, 2'b0, 4'b1})))))) 1 -1" (2 "1")
+Condition 85 "2049157779" "(rx_data_trig_int ? ({iir_fifo_bits, 2'b0, 4'b0100}) : (rx_timeout_int ? ({iir_fifo_bits, 2'b0, 4'b1100}) : (tx_empty_int ? ({iir_fifo_bits, 2'b0, 4'b0010}) : (modem_int ? ({iir_fifo_bits, 2'b0, 4'b0}) : ({iir_fifo_bits, 2'b0, 4'b1}))))) 1 -1" (2 "1")
+Condition 86 "1198179459" "(rx_timeout_int ? ({iir_fifo_bits, 2'b0, 4'b1100}) : (tx_empty_int ? ({iir_fifo_bits, 2'b0, 4'b0010}) : (modem_int ? ({iir_fifo_bits, 2'b0, 4'b0}) : ({iir_fifo_bits, 2'b0, 4'b1})))) 1 -1" (2 "1")
+Condition 88 "1689982835" "(modem_int ? ({iir_fifo_bits, 2'b0, 4'b0}) : ({iir_fifo_bits, 2'b0, 4'b1})) 1 -1" (2 "1")
+Condition 89 "2402655362" "(rx_line_err_int | rx_data_trig_int | rx_timeout_int) 1 -1" (2 "001")
+Condition 89 "2402655362" "(rx_line_err_int | rx_data_trig_int | rx_timeout_int) 1 -1" (3 "010")
+Condition 89 "2402655362" "(rx_line_err_int | rx_data_trig_int | rx_timeout_int) 1 -1" (4 "100")
+Condition 90 "2427609311" "(rx_irq | tx_irq | modem_int) 1 -1" (2 "001")
+Condition 90 "2427609311" "(rx_irq | tx_irq | modem_int) 1 -1" (4 "100")
+Condition 93 "1989212686" "(mcr_r[5] & (rx_count >= rx_trig_level)) 1 -1" (1 "01")
+Condition 93 "1989212686" "(mcr_r[5] & (rx_count >= rx_trig_level)) 1 -1" (3 "11")
+Condition 94 "2152693204" "(((~mcr_r[1])) | auto_rts_deassert) 1 -1" (2 "01")
+
+// ID: EXCL-PROD-0040
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3763908232 705477589"
+MODULE: qspi_shared_pin_arbiter
+Condition 1 "977900637" "(cmd_req || cmd_active) 1 -1" (2 "01")
+Condition 1 "977900637" "(cmd_req || cmd_active) 1 -1" (3 "10")
+Condition 2 "1870353954" "(mem_req || mem_active) 1 -1" (2 "01")
+Condition 3 "868323733" "(owner_r == OWNER_CMD) 1 -1" (2 "1")
+Condition 6 "526744414" "(cmd_claim && mem_claim) 1 -1" (2 "10")
+Condition 6 "526744414" "(cmd_claim && mem_claim) 1 -1" (3 "11")
+Condition 7 "891071413" "(cmd_grant ? cmd_sclk : (mem_grant ? mem_sclk : 1'b0)) 1 -1" (2 "1")
+Condition 9 "162337268" "(cmd_grant ? cmd_cs_n : (mem_grant ? mem_cs_n : 1'b1)) 1 -1" (2 "1")
+Condition 11 "230246612" "(cmd_grant ? cmd_mosi : (mem_grant ? mem_mosi : 1'b0)) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0041
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3599225912 3546751060"
+MODULE: mips_alu
+Condition 20 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (1 "01")
+Condition 20 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (2 "10")
+Condition 20 "702078619" "((sign_a != sign_b) && (sign_r != sign_a)) 1 -1" (3 "11")
+Condition 21 "2041577695" "(sign_a != sign_b) 1 -1" (2 "1")
+Condition 22 "1025947488" "(sign_r != sign_a) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0042
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3319620102 1781645666"
+MODULE: mips_cp0
+Condition 3 "4262283065" "(we && ({waddr, wsel} == {5'd9, 3'b0})) 1 -1" (3 "11")
+Condition 6 "3354819029" "(we && ({waddr, wsel} == {5'd6, 3'b0})) 1 -1" (3 "11")
+Condition 8 "389043934" "(cache_op_done && ((cache_op == 5'b00101) || (cache_op == 5'b00100))) 1 -1" (1 "01")
+Condition 8 "389043934" "(cache_op_done && ((cache_op == 5'b00101) || (cache_op == 5'b00100))) 1 -1" (2 "10")
+Condition 8 "389043934" "(cache_op_done && ((cache_op == 5'b00101) || (cache_op == 5'b00100))) 1 -1" (3 "11")
+Condition 9 "3059225549" "((cache_op == 5'b00101) || (cache_op == 5'b00100)) 1 -1" (2 "01")
+Condition 9 "3059225549" "((cache_op == 5'b00101) || (cache_op == 5'b00100)) 1 -1" (3 "10")
+Condition 10 "2015027444" "(cache_op == 5'b00101) 1 -1" (2 "1")
+Condition 11 "1551310560" "(cache_op == 5'b00100) 1 -1" (2 "1")
+Condition 13 "114919905" "(except_code == 5'h1e) 1 -1" (2 "1")
+Condition 14 "2706157000" "(except_bd ? ((except_pc - 32'd4)) : except_pc) 1 -1" (1 "0")
+Condition 14 "2706157000" "(except_bd ? ((except_pc - 32'd4)) : except_pc) 1 -1" (2 "1")
+Condition 15 "2927062251" "(interrupt_accept_in ? interrupt_srs_set : cp0_srs_ess) 1 -1" (1 "0")
+Condition 15 "2927062251" "(interrupt_accept_in ? interrupt_srs_set : cp0_srs_ess) 1 -1" (2 "1")
+Condition 16 "2676203062" "(except_code == 5'h18) 1 -1" (2 "1")
+Condition 17 "1682961717" "(except_code == 5'h1e) 1 -1" (1 "0")
+Condition 17 "1682961717" "(except_code == 5'h1e) 1 -1" (2 "1")
+Condition 18 "2770698685" "((except_code == 5'b1) || (except_code == 5'h02) || (except_code == 5'h03) || (except_code == 5'h04) || (except_code == 5'h05)) 1 -1" (2 "00001")
+Condition 18 "2770698685" "((except_code == 5'b1) || (except_code == 5'h02) || (except_code == 5'h03) || (except_code == 5'h04) || (except_code == 5'h05)) 1 -1" (4 "00100")
+Condition 18 "2770698685" "((except_code == 5'b1) || (except_code == 5'h02) || (except_code == 5'h03) || (except_code == 5'h04) || (except_code == 5'h05)) 1 -1" (5 "01000")
+Condition 18 "2770698685" "((except_code == 5'b1) || (except_code == 5'h02) || (except_code == 5'h03) || (except_code == 5'h04) || (except_code == 5'h05)) 1 -1" (6 "10000")
+Condition 19 "793033660" "(except_code == 5'b1) 1 -1" (2 "1")
+Condition 20 "1370600040" "(except_code == 5'h02) 1 -1" (2 "1")
+Condition 21 "2683519313" "(except_code == 5'h03) 1 -1" (2 "1")
+Condition 23 "909491119" "(except_code == 5'h05) 1 -1" (2 "1")
+Condition 24 "4225098208" "(di || ei) 1 -1" (2 "01")
+Condition 24 "4225098208" "(di || ei) 1 -1" (3 "10")
+Condition 25 "2034331653" "(tlb_probe_hit ? tlb_probe_index : ({TLB_IDX_BITS {1'b0}})) 1 -1" (1 "0")
+Condition 25 "2034331653" "(tlb_probe_hit ? tlb_probe_index : ({TLB_IDX_BITS {1'b0}})) 1 -1" (2 "1")
+Condition 26 "2299584178" "((cp0_status[1] == 1'b0) && (cp0_status[22] == 1'b0)) 1 -1" (1 "01")
+Condition 26 "2299584178" "((cp0_status[1] == 1'b0) && (cp0_status[22] == 1'b0)) 1 -1" (2 "10")
+Condition 26 "2299584178" "((cp0_status[1] == 1'b0) && (cp0_status[22] == 1'b0)) 1 -1" (3 "11")
+Condition 27 "3453591160" "(cp0_status[1] == 1'b0) 1 -1" (1 "0")
+Condition 27 "3453591160" "(cp0_status[1] == 1'b0) 1 -1" (2 "1")
+Condition 28 "2368269640" "(cp0_status[22] == 1'b0) 1 -1" (1 "0")
+Condition 28 "2368269640" "(cp0_status[22] == 1'b0) 1 -1" (2 "1")
+Condition 29 "510762891" "((we && (waddr == 5'd28) && (wsel == 3'b0)) ? wdata : cp0_taglo) 1 -1" (2 "1")
+Condition 30 "4234162096" "(we && (waddr == 5'd28) && (wsel == 3'b0)) 1 -1" (3 "110")
+Condition 30 "4234162096" "(we && (waddr == 5'd28) && (wsel == 3'b0)) 1 -1" (4 "111")
+Condition 33 "2018228326" "((we && (waddr == 5'd29) && (wsel == 3'b0)) ? wdata : cp0_taghi) 1 -1" (2 "1")
+Condition 34 "2874749469" "(we && (waddr == 5'd29) && (wsel == 3'b0)) 1 -1" (1 "011")
+Condition 34 "2874749469" "(we && (waddr == 5'd29) && (wsel == 3'b0)) 1 -1" (3 "110")
+Condition 34 "2874749469" "(we && (waddr == 5'd29) && (wsel == 3'b0)) 1 -1" (4 "111")
+Condition 37 "2927446021" "(cp0_status[2] | cp0_status[1] | (cp0_status[4:3] != 2'b10)) 1 -1" (1 "000")
+Condition 37 "2927446021" "(cp0_status[2] | cp0_status[1] | (cp0_status[4:3] != 2'b10)) 1 -1" (3 "010")
+Condition 37 "2927446021" "(cp0_status[2] | cp0_status[1] | (cp0_status[4:3] != 2'b10)) 1 -1" (4 "100")
+Condition 39 "1436970699" "(cp0_cause[30] && ((!cp0_cause[27]))) 1 -1" (2 "10")
+Condition 39 "1436970699" "(cp0_cause[30] && ((!cp0_cause[27]))) 1 -1" (3 "11")
+Condition 40 "216097514" "(timer_ip_active ? ((8'b1 << cp0_intctl_ipti)) : 8'b0) 1 -1" (2 "1")
+Condition 41 "1067076210" "(cp0_count == cp0_compare) 1 -1" (2 "1")
+Condition 42 "298598151" "(cp0_status[0] && ((!cp0_status[1])) && ((!cp0_status[2])) && ((|(cp0_cause[15:8] & cp0_status[15:8])))) 1 -1" (3 "1101")
+Condition 43 "329568224" "(cp0_status[2] ? cp0_errorepc : cp0_epc) 1 -1" (2 "1")
+Condition 44 "460696974" "((tlb_op == 3'b010) || (tlb_op == 3'b011)) 1 -1" (2 "01")
+Condition 44 "460696974" "((tlb_op == 3'b010) || (tlb_op == 3'b011)) 1 -1" (3 "10")
+Condition 45 "3629340448" "(tlb_op == 3'b010) 1 -1" (2 "1")
+Condition 46 "370254873" "(tlb_op == 3'b011) 1 -1" (2 "1")
+Condition 50 "1359227116" "(tlb_wr_en_raw && tlb_wr_gate) 1 -1" (2 "10")
+Condition 50 "1359227116" "(tlb_wr_en_raw && tlb_wr_gate) 1 -1" (3 "11")
+Condition 51 "4171754528" "(tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready)) 1 -1" (2 "01")
+Condition 51 "4171754528" "(tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready)) 1 -1" (3 "10")
+Condition 52 "2640923217" "(hw_tlb_wr_en && hw_tlb_wr_ready) 1 -1" (2 "10")
+Condition 52 "2640923217" "(hw_tlb_wr_en && hw_tlb_wr_ready) 1 -1" (3 "11")
+Condition 53 "101399632" "((we && ((waddr == 5'd5) || (waddr == 5'd10))) || ctx_restore_req) 1 -1" (2 "01")
+Condition 53 "101399632" "((we && ((waddr == 5'd5) || (waddr == 5'd10))) || ctx_restore_req) 1 -1" (3 "10")
+Condition 54 "3628533156" "(we && ((waddr == 5'd5) || (waddr == 5'd10))) 1 -1" (3 "11")
+Condition 58 "3604840175" "(hw_tlb_wr_en ? hw_tlb_wr_index : ((tlb_op == 3'b010) ? cp0_index : cp0_random)) 1 -1" (2 "1")
+Condition 59 "763755659" "((tlb_op == 3'b010) ? cp0_index : cp0_random) 1 -1" (2 "1")
+Condition 60 "134767322" "(tlb_op == 3'b010) 1 -1" (2 "1")
+Condition 61 "2689941333" "(hw_tlb_wr_en ? hw_tlb_wr_vpn2 : cp0_entryhi_vpn2) 1 -1" (2 "1")
+Condition 62 "4210557997" "(hw_tlb_wr_en ? hw_tlb_wr_asid : cp0_entryhi_asid) 1 -1" (2 "1")
+Condition 63 "2849278350" "(hw_tlb_wr_en ? hw_tlb_wr_mask : cp0_pagemask_mask) 1 -1" (2 "1")
+Condition 64 "1687710842" "(hw_tlb_wr_en ? hw_tlb_wr_entrylo0 : cp0_entrylo0) 1 -1" (2 "1")
+Condition 65 "279720151" "(hw_tlb_wr_en ? hw_tlb_wr_entrylo1 : cp0_entrylo1) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0043
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3943920266 1926259864"
+MODULE: dcache
+Condition 2 "3008937002" "((addr[31:28] == 4'ha) && (addr[27:16] == 12'b0)) 1 -1" (2 "10")
+Condition 10 "3458973300" "(cpu_req || req_buf_valid) 1 -1" (2 "01")
+Condition 13 "2670946741" "(awready && awvalid) 1 -1" (2 "10")
+Condition 14 "3133837065" "(wready && wvalid && wlast) 1 -1" (2 "101")
+Condition 15 "2855174950" "(bready && bvalid) 1 -1" (1 "01")
+Condition 16 "1059358951" "((bresp != 2'b0) ? ERROR_RESP : REFILL_REQ) 1 -1" (2 "1")
+Condition 17 "3542548238" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 18 "1369460935" "(arready && arvalid) 1 -1" (2 "10")
+Condition 19 "3961374317" "(rvalid && rlast) 1 -1" (1 "01")
+Condition 20 "2760523026" "((refill_error || (rresp != 2'b0)) ? ERROR_RESP : WRITE_MERGE) 1 -1" (2 "1")
+Condition 21 "1096724364" "(refill_error || (rresp != 2'b0)) 1 -1" (2 "01")
+Condition 21 "1096724364" "(refill_error || (rresp != 2'b0)) 1 -1" (3 "10")
+Condition 22 "2046298389" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 24 "259609542" "((((!awvalid)) || awready) && (((!wvalid)) || wready)) 1 -1" (1 "01")
+Condition 26 "803128726" "(((!wvalid)) || wready) 1 -1" (3 "10")
+Condition 27 "2196960543" "(bready && bvalid) 1 -1" (1 "01")
+Condition 28 "2325037228" "(rready && rvalid) 1 -1" (1 "01")
+Condition 29 "2553205995" "(maint_needs_wb ? CACHE_WB_REQ : CACHE_DONE) 1 -1" (1 "0")
+Condition 29 "2553205995" "(maint_needs_wb ? CACHE_WB_REQ : CACHE_DONE) 1 -1" (2 "1")
+Condition 30 "3126424703" "(awready && awvalid) 1 -1" (1 "01")
+Condition 30 "3126424703" "(awready && awvalid) 1 -1" (2 "10")
+Condition 30 "3126424703" "(awready && awvalid) 1 -1" (3 "11")
+Condition 31 "1597085826" "(wready && wvalid && wlast) 1 -1" (1 "011")
+Condition 31 "1597085826" "(wready && wvalid && wlast) 1 -1" (2 "101")
+Condition 31 "1597085826" "(wready && wvalid && wlast) 1 -1" (3 "110")
+Condition 31 "1597085826" "(wready && wvalid && wlast) 1 -1" (4 "111")
+Condition 32 "1339397293" "(bready && bvalid) 1 -1" (1 "01")
+Condition 32 "1339397293" "(bready && bvalid) 1 -1" (2 "10")
+Condition 32 "1339397293" "(bready && bvalid) 1 -1" (3 "11")
+Condition 34 "755977425" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 34 "755977425" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 34 "755977425" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 35 "662639697" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 35 "662639697" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 36 "3731777960" "(tag_rdata[0][(TAG_BITS + 1)] && (tag_rdata[0][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 36 "3731777960" "(tag_rdata[0][(TAG_BITS + 1)] && (tag_rdata[0][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 36 "3731777960" "(tag_rdata[0][(TAG_BITS + 1)] && (tag_rdata[0][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 37 "361617442" "(tag_rdata[0][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 37 "361617442" "(tag_rdata[0][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 38 "4264628735" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 38 "4264628735" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 38 "4264628735" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 39 "3021762416" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 39 "3021762416" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 40 "491783013" "(tag_rdata[1][(TAG_BITS + 1)] && (tag_rdata[1][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 40 "491783013" "(tag_rdata[1][(TAG_BITS + 1)] && (tag_rdata[1][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 40 "491783013" "(tag_rdata[1][(TAG_BITS + 1)] && (tag_rdata[1][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 41 "1373013504" "(tag_rdata[1][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 41 "1373013504" "(tag_rdata[1][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 42 "3815008430" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 42 "3815008430" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 42 "3815008430" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 43 "2533901440" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 43 "2533901440" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 44 "2725615925" "(tag_rdata[2][(TAG_BITS + 1)] && (tag_rdata[2][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 44 "2725615925" "(tag_rdata[2][(TAG_BITS + 1)] && (tag_rdata[2][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 44 "2725615925" "(tag_rdata[2][(TAG_BITS + 1)] && (tag_rdata[2][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 45 "1475248123" "(tag_rdata[2][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 45 "1475248123" "(tag_rdata[2][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 46 "811218304" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 46 "811218304" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 46 "811218304" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 47 "74137505" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 47 "74137505" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 48 "1632367608" "(tag_rdata[3][(TAG_BITS + 1)] && (tag_rdata[3][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (1 "01")
+Condition 48 "1632367608" "(tag_rdata[3][(TAG_BITS + 1)] && (tag_rdata[3][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (2 "10")
+Condition 48 "1632367608" "(tag_rdata[3][(TAG_BITS + 1)] && (tag_rdata[3][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 49 "330637785" "(tag_rdata[3][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (1 "0")
+Condition 49 "330637785" "(tag_rdata[3][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) 1 -1" (2 "1")
+Condition 50 "1016354942" "(req_buf_valid && ((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])) 1 -1" (1 "011")
+Condition 50 "1016354942" "(req_buf_valid && ((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])) 1 -1" (2 "101")
+Condition 50 "1016354942" "(req_buf_valid && ((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])) 1 -1" (3 "110")
+Condition 50 "1016354942" "(req_buf_valid && ((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])) 1 -1" (4 "111")
+Condition 51 "3882618014" "((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) 1 -1" (1 "000")
+Condition 51 "3882618014" "((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) 1 -1" (2 "001")
+Condition 51 "3882618014" "((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) 1 -1" (3 "010")
+Condition 51 "3882618014" "((state == REFILL_REQ) || (state == REFILL_DATA) || (state == WRITE_MERGE)) 1 -1" (4 "100")
+Condition 52 "3521205245" "(state == REFILL_REQ) 1 -1" (1 "0")
+Condition 52 "3521205245" "(state == REFILL_REQ) 1 -1" (2 "1")
+Condition 53 "1726843224" "(state == REFILL_DATA) 1 -1" (1 "0")
+Condition 53 "1726843224" "(state == REFILL_DATA) 1 -1" (2 "1")
+Condition 54 "2709423246" "(state == WRITE_MERGE) 1 -1" (1 "0")
+Condition 54 "2709423246" "(state == WRITE_MERGE) 1 -1" (2 "1")
+Condition 55 "2416929459" "(req_buf_addr[31:5] == coh_snoop_addr_norm[31:5]) 1 -1" (1 "0")
+Condition 55 "2416929459" "(req_buf_addr[31:5] == coh_snoop_addr_norm[31:5]) 1 -1" (2 "1")
+Condition 56 "108130043" "(cpu_uncacheable || legacy_cpu_uncacheable) 1 -1" (2 "01")
+Condition 56 "108130043" "(cpu_uncacheable || legacy_cpu_uncacheable) 1 -1" (3 "10")
+Condition 57 "481645750" "((cache_op == 5'b1) || (cache_op == 5'b10101) || (cache_op == 5'b11001)) 1 -1" (1 "000")
+Condition 57 "481645750" "((cache_op == 5'b1) || (cache_op == 5'b10101) || (cache_op == 5'b11001)) 1 -1" (2 "001")
+Condition 57 "481645750" "((cache_op == 5'b1) || (cache_op == 5'b10101) || (cache_op == 5'b11001)) 1 -1" (3 "010")
+Condition 57 "481645750" "((cache_op == 5'b1) || (cache_op == 5'b10101) || (cache_op == 5'b11001)) 1 -1" (4 "100")
+Condition 58 "3184453998" "(cache_op == 5'b1) 1 -1" (1 "0")
+Condition 58 "3184453998" "(cache_op == 5'b1) 1 -1" (2 "1")
+Condition 59 "127964089" "(cache_op == 5'b10101) 1 -1" (1 "0")
+Condition 59 "127964089" "(cache_op == 5'b10101) 1 -1" (2 "1")
+Condition 60 "3087860436" "(cache_op == 5'b11001) 1 -1" (1 "0")
+Condition 60 "3087860436" "(cache_op == 5'b11001) 1 -1" (2 "1")
+Condition 61 "4085107925" "(cache_op == 5'b11101) 1 -1" (1 "0")
+Condition 61 "4085107925" "(cache_op == 5'b11101) 1 -1" (2 "1")
+Condition 62 "2740729012" "((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && (maint_clear_valid || maint_clear_dirty)) 1 -1" (1 "011")
+Condition 62 "2740729012" "((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && (maint_clear_valid || maint_clear_dirty)) 1 -1" (2 "101")
+Condition 62 "2740729012" "((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && (maint_clear_valid || maint_clear_dirty)) 1 -1" (3 "110")
+Condition 62 "2740729012" "((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && (maint_clear_valid || maint_clear_dirty)) 1 -1" (4 "111")
+Condition 63 "3771146233" "(maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) 1 -1" (1 "0000")
+Condition 63 "3771146233" "(maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) 1 -1" (2 "0001")
+Condition 63 "3771146233" "(maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) 1 -1" (3 "0010")
+Condition 63 "3771146233" "(maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) 1 -1" (4 "0100")
+Condition 63 "3771146233" "(maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) 1 -1" (5 "1000")
+Condition 64 "1611495313" "(maint_clear_valid || maint_clear_dirty) 1 -1" (1 "00")
+Condition 64 "1611495313" "(maint_clear_valid || maint_clear_dirty) 1 -1" (2 "01")
+Condition 64 "1611495313" "(maint_clear_valid || maint_clear_dirty) 1 -1" (3 "10")
+Condition 65 "1329996258" "(awready && awvalid) 1 -1" (1 "01")
+Condition 65 "1329996258" "(awready && awvalid) 1 -1" (2 "10")
+Condition 65 "1329996258" "(awready && awvalid) 1 -1" (3 "11")
+Condition 66 "3656494972" "(wready && wvalid) 1 -1" (1 "01")
+Condition 66 "3656494972" "(wready && wvalid) 1 -1" (2 "10")
+Condition 66 "3656494972" "(wready && wvalid) 1 -1" (3 "11")
+Condition 67 "1524110410" "(word_cnt == 3'd6) 1 -1" (1 "0")
+Condition 67 "1524110410" "(word_cnt == 3'd6) 1 -1" (2 "1")
+Condition 68 "3472728015" "(bready && bvalid) 1 -1" (1 "01")
+Condition 68 "3472728015" "(bready && bvalid) 1 -1" (2 "10")
+Condition 68 "3472728015" "(bready && bvalid) 1 -1" (3 "11")
+Condition 69 "3312478328" "(bresp != 2'b0) 1 -1" (1 "0")
+Condition 69 "3312478328" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 70 "2186825407" "(awready && awvalid) 1 -1" (2 "10")
+Condition 71 "3679989018" "(wready && wvalid) 1 -1" (2 "10")
+Condition 72 "1105181552" "((((!awvalid)) || awready) && (((!wvalid)) || wready)) 1 -1" (1 "01")
+Condition 74 "3670118411" "(((!wvalid)) || wready) 1 -1" (3 "10")
+Condition 75 "3428064681" "(bready && bvalid) 1 -1" (1 "01")
+Condition 76 "3291719706" "(rready && rvalid) 1 -1" (1 "01")
+Condition 77 "2380975339" "(arready && arvalid) 1 -1" (1 "01")
+Condition 77 "2380975339" "(arready && arvalid) 1 -1" (2 "10")
+Condition 78 "505111255" "(awready && awvalid) 1 -1" (1 "01")
+Condition 78 "505111255" "(awready && awvalid) 1 -1" (2 "10")
+Condition 79 "4175703244" "(wready && wvalid) 1 -1" (2 "10")
+Condition 81 "4024966271" "(bready && bvalid) 1 -1" (1 "01")
+Condition 82 "2778556640" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 83 "2087181251" "(arready && arvalid) 1 -1" (2 "10")
+Condition 84 "87587153" "(rready && rvalid) 1 -1" (1 "01")
+Condition 85 "3303286038" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 86 "1440574080" "(cache_op_valid ? 8'd7 : (uncacheable ? 8'b0 : 8'd7)) 1 -1" (2 "1")
+Condition 88 "3147668225" "(cache_op_valid ? 4'b0010 : (uncacheable ? 4'b0 : 4'b0010)) 1 -1" (2 "1")
+Condition 92 "833623697" "(((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) ? maint_addr : (req_buf_valid ? req_buf_addr : cpu_addr)) 1 -1" (2 "1")
+Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (2 "00001")
+Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (3 "00010")
+Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (4 "00100")
+Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (5 "01000")
+Condition 93 "3595813833" "((state == CACHE_LOOKUP) || (state == CACHE_WB_REQ) || (state == CACHE_WB_DATA) || (state == CACHE_WB_RESP) || (state == CACHE_DONE)) 1 -1" (6 "10000")
+Condition 94 "4278298376" "(state == CACHE_LOOKUP) 1 -1" (2 "1")
+Condition 95 "49332438" "(state == CACHE_WB_REQ) 1 -1" (2 "1")
+Condition 96 "3248935753" "(state == CACHE_WB_DATA) 1 -1" (2 "1")
+Condition 97 "877805972" "(state == CACHE_WB_RESP) 1 -1" (2 "1")
+Condition 98 "2608178621" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 100 "513843850" "(legacy_addr_uncacheable && ((cpu_addr[31:28] == 4'h4) || (cpu_addr[31:28] == 4'ha))) 1 -1" (1 "01")
+Condition 104 "3115373619" "(legacy_addr_uncacheable && ((req_buf_addr[31:28] == 4'h4) || (req_buf_addr[31:28] == 4'ha))) 1 -1" (1 "01")
+Condition 109 "4229207473" "(req_buf_uncacheable || legacy_req_uncacheable || ((ENABLE_COHERENCY && req_buf_we))) 1 -1" (2 "001")
+Condition 109 "4229207473" "(req_buf_uncacheable || legacy_req_uncacheable || ((ENABLE_COHERENCY && req_buf_we))) 1 -1" (3 "010")
+Condition 109 "4229207473" "(req_buf_uncacheable || legacy_req_uncacheable || ((ENABLE_COHERENCY && req_buf_we))) 1 -1" (4 "100")
+Condition 110 "2185559669" "(cpu_uncacheable || legacy_cpu_uncacheable || ((ENABLE_COHERENCY && cpu_we))) 1 -1" (2 "001")
+Condition 110 "2185559669" "(cpu_uncacheable || legacy_cpu_uncacheable || ((ENABLE_COHERENCY && cpu_we))) 1 -1" (3 "010")
+Condition 111 "455490193" "(tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && ((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))) 1 -1" (3 "11")
+Condition 112 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (2 "0001")
+Condition 112 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (3 "0010")
+Condition 112 "3587165185" "((tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]) || (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) || (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11]))) 1 -1" (4 "0100")
+Condition 114 "1726770860" "(tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 116 "2075727869" "(tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 118 "2827438803" "(tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])) 1 -1" (3 "11")
+Condition 120 "1958135573" "(coh_refill_snoop_pending || (((((ENABLE_COHERENCY && coh_snoop_valid) && req_buf_valid) && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))) 1 -1" (2 "01")
+Condition 120 "1958135573" "(coh_refill_snoop_pending || (((((ENABLE_COHERENCY && coh_snoop_valid) && req_buf_valid) && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))) 1 -1" (3 "10")
+Condition 121 "4164461971" "(cache_hit && ((!coh_snoop_hits_lookup)) && ((!coh_snoop_block))) 1 -1" (2 "101")
+Condition 121 "4164461971" "(cache_hit && ((!coh_snoop_hits_lookup)) && ((!coh_snoop_block))) 1 -1" (3 "110")
+Condition 122 "4020448731" "(victim_tag_entry[(TAG_BITS + 1)] && victim_tag_entry[TAG_BITS]) 1 -1" (1 "01")
+Condition 123 "1421357505" "(((!coh_snoop_valid)) && (((state == IDLE) && ((cpu_req && ((!uncacheable))) || cache_op_valid)) || ((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))))) 1 -1" (1 "01")
+Condition 127 "282309210" "((cpu_req && ((!uncacheable))) || cache_op_valid) 1 -1" (2 "01")
+Condition 129 "1481050654" "((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))) 1 -1" (3 "11011")
+Condition 129 "1481050654" "((state == COMPARE) && cache_hit_for_request && cpu_req && cpu_addr_ok && ((!uncacheable))) 1 -1" (5 "11110")
+Condition 133 "4023007314" "((state == COMPARE) && cache_hit_for_request && ((!uncacheable))) 1 -1" (3 "110")
+Condition 135 "3652380112" "(((state == COMPARE) && cache_hit_for_request && ((!uncacheable))) || ((state == UC_WRESP) && bvalid) || ((state == UC_RDATA) && rvalid) || (state == ERROR_RESP)) 1 -1" (2 "0001")
+Condition 136 "2513094292" "((state == COMPARE) && cache_hit_for_request && ((!uncacheable))) 1 -1" (3 "110")
+Condition 142 "2151186789" "(state == ERROR_RESP) 1 -1" (2 "1")
+Condition 143 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (2 "001")
+Condition 143 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (3 "010")
+Condition 143 "3446728051" "(((state == UC_WRESP) && bvalid && (bresp != 2'b0)) || ((state == UC_RDATA) && rvalid && (rresp != 2'b0)) || (state == ERROR_RESP)) 1 -1" (4 "100")
+Condition 144 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (1 "011")
+Condition 144 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (2 "101")
+Condition 144 "2152757688" "((state == UC_WRESP) && bvalid && (bresp != 2'b0)) 1 -1" (4 "111")
+Condition 146 "4066300739" "(bresp != 2'b0) 1 -1" (2 "1")
+Condition 147 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (1 "011")
+Condition 147 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (2 "101")
+Condition 147 "3539808467" "((state == UC_RDATA) && rvalid && (rresp != 2'b0)) 1 -1" (4 "111")
+Condition 149 "3855396601" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 150 "1853467482" "(state == ERROR_RESP) 1 -1" (2 "1")
+Condition 151 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (1 "01")
+Condition 151 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (2 "10")
+Condition 151 "663618037" "((state == ERROR_RESP) && cache_error_pending) 1 -1" (3 "11")
+Condition 152 "3584445389" "(state == ERROR_RESP) 1 -1" (2 "1")
+Condition 153 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (1 "01")
+Condition 155 "3574179587" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 156 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (1 "01")
+Condition 156 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (2 "10")
+Condition 156 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (3 "11")
+Condition 157 "3370719861" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 158 "3093761226" "(maint_op == 5'b1) 1 -1" (2 "1")
+Condition 159 "2575154474" "(maint_op == 5'b00101) 1 -1" (2 "1")
+Condition 160 "607010893" "(maint_op == 5'b01001) 1 -1" (2 "1")
+Condition 161 "1678095782" "(maint_index_load_tag || maint_index_store_tag) 1 -1" (2 "01")
+Condition 161 "1678095782" "(maint_index_load_tag || maint_index_store_tag) 1 -1" (3 "10")
+Condition 162 "3234652410" "(maint_op == 5'b10101) 1 -1" (2 "1")
+Condition 163 "1099912446" "(maint_op == 5'b11001) 1 -1" (2 "1")
+Condition 164 "3593998666" "(maint_op == 5'b11101) 1 -1" (2 "1")
+Condition 165 "3697254965" "((maint_index_wbi || maint_index_tag) ? maint_way : hit_way) 1 -1" (2 "1")
+Condition 166 "3200327930" "(maint_index_wbi || maint_index_tag) 1 -1" (2 "01")
+Condition 166 "3200327930" "(maint_index_wbi || maint_index_tag) 1 -1" (3 "10")
+Condition 167 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (2 "101")
+Condition 167 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (3 "110")
+Condition 167 "1105099406" "((maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) && maint_target_valid && maint_target_dirty) 1 -1" (4 "111")
+Condition 168 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (2 "001")
+Condition 168 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (3 "010")
+Condition 168 "2260039585" "(maint_index_wbi || maint_hit_wb_inv || maint_hit_wb) 1 -1" (4 "100")
+
+// ID: EXCL-PROD-0044
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1536517759 4142021445"
+MODULE: l2_cache_wt
+Condition 1 "1709983127" "((state == ST_R_ERR_RESP) ? refill_error : 2'b0) 1 -1" (2 "1")
+Condition 2 "1059940474" "(state == ST_R_ERR_RESP) 1 -1" (2 "1")
+Condition 3 "54235634" "(snoop_valid && snoop_line_hit) 1 -1" (2 "10")
+Condition 3 "54235634" "(snoop_valid && snoop_line_hit) 1 -1" (3 "11")
+Condition 4 "1607500074" "(state == ST_R_HIT_LOOP) 1 -1" (1 "0")
+Condition 4 "1607500074" "(state == ST_R_HIT_LOOP) 1 -1" (2 "1")
+Condition 6 "220476054" "(m_rvalid && s_rready) 1 -1" (1 "01")
+Condition 6 "220476054" "(m_rvalid && s_rready) 1 -1" (2 "10")
+Condition 7 "1261771653" "(m_rlast || is_last_beat) 1 -1" (1 "00")
+Condition 7 "1261771653" "(m_rlast || is_last_beat) 1 -1" (2 "01")
+Condition 7 "1261771653" "(m_rlast || is_last_beat) 1 -1" (3 "10")
+Condition 8 "2616104847" "((m_rresp != 2'b0) && (refill_error == 2'b0)) 1 -1" (2 "10")
+Condition 8 "2616104847" "((m_rresp != 2'b0) && (refill_error == 2'b0)) 1 -1" (3 "11")
+Condition 9 "1518439573" "(m_rresp != 2'b0) 1 -1" (2 "1")
+Condition 10 "3656162987" "(refill_error == 2'b0) 1 -1" (1 "0")
+Condition 11 "1651485298" "(m_rlast || (fill_idx == (WORDS_PER_LN - 1))) 1 -1" (2 "01")
+Condition 11 "1651485298" "(m_rlast || (fill_idx == (WORDS_PER_LN - 1))) 1 -1" (3 "10")
+Condition 13 "4079496812" "((refill_error != 2'b0) || (m_rresp != 2'b0)) 1 -1" (2 "01")
+Condition 13 "4079496812" "((refill_error != 2'b0) || (m_rresp != 2'b0)) 1 -1" (3 "10")
+Condition 14 "847530618" "(refill_error != 2'b0) 1 -1" (2 "1")
+Condition 15 "620412138" "(m_rresp != 2'b0) 1 -1" (2 "1")
+Condition 16 "2159185147" "(s_wvalid && ((!w_buf_valid))) 1 -1" (1 "01")
+Condition 16 "2159185147" "(s_wvalid && ((!w_buf_valid))) 1 -1" (2 "10")
+Condition 17 "4229839635" "(((!req_uncached)) && valid_ram[beat_index] && (tag_ram[beat_index] == beat_tag)) 1 -1" (1 "011")
+Condition 17 "4229839635" "(((!req_uncached)) && valid_ram[beat_index] && (tag_ram[beat_index] == beat_tag)) 1 -1" (2 "101")
+Condition 17 "4229839635" "(((!req_uncached)) && valid_ram[beat_index] && (tag_ram[beat_index] == beat_tag)) 1 -1" (3 "110")
+Condition 20 "1738850627" "(s_wstrb[3] ? s_wdata[31:24] : data_ram[beat_index][beat_wordoff][31:24]) 1 -1" (1 "0")
+Condition 21 "2760728398" "(s_wstrb[2] ? s_wdata[23:16] : data_ram[beat_index][beat_wordoff][23:16]) 1 -1" (1 "0")
+Condition 22 "2455172508" "(s_wstrb[1] ? s_wdata[15:8] : data_ram[beat_index][beat_wordoff][15:8]) 1 -1" (1 "0")
+Condition 23 "3425056694" "(s_wstrb[0] ? s_wdata[7:0] : data_ram[beat_index][beat_wordoff][7:0]) 1 -1" (1 "0")
+Condition 25 "4045358066" "(w_buf_valid && m_wready) 1 -1" (1 "01")
+Condition 26 "3472924762" "(valid_ram[snoop_index] && (tag_ram[snoop_index] == snoop_tag)) 1 -1" (2 "10")
+Condition 27 "3928768793" "(tag_ram[snoop_index] == snoop_tag) 1 -1" (1 "0")
+Condition 28 "1818471992" "(snoop_valid && snoop_line_hit) 1 -1" (2 "10")
+Condition 28 "1818471992" "(snoop_valid && snoop_line_hit) 1 -1" (3 "11")
+Condition 31 "3294857413" "(hit && ( ! (snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) )) 1 -1" (2 "10")
+Condition 32 "96332585" "( ! (snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) ) 1 -1" (2 "1")
+Condition 33 "3452629743" "(snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) 1 -1" (2 "101")
+Condition 33 "3452629743" "(snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) 1 -1" (3 "110")
+Condition 33 "3452629743" "(snoop_valid && (beat_index == snoop_index) && (beat_tag == snoop_tag)) 1 -1" (4 "111")
+
+// ID: EXCL-PROD-0045
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2910715491 4149260386"
+MODULE: apb_wdt
+Condition 1 "1348641391" "(val_r == 32'b0) 1 -1" (1 "0")
+Condition 1 "1348641391" "(val_r == 32'b0) 1 -1" (2 "1")
+Condition 2 "1661640642" "(pwdata == PETVAL) 1 -1" (1 "0")
+Condition 2 "1661640642" "(pwdata == PETVAL) 1 -1" (2 "1")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+
+// ID: EXCL-PROD-0046
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3975723183 102336547"
+MODULE: icache
+Condition 2 "1204437303" "((p[1] == 1'b0) ? 2'b0 : 2'b1) 1 -1" (1 "0")
+Condition 3 "320115894" "(p[1] == 1'b0) 1 -1" (1 "0")
+Condition 4 "2647389276" "((p[2] == 1'b0) ? 2'd2 : 2'd3) 1 -1" (1 "0")
+Condition 5 "1901425551" "(p[2] == 1'b0) 1 -1" (1 "0")
+Condition 7 "1341696682" "(arready && arvalid) 1 -1" (2 "10")
+Condition 8 "15292451" "(rvalid && rlast) 1 -1" (1 "01")
+Condition 9 "2323703806" "((refill_error || (rresp != 2'b0)) ? ERROR : IDLE) 1 -1" (2 "1")
+Condition 10 "634915445" "(refill_error || (rresp != 2'b0)) 1 -1" (2 "01")
+Condition 10 "634915445" "(refill_error || (rresp != 2'b0)) 1 -1" (3 "10")
+Condition 11 "3020453582" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 12 "1047006440" "(maint_req && ((!cpu_req))) 1 -1" (1 "01")
+Condition 12 "1047006440" "(maint_req && ((!cpu_req))) 1 -1" (2 "10")
+Condition 12 "1047006440" "(maint_req && ((!cpu_req))) 1 -1" (3 "11")
+Condition 13 "1537418234" "(arready && arvalid) 1 -1" (1 "01")
+Condition 13 "1537418234" "(arready && arvalid) 1 -1" (2 "10")
+Condition 14 "2306790429" "(rvalid && rready) 1 -1" (2 "10")
+Condition 15 "724934748" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 16 "2357970291" "((state == LOOKUP) && cache_hit) 1 -1" (1 "01")
+Condition 20 "4043950739" "(maint_op == 5'b00100) 1 -1" (2 "1")
+Condition 21 "2275621262" "(maint_op == 5'b01000) 1 -1" (2 "1")
+Condition 22 "1773354118" "(maint_op == 5'b10000) 1 -1" (2 "1")
+Condition 24 "1706224794" "((state == IDLE) && (cpu_req || maint_req)) 1 -1" (2 "10")
+Condition 26 "1214819370" "(cpu_req || maint_req) 1 -1" (1 "00")
+Condition 26 "1214819370" "(cpu_req || maint_req) 1 -1" (2 "01")
+Condition 27 "105296432" "((state == LOOKUP) && cpu_req && cpu_addr_ok) 1 -1" (2 "101")
+Condition 29 "3903685141" "((state == REFILL) && rvalid && rlast && ( ! (refill_error || (rresp != 2'b0)) )) 1 -1" (2 "1011")
+Condition 29 "3903685141" "((state == REFILL) && rvalid && rlast && ( ! (refill_error || (rresp != 2'b0)) )) 1 -1" (4 "1110")
+Condition 31 "3410770109" "( ! (refill_error || (rresp != 2'b0)) ) 1 -1" (2 "1")
+Condition 32 "2143926841" "(refill_error || (rresp != 2'b0)) 1 -1" (2 "01")
+Condition 32 "2143926841" "(refill_error || (rresp != 2'b0)) 1 -1" (3 "10")
+Condition 33 "4020833575" "(rresp != 2'b0) 1 -1" (2 "1")
+Condition 35 "4294910825" "(((state == IDLE) && maint_req) ? cache_op_addr[10:5] : (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5])) 1 -1" (2 "1")
+Condition 36 "3621298047" "((state == IDLE) && maint_req) 1 -1" (1 "01")
+Condition 36 "3621298047" "((state == IDLE) && maint_req) 1 -1" (3 "11")
+Condition 39 "2228007650" "(((|tag_parity_bad)) || ((|data_parity_bad))) 1 -1" (2 "01")
+Condition 39 "2228007650" "(((|tag_parity_bad)) || ((|data_parity_bad))) 1 -1" (3 "10")
+Condition 41 "3823703787" "((state == IDLE) && ((!maint_req))) 1 -1" (2 "10")
+Condition 43 "1518250458" "((state == LOOKUP) && cache_hit) 1 -1" (1 "01")
+Condition 45 "1006472646" "(((state == LOOKUP) && cache_hit) || (state == ERROR)) 1 -1" (2 "01")
+Condition 46 "1831112182" "((state == LOOKUP) && cache_hit) 1 -1" (1 "01")
+Condition 48 "2393135638" "(state == ERROR) 1 -1" (2 "1")
+Condition 49 "4195072364" "(state == ERROR) 1 -1" (2 "1")
+Condition 50 "1962533762" "(state == ERROR) 1 -1" (2 "1")
+Condition 51 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (1 "01")
+Condition 51 "1305881781" "((state == IDLE) && ((!cpu_req))) 1 -1" (3 "11")
+Condition 53 "3574179587" "(state == CACHE_DONE) 1 -1" (2 "1")
+Condition 54 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (1 "01")
+Condition 54 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (2 "10")
+Condition 54 "2759359795" "((state == CACHE_DONE) && maint_error) 1 -1" (3 "11")
+Condition 55 "3370719861" "(state == CACHE_DONE) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0047
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "892611322 4064681054"
+MODULE: mips_soc_impl
+Condition 1 "3253009356" "(tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate) 1 -1" (2 "001")
+Condition 1 "3253009356" "(tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate) 1 -1" (3 "010")
+Condition 1 "3253009356" "(tlb_inv_en || ipi_core0_invalidate || ipi_core1_core0_invalidate) 1 -1" (4 "100")
+Condition 2 "207244938" "(ipi_core1_core0_invalidate ? ipi_core1_invalidate_vpn[18:0] : (ipi_core0_invalidate ? ipi_invalidate_vpn[18:0] : tlb_inv_vpn2)) 1 -1" (2 "1")
+Condition 3 "1419854972" "(ipi_core0_invalidate ? ipi_invalidate_vpn[18:0] : tlb_inv_vpn2) 1 -1" (2 "1")
+Condition 4 "364522818" "(ipi_core1_core0_invalidate ? ipi_core1_invalidate_asid : (ipi_core0_invalidate ? ipi_invalidate_asid : tlb_inv_asid)) 1 -1" (2 "1")
+Condition 5 "1314575247" "(ipi_core0_invalidate ? ipi_invalidate_asid : tlb_inv_asid) 1 -1" (2 "1")
+Condition 6 "3679563466" "(ipi_core1_core0_invalidate ? ipi_core1_invalidate_scope : (ipi_core0_invalidate ? ipi_invalidate_scope : tlb_inv_scope)) 1 -1" (2 "1")
+Condition 7 "3282723727" "(ipi_core0_invalidate ? ipi_invalidate_scope : tlb_inv_scope) 1 -1" (2 "1")
+Condition 8 "177546086" "(core0_coh_store_valid ? core0_coh_store_addr : core1_coh_store_addr) 1 -1" (2 "1")
+Condition 9 "1764931724" "(core0_coh_store_valid | core1_coh_store_valid) 1 -1" (2 "01")
+Condition 9 "1764931724" "(core0_coh_store_valid | core1_coh_store_valid) 1 -1" (3 "10")
+Condition 10 "681678048" "(ipi_invalidate_valid && ((!ipi_invalidate_target))) 1 -1" (2 "10")
+Condition 10 "681678048" "(ipi_invalidate_valid && ((!ipi_invalidate_target))) 1 -1" (3 "11")
+Condition 11 "4096997985" "(ipi_core1_invalidate_valid && ((!ipi_core1_invalidate_target))) 1 -1" (2 "10")
+Condition 11 "4096997985" "(ipi_core1_invalidate_valid && ((!ipi_core1_invalidate_target))) 1 -1" (3 "11")
+Condition 12 "3900324519" "(ipi_core1_invalidate_valid && ipi_core1_invalidate_target) 1 -1" (1 "01")
+Condition 12 "3900324519" "(ipi_core1_invalidate_valid && ipi_core1_invalidate_target) 1 -1" (2 "10")
+Condition 12 "3900324519" "(ipi_core1_invalidate_valid && ipi_core1_invalidate_target) 1 -1" (3 "11")
+Condition 13 "3014300374" "(rst_n & ((~wdt_reset))) 1 -1" (2 "10")
+Condition 14 "2660777202" "(ipi_core1_invalidate_valid && ((!ipi_core1_invalidate_target))) 1 -1" (2 "10")
+Condition 14 "2660777202" "(ipi_core1_invalidate_valid && ((!ipi_core1_invalidate_target))) 1 -1" (3 "11")
+Condition 15 "3169431388" "((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate) 1 -1" (2 "01")
+Condition 15 "3169431388" "((ipi_invalidate_valid && ipi_invalidate_target) || ipi_core1_core1_invalidate) 1 -1" (3 "10")
+Condition 16 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (1 "01")
+Condition 16 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (2 "10")
+Condition 16 "802179871" "(ipi_invalidate_valid && ipi_invalidate_target) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0048
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "41468714 2059093108"
+MODULE: axi_crossbar
+Condition 5 "1203281566" "((a >= 32'h1fc00000) && (a < (32'h1fc00000 + 32'h00010000))) 1 -1" (2 "10")
+Condition 5 "1203281566" "((a >= 32'h1fc00000) && (a < (32'h1fc00000 + 32'h00010000))) 1 -1" (3 "11")
+Condition 6 "3240770334" "((a & 32'hf0000000) == 32'h10000000) 1 -1" (1 "0")
+Condition 7 "2109322115" "((a >= 32'h08000000) && (a < (32'h08000000 + 32'h08000000))) 1 -1" (1 "01")
+Condition 7 "2109322115" "((a >= 32'h08000000) && (a < (32'h08000000 + 32'h08000000))) 1 -1" (2 "10")
+Condition 7 "2109322115" "((a >= 32'h08000000) && (a < (32'h08000000 + 32'h08000000))) 1 -1" (3 "11")
+Condition 8 "3221349526" "(rd_resp_v[DEC] && (rd_beat[DEC] == rd_resp_len[DEC])) 1 -1" (2 "10")
+Condition 8 "3221349526" "(rd_resp_v[DEC] && (rd_beat[DEC] == rd_resp_len[DEC])) 1 -1" (3 "11")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (1 "011111")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (2 "101111")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (3 "110111")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (4 "111011")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (5 "111101")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (6 "111110")
+Condition 10 "3911526199" "(rd_resp_v[DEC] && dec_rvalid && r_sel_v[rd_resp_mid[DEC]] && (r_sel_s[rd_resp_mid[DEC]] == DEC) && m_rready[rd_resp_mid[DEC]] && dec_rlast) 1 -1" (7 "111111")
+Condition 11 "202039226" "(r_sel_s[rd_resp_mid[DEC]] == DEC) 1 -1" (2 "1")
+Condition 12 "3689851742" "(wdrive_v[DEC] && m_wvalid[wdrive_mid[DEC]] && m_wlast[wdrive_mid[DEC]]) 1 -1" (1 "011")
+Condition 12 "3689851742" "(wdrive_v[DEC] && m_wvalid[wdrive_mid[DEC]] && m_wlast[wdrive_mid[DEC]]) 1 -1" (2 "101")
+Condition 12 "3689851742" "(wdrive_v[DEC] && m_wvalid[wdrive_mid[DEC]] && m_wlast[wdrive_mid[DEC]]) 1 -1" (3 "110")
+Condition 12 "3689851742" "(wdrive_v[DEC] && m_wvalid[wdrive_mid[DEC]] && m_wlast[wdrive_mid[DEC]]) 1 -1" (4 "111")
+Condition 13 "3252340833" "(b_resp_v[DEC] && dec_bvalid && b_sel_v[b_resp_mid[DEC]] && (b_sel_s[b_resp_mid[DEC]] == DEC) && m_bready[b_resp_mid[DEC]]) 1 -1" (1 "01111")
+Condition 13 "3252340833" "(b_resp_v[DEC] && dec_bvalid && b_sel_v[b_resp_mid[DEC]] && (b_sel_s[b_resp_mid[DEC]] == DEC) && m_bready[b_resp_mid[DEC]]) 1 -1" (2 "10111")
+Condition 13 "3252340833" "(b_resp_v[DEC] && dec_bvalid && b_sel_v[b_resp_mid[DEC]] && (b_sel_s[b_resp_mid[DEC]] == DEC) && m_bready[b_resp_mid[DEC]]) 1 -1" (3 "11011")
+Condition 13 "3252340833" "(b_resp_v[DEC] && dec_bvalid && b_sel_v[b_resp_mid[DEC]] && (b_sel_s[b_resp_mid[DEC]] == DEC) && m_bready[b_resp_mid[DEC]]) 1 -1" (4 "11101")
+Condition 13 "3252340833" "(b_resp_v[DEC] && dec_bvalid && b_sel_v[b_resp_mid[DEC]] && (b_sel_s[b_resp_mid[DEC]] == DEC) && m_bready[b_resp_mid[DEC]]) 1 -1" (5 "11110")
+Condition 13 "3252340833" "(b_resp_v[DEC] && dec_bvalid && b_sel_v[b_resp_mid[DEC]] && (b_sel_s[b_resp_mid[DEC]] == DEC) && m_bready[b_resp_mid[DEC]]) 1 -1" (6 "11111")
+Condition 14 "740699191" "(b_sel_s[b_resp_mid[DEC]] == DEC) 1 -1" (2 "1")
+Condition 18 "1988457685" "(s_arvalid[3] && s_arready[3]) 1 -1" (2 "10")
+Condition 18 "1988457685" "(s_arvalid[3] && s_arready[3]) 1 -1" (3 "11")
+Condition 19 "1337103367" "(s_arvalid[4] && s_arready[4]) 1 -1" (2 "10")
+Condition 19 "1337103367" "(s_arvalid[4] && s_arready[4]) 1 -1" (3 "11")
+Condition 20 "4022103598" "(m_enable[0] && m_arvalid[0] && rd_grant_v[ar_tgt[0]] && (rg[ar_tgt[0]] == 0[(MIDW - 1):0]) && ar_accept[ar_tgt[0]]) 1 -1" (1 "01111")
+Condition 20 "4022103598" "(m_enable[0] && m_arvalid[0] && rd_grant_v[ar_tgt[0]] && (rg[ar_tgt[0]] == 0[(MIDW - 1):0]) && ar_accept[ar_tgt[0]]) 1 -1" (2 "10111")
+Condition 20 "4022103598" "(m_enable[0] && m_arvalid[0] && rd_grant_v[ar_tgt[0]] && (rg[ar_tgt[0]] == 0[(MIDW - 1):0]) && ar_accept[ar_tgt[0]]) 1 -1" (3 "11011")
+Condition 20 "4022103598" "(m_enable[0] && m_arvalid[0] && rd_grant_v[ar_tgt[0]] && (rg[ar_tgt[0]] == 0[(MIDW - 1):0]) && ar_accept[ar_tgt[0]]) 1 -1" (4 "11101")
+Condition 20 "4022103598" "(m_enable[0] && m_arvalid[0] && rd_grant_v[ar_tgt[0]] && (rg[ar_tgt[0]] == 0[(MIDW - 1):0]) && ar_accept[ar_tgt[0]]) 1 -1" (5 "11110")
+Condition 22 "1564488915" "(m_enable[1] && m_arvalid[1] && rd_grant_v[ar_tgt[1]] && (rg[ar_tgt[1]] == 1[(MIDW - 1):0]) && ar_accept[ar_tgt[1]]) 1 -1" (1 "01111")
+Condition 22 "1564488915" "(m_enable[1] && m_arvalid[1] && rd_grant_v[ar_tgt[1]] && (rg[ar_tgt[1]] == 1[(MIDW - 1):0]) && ar_accept[ar_tgt[1]]) 1 -1" (2 "10111")
+Condition 22 "1564488915" "(m_enable[1] && m_arvalid[1] && rd_grant_v[ar_tgt[1]] && (rg[ar_tgt[1]] == 1[(MIDW - 1):0]) && ar_accept[ar_tgt[1]]) 1 -1" (3 "11011")
+Condition 22 "1564488915" "(m_enable[1] && m_arvalid[1] && rd_grant_v[ar_tgt[1]] && (rg[ar_tgt[1]] == 1[(MIDW - 1):0]) && ar_accept[ar_tgt[1]]) 1 -1" (4 "11101")
+Condition 24 "3863887346" "(m_enable[2] && m_arvalid[2] && rd_grant_v[ar_tgt[2]] && (rg[ar_tgt[2]] == 2[(MIDW - 1):0]) && ar_accept[ar_tgt[2]]) 1 -1" (1 "01111")
+Condition 24 "3863887346" "(m_enable[2] && m_arvalid[2] && rd_grant_v[ar_tgt[2]] && (rg[ar_tgt[2]] == 2[(MIDW - 1):0]) && ar_accept[ar_tgt[2]]) 1 -1" (2 "10111")
+Condition 24 "3863887346" "(m_enable[2] && m_arvalid[2] && rd_grant_v[ar_tgt[2]] && (rg[ar_tgt[2]] == 2[(MIDW - 1):0]) && ar_accept[ar_tgt[2]]) 1 -1" (3 "11011")
+Condition 24 "3863887346" "(m_enable[2] && m_arvalid[2] && rd_grant_v[ar_tgt[2]] && (rg[ar_tgt[2]] == 2[(MIDW - 1):0]) && ar_accept[ar_tgt[2]]) 1 -1" (4 "11101")
+Condition 26 "1420977935" "(m_enable[3] && m_arvalid[3] && rd_grant_v[ar_tgt[3]] && (rg[ar_tgt[3]] == 3[(MIDW - 1):0]) && ar_accept[ar_tgt[3]]) 1 -1" (1 "01111")
+Condition 26 "1420977935" "(m_enable[3] && m_arvalid[3] && rd_grant_v[ar_tgt[3]] && (rg[ar_tgt[3]] == 3[(MIDW - 1):0]) && ar_accept[ar_tgt[3]]) 1 -1" (2 "10111")
+Condition 26 "1420977935" "(m_enable[3] && m_arvalid[3] && rd_grant_v[ar_tgt[3]] && (rg[ar_tgt[3]] == 3[(MIDW - 1):0]) && ar_accept[ar_tgt[3]]) 1 -1" (3 "11011")
+Condition 26 "1420977935" "(m_enable[3] && m_arvalid[3] && rd_grant_v[ar_tgt[3]] && (rg[ar_tgt[3]] == 3[(MIDW - 1):0]) && ar_accept[ar_tgt[3]]) 1 -1" (4 "11101")
+Condition 28 "5347705" "(m_enable[4] && m_arvalid[4] && rd_grant_v[ar_tgt[4]] && (rg[ar_tgt[4]] == 4[(MIDW - 1):0]) && ar_accept[ar_tgt[4]]) 1 -1" (1 "01111")
+Condition 28 "5347705" "(m_enable[4] && m_arvalid[4] && rd_grant_v[ar_tgt[4]] && (rg[ar_tgt[4]] == 4[(MIDW - 1):0]) && ar_accept[ar_tgt[4]]) 1 -1" (2 "10111")
+Condition 28 "5347705" "(m_enable[4] && m_arvalid[4] && rd_grant_v[ar_tgt[4]] && (rg[ar_tgt[4]] == 4[(MIDW - 1):0]) && ar_accept[ar_tgt[4]]) 1 -1" (3 "11011")
+Condition 28 "5347705" "(m_enable[4] && m_arvalid[4] && rd_grant_v[ar_tgt[4]] && (rg[ar_tgt[4]] == 4[(MIDW - 1):0]) && ar_accept[ar_tgt[4]]) 1 -1" (4 "11101")
+Condition 28 "5347705" "(m_enable[4] && m_arvalid[4] && rd_grant_v[ar_tgt[4]] && (rg[ar_tgt[4]] == 4[(MIDW - 1):0]) && ar_accept[ar_tgt[4]]) 1 -1" (5 "11110")
+Condition 28 "5347705" "(m_enable[4] && m_arvalid[4] && rd_grant_v[ar_tgt[4]] && (rg[ar_tgt[4]] == 4[(MIDW - 1):0]) && ar_accept[ar_tgt[4]]) 1 -1" (6 "11111")
+Condition 29 "1823219507" "(rg[ar_tgt[4]] == 4[(MIDW - 1):0]) 1 -1" (2 "1")
+Condition 33 "428525001" "(rd_cnt[3] != 0) 1 -1" (2 "1")
+Condition 34 "2066207678" "(rd_cnt[4] != 0) 1 -1" (2 "1")
+Condition 35 "2097285317" "(rd_cnt[5] != 0) 1 -1" (2 "1")
+Condition 36 "2774458161" "(rd_resp_v[0] && rvalid_s2m[0][rd_resp_mid[0]] && r_sel_v[rd_resp_mid[0]] && (r_sel_s[rd_resp_mid[0]] == 0) && m_rready[rd_resp_mid[0]]) 1 -1" (1 "01111")
+Condition 36 "2774458161" "(rd_resp_v[0] && rvalid_s2m[0][rd_resp_mid[0]] && r_sel_v[rd_resp_mid[0]] && (r_sel_s[rd_resp_mid[0]] == 0) && m_rready[rd_resp_mid[0]]) 1 -1" (2 "10111")
+Condition 36 "2774458161" "(rd_resp_v[0] && rvalid_s2m[0][rd_resp_mid[0]] && r_sel_v[rd_resp_mid[0]] && (r_sel_s[rd_resp_mid[0]] == 0) && m_rready[rd_resp_mid[0]]) 1 -1" (4 "11101")
+Condition 36 "2774458161" "(rd_resp_v[0] && rvalid_s2m[0][rd_resp_mid[0]] && r_sel_v[rd_resp_mid[0]] && (r_sel_s[rd_resp_mid[0]] == 0) && m_rready[rd_resp_mid[0]]) 1 -1" (5 "11110")
+Condition 38 "2613448648" "(rd_resp_v[1] && rvalid_s2m[1][rd_resp_mid[1]] && r_sel_v[rd_resp_mid[1]] && (r_sel_s[rd_resp_mid[1]] == 1) && m_rready[rd_resp_mid[1]]) 1 -1" (1 "01111")
+Condition 38 "2613448648" "(rd_resp_v[1] && rvalid_s2m[1][rd_resp_mid[1]] && r_sel_v[rd_resp_mid[1]] && (r_sel_s[rd_resp_mid[1]] == 1) && m_rready[rd_resp_mid[1]]) 1 -1" (2 "10111")
+Condition 38 "2613448648" "(rd_resp_v[1] && rvalid_s2m[1][rd_resp_mid[1]] && r_sel_v[rd_resp_mid[1]] && (r_sel_s[rd_resp_mid[1]] == 1) && m_rready[rd_resp_mid[1]]) 1 -1" (3 "11011")
+Condition 38 "2613448648" "(rd_resp_v[1] && rvalid_s2m[1][rd_resp_mid[1]] && r_sel_v[rd_resp_mid[1]] && (r_sel_s[rd_resp_mid[1]] == 1) && m_rready[rd_resp_mid[1]]) 1 -1" (4 "11101")
+Condition 38 "2613448648" "(rd_resp_v[1] && rvalid_s2m[1][rd_resp_mid[1]] && r_sel_v[rd_resp_mid[1]] && (r_sel_s[rd_resp_mid[1]] == 1) && m_rready[rd_resp_mid[1]]) 1 -1" (5 "11110")
+Condition 40 "234047269" "(rd_resp_v[2] && rvalid_s2m[2][rd_resp_mid[2]] && r_sel_v[rd_resp_mid[2]] && (r_sel_s[rd_resp_mid[2]] == 2) && m_rready[rd_resp_mid[2]]) 1 -1" (1 "01111")
+Condition 40 "234047269" "(rd_resp_v[2] && rvalid_s2m[2][rd_resp_mid[2]] && r_sel_v[rd_resp_mid[2]] && (r_sel_s[rd_resp_mid[2]] == 2) && m_rready[rd_resp_mid[2]]) 1 -1" (2 "10111")
+Condition 40 "234047269" "(rd_resp_v[2] && rvalid_s2m[2][rd_resp_mid[2]] && r_sel_v[rd_resp_mid[2]] && (r_sel_s[rd_resp_mid[2]] == 2) && m_rready[rd_resp_mid[2]]) 1 -1" (3 "11011")
+Condition 40 "234047269" "(rd_resp_v[2] && rvalid_s2m[2][rd_resp_mid[2]] && r_sel_v[rd_resp_mid[2]] && (r_sel_s[rd_resp_mid[2]] == 2) && m_rready[rd_resp_mid[2]]) 1 -1" (4 "11101")
+Condition 40 "234047269" "(rd_resp_v[2] && rvalid_s2m[2][rd_resp_mid[2]] && r_sel_v[rd_resp_mid[2]] && (r_sel_s[rd_resp_mid[2]] == 2) && m_rready[rd_resp_mid[2]]) 1 -1" (5 "11110")
+Condition 42 "862689244" "(rd_resp_v[3] && rvalid_s2m[3][rd_resp_mid[3]] && r_sel_v[rd_resp_mid[3]] && (r_sel_s[rd_resp_mid[3]] == 3) && m_rready[rd_resp_mid[3]]) 1 -1" (1 "01111")
+Condition 42 "862689244" "(rd_resp_v[3] && rvalid_s2m[3][rd_resp_mid[3]] && r_sel_v[rd_resp_mid[3]] && (r_sel_s[rd_resp_mid[3]] == 3) && m_rready[rd_resp_mid[3]]) 1 -1" (2 "10111")
+Condition 42 "862689244" "(rd_resp_v[3] && rvalid_s2m[3][rd_resp_mid[3]] && r_sel_v[rd_resp_mid[3]] && (r_sel_s[rd_resp_mid[3]] == 3) && m_rready[rd_resp_mid[3]]) 1 -1" (3 "11011")
+Condition 42 "862689244" "(rd_resp_v[3] && rvalid_s2m[3][rd_resp_mid[3]] && r_sel_v[rd_resp_mid[3]] && (r_sel_s[rd_resp_mid[3]] == 3) && m_rready[rd_resp_mid[3]]) 1 -1" (4 "11101")
+Condition 42 "862689244" "(rd_resp_v[3] && rvalid_s2m[3][rd_resp_mid[3]] && r_sel_v[rd_resp_mid[3]] && (r_sel_s[rd_resp_mid[3]] == 3) && m_rready[rd_resp_mid[3]]) 1 -1" (5 "11110")
+Condition 42 "862689244" "(rd_resp_v[3] && rvalid_s2m[3][rd_resp_mid[3]] && r_sel_v[rd_resp_mid[3]] && (r_sel_s[rd_resp_mid[3]] == 3) && m_rready[rd_resp_mid[3]]) 1 -1" (6 "11111")
+Condition 43 "2734129358" "(r_sel_s[rd_resp_mid[3]] == 3) 1 -1" (2 "1")
+Condition 44 "928545601" "(rd_resp_v[4] && rvalid_s2m[4][rd_resp_mid[4]] && r_sel_v[rd_resp_mid[4]] && (r_sel_s[rd_resp_mid[4]] == 4) && m_rready[rd_resp_mid[4]]) 1 -1" (1 "01111")
+Condition 44 "928545601" "(rd_resp_v[4] && rvalid_s2m[4][rd_resp_mid[4]] && r_sel_v[rd_resp_mid[4]] && (r_sel_s[rd_resp_mid[4]] == 4) && m_rready[rd_resp_mid[4]]) 1 -1" (2 "10111")
+Condition 44 "928545601" "(rd_resp_v[4] && rvalid_s2m[4][rd_resp_mid[4]] && r_sel_v[rd_resp_mid[4]] && (r_sel_s[rd_resp_mid[4]] == 4) && m_rready[rd_resp_mid[4]]) 1 -1" (3 "11011")
+Condition 44 "928545601" "(rd_resp_v[4] && rvalid_s2m[4][rd_resp_mid[4]] && r_sel_v[rd_resp_mid[4]] && (r_sel_s[rd_resp_mid[4]] == 4) && m_rready[rd_resp_mid[4]]) 1 -1" (4 "11101")
+Condition 44 "928545601" "(rd_resp_v[4] && rvalid_s2m[4][rd_resp_mid[4]] && r_sel_v[rd_resp_mid[4]] && (r_sel_s[rd_resp_mid[4]] == 4) && m_rready[rd_resp_mid[4]]) 1 -1" (5 "11110")
+Condition 44 "928545601" "(rd_resp_v[4] && rvalid_s2m[4][rd_resp_mid[4]] && r_sel_v[rd_resp_mid[4]] && (r_sel_s[rd_resp_mid[4]] == 4) && m_rready[rd_resp_mid[4]]) 1 -1" (6 "11111")
+Condition 45 "493697284" "(r_sel_s[rd_resp_mid[4]] == 4) 1 -1" (2 "1")
+Condition 46 "1934447581" "(rd_resp_v[0] && s_rvalid[0] && s_rready[0] && s_rlast[0]) 1 -1" (1 "0111")
+Condition 46 "1934447581" "(rd_resp_v[0] && s_rvalid[0] && s_rready[0] && s_rlast[0]) 1 -1" (2 "1011")
+Condition 47 "58819140" "(rd_resp_v[1] && s_rvalid[1] && s_rready[1] && s_rlast[1]) 1 -1" (1 "0111")
+Condition 47 "58819140" "(rd_resp_v[1] && s_rvalid[1] && s_rready[1] && s_rlast[1]) 1 -1" (2 "1011")
+Condition 48 "2094862345" "(rd_resp_v[2] && s_rvalid[2] && s_rready[2] && s_rlast[2]) 1 -1" (1 "0111")
+Condition 48 "2094862345" "(rd_resp_v[2] && s_rvalid[2] && s_rready[2] && s_rlast[2]) 1 -1" (2 "1011")
+Condition 49 "202490256" "(rd_resp_v[3] && s_rvalid[3] && s_rready[3] && s_rlast[3]) 1 -1" (1 "0111")
+Condition 49 "202490256" "(rd_resp_v[3] && s_rvalid[3] && s_rready[3] && s_rlast[3]) 1 -1" (2 "1011")
+Condition 49 "202490256" "(rd_resp_v[3] && s_rvalid[3] && s_rready[3] && s_rlast[3]) 1 -1" (3 "1101")
+Condition 49 "202490256" "(rd_resp_v[3] && s_rvalid[3] && s_rready[3] && s_rlast[3]) 1 -1" (4 "1110")
+Condition 49 "202490256" "(rd_resp_v[3] && s_rvalid[3] && s_rready[3] && s_rlast[3]) 1 -1" (5 "1111")
+Condition 50 "3950545960" "(rd_resp_v[4] && s_rvalid[4] && s_rready[4] && s_rlast[4]) 1 -1" (1 "0111")
+Condition 50 "3950545960" "(rd_resp_v[4] && s_rvalid[4] && s_rready[4] && s_rlast[4]) 1 -1" (2 "1011")
+Condition 50 "3950545960" "(rd_resp_v[4] && s_rvalid[4] && s_rready[4] && s_rlast[4]) 1 -1" (3 "1101")
+Condition 50 "3950545960" "(rd_resp_v[4] && s_rvalid[4] && s_rready[4] && s_rlast[4]) 1 -1" (4 "1110")
+Condition 50 "3950545960" "(rd_resp_v[4] && s_rvalid[4] && s_rready[4] && s_rlast[4]) 1 -1" (5 "1111")
+Condition 53 "2297854546" "(s_awvalid[2] && s_awready[2]) 1 -1" (2 "10")
+Condition 53 "2297854546" "(s_awvalid[2] && s_awready[2]) 1 -1" (3 "11")
+Condition 54 "383118961" "(s_awvalid[3] && s_awready[3]) 1 -1" (2 "10")
+Condition 54 "383118961" "(s_awvalid[3] && s_awready[3]) 1 -1" (3 "11")
+Condition 55 "803344035" "(s_awvalid[4] && s_awready[4]) 1 -1" (2 "10")
+Condition 55 "803344035" "(s_awvalid[4] && s_awready[4]) 1 -1" (3 "11")
+Condition 56 "1377679267" "(m_enable[0] && m_awvalid[0] && wr_grant_v[aw_tgt[0]] && (wg[aw_tgt[0]] == 0[(MIDW - 1):0]) && aw_accept[aw_tgt[0]]) 1 -1" (1 "01111")
+Condition 56 "1377679267" "(m_enable[0] && m_awvalid[0] && wr_grant_v[aw_tgt[0]] && (wg[aw_tgt[0]] == 0[(MIDW - 1):0]) && aw_accept[aw_tgt[0]]) 1 -1" (2 "10111")
+Condition 56 "1377679267" "(m_enable[0] && m_awvalid[0] && wr_grant_v[aw_tgt[0]] && (wg[aw_tgt[0]] == 0[(MIDW - 1):0]) && aw_accept[aw_tgt[0]]) 1 -1" (3 "11011")
+Condition 56 "1377679267" "(m_enable[0] && m_awvalid[0] && wr_grant_v[aw_tgt[0]] && (wg[aw_tgt[0]] == 0[(MIDW - 1):0]) && aw_accept[aw_tgt[0]]) 1 -1" (4 "11101")
+Condition 56 "1377679267" "(m_enable[0] && m_awvalid[0] && wr_grant_v[aw_tgt[0]] && (wg[aw_tgt[0]] == 0[(MIDW - 1):0]) && aw_accept[aw_tgt[0]]) 1 -1" (5 "11110")
+Condition 56 "1377679267" "(m_enable[0] && m_awvalid[0] && wr_grant_v[aw_tgt[0]] && (wg[aw_tgt[0]] == 0[(MIDW - 1):0]) && aw_accept[aw_tgt[0]]) 1 -1" (6 "11111")
+Condition 58 "3772902750" "(m_enable[1] && m_awvalid[1] && wr_grant_v[aw_tgt[1]] && (wg[aw_tgt[1]] == 1[(MIDW - 1):0]) && aw_accept[aw_tgt[1]]) 1 -1" (1 "01111")
+Condition 58 "3772902750" "(m_enable[1] && m_awvalid[1] && wr_grant_v[aw_tgt[1]] && (wg[aw_tgt[1]] == 1[(MIDW - 1):0]) && aw_accept[aw_tgt[1]]) 1 -1" (2 "10111")
+Condition 58 "3772902750" "(m_enable[1] && m_awvalid[1] && wr_grant_v[aw_tgt[1]] && (wg[aw_tgt[1]] == 1[(MIDW - 1):0]) && aw_accept[aw_tgt[1]]) 1 -1" (3 "11011")
+Condition 58 "3772902750" "(m_enable[1] && m_awvalid[1] && wr_grant_v[aw_tgt[1]] && (wg[aw_tgt[1]] == 1[(MIDW - 1):0]) && aw_accept[aw_tgt[1]]) 1 -1" (4 "11101")
+Condition 60 "1542448255" "(m_enable[2] && m_awvalid[2] && wr_grant_v[aw_tgt[2]] && (wg[aw_tgt[2]] == 2[(MIDW - 1):0]) && aw_accept[aw_tgt[2]]) 1 -1" (1 "01111")
+Condition 60 "1542448255" "(m_enable[2] && m_awvalid[2] && wr_grant_v[aw_tgt[2]] && (wg[aw_tgt[2]] == 2[(MIDW - 1):0]) && aw_accept[aw_tgt[2]]) 1 -1" (2 "10111")
+Condition 60 "1542448255" "(m_enable[2] && m_awvalid[2] && wr_grant_v[aw_tgt[2]] && (wg[aw_tgt[2]] == 2[(MIDW - 1):0]) && aw_accept[aw_tgt[2]]) 1 -1" (3 "11011")
+Condition 60 "1542448255" "(m_enable[2] && m_awvalid[2] && wr_grant_v[aw_tgt[2]] && (wg[aw_tgt[2]] == 2[(MIDW - 1):0]) && aw_accept[aw_tgt[2]]) 1 -1" (4 "11101")
+Condition 62 "3910385282" "(m_enable[3] && m_awvalid[3] && wr_grant_v[aw_tgt[3]] && (wg[aw_tgt[3]] == 3[(MIDW - 1):0]) && aw_accept[aw_tgt[3]]) 1 -1" (1 "01111")
+Condition 62 "3910385282" "(m_enable[3] && m_awvalid[3] && wr_grant_v[aw_tgt[3]] && (wg[aw_tgt[3]] == 3[(MIDW - 1):0]) && aw_accept[aw_tgt[3]]) 1 -1" (2 "10111")
+Condition 62 "3910385282" "(m_enable[3] && m_awvalid[3] && wr_grant_v[aw_tgt[3]] && (wg[aw_tgt[3]] == 3[(MIDW - 1):0]) && aw_accept[aw_tgt[3]]) 1 -1" (3 "11011")
+Condition 62 "3910385282" "(m_enable[3] && m_awvalid[3] && wr_grant_v[aw_tgt[3]] && (wg[aw_tgt[3]] == 3[(MIDW - 1):0]) && aw_accept[aw_tgt[3]]) 1 -1" (4 "11101")
+Condition 62 "3910385282" "(m_enable[3] && m_awvalid[3] && wr_grant_v[aw_tgt[3]] && (wg[aw_tgt[3]] == 3[(MIDW - 1):0]) && aw_accept[aw_tgt[3]]) 1 -1" (5 "11110")
+Condition 64 "3186639092" "(m_enable[4] && m_awvalid[4] && wr_grant_v[aw_tgt[4]] && (wg[aw_tgt[4]] == 4[(MIDW - 1):0]) && aw_accept[aw_tgt[4]]) 1 -1" (1 "01111")
+Condition 64 "3186639092" "(m_enable[4] && m_awvalid[4] && wr_grant_v[aw_tgt[4]] && (wg[aw_tgt[4]] == 4[(MIDW - 1):0]) && aw_accept[aw_tgt[4]]) 1 -1" (2 "10111")
+Condition 64 "3186639092" "(m_enable[4] && m_awvalid[4] && wr_grant_v[aw_tgt[4]] && (wg[aw_tgt[4]] == 4[(MIDW - 1):0]) && aw_accept[aw_tgt[4]]) 1 -1" (3 "11011")
+Condition 64 "3186639092" "(m_enable[4] && m_awvalid[4] && wr_grant_v[aw_tgt[4]] && (wg[aw_tgt[4]] == 4[(MIDW - 1):0]) && aw_accept[aw_tgt[4]]) 1 -1" (4 "11101")
+Condition 64 "3186639092" "(m_enable[4] && m_awvalid[4] && wr_grant_v[aw_tgt[4]] && (wg[aw_tgt[4]] == 4[(MIDW - 1):0]) && aw_accept[aw_tgt[4]]) 1 -1" (5 "11110")
+Condition 64 "3186639092" "(m_enable[4] && m_awvalid[4] && wr_grant_v[aw_tgt[4]] && (wg[aw_tgt[4]] == 4[(MIDW - 1):0]) && aw_accept[aw_tgt[4]]) 1 -1" (6 "11111")
+Condition 65 "413430546" "(wg[aw_tgt[4]] == 4[(MIDW - 1):0]) 1 -1" (2 "1")
+Condition 68 "431481120" "(wr_wpend[2] != 0) 1 -1" (2 "1")
+Condition 69 "529676891" "(wr_wpend[3] != 0) 1 -1" (2 "1")
+Condition 70 "2101292076" "(wr_wpend[4] != 0) 1 -1" (2 "1")
+Condition 71 "2065364823" "(wr_wpend[5] != 0) 1 -1" (2 "1")
+Condition 72 "2283151605" "(wdrive_v[0] && m_wvalid[wdrive_mid[0]]) 1 -1" (1 "01")
+Condition 73 "3411291882" "(wdrive_v[1] && m_wvalid[wdrive_mid[1]]) 1 -1" (1 "01")
+Condition 73 "3411291882" "(wdrive_v[1] && m_wvalid[wdrive_mid[1]]) 1 -1" (2 "10")
+Condition 74 "651171560" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]]) 1 -1" (1 "01")
+Condition 74 "651171560" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]]) 1 -1" (2 "10")
+Condition 74 "651171560" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]]) 1 -1" (3 "11")
+Condition 75 "1704073463" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]]) 1 -1" (1 "01")
+Condition 75 "1704073463" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]]) 1 -1" (2 "10")
+Condition 75 "1704073463" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]]) 1 -1" (3 "11")
+Condition 76 "4133715258" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]]) 1 -1" (1 "01")
+Condition 76 "4133715258" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]]) 1 -1" (2 "10")
+Condition 76 "4133715258" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]]) 1 -1" (3 "11")
+Condition 77 "2784010736" "(wdrive_v[0] && m_wvalid[wdrive_mid[0]] && m_wready[wdrive_mid[0]] && m_wlast[wdrive_mid[0]]) 1 -1" (1 "0111")
+Condition 77 "2784010736" "(wdrive_v[0] && m_wvalid[wdrive_mid[0]] && m_wready[wdrive_mid[0]] && m_wlast[wdrive_mid[0]]) 1 -1" (2 "1011")
+Condition 78 "1252091042" "(wdrive_v[1] && m_wvalid[wdrive_mid[1]] && m_wready[wdrive_mid[1]] && m_wlast[wdrive_mid[1]]) 1 -1" (1 "0111")
+Condition 78 "1252091042" "(wdrive_v[1] && m_wvalid[wdrive_mid[1]] && m_wready[wdrive_mid[1]] && m_wlast[wdrive_mid[1]]) 1 -1" (2 "1011")
+Condition 78 "1252091042" "(wdrive_v[1] && m_wvalid[wdrive_mid[1]] && m_wready[wdrive_mid[1]] && m_wlast[wdrive_mid[1]]) 1 -1" (3 "1101")
+Condition 78 "1252091042" "(wdrive_v[1] && m_wvalid[wdrive_mid[1]] && m_wready[wdrive_mid[1]] && m_wlast[wdrive_mid[1]]) 1 -1" (4 "1110")
+Condition 79 "834052634" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]] && m_wready[wdrive_mid[2]] && m_wlast[wdrive_mid[2]]) 1 -1" (1 "0111")
+Condition 79 "834052634" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]] && m_wready[wdrive_mid[2]] && m_wlast[wdrive_mid[2]]) 1 -1" (2 "1011")
+Condition 79 "834052634" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]] && m_wready[wdrive_mid[2]] && m_wlast[wdrive_mid[2]]) 1 -1" (3 "1101")
+Condition 79 "834052634" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]] && m_wready[wdrive_mid[2]] && m_wlast[wdrive_mid[2]]) 1 -1" (4 "1110")
+Condition 79 "834052634" "(wdrive_v[2] && m_wvalid[wdrive_mid[2]] && m_wready[wdrive_mid[2]] && m_wlast[wdrive_mid[2]]) 1 -1" (5 "1111")
+Condition 80 "3739707208" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]] && m_wready[wdrive_mid[3]] && m_wlast[wdrive_mid[3]]) 1 -1" (1 "0111")
+Condition 80 "3739707208" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]] && m_wready[wdrive_mid[3]] && m_wlast[wdrive_mid[3]]) 1 -1" (2 "1011")
+Condition 80 "3739707208" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]] && m_wready[wdrive_mid[3]] && m_wlast[wdrive_mid[3]]) 1 -1" (3 "1101")
+Condition 80 "3739707208" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]] && m_wready[wdrive_mid[3]] && m_wlast[wdrive_mid[3]]) 1 -1" (4 "1110")
+Condition 80 "3739707208" "(wdrive_v[3] && m_wvalid[wdrive_mid[3]] && m_wready[wdrive_mid[3]] && m_wlast[wdrive_mid[3]]) 1 -1" (5 "1111")
+Condition 81 "893205198" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]] && m_wready[wdrive_mid[4]] && m_wlast[wdrive_mid[4]]) 1 -1" (1 "0111")
+Condition 81 "893205198" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]] && m_wready[wdrive_mid[4]] && m_wlast[wdrive_mid[4]]) 1 -1" (2 "1011")
+Condition 81 "893205198" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]] && m_wready[wdrive_mid[4]] && m_wlast[wdrive_mid[4]]) 1 -1" (3 "1101")
+Condition 81 "893205198" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]] && m_wready[wdrive_mid[4]] && m_wlast[wdrive_mid[4]]) 1 -1" (4 "1110")
+Condition 81 "893205198" "(wdrive_v[4] && m_wvalid[wdrive_mid[4]] && m_wready[wdrive_mid[4]] && m_wlast[wdrive_mid[4]]) 1 -1" (5 "1111")
+Condition 82 "3181064562" "(b_resp_v[0] && bvalid_s2m[0][b_resp_mid[0]] && b_sel_v[b_resp_mid[0]] && (b_sel_s[b_resp_mid[0]] == 0) && m_bready[b_resp_mid[0]]) 1 -1" (1 "01111")
+Condition 82 "3181064562" "(b_resp_v[0] && bvalid_s2m[0][b_resp_mid[0]] && b_sel_v[b_resp_mid[0]] && (b_sel_s[b_resp_mid[0]] == 0) && m_bready[b_resp_mid[0]]) 1 -1" (2 "10111")
+Condition 82 "3181064562" "(b_resp_v[0] && bvalid_s2m[0][b_resp_mid[0]] && b_sel_v[b_resp_mid[0]] && (b_sel_s[b_resp_mid[0]] == 0) && m_bready[b_resp_mid[0]]) 1 -1" (4 "11101")
+Condition 82 "3181064562" "(b_resp_v[0] && bvalid_s2m[0][b_resp_mid[0]] && b_sel_v[b_resp_mid[0]] && (b_sel_s[b_resp_mid[0]] == 0) && m_bready[b_resp_mid[0]]) 1 -1" (5 "11110")
+Condition 84 "925225556" "(b_resp_v[1] && bvalid_s2m[1][b_resp_mid[1]] && b_sel_v[b_resp_mid[1]] && (b_sel_s[b_resp_mid[1]] == 1) && m_bready[b_resp_mid[1]]) 1 -1" (1 "01111")
+Condition 84 "925225556" "(b_resp_v[1] && bvalid_s2m[1][b_resp_mid[1]] && b_sel_v[b_resp_mid[1]] && (b_sel_s[b_resp_mid[1]] == 1) && m_bready[b_resp_mid[1]]) 1 -1" (2 "10111")
+Condition 84 "925225556" "(b_resp_v[1] && bvalid_s2m[1][b_resp_mid[1]] && b_sel_v[b_resp_mid[1]] && (b_sel_s[b_resp_mid[1]] == 1) && m_bready[b_resp_mid[1]]) 1 -1" (3 "11011")
+Condition 84 "925225556" "(b_resp_v[1] && bvalid_s2m[1][b_resp_mid[1]] && b_sel_v[b_resp_mid[1]] && (b_sel_s[b_resp_mid[1]] == 1) && m_bready[b_resp_mid[1]]) 1 -1" (4 "11101")
+Condition 84 "925225556" "(b_resp_v[1] && bvalid_s2m[1][b_resp_mid[1]] && b_sel_v[b_resp_mid[1]] && (b_sel_s[b_resp_mid[1]] == 1) && m_bready[b_resp_mid[1]]) 1 -1" (5 "11110")
+Condition 86 "959578845" "(b_resp_v[2] && bvalid_s2m[2][b_resp_mid[2]] && b_sel_v[b_resp_mid[2]] && (b_sel_s[b_resp_mid[2]] == 2) && m_bready[b_resp_mid[2]]) 1 -1" (1 "01111")
+Condition 86 "959578845" "(b_resp_v[2] && bvalid_s2m[2][b_resp_mid[2]] && b_sel_v[b_resp_mid[2]] && (b_sel_s[b_resp_mid[2]] == 2) && m_bready[b_resp_mid[2]]) 1 -1" (2 "10111")
+Condition 86 "959578845" "(b_resp_v[2] && bvalid_s2m[2][b_resp_mid[2]] && b_sel_v[b_resp_mid[2]] && (b_sel_s[b_resp_mid[2]] == 2) && m_bready[b_resp_mid[2]]) 1 -1" (3 "11011")
+Condition 86 "959578845" "(b_resp_v[2] && bvalid_s2m[2][b_resp_mid[2]] && b_sel_v[b_resp_mid[2]] && (b_sel_s[b_resp_mid[2]] == 2) && m_bready[b_resp_mid[2]]) 1 -1" (4 "11101")
+Condition 86 "959578845" "(b_resp_v[2] && bvalid_s2m[2][b_resp_mid[2]] && b_sel_v[b_resp_mid[2]] && (b_sel_s[b_resp_mid[2]] == 2) && m_bready[b_resp_mid[2]]) 1 -1" (5 "11110")
+Condition 86 "959578845" "(b_resp_v[2] && bvalid_s2m[2][b_resp_mid[2]] && b_sel_v[b_resp_mid[2]] && (b_sel_s[b_resp_mid[2]] == 2) && m_bready[b_resp_mid[2]]) 1 -1" (6 "11111")
+Condition 87 "4020664174" "(b_sel_s[b_resp_mid[2]] == 2) 1 -1" (2 "1")
+Condition 88 "3012354555" "(b_resp_v[3] && bvalid_s2m[3][b_resp_mid[3]] && b_sel_v[b_resp_mid[3]] && (b_sel_s[b_resp_mid[3]] == 3) && m_bready[b_resp_mid[3]]) 1 -1" (1 "01111")
+Condition 88 "3012354555" "(b_resp_v[3] && bvalid_s2m[3][b_resp_mid[3]] && b_sel_v[b_resp_mid[3]] && (b_sel_s[b_resp_mid[3]] == 3) && m_bready[b_resp_mid[3]]) 1 -1" (2 "10111")
+Condition 88 "3012354555" "(b_resp_v[3] && bvalid_s2m[3][b_resp_mid[3]] && b_sel_v[b_resp_mid[3]] && (b_sel_s[b_resp_mid[3]] == 3) && m_bready[b_resp_mid[3]]) 1 -1" (3 "11011")
+Condition 88 "3012354555" "(b_resp_v[3] && bvalid_s2m[3][b_resp_mid[3]] && b_sel_v[b_resp_mid[3]] && (b_sel_s[b_resp_mid[3]] == 3) && m_bready[b_resp_mid[3]]) 1 -1" (4 "11101")
+Condition 88 "3012354555" "(b_resp_v[3] && bvalid_s2m[3][b_resp_mid[3]] && b_sel_v[b_resp_mid[3]] && (b_sel_s[b_resp_mid[3]] == 3) && m_bready[b_resp_mid[3]]) 1 -1" (5 "11110")
+Condition 88 "3012354555" "(b_resp_v[3] && bvalid_s2m[3][b_resp_mid[3]] && b_sel_v[b_resp_mid[3]] && (b_sel_s[b_resp_mid[3]] == 3) && m_bready[b_resp_mid[3]]) 1 -1" (6 "11111")
+Condition 89 "2953978265" "(b_sel_s[b_resp_mid[3]] == 3) 1 -1" (2 "1")
+Condition 90 "2536531929" "(b_resp_v[4] && bvalid_s2m[4][b_resp_mid[4]] && b_sel_v[b_resp_mid[4]] && (b_sel_s[b_resp_mid[4]] == 4) && m_bready[b_resp_mid[4]]) 1 -1" (1 "01111")
+Condition 90 "2536531929" "(b_resp_v[4] && bvalid_s2m[4][b_resp_mid[4]] && b_sel_v[b_resp_mid[4]] && (b_sel_s[b_resp_mid[4]] == 4) && m_bready[b_resp_mid[4]]) 1 -1" (2 "10111")
+Condition 90 "2536531929" "(b_resp_v[4] && bvalid_s2m[4][b_resp_mid[4]] && b_sel_v[b_resp_mid[4]] && (b_sel_s[b_resp_mid[4]] == 4) && m_bready[b_resp_mid[4]]) 1 -1" (3 "11011")
+Condition 90 "2536531929" "(b_resp_v[4] && bvalid_s2m[4][b_resp_mid[4]] && b_sel_v[b_resp_mid[4]] && (b_sel_s[b_resp_mid[4]] == 4) && m_bready[b_resp_mid[4]]) 1 -1" (4 "11101")
+Condition 90 "2536531929" "(b_resp_v[4] && bvalid_s2m[4][b_resp_mid[4]] && b_sel_v[b_resp_mid[4]] && (b_sel_s[b_resp_mid[4]] == 4) && m_bready[b_resp_mid[4]]) 1 -1" (5 "11110")
+Condition 90 "2536531929" "(b_resp_v[4] && bvalid_s2m[4][b_resp_mid[4]] && b_sel_v[b_resp_mid[4]] && (b_sel_s[b_resp_mid[4]] == 4) && m_bready[b_resp_mid[4]]) 1 -1" (6 "11111")
+Condition 91 "3436644731" "(b_sel_s[b_resp_mid[4]] == 4) 1 -1" (2 "1")
+Condition 92 "2878848898" "(b_resp_v[0] && s_bvalid[0] && s_bready[0]) 1 -1" (1 "011")
+Condition 92 "2878848898" "(b_resp_v[0] && s_bvalid[0] && s_bready[0]) 1 -1" (2 "101")
+Condition 93 "3661821388" "(b_resp_v[1] && s_bvalid[1] && s_bready[1]) 1 -1" (1 "011")
+Condition 93 "3661821388" "(b_resp_v[1] && s_bvalid[1] && s_bready[1]) 1 -1" (2 "101")
+Condition 94 "102350823" "(b_resp_v[2] && s_bvalid[2] && s_bready[2]) 1 -1" (1 "011")
+Condition 94 "102350823" "(b_resp_v[2] && s_bvalid[2] && s_bready[2]) 1 -1" (2 "101")
+Condition 94 "102350823" "(b_resp_v[2] && s_bvalid[2] && s_bready[2]) 1 -1" (3 "110")
+Condition 94 "102350823" "(b_resp_v[2] && s_bvalid[2] && s_bready[2]) 1 -1" (4 "111")
+Condition 95 "2009920937" "(b_resp_v[3] && s_bvalid[3] && s_bready[3]) 1 -1" (1 "011")
+Condition 95 "2009920937" "(b_resp_v[3] && s_bvalid[3] && s_bready[3]) 1 -1" (2 "101")
+Condition 95 "2009920937" "(b_resp_v[3] && s_bvalid[3] && s_bready[3]) 1 -1" (3 "110")
+Condition 95 "2009920937" "(b_resp_v[3] && s_bvalid[3] && s_bready[3]) 1 -1" (4 "111")
+Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (1 "011")
+Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (2 "101")
+Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (3 "110")
+Condition 96 "783064440" "(b_resp_v[4] && s_bvalid[4] && s_bready[4]) 1 -1" (4 "111")
+
+// ID: EXCL-PROD-0049
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3979373752 1255268996"
+MODULE: mips_fpu
+Condition 1 "2765105362" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (1 "01")
+Condition 1 "2765105362" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (2 "10")
+Condition 1 "2765105362" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (3 "11")
+Condition 2 "2326273930" "(a_double[62:52] == 11'h7ff) 1 -1" (1 "0")
+Condition 2 "2326273930" "(a_double[62:52] == 11'h7ff) 1 -1" (2 "1")
+Condition 3 "1088454107" "(a_double[51:0] != 0) 1 -1" (1 "0")
+Condition 3 "1088454107" "(a_double[51:0] != 0) 1 -1" (2 "1")
+Condition 4 "1696843991" "((b_double[62:52] == 11'h7ff) && (b_double[51:0] != 0)) 1 -1" (1 "01")
+Condition 4 "1696843991" "((b_double[62:52] == 11'h7ff) && (b_double[51:0] != 0)) 1 -1" (2 "10")
+Condition 4 "1696843991" "((b_double[62:52] == 11'h7ff) && (b_double[51:0] != 0)) 1 -1" (3 "11")
+Condition 5 "2576155957" "(b_double[62:52] == 11'h7ff) 1 -1" (1 "0")
+Condition 5 "2576155957" "(b_double[62:52] == 11'h7ff) 1 -1" (2 "1")
+Condition 6 "2747917017" "(b_double[51:0] != 0) 1 -1" (1 "0")
+Condition 6 "2747917017" "(b_double[51:0] != 0) 1 -1" (2 "1")
+Condition 7 "852089499" "(a_nan || b_nan) 1 -1" (1 "00")
+Condition 7 "852089499" "(a_nan || b_nan) 1 -1" (2 "01")
+Condition 7 "852089499" "(a_nan || b_nan) 1 -1" (3 "10")
+Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (1 "011")
+Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (2 "101")
+Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (3 "110")
+Condition 8 "1261104772" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (4 "111")
+Condition 9 "1346141122" "(op == OP_DIV) 1 -1" (1 "0")
+Condition 9 "1346141122" "(op == OP_DIV) 1 -1" (2 "1")
+Condition 10 "2116365228" "(b_double[62:52] == 11'b0) 1 -1" (1 "0")
+Condition 10 "2116365228" "(b_double[62:52] == 11'b0) 1 -1" (2 "1")
+Condition 11 "532431330" "(b_double[51:0] == 0) 1 -1" (1 "0")
+Condition 11 "532431330" "(b_double[51:0] == 0) 1 -1" (2 "1")
+Condition 12 "3228047021" "(((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))) 1 -1" (1 "00")
+Condition 12 "3228047021" "(((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))) 1 -1" (2 "01")
+Condition 12 "3228047021" "(((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))) 1 -1" (3 "10")
+Condition 13 "4275590734" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (1 "01")
+Condition 13 "4275590734" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (2 "10")
+Condition 13 "4275590734" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (3 "11")
+Condition 14 "1234209136" "(a_double[62:52] == 11'b0) 1 -1" (1 "0")
+Condition 14 "1234209136" "(a_double[62:52] == 11'b0) 1 -1" (2 "1")
+Condition 15 "3941164614" "(a_double[51:0] == 0) 1 -1" (1 "0")
+Condition 15 "3941164614" "(a_double[51:0] == 0) 1 -1" (2 "1")
+Condition 16 "1503862916" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (1 "01")
+Condition 16 "1503862916" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (2 "10")
+Condition 16 "1503862916" "((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0)) 1 -1" (3 "11")
+Condition 17 "2481668821" "(a_double[62:52] == 11'h7ff) 1 -1" (1 "0")
+Condition 17 "2481668821" "(a_double[62:52] == 11'h7ff) 1 -1" (2 "1")
+Condition 18 "3826994564" "(a_double[51:0] != 0) 1 -1" (1 "0")
+Condition 18 "3826994564" "(a_double[51:0] != 0) 1 -1" (2 "1")
+Condition 19 "3393640756" "(a_nan || ((a_double[62:52] == 11'b0) && (a_double[51:0] == 0))) 1 -1" (1 "00")
+Condition 19 "3393640756" "(a_nan || ((a_double[62:52] == 11'b0) && (a_double[51:0] == 0))) 1 -1" (2 "01")
+Condition 19 "3393640756" "(a_nan || ((a_double[62:52] == 11'b0) && (a_double[51:0] == 0))) 1 -1" (3 "10")
+Condition 20 "3930906126" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (1 "01")
+Condition 20 "3930906126" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (2 "10")
+Condition 20 "3930906126" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (3 "11")
+Condition 21 "1560543536" "(a_double[62:52] == 11'b0) 1 -1" (1 "0")
+Condition 21 "1560543536" "(a_double[62:52] == 11'b0) 1 -1" (2 "1")
+Condition 22 "3884157746" "(a_double[51:0] == 0) 1 -1" (1 "0")
+Condition 22 "3884157746" "(a_double[51:0] == 0) 1 -1" (2 "1")
+Condition 23 "1291615320" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (1 "01")
+Condition 23 "1291615320" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (2 "10")
+Condition 23 "1291615320" "((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) 1 -1" (3 "11")
+Condition 24 "595370657" "(a_double[62:52] == 11'b0) 1 -1" (1 "0")
+Condition 24 "595370657" "(a_double[62:52] == 11'b0) 1 -1" (2 "1")
+Condition 25 "2486467999" "(a_double[51:0] == 0) 1 -1" (1 "0")
+Condition 25 "2486467999" "(a_double[51:0] == 0) 1 -1" (2 "1")
+Condition 26 "2675098801" "((a[30:23] == 8'hff) && (a[22:0] != 23'b0)) 1 -1" (1 "01")
+Condition 26 "2675098801" "((a[30:23] == 8'hff) && (a[22:0] != 23'b0)) 1 -1" (2 "10")
+Condition 26 "2675098801" "((a[30:23] == 8'hff) && (a[22:0] != 23'b0)) 1 -1" (3 "11")
+Condition 27 "1216143026" "(a[30:23] == 8'hff) 1 -1" (2 "1")
+Condition 28 "2971214076" "(a[22:0] != 23'b0) 1 -1" (2 "1")
+Condition 29 "1709852111" "((b[30:23] == 8'hff) && (b[22:0] != 23'b0)) 1 -1" (1 "01")
+Condition 29 "1709852111" "((b[30:23] == 8'hff) && (b[22:0] != 23'b0)) 1 -1" (2 "10")
+Condition 29 "1709852111" "((b[30:23] == 8'hff) && (b[22:0] != 23'b0)) 1 -1" (3 "11")
+Condition 30 "33268571" "(b[30:23] == 8'hff) 1 -1" (2 "1")
+Condition 31 "296924571" "(b[22:0] != 23'b0) 1 -1" (2 "1")
+Condition 32 "1266397172" "(a_nan || b_nan) 1 -1" (2 "01")
+Condition 32 "1266397172" "(a_nan || b_nan) 1 -1" (3 "10")
+Condition 33 "2917397986" "((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) 1 -1" (2 "101")
+Condition 33 "2917397986" "((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) 1 -1" (3 "110")
+Condition 35 "1095626569" "(b[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 36 "3342591736" "(b[22:0] == 23'b0) 1 -1" (1 "0")
+Condition 37 "2789792485" "(((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) || ((a[30:23] == 8'hff) && (a[22:0] != 23'b0))) 1 -1" (1 "00")
+Condition 37 "2789792485" "(((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) || ((a[30:23] == 8'hff) && (a[22:0] != 23'b0))) 1 -1" (2 "01")
+Condition 38 "859204020" "((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) 1 -1" (1 "01")
+Condition 38 "859204020" "((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) 1 -1" (2 "10")
+Condition 39 "3040894981" "(a[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 40 "1697635396" "(a[22:0] == 23'b0) 1 -1" (1 "0")
+Condition 41 "3124338784" "((a[30:23] == 8'hff) && (a[22:0] != 23'b0)) 1 -1" (1 "01")
+Condition 41 "3124338784" "((a[30:23] == 8'hff) && (a[22:0] != 23'b0)) 1 -1" (2 "10")
+Condition 41 "3124338784" "((a[30:23] == 8'hff) && (a[22:0] != 23'b0)) 1 -1" (3 "11")
+Condition 42 "1130126894" "(a[30:23] == 8'hff) 1 -1" (2 "1")
+Condition 43 "2015608304" "(a[22:0] != 23'b0) 1 -1" (2 "1")
+Condition 44 "279918345" "(a_nan || ((a[30:23] == 8'b0) && (a[22:0] == 23'b0))) 1 -1" (1 "00")
+Condition 44 "279918345" "(a_nan || ((a[30:23] == 8'b0) && (a[22:0] == 23'b0))) 1 -1" (3 "10")
+Condition 45 "643861805" "((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) 1 -1" (1 "01")
+Condition 45 "643861805" "((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) 1 -1" (2 "10")
+Condition 46 "2685830300" "(a[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 47 "3020015402" "(a[22:0] == 23'b0) 1 -1" (1 "0")
+Condition 48 "1403607325" "((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) 1 -1" (1 "01")
+Condition 48 "1403607325" "((a[30:23] == 8'b0) && (a[22:0] == 23'b0)) 1 -1" (2 "10")
+Condition 49 "1229892941" "(a[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 50 "3476595964" "(a[22:0] == 23'b0) 1 -1" (1 "0")
+Condition 51 "2177086839" "(((!fmt_double)) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (1 "011")
+Condition 51 "2177086839" "(((!fmt_double)) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (2 "101")
+Condition 52 "3854995166" "(a[30:23] != 8'hff) 1 -1" (1 "0")
+Condition 53 "577506037" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (2 "00000001")
+Condition 53 "577506037" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (3 "00000010")
+Condition 53 "577506037" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (4 "00000100")
+Condition 53 "577506037" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (5 "00001000")
+Condition 58 "3756302783" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 59 "2860329040" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 60 "1214435850" "(op == OP_NMADD) 1 -1" (2 "1")
+Condition 61 "3505084093" "(op == OP_NMSUB) 1 -1" (2 "1")
+Condition 62 "2307917139" "((b[30:23] != 8'b0) || (b[22:0] != 23'b0)) 1 -1" (2 "01")
+Condition 62 "2307917139" "((b[30:23] != 8'b0) || (b[22:0] != 23'b0)) 1 -1" (3 "10")
+Condition 63 "1515717858" "(b[30:23] != 8'b0) 1 -1" (2 "1")
+Condition 64 "86377213" "(b[22:0] != 23'b0) 1 -1" (2 "1")
+Condition 65 "3186268278" "(((!fmt_double)) && (op == OP_MUL) && (((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) || ((b[30:23] == 8'b0) && (b[22:0] != 23'b0))) && ((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f))) 1 -1" (1 "0111")
+Condition 65 "3186268278" "(((!fmt_double)) && (op == OP_MUL) && (((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) || ((b[30:23] == 8'b0) && (b[22:0] != 23'b0))) && ((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f))) 1 -1" (2 "1011")
+Condition 65 "3186268278" "(((!fmt_double)) && (op == OP_MUL) && (((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) || ((b[30:23] == 8'b0) && (b[22:0] != 23'b0))) && ((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f))) 1 -1" (4 "1110")
+Condition 65 "3186268278" "(((!fmt_double)) && (op == OP_MUL) && (((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) || ((b[30:23] == 8'b0) && (b[22:0] != 23'b0))) && ((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f))) 1 -1" (5 "1111")
+Condition 67 "2792419553" "(((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) || ((b[30:23] == 8'b0) && (b[22:0] != 23'b0))) 1 -1" (2 "01")
+Condition 67 "2792419553" "(((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) || ((b[30:23] == 8'b0) && (b[22:0] != 23'b0))) 1 -1" (3 "10")
+Condition 68 "1813844560" "((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) 1 -1" (1 "01")
+Condition 68 "1813844560" "((a[30:23] == 8'b0) && (a[22:0] != 23'b0)) 1 -1" (3 "11")
+Condition 69 "2519057362" "(a[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 70 "888272640" "(a[22:0] != 23'b0) 1 -1" (2 "1")
+Condition 71 "4271642033" "((b[30:23] == 8'b0) && (b[22:0] != 23'b0)) 1 -1" (1 "01")
+Condition 71 "4271642033" "((b[30:23] == 8'b0) && (b[22:0] != 23'b0)) 1 -1" (3 "11")
+Condition 72 "2027286674" "(b[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 73 "1859094938" "(b[22:0] != 23'b0) 1 -1" (2 "1")
+Condition 74 "3019605227" "((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f)) 1 -1" (1 "00")
+Condition 74 "3019605227" "((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f)) 1 -1" (2 "01")
+Condition 74 "3019605227" "((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f)) 1 -1" (3 "10")
+Condition 75 "1826678476" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] == 23'b0) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) )) 1 -1" (1 "011111")
+Condition 75 "1826678476" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] == 23'b0) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) )) 1 -1" (3 "110111")
+Condition 75 "1826678476" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] == 23'b0) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) )) 1 -1" (4 "111011")
+Condition 75 "1826678476" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] == 23'b0) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) )) 1 -1" (5 "111101")
+Condition 75 "1826678476" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] == 23'b0) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) )) 1 -1" (6 "111110")
+Condition 75 "1826678476" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] == 23'b0) && (a[30:23] != 8'hff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) )) 1 -1" (7 "111111")
+Condition 78 "2908594213" "(a[30:23] != 8'hff) 1 -1" (1 "0")
+Condition 79 "439084113" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (2 "00000001")
+Condition 79 "439084113" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (3 "00000010")
+Condition 79 "439084113" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (4 "00000100")
+Condition 79 "439084113" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (5 "00001000")
+Condition 84 "3886239515" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 85 "2453325556" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 86 "1881488558" "(op == OP_NMADD) 1 -1" (2 "1")
+Condition 87 "2557507654" "(op == OP_NMSUB) 1 -1" (2 "1")
+Condition 89 "1433049087" "((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) 1 -1" (2 "101")
+Condition 89 "1433049087" "((op == OP_DIV) && (b[30:23] == 8'b0) && (b[22:0] == 23'b0)) 1 -1" (3 "110")
+Condition 91 "1469473852" "(b[30:23] == 8'b0) 1 -1" (1 "0")
+Condition 92 "697612770" "(b[22:0] == 23'b0) 1 -1" (1 "0")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (1 "011111")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (2 "101111")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (3 "110111")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (4 "111011")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (5 "111101")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (6 "111110")
+Condition 93 "2532217171" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] == 0) && (a_double[62:52] != 11'h7ff) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) && ( ! ((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) )) 1 -1" (7 "111111")
+Condition 94 "1848829959" "(result_double[62:52] == 11'h7ff) 1 -1" (2 "1")
+Condition 95 "4233913293" "(result_double[51:0] == 0) 1 -1" (1 "0")
+Condition 97 "3820340417" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (2 "00000001")
+Condition 97 "3820340417" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (3 "00000010")
+Condition 97 "3820340417" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (4 "00000100")
+Condition 97 "3820340417" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (5 "00001000")
+Condition 102 "507342731" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 103 "1805968996" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 104 "2310741054" "(op == OP_NMADD) 1 -1" (2 "1")
+Condition 105 "3870800005" "(op == OP_NMSUB) 1 -1" (2 "1")
+Condition 107 "680207930" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (2 "101")
+Condition 107 "680207930" "((op == OP_DIV) && (b_double[62:52] == 11'b0) && (b_double[51:0] == 0)) 1 -1" (3 "110")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (1 "011111")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (2 "101111")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (3 "110111")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (4 "111011")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (5 "111101")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (6 "111110")
+Condition 111 "3331400597" "(fmt_double && (result_double[62:52] == 11'h7ff) && (result_double[51:0] != 0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (7 "111111")
+Condition 112 "1187985797" "(result_double[62:52] == 11'h7ff) 1 -1" (2 "1")
+Condition 113 "75786162" "(result_double[51:0] != 0) 1 -1" (2 "1")
+Condition 114 "623341522" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (2 "00000001")
+Condition 114 "623341522" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (3 "00000010")
+Condition 114 "623341522" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (4 "00000100")
+Condition 114 "623341522" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (5 "00001000")
+Condition 119 "3635397784" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 120 "2906017143" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 121 "1328133933" "(op == OP_NMADD) 1 -1" (2 "1")
+Condition 122 "3460983047" "(op == OP_NMSUB) 1 -1" (2 "1")
+Condition 123 "1924926349" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] != 23'b0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (1 "011111")
+Condition 123 "1924926349" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] != 23'b0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (2 "101111")
+Condition 123 "1924926349" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] != 23'b0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (3 "110111")
+Condition 123 "1924926349" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] != 23'b0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (4 "111011")
+Condition 123 "1924926349" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] != 23'b0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (5 "111101")
+Condition 123 "1924926349" "(((!fmt_double)) && (result[30:23] == 8'hff) && (result[22:0] != 23'b0) && ((!a_nan)) && ((!b_nan)) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (6 "111110")
+Condition 126 "2049316524" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (2 "00000001")
+Condition 126 "2049316524" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (3 "00000010")
+Condition 126 "2049316524" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (4 "00000100")
+Condition 126 "2049316524" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (5 "00001000")
+Condition 131 "2276376038" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 132 "4063704073" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 133 "271109715" "(op == OP_NMADD) 1 -1" (2 "1")
+Condition 134 "4198292146" "(op == OP_NMSUB) 1 -1" (2 "1")
+Condition 135 "3607348189" "(fmt_double && (result_double[62:52] == 11'b0) && (result_double[51:0] != 0) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (1 "0111")
+Condition 135 "3607348189" "(fmt_double && (result_double[62:52] == 11'b0) && (result_double[51:0] != 0) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (2 "1011")
+Condition 135 "3607348189" "(fmt_double && (result_double[62:52] == 11'b0) && (result_double[51:0] != 0) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (3 "1101")
+Condition 135 "3607348189" "(fmt_double && (result_double[62:52] == 11'b0) && (result_double[51:0] != 0) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (4 "1110")
+Condition 135 "3607348189" "(fmt_double && (result_double[62:52] == 11'b0) && (result_double[51:0] != 0) && ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) 1 -1" (5 "1111")
+Condition 136 "1736450513" "(result_double[62:52] == 11'b0) 1 -1" (1 "0")
+Condition 137 "746003813" "(result_double[51:0] != 0) 1 -1" (2 "1")
+Condition 138 "3699210680" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (2 "00000001")
+Condition 138 "3699210680" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (3 "00000010")
+Condition 138 "3699210680" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (4 "00000100")
+Condition 138 "3699210680" "((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) || (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB)) 1 -1" (5 "00001000")
+Condition 143 "569758450" "(op == OP_MADD) 1 -1" (2 "1")
+Condition 144 "1416387357" "(op == OP_MSUB) 1 -1" (2 "1")
+Condition 145 "3061031239" "(op == OP_NMADD) 1 -1" (2 "1")
+Condition 146 "3870888912" "(op == OP_NMSUB) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0050
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1341811719 1637099011"
+MODULE: apb_axi_dma
+Condition 1 "3921559128" "((st == ST_LOAD_SRC) || (st == ST_LOAD_DST) || (st == ST_LOAD_LEN) || (st == ST_LOAD_NEXT) || (st == ST_EXEC_R) || (st == ST_EXEC_W)) 1 -1" (4 "000100")
+Condition 1 "3921559128" "((st == ST_LOAD_SRC) || (st == ST_LOAD_DST) || (st == ST_LOAD_LEN) || (st == ST_LOAD_NEXT) || (st == ST_EXEC_R) || (st == ST_EXEC_W)) 1 -1" (5 "001000")
+Condition 1 "3921559128" "((st == ST_LOAD_SRC) || (st == ST_LOAD_DST) || (st == ST_LOAD_LEN) || (st == ST_LOAD_NEXT) || (st == ST_EXEC_R) || (st == ST_EXEC_W)) 1 -1" (6 "010000")
+Condition 1 "3921559128" "((st == ST_LOAD_SRC) || (st == ST_LOAD_DST) || (st == ST_LOAD_LEN) || (st == ST_LOAD_NEXT) || (st == ST_EXEC_R) || (st == ST_EXEC_W)) 1 -1" (7 "100000")
+Condition 2 "3682464817" "(st == ST_LOAD_SRC) 1 -1" (2 "1")
+Condition 3 "2987350359" "(st == ST_LOAD_DST) 1 -1" (2 "1")
+Condition 4 "3386511931" "(st == ST_LOAD_LEN) 1 -1" (2 "1")
+Condition 5 "2138978968" "(st == ST_LOAD_NEXT) 1 -1" (2 "1")
+Condition 8 "1147742964" "(wr && (paddr[11:0] == 12'h100)) 1 -1" (3 "11")
+Condition 10 "1385070286" "(((~wait_aw[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
+Condition 11 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (1 "01")
+Condition 11 "2284591794" "(((~wait_w[act_ch])) & ((~wait_b[act_ch]))) 1 -1" (2 "10")
+Condition 13 "2520269436" "(en_r[0] | busy_r[0]) 1 -1" (3 "10")
+Condition 14 "685583433" "(paddr[11:0] == 12'h100) 1 -1" (1 "0")
+Condition 14 "685583433" "(paddr[11:0] == 12'h100) 1 -1" (2 "1")
+Condition 15 "3836656521" "(paddr[11:0] == 12'h104) 1 -1" (1 "0")
+Condition 15 "3836656521" "(paddr[11:0] == 12'h104) 1 -1" (2 "1")
+Condition 22 "4254274386" "((paddr[11:0] == 12'h100) || (paddr[11:0] == 12'h104)) 1 -1" (2 "01")
+Condition 24 "3742674561" "(paddr[11:0] == 12'h104) 1 -1" (2 "1")
+Condition 25 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (2 "10")
+Condition 25 "1200443308" "(int_en_r[0] & (done_r[0] | err_r[0])) 1 -1" (3 "11")
+Condition 26 "3562936477" "(done_r[0] | err_r[0]) 1 -1" (2 "01")
+Condition 27 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (1 "01")
+Condition 27 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (2 "10")
+Condition 27 "1289255634" "(int_en_r[1] & (done_r[1] | err_r[1])) 1 -1" (3 "11")
+Condition 28 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (2 "01")
+Condition 28 "3078233875" "(done_r[1] | err_r[1]) 1 -1" (3 "10")
+Condition 29 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (1 "01")
+Condition 29 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (2 "10")
+Condition 29 "41486273" "(int_en_r[2] & (done_r[2] | err_r[2])) 1 -1" (3 "11")
+Condition 30 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (2 "01")
+Condition 30 "2489118851" "(done_r[2] | err_r[2]) 1 -1" (3 "10")
+Condition 31 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (1 "01")
+Condition 31 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (2 "10")
+Condition 31 "153891519" "(int_en_r[3] & (done_r[3] | err_r[3])) 1 -1" (3 "11")
+Condition 32 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (2 "01")
+Condition 32 "4151899917" "(done_r[3] | err_r[3]) 1 -1" (3 "10")
+
+// ID: EXCL-PROD-0051
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1159426980 2213130587"
+MODULE: mips_tlb
+Condition 1 "1817497898" "(wr_entrylo0[0] & wr_entrylo1[0]) 1 -1" (1 "01")
+Condition 1 "1817497898" "(wr_entrylo0[0] & wr_entrylo1[0]) 1 -1" (2 "10")
+Condition 1 "1817497898" "(wr_entrylo0[0] & wr_entrylo1[0]) 1 -1" (3 "11")
+Condition 2 "3526090989" "(lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r] : tlb_entrylo0[lookup0_hit_index_r]) 1 -1" (1 "0")
+Condition 2 "3526090989" "(lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r] : tlb_entrylo0[lookup0_hit_index_r]) 1 -1" (2 "1")
+Condition 3 "3537702490" "(lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r] : tlb_entrylo0[lookup1_hit_index_r]) 1 -1" (1 "0")
+Condition 3 "3537702490" "(lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r] : tlb_entrylo0[lookup1_hit_index_r]) 1 -1" (2 "1")
+Condition 4 "3569291962" "(wr_en | inv_en | context_flush) 1 -1" (2 "001")
+Condition 4 "3569291962" "(wr_en | inv_en | context_flush) 1 -1" (3 "010")
+Condition 4 "3569291962" "(wr_en | inv_en | context_flush) 1 -1" (4 "100")
+Condition 5 "2369100492" "(tlb_valid[0] && (((tlb_vpn2[0] ^ probe_vpn2) & g_probe[0].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 5 "2369100492" "(tlb_valid[0] && (((tlb_vpn2[0] ^ probe_vpn2) & g_probe[0].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 5 "2369100492" "(tlb_valid[0] && (((tlb_vpn2[0] ^ probe_vpn2) & g_probe[0].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 6 "536253733" "(((tlb_vpn2[0] ^ probe_vpn2) & g_probe[0].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 7 "3327025621" "(tlb_g[0] || (tlb_asid[0] == probe_asid)) 1 -1" (1 "00")
+Condition 7 "3327025621" "(tlb_g[0] || (tlb_asid[0] == probe_asid)) 1 -1" (2 "01")
+Condition 7 "3327025621" "(tlb_g[0] || (tlb_asid[0] == probe_asid)) 1 -1" (3 "10")
+Condition 8 "2654780571" "(tlb_asid[0] == probe_asid) 1 -1" (2 "1")
+Condition 9 "3863443571" "(g_probe[0].vpn2_match && g_probe[0].asid_match) 1 -1" (1 "01")
+Condition 9 "3863443571" "(g_probe[0].vpn2_match && g_probe[0].asid_match) 1 -1" (2 "10")
+Condition 9 "3863443571" "(g_probe[0].vpn2_match && g_probe[0].asid_match) 1 -1" (3 "11")
+Condition 10 "947279599" "(tlb_valid[1] && (((tlb_vpn2[1] ^ probe_vpn2) & g_probe[1].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 10 "947279599" "(tlb_valid[1] && (((tlb_vpn2[1] ^ probe_vpn2) & g_probe[1].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 10 "947279599" "(tlb_valid[1] && (((tlb_vpn2[1] ^ probe_vpn2) & g_probe[1].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 11 "1423353181" "(((tlb_vpn2[1] ^ probe_vpn2) & g_probe[1].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 12 "3638944223" "(tlb_g[1] || (tlb_asid[1] == probe_asid)) 1 -1" (1 "00")
+Condition 12 "3638944223" "(tlb_g[1] || (tlb_asid[1] == probe_asid)) 1 -1" (2 "01")
+Condition 12 "3638944223" "(tlb_g[1] || (tlb_asid[1] == probe_asid)) 1 -1" (3 "10")
+Condition 13 "2379275593" "(tlb_asid[1] == probe_asid) 1 -1" (2 "1")
+Condition 14 "3780646160" "(g_probe[1].vpn2_match && g_probe[1].asid_match) 1 -1" (1 "01")
+Condition 14 "3780646160" "(g_probe[1].vpn2_match && g_probe[1].asid_match) 1 -1" (2 "10")
+Condition 14 "3780646160" "(g_probe[1].vpn2_match && g_probe[1].asid_match) 1 -1" (3 "11")
+Condition 15 "2447658525" "(tlb_valid[2] && (((tlb_vpn2[2] ^ probe_vpn2) & g_probe[2].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 15 "2447658525" "(tlb_valid[2] && (((tlb_vpn2[2] ^ probe_vpn2) & g_probe[2].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 15 "2447658525" "(tlb_valid[2] && (((tlb_vpn2[2] ^ probe_vpn2) & g_probe[2].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 16 "933401507" "(((tlb_vpn2[2] ^ probe_vpn2) & g_probe[2].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 17 "2988173793" "(tlb_g[2] || (tlb_asid[2] == probe_asid)) 1 -1" (1 "00")
+Condition 17 "2988173793" "(tlb_g[2] || (tlb_asid[2] == probe_asid)) 1 -1" (2 "01")
+Condition 17 "2988173793" "(tlb_g[2] || (tlb_asid[2] == probe_asid)) 1 -1" (3 "10")
+Condition 18 "3678349507" "(tlb_asid[2] == probe_asid) 1 -1" (2 "1")
+Condition 19 "3872712702" "(g_probe[2].vpn2_match && g_probe[2].asid_match) 1 -1" (1 "01")
+Condition 19 "3872712702" "(g_probe[2].vpn2_match && g_probe[2].asid_match) 1 -1" (2 "10")
+Condition 19 "3872712702" "(g_probe[2].vpn2_match && g_probe[2].asid_match) 1 -1" (3 "11")
+Condition 20 "614957630" "(tlb_valid[3] && (((tlb_vpn2[3] ^ probe_vpn2) & g_probe[3].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 20 "614957630" "(tlb_valid[3] && (((tlb_vpn2[3] ^ probe_vpn2) & g_probe[3].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 20 "614957630" "(tlb_valid[3] && (((tlb_vpn2[3] ^ probe_vpn2) & g_probe[3].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 21 "2088936411" "(((tlb_vpn2[3] ^ probe_vpn2) & g_probe[3].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 22 "2897242603" "(tlb_g[3] || (tlb_asid[3] == probe_asid)) 1 -1" (1 "00")
+Condition 22 "2897242603" "(tlb_g[3] || (tlb_asid[3] == probe_asid)) 1 -1" (2 "01")
+Condition 22 "2897242603" "(tlb_g[3] || (tlb_asid[3] == probe_asid)) 1 -1" (3 "10")
+Condition 23 "3369290001" "(tlb_asid[3] == probe_asid) 1 -1" (2 "1")
+Condition 24 "3788212893" "(g_probe[3].vpn2_match && g_probe[3].asid_match) 1 -1" (1 "01")
+Condition 24 "3788212893" "(g_probe[3].vpn2_match && g_probe[3].asid_match) 1 -1" (2 "10")
+Condition 24 "3788212893" "(g_probe[3].vpn2_match && g_probe[3].asid_match) 1 -1" (3 "11")
+Condition 25 "1912924043" "(tlb_valid[4] && (((tlb_vpn2[4] ^ probe_vpn2) & g_probe[4].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 25 "1912924043" "(tlb_valid[4] && (((tlb_vpn2[4] ^ probe_vpn2) & g_probe[4].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 25 "1912924043" "(tlb_valid[4] && (((tlb_vpn2[4] ^ probe_vpn2) & g_probe[4].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 26 "103746357" "(((tlb_vpn2[4] ^ probe_vpn2) & g_probe[4].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 27 "363443869" "(tlb_g[4] || (tlb_asid[4] == probe_asid)) 1 -1" (1 "00")
+Condition 27 "363443869" "(tlb_g[4] || (tlb_asid[4] == probe_asid)) 1 -1" (2 "01")
+Condition 27 "363443869" "(tlb_g[4] || (tlb_asid[4] == probe_asid)) 1 -1" (3 "10")
+Condition 28 "3460113549" "(tlb_asid[4] == probe_asid) 1 -1" (2 "1")
+Condition 29 "553438854" "(g_probe[4].vpn2_match && g_probe[4].asid_match) 1 -1" (1 "01")
+Condition 29 "553438854" "(g_probe[4].vpn2_match && g_probe[4].asid_match) 1 -1" (2 "10")
+Condition 29 "553438854" "(g_probe[4].vpn2_match && g_probe[4].asid_match) 1 -1" (3 "11")
+Condition 30 "3343330216" "(tlb_valid[5] && (((tlb_vpn2[5] ^ probe_vpn2) & g_probe[5].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 30 "3343330216" "(tlb_valid[5] && (((tlb_vpn2[5] ^ probe_vpn2) & g_probe[5].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 30 "3343330216" "(tlb_valid[5] && (((tlb_vpn2[5] ^ probe_vpn2) & g_probe[5].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 31 "1292843853" "(((tlb_vpn2[5] ^ probe_vpn2) & g_probe[5].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 32 "184694423" "(tlb_g[5] || (tlb_asid[5] == probe_asid)) 1 -1" (1 "00")
+Condition 32 "184694423" "(tlb_g[5] || (tlb_asid[5] == probe_asid)) 1 -1" (2 "01")
+Condition 32 "184694423" "(tlb_g[5] || (tlb_asid[5] == probe_asid)) 1 -1" (3 "10")
+Condition 33 "3721479519" "(tlb_asid[5] == probe_asid) 1 -1" (2 "1")
+Condition 34 "669230053" "(g_probe[5].vpn2_match && g_probe[5].asid_match) 1 -1" (1 "01")
+Condition 34 "669230053" "(g_probe[5].vpn2_match && g_probe[5].asid_match) 1 -1" (2 "10")
+Condition 34 "669230053" "(g_probe[5].vpn2_match && g_probe[5].asid_match) 1 -1" (3 "11")
+Condition 35 "1859466074" "(tlb_valid[6] && (((tlb_vpn2[6] ^ probe_vpn2) & g_probe[6].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 35 "1859466074" "(tlb_valid[6] && (((tlb_vpn2[6] ^ probe_vpn2) & g_probe[6].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 35 "1859466074" "(tlb_valid[6] && (((tlb_vpn2[6] ^ probe_vpn2) & g_probe[6].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 36 "779816371" "(((tlb_vpn2[6] ^ probe_vpn2) & g_probe[6].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 37 "1643921065" "(tlb_g[6] || (tlb_asid[6] == probe_asid)) 1 -1" (1 "00")
+Condition 37 "1643921065" "(tlb_g[6] || (tlb_asid[6] == probe_asid)) 1 -1" (2 "01")
+Condition 37 "1643921065" "(tlb_g[6] || (tlb_asid[6] == probe_asid)) 1 -1" (3 "10")
+Condition 38 "2336141525" "(tlb_asid[6] == probe_asid) 1 -1" (2 "1")
+Condition 39 "544166155" "(g_probe[6].vpn2_match && g_probe[6].asid_match) 1 -1" (1 "01")
+Condition 39 "544166155" "(g_probe[6].vpn2_match && g_probe[6].asid_match) 1 -1" (2 "10")
+Condition 39 "544166155" "(g_probe[6].vpn2_match && g_probe[6].asid_match) 1 -1" (3 "11")
+Condition 40 "3684106105" "(tlb_valid[7] && (((tlb_vpn2[7] ^ probe_vpn2) & g_probe[7].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 40 "3684106105" "(tlb_valid[7] && (((tlb_vpn2[7] ^ probe_vpn2) & g_probe[7].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 40 "3684106105" "(tlb_valid[7] && (((tlb_vpn2[7] ^ probe_vpn2) & g_probe[7].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 41 "1700478411" "(((tlb_vpn2[7] ^ probe_vpn2) & g_probe[7].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 42 "2136456867" "(tlb_g[7] || (tlb_asid[7] == probe_asid)) 1 -1" (1 "00")
+Condition 42 "2136456867" "(tlb_g[7] || (tlb_asid[7] == probe_asid)) 1 -1" (2 "01")
+Condition 42 "2136456867" "(tlb_g[7] || (tlb_asid[7] == probe_asid)) 1 -1" (3 "10")
+Condition 43 "2563952903" "(tlb_asid[7] == probe_asid) 1 -1" (2 "1")
+Condition 44 "661666920" "(g_probe[7].vpn2_match && g_probe[7].asid_match) 1 -1" (1 "01")
+Condition 44 "661666920" "(g_probe[7].vpn2_match && g_probe[7].asid_match) 1 -1" (2 "10")
+Condition 44 "661666920" "(g_probe[7].vpn2_match && g_probe[7].asid_match) 1 -1" (3 "11")
+Condition 45 "3259284250" "(tlb_valid[8] && (((tlb_vpn2[8] ^ probe_vpn2) & g_probe[8].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 45 "3259284250" "(tlb_valid[8] && (((tlb_vpn2[8] ^ probe_vpn2) & g_probe[8].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 45 "3259284250" "(tlb_valid[8] && (((tlb_vpn2[8] ^ probe_vpn2) & g_probe[8].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 46 "1712197915" "(((tlb_vpn2[8] ^ probe_vpn2) & g_probe[8].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 47 "3943157021" "(tlb_g[8] || (tlb_asid[8] == probe_asid)) 1 -1" (1 "00")
+Condition 47 "3943157021" "(tlb_g[8] || (tlb_asid[8] == probe_asid)) 1 -1" (2 "01")
+Condition 47 "3943157021" "(tlb_g[8] || (tlb_asid[8] == probe_asid)) 1 -1" (3 "10")
+Condition 48 "2360888765" "(tlb_asid[8] == probe_asid) 1 -1" (2 "1")
+Condition 49 "367222166" "(g_probe[8].vpn2_match && g_probe[8].asid_match) 1 -1" (1 "01")
+Condition 49 "367222166" "(g_probe[8].vpn2_match && g_probe[8].asid_match) 1 -1" (2 "10")
+Condition 49 "367222166" "(g_probe[8].vpn2_match && g_probe[8].asid_match) 1 -1" (3 "11")
+Condition 50 "1996977977" "(tlb_valid[9] && (((tlb_vpn2[9] ^ probe_vpn2) & g_probe[9].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 50 "1996977977" "(tlb_valid[9] && (((tlb_vpn2[9] ^ probe_vpn2) & g_probe[9].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 50 "1996977977" "(tlb_valid[9] && (((tlb_vpn2[9] ^ probe_vpn2) & g_probe[9].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 51 "757997923" "(((tlb_vpn2[9] ^ probe_vpn2) & g_probe[9].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 52 "4121709847" "(tlb_g[9] || (tlb_asid[9] == probe_asid)) 1 -1" (1 "00")
+Condition 52 "4121709847" "(tlb_g[9] || (tlb_asid[9] == probe_asid)) 1 -1" (2 "01")
+Condition 52 "4121709847" "(tlb_g[9] || (tlb_asid[9] == probe_asid)) 1 -1" (3 "10")
+Condition 53 "2673093743" "(tlb_asid[9] == probe_asid) 1 -1" (2 "1")
+Condition 54 "318517493" "(g_probe[9].vpn2_match && g_probe[9].asid_match) 1 -1" (1 "01")
+Condition 54 "318517493" "(g_probe[9].vpn2_match && g_probe[9].asid_match) 1 -1" (2 "10")
+Condition 54 "318517493" "(g_probe[9].vpn2_match && g_probe[9].asid_match) 1 -1" (3 "11")
+Condition 55 "1517488683" "(tlb_valid[10] && (((tlb_vpn2[10] ^ probe_vpn2) & g_probe[10].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 55 "1517488683" "(tlb_valid[10] && (((tlb_vpn2[10] ^ probe_vpn2) & g_probe[10].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 55 "1517488683" "(tlb_valid[10] && (((tlb_vpn2[10] ^ probe_vpn2) & g_probe[10].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 56 "648925801" "(((tlb_vpn2[10] ^ probe_vpn2) & g_probe[10].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 57 "2085302945" "(tlb_g[10] || (tlb_asid[10] == probe_asid)) 1 -1" (1 "00")
+Condition 57 "2085302945" "(tlb_g[10] || (tlb_asid[10] == probe_asid)) 1 -1" (2 "01")
+Condition 57 "2085302945" "(tlb_g[10] || (tlb_asid[10] == probe_asid)) 1 -1" (3 "10")
+Condition 58 "445067068" "(tlb_asid[10] == probe_asid) 1 -1" (2 "1")
+Condition 59 "2299463785" "(g_probe[10].vpn2_match && g_probe[10].asid_match) 1 -1" (1 "01")
+Condition 59 "2299463785" "(g_probe[10].vpn2_match && g_probe[10].asid_match) 1 -1" (2 "10")
+Condition 59 "2299463785" "(g_probe[10].vpn2_match && g_probe[10].asid_match) 1 -1" (3 "11")
+Condition 60 "2931855720" "(tlb_valid[11] && (((tlb_vpn2[11] ^ probe_vpn2) & g_probe[11].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 60 "2931855720" "(tlb_valid[11] && (((tlb_vpn2[11] ^ probe_vpn2) & g_probe[11].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 60 "2931855720" "(tlb_valid[11] && (((tlb_vpn2[11] ^ probe_vpn2) & g_probe[11].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 61 "3984321419" "(((tlb_vpn2[11] ^ probe_vpn2) & g_probe[11].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 62 "1460412096" "(tlb_g[11] || (tlb_asid[11] == probe_asid)) 1 -1" (1 "00")
+Condition 62 "1460412096" "(tlb_g[11] || (tlb_asid[11] == probe_asid)) 1 -1" (2 "01")
+Condition 62 "1460412096" "(tlb_g[11] || (tlb_asid[11] == probe_asid)) 1 -1" (3 "10")
+Condition 63 "4134295097" "(tlb_asid[11] == probe_asid) 1 -1" (2 "1")
+Condition 64 "3179896101" "(g_probe[11].vpn2_match && g_probe[11].asid_match) 1 -1" (1 "01")
+Condition 64 "3179896101" "(g_probe[11].vpn2_match && g_probe[11].asid_match) 1 -1" (2 "10")
+Condition 64 "3179896101" "(g_probe[11].vpn2_match && g_probe[11].asid_match) 1 -1" (3 "11")
+Condition 65 "2735898978" "(tlb_valid[12] && (((tlb_vpn2[12] ^ probe_vpn2) & g_probe[12].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 65 "2735898978" "(tlb_valid[12] && (((tlb_vpn2[12] ^ probe_vpn2) & g_probe[12].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 65 "2735898978" "(tlb_valid[12] && (((tlb_vpn2[12] ^ probe_vpn2) & g_probe[12].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 66 "2256324569" "(((tlb_vpn2[12] ^ probe_vpn2) & g_probe[12].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 67 "2203388012" "(tlb_g[12] || (tlb_asid[12] == probe_asid)) 1 -1" (1 "00")
+Condition 67 "2203388012" "(tlb_g[12] || (tlb_asid[12] == probe_asid)) 1 -1" (2 "01")
+Condition 67 "2203388012" "(tlb_g[12] || (tlb_asid[12] == probe_asid)) 1 -1" (3 "10")
+Condition 68 "2743466696" "(tlb_asid[12] == probe_asid) 1 -1" (2 "1")
+Condition 69 "2912092405" "(g_probe[12].vpn2_match && g_probe[12].asid_match) 1 -1" (1 "01")
+Condition 69 "2912092405" "(g_probe[12].vpn2_match && g_probe[12].asid_match) 1 -1" (2 "10")
+Condition 69 "2912092405" "(g_probe[12].vpn2_match && g_probe[12].asid_match) 1 -1" (3 "11")
+Condition 70 "1470175777" "(tlb_valid[13] && (((tlb_vpn2[13] ^ probe_vpn2) & g_probe[13].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 70 "1470175777" "(tlb_valid[13] && (((tlb_vpn2[13] ^ probe_vpn2) & g_probe[13].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 70 "1470175777" "(tlb_valid[13] && (((tlb_vpn2[13] ^ probe_vpn2) & g_probe[13].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 71 "1303051835" "(((tlb_vpn2[13] ^ probe_vpn2) & g_probe[13].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 72 "2819761165" "(tlb_g[13] || (tlb_asid[13] == probe_asid)) 1 -1" (1 "00")
+Condition 72 "2819761165" "(tlb_g[13] || (tlb_asid[13] == probe_asid)) 1 -1" (2 "01")
+Condition 72 "2819761165" "(tlb_g[13] || (tlb_asid[13] == probe_asid)) 1 -1" (3 "10")
+Condition 73 "1332642765" "(tlb_asid[13] == probe_asid) 1 -1" (2 "1")
+Condition 74 "2568312249" "(g_probe[13].vpn2_match && g_probe[13].asid_match) 1 -1" (1 "01")
+Condition 74 "2568312249" "(g_probe[13].vpn2_match && g_probe[13].asid_match) 1 -1" (2 "10")
+Condition 74 "2568312249" "(g_probe[13].vpn2_match && g_probe[13].asid_match) 1 -1" (3 "11")
+Condition 75 "1970217230" "(tlb_valid[14] && (((tlb_vpn2[14] ^ probe_vpn2) & g_probe[14].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 75 "1970217230" "(tlb_valid[14] && (((tlb_vpn2[14] ^ probe_vpn2) & g_probe[14].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 75 "1970217230" "(tlb_valid[14] && (((tlb_vpn2[14] ^ probe_vpn2) & g_probe[14].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 76 "2469777259" "(((tlb_vpn2[14] ^ probe_vpn2) & g_probe[14].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 77 "1409570564" "(tlb_g[14] || (tlb_asid[14] == probe_asid)) 1 -1" (1 "00")
+Condition 77 "1409570564" "(tlb_g[14] || (tlb_asid[14] == probe_asid)) 1 -1" (2 "01")
+Condition 77 "1409570564" "(tlb_g[14] || (tlb_asid[14] == probe_asid)) 1 -1" (3 "10")
+Condition 78 "2256381700" "(tlb_asid[14] == probe_asid) 1 -1" (2 "1")
+Condition 79 "2844318002" "(g_probe[14].vpn2_match && g_probe[14].asid_match) 1 -1" (1 "01")
+Condition 79 "2844318002" "(g_probe[14].vpn2_match && g_probe[14].asid_match) 1 -1" (2 "10")
+Condition 79 "2844318002" "(g_probe[14].vpn2_match && g_probe[14].asid_match) 1 -1" (3 "11")
+Condition 80 "2178726477" "(tlb_valid[15] && (((tlb_vpn2[15] ^ probe_vpn2) & g_probe[15].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 80 "2178726477" "(tlb_valid[15] && (((tlb_vpn2[15] ^ probe_vpn2) & g_probe[15].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 80 "2178726477" "(tlb_valid[15] && (((tlb_vpn2[15] ^ probe_vpn2) & g_probe[15].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 81 "1491334793" "(((tlb_vpn2[15] ^ probe_vpn2) & g_probe[15].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 82 "2135128933" "(tlb_g[15] || (tlb_asid[15] == probe_asid)) 1 -1" (1 "00")
+Condition 82 "2135128933" "(tlb_g[15] || (tlb_asid[15] == probe_asid)) 1 -1" (2 "01")
+Condition 82 "2135128933" "(tlb_g[15] || (tlb_asid[15] == probe_asid)) 1 -1" (3 "10")
+Condition 83 "1788272129" "(tlb_asid[15] == probe_asid) 1 -1" (2 "1")
+Condition 84 "2634976382" "(g_probe[15].vpn2_match && g_probe[15].asid_match) 1 -1" (1 "01")
+Condition 84 "2634976382" "(g_probe[15].vpn2_match && g_probe[15].asid_match) 1 -1" (2 "10")
+Condition 84 "2634976382" "(g_probe[15].vpn2_match && g_probe[15].asid_match) 1 -1" (3 "11")
+Condition 85 "2349771335" "(tlb_valid[16] && (((tlb_vpn2[16] ^ probe_vpn2) & g_probe[16].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 85 "2349771335" "(tlb_valid[16] && (((tlb_vpn2[16] ^ probe_vpn2) & g_probe[16].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 85 "2349771335" "(tlb_valid[16] && (((tlb_vpn2[16] ^ probe_vpn2) & g_probe[16].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 86 "870636251" "(((tlb_vpn2[16] ^ probe_vpn2) & g_probe[16].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 87 "2870635977" "(tlb_g[16] || (tlb_asid[16] == probe_asid)) 1 -1" (1 "00")
+Condition 87 "2870635977" "(tlb_g[16] || (tlb_asid[16] == probe_asid)) 1 -1" (2 "01")
+Condition 87 "2870635977" "(tlb_g[16] || (tlb_asid[16] == probe_asid)) 1 -1" (3 "10")
+Condition 88 "1065317104" "(tlb_asid[16] == probe_asid) 1 -1" (2 "1")
+Condition 89 "2366951854" "(g_probe[16].vpn2_match && g_probe[16].asid_match) 1 -1" (1 "01")
+Condition 89 "2366951854" "(g_probe[16].vpn2_match && g_probe[16].asid_match) 1 -1" (2 "10")
+Condition 89 "2366951854" "(g_probe[16].vpn2_match && g_probe[16].asid_match) 1 -1" (3 "11")
+Condition 90 "2025664772" "(tlb_valid[17] && (((tlb_vpn2[17] ^ probe_vpn2) & g_probe[17].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 90 "2025664772" "(tlb_valid[17] && (((tlb_vpn2[17] ^ probe_vpn2) & g_probe[17].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 90 "2025664772" "(tlb_valid[17] && (((tlb_vpn2[17] ^ probe_vpn2) & g_probe[17].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 91 "4164084537" "(((tlb_vpn2[17] ^ probe_vpn2) & g_probe[17].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 92 "2153595304" "(tlb_g[17] || (tlb_asid[17] == probe_asid)) 1 -1" (1 "00")
+Condition 92 "2153595304" "(tlb_g[17] || (tlb_asid[17] == probe_asid)) 1 -1" (2 "01")
+Condition 92 "2153595304" "(tlb_g[17] || (tlb_asid[17] == probe_asid)) 1 -1" (3 "10")
+Condition 93 "3549694965" "(tlb_asid[17] == probe_asid) 1 -1" (2 "1")
+Condition 94 "3113387234" "(g_probe[17].vpn2_match && g_probe[17].asid_match) 1 -1" (1 "01")
+Condition 94 "3113387234" "(g_probe[17].vpn2_match && g_probe[17].asid_match) 1 -1" (2 "10")
+Condition 94 "3113387234" "(g_probe[17].vpn2_match && g_probe[17].asid_match) 1 -1" (3 "11")
+Condition 95 "297584166" "(tlb_valid[18] && (((tlb_vpn2[18] ^ probe_vpn2) & g_probe[18].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 95 "297584166" "(tlb_valid[18] && (((tlb_vpn2[18] ^ probe_vpn2) & g_probe[18].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 95 "297584166" "(tlb_valid[18] && (((tlb_vpn2[18] ^ probe_vpn2) & g_probe[18].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 96 "1463621077" "(((tlb_vpn2[18] ^ probe_vpn2) & g_probe[18].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 97 "2199884920" "(tlb_g[18] || (tlb_asid[18] == probe_asid)) 1 -1" (1 "00")
+Condition 97 "2199884920" "(tlb_g[18] || (tlb_asid[18] == probe_asid)) 1 -1" (2 "01")
+Condition 97 "2199884920" "(tlb_g[18] || (tlb_asid[18] == probe_asid)) 1 -1" (3 "10")
+Condition 98 "1130880865" "(tlb_asid[18] == probe_asid) 1 -1" (2 "1")
+Condition 99 "2144042783" "(g_probe[18].vpn2_match && g_probe[18].asid_match) 1 -1" (1 "01")
+Condition 99 "2144042783" "(g_probe[18].vpn2_match && g_probe[18].asid_match) 1 -1" (2 "10")
+Condition 99 "2144042783" "(g_probe[18].vpn2_match && g_probe[18].asid_match) 1 -1" (3 "11")
+Condition 100 "3842989413" "(tlb_valid[19] && (((tlb_vpn2[19] ^ probe_vpn2) & g_probe[19].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 100 "3842989413" "(tlb_valid[19] && (((tlb_vpn2[19] ^ probe_vpn2) & g_probe[19].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 100 "3842989413" "(tlb_valid[19] && (((tlb_vpn2[19] ^ probe_vpn2) & g_probe[19].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 101 "2632657975" "(((tlb_vpn2[19] ^ probe_vpn2) & g_probe[19].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 102 "2824386585" "(tlb_g[19] || (tlb_asid[19] == probe_asid)) 1 -1" (1 "00")
+Condition 102 "2824386585" "(tlb_g[19] || (tlb_asid[19] == probe_asid)) 1 -1" (2 "01")
+Condition 102 "2824386585" "(tlb_g[19] || (tlb_asid[19] == probe_asid)) 1 -1" (3 "10")
+Condition 103 "2945230436" "(tlb_asid[19] == probe_asid) 1 -1" (2 "1")
+Condition 104 "1263348307" "(g_probe[19].vpn2_match && g_probe[19].asid_match) 1 -1" (1 "01")
+Condition 104 "1263348307" "(g_probe[19].vpn2_match && g_probe[19].asid_match) 1 -1" (2 "10")
+Condition 104 "1263348307" "(g_probe[19].vpn2_match && g_probe[19].asid_match) 1 -1" (3 "11")
+Condition 105 "2579647130" "(tlb_valid[20] && (((tlb_vpn2[20] ^ probe_vpn2) & g_probe[20].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 105 "2579647130" "(tlb_valid[20] && (((tlb_vpn2[20] ^ probe_vpn2) & g_probe[20].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 105 "2579647130" "(tlb_valid[20] && (((tlb_vpn2[20] ^ probe_vpn2) & g_probe[20].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 106 "2408092667" "(((tlb_vpn2[20] ^ probe_vpn2) & g_probe[20].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 107 "365796425" "(tlb_g[20] || (tlb_asid[20] == probe_asid)) 1 -1" (1 "00")
+Condition 107 "365796425" "(tlb_g[20] || (tlb_asid[20] == probe_asid)) 1 -1" (2 "01")
+Condition 107 "365796425" "(tlb_g[20] || (tlb_asid[20] == probe_asid)) 1 -1" (3 "10")
+Condition 108 "3618032253" "(tlb_asid[20] == probe_asid) 1 -1" (2 "1")
+Condition 109 "2559569096" "(g_probe[20].vpn2_match && g_probe[20].asid_match) 1 -1" (1 "01")
+Condition 109 "2559569096" "(g_probe[20].vpn2_match && g_probe[20].asid_match) 1 -1" (2 "10")
+Condition 109 "2559569096" "(g_probe[20].vpn2_match && g_probe[20].asid_match) 1 -1" (3 "11")
+Condition 110 "1836175833" "(tlb_valid[21] && (((tlb_vpn2[21] ^ probe_vpn2) & g_probe[21].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 110 "1836175833" "(tlb_valid[21] && (((tlb_vpn2[21] ^ probe_vpn2) & g_probe[21].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 110 "1836175833" "(tlb_valid[21] && (((tlb_vpn2[21] ^ probe_vpn2) & g_probe[21].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 111 "1147054617" "(((tlb_vpn2[21] ^ probe_vpn2) & g_probe[21].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 112 "1049276456" "(tlb_g[21] || (tlb_asid[21] == probe_asid)) 1 -1" (1 "00")
+Condition 112 "1049276456" "(tlb_g[21] || (tlb_asid[21] == probe_asid)) 1 -1" (2 "01")
+Condition 112 "1049276456" "(tlb_g[21] || (tlb_asid[21] == probe_asid)) 1 -1" (3 "10")
+Condition 113 "994947960" "(tlb_asid[21] == probe_asid) 1 -1" (2 "1")
+Condition 114 "2886318468" "(g_probe[21].vpn2_match && g_probe[21].asid_match) 1 -1" (1 "01")
+Condition 114 "2886318468" "(g_probe[21].vpn2_match && g_probe[21].asid_match) 1 -1" (2 "10")
+Condition 114 "2886318468" "(g_probe[21].vpn2_match && g_probe[21].asid_match) 1 -1" (3 "11")
+Condition 115 "1621344723" "(tlb_valid[22] && (((tlb_vpn2[22] ^ probe_vpn2) & g_probe[22].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 115 "1621344723" "(tlb_valid[22] && (((tlb_vpn2[22] ^ probe_vpn2) & g_probe[22].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 115 "1621344723" "(tlb_valid[22] && (((tlb_vpn2[22] ^ probe_vpn2) & g_probe[22].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 116 "794396235" "(((tlb_vpn2[22] ^ probe_vpn2) & g_probe[22].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 117 "3939739268" "(tlb_g[22] || (tlb_asid[22] == probe_asid)) 1 -1" (1 "00")
+Condition 117 "3939739268" "(tlb_g[22] || (tlb_asid[22] == probe_asid)) 1 -1" (2 "01")
+Condition 117 "3939739268" "(tlb_g[22] || (tlb_asid[22] == probe_asid)) 1 -1" (3 "10")
+Condition 118 "1856249737" "(tlb_asid[22] == probe_asid) 1 -1" (2 "1")
+Condition 119 "3155420244" "(g_probe[22].vpn2_match && g_probe[22].asid_match) 1 -1" (1 "01")
+Condition 119 "3155420244" "(g_probe[22].vpn2_match && g_probe[22].asid_match) 1 -1" (2 "10")
+Condition 119 "3155420244" "(g_probe[22].vpn2_match && g_probe[22].asid_match) 1 -1" (3 "11")
+Condition 120 "2484099728" "(tlb_valid[23] && (((tlb_vpn2[23] ^ probe_vpn2) & g_probe[23].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 120 "2484099728" "(tlb_valid[23] && (((tlb_vpn2[23] ^ probe_vpn2) & g_probe[23].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 120 "2484099728" "(tlb_valid[23] && (((tlb_vpn2[23] ^ probe_vpn2) & g_probe[23].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 121 "3834625961" "(((tlb_vpn2[23] ^ probe_vpn2) & g_probe[23].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 122 "3247737573" "(tlb_g[23] || (tlb_asid[23] == probe_asid)) 1 -1" (1 "00")
+Condition 122 "3247737573" "(tlb_g[23] || (tlb_asid[23] == probe_asid)) 1 -1" (2 "01")
+Condition 122 "3247737573" "(tlb_g[23] || (tlb_asid[23] == probe_asid)) 1 -1" (3 "10")
+Condition 123 "2186241676" "(tlb_asid[23] == probe_asid) 1 -1" (2 "1")
+Condition 124 "2291511576" "(g_probe[23].vpn2_match && g_probe[23].asid_match) 1 -1" (1 "01")
+Condition 124 "2291511576" "(g_probe[23].vpn2_match && g_probe[23].asid_match) 1 -1" (2 "10")
+Condition 124 "2291511576" "(g_probe[23].vpn2_match && g_probe[23].asid_match) 1 -1" (3 "11")
+Condition 125 "3068027327" "(tlb_valid[24] && (((tlb_vpn2[24] ^ probe_vpn2) & g_probe[24].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 125 "3068027327" "(tlb_valid[24] && (((tlb_vpn2[24] ^ probe_vpn2) & g_probe[24].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 125 "3068027327" "(tlb_valid[24] && (((tlb_vpn2[24] ^ probe_vpn2) & g_probe[24].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 126 "974163705" "(((tlb_vpn2[24] ^ probe_vpn2) & g_probe[24].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 127 "1031993836" "(tlb_g[24] || (tlb_asid[24] == probe_asid)) 1 -1" (1 "00")
+Condition 127 "1031993836" "(tlb_g[24] || (tlb_asid[24] == probe_asid)) 1 -1" (2 "01")
+Condition 127 "1031993836" "(tlb_g[24] || (tlb_asid[24] == probe_asid)) 1 -1" (3 "10")
+Condition 128 "1264337477" "(tlb_asid[24] == probe_asid) 1 -1" (2 "1")
+Condition 129 "3087547795" "(g_probe[24].vpn2_match && g_probe[24].asid_match) 1 -1" (1 "01")
+Condition 129 "3087547795" "(g_probe[24].vpn2_match && g_probe[24].asid_match) 1 -1" (2 "10")
+Condition 129 "3087547795" "(g_probe[24].vpn2_match && g_probe[24].asid_match) 1 -1" (3 "11")
+Condition 130 "1114503932" "(tlb_valid[25] && (((tlb_vpn2[25] ^ probe_vpn2) & g_probe[25].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 130 "1114503932" "(tlb_valid[25] && (((tlb_vpn2[25] ^ probe_vpn2) & g_probe[25].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 130 "1114503932" "(tlb_valid[25] && (((tlb_vpn2[25] ^ probe_vpn2) & g_probe[25].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 131 "4056332059" "(((tlb_vpn2[25] ^ probe_vpn2) & g_probe[25].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 132 "382064013" "(tlb_g[25] || (tlb_asid[25] == probe_asid)) 1 -1" (1 "00")
+Condition 132 "382064013" "(tlb_g[25] || (tlb_asid[25] == probe_asid)) 1 -1" (2 "01")
+Condition 132 "382064013" "(tlb_g[25] || (tlb_asid[25] == probe_asid)) 1 -1" (3 "10")
+Condition 133 "2813803328" "(tlb_asid[25] == probe_asid) 1 -1" (2 "1")
+Condition 134 "2358143199" "(g_probe[25].vpn2_match && g_probe[25].asid_match) 1 -1" (1 "01")
+Condition 134 "2358143199" "(g_probe[25].vpn2_match && g_probe[25].asid_match) 1 -1" (2 "10")
+Condition 134 "2358143199" "(g_probe[25].vpn2_match && g_probe[25].asid_match) 1 -1" (3 "11")
+Condition 135 "1337977590" "(tlb_valid[26] && (((tlb_vpn2[26] ^ probe_vpn2) & g_probe[26].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 135 "1337977590" "(tlb_valid[26] && (((tlb_vpn2[26] ^ probe_vpn2) & g_probe[26].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 135 "1337977590" "(tlb_valid[26] && (((tlb_vpn2[26] ^ probe_vpn2) & g_probe[26].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 136 "2596379465" "(((tlb_vpn2[26] ^ probe_vpn2) & g_probe[26].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 137 "3265053473" "(tlb_g[26] || (tlb_asid[26] == probe_asid)) 1 -1" (1 "00")
+Condition 137 "3265053473" "(tlb_g[26] || (tlb_asid[26] == probe_asid)) 1 -1" (2 "01")
+Condition 137 "3265053473" "(tlb_g[26] || (tlb_asid[26] == probe_asid)) 1 -1" (3 "10")
+Condition 138 "4066285489" "(tlb_asid[26] == probe_asid) 1 -1" (2 "1")
+Condition 139 "2626958607" "(g_probe[26].vpn2_match && g_probe[26].asid_match) 1 -1" (1 "01")
+Condition 139 "2626958607" "(g_probe[26].vpn2_match && g_probe[26].asid_match) 1 -1" (2 "10")
+Condition 139 "2626958607" "(g_probe[26].vpn2_match && g_probe[26].asid_match) 1 -1" (3 "11")
+Condition 140 "3138154933" "(tlb_valid[27] && (((tlb_vpn2[27] ^ probe_vpn2) & g_probe[27].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 140 "3138154933" "(tlb_valid[27] && (((tlb_vpn2[27] ^ probe_vpn2) & g_probe[27].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 140 "3138154933" "(tlb_valid[27] && (((tlb_vpn2[27] ^ probe_vpn2) & g_probe[27].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 141 "1360503467" "(((tlb_vpn2[27] ^ probe_vpn2) & g_probe[27].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 142 "3923504960" "(tlb_g[27] || (tlb_asid[27] == probe_asid)) 1 -1" (1 "00")
+Condition 142 "3923504960" "(tlb_g[27] || (tlb_asid[27] == probe_asid)) 1 -1" (2 "01")
+Condition 142 "3923504960" "(tlb_g[27] || (tlb_asid[27] == probe_asid)) 1 -1" (3 "10")
+Condition 143 "515239604" "(tlb_asid[27] == probe_asid) 1 -1" (2 "1")
+Condition 144 "2819776579" "(g_probe[27].vpn2_match && g_probe[27].asid_match) 1 -1" (1 "01")
+Condition 144 "2819776579" "(g_probe[27].vpn2_match && g_probe[27].asid_match) 1 -1" (2 "10")
+Condition 144 "2819776579" "(g_probe[27].vpn2_match && g_probe[27].asid_match) 1 -1" (3 "11")
+Condition 145 "3524101783" "(tlb_valid[28] && (((tlb_vpn2[28] ^ probe_vpn2) & g_probe[28].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 145 "3524101783" "(tlb_valid[28] && (((tlb_vpn2[28] ^ probe_vpn2) & g_probe[28].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 145 "3524101783" "(tlb_valid[28] && (((tlb_vpn2[28] ^ probe_vpn2) & g_probe[28].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 146 "4263007303" "(((tlb_vpn2[28] ^ probe_vpn2) & g_probe[28].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 147 "3935910544" "(tlb_g[28] || (tlb_asid[28] == probe_asid)) 1 -1" (1 "00")
+Condition 147 "3935910544" "(tlb_g[28] || (tlb_asid[28] == probe_asid)) 1 -1" (2 "01")
+Condition 147 "3935910544" "(tlb_g[28] || (tlb_asid[28] == probe_asid)) 1 -1" (3 "10")
+Condition 148 "2386967072" "(tlb_asid[28] == probe_asid) 1 -1" (2 "1")
+Condition 149 "1850448830" "(g_probe[28].vpn2_match && g_probe[28].asid_match) 1 -1" (1 "01")
+Condition 149 "1850448830" "(g_probe[28].vpn2_match && g_probe[28].asid_match) 1 -1" (2 "10")
+Condition 149 "1850448830" "(g_probe[28].vpn2_match && g_probe[28].asid_match) 1 -1" (3 "11")
+Condition 150 "649993684" "(tlb_valid[29] && (((tlb_vpn2[29] ^ probe_vpn2) & g_probe[29].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 150 "649993684" "(tlb_valid[29] && (((tlb_vpn2[29] ^ probe_vpn2) & g_probe[29].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 150 "649993684" "(tlb_valid[29] && (((tlb_vpn2[29] ^ probe_vpn2) & g_probe[29].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 151 "902720933" "(((tlb_vpn2[29] ^ probe_vpn2) & g_probe[29].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 152 "3252557553" "(tlb_g[29] || (tlb_asid[29] == probe_asid)) 1 -1" (1 "00")
+Condition 152 "3252557553" "(tlb_g[29] || (tlb_asid[29] == probe_asid)) 1 -1" (2 "01")
+Condition 152 "3252557553" "(tlb_g[29] || (tlb_asid[29] == probe_asid)) 1 -1" (3 "10")
+Condition 153 "1655522085" "(tlb_asid[29] == probe_asid) 1 -1" (2 "1")
+Condition 154 "1523437298" "(g_probe[29].vpn2_match && g_probe[29].asid_match) 1 -1" (1 "01")
+Condition 154 "1523437298" "(g_probe[29].vpn2_match && g_probe[29].asid_match) 1 -1" (2 "10")
+Condition 154 "1523437298" "(g_probe[29].vpn2_match && g_probe[29].asid_match) 1 -1" (3 "11")
+Condition 155 "356817716" "(tlb_valid[30] && (((tlb_vpn2[30] ^ probe_vpn2) & g_probe[30].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 155 "356817716" "(tlb_valid[30] && (((tlb_vpn2[30] ^ probe_vpn2) & g_probe[30].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 155 "356817716" "(tlb_valid[30] && (((tlb_vpn2[30] ^ probe_vpn2) & g_probe[30].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 156 "4040840726" "(((tlb_vpn2[30] ^ probe_vpn2) & g_probe[30].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 157 "664834675" "(tlb_g[30] || (tlb_asid[30] == probe_asid)) 1 -1" (1 "00")
+Condition 157 "664834675" "(tlb_g[30] || (tlb_asid[30] == probe_asid)) 1 -1" (2 "01")
+Condition 157 "664834675" "(tlb_g[30] || (tlb_asid[30] == probe_asid)) 1 -1" (3 "10")
+Condition 158 "1939058713" "(tlb_asid[30] == probe_asid) 1 -1" (2 "1")
+Condition 159 "2790872571" "(g_probe[30].vpn2_match && g_probe[30].asid_match) 1 -1" (1 "01")
+Condition 159 "2790872571" "(g_probe[30].vpn2_match && g_probe[30].asid_match) 1 -1" (2 "10")
+Condition 159 "2790872571" "(g_probe[30].vpn2_match && g_probe[30].asid_match) 1 -1" (3 "11")
+Condition 160 "3791061111" "(tlb_valid[31] && (((tlb_vpn2[31] ^ probe_vpn2) & g_probe[31].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 160 "3791061111" "(tlb_valid[31] && (((tlb_vpn2[31] ^ probe_vpn2) & g_probe[31].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 160 "3791061111" "(tlb_valid[31] && (((tlb_vpn2[31] ^ probe_vpn2) & g_probe[31].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 161 "990670836" "(((tlb_vpn2[31] ^ probe_vpn2) & g_probe[31].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 162 "216514066" "(tlb_g[31] || (tlb_asid[31] == probe_asid)) 1 -1" (1 "00")
+Condition 162 "216514066" "(tlb_g[31] || (tlb_asid[31] == probe_asid)) 1 -1" (2 "01")
+Condition 162 "216514066" "(tlb_g[31] || (tlb_asid[31] == probe_asid)) 1 -1" (3 "10")
+Condition 163 "2675493148" "(tlb_asid[31] == probe_asid) 1 -1" (2 "1")
+Condition 164 "2464088247" "(g_probe[31].vpn2_match && g_probe[31].asid_match) 1 -1" (1 "01")
+Condition 164 "2464088247" "(g_probe[31].vpn2_match && g_probe[31].asid_match) 1 -1" (2 "10")
+Condition 164 "2464088247" "(g_probe[31].vpn2_match && g_probe[31].asid_match) 1 -1" (3 "11")
+Condition 165 "3961852029" "(tlb_valid[32] && (((tlb_vpn2[32] ^ probe_vpn2) & g_probe[32].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 165 "3961852029" "(tlb_valid[32] && (((tlb_vpn2[32] ^ probe_vpn2) & g_probe[32].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 165 "3961852029" "(tlb_valid[32] && (((tlb_vpn2[32] ^ probe_vpn2) & g_probe[32].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 166 "1342915494" "(((tlb_vpn2[32] ^ probe_vpn2) & g_probe[32].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 167 "3636373694" "(tlb_g[32] || (tlb_asid[32] == probe_asid)) 1 -1" (1 "00")
+Condition 167 "3636373694" "(tlb_g[32] || (tlb_asid[32] == probe_asid)) 1 -1" (2 "01")
+Condition 167 "3636373694" "(tlb_g[32] || (tlb_asid[32] == probe_asid)) 1 -1" (3 "10")
+Condition 168 "3398526445" "(tlb_asid[32] == probe_asid) 1 -1" (2 "1")
+Condition 169 "2193972583" "(g_probe[32].vpn2_match && g_probe[32].asid_match) 1 -1" (1 "01")
+Condition 169 "2193972583" "(g_probe[32].vpn2_match && g_probe[32].asid_match) 1 -1" (2 "10")
+Condition 169 "2193972583" "(g_probe[32].vpn2_match && g_probe[32].asid_match) 1 -1" (3 "11")
+Condition 170 "412519230" "(tlb_valid[33] && (((tlb_vpn2[33] ^ probe_vpn2) & g_probe[33].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 170 "412519230" "(tlb_valid[33] && (((tlb_vpn2[33] ^ probe_vpn2) & g_probe[33].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 170 "412519230" "(tlb_valid[33] && (((tlb_vpn2[33] ^ probe_vpn2) & g_probe[33].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 171 "2614983236" "(((tlb_vpn2[33] ^ probe_vpn2) & g_probe[33].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 172 "4093215967" "(tlb_g[33] || (tlb_asid[33] == probe_asid)) 1 -1" (1 "00")
+Condition 172 "4093215967" "(tlb_g[33] || (tlb_asid[33] == probe_asid)) 1 -1" (2 "01")
+Condition 172 "4093215967" "(tlb_g[33] || (tlb_asid[33] == probe_asid)) 1 -1" (3 "10")
+Condition 173 "645537000" "(tlb_asid[33] == probe_asid) 1 -1" (2 "1")
+Condition 174 "3057846315" "(g_probe[33].vpn2_match && g_probe[33].asid_match) 1 -1" (1 "01")
+Condition 174 "3057846315" "(g_probe[33].vpn2_match && g_probe[33].asid_match) 1 -1" (2 "10")
+Condition 174 "3057846315" "(g_probe[33].vpn2_match && g_probe[33].asid_match) 1 -1" (3 "11")
+Condition 175 "978890769" "(tlb_valid[34] && (((tlb_vpn2[34] ^ probe_vpn2) & g_probe[34].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 175 "978890769" "(tlb_valid[34] && (((tlb_vpn2[34] ^ probe_vpn2) & g_probe[34].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 175 "978890769" "(tlb_valid[34] && (((tlb_vpn2[34] ^ probe_vpn2) & g_probe[34].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 176 "1161972500" "(((tlb_vpn2[34] ^ probe_vpn2) & g_probe[34].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 177 "267384790" "(tlb_g[34] || (tlb_asid[34] == probe_asid)) 1 -1" (1 "00")
+Condition 177 "267384790" "(tlb_g[34] || (tlb_asid[34] == probe_asid)) 1 -1" (2 "01")
+Condition 177 "267384790" "(tlb_g[34] || (tlb_asid[34] == probe_asid)) 1 -1" (3 "10")
+Condition 178 "4016650273" "(tlb_asid[34] == probe_asid) 1 -1" (2 "1")
+Condition 179 "2262729888" "(g_probe[34].vpn2_match && g_probe[34].asid_match) 1 -1" (1 "01")
+Condition 179 "2262729888" "(g_probe[34].vpn2_match && g_probe[34].asid_match) 1 -1" (2 "10")
+Condition 179 "2262729888" "(g_probe[34].vpn2_match && g_probe[34].asid_match) 1 -1" (3 "11")
+Condition 180 "3471518546" "(tlb_valid[35] && (((tlb_vpn2[35] ^ probe_vpn2) & g_probe[35].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 180 "3471518546" "(tlb_valid[35] && (((tlb_vpn2[35] ^ probe_vpn2) & g_probe[35].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 180 "3471518546" "(tlb_valid[35] && (((tlb_vpn2[35] ^ probe_vpn2) & g_probe[35].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 181 "2392093430" "(((tlb_vpn2[35] ^ probe_vpn2) & g_probe[35].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 182 "615046071" "(tlb_g[35] || (tlb_asid[35] == probe_asid)) 1 -1" (1 "00")
+Condition 182 "615046071" "(tlb_g[35] || (tlb_asid[35] == probe_asid)) 1 -1" (2 "01")
+Condition 182 "615046071" "(tlb_g[35] || (tlb_asid[35] == probe_asid)) 1 -1" (3 "10")
+Condition 183 "58868004" "(tlb_asid[35] == probe_asid) 1 -1" (2 "1")
+Condition 184 "2992165356" "(g_probe[35].vpn2_match && g_probe[35].asid_match) 1 -1" (1 "01")
+Condition 184 "2992165356" "(g_probe[35].vpn2_match && g_probe[35].asid_match) 1 -1" (2 "10")
+Condition 184 "2992165356" "(g_probe[35].vpn2_match && g_probe[35].asid_match) 1 -1" (3 "11")
+Condition 185 "3275307864" "(tlb_valid[36] && (((tlb_vpn2[36] ^ probe_vpn2) & g_probe[36].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 185 "3275307864" "(tlb_valid[36] && (((tlb_vpn2[36] ^ probe_vpn2) & g_probe[36].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 185 "3275307864" "(tlb_valid[36] && (((tlb_vpn2[36] ^ probe_vpn2) & g_probe[36].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 186 "3851640484" "(((tlb_vpn2[36] ^ probe_vpn2) & g_probe[36].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 187 "4042378523" "(tlb_g[36] || (tlb_asid[36] == probe_asid)) 1 -1" (1 "00")
+Condition 187 "4042378523" "(tlb_g[36] || (tlb_asid[36] == probe_asid)) 1 -1" (2 "01")
+Condition 187 "4042378523" "(tlb_g[36] || (tlb_asid[36] == probe_asid)) 1 -1" (3 "10")
+Condition 188 "1449913813" "(tlb_asid[36] == probe_asid) 1 -1" (2 "1")
+Condition 189 "2722270268" "(g_probe[36].vpn2_match && g_probe[36].asid_match) 1 -1" (1 "01")
+Condition 189 "2722270268" "(g_probe[36].vpn2_match && g_probe[36].asid_match) 1 -1" (2 "10")
+Condition 189 "2722270268" "(g_probe[36].vpn2_match && g_probe[36].asid_match) 1 -1" (3 "11")
+Condition 190 "931831835" "(tlb_valid[37] && (((tlb_vpn2[37] ^ probe_vpn2) & g_probe[37].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 190 "931831835" "(tlb_valid[37] && (((tlb_vpn2[37] ^ probe_vpn2) & g_probe[37].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 190 "931831835" "(tlb_valid[37] && (((tlb_vpn2[37] ^ probe_vpn2) & g_probe[37].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 191 "776300358" "(((tlb_vpn2[37] ^ probe_vpn2) & g_probe[37].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 192 "3686195578" "(tlb_g[37] || (tlb_asid[37] == probe_asid)) 1 -1" (1 "00")
+Condition 192 "3686195578" "(tlb_g[37] || (tlb_asid[37] == probe_asid)) 1 -1" (2 "01")
+Condition 192 "3686195578" "(tlb_g[37] || (tlb_asid[37] == probe_asid)) 1 -1" (3 "10")
+Condition 193 "3128988880" "(tlb_asid[37] == probe_asid) 1 -1" (2 "1")
+Condition 194 "2529483120" "(g_probe[37].vpn2_match && g_probe[37].asid_match) 1 -1" (1 "01")
+Condition 194 "2529483120" "(g_probe[37].vpn2_match && g_probe[37].asid_match) 1 -1" (2 "10")
+Condition 194 "2529483120" "(g_probe[37].vpn2_match && g_probe[37].asid_match) 1 -1" (3 "11")
+Condition 195 "1586190137" "(tlb_valid[38] && (((tlb_vpn2[38] ^ probe_vpn2) & g_probe[38].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 195 "1586190137" "(tlb_valid[38] && (((tlb_vpn2[38] ^ probe_vpn2) & g_probe[38].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 195 "1586190137" "(tlb_valid[38] && (((tlb_vpn2[38] ^ probe_vpn2) & g_probe[38].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 196 "2169147818" "(((tlb_vpn2[38] ^ probe_vpn2) & g_probe[38].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 197 "3639882922" "(tlb_g[38] || (tlb_asid[38] == probe_asid)) 1 -1" (1 "00")
+Condition 197 "3639882922" "(tlb_g[38] || (tlb_asid[38] == probe_asid)) 1 -1" (2 "01")
+Condition 197 "3639882922" "(tlb_g[38] || (tlb_asid[38] == probe_asid)) 1 -1" (3 "10")
+Condition 198 "712196164" "(tlb_asid[38] == probe_asid) 1 -1" (2 "1")
+Condition 199 "1352475277" "(g_probe[38].vpn2_match && g_probe[38].asid_match) 1 -1" (1 "01")
+Condition 199 "1352475277" "(g_probe[38].vpn2_match && g_probe[38].asid_match) 1 -1" (2 "10")
+Condition 199 "1352475277" "(g_probe[38].vpn2_match && g_probe[38].asid_match) 1 -1" (3 "11")
+Condition 200 "2855849082" "(tlb_valid[39] && (((tlb_vpn2[39] ^ probe_vpn2) & g_probe[39].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 200 "2855849082" "(tlb_valid[39] && (((tlb_vpn2[39] ^ probe_vpn2) & g_probe[39].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 200 "2855849082" "(tlb_valid[39] && (((tlb_vpn2[39] ^ probe_vpn2) & g_probe[39].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 201 "1251780680" "(((tlb_vpn2[39] ^ probe_vpn2) & g_probe[39].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 202 "4088600779" "(tlb_g[39] || (tlb_asid[39] == probe_asid)) 1 -1" (1 "00")
+Condition 202 "4088600779" "(tlb_g[39] || (tlb_asid[39] == probe_asid)) 1 -1" (2 "01")
+Condition 202 "4088600779" "(tlb_g[39] || (tlb_asid[39] == probe_asid)) 1 -1" (3 "10")
+Condition 203 "3331864897" "(tlb_asid[39] == probe_asid) 1 -1" (2 "1")
+Condition 204 "1679521729" "(g_probe[39].vpn2_match && g_probe[39].asid_match) 1 -1" (1 "01")
+Condition 204 "1679521729" "(g_probe[39].vpn2_match && g_probe[39].asid_match) 1 -1" (2 "10")
+Condition 204 "1679521729" "(g_probe[39].vpn2_match && g_probe[39].asid_match) 1 -1" (3 "11")
+Condition 205 "4232989417" "(tlb_valid[40] && (((tlb_vpn2[40] ^ probe_vpn2) & g_probe[40].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 205 "4232989417" "(tlb_valid[40] && (((tlb_vpn2[40] ^ probe_vpn2) & g_probe[40].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 205 "4232989417" "(tlb_valid[40] && (((tlb_vpn2[40] ^ probe_vpn2) & g_probe[40].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 206 "120240828" "(((tlb_vpn2[40] ^ probe_vpn2) & g_probe[40].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 207 "4145559993" "(tlb_g[40] || (tlb_asid[40] == probe_asid)) 1 -1" (1 "00")
+Condition 207 "4145559993" "(tlb_g[40] || (tlb_asid[40] == probe_asid)) 1 -1" (2 "01")
+Condition 207 "4145559993" "(tlb_g[40] || (tlb_asid[40] == probe_asid)) 1 -1" (3 "10")
+Condition 208 "2188842505" "(tlb_asid[40] == probe_asid) 1 -1" (2 "1")
+Condition 209 "485950211" "(g_probe[40].vpn2_match && g_probe[40].asid_match) 1 -1" (1 "01")
+Condition 209 "485950211" "(g_probe[40].vpn2_match && g_probe[40].asid_match) 1 -1" (2 "10")
+Condition 209 "485950211" "(g_probe[40].vpn2_match && g_probe[40].asid_match) 1 -1" (3 "11")
+Condition 210 "150852010" "(tlb_valid[41] && (((tlb_vpn2[41] ^ probe_vpn2) & g_probe[41].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 210 "150852010" "(tlb_valid[41] && (((tlb_vpn2[41] ^ probe_vpn2) & g_probe[41].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 210 "150852010" "(tlb_valid[41] && (((tlb_vpn2[41] ^ probe_vpn2) & g_probe[41].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 211 "3439100766" "(((tlb_vpn2[41] ^ probe_vpn2) & g_probe[41].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 212 "3697219032" "(tlb_g[41] || (tlb_asid[41] == probe_asid)) 1 -1" (1 "00")
+Condition 212 "3697219032" "(tlb_g[41] || (tlb_asid[41] == probe_asid)) 1 -1" (2 "01")
+Condition 212 "3697219032" "(tlb_g[41] || (tlb_asid[41] == probe_asid)) 1 -1" (3 "10")
+Condition 213 "1855745804" "(tlb_asid[41] == probe_asid) 1 -1" (2 "1")
+Condition 214 "678516303" "(g_probe[41].vpn2_match && g_probe[41].asid_match) 1 -1" (1 "01")
+Condition 214 "678516303" "(g_probe[41].vpn2_match && g_probe[41].asid_match) 1 -1" (2 "10")
+Condition 214 "678516303" "(g_probe[41].vpn2_match && g_probe[41].asid_match) 1 -1" (3 "11")
+Condition 215 "87015840" "(tlb_valid[42] && (((tlb_vpn2[42] ^ probe_vpn2) & g_probe[42].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 215 "87015840" "(tlb_valid[42] && (((tlb_vpn2[42] ^ probe_vpn2) & g_probe[42].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 215 "87015840" "(tlb_valid[42] && (((tlb_vpn2[42] ^ probe_vpn2) & g_probe[42].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 216 "2818289420" "(((tlb_vpn2[42] ^ probe_vpn2) & g_probe[42].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 217 "134611828" "(tlb_g[42] || (tlb_asid[42] == probe_asid)) 1 -1" (1 "00")
+Condition 217 "134611828" "(tlb_g[42] || (tlb_asid[42] == probe_asid)) 1 -1" (2 "01")
+Condition 217 "134611828" "(tlb_g[42] || (tlb_asid[42] == probe_asid)) 1 -1" (3 "10")
+Condition 218 "997573629" "(tlb_asid[42] == probe_asid) 1 -1" (2 "1")
+Condition 219 "946539423" "(g_probe[42].vpn2_match && g_probe[42].asid_match) 1 -1" (1 "01")
+Condition 219 "946539423" "(g_probe[42].vpn2_match && g_probe[42].asid_match) 1 -1" (2 "10")
+Condition 219 "946539423" "(g_probe[42].vpn2_match && g_probe[42].asid_match) 1 -1" (3 "11")
+Condition 220 "4053555939" "(tlb_valid[43] && (((tlb_vpn2[43] ^ probe_vpn2) & g_probe[43].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 220 "4053555939" "(tlb_valid[43] && (((tlb_vpn2[43] ^ probe_vpn2) & g_probe[43].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 220 "4053555939" "(tlb_valid[43] && (((tlb_vpn2[43] ^ probe_vpn2) & g_probe[43].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 221 "1814927086" "(((tlb_vpn2[43] ^ probe_vpn2) & g_probe[43].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 222 "591474453" "(tlb_g[43] || (tlb_asid[43] == probe_asid)) 1 -1" (1 "00")
+Condition 222 "591474453" "(tlb_g[43] || (tlb_asid[43] == probe_asid)) 1 -1" (2 "01")
+Condition 222 "591474453" "(tlb_g[43] || (tlb_asid[43] == probe_asid)) 1 -1" (3 "10")
+Condition 223 "3617503992" "(tlb_asid[43] == probe_asid) 1 -1" (2 "1")
+Condition 224 "216882899" "(g_probe[43].vpn2_match && g_probe[43].asid_match) 1 -1" (1 "01")
+Condition 224 "216882899" "(g_probe[43].vpn2_match && g_probe[43].asid_match) 1 -1" (2 "10")
+Condition 224 "216882899" "(g_probe[43].vpn2_match && g_probe[43].asid_match) 1 -1" (3 "11")
+Condition 225 "3545391564" "(tlb_valid[44] && (((tlb_vpn2[44] ^ probe_vpn2) & g_probe[44].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 225 "3545391564" "(tlb_valid[44] && (((tlb_vpn2[44] ^ probe_vpn2) & g_probe[44].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 225 "3545391564" "(tlb_valid[44] && (((tlb_vpn2[44] ^ probe_vpn2) & g_probe[44].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 226 "2998052798" "(((tlb_vpn2[44] ^ probe_vpn2) & g_probe[44].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 227 "3747044380" "(tlb_g[44] || (tlb_asid[44] == probe_asid)) 1 -1" (1 "00")
+Condition 227 "3747044380" "(tlb_g[44] || (tlb_asid[44] == probe_asid)) 1 -1" (2 "01")
+Condition 227 "3747044380" "(tlb_g[44] || (tlb_asid[44] == probe_asid)) 1 -1" (3 "10")
+Condition 228 "512597553" "(tlb_asid[44] == probe_asid) 1 -1" (2 "1")
+Condition 229 "1014026840" "(g_probe[44].vpn2_match && g_probe[44].asid_match) 1 -1" (1 "01")
+Condition 229 "1014026840" "(g_probe[44].vpn2_match && g_probe[44].asid_match) 1 -1" (2 "10")
+Condition 229 "1014026840" "(g_probe[44].vpn2_match && g_probe[44].asid_match) 1 -1" (3 "11")
+Condition 230 "669121167" "(tlb_valid[45] && (((tlb_vpn2[45] ^ probe_vpn2) & g_probe[45].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 230 "669121167" "(tlb_valid[45] && (((tlb_vpn2[45] ^ probe_vpn2) & g_probe[45].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 230 "669121167" "(tlb_valid[45] && (((tlb_vpn2[45] ^ probe_vpn2) & g_probe[45].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 231 "2036637276" "(((tlb_vpn2[45] ^ probe_vpn2) & g_probe[45].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 232 "4094718077" "(tlb_g[45] || (tlb_asid[45] == probe_asid)) 1 -1" (1 "00")
+Condition 232 "4094718077" "(tlb_g[45] || (tlb_asid[45] == probe_asid)) 1 -1" (2 "01")
+Condition 232 "4094718077" "(tlb_g[45] || (tlb_asid[45] == probe_asid)) 1 -1" (3 "10")
+Condition 233 "4066830132" "(tlb_asid[45] == probe_asid) 1 -1" (2 "1")
+Condition 234 "150374164" "(g_probe[45].vpn2_match && g_probe[45].asid_match) 1 -1" (1 "01")
+Condition 234 "150374164" "(g_probe[45].vpn2_match && g_probe[45].asid_match) 1 -1" (2 "10")
+Condition 234 "150374164" "(g_probe[45].vpn2_match && g_probe[45].asid_match) 1 -1" (3 "11")
+Condition 235 "708045445" "(tlb_valid[46] && (((tlb_vpn2[46] ^ probe_vpn2) & g_probe[46].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 235 "708045445" "(tlb_valid[46] && (((tlb_vpn2[46] ^ probe_vpn2) & g_probe[46].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 235 "708045445" "(tlb_valid[46] && (((tlb_vpn2[46] ^ probe_vpn2) & g_probe[46].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 236 "308523534" "(((tlb_vpn2[46] ^ probe_vpn2) & g_probe[46].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 237 "541681361" "(tlb_g[46] || (tlb_asid[46] == probe_asid)) 1 -1" (1 "00")
+Condition 237 "541681361" "(tlb_g[46] || (tlb_asid[46] == probe_asid)) 1 -1" (2 "01")
+Condition 237 "541681361" "(tlb_g[46] || (tlb_asid[46] == probe_asid)) 1 -1" (3 "10")
+Condition 238 "2811186117" "(tlb_asid[46] == probe_asid) 1 -1" (2 "1")
+Condition 239 "418175684" "(g_probe[46].vpn2_match && g_probe[46].asid_match) 1 -1" (1 "01")
+Condition 239 "418175684" "(g_probe[46].vpn2_match && g_probe[46].asid_match) 1 -1" (2 "10")
+Condition 239 "418175684" "(g_probe[46].vpn2_match && g_probe[46].asid_match) 1 -1" (3 "11")
+Condition 240 "3732959686" "(tlb_valid[47] && (((tlb_vpn2[47] ^ probe_vpn2) & g_probe[47].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 240 "3732959686" "(tlb_valid[47] && (((tlb_vpn2[47] ^ probe_vpn2) & g_probe[47].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 240 "3732959686" "(tlb_valid[47] && (((tlb_vpn2[47] ^ probe_vpn2) & g_probe[47].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 241 "3652553708" "(((tlb_vpn2[47] ^ probe_vpn2) & g_probe[47].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 242 "185486000" "(tlb_g[47] || (tlb_asid[47] == probe_asid)) 1 -1" (1 "00")
+Condition 242 "185486000" "(tlb_g[47] || (tlb_asid[47] == probe_asid)) 1 -1" (2 "01")
+Condition 242 "185486000" "(tlb_g[47] || (tlb_asid[47] == probe_asid)) 1 -1" (3 "10")
+Condition 243 "1264857792" "(tlb_asid[47] == probe_asid) 1 -1" (2 "1")
+Condition 244 "745181064" "(g_probe[47].vpn2_match && g_probe[47].asid_match) 1 -1" (1 "01")
+Condition 244 "745181064" "(g_probe[47].vpn2_match && g_probe[47].asid_match) 1 -1" (2 "10")
+Condition 244 "745181064" "(g_probe[47].vpn2_match && g_probe[47].asid_match) 1 -1" (3 "11")
+Condition 245 "3078719204" "(tlb_valid[48] && (((tlb_vpn2[48] ^ probe_vpn2) & g_probe[48].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 245 "3078719204" "(tlb_valid[48] && (((tlb_vpn2[48] ^ probe_vpn2) & g_probe[48].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 245 "3078719204" "(tlb_valid[48] && (((tlb_vpn2[48] ^ probe_vpn2) & g_probe[48].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 246 "1991933184" "(((tlb_vpn2[48] ^ probe_vpn2) & g_probe[48].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 247 "139239264" "(tlb_g[48] || (tlb_asid[48] == probe_asid)) 1 -1" (1 "00")
+Condition 247 "139239264" "(tlb_g[48] || (tlb_asid[48] == probe_asid)) 1 -1" (2 "01")
+Condition 247 "139239264" "(tlb_g[48] || (tlb_asid[48] == probe_asid)) 1 -1" (3 "10")
+Condition 248 "3684165204" "(tlb_asid[48] == probe_asid) 1 -1" (2 "1")
+Condition 249 "3929240693" "(g_probe[48].vpn2_match && g_probe[48].asid_match) 1 -1" (1 "01")
+Condition 249 "3929240693" "(g_probe[48].vpn2_match && g_probe[48].asid_match) 1 -1" (2 "10")
+Condition 249 "3929240693" "(g_probe[48].vpn2_match && g_probe[48].asid_match) 1 -1" (3 "11")
+Condition 250 "1127357863" "(tlb_valid[49] && (((tlb_vpn2[49] ^ probe_vpn2) & g_probe[49].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 250 "1127357863" "(tlb_valid[49] && (((tlb_vpn2[49] ^ probe_vpn2) & g_probe[49].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 250 "1127357863" "(tlb_valid[49] && (((tlb_vpn2[49] ^ probe_vpn2) & g_probe[49].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 251 "3177989346" "(((tlb_vpn2[49] ^ probe_vpn2) & g_probe[49].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 252 "587969281" "(tlb_g[49] || (tlb_asid[49] == probe_asid)) 1 -1" (1 "00")
+Condition 252 "587969281" "(tlb_g[49] || (tlb_asid[49] == probe_asid)) 1 -1" (2 "01")
+Condition 252 "587969281" "(tlb_g[49] || (tlb_asid[49] == probe_asid)) 1 -1" (3 "10")
+Condition 253 "930914129" "(tlb_asid[49] == probe_asid) 1 -1" (2 "1")
+Condition 254 "3736412473" "(g_probe[49].vpn2_match && g_probe[49].asid_match) 1 -1" (1 "01")
+Condition 254 "3736412473" "(g_probe[49].vpn2_match && g_probe[49].asid_match) 1 -1" (2 "10")
+Condition 254 "3736412473" "(g_probe[49].vpn2_match && g_probe[49].asid_match) 1 -1" (3 "11")
+Condition 255 "1892195143" "(tlb_valid[50] && (((tlb_vpn2[50] ^ probe_vpn2) & g_probe[50].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 255 "1892195143" "(tlb_valid[50] && (((tlb_vpn2[50] ^ probe_vpn2) & g_probe[50].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 255 "1892195143" "(tlb_valid[50] && (((tlb_vpn2[50] ^ probe_vpn2) & g_probe[50].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 256 "2021162833" "(((tlb_vpn2[50] ^ probe_vpn2) & g_probe[50].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 257 "3312793475" "(tlb_g[50] || (tlb_asid[50] == probe_asid)) 1 -1" (1 "00")
+Condition 257 "3312793475" "(tlb_g[50] || (tlb_asid[50] == probe_asid)) 1 -1" (2 "01")
+Condition 257 "3312793475" "(tlb_g[50] || (tlb_asid[50] == probe_asid)) 1 -1" (3 "10")
+Condition 258 "641887341" "(tlb_asid[50] == probe_asid) 1 -1" (2 "1")
+Condition 259 "572635696" "(g_probe[50].vpn2_match && g_probe[50].asid_match) 1 -1" (1 "01")
+Condition 259 "572635696" "(g_probe[50].vpn2_match && g_probe[50].asid_match) 1 -1" (2 "10")
+Condition 259 "572635696" "(g_probe[50].vpn2_match && g_probe[50].asid_match) 1 -1" (3 "11")
+Condition 260 "2222653444" "(tlb_valid[51] && (((tlb_vpn2[51] ^ probe_vpn2) & g_probe[51].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 260 "2222653444" "(tlb_valid[51] && (((tlb_vpn2[51] ^ probe_vpn2) & g_probe[51].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 260 "2222653444" "(tlb_valid[51] && (((tlb_vpn2[51] ^ probe_vpn2) & g_probe[51].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 261 "3014543027" "(((tlb_vpn2[51] ^ probe_vpn2) & g_probe[51].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 262 "3996261346" "(tlb_g[51] || (tlb_asid[51] == probe_asid)) 1 -1" (1 "00")
+Condition 262 "3996261346" "(tlb_g[51] || (tlb_asid[51] == probe_asid)) 1 -1" (2 "01")
+Condition 262 "3996261346" "(tlb_g[51] || (tlb_asid[51] == probe_asid)) 1 -1" (3 "10")
+Condition 263 "3400078696" "(tlb_asid[51] == probe_asid) 1 -1" (2 "1")
+Condition 264 "380104572" "(g_probe[51].vpn2_match && g_probe[51].asid_match) 1 -1" (1 "01")
+Condition 264 "380104572" "(g_probe[51].vpn2_match && g_probe[51].asid_match) 1 -1" (2 "10")
+Condition 264 "380104572" "(g_probe[51].vpn2_match && g_probe[51].asid_match) 1 -1" (3 "11")
+Condition 265 "2309558286" "(tlb_valid[52] && (((tlb_vpn2[52] ^ probe_vpn2) & g_probe[52].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 265 "2309558286" "(tlb_valid[52] && (((tlb_vpn2[52] ^ probe_vpn2) & g_probe[52].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 265 "2309558286" "(tlb_valid[52] && (((tlb_vpn2[52] ^ probe_vpn2) & g_probe[52].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 266 "3634981601" "(((tlb_vpn2[52] ^ probe_vpn2) & g_probe[52].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 267 "980094286" "(tlb_g[52] || (tlb_asid[52] == probe_asid)) 1 -1" (1 "00")
+Condition 267 "980094286" "(tlb_g[52] || (tlb_asid[52] == probe_asid)) 1 -1" (2 "01")
+Condition 267 "980094286" "(tlb_g[52] || (tlb_asid[52] == probe_asid)) 1 -1" (3 "10")
+Condition 268 "2671819161" "(tlb_asid[52] == probe_asid) 1 -1" (2 "1")
+Condition 269 "113095340" "(g_probe[52].vpn2_match && g_probe[52].asid_match) 1 -1" (1 "01")
+Condition 269 "113095340" "(g_probe[52].vpn2_match && g_probe[52].asid_match) 1 -1" (2 "10")
+Condition 269 "113095340" "(g_probe[52].vpn2_match && g_probe[52].asid_match) 1 -1" (3 "11")
+Condition 270 "2098891597" "(tlb_valid[53] && (((tlb_vpn2[53] ^ probe_vpn2) & g_probe[53].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 270 "2098891597" "(tlb_valid[53] && (((tlb_vpn2[53] ^ probe_vpn2) & g_probe[53].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 270 "2098891597" "(tlb_valid[53] && (((tlb_vpn2[53] ^ probe_vpn2) & g_probe[53].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 271 "327111427" "(((tlb_vpn2[53] ^ probe_vpn2) & g_probe[53].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 272 "288104751" "(tlb_g[53] || (tlb_asid[53] == probe_asid)) 1 -1" (1 "00")
+Condition 272 "288104751" "(tlb_g[53] || (tlb_asid[53] == probe_asid)) 1 -1" (2 "01")
+Condition 272 "288104751" "(tlb_g[53] || (tlb_asid[53] == probe_asid)) 1 -1" (3 "10")
+Condition 273 "1940635804" "(tlb_asid[53] == probe_asid) 1 -1" (2 "1")
+Condition 274 "842786784" "(g_probe[53].vpn2_match && g_probe[53].asid_match) 1 -1" (1 "01")
+Condition 274 "842786784" "(g_probe[53].vpn2_match && g_probe[53].asid_match) 1 -1" (2 "10")
+Condition 274 "842786784" "(g_probe[53].vpn2_match && g_probe[53].asid_match) 1 -1" (3 "11")
+Condition 275 "1607774306" "(tlb_valid[54] && (((tlb_vpn2[54] ^ probe_vpn2) & g_probe[54].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 275 "1607774306" "(tlb_valid[54] && (((tlb_vpn2[54] ^ probe_vpn2) & g_probe[54].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 275 "1607774306" "(tlb_valid[54] && (((tlb_vpn2[54] ^ probe_vpn2) & g_probe[54].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 276 "3454034515" "(((tlb_vpn2[54] ^ probe_vpn2) & g_probe[54].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 277 "3980022310" "(tlb_g[54] || (tlb_asid[54] == probe_asid)) 1 -1" (1 "00")
+Condition 277 "3980022310" "(tlb_g[54] || (tlb_asid[54] == probe_asid)) 1 -1" (2 "01")
+Condition 277 "3980022310" "(tlb_g[54] || (tlb_asid[54] == probe_asid)) 1 -1" (3 "10")
+Condition 278 "3132679253" "(tlb_asid[54] == probe_asid) 1 -1" (2 "1")
+Condition 279 "44460907" "(g_probe[54].vpn2_match && g_probe[54].asid_match) 1 -1" (1 "01")
+Condition 279 "44460907" "(g_probe[54].vpn2_match && g_probe[54].asid_match) 1 -1" (2 "10")
+Condition 279 "44460907" "(g_probe[54].vpn2_match && g_probe[54].asid_match) 1 -1" (3 "11")
+Condition 280 "2875665185" "(tlb_valid[55] && (((tlb_vpn2[55] ^ probe_vpn2) & g_probe[55].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 280 "2875665185" "(tlb_valid[55] && (((tlb_vpn2[55] ^ probe_vpn2) & g_probe[55].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 280 "2875665185" "(tlb_valid[55] && (((tlb_vpn2[55] ^ probe_vpn2) & g_probe[55].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 281 "104225713" "(((tlb_vpn2[55] ^ probe_vpn2) & g_probe[55].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 282 "3330113095" "(tlb_g[55] || (tlb_asid[55] == probe_asid)) 1 -1" (1 "00")
+Condition 282 "3330113095" "(tlb_g[55] || (tlb_asid[55] == probe_asid)) 1 -1" (2 "01")
+Condition 282 "3330113095" "(tlb_g[55] || (tlb_asid[55] == probe_asid)) 1 -1" (3 "10")
+Condition 283 "1448320336" "(tlb_asid[55] == probe_asid) 1 -1" (2 "1")
+Condition 284 "908082727" "(g_probe[55].vpn2_match && g_probe[55].asid_match) 1 -1" (1 "01")
+Condition 284 "908082727" "(g_probe[55].vpn2_match && g_probe[55].asid_match) 1 -1" (2 "10")
+Condition 284 "908082727" "(g_probe[55].vpn2_match && g_probe[55].asid_match) 1 -1" (3 "11")
+Condition 285 "2796895019" "(tlb_valid[56] && (((tlb_vpn2[56] ^ probe_vpn2) & g_probe[56].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 285 "2796895019" "(tlb_valid[56] && (((tlb_vpn2[56] ^ probe_vpn2) & g_probe[56].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 285 "2796895019" "(tlb_valid[56] && (((tlb_vpn2[56] ^ probe_vpn2) & g_probe[56].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 286 "1831958499" "(((tlb_vpn2[56] ^ probe_vpn2) & g_probe[56].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 287 "304376043" "(tlb_g[56] || (tlb_asid[56] == probe_asid)) 1 -1" (1 "00")
+Condition 287 "304376043" "(tlb_g[56] || (tlb_asid[56] == probe_asid)) 1 -1" (2 "01")
+Condition 287 "304376043" "(tlb_g[56] || (tlb_asid[56] == probe_asid)) 1 -1" (3 "10")
+Condition 288 "62534049" "(tlb_asid[56] == probe_asid) 1 -1" (2 "1")
+Condition 289 "641360887" "(g_probe[56].vpn2_match && g_probe[56].asid_match) 1 -1" (1 "01")
+Condition 289 "641360887" "(g_probe[56].vpn2_match && g_probe[56].asid_match) 1 -1" (2 "10")
+Condition 289 "641360887" "(g_probe[56].vpn2_match && g_probe[56].asid_match) 1 -1" (3 "11")
+Condition 290 "1376165992" "(tlb_valid[57] && (((tlb_vpn2[57] ^ probe_vpn2) & g_probe[57].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 290 "1376165992" "(tlb_valid[57] && (((tlb_vpn2[57] ^ probe_vpn2) & g_probe[57].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 290 "1376165992" "(tlb_valid[57] && (((tlb_vpn2[57] ^ probe_vpn2) & g_probe[57].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 291 "2800176641" "(((tlb_vpn2[57] ^ probe_vpn2) & g_probe[57].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 292 "962806922" "(tlb_g[57] || (tlb_asid[57] == probe_asid)) 1 -1" (1 "00")
+Condition 292 "962806922" "(tlb_g[57] || (tlb_asid[57] == probe_asid)) 1 -1" (2 "01")
+Condition 292 "962806922" "(tlb_g[57] || (tlb_asid[57] == probe_asid)) 1 -1" (3 "10")
+Condition 293 "4015081636" "(tlb_asid[57] == probe_asid) 1 -1" (2 "1")
+Condition 294 "314324667" "(g_probe[57].vpn2_match && g_probe[57].asid_match) 1 -1" (1 "01")
+Condition 294 "314324667" "(g_probe[57].vpn2_match && g_probe[57].asid_match) 1 -1" (2 "10")
+Condition 294 "314324667" "(g_probe[57].vpn2_match && g_probe[57].asid_match) 1 -1" (3 "11")
+Condition 295 "990336842" "(tlb_valid[58] && (((tlb_vpn2[58] ^ probe_vpn2) & g_probe[58].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 295 "990336842" "(tlb_valid[58] && (((tlb_vpn2[58] ^ probe_vpn2) & g_probe[58].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 295 "990336842" "(tlb_valid[58] && (((tlb_vpn2[58] ^ probe_vpn2) & g_probe[58].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 296 "166246637" "(((tlb_vpn2[58] ^ probe_vpn2) & g_probe[58].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 297 "975278426" "(tlb_g[58] || (tlb_asid[58] == probe_asid)) 1 -1" (1 "00")
+Condition 297 "975278426" "(tlb_g[58] || (tlb_asid[58] == probe_asid)) 1 -1" (2 "01")
+Condition 297 "975278426" "(tlb_g[58] || (tlb_asid[58] == probe_asid)) 1 -1" (3 "10")
+Condition 298 "2141363248" "(tlb_asid[58] == probe_asid) 1 -1" (2 "1")
+Condition 299 "3571830086" "(g_probe[58].vpn2_match && g_probe[58].asid_match) 1 -1" (1 "01")
+Condition 299 "3571830086" "(g_probe[58].vpn2_match && g_probe[58].asid_match) 1 -1" (2 "10")
+Condition 299 "3571830086" "(g_probe[58].vpn2_match && g_probe[58].asid_match) 1 -1" (3 "11")
+Condition 300 "3484732425" "(tlb_valid[59] && (((tlb_vpn2[59] ^ probe_vpn2) & g_probe[59].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 300 "3484732425" "(tlb_valid[59] && (((tlb_vpn2[59] ^ probe_vpn2) & g_probe[59].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 300 "3484732425" "(tlb_valid[59] && (((tlb_vpn2[59] ^ probe_vpn2) & g_probe[59].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 301 "3258876175" "(((tlb_vpn2[59] ^ probe_vpn2) & g_probe[59].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 302 "291945787" "(tlb_g[59] || (tlb_asid[59] == probe_asid)) 1 -1" (1 "00")
+Condition 302 "291945787" "(tlb_g[59] || (tlb_asid[59] == probe_asid)) 1 -1" (2 "01")
+Condition 302 "291945787" "(tlb_g[59] || (tlb_asid[59] == probe_asid)) 1 -1" (3 "10")
+Condition 303 "2471093557" "(tlb_asid[59] == probe_asid) 1 -1" (2 "1")
+Condition 304 "3764623370" "(g_probe[59].vpn2_match && g_probe[59].asid_match) 1 -1" (1 "01")
+Condition 304 "3764623370" "(g_probe[59].vpn2_match && g_probe[59].asid_match) 1 -1" (2 "10")
+Condition 304 "3764623370" "(g_probe[59].vpn2_match && g_probe[59].asid_match) 1 -1" (3 "11")
+Condition 305 "3011107830" "(tlb_valid[60] && (((tlb_vpn2[60] ^ probe_vpn2) & g_probe[60].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 305 "3011107830" "(tlb_valid[60] && (((tlb_vpn2[60] ^ probe_vpn2) & g_probe[60].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 305 "3011107830" "(tlb_valid[60] && (((tlb_vpn2[60] ^ probe_vpn2) & g_probe[60].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 306 "3512549059" "(((tlb_vpn2[60] ^ probe_vpn2) & g_probe[60].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 307 "2901645675" "(tlb_g[60] || (tlb_asid[60] == probe_asid)) 1 -1" (1 "00")
+Condition 307 "2901645675" "(tlb_g[60] || (tlb_asid[60] == probe_asid)) 1 -1" (2 "01")
+Condition 307 "2901645675" "(tlb_g[60] || (tlb_asid[60] == probe_asid)) 1 -1" (3 "10")
+Condition 308 "3949168940" "(tlb_asid[60] == probe_asid) 1 -1" (2 "1")
+Condition 309 "866213521" "(g_probe[60].vpn2_match && g_probe[60].asid_match) 1 -1" (1 "01")
+Condition 309 "866213521" "(g_probe[60].vpn2_match && g_probe[60].asid_match) 1 -1" (2 "10")
+Condition 309 "866213521" "(g_probe[60].vpn2_match && g_probe[60].asid_match) 1 -1" (3 "11")
+Condition 310 "1204437173" "(tlb_valid[61] && (((tlb_vpn2[61] ^ probe_vpn2) & g_probe[61].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 310 "1204437173" "(tlb_valid[61] && (((tlb_vpn2[61] ^ probe_vpn2) & g_probe[61].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 310 "1204437173" "(tlb_valid[61] && (((tlb_vpn2[61] ^ probe_vpn2) & g_probe[61].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 311 "445318945" "(((tlb_vpn2[61] ^ probe_vpn2) & g_probe[61].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 312 "2276766986" "(tlb_g[61] || (tlb_asid[61] == probe_asid)) 1 -1" (1 "00")
+Condition 312 "2276766986" "(tlb_g[61] || (tlb_asid[61] == probe_asid)) 1 -1" (2 "01")
+Condition 312 "2276766986" "(tlb_g[61] || (tlb_asid[61] == probe_asid)) 1 -1" (3 "10")
+Condition 313 "126414889" "(tlb_asid[61] == probe_asid) 1 -1" (2 "1")
+Condition 314 "119999453" "(g_probe[61].vpn2_match && g_probe[61].asid_match) 1 -1" (1 "01")
+Condition 314 "119999453" "(g_probe[61].vpn2_match && g_probe[61].asid_match) 1 -1" (2 "10")
+Condition 314 "119999453" "(g_probe[61].vpn2_match && g_probe[61].asid_match) 1 -1" (3 "11")
+Condition 315 "1243107519" "(tlb_valid[62] && (((tlb_vpn2[62] ^ probe_vpn2) & g_probe[62].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 315 "1243107519" "(tlb_valid[62] && (((tlb_vpn2[62] ^ probe_vpn2) & g_probe[62].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 315 "1243107519" "(tlb_valid[62] && (((tlb_vpn2[62] ^ probe_vpn2) & g_probe[62].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 316 "1905011571" "(((tlb_vpn2[62] ^ probe_vpn2) & g_probe[62].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 317 "1408082854" "(tlb_g[62] || (tlb_asid[62] == probe_asid)) 1 -1" (1 "00")
+Condition 317 "1408082854" "(tlb_g[62] || (tlb_asid[62] == probe_asid)) 1 -1" (2 "01")
+Condition 317 "1408082854" "(tlb_g[62] || (tlb_asid[62] == probe_asid)) 1 -1" (3 "10")
+Condition 318 "1382112472" "(tlb_asid[62] == probe_asid) 1 -1" (2 "1")
+Condition 319 "389895693" "(g_probe[62].vpn2_match && g_probe[62].asid_match) 1 -1" (1 "01")
+Condition 319 "389895693" "(g_probe[62].vpn2_match && g_probe[62].asid_match) 1 -1" (2 "10")
+Condition 319 "389895693" "(g_probe[62].vpn2_match && g_probe[62].asid_match) 1 -1" (3 "11")
+Condition 320 "3198929916" "(tlb_valid[63] && (((tlb_vpn2[63] ^ probe_vpn2) & g_probe[63].cmp_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 320 "3198929916" "(tlb_valid[63] && (((tlb_vpn2[63] ^ probe_vpn2) & g_probe[63].cmp_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 320 "3198929916" "(tlb_valid[63] && (((tlb_vpn2[63] ^ probe_vpn2) & g_probe[63].cmp_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 321 "3126465169" "(((tlb_vpn2[63] ^ probe_vpn2) & g_probe[63].cmp_mask) == 19'b0) 1 -1" (2 "1")
+Condition 322 "2024443847" "(tlb_g[63] || (tlb_asid[63] == probe_asid)) 1 -1" (1 "00")
+Condition 322 "2024443847" "(tlb_g[63] || (tlb_asid[63] == probe_asid)) 1 -1" (2 "01")
+Condition 322 "2024443847" "(tlb_g[63] || (tlb_asid[63] == probe_asid)) 1 -1" (3 "10")
+Condition 323 "3196724701" "(tlb_asid[63] == probe_asid) 1 -1" (2 "1")
+Condition 324 "599458625" "(g_probe[63].vpn2_match && g_probe[63].asid_match) 1 -1" (1 "01")
+Condition 324 "599458625" "(g_probe[63].vpn2_match && g_probe[63].asid_match) 1 -1" (2 "10")
+Condition 324 "599458625" "(g_probe[63].vpn2_match && g_probe[63].asid_match) 1 -1" (3 "11")
+Condition 325 "2272814258" "(tlb_valid[0] && (((tlb_vpn2[0] ^ lookup0_vpn2) & g_lookup0[0].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 325 "2272814258" "(tlb_valid[0] && (((tlb_vpn2[0] ^ lookup0_vpn2) & g_lookup0[0].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 325 "2272814258" "(tlb_valid[0] && (((tlb_vpn2[0] ^ lookup0_vpn2) & g_lookup0[0].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 326 "4012168350" "(((tlb_vpn2[0] ^ lookup0_vpn2) & g_lookup0[0].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 327 "2304708881" "(tlb_g[0] || (tlb_asid[0] == lookup0_asid)) 1 -1" (1 "00")
+Condition 327 "2304708881" "(tlb_g[0] || (tlb_asid[0] == lookup0_asid)) 1 -1" (2 "01")
+Condition 327 "2304708881" "(tlb_g[0] || (tlb_asid[0] == lookup0_asid)) 1 -1" (3 "10")
+Condition 328 "1260212093" "(tlb_asid[0] == lookup0_asid) 1 -1" (2 "1")
+Condition 329 "1739188960" "(g_lookup0[0].vpn2_match0 && g_lookup0[0].asid_match0) 1 -1" (1 "01")
+Condition 329 "1739188960" "(g_lookup0[0].vpn2_match0 && g_lookup0[0].asid_match0) 1 -1" (2 "10")
+Condition 329 "1739188960" "(g_lookup0[0].vpn2_match0 && g_lookup0[0].asid_match0) 1 -1" (3 "11")
+Condition 330 "3485396195" "(tlb_valid[1] && (((tlb_vpn2[1] ^ lookup0_vpn2) & g_lookup0[1].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 330 "3485396195" "(tlb_valid[1] && (((tlb_vpn2[1] ^ lookup0_vpn2) & g_lookup0[1].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 330 "3485396195" "(tlb_valid[1] && (((tlb_vpn2[1] ^ lookup0_vpn2) & g_lookup0[1].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 331 "1504406398" "(((tlb_vpn2[1] ^ lookup0_vpn2) & g_lookup0[1].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 332 "3467473815" "(tlb_g[1] || (tlb_asid[1] == lookup0_asid)) 1 -1" (1 "00")
+Condition 332 "3467473815" "(tlb_g[1] || (tlb_asid[1] == lookup0_asid)) 1 -1" (2 "01")
+Condition 332 "3467473815" "(tlb_g[1] || (tlb_asid[1] == lookup0_asid)) 1 -1" (3 "10")
+Condition 333 "2905203219" "(tlb_asid[1] == lookup0_asid) 1 -1" (2 "1")
+Condition 334 "350510844" "(g_lookup0[1].vpn2_match0 && g_lookup0[1].asid_match0) 1 -1" (1 "01")
+Condition 334 "350510844" "(g_lookup0[1].vpn2_match0 && g_lookup0[1].asid_match0) 1 -1" (2 "10")
+Condition 334 "350510844" "(g_lookup0[1].vpn2_match0 && g_lookup0[1].asid_match0) 1 -1" (3 "11")
+Condition 335 "926680993" "(tlb_valid[2] && (((tlb_vpn2[2] ^ lookup0_vpn2) & g_lookup0[2].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 335 "926680993" "(tlb_valid[2] && (((tlb_vpn2[2] ^ lookup0_vpn2) & g_lookup0[2].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 335 "926680993" "(tlb_valid[2] && (((tlb_vpn2[2] ^ lookup0_vpn2) & g_lookup0[2].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 336 "3530732553" "(((tlb_vpn2[2] ^ lookup0_vpn2) & g_lookup0[2].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 337 "3352691201" "(tlb_g[2] || (tlb_asid[2] == lookup0_asid)) 1 -1" (1 "00")
+Condition 337 "3352691201" "(tlb_g[2] || (tlb_asid[2] == lookup0_asid)) 1 -1" (2 "01")
+Condition 337 "3352691201" "(tlb_g[2] || (tlb_asid[2] == lookup0_asid)) 1 -1" (3 "10")
+Condition 338 "742948724" "(tlb_asid[2] == lookup0_asid) 1 -1" (2 "1")
+Condition 339 "3020562067" "(g_lookup0[2].vpn2_match0 && g_lookup0[2].asid_match0) 1 -1" (1 "01")
+Condition 339 "3020562067" "(g_lookup0[2].vpn2_match0 && g_lookup0[2].asid_match0) 1 -1" (2 "10")
+Condition 339 "3020562067" "(g_lookup0[2].vpn2_match0 && g_lookup0[2].asid_match0) 1 -1" (3 "11")
+Condition 340 "2147127280" "(tlb_valid[3] && (((tlb_vpn2[3] ^ lookup0_vpn2) & g_lookup0[3].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 340 "2147127280" "(tlb_valid[3] && (((tlb_vpn2[3] ^ lookup0_vpn2) & g_lookup0[3].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 340 "2147127280" "(tlb_valid[3] && (((tlb_vpn2[3] ^ lookup0_vpn2) & g_lookup0[3].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 341 "1694305257" "(((tlb_vpn2[3] ^ lookup0_vpn2) & g_lookup0[3].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 342 "2149867655" "(tlb_g[3] || (tlb_asid[3] == lookup0_asid)) 1 -1" (1 "00")
+Condition 342 "2149867655" "(tlb_g[3] || (tlb_asid[3] == lookup0_asid)) 1 -1" (2 "01")
+Condition 342 "2149867655" "(tlb_g[3] || (tlb_asid[3] == lookup0_asid)) 1 -1" (3 "10")
+Condition 343 "3397177882" "(tlb_asid[3] == lookup0_asid) 1 -1" (2 "1")
+Condition 344 "3343362703" "(g_lookup0[3].vpn2_match0 && g_lookup0[3].asid_match0) 1 -1" (1 "01")
+Condition 344 "3343362703" "(g_lookup0[3].vpn2_match0 && g_lookup0[3].asid_match0) 1 -1" (2 "10")
+Condition 344 "3343362703" "(g_lookup0[3].vpn2_match0 && g_lookup0[3].asid_match0) 1 -1" (3 "11")
+Condition 345 "953802158" "(tlb_valid[4] && (((tlb_vpn2[4] ^ lookup0_vpn2) & g_lookup0[4].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 345 "953802158" "(tlb_valid[4] && (((tlb_vpn2[4] ^ lookup0_vpn2) & g_lookup0[4].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 345 "953802158" "(tlb_valid[4] && (((tlb_vpn2[4] ^ lookup0_vpn2) & g_lookup0[4].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 346 "3129969663" "(((tlb_vpn2[4] ^ lookup0_vpn2) & g_lookup0[4].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 347 "1871192483" "(tlb_g[4] || (tlb_asid[4] == lookup0_asid)) 1 -1" (1 "00")
+Condition 347 "1871192483" "(tlb_g[4] || (tlb_asid[4] == lookup0_asid)) 1 -1" (2 "01")
+Condition 347 "1871192483" "(tlb_g[4] || (tlb_asid[4] == lookup0_asid)) 1 -1" (3 "10")
+Condition 348 "3721293208" "(tlb_asid[4] == lookup0_asid) 1 -1" (2 "1")
+Condition 349 "2745098817" "(g_lookup0[4].vpn2_match0 && g_lookup0[4].asid_match0) 1 -1" (1 "01")
+Condition 349 "2745098817" "(g_lookup0[4].vpn2_match0 && g_lookup0[4].asid_match0) 1 -1" (2 "10")
+Condition 349 "2745098817" "(g_lookup0[4].vpn2_match0 && g_lookup0[4].asid_match0) 1 -1" (3 "11")
+Condition 350 "1881101823" "(tlb_valid[5] && (((tlb_vpn2[5] ^ lookup0_vpn2) & g_lookup0[5].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 350 "1881101823" "(tlb_valid[5] && (((tlb_vpn2[5] ^ lookup0_vpn2) & g_lookup0[5].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 350 "1881101823" "(tlb_valid[5] && (((tlb_vpn2[5] ^ lookup0_vpn2) & g_lookup0[5].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 351 "201339935" "(((tlb_vpn2[5] ^ lookup0_vpn2) & g_lookup0[5].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 352 "679101221" "(tlb_g[5] || (tlb_asid[5] == lookup0_asid)) 1 -1" (1 "00")
+Condition 352 "679101221" "(tlb_g[5] || (tlb_asid[5] == lookup0_asid)) 1 -1" (2 "01")
+Condition 352 "679101221" "(tlb_g[5] || (tlb_asid[5] == lookup0_asid)) 1 -1" (3 "10")
+Condition 353 "1006289142" "(tlb_asid[5] == lookup0_asid) 1 -1" (2 "1")
+Condition 354 "3503511133" "(g_lookup0[5].vpn2_match0 && g_lookup0[5].asid_match0) 1 -1" (1 "01")
+Condition 354 "3503511133" "(g_lookup0[5].vpn2_match0 && g_lookup0[5].asid_match0) 1 -1" (2 "10")
+Condition 354 "3503511133" "(g_lookup0[5].vpn2_match0 && g_lookup0[5].asid_match0) 1 -1" (3 "11")
+Condition 355 "2292039357" "(tlb_valid[6] && (((tlb_vpn2[6] ^ lookup0_vpn2) & g_lookup0[6].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 355 "2292039357" "(tlb_valid[6] && (((tlb_vpn2[6] ^ lookup0_vpn2) & g_lookup0[6].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 355 "2292039357" "(tlb_valid[6] && (((tlb_vpn2[6] ^ lookup0_vpn2) & g_lookup0[6].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 356 "2279205736" "(((tlb_vpn2[6] ^ lookup0_vpn2) & g_lookup0[6].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 357 "553726643" "(tlb_g[6] || (tlb_asid[6] == lookup0_asid)) 1 -1" (1 "00")
+Condition 357 "553726643" "(tlb_g[6] || (tlb_asid[6] == lookup0_asid)) 1 -1" (2 "01")
+Condition 357 "553726643" "(tlb_g[6] || (tlb_asid[6] == lookup0_asid)) 1 -1" (3 "10")
+Condition 358 "3130744209" "(tlb_asid[6] == lookup0_asid) 1 -1" (2 "1")
+Condition 359 "1883051570" "(g_lookup0[6].vpn2_match0 && g_lookup0[6].asid_match0) 1 -1" (1 "01")
+Condition 359 "1883051570" "(g_lookup0[6].vpn2_match0 && g_lookup0[6].asid_match0) 1 -1" (2 "10")
+Condition 359 "1883051570" "(g_lookup0[6].vpn2_match0 && g_lookup0[6].asid_match0) 1 -1" (3 "11")
+Condition 360 "3227203308" "(tlb_valid[7] && (((tlb_vpn2[7] ^ lookup0_vpn2) & g_lookup0[7].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 360 "3227203308" "(tlb_valid[7] && (((tlb_vpn2[7] ^ lookup0_vpn2) & g_lookup0[7].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 360 "3227203308" "(tlb_valid[7] && (((tlb_vpn2[7] ^ lookup0_vpn2) & g_lookup0[7].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 361 "827741320" "(((tlb_vpn2[7] ^ lookup0_vpn2) & g_lookup0[7].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 362 "1727221813" "(tlb_g[7] || (tlb_asid[7] == lookup0_asid)) 1 -1" (1 "00")
+Condition 362 "1727221813" "(tlb_g[7] || (tlb_asid[7] == lookup0_asid)) 1 -1" (2 "01")
+Condition 362 "1727221813" "(tlb_g[7] || (tlb_asid[7] == lookup0_asid)) 1 -1" (3 "10")
+Condition 363 "1555034367" "(tlb_asid[7] == lookup0_asid) 1 -1" (2 "1")
+Condition 364 "57713198" "(g_lookup0[7].vpn2_match0 && g_lookup0[7].asid_match0) 1 -1" (1 "01")
+Condition 364 "57713198" "(g_lookup0[7].vpn2_match0 && g_lookup0[7].asid_match0) 1 -1" (2 "10")
+Condition 364 "57713198" "(g_lookup0[7].vpn2_match0 && g_lookup0[7].asid_match0) 1 -1" (3 "11")
+Condition 365 "1574511144" "(tlb_valid[8] && (((tlb_vpn2[8] ^ lookup0_vpn2) & g_lookup0[8].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 365 "1574511144" "(tlb_valid[8] && (((tlb_vpn2[8] ^ lookup0_vpn2) & g_lookup0[8].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 365 "1574511144" "(tlb_valid[8] && (((tlb_vpn2[8] ^ lookup0_vpn2) & g_lookup0[8].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 366 "3461016285" "(((tlb_vpn2[8] ^ lookup0_vpn2) & g_lookup0[8].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 367 "3776136407" "(tlb_g[8] || (tlb_asid[8] == lookup0_asid)) 1 -1" (1 "00")
+Condition 367 "3776136407" "(tlb_g[8] || (tlb_asid[8] == lookup0_asid)) 1 -1" (2 "01")
+Condition 367 "3776136407" "(tlb_g[8] || (tlb_asid[8] == lookup0_asid)) 1 -1" (3 "10")
+Condition 368 "3896678273" "(tlb_asid[8] == lookup0_asid) 1 -1" (2 "1")
+Condition 369 "1465874792" "(g_lookup0[8].vpn2_match0 && g_lookup0[8].asid_match0) 1 -1" (1 "01")
+Condition 369 "1465874792" "(g_lookup0[8].vpn2_match0 && g_lookup0[8].asid_match0) 1 -1" (2 "10")
+Condition 369 "1465874792" "(g_lookup0[8].vpn2_match0 && g_lookup0[8].asid_match0) 1 -1" (3 "11")
+Condition 370 "354396793" "(tlb_valid[9] && (((tlb_vpn2[9] ^ lookup0_vpn2) & g_lookup0[9].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 370 "354396793" "(tlb_valid[9] && (((tlb_vpn2[9] ^ lookup0_vpn2) & g_lookup0[9].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 370 "354396793" "(tlb_valid[9] && (((tlb_vpn2[9] ^ lookup0_vpn2) & g_lookup0[9].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 371 "2026198333" "(((tlb_vpn2[9] ^ lookup0_vpn2) & g_lookup0[9].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 372 "2799773265" "(tlb_g[9] || (tlb_asid[9] == lookup0_asid)) 1 -1" (1 "00")
+Condition 372 "2799773265" "(tlb_g[9] || (tlb_asid[9] == lookup0_asid)) 1 -1" (2 "01")
+Condition 372 "2799773265" "(tlb_g[9] || (tlb_asid[9] == lookup0_asid)) 1 -1" (3 "10")
+Condition 373 "242629359" "(tlb_asid[9] == lookup0_asid) 1 -1" (2 "1")
+Condition 374 "605212020" "(g_lookup0[9].vpn2_match0 && g_lookup0[9].asid_match0) 1 -1" (1 "01")
+Condition 374 "605212020" "(g_lookup0[9].vpn2_match0 && g_lookup0[9].asid_match0) 1 -1" (2 "10")
+Condition 374 "605212020" "(g_lookup0[9].vpn2_match0 && g_lookup0[9].asid_match0) 1 -1" (3 "11")
+Condition 375 "1176449902" "(tlb_valid[10] && (((tlb_vpn2[10] ^ lookup0_vpn2) & g_lookup0[10].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 375 "1176449902" "(tlb_valid[10] && (((tlb_vpn2[10] ^ lookup0_vpn2) & g_lookup0[10].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 375 "1176449902" "(tlb_valid[10] && (((tlb_vpn2[10] ^ lookup0_vpn2) & g_lookup0[10].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 376 "3477176249" "(((tlb_vpn2[10] ^ lookup0_vpn2) & g_lookup0[10].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 377 "1850452170" "(tlb_g[10] || (tlb_asid[10] == lookup0_asid)) 1 -1" (1 "00")
+Condition 377 "1850452170" "(tlb_g[10] || (tlb_asid[10] == lookup0_asid)) 1 -1" (2 "01")
+Condition 377 "1850452170" "(tlb_g[10] || (tlb_asid[10] == lookup0_asid)) 1 -1" (3 "10")
+Condition 378 "1213467390" "(tlb_asid[10] == lookup0_asid) 1 -1" (2 "1")
+Condition 379 "3090772648" "(g_lookup0[10].vpn2_match0 && g_lookup0[10].asid_match0) 1 -1" (1 "01")
+Condition 379 "3090772648" "(g_lookup0[10].vpn2_match0 && g_lookup0[10].asid_match0) 1 -1" (2 "10")
+Condition 379 "3090772648" "(g_lookup0[10].vpn2_match0 && g_lookup0[10].asid_match0) 1 -1" (3 "11")
+Condition 380 "712832041" "(tlb_valid[11] && (((tlb_vpn2[11] ^ lookup0_vpn2) & g_lookup0[11].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 380 "712832041" "(tlb_valid[11] && (((tlb_vpn2[11] ^ lookup0_vpn2) & g_lookup0[11].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 380 "712832041" "(tlb_valid[11] && (((tlb_vpn2[11] ^ lookup0_vpn2) & g_lookup0[11].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 381 "1478840968" "(((tlb_vpn2[11] ^ lookup0_vpn2) & g_lookup0[11].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 382 "2982046387" "(tlb_g[11] || (tlb_asid[11] == lookup0_asid)) 1 -1" (1 "00")
+Condition 382 "2982046387" "(tlb_g[11] || (tlb_asid[11] == lookup0_asid)) 1 -1" (2 "01")
+Condition 382 "2982046387" "(tlb_g[11] || (tlb_asid[11] == lookup0_asid)) 1 -1" (3 "10")
+Condition 383 "279692987" "(tlb_asid[11] == lookup0_asid) 1 -1" (2 "1")
+Condition 384 "4096575386" "(g_lookup0[11].vpn2_match0 && g_lookup0[11].asid_match0) 1 -1" (1 "01")
+Condition 384 "4096575386" "(g_lookup0[11].vpn2_match0 && g_lookup0[11].asid_match0) 1 -1" (2 "10")
+Condition 384 "4096575386" "(g_lookup0[11].vpn2_match0 && g_lookup0[11].asid_match0) 1 -1" (3 "11")
+Condition 385 "2905545069" "(tlb_valid[12] && (((tlb_vpn2[12] ^ lookup0_vpn2) & g_lookup0[12].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 385 "2905545069" "(tlb_valid[12] && (((tlb_vpn2[12] ^ lookup0_vpn2) & g_lookup0[12].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 385 "2905545069" "(tlb_valid[12] && (((tlb_vpn2[12] ^ lookup0_vpn2) & g_lookup0[12].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 386 "3029739210" "(((tlb_vpn2[12] ^ lookup0_vpn2) & g_lookup0[12].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 387 "986569740" "(tlb_g[12] || (tlb_asid[12] == lookup0_asid)) 1 -1" (1 "00")
+Condition 387 "986569740" "(tlb_g[12] || (tlb_asid[12] == lookup0_asid)) 1 -1" (2 "01")
+Condition 387 "986569740" "(tlb_g[12] || (tlb_asid[12] == lookup0_asid)) 1 -1" (3 "10")
+Condition 388 "3407652449" "(tlb_asid[12] == lookup0_asid) 1 -1" (2 "1")
+Condition 389 "4729242" "(g_lookup0[12].vpn2_match0 && g_lookup0[12].asid_match0) 1 -1" (1 "01")
+Condition 389 "4729242" "(g_lookup0[12].vpn2_match0 && g_lookup0[12].asid_match0) 1 -1" (2 "10")
+Condition 389 "4729242" "(g_lookup0[12].vpn2_match0 && g_lookup0[12].asid_match0) 1 -1" (3 "11")
+Condition 390 "3243040298" "(tlb_valid[13] && (((tlb_vpn2[13] ^ lookup0_vpn2) & g_lookup0[13].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 390 "3243040298" "(tlb_valid[13] && (((tlb_vpn2[13] ^ lookup0_vpn2) & g_lookup0[13].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 390 "3243040298" "(tlb_valid[13] && (((tlb_vpn2[13] ^ lookup0_vpn2) & g_lookup0[13].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 391 "603065339" "(((tlb_vpn2[13] ^ lookup0_vpn2) & g_lookup0[13].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 392 "3845660277" "(tlb_g[13] || (tlb_asid[13] == lookup0_asid)) 1 -1" (1 "00")
+Condition 392 "3845660277" "(tlb_g[13] || (tlb_asid[13] == lookup0_asid)) 1 -1" (2 "01")
+Condition 392 "3845660277" "(tlb_g[13] || (tlb_asid[13] == lookup0_asid)) 1 -1" (3 "10")
+Condition 393 "2481154596" "(tlb_asid[13] == lookup0_asid) 1 -1" (2 "1")
+Condition 394 "1281203368" "(g_lookup0[13].vpn2_match0 && g_lookup0[13].asid_match0) 1 -1" (1 "01")
+Condition 394 "1281203368" "(g_lookup0[13].vpn2_match0 && g_lookup0[13].asid_match0) 1 -1" (2 "10")
+Condition 394 "1281203368" "(g_lookup0[13].vpn2_match0 && g_lookup0[13].asid_match0) 1 -1" (3 "11")
+Condition 395 "4217091360" "(tlb_valid[14] && (((tlb_vpn2[14] ^ lookup0_vpn2) & g_lookup0[14].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 395 "4217091360" "(tlb_valid[14] && (((tlb_vpn2[14] ^ lookup0_vpn2) & g_lookup0[14].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 395 "4217091360" "(tlb_valid[14] && (((tlb_vpn2[14] ^ lookup0_vpn2) & g_lookup0[14].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 396 "3804486525" "(((tlb_vpn2[14] ^ lookup0_vpn2) & g_lookup0[14].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 397 "1939075604" "(tlb_g[14] || (tlb_asid[14] == lookup0_asid)) 1 -1" (1 "00")
+Condition 397 "1939075604" "(tlb_g[14] || (tlb_asid[14] == lookup0_asid)) 1 -1" (2 "01")
+Condition 397 "1939075604" "(tlb_g[14] || (tlb_asid[14] == lookup0_asid)) 1 -1" (3 "10")
+Condition 398 "4096408844" "(tlb_asid[14] == lookup0_asid) 1 -1" (2 "1")
+Condition 399 "2779060504" "(g_lookup0[14].vpn2_match0 && g_lookup0[14].asid_match0) 1 -1" (1 "01")
+Condition 399 "2779060504" "(g_lookup0[14].vpn2_match0 && g_lookup0[14].asid_match0) 1 -1" (2 "10")
+Condition 399 "2779060504" "(g_lookup0[14].vpn2_match0 && g_lookup0[14].asid_match0) 1 -1" (3 "11")
+Condition 400 "2537058919" "(tlb_valid[15] && (((tlb_vpn2[15] ^ lookup0_vpn2) & g_lookup0[15].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 400 "2537058919" "(tlb_valid[15] && (((tlb_vpn2[15] ^ lookup0_vpn2) & g_lookup0[15].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 400 "2537058919" "(tlb_valid[15] && (((tlb_vpn2[15] ^ lookup0_vpn2) & g_lookup0[15].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 401 "1973941836" "(((tlb_vpn2[15] ^ lookup0_vpn2) & g_lookup0[15].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 402 "2892378221" "(tlb_g[15] || (tlb_asid[15] == lookup0_asid)) 1 -1" (1 "00")
+Condition 402 "2892378221" "(tlb_g[15] || (tlb_asid[15] == lookup0_asid)) 1 -1" (2 "01")
+Condition 402 "2892378221" "(tlb_g[15] || (tlb_asid[15] == lookup0_asid)) 1 -1" (3 "10")
+Condition 403 "2899702089" "(tlb_asid[15] == lookup0_asid) 1 -1" (2 "1")
+Condition 404 "3920669738" "(g_lookup0[15].vpn2_match0 && g_lookup0[15].asid_match0) 1 -1" (1 "01")
+Condition 404 "3920669738" "(g_lookup0[15].vpn2_match0 && g_lookup0[15].asid_match0) 1 -1" (2 "10")
+Condition 404 "3920669738" "(g_lookup0[15].vpn2_match0 && g_lookup0[15].asid_match0) 1 -1" (3 "11")
+Condition 405 "275488547" "(tlb_valid[16] && (((tlb_vpn2[16] ^ lookup0_vpn2) & g_lookup0[16].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 405 "275488547" "(tlb_valid[16] && (((tlb_vpn2[16] ^ lookup0_vpn2) & g_lookup0[16].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 405 "275488547" "(tlb_valid[16] && (((tlb_vpn2[16] ^ lookup0_vpn2) & g_lookup0[16].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 406 "2568258062" "(((tlb_vpn2[16] ^ lookup0_vpn2) & g_lookup0[16].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 407 "655722194" "(tlb_g[16] || (tlb_asid[16] == lookup0_asid)) 1 -1" (1 "00")
+Condition 407 "655722194" "(tlb_g[16] || (tlb_asid[16] == lookup0_asid)) 1 -1" (2 "01")
+Condition 407 "655722194" "(tlb_g[16] || (tlb_asid[16] == lookup0_asid)) 1 -1" (3 "10")
+Condition 408 "2002948499" "(tlb_asid[16] == lookup0_asid) 1 -1" (2 "1")
+Condition 409 "500449834" "(g_lookup0[16].vpn2_match0 && g_lookup0[16].asid_match0) 1 -1" (1 "01")
+Condition 409 "500449834" "(g_lookup0[16].vpn2_match0 && g_lookup0[16].asid_match0) 1 -1" (2 "10")
+Condition 409 "500449834" "(g_lookup0[16].vpn2_match0 && g_lookup0[16].asid_match0) 1 -1" (3 "11")
+Condition 410 "2080921700" "(tlb_valid[17] && (((tlb_vpn2[17] ^ lookup0_vpn2) & g_lookup0[17].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 410 "2080921700" "(tlb_valid[17] && (((tlb_vpn2[17] ^ lookup0_vpn2) & g_lookup0[17].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 410 "2080921700" "(tlb_valid[17] && (((tlb_vpn2[17] ^ lookup0_vpn2) & g_lookup0[17].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 411 "242265919" "(((tlb_vpn2[17] ^ lookup0_vpn2) & g_lookup0[17].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 412 "4175447211" "(tlb_g[17] || (tlb_asid[17] == lookup0_asid)) 1 -1" (1 "00")
+Condition 412 "4175447211" "(tlb_g[17] || (tlb_asid[17] == lookup0_asid)) 1 -1" (2 "01")
+Condition 412 "4175447211" "(tlb_g[17] || (tlb_asid[17] == lookup0_asid)) 1 -1" (3 "10")
+Condition 413 "798842326" "(tlb_asid[17] == lookup0_asid) 1 -1" (2 "1")
+Condition 414 "1371666200" "(g_lookup0[17].vpn2_match0 && g_lookup0[17].asid_match0) 1 -1" (1 "01")
+Condition 414 "1371666200" "(g_lookup0[17].vpn2_match0 && g_lookup0[17].asid_match0) 1 -1" (2 "10")
+Condition 414 "1371666200" "(g_lookup0[17].vpn2_match0 && g_lookup0[17].asid_match0) 1 -1" (3 "11")
+Condition 415 "2409428869" "(tlb_valid[18] && (((tlb_vpn2[18] ^ lookup0_vpn2) & g_lookup0[18].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 415 "2409428869" "(tlb_valid[18] && (((tlb_vpn2[18] ^ lookup0_vpn2) & g_lookup0[18].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 415 "2409428869" "(tlb_valid[18] && (((tlb_vpn2[18] ^ lookup0_vpn2) & g_lookup0[18].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 416 "4288156574" "(((tlb_vpn2[18] ^ lookup0_vpn2) & g_lookup0[18].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 417 "850237843" "(tlb_g[18] || (tlb_asid[18] == lookup0_asid)) 1 -1" (1 "00")
+Condition 417 "850237843" "(tlb_g[18] || (tlb_asid[18] == lookup0_asid)) 1 -1" (2 "01")
+Condition 417 "850237843" "(tlb_g[18] || (tlb_asid[18] == lookup0_asid)) 1 -1" (3 "10")
+Condition 418 "1772611299" "(tlb_asid[18] == lookup0_asid) 1 -1" (2 "1")
+Condition 419 "885682184" "(g_lookup0[18].vpn2_match0 && g_lookup0[18].asid_match0) 1 -1" (1 "01")
+Condition 419 "885682184" "(g_lookup0[18].vpn2_match0 && g_lookup0[18].asid_match0) 1 -1" (2 "10")
+Condition 419 "885682184" "(g_lookup0[18].vpn2_match0 && g_lookup0[18].asid_match0) 1 -1" (3 "11")
+Condition 420 "3825152194" "(tlb_valid[19] && (((tlb_vpn2[19] ^ lookup0_vpn2) & g_lookup0[19].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 420 "3825152194" "(tlb_valid[19] && (((tlb_vpn2[19] ^ lookup0_vpn2) & g_lookup0[19].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 420 "3825152194" "(tlb_valid[19] && (((tlb_vpn2[19] ^ lookup0_vpn2) & g_lookup0[19].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 421 "1761361583" "(((tlb_vpn2[19] ^ lookup0_vpn2) & g_lookup0[19].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 422 "3981990890" "(tlb_g[19] || (tlb_asid[19] == lookup0_asid)) 1 -1" (1 "00")
+Condition 422 "3981990890" "(tlb_g[19] || (tlb_asid[19] == lookup0_asid)) 1 -1" (2 "01")
+Condition 422 "3981990890" "(tlb_g[19] || (tlb_asid[19] == lookup0_asid)) 1 -1" (3 "10")
+Condition 423 "827861670" "(tlb_asid[19] == lookup0_asid) 1 -1" (2 "1")
+Condition 424 "2027930938" "(g_lookup0[19].vpn2_match0 && g_lookup0[19].asid_match0) 1 -1" (1 "01")
+Condition 424 "2027930938" "(g_lookup0[19].vpn2_match0 && g_lookup0[19].asid_match0) 1 -1" (2 "10")
+Condition 424 "2027930938" "(g_lookup0[19].vpn2_match0 && g_lookup0[19].asid_match0) 1 -1" (3 "11")
+Condition 425 "397860975" "(tlb_valid[20] && (((tlb_vpn2[20] ^ lookup0_vpn2) & g_lookup0[20].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 425 "397860975" "(tlb_valid[20] && (((tlb_vpn2[20] ^ lookup0_vpn2) & g_lookup0[20].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 425 "397860975" "(tlb_valid[20] && (((tlb_vpn2[20] ^ lookup0_vpn2) & g_lookup0[20].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 426 "2146721856" "(((tlb_vpn2[20] ^ lookup0_vpn2) & g_lookup0[20].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 427 "1896420708" "(tlb_g[20] || (tlb_asid[20] == lookup0_asid)) 1 -1" (1 "00")
+Condition 427 "1896420708" "(tlb_g[20] || (tlb_asid[20] == lookup0_asid)) 1 -1" (2 "01")
+Condition 427 "1896420708" "(tlb_g[20] || (tlb_asid[20] == lookup0_asid)) 1 -1" (3 "10")
+Condition 428 "1334744897" "(tlb_asid[20] == lookup0_asid) 1 -1" (2 "1")
+Condition 429 "775636154" "(g_lookup0[20].vpn2_match0 && g_lookup0[20].asid_match0) 1 -1" (1 "01")
+Condition 429 "775636154" "(g_lookup0[20].vpn2_match0 && g_lookup0[20].asid_match0) 1 -1" (2 "10")
+Condition 429 "775636154" "(g_lookup0[20].vpn2_match0 && g_lookup0[20].asid_match0) 1 -1" (3 "11")
+Condition 430 "2077566760" "(tlb_valid[21] && (((tlb_vpn2[21] ^ lookup0_vpn2) & g_lookup0[21].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 430 "2077566760" "(tlb_valid[21] && (((tlb_vpn2[21] ^ lookup0_vpn2) & g_lookup0[21].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 430 "2077566760" "(tlb_valid[21] && (((tlb_vpn2[21] ^ lookup0_vpn2) & g_lookup0[21].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 431 "3901771121" "(((tlb_vpn2[21] ^ lookup0_vpn2) & g_lookup0[21].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 432 "2935805725" "(tlb_g[21] || (tlb_asid[21] == lookup0_asid)) 1 -1" (1 "00")
+Condition 432 "2935805725" "(tlb_g[21] || (tlb_asid[21] == lookup0_asid)) 1 -1" (2 "01")
+Condition 432 "2935805725" "(tlb_g[21] || (tlb_asid[21] == lookup0_asid)) 1 -1" (3 "10")
+Condition 433 "393304836" "(tlb_asid[21] == lookup0_asid) 1 -1" (2 "1")
+Condition 434 "1647243656" "(g_lookup0[21].vpn2_match0 && g_lookup0[21].asid_match0) 1 -1" (1 "01")
+Condition 434 "1647243656" "(g_lookup0[21].vpn2_match0 && g_lookup0[21].asid_match0) 1 -1" (2 "10")
+Condition 434 "1647243656" "(g_lookup0[21].vpn2_match0 && g_lookup0[21].asid_match0) 1 -1" (3 "11")
+Condition 435 "4236692076" "(tlb_valid[22] && (((tlb_vpn2[22] ^ lookup0_vpn2) & g_lookup0[22].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 435 "4236692076" "(tlb_valid[22] && (((tlb_vpn2[22] ^ lookup0_vpn2) & g_lookup0[22].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 435 "4236692076" "(tlb_valid[22] && (((tlb_vpn2[22] ^ lookup0_vpn2) & g_lookup0[22].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 436 "69417267" "(((tlb_vpn2[22] ^ lookup0_vpn2) & g_lookup0[22].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 437 "630153634" "(tlb_g[22] || (tlb_asid[22] == lookup0_asid)) 1 -1" (1 "00")
+Condition 437 "630153634" "(tlb_g[22] || (tlb_asid[22] == lookup0_asid)) 1 -1" (2 "01")
+Condition 437 "630153634" "(tlb_g[22] || (tlb_asid[22] == lookup0_asid)) 1 -1" (3 "10")
+Condition 438 "3435543518" "(tlb_asid[22] == lookup0_asid) 1 -1" (2 "1")
+Condition 439 "2521440136" "(g_lookup0[22].vpn2_match0 && g_lookup0[22].asid_match0) 1 -1" (1 "01")
+Condition 439 "2521440136" "(g_lookup0[22].vpn2_match0 && g_lookup0[22].asid_match0) 1 -1" (2 "10")
+Condition 439 "2521440136" "(g_lookup0[22].vpn2_match0 && g_lookup0[22].asid_match0) 1 -1" (3 "11")
+Condition 440 "2430930219" "(tlb_valid[23] && (((tlb_vpn2[23] ^ lookup0_vpn2) & g_lookup0[23].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 440 "2430930219" "(tlb_valid[23] && (((tlb_vpn2[23] ^ lookup0_vpn2) & g_lookup0[23].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 440 "2430930219" "(tlb_valid[23] && (((tlb_vpn2[23] ^ lookup0_vpn2) & g_lookup0[23].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 441 "2470908930" "(((tlb_vpn2[23] ^ lookup0_vpn2) & g_lookup0[23].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 442 "4202341339" "(tlb_g[23] || (tlb_asid[23] == lookup0_asid)) 1 -1" (1 "00")
+Condition 442 "4202341339" "(tlb_g[23] || (tlb_asid[23] == lookup0_asid)) 1 -1" (2 "01")
+Condition 442 "4202341339" "(tlb_g[23] || (tlb_asid[23] == lookup0_asid)) 1 -1" (3 "10")
+Condition 443 "2486826907" "(tlb_asid[23] == lookup0_asid) 1 -1" (2 "1")
+Condition 444 "3663702714" "(g_lookup0[23].vpn2_match0 && g_lookup0[23].asid_match0) 1 -1" (1 "01")
+Condition 444 "3663702714" "(g_lookup0[23].vpn2_match0 && g_lookup0[23].asid_match0) 1 -1" (2 "10")
+Condition 444 "3663702714" "(g_lookup0[23].vpn2_match0 && g_lookup0[23].asid_match0) 1 -1" (3 "11")
+Condition 445 "2868012577" "(tlb_valid[24] && (((tlb_vpn2[24] ^ lookup0_vpn2) & g_lookup0[24].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 445 "2868012577" "(tlb_valid[24] && (((tlb_vpn2[24] ^ lookup0_vpn2) & g_lookup0[24].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 445 "2868012577" "(tlb_valid[24] && (((tlb_vpn2[24] ^ lookup0_vpn2) & g_lookup0[24].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 446 "1383515268" "(((tlb_vpn2[24] ^ lookup0_vpn2) & g_lookup0[24].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 447 "1825656762" "(tlb_g[24] || (tlb_asid[24] == lookup0_asid)) 1 -1" (1 "00")
+Condition 447 "1825656762" "(tlb_g[24] || (tlb_asid[24] == lookup0_asid)) 1 -1" (2 "01")
+Condition 447 "1825656762" "(tlb_g[24] || (tlb_asid[24] == lookup0_asid)) 1 -1" (3 "10")
+Condition 448 "4092633267" "(tlb_asid[24] == lookup0_asid) 1 -1" (2 "1")
+Condition 449 "866594570" "(g_lookup0[24].vpn2_match0 && g_lookup0[24].asid_match0) 1 -1" (1 "01")
+Condition 449 "866594570" "(g_lookup0[24].vpn2_match0 && g_lookup0[24].asid_match0) 1 -1" (2 "10")
+Condition 449 "866594570" "(g_lookup0[24].vpn2_match0 && g_lookup0[24].asid_match0) 1 -1" (3 "11")
+Condition 450 "3331432806" "(tlb_valid[25] && (((tlb_vpn2[25] ^ lookup0_vpn2) & g_lookup0[25].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 450 "3331432806" "(tlb_valid[25] && (((tlb_vpn2[25] ^ lookup0_vpn2) & g_lookup0[25].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 450 "3331432806" "(tlb_valid[25] && (((tlb_vpn2[25] ^ lookup0_vpn2) & g_lookup0[25].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 451 "3306351029" "(((tlb_vpn2[25] ^ lookup0_vpn2) & g_lookup0[25].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 452 "3005517251" "(tlb_g[25] || (tlb_asid[25] == lookup0_asid)) 1 -1" (1 "00")
+Condition 452 "3005517251" "(tlb_g[25] || (tlb_asid[25] == lookup0_asid)) 1 -1" (2 "01")
+Condition 452 "3005517251" "(tlb_g[25] || (tlb_asid[25] == lookup0_asid)) 1 -1" (3 "10")
+Condition 453 "2869914870" "(tlb_asid[25] == lookup0_asid) 1 -1" (2 "1")
+Condition 454 "2142411320" "(g_lookup0[25].vpn2_match0 && g_lookup0[25].asid_match0) 1 -1" (1 "01")
+Condition 454 "2142411320" "(g_lookup0[25].vpn2_match0 && g_lookup0[25].asid_match0) 1 -1" (2 "10")
+Condition 454 "2142411320" "(g_lookup0[25].vpn2_match0 && g_lookup0[25].asid_match0) 1 -1" (3 "11")
+Condition 455 "1103252514" "(tlb_valid[26] && (((tlb_vpn2[26] ^ lookup0_vpn2) & g_lookup0[26].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 455 "1103252514" "(tlb_valid[26] && (((tlb_vpn2[26] ^ lookup0_vpn2) & g_lookup0[26].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 455 "1103252514" "(tlb_valid[26] && (((tlb_vpn2[26] ^ lookup0_vpn2) & g_lookup0[26].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 456 "698457591" "(((tlb_vpn2[26] ^ lookup0_vpn2) & g_lookup0[26].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 457 "945240956" "(tlb_g[26] || (tlb_asid[26] == lookup0_asid)) 1 -1" (1 "00")
+Condition 457 "945240956" "(tlb_g[26] || (tlb_asid[26] == lookup0_asid)) 1 -1" (2 "01")
+Condition 457 "945240956" "(tlb_g[26] || (tlb_asid[26] == lookup0_asid)) 1 -1" (3 "10")
+Condition 458 "1891109932" "(tlb_asid[26] == lookup0_asid) 1 -1" (2 "1")
+Condition 459 "2346087480" "(g_lookup0[26].vpn2_match0 && g_lookup0[26].asid_match0) 1 -1" (1 "01")
+Condition 459 "2346087480" "(g_lookup0[26].vpn2_match0 && g_lookup0[26].asid_match0) 1 -1" (2 "10")
+Condition 459 "2346087480" "(g_lookup0[26].vpn2_match0 && g_lookup0[26].asid_match0) 1 -1" (3 "11")
+Condition 460 "765561701" "(tlb_valid[27] && (((tlb_vpn2[27] ^ lookup0_vpn2) & g_lookup0[27].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 460 "765561701" "(tlb_valid[27] && (((tlb_vpn2[27] ^ lookup0_vpn2) & g_lookup0[27].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 460 "765561701" "(tlb_valid[27] && (((tlb_vpn2[27] ^ lookup0_vpn2) & g_lookup0[27].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 461 "3200626886" "(((tlb_vpn2[27] ^ lookup0_vpn2) & g_lookup0[27].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 462 "3886217477" "(tlb_g[27] || (tlb_asid[27] == lookup0_asid)) 1 -1" (1 "00")
+Condition 462 "3886217477" "(tlb_g[27] || (tlb_asid[27] == lookup0_asid)) 1 -1" (2 "01")
+Condition 462 "3886217477" "(tlb_g[27] || (tlb_asid[27] == lookup0_asid)) 1 -1" (3 "10")
+Condition 463 "675790953" "(tlb_asid[27] == lookup0_asid) 1 -1" (2 "1")
+Condition 464 "3351494922" "(g_lookup0[27].vpn2_match0 && g_lookup0[27].asid_match0) 1 -1" (1 "01")
+Condition 464 "3351494922" "(g_lookup0[27].vpn2_match0 && g_lookup0[27].asid_match0) 1 -1" (2 "10")
+Condition 464 "3351494922" "(g_lookup0[27].vpn2_match0 && g_lookup0[27].asid_match0) 1 -1" (3 "11")
+Condition 465 "3728024708" "(tlb_valid[28] && (((tlb_vpn2[28] ^ lookup0_vpn2) & g_lookup0[28].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 465 "3728024708" "(tlb_valid[28] && (((tlb_vpn2[28] ^ lookup0_vpn2) & g_lookup0[28].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 465 "3728024708" "(tlb_valid[28] && (((tlb_vpn2[28] ^ lookup0_vpn2) & g_lookup0[28].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 466 "1328352359" "(((tlb_vpn2[28] ^ lookup0_vpn2) & g_lookup0[28].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 467 "770647101" "(tlb_g[28] || (tlb_asid[28] == lookup0_asid)) 1 -1" (1 "00")
+Condition 467 "770647101" "(tlb_g[28] || (tlb_asid[28] == lookup0_asid)) 1 -1" (2 "01")
+Condition 467 "770647101" "(tlb_g[28] || (tlb_asid[28] == lookup0_asid)) 1 -1" (3 "10")
+Condition 468 "1853717340" "(tlb_asid[28] == lookup0_asid) 1 -1" (2 "1")
+Condition 469 "2731034138" "(g_lookup0[28].vpn2_match0 && g_lookup0[28].asid_match0) 1 -1" (1 "01")
+Condition 469 "2731034138" "(g_lookup0[28].vpn2_match0 && g_lookup0[28].asid_match0) 1 -1" (2 "10")
+Condition 469 "2731034138" "(g_lookup0[28].vpn2_match0 && g_lookup0[28].asid_match0) 1 -1" (3 "11")
+Condition 470 "2992038851" "(tlb_valid[29] && (((tlb_vpn2[29] ^ lookup0_vpn2) & g_lookup0[29].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 470 "2992038851" "(tlb_valid[29] && (((tlb_vpn2[29] ^ lookup0_vpn2) & g_lookup0[29].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 470 "2992038851" "(tlb_valid[29] && (((tlb_vpn2[29] ^ lookup0_vpn2) & g_lookup0[29].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 471 "3628671318" "(((tlb_vpn2[29] ^ lookup0_vpn2) & g_lookup0[29].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 472 "4061849156" "(tlb_g[29] || (tlb_asid[29] == lookup0_asid)) 1 -1" (1 "00")
+Condition 472 "4061849156" "(tlb_g[29] || (tlb_asid[29] == lookup0_asid)) 1 -1" (2 "01")
+Condition 472 "4061849156" "(tlb_g[29] || (tlb_asid[29] == lookup0_asid)) 1 -1" (3 "10")
+Condition 473 "914536217" "(tlb_asid[29] == lookup0_asid) 1 -1" (2 "1")
+Condition 474 "4007523112" "(g_lookup0[29].vpn2_match0 && g_lookup0[29].asid_match0) 1 -1" (1 "01")
+Condition 474 "4007523112" "(g_lookup0[29].vpn2_match0 && g_lookup0[29].asid_match0) 1 -1" (2 "10")
+Condition 474 "4007523112" "(g_lookup0[29].vpn2_match0 && g_lookup0[29].asid_match0) 1 -1" (3 "11")
+Condition 475 "3794321781" "(tlb_valid[30] && (((tlb_vpn2[30] ^ lookup0_vpn2) & g_lookup0[30].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 475 "3794321781" "(tlb_valid[30] && (((tlb_vpn2[30] ^ lookup0_vpn2) & g_lookup0[30].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 475 "3794321781" "(tlb_valid[30] && (((tlb_vpn2[30] ^ lookup0_vpn2) & g_lookup0[30].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 476 "3445640146" "(((tlb_vpn2[30] ^ lookup0_vpn2) & g_lookup0[30].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 477 "1116661110" "(tlb_g[30] || (tlb_asid[30] == lookup0_asid)) 1 -1" (1 "00")
+Condition 477 "1116661110" "(tlb_g[30] || (tlb_asid[30] == lookup0_asid)) 1 -1" (2 "01")
+Condition 477 "1116661110" "(tlb_g[30] || (tlb_asid[30] == lookup0_asid)) 1 -1" (3 "10")
+Condition 478 "2912989902" "(tlb_asid[30] == lookup0_asid) 1 -1" (2 "1")
+Condition 479 "1274270135" "(g_lookup0[30].vpn2_match0 && g_lookup0[30].asid_match0) 1 -1" (1 "01")
+Condition 479 "1274270135" "(g_lookup0[30].vpn2_match0 && g_lookup0[30].asid_match0) 1 -1" (2 "10")
+Condition 479 "1274270135" "(g_lookup0[30].vpn2_match0 && g_lookup0[30].asid_match0) 1 -1" (3 "11")
+Condition 480 "2387281458" "(tlb_valid[31] && (((tlb_vpn2[31] ^ lookup0_vpn2) & g_lookup0[31].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 480 "2387281458" "(tlb_valid[31] && (((tlb_vpn2[31] ^ lookup0_vpn2) & g_lookup0[31].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 480 "2387281458" "(tlb_valid[31] && (((tlb_vpn2[31] ^ lookup0_vpn2) & g_lookup0[31].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 481 "1510237923" "(((tlb_vpn2[31] ^ lookup0_vpn2) & g_lookup0[31].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 482 "2642093839" "(tlb_g[31] || (tlb_asid[31] == lookup0_asid)) 1 -1" (1 "00")
+Condition 482 "2642093839" "(tlb_g[31] || (tlb_asid[31] == lookup0_asid)) 1 -1" (2 "01")
+Condition 482 "2642093839" "(tlb_g[31] || (tlb_asid[31] == lookup0_asid)) 1 -1" (3 "10")
+Condition 483 "4116676235" "(tlb_asid[31] == lookup0_asid) 1 -1" (2 "1")
+Condition 484 "132539525" "(g_lookup0[31].vpn2_match0 && g_lookup0[31].asid_match0) 1 -1" (1 "01")
+Condition 484 "132539525" "(g_lookup0[31].vpn2_match0 && g_lookup0[31].asid_match0) 1 -1" (2 "10")
+Condition 484 "132539525" "(g_lookup0[31].vpn2_match0 && g_lookup0[31].asid_match0) 1 -1" (3 "11")
+Condition 485 "152628086" "(tlb_valid[32] && (((tlb_vpn2[32] ^ lookup0_vpn2) & g_lookup0[32].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 485 "152628086" "(tlb_valid[32] && (((tlb_vpn2[32] ^ lookup0_vpn2) & g_lookup0[32].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 485 "152628086" "(tlb_valid[32] && (((tlb_vpn2[32] ^ lookup0_vpn2) & g_lookup0[32].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 486 "3065451169" "(((tlb_vpn2[32] ^ lookup0_vpn2) & g_lookup0[32].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 487 "369660336" "(tlb_g[32] || (tlb_asid[32] == lookup0_asid)) 1 -1" (1 "00")
+Condition 487 "369660336" "(tlb_g[32] || (tlb_asid[32] == lookup0_asid)) 1 -1" (2 "01")
+Condition 487 "369660336" "(tlb_g[32] || (tlb_asid[32] == lookup0_asid)) 1 -1" (3 "10")
+Condition 488 "786964049" "(tlb_asid[32] == lookup0_asid) 1 -1" (2 "1")
+Condition 489 "4085418629" "(g_lookup0[32].vpn2_match0 && g_lookup0[32].asid_match0) 1 -1" (1 "01")
+Condition 489 "4085418629" "(g_lookup0[32].vpn2_match0 && g_lookup0[32].asid_match0) 1 -1" (2 "10")
+Condition 489 "4085418629" "(g_lookup0[32].vpn2_match0 && g_lookup0[32].asid_match0) 1 -1" (3 "11")
+Condition 490 "1702571057" "(tlb_valid[33] && (((tlb_vpn2[33] ^ lookup0_vpn2) & g_lookup0[33].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 490 "1702571057" "(tlb_valid[33] && (((tlb_vpn2[33] ^ lookup0_vpn2) & g_lookup0[33].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 490 "1702571057" "(tlb_valid[33] && (((tlb_vpn2[33] ^ lookup0_vpn2) & g_lookup0[33].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 491 "567492496" "(((tlb_vpn2[33] ^ lookup0_vpn2) & g_lookup0[33].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 492 "3388822473" "(tlb_g[33] || (tlb_asid[33] == lookup0_asid)) 1 -1" (1 "00")
+Condition 492 "3388822473" "(tlb_g[33] || (tlb_asid[33] == lookup0_asid)) 1 -1" (2 "01")
+Condition 492 "3388822473" "(tlb_g[33] || (tlb_asid[33] == lookup0_asid)) 1 -1" (3 "10")
+Condition 493 "1981272596" "(tlb_asid[33] == lookup0_asid) 1 -1" (2 "1")
+Condition 494 "3214360503" "(g_lookup0[33].vpn2_match0 && g_lookup0[33].asid_match0) 1 -1" (1 "01")
+Condition 494 "3214360503" "(g_lookup0[33].vpn2_match0 && g_lookup0[33].asid_match0) 1 -1" (2 "10")
+Condition 494 "3214360503" "(g_lookup0[33].vpn2_match0 && g_lookup0[33].asid_match0) 1 -1" (3 "11")
+Condition 495 "1600931643" "(tlb_valid[34] && (((tlb_vpn2[34] ^ lookup0_vpn2) & g_lookup0[34].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 495 "1600931643" "(tlb_valid[34] && (((tlb_vpn2[34] ^ lookup0_vpn2) & g_lookup0[34].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 495 "1600931643" "(tlb_valid[34] && (((tlb_vpn2[34] ^ lookup0_vpn2) & g_lookup0[34].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 496 "3772968726" "(((tlb_vpn2[34] ^ lookup0_vpn2) & g_lookup0[34].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 497 "1599520680" "(tlb_g[34] || (tlb_asid[34] == lookup0_asid)) 1 -1" (1 "00")
+Condition 497 "1599520680" "(tlb_g[34] || (tlb_asid[34] == lookup0_asid)) 1 -1" (2 "01")
+Condition 497 "1599520680" "(tlb_g[34] || (tlb_asid[34] == lookup0_asid)) 1 -1" (3 "10")
+Condition 498 "299795772" "(tlb_asid[34] == lookup0_asid) 1 -1" (2 "1")
+Condition 499 "1450162695" "(g_lookup0[34].vpn2_match0 && g_lookup0[34].asid_match0) 1 -1" (1 "01")
+Condition 499 "1450162695" "(g_lookup0[34].vpn2_match0 && g_lookup0[34].asid_match0) 1 -1" (2 "10")
+Condition 499 "1450162695" "(g_lookup0[34].vpn2_match0 && g_lookup0[34].asid_match0) 1 -1" (3 "11")
+Condition 500 "856653948" "(tlb_valid[35] && (((tlb_vpn2[35] ^ lookup0_vpn2) & g_lookup0[35].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 500 "856653948" "(tlb_valid[35] && (((tlb_vpn2[35] ^ lookup0_vpn2) & g_lookup0[35].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 500 "856653948" "(tlb_valid[35] && (((tlb_vpn2[35] ^ lookup0_vpn2) & g_lookup0[35].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 501 "2005320231" "(((tlb_vpn2[35] ^ lookup0_vpn2) & g_lookup0[35].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 502 "2158198225" "(tlb_g[35] || (tlb_asid[35] == lookup0_asid)) 1 -1" (1 "00")
+Condition 502 "2158198225" "(tlb_g[35] || (tlb_asid[35] == lookup0_asid)) 1 -1" (2 "01")
+Condition 502 "2158198225" "(tlb_g[35] || (tlb_asid[35] == lookup0_asid)) 1 -1" (3 "10")
+Condition 503 "1226918265" "(tlb_asid[35] == lookup0_asid) 1 -1" (2 "1")
+Condition 504 "444206901" "(g_lookup0[35].vpn2_match0 && g_lookup0[35].asid_match0) 1 -1" (1 "01")
+Condition 504 "444206901" "(g_lookup0[35].vpn2_match0 && g_lookup0[35].asid_match0) 1 -1" (2 "10")
+Condition 504 "444206901" "(g_lookup0[35].vpn2_match0 && g_lookup0[35].asid_match0) 1 -1" (3 "11")
+Condition 505 "3025956152" "(tlb_valid[36] && (((tlb_vpn2[36] ^ lookup0_vpn2) & g_lookup0[36].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 505 "3025956152" "(tlb_valid[36] && (((tlb_vpn2[36] ^ lookup0_vpn2) & g_lookup0[36].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 505 "3025956152" "(tlb_valid[36] && (((tlb_vpn2[36] ^ lookup0_vpn2) & g_lookup0[36].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 506 "2603988581" "(((tlb_vpn2[36] ^ lookup0_vpn2) & g_lookup0[36].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 507 "198232942" "(tlb_g[36] || (tlb_asid[36] == lookup0_asid)) 1 -1" (1 "00")
+Condition 507 "198232942" "(tlb_g[36] || (tlb_asid[36] == lookup0_asid)) 1 -1" (2 "01")
+Condition 507 "198232942" "(tlb_g[36] || (tlb_asid[36] == lookup0_asid)) 1 -1" (3 "10")
+Condition 508 "2459314595" "(tlb_asid[36] == lookup0_asid) 1 -1" (2 "1")
+Condition 509 "3995001141" "(g_lookup0[36].vpn2_match0 && g_lookup0[36].asid_match0) 1 -1" (1 "01")
+Condition 509 "3995001141" "(g_lookup0[36].vpn2_match0 && g_lookup0[36].asid_match0) 1 -1" (2 "10")
+Condition 509 "3995001141" "(g_lookup0[36].vpn2_match0 && g_lookup0[36].asid_match0) 1 -1" (3 "11")
+Condition 510 "3628051071" "(tlb_valid[37] && (((tlb_vpn2[37] ^ lookup0_vpn2) & g_lookup0[37].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 510 "3628051071" "(tlb_valid[37] && (((tlb_vpn2[37] ^ lookup0_vpn2) & g_lookup0[37].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 510 "3628051071" "(tlb_valid[37] && (((tlb_vpn2[37] ^ lookup0_vpn2) & g_lookup0[37].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 511 "206674772" "(((tlb_vpn2[37] ^ lookup0_vpn2) & g_lookup0[37].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 512 "3559196951" "(tlb_g[37] || (tlb_asid[37] == lookup0_asid)) 1 -1" (1 "00")
+Condition 512 "3559196951" "(tlb_g[37] || (tlb_asid[37] == lookup0_asid)) 1 -1" (2 "01")
+Condition 512 "3559196951" "(tlb_g[37] || (tlb_asid[37] == lookup0_asid)) 1 -1" (3 "10")
+Condition 513 "3395937766" "(tlb_asid[37] == lookup0_asid) 1 -1" (2 "1")
+Condition 514 "2718651399" "(g_lookup0[37].vpn2_match0 && g_lookup0[37].asid_match0) 1 -1" (1 "01")
+Condition 514 "2718651399" "(g_lookup0[37].vpn2_match0 && g_lookup0[37].asid_match0) 1 -1" (2 "10")
+Condition 514 "2718651399" "(g_lookup0[37].vpn2_match0 && g_lookup0[37].asid_match0) 1 -1" (3 "11")
+Condition 515 "732628382" "(tlb_valid[38] && (((tlb_vpn2[38] ^ lookup0_vpn2) & g_lookup0[38].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 515 "732628382" "(tlb_valid[38] && (((tlb_vpn2[38] ^ lookup0_vpn2) & g_lookup0[38].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 515 "732628382" "(tlb_valid[38] && (((tlb_vpn2[38] ^ lookup0_vpn2) & g_lookup0[38].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 516 "4256770037" "(((tlb_vpn2[38] ^ lookup0_vpn2) & g_lookup0[38].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 517 "510186543" "(tlb_g[38] || (tlb_asid[38] == lookup0_asid)) 1 -1" (1 "00")
+Condition 517 "510186543" "(tlb_g[38] || (tlb_asid[38] == lookup0_asid)) 1 -1" (2 "01")
+Condition 517 "510186543" "(tlb_g[38] || (tlb_asid[38] == lookup0_asid)) 1 -1" (3 "10")
+Condition 518 "2354274003" "(tlb_asid[38] == lookup0_asid) 1 -1" (2 "1")
+Condition 519 "3338720023" "(g_lookup0[38].vpn2_match0 && g_lookup0[38].asid_match0) 1 -1" (1 "01")
+Condition 519 "3338720023" "(g_lookup0[38].vpn2_match0 && g_lookup0[38].asid_match0) 1 -1" (2 "10")
+Condition 519 "3338720023" "(g_lookup0[38].vpn2_match0 && g_lookup0[38].asid_match0) 1 -1" (3 "11")
+Condition 520 "1204339417" "(tlb_valid[39] && (((tlb_vpn2[39] ^ lookup0_vpn2) & g_lookup0[39].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 520 "1204339417" "(tlb_valid[39] && (((tlb_vpn2[39] ^ lookup0_vpn2) & g_lookup0[39].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 520 "1204339417" "(tlb_valid[39] && (((tlb_vpn2[39] ^ lookup0_vpn2) & g_lookup0[39].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 521 "1792871108" "(((tlb_vpn2[39] ^ lookup0_vpn2) & g_lookup0[39].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 522 "3248297558" "(tlb_g[39] || (tlb_asid[39] == lookup0_asid)) 1 -1" (1 "00")
+Condition 522 "3248297558" "(tlb_g[39] || (tlb_asid[39] == lookup0_asid)) 1 -1" (2 "01")
+Condition 522 "3248297558" "(tlb_g[39] || (tlb_asid[39] == lookup0_asid)) 1 -1" (3 "10")
+Condition 523 "3568079510" "(tlb_asid[39] == lookup0_asid) 1 -1" (2 "1")
+Condition 524 "2333435429" "(g_lookup0[39].vpn2_match0 && g_lookup0[39].asid_match0) 1 -1" (1 "01")
+Condition 524 "2333435429" "(g_lookup0[39].vpn2_match0 && g_lookup0[39].asid_match0) 1 -1" (2 "10")
+Condition 524 "2333435429" "(g_lookup0[39].vpn2_match0 && g_lookup0[39].asid_match0) 1 -1" (3 "11")
+Condition 525 "734521825" "(tlb_valid[40] && (((tlb_vpn2[40] ^ lookup0_vpn2) & g_lookup0[40].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 525 "734521825" "(tlb_valid[40] && (((tlb_vpn2[40] ^ lookup0_vpn2) & g_lookup0[40].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 525 "734521825" "(tlb_valid[40] && (((tlb_vpn2[40] ^ lookup0_vpn2) & g_lookup0[40].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 526 "3077279191" "(((tlb_vpn2[40] ^ lookup0_vpn2) & g_lookup0[40].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 527 "3121506117" "(tlb_g[40] || (tlb_asid[40] == lookup0_asid)) 1 -1" (1 "00")
+Condition 527 "3121506117" "(tlb_g[40] || (tlb_asid[40] == lookup0_asid)) 1 -1" (2 "01")
+Condition 527 "3121506117" "(tlb_g[40] || (tlb_asid[40] == lookup0_asid)) 1 -1" (3 "10")
+Condition 528 "3792757960" "(tlb_asid[40] == lookup0_asid) 1 -1" (2 "1")
+Condition 529 "3230374105" "(g_lookup0[40].vpn2_match0 && g_lookup0[40].asid_match0) 1 -1" (1 "01")
+Condition 529 "3230374105" "(g_lookup0[40].vpn2_match0 && g_lookup0[40].asid_match0) 1 -1" (2 "10")
+Condition 529 "3230374105" "(g_lookup0[40].vpn2_match0 && g_lookup0[40].asid_match0) 1 -1" (3 "11")
+Condition 530 "1201942182" "(tlb_valid[41] && (((tlb_vpn2[41] ^ lookup0_vpn2) & g_lookup0[41].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 530 "1201942182" "(tlb_valid[41] && (((tlb_vpn2[41] ^ lookup0_vpn2) & g_lookup0[41].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 530 "1201942182" "(tlb_valid[41] && (((tlb_vpn2[41] ^ lookup0_vpn2) & g_lookup0[41].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 531 "537895142" "(((tlb_vpn2[41] ^ lookup0_vpn2) & g_lookup0[41].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 532 "1710990652" "(tlb_g[41] || (tlb_asid[41] == lookup0_asid)) 1 -1" (1 "00")
+Condition 532 "1710990652" "(tlb_g[41] || (tlb_asid[41] == lookup0_asid)) 1 -1" (2 "01")
+Condition 532 "1710990652" "(tlb_g[41] || (tlb_asid[41] == lookup0_asid)) 1 -1" (3 "10")
+Condition 533 "3136235661" "(tlb_asid[41] == lookup0_asid) 1 -1" (2 "1")
+Condition 534 "2359176683" "(g_lookup0[41].vpn2_match0 && g_lookup0[41].asid_match0) 1 -1" (1 "01")
+Condition 534 "2359176683" "(g_lookup0[41].vpn2_match0 && g_lookup0[41].asid_match0) 1 -1" (2 "10")
+Condition 534 "2359176683" "(g_lookup0[41].vpn2_match0 && g_lookup0[41].asid_match0) 1 -1" (3 "11")
+Condition 535 "3237463010" "(tlb_valid[42] && (((tlb_vpn2[42] ^ lookup0_vpn2) & g_lookup0[42].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 535 "3237463010" "(tlb_valid[42] && (((tlb_vpn2[42] ^ lookup0_vpn2) & g_lookup0[42].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 535 "3237463010" "(tlb_valid[42] && (((tlb_vpn2[42] ^ lookup0_vpn2) & g_lookup0[42].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 536 "3434927268" "(((tlb_vpn2[42] ^ lookup0_vpn2) & g_lookup0[42].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 537 "4001895299" "(tlb_g[42] || (tlb_asid[42] == lookup0_asid)) 1 -1" (1 "00")
+Condition 537 "4001895299" "(tlb_g[42] || (tlb_asid[42] == lookup0_asid)) 1 -1" (2 "01")
+Condition 537 "4001895299" "(tlb_g[42] || (tlb_asid[42] == lookup0_asid)) 1 -1" (3 "10")
+Condition 538 "1633175639" "(tlb_asid[42] == lookup0_asid) 1 -1" (2 "1")
+Condition 539 "2029700075" "(g_lookup0[42].vpn2_match0 && g_lookup0[42].asid_match0) 1 -1" (1 "01")
+Condition 539 "2029700075" "(g_lookup0[42].vpn2_match0 && g_lookup0[42].asid_match0) 1 -1" (2 "10")
+Condition 539 "2029700075" "(g_lookup0[42].vpn2_match0 && g_lookup0[42].asid_match0) 1 -1" (3 "11")
+Condition 540 "2895381669" "(tlb_valid[43] && (((tlb_vpn2[43] ^ lookup0_vpn2) & g_lookup0[43].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 540 "2895381669" "(tlb_valid[43] && (((tlb_vpn2[43] ^ lookup0_vpn2) & g_lookup0[43].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 540 "2895381669" "(tlb_valid[43] && (((tlb_vpn2[43] ^ lookup0_vpn2) & g_lookup0[43].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 541 "1540946325" "(((tlb_vpn2[43] ^ lookup0_vpn2) & g_lookup0[43].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 542 "830329338" "(tlb_g[43] || (tlb_asid[43] == lookup0_asid)) 1 -1" (1 "00")
+Condition 542 "830329338" "(tlb_g[43] || (tlb_asid[43] == lookup0_asid)) 1 -1" (2 "01")
+Condition 542 "830329338" "(tlb_g[43] || (tlb_asid[43] == lookup0_asid)) 1 -1" (3 "10")
+Condition 543 "967279634" "(tlb_asid[43] == lookup0_asid) 1 -1" (2 "1")
+Condition 544 "888108761" "(g_lookup0[43].vpn2_match0 && g_lookup0[43].asid_match0) 1 -1" (1 "01")
+Condition 544 "888108761" "(g_lookup0[43].vpn2_match0 && g_lookup0[43].asid_match0) 1 -1" (2 "10")
+Condition 544 "888108761" "(g_lookup0[43].vpn2_match0 && g_lookup0[43].asid_match0) 1 -1" (3 "11")
+Condition 545 "2525196207" "(tlb_valid[44] && (((tlb_vpn2[44] ^ lookup0_vpn2) & g_lookup0[44].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 545 "2525196207" "(tlb_valid[44] && (((tlb_vpn2[44] ^ lookup0_vpn2) & g_lookup0[44].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 545 "2525196207" "(tlb_valid[44] && (((tlb_vpn2[44] ^ lookup0_vpn2) & g_lookup0[44].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 546 "2598971667" "(((tlb_vpn2[44] ^ lookup0_vpn2) & g_lookup0[44].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 547 "2815835547" "(tlb_g[44] || (tlb_asid[44] == lookup0_asid)) 1 -1" (1 "00")
+Condition 547 "2815835547" "(tlb_g[44] || (tlb_asid[44] == lookup0_asid)) 1 -1" (2 "01")
+Condition 547 "2815835547" "(tlb_g[44] || (tlb_asid[44] == lookup0_asid)) 1 -1" (3 "10")
+Condition 548 "1584321338" "(tlb_asid[44] == lookup0_asid) 1 -1" (2 "1")
+Condition 549 "3709334377" "(g_lookup0[44].vpn2_match0 && g_lookup0[44].asid_match0) 1 -1" (1 "01")
+Condition 549 "3709334377" "(g_lookup0[44].vpn2_match0 && g_lookup0[44].asid_match0) 1 -1" (2 "10")
+Condition 549 "3709334377" "(g_lookup0[44].vpn2_match0 && g_lookup0[44].asid_match0) 1 -1" (3 "11")
+Condition 550 "4209027304" "(tlb_valid[45] && (((tlb_vpn2[45] ^ lookup0_vpn2) & g_lookup0[45].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 550 "4209027304" "(tlb_valid[45] && (((tlb_vpn2[45] ^ lookup0_vpn2) & g_lookup0[45].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 550 "4209027304" "(tlb_valid[45] && (((tlb_vpn2[45] ^ lookup0_vpn2) & g_lookup0[45].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 551 "227345442" "(((tlb_vpn2[45] ^ lookup0_vpn2) & g_lookup0[45].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 552 "2015625186" "(tlb_g[45] || (tlb_asid[45] == lookup0_asid)) 1 -1" (1 "00")
+Condition 552 "2015625186" "(tlb_g[45] || (tlb_asid[45] == lookup0_asid)) 1 -1" (2 "01")
+Condition 552 "2015625186" "(tlb_g[45] || (tlb_asid[45] == lookup0_asid)) 1 -1" (3 "10")
+Condition 553 "110174079" "(tlb_asid[45] == lookup0_asid) 1 -1" (2 "1")
+Condition 554 "2432845403" "(g_lookup0[45].vpn2_match0 && g_lookup0[45].asid_match0) 1 -1" (1 "01")
+Condition 554 "2432845403" "(g_lookup0[45].vpn2_match0 && g_lookup0[45].asid_match0) 1 -1" (2 "10")
+Condition 554 "2432845403" "(g_lookup0[45].vpn2_match0 && g_lookup0[45].asid_match0) 1 -1" (3 "11")
+Condition 555 "2108900780" "(tlb_valid[46] && (((tlb_vpn2[46] ^ lookup0_vpn2) & g_lookup0[46].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 555 "2108900780" "(tlb_valid[46] && (((tlb_vpn2[46] ^ lookup0_vpn2) & g_lookup0[46].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 555 "2108900780" "(tlb_valid[46] && (((tlb_vpn2[46] ^ lookup0_vpn2) & g_lookup0[46].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 556 "3778965600" "(((tlb_vpn2[46] ^ lookup0_vpn2) & g_lookup0[46].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 557 "4082125149" "(tlb_g[46] || (tlb_asid[46] == lookup0_asid)) 1 -1" (1 "00")
+Condition 557 "4082125149" "(tlb_g[46] || (tlb_asid[46] == lookup0_asid)) 1 -1" (2 "01")
+Condition 557 "4082125149" "(tlb_g[46] || (tlb_asid[46] == lookup0_asid)) 1 -1" (3 "10")
+Condition 558 "3710287781" "(tlb_asid[46] == lookup0_asid) 1 -1" (2 "1")
+Condition 559 "1701226587" "(g_lookup0[46].vpn2_match0 && g_lookup0[46].asid_match0) 1 -1" (1 "01")
+Condition 559 "1701226587" "(g_lookup0[46].vpn2_match0 && g_lookup0[46].asid_match0) 1 -1" (2 "10")
+Condition 559 "1701226587" "(g_lookup0[46].vpn2_match0 && g_lookup0[46].asid_match0) 1 -1" (3 "11")
+Condition 560 "298877675" "(tlb_valid[47] && (((tlb_vpn2[47] ^ lookup0_vpn2) & g_lookup0[47].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 560 "298877675" "(tlb_valid[47] && (((tlb_vpn2[47] ^ lookup0_vpn2) & g_lookup0[47].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 560 "298877675" "(tlb_valid[47] && (((tlb_vpn2[47] ^ lookup0_vpn2) & g_lookup0[47].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 561 "1985633617" "(((tlb_vpn2[47] ^ lookup0_vpn2) & g_lookup0[47].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 562 "749046564" "(tlb_g[47] || (tlb_asid[47] == lookup0_asid)) 1 -1" (1 "00")
+Condition 562 "749046564" "(tlb_g[47] || (tlb_asid[47] == lookup0_asid)) 1 -1" (2 "01")
+Condition 562 "749046564" "(tlb_g[47] || (tlb_asid[47] == lookup0_asid)) 1 -1" (3 "10")
+Condition 563 "2245637088" "(tlb_asid[47] == lookup0_asid) 1 -1" (2 "1")
+Condition 564 "695410025" "(g_lookup0[47].vpn2_match0 && g_lookup0[47].asid_match0) 1 -1" (1 "01")
+Condition 564 "695410025" "(g_lookup0[47].vpn2_match0 && g_lookup0[47].asid_match0) 1 -1" (2 "10")
+Condition 564 "695410025" "(g_lookup0[47].vpn2_match0 && g_lookup0[47].asid_match0) 1 -1" (3 "11")
+Condition 565 "3796118794" "(tlb_valid[48] && (((tlb_vpn2[48] ^ lookup0_vpn2) & g_lookup0[48].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 565 "3796118794" "(tlb_valid[48] && (((tlb_vpn2[48] ^ lookup0_vpn2) & g_lookup0[48].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 565 "3796118794" "(tlb_valid[48] && (((tlb_vpn2[48] ^ lookup0_vpn2) & g_lookup0[48].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 566 "2276647408" "(((tlb_vpn2[48] ^ lookup0_vpn2) & g_lookup0[48].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 567 "3873986076" "(tlb_g[48] || (tlb_asid[48] == lookup0_asid)) 1 -1" (1 "00")
+Condition 567 "3873986076" "(tlb_g[48] || (tlb_asid[48] == lookup0_asid)) 1 -1" (2 "01")
+Condition 567 "3873986076" "(tlb_g[48] || (tlb_asid[48] == lookup0_asid)) 1 -1" (3 "10")
+Condition 568 "3286436053" "(tlb_asid[48] == lookup0_asid) 1 -1" (2 "1")
+Condition 569 "1282972281" "(g_lookup0[48].vpn2_match0 && g_lookup0[48].asid_match0) 1 -1" (1 "01")
+Condition 569 "1282972281" "(g_lookup0[48].vpn2_match0 && g_lookup0[48].asid_match0) 1 -1" (2 "10")
+Condition 569 "1282972281" "(g_lookup0[48].vpn2_match0 && g_lookup0[48].asid_match0) 1 -1" (3 "11")
+Condition 570 "2384980557" "(tlb_valid[49] && (((tlb_vpn2[49] ^ lookup0_vpn2) & g_lookup0[49].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 570 "2384980557" "(tlb_valid[49] && (((tlb_vpn2[49] ^ lookup0_vpn2) & g_lookup0[49].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 570 "2384980557" "(tlb_valid[49] && (((tlb_vpn2[49] ^ lookup0_vpn2) & g_lookup0[49].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 571 "282512577" "(((tlb_vpn2[49] ^ lookup0_vpn2) & g_lookup0[49].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 572 "958239845" "(tlb_g[49] || (tlb_asid[49] == lookup0_asid)) 1 -1" (1 "00")
+Condition 572 "958239845" "(tlb_g[49] || (tlb_asid[49] == lookup0_asid)) 1 -1" (2 "01")
+Condition 572 "958239845" "(tlb_g[49] || (tlb_asid[49] == lookup0_asid)) 1 -1" (3 "10")
+Condition 573 "2602353808" "(tlb_asid[49] == lookup0_asid) 1 -1" (2 "1")
+Condition 574 "7155531" "(g_lookup0[49].vpn2_match0 && g_lookup0[49].asid_match0) 1 -1" (1 "01")
+Condition 574 "7155531" "(g_lookup0[49].vpn2_match0 && g_lookup0[49].asid_match0) 1 -1" (2 "10")
+Condition 574 "7155531" "(g_lookup0[49].vpn2_match0 && g_lookup0[49].asid_match0) 1 -1" (3 "11")
+Condition 575 "3730426107" "(tlb_valid[50] && (((tlb_vpn2[50] ^ lookup0_vpn2) & g_lookup0[50].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 575 "3730426107" "(tlb_valid[50] && (((tlb_vpn2[50] ^ lookup0_vpn2) & g_lookup0[50].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 575 "3730426107" "(tlb_valid[50] && (((tlb_vpn2[50] ^ lookup0_vpn2) & g_lookup0[50].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 576 "100640325" "(((tlb_vpn2[50] ^ lookup0_vpn2) & g_lookup0[50].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 577 "2307495767" "(tlb_g[50] || (tlb_asid[50] == lookup0_asid)) 1 -1" (1 "00")
+Condition 577 "2307495767" "(tlb_g[50] || (tlb_asid[50] == lookup0_asid)) 1 -1" (2 "01")
+Condition 577 "2307495767" "(tlb_g[50] || (tlb_asid[50] == lookup0_asid)) 1 -1" (3 "10")
+Condition 578 "4112711" "(tlb_asid[50] == lookup0_asid) 1 -1" (2 "1")
+Condition 579 "2772635092" "(g_lookup0[50].vpn2_match0 && g_lookup0[50].asid_match0) 1 -1" (1 "01")
+Condition 579 "2772635092" "(g_lookup0[50].vpn2_match0 && g_lookup0[50].asid_match0) 1 -1" (2 "10")
+Condition 579 "2772635092" "(g_lookup0[50].vpn2_match0 && g_lookup0[50].asid_match0) 1 -1" (3 "11")
+Condition 580 "2990149564" "(tlb_valid[51] && (((tlb_vpn2[51] ^ lookup0_vpn2) & g_lookup0[51].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 580 "2990149564" "(tlb_valid[51] && (((tlb_vpn2[51] ^ lookup0_vpn2) & g_lookup0[51].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 580 "2990149564" "(tlb_valid[51] && (((tlb_vpn2[51] ^ lookup0_vpn2) & g_lookup0[51].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 581 "2459667316" "(((tlb_vpn2[51] ^ lookup0_vpn2) & g_lookup0[51].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 582 "1450988846" "(tlb_g[51] || (tlb_asid[51] == lookup0_asid)) 1 -1" (1 "00")
+Condition 582 "1450988846" "(tlb_g[51] || (tlb_asid[51] == lookup0_asid)) 1 -1" (2 "01")
+Condition 582 "1450988846" "(tlb_g[51] || (tlb_asid[51] == lookup0_asid)) 1 -1" (3 "10")
+Condition 583 "1489046786" "(tlb_asid[51] == lookup0_asid) 1 -1" (2 "1")
+Condition 584 "3914774758" "(g_lookup0[51].vpn2_match0 && g_lookup0[51].asid_match0) 1 -1" (1 "01")
+Condition 584 "3914774758" "(g_lookup0[51].vpn2_match0 && g_lookup0[51].asid_match0) 1 -1" (2 "10")
+Condition 584 "3914774758" "(g_lookup0[51].vpn2_match0 && g_lookup0[51].asid_match0) 1 -1" (3 "11")
+Condition 585 "896131832" "(tlb_valid[52] && (((tlb_vpn2[52] ^ lookup0_vpn2) & g_lookup0[52].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 585 "896131832" "(tlb_valid[52] && (((tlb_vpn2[52] ^ lookup0_vpn2) & g_lookup0[52].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 585 "896131832" "(tlb_valid[52] && (((tlb_vpn2[52] ^ lookup0_vpn2) & g_lookup0[52].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 586 "2116615990" "(((tlb_vpn2[52] ^ lookup0_vpn2) & g_lookup0[52].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 587 "3708806033" "(tlb_g[52] || (tlb_asid[52] == lookup0_asid)) 1 -1" (1 "00")
+Condition 587 "3708806033" "(tlb_g[52] || (tlb_asid[52] == lookup0_asid)) 1 -1" (2 "01")
+Condition 587 "3708806033" "(tlb_g[52] || (tlb_asid[52] == lookup0_asid)) 1 -1" (3 "10")
+Condition 588 "2205576664" "(tlb_asid[52] == lookup0_asid) 1 -1" (2 "1")
+Condition 589 "489838310" "(g_lookup0[52].vpn2_match0 && g_lookup0[52].asid_match0) 1 -1" (1 "01")
+Condition 589 "489838310" "(g_lookup0[52].vpn2_match0 && g_lookup0[52].asid_match0) 1 -1" (2 "10")
+Condition 589 "489838310" "(g_lookup0[52].vpn2_match0 && g_lookup0[52].asid_match0) 1 -1" (3 "11")
+Condition 590 "1493837247" "(tlb_valid[53] && (((tlb_vpn2[53] ^ lookup0_vpn2) & g_lookup0[53].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 590 "1493837247" "(tlb_valid[53] && (((tlb_vpn2[53] ^ lookup0_vpn2) & g_lookup0[53].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 590 "1493837247" "(tlb_valid[53] && (((tlb_vpn2[53] ^ lookup0_vpn2) & g_lookup0[53].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 591 "3914125831" "(((tlb_vpn2[53] ^ lookup0_vpn2) & g_lookup0[53].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 592 "49947112" "(tlb_g[53] || (tlb_asid[53] == lookup0_asid)) 1 -1" (1 "00")
+Condition 592 "49947112" "(tlb_g[53] || (tlb_asid[53] == lookup0_asid)) 1 -1" (2 "01")
+Condition 592 "49947112" "(tlb_g[53] || (tlb_asid[53] == lookup0_asid)) 1 -1" (3 "10")
+Condition 593 "3683230109" "(tlb_asid[53] == lookup0_asid) 1 -1" (2 "1")
+Condition 594 "1361568724" "(g_lookup0[53].vpn2_match0 && g_lookup0[53].asid_match0) 1 -1" (1 "01")
+Condition 594 "1361568724" "(g_lookup0[53].vpn2_match0 && g_lookup0[53].asid_match0) 1 -1" (2 "10")
+Condition 594 "1361568724" "(g_lookup0[53].vpn2_match0 && g_lookup0[53].asid_match0) 1 -1" (3 "11")
+Condition 595 "1662865077" "(tlb_valid[54] && (((tlb_vpn2[54] ^ lookup0_vpn2) & g_lookup0[54].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 595 "1662865077" "(tlb_valid[54] && (((tlb_vpn2[54] ^ lookup0_vpn2) & g_lookup0[54].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 595 "1662865077" "(tlb_valid[54] && (((tlb_vpn2[54] ^ lookup0_vpn2) & g_lookup0[54].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 596 "679281281" "(((tlb_vpn2[54] ^ lookup0_vpn2) & g_lookup0[54].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 597 "2488389001" "(tlb_g[54] || (tlb_asid[54] == lookup0_asid)) 1 -1" (1 "00")
+Condition 597 "2488389001" "(tlb_g[54] || (tlb_asid[54] == lookup0_asid)) 1 -1" (2 "01")
+Condition 597 "2488389001" "(tlb_g[54] || (tlb_asid[54] == lookup0_asid)) 1 -1" (3 "10")
+Condition 598 "3158374069" "(tlb_asid[54] == lookup0_asid) 1 -1" (2 "1")
+Condition 599 "3101648484" "(g_lookup0[54].vpn2_match0 && g_lookup0[54].asid_match0) 1 -1" (1 "01")
+Condition 599 "3101648484" "(g_lookup0[54].vpn2_match0 && g_lookup0[54].asid_match0) 1 -1" (2 "10")
+Condition 599 "3101648484" "(g_lookup0[54].vpn2_match0 && g_lookup0[54].asid_match0) 1 -1" (3 "11")
+Condition 600 "259951090" "(tlb_valid[55] && (((tlb_vpn2[55] ^ lookup0_vpn2) & g_lookup0[55].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 600 "259951090" "(tlb_valid[55] && (((tlb_vpn2[55] ^ lookup0_vpn2) & g_lookup0[55].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 600 "259951090" "(tlb_valid[55] && (((tlb_vpn2[55] ^ lookup0_vpn2) & g_lookup0[55].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 601 "3206098864" "(((tlb_vpn2[55] ^ lookup0_vpn2) & g_lookup0[55].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 602 "1269043184" "(tlb_g[55] || (tlb_asid[55] == lookup0_asid)) 1 -1" (1 "00")
+Condition 602 "1269043184" "(tlb_g[55] || (tlb_asid[55] == lookup0_asid)) 1 -1" (2 "01")
+Condition 602 "1269043184" "(tlb_g[55] || (tlb_asid[55] == lookup0_asid)) 1 -1" (3 "10")
+Condition 603 "3837737712" "(tlb_asid[55] == lookup0_asid) 1 -1" (2 "1")
+Condition 604 "4106933078" "(g_lookup0[55].vpn2_match0 && g_lookup0[55].asid_match0) 1 -1" (1 "01")
+Condition 604 "4106933078" "(g_lookup0[55].vpn2_match0 && g_lookup0[55].asid_match0) 1 -1" (2 "10")
+Condition 604 "4106933078" "(g_lookup0[55].vpn2_match0 && g_lookup0[55].asid_match0) 1 -1" (3 "11")
+Condition 605 "2284676278" "(tlb_valid[56] && (((tlb_vpn2[56] ^ lookup0_vpn2) & g_lookup0[56].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 605 "2284676278" "(tlb_valid[56] && (((tlb_vpn2[56] ^ lookup0_vpn2) & g_lookup0[56].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 605 "2284676278" "(tlb_valid[56] && (((tlb_vpn2[56] ^ lookup0_vpn2) & g_lookup0[56].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 606 "1403673586" "(((tlb_vpn2[56] ^ lookup0_vpn2) & g_lookup0[56].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 607 "3235363151" "(tlb_g[56] || (tlb_asid[56] == lookup0_asid)) 1 -1" (1 "00")
+Condition 607 "3235363151" "(tlb_g[56] || (tlb_asid[56] == lookup0_asid)) 1 -1" (2 "01")
+Condition 607 "3235363151" "(tlb_g[56] || (tlb_asid[56] == lookup0_asid)) 1 -1" (3 "10")
+Condition 608 "1057511978" "(tlb_asid[56] == lookup0_asid) 1 -1" (2 "1")
+Condition 609 "11418966" "(g_lookup0[56].vpn2_match0 && g_lookup0[56].asid_match0) 1 -1" (1 "01")
+Condition 609 "11418966" "(g_lookup0[56].vpn2_match0 && g_lookup0[56].asid_match0) 1 -1" (2 "10")
+Condition 609 "11418966" "(g_lookup0[56].vpn2_match0 && g_lookup0[56].asid_match0) 1 -1" (3 "11")
+Condition 610 "3830359025" "(tlb_valid[57] && (((tlb_vpn2[57] ^ lookup0_vpn2) & g_lookup0[57].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 610 "3830359025" "(tlb_valid[57] && (((tlb_vpn2[57] ^ lookup0_vpn2) & g_lookup0[57].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 610 "3830359025" "(tlb_valid[57] && (((tlb_vpn2[57] ^ lookup0_vpn2) & g_lookup0[57].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 611 "3301865155" "(((tlb_vpn2[57] ^ lookup0_vpn2) & g_lookup0[57].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 612 "522353462" "(tlb_g[57] || (tlb_asid[57] == lookup0_asid)) 1 -1" (1 "00")
+Condition 612 "522353462" "(tlb_g[57] || (tlb_asid[57] == lookup0_asid)) 1 -1" (2 "01")
+Condition 612 "522353462" "(tlb_g[57] || (tlb_asid[57] == lookup0_asid)) 1 -1" (3 "10")
+Condition 613 "1744279151" "(tlb_asid[57] == lookup0_asid) 1 -1" (2 "1")
+Condition 614 "1287358564" "(g_lookup0[57].vpn2_match0 && g_lookup0[57].asid_match0) 1 -1" (1 "01")
+Condition 614 "1287358564" "(g_lookup0[57].vpn2_match0 && g_lookup0[57].asid_match0) 1 -1" (2 "10")
+Condition 614 "1287358564" "(g_lookup0[57].vpn2_match0 && g_lookup0[57].asid_match0) 1 -1" (3 "11")
+Condition 615 "400165904" "(tlb_valid[58] && (((tlb_vpn2[58] ^ lookup0_vpn2) & g_lookup0[58].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 615 "400165904" "(tlb_valid[58] && (((tlb_vpn2[58] ^ lookup0_vpn2) & g_lookup0[58].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 615 "400165904" "(tlb_valid[58] && (((tlb_vpn2[58] ^ lookup0_vpn2) & g_lookup0[58].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 616 "891734626" "(((tlb_vpn2[58] ^ lookup0_vpn2) & g_lookup0[58].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 617 "3580864014" "(tlb_g[58] || (tlb_asid[58] == lookup0_asid)) 1 -1" (1 "00")
+Condition 617 "3580864014" "(tlb_g[58] || (tlb_asid[58] == lookup0_asid)) 1 -1" (2 "01")
+Condition 617 "3580864014" "(tlb_g[58] || (tlb_asid[58] == lookup0_asid)) 1 -1" (3 "10")
+Condition 618 "567094618" "(tlb_asid[58] == lookup0_asid) 1 -1" (2 "1")
+Condition 619 "699404148" "(g_lookup0[58].vpn2_match0 && g_lookup0[58].asid_match0) 1 -1" (1 "01")
+Condition 619 "699404148" "(g_lookup0[58].vpn2_match0 && g_lookup0[58].asid_match0) 1 -1" (2 "10")
+Condition 619 "699404148" "(g_lookup0[58].vpn2_match0 && g_lookup0[58].asid_match0) 1 -1" (3 "11")
+Condition 620 "2075773783" "(tlb_valid[59] && (((tlb_vpn2[59] ^ lookup0_vpn2) & g_lookup0[59].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 620 "2075773783" "(tlb_valid[59] && (((tlb_vpn2[59] ^ lookup0_vpn2) & g_lookup0[59].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 620 "2075773783" "(tlb_valid[59] && (((tlb_vpn2[59] ^ lookup0_vpn2) & g_lookup0[59].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 621 "2722293587" "(((tlb_vpn2[59] ^ lookup0_vpn2) & g_lookup0[59].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 622 "177890423" "(tlb_g[59] || (tlb_asid[59] == lookup0_asid)) 1 -1" (1 "00")
+Condition 622 "177890423" "(tlb_g[59] || (tlb_asid[59] == lookup0_asid)) 1 -1" (2 "01")
+Condition 622 "177890423" "(tlb_g[59] || (tlb_asid[59] == lookup0_asid)) 1 -1" (3 "10")
+Condition 623 "2033377567" "(tlb_asid[59] == lookup0_asid) 1 -1" (2 "1")
+Condition 624 "1705359942" "(g_lookup0[59].vpn2_match0 && g_lookup0[59].asid_match0) 1 -1" (1 "01")
+Condition 624 "1705359942" "(g_lookup0[59].vpn2_match0 && g_lookup0[59].asid_match0) 1 -1" (2 "10")
+Condition 624 "1705359942" "(g_lookup0[59].vpn2_match0 && g_lookup0[59].asid_match0) 1 -1" (3 "11")
+Condition 625 "2414877690" "(tlb_valid[60] && (((tlb_vpn2[60] ^ lookup0_vpn2) & g_lookup0[60].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 625 "2414877690" "(tlb_valid[60] && (((tlb_vpn2[60] ^ lookup0_vpn2) & g_lookup0[60].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 625 "2414877690" "(tlb_valid[60] && (((tlb_vpn2[60] ^ lookup0_vpn2) & g_lookup0[60].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 626 "3041573308" "(((tlb_vpn2[60] ^ lookup0_vpn2) & g_lookup0[60].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 627 "2529897209" "(tlb_g[60] || (tlb_asid[60] == lookup0_asid)) 1 -1" (1 "00")
+Condition 627 "2529897209" "(tlb_g[60] || (tlb_asid[60] == lookup0_asid)) 1 -1" (2 "01")
+Condition 627 "2529897209" "(tlb_g[60] || (tlb_asid[60] == lookup0_asid)) 1 -1" (3 "10")
+Condition 628 "132406520" "(tlb_asid[60] == lookup0_asid) 1 -1" (2 "1")
+Condition 629 "859913158" "(g_lookup0[60].vpn2_match0 && g_lookup0[60].asid_match0) 1 -1" (1 "01")
+Condition 629 "859913158" "(g_lookup0[60].vpn2_match0 && g_lookup0[60].asid_match0) 1 -1" (2 "10")
+Condition 629 "859913158" "(g_lookup0[60].vpn2_match0 && g_lookup0[60].asid_match0) 1 -1" (3 "11")
+Condition 630 "3818118333" "(tlb_valid[61] && (((tlb_vpn2[61] ^ lookup0_vpn2) & g_lookup0[61].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 630 "3818118333" "(tlb_valid[61] && (((tlb_vpn2[61] ^ lookup0_vpn2) & g_lookup0[61].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 630 "3818118333" "(tlb_valid[61] && (((tlb_vpn2[61] ^ lookup0_vpn2) & g_lookup0[61].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 631 "573478029" "(((tlb_vpn2[61] ^ lookup0_vpn2) & g_lookup0[61].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 632 "1228859520" "(tlb_g[61] || (tlb_asid[61] == lookup0_asid)) 1 -1" (1 "00")
+Condition 632 "1228859520" "(tlb_g[61] || (tlb_asid[61] == lookup0_asid)) 1 -1" (2 "01")
+Condition 632 "1228859520" "(tlb_g[61] || (tlb_asid[61] == lookup0_asid)) 1 -1" (3 "10")
+Condition 633 "1595642045" "(tlb_asid[61] == lookup0_asid) 1 -1" (2 "1")
+Condition 634 "2136248052" "(g_lookup0[61].vpn2_match0 && g_lookup0[61].asid_match0) 1 -1" (1 "01")
+Condition 634 "2136248052" "(g_lookup0[61].vpn2_match0 && g_lookup0[61].asid_match0) 1 -1" (2 "10")
+Condition 634 "2136248052" "(g_lookup0[61].vpn2_match0 && g_lookup0[61].asid_match0) 1 -1" (3 "11")
+Condition 635 "1690317305" "(tlb_valid[62] && (((tlb_vpn2[62] ^ lookup0_vpn2) & g_lookup0[62].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 635 "1690317305" "(tlb_valid[62] && (((tlb_vpn2[62] ^ lookup0_vpn2) & g_lookup0[62].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 635 "1690317305" "(tlb_valid[62] && (((tlb_vpn2[62] ^ lookup0_vpn2) & g_lookup0[62].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 636 "3466453199" "(((tlb_vpn2[62] ^ lookup0_vpn2) & g_lookup0[62].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 637 "3259850303" "(tlb_g[62] || (tlb_asid[62] == lookup0_asid)) 1 -1" (1 "00")
+Condition 637 "3259850303" "(tlb_g[62] || (tlb_asid[62] == lookup0_asid)) 1 -1" (2 "01")
+Condition 637 "3259850303" "(tlb_g[62] || (tlb_asid[62] == lookup0_asid)) 1 -1" (3 "10")
+Condition 638 "2225926247" "(tlb_asid[62] == lookup0_asid) 1 -1" (2 "1")
+Condition 639 "2335203572" "(g_lookup0[62].vpn2_match0 && g_lookup0[62].asid_match0) 1 -1" (1 "01")
+Condition 639 "2335203572" "(g_lookup0[62].vpn2_match0 && g_lookup0[62].asid_match0) 1 -1" (2 "10")
+Condition 639 "2335203572" "(g_lookup0[62].vpn2_match0 && g_lookup0[62].asid_match0) 1 -1" (3 "11")
+Condition 640 "144963262" "(tlb_valid[63] && (((tlb_vpn2[63] ^ lookup0_vpn2) & g_lookup0[63].cmp0_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 640 "144963262" "(tlb_valid[63] && (((tlb_vpn2[63] ^ lookup0_vpn2) & g_lookup0[63].cmp0_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 640 "144963262" "(tlb_valid[63] && (((tlb_vpn2[63] ^ lookup0_vpn2) & g_lookup0[63].cmp0_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 641 "1509543422" "(((tlb_vpn2[63] ^ lookup0_vpn2) & g_lookup0[63].cmp0_mask) == 19'b0) 1 -1" (2 "1")
+Condition 642 "498637894" "(tlb_g[63] || (tlb_asid[63] == lookup0_asid)) 1 -1" (1 "00")
+Condition 642 "498637894" "(tlb_g[63] || (tlb_asid[63] == lookup0_asid)) 1 -1" (2 "01")
+Condition 642 "498637894" "(tlb_g[63] || (tlb_asid[63] == lookup0_asid)) 1 -1" (3 "10")
+Condition 643 "3696442402" "(tlb_asid[63] == lookup0_asid) 1 -1" (2 "1")
+Condition 644 "3341145542" "(g_lookup0[63].vpn2_match0 && g_lookup0[63].asid_match0) 1 -1" (1 "01")
+Condition 644 "3341145542" "(g_lookup0[63].vpn2_match0 && g_lookup0[63].asid_match0) 1 -1" (2 "10")
+Condition 644 "3341145542" "(g_lookup0[63].vpn2_match0 && g_lookup0[63].asid_match0) 1 -1" (3 "11")
+Condition 645 "3371217829" "(tlb_valid[0] && (((tlb_vpn2[0] ^ lookup1_vpn2) & g_lookup1[0].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 645 "3371217829" "(tlb_valid[0] && (((tlb_vpn2[0] ^ lookup1_vpn2) & g_lookup1[0].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 645 "3371217829" "(tlb_valid[0] && (((tlb_vpn2[0] ^ lookup1_vpn2) & g_lookup1[0].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 646 "3569729930" "(((tlb_vpn2[0] ^ lookup1_vpn2) & g_lookup1[0].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 647 "4055552042" "(tlb_g[0] || (tlb_asid[0] == lookup1_asid)) 1 -1" (1 "00")
+Condition 647 "4055552042" "(tlb_g[0] || (tlb_asid[0] == lookup1_asid)) 1 -1" (2 "01")
+Condition 647 "4055552042" "(tlb_g[0] || (tlb_asid[0] == lookup1_asid)) 1 -1" (3 "10")
+Condition 648 "905065809" "(tlb_asid[0] == lookup1_asid) 1 -1" (2 "1")
+Condition 649 "2404907058" "(g_lookup1[0].vpn2_match1 && g_lookup1[0].asid_match1) 1 -1" (1 "01")
+Condition 649 "2404907058" "(g_lookup1[0].vpn2_match1 && g_lookup1[0].asid_match1) 1 -1" (2 "10")
+Condition 649 "2404907058" "(g_lookup1[0].vpn2_match1 && g_lookup1[0].asid_match1) 1 -1" (3 "11")
+Condition 650 "2151037940" "(tlb_valid[1] && (((tlb_vpn2[1] ^ lookup1_vpn2) & g_lookup1[1].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 650 "2151037940" "(tlb_valid[1] && (((tlb_vpn2[1] ^ lookup1_vpn2) & g_lookup1[1].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 650 "2151037940" "(tlb_valid[1] && (((tlb_vpn2[1] ^ lookup1_vpn2) & g_lookup1[1].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 651 "1649049194" "(((tlb_vpn2[1] ^ lookup1_vpn2) & g_lookup1[1].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 652 "3058217644" "(tlb_g[1] || (tlb_asid[1] == lookup1_asid)) 1 -1" (1 "00")
+Condition 652 "3058217644" "(tlb_g[1] || (tlb_asid[1] == lookup1_asid)) 1 -1" (2 "01")
+Condition 652 "3058217644" "(tlb_g[1] || (tlb_asid[1] == lookup1_asid)) 1 -1" (3 "10")
+Condition 653 "3553007679" "(tlb_asid[1] == lookup1_asid) 1 -1" (2 "1")
+Condition 654 "4229581870" "(g_lookup1[1].vpn2_match1 && g_lookup1[1].asid_match1) 1 -1" (1 "01")
+Condition 654 "4229581870" "(g_lookup1[1].vpn2_match1 && g_lookup1[1].asid_match1) 1 -1" (2 "10")
+Condition 654 "4229581870" "(g_lookup1[1].vpn2_match1 && g_lookup1[1].asid_match1) 1 -1" (3 "11")
+Condition 655 "2025115830" "(tlb_valid[2] && (((tlb_vpn2[2] ^ lookup1_vpn2) & g_lookup1[2].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 655 "2025115830" "(tlb_valid[2] && (((tlb_vpn2[2] ^ lookup1_vpn2) & g_lookup1[2].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 655 "2025115830" "(tlb_valid[2] && (((tlb_vpn2[2] ^ lookup1_vpn2) & g_lookup1[2].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 656 "3918766365" "(((tlb_vpn2[2] ^ lookup1_vpn2) & g_lookup1[2].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 657 "3207840570" "(tlb_g[2] || (tlb_asid[2] == lookup1_asid)) 1 -1" (1 "00")
+Condition 657 "3207840570" "(tlb_g[2] || (tlb_asid[2] == lookup1_asid)) 1 -1" (2 "01")
+Condition 657 "3207840570" "(tlb_g[2] || (tlb_asid[2] == lookup1_asid)) 1 -1" (3 "10")
+Condition 658 "1386677592" "(tlb_asid[2] == lookup1_asid) 1 -1" (2 "1")
+Condition 659 "1559497793" "(g_lookup1[2].vpn2_match1 && g_lookup1[2].asid_match1) 1 -1" (1 "01")
+Condition 659 "1559497793" "(g_lookup1[2].vpn2_match1 && g_lookup1[2].asid_match1) 1 -1" (2 "10")
+Condition 659 "1559497793" "(g_lookup1[2].vpn2_match1 && g_lookup1[2].asid_match1) 1 -1" (3 "11")
+Condition 660 "812800231" "(tlb_valid[3] && (((tlb_vpn2[3] ^ lookup1_vpn2) & g_lookup1[3].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 660 "812800231" "(tlb_valid[3] && (((tlb_vpn2[3] ^ lookup1_vpn2) & g_lookup1[3].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 660 "812800231" "(tlb_valid[3] && (((tlb_vpn2[3] ^ lookup1_vpn2) & g_lookup1[3].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 661 "1595678461" "(((tlb_vpn2[3] ^ lookup1_vpn2) & g_lookup1[3].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 662 "4173439420" "(tlb_g[3] || (tlb_asid[3] == lookup1_asid)) 1 -1" (1 "00")
+Condition 662 "4173439420" "(tlb_g[3] || (tlb_asid[3] == lookup1_asid)) 1 -1" (2 "01")
+Condition 662 "4173439420" "(tlb_g[3] || (tlb_asid[3] == lookup1_asid)) 1 -1" (3 "10")
+Condition 663 "3029575734" "(tlb_asid[3] == lookup1_asid) 1 -1" (2 "1")
+Condition 664 "800700509" "(g_lookup1[3].vpn2_match1 && g_lookup1[3].asid_match1) 1 -1" (1 "01")
+Condition 664 "800700509" "(g_lookup1[3].vpn2_match1 && g_lookup1[3].asid_match1) 1 -1" (2 "10")
+Condition 664 "800700509" "(g_lookup1[3].vpn2_match1 && g_lookup1[3].asid_match1) 1 -1" (3 "11")
+Condition 665 "2001799865" "(tlb_valid[4] && (((tlb_vpn2[4] ^ lookup1_vpn2) & g_lookup1[4].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 665 "2001799865" "(tlb_valid[4] && (((tlb_vpn2[4] ^ lookup1_vpn2) & g_lookup1[4].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 665 "2001799865" "(tlb_valid[4] && (((tlb_vpn2[4] ^ lookup1_vpn2) & g_lookup1[4].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 666 "2171510507" "(((tlb_vpn2[4] ^ lookup1_vpn2) & g_lookup1[4].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 667 "393076888" "(tlb_g[4] || (tlb_asid[4] == lookup1_asid)) 1 -1" (1 "00")
+Condition 667 "393076888" "(tlb_g[4] || (tlb_asid[4] == lookup1_asid)) 1 -1" (2 "01")
+Condition 667 "393076888" "(tlb_g[4] || (tlb_asid[4] == lookup1_asid)) 1 -1" (3 "10")
+Condition 668 "2736854964" "(tlb_asid[4] == lookup1_asid) 1 -1" (2 "1")
+Condition 669 "1264644243" "(g_lookup1[4].vpn2_match1 && g_lookup1[4].asid_match1) 1 -1" (1 "01")
+Condition 669 "1264644243" "(g_lookup1[4].vpn2_match1 && g_lookup1[4].asid_match1) 1 -1" (2 "10")
+Condition 669 "1264644243" "(g_lookup1[4].vpn2_match1 && g_lookup1[4].asid_match1) 1 -1" (3 "11")
+Condition 670 "1066894056" "(tlb_valid[5] && (((tlb_vpn2[5] ^ lookup1_vpn2) & g_lookup1[5].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 670 "1066894056" "(tlb_valid[5] && (((tlb_vpn2[5] ^ lookup1_vpn2) & g_lookup1[5].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 670 "1066894056" "(tlb_valid[5] && (((tlb_vpn2[5] ^ lookup1_vpn2) & g_lookup1[5].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 671 "937500939" "(((tlb_vpn2[5] ^ lookup1_vpn2) & g_lookup1[5].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 672 "1352630814" "(tlb_g[5] || (tlb_asid[5] == lookup1_asid)) 1 -1" (1 "00")
+Condition 672 "1352630814" "(tlb_g[5] || (tlb_asid[5] == lookup1_asid)) 1 -1" (2 "01")
+Condition 672 "1352630814" "(tlb_g[5] || (tlb_asid[5] == lookup1_asid)) 1 -1" (3 "10")
+Condition 673 "1159051994" "(tlb_asid[5] == lookup1_asid) 1 -1" (2 "1")
+Condition 674 "942490767" "(g_lookup1[5].vpn2_match1 && g_lookup1[5].asid_match1) 1 -1" (1 "01")
+Condition 674 "942490767" "(g_lookup1[5].vpn2_match1 && g_lookup1[5].asid_match1) 1 -1" (2 "10")
+Condition 674 "942490767" "(g_lookup1[5].vpn2_match1 && g_lookup1[5].asid_match1) 1 -1" (3 "11")
+Condition 675 "3340069290" "(tlb_valid[6] && (((tlb_vpn2[6] ^ lookup1_vpn2) & g_lookup1[6].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 675 "3340069290" "(tlb_valid[6] && (((tlb_vpn2[6] ^ lookup1_vpn2) & g_lookup1[6].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 675 "3340069290" "(tlb_valid[6] && (((tlb_vpn2[6] ^ lookup1_vpn2) & g_lookup1[6].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 676 "3157851772" "(((tlb_vpn2[6] ^ lookup1_vpn2) & g_lookup1[6].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 677 "1508176776" "(tlb_g[6] || (tlb_asid[6] == lookup1_asid)) 1 -1" (1 "00")
+Condition 677 "1508176776" "(tlb_g[6] || (tlb_asid[6] == lookup1_asid)) 1 -1" (2 "01")
+Condition 677 "1508176776" "(tlb_g[6] || (tlb_asid[6] == lookup1_asid)) 1 -1" (3 "10")
+Condition 678 "3295946685" "(tlb_asid[6] == lookup1_asid) 1 -1" (2 "1")
+Condition 679 "2562917600" "(g_lookup1[6].vpn2_match1 && g_lookup1[6].asid_match1) 1 -1" (1 "01")
+Condition 679 "2562917600" "(g_lookup1[6].vpn2_match1 && g_lookup1[6].asid_match1) 1 -1" (2 "10")
+Condition 679 "2562917600" "(g_lookup1[6].vpn2_match1 && g_lookup1[6].asid_match1) 1 -1" (3 "11")
+Condition 680 "2413027835" "(tlb_valid[7] && (((tlb_vpn2[7] ^ lookup1_vpn2) & g_lookup1[7].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 680 "2413027835" "(tlb_valid[7] && (((tlb_vpn2[7] ^ lookup1_vpn2) & g_lookup1[7].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 680 "2413027835" "(tlb_valid[7] && (((tlb_vpn2[7] ^ lookup1_vpn2) & g_lookup1[7].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 681 "179782044" "(((tlb_vpn2[7] ^ lookup1_vpn2) & g_lookup1[7].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 682 "504795406" "(tlb_g[7] || (tlb_asid[7] == lookup1_asid)) 1 -1" (1 "00")
+Condition 682 "504795406" "(tlb_g[7] || (tlb_asid[7] == lookup1_asid)) 1 -1" (2 "01")
+Condition 682 "504795406" "(tlb_g[7] || (tlb_asid[7] == lookup1_asid)) 1 -1" (3 "10")
+Condition 683 "574655187" "(tlb_asid[7] == lookup1_asid) 1 -1" (2 "1")
+Condition 684 "3951997180" "(g_lookup1[7].vpn2_match1 && g_lookup1[7].asid_match1) 1 -1" (1 "01")
+Condition 684 "3951997180" "(g_lookup1[7].vpn2_match1 && g_lookup1[7].asid_match1) 1 -1" (2 "10")
+Condition 684 "3951997180" "(g_lookup1[7].vpn2_match1 && g_lookup1[7].asid_match1) 1 -1" (3 "11")
+Condition 685 "307361087" "(tlb_valid[8] && (((tlb_vpn2[8] ^ lookup1_vpn2) & g_lookup1[8].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 685 "307361087" "(tlb_valid[8] && (((tlb_vpn2[8] ^ lookup1_vpn2) & g_lookup1[8].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 685 "307361087" "(tlb_valid[8] && (((tlb_vpn2[8] ^ lookup1_vpn2) & g_lookup1[8].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 686 "4121690057" "(((tlb_vpn2[8] ^ lookup1_vpn2) & g_lookup1[8].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 687 "2583070188" "(tlb_g[8] || (tlb_asid[8] == lookup1_asid)) 1 -1" (1 "00")
+Condition 687 "2583070188" "(tlb_g[8] || (tlb_asid[8] == lookup1_asid)) 1 -1" (2 "01")
+Condition 687 "2583070188" "(tlb_g[8] || (tlb_asid[8] == lookup1_asid)) 1 -1" (3 "10")
+Condition 688 "2527980973" "(tlb_asid[8] == lookup1_asid) 1 -1" (2 "1")
+Condition 689 "3215027130" "(g_lookup1[8].vpn2_match1 && g_lookup1[8].asid_match1) 1 -1" (1 "01")
+Condition 689 "3215027130" "(g_lookup1[8].vpn2_match1 && g_lookup1[8].asid_match1) 1 -1" (2 "10")
+Condition 689 "3215027130" "(g_lookup1[8].vpn2_match1 && g_lookup1[8].asid_match1) 1 -1" (3 "11")
+Condition 690 "1519877486" "(tlb_valid[9] && (((tlb_vpn2[9] ^ lookup1_vpn2) & g_lookup1[9].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 690 "1519877486" "(tlb_valid[9] && (((tlb_vpn2[9] ^ lookup1_vpn2) & g_lookup1[9].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 690 "1519877486" "(tlb_valid[9] && (((tlb_vpn2[9] ^ lookup1_vpn2) & g_lookup1[9].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 691 "1126449193" "(((tlb_vpn2[9] ^ lookup1_vpn2) & g_lookup1[9].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 692 "3724863338" "(tlb_g[9] || (tlb_asid[9] == lookup1_asid)) 1 -1" (1 "00")
+Condition 692 "3724863338" "(tlb_g[9] || (tlb_asid[9] == lookup1_asid)) 1 -1" (2 "01")
+Condition 692 "3724863338" "(tlb_g[9] || (tlb_asid[9] == lookup1_asid)) 1 -1" (3 "10")
+Condition 693 "1889091779" "(tlb_asid[9] == lookup1_asid) 1 -1" (2 "1")
+Condition 694 "3438075814" "(g_lookup1[9].vpn2_match1 && g_lookup1[9].asid_match1) 1 -1" (1 "01")
+Condition 694 "3438075814" "(g_lookup1[9].vpn2_match1 && g_lookup1[9].asid_match1) 1 -1" (2 "10")
+Condition 694 "3438075814" "(g_lookup1[9].vpn2_match1 && g_lookup1[9].asid_match1) 1 -1" (3 "11")
+Condition 695 "1310552029" "(tlb_valid[10] && (((tlb_vpn2[10] ^ lookup1_vpn2) & g_lookup1[10].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 695 "1310552029" "(tlb_valid[10] && (((tlb_vpn2[10] ^ lookup1_vpn2) & g_lookup1[10].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 695 "1310552029" "(tlb_valid[10] && (((tlb_vpn2[10] ^ lookup1_vpn2) & g_lookup1[10].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 696 "4072765650" "(((tlb_vpn2[10] ^ lookup1_vpn2) & g_lookup1[10].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 697 "636432572" "(tlb_g[10] || (tlb_asid[10] == lookup1_asid)) 1 -1" (1 "00")
+Condition 697 "636432572" "(tlb_g[10] || (tlb_asid[10] == lookup1_asid)) 1 -1" (2 "01")
+Condition 697 "636432572" "(tlb_g[10] || (tlb_asid[10] == lookup1_asid)) 1 -1" (3 "10")
+Condition 698 "818915292" "(tlb_asid[10] == lookup1_asid) 1 -1" (2 "1")
+Condition 699 "769354514" "(g_lookup1[10].vpn2_match1 && g_lookup1[10].asid_match1) 1 -1" (1 "01")
+Condition 699 "769354514" "(g_lookup1[10].vpn2_match1 && g_lookup1[10].asid_match1) 1 -1" (2 "10")
+Condition 699 "769354514" "(g_lookup1[10].vpn2_match1 && g_lookup1[10].asid_match1) 1 -1" (3 "11")
+Condition 700 "578726042" "(tlb_valid[11] && (((tlb_vpn2[11] ^ lookup1_vpn2) & g_lookup1[11].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 700 "578726042" "(tlb_valid[11] && (((tlb_vpn2[11] ^ lookup1_vpn2) & g_lookup1[11].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 700 "578726042" "(tlb_valid[11] && (((tlb_vpn2[11] ^ lookup1_vpn2) & g_lookup1[11].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 701 "1705334243" "(((tlb_vpn2[11] ^ lookup1_vpn2) & g_lookup1[11].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 702 "4196070085" "(tlb_g[11] || (tlb_asid[11] == lookup1_asid)) 1 -1" (1 "00")
+Condition 702 "4196070085" "(tlb_g[11] || (tlb_asid[11] == lookup1_asid)) 1 -1" (2 "01")
+Condition 702 "4196070085" "(tlb_g[11] || (tlb_asid[11] == lookup1_asid)) 1 -1" (3 "10")
+Condition 703 "1748003737" "(tlb_asid[11] == lookup1_asid) 1 -1" (2 "1")
+Condition 704 "1640947232" "(g_lookup1[11].vpn2_match1 && g_lookup1[11].asid_match1) 1 -1" (1 "01")
+Condition 704 "1640947232" "(g_lookup1[11].vpn2_match1 && g_lookup1[11].asid_match1) 1 -1" (2 "10")
+Condition 704 "1640947232" "(g_lookup1[11].vpn2_match1 && g_lookup1[11].asid_match1) 1 -1" (3 "11")
+Condition 705 "2771207646" "(tlb_valid[12] && (((tlb_vpn2[12] ^ lookup1_vpn2) & g_lookup1[12].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 705 "2771207646" "(tlb_valid[12] && (((tlb_vpn2[12] ^ lookup1_vpn2) & g_lookup1[12].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 705 "2771207646" "(tlb_valid[12] && (((tlb_vpn2[12] ^ lookup1_vpn2) & g_lookup1[12].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 706 "2299928993" "(((tlb_vpn2[12] ^ lookup1_vpn2) & g_lookup1[12].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 707 "1902724218" "(tlb_g[12] || (tlb_asid[12] == lookup1_asid)) 1 -1" (1 "00")
+Condition 707 "1902724218" "(tlb_g[12] || (tlb_asid[12] == lookup1_asid)) 1 -1" (2 "01")
+Condition 707 "1902724218" "(tlb_g[12] || (tlb_asid[12] == lookup1_asid)) 1 -1" (3 "10")
+Condition 708 "3011971907" "(tlb_asid[12] == lookup1_asid) 1 -1" (2 "1")
+Condition 709 "2510958624" "(g_lookup1[12].vpn2_match1 && g_lookup1[12].asid_match1) 1 -1" (1 "01")
+Condition 709 "2510958624" "(g_lookup1[12].vpn2_match1 && g_lookup1[12].asid_match1) 1 -1" (2 "10")
+Condition 709 "2510958624" "(g_lookup1[12].vpn2_match1 && g_lookup1[12].asid_match1) 1 -1" (3 "11")
+Condition 710 "3377365657" "(tlb_valid[13] && (((tlb_vpn2[13] ^ lookup1_vpn2) & g_lookup1[13].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 710 "3377365657" "(tlb_valid[13] && (((tlb_vpn2[13] ^ lookup1_vpn2) & g_lookup1[13].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 710 "3377365657" "(tlb_valid[13] && (((tlb_vpn2[13] ^ lookup1_vpn2) & g_lookup1[13].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 711 "510790800" "(((tlb_vpn2[13] ^ lookup1_vpn2) & g_lookup1[13].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 712 "2929493507" "(tlb_g[13] || (tlb_asid[13] == lookup1_asid)) 1 -1" (1 "00")
+Condition 712 "2929493507" "(tlb_g[13] || (tlb_asid[13] == lookup1_asid)) 1 -1" (2 "01")
+Condition 712 "2929493507" "(tlb_g[13] || (tlb_asid[13] == lookup1_asid)) 1 -1" (3 "10")
+Condition 713 "3950561030" "(tlb_asid[13] == lookup1_asid) 1 -1" (2 "1")
+Condition 714 "3653207314" "(g_lookup1[13].vpn2_match1 && g_lookup1[13].asid_match1) 1 -1" (1 "01")
+Condition 714 "3653207314" "(g_lookup1[13].vpn2_match1 && g_lookup1[13].asid_match1) 1 -1" (2 "10")
+Condition 714 "3653207314" "(g_lookup1[13].vpn2_match1 && g_lookup1[13].asid_match1) 1 -1" (3 "11")
+Condition 715 "4082755987" "(tlb_valid[14] && (((tlb_vpn2[14] ^ lookup1_vpn2) & g_lookup1[14].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 715 "4082755987" "(tlb_valid[14] && (((tlb_vpn2[14] ^ lookup1_vpn2) & g_lookup1[14].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 715 "4082755987" "(tlb_valid[14] && (((tlb_vpn2[14] ^ lookup1_vpn2) & g_lookup1[14].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 716 "3745766422" "(((tlb_vpn2[14] ^ lookup1_vpn2) & g_lookup1[14].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 717 "943155810" "(tlb_g[14] || (tlb_asid[14] == lookup1_asid)) 1 -1" (1 "00")
+Condition 717 "943155810" "(tlb_g[14] || (tlb_asid[14] == lookup1_asid)) 1 -1" (2 "01")
+Condition 717 "943155810" "(tlb_g[14] || (tlb_asid[14] == lookup1_asid)) 1 -1" (3 "10")
+Condition 718 "2360447022" "(tlb_asid[14] == lookup1_asid) 1 -1" (2 "1")
+Condition 719 "809959586" "(g_lookup1[14].vpn2_match1 && g_lookup1[14].asid_match1) 1 -1" (1 "01")
+Condition 719 "809959586" "(g_lookup1[14].vpn2_match1 && g_lookup1[14].asid_match1) 1 -1" (2 "10")
+Condition 719 "809959586" "(g_lookup1[14].vpn2_match1 && g_lookup1[14].asid_match1) 1 -1" (3 "11")
+Condition 720 "2671390420" "(tlb_valid[15] && (((tlb_vpn2[15] ^ lookup1_vpn2) & g_lookup1[15].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 720 "2671390420" "(tlb_valid[15] && (((tlb_vpn2[15] ^ lookup1_vpn2) & g_lookup1[15].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 720 "2671390420" "(tlb_valid[15] && (((tlb_vpn2[15] ^ lookup1_vpn2) & g_lookup1[15].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 721 "1210577191" "(((tlb_vpn2[15] ^ lookup1_vpn2) & g_lookup1[15].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 722 "3888293915" "(tlb_g[15] || (tlb_asid[15] == lookup1_asid)) 1 -1" (1 "00")
+Condition 722 "3888293915" "(tlb_g[15] || (tlb_asid[15] == lookup1_asid)) 1 -1" (2 "01")
+Condition 722 "3888293915" "(tlb_g[15] || (tlb_asid[15] == lookup1_asid)) 1 -1" (3 "10")
+Condition 723 "3561905259" "(tlb_asid[15] == lookup1_asid) 1 -1" (2 "1")
+Condition 724 "2085795216" "(g_lookup1[15].vpn2_match1 && g_lookup1[15].asid_match1) 1 -1" (1 "01")
+Condition 724 "2085795216" "(g_lookup1[15].vpn2_match1 && g_lookup1[15].asid_match1) 1 -1" (2 "10")
+Condition 724 "2085795216" "(g_lookup1[15].vpn2_match1 && g_lookup1[15].asid_match1) 1 -1" (3 "11")
+Condition 725 "409584528" "(tlb_valid[16] && (((tlb_vpn2[16] ^ lookup1_vpn2) & g_lookup1[16].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 725 "409584528" "(tlb_valid[16] && (((tlb_vpn2[16] ^ lookup1_vpn2) & g_lookup1[16].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 725 "409584528" "(tlb_valid[16] && (((tlb_vpn2[16] ^ lookup1_vpn2) & g_lookup1[16].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 726 "2761196901" "(((tlb_vpn2[16] ^ lookup1_vpn2) & g_lookup1[16].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 727 "1823547044" "(tlb_g[16] || (tlb_asid[16] == lookup1_asid)) 1 -1" (1 "00")
+Condition 727 "1823547044" "(tlb_g[16] || (tlb_asid[16] == lookup1_asid)) 1 -1" (2 "01")
+Condition 727 "1823547044" "(tlb_g[16] || (tlb_asid[16] == lookup1_asid)) 1 -1" (3 "10")
+Condition 728 "267992241" "(tlb_asid[16] == lookup1_asid) 1 -1" (2 "1")
+Condition 729 "2285263760" "(g_lookup1[16].vpn2_match1 && g_lookup1[16].asid_match1) 1 -1" (1 "01")
+Condition 729 "2285263760" "(g_lookup1[16].vpn2_match1 && g_lookup1[16].asid_match1) 1 -1" (2 "10")
+Condition 729 "2285263760" "(g_lookup1[16].vpn2_match1 && g_lookup1[16].asid_match1) 1 -1" (3 "11")
+Condition 730 "1946813655" "(tlb_valid[17] && (((tlb_vpn2[17] ^ lookup1_vpn2) & g_lookup1[17].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 730 "1946813655" "(tlb_valid[17] && (((tlb_vpn2[17] ^ lookup1_vpn2) & g_lookup1[17].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 730 "1946813655" "(tlb_valid[17] && (((tlb_vpn2[17] ^ lookup1_vpn2) & g_lookup1[17].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 731 "871409748" "(((tlb_vpn2[17] ^ lookup1_vpn2) & g_lookup1[17].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 732 "3007634653" "(tlb_g[17] || (tlb_asid[17] == lookup1_asid)) 1 -1" (1 "00")
+Condition 732 "3007634653" "(tlb_g[17] || (tlb_asid[17] == lookup1_asid)) 1 -1" (2 "01")
+Condition 732 "3007634653" "(tlb_g[17] || (tlb_asid[17] == lookup1_asid)) 1 -1" (3 "10")
+Condition 733 "1460072692" "(tlb_asid[17] == lookup1_asid) 1 -1" (2 "1")
+Condition 734 "3290689186" "(g_lookup1[17].vpn2_match1 && g_lookup1[17].asid_match1) 1 -1" (1 "01")
+Condition 734 "3290689186" "(g_lookup1[17].vpn2_match1 && g_lookup1[17].asid_match1) 1 -1" (2 "10")
+Condition 734 "3290689186" "(g_lookup1[17].vpn2_match1 && g_lookup1[17].asid_match1) 1 -1" (3 "11")
+Condition 735 "2275322678" "(tlb_valid[18] && (((tlb_vpn2[18] ^ lookup1_vpn2) & g_lookup1[18].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 735 "2275322678" "(tlb_valid[18] && (((tlb_vpn2[18] ^ lookup1_vpn2) & g_lookup1[18].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 735 "2275322678" "(tlb_valid[18] && (((tlb_vpn2[18] ^ lookup1_vpn2) & g_lookup1[18].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 736 "3256358133" "(((tlb_vpn2[18] ^ lookup1_vpn2) & g_lookup1[18].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 737 "2030633445" "(tlb_g[18] || (tlb_asid[18] == lookup1_asid)) 1 -1" (1 "00")
+Condition 737 "2030633445" "(tlb_g[18] || (tlb_asid[18] == lookup1_asid)) 1 -1" (2 "01")
+Condition 737 "2030633445" "(tlb_g[18] || (tlb_asid[18] == lookup1_asid)) 1 -1" (3 "10")
+Condition 738 "289164225" "(tlb_asid[18] == lookup1_asid) 1 -1" (2 "1")
+Condition 739 "2703780274" "(g_lookup1[18].vpn2_match1 && g_lookup1[18].asid_match1) 1 -1" (1 "01")
+Condition 739 "2703780274" "(g_lookup1[18].vpn2_match1 && g_lookup1[18].asid_match1) 1 -1" (2 "10")
+Condition 739 "2703780274" "(g_lookup1[18].vpn2_match1 && g_lookup1[18].asid_match1) 1 -1" (3 "11")
+Condition 740 "3959254129" "(tlb_valid[19] && (((tlb_vpn2[19] ^ lookup1_vpn2) & g_lookup1[19].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 740 "3959254129" "(tlb_valid[19] && (((tlb_vpn2[19] ^ lookup1_vpn2) & g_lookup1[19].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 740 "3959254129" "(tlb_valid[19] && (((tlb_vpn2[19] ^ lookup1_vpn2) & g_lookup1[19].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 741 "1434204612" "(((tlb_vpn2[19] ^ lookup1_vpn2) & g_lookup1[19].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 742 "2801583004" "(tlb_g[19] || (tlb_asid[19] == lookup1_asid)) 1 -1" (1 "00")
+Condition 742 "2801583004" "(tlb_g[19] || (tlb_asid[19] == lookup1_asid)) 1 -1" (2 "01")
+Condition 742 "2801583004" "(tlb_g[19] || (tlb_asid[19] == lookup1_asid)) 1 -1" (3 "10")
+Condition 743 "1237550980" "(tlb_asid[19] == lookup1_asid) 1 -1" (2 "1")
+Condition 744 "3980254336" "(g_lookup1[19].vpn2_match1 && g_lookup1[19].asid_match1) 1 -1" (1 "01")
+Condition 744 "3980254336" "(g_lookup1[19].vpn2_match1 && g_lookup1[19].asid_match1) 1 -1" (2 "10")
+Condition 744 "3980254336" "(g_lookup1[19].vpn2_match1 && g_lookup1[19].asid_match1) 1 -1" (3 "11")
+Condition 745 "531938524" "(tlb_valid[20] && (((tlb_vpn2[20] ^ lookup1_vpn2) & g_lookup1[20].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 745 "531938524" "(tlb_valid[20] && (((tlb_vpn2[20] ^ lookup1_vpn2) & g_lookup1[20].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 745 "531938524" "(tlb_valid[20] && (((tlb_vpn2[20] ^ lookup1_vpn2) & g_lookup1[20].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 746 "1114924843" "(((tlb_vpn2[20] ^ lookup1_vpn2) & g_lookup1[20].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 747 "984452370" "(tlb_g[20] || (tlb_asid[20] == lookup1_asid)) 1 -1" (1 "00")
+Condition 747 "984452370" "(tlb_g[20] || (tlb_asid[20] == lookup1_asid)) 1 -1" (2 "01")
+Condition 747 "984452370" "(tlb_g[20] || (tlb_asid[20] == lookup1_asid)) 1 -1" (3 "10")
+Condition 748 "924138083" "(tlb_asid[20] == lookup1_asid) 1 -1" (2 "1")
+Condition 749 "3151584512" "(g_lookup1[20].vpn2_match1 && g_lookup1[20].asid_match1) 1 -1" (1 "01")
+Condition 749 "3151584512" "(g_lookup1[20].vpn2_match1 && g_lookup1[20].asid_match1) 1 -1" (2 "10")
+Condition 749 "3151584512" "(g_lookup1[20].vpn2_match1 && g_lookup1[20].asid_match1) 1 -1" (3 "11")
+Condition 750 "1943501723" "(tlb_valid[21] && (((tlb_vpn2[21] ^ lookup1_vpn2) & g_lookup1[21].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 750 "1943501723" "(tlb_valid[21] && (((tlb_vpn2[21] ^ lookup1_vpn2) & g_lookup1[21].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 750 "1943501723" "(tlb_valid[21] && (((tlb_vpn2[21] ^ lookup1_vpn2) & g_lookup1[21].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 751 "3574614554" "(((tlb_vpn2[21] ^ lookup1_vpn2) & g_lookup1[21].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 752 "3847769963" "(tlb_g[21] || (tlb_asid[21] == lookup1_asid)) 1 -1" (1 "00")
+Condition 752 "3847769963" "(tlb_g[21] || (tlb_asid[21] == lookup1_asid)) 1 -1" (2 "01")
+Condition 752 "3847769963" "(tlb_g[21] || (tlb_asid[21] == lookup1_asid)) 1 -1" (3 "10")
+Condition 753 "1877669414" "(tlb_asid[21] == lookup1_asid) 1 -1" (2 "1")
+Condition 754 "4157401138" "(g_lookup1[21].vpn2_match1 && g_lookup1[21].asid_match1) 1 -1" (1 "01")
+Condition 754 "4157401138" "(g_lookup1[21].vpn2_match1 && g_lookup1[21].asid_match1) 1 -1" (2 "10")
+Condition 754 "4157401138" "(g_lookup1[21].vpn2_match1 && g_lookup1[21].asid_match1) 1 -1" (3 "11")
+Condition 755 "4102330079" "(tlb_valid[22] && (((tlb_vpn2[22] ^ lookup1_vpn2) & g_lookup1[22].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 755 "4102330079" "(tlb_valid[22] && (((tlb_vpn2[22] ^ lookup1_vpn2) & g_lookup1[22].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 755 "4102330079" "(tlb_valid[22] && (((tlb_vpn2[22] ^ lookup1_vpn2) & g_lookup1[22].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 756 "966999640" "(((tlb_vpn2[22] ^ lookup1_vpn2) & g_lookup1[22].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 757 "1848375764" "(tlb_g[22] || (tlb_asid[22] == lookup1_asid)) 1 -1" (1 "00")
+Condition 757 "1848375764" "(tlb_g[22] || (tlb_asid[22] == lookup1_asid)) 1 -1" (2 "01")
+Condition 757 "1848375764" "(tlb_g[22] || (tlb_asid[22] == lookup1_asid)) 1 -1" (3 "10")
+Condition 758 "3026032380" "(tlb_asid[22] == lookup1_asid) 1 -1" (2 "1")
+Condition 759 "61343282" "(g_lookup1[22].vpn2_match1 && g_lookup1[22].asid_match1) 1 -1" (1 "01")
+Condition 759 "61343282" "(g_lookup1[22].vpn2_match1 && g_lookup1[22].asid_match1) 1 -1" (2 "10")
+Condition 759 "61343282" "(g_lookup1[22].vpn2_match1 && g_lookup1[22].asid_match1) 1 -1" (3 "11")
+Condition 760 "2565296536" "(tlb_valid[23] && (((tlb_vpn2[23] ^ lookup1_vpn2) & g_lookup1[23].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 760 "2565296536" "(tlb_valid[23] && (((tlb_vpn2[23] ^ lookup1_vpn2) & g_lookup1[23].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 760 "2565296536" "(tlb_valid[23] && (((tlb_vpn2[23] ^ lookup1_vpn2) & g_lookup1[23].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 761 "2932282217" "(((tlb_vpn2[23] ^ lookup1_vpn2) & g_lookup1[23].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 762 "2984131501" "(tlb_g[23] || (tlb_asid[23] == lookup1_asid)) 1 -1" (1 "00")
+Condition 762 "2984131501" "(tlb_g[23] || (tlb_asid[23] == lookup1_asid)) 1 -1" (2 "01")
+Condition 762 "2984131501" "(tlb_g[23] || (tlb_asid[23] == lookup1_asid)) 1 -1" (3 "10")
+Condition 763 "3970063033" "(tlb_asid[23] == lookup1_asid) 1 -1" (2 "1")
+Condition 764 "1337832192" "(g_lookup1[23].vpn2_match1 && g_lookup1[23].asid_match1) 1 -1" (1 "01")
+Condition 764 "1337832192" "(g_lookup1[23].vpn2_match1 && g_lookup1[23].asid_match1) 1 -1" (2 "10")
+Condition 764 "1337832192" "(g_lookup1[23].vpn2_match1 && g_lookup1[23].asid_match1) 1 -1" (3 "11")
+Condition 765 "2733652626" "(tlb_valid[24] && (((tlb_vpn2[24] ^ lookup1_vpn2) & g_lookup1[24].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 765 "2733652626" "(tlb_valid[24] && (((tlb_vpn2[24] ^ lookup1_vpn2) & g_lookup1[24].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 765 "2733652626" "(tlb_valid[24] && (((tlb_vpn2[24] ^ lookup1_vpn2) & g_lookup1[24].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 766 "1878442991" "(((tlb_vpn2[24] ^ lookup1_vpn2) & g_lookup1[24].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 767 "662034380" "(tlb_g[24] || (tlb_asid[24] == lookup1_asid)) 1 -1" (1 "00")
+Condition 767 "662034380" "(tlb_g[24] || (tlb_asid[24] == lookup1_asid)) 1 -1" (2 "01")
+Condition 767 "662034380" "(tlb_g[24] || (tlb_asid[24] == lookup1_asid)) 1 -1" (3 "10")
+Condition 768 "2339048849" "(tlb_asid[24] == lookup1_asid) 1 -1" (2 "1")
+Condition 769 "2789553840" "(g_lookup1[24].vpn2_match1 && g_lookup1[24].asid_match1) 1 -1" (1 "01")
+Condition 769 "2789553840" "(g_lookup1[24].vpn2_match1 && g_lookup1[24].asid_match1) 1 -1" (2 "10")
+Condition 769 "2789553840" "(g_lookup1[24].vpn2_match1 && g_lookup1[24].asid_match1) 1 -1" (3 "11")
+Condition 770 "3465805269" "(tlb_valid[25] && (((tlb_vpn2[25] ^ lookup1_vpn2) & g_lookup1[25].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 770 "3465805269" "(tlb_valid[25] && (((tlb_vpn2[25] ^ lookup1_vpn2) & g_lookup1[25].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 770 "3465805269" "(tlb_valid[25] && (((tlb_vpn2[25] ^ lookup1_vpn2) & g_lookup1[25].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 771 "4170378974" "(((tlb_vpn2[25] ^ lookup1_vpn2) & g_lookup1[25].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 772 "4169143733" "(tlb_g[25] || (tlb_asid[25] == lookup1_asid)) 1 -1" (1 "00")
+Condition 772 "4169143733" "(tlb_g[25] || (tlb_asid[25] == lookup1_asid)) 1 -1" (2 "01")
+Condition 772 "4169143733" "(tlb_g[25] || (tlb_asid[25] == lookup1_asid)) 1 -1" (3 "10")
+Condition 773 "3549741524" "(tlb_asid[25] == lookup1_asid) 1 -1" (2 "1")
+Condition 774 "3931145090" "(g_lookup1[25].vpn2_match1 && g_lookup1[25].asid_match1) 1 -1" (1 "01")
+Condition 774 "3931145090" "(g_lookup1[25].vpn2_match1 && g_lookup1[25].asid_match1) 1 -1" (2 "10")
+Condition 774 "3931145090" "(g_lookup1[25].vpn2_match1 && g_lookup1[25].asid_match1) 1 -1" (3 "11")
+Condition 775 "1237323921" "(tlb_valid[26] && (((tlb_vpn2[26] ^ lookup1_vpn2) & g_lookup1[26].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 775 "1237323921" "(tlb_valid[26] && (((tlb_vpn2[26] ^ lookup1_vpn2) & g_lookup1[26].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 775 "1237323921" "(tlb_valid[26] && (((tlb_vpn2[26] ^ lookup1_vpn2) & g_lookup1[26].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 776 "337746588" "(((tlb_vpn2[26] ^ lookup1_vpn2) & g_lookup1[26].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 777 "1945346826" "(tlb_g[26] || (tlb_asid[26] == lookup1_asid)) 1 -1" (1 "00")
+Condition 777 "1945346826" "(tlb_g[26] || (tlb_asid[26] == lookup1_asid)) 1 -1" (2 "01")
+Condition 777 "1945346826" "(tlb_g[26] || (tlb_asid[26] == lookup1_asid)) 1 -1" (3 "10")
+Condition 778 "136552718" "(tlb_asid[26] == lookup1_asid) 1 -1" (2 "1")
+Condition 779 "506752386" "(g_lookup1[26].vpn2_match1 && g_lookup1[26].asid_match1) 1 -1" (1 "01")
+Condition 779 "506752386" "(g_lookup1[26].vpn2_match1 && g_lookup1[26].asid_match1) 1 -1" (2 "10")
+Condition 779 "506752386" "(g_lookup1[26].vpn2_match1 && g_lookup1[26].asid_match1) 1 -1" (3 "11")
+Condition 780 "631494614" "(tlb_valid[27] && (((tlb_vpn2[27] ^ lookup1_vpn2) & g_lookup1[27].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 780 "631494614" "(tlb_valid[27] && (((tlb_vpn2[27] ^ lookup1_vpn2) & g_lookup1[27].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 780 "631494614" "(tlb_valid[27] && (((tlb_vpn2[27] ^ lookup1_vpn2) & g_lookup1[27].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 781 "2202384301" "(((tlb_vpn2[27] ^ lookup1_vpn2) & g_lookup1[27].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 782 "2886099315" "(tlb_g[27] || (tlb_asid[27] == lookup1_asid)) 1 -1" (1 "00")
+Condition 782 "2886099315" "(tlb_g[27] || (tlb_asid[27] == lookup1_asid)) 1 -1" (2 "01")
+Condition 782 "2886099315" "(tlb_g[27] || (tlb_asid[27] == lookup1_asid)) 1 -1" (3 "10")
+Condition 783 "1356623179" "(tlb_asid[27] == lookup1_asid) 1 -1" (2 "1")
+Condition 784 "1377949872" "(g_lookup1[27].vpn2_match1 && g_lookup1[27].asid_match1) 1 -1" (1 "01")
+Condition 784 "1377949872" "(g_lookup1[27].vpn2_match1 && g_lookup1[27].asid_match1) 1 -1" (2 "10")
+Condition 784 "1377949872" "(g_lookup1[27].vpn2_match1 && g_lookup1[27].asid_match1) 1 -1" (3 "11")
+Condition 785 "3593959479" "(tlb_valid[28] && (((tlb_vpn2[28] ^ lookup1_vpn2) & g_lookup1[28].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 785 "3593959479" "(tlb_valid[28] && (((tlb_vpn2[28] ^ lookup1_vpn2) & g_lookup1[28].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 785 "3593959479" "(tlb_valid[28] && (((tlb_vpn2[28] ^ lookup1_vpn2) & g_lookup1[28].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 786 "1923943180" "(((tlb_vpn2[28] ^ lookup1_vpn2) & g_lookup1[28].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 787 "1716239435" "(tlb_g[28] || (tlb_asid[28] == lookup1_asid)) 1 -1" (1 "00")
+Condition 787 "1716239435" "(tlb_g[28] || (tlb_asid[28] == lookup1_asid)) 1 -1" (2 "01")
+Condition 787 "1716239435" "(tlb_g[28] || (tlb_asid[28] == lookup1_asid)) 1 -1" (3 "10")
+Condition 788 "384226942" "(tlb_asid[28] == lookup1_asid) 1 -1" (2 "1")
+Condition 789 "925523872" "(g_lookup1[28].vpn2_match1 && g_lookup1[28].asid_match1) 1 -1" (1 "01")
+Condition 789 "925523872" "(g_lookup1[28].vpn2_match1 && g_lookup1[28].asid_match1) 1 -1" (2 "10")
+Condition 789 "925523872" "(g_lookup1[28].vpn2_match1 && g_lookup1[28].asid_match1) 1 -1" (3 "11")
+Condition 790 "3126116208" "(tlb_valid[29] && (((tlb_vpn2[29] ^ lookup1_vpn2) & g_lookup1[29].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 790 "3126116208" "(tlb_valid[29] && (((tlb_vpn2[29] ^ lookup1_vpn2) & g_lookup1[29].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 790 "3126116208" "(tlb_valid[29] && (((tlb_vpn2[29] ^ lookup1_vpn2) & g_lookup1[29].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 791 "3855164989" "(((tlb_vpn2[29] ^ lookup1_vpn2) & g_lookup1[29].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 792 "3116269106" "(tlb_g[29] || (tlb_asid[29] == lookup1_asid)) 1 -1" (1 "00")
+Condition 792 "3116269106" "(tlb_g[29] || (tlb_asid[29] == lookup1_asid)) 1 -1" (2 "01")
+Condition 792 "3116269106" "(tlb_g[29] || (tlb_asid[29] == lookup1_asid)) 1 -1" (3 "10")
+Condition 793 "1310267963" "(tlb_asid[29] == lookup1_asid) 1 -1" (2 "1")
+Condition 794 "2067786386" "(g_lookup1[29].vpn2_match1 && g_lookup1[29].asid_match1) 1 -1" (1 "01")
+Condition 794 "2067786386" "(g_lookup1[29].vpn2_match1 && g_lookup1[29].asid_match1) 1 -1" (2 "10")
+Condition 794 "2067786386" "(g_lookup1[29].vpn2_match1 && g_lookup1[29].asid_match1) 1 -1" (3 "11")
+Condition 795 "3928661446" "(tlb_valid[30] && (((tlb_vpn2[30] ^ lookup1_vpn2) & g_lookup1[30].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 795 "3928661446" "(tlb_valid[30] && (((tlb_vpn2[30] ^ lookup1_vpn2) & g_lookup1[30].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 795 "3928661446" "(tlb_valid[30] && (((tlb_vpn2[30] ^ lookup1_vpn2) & g_lookup1[30].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 796 "4041231545" "(((tlb_vpn2[30] ^ lookup1_vpn2) & g_lookup1[30].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 797 "153779456" "(tlb_g[30] || (tlb_asid[30] == lookup1_asid)) 1 -1" (1 "00")
+Condition 797 "153779456" "(tlb_g[30] || (tlb_asid[30] == lookup1_asid)) 1 -1" (2 "01")
+Condition 797 "153779456" "(tlb_g[30] || (tlb_asid[30] == lookup1_asid)) 1 -1" (3 "10")
+Condition 798 "3577421804" "(tlb_asid[30] == lookup1_asid) 1 -1" (2 "1")
+Condition 799 "3725707277" "(g_lookup1[30].vpn2_match1 && g_lookup1[30].asid_match1) 1 -1" (1 "01")
+Condition 799 "3725707277" "(g_lookup1[30].vpn2_match1 && g_lookup1[30].asid_match1) 1 -1" (2 "10")
+Condition 799 "3725707277" "(g_lookup1[30].vpn2_match1 && g_lookup1[30].asid_match1) 1 -1" (3 "11")
+Condition 800 "2252954241" "(tlb_valid[31] && (((tlb_vpn2[31] ^ lookup1_vpn2) & g_lookup1[31].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 800 "2252954241" "(tlb_valid[31] && (((tlb_vpn2[31] ^ lookup1_vpn2) & g_lookup1[31].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 800 "2252954241" "(tlb_valid[31] && (((tlb_vpn2[31] ^ lookup1_vpn2) & g_lookup1[31].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 801 "1736728968" "(((tlb_vpn2[31] ^ lookup1_vpn2) & g_lookup1[31].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 802 "3604987769" "(tlb_g[31] || (tlb_asid[31] == lookup1_asid)) 1 -1" (1 "00")
+Condition 802 "3604987769" "(tlb_g[31] || (tlb_asid[31] == lookup1_asid)) 1 -1" (2 "01")
+Condition 802 "3604987769" "(tlb_g[31] || (tlb_asid[31] == lookup1_asid)) 1 -1" (3 "10")
+Condition 803 "2378486697" "(tlb_asid[31] == lookup1_asid) 1 -1" (2 "1")
+Condition 804 "2449767743" "(g_lookup1[31].vpn2_match1 && g_lookup1[31].asid_match1) 1 -1" (1 "01")
+Condition 804 "2449767743" "(g_lookup1[31].vpn2_match1 && g_lookup1[31].asid_match1) 1 -1" (2 "10")
+Condition 804 "2449767743" "(g_lookup1[31].vpn2_match1 && g_lookup1[31].asid_match1) 1 -1" (3 "11")
+Condition 805 "18528197" "(tlb_valid[32] && (((tlb_vpn2[32] ^ lookup1_vpn2) & g_lookup1[32].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 805 "18528197" "(tlb_valid[32] && (((tlb_vpn2[32] ^ lookup1_vpn2) & g_lookup1[32].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 805 "18528197" "(tlb_valid[32] && (((tlb_vpn2[32] ^ lookup1_vpn2) & g_lookup1[32].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 806 "2335643082" "(((tlb_vpn2[32] ^ lookup1_vpn2) & g_lookup1[32].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 807 "1571555782" "(tlb_g[32] || (tlb_asid[32] == lookup1_asid)) 1 -1" (1 "00")
+Condition 807 "1571555782" "(tlb_g[32] || (tlb_asid[32] == lookup1_asid)) 1 -1" (2 "01")
+Condition 807 "1571555782" "(tlb_g[32] || (tlb_asid[32] == lookup1_asid)) 1 -1" (3 "10")
+Condition 808 "1450423155" "(tlb_asid[32] == lookup1_asid) 1 -1" (2 "1")
+Condition 809 "1717605183" "(g_lookup1[32].vpn2_match1 && g_lookup1[32].asid_match1) 1 -1" (1 "01")
+Condition 809 "1717605183" "(g_lookup1[32].vpn2_match1 && g_lookup1[32].asid_match1) 1 -1" (2 "10")
+Condition 809 "1717605183" "(g_lookup1[32].vpn2_match1 && g_lookup1[32].asid_match1) 1 -1" (3 "11")
+Condition 810 "1836675202" "(tlb_valid[33] && (((tlb_vpn2[33] ^ lookup1_vpn2) & g_lookup1[33].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 810 "1836675202" "(tlb_valid[33] && (((tlb_vpn2[33] ^ lookup1_vpn2) & g_lookup1[33].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 810 "1836675202" "(tlb_valid[33] && (((tlb_vpn2[33] ^ lookup1_vpn2) & g_lookup1[33].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 811 "475216123" "(((tlb_vpn2[33] ^ lookup1_vpn2) & g_lookup1[33].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 812 "2186922943" "(tlb_g[33] || (tlb_asid[33] == lookup1_asid)) 1 -1" (1 "00")
+Condition 812 "2186922943" "(tlb_g[33] || (tlb_asid[33] == lookup1_asid)) 1 -1" (2 "01")
+Condition 812 "2186922943" "(tlb_g[33] || (tlb_asid[33] == lookup1_asid)) 1 -1" (3 "10")
+Condition 813 "244088630" "(tlb_asid[33] == lookup1_asid) 1 -1" (2 "1")
+Condition 814 "712320525" "(g_lookup1[33].vpn2_match1 && g_lookup1[33].asid_match1) 1 -1" (1 "01")
+Condition 814 "712320525" "(g_lookup1[33].vpn2_match1 && g_lookup1[33].asid_match1) 1 -1" (2 "10")
+Condition 814 "712320525" "(g_lookup1[33].vpn2_match1 && g_lookup1[33].asid_match1) 1 -1" (3 "11")
+Condition 815 "1466833800" "(tlb_valid[34] && (((tlb_vpn2[34] ^ lookup1_vpn2) & g_lookup1[34].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 815 "1466833800" "(tlb_valid[34] && (((tlb_vpn2[34] ^ lookup1_vpn2) & g_lookup1[34].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 815 "1466833800" "(tlb_valid[34] && (((tlb_vpn2[34] ^ lookup1_vpn2) & g_lookup1[34].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 816 "3714246781" "(((tlb_vpn2[34] ^ lookup1_vpn2) & g_lookup1[34].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 817 "351414238" "(tlb_g[34] || (tlb_asid[34] == lookup1_asid)) 1 -1" (1 "00")
+Condition 817 "351414238" "(tlb_g[34] || (tlb_asid[34] == lookup1_asid)) 1 -1" (2 "01")
+Condition 817 "351414238" "(tlb_g[34] || (tlb_asid[34] == lookup1_asid)) 1 -1" (3 "10")
+Condition 818 "1766139934" "(tlb_asid[34] == lookup1_asid) 1 -1" (2 "1")
+Condition 819 "3280839613" "(g_lookup1[34].vpn2_match1 && g_lookup1[34].asid_match1) 1 -1" (1 "01")
+Condition 819 "3280839613" "(g_lookup1[34].vpn2_match1 && g_lookup1[34].asid_match1) 1 -1" (2 "10")
+Condition 819 "3280839613" "(g_lookup1[34].vpn2_match1 && g_lookup1[34].asid_match1) 1 -1" (3 "11")
+Condition 820 "990764239" "(tlb_valid[35] && (((tlb_vpn2[35] ^ lookup1_vpn2) & g_lookup1[35].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 820 "990764239" "(tlb_valid[35] && (((tlb_vpn2[35] ^ lookup1_vpn2) & g_lookup1[35].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 820 "990764239" "(tlb_valid[35] && (((tlb_vpn2[35] ^ lookup1_vpn2) & g_lookup1[35].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 821 "1241957708" "(((tlb_vpn2[35] ^ lookup1_vpn2) & g_lookup1[35].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 822 "3406292391" "(tlb_g[35] || (tlb_asid[35] == lookup1_asid)) 1 -1" (1 "00")
+Condition 822 "3406292391" "(tlb_g[35] || (tlb_asid[35] == lookup1_asid)) 1 -1" (2 "01")
+Condition 822 "3406292391" "(tlb_g[35] || (tlb_asid[35] == lookup1_asid)) 1 -1" (3 "10")
+Condition 823 "834331739" "(tlb_asid[35] == lookup1_asid) 1 -1" (2 "1")
+Condition 824 "2409109135" "(g_lookup1[35].vpn2_match1 && g_lookup1[35].asid_match1) 1 -1" (1 "01")
+Condition 824 "2409109135" "(g_lookup1[35].vpn2_match1 && g_lookup1[35].asid_match1) 1 -1" (2 "10")
+Condition 824 "2409109135" "(g_lookup1[35].vpn2_match1 && g_lookup1[35].asid_match1) 1 -1" (3 "11")
+Condition 825 "3160289675" "(tlb_valid[36] && (((tlb_vpn2[36] ^ lookup1_vpn2) & g_lookup1[36].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 825 "3160289675" "(tlb_valid[36] && (((tlb_vpn2[36] ^ lookup1_vpn2) & g_lookup1[36].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 825 "3160289675" "(tlb_valid[36] && (((tlb_vpn2[36] ^ lookup1_vpn2) & g_lookup1[36].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 826 "2796925198" "(((tlb_vpn2[36] ^ lookup1_vpn2) & g_lookup1[36].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 827 "1081365272" "(tlb_g[36] || (tlb_asid[36] == lookup1_asid)) 1 -1" (1 "00")
+Condition 827 "1081365272" "(tlb_g[36] || (tlb_asid[36] == lookup1_asid)) 1 -1" (2 "01")
+Condition 827 "1081365272" "(tlb_g[36] || (tlb_asid[36] == lookup1_asid)) 1 -1" (3 "10")
+Condition 828 "3926754433" "(tlb_asid[36] == lookup1_asid) 1 -1" (2 "1")
+Condition 829 "2080176271" "(g_lookup1[36].vpn2_match1 && g_lookup1[36].asid_match1) 1 -1" (1 "01")
+Condition 829 "2080176271" "(g_lookup1[36].vpn2_match1 && g_lookup1[36].asid_match1) 1 -1" (2 "10")
+Condition 829 "2080176271" "(g_lookup1[36].vpn2_match1 && g_lookup1[36].asid_match1) 1 -1" (3 "11")
+Condition 830 "3493721804" "(tlb_valid[37] && (((tlb_vpn2[37] ^ lookup1_vpn2) & g_lookup1[37].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 830 "3493721804" "(tlb_valid[37] && (((tlb_vpn2[37] ^ lookup1_vpn2) & g_lookup1[37].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 830 "3493721804" "(tlb_valid[37] && (((tlb_vpn2[37] ^ lookup1_vpn2) & g_lookup1[37].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 831 "835820607" "(((tlb_vpn2[37] ^ lookup1_vpn2) & g_lookup1[37].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 832 "2676068705" "(tlb_g[37] || (tlb_asid[37] == lookup1_asid)) 1 -1" (1 "00")
+Condition 832 "2676068705" "(tlb_g[37] || (tlb_asid[37] == lookup1_asid)) 1 -1" (2 "01")
+Condition 832 "2676068705" "(tlb_g[37] || (tlb_asid[37] == lookup1_asid)) 1 -1" (3 "10")
+Condition 833 "3002222788" "(tlb_asid[37] == lookup1_asid) 1 -1" (2 "1")
+Condition 834 "938036669" "(g_lookup1[37].vpn2_match1 && g_lookup1[37].asid_match1) 1 -1" (1 "01")
+Condition 834 "938036669" "(g_lookup1[37].vpn2_match1 && g_lookup1[37].asid_match1) 1 -1" (2 "10")
+Condition 834 "938036669" "(g_lookup1[37].vpn2_match1 && g_lookup1[37].asid_match1) 1 -1" (3 "11")
+Condition 835 "598300973" "(tlb_valid[38] && (((tlb_vpn2[38] ^ lookup1_vpn2) & g_lookup1[38].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 835 "598300973" "(tlb_valid[38] && (((tlb_vpn2[38] ^ lookup1_vpn2) & g_lookup1[38].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 835 "598300973" "(tlb_valid[38] && (((tlb_vpn2[38] ^ lookup1_vpn2) & g_lookup1[38].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 836 "3224969374" "(((tlb_vpn2[38] ^ lookup1_vpn2) & g_lookup1[38].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 837 "1439452249" "(tlb_g[38] || (tlb_asid[38] == lookup1_asid)) 1 -1" (1 "00")
+Condition 837 "1439452249" "(tlb_g[38] || (tlb_asid[38] == lookup1_asid)) 1 -1" (2 "01")
+Condition 837 "1439452249" "(tlb_g[38] || (tlb_asid[38] == lookup1_asid)) 1 -1" (3 "10")
+Condition 838 "4106810353" "(tlb_asid[38] == lookup1_asid) 1 -1" (2 "1")
+Condition 839 "1390594733" "(g_lookup1[38].vpn2_match1 && g_lookup1[38].asid_match1) 1 -1" (1 "01")
+Condition 839 "1390594733" "(g_lookup1[38].vpn2_match1 && g_lookup1[38].asid_match1) 1 -1" (2 "10")
+Condition 839 "1390594733" "(g_lookup1[38].vpn2_match1 && g_lookup1[38].asid_match1) 1 -1" (3 "11")
+Condition 840 "1338678890" "(tlb_valid[39] && (((tlb_vpn2[39] ^ lookup1_vpn2) & g_lookup1[39].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 840 "1338678890" "(tlb_valid[39] && (((tlb_vpn2[39] ^ lookup1_vpn2) & g_lookup1[39].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 840 "1338678890" "(tlb_valid[39] && (((tlb_vpn2[39] ^ lookup1_vpn2) & g_lookup1[39].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 841 "1465716143" "(((tlb_vpn2[39] ^ lookup1_vpn2) & g_lookup1[39].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 842 "2319027744" "(tlb_g[39] || (tlb_asid[39] == lookup1_asid)) 1 -1" (1 "00")
+Condition 842 "2319027744" "(tlb_g[39] || (tlb_asid[39] == lookup1_asid)) 1 -1" (2 "01")
+Condition 842 "2319027744" "(tlb_g[39] || (tlb_asid[39] == lookup1_asid)) 1 -1" (3 "10")
+Condition 843 "2889301940" "(tlb_asid[39] == lookup1_asid) 1 -1" (2 "1")
+Condition 844 "519536543" "(g_lookup1[39].vpn2_match1 && g_lookup1[39].asid_match1) 1 -1" (1 "01")
+Condition 844 "519536543" "(g_lookup1[39].vpn2_match1 && g_lookup1[39].asid_match1) 1 -1" (2 "10")
+Condition 844 "519536543" "(g_lookup1[39].vpn2_match1 && g_lookup1[39].asid_match1) 1 -1" (3 "11")
+Condition 845 "600159570" "(tlb_valid[40] && (((tlb_vpn2[40] ^ lookup1_vpn2) & g_lookup1[40].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 845 "600159570" "(tlb_valid[40] && (((tlb_vpn2[40] ^ lookup1_vpn2) & g_lookup1[40].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 845 "600159570" "(tlb_valid[40] && (((tlb_vpn2[40] ^ lookup1_vpn2) & g_lookup1[40].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 846 "2330692284" "(((tlb_vpn2[40] ^ lookup1_vpn2) & g_lookup1[40].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 847 "4054515507" "(tlb_g[40] || (tlb_asid[40] == lookup1_asid)) 1 -1" (1 "00")
+Condition 847 "4054515507" "(tlb_g[40] || (tlb_asid[40] == lookup1_asid)) 1 -1" (2 "01")
+Condition 847 "4054515507" "(tlb_g[40] || (tlb_asid[40] == lookup1_asid)) 1 -1" (3 "10")
+Condition 848 "2592819690" "(tlb_asid[40] == lookup1_asid) 1 -1" (2 "1")
+Condition 849 "1432977763" "(g_lookup1[40].vpn2_match1 && g_lookup1[40].asid_match1) 1 -1" (1 "01")
+Condition 849 "1432977763" "(g_lookup1[40].vpn2_match1 && g_lookup1[40].asid_match1) 1 -1" (2 "10")
+Condition 849 "1432977763" "(g_lookup1[40].vpn2_match1 && g_lookup1[40].asid_match1) 1 -1" (3 "11")
+Condition 850 "1336308245" "(tlb_valid[41] && (((tlb_vpn2[41] ^ lookup1_vpn2) & g_lookup1[41].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 850 "1336308245" "(tlb_valid[41] && (((tlb_vpn2[41] ^ lookup1_vpn2) & g_lookup1[41].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 850 "1336308245" "(tlb_valid[41] && (((tlb_vpn2[41] ^ lookup1_vpn2) & g_lookup1[41].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 851 "495953805" "(((tlb_vpn2[41] ^ lookup1_vpn2) & g_lookup1[41].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 852 "777993546" "(tlb_g[41] || (tlb_asid[41] == lookup1_asid)) 1 -1" (1 "00")
+Condition 852 "777993546" "(tlb_g[41] || (tlb_asid[41] == lookup1_asid)) 1 -1" (2 "01")
+Condition 852 "777993546" "(tlb_g[41] || (tlb_asid[41] == lookup1_asid)) 1 -1" (3 "10")
+Condition 853 "3262416303" "(tlb_asid[41] == lookup1_asid) 1 -1" (2 "1")
+Condition 854 "427570257" "(g_lookup1[41].vpn2_match1 && g_lookup1[41].asid_match1) 1 -1" (1 "01")
+Condition 854 "427570257" "(g_lookup1[41].vpn2_match1 && g_lookup1[41].asid_match1) 1 -1" (2 "10")
+Condition 854 "427570257" "(g_lookup1[41].vpn2_match1 && g_lookup1[41].asid_match1) 1 -1" (3 "11")
+Condition 855 "3371540305" "(tlb_valid[42] && (((tlb_vpn2[42] ^ lookup1_vpn2) & g_lookup1[42].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 855 "3371540305" "(tlb_valid[42] && (((tlb_vpn2[42] ^ lookup1_vpn2) & g_lookup1[42].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 855 "3371540305" "(tlb_valid[42] && (((tlb_vpn2[42] ^ lookup1_vpn2) & g_lookup1[42].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 856 "4047295439" "(((tlb_vpn2[42] ^ lookup1_vpn2) & g_lookup1[42].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 857 "2771160053" "(tlb_g[42] || (tlb_asid[42] == lookup1_asid)) 1 -1" (1 "00")
+Condition 857 "2771160053" "(tlb_g[42] || (tlb_asid[42] == lookup1_asid)) 1 -1" (2 "01")
+Condition 857 "2771160053" "(tlb_g[42] || (tlb_asid[42] == lookup1_asid)) 1 -1" (3 "10")
+Condition 858 "432268661" "(tlb_asid[42] == lookup1_asid) 1 -1" (2 "1")
+Condition 859 "3977828945" "(g_lookup1[42].vpn2_match1 && g_lookup1[42].asid_match1) 1 -1" (1 "01")
+Condition 859 "3977828945" "(g_lookup1[42].vpn2_match1 && g_lookup1[42].asid_match1) 1 -1" (2 "10")
+Condition 859 "3977828945" "(g_lookup1[42].vpn2_match1 && g_lookup1[42].asid_match1) 1 -1" (3 "11")
+Condition 860 "2761316374" "(tlb_valid[43] && (((tlb_vpn2[43] ^ lookup1_vpn2) & g_lookup1[43].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 860 "2761316374" "(tlb_valid[43] && (((tlb_vpn2[43] ^ lookup1_vpn2) & g_lookup1[43].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 860 "2761316374" "(tlb_valid[43] && (((tlb_vpn2[43] ^ lookup1_vpn2) & g_lookup1[43].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 861 "1717108478" "(((tlb_vpn2[43] ^ lookup1_vpn2) & g_lookup1[43].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 862 "2061060492" "(tlb_g[43] || (tlb_asid[43] == lookup1_asid)) 1 -1" (1 "00")
+Condition 862 "2061060492" "(tlb_g[43] || (tlb_asid[43] == lookup1_asid)) 1 -1" (2 "01")
+Condition 862 "2061060492" "(tlb_g[43] || (tlb_asid[43] == lookup1_asid)) 1 -1" (3 "10")
+Condition 863 "1094461744" "(tlb_asid[43] == lookup1_asid) 1 -1" (2 "1")
+Condition 864 "2702012259" "(g_lookup1[43].vpn2_match1 && g_lookup1[43].asid_match1) 1 -1" (1 "01")
+Condition 864 "2702012259" "(g_lookup1[43].vpn2_match1 && g_lookup1[43].asid_match1) 1 -1" (2 "10")
+Condition 864 "2702012259" "(g_lookup1[43].vpn2_match1 && g_lookup1[43].asid_match1) 1 -1" (3 "11")
+Condition 865 "2659267356" "(tlb_valid[44] && (((tlb_vpn2[44] ^ lookup1_vpn2) & g_lookup1[44].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 865 "2659267356" "(tlb_valid[44] && (((tlb_vpn2[44] ^ lookup1_vpn2) & g_lookup1[44].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 865 "2659267356" "(tlb_valid[44] && (((tlb_vpn2[44] ^ lookup1_vpn2) & g_lookup1[44].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 866 "2808688248" "(((tlb_vpn2[44] ^ lookup1_vpn2) & g_lookup1[44].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 867 "3966936557" "(tlb_g[44] || (tlb_asid[44] == lookup1_asid)) 1 -1" (1 "00")
+Condition 867 "3966936557" "(tlb_g[44] || (tlb_asid[44] == lookup1_asid)) 1 -1" (2 "01")
+Condition 867 "3966936557" "(tlb_g[44] || (tlb_asid[44] == lookup1_asid)) 1 -1" (3 "10")
+Condition 868 "653622808" "(tlb_asid[44] == lookup1_asid) 1 -1" (2 "1")
+Condition 869 "1224075987" "(g_lookup1[44].vpn2_match1 && g_lookup1[44].asid_match1) 1 -1" (1 "01")
+Condition 869 "1224075987" "(g_lookup1[44].vpn2_match1 && g_lookup1[44].asid_match1) 1 -1" (2 "10")
+Condition 869 "1224075987" "(g_lookup1[44].vpn2_match1 && g_lookup1[44].asid_match1) 1 -1" (3 "11")
+Condition 870 "4074959963" "(tlb_valid[45] && (((tlb_vpn2[45] ^ lookup1_vpn2) & g_lookup1[45].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 870 "4074959963" "(tlb_valid[45] && (((tlb_vpn2[45] ^ lookup1_vpn2) & g_lookup1[45].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 870 "4074959963" "(tlb_valid[45] && (((tlb_vpn2[45] ^ lookup1_vpn2) & g_lookup1[45].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 871 "806159177" "(((tlb_vpn2[45] ^ lookup1_vpn2) & g_lookup1[45].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 872 "864511892" "(tlb_g[45] || (tlb_asid[45] == lookup1_asid)) 1 -1" (1 "00")
+Condition 872 "864511892" "(tlb_g[45] || (tlb_asid[45] == lookup1_asid)) 1 -1" (2 "01")
+Condition 872 "864511892" "(tlb_g[45] || (tlb_asid[45] == lookup1_asid)) 1 -1" (3 "10")
+Condition 873 "2114630237" "(tlb_asid[45] == lookup1_asid) 1 -1" (2 "1")
+Condition 874 "81813473" "(g_lookup1[45].vpn2_match1 && g_lookup1[45].asid_match1) 1 -1" (1 "01")
+Condition 874 "81813473" "(g_lookup1[45].vpn2_match1 && g_lookup1[45].asid_match1) 1 -1" (2 "10")
+Condition 874 "81813473" "(g_lookup1[45].vpn2_match1 && g_lookup1[45].asid_match1) 1 -1" (3 "11")
+Condition 875 "1974540575" "(tlb_valid[46] && (((tlb_vpn2[46] ^ lookup1_vpn2) & g_lookup1[46].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 875 "1974540575" "(tlb_valid[46] && (((tlb_vpn2[46] ^ lookup1_vpn2) & g_lookup1[46].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 875 "1974540575" "(tlb_valid[46] && (((tlb_vpn2[46] ^ lookup1_vpn2) & g_lookup1[46].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 876 "3703469835" "(((tlb_vpn2[46] ^ lookup1_vpn2) & g_lookup1[46].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 877 "3103052075" "(tlb_g[46] || (tlb_asid[46] == lookup1_asid)) 1 -1" (1 "00")
+Condition 877 "3103052075" "(tlb_g[46] || (tlb_asid[46] == lookup1_asid)) 1 -1" (2 "01")
+Condition 877 "3103052075" "(tlb_g[46] || (tlb_asid[46] == lookup1_asid)) 1 -1" (3 "10")
+Condition 878 "2780680839" "(tlb_asid[46] == lookup1_asid) 1 -1" (2 "1")
+Condition 879 "4035228129" "(g_lookup1[46].vpn2_match1 && g_lookup1[46].asid_match1) 1 -1" (1 "01")
+Condition 879 "4035228129" "(g_lookup1[46].vpn2_match1 && g_lookup1[46].asid_match1) 1 -1" (2 "10")
+Condition 879 "4035228129" "(g_lookup1[46].vpn2_match1 && g_lookup1[46].asid_match1) 1 -1" (3 "11")
+Condition 880 "433249880" "(tlb_valid[47] && (((tlb_vpn2[47] ^ lookup1_vpn2) & g_lookup1[47].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 880 "433249880" "(tlb_valid[47] && (((tlb_vpn2[47] ^ lookup1_vpn2) & g_lookup1[47].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 880 "433249880" "(tlb_valid[47] && (((tlb_vpn2[47] ^ lookup1_vpn2) & g_lookup1[47].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 881 "1272601146" "(((tlb_vpn2[47] ^ lookup1_vpn2) & g_lookup1[47].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 882 "1728123730" "(tlb_g[47] || (tlb_asid[47] == lookup1_asid)) 1 -1" (1 "00")
+Condition 882 "1728123730" "(tlb_g[47] || (tlb_asid[47] == lookup1_asid)) 1 -1" (2 "01")
+Condition 882 "1728123730" "(tlb_g[47] || (tlb_asid[47] == lookup1_asid)) 1 -1" (3 "10")
+Condition 883 "4248968898" "(tlb_asid[47] == lookup1_asid) 1 -1" (2 "1")
+Condition 884 "3163620563" "(g_lookup1[47].vpn2_match1 && g_lookup1[47].asid_match1) 1 -1" (1 "01")
+Condition 884 "3163620563" "(g_lookup1[47].vpn2_match1 && g_lookup1[47].asid_match1) 1 -1" (2 "10")
+Condition 884 "3163620563" "(g_lookup1[47].vpn2_match1 && g_lookup1[47].asid_match1) 1 -1" (3 "11")
+Condition 885 "3930485177" "(tlb_valid[48] && (((tlb_vpn2[48] ^ lookup1_vpn2) & g_lookup1[48].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 885 "3930485177" "(tlb_valid[48] && (((tlb_vpn2[48] ^ lookup1_vpn2) & g_lookup1[48].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 885 "3930485177" "(tlb_valid[48] && (((tlb_vpn2[48] ^ lookup1_vpn2) & g_lookup1[48].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 886 "3123898011" "(((tlb_vpn2[48] ^ lookup1_vpn2) & g_lookup1[48].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 887 "2907491946" "(tlb_g[48] || (tlb_asid[48] == lookup1_asid)) 1 -1" (1 "00")
+Condition 887 "2907491946" "(tlb_g[48] || (tlb_asid[48] == lookup1_asid)) 1 -1" (2 "01")
+Condition 887 "2907491946" "(tlb_g[48] || (tlb_asid[48] == lookup1_asid)) 1 -1" (3 "10")
+Condition 888 "3145246199" "(tlb_asid[48] == lookup1_asid) 1 -1" (2 "1")
+Condition 889 "3650782147" "(g_lookup1[48].vpn2_match1 && g_lookup1[48].asid_match1) 1 -1" (1 "01")
+Condition 889 "3650782147" "(g_lookup1[48].vpn2_match1 && g_lookup1[48].asid_match1) 1 -1" (2 "10")
+Condition 889 "3650782147" "(g_lookup1[48].vpn2_match1 && g_lookup1[48].asid_match1) 1 -1" (3 "11")
+Condition 890 "2250618622" "(tlb_valid[49] && (((tlb_vpn2[49] ^ lookup1_vpn2) & g_lookup1[49].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 890 "2250618622" "(tlb_valid[49] && (((tlb_vpn2[49] ^ lookup1_vpn2) & g_lookup1[49].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 890 "2250618622" "(tlb_valid[49] && (((tlb_vpn2[49] ^ lookup1_vpn2) & g_lookup1[49].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 891 "760662954" "(((tlb_vpn2[49] ^ lookup1_vpn2) & g_lookup1[49].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 892 "1924729875" "(tlb_g[49] || (tlb_asid[49] == lookup1_asid)) 1 -1" (1 "00")
+Condition 892 "1924729875" "(tlb_g[49] || (tlb_asid[49] == lookup1_asid)) 1 -1" (2 "01")
+Condition 892 "1924729875" "(tlb_g[49] || (tlb_asid[49] == lookup1_asid)) 1 -1" (3 "10")
+Condition 893 "3817302450" "(tlb_asid[49] == lookup1_asid) 1 -1" (2 "1")
+Condition 894 "2509190897" "(g_lookup1[49].vpn2_match1 && g_lookup1[49].asid_match1) 1 -1" (1 "01")
+Condition 894 "2509190897" "(g_lookup1[49].vpn2_match1 && g_lookup1[49].asid_match1) 1 -1" (2 "10")
+Condition 894 "2509190897" "(g_lookup1[49].vpn2_match1 && g_lookup1[49].asid_match1) 1 -1" (3 "11")
+Condition 895 "3596325960" "(tlb_valid[50] && (((tlb_vpn2[50] ^ lookup1_vpn2) & g_lookup1[50].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 895 "3596325960" "(tlb_valid[50] && (((tlb_vpn2[50] ^ lookup1_vpn2) & g_lookup1[50].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 895 "3596325960" "(tlb_valid[50] && (((tlb_vpn2[50] ^ lookup1_vpn2) & g_lookup1[50].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 896 "947888430" "(((tlb_vpn2[50] ^ lookup1_vpn2) & g_lookup1[50].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 897 "3257732897" "(tlb_g[50] || (tlb_asid[50] == lookup1_asid)) 1 -1" (1 "00")
+Condition 897 "3257732897" "(tlb_g[50] || (tlb_asid[50] == lookup1_asid)) 1 -1" (2 "01")
+Condition 897 "3257732897" "(tlb_g[50] || (tlb_asid[50] == lookup1_asid)) 1 -1" (3 "10")
+Condition 898 "2024107109" "(tlb_asid[50] == lookup1_asid) 1 -1" (2 "1")
+Condition 899 "815862894" "(g_lookup1[50].vpn2_match1 && g_lookup1[50].asid_match1) 1 -1" (1 "01")
+Condition 899 "815862894" "(g_lookup1[50].vpn2_match1 && g_lookup1[50].asid_match1) 1 -1" (2 "10")
+Condition 899 "815862894" "(g_lookup1[50].vpn2_match1 && g_lookup1[50].asid_match1) 1 -1" (3 "11")
+Condition 900 "3124253455" "(tlb_valid[51] && (((tlb_vpn2[51] ^ lookup1_vpn2) & g_lookup1[51].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 900 "3124253455" "(tlb_valid[51] && (((tlb_vpn2[51] ^ lookup1_vpn2) & g_lookup1[51].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 900 "3124253455" "(tlb_valid[51] && (((tlb_vpn2[51] ^ lookup1_vpn2) & g_lookup1[51].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 901 "2937818143" "(((tlb_vpn2[51] ^ lookup1_vpn2) & g_lookup1[51].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 902 "500747608" "(tlb_g[51] || (tlb_asid[51] == lookup1_asid)) 1 -1" (1 "00")
+Condition 902 "500747608" "(tlb_g[51] || (tlb_asid[51] == lookup1_asid)) 1 -1" (2 "01")
+Condition 902 "500747608" "(tlb_g[51] || (tlb_asid[51] == lookup1_asid)) 1 -1" (3 "10")
+Condition 903 "542810144" "(tlb_asid[51] == lookup1_asid) 1 -1" (2 "1")
+Condition 904 "2092212572" "(g_lookup1[51].vpn2_match1 && g_lookup1[51].asid_match1) 1 -1" (1 "01")
+Condition 904 "2092212572" "(g_lookup1[51].vpn2_match1 && g_lookup1[51].asid_match1) 1 -1" (2 "10")
+Condition 904 "2092212572" "(g_lookup1[51].vpn2_match1 && g_lookup1[51].asid_match1) 1 -1" (3 "11")
+Condition 905 "1030471243" "(tlb_valid[52] && (((tlb_vpn2[52] ^ lookup1_vpn2) & g_lookup1[52].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 905 "1030471243" "(tlb_valid[52] && (((tlb_vpn2[52] ^ lookup1_vpn2) & g_lookup1[52].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 905 "1030471243" "(tlb_valid[52] && (((tlb_vpn2[52] ^ lookup1_vpn2) & g_lookup1[52].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 906 "1135147101" "(((tlb_vpn2[52] ^ lookup1_vpn2) & g_lookup1[52].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 907 "2527820775" "(tlb_g[52] || (tlb_asid[52] == lookup1_asid)) 1 -1" (1 "00")
+Condition 907 "2527820775" "(tlb_g[52] || (tlb_asid[52] == lookup1_asid)) 1 -1" (2 "01")
+Condition 907 "2527820775" "(tlb_g[52] || (tlb_asid[52] == lookup1_asid)) 1 -1" (3 "10")
+Condition 908 "4226662650" "(tlb_asid[52] == lookup1_asid) 1 -1" (2 "1")
+Condition 909 "2295353180" "(g_lookup1[52].vpn2_match1 && g_lookup1[52].asid_match1) 1 -1" (1 "01")
+Condition 909 "2295353180" "(g_lookup1[52].vpn2_match1 && g_lookup1[52].asid_match1) 1 -1" (2 "10")
+Condition 909 "2295353180" "(g_lookup1[52].vpn2_match1 && g_lookup1[52].asid_match1) 1 -1" (3 "11")
+Condition 910 "1359509772" "(tlb_valid[53] && (((tlb_vpn2[53] ^ lookup1_vpn2) & g_lookup1[53].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 910 "1359509772" "(tlb_valid[53] && (((tlb_vpn2[53] ^ lookup1_vpn2) & g_lookup1[53].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 910 "1359509772" "(tlb_valid[53] && (((tlb_vpn2[53] ^ lookup1_vpn2) & g_lookup1[53].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 911 "3570193772" "(((tlb_vpn2[53] ^ lookup1_vpn2) & g_lookup1[53].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 912 "1230944670" "(tlb_g[53] || (tlb_asid[53] == lookup1_asid)) 1 -1" (1 "00")
+Condition 912 "1230944670" "(tlb_g[53] || (tlb_asid[53] == lookup1_asid)) 1 -1" (2 "01")
+Condition 912 "1230944670" "(tlb_g[53] || (tlb_asid[53] == lookup1_asid)) 1 -1" (3 "10")
+Condition 913 "2735869119" "(tlb_asid[53] == lookup1_asid) 1 -1" (2 "1")
+Condition 914 "3301309038" "(g_lookup1[53].vpn2_match1 && g_lookup1[53].asid_match1) 1 -1" (1 "01")
+Condition 914 "3301309038" "(g_lookup1[53].vpn2_match1 && g_lookup1[53].asid_match1) 1 -1" (2 "10")
+Condition 914 "3301309038" "(g_lookup1[53].vpn2_match1 && g_lookup1[53].asid_match1) 1 -1" (3 "11")
+Condition 915 "1797198342" "(tlb_valid[54] && (((tlb_vpn2[54] ^ lookup1_vpn2) & g_lookup1[54].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 915 "1797198342" "(tlb_valid[54] && (((tlb_vpn2[54] ^ lookup1_vpn2) & g_lookup1[54].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 915 "1797198342" "(tlb_valid[54] && (((tlb_vpn2[54] ^ lookup1_vpn2) & g_lookup1[54].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 916 "368903658" "(((tlb_vpn2[54] ^ lookup1_vpn2) & g_lookup1[54].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 917 "3757397503" "(tlb_g[54] || (tlb_asid[54] == lookup1_asid)) 1 -1" (1 "00")
+Condition 917 "3757397503" "(tlb_g[54] || (tlb_asid[54] == lookup1_asid)) 1 -1" (2 "01")
+Condition 917 "3757397503" "(tlb_g[54] || (tlb_asid[54] == lookup1_asid)) 1 -1" (3 "10")
+Condition 918 "3302710167" "(tlb_asid[54] == lookup1_asid) 1 -1" (2 "1")
+Condition 919 "759005150" "(g_lookup1[54].vpn2_match1 && g_lookup1[54].asid_match1) 1 -1" (1 "01")
+Condition 919 "759005150" "(g_lookup1[54].vpn2_match1 && g_lookup1[54].asid_match1) 1 -1" (2 "10")
+Condition 919 "759005150" "(g_lookup1[54].vpn2_match1 && g_lookup1[54].asid_match1) 1 -1" (3 "11")
+Condition 920 "125621569" "(tlb_valid[55] && (((tlb_vpn2[55] ^ lookup1_vpn2) & g_lookup1[55].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 920 "125621569" "(tlb_valid[55] && (((tlb_vpn2[55] ^ lookup1_vpn2) & g_lookup1[55].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 920 "125621569" "(tlb_valid[55] && (((tlb_vpn2[55] ^ lookup1_vpn2) & g_lookup1[55].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 921 "2191075547" "(((tlb_vpn2[55] ^ lookup1_vpn2) & g_lookup1[55].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 922 "38790" "(tlb_g[55] || (tlb_asid[55] == lookup1_asid)) 1 -1" (1 "00")
+Condition 922 "38790" "(tlb_g[55] || (tlb_asid[55] == lookup1_asid)) 1 -1" (2 "01")
+Condition 922 "38790" "(tlb_g[55] || (tlb_asid[55] == lookup1_asid)) 1 -1" (3 "10")
+Condition 923 "2619643858" "(tlb_asid[55] == lookup1_asid) 1 -1" (2 "1")
+Condition 924 "1630063340" "(g_lookup1[55].vpn2_match1 && g_lookup1[55].asid_match1) 1 -1" (1 "01")
+Condition 924 "1630063340" "(g_lookup1[55].vpn2_match1 && g_lookup1[55].asid_match1) 1 -1" (2 "10")
+Condition 924 "1630063340" "(g_lookup1[55].vpn2_match1 && g_lookup1[55].asid_match1) 1 -1" (3 "11")
+Condition 925 "2150578181" "(tlb_valid[56] && (((tlb_vpn2[56] ^ lookup1_vpn2) & g_lookup1[56].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 925 "2150578181" "(tlb_valid[56] && (((tlb_vpn2[56] ^ lookup1_vpn2) & g_lookup1[56].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 925 "2150578181" "(tlb_valid[56] && (((tlb_vpn2[56] ^ lookup1_vpn2) & g_lookup1[56].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 926 "1848269977" "(((tlb_vpn2[56] ^ lookup1_vpn2) & g_lookup1[56].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 927 "2339578169" "(tlb_g[56] || (tlb_asid[56] == lookup1_asid)) 1 -1" (1 "00")
+Condition 927 "2339578169" "(tlb_g[56] || (tlb_asid[56] == lookup1_asid)) 1 -1" (2 "01")
+Condition 927 "2339578169" "(tlb_g[56] || (tlb_asid[56] == lookup1_asid)) 1 -1" (3 "10")
+Condition 928 "1200879368" "(tlb_asid[56] == lookup1_asid) 1 -1" (2 "1")
+Condition 929 "2504795372" "(g_lookup1[56].vpn2_match1 && g_lookup1[56].asid_match1) 1 -1" (1 "01")
+Condition 929 "2504795372" "(g_lookup1[56].vpn2_match1 && g_lookup1[56].asid_match1) 1 -1" (2 "10")
+Condition 929 "2504795372" "(g_lookup1[56].vpn2_match1 && g_lookup1[56].asid_match1) 1 -1" (3 "11")
+Condition 930 "3964469058" "(tlb_valid[57] && (((tlb_vpn2[57] ^ lookup1_vpn2) & g_lookup1[57].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 930 "3964469058" "(tlb_valid[57] && (((tlb_vpn2[57] ^ lookup1_vpn2) & g_lookup1[57].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 930 "3964469058" "(tlb_valid[57] && (((tlb_vpn2[57] ^ lookup1_vpn2) & g_lookup1[57].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 931 "4182667688" "(((tlb_vpn2[57] ^ lookup1_vpn2) & g_lookup1[57].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 932 "1418126144" "(tlb_g[57] || (tlb_asid[57] == lookup1_asid)) 1 -1" (1 "00")
+Condition 932 "1418126144" "(tlb_g[57] || (tlb_asid[57] == lookup1_asid)) 1 -1" (2 "01")
+Condition 932 "1418126144" "(tlb_g[57] || (tlb_asid[57] == lookup1_asid)) 1 -1" (3 "10")
+Condition 933 "527186765" "(tlb_asid[57] == lookup1_asid) 1 -1" (2 "1")
+Condition 934 "3646525918" "(g_lookup1[57].vpn2_match1 && g_lookup1[57].asid_match1) 1 -1" (1 "01")
+Condition 934 "3646525918" "(g_lookup1[57].vpn2_match1 && g_lookup1[57].asid_match1) 1 -1" (2 "10")
+Condition 934 "3646525918" "(g_lookup1[57].vpn2_match1 && g_lookup1[57].asid_match1) 1 -1" (3 "11")
+Condition 935 "534270115" "(tlb_valid[58] && (((tlb_vpn2[58] ^ lookup1_vpn2) & g_lookup1[58].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 935 "534270115" "(tlb_valid[58] && (((tlb_vpn2[58] ^ lookup1_vpn2) & g_lookup1[58].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 935 "534270115" "(tlb_valid[58] && (((tlb_vpn2[58] ^ lookup1_vpn2) & g_lookup1[58].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 936 "145149193" "(((tlb_vpn2[58] ^ lookup1_vpn2) & g_lookup1[58].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 937 "2664119928" "(tlb_g[58] || (tlb_asid[58] == lookup1_asid)) 1 -1" (1 "00")
+Condition 937 "2664119928" "(tlb_g[58] || (tlb_asid[58] == lookup1_asid)) 1 -1" (2 "01")
+Condition 937 "2664119928" "(tlb_g[58] || (tlb_asid[58] == lookup1_asid)) 1 -1" (3 "10")
+Condition 938 "1498841208" "(tlb_asid[58] == lookup1_asid) 1 -1" (2 "1")
+Condition 939 "3159496398" "(g_lookup1[58].vpn2_match1 && g_lookup1[58].asid_match1) 1 -1" (1 "01")
+Condition 939 "3159496398" "(g_lookup1[58].vpn2_match1 && g_lookup1[58].asid_match1) 1 -1" (2 "10")
+Condition 939 "3159496398" "(g_lookup1[58].vpn2_match1 && g_lookup1[58].asid_match1) 1 -1" (3 "11")
+Condition 940 "1941673956" "(tlb_valid[59] && (((tlb_vpn2[59] ^ lookup1_vpn2) & g_lookup1[59].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 940 "1941673956" "(tlb_valid[59] && (((tlb_vpn2[59] ^ lookup1_vpn2) & g_lookup1[59].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 940 "1941673956" "(tlb_valid[59] && (((tlb_vpn2[59] ^ lookup1_vpn2) & g_lookup1[59].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 941 "2680348728" "(((tlb_vpn2[59] ^ lookup1_vpn2) & g_lookup1[59].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 942 "1094646785" "(tlb_g[59] || (tlb_asid[59] == lookup1_asid)) 1 -1" (1 "00")
+Condition 942 "1094646785" "(tlb_g[59] || (tlb_asid[59] == lookup1_asid)) 1 -1" (2 "01")
+Condition 942 "1094646785" "(tlb_g[59] || (tlb_asid[59] == lookup1_asid)) 1 -1" (3 "10")
+Condition 943 "27872317" "(tlb_asid[59] == lookup1_asid) 1 -1" (2 "1")
+Condition 944 "4031226876" "(g_lookup1[59].vpn2_match1 && g_lookup1[59].asid_match1) 1 -1" (1 "01")
+Condition 944 "4031226876" "(g_lookup1[59].vpn2_match1 && g_lookup1[59].asid_match1) 1 -1" (2 "10")
+Condition 944 "4031226876" "(g_lookup1[59].vpn2_match1 && g_lookup1[59].asid_match1) 1 -1" (3 "11")
+Condition 945 "2280802121" "(tlb_valid[60] && (((tlb_vpn2[60] ^ lookup1_vpn2) & g_lookup1[60].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 945 "2280802121" "(tlb_valid[60] && (((tlb_vpn2[60] ^ lookup1_vpn2) & g_lookup1[60].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 945 "2280802121" "(tlb_valid[60] && (((tlb_vpn2[60] ^ lookup1_vpn2) & g_lookup1[60].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 946 "2294988503" "(((tlb_vpn2[60] ^ lookup1_vpn2) & g_lookup1[60].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 947 "3715084943" "(tlb_g[60] || (tlb_asid[60] == lookup1_asid)) 1 -1" (1 "00")
+Condition 947 "3715084943" "(tlb_g[60] || (tlb_asid[60] == lookup1_asid)) 1 -1" (2 "01")
+Condition 947 "3715084943" "(tlb_g[60] || (tlb_asid[60] == lookup1_asid)) 1 -1" (3 "10")
+Condition 948 "2139091418" "(tlb_asid[60] == lookup1_asid) 1 -1" (2 "1")
+Condition 949 "2795709052" "(g_lookup1[60].vpn2_match1 && g_lookup1[60].asid_match1) 1 -1" (1 "01")
+Condition 949 "2795709052" "(g_lookup1[60].vpn2_match1 && g_lookup1[60].asid_match1) 1 -1" (2 "10")
+Condition 949 "2795709052" "(g_lookup1[60].vpn2_match1 && g_lookup1[60].asid_match1) 1 -1" (3 "11")
+Condition 950 "3952181262" "(tlb_valid[61] && (((tlb_vpn2[61] ^ lookup1_vpn2) & g_lookup1[61].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 950 "3952181262" "(tlb_valid[61] && (((tlb_vpn2[61] ^ lookup1_vpn2) & g_lookup1[61].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 950 "3952181262" "(tlb_valid[61] && (((tlb_vpn2[61] ^ lookup1_vpn2) & g_lookup1[61].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 951 "531534822" "(((tlb_vpn2[61] ^ lookup1_vpn2) & g_lookup1[61].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 952 "43675894" "(tlb_g[61] || (tlb_asid[61] == lookup1_asid)) 1 -1" (1 "00")
+Condition 952 "43675894" "(tlb_g[61] || (tlb_asid[61] == lookup1_asid)) 1 -1" (2 "01")
+Condition 952 "43675894" "(tlb_g[61] || (tlb_asid[61] == lookup1_asid)) 1 -1" (3 "10")
+Condition 953 "662715807" "(tlb_asid[61] == lookup1_asid) 1 -1" (2 "1")
+Condition 954 "3937834830" "(g_lookup1[61].vpn2_match1 && g_lookup1[61].asid_match1) 1 -1" (1 "01")
+Condition 954 "3937834830" "(g_lookup1[61].vpn2_match1 && g_lookup1[61].asid_match1) 1 -1" (2 "10")
+Condition 954 "3937834830" "(g_lookup1[61].vpn2_match1 && g_lookup1[61].asid_match1) 1 -1" (3 "11")
+Condition 955 "1824681290" "(tlb_valid[62] && (((tlb_vpn2[62] ^ lookup1_vpn2) & g_lookup1[62].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 955 "1824681290" "(tlb_valid[62] && (((tlb_vpn2[62] ^ lookup1_vpn2) & g_lookup1[62].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 955 "1824681290" "(tlb_valid[62] && (((tlb_vpn2[62] ^ lookup1_vpn2) & g_lookup1[62].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 956 "4078823332" "(((tlb_vpn2[62] ^ lookup1_vpn2) & g_lookup1[62].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 957 "2313799241" "(tlb_g[62] || (tlb_asid[62] == lookup1_asid)) 1 -1" (1 "00")
+Condition 957 "2313799241" "(tlb_g[62] || (tlb_asid[62] == lookup1_asid)) 1 -1" (2 "01")
+Condition 957 "2313799241" "(tlb_g[62] || (tlb_asid[62] == lookup1_asid)) 1 -1" (3 "10")
+Condition 958 "4231486789" "(tlb_asid[62] == lookup1_asid) 1 -1" (2 "1")
+Condition 959 "517110094" "(g_lookup1[62].vpn2_match1 && g_lookup1[62].asid_match1) 1 -1" (1 "01")
+Condition 959 "517110094" "(g_lookup1[62].vpn2_match1 && g_lookup1[62].asid_match1) 1 -1" (2 "10")
+Condition 959 "517110094" "(g_lookup1[62].vpn2_match1 && g_lookup1[62].asid_match1) 1 -1" (3 "11")
+Condition 960 "10594829" "(tlb_valid[63] && (((tlb_vpn2[63] ^ lookup1_vpn2) & g_lookup1[63].cmp1_mask) == 19'b0)) 1 -1" (1 "01")
+Condition 960 "10594829" "(tlb_valid[63] && (((tlb_vpn2[63] ^ lookup1_vpn2) & g_lookup1[63].cmp1_mask) == 19'b0)) 1 -1" (2 "10")
+Condition 960 "10594829" "(tlb_valid[63] && (((tlb_vpn2[63] ^ lookup1_vpn2) & g_lookup1[63].cmp1_mask) == 19'b0)) 1 -1" (3 "11")
+Condition 961 "1685703317" "(((tlb_vpn2[63] ^ lookup1_vpn2) & g_lookup1[63].cmp1_mask) == 19'b0) 1 -1" (2 "1")
+Condition 962 "1444676656" "(tlb_g[63] || (tlb_asid[63] == lookup1_asid)) 1 -1" (1 "00")
+Condition 962 "1444676656" "(tlb_g[63] || (tlb_asid[63] == lookup1_asid)) 1 -1" (2 "01")
+Condition 962 "1444676656" "(tlb_g[63] || (tlb_asid[63] == lookup1_asid)) 1 -1" (3 "10")
+Condition 963 "2764607744" "(tlb_asid[63] == lookup1_asid) 1 -1" (2 "1")
+Condition 964 "1388825724" "(g_lookup1[63].vpn2_match1 && g_lookup1[63].asid_match1) 1 -1" (1 "01")
+Condition 964 "1388825724" "(g_lookup1[63].vpn2_match1 && g_lookup1[63].asid_match1) 1 -1" (2 "10")
+Condition 964 "1388825724" "(g_lookup1[63].vpn2_match1 && g_lookup1[63].asid_match1) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0052
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3371145080 768270639"
+MODULE: mips_page_table_walker
+Condition 1 "1494751667" "(pte[0] && (((!u)) || pte[3]) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]))) 1 -1" (1 "011")
+Condition 1 "1494751667" "(pte[0] && (((!u)) || pte[3]) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]))) 1 -1" (2 "101")
+Condition 1 "1494751667" "(pte[0] && (((!u)) || pte[3]) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]))) 1 -1" (3 "110")
+Condition 1 "1494751667" "(pte[0] && (((!u)) || pte[3]) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]))) 1 -1" (4 "111")
+Condition 2 "3012470267" "(((!u)) || pte[3]) 1 -1" (1 "00")
+Condition 2 "3012470267" "(((!u)) || pte[3]) 1 -1" (2 "01")
+Condition 2 "3012470267" "(((!u)) || pte[3]) 1 -1" (3 "10")
+Condition 3 "3906904770" "((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1])) 1 -1" (1 "0")
+Condition 3 "3906904770" "((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1])) 1 -1" (2 "1")
+Condition 4 "847014372" "(a == 2'b0) 1 -1" (1 "0")
+Condition 4 "847014372" "(a == 2'b0) 1 -1" (2 "1")
+Condition 5 "135907554" "((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]) 1 -1" (1 "0")
+Condition 5 "135907554" "((a == 2'b1) ? (pte[1] || pte[2]) : pte[1]) 1 -1" (2 "1")
+Condition 6 "530369116" "(a == 2'b1) 1 -1" (1 "0")
+Condition 6 "530369116" "(a == 2'b1) 1 -1" (2 "1")
+Condition 7 "3342862110" "(pte[1] || pte[2]) 1 -1" (1 "00")
+Condition 7 "3342862110" "(pte[1] || pte[2]) 1 -1" (2 "01")
+Condition 7 "3342862110" "(pte[1] || pte[2]) 1 -1" (3 "10")
+Condition 8 "3901402235" "(mem_valid && mem_ready) 1 -1" (1 "01")
+Condition 8 "3901402235" "(mem_valid && mem_ready) 1 -1" (2 "10")
+Condition 8 "3901402235" "(mem_valid && mem_ready) 1 -1" (3 "11")
+Condition 9 "865928428" "(mem_valid && mem_ready) 1 -1" (1 "01")
+Condition 9 "865928428" "(mem_valid && mem_ready) 1 -1" (2 "10")
+Condition 9 "865928428" "(mem_valid && mem_ready) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0053
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "629359671 2085574916"
+MODULE: axi_spi_flash
+Condition 1 "2289792474" "(s_awvalid && s_awready) 1 -1" (2 "10")
+Condition 1 "2289792474" "(s_awvalid && s_awready) 1 -1" (3 "11")
+Condition 2 "88631094" "(s_wvalid && s_wready && s_wlast) 1 -1" (1 "011")
+Condition 2 "88631094" "(s_wvalid && s_wready && s_wlast) 1 -1" (2 "101")
+Condition 2 "88631094" "(s_wvalid && s_wready && s_wlast) 1 -1" (3 "110")
+Condition 2 "88631094" "(s_wvalid && s_wready && s_wlast) 1 -1" (4 "111")
+Condition 3 "1686882110" "(wr_bvalid && s_bready) 1 -1" (1 "01")
+Condition 3 "1686882110" "(wr_bvalid && s_bready) 1 -1" (2 "10")
+Condition 3 "1686882110" "(wr_bvalid && s_bready) 1 -1" (3 "11")
+Condition 10 "3939897947" "(s_rvalid && s_rready) 1 -1" (1 "01")
+Condition 13 "2272049603" "((state == IDLE) && s_arvalid) 1 -1" (1 "01")
+Condition 24 "4250986298" "((state == RESP) && s_rvalid && s_rready && (burst_beat != burst_len)) 1 -1" (1 "0111")
+Condition 24 "4250986298" "((state == RESP) && s_rvalid && s_rready && (burst_beat != burst_len)) 1 -1" (2 "1011")
+Condition 24 "4250986298" "((state == RESP) && s_rvalid && s_rready && (burst_beat != burst_len)) 1 -1" (3 "1101")
+Condition 29 "1436514190" "(((!wr_busy)) && ((!wr_bvalid))) 1 -1" (1 "01")
+Condition 29 "1436514190" "(((!wr_busy)) && ((!wr_bvalid))) 1 -1" (2 "10")
+Condition 30 "510718628" "(wr_busy && ((!wr_bvalid))) 1 -1" (2 "10")
+Condition 30 "510718628" "(wr_busy && ((!wr_bvalid))) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0054
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1363931416 2109814194"
+MODULE: qspi_cmd_behavioral
+Condition 1 "1723375856" "(tx_bytes_left_r != 3'b0) 1 -1" (1 "0")
+Condition 1 "1723375856" "(tx_bytes_left_r != 3'b0) 1 -1" (2 "1")
+Condition 2 "1527599600" "(dummy_cycles != 5'b0) 1 -1" (1 "0")
+Condition 2 "1527599600" "(dummy_cycles != 5'b0) 1 -1" (2 "1")
+Condition 3 "2310521511" "(data_bytes_left != 16'b0) 1 -1" (1 "0")
+Condition 3 "2310521511" "(data_bytes_left != 16'b0) 1 -1" (2 "1")
+Condition 4 "131218228" "((state != ST_IDLE) && (cs_ctrl_r[1:0] < CS_COUNT)) 1 -1" (2 "10")
+Condition 4 "131218228" "((state != ST_IDLE) && (cs_ctrl_r[1:0] < CS_COUNT)) 1 -1" (3 "11")
+Condition 5 "2063620647" "(state != ST_IDLE) 1 -1" (2 "1")
+Condition 6 "3253116965" "((state == ST_CMD) || (state == ST_ADDR) || (state == ST_MODE) || ((state == ST_DATA) && data_write)) 1 -1" (2 "0001")
+Condition 6 "3253116965" "((state == ST_CMD) || (state == ST_ADDR) || (state == ST_MODE) || ((state == ST_DATA) && data_write)) 1 -1" (3 "0010")
+Condition 6 "3253116965" "((state == ST_CMD) || (state == ST_ADDR) || (state == ST_MODE) || ((state == ST_DATA) && data_write)) 1 -1" (4 "0100")
+Condition 6 "3253116965" "((state == ST_CMD) || (state == ST_ADDR) || (state == ST_MODE) || ((state == ST_DATA) && data_write)) 1 -1" (5 "1000")
+Condition 7 "2058369011" "(state == ST_CMD) 1 -1" (2 "1")
+Condition 8 "1244083857" "(state == ST_ADDR) 1 -1" (2 "1")
+Condition 9 "968340036" "(state == ST_MODE) 1 -1" (2 "1")
+Condition 10 "2342775590" "((state == ST_DATA) && data_write) 1 -1" (1 "01")
+Condition 10 "2342775590" "((state == ST_DATA) && data_write) 1 -1" (2 "10")
+Condition 10 "2342775590" "((state == ST_DATA) && data_write) 1 -1" (3 "11")
+Condition 11 "2592510563" "(state == ST_DATA) 1 -1" (2 "1")
+Condition 12 "3455012194" "((phase_lane_r == 3'd4) ? 4'hf : ((phase_lane_r == 3'd2) ? 4'h3 : 4'b1)) 1 -1" (1 "0")
+Condition 12 "3455012194" "((phase_lane_r == 3'd4) ? 4'hf : ((phase_lane_r == 3'd2) ? 4'h3 : 4'b1)) 1 -1" (2 "1")
+Condition 13 "1020333566" "(phase_lane_r == 3'd4) 1 -1" (1 "0")
+Condition 13 "1020333566" "(phase_lane_r == 3'd4) 1 -1" (2 "1")
+Condition 14 "750976098" "((phase_lane_r == 3'd2) ? 4'h3 : 4'b1) 1 -1" (1 "0")
+Condition 14 "750976098" "((phase_lane_r == 3'd2) ? 4'h3 : 4'b1) 1 -1" (2 "1")
+Condition 15 "306297082" "(phase_lane_r == 3'd2) 1 -1" (1 "0")
+Condition 15 "306297082" "(phase_lane_r == 3'd2) 1 -1" (2 "1")
+Condition 16 "2097243924" "(phase_lane_r == 3'd4) 1 -1" (1 "0")
+Condition 16 "2097243924" "(phase_lane_r == 3'd4) 1 -1" (2 "1")
+Condition 17 "3266759426" "(phase_lane_r == 3'd2) 1 -1" (1 "0")
+Condition 17 "3266759426" "(phase_lane_r == 3'd2) 1 -1" (2 "1")
+Condition 18 "807817723" "((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))) 1 -1" (1 "01")
+Condition 18 "807817723" "((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))) 1 -1" (2 "10")
+Condition 18 "807817723" "((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))) 1 -1" (3 "11")
+Condition 19 "817306829" "(tx_push && ((!tx_full))) 1 -1" (2 "10")
+Condition 19 "817306829" "(tx_push && ((!tx_full))) 1 -1" (3 "11")
+Condition 20 "3992931387" "(tx_pop_pulse && ((!tx_empty))) 1 -1" (1 "01")
+Condition 20 "3992931387" "(tx_pop_pulse && ((!tx_empty))) 1 -1" (2 "10")
+Condition 20 "3992931387" "(tx_pop_pulse && ((!tx_empty))) 1 -1" (3 "11")
+Condition 21 "840165482" "(rx_push_pulse && (rx_count_r < RX_FIFO_DEPTH)) 1 -1" (2 "10")
+Condition 21 "840165482" "(rx_push_pulse && (rx_count_r < RX_FIFO_DEPTH)) 1 -1" (3 "11")
+Condition 22 "2430702680" "(rx_pop && ((!rx_empty))) 1 -1" (1 "01")
+Condition 22 "2430702680" "(rx_pop && ((!rx_empty))) 1 -1" (2 "10")
+Condition 22 "2430702680" "(rx_pop && ((!rx_empty))) 1 -1" (3 "11")
+Condition 23 "759342964" "(wr && (paddr == A_IRQ_STATUS)) 1 -1" (1 "01")
+Condition 23 "759342964" "(wr && (paddr == A_IRQ_STATUS)) 1 -1" (2 "10")
+Condition 23 "759342964" "(wr && (paddr == A_IRQ_STATUS)) 1 -1" (3 "11")
+Condition 24 "904570739" "(paddr == A_IRQ_STATUS) 1 -1" (2 "1")
+Condition 25 "3485256606" "(pwdata[1] || pwdata[2]) 1 -1" (1 "00")
+Condition 25 "3485256606" "(pwdata[1] || pwdata[2]) 1 -1" (2 "01")
+Condition 25 "3485256606" "(pwdata[1] || pwdata[2]) 1 -1" (3 "10")
+Condition 26 "2435620030" "(abort_cmd || disable_abort) 1 -1" (2 "01")
+Condition 26 "2435620030" "(abort_cmd || disable_abort) 1 -1" (3 "10")
+Condition 27 "3946496214" "(trigger_busy || trigger_disabled) 1 -1" (2 "01")
+Condition 27 "3946496214" "(trigger_busy || trigger_disabled) 1 -1" (3 "10")
+Condition 28 "2250896292" "(state == ST_IDLE) 1 -1" (1 "0")
+Condition 29 "1454032100" "(trigger_write && ctrl_r[0]) 1 -1" (1 "01")
+Condition 29 "1454032100" "(trigger_write && ctrl_r[0]) 1 -1" (2 "10")
+Condition 29 "1454032100" "(trigger_write && ctrl_r[0]) 1 -1" (3 "11")
+Condition 30 "3630584424" "((state == ST_DATA) && ((!data_write))) 1 -1" (1 "01")
+Condition 30 "3630584424" "((state == ST_DATA) && ((!data_write))) 1 -1" (2 "10")
+Condition 30 "3630584424" "((state == ST_DATA) && ((!data_write))) 1 -1" (3 "11")
+Condition 31 "2940460735" "(state == ST_DATA) 1 -1" (1 "0")
+Condition 31 "2940460735" "(state == ST_DATA) 1 -1" (2 "1")
+Condition 32 "3933451117" "(addr_type != 2'b0) 1 -1" (1 "0")
+Condition 32 "3933451117" "(addr_type != 2'b0) 1 -1" (2 "1")
+Condition 33 "2089986245" "((addr_type == 2'h2) ? 7'd32 : 7'd24) 1 -1" (1 "0")
+Condition 33 "2089986245" "((addr_type == 2'h2) ? 7'd32 : 7'd24) 1 -1" (2 "1")
+Condition 34 "2253051302" "(addr_type == 2'h2) 1 -1" (1 "0")
+Condition 34 "2253051302" "(addr_type == 2'h2) 1 -1" (2 "1")
+Condition 35 "957830376" "((addr_type == 2'h2) ? active_addr_r : ({active_addr_r[23:0], 8'b0})) 1 -1" (1 "0")
+Condition 35 "957830376" "((addr_type == 2'h2) ? active_addr_r : ({active_addr_r[23:0], 8'b0})) 1 -1" (2 "1")
+Condition 36 "1173651360" "(addr_type == 2'h2) 1 -1" (1 "0")
+Condition 36 "1173651360" "(addr_type == 2'h2) 1 -1" (2 "1")
+Condition 37 "537215407" "(mode_type != 2'b0) 1 -1" (1 "0")
+Condition 37 "537215407" "(mode_type != 2'b0) 1 -1" (2 "1")
+Condition 38 "1748698744" "(mode_type != 2'b0) 1 -1" (1 "0")
+Condition 38 "1748698744" "(mode_type != 2'b0) 1 -1" (2 "1")
+Condition 39 "2927195289" "(data_bytes_left != 16'b0) 1 -1" (1 "0")
+Condition 39 "2927195289" "(data_bytes_left != 16'b0) 1 -1" (2 "1")
+Condition 41 "4198472719" "(state != ST_IDLE) 1 -1" (1 "0")
+Condition 41 "4198472719" "(state != ST_IDLE) 1 -1" (2 "1")
+Condition 42 "2899888962" "(rx_empty ? 32'b0 : rx_fifo[rx_rd]) 1 -1" (1 "0")
+Condition 42 "2899888962" "(rx_empty ? 32'b0 : rx_fifo[rx_rd]) 1 -1" (2 "1")
+Condition 43 "3485556231" "((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))) 1 -1" (1 "01")
+Condition 43 "3485556231" "((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))) 1 -1" (2 "10")
+Condition 43 "3485556231" "((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))) 1 -1" (3 "11")
+Condition 44 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 44 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 44 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 45 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 45 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 45 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Condition 46 "3781042665" "(wr && (paddr == A_TX_DATA)) 1 -1" (1 "01")
+Condition 46 "3781042665" "(wr && (paddr == A_TX_DATA)) 1 -1" (2 "10")
+Condition 46 "3781042665" "(wr && (paddr == A_TX_DATA)) 1 -1" (3 "11")
+Condition 47 "1323228502" "(paddr == A_TX_DATA) 1 -1" (2 "1")
+Condition 48 "2172894540" "(rd && (paddr == A_RX_DATA)) 1 -1" (1 "01")
+Condition 48 "2172894540" "(rd && (paddr == A_RX_DATA)) 1 -1" (2 "10")
+Condition 48 "2172894540" "(rd && (paddr == A_RX_DATA)) 1 -1" (3 "11")
+Condition 49 "3992792570" "(paddr == A_RX_DATA) 1 -1" (2 "1")
+Condition 50 "2967075639" "(wr && (paddr == A_CTRL) && pwdata[1]) 1 -1" (1 "011")
+Condition 50 "2967075639" "(wr && (paddr == A_CTRL) && pwdata[1]) 1 -1" (2 "101")
+Condition 50 "2967075639" "(wr && (paddr == A_CTRL) && pwdata[1]) 1 -1" (3 "110")
+Condition 50 "2967075639" "(wr && (paddr == A_CTRL) && pwdata[1]) 1 -1" (4 "111")
+Condition 51 "1156065656" "(paddr == A_CTRL) 1 -1" (2 "1")
+Condition 52 "1503087767" "(wr && (paddr == A_CTRL) && pwdata[2]) 1 -1" (1 "011")
+Condition 52 "1503087767" "(wr && (paddr == A_CTRL) && pwdata[2]) 1 -1" (2 "101")
+Condition 52 "1503087767" "(wr && (paddr == A_CTRL) && pwdata[2]) 1 -1" (3 "110")
+Condition 52 "1503087767" "(wr && (paddr == A_CTRL) && pwdata[2]) 1 -1" (4 "111")
+Condition 53 "4107285327" "(paddr == A_CTRL) 1 -1" (2 "1")
+Condition 56 "3163587714" "((state != ST_IDLE) && (div_count_r >= clk_div_r)) 1 -1" (2 "10")
+Condition 56 "3163587714" "((state != ST_IDLE) && (div_count_r >= clk_div_r)) 1 -1" (3 "11")
+Condition 57 "2220742283" "(state != ST_IDLE) 1 -1" (2 "1")
+Condition 58 "814327842" "(wr && (paddr == A_CMD_TRIG)) 1 -1" (1 "01")
+Condition 58 "814327842" "(wr && (paddr == A_CMD_TRIG)) 1 -1" (2 "10")
+Condition 58 "814327842" "(wr && (paddr == A_CMD_TRIG)) 1 -1" (3 "11")
+Condition 59 "2994376030" "(paddr == A_CMD_TRIG) 1 -1" (2 "1")
+Condition 60 "1016400789" "(trigger_write && (state != ST_IDLE)) 1 -1" (1 "01")
+Condition 60 "1016400789" "(trigger_write && (state != ST_IDLE)) 1 -1" (2 "10")
+Condition 60 "1016400789" "(trigger_write && (state != ST_IDLE)) 1 -1" (3 "11")
+Condition 61 "1230805960" "(state != ST_IDLE) 1 -1" (2 "1")
+Condition 62 "2240181243" "(trigger_write && ((!ctrl_r[0]))) 1 -1" (2 "10")
+Condition 62 "2240181243" "(trigger_write && ((!ctrl_r[0]))) 1 -1" (3 "11")
+Condition 63 "2648021123" "(wr && (paddr == A_CTRL) && ((!pwdata[0])) && (state != ST_IDLE)) 1 -1" (1 "0111")
+Condition 63 "2648021123" "(wr && (paddr == A_CTRL) && ((!pwdata[0])) && (state != ST_IDLE)) 1 -1" (2 "1011")
+Condition 63 "2648021123" "(wr && (paddr == A_CTRL) && ((!pwdata[0])) && (state != ST_IDLE)) 1 -1" (3 "1101")
+Condition 63 "2648021123" "(wr && (paddr == A_CTRL) && ((!pwdata[0])) && (state != ST_IDLE)) 1 -1" (4 "1110")
+Condition 63 "2648021123" "(wr && (paddr == A_CTRL) && ((!pwdata[0])) && (state != ST_IDLE)) 1 -1" (5 "1111")
+Condition 64 "1138755854" "(paddr == A_CTRL) 1 -1" (2 "1")
+Condition 65 "431280585" "(state != ST_IDLE) 1 -1" (2 "1")
+Condition 66 "3611772510" "((state != ST_IDLE) && (timeout_limit_r != 0) && (timeout_count_r >= (timeout_limit_r - 1'b1))) 1 -1" (1 "011")
+Condition 66 "3611772510" "((state != ST_IDLE) && (timeout_limit_r != 0) && (timeout_count_r >= (timeout_limit_r - 1'b1))) 1 -1" (2 "101")
+Condition 66 "3611772510" "((state != ST_IDLE) && (timeout_limit_r != 0) && (timeout_count_r >= (timeout_limit_r - 1'b1))) 1 -1" (3 "110")
+Condition 66 "3611772510" "((state != ST_IDLE) && (timeout_limit_r != 0) && (timeout_count_r >= (timeout_limit_r - 1'b1))) 1 -1" (4 "111")
+Condition 67 "3815325112" "(state != ST_IDLE) 1 -1" (2 "1")
+Condition 69 "2970649885" "(irq_en_r[0] & irq_pending_r) 1 -1" (1 "01")
+Condition 69 "2970649885" "(irq_en_r[0] & irq_pending_r) 1 -1" (2 "10")
+Condition 69 "2970649885" "(irq_en_r[0] & irq_pending_r) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0055
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2772071125 3425521730"
+MODULE: uart_pad_wrapper
+Condition 1 "4251496404" "(enable ? uart_tx_i : 1'b1) 1 -1" (1 "0")
+Condition 2 "2446792643" "(enable ? uart_rts_n_i : 1'b1) 1 -1" (1 "0")
+Condition 3 "4013513025" "(enable ? uart_dtr_n_i : 1'b1) 1 -1" (1 "0")
+Condition 4 "2447554632" "(enable ? uart_rx_pad : 1'b1) 1 -1" (1 "0")
+Condition 5 "2691669457" "(enable ? uart_cts_n_pad : 1'b0) 1 -1" (1 "0")
+Condition 6 "3526577848" "(enable ? uart_dsr_n_pad : 1'b0) 1 -1" (1 "0")
+Condition 7 "2991534556" "(enable ? uart_dcd_n_pad : 1'b0) 1 -1" (1 "0")
+Condition 8 "1581281772" "(enable ? uart_ri_n_pad : 1'b1) 1 -1" (1 "0")
+
+// ID: EXCL-PROD-0056
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4288013028 879894472"
+MODULE: axi_ddr4_controller
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (1 "0111111")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (2 "1011111")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (3 "1101111")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (4 "1110111")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (5 "1111011")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (6 "1111101")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (7 "1111110")
+Condition 1 "3299880511" "((addr[1:0] == 2'b0) && (size == 3'd2) && (burst == 2'b1) && (len <= 8'd15) && (addr >= 32'h08000000) && (last_addr[31:0] < (32'h08000000 + 32'h08000000)) && (last_addr[31:12] == addr[31:12])) 1 -1" (8 "1111111")
+Condition 2 "4050223026" "(addr[1:0] == 2'b0) 1 -1" (1 "0")
+Condition 2 "4050223026" "(addr[1:0] == 2'b0) 1 -1" (2 "1")
+Condition 3 "2275064799" "(size == 3'd2) 1 -1" (1 "0")
+Condition 3 "2275064799" "(size == 3'd2) 1 -1" (2 "1")
+Condition 4 "2362083648" "(burst == 2'b1) 1 -1" (1 "0")
+Condition 4 "2362083648" "(burst == 2'b1) 1 -1" (2 "1")
+Condition 5 "2320943550" "(last_addr[31:12] == addr[31:12]) 1 -1" (1 "0")
+Condition 5 "2320943550" "(last_addr[31:12] == addr[31:12]) 1 -1" (2 "1")
+Condition 6 "43812024" "(s_bvalid && s_bready) 1 -1" (1 "01")
+Condition 6 "43812024" "(s_bvalid && s_bready) 1 -1" (2 "10")
+Condition 6 "43812024" "(s_bvalid && s_bready) 1 -1" (3 "11")
+Condition 7 "825263332" "(s_rvalid && s_rready) 1 -1" (1 "01")
+Condition 7 "825263332" "(s_rvalid && s_rready) 1 -1" (2 "10")
+Condition 7 "825263332" "(s_rvalid && s_rready) 1 -1" (3 "11")
+Condition 8 "3533825452" "(read_left == 8'b0) 1 -1" (1 "0")
+Condition 8 "3533825452" "(read_left == 8'b0) 1 -1" (2 "1")
+Condition 9 "1791047488" "(read_bad ? 32'b0 : ((ENABLE_ECC ? ecc_data_next : ram[word_index((read_addr + 32'd4))]))) 1 -1" (1 "0")
+Condition 9 "1791047488" "(read_bad ? 32'b0 : ((ENABLE_ECC ? ecc_data_next : ram[word_index((read_addr + 32'd4))]))) 1 -1" (2 "1")
+Condition 10 "2595705011" "(read_left == 8'b1) 1 -1" (1 "0")
+Condition 10 "2595705011" "(read_left == 8'b1) 1 -1" (2 "1")
+Condition 11 "1722501271" "(refresh_req || ((REFRESH_INTERVAL_CYCLES > 0) && (refresh_timer >= (REFRESH_INTERVAL_CYCLES - 1)) && controller_ready)) 1 -1" (3 "10")
+Condition 12 "4145959591" "((REFRESH_INTERVAL_CYCLES > 0) && (refresh_timer >= (REFRESH_INTERVAL_CYCLES - 1)) && controller_ready) 1 -1" (2 "-10")
+Condition 13 "335967372" "(s_awvalid && s_awready) 1 -1" (2 "10")
+Condition 13 "335967372" "(s_awvalid && s_awready) 1 -1" (3 "11")
+Condition 14 "1215646086" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (1 "011")
+Condition 14 "1215646086" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (2 "101")
+Condition 14 "1215646086" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (3 "110")
+Condition 14 "1215646086" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (4 "111")
+Condition 15 "4189992693" "(active_bank == s_awaddr[10:8]) 1 -1" (1 "0")
+Condition 15 "4189992693" "(active_bank == s_awaddr[10:8]) 1 -1" (2 "1")
+Condition 16 "1658804045" "(active_row == s_awaddr[27:12]) 1 -1" (1 "0")
+Condition 16 "1658804045" "(active_row == s_awaddr[27:12]) 1 -1" (2 "1")
+Condition 17 "4012021347" "(((!bank_open)) || (active_bank != s_awaddr[10:8]) || (active_row != s_awaddr[27:12])) 1 -1" (1 "000")
+Condition 17 "4012021347" "(((!bank_open)) || (active_bank != s_awaddr[10:8]) || (active_row != s_awaddr[27:12])) 1 -1" (2 "001")
+Condition 17 "4012021347" "(((!bank_open)) || (active_bank != s_awaddr[10:8]) || (active_row != s_awaddr[27:12])) 1 -1" (3 "010")
+Condition 17 "4012021347" "(((!bank_open)) || (active_bank != s_awaddr[10:8]) || (active_row != s_awaddr[27:12])) 1 -1" (4 "100")
+Condition 18 "407315368" "(active_bank != s_awaddr[10:8]) 1 -1" (1 "0")
+Condition 18 "407315368" "(active_bank != s_awaddr[10:8]) 1 -1" (2 "1")
+Condition 19 "3292128070" "(active_row != s_awaddr[27:12]) 1 -1" (1 "0")
+Condition 19 "3292128070" "(active_row != s_awaddr[27:12]) 1 -1" (2 "1")
+Condition 20 "4264099639" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (1 "011")
+Condition 20 "4264099639" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (2 "101")
+Condition 20 "4264099639" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (3 "110")
+Condition 20 "4264099639" "(bank_open && (active_bank == s_awaddr[10:8]) && (active_row == s_awaddr[27:12])) 1 -1" (4 "111")
+Condition 21 "264490423" "(active_bank == s_awaddr[10:8]) 1 -1" (1 "0")
+Condition 21 "264490423" "(active_bank == s_awaddr[10:8]) 1 -1" (2 "1")
+Condition 22 "2493688847" "(active_row == s_awaddr[27:12]) 1 -1" (1 "0")
+Condition 22 "2493688847" "(active_row == s_awaddr[27:12]) 1 -1" (2 "1")
+Condition 23 "4025525137" "(s_arvalid && s_arready) 1 -1" (2 "10")
+Condition 23 "4025525137" "(s_arvalid && s_arready) 1 -1" (3 "11")
+Condition 24 "1364478930" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (1 "011")
+Condition 24 "1364478930" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (2 "101")
+Condition 24 "1364478930" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (3 "110")
+Condition 24 "1364478930" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (4 "111")
+Condition 25 "95389289" "(active_bank == s_araddr[10:8]) 1 -1" (1 "0")
+Condition 25 "95389289" "(active_bank == s_araddr[10:8]) 1 -1" (2 "1")
+Condition 26 "1150064855" "(active_row == s_araddr[27:12]) 1 -1" (1 "0")
+Condition 26 "1150064855" "(active_row == s_araddr[27:12]) 1 -1" (2 "1")
+Condition 27 "4127429687" "(((!bank_open)) || (active_bank != s_araddr[10:8]) || (active_row != s_araddr[27:12])) 1 -1" (1 "000")
+Condition 27 "4127429687" "(((!bank_open)) || (active_bank != s_araddr[10:8]) || (active_row != s_araddr[27:12])) 1 -1" (2 "001")
+Condition 27 "4127429687" "(((!bank_open)) || (active_bank != s_araddr[10:8]) || (active_row != s_araddr[27:12])) 1 -1" (3 "010")
+Condition 27 "4127429687" "(((!bank_open)) || (active_bank != s_araddr[10:8]) || (active_row != s_araddr[27:12])) 1 -1" (4 "100")
+Condition 28 "3830879028" "(active_bank != s_araddr[10:8]) 1 -1" (1 "0")
+Condition 28 "3830879028" "(active_bank != s_araddr[10:8]) 1 -1" (2 "1")
+Condition 29 "3798609116" "(active_row != s_araddr[27:12]) 1 -1" (1 "0")
+Condition 29 "3798609116" "(active_row != s_araddr[27:12]) 1 -1" (2 "1")
+Condition 30 "556409790" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (1 "011")
+Condition 30 "556409790" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (2 "101")
+Condition 30 "556409790" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (3 "110")
+Condition 30 "556409790" "(bank_open && (active_bank == s_araddr[10:8]) && (active_row == s_araddr[27:12])) 1 -1" (4 "111")
+Condition 31 "3790065631" "(active_bank == s_araddr[10:8]) 1 -1" (1 "0")
+Condition 31 "3790065631" "(active_bank == s_araddr[10:8]) 1 -1" (2 "1")
+Condition 32 "2697253217" "(active_row == s_araddr[27:12]) 1 -1" (1 "0")
+Condition 32 "2697253217" "(active_row == s_araddr[27:12]) 1 -1" (2 "1")
+Condition 33 "57479510" "((pending_cmd == CMD_READ) ? ST_READ_CMD : ST_WRITE_CMD) 1 -1" (1 "0")
+Condition 33 "57479510" "((pending_cmd == CMD_READ) ? ST_READ_CMD : ST_WRITE_CMD) 1 -1" (2 "1")
+Condition 34 "2317604564" "(pending_cmd == CMD_READ) 1 -1" (1 "0")
+Condition 34 "2317604564" "(pending_cmd == CMD_READ) 1 -1" (2 "1")
+Condition 35 "797865460" "(read_bad ? 2'b11 : 2'b0) 1 -1" (1 "0")
+Condition 35 "797865460" "(read_bad ? 2'b11 : 2'b0) 1 -1" (2 "1")
+Condition 36 "3725493229" "(read_bad ? 32'b0 : ((ENABLE_ECC ? ecc_data_current : ram[word_index(read_addr)]))) 1 -1" (1 "0")
+Condition 36 "3725493229" "(read_bad ? 32'b0 : ((ENABLE_ECC ? ecc_data_current : ram[word_index(read_addr)]))) 1 -1" (2 "1")
+Condition 37 "538961220" "(read_left == 8'b0) 1 -1" (1 "0")
+Condition 37 "538961220" "(read_left == 8'b0) 1 -1" (2 "1")
+Condition 38 "3389977312" "(s_wvalid && s_wready) 1 -1" (1 "01")
+Condition 38 "3389977312" "(s_wvalid && s_wready) 1 -1" (2 "10")
+Condition 38 "3389977312" "(s_wvalid && s_wready) 1 -1" (3 "11")
+Condition 39 "2670060787" "(((!write_bad)) && (s_wlast == (write_left == 8'b0))) 1 -1" (1 "01")
+Condition 39 "2670060787" "(((!write_bad)) && (s_wlast == (write_left == 8'b0))) 1 -1" (2 "10")
+Condition 39 "2670060787" "(((!write_bad)) && (s_wlast == (write_left == 8'b0))) 1 -1" (3 "11")
+Condition 40 "1670411519" "(s_wlast == (write_left == 8'b0)) 1 -1" (1 "0")
+Condition 40 "1670411519" "(s_wlast == (write_left == 8'b0)) 1 -1" (2 "1")
+Condition 41 "2905259509" "(s_wlast || (write_left == 8'b0)) 1 -1" (1 "00")
+Condition 41 "2905259509" "(s_wlast || (write_left == 8'b0)) 1 -1" (2 "01")
+Condition 41 "2905259509" "(s_wlast || (write_left == 8'b0)) 1 -1" (3 "10")
+Condition 42 "3580826893" "(write_left == 8'b0) 1 -1" (1 "0")
+Condition 42 "3580826893" "(write_left == 8'b0) 1 -1" (2 "1")
+Condition 43 "3415380157" "(((!write_bad)) && (s_wlast != (write_left == 8'b0))) 1 -1" (1 "01")
+Condition 43 "3415380157" "(((!write_bad)) && (s_wlast != (write_left == 8'b0))) 1 -1" (2 "10")
+Condition 43 "3415380157" "(((!write_bad)) && (s_wlast != (write_left == 8'b0))) 1 -1" (3 "11")
+Condition 44 "1109122741" "(s_wlast != (write_left == 8'b0)) 1 -1" (1 "0")
+Condition 44 "1109122741" "(s_wlast != (write_left == 8'b0)) 1 -1" (2 "1")
+Condition 45 "1411537450" "(write_bad ? 2'b11 : ((s_wlast == (write_left == 8'b0)) ? 2'b0 : 2'b10)) 1 -1" (1 "0")
+Condition 45 "1411537450" "(write_bad ? 2'b11 : ((s_wlast == (write_left == 8'b0)) ? 2'b0 : 2'b10)) 1 -1" (2 "1")
+Condition 46 "3234893354" "((s_wlast == (write_left == 8'b0)) ? 2'b0 : 2'b10) 1 -1" (1 "0")
+Condition 46 "3234893354" "((s_wlast == (write_left == 8'b0)) ? 2'b0 : 2'b10) 1 -1" (2 "1")
+Condition 47 "3936046416" "(s_wlast == (write_left == 8'b0)) 1 -1" (1 "0")
+Condition 47 "3936046416" "(s_wlast == (write_left == 8'b0)) 1 -1" (2 "1")
+Condition 49 "2114625330" "(s_wstrb[3] ? s_wdata[31:24] : ecc_old_write_data[31:24]) 1 -1" (2 "1")
+Condition 50 "3893417358" "(s_wstrb[2] ? s_wdata[23:16] : ecc_old_write_data[23:16]) 1 -1" (2 "1")
+Condition 51 "1317516479" "(s_wstrb[1] ? s_wdata[15:8] : ecc_old_write_data[15:8]) 1 -1" (2 "1")
+Condition 52 "3977083818" "(s_wstrb[0] ? s_wdata[7:0] : ecc_old_write_data[7:0]) 1 -1" (2 "1")
+Condition 53 "2152892583" "((state == ST_READY) && ((!write_active)) && ((!read_active)) && ((!s_bvalid)) && ((!s_rvalid))) 1 -1" (2 "10111")
+Condition 53 "2152892583" "((state == ST_READY) && ((!write_active)) && ((!read_active)) && ((!s_bvalid)) && ((!s_rvalid))) 1 -1" (3 "11011")
+Condition 53 "2152892583" "((state == ST_READY) && ((!write_active)) && ((!read_active)) && ((!s_bvalid)) && ((!s_rvalid))) 1 -1" (4 "11101")
+Condition 53 "2152892583" "((state == ST_READY) && ((!write_active)) && ((!read_active)) && ((!s_bvalid)) && ((!s_rvalid))) 1 -1" (5 "11110")
+Condition 55 "1943371674" "((state != ST_INIT) && (state != ST_FATAL)) 1 -1" (2 "10")
+Condition 59 "3414008015" "(state == ST_FATAL) 1 -1" (2 "1")
+Condition 60 "870707628" "(controller_ready && ((!refresh_req))) 1 -1" (2 "10")
+Condition 61 "1606624086" "(controller_ready && ((!refresh_req)) && ((!s_awvalid))) 1 -1" (2 "101")
+Condition 61 "1606624086" "(controller_ready && ((!refresh_req)) && ((!s_awvalid))) 1 -1" (3 "110")
+Condition 62 "1133107358" "((state == ST_WRITE_DATA) && write_active) 1 -1" (1 "01")
+Condition 62 "1133107358" "((state == ST_WRITE_DATA) && write_active) 1 -1" (2 "10")
+Condition 62 "1133107358" "((state == ST_WRITE_DATA) && write_active) 1 -1" (3 "11")
+Condition 63 "366057905" "(state == ST_WRITE_DATA) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0057
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1581893224 2639902673"
+MODULE: apb_mmu_context_status
+Condition 1 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 1 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 1 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 2 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Condition 3 "1713631586" "(wr && (paddr[4:2] == 3'b101) && pwdata[0]) 1 -1" (1 "011")
+Condition 3 "1713631586" "(wr && (paddr[4:2] == 3'b101) && pwdata[0]) 1 -1" (2 "101")
+Condition 3 "1713631586" "(wr && (paddr[4:2] == 3'b101) && pwdata[0]) 1 -1" (3 "110")
+Condition 3 "1713631586" "(wr && (paddr[4:2] == 3'b101) && pwdata[0]) 1 -1" (4 "111")
+Condition 5 "1551543845" "(wr && (paddr[4:2] == 3'b110) && pwdata[31]) 1 -1" (2 "101")
+Condition 5 "1551543845" "(wr && (paddr[4:2] == 3'b110) && pwdata[31]) 1 -1" (3 "110")
+Condition 5 "1551543845" "(wr && (paddr[4:2] == 3'b110) && pwdata[31]) 1 -1" (4 "111")
+Condition 7 "1330731703" "(wr && (paddr[5:2] == 4'd7) && pwdata[0]) 1 -1" (1 "011")
+Condition 7 "1330731703" "(wr && (paddr[5:2] == 4'd7) && pwdata[0]) 1 -1" (2 "101")
+Condition 7 "1330731703" "(wr && (paddr[5:2] == 4'd7) && pwdata[0]) 1 -1" (3 "110")
+Condition 7 "1330731703" "(wr && (paddr[5:2] == 4'd7) && pwdata[0]) 1 -1" (4 "111")
+Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (1 "011")
+Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (2 "101")
+Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (3 "110")
+Condition 9 "3090360216" "(wr && (paddr[5:2] == 4'd8) && pwdata[0]) 1 -1" (4 "111")
+
+// ID: EXCL-PROD-0058
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3915859991 874556294"
+MODULE: apb_ddr4_status
+Condition 1 "3492290495" "(error_active && ((!error_seen_r))) 1 -1" (2 "10")
+Condition 1 "3492290495" "(error_active && ((!error_seen_r))) 1 -1" (3 "11")
+Condition 2 "1786715358" "(error_inject_r ? 32'h00040004 : (ecc_uncorrectable_error ? 32'h00040008 : ({16'h0004, error_code}))) 1 -1" (1 "0")
+Condition 2 "1786715358" "(error_inject_r ? 32'h00040004 : (ecc_uncorrectable_error ? 32'h00040008 : ({16'h0004, error_code}))) 1 -1" (2 "1")
+Condition 3 "1966258351" "(ecc_uncorrectable_error ? 32'h00040008 : ({16'h0004, error_code})) 1 -1" (1 "0")
+Condition 3 "1966258351" "(ecc_uncorrectable_error ? 32'h00040008 : ({16'h0004, error_code})) 1 -1" (2 "1")
+Condition 4 "3227065822" "(wr && (paddr[4:2] == 3'b011) && pwdata[0]) 1 -1" (2 "101")
+Condition 4 "3227065822" "(wr && (paddr[4:2] == 3'b011) && pwdata[0]) 1 -1" (3 "110")
+Condition 4 "3227065822" "(wr && (paddr[4:2] == 3'b011) && pwdata[0]) 1 -1" (4 "111")
+Condition 6 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 6 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 6 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 7 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 7 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 7 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Condition 8 "301600599" "((fatal_error && (error_code != 16'b0)) || ecc_uncorrectable_error || error_inject_r) 1 -1" (2 "001")
+Condition 8 "301600599" "((fatal_error && (error_code != 16'b0)) || ecc_uncorrectable_error || error_inject_r) 1 -1" (3 "010")
+Condition 8 "301600599" "((fatal_error && (error_code != 16'b0)) || ecc_uncorrectable_error || error_inject_r) 1 -1" (4 "100")
+Condition 9 "963958220" "(fatal_error && (error_code != 16'b0)) 1 -1" (1 "01")
+Condition 9 "963958220" "(fatal_error && (error_code != 16'b0)) 1 -1" (2 "10")
+Condition 9 "963958220" "(fatal_error && (error_code != 16'b0)) 1 -1" (3 "11")
+Condition 10 "1086754690" "(error_code != 16'b0) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0059
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2914053452 4054228083"
+MODULE: l2_cache_caching
+Condition 1 "1033550698" "(p[0] == 1'b0) 1 -1" (1 "0")
+Condition 1 "1033550698" "(p[0] == 1'b0) 1 -1" (2 "1")
+Condition 2 "2075692279" "(p[2] == 1'b0) 1 -1" (1 "0")
+Condition 2 "2075692279" "(p[2] == 1'b0) 1 -1" (2 "1")
+Condition 3 "371611789" "((p[6] == 1'b0) ? 3'd7 : 3'd6) 1 -1" (1 "0")
+Condition 3 "371611789" "((p[6] == 1'b0) ? 3'd7 : 3'd6) 1 -1" (2 "1")
+Condition 4 "1743204334" "(p[6] == 1'b0) 1 -1" (1 "0")
+Condition 4 "1743204334" "(p[6] == 1'b0) 1 -1" (2 "1")
+Condition 5 "2026911725" "((p[5] == 1'b0) ? 3'd5 : 3'd4) 1 -1" (1 "0")
+Condition 5 "2026911725" "((p[5] == 1'b0) ? 3'd5 : 3'd4) 1 -1" (2 "1")
+Condition 6 "2974880476" "(p[5] == 1'b0) 1 -1" (1 "0")
+Condition 6 "2974880476" "(p[5] == 1'b0) 1 -1" (2 "1")
+Condition 7 "1403124574" "(p[1] == 1'b0) 1 -1" (1 "0")
+Condition 7 "1403124574" "(p[1] == 1'b0) 1 -1" (2 "1")
+Condition 8 "585088052" "((p[4] == 1'b0) ? 3'd3 : 3'd2) 1 -1" (1 "0")
+Condition 8 "585088052" "((p[4] == 1'b0) ? 3'd3 : 3'd2) 1 -1" (2 "1")
+Condition 9 "1613237052" "(p[4] == 1'b0) 1 -1" (1 "0")
+Condition 9 "1613237052" "(p[4] == 1'b0) 1 -1" (2 "1")
+Condition 10 "3510277515" "((p[3] == 1'b0) ? 3'b1 : 3'b0) 1 -1" (1 "0")
+Condition 10 "3510277515" "((p[3] == 1'b0) ? 3'b1 : 3'b0) 1 -1" (2 "1")
+Condition 11 "710646216" "(p[3] == 1'b0) 1 -1" (1 "0")
+Condition 11 "710646216" "(p[3] == 1'b0) 1 -1" (2 "1")
+Condition 12 "2774232045" "((w < 3'h4) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 12 "2774232045" "((w < 3'h4) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 13 "4177804921" "((w < 3'h2) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 13 "4177804921" "((w < 3'h2) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 14 "1480311381" "((w == 3'b0) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 14 "1480311381" "((w == 3'b0) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 15 "1401782885" "(w == 3'b0) 1 -1" (1 "0")
+Condition 15 "1401782885" "(w == 3'b0) 1 -1" (2 "1")
+Condition 16 "3107669811" "((w == 3'h2) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 16 "3107669811" "((w == 3'h2) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 17 "4219910214" "(w == 3'h2) 1 -1" (1 "0")
+Condition 17 "4219910214" "(w == 3'h2) 1 -1" (2 "1")
+Condition 18 "311714062" "((w < 3'h6) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 18 "311714062" "((w < 3'h6) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 19 "2836380306" "((w == 3'h4) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 19 "2836380306" "((w == 3'h4) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 20 "2668262632" "(w == 3'h4) 1 -1" (1 "0")
+Condition 20 "2668262632" "(w == 3'h4) 1 -1" (2 "1")
+Condition 21 "64379036" "((w == 3'h6) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 21 "64379036" "((w == 3'h6) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 22 "3712865012" "(w == 3'h6) 1 -1" (1 "0")
+Condition 22 "3712865012" "(w == 3'h6) 1 -1" (2 "1")
+Condition 23 "3487595020" "(evict_cnt == 3'd7) 1 -1" (2 "1")
+Condition 24 "32532907" "(hit && (beat_cnt == req_len)) 1 -1" (1 "01")
+Condition 24 "32532907" "(hit && (beat_cnt == req_len)) 1 -1" (2 "10")
+Condition 24 "32532907" "(hit && (beat_cnt == req_len)) 1 -1" (3 "11")
+Condition 25 "370278444" "(beat_cnt == req_len) 1 -1" (1 "0")
+Condition 25 "370278444" "(beat_cnt == req_len) 1 -1" (2 "1")
+Condition 26 "470784813" "(beat_cnt == req_len) 1 -1" (1 "0")
+Condition 26 "470784813" "(beat_cnt == req_len) 1 -1" (2 "1")
+Condition 27 "4052545926" "(s_wvalid && s_wready) 1 -1" (1 "01")
+Condition 27 "4052545926" "(s_wvalid && s_wready) 1 -1" (2 "10")
+Condition 27 "4052545926" "(s_wvalid && s_wready) 1 -1" (3 "11")
+Condition 28 "1735093792" "(resp_err != 2'b0) 1 -1" (1 "0")
+Condition 28 "1735093792" "(resp_err != 2'b0) 1 -1" (2 "1")
+Condition 30 "843770925" "(req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][hit_way][req_wordoff][31:24]) 1 -1" (1 "0")
+Condition 30 "843770925" "(req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][hit_way][req_wordoff][31:24]) 1 -1" (2 "1")
+Condition 31 "1754572420" "(req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][hit_way][req_wordoff][23:16]) 1 -1" (1 "0")
+Condition 31 "1754572420" "(req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][hit_way][req_wordoff][23:16]) 1 -1" (2 "1")
+Condition 32 "3199448105" "(req_wstrb[1] ? req_wdata[15:8] : data_ram[req_index][hit_way][req_wordoff][15:8]) 1 -1" (1 "0")
+Condition 32 "3199448105" "(req_wstrb[1] ? req_wdata[15:8] : data_ram[req_index][hit_way][req_wordoff][15:8]) 1 -1" (2 "1")
+Condition 33 "2106522186" "(req_wstrb[0] ? req_wdata[7:0] : data_ram[req_index][hit_way][req_wordoff][7:0]) 1 -1" (1 "0")
+Condition 33 "2106522186" "(req_wstrb[0] ? req_wdata[7:0] : data_ram[req_index][hit_way][req_wordoff][7:0]) 1 -1" (2 "1")
+Condition 34 "1209349677" "(beat_cnt == req_len) 1 -1" (1 "0")
+Condition 34 "1209349677" "(beat_cnt == req_len) 1 -1" (2 "1")
+Condition 35 "12701625" "(evict_cnt == 3'd7) 1 -1" (1 "0")
+Condition 35 "12701625" "(evict_cnt == 3'd7) 1 -1" (2 "1")
+Condition 36 "4072400280" "(m_bresp != 2'b0) 1 -1" (1 "0")
+Condition 36 "4072400280" "(m_bresp != 2'b0) 1 -1" (2 "1")
+Condition 37 "1122603028" "((m_rresp != 2'b0) && (resp_err == 2'b0)) 1 -1" (1 "01")
+Condition 37 "1122603028" "((m_rresp != 2'b0) && (resp_err == 2'b0)) 1 -1" (2 "10")
+Condition 37 "1122603028" "((m_rresp != 2'b0) && (resp_err == 2'b0)) 1 -1" (3 "11")
+Condition 38 "3279275987" "(m_rresp != 2'b0) 1 -1" (1 "0")
+Condition 38 "3279275987" "(m_rresp != 2'b0) 1 -1" (2 "1")
+Condition 39 "4260584018" "(resp_err == 2'b0) 1 -1" (1 "0")
+Condition 39 "4260584018" "(resp_err == 2'b0) 1 -1" (2 "1")
+Condition 40 "1363366249" "(m_rlast || (fill_cnt == 3'd7)) 1 -1" (1 "00")
+Condition 40 "1363366249" "(m_rlast || (fill_cnt == 3'd7)) 1 -1" (2 "01")
+Condition 40 "1363366249" "(m_rlast || (fill_cnt == 3'd7)) 1 -1" (3 "10")
+Condition 41 "4280713916" "(fill_cnt == 3'd7) 1 -1" (1 "0")
+Condition 41 "4280713916" "(fill_cnt == 3'd7) 1 -1" (2 "1")
+Condition 42 "2278410018" "((resp_err != 2'b0) || (m_rresp != 2'b0)) 1 -1" (1 "00")
+Condition 42 "2278410018" "((resp_err != 2'b0) || (m_rresp != 2'b0)) 1 -1" (2 "01")
+Condition 42 "2278410018" "((resp_err != 2'b0) || (m_rresp != 2'b0)) 1 -1" (3 "10")
+Condition 43 "731270909" "(resp_err != 2'b0) 1 -1" (1 "0")
+Condition 43 "731270909" "(resp_err != 2'b0) 1 -1" (2 "1")
+Condition 44 "2147694546" "(m_rresp != 2'b0) 1 -1" (1 "0")
+Condition 44 "2147694546" "(m_rresp != 2'b0) 1 -1" (2 "1")
+Condition 45 "2154495648" "((resp_err != 2'b0) ? resp_err : m_rresp) 1 -1" (1 "0")
+Condition 45 "2154495648" "((resp_err != 2'b0) ? resp_err : m_rresp) 1 -1" (2 "1")
+Condition 46 "13487501" "(resp_err != 2'b0) 1 -1" (1 "0")
+Condition 46 "13487501" "(resp_err != 2'b0) 1 -1" (2 "1")
+Condition 47 "3208746730" "(s_wvalid && s_wready) 1 -1" (1 "01")
+Condition 47 "3208746730" "(s_wvalid && s_wready) 1 -1" (2 "10")
+Condition 47 "3208746730" "(s_wvalid && s_wready) 1 -1" (3 "11")
+Condition 48 "607900252" "(beat_cnt == req_len) 1 -1" (1 "0")
+Condition 48 "607900252" "(beat_cnt == req_len) 1 -1" (2 "1")
+Condition 49 "3209644872" "((s_awsize != 3'b010) || (s_awaddr[1:0] != 2'b0) || (s_awburst != 2'b1)) 1 -1" (1 "000")
+Condition 49 "3209644872" "((s_awsize != 3'b010) || (s_awaddr[1:0] != 2'b0) || (s_awburst != 2'b1)) 1 -1" (2 "001")
+Condition 49 "3209644872" "((s_awsize != 3'b010) || (s_awaddr[1:0] != 2'b0) || (s_awburst != 2'b1)) 1 -1" (3 "010")
+Condition 49 "3209644872" "((s_awsize != 3'b010) || (s_awaddr[1:0] != 2'b0) || (s_awburst != 2'b1)) 1 -1" (4 "100")
+Condition 50 "651210807" "(s_awsize != 3'b010) 1 -1" (2 "1")
+Condition 51 "2308831466" "(s_awaddr[1:0] != 2'b0) 1 -1" (2 "1")
+Condition 52 "1414920281" "(s_awburst != 2'b1) 1 -1" (2 "1")
+Condition 53 "3280324313" "((s_arsize != 3'b010) || (s_araddr[1:0] != 2'b0) || (s_arburst != 2'b1)) 1 -1" (1 "000")
+Condition 53 "3280324313" "((s_arsize != 3'b010) || (s_araddr[1:0] != 2'b0) || (s_arburst != 2'b1)) 1 -1" (2 "001")
+Condition 53 "3280324313" "((s_arsize != 3'b010) || (s_araddr[1:0] != 2'b0) || (s_arburst != 2'b1)) 1 -1" (3 "010")
+Condition 53 "3280324313" "((s_arsize != 3'b010) || (s_araddr[1:0] != 2'b0) || (s_arburst != 2'b1)) 1 -1" (4 "100")
+Condition 54 "383524713" "(s_arsize != 3'b010) 1 -1" (2 "1")
+Condition 55 "45696949" "(s_araddr[1:0] != 2'b0) 1 -1" (2 "1")
+Condition 56 "4226512845" "(s_arburst != 2'b1) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0060
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "2028136588 2318414523"
+MODULE: axi_ddr_model
+Condition 2 "2970180844" "((rd_out >= 0) && (rd_len[rd_out] == 8'b0)) 1 -1" (1 "01")
+Condition 7 "3706083709" "(s_arvalid && s_arready && (rd_free >= 0)) 1 -1" (3 "110")
+Condition 8 "96422332" "(s_rvalid && s_rready && (rd_out >= 0)) 1 -1" (1 "011")
+Condition 8 "96422332" "(s_rvalid && s_rready && (rd_out >= 0)) 1 -1" (2 "101")
+Condition 8 "96422332" "(s_rvalid && s_rready && (rd_out >= 0)) 1 -1" (3 "110")
+Condition 14 "2108852241" "(s_bvalid && s_bready) 1 -1" (1 "01")
+Condition 14 "2108852241" "(s_bvalid && s_bready) 1 -1" (2 "10")
+
+// ID: EXCL-PROD-0061
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3372399530 699666711"
+MODULE: cpu_scheduler
+Condition 1 "3657620699" "(trigger && (state == ST_RUN)) 1 -1" (2 "10")
+Condition 1 "3657620699" "(trigger && (state == ST_RUN)) 1 -1" (3 "11")
+Condition 2 "4084058001" "(state == ST_RUN) 1 -1" (1 "0")
+Condition 3 "2190032388" "(trigger && (active_mask != 4'b0)) 1 -1" (2 "10")
+Condition 3 "2190032388" "(trigger && (active_mask != 4'b0)) 1 -1" (3 "11")
+Condition 4 "1058183337" "(active_mask != 4'b0) 1 -1" (1 "0")
+Condition 5 "212293076" "(selected != current_r) 1 -1" (1 "0")
+Condition 5 "212293076" "(selected != current_r) 1 -1" (2 "1")
+Condition 6 "1103640701" "(enable && (timer_tick || ipi_resched || yield_req)) 1 -1" (1 "01")
+Condition 6 "1103640701" "(enable && (timer_tick || ipi_resched || yield_req)) 1 -1" (2 "10")
+Condition 6 "1103640701" "(enable && (timer_tick || ipi_resched || yield_req)) 1 -1" (3 "11")
+Condition 7 "2684538736" "(timer_tick || ipi_resched || yield_req) 1 -1" (2 "001")
+Condition 7 "2684538736" "(timer_tick || ipi_resched || yield_req) 1 -1" (3 "010")
+Condition 7 "2684538736" "(timer_tick || ipi_resched || yield_req) 1 -1" (4 "100")
+Condition 8 "301303126" "(state != ST_RUN) 1 -1" (2 "1")
+Condition 9 "1742493412" "((state == ST_SAVE) && ctx_save_done) 1 -1" (1 "01")
+Condition 9 "1742493412" "((state == ST_SAVE) && ctx_save_done) 1 -1" (2 "10")
+Condition 9 "1742493412" "((state == ST_SAVE) && ctx_save_done) 1 -1" (3 "11")
+Condition 10 "498283300" "(state == ST_SAVE) 1 -1" (2 "1")
+Condition 11 "3838293940" "(state == ST_SAVE) 1 -1" (2 "1")
+Condition 12 "3013210154" "(state == ST_RESTORE) 1 -1" (2 "1")
+Condition 13 "951481872" "((state == ST_RESTORE) && ctx_restore_ack) 1 -1" (1 "01")
+Condition 13 "951481872" "((state == ST_RESTORE) && ctx_restore_ack) 1 -1" (2 "10")
+Condition 13 "951481872" "((state == ST_RESTORE) && ctx_restore_ack) 1 -1" (3 "11")
+Condition 14 "2599305210" "(state == ST_RESTORE) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0062
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1135157623 1695377700"
+MODULE: mips_regfile
+Condition 1 "4180666960" "(shadow_we && (shadow_waddr != 5'b0)) 1 -1" (2 "10")
+Condition 1 "4180666960" "(shadow_we && (shadow_waddr != 5'b0)) 1 -1" (3 "11")
+Condition 3 "3227671146" "(we && (waddr != 5'b0)) 1 -1" (1 "01")
+Condition 3 "3227671146" "(we && (waddr != 5'b0)) 1 -1" (2 "10")
+Condition 3 "3227671146" "(we && (waddr != 5'b0)) 1 -1" (3 "11")
+Condition 4 "589020046" "(waddr != 5'b0) 1 -1" (1 "0")
+Condition 4 "589020046" "(waddr != 5'b0) 1 -1" (2 "1")
+Condition 19 "70759243" "((shadow_we && (shadow_wset == active_prev_set) && (shadow_waddr == shadow_raddr)) ? shadow_wdata : regs[active_shadow_ridx]) 1 -1" (2 "1")
+Condition 20 "4049338826" "(shadow_we && (shadow_wset == active_prev_set) && (shadow_waddr == shadow_raddr)) 1 -1" (2 "101")
+Condition 20 "4049338826" "(shadow_we && (shadow_wset == active_prev_set) && (shadow_waddr == shadow_raddr)) 1 -1" (3 "110")
+Condition 20 "4049338826" "(shadow_we && (shadow_wset == active_prev_set) && (shadow_waddr == shadow_raddr)) 1 -1" (4 "111")
+Condition 21 "3540263937" "(shadow_wset == active_prev_set) 1 -1" (1 "0")
+
+// ID: EXCL-PROD-0063
+// CATEGORY: Bus & Fabric Interconnect
+// CHECKSUM: "1023251519 3582447580"
+MODULE: axi2apb_bridge
+Condition 1 "493857619" "(aw_done && w_done) 1 -1" (1 "01")
+Condition 2 "1762539350" "(s_arvalid && s_arready) 1 -1" (2 "10")
+Condition 4 "3736111129" "(s_awvalid && s_awready) 1 -1" (2 "10")
+Condition 5 "3977405531" "(s_wvalid && s_wready) 1 -1" (2 "10")
+Condition 6 "3060780798" "(s_arvalid && s_arready) 1 -1" (2 "10")
+Condition 7 "918155858" "((state == W_RESP) && s_bready) 1 -1" (1 "01")
+Condition 7 "918155858" "((state == W_RESP) && s_bready) 1 -1" (2 "10")
+Condition 11 "1179882803" "(pslverr ? 2'b10 : 2'b0) 1 -1" (2 "1")
+Condition 15 "722240960" "(pslverr ? 2'b10 : 2'b0) 1 -1" (2 "1")
+Condition 16 "4107264836" "((state == R_RESP) && s_rready && ((!rlast_latch))) 1 -1" (1 "011")
+Condition 16 "4107264836" "((state == R_RESP) && s_rready && ((!rlast_latch))) 1 -1" (2 "101")
+Condition 18 "1285676281" "((state == IDLE) ? (s_awvalid ? s_awaddr : awaddr_latch) : awaddr_latch) 1 -1" (1 "0")
+Condition 19 "1352092382" "(state == IDLE) 1 -1" (1 "0")
+Condition 21 "1389569540" "((state == IDLE) ? (s_wvalid ? s_wdata : wdata_latch) : wdata_latch) 1 -1" (1 "0")
+Condition 22 "1323675683" "(state == IDLE) 1 -1" (1 "0")
+Condition 23 "75164380" "(s_wvalid ? s_wdata : wdata_latch) 1 -1" (1 "0")
+Condition 24 "1766569304" "((state == IDLE) ? (s_wvalid ? s_wstrb : wstrb_latch) : wstrb_latch) 1 -1" (1 "0")
+Condition 25 "314855942" "(state == IDLE) 1 -1" (1 "0")
+Condition 26 "1859129159" "(s_wvalid ? s_wstrb : wstrb_latch) 1 -1" (1 "0")
+Condition 34 "2472809258" "((arburst_latch == 2'b1) ? ((araddr_latch + ({24'b0, read_setup_beat} << arsize_latch))) : araddr_latch) 1 -1" (1 "0")
+
+// ID: EXCL-PROD-0064
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3303551202 1759799712"
+MODULE: apb_perf_counters
+Condition 1 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 1 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 1 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+
+// ID: EXCL-PROD-0065
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2568128339 1247539676"
+MODULE: qspi_soc_pad_mux
+Condition 1 "811452435" "(((!selected_cmd)) && mem_grant) 1 -1" (1 "01")
+Condition 2 "3084054548" "(selected_cmd ? cmd_sclk : (selected_mem ? mem_sclk : 1'b0)) 1 -1" (2 "1")
+Condition 4 "2069880144" "(selected_cmd ? cmd_cs_n : (selected_mem ? mem_cs_n : 1'b1)) 1 -1" (2 "1")
+Condition 6 "3237105869" "(selected_cmd ? cmd_io_o[0] : (selected_mem ? mem_mosi : 1'b0)) 1 -1" (2 "1")
+Condition 8 "448500826" "(selected_cmd ? cmd_io_o : (selected_mem ? mem_io_o : 4'b0)) 1 -1" (2 "1")
+Condition 10 "561503642" "(qspi_io_oe[0] ? qspi_io_o[0] : 1'bz) 1 -1" (2 "1")
+Condition 11 "2980518480" "(qspi_io_oe[1] ? qspi_io_o[1] : 1'bz) 1 -1" (2 "1")
+Condition 12 "3721008354" "(qspi_io_oe[2] ? qspi_io_o[2] : 1'bz) 1 -1" (2 "1")
+Condition 13 "1293603624" "(qspi_io_oe[3] ? qspi_io_o[3] : 1'bz) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0066
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "832457901 1759081225"
+MODULE: qspi_apb_integration
+Condition 1 "3788800454" "(error_event | cmd_error_event) 1 -1" (2 "01")
+Condition 1 "3788800454" "(error_event | cmd_error_event) 1 -1" (3 "10")
+Condition 2 "1340594016" "(cmd_error_event ? cmd_error_value : error_value) 1 -1" (2 "1")
+Condition 3 "1057361443" "(psel && (paddr[11:0] < 12'h020)) 1 -1" (2 "10")
+Condition 3 "1057361443" "(psel && (paddr[11:0] < 12'h020)) 1 -1" (3 "11")
+Condition 4 "774821943" "(psel && (paddr[11:0] >= 12'h020) && (paddr[11:0] < 12'h1a0)) 1 -1" (2 "101")
+Condition 4 "774821943" "(psel && (paddr[11:0] >= 12'h020) && (paddr[11:0] < 12'h1a0)) 1 -1" (3 "110")
+Condition 4 "774821943" "(psel && (paddr[11:0] >= 12'h020) && (paddr[11:0] < 12'h1a0)) 1 -1" (4 "111")
+Condition 5 "2156111485" "(cmd_sel && penable && pwrite && (cmd_paddr == 12'h100)) 1 -1" (1 "0111")
+Condition 5 "2156111485" "(cmd_sel && penable && pwrite && (cmd_paddr == 12'h100)) 1 -1" (2 "1011")
+Condition 5 "2156111485" "(cmd_sel && penable && pwrite && (cmd_paddr == 12'h100)) 1 -1" (3 "1101")
+Condition 5 "2156111485" "(cmd_sel && penable && pwrite && (cmd_paddr == 12'h100)) 1 -1" (4 "1110")
+Condition 5 "2156111485" "(cmd_sel && penable && pwrite && (cmd_paddr == 12'h100)) 1 -1" (5 "1111")
+Condition 6 "2715441074" "(cmd_paddr == 12'h100) 1 -1" (2 "1")
+Condition 7 "1369210929" "(ENABLE_SHARED_ARB && trigger_access && ((!shared_grant))) 1 -1" (2 "-10")
+Condition 7 "1369210929" "(ENABLE_SHARED_ARB && trigger_access && ((!shared_grant))) 1 -1" (3 "-11")
+Condition 8 "117764726" "(cmd_sel && ((!arbiter_wait))) 1 -1" (2 "10")
+Condition 8 "117764726" "(cmd_sel && ((!arbiter_wait))) 1 -1" (3 "11")
+Condition 9 "3433043584" "(status_sel ? status_prdata : (cmd_sel ? cmd_prdata : 32'b0)) 1 -1" (2 "1")
+Condition 10 "3471020164" "(cmd_sel ? cmd_prdata : 32'b0) 1 -1" (2 "1")
+Condition 11 "3345820874" "(status_sel ? status_pready : (cmd_sel ? (arbiter_wait ? 1'b0 : cmd_pready) : 1'b1)) 1 -1" (2 "1")
+Condition 12 "2252789378" "(cmd_sel ? (arbiter_wait ? 1'b0 : cmd_pready) : 1'b1) 1 -1" (2 "1")
+Condition 13 "3234660687" "(arbiter_wait ? 1'b0 : cmd_pready) 1 -1" (1 "0")
+Condition 13 "3234660687" "(arbiter_wait ? 1'b0 : cmd_pready) 1 -1" (2 "1")
+Condition 14 "979531311" "(status_sel ? status_pslverr : (cmd_sel ? (arbiter_wait ? 1'b0 : cmd_pslverr) : 1'b0)) 1 -1" (2 "1")
+Condition 15 "3364870529" "(cmd_sel ? (arbiter_wait ? 1'b0 : cmd_pslverr) : 1'b0) 1 -1" (2 "1")
+Condition 16 "3266231871" "(arbiter_wait ? 1'b0 : cmd_pslverr) 1 -1" (1 "0")
+Condition 16 "3266231871" "(arbiter_wait ? 1'b0 : cmd_pslverr) 1 -1" (2 "1")
+Condition 17 "1531429977" "(ENABLE_SHARED_ARB && (trigger_access || active)) 1 -1" (2 "-1")
+Condition 18 "3171519770" "(trigger_access || active) 1 -1" (2 "01")
+Condition 18 "3171519770" "(trigger_access || active) 1 -1" (3 "10")
+
+// ID: EXCL-PROD-0067
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "1633348978 3494448046"
+MODULE: soc_core_subsystem
+Condition 1 "1474257886" "(ptw_axi_busy && data_rvalid && data_rlast) 1 -1" (2 "101")
+Condition 1 "1474257886" "(ptw_axi_busy && data_rvalid && data_rlast) 1 -1" (3 "110")
+Condition 1 "1474257886" "(ptw_axi_busy && data_rvalid && data_rlast) 1 -1" (4 "111")
+Condition 2 "2450111747" "(core_ptw_mem_valid ? 4'b0 : core_data_arid) 1 -1" (2 "1")
+Condition 3 "1992885392" "(core_ptw_mem_valid ? core_ptw_mem_addr : core_data_araddr) 1 -1" (2 "1")
+Condition 4 "1070927240" "(core_ptw_mem_valid ? 8'b0 : core_data_arlen) 1 -1" (2 "1")
+Condition 5 "261184393" "(core_ptw_mem_valid ? 3'd2 : core_data_arsize) 1 -1" (2 "1")
+Condition 6 "1835644428" "(core_ptw_mem_valid ? 2'b1 : core_data_arburst) 1 -1" (2 "1")
+Condition 7 "738617586" "(core_ptw_mem_valid ? 2'b0 : core_data_arlock) 1 -1" (2 "1")
+Condition 8 "2769548270" "(core_ptw_mem_valid ? 4'b0 : core_data_arcache) 1 -1" (2 "1")
+Condition 9 "760602169" "(core_ptw_mem_valid ? 3'b010 : core_data_arprot) 1 -1" (2 "1")
+Condition 10 "1919635351" "((core_ptw_mem_valid && ((!ptw_axi_busy))) ? 1'b1 : (core_data_arvalid && ((!ptw_axi_busy)))) 1 -1" (2 "1")
+Condition 11 "1646337347" "(core_ptw_mem_valid && ((!ptw_axi_busy))) 1 -1" (2 "10")
+Condition 11 "1646337347" "(core_ptw_mem_valid && ((!ptw_axi_busy))) 1 -1" (3 "11")
+Condition 12 "1994771369" "(core_data_arvalid && ((!ptw_axi_busy))) 1 -1" (2 "10")
+Condition 13 "2320385108" "(((!ptw_axi_busy)) && ((!core_ptw_mem_valid)) && data_arready) 1 -1" (1 "011")
+Condition 13 "2320385108" "(((!ptw_axi_busy)) && ((!core_ptw_mem_valid)) && data_arready) 1 -1" (2 "101")
+Condition 14 "1746375194" "(data_rvalid && ((!ptw_axi_busy))) 1 -1" (2 "10")
+Condition 15 "341463080" "(ptw_axi_busy ? 1'b1 : core_data_rready) 1 -1" (2 "1")
+Condition 16 "2056329113" "(data_rresp != 2'b0) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0068
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "314633967 3274379810"
+MODULE: soc_peripheral_subsystem
+Condition 1 "3241767271" "(rst_n & ((~wdt_reset))) 1 -1" (2 "10")
+Condition 12 "719741440" "(apb_psel & (apb_paddr[15:12] == 4'h5)) 1 -1" (1 "01")
+Condition 12 "719741440" "(apb_psel & (apb_paddr[15:12] == 4'h5)) 1 -1" (3 "11")
+Condition 13 "171700867" "(apb_paddr[15:12] == 4'h5) 1 -1" (2 "1")
+Condition 14 "3683081641" "(apb_psel & (apb_paddr[15:12] == 4'h6)) 1 -1" (1 "01")
+Condition 14 "3683081641" "(apb_psel & (apb_paddr[15:12] == 4'h6)) 1 -1" (3 "11")
+Condition 15 "3694052855" "(apb_paddr[15:12] == 4'h6) 1 -1" (2 "1")
+Condition 16 "3356825465" "(apb_psel & (apb_paddr[15:12] == 4'h7)) 1 -1" (1 "01")
+Condition 16 "3356825465" "(apb_psel & (apb_paddr[15:12] == 4'h7)) 1 -1" (3 "11")
+Condition 17 "218464517" "(apb_paddr[15:12] == 4'h7) 1 -1" (2 "1")
+Condition 18 "1289483165" "(apb_psel & (apb_paddr[15:12] == 4'h8)) 1 -1" (1 "01")
+Condition 18 "1289483165" "(apb_psel & (apb_paddr[15:12] == 4'h8)) 1 -1" (3 "11")
+Condition 19 "869187342" "(apb_paddr[15:12] == 4'h8) 1 -1" (2 "1")
+Condition 20 "678458214" "(apb_psel & (apb_paddr[15:12] == 4'h9)) 1 -1" (1 "01")
+Condition 20 "678458214" "(apb_psel & (apb_paddr[15:12] == 4'h9)) 1 -1" (3 "11")
+Condition 21 "1091795639" "(apb_paddr[15:12] == 4'h9) 1 -1" (2 "1")
+Condition 22 "983544667" "(apb_psel & (apb_paddr[15:12] == 4'hc)) 1 -1" (1 "01")
+Condition 22 "983544667" "(apb_psel & (apb_paddr[15:12] == 4'hc)) 1 -1" (3 "11")
+Condition 23 "2018570055" "(apb_paddr[15:12] == 4'hc) 1 -1" (2 "1")
+Condition 29 "964331890" "(qspi_sel ? qspi_prdata : (ddr4_status_sel ? ddr4_status_prdata : (wdt_sel ? wdt_prdata : (boot_status_sel ? boot_status_prdata : (mmu_context_sel ? mmu_context_prdata : (ipi_sel ? ipi_prdata : (ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0))))))))) 1 -1" (2 "1")
+Condition 30 "1436102130" "(ddr4_status_sel ? ddr4_status_prdata : (wdt_sel ? wdt_prdata : (boot_status_sel ? boot_status_prdata : (mmu_context_sel ? mmu_context_prdata : (ipi_sel ? ipi_prdata : (ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0)))))))) 1 -1" (2 "1")
+Condition 31 "455977896" "(wdt_sel ? wdt_prdata : (boot_status_sel ? boot_status_prdata : (mmu_context_sel ? mmu_context_prdata : (ipi_sel ? ipi_prdata : (ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0))))))) 1 -1" (2 "1")
+Condition 32 "4067215699" "(boot_status_sel ? boot_status_prdata : (mmu_context_sel ? mmu_context_prdata : (ipi_sel ? ipi_prdata : (ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0)))))) 1 -1" (2 "1")
+Condition 33 "4270732483" "(mmu_context_sel ? mmu_context_prdata : (ipi_sel ? ipi_prdata : (ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0))))) 1 -1" (2 "1")
+Condition 34 "3135693381" "(ipi_sel ? ipi_prdata : (ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0)))) 1 -1" (2 "1")
+Condition 35 "1248401946" "(ipi_core1_sel ? ipi_core1_prdata : (perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0))) 1 -1" (2 "1")
+Condition 36 "4076999954" "(perf_sel ? perf_prdata : (fault_sel ? fault_prdata : 32'b0)) 1 -1" (2 "1")
+Condition 37 "3480660652" "(fault_sel ? fault_prdata : 32'b0) 1 -1" (2 "1")
+Condition 43 "3504238439" "(qspi_sel ? qspi_pready : (ddr4_status_sel ? ddr4_status_pready : (wdt_sel ? wdt_pready : (boot_status_sel ? boot_status_pready : (mmu_context_sel ? mmu_context_pready : (ipi_sel ? ipi_pready : (ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1))))))))) 1 -1" (2 "1")
+Condition 44 "1333049484" "(ddr4_status_sel ? ddr4_status_pready : (wdt_sel ? wdt_pready : (boot_status_sel ? boot_status_pready : (mmu_context_sel ? mmu_context_pready : (ipi_sel ? ipi_pready : (ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1)))))))) 1 -1" (2 "1")
+Condition 45 "1824766070" "(wdt_sel ? wdt_pready : (boot_status_sel ? boot_status_pready : (mmu_context_sel ? mmu_context_pready : (ipi_sel ? ipi_pready : (ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1))))))) 1 -1" (2 "1")
+Condition 46 "1999480361" "(boot_status_sel ? boot_status_pready : (mmu_context_sel ? mmu_context_pready : (ipi_sel ? ipi_pready : (ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1)))))) 1 -1" (2 "1")
+Condition 47 "1741808578" "(mmu_context_sel ? mmu_context_pready : (ipi_sel ? ipi_pready : (ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1))))) 1 -1" (2 "1")
+Condition 48 "457652159" "(ipi_sel ? ipi_pready : (ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1)))) 1 -1" (2 "1")
+Condition 49 "157484369" "(ipi_core1_sel ? ipi_core1_pready : (perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1))) 1 -1" (2 "1")
+Condition 50 "630973226" "(perf_sel ? perf_pready : (fault_sel ? fault_pready : 1'b1)) 1 -1" (2 "1")
+Condition 51 "1428402434" "(fault_sel ? fault_pready : 1'b1) 1 -1" (2 "1")
+Condition 57 "1317823508" "(qspi_sel ? qspi_pslverr : (ddr4_status_sel ? ddr4_status_pslverr : (wdt_sel ? wdt_pslverr : (boot_status_sel ? boot_status_pslverr : (mmu_context_sel ? mmu_context_pslverr : (ipi_sel ? ipi_pslverr : (ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0))))))))) 1 -1" (2 "1")
+Condition 58 "3593644547" "(ddr4_status_sel ? ddr4_status_pslverr : (wdt_sel ? wdt_pslverr : (boot_status_sel ? boot_status_pslverr : (mmu_context_sel ? mmu_context_pslverr : (ipi_sel ? ipi_pslverr : (ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0)))))))) 1 -1" (2 "1")
+Condition 59 "2621649655" "(wdt_sel ? wdt_pslverr : (boot_status_sel ? boot_status_pslverr : (mmu_context_sel ? mmu_context_pslverr : (ipi_sel ? ipi_pslverr : (ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0))))))) 1 -1" (2 "1")
+Condition 60 "277110554" "(boot_status_sel ? boot_status_pslverr : (mmu_context_sel ? mmu_context_pslverr : (ipi_sel ? ipi_pslverr : (ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0)))))) 1 -1" (2 "1")
+Condition 61 "3720471516" "(mmu_context_sel ? mmu_context_pslverr : (ipi_sel ? ipi_pslverr : (ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0))))) 1 -1" (2 "1")
+Condition 62 "405658217" "(ipi_sel ? ipi_pslverr : (ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0)))) 1 -1" (2 "1")
+Condition 63 "3421619887" "(ipi_core1_sel ? ipi_core1_pslverr : (perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0))) 1 -1" (2 "1")
+Condition 64 "331729504" "(perf_sel ? perf_pslverr : (fault_sel ? fault_pslverr : 1'b0)) 1 -1" (2 "1")
+Condition 65 "3904988697" "(fault_sel ? fault_pslverr : 1'b0) 1 -1" (2 "1")
+Condition 66 "4278448155" "(ddr4_fatal_error | ddr4_ecc_uncorrectable_error) 1 -1" (2 "01")
+Condition 66 "4278448155" "(ddr4_fatal_error | ddr4_ecc_uncorrectable_error) 1 -1" (3 "10")
+
+// ID: EXCL-PROD-0069
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3949678489 1134209161"
+MODULE: mips_control
+Condition 3 "1455547439" "((rt == 5'b0) && (rd == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (1 "011")
+Condition 3 "1455547439" "((rt == 5'b0) && (rd == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (2 "101")
+Condition 3 "1455547439" "((rt == 5'b0) && (rd == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (3 "110")
+Condition 4 "3676681568" "(rt == 5'b0) 1 -1" (1 "0")
+Condition 5 "4167071329" "(rd == 5'b0) 1 -1" (1 "0")
+Condition 6 "4003516403" "((sa == 5'b0) || (sa == 5'd16)) 1 -1" (1 "00")
+Condition 6 "4003516403" "((sa == 5'b0) || (sa == 5'd16)) 1 -1" (2 "01")
+Condition 7 "3293846938" "(sa == 5'b0) 1 -1" (1 "0")
+Condition 8 "290310142" "(sa == 5'd16) 1 -1" (2 "1")
+Condition 9 "3244837949" "((rt == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (1 "01")
+Condition 9 "3244837949" "((rt == 5'b0) && ((sa == 5'b0) || (sa == 5'd16))) 1 -1" (2 "10")
+Condition 10 "603917720" "(rt == 5'b0) 1 -1" (1 "0")
+Condition 11 "1615274155" "((sa == 5'b0) || (sa == 5'd16)) 1 -1" (1 "00")
+Condition 11 "1615274155" "((sa == 5'b0) || (sa == 5'd16)) 1 -1" (2 "01")
+Condition 12 "1253307074" "(sa == 5'b0) 1 -1" (1 "0")
+Condition 13 "3919019782" "(sa == 5'd16) 1 -1" (2 "1")
+Condition 14 "3405745754" "((rs == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29))) 1 -1" (1 "01")
+Condition 14 "3405745754" "((rs == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29))) 1 -1" (2 "10")
+Condition 14 "3405745754" "((rs == 5'b00011) && ((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29))) 1 -1" (3 "11")
+Condition 15 "3895847017" "(rs == 5'b00011) 1 -1" (1 "0")
+Condition 15 "3895847017" "(rs == 5'b00011) 1 -1" (2 "1")
+Condition 16 "1013738910" "((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) 1 -1" (1 "00000")
+Condition 16 "1013738910" "((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) 1 -1" (2 "00001")
+Condition 16 "1013738910" "((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) 1 -1" (3 "00010")
+Condition 16 "1013738910" "((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) 1 -1" (4 "00100")
+Condition 16 "1013738910" "((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) 1 -1" (5 "01000")
+Condition 16 "1013738910" "((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1) || (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) || (inst[15:11] == 5'd29)) 1 -1" (6 "10000")
+Condition 17 "4063141543" "(inst[15:11] == 5'b0) 1 -1" (1 "0")
+Condition 17 "4063141543" "(inst[15:11] == 5'b0) 1 -1" (2 "1")
+Condition 18 "3566583398" "(inst[15:11] == 5'b1) 1 -1" (1 "0")
+Condition 18 "3566583398" "(inst[15:11] == 5'b1) 1 -1" (2 "1")
+Condition 19 "450317663" "(inst[15:11] == 5'd2) 1 -1" (1 "0")
+Condition 19 "450317663" "(inst[15:11] == 5'd2) 1 -1" (2 "1")
+Condition 20 "4256040931" "(inst[15:11] == 5'd3) 1 -1" (1 "0")
+Condition 20 "4256040931" "(inst[15:11] == 5'd3) 1 -1" (2 "1")
+Condition 21 "2243544796" "(inst[15:11] == 5'd29) 1 -1" (1 "0")
+Condition 21 "2243544796" "(inst[15:11] == 5'd29) 1 -1" (2 "1")
+Condition 22 "1280944160" "(rs != 5'b0) 1 -1" (2 "1")
+Condition 23 "300846476" "(inst[10:3] != 8'b0) 1 -1" (2 "1")
+Condition 24 "2074665747" "(inst[10:3] != 8'b0) 1 -1" (2 "1")
+Condition 25 "4065424587" "(inst[24:6] == 19'b0) 1 -1" (1 "0")
+Condition 26 "3500462836" "(inst[24:6] == 19'b0) 1 -1" (1 "0")
+Condition 26 "3500462836" "(inst[24:6] == 19'b0) 1 -1" (2 "1")
+Condition 27 "1011267498" "(inst[24:6] == 19'b0) 1 -1" (1 "0")
+Condition 27 "1011267498" "(inst[24:6] == 19'b0) 1 -1" (2 "1")
+Condition 28 "1442896181" "(inst[24:6] == 19'b0) 1 -1" (1 "0")
+Condition 28 "1442896181" "(inst[24:6] == 19'b0) 1 -1" (2 "1")
+Condition 29 "1602867968" "(inst[24:6] == 19'b0) 1 -1" (1 "0")
+Condition 29 "1602867968" "(inst[24:6] == 19'b0) 1 -1" (2 "1")
+Condition 30 "3564461087" "(inst[24:6] == 19'b0) 1 -1" (1 "0")
+Condition 30 "3564461087" "(inst[24:6] == 19'b0) 1 -1" (2 "1")
+Condition 31 "2759952322" "((inst[15:11] == 5'd12) && (inst[10:6] == 5'b0) && ((func == 6'b0) || (func == 6'b100000))) 1 -1" (1 "011")
+Condition 31 "2759952322" "((inst[15:11] == 5'd12) && (inst[10:6] == 5'b0) && ((func == 6'b0) || (func == 6'b100000))) 1 -1" (2 "101")
+Condition 31 "2759952322" "((inst[15:11] == 5'd12) && (inst[10:6] == 5'b0) && ((func == 6'b0) || (func == 6'b100000))) 1 -1" (3 "110")
+Condition 31 "2759952322" "((inst[15:11] == 5'd12) && (inst[10:6] == 5'b0) && ((func == 6'b0) || (func == 6'b100000))) 1 -1" (4 "111")
+Condition 32 "409850276" "(inst[15:11] == 5'd12) 1 -1" (1 "0")
+Condition 32 "409850276" "(inst[15:11] == 5'd12) 1 -1" (2 "1")
+Condition 33 "1323073128" "(inst[10:6] == 5'b0) 1 -1" (1 "0")
+Condition 33 "1323073128" "(inst[10:6] == 5'b0) 1 -1" (2 "1")
+Condition 34 "3685210268" "((func == 6'b0) || (func == 6'b100000)) 1 -1" (1 "00")
+Condition 34 "3685210268" "((func == 6'b0) || (func == 6'b100000)) 1 -1" (2 "01")
+Condition 34 "3685210268" "((func == 6'b0) || (func == 6'b100000)) 1 -1" (3 "10")
+Condition 35 "2171043521" "(func == 6'b0) 1 -1" (1 "0")
+Condition 35 "2171043521" "(func == 6'b0) 1 -1" (2 "1")
+Condition 36 "1971402536" "(func == 6'b100000) 1 -1" (1 "0")
+Condition 36 "1971402536" "(func == 6'b100000) 1 -1" (2 "1")
+Condition 37 "1483952554" "(func == 6'b0) 1 -1" (1 "0")
+Condition 37 "1483952554" "(func == 6'b0) 1 -1" (2 "1")
+Condition 38 "1324418314" "(func == 6'b100000) 1 -1" (1 "0")
+Condition 38 "1324418314" "(func == 6'b100000) 1 -1" (2 "1")
+Condition 39 "759263214" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (1 "01")
+Condition 39 "759263214" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (2 "10")
+Condition 39 "759263214" "(func[0] && (rs[0] || rt[0] || rd[0] || sa[0])) 1 -1" (3 "11")
+Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (1 "0000")
+Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (2 "0001")
+Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (3 "0010")
+Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (4 "0100")
+Condition 40 "264748819" "(rs[0] || rt[0] || rd[0] || sa[0]) 1 -1" (5 "1000")
+Condition 41 "2565516427" "( ! ((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) ) 1 -1" (1 "0")
+Condition 41 "2565516427" "( ! ((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) ) 1 -1" (2 "1")
+Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (1 "0000")
+Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (2 "0001")
+Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (3 "0010")
+Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (4 "0100")
+Condition 42 "2913158764" "((rt == 5'b0) || (rt == 5'b1) || (rt == 5'd2) || (rt == 5'd3)) 1 -1" (5 "1000")
+Condition 43 "1675736405" "(rt == 5'b0) 1 -1" (1 "0")
+Condition 43 "1675736405" "(rt == 5'b0) 1 -1" (2 "1")
+Condition 44 "1163564436" "(rt == 5'b1) 1 -1" (1 "0")
+Condition 44 "1163564436" "(rt == 5'b1) 1 -1" (2 "1")
+Condition 45 "2333632173" "(rt == 5'd2) 1 -1" (1 "0")
+Condition 45 "2333632173" "(rt == 5'd2) 1 -1" (2 "1")
+Condition 46 "1719504141" "(rt == 5'd3) 1 -1" (1 "0")
+Condition 46 "1719504141" "(rt == 5'd3) 1 -1" (2 "1")
+Condition 47 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (1 "00")
+Condition 47 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (2 "01")
+Condition 47 "950724891" "((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))) 1 -1" (3 "10")
+Condition 48 "205629015" "(inst[10:0] != 11'b0) 1 -1" (1 "0")
+Condition 48 "205629015" "(inst[10:0] != 11'b0) 1 -1" (2 "1")
+Condition 49 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (1 "01")
+Condition 49 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (2 "10")
+Condition 49 "3060446865" "(((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31)) 1 -1" (3 "11")
+Condition 50 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (1 "00")
+Condition 50 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (2 "01")
+Condition 50 "3042738611" "((rs == 5'b00010) || (rs == 5'b00110)) 1 -1" (3 "10")
+Condition 51 "3388376515" "(rs == 5'b00010) 1 -1" (1 "0")
+Condition 51 "3388376515" "(rs == 5'b00010) 1 -1" (2 "1")
+Condition 52 "3606998494" "(rs == 5'b00110) 1 -1" (1 "0")
+Condition 52 "3606998494" "(rs == 5'b00110) 1 -1" (2 "1")
+Condition 53 "3441580578" "(inst[15:11] != 5'd31) 1 -1" (1 "0")
+Condition 53 "3441580578" "(inst[15:11] != 5'd31) 1 -1" (2 "1")
+Condition 54 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (1 "01")
+Condition 54 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (2 "10")
+Condition 54 "1014582166" "((rs == 5'b10001) && (inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16]))) 1 -1" (3 "11")
+Condition 55 "1602123450" "(rs == 5'b10001) 1 -1" (1 "0")
+Condition 55 "1602123450" "(rs == 5'b10001) 1 -1" (2 "1")
+Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (1 "000")
+Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (2 "001")
+Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (3 "010")
+Condition 56 "3909475107" "(inst[6] || inst[11] || ((func != 6'h12) && (func != 6'h13) && inst[16])) 1 -1" (4 "100")
+Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (1 "011")
+Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (2 "101")
+Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (3 "110")
+Condition 57 "658974746" "((func != 6'h12) && (func != 6'h13) && inst[16]) 1 -1" (4 "111")
+Condition 58 "2463493148" "(func != 6'h12) 1 -1" (1 "0")
+Condition 58 "2463493148" "(func != 6'h12) 1 -1" (2 "1")
+Condition 59 "4208424476" "(func != 6'h13) 1 -1" (1 "0")
+Condition 59 "4208424476" "(func != 6'h13) 1 -1" (2 "1")
+Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (1 "011")
+Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (2 "101")
+Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (3 "110")
+Condition 60 "209131219" "((rs == 5'b10100) && (func != 6'h20) && (func != 6'h21)) 1 -1" (4 "111")
+Condition 61 "3938458045" "(rs == 5'b10100) 1 -1" (1 "0")
+Condition 61 "3938458045" "(rs == 5'b10100) 1 -1" (2 "1")
+Condition 62 "1544494983" "(func != 6'h20) 1 -1" (1 "0")
+Condition 62 "1544494983" "(func != 6'h20) 1 -1" (2 "1")
+Condition 63 "2454580414" "(func != 6'h21) 1 -1" (1 "0")
+Condition 63 "2454580414" "(func != 6'h21) 1 -1" (2 "1")
+Condition 64 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (1 "00")
+Condition 64 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (2 "01")
+Condition 64 "1254828282" "(((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))) 1 -1" (3 "10")
+Condition 65 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (1 "01")
+Condition 65 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (2 "10")
+Condition 65 "1323266904" "((rs == 5'b10000) && (func == 6'h20)) 1 -1" (3 "11")
+Condition 66 "3074271552" "(rs == 5'b10000) 1 -1" (1 "0")
+Condition 66 "3074271552" "(rs == 5'b10000) 1 -1" (2 "1")
+Condition 67 "2467127709" "(func == 6'h20) 1 -1" (1 "0")
+Condition 67 "2467127709" "(func == 6'h20) 1 -1" (2 "1")
+Condition 68 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (1 "01")
+Condition 68 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (2 "10")
+Condition 68 "698825323" "((rs == 5'b10001) && (func == 6'h21)) 1 -1" (3 "11")
+Condition 69 "3494240371" "(rs == 5'b10001) 1 -1" (1 "0")
+Condition 69 "3494240371" "(rs == 5'b10001) 1 -1" (2 "1")
+Condition 70 "365623692" "(func == 6'h21) 1 -1" (1 "0")
+Condition 70 "365623692" "(func == 6'h21) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0070
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3417257133 2465278433"
+MODULE: tb_mips_soc
+Condition 1 "1396282317" "(legacy_mailbox_wdata == 32'hdeadbeef) 1 -1" (1 "0")
+Condition 2 "200320930" "((legacy_mailbox_wdata == 32'hdeaddead) || (legacy_mailbox_wdata[31:16] == 16'hdeaf)) 1 -1" (1 "00")
+Condition 2 "200320930" "((legacy_mailbox_wdata == 32'hdeaddead) || (legacy_mailbox_wdata[31:16] == 16'hdeaf)) 1 -1" (2 "01")
+Condition 2 "200320930" "((legacy_mailbox_wdata == 32'hdeaddead) || (legacy_mailbox_wdata[31:16] == 16'hdeaf)) 1 -1" (3 "10")
+Condition 3 "3525783263" "(legacy_mailbox_wdata == 32'hdeaddead) 1 -1" (1 "0")
+Condition 3 "3525783263" "(legacy_mailbox_wdata == 32'hdeaddead) 1 -1" (2 "1")
+Condition 4 "4164470189" "(legacy_mailbox_wdata[31:16] == 16'hdeaf) 1 -1" (1 "0")
+Condition 4 "4164470189" "(legacy_mailbox_wdata[31:16] == 16'hdeaf) 1 -1" (2 "1")
+Condition 6 "3407231798" "(rst_n && ((!uart_tx))) 1 -1" (1 "01")
+Condition 7 "3958158818" "(tb_mips_soc.u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req && tb_mips_soc.u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we && (tb_mips_soc.u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'ha000fffc)) 1 -1" (2 "101")
+
+// ID: EXCL-PROD-0071
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "63469976 2771160044"
+MODULE: l2_cache_nb
+Condition 1 "1033550698" "(p[0] == 1'b0) 1 -1" (1 "0")
+Condition 1 "1033550698" "(p[0] == 1'b0) 1 -1" (2 "1")
+Condition 2 "2075692279" "(p[2] == 1'b0) 1 -1" (1 "0")
+Condition 2 "2075692279" "(p[2] == 1'b0) 1 -1" (2 "1")
+Condition 3 "371611789" "((p[6] == 1'b0) ? 3'd7 : 3'd6) 1 -1" (1 "0")
+Condition 3 "371611789" "((p[6] == 1'b0) ? 3'd7 : 3'd6) 1 -1" (2 "1")
+Condition 4 "1743204334" "(p[6] == 1'b0) 1 -1" (1 "0")
+Condition 4 "1743204334" "(p[6] == 1'b0) 1 -1" (2 "1")
+Condition 5 "2026911725" "((p[5] == 1'b0) ? 3'd5 : 3'd4) 1 -1" (1 "0")
+Condition 5 "2026911725" "((p[5] == 1'b0) ? 3'd5 : 3'd4) 1 -1" (2 "1")
+Condition 6 "2974880476" "(p[5] == 1'b0) 1 -1" (1 "0")
+Condition 6 "2974880476" "(p[5] == 1'b0) 1 -1" (2 "1")
+Condition 7 "1403124574" "(p[1] == 1'b0) 1 -1" (1 "0")
+Condition 7 "1403124574" "(p[1] == 1'b0) 1 -1" (2 "1")
+Condition 8 "585088052" "((p[4] == 1'b0) ? 3'd3 : 3'd2) 1 -1" (1 "0")
+Condition 8 "585088052" "((p[4] == 1'b0) ? 3'd3 : 3'd2) 1 -1" (2 "1")
+Condition 9 "1613237052" "(p[4] == 1'b0) 1 -1" (1 "0")
+Condition 9 "1613237052" "(p[4] == 1'b0) 1 -1" (2 "1")
+Condition 10 "3510277515" "((p[3] == 1'b0) ? 3'b1 : 3'b0) 1 -1" (1 "0")
+Condition 10 "3510277515" "((p[3] == 1'b0) ? 3'b1 : 3'b0) 1 -1" (2 "1")
+Condition 11 "710646216" "(p[3] == 1'b0) 1 -1" (1 "0")
+Condition 11 "710646216" "(p[3] == 1'b0) 1 -1" (2 "1")
+Condition 12 "4291530785" "((w < 3'h4) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 12 "4291530785" "((w < 3'h4) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 13 "2744436149" "((w < 3'h2) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 13 "2744436149" "((w < 3'h2) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 14 "44775833" "((w == 3'b0) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 14 "44775833" "((w == 3'b0) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 15 "2730166829" "(w == 3'b0) 1 -1" (1 "0")
+Condition 15 "2730166829" "(w == 3'b0) 1 -1" (2 "1")
+Condition 16 "3819683071" "((w == 3'h2) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 16 "3819683071" "((w == 3'h2) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 17 "179318798" "(w == 3'h2) 1 -1" (1 "0")
+Condition 17 "179318798" "(w == 3'h2) 1 -1" (2 "1")
+Condition 18 "1208261314" "((w < 3'h6) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 18 "1208261314" "((w < 3'h6) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 19 "4087300446" "((w == 3'h4) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 19 "4087300446" "((w == 3'h4) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 20 "1849490592" "(w == 3'h4) 1 -1" (1 "0")
+Condition 20 "1849490592" "(w == 3'h4) 1 -1" (2 "1")
+Condition 21 "1497801552" "((w == 3'h6) ? 1'b1 : 1'b0) 1 -1" (1 "0")
+Condition 21 "1497801552" "((w == 3'h6) ? 1'b1 : 1'b0) 1 -1" (2 "1")
+Condition 22 "746281660" "(w == 3'h6) 1 -1" (1 "0")
+Condition 22 "746281660" "(w == 3'h6) 1 -1" (2 "1")
+Condition 23 "1241546820" "(acc_reserved[plru_v] || ((valid_ram[acc_set][plru_v] && 1'b0))) 1 -1" (1 "00")
+Condition 23 "1241546820" "(acc_reserved[plru_v] || ((valid_ram[acc_set][plru_v] && 1'b0))) 1 -1" (2 "01")
+Condition 23 "1241546820" "(acc_reserved[plru_v] || ((valid_ram[acc_set][plru_v] && 1'b0))) 1 -1" (3 "10")
+Condition 24 "1514308714" "((acc_state == ACC_IDLE) && acc_can_alloc) 1 -1" (1 "01")
+Condition 24 "1514308714" "((acc_state == ACC_IDLE) && acc_can_alloc) 1 -1" (2 "10")
+Condition 24 "1514308714" "((acc_state == ACC_IDLE) && acc_can_alloc) 1 -1" (3 "11")
+Condition 25 "2573291145" "(acc_state == ACC_IDLE) 1 -1" (1 "0")
+Condition 25 "2573291145" "(acc_state == ACC_IDLE) 1 -1" (2 "1")
+Condition 26 "2810603052" "(me_cnt == 3'd7) 1 -1" (1 "0")
+Condition 26 "2810603052" "(me_cnt == 3'd7) 1 -1" (2 "1")
+Condition 27 "472444183" "(ord_beat[rsp_idx] == ord_len[rsp_idx]) 1 -1" (1 "0")
+Condition 27 "472444183" "(ord_beat[rsp_idx] == ord_len[rsp_idx]) 1 -1" (2 "1")
+Condition 28 "587868528" "(acc_state == ACC_IDLE) 1 -1" (1 "0")
+Condition 28 "587868528" "(acc_state == ACC_IDLE) 1 -1" (2 "1")
+Condition 29 "3977608214" "(want_ar && acc_can_alloc && s_arready) 1 -1" (1 "011")
+Condition 29 "3977608214" "(want_ar && acc_can_alloc && s_arready) 1 -1" (2 "101")
+Condition 29 "3977608214" "(want_ar && acc_can_alloc && s_arready) 1 -1" (3 "110")
+Condition 29 "3977608214" "(want_ar && acc_can_alloc && s_arready) 1 -1" (4 "111")
+Condition 30 "3632653213" "((mshr_match || ((!acc_hit))) ? OST_WAIT : OST_READY) 1 -1" (1 "0")
+Condition 30 "3632653213" "((mshr_match || ((!acc_hit))) ? OST_WAIT : OST_READY) 1 -1" (2 "1")
+Condition 31 "2411676198" "(mshr_match || ((!acc_hit))) 1 -1" (1 "00")
+Condition 31 "2411676198" "(mshr_match || ((!acc_hit))) 1 -1" (2 "01")
+Condition 31 "2411676198" "(mshr_match || ((!acc_hit))) 1 -1" (3 "10")
+Condition 32 "1541831427" "(valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) 1 -1" (1 "01")
+Condition 32 "1541831427" "(valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) 1 -1" (2 "10")
+Condition 32 "1541831427" "(valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) 1 -1" (3 "11")
+Condition 33 "346644954" "(want_aw && acc_can_alloc && s_awready) 1 -1" (1 "011")
+Condition 33 "346644954" "(want_aw && acc_can_alloc && s_awready) 1 -1" (2 "101")
+Condition 33 "346644954" "(want_aw && acc_can_alloc && s_awready) 1 -1" (3 "110")
+Condition 33 "346644954" "(want_aw && acc_can_alloc && s_awready) 1 -1" (4 "111")
+Condition 34 "420531291" "(acc_hit && ((!mshr_match))) 1 -1" (1 "01")
+Condition 34 "420531291" "(acc_hit && ((!mshr_match))) 1 -1" (2 "10")
+Condition 34 "420531291" "(acc_hit && ((!mshr_match))) 1 -1" (3 "11")
+Condition 35 "208053969" "((acc_hit && ((!mshr_match))) ? acc_hitway : acc_victim) 1 -1" (1 "0")
+Condition 35 "208053969" "((acc_hit && ((!mshr_match))) ? acc_hitway : acc_victim) 1 -1" (2 "1")
+Condition 36 "252978347" "(acc_hit && ((!mshr_match))) 1 -1" (1 "01")
+Condition 36 "252978347" "(acc_hit && ((!mshr_match))) 1 -1" (2 "10")
+Condition 36 "252978347" "(acc_hit && ((!mshr_match))) 1 -1" (3 "11")
+Condition 37 "2447198365" "(valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) 1 -1" (1 "01")
+Condition 37 "2447198365" "(valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) 1 -1" (2 "10")
+Condition 37 "2447198365" "(valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) 1 -1" (3 "11")
+Condition 38 "2106834985" "(acc_state == ACC_WCOLLECT) 1 -1" (1 "0")
+Condition 38 "2106834985" "(acc_state == ACC_WCOLLECT) 1 -1" (2 "1")
+Condition 39 "1280400135" "(s_wvalid && s_wready) 1 -1" (1 "01")
+Condition 39 "1280400135" "(s_wvalid && s_wready) 1 -1" (2 "10")
+Condition 39 "1280400135" "(s_wvalid && s_wready) 1 -1" (3 "11")
+Condition 40 "2632054481" "(acc_whit ? ACC_WCOMMIT : ACC_IDLE) 1 -1" (1 "0")
+Condition 40 "2632054481" "(acc_whit ? ACC_WCOMMIT : ACC_IDLE) 1 -1" (2 "1")
+Condition 41 "2819959690" "(acc_state == ACC_WCOMMIT) 1 -1" (1 "0")
+Condition 41 "2819959690" "(acc_state == ACC_WCOMMIT) 1 -1" (2 "1")
+Condition 42 "3806791343" "(me_cnt == 3'd7) 1 -1" (1 "0")
+Condition 42 "3806791343" "(me_cnt == 3'd7) 1 -1" (2 "1")
+Condition 43 "3603400289" "(m_rlast || (me_cnt == 3'd7)) 1 -1" (1 "00")
+Condition 43 "3603400289" "(m_rlast || (me_cnt == 3'd7)) 1 -1" (2 "01")
+Condition 43 "3603400289" "(m_rlast || (me_cnt == 3'd7)) 1 -1" (3 "10")
+Condition 44 "3842530517" "(me_cnt == 3'd7) 1 -1" (1 "0")
+Condition 44 "3842530517" "(me_cnt == 3'd7) 1 -1" (2 "1")
+Condition 45 "932538442" "(ord_beat[rsp_idx] == ord_len[rsp_idx]) 1 -1" (1 "0")
+Condition 45 "932538442" "(ord_beat[rsp_idx] == ord_len[rsp_idx]) 1 -1" (2 "1")
+Condition 46 "1159939746" "(acc_state == ACC_WCOLLECT) 1 -1" (2 "1")
+Condition 47 "1484147237" "((acc_state == ACC_IDLE) && s_awvalid) 1 -1" (1 "01")
+Condition 47 "1484147237" "((acc_state == ACC_IDLE) && s_awvalid) 1 -1" (2 "10")
+Condition 47 "1484147237" "((acc_state == ACC_IDLE) && s_awvalid) 1 -1" (3 "11")
+Condition 48 "2753235254" "(acc_state == ACC_IDLE) 1 -1" (2 "1")
+Condition 49 "1220778922" "((acc_state == ACC_IDLE) && ((!s_awvalid)) && s_arvalid) 1 -1" (1 "011")
+Condition 49 "1220778922" "((acc_state == ACC_IDLE) && ((!s_awvalid)) && s_arvalid) 1 -1" (2 "101")
+Condition 49 "1220778922" "((acc_state == ACC_IDLE) && ((!s_awvalid)) && s_arvalid) 1 -1" (3 "110")
+Condition 49 "1220778922" "((acc_state == ACC_IDLE) && ((!s_awvalid)) && s_arvalid) 1 -1" (4 "111")
+Condition 50 "3485307478" "(acc_state == ACC_IDLE) 1 -1" (2 "1")
+Condition 51 "4030796880" "(accepting_aw ? s_awaddr[28:0] : s_araddr[28:0]) 1 -1" (1 "0")
+Condition 51 "4030796880" "(accepting_aw ? s_awaddr[28:0] : s_araddr[28:0]) 1 -1" (2 "1")
+Condition 52 "793854663" "(((!acc_hit)) && ((!mshr_match))) 1 -1" (1 "01")
+Condition 52 "793854663" "(((!acc_hit)) && ((!mshr_match))) 1 -1" (2 "10")
+Condition 52 "793854663" "(((!acc_hit)) && ((!mshr_match))) 1 -1" (3 "11")
+Condition 53 "1719662775" "(ord_free_v && (acc_hit || mshr_match || (mshr_free_v && acc_victim_ok))) 1 -1" (1 "01")
+Condition 53 "1719662775" "(ord_free_v && (acc_hit || mshr_match || (mshr_free_v && acc_victim_ok))) 1 -1" (2 "10")
+Condition 53 "1719662775" "(ord_free_v && (acc_hit || mshr_match || (mshr_free_v && acc_victim_ok))) 1 -1" (3 "11")
+Condition 54 "205686220" "(acc_hit || mshr_match || (mshr_free_v && acc_victim_ok)) 1 -1" (1 "000")
+Condition 54 "205686220" "(acc_hit || mshr_match || (mshr_free_v && acc_victim_ok)) 1 -1" (2 "001")
+Condition 54 "205686220" "(acc_hit || mshr_match || (mshr_free_v && acc_victim_ok)) 1 -1" (3 "010")
+Condition 54 "205686220" "(acc_hit || mshr_match || (mshr_free_v && acc_victim_ok)) 1 -1" (4 "100")
+Condition 55 "2226068445" "(mshr_free_v && acc_victim_ok) 1 -1" (1 "01")
+Condition 55 "2226068445" "(mshr_free_v && acc_victim_ok) 1 -1" (2 "10")
+Condition 55 "2226068445" "(mshr_free_v && acc_victim_ok) 1 -1" (3 "11")
+Condition 56 "54780300" "(mshr_match && ((want_ar && s_arready) || (want_aw && s_awready))) 1 -1" (1 "01")
+Condition 56 "54780300" "(mshr_match && ((want_ar && s_arready) || (want_aw && s_awready))) 1 -1" (2 "10")
+Condition 56 "54780300" "(mshr_match && ((want_ar && s_arready) || (want_aw && s_awready))) 1 -1" (3 "11")
+Condition 57 "1890388450" "((want_ar && s_arready) || (want_aw && s_awready)) 1 -1" (1 "00")
+Condition 57 "1890388450" "((want_ar && s_arready) || (want_aw && s_awready)) 1 -1" (2 "01")
+Condition 57 "1890388450" "((want_ar && s_arready) || (want_aw && s_awready)) 1 -1" (3 "10")
+Condition 58 "3739100245" "(want_ar && s_arready) 1 -1" (1 "01")
+Condition 58 "3739100245" "(want_ar && s_arready) 1 -1" (2 "10")
+Condition 58 "3739100245" "(want_ar && s_arready) 1 -1" (3 "11")
+Condition 59 "1852338853" "(want_aw && s_awready) 1 -1" (1 "01")
+Condition 59 "1852338853" "(want_aw && s_awready) 1 -1" (2 "10")
+Condition 59 "1852338853" "(want_aw && s_awready) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0072
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "97997737 3604279739"
+MODULE: soc_memory_subsystem
+Condition 3 "2924960681" "(s2_arvalid || spi_transaction_active || ((!spi_cs_n))) 1 -1" (2 "001")
+
+// ID: EXCL-PROD-0073
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4202099251 689297576"
+MODULE: ecc_secded_32
+Condition 1 "551564863" "(parity && (syndrome != 0)) 1 -1" (1 "01")
+Condition 1 "551564863" "(parity && (syndrome != 0)) 1 -1" (2 "10")
+Condition 1 "551564863" "(parity && (syndrome != 0)) 1 -1" (3 "11")
+Condition 2 "909360806" "(syndrome != 0) 1 -1" (2 "1")
+Condition 3 "2185426022" "(parity && (syndrome == 0)) 1 -1" (2 "10")
+Condition 3 "2185426022" "(parity && (syndrome == 0)) 1 -1" (3 "11")
+Condition 4 "1152690434" "(syndrome == 0) 1 -1" (1 "0")
+Condition 5 "1599487091" "(((!parity)) && (syndrome != 0)) 1 -1" (1 "01")
+Condition 5 "1599487091" "(((!parity)) && (syndrome != 0)) 1 -1" (3 "11")
+Condition 6 "2375736019" "(syndrome != 0) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0074
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2802209148 2574412946"
+MODULE: mips_core
+Condition 1 "3842660206" "(cpu_data_cache_op_valid && cpu_data_cache_op_is_icache) 1 -1" (1 "01")
+Condition 1 "3842660206" "(cpu_data_cache_op_valid && cpu_data_cache_op_is_icache) 1 -1" (2 "10")
+Condition 1 "3842660206" "(cpu_data_cache_op_valid && cpu_data_cache_op_is_icache) 1 -1" (3 "11")
+Condition 2 "3389261455" "(cpu_data_cache_op_valid && ((!cpu_data_cache_op_is_icache))) 1 -1" (2 "10")
+Condition 2 "3389261455" "(cpu_data_cache_op_valid && ((!cpu_data_cache_op_is_icache))) 1 -1" (3 "11")
+Condition 3 "869782399" "(cpu_data_cache_op_is_icache ? icache_op_done : dcache_op_done) 1 -1" (2 "1")
+Condition 4 "898055530" "(cpu_data_cache_op_is_icache ? icache_op_error : dcache_op_error) 1 -1" (2 "1")
+Condition 5 "3261305808" "(cpu_data_cache_op_is_icache ? icache_tag_rdata : cpu_data_cache_tag_rdata_d) 1 -1" (2 "1")
+Condition 6 "2957041181" "(cpu_inst_req & ((~cpu_data_cache_op_valid))) 1 -1" (1 "01")
+Condition 6 "2957041181" "(cpu_inst_req & ((~cpu_data_cache_op_valid))) 1 -1" (2 "10")
+Condition 7 "1225809001" "(sched_enable_i ? scheduler_active_mask : 4'b1) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0075
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "886703037 2567747547"
+MODULE: mmu_tlb_shootdown_mailbox
+Condition 1 "1861885221" "(target_present && target_ack) 1 -1" (1 "01")
+Condition 1 "1861885221" "(target_present && target_ack) 1 -1" (2 "10")
+Condition 1 "1861885221" "(target_present && target_ack) 1 -1" (3 "11")
+Condition 2 "3332327411" "(((!target_present)) || (count >= (TIMEOUT_CYCLES - 1))) 1 -1" (1 "00")
+Condition 2 "3332327411" "(((!target_present)) || (count >= (TIMEOUT_CYCLES - 1))) 1 -1" (2 "01")
+Condition 2 "3332327411" "(((!target_present)) || (count >= (TIMEOUT_CYCLES - 1))) 1 -1" (3 "10")
+
+// ID: EXCL-PROD-0076
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "469529741 575978489"
+MODULE: axi_read_timeout_guard
+Condition 1 "176326803" "(s_arvalid && s_arready) 1 -1" (2 "10")
+Condition 2 "2479120150" "(m_arvalid && m_arready) 1 -1" (1 "01")
+Condition 2 "2479120150" "(m_arvalid && m_arready) 1 -1" (2 "10")
+Condition 3 "801776827" "(m_rready && m_rlast) 1 -1" (1 "01")
+Condition 4 "2261133023" "(s_rvalid && s_rready) 1 -1" (1 "01")
+Condition 4 "2261133023" "(s_rvalid && s_rready) 1 -1" (2 "10")
+Condition 4 "2261133023" "(s_rvalid && s_rready) 1 -1" (3 "11")
+Condition 5 "1911606237" "(error_beat == req_len) 1 -1" (1 "0")
+Condition 5 "1911606237" "(error_beat == req_len) 1 -1" (2 "1")
+Condition 6 "2142842284" "(downstream_active ? ST_DRAIN : ST_IDLE) 1 -1" (1 "0")
+Condition 6 "2142842284" "(downstream_active ? ST_DRAIN : ST_IDLE) 1 -1" (2 "1")
+Condition 7 "1002718416" "(m_rvalid && m_rready && m_rlast) 1 -1" (1 "011")
+Condition 7 "1002718416" "(m_rvalid && m_rready && m_rlast) 1 -1" (2 "101")
+Condition 7 "1002718416" "(m_rvalid && m_rready && m_rlast) 1 -1" (3 "110")
+Condition 7 "1002718416" "(m_rvalid && m_rready && m_rlast) 1 -1" (4 "111")
+Condition 8 "3707814934" "(timeout_enabled && (wait_count >= (TIMEOUT_CYCLES - 1))) 1 -1" (1 "01")
+Condition 8 "3707814934" "(timeout_enabled && (wait_count >= (TIMEOUT_CYCLES - 1))) 1 -1" (3 "11")
+Condition 22 "2491970079" "(state == ST_ERROR) 1 -1" (2 "1")
+Condition 25 "1717593992" "(state == ST_DRAIN) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0077
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2624281472 3849405154"
+MODULE: apb_qspi_status
+Condition 1 "3227065822" "(wr && (paddr[4:2] == 3'b011) && pwdata[0]) 1 -1" (2 "101")
+Condition 1 "3227065822" "(wr && (paddr[4:2] == 3'b011) && pwdata[0]) 1 -1" (3 "110")
+Condition 1 "3227065822" "(wr && (paddr[4:2] == 3'b011) && pwdata[0]) 1 -1" (4 "111")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (2 "101")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (3 "110")
+Condition 3 "2862330562" "(psel & penable & pwrite) 1 -1" (4 "111")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (2 "101")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (3 "110")
+Condition 4 "473781829" "(psel & penable & ((~pwrite))) 1 -1" (4 "111")
+Condition 5 "2537173076" "(xip_timeout_sticky & ((~source_seen_r))) 1 -1" (2 "10")
+Condition 5 "2537173076" "(xip_timeout_sticky & ((~source_seen_r))) 1 -1" (3 "11")
+Condition 6 "3629936129" "(error_event & ((~error_seen_r))) 1 -1" (2 "10")
+Condition 6 "3629936129" "(error_event & ((~error_seen_r))) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0078
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "827148926 3197185322"
+MODULE: mips_mem_stage
+Condition 1 "3084881795" "((mem_read | mem_write) & ((~adel_exception)) & ((~ades_exception)) & ((~translation_fault)) & ((~mem_done))) 1 -1" (2 "10111")
+Condition 1 "3084881795" "((mem_read | mem_write) & ((~adel_exception)) & ((~ades_exception)) & ((~translation_fault)) & ((~mem_done))) 1 -1" (4 "11101")
+Condition 3 "2117908948" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (2 "10")
+Condition 3 "2117908948" "(mem_cache_op_valid & ((~mem_done))) 1 -1" (3 "11")
+Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (1 "011")
+Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (2 "101")
+Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (3 "110")
+Condition 4 "3323374644" "(cache_op_valid & cache_op_done & cache_op_error) 1 -1" (4 "111")
+Condition 5 "1223484174" "(((mem_op == 3'b010) || (mem_op == 3'b011)) && (addr_align[0] != 1'b0)) 1 -1" (3 "11")
+Condition 13 "180770412" "(bad_align_h | bad_align_w) 1 -1" (3 "10")
+Condition 14 "1817015435" "(mem_read & bad_align) 1 -1" (3 "11")
+
+// ID: EXCL-PROD-0079
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3064912425 1617334675"
+MODULE: apb_vic
+Condition 1 "716705227" "(wr && (paddr[11:2] == 10'h005)) 1 -1" (3 "11")
+Condition 3 "599258538" "(wr && (paddr[11:2] == 10'h006)) 1 -1" (3 "11")
+Condition 5 "2682247114" "(wr && (paddr[11:2] == 10'h082)) 1 -1" (1 "01")
+Condition 5 "2682247114" "(wr && (paddr[11:2] == 10'h082)) 1 -1" (3 "11")
+Condition 6 "1144097867" "(paddr[11:2] == 10'h082) 1 -1" (2 "1")
+Condition 7 "3867443095" "(rd && (paddr[11:2] == 10'h080) && irq) 1 -1" (1 "011")
+Condition 7 "3867443095" "(rd && (paddr[11:2] == 10'h080) && irq) 1 -1" (3 "110")
+Condition 7 "3867443095" "(rd && (paddr[11:2] == 10'h080) && irq) 1 -1" (4 "111")
+Condition 9 "168820980" "(wr && (paddr[11:8] == 4'b1)) 1 -1" (3 "11")
+Condition 11 "4101841336" "((paddr[11:8] == 4'b1) && (paddr[7:2] < NUM_SOURCES)) 1 -1" (1 "01")
+Condition 11 "4101841336" "((paddr[11:8] == 4'b1) && (paddr[7:2] < NUM_SOURCES)) 1 -1" (2 "10")
+Condition 11 "4101841336" "((paddr[11:8] == 4'b1) && (paddr[7:2] < NUM_SOURCES)) 1 -1" (3 "11")
+Condition 12 "2624642325" "(paddr[11:8] == 4'b1) 1 -1" (1 "0")
+Condition 12 "2624642325" "(paddr[11:8] == 4'b1) 1 -1" (2 "1")
+Condition 15 "796496142" "(any_pend_r && (((!any_active_r)) || (best_pri_r > running_prio_r))) 1 -1" (2 "10")
+Condition 16 "3151458438" "(((!any_active_r)) || (best_pri_r > running_prio_r)) 1 -1" (1 "00")
+Condition 16 "3151458438" "(((!any_active_r)) || (best_pri_r > running_prio_r)) 1 -1" (2 "01")
+
+// ID: EXCL-PROD-0080
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "609989151 1235140111"
+MODULE: mips_perf_counters
+Condition 1 "3093334197" "(((!rst_n)) || clear) 1 -1" (2 "01")
+
+// ID: EXCL-PROD-0081
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1192777547 1229127467"
+MODULE: mips_ex_mem_reg
+Condition 1 "3738183703" "((((!stall)) || (enable_nonblocking_load && mem_mem_read && ((!mem_done)) && dmem_addr_ok)) && ( ! (((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && dmem_data_ok) )) 1 -1" (2 "10")
+Condition 2 "66974717" "(((!stall)) || (enable_nonblocking_load && mem_mem_read && ((!mem_done)) && dmem_addr_ok)) 1 -1" (2 "01")
+Condition 3 "2750074297" "(enable_nonblocking_load && mem_mem_read && ((!mem_done)) && dmem_addr_ok) 1 -1" (2 "1011")
+Condition 3 "2750074297" "(enable_nonblocking_load && mem_mem_read && ((!mem_done)) && dmem_addr_ok) 1 -1" (3 "1101")
+Condition 3 "2750074297" "(enable_nonblocking_load && mem_mem_read && ((!mem_done)) && dmem_addr_ok) 1 -1" (4 "1110")
+Condition 3 "2750074297" "(enable_nonblocking_load && mem_mem_read && ((!mem_done)) && dmem_addr_ok) 1 -1" (5 "1111")
+Condition 4 "2450884209" "( ! (((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && dmem_data_ok) ) 1 -1" (2 "1")
+Condition 5 "781066302" "(((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && dmem_data_ok) 1 -1" (2 "10")
+Condition 5 "781066302" "(((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && dmem_data_ok) 1 -1" (3 "11")
+Condition 6 "2362159887" "((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) 1 -1" (2 "01")
+Condition 6 "2362159887" "((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) 1 -1" (3 "10")
+Condition 7 "2798293647" "(mem_inst[31:26] == 6'b110101) 1 -1" (2 "1")
+Condition 8 "4070836445" "(mem_inst[31:26] == 6'b111101) 1 -1" (2 "1")
+Condition 11 "2768572325" "(((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && ((!mem_double_phase)) && dmem_data_ok) 1 -1" (2 "101")
+Condition 11 "2768572325" "(((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && ((!mem_double_phase)) && dmem_data_ok) 1 -1" (3 "110")
+Condition 11 "2768572325" "(((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) && ((!mem_double_phase)) && dmem_data_ok) 1 -1" (4 "111")
+Condition 12 "824696970" "((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) 1 -1" (2 "01")
+Condition 12 "824696970" "((mem_inst[31:26] == 6'b110101) || (mem_inst[31:26] == 6'b111101)) 1 -1" (3 "10")
+Condition 13 "2377926341" "(mem_inst[31:26] == 6'b110101) 1 -1" (2 "1")
+Condition 14 "1158594582" "(mem_inst[31:26] == 6'b111101) 1 -1" (2 "1")
+
+// ID: EXCL-PROD-0082
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "7721136 2026093823"
+MODULE: axi_sram
+Fsm w_state "2026093823"
+State W_DATA "1"
+State W_IDLE "0"
+State W_RESP "2"
+Transition W_DATA->W_RESP "1->2"
+Transition W_IDLE->W_DATA "0->1"
+Transition W_RESP->W_IDLE "2->0"
+
+// ID: EXCL-PROD-0083
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2914053452 1497274622"
+MODULE: l2_cache_caching
+Fsm state "1497274622"
+State ST_ERR_RESP_B "13"
+State ST_ERR_RESP_R "12"
+State ST_EVICT_AW "6"
+State ST_EVICT_B "8"
+State ST_EVICT_W "7"
+State ST_IDLE "0"
+State ST_LOOKUP "2"
+State ST_MISS_ALLOC "5"
+State ST_REFILL_AR "9"
+State ST_REFILL_R "10"
+State ST_R_HIT_BURST "3"
+State ST_W_ACCEPT "1"
+State ST_W_DRAIN_ERR "14"
+State ST_W_HIT_MERGE "4"
+State ST_W_RESP "11"
+Transition ST_ERR_RESP_B->ST_IDLE "13->0"
+Transition ST_ERR_RESP_R->ST_IDLE "12->0"
+Transition ST_EVICT_AW->ST_EVICT_W "6->7"
+Transition ST_EVICT_AW->ST_IDLE "6->0"
+Transition ST_EVICT_B->ST_ERR_RESP_B "8->13"
+Transition ST_EVICT_B->ST_ERR_RESP_R "8->12"
+Transition ST_EVICT_B->ST_IDLE "8->0"
+Transition ST_EVICT_B->ST_REFILL_AR "8->9"
+Transition ST_EVICT_B->ST_W_DRAIN_ERR "8->14"
+Transition ST_EVICT_W->ST_EVICT_B "7->8"
+Transition ST_EVICT_W->ST_IDLE "7->0"
+Transition ST_IDLE->ST_ERR_RESP_R "0->12"
+Transition ST_IDLE->ST_LOOKUP "0->2"
+Transition ST_IDLE->ST_W_ACCEPT "0->1"
+Transition ST_LOOKUP->ST_IDLE "2->0"
+Transition ST_LOOKUP->ST_MISS_ALLOC "2->5"
+Transition ST_LOOKUP->ST_R_HIT_BURST "2->3"
+Transition ST_LOOKUP->ST_W_HIT_MERGE "2->4"
+Transition ST_MISS_ALLOC->ST_EVICT_AW "5->6"
+Transition ST_MISS_ALLOC->ST_IDLE "5->0"
+Transition ST_MISS_ALLOC->ST_REFILL_AR "5->9"
+Transition ST_REFILL_AR->ST_IDLE "9->0"
+Transition ST_REFILL_AR->ST_REFILL_R "9->10"
+Transition ST_REFILL_R->ST_ERR_RESP_B "10->13"
+Transition ST_REFILL_R->ST_ERR_RESP_R "10->12"
+Transition ST_REFILL_R->ST_IDLE "10->0"
+Transition ST_REFILL_R->ST_LOOKUP "10->2"
+Transition ST_REFILL_R->ST_W_DRAIN_ERR "10->14"
+Transition ST_R_HIT_BURST->ST_IDLE "3->0"
+Transition ST_R_HIT_BURST->ST_MISS_ALLOC "3->5"
+Transition ST_W_ACCEPT->ST_ERR_RESP_B "1->13"
+Transition ST_W_ACCEPT->ST_IDLE "1->0"
+Transition ST_W_ACCEPT->ST_LOOKUP "1->2"
+Transition ST_W_ACCEPT->ST_W_DRAIN_ERR "1->14"
+Transition ST_W_DRAIN_ERR->ST_ERR_RESP_B "14->13"
+Transition ST_W_DRAIN_ERR->ST_IDLE "14->0"
+Transition ST_W_HIT_MERGE->ST_IDLE "4->0"
+Transition ST_W_HIT_MERGE->ST_W_ACCEPT "4->1"
+Transition ST_W_HIT_MERGE->ST_W_RESP "4->11"
+Transition ST_W_RESP->ST_IDLE "11->0"
+
+// ID: EXCL-PROD-0084
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "63469976 2741105997"
+MODULE: l2_cache_nb
+Fsm acc_state "2440440501"
+State ACC_IDLE "0"
+State ACC_WCOLLECT "1"
+State ACC_WCOMMIT "2"
+Transition ACC_IDLE->ACC_WCOLLECT "0->1"
+Transition ACC_WCOLLECT->ACC_IDLE "1->0"
+Transition ACC_WCOLLECT->ACC_WCOMMIT "1->2"
+Transition ACC_WCOMMIT->ACC_IDLE "2->0"
+Fsm me_state "4188887775"
+State ME_EVICT_AW "1"
+State ME_EVICT_B "3"
+State ME_EVICT_W "2"
+State ME_IDLE "0"
+State ME_REFILL_AR "4"
+State ME_REFILL_R "5"
+Transition ME_EVICT_AW->ME_EVICT_W "1->2"
+Transition ME_EVICT_AW->ME_IDLE "1->0"
+Transition ME_EVICT_B->ME_IDLE "3->0"
+Transition ME_EVICT_B->ME_REFILL_AR "3->4"
+Transition ME_EVICT_W->ME_EVICT_B "2->3"
+Transition ME_EVICT_W->ME_IDLE "2->0"
+Transition ME_IDLE->ME_EVICT_AW "0->1"
+Transition ME_IDLE->ME_REFILL_AR "0->4"
+Transition ME_REFILL_AR->ME_IDLE "4->0"
+Transition ME_REFILL_AR->ME_REFILL_R "4->5"
+Transition ME_REFILL_R->ME_IDLE "5->0"
+
+// ID: EXCL-PROD-0085
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1149415544 3728872850"
+MODULE: apb_boot_status
+Block 4 "3924456495" "reset_cause_r[1] <= 1'b1;"
+Block 7 "3006980858" "case (paddr[4:2])"
+Block 8 "4033126899" "stage_r <= pwdata[7:0];"
+Block 9 "2388216297" "failure_r <= pwdata;"
+Block 10 "3855634254" "reset_cause_r <= (reset_cause_r & (~pwdata[1:0]));"
+Block 13 "3658667393" "case (paddr[4:2])"
+Block 14 "2018994640" "prdata = {24'b0, stage_r};"
+Block 15 "474479599" "prdata = failure_r;"
+Block 16 "3174193844" "prdata = {30'b0, reset_cause_r};"
+Block 17 "2419579025" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0086
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "299010489 1630025265"
+MODULE: axi_boot_rom
+Block 4 "3322657415" "$readmemh(ROM_INIT_FILE, rom);"
+Block 6 "552310594" "$display(\"axi_boot_rom: loading image from %0s\", image_hex);"
+Block 10 "2316959799" "word_index = ((addr - 32'h1fc00000) >> 2);"
+Block 12 "1335899302" "if ((!rst_n))"
+Block 16 "3458093295" "rd_busy <= 1'b1;"
+Block 18 "3601259291" "if ((s_rvalid && s_rready))"
+Block 19 "175619253" "if ((rd_beat == rd_len))"
+Block 20 "1598679044" "rd_busy <= 1'b0;"
+Block 21 "4156718890" "rd_beat <= (rd_beat + 8'b1);"
+Block 22 "4201878422" "rd_addr <= (rd_addr + (32'b1 << rd_size));"
+Block 25 "1335899302" "if ((!rst_n))"
+Block 28 "4235553089" "wr_busy <= 1'b1;"
+Block 31 "4209691399" "if ((s_wlast || (wr_beat == wr_len)))"
+Block 32 "2425210529" "wr_busy <= 1'b0;"
+Block 33 "834937553" "wr_beat <= (wr_beat + 8'b1);"
+Block 36 "1188821629" "wr_resp_valid <= 1'b0;"
+
+// ID: EXCL-PROD-0087
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "821264661 658587359"
+MODULE: mmu_asid_allocator
+Block 5 "3389375409" "if (((((release_asid != 8'b0) && (release_asid <= SLOTS)) && used[release_asid]) && (generation[release_asid] === release_generation)))"
+Block 6 "882207125" "used[release_asid] <= 0;"
+Block 7 "2704885977" "release_reject <= 1;"
+Block 10 "2719014330" "found = 0;"
+Block 11 "3241360553" "if (((!used[i]) && (!found)))"
+Block 12 "2224322843" "used[i] <= 1;"
+Block 14 "4146106111" "if ((!found))"
+Block 15 "3862200805" "alloc_fail <= 1;"
+
+// ID: EXCL-PROD-0088
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1384839261 1235642304"
+MODULE: mips_mdu
+Block 8 "2295146642" "state <= ST_DONE;"
+Block 17 "2231345323" "lo_r <= 32'hffffffff;"
+Block 19 "3213785825" "state <= ST_DONE;"
+Block 28 "643030385" "mul_prod <= ((~mul_prod) + 64'b1);"
+Block 31 "3312693081" "state <= ST_ACC;"
+Block 33 "3599864984" "hi_r <= (result_neg_mul ? ((~mul_prod[63:32]) + ((mul_prod[31:0] == 32'b0) ? 32'b1 : 32'b0)) : mul_prod[63:32]);"
+Block 35 "3251757035" "acc_tmp = {hi_r, lo_r};"
+Block 36 "2325554504" "acc_tmp = (acc_tmp - mul_prod);"
+Block 37 "2134729940" "acc_tmp = (acc_tmp + mul_prod);"
+Block 38 "1089440602" "{hi_r, lo_r} <= acc_tmp;"
+Block 40 "3577087196" "lo_r <= 32'b0;"
+Block 52 "3464918496" "state <= ST_IDLE;"
+
+// ID: EXCL-PROD-0089
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2521688486 1130670477"
+MODULE: mips_mmu
+Block 3 "1869068458" "ok_r = 1'b0;"
+Block 6 "2588250850" "if (is_kseg0)"
+Block 7 "3881774839" "pa_r = pa_kseg_dir;"
+Block 8 "3014522317" "if (is_kseg1)"
+Block 9 "3712395878" "pa_r = pa_kseg_dir;"
+Block 10 "240248451" "if ((tlb_lookup_multi_hit === 1'b1))"
+Block 11 "1114077115" "ok_r = 1'b0;"
+Block 12 "1587226266" "if ((!tlb_lookup_hit))"
+Block 13 "2290305029" "ok_r = 1'b0;"
+Block 14 "2443397504" "if ((!tlb_lookup_v))"
+Block 15 "1785161194" "ok_r = 1'b0;"
+Block 16 "1841346855" "if ((req_is_store && (!tlb_lookup_d)))"
+Block 17 "3467242389" "ok_r = 1'b0;"
+Block 18 "699261461" "pa_r = pa_tlb;"
+
+// ID: EXCL-PROD-0090
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1806501640 3054984617"
+MODULE: mips_micro_tlb
+Block 1 "2678468481" "case (mask)"
+Block 2 "676866254" "odd_bit = 6'd14;"
+Block 3 "718612532" "odd_bit = 6'd16;"
+Block 4 "309100384" "odd_bit = 6'd18;"
+Block 5 "3209965104" "odd_bit = 6'd20;"
+Block 6 "3538560344" "odd_bit = 6'd22;"
+Block 7 "831068595" "odd_bit = 6'd24;"
+Block 8 "2744692491" "odd_bit = 6'd26;"
+Block 10 "2678468481" "case (mask)"
+Block 11 "738884243" "adjusted_pfn = {pfn[19:2], va[13:12]};"
+Block 12 "2171570697" "adjusted_pfn = {pfn[19:4], va[15:12]};"
+Block 13 "2166180455" "adjusted_pfn = {pfn[19:6], va[17:12]};"
+Block 14 "3736433374" "adjusted_pfn = {pfn[19:8], va[19:12]};"
+Block 15 "1286384840" "adjusted_pfn = {pfn[19:10], va[21:12]};"
+Block 16 "4107493209" "adjusted_pfn = {pfn[19:12], va[23:12]};"
+Block 17 "3374979457" "adjusted_pfn = {pfn[19:14], va[25:12]};"
+Block 21 "211465501" "i_many = (i_many | i_found);"
+Block 24 "4120233817" "d_many = (d_many | d_found);"
+Block 30 "2351091108" "next_i <= 0;"
+Block 31 "1796193815" "valid_i[k] <= 1'b0;"
+Block 33 "385063678" "valid_i[next_i] <= 1'b1;"
+Block 36 "3190696720" "valid_d[next_d] <= 1'b1;"
+
+// ID: EXCL-PROD-0091
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2069035916 3162750358"
+MODULE: mips_id_stage
+Block 8 "3024014638" "br_taken = (fpu_condition[fpu_condition_code] ^ fpu_branch_invert);"
+
+// ID: EXCL-PROD-0092
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1189874766 809968344"
+MODULE: apb_timer
+Block 1 "3323447681" "if ((!presetn))"
+Block 16 "3323447681" "if ((!presetn))"
+Block 33 "3323447681" "if ((!presetn))"
+
+// ID: EXCL-PROD-0093
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1947636165 2913175166"
+MODULE: mips_if_stage
+Block 6 "1278738770" "next_pc = bpu_recover_target;"
+Block 10 "3861209437" "next_pc = branch_likely_delay_target;"
+Block 12 "1572333188" "next_pc = pc;"
+Block 18 "1540375222" "next_pc = bpu_delay_target;"
+Block 23 "364711059" "pc <= ctx_restore_pc;"
+Block 28 "4043742603" "branch_likely_delay_pending <= 1'b0;"
+Block 31 "3820473033" "branch_likely_delay_pending <= 1'b1;"
+Block 34 "3374305962" "bpu_delay_pending <= 1'b0;"
+Block 36 "892874724" "bpu_delay_pending <= 1'b1;"
+
+// ID: EXCL-PROD-0094
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "7721136 2984946411"
+MODULE: axi_sram
+Block 3 "1335899302" "if ((!rst_n))"
+Block 4 "3930834661" "r_state <= R_IDLE;"
+Block 5 "2588970769" "case (r_state)"
+Block 6 "1264505119" "s_arready <= 1'b1;"
+Block 7 "1692246362" "s_arready <= 1'b0;"
+Block 9 "2715006802" "if ((s_rvalid && s_rready))"
+Block 10 "3220515452" "if ((r_len == 8'b0))"
+Block 11 "1668296456" "s_rvalid <= 1'b0;"
+Block 12 "2732676762" "r_addr <= (r_addr + 32'd4);"
+Block 15 "1335899302" "if ((!rst_n))"
+Block 16 "2097304478" "w_state <= W_IDLE;"
+Block 17 "696759610" "case (w_state)"
+Block 18 "2751154473" "s_awready <= 1'b1;"
+Block 19 "1420358384" "s_awready <= 1'b0;"
+Block 21 "3226827950" "if ((s_wvalid && s_wready))"
+Block 22 "3275760638" "if (s_wstrb[0])"
+Block 23 "642544141" "ram[w_addr[15:2]][7:0] <= s_wdata[7:0];"
+Block 25 "2703827143" "if (s_wstrb[1])"
+Block 26 "3064156225" "ram[w_addr[15:2]][15:8] <= s_wdata[15:8];"
+Block 28 "667423962" "if (s_wstrb[2])"
+Block 29 "776968270" "ram[w_addr[15:2]][23:16] <= s_wdata[23:16];"
+Block 31 "1168185315" "if (s_wstrb[3])"
+Block 32 "3264335812" "ram[w_addr[15:2]][31:24] <= s_wdata[31:24];"
+Block 34 "452569257" "if (s_wlast)"
+Block 35 "678207569" "s_wready <= 1'b0;"
+Block 36 "2157957885" "w_addr <= (w_addr + 32'd4);"
+Block 38 "3757803407" "if ((s_bvalid && s_bready))"
+Block 39 "790952184" "s_bvalid <= 1'b0;"
+
+// ID: EXCL-PROD-0095
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2018139936 3941964472"
+MODULE: mips_cpu
+Block 1 "1335899302" "if ((!rst_n))"
+Block 6 "3219282387" "wait_state <= 1'b1;"
+Block 8 "1335899302" "if ((!rst_n))"
+Block 11 "2556374643" "if (ctx_restore_req)"
+Block 12 "328302385" "fcsr <= ctx_restore_fcsr;"
+Block 13 "762625665" "fpr[fpu_i] <= ctx_restore_fpr[(fpu_i * 32)+:32];"
+Block 15 "3735413784" "fpu_double_low <= mem_rdata_fmt;"
+Block 17 "2378086539" "fpr[mem_inst[20:16]] <= mem_rdata_fmt;"
+Block 19 "3461033878" "fpr[mem_inst[20:16]] <= fpu_double_low;"
+Block 21 "3691782975" "fcsr[6:2] <= (fcsr[6:2] | fpu_exception_flags);"
+Block 23 "4186918711" "if (fpu_id_mtc1)"
+Block 24 "3399234731" "fpr[id_inst[15:11]] <= id_val_rt;"
+Block 25 "1125229646" "if (fpu_id_ctc1)"
+Block 26 "3316989418" "fcsr <= id_val_rt;"
+Block 27 "385864305" "if (fpu_id_arith)"
+Block 28 "1790976144" "if ((fpu_id_cop1 && (id_inst[5:0] >= 6'h30)))"
+Block 29 "1146992842" "case (id_inst[10:8])"
+Block 30 "3161084785" "fcsr[23] <= fpu_compare_true;"
+Block 31 "3001348409" "fcsr[25] <= fpu_compare_true;"
+Block 32 "1981674430" "fcsr[26] <= fpu_compare_true;"
+Block 33 "234468549" "fcsr[27] <= fpu_compare_true;"
+Block 34 "1252000904" "fcsr[28] <= fpu_compare_true;"
+Block 35 "826557427" "fcsr[29] <= fpu_compare_true;"
+Block 36 "3396294981" "fcsr[30] <= fpu_compare_true;"
+Block 37 "2978684478" "fcsr[31] <= fpu_compare_true;"
+Block 39 "2064099880" "if (fpu_id_double_result)"
+Block 40 "3405504695" "fpr[id_inst[10:6]] <= fpu_result_double[31:0];"
+Block 41 "3849705358" "if ((((fpu_op >= 5'd10) && (fpu_op <= 5'd14)) || ((fpu_op >= 5'd18) && (fpu_op <= 5'd22))))"
+Block 42 "3259121525" "fpr[id_inst[10:6]] <= fpu_result_word;"
+Block 43 "1064269804" "fpr[id_inst[10:6]] <= fpu_result;"
+Block 44 "168989263" "fcsr[6:2] <= (fcsr[6:2] | fpu_exception_flags);"
+Block 47 "1335899302" "if ((!rst_n))"
+Block 61 "1335899302" "if ((!rst_n))"
+Block 63 "2556374643" "if (ctx_restore_req)"
+Block 64 "1284105813" "ll_reservation_valid <= 1'b0;"
+Block 66 "4104381284" "ll_reservation_valid <= 1'b0;"
+Block 69 "3582503382" "ll_reservation_valid <= 1'b1;"
+Block 74 "1335899302" "if ((!rst_n))"
+Block 79 "3323406010" "if (((!rst_n) || flush_mem_wb))"
+Block 87 "3323406010" "if (((!rst_n) || flush_mem_wb))"
+Block 91 "3655976209" "nb_load_busy <= 4'b0;"
+Block 97 "2172152490" "nb_load_busy[rob_alloc_tag] <= 1'b1;"
+Block 99 "1335899302" "if ((!rst_n))"
+Block 102 "3649352009" "ptw_busy <= 1'b1;"
+Block 105 "2350445706" "if (ptw_fault_i)"
+Block 106 "2315978826" "ptw_busy <= 1'b0;"
+Block 107 "2801400699" "ptw_refill_pending <= 1'b1;"
+Block 110 "338680599" "ptw_refill_pending <= 1'b0;"
+Block 113 "49517173" "ptw_fault_pending <= 1'b0;"
+
+// ID: EXCL-PROD-0096
+// CATEGORY: Debug & Observability
+// CHECKSUM: "1978932013 2125241390"
+MODULE: jtag_debug_top
+Block 1 "2989355435" "if ((!trst_n))"
+Block 2 "1441433738" "tap_state <= TEST_LOGIC_RESET;"
+Block 21 "2240512468" "next_tap_state = TEST_LOGIC_RESET;"
+Block 22 "2989355435" "if ((!trst_n))"
+Block 33 "2989355435" "if ((!trst_n))"
+Block 65 "1335899302" "if ((!rst_n))"
+Block 68 "1335899302" "if ((!rst_n))"
+Block 73 "1335899302" "if ((!rst_n))"
+Block 74 "3685437455" "axi_state <= ST_IDLE;"
+Block 97 "1309846331" "next_axi_state = ST_IDLE;"
+Block 98 "1335899302" "if ((!rst_n))"
+
+// ID: EXCL-PROD-0097
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "3032547841 467624506"
+MODULE: apb_gpio
+Block 1 "3323447681" "if ((!presetn))"
+Block 7 "3482919161" ";"
+Block 9 "3323447681" "if ((!presetn))"
+
+// ID: EXCL-PROD-0098
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3798910544 2579913623"
+MODULE: apb_uart_16550
+Block 3 "1662809449" "rx_trig_level = 4'd4;"
+Block 5 "3820269612" "rx_trig_level = 4'd14;"
+Block 7 "1335899302" "if ((!rst_n))"
+Block 14 "757197616" "data_bits = 4'd6;"
+Block 23 "1335899302" "if ((!rst_n))"
+Block 34 "1929076140" "tx_parity_bit <= (~eps);"
+Block 44 "1464926216" "tx_line <= tx_parity_bit;"
+Block 46 "869592158" "tx_line <= 1'b1;"
+Block 48 "3674869664" "tx_line <= 1'b1;"
+Block 50 "109881582" "tx_state <= TX_IDLE;"
+Block 51 "3619857455" "tx_state <= TX_IDLE;"
+Block 54 "1335899302" "if ((!rst_n))"
+Block 56 "3113988879" "if (((wr_stb && (paddr[4:2] == 3'b010)) && write_data[2]))"
+Block 57 "3386653180" "tx_wr <= 0;"
+Block 61 "1335899302" "if ((!rst_n))"
+Block 63 "3113988879" "if (((wr_stb && (paddr[4:2] == 3'b010)) && write_data[2]))"
+Block 64 "2711701592" "tx_rd <= 0;"
+Block 68 "1335899302" "if ((!rst_n))"
+Block 71 "1335899302" "if ((!rst_n))"
+Block 73 "568626236" "if (((wr_stb && (paddr[4:2] == 3'b010)) && write_data[1]))"
+Block 84 "3903018849" "rx_bit_ctr <= 4'b0;"
+Block 85 "1445057687" "if ((!rx_sync2))"
+Block 86 "3240023820" "rx_state <= RX_DATA;"
+Block 87 "3478211971" "rx_state <= RX_IDLE;"
+Block 88 "2303922949" "rx_shift[rx_bit_idx] <= rx_sync2;"
+Block 89 "69604230" "rx_parity_r <= 1'b0;"
+Block 90 "1498680593" "rx_state <= RX_PARITY;"
+Block 91 "3233365621" "rx_state <= RX_STOP;"
+Block 92 "1238043592" "rx_bit_idx <= (rx_bit_idx + 1'b1);"
+Block 93 "3413658863" "if (sp)"
+Block 94 "2773795446" "if ((rx_sync2 != (~eps)))"
+Block 95 "1734009065" "rx_err_par <= 1'b1;"
+Block 97 "2694576606" "if ((rx_sync2 != (pop_parity(rx_shift, data_bits) ^ (~eps))))"
+Block 98 "2919902648" "rx_err_par <= 1'b1;"
+Block 100 "3839904465" "rx_state <= RX_STOP;"
+Block 101 "1816631043" "if ((!rx_sync2))"
+Block 102 "3125247475" "rx_err_fram <= 1'b1;"
+Block 104 "3739116616" "if (((rx_shift == 8'b0) && ((!rx_sync2) || rx_err_fram)))"
+Block 105 "934166704" "rx_brk <= 1'b1;"
+Block 107 "1644247778" "if ((!rx_full))"
+Block 108 "304603119" "rx_fifo[rx_wr[(RX_AW - 1):0]] <= {rx_err_par, (!rx_sync2), ((rx_shift == 8'b0) && ((!rx_sync2) || rx_err_fram)), rx_shift};"
+Block 109 "2327891504" "overrun_r <= 1'b1;"
+Block 110 "4244309282" "rx_state <= RX_IDLE;"
+Block 111 "515074648" "rx_state <= RX_IDLE;"
+Block 114 "1335899302" "if ((!rst_n))"
+Block 116 "568626236" "if (((wr_stb && (paddr[4:2] == 3'b010)) && write_data[1]))"
+Block 119 "3607944384" "rx_rd <= (rx_rd + 1'b1);"
+Block 121 "1335899302" "if ((!rst_n))"
+Block 125 "904071167" "if (baud16_tick)"
+Block 126 "3394019008" "if (((fifo_en && (rx_count > 5'b0)) && (rx_count < rx_trig_level)))"
+Block 127 "1142141389" "if ((rx_state != RX_IDLE))"
+Block 128 "663405696" "timeout_cnt <= 16'b0;"
+Block 129 "642774980" "if ((timeout_cnt < timeout_limit))"
+Block 130 "1435846959" "timeout_cnt <= (timeout_cnt + 1'b1);"
+Block 132 "2534478347" "timeout_cnt <= 16'b0;"
+Block 134 "1335899302" "if ((!rst_n))"
+Block 151 "490042656" "for (i_err = 0; (i_err < RX_FIFO_DEPTH); i_err = (i_err + 1))"
+Block 152 "60159175" "if ((i_err < rx_count))"
+Block 153 "1763802276" "err_pos = (rx_rd + i_err);"
+Block 154 "2386244540" "rx_fifo_has_err = 1'b1;"
+Block 158 "1335899302" "if ((!rst_n))"
+Block 170 "2505717080" "d_ri <= 1'b1;"
+Block 185 "2088859014" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0099
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3763908232 1743002504"
+MODULE: qspi_shared_pin_arbiter
+Block 5 "2201242173" "owner_r <= OWNER_CMD;"
+Block 9 "3540902703" "if ((!cmd_claim))"
+Block 10 "1093360235" "if (mem_claim)"
+Block 11 "2444829698" "owner_r <= OWNER_MEM;"
+Block 12 "3885480740" "owner_r <= OWNER_IDLE;"
+Block 16 "30389959" "owner_r <= OWNER_CMD;"
+Block 19 "1608952519" "owner_r <= OWNER_IDLE;"
+
+// ID: EXCL-PROD-0100
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3599225912 400308336"
+MODULE: mips_alu
+Block 29 "2784385560" "alu_out = ((op_a >> sa) & ext_mask);"
+Block 30 "2638837473" "alu_out = ((op_b & (~(field_mask << sa))) | ((op_a & field_mask) << sa));"
+Block 31 "3693976923" "alu_out = 32'b0;"
+Block 32 "1706001246" "alu_out[((bi * 8) + 0)] = op_b[((bi * 8) + 7)];"
+Block 33 "422754686" "alu_out = 32'b0;"
+
+// ID: EXCL-PROD-0101
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3319620102 2884182956"
+MODULE: mips_cp0
+Block 2 "2362509331" "highest_enabled_pending_ip = 3'd7;"
+Block 4 "2560905208" "highest_enabled_pending_ip = 3'd6;"
+Block 6 "3132418416" "highest_enabled_pending_ip = 3'd5;"
+Block 8 "654412522" "highest_enabled_pending_ip = 3'd4;"
+Block 10 "3515364980" "highest_enabled_pending_ip = 3'd3;"
+Block 20 "3376174310" "vint_srs_set = cp0_srs_map[15:12];"
+Block 21 "3916903545" "vint_srs_set = cp0_srs_map[19:16];"
+Block 22 "1638026399" "vint_srs_set = cp0_srs_map[23:20];"
+Block 23 "1876695276" "vint_srs_set = cp0_srs_map[27:24];"
+Block 24 "54143033" "vint_srs_set = cp0_srs_map[31:28];"
+Block 40 "3093343542" "rdata = intctl_val;"
+Block 41 "2156441850" "rdata = srsctl_val;"
+Block 42 "2125098168" "rdata = srsmap_val;"
+Block 47 "806409578" "rdata = {{22 {1'b0}}, CPUNUM};"
+Block 49 "1273258629" "rdata = 32'd2;"
+Block 50 "2886661848" "rdata = lladdr_in;"
+Block 56 "95401731" "rdata = cp0_taghi;"
+Block 64 "1303214116" "cp0_cause[30] <= 1'b1;"
+Block 67 "3870470318" "cp0_count <= wdata;"
+Block 74 "2043654175" "cp0_random <= 6'd63;"
+Block 79 "2872960865" "cp0_taglo <= cache_tag_rdata;"
+Block 82 "3067880080" "cp0_status[28] <= ctx_restore_status[28];"
+Block 83 "2364102202" "cp0_srs_css <= ctx_restore_srsctl[3:0];"
+Block 87 "2132639680" "cp0_status[2] <= 1'b1;"
+Block 88 "1318363114" "cp0_errorepc <= (except_bd ? (except_pc - 32'd4) : except_pc);"
+Block 92 "4028114240" "cp0_srs_pss <= cp0_srs_css;"
+Block 95 "116195323" "cp0_status[21] <= 1'b1;"
+Block 98 "1386931656" "if ((except_code == 5'h1e))"
+Block 99 "2787534057" "if ((!cp0_errorepc_valid))"
+Block 100 "1297522517" "cp0_errorepc <= (except_pc - 32'd4);"
+Block 102 "3853166316" "cp0_epc <= (except_pc - 32'd4);"
+Block 109 "1427648232" "cp0_status[2] <= 1'b0;"
+Block 112 "627670667" "cp0_srs_css <= cp0_srs_pss;"
+Block 115 "2229503196" "cp0_status[0] <= ei;"
+Block 117 "604283133" "case (tlb_op)"
+Block 118 "1973584628" "cp0_entryhi_vpn2 <= tlb_rd_vpn2;"
+Block 119 "2884923225" "cp0_index_p <= (~tlb_probe_hit);"
+Block 120 "4197512635" "cp0_status[21] <= 1'b1;"
+Block 122 "2421168696" ";"
+Block 125 "1540402416" "cp0_index_p <= wdata[31];"
+Block 126 "798204130" "cp0_entrylo0 <= wdata;"
+Block 127 "1633484695" "cp0_entrylo1 <= wdata;"
+Block 128 "911847808" "cp0_context_ptebase <= wdata[31:23];"
+Block 129 "3140559419" "cp0_pagemask_mask <= wdata[28:13];"
+Block 130 "3549722951" "cp0_wired <= wdata[(TLB_IDX_BITS - 1):0];"
+Block 131 "1119098536" "cp0_hwrena <= {2'b0, wdata[29], 25'b0, wdata[3:0]};"
+Block 132 "3429293073" "cp0_userlocal <= wdata;"
+Block 133 "2190397714" "cp0_entryhi_vpn2 <= wdata[31:13];"
+Block 135 "3395867231" "cp0_status[29] <= wdata[29];"
+Block 138 "4059299542" "cp0_intctl_ipti <= wdata[31:29];"
+Block 139 "2223921221" "if ((0 != 0))"
+Block 140 "3468828572" "cp0_srs_pss <= wdata[9:6];"
+Block 142 "2099437483" "if ((0 != 0))"
+Block 143 "369530717" "cp0_srs_map <= wdata;"
+Block 148 "3353989799" "if (((cp0_status[1] == 1'b0) && (cp0_status[22] == 1'b0)))"
+Block 149 "1107560013" "cp0_ebase_hi <= wdata[29:12];"
+Block 151 "828387617" "cp0_config_k0 <= wdata[2:0];"
+Block 152 "126752008" "cp0_taglo <= wdata;"
+Block 153 "1153336496" "cp0_taghi <= wdata;"
+Block 155 "1234061512" ";"
+
+// ID: EXCL-PROD-0102
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3943920266 2024805975"
+MODULE: dcache
+Block 36 "4175153508" "next_state = CACHE_LOOKUP;"
+Block 67 "4019961406" "next_state = IDLE;"
+Block 68 "3128736384" "next_state = (maint_needs_wb ? CACHE_WB_REQ : CACHE_DONE);"
+Block 69 "963813433" "if ((awready && awvalid))"
+Block 70 "163806343" "next_state = CACHE_WB_DATA;"
+Block 72 "729213329" "if (((wready && wvalid) && wlast))"
+Block 73 "546970840" "next_state = CACHE_WB_RESP;"
+Block 75 "3785695783" "if ((bready && bvalid))"
+Block 76 "119910095" "next_state = CACHE_DONE;"
+Block 78 "2743818530" "next_state = IDLE;"
+Block 91 "3106759765" "tag_rdata[0][(TAG_BITS + 1)] <= 1'b0;"
+Block 92 "1225045441" "tag_ram[0][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 93 "2638796252" "tag_rdata[0][(TAG_BITS + 1)] <= 1'b0;"
+Block 96 "3527263987" "if ((tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
+Block 97 "2057194043" "tag_ram[1][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 98 "218941829" "tag_rdata[1][(TAG_BITS + 1)] <= 1'b0;"
+Block 101 "3373940395" "if ((tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
+Block 102 "3705146530" "tag_ram[2][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 103 "1555712385" "tag_rdata[2][(TAG_BITS + 1)] <= 1'b0;"
+Block 106 "3724051237" "if ((tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] && (tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS - 1):0] == coh_snoop_addr_norm[31:11])))"
+Block 107 "4014142296" "tag_ram[3][coh_snoop_addr_norm[10:5]][(TAG_BITS + 1)] <= 1'b0;"
+Block 108 "3439220184" "tag_rdata[3][(TAG_BITS + 1)] <= 1'b0;"
+Block 111 "510579021" "if (((req_buf_valid && (((state == REFILL_REQ) || (state == REFILL_DATA)) || (state == WRITE_MERGE))) && (req_buf_addr[31:5] == coh_snoop_addr_norm[31:5])))"
+Block 112 "1856515408" "coh_refill_snoop_pending <= 1'b1;"
+Block 119 "1236527527" "maint_addr <= cache_op_addr;"
+Block 121 "3974474359" "if ((!maint_needs_wb))"
+Block 122 "2074668288" "if (maint_index_store_tag)"
+Block 123 "617521029" "tag_ram[maint_target_way][lookup_index] <= maint_tag_wdata[22:0];"
+Block 124 "645714639" "if ((((((maint_index_wbi || maint_hit_inv) || maint_hit_wb_inv) || maint_hit_wb) && maint_target_valid) && (maint_clear_valid || maint_clear_dirty)))"
+Block 125 "62233001" "if (maint_clear_valid)"
+Block 126 "701838685" "tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)] <= 1'b0;"
+Block 127 "796141109" "if (maint_clear_dirty)"
+Block 128 "118878061" "tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;"
+Block 131 "2290437466" "maint_line <= data_rdata[maint_target_way];"
+Block 132 "2092187488" "if ((awready && awvalid))"
+Block 133 "2105273728" "awvalid <= 1'b0;"
+Block 135 "643309110" "if ((wready && wvalid))"
+Block 136 "3035562070" "if (wlast)"
+Block 137 "3513133805" "wvalid <= 1'b0;"
+Block 138 "2503586087" "word_cnt <= (word_cnt + 1'b1);"
+Block 139 "3905572046" "wlast <= 1'b1;"
+Block 141 "687800753" "wdata <= maint_line[((word_cnt + 1'b1) * 32)+:32];"
+Block 143 "75063355" "if ((bready && bvalid))"
+Block 144 "1322202547" "bready <= 1'b0;"
+Block 145 "226439602" "maint_error <= 1'b1;"
+Block 146 "2889973514" "if (maint_clear_valid)"
+Block 147 "1247964446" "tag_ram[maint_target_way][lookup_index][(TAG_BITS + 1)] <= 1'b0;"
+Block 148 "1738831976" "if (maint_clear_dirty)"
+Block 149 "2212334490" "tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;"
+Block 166 "3757593131" "for (sw = 0; (sw < WAYS); sw = (sw + 1))"
+Block 167 "2099415160" "if ((tag_ram[sw][req_buf_addr[10:5]][(TAG_BITS + 1)] && (tag_ram[sw][req_buf_addr[10:5]][(TAG_BITS - 1):0] == $$commaassign(_vcs_func, normalize_coh_addr(req_buf_addr), _vcs_func, 1)[31:11])))"
+Block 168 "1834692788" "if (req_buf_be[0])"
+Block 169 "879547395" "data_ram[sw][req_buf_addr[10:5]][(req_buf_addr[4:2] * 32)+:8] <= req_buf_wdata[7:0];"
+Block 171 "254948237" "if (req_buf_be[1])"
+Block 172 "2245045438" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 8)+:8] <= req_buf_wdata[15:8];"
+Block 174 "2312308624" "if (req_buf_be[2])"
+Block 175 "1207071671" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 16)+:8] <= req_buf_wdata[23:16];"
+Block 177 "3954836649" "if (req_buf_be[3])"
+Block 178 "4091589642" "data_ram[sw][req_buf_addr[10:5]][((req_buf_addr[4:2] * 32) + 24)+:8] <= req_buf_wdata[31:24];"
+Block 180 "500997163" "tag_ram[sw][req_buf_addr[10:5]] <= {1'b1, 1'b0, $$commaassign(_vcs_func_0, normalize_coh_addr(req_buf_addr), _vcs_func_0, 1)[31:11]};"
+Block 211 "2024556994" "cache_error_pending <= 1'b1;"
+Block 219 "1235514936" "refill_error <= 1'b1;"
+Block 226 "3985096155" "if (cache_error_pending)"
+Block 227 "701379638" "tag_ram[victim_way][lookup_index] <= {(TAG_BITS + 2) {1'b0}};"
+Block 229 "1429237606" "req_buf_valid <= 1'b0;"
+
+// ID: EXCL-PROD-0103
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1536517759 1864523850"
+MODULE: l2_cache_wt
+Block 9 "986364229" "s_rvalid = 1'b1;"
+Block 21 "4088844895" "if ((state == ST_R_HIT_LOOP))"
+Block 22 "1266193768" "snoop_invalidate_pending <= 1'b1;"
+Block 23 "1746975997" "valid_ram[snoop_index] <= 1'b0;"
+Block 37 "1455488255" "beat_cnt <= (beat_cnt + 1'b1);"
+Block 43 "685462838" "fill_idx <= {WORD_BITS {1'b0}};"
+Block 47 "4127368151" "valid_ram[beat_index] <= 1'b0;"
+Block 57 "2153696723" "refill_error <= m_rresp;"
+Block 61 "2426525472" "valid_ram[line_index] <= 1'b0;"
+Block 65 "2379234428" "if (s_rready)"
+Block 66 "4135198637" "if (is_last_beat)"
+Block 67 "2011185801" "beat_cnt <= 8'b0;"
+Block 68 "1385666286" "beat_cnt <= (beat_cnt + 1'b1);"
+Block 90 "113343392" "state <= ST_IDLE;"
+
+// ID: EXCL-PROD-0104
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2910715491 3298731929"
+MODULE: apb_wdt
+Block 4 "3653785959" "if ((val_r == 32'b0))"
+Block 5 "62150607" "expired_r <= 1'b1;"
+Block 6 "3228753957" "val_r <= (val_r - 1'b1);"
+Block 9 "3006980858" "case (paddr[4:2])"
+Block 10 "2949458704" "if ((!ctrl_lock))"
+Block 11 "2157809358" "ctrl_en <= pwdata[0];"
+Block 12 "3424692555" "val_r <= load_r;"
+Block 15 "794659703" "if ((!ctrl_lock))"
+Block 16 "2467709564" "load_r <= pwdata;"
+Block 18 "751927470" "if ((pwdata == PETVAL))"
+Block 19 "2733397894" "val_r <= load_r;"
+Block 21 "1048512973" "if (pwdata[0])"
+Block 22 "3892528766" "expired_r <= 1'b0;"
+Block 24 "1719022400" ";"
+Block 27 "3658667393" "case (paddr[4:2])"
+Block 28 "3242253756" "prdata = {30'b0, ctrl_lock, ctrl_en};"
+Block 29 "1147034353" "prdata = load_r;"
+Block 30 "3581517181" "prdata = val_r;"
+Block 31 "1198742539" "prdata = {31'b0, expired_r};"
+Block 32 "2419579025" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0105
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3975723183 3850497307"
+MODULE: icache
+Block 10 "4123884699" "for (wi = 0; (wi < WAYS); wi = (wi + 1))"
+Block 12 "4123884699" "for (wi = 0; (wi < WAYS); wi = (wi + 1))"
+Block 40 "1486647595" "if (maint_req)"
+Block 41 "895618987" "next_state = CACHE_LOOKUP;"
+Block 44 "445834940" "next_state = ERROR;"
+Block 47 "1185527947" "next_state = IDLE;"
+Block 56 "364834295" "next_state = IDLE;"
+Block 57 "3156070028" "next_state = CACHE_DONE;"
+Block 58 "2743818530" "next_state = IDLE;"
+Block 66 "3088858374" "maint_addr <= cache_op_addr;"
+Block 73 "3340886318" "req_buf_valid <= 1'b0;"
+Block 80 "2533613869" "refill_error <= 1'b1;"
+Block 86 "197267443" "req_buf_valid <= 1'b0;"
+Block 87 "3736712995" "if (maint_index_invalidate)"
+Block 88 "4055411379" "tag_ram[maint_way][maint_index][TAG_BITS] <= 1'b0;"
+Block 89 "3412728399" "if (maint_hit_invalidate)"
+Block 90 "1452161900" "if (maint_hit)"
+Block 91 "2695423578" "tag_ram[maint_hit_way][maint_index][TAG_BITS] <= 1'b0;"
+Block 93 "2630775323" "if (maint_store_tag)"
+Block 94 "3115702638" "tag_ram[maint_way][maint_index] <= {maint_tag_wdata[22], maint_tag_wdata[20:0]};"
+Block 95 "777039892" "if ((!maint_load_tag))"
+Block 96 "2006529409" "maint_error <= 1'b1;"
+
+// ID: EXCL-PROD-0106
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "892611322 82767367"
+MODULE: mips_soc_impl
+Block 1 "816524862" "mips_soc_impl.u_memory_subsystem.preload_sram_hex(hex_path);"
+
+// ID: EXCL-PROD-0107
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "41468714 2432982259"
+MODULE: axi_crossbar
+Block 6 "282964286" "decode_slave = 4'd4;"
+Block 9 "3475131630" "if (((a >= 32'h08000000) && (a < (32'h08000000 + 32'h08000000))))"
+Block 10 "1854277469" "decode_slave = 4'd3;"
+Block 11 "2780372110" "decode_slave = DEC[3:0];"
+Block 12 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 23 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 31 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 32 "3331320722" "for (am = 0; (am < N_M); am = (am + 1))"
+Block 34 "2006546782" "for (i = 0; (i < N_S); i = (i + 1))"
+Block 39 "2454133245" "rvalid_s2m[DEC][rd_resp_mid[DEC]] = dec_rvalid;"
+Block 41 "3021364694" "for (am = 0; (am < N_M); am = (am + 1))"
+Block 46 "1335899302" "if ((!rst_n))"
+Block 59 "822109008" "rd_beat[DEC] <= (rd_beat[DEC] + 8'b1);"
+Block 66 "4100199623" "rd_beat[DEC] <= 8'b0;"
+Block 79 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 90 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 95 "517250908" "for (wm = 0; (wm < N_M); wm = (wm + 1))"
+Block 101 "2105853351" "for (wds = 0; (wds < S_ALL); wds = (wds + 1))"
+Block 109 "3021364694" "for (am = 0; (am < N_M); am = (am + 1))"
+Block 111 "517250908" "for (wm = 0; (wm < N_M); wm = (wm + 1))"
+Block 115 "2105853351" "for (wds = 0; (wds < S_ALL); wds = (wds + 1))"
+Block 119 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 124 "3968404689" "for (i = 0; (i < S_ALL); i = (i + 1))"
+Block 125 "3331320722" "for (am = 0; (am < N_M); am = (am + 1))"
+Block 127 "2006546782" "for (i = 0; (i < N_S); i = (i + 1))"
+Block 132 "232734023" "bvalid_s2m[DEC][b_resp_mid[DEC]] = dec_bvalid;"
+Block 134 "3021364694" "for (am = 0; (am < N_M); am = (am + 1))"
+Block 139 "1335899302" "if ((!rst_n))"
+
+// ID: EXCL-PROD-0108
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3979373752 3189971460"
+MODULE: mips_fpu
+Block 1 "1787523310" "case (mode)"
+Block 2 "3783524461" "rounded = $rtoi(value);"
+Block 3 "174620235" "rounded = $rtoi($ceil(value));"
+Block 4 "3125671411" "rounded = $rtoi($floor(value));"
+Block 5 "557525588" "lower = $floor(value);"
+Block 6 "307754551" "rounded = (base + 1);"
+Block 7 "926778701" "rounded = base;"
+Block 8 "3861393705" "round_real_to_word = rounded;"
+Block 10 "3868416685" "a_nan = ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0));"
+Block 11 "2530526843" "exception_flags[4] = 1'b1;"
+Block 13 "1868514106" "if ((((op == OP_DIV) && (b_double[62:52] == 11'b0)) && (b_double[51:0] == 0)))"
+Block 14 "3495808058" "if ((((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)) || ((a_double[62:52] == 11'h7ff) && (a_double[51:0] != 0))))"
+Block 15 "2591683062" "exception_flags[4] = 1'b1;"
+Block 16 "3158227399" "exception_flags[3] = 1'b1;"
+Block 18 "3766537262" "case (op)"
+Block 19 "3933069818" "rr_double = (ar_double + br_double);"
+Block 20 "3068254151" "rr_double = (ar_double - br_double);"
+Block 21 "2265462624" "rr_double = (ar_double * br_double);"
+Block 22 "3985303975" "rr_double = (ar_double / br_double);"
+Block 23 "1585805768" "if (a_nan)"
+Block 24 "1644881620" "rr_double = ar_double;"
+Block 25 "3042354893" "if ((a_double[63] || (ar_double < 0.0000000000000000)))"
+Block 26 "2587132982" "rr_double = 0.0000000000000000;"
+Block 27 "1336059683" "rr_double = $sqrt(ar_double);"
+Block 28 "1615750829" "rr_double = ((ar_double < 0.0000000000000000) ? (-ar_double) : ar_double);"
+Block 29 "986273697" "rr_double = ar_double;"
+Block 30 "3440714560" "rr_double = (-ar_double);"
+Block 31 "345312278" "rr_double = ((ar_double * br_double) + cr_double);"
+Block 32 "1209612843" "rr_double = ((ar_double * br_double) - cr_double);"
+Block 33 "2211005949" "rr_double = (-((ar_double * br_double) + cr_double));"
+Block 34 "4099868670" "rr_double = (-((ar_double * br_double) - cr_double));"
+Block 35 "2446526349" "if ((a_nan || ((a_double[62:52] == 11'b0) && (a_double[51:0] == 0))))"
+Block 36 "3270264669" "rr_double = 0.0000000000000000;"
+Block 37 "2155131401" "exception_flags[4] = 1'b1;"
+Block 39 "385853595" "rr_double = (1.0000000000000000 / ar_double);"
+Block 40 "532617062" "if (((a_nan || a_double[63]) || (ar_double < 0.0000000000000000)))"
+Block 41 "82554083" "rr_double = 0.0000000000000000;"
+Block 42 "3243326235" "if (((a_double[62:52] == 11'b0) && (a_double[51:0] == 0)))"
+Block 43 "76200208" "rr_double = 0.0000000000000000;"
+Block 44 "110765806" "rr_double = (1.0000000000000000 / $sqrt(ar_double));"
+Block 45 "2347020808" "if (a_nan)"
+Block 46 "3305642509" "rr = ar_double;"
+Block 47 "158045611" "rr = ar_double;"
+Block 48 "2380812498" "exception_flags[0] = 1'b1;"
+Block 50 "2010192998" "if (a_nan)"
+Block 51 "1895999688" "result_word = 32'h80000000;"
+Block 52 "1154137821" "case (op)"
+Block 53 "2438892112" "result_word = round_real_to_word(ar_double, rounding_mode);"
+Block 54 "4107005709" "result_word = round_real_to_word(ar_double, 2'b1);"
+Block 55 "947371135" "result_word = round_real_to_word(ar_double, 2'b0);"
+Block 56 "2019439155" "result_word = round_real_to_word(ar_double, 2'b10);"
+Block 57 "924629216" "result_word = round_real_to_word(ar_double, 2'b11);"
+Block 58 "3260387255" "if ((ar_double != $itor($rtoi(ar_double))))"
+Block 59 "3060903426" "exception_flags[0] = 1'b1;"
+Block 61 "1363804829" "rr_double = 0.0000000000000000;"
+Block 62 "746483026" "case (compare_condition)"
+Block 63 "34890958" "compare_true = 1'b0;"
+Block 64 "2529702260" "compare_true = unordered;"
+Block 65 "2566225546" "compare_true = ((!unordered) && (ar_double == br_double));"
+Block 66 "1283440125" "compare_true = (unordered || (ar_double == br_double));"
+Block 67 "3461658678" "compare_true = ((!unordered) && (ar_double < br_double));"
+Block 68 "2954444585" "compare_true = (unordered || (ar_double < br_double));"
+Block 69 "3206966782" "compare_true = ((!unordered) && (ar_double <= br_double));"
+Block 70 "1806478985" "compare_true = (unordered || (ar_double <= br_double));"
+Block 71 "1111813194" "compare_true = unordered;"
+Block 72 "1283040180" "compare_true = ((!unordered) && (ar_double == br_double));"
+Block 73 "2566086851" "compare_true = (unordered || (ar_double == br_double));"
+Block 74 "450389256" "compare_true = ((!unordered) && (ar_double < br_double));"
+Block 75 "1687544343" "compare_true = (unordered || (ar_double < br_double));"
+Block 76 "1806348480" "compare_true = ((!unordered) && (ar_double <= br_double));"
+Block 77 "3206575031" "compare_true = (unordered || (ar_double <= br_double));"
+Block 78 "3017212598" "compare_true = 1'b0;"
+Block 79 "2682367731" "rr_double = 0.0000000000000000;"
+Block 81 "4016485140" "exception_flags[4] = 1'b1;"
+Block 86 "3473021337" "exception_flags[3] = 1'b1;"
+Block 94 "743392807" "rr = ar;"
+Block 96 "2572075730" "rr = 0.0000000000000000;"
+Block 101 "4228194685" "rr = ((ar * br) + $bitstoshortreal(c));"
+Block 102 "3463574471" "rr = ((ar * br) - $bitstoshortreal(c));"
+Block 103 "911658439" "rr = (-((ar * br) + $bitstoshortreal(c)));"
+Block 104 "4034749054" "rr = (-((ar * br) - $bitstoshortreal(c)));"
+Block 107 "4069162638" "exception_flags[4] = 1'b1;"
+Block 109 "2261516101" "rr = (1.0000000000000000 / ar);"
+Block 111 "3668189846" "rr = 0.0000000000000000;"
+Block 114 "269717551" "rr = (1.0000000000000000 / $sqrt(ar));"
+Block 115 "373271744" "rr = $itor($signed(a));"
+Block 116 "1509451677" "rr_double = ar;"
+Block 117 "1051290045" "rr_double = $itor($signed(a));"
+Block 118 "1494433046" "if (a_nan)"
+Block 119 "1703152175" "result_word = 32'h80000000;"
+Block 120 "56566241" "result_word = round_real_to_word(ar, rounding_mode);"
+Block 121 "1485030735" "exception_flags[0] = 1'b1;"
+Block 123 "628418925" "if (a_nan)"
+Block 124 "2158102969" "result_word = 32'h80000000;"
+Block 125 "2395764868" "result_word = round_real_to_word(ar, 2'b0);"
+Block 126 "397519433" "exception_flags[0] = 1'b1;"
+Block 128 "3495562511" "if (a_nan)"
+Block 129 "56843788" "result_word = 32'h80000000;"
+Block 130 "150926094" "result_word = round_real_to_word(ar, 2'b1);"
+Block 131 "2259059917" "exception_flags[0] = 1'b1;"
+Block 133 "3742008211" "if (a_nan)"
+Block 134 "2038138601" "result_word = 32'h80000000;"
+Block 135 "4027646019" "result_word = round_real_to_word(ar, 2'b10);"
+Block 136 "2538095318" "exception_flags[0] = 1'b1;"
+Block 138 "253669683" "if (a_nan)"
+Block 139 "1878423771" "result_word = 32'h80000000;"
+Block 140 "4112759082" "result_word = round_real_to_word(ar, 2'b11);"
+Block 141 "93094241" "exception_flags[0] = 1'b1;"
+Block 143 "3323659840" "case (compare_condition)"
+Block 144 "3456573710" "compare_true = 1'b0;"
+Block 145 "259082002" "compare_true = unordered;"
+Block 146 "2676485312" "compare_true = ((!unordered) && (ar == br));"
+Block 147 "4173720891" "compare_true = (unordered || (ar == br));"
+Block 148 "2813308479" "compare_true = ((!unordered) && (ar < br));"
+Block 149 "2394958586" "compare_true = (unordered || (ar < br));"
+Block 150 "1786686676" "compare_true = ((!unordered) && (ar <= br));"
+Block 151 "222080303" "compare_true = (unordered || (ar <= br));"
+Block 152 "3690830380" "compare_true = unordered;"
+Block 153 "1259024894" "compare_true = ((!unordered) && (ar == br));"
+Block 154 "742993925" "compare_true = (unordered || (ar == br));"
+Block 155 "1931703041" "compare_true = ((!unordered) && (ar < br));"
+Block 156 "1514993604" "compare_true = (unordered || (ar < br));"
+Block 157 "3203559914" "compare_true = ((!unordered) && (ar <= br));"
+Block 158 "3652218897" "compare_true = (unordered || (ar <= br));"
+Block 159 "875316792" "compare_true = 1'b0;"
+Block 167 "3569071547" "exact_single = (ar / br);"
+Block 169 "3766052460" "exact_single = ((ar * br) + $bitstoshortreal(c));"
+Block 170 "3524113622" "exact_single = ((ar * br) - $bitstoshortreal(c));"
+Block 171 "3231593106" "exact_single = (-((ar * br) + $bitstoshortreal(c)));"
+Block 172 "112565547" "exact_single = (-((ar * br) - $bitstoshortreal(c)));"
+Block 173 "1723678498" "exact_single = 0.0000000000000000;"
+Block 175 "990958278" "exception_flags[1] = 1'b1;"
+Block 178 "2798824866" "exception_flags[0] = 1'b1;"
+Block 182 "2863138159" "exception_flags[1] = 1'b1;"
+Block 185 "1838386956" "exception_flags[2] = 1'b1;"
+Block 188 "324292559" "exception_flags[2] = 1'b1;"
+Block 191 "3164383789" "exception_flags[4] = 1'b1;"
+Block 197 "1722498912" "exception_flags[1] = 1'b1;"
+
+// ID: EXCL-PROD-0109
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4266736862 21306137"
+MODULE: mips_bpu
+Block 2 "3248431144" "case (btb_type_out)"
+Block 3 "3754767625" "taken_r = bht_taken;"
+Block 4 "560585740" "taken_r = 1'b1;"
+Block 5 "1899845652" "taken_r = ras_valid;"
+Block 6 "780409344" "taken_r = 1'b1;"
+Block 7 "1572402736" ";"
+Block 17 "3678002153" "if (resolve_taken)"
+Block 20 "3678002153" "if (resolve_taken)"
+
+// ID: EXCL-PROD-0110
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1341811719 3939855581"
+MODULE: apb_axi_dma
+Block 1 "1335899302" "if ((!rst_n))"
+Block 4 "238552135" "global_en <= pwdata[0];"
+Block 14 "1335899302" "if ((!rst_n))"
+Block 19 "2840707112" "m_araddr = (desc_ptr_r[act_ch] + 32'b0);"
+Block 20 "726454809" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000004);"
+Block 21 "3859914874" "m_araddr = (desc_ptr_r[act_ch] + 32'h00000008);"
+Block 22 "3217726767" "m_araddr = (desc_ptr_r[act_ch] + 32'h0000000c);"
+Block 27 "1335899302" "if ((!rst_n))"
+Block 33 "3870867" "if ((desc_head_r[c][1:0] != 2'b0))"
+Block 34 "3740070422" "busy_r[c] <= 1'b0;"
+Block 35 "439166644" "busy_r[c] <= 1'b1;"
+Block 37 "2752668046" "busy_r[c] <= 1'b0;"
+Block 57 "2255950608" "busy_r[c] <= 1'b0;"
+Block 59 "4161181378" "cur_src_r[c] <= m_rdata;"
+Block 60 "2195545774" "cur_dst_r[c] <= m_rdata;"
+Block 61 "2418887532" "cur_len_r[c] <= m_rdata;"
+Block 62 "773850211" "cur_next_r[c] <= m_rdata;"
+Block 64 "1163129724" ";"
+Block 67 "4273442771" "desc_cnt_r[c] <= (desc_cnt_r[c] + 5'b1);"
+Block 68 "2237586114" "busy_r[c] <= 1'b0;"
+Block 69 "447443342" "if ((((((cur_src_r[c][1:0] != 2'b0) || (cur_dst_r[c][1:0] != 2'b0)) || (cur_len_r[c][1:0] != 2'b0)) || (cur_next_r[c][1:0] != 2'b0)) || ((cur_len_r[c] == 32'b0) && (cur_next_r[c] != 32'b0))))"
+Block 70 "4095001107" "busy_r[c] <= 1'b0;"
+Block 71 "646544341" "if (((cur_len_r[c] == 32'b0) && (cur_next_r[c] == 32'b0)))"
+Block 72 "3777732831" "busy_r[c] <= 1'b0;"
+Block 73 "3311968749" "ch_state[c] <= ST_EXEC_R;"
+Block 77 "518783126" "busy_r[c] <= 1'b0;"
+Block 84 "3123884950" "if ((cur_next_r[c][1:0] != 2'b0))"
+Block 85 "41021750" "busy_r[c] <= 1'b0;"
+Block 86 "432705095" "desc_ptr_r[c] <= cur_next_r[c];"
+Block 107 "626841445" ";"
+Block 109 "3269668853" "case (paddr[5:2])"
+Block 110 "3197820362" "int_en_r[c] <= pwdata[2];"
+Block 111 "2711686418" "en_r[c] <= pwdata[0];"
+Block 113 "377257276" "if (pwdata[3])"
+Block 114 "927544707" "done_r[c] <= 1'b0;"
+Block 116 "865718046" "if (pwdata[4])"
+Block 117 "4039979712" "err_r[c] <= 1'b0;"
+Block 119 "212979332" "if ((pwdata[3] || pwdata[4]))"
+Block 120 "665264934" "if ((((!done_r[c]) || pwdata[3]) && ((!err_r[c]) || pwdata[4])))"
+Block 121 "1247788505" "err_code_r[c] <= ERR_NONE;"
+Block 124 "773781174" "if ((pwdata[0] && (!busy_r[c])))"
+Block 125 "1669664962" "done_r[c] <= 1'b0;"
+Block 127 "2731537880" "if ((!busy_r[c]))"
+Block 128 "2556701443" "src_r[c] <= pwdata;"
+Block 130 "666831046" "if ((!busy_r[c]))"
+Block 131 "1033342060" "dst_r[c] <= pwdata;"
+Block 133 "2804918433" "if ((!busy_r[c]))"
+Block 134 "2059947595" "len_r[c] <= pwdata;"
+Block 136 "698347341" "if ((!busy_r[c]))"
+Block 137 "3378740162" "desc_head_r[c] <= pwdata;"
+Block 139 "1421779518" ";"
+Block 144 "783912778" "prdata = src_r[0];"
+Block 145 "132427407" "prdata = dst_r[0];"
+Block 146 "768899704" "prdata = len_r[0];"
+Block 148 "276564015" "prdata = 32'b0;"
+Block 149 "694414223" "if ((paddr[11:0] == 12'h100))"
+Block 150 "3278040218" "prdata = {31'b0, global_en};"
+Block 151 "1609696926" "if ((paddr[11:0] == 12'h104))"
+Block 152 "2044456488" "prdata = {{(32 - N_CHANNELS) {1'b0}}, ch_int};"
+Block 153 "2410174987" "if (apb_ch_valid)"
+Block 154 "1329932086" "case (paddr[5:2])"
+Block 155 "3532382097" "prdata = {24'b0, err_code_r[apb_ch], err_r[apb_ch], done_r[apb_ch], int_en_r[apb_ch], sg_mode_r[apb_ch], en_r[apb_ch]};"
+Block 156 "3747510706" "prdata = src_r[apb_ch];"
+Block 157 "2563376832" "prdata = dst_r[apb_ch];"
+Block 158 "1492456481" "prdata = len_r[apb_ch];"
+Block 159 "2881116722" "prdata = desc_head_r[apb_ch];"
+Block 160 "1980350101" "prdata = {26'b0, err_code_r[apb_ch], err_r[apb_ch], done_r[apb_ch], busy_r[apb_ch]};"
+Block 161 "2229812368" "prdata = cur_src_r[apb_ch];"
+Block 162 "1950349942" "prdata = cur_dst_r[apb_ch];"
+Block 163 "3179930274" "prdata = cur_len_r[apb_ch];"
+Block 164 "3807088984" "prdata = desc_ptr_r[apb_ch];"
+Block 165 "3022553672" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0111
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1159426980 2850905086"
+MODULE: mips_tlb
+Block 3 "4224973489" "if ((probe_hit_r && (((((tlb_vpn2[j] != tlb_vpn2[probe_index_r]) || (tlb_asid[j] != tlb_asid[probe_index_r])) || (tlb_mask[j] != tlb_mask[probe_index_r])) || (tlb_entrylo0[j] != tlb_entrylo0[probe_index_r])) || (tlb_entrylo1[j] != tlb_entrylo1[probe_index_r]))))"
+Block 4 "3341504232" "probe_multi_hit_r = 1'b1;"
+Block 6 "4201086347" "probe_hit_r = 1'b1;"
+Block 8 "2678468481" "case (mask)"
+Block 9 "498036969" "page_odd_bit_index = 6'd12;"
+Block 10 "1485565769" "page_odd_bit_index = 6'd14;"
+Block 11 "1510404019" "page_odd_bit_index = 6'd16;"
+Block 12 "1656731879" "page_odd_bit_index = 6'd18;"
+Block 13 "3481790903" "page_odd_bit_index = 6'd20;"
+Block 14 "2721702623" "page_odd_bit_index = 6'd22;"
+Block 15 "1096474164" "page_odd_bit_index = 6'd24;"
+Block 16 "3544934540" "page_odd_bit_index = 6'd26;"
+Block 17 "3757533933" "page_odd_bit_index = 6'd12;"
+Block 19 "1259598098" "effective_pfn = {pfn[19:2], va[13:12]};"
+Block 20 "3866493320" "effective_pfn = {pfn[19:4], va[15:12]};"
+Block 21 "3859071462" "effective_pfn = {pfn[19:6], va[17:12]};"
+Block 22 "3115120991" "effective_pfn = {pfn[19:8], va[19:12]};"
+Block 23 "3372960591" "effective_pfn = {pfn[19:10], va[21:12]};"
+Block 24 "1903474910" "effective_pfn = {pfn[19:12], va[23:12]};"
+Block 25 "1284374022" "effective_pfn = {pfn[19:14], va[25:12]};"
+Block 29 "4120595788" "if ((lookup0_hit_r && (((((tlb_vpn2[m0] != tlb_vpn2[lookup0_hit_index_r]) || (tlb_asid[m0] != tlb_asid[lookup0_hit_index_r])) || (tlb_mask[m0] != tlb_mask[lookup0_hit_index_r])) || (tlb_entrylo0[m0] != tlb_entrylo0[lookup0_hit_index_r])) || (tlb_entrylo1[m0] != tlb_entrylo1[lookup0_hit_index_r]))))"
+Block 30 "3011983977" "lookup0_multi_hit_r = 1'b1;"
+Block 32 "1863447138" "lookup0_hit_r = 1'b1;"
+Block 36 "2243790287" "if ((lookup1_hit_r && (((((tlb_vpn2[m1] != tlb_vpn2[lookup1_hit_index_r]) || (tlb_asid[m1] != tlb_asid[lookup1_hit_index_r])) || (tlb_mask[m1] != tlb_mask[lookup1_hit_index_r])) || (tlb_entrylo0[m1] != tlb_entrylo0[lookup1_hit_index_r])) || (tlb_entrylo1[m1] != tlb_entrylo1[lookup1_hit_index_r]))))"
+Block 37 "4001058858" "lookup1_multi_hit_r = 1'b1;"
+Block 39 "1888715816" "lookup1_hit_r = 1'b1;"
+Block 45 "3251119757" "tlb_vpn2[wr_index] <= wr_vpn2;"
+Block 47 "2639493791" "for (k = 0; (k < TLB_ENTRIES); k = (k + 1))"
+Block 48 "1446066017" "inv_match = 1'b0;"
+Block 49 "3482211785" "case (inv_scope)"
+Block 50 "2669404970" "inv_match = ((tlb_valid[k] && (tlb_vpn2[k] == inv_vpn2)) && (tlb_g[k] || (tlb_asid[k] == inv_asid)));"
+Block 51 "1431887814" "inv_match = (tlb_valid[k] && (tlb_g[k] || (tlb_asid[k] == inv_asid)));"
+Block 52 "4139916726" "inv_match = tlb_valid[k];"
+Block 53 "1117296976" "inv_match = 1'b0;"
+Block 55 "1982992983" "if (inv_match)"
+Block 56 "1769873923" "tlb_valid[k] <= 1'b0;"
+
+// ID: EXCL-PROD-0112
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "788579723 2864553020"
+MODULE: mips_wb_stage
+Block 6 "470869113" "wb_wdata = ex_out;"
+
+// ID: EXCL-PROD-0113
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3371145080 2366951397"
+MODULE: mips_page_table_walker
+Block 1 "2047728511" "leaf_allowed = ((pte[0] && ((!u) || pte[3])) && ((a == 2'b0) ? pte[2] : ((a == 2'b1) ? (pte[1] || pte[2]) : pte[1])));"
+Block 6 "4171626083" "fault_valid <= 1'b0;"
+Block 8 "206283865" "if ((mem_valid && mem_ready))"
+Block 9 "330801409" "mem_valid <= 1'b0;"
+Block 10 "3761771823" "fault_valid <= 1'b1;"
+Block 11 "355738030" "if ((!mem_rdata[0]))"
+Block 12 "4106025774" "fault_valid <= 1'b1;"
+Block 13 "4239410504" "if ((!mem_rdata[1]))"
+Block 14 "3553025580" "fault_valid <= 1'b1;"
+Block 15 "1748755375" "mem_addr <= ({mem_rdata[31:12], 12'b0} + {20'b0, va_q[21:12], 2'b0});"
+Block 17 "3719437418" "if ((mem_valid && mem_ready))"
+Block 18 "1885773600" "mem_valid <= 1'b0;"
+Block 19 "2855493452" "fault_valid <= 1'b1;"
+Block 20 "186169669" "if ((!mem_rdata[0]))"
+Block 21 "1786654967" "fault_valid <= 1'b1;"
+Block 22 "2194476326" "if ((!leaf_allowed(mem_rdata, access_q, user_q)))"
+Block 23 "2921499931" "fault_valid <= 1'b1;"
+Block 24 "1332630374" "leaf_pte <= mem_rdata;"
+Block 26 "3480616904" "resp_valid <= 1'b1;"
+
+// ID: EXCL-PROD-0114
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "629359671 166209940"
+MODULE: axi_spi_flash
+Block 1 "1335899302" "if ((!rst_n))"
+Block 4 "2769987776" "wr_busy <= 1'b1;"
+Block 7 "4174208409" "wr_busy <= 1'b0;"
+Block 10 "2637518181" "wr_bvalid <= 1'b0;"
+Block 12 "1335899302" "if ((!rst_n))"
+Block 15 "1335899302" "if ((!rst_n))"
+Block 16 "2957958209" "state <= IDLE;"
+Block 42 "2067506889" "next_state = IDLE;"
+Block 43 "1335899302" "if ((!rst_n))"
+
+// ID: EXCL-PROD-0115
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2186720845 792766066"
+MODULE: mips_ex_stage
+Block 4 "3672088284" "mdu_out_r = lo_val;"
+
+// ID: EXCL-PROD-0116
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1363931416 4264086090"
+MODULE: qspi_cmd_behavioral
+Block 1 "4291195541" "case (code)"
+Block 2 "49311597" "lane_decode = 3'd2;"
+Block 3 "1205137613" "lane_decode = 3'd4;"
+Block 4 "3314323308" "lane_decode = 3'b1;"
+Block 5 "3818407720" "case (lane)"
+Block 6 "1116909204" "append_lane = {old_value[5:0], pin_value[1:0]};"
+Block 7 "4041947740" "append_lane = {old_value[3:0], pin_value[3:0]};"
+Block 8 "402123592" "append_lane = {old_value[6:0], pin_value[0]};"
+Block 10 "732917078" "cs_n_r[cs_ctrl_r[1:0]] = 1'b0;"
+Block 13 "3050791205" "io_oe_r = ((phase_lane_r == 3'd4) ? 4'hf : ((phase_lane_r == 3'd2) ? 4'h3 : 4'b1));"
+Block 14 "1442368988" "io_o_r = tx_shift_r[31:28];"
+Block 15 "2148907478" "if ((phase_lane_r == 3'd2))"
+Block 16 "2199949700" "io_o_r = {2'b0, tx_shift_r[31:30]};"
+Block 17 "4042971357" "io_o_r[0] = tx_shift_r[31];"
+Block 19 "1335899302" "if ((!rst_n))"
+Block 23 "11060350" "case (paddr)"
+Block 24 "1715028116" "ctrl_r <= {pwdata[31:3], 1'b0, pwdata[1:0]};"
+Block 25 "878476584" "clk_div_r <= pwdata[15:0];"
+Block 26 "243123054" "cs_ctrl_r <= pwdata;"
+Block 27 "2185574055" "irq_en_r <= pwdata;"
+Block 28 "2606526011" "timeout_limit_r <= pwdata;"
+Block 29 "3778087727" "cmd_addr_r <= pwdata;"
+Block 30 "3411972460" "cmd_len_r <= pwdata[15:0];"
+Block 31 "2754400980" "xip_index_r <= pwdata[2:0];"
+Block 32 "1815807398" "if (((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))))"
+Block 33 "3146567370" "lut_r[((paddr - A_LUT_BASE) >> 2)] <= pwdata;"
+Block 36 "1335899302" "if ((!rst_n))"
+Block 38 "2325899804" "if (soft_reset)"
+Block 39 "1156267197" "tx_wr <= 0;"
+Block 41 "1794440993" "tx_fifo[tx_wr] <= pwdata;"
+Block 44 "2170234821" "tx_rd <= (tx_rd + 1'b1);"
+Block 47 "2283664537" "tx_count_r <= (tx_count_r + 1'b1);"
+Block 48 "3371531081" "tx_count_r <= (tx_count_r - 1'b1);"
+Block 51 "2063612653" "rx_fifo[rx_wr] <= rx_push_data;"
+Block 54 "1255388225" "rx_rd <= (rx_rd + 1'b1);"
+Block 57 "207198044" "rx_count_r <= (rx_count_r + 1'b1);"
+Block 58 "1286674572" "rx_count_r <= (rx_count_r - 1'b1);"
+Block 60 "2238868859" "state <= ST_DATA;"
+Block 61 "811783883" "if ((tx_bytes_left_r != 3'b0))"
+Block 62 "1220625750" "tx_shift_r <= {tx_word_r[31:24], 24'b0};"
+Block 63 "2929592972" "if ((!tx_empty))"
+Block 64 "2644282351" "tx_shift_r <= {tx_fifo[tx_rd][31:24], 24'b0};"
+Block 65 "2028697043" "tx_shift_r <= 32'b0;"
+Block 67 "1176387276" "if ((dummy_cycles != 5'b0))"
+Block 68 "319379488" "state <= ST_DUMMY;"
+Block 69 "882169004" "if ((data_bytes_left != 16'b0))"
+Block 70 "3699299984" "start_data_phase;"
+Block 71 "44768018" "state <= ST_IDLE;"
+Block 72 "1335899302" "if ((!rst_n))"
+Block 75 "1927014406" "if (pwdata[0])"
+Block 76 "3790068026" "irq_pending_r <= 1'b0;"
+Block 78 "280161087" "if (pwdata[1])"
+Block 79 "3619999927" "timeout_r <= 1'b0;"
+Block 81 "2522079010" "if (pwdata[2])"
+Block 82 "3826511372" "aborted_r <= 1'b0;"
+Block 84 "2994129959" "if ((pwdata[1] || pwdata[2]))"
+Block 85 "3869815285" "error_r <= 1'b0;"
+Block 88 "2325899804" "if (soft_reset)"
+Block 89 "2040728217" "state <= ST_IDLE;"
+Block 91 "612447903" "state <= ST_IDLE;"
+Block 93 "1008088548" "state <= ST_IDLE;"
+Block 95 "262082740" "error_r <= 1'b1;"
+Block 98 "2227047215" "active_lut_r <= lut_r[pwdata[2:0]];"
+Block 100 "1043566186" "if ((!ctrl_r[0]))"
+Block 101 "281413843" "state <= ST_IDLE;"
+Block 102 "3529212708" "if (spi_tick)"
+Block 103 "4115402212" "timeout_count_r <= (timeout_count_r + 1'b1);"
+Block 104 "1186668962" "spi_sclk_r <= 1'b1;"
+Block 105 "2186875965" "spi_sclk_r <= 1'b0;"
+Block 106 "3344897909" "rx_shift_r <= append_lane(rx_shift_r, phase_lane_r, spi_io_i);"
+Block 107 "2994502513" "rx_push_data <= {24'b0, append_lane(rx_shift_r, phase_lane_r, spi_io_i)};"
+Block 109 "3572651252" "if ((phase_bits_left > phase_lane_r))"
+Block 110 "3509871786" "tx_shift_r <= (tx_shift_r << phase_lane_r);"
+Block 112 "1074793967" "if ((phase_bits_left <= phase_lane_r))"
+Block 113 "4006141610" "case (state)"
+Block 114 "417216336" "if ((addr_type != 2'b0))"
+Block 115 "1360750150" "state <= ST_ADDR;"
+Block 116 "4183690892" "if ((mode_type != 2'b0))"
+Block 117 "2220493198" "state <= ST_MODE;"
+Block 118 "858695503" "finish_or_data;"
+Block 119 "2637949960" "if ((mode_type != 2'b0))"
+Block 120 "409695279" "state <= ST_MODE;"
+Block 121 "1093524679" "finish_or_data;"
+Block 122 "2729511795" "finish_or_data;"
+Block 123 "4106398819" "if ((data_bytes_left != 16'b0))"
+Block 124 "90866929" "start_data_phase;"
+Block 125 "610705514" "state <= ST_IDLE;"
+Block 126 "843381369" "if ((data_bytes_left > 16'b1))"
+Block 127 "761400772" "data_bytes_left <= (data_bytes_left - 1'b1);"
+Block 128 "3032455065" "data_bytes_left <= 0;"
+Block 129 "2166994457" "state <= ST_IDLE;"
+Block 130 "3842762762" "phase_bits_left <= (phase_bits_left - phase_lane_r);"
+Block 131 "526030017" "if ((div_count_r < clk_div_r))"
+Block 132 "3838293323" "timeout_count_r <= (timeout_count_r + 1'b1);"
+Block 135 "1770058501" "case (paddr)"
+Block 136 "56655151" "prdata = ctrl_r;"
+Block 137 "1857343426" "prdata = {25'b0, aborted_r, timeout_r, error_r, irq_pending_r, rx_empty, tx_full, (state != ST_IDLE)};"
+Block 138 "1827122085" "prdata = {16'b0, clk_div_r};"
+Block 139 "1657859400" "prdata = cs_ctrl_r;"
+Block 140 "1915932315" "prdata = irq_en_r;"
+Block 141 "1389773629" "prdata = {29'b0, aborted_r, timeout_r, irq_pending_r};"
+Block 142 "802888789" "prdata = timeout_limit_r;"
+Block 143 "1696999825" "prdata = {29'b0, xip_index_r};"
+Block 144 "2841240608" "prdata = cmd_addr_r;"
+Block 145 "2575938452" "prdata = {16'b0, cmd_len_r};"
+Block 146 "3063742727" "prdata = (rx_empty ? 32'b0 : rx_fifo[rx_rd]);"
+Block 147 "4013726610" "prdata = {17'b0, rx_count_r, 1'b0, tx_count_r};"
+Block 148 "4137047827" "if (((paddr >= A_LUT_BASE) && (paddr < (A_LUT_BASE + (LUT_SLOTS * 4)))))"
+Block 149 "2837528424" "prdata = lut_r[((paddr - A_LUT_BASE) >> 2)];"
+
+// ID: EXCL-PROD-0117
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4288013028 138626815"
+MODULE: axi_ddr4_controller
+Block 2 "3882505731" "last_addr = ({1'b0, addr} + ({25'b0, len} << size));"
+Block 6 "1057679852" "$readmemh(hex_path, ram);"
+Block 7 "605006779" "image_hex = \"\000\";"
+Block 8 "3183924029" "load_hex(image_hex);"
+Block 13 "522596280" "s_bvalid <= 1'b0;"
+Block 16 "3971787184" "if ((read_left == 8'b0))"
+Block 17 "2440163013" "s_rvalid <= 1'b0;"
+Block 18 "3865668720" "read_left <= (read_left - 1'b1);"
+Block 21 "1929005191" "state <= ST_FATAL;"
+Block 26 "1538835814" "state <= ST_FATAL;"
+Block 32 "2848682660" "write_active <= 1'b1;"
+Block 33 "2857990093" "state <= ST_WRITE_CMD;"
+Block 34 "1060274630" "if (bank_open)"
+Block 35 "3450860384" "state <= ST_PRE;"
+Block 36 "3860098299" "state <= ST_ACT;"
+Block 38 "551432617" "read_active <= 1'b1;"
+Block 39 "817159424" "state <= ST_READ_CMD;"
+Block 40 "1817240867" "if (bank_open)"
+Block 41 "798074389" "state <= ST_PRE;"
+Block 42 "3670022535" "state <= ST_ACT;"
+Block 45 "1018583390" "if ((timer > 1))"
+Block 46 "234917029" "timer <= (timer - 1'b1);"
+Block 47 "2753261724" "active_bank <= command_addr[10:8];"
+Block 48 "3232696611" "if ((timer > 1))"
+Block 49 "217177280" "timer <= (timer - 1'b1);"
+Block 50 "459448039" "phy_cmd_valid <= 1'b1;"
+Block 51 "2827590210" "if ((s_wvalid && s_wready))"
+Block 52 "3419992297" "if (((!write_bad) && (s_wlast == (write_left == 8'b0))))"
+Block 53 "454390465" "if (ENABLE_ECC)"
+Block 54 "2458394969" "ecc_ram[word_index(write_addr)] <= ecc_write_code;"
+Block 56 "3654658728" "if (s_wstrb[0])"
+Block 57 "3649281884" "ram[word_index(write_addr)][7:0] <= s_wdata[7:0];"
+Block 59 "3149703569" "if (s_wstrb[1])"
+Block 60 "1586034973" "ram[word_index(write_addr)][15:8] <= s_wdata[15:8];"
+Block 62 "1029545356" "if (s_wstrb[2])"
+Block 63 "382953736" "ram[word_index(write_addr)][23:16] <= s_wdata[23:16];"
+Block 65 "1597284021" "if (s_wstrb[3])"
+Block 66 "4195171970" "ram[word_index(write_addr)][31:24] <= s_wdata[31:24];"
+Block 69 "982613614" "if ((s_wlast || (write_left == 8'b0)))"
+Block 70 "148700004" "if (((!write_bad) && (s_wlast != (write_left == 8'b0))))"
+Block 71 "819333217" "error_code_r <= {12'b0, ERR_WLAST};"
+Block 73 "1843889504" "s_bid <= write_id;"
+Block 74 "2507792376" "write_left <= (write_left - 1'b1);"
+Block 76 "2074352703" "if ((timer > 1))"
+Block 77 "2021359245" "timer <= (timer - 1'b1);"
+Block 78 "1379508871" "phy_cmd_valid <= 1'b1;"
+Block 79 "2309950521" "if ((timer > 1))"
+Block 80 "284963330" "timer <= (timer - 1'b1);"
+Block 81 "3830152208" "phy_cmd_valid <= 1'b1;"
+Block 85 "674071404" "state <= ST_FATAL;"
+Block 86 "2287936570" "state <= ST_FATAL;"
+
+// ID: EXCL-PROD-0118
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1581893224 2701593082"
+MODULE: apb_mmu_context_status
+Block 4 "3868322666" "asid_r <= alloc_asid;"
+Block 7 "758206649" "event_r[1] <= 1'b1;"
+Block 10 "1547538585" "event_r[2] <= 1'b1;"
+Block 13 "1766870754" "event_r[3] <= 1'b1;"
+Block 16 "2632084912" "sd_status_r <= 0;"
+Block 19 "4159579829" "sd_status_r[1] <= 1'b1;"
+Block 22 "556722800" "sd_status_r[2] <= 1'b1;"
+Block 25 "3963161420" "sd_status_r[3] <= 1'b1;"
+Block 28 "369599520" "sd_status_r[4] <= 1'b1;"
+Block 31 "3006980858" "case (paddr[4:2])"
+Block 32 "2420085729" "asid_r <= pwdata[7:0];"
+Block 33 "489195441" "vpn_r <= pwdata[19:0];"
+Block 34 "4178047855" "scope_r <= pwdata[1:0];"
+Block 35 "762830076" "event_r <= (event_r | pwdata[3:0]);"
+Block 36 "3138244981" "event_r <= (event_r & (~pwdata[3:0]));"
+Block 37 "1719022400" ";"
+Block 40 "246778540" "case (paddr[5:2])"
+Block 41 "3457094582" "prdata = {16'b0, generation_r, asid_r};"
+Block 42 "2847767124" "prdata = {12'b0, vpn_r};"
+Block 43 "830728202" "prdata = {30'b0, scope_r};"
+Block 44 "2049715315" "prdata = {28'b0, event_r};"
+Block 45 "2570929175" "prdata = {27'b0, sd_status_r[4], sd_status_r[3], sd_status_r[2], sd_status_r[1], sd_busy};"
+Block 46 "4133043529" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0119
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3379064563 3943915334"
+MODULE: mips_soc
+Block 1 "1286636707" "mips_soc.u_impl.preload_sram_hex(hex_path);"
+
+// ID: EXCL-PROD-0120
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3915859991 798573499"
+MODULE: apb_ddr4_status
+Block 4 "2961054455" "if (pwdata[1])"
+Block 5 "267980473" "error_inject_r <= 1'b1;"
+Block 7 "916401898" "if (pwdata[2])"
+Block 8 "1402249584" "error_inject_r <= 1'b0;"
+Block 12 "1157811531" "error_r <= (error_inject_r ? 32'h00040004 : (ecc_uncorrectable_error ? 32'h00040008 : {16'h0004, error_code}));"
+Block 15 "1671848705" "error_r <= 32'b0;"
+Block 18 "3658667393" "case (paddr[4:2])"
+Block 19 "3064600859" "prdata = VERSION;"
+Block 20 "1616592677" "prdata = {26'b0, ecc_uncorrectable_error, ecc_correctable_error, fatal_error, training_done, init_done, controller_present};"
+Block 21 "2722171912" "prdata = error_r;"
+Block 22 "2419579025" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0121
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2914053452 1722543953"
+MODULE: l2_cache_caching
+Block 4 "334344347" "if ((p[0] == 1'b0))"
+Block 5 "289533695" "if ((p[2] == 1'b0))"
+Block 6 "3452697659" "get_plru_victim = ((p[6] == 1'b0) ? 3'd7 : 3'd6);"
+Block 7 "3621361182" "get_plru_victim = ((p[5] == 1'b0) ? 3'd5 : 3'd4);"
+Block 8 "2732306676" "if ((p[1] == 1'b0))"
+Block 9 "3120754103" "get_plru_victim = ((p[4] == 1'b0) ? 3'd3 : 3'd2);"
+Block 10 "3334586641" "get_plru_victim = ((p[3] == 1'b0) ? 3'b1 : 3'b0);"
+Block 11 "1488015261" "if ((!valids[0]))"
+Block 12 "3807009829" "get_victim_way = 3'b0;"
+Block 13 "929386329" "if ((!valids[1]))"
+Block 14 "4069651819" "get_victim_way = 3'b1;"
+Block 15 "1371441956" "if ((!valids[2]))"
+Block 16 "2931077358" "get_victim_way = 3'd2;"
+Block 17 "3564000742" "if ((!valids[3]))"
+Block 18 "3122540755" "get_victim_way = 3'd3;"
+Block 19 "475327351" "if ((!valids[4]))"
+Block 20 "3509679572" "get_victim_way = 3'd4;"
+Block 21 "15078532" "if ((!valids[5]))"
+Block 22 "2332150037" "get_victim_way = 3'd5;"
+Block 23 "1971881352" "if ((!valids[6]))"
+Block 24 "514510566" "get_victim_way = 3'd6;"
+Block 25 "437464534" "if ((!valids[7]))"
+Block 26 "2860690018" "get_victim_way = 3'd7;"
+Block 27 "3072447979" "get_victim_way = get_plru_victim(p);"
+Block 28 "2186644505" "p_next = p;"
+Block 29 "3207508677" "p_next[1] = ((w < 3'h2) ? 1'b1 : 1'b0);"
+Block 30 "3848768681" "p_next[3] = ((w == 3'b0) ? 1'b1 : 1'b0);"
+Block 31 "745688351" "p_next[4] = ((w == 3'h2) ? 1'b1 : 1'b0);"
+Block 32 "2869687876" "p_next[2] = ((w < 3'h6) ? 1'b1 : 1'b0);"
+Block 33 "3234412190" "p_next[5] = ((w == 3'h4) ? 1'b1 : 1'b0);"
+Block 34 "3971104049" "p_next[6] = ((w == 3'h6) ? 1'b1 : 1'b0);"
+Block 35 "1968094077" "update_plru = p_next;"
+Block 36 "1041013332" "for (i = 0; (i < WAYS); i = (i + 1))"
+Block 37 "488668401" "valids_of_index[i] = valid_ram[req_index][i];"
+Block 38 "1478923419" "hit_way = 3'b0;"
+Block 39 "2591368882" "if (way_hit[i])"
+Block 40 "4183126828" "hit_way = i[2:0];"
+Block 43 "4188849239" "s_awready = 1'b1;"
+Block 44 "4252409388" "s_wready = 1'b1;"
+Block 45 "2770652525" "s_rvalid = hit;"
+Block 46 "857569494" "s_bvalid = 1'b1;"
+Block 47 "4279390346" "m_awvalid = 1'b1;"
+Block 48 "3921368998" "m_wvalid = 1'b1;"
+Block 49 "2020470427" "m_bready = 1'b1;"
+Block 50 "3163377689" "m_arvalid = 1'b1;"
+Block 51 "2018937540" "m_rready = 1'b1;"
+Block 52 "1720563341" "s_rvalid = 1'b1;"
+Block 53 "3830254953" "s_bvalid = 1'b1;"
+Block 54 "2551730730" "s_wready = 1'b1;"
+Block 56 "1335899302" "if ((!rst_n))"
+Block 57 "524313159" "state <= ST_IDLE;"
+Block 58 "4239173900" "case (state)"
+Block 59 "1203214820" "beat_cnt <= 8'b0;"
+Block 60 "3761556241" "req_is_write <= 1'b1;"
+Block 61 "2710129482" "resp_err <= 2'b10;"
+Block 63 "1189126476" "state <= ST_W_ACCEPT;"
+Block 64 "1011102359" "if (s_arvalid)"
+Block 65 "789434233" "req_is_write <= 1'b0;"
+Block 66 "1193248136" "resp_err <= 2'b10;"
+Block 67 "3850932991" "state <= ST_LOOKUP;"
+Block 69 "53538934" "if ((s_wvalid && s_wready))"
+Block 70 "3722397207" "req_wdata <= s_wdata;"
+Block 71 "3777280518" "if (s_wlast)"
+Block 72 "1588892305" "state <= ST_ERR_RESP_B;"
+Block 73 "2396005652" "state <= ST_W_DRAIN_ERR;"
+Block 74 "3302545390" "state <= ST_LOOKUP;"
+Block 76 "2643286264" "if (hit)"
+Block 77 "3481815777" "if (req_is_write)"
+Block 78 "1656762244" "state <= ST_W_HIT_MERGE;"
+Block 79 "1816376193" "plru_ram[req_index] <= update_plru(plru_ram[req_index], hit_way);"
+Block 80 "3826844108" "state <= ST_MISS_ALLOC;"
+Block 81 "2457419746" "data_ram[req_index][hit_way][req_wordoff] <= {(req_wstrb[3] ? req_wdata[31:24] : data_ram[req_index][hit_way][req_wordoff][31:24]), (req_wstrb[2] ? req_wdata[23:16] : data_ram[req_index][hit_way][req_wordoff][23:16]), (req_wstrb[1] ? req_wdata[15:8] : data_ram[req_index][hit_way][req_wordoff][15:8]), (req_wstrb[0] ? req_wdata[7:0] : data_ram[req_index][hit_way][req_wordoff][7:0])};"
+Block 82 "1744091163" "state <= ST_W_RESP;"
+Block 83 "2675661249" "beat_cnt <= (beat_cnt + 1'b1);"
+Block 84 "20571411" "if (hit)"
+Block 85 "2380320920" "if (s_rready)"
+Block 86 "3828340445" "plru_ram[req_index] <= update_plru(plru_ram[req_index], hit_way);"
+Block 87 "3739444605" "beat_cnt <= 8'b0;"
+Block 88 "4220825882" "beat_cnt <= (beat_cnt + 1'b1);"
+Block 90 "2684968562" "state <= ST_MISS_ALLOC;"
+Block 91 "3617271852" "if (s_bready)"
+Block 92 "2813553279" "beat_cnt <= 8'b0;"
+Block 94 "3473208415" "alloc_way <= get_victim_way(valids_of_index, plru_ram[req_index]);"
+Block 95 "4255219208" "evict_addr <= {3'b0, tag_ram[req_index][get_victim_way(valids_of_index, plru_ram[req_index])], req_index, {OFFSET_BITS {1'b0}}};"
+Block 96 "2420961918" "state <= ST_REFILL_AR;"
+Block 97 "2189806129" "if (m_awready)"
+Block 98 "3095417575" "evict_cnt <= 3'b0;"
+Block 100 "3797670462" "if (m_wready)"
+Block 101 "426106607" "if ((evict_cnt == 3'd7))"
+Block 102 "3709883968" "state <= ST_EVICT_B;"
+Block 103 "2393205574" "evict_cnt <= (evict_cnt + 1'b1);"
+Block 105 "14426218" "if (m_bvalid)"
+Block 106 "2947584560" "if ((m_bresp != 2'b0))"
+Block 107 "4091652816" "resp_err <= m_bresp;"
+Block 108 "3363250566" "if (req_wlast)"
+Block 109 "3356666855" "state <= ST_ERR_RESP_B;"
+Block 110 "1590433514" "state <= ST_W_DRAIN_ERR;"
+Block 111 "2920399790" "state <= ST_ERR_RESP_R;"
+Block 112 "1859478538" "state <= ST_REFILL_AR;"
+Block 114 "3266935954" "if (m_arready)"
+Block 115 "1011660537" "fill_cnt <= 3'b0;"
+Block 117 "2270772504" "if (m_rvalid)"
+Block 118 "3430318695" "data_ram[req_index][alloc_way][fill_cnt] <= m_rdata;"
+Block 119 "2718722229" "resp_err <= m_rresp;"
+Block 121 "1681208300" "if ((m_rlast || (fill_cnt == 3'd7)))"
+Block 122 "2589440007" "fill_cnt <= 3'b0;"
+Block 123 "3358925725" "valid_ram[req_index][alloc_way] <= 1'b0;"
+Block 124 "3830679221" "if (req_wlast)"
+Block 125 "197738246" "state <= ST_ERR_RESP_B;"
+Block 126 "3565448097" "state <= ST_W_DRAIN_ERR;"
+Block 127 "1841977167" "state <= ST_ERR_RESP_R;"
+Block 128 "2821241788" "tag_ram[req_index][alloc_way] <= req_tag;"
+Block 129 "2328596785" "fill_cnt <= (fill_cnt + 1'b1);"
+Block 131 "650344068" "if ((s_wvalid && s_wready))"
+Block 132 "790035013" "if (s_wlast)"
+Block 133 "1863552079" "state <= ST_ERR_RESP_B;"
+Block 136 "1292151249" "if (s_rready)"
+Block 137 "3342197439" "if ((beat_cnt == req_len))"
+Block 138 "592067215" "beat_cnt <= 8'b0;"
+Block 139 "104722152" "beat_cnt <= (beat_cnt + 1'b1);"
+Block 141 "795084933" "if (s_bready)"
+Block 142 "3625231844" "beat_cnt <= 8'b0;"
+Block 144 "113343392" "state <= ST_IDLE;"
+
+// ID: EXCL-PROD-0122
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "2028136588 2229236413"
+MODULE: axi_ddr_model
+Block 5 "4266699912" "$display(\"axi_ddr_model: no firmware image supplied; retaining zero init\");"
+Block 6 "1057679852" "$readmemh(hex_path, ram);"
+Block 7 "1335899302" "if ((!rst_n))"
+Block 10 "1335899302" "if ((!rst_n))"
+Block 26 "1335899302" "if ((!rst_n))"
+Block 31 "589532142" "rd_resp[rd_free] <= 2'b10;"
+Block 33 "3248128590" "rd_resp[rd_free] <= 2'b10;"
+Block 47 "1335899302" "if ((!rst_n))"
+
+// ID: EXCL-PROD-0123
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3372399530 1051723761"
+MODULE: cpu_scheduler
+Block 3 "4188477053" "selected = ((current_r + offset) % TASKS);"
+Block 9 "968566656" "pending_mask <= active_mask;"
+Block 13 "1323558710" "next_r <= selected;"
+Block 14 "2316091620" "state <= ST_SAVE;"
+Block 17 "3239848030" "if (ctx_save_done)"
+Block 18 "199959217" "pc_bank[current_r] <= ctx_save_pc;"
+Block 20 "416462005" "if (ctx_restore_ack)"
+Block 21 "3581525068" "current_r <= next_r;"
+
+// ID: EXCL-PROD-0124
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1135157623 2394591942"
+MODULE: mips_regfile
+Block 5 "952950990" "for (i = 1; (i < 32); i = (i + 1))"
+Block 6 "3575341522" "regs[{restore_set, i[4:0]}] <= ctx_restore_data[(i * 32)+:32];"
+Block 7 "3212824233" "regs[{restore_set, 5'b0}] <= 32'b0;"
+Block 8 "868698682" "for (i = 0; (i < 512); i = (i + 1))"
+Block 9 "1802251450" "regs[i] <= ((i[4:0] == 5'b0) ? 32'b0 : ctx_restore_srs_data[(i * 32)+:32]);"
+Block 12 "3892603082" "regs[shadow_widx] <= shadow_wdata;"
+Block 13 "834171604" "regs[{active_set, waddr}] <= wdata;"
+
+// ID: EXCL-PROD-0125
+// CATEGORY: Bus & Fabric Interconnect
+// CHECKSUM: "1023251519 4037413863"
+MODULE: axi2apb_bridge
+Block 1 "1335899302" "if ((!rst_n))"
+Block 2 "2957958209" "state <= IDLE;"
+Block 26 "2067506889" "next_state = IDLE;"
+Block 27 "1335899302" "if ((!rst_n))"
+Block 51 "1335899302" "if ((!rst_n))"
+Block 61 "2514280839" "psel <= 1'b0;"
+
+// ID: EXCL-PROD-0126
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3303551202 1076699656"
+MODULE: apb_perf_counters
+Block 2 "246778540" "case (paddr[5:2])"
+Block 3 "3035600128" "prdata = cycle_count;"
+Block 4 "3948211949" "prdata = retire_count;"
+Block 5 "1743646286" "prdata = icache_miss_count;"
+Block 6 "1010345921" "prdata = dcache_miss_count;"
+Block 7 "1244657233" "prdata = branch_mispredict_count;"
+Block 8 "2222351966" "prdata = mdu_stall_count;"
+Block 9 "3994425090" "prdata = VERSION;"
+Block 10 "4133043529" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0127
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "1633348978 4093611459"
+MODULE: soc_core_subsystem
+Block 4 "3245769326" "ptw_axi_busy <= 1'b1;"
+Block 6 "1705287202" "ptw_axi_busy <= 1'b0;"
+
+// ID: EXCL-PROD-0128
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1379674422 3413556816"
+MODULE: mips_mem_wb_reg
+Block 1 "1335899302" "if ((!rst_n))"
+Block 2 "3125365209" "wb_rdata_fmt <= 32'b0;"
+Block 3 "955982459" "if (flush)"
+Block 4 "2146485026" "wb_rdata_fmt <= 32'b0;"
+Block 5 "1227602061" "if ((!stall))"
+Block 6 "774506677" "wb_rdata_fmt <= mem_rdata_fmt;"
+
+// ID: EXCL-PROD-0129
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3949678489 3492419537"
+MODULE: mips_control
+Block 12 "273635901" "is_break = 1'b1;"
+Block 13 "2414480614" "is_trap = 1'b1;"
+Block 14 "1180572889" "is_trap = 1'b1;"
+Block 15 "1761483026" "is_trap = 1'b1;"
+Block 16 "2705983789" "is_trap = 1'b1;"
+Block 17 "3507399160" "is_trap = 1'b1;"
+Block 18 "279026893" "is_trap = 1'b1;"
+Block 23 "2721338868" "alu_op = 5'b10110;"
+Block 34 "3494019777" "illegal_inst = 1'b1;"
+Block 37 "1587899801" "illegal_inst = 1'b1;"
+Block 56 "2033405836" "if ((0 == 0))"
+Block 57 "1106067296" "illegal_inst = 1'b1;"
+Block 58 "3846473640" "alu_op = 5'b1;"
+Block 59 "3166588378" "if (((0 == 0) || rt[0]))"
+Block 60 "1334644220" "illegal_inst = 1'b1;"
+Block 61 "738215784" "alu_op = 5'b1;"
+Block 62 "3208147184" "alu_op = 5'b1;"
+Block 70 "1857174120" "if ((0 == 0))"
+Block 71 "2119837520" "illegal_inst = 1'b1;"
+Block 72 "3436894235" "alu_op = 5'b1;"
+Block 73 "2873047102" "if (((0 == 0) || rt[0]))"
+Block 74 "1882854860" "illegal_inst = 1'b1;"
+Block 75 "347384878" "alu_op = 5'b1;"
+Block 76 "342970331" "alu_op = 5'b1;"
+Block 81 "2877073392" "case (rt)"
+Block 82 "2102639229" "alu_op = 5'b1;"
+Block 83 "114402981" "illegal_inst = 1'b1;"
+Block 87 "3514922549" "branch_op = 3'b1;"
+Block 89 "3298771345" "branch_op = 3'b010;"
+Block 91 "2121154687" "branch_op = 3'b011;"
+Block 93 "1637479798" "branch_op = 3'b100;"
+Block 98 "1692804603" "branch_op = 3'b110;"
+Block 100 "739025798" "branch_op = 3'b101;"
+Block 102 "2260895733" "branch_op = 3'b110;"
+Block 103 "611712993" "alu_op = 5'b1;"
+Block 104 "541504484" "is_trap = 1'b1;"
+Block 105 "1135869475" "is_trap = 1'b1;"
+Block 106 "3524520249" "is_trap = 1'b1;"
+Block 107 "2984682750" "is_trap = 1'b1;"
+Block 108 "3069809582" "is_trap = 1'b1;"
+Block 109 "2782142247" "is_trap = 1'b1;"
+Block 110 "769966892" "illegal_inst = 1'b1;"
+Block 112 "2953915410" "mdu_op = 4'd8;"
+Block 113 "4221910505" "mdu_op = 4'd9;"
+Block 114 "1216969071" "mdu_op = 4'd12;"
+Block 115 "1439939815" "mdu_op = 4'd10;"
+Block 116 "510111004" "mdu_op = 4'd11;"
+Block 119 "3677819716" "illegal_inst = 1'b1;"
+Block 121 "3598473685" "if ((({1'b0, inst[10:6]} + {1'b0, inst[15:11]}) < 6'd32))"
+Block 122 "440982548" "alu_op = 5'b10111;"
+Block 123 "1237471077" "illegal_inst = 1'b1;"
+Block 124 "233350373" "if ((inst[15:11] >= inst[10:6]))"
+Block 125 "3250980855" "alu_op = 5'b11000;"
+Block 126 "3315764090" "illegal_inst = 1'b1;"
+Block 127 "1498053372" "if (((rs == 5'b00011) && (((((inst[15:11] == 5'b0) || (inst[15:11] == 5'b1)) || (inst[15:11] == 5'd2)) || (inst[15:11] == 5'd3)) || (inst[15:11] == 5'd29))))"
+Block 128 "3565662836" "reg_write = 1'b1;"
+Block 129 "4166964196" "illegal_inst = 1'b1;"
+Block 131 "697419692" "illegal_inst = 1'b1;"
+Block 133 "1676702752" "alu_op = 5'b11001;"
+Block 137 "3391448394" "illegal_inst = 1'b1;"
+Block 138 "3306916783" "illegal_inst = 1'b1;"
+Block 141 "3936056158" "illegal_inst = 1'b1;"
+Block 144 "4114677574" "illegal_inst = 1'b1;"
+Block 149 "1821607375" "illegal_inst = 1'b1;"
+Block 150 "1825791188" "if ((inst[24:6] == 19'b0))"
+Block 151 "464386345" "tlb_op = 3'b1;"
+Block 152 "3366000220" "illegal_inst = 1'b1;"
+Block 153 "3919815114" "if ((inst[24:6] == 19'b0))"
+Block 154 "3262139726" "tlb_op = 3'b010;"
+Block 155 "3094992658" "illegal_inst = 1'b1;"
+Block 156 "3798145848" "if ((inst[24:6] == 19'b0))"
+Block 157 "334049903" "tlb_op = 3'b011;"
+Block 158 "111619066" "illegal_inst = 1'b1;"
+Block 159 "4223830359" "if ((inst[24:6] == 19'b0))"
+Block 160 "3364754240" "tlb_op = 3'b100;"
+Block 161 "2657766657" "illegal_inst = 1'b1;"
+Block 162 "2990943011" "if ((inst[24:6] == 19'b0))"
+Block 163 "904524337" "is_wait = 1'b1;"
+Block 164 "103032141" "illegal_inst = 1'b1;"
+Block 165 "1614659912" "illegal_inst = 1'b1;"
+Block 166 "2190696847" "if ((((inst[15:11] == 5'd12) && (inst[10:6] == 5'b0)) && ((func == 6'b0) || (func == 6'b100000))))"
+Block 167 "1691703399" "reg_write = 1'b1;"
+Block 168 "1934994561" "illegal_inst = 1'b1;"
+Block 169 "563599941" "if ((((0 != 0) && (sa == 5'b0)) && (func == 6'b0)))"
+Block 170 "2552636386" "reg_write = 1'b1;"
+Block 171 "115321053" "illegal_inst = 1'b1;"
+Block 172 "710369463" "if ((((0 != 0) && (sa == 5'b0)) && (func == 6'b0)))"
+Block 173 "3492776313" "is_wrpgpr = 1'b1;"
+Block 174 "3087094837" "illegal_inst = 1'b1;"
+Block 176 "584500581" "if ((0 == 0))"
+Block 177 "2967247276" "illegal_inst = 1'b1;"
+Block 178 "1179350564" "case (func)"
+Block 179 "3991448320" "if ((func[0] && (((rs[0] || rt[0]) || rd[0]) || sa[0])))"
+Block 180 "1212734922" "illegal_inst = 1'b1;"
+Block 182 "3490786313" "illegal_inst = 1'b1;"
+Block 183 "657889308" "if ((0 == 0))"
+Block 184 "3207684000" "illegal_inst = 1'b1;"
+Block 185 "1634134510" "case (rs)"
+Block 186 "3517621175" "if ((!((((rt == 5'b0) || (rt == 5'b1)) || (rt == 5'd2)) || (rt == 5'd3))))"
+Block 187 "2187680029" "illegal_inst = 1'b1;"
+Block 188 "4083511707" "branch_op = 3'b111;"
+Block 189 "43203966" "if (((inst[10:0] != 11'b0) || (((rs == 5'b00010) || (rs == 5'b00110)) && (inst[15:11] != 5'd31))))"
+Block 190 "1260893334" "illegal_inst = 1'b1;"
+Block 192 "3014475917" "case (func)"
+Block 193 "771317319" "illegal_inst = 1'b1;"
+Block 194 "4192367079" "if (((rs == 5'b10001) && ((inst[6] || inst[11]) || (((func != 6'h12) && (func != 6'h13)) && inst[16]))))"
+Block 195 "3897602470" "illegal_inst = 1'b1;"
+Block 197 "2832956632" "if ((((rs == 5'b10100) && (func != 6'h20)) && (func != 6'h21)))"
+Block 198 "2426018490" "illegal_inst = 1'b1;"
+Block 200 "3125852456" "if ((((rs == 5'b10000) && (func == 6'h20)) || ((rs == 5'b10001) && (func == 6'h21))))"
+Block 201 "2811114537" "illegal_inst = 1'b1;"
+Block 203 "814954590" "illegal_inst = 1'b1;"
+
+// ID: EXCL-PROD-0130
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3417257133 161432321"
+MODULE: tb_mips_soc
+Block 6 "2098513534" "$display(\"tb_mips_soc: loading default firmware.hex\");"
+Block 10 "4149463774" ";"
+Block 14 "2957039381" "$display(\"REGRESSION_TEST_FAILED UART TX pin never asserted\");"
+Block 17 "1496232521" "if (((legacy_mailbox_wdata == 32'hdeaddead) || (legacy_mailbox_wdata[31:16] == 16'hdeaf)))"
+Block 18 "3100612380" "$display(\"REGRESSION_TEST_FAILED code=%08h\", legacy_mailbox_wdata);"
+Block 22 "1592214811" "$display(\"Time=%0t PC=%h\", $time, legacy_trace_pc);"
+Block 33 "545397293" "cp0_cacheerr_count <= (cp0_cacheerr_count + 1);"
+Block 46 "3288537038" "$display(\"Time=%0t DCACHE: state=%0d next_state=%0d req_buf_addr=%x req_buf_we=%b uc_req=%b awv=%b wv=%b bready=%b\", $time, legacy_dcache_state, legacy_dcache_next_state, legacy_dcache_req_buf_addr, legacy_dcache_req_buf_we, legacy_dcache_uncacheable, legacy_dcache_awvalid, legacy_dcache_wvalid, legacy_dcache_bready);"
+Block 52 "273643084" "tms_r = 0;"
+Block 53 "3667158872" "tck_r = 1;"
+Block 54 "1075297030" "tck_r = 0;"
+Block 55 "3667158872" "tck_r = 1;"
+Block 56 "1075297030" "tck_r = 0;"
+Block 57 "3667158872" "tck_r = 1;"
+Block 58 "206916091" "tck_r = 0;"
+Block 59 "3667158872" "tck_r = 1;"
+Block 60 "206916091" "tck_r = 0;"
+Block 61 "3667158872" "tck_r = 1;"
+Block 66 "273643084" "tms_r = 0;"
+Block 67 "3667158872" "tck_r = 1;"
+Block 68 "1075297030" "tck_r = 0;"
+Block 69 "3667158872" "tck_r = 1;"
+Block 70 "1075297030" "tck_r = 0;"
+Block 71 "3667158872" "tck_r = 1;"
+Block 72 "206916091" "tck_r = 0;"
+Block 73 "3667158872" "tck_r = 1;"
+Block 74 "1291358786" "tck_r = 0;"
+Block 75 "273643084" "tms_r = 0;"
+Block 76 "3667158872" "tck_r = 1;"
+Block 77 "1075297030" "tck_r = 0;"
+Block 78 "3667158872" "tck_r = 1;"
+Block 79 "206916091" "tck_r = 0;"
+Block 80 "3667158872" "tck_r = 1;"
+Block 81 "206916091" "tck_r = 0;"
+Block 82 "3667158872" "tck_r = 1;"
+Block 87 "273643084" "tms_r = 0;"
+Block 88 "3667158872" "tck_r = 1;"
+Block 89 "206916091" "tck_r = 0;"
+Block 90 "3667158872" "tck_r = 1;"
+Block 91 "1075297030" "tck_r = 0;"
+Block 92 "3667158872" "tck_r = 1;"
+Block 93 "1075297030" "tck_r = 0;"
+Block 94 "3667158872" "tck_r = 1;"
+Block 95 "206916091" "tck_r = 0;"
+Block 96 "3667158872" "tck_r = 1;"
+Block 97 "1291358786" "tck_r = 0;"
+Block 98 "273643084" "tms_r = 0;"
+Block 99 "3667158872" "tck_r = 1;"
+Block 100 "1075297030" "tck_r = 0;"
+Block 101 "3667158872" "tck_r = 1;"
+Block 102 "206916091" "tck_r = 0;"
+Block 103 "3667158872" "tck_r = 1;"
+Block 104 "206916091" "tck_r = 0;"
+Block 105 "3667158872" "tck_r = 1;"
+Block 111 "3667158872" "tck_r = 1;"
+Block 112 "206916091" "tck_r = 0;"
+Block 113 "3667158872" "tck_r = 1;"
+Block 114 "1291358786" "tck_r = 0;"
+Block 120 "3667158872" "tck_r = 1;"
+Block 121 "1075297030" "tck_r = 0;"
+Block 122 "3667158872" "tck_r = 1;"
+Block 123 "206916091" "tck_r = 0;"
+Block 124 "3667158872" "tck_r = 1;"
+Block 125 "1075297030" "tck_r = 0;"
+Block 126 "3667158872" "tck_r = 1;"
+Block 127 "1075297030" "tck_r = 0;"
+Block 128 "3667158872" "tck_r = 1;"
+Block 129 "1075297030" "tck_r = 0;"
+Block 130 "3667158872" "tck_r = 1;"
+Block 131 "206916091" "tck_r = 0;"
+Block 132 "3667158872" "tck_r = 1;"
+Block 133 "1075297030" "tck_r = 0;"
+Block 134 "3667158872" "tck_r = 1;"
+Block 135 "206916091" "tck_r = 0;"
+Block 136 "3667158872" "tck_r = 1;"
+Block 137 "1075297030" "tck_r = 0;"
+Block 138 "3667158872" "tck_r = 1;"
+Block 139 "206916091" "tck_r = 0;"
+Block 140 "3667158872" "tck_r = 1;"
+Block 141 "1075297030" "tck_r = 0;"
+Block 142 "3667158872" "tck_r = 1;"
+Block 143 "1075297030" "tck_r = 0;"
+Block 144 "3667158872" "tck_r = 1;"
+Block 145 "1075297030" "tck_r = 0;"
+Block 146 "3667158872" "tck_r = 1;"
+Block 147 "1075297030" "tck_r = 0;"
+Block 148 "3667158872" "tck_r = 1;"
+Block 149 "206916091" "tck_r = 0;"
+Block 150 "3667158872" "tck_r = 1;"
+Block 151 "1075297030" "tck_r = 0;"
+Block 152 "3667158872" "tck_r = 1;"
+Block 153 "206916091" "tck_r = 0;"
+Block 154 "3667158872" "tck_r = 1;"
+Block 155 "1075297030" "tck_r = 0;"
+Block 156 "3667158872" "tck_r = 1;"
+Block 157 "206916091" "tck_r = 0;"
+Block 158 "3667158872" "tck_r = 1;"
+Block 159 "1075297030" "tck_r = 0;"
+Block 160 "3667158872" "tck_r = 1;"
+Block 161 "1075297030" "tck_r = 0;"
+Block 162 "3667158872" "tck_r = 1;"
+Block 163 "206916091" "tck_r = 0;"
+Block 164 "3667158872" "tck_r = 1;"
+Block 166 "105343632" ";"
+Block 167 "3667158872" "tck_r = 1;"
+Block 168 "206916091" "tck_r = 0;"
+Block 169 "3667158872" "tck_r = 1;"
+Block 170 "206916091" "tck_r = 0;"
+Block 171 "3667158872" "tck_r = 1;"
+Block 172 "3132256354" "tck_r = 0;"
+Block 173 "3353478370" "tck_r = 1;"
+Block 174 "1487388198" ";"
+Block 175 "3839088071" "tck_r = 0;"
+Block 176 "2888653380" "rst_n = 1;"
+Block 177 "938264134" ";"
+Block 178 "3667158872" "tck_r = 1;"
+Block 179 "1075297030" "tck_r = 0;"
+Block 180 "3667158872" "tck_r = 1;"
+Block 181 "1075297030" "tck_r = 0;"
+Block 182 "3667158872" "tck_r = 1;"
+Block 183 "1075297030" "tck_r = 0;"
+Block 184 "3667158872" "tck_r = 1;"
+Block 185 "1075297030" "tck_r = 0;"
+Block 186 "3667158872" "tck_r = 1;"
+Block 187 "1075297030" "tck_r = 0;"
+Block 188 "3667158872" "tck_r = 1;"
+Block 189 "2857807901" "tck_r = 0;"
+Block 190 "3667158872" "tck_r = 1;"
+Block 191 "1142167435" "tck_r = 0;"
+Block 192 "160640865" ";"
+Block 193 "227574764" ";"
+Block 194 "3667158872" "tck_r = 1;"
+Block 195 "1075297030" "tck_r = 0;"
+Block 196 "3667158872" "tck_r = 1;"
+Block 197 "1142167435" "tck_r = 0;"
+Block 198 "160640865" ";"
+Block 199 "227574764" ";"
+Block 200 "3667158872" "tck_r = 1;"
+Block 201 "1075297030" "tck_r = 0;"
+Block 202 "3667158872" "tck_r = 1;"
+Block 203 "206916091" "tck_r = 0;"
+Block 204 "3667158872" "tck_r = 1;"
+Block 205 "1142167435" "tck_r = 0;"
+Block 206 "160640865" ";"
+Block 207 "227574764" ";"
+Block 208 "3667158872" "tck_r = 1;"
+Block 209 "1075297030" "tck_r = 0;"
+Block 210 "3667158872" "tck_r = 1;"
+Block 211 "206916091" "tck_r = 0;"
+Block 212 "3667158872" "tck_r = 1;"
+Block 213 "206916091" "tck_r = 0;"
+Block 214 "3667158872" "tck_r = 1;"
+Block 215 "1142167435" "tck_r = 0;"
+Block 216 "160640865" ";"
+Block 217 "227574764" ";"
+Block 218 "3667158872" "tck_r = 1;"
+Block 219 "1075297030" "tck_r = 0;"
+Block 220 "3667158872" "tck_r = 1;"
+Block 221 "206916091" "tck_r = 0;"
+Block 222 "3667158872" "tck_r = 1;"
+Block 223 "1075297030" "tck_r = 0;"
+Block 224 "3667158872" "tck_r = 1;"
+Block 225 "1142167435" "tck_r = 0;"
+Block 226 "160640865" ";"
+Block 227 "227574764" ";"
+Block 228 "3667158872" "tck_r = 1;"
+Block 229 "1075297030" "tck_r = 0;"
+Block 230 "3667158872" "tck_r = 1;"
+Block 231 "206916091" "tck_r = 0;"
+Block 232 "3667158872" "tck_r = 1;"
+Block 233 "1075297030" "tck_r = 0;"
+Block 234 "3667158872" "tck_r = 1;"
+Block 235 "206916091" "tck_r = 0;"
+Block 236 "3667158872" "tck_r = 1;"
+Block 237 "1142167435" "tck_r = 0;"
+Block 238 "160640865" ";"
+Block 239 "227574764" ";"
+Block 240 "3667158872" "tck_r = 1;"
+Block 241 "1075297030" "tck_r = 0;"
+Block 242 "3667158872" "tck_r = 1;"
+Block 243 "206916091" "tck_r = 0;"
+Block 244 "3667158872" "tck_r = 1;"
+Block 245 "1075297030" "tck_r = 0;"
+Block 246 "3667158872" "tck_r = 1;"
+Block 247 "206916091" "tck_r = 0;"
+Block 248 "3667158872" "tck_r = 1;"
+Block 249 "1075297030" "tck_r = 0;"
+Block 250 "3667158872" "tck_r = 1;"
+Block 251 "1142167435" "tck_r = 0;"
+Block 252 "160640865" ";"
+Block 253 "227574764" ";"
+Block 254 "3667158872" "tck_r = 1;"
+Block 255 "1075297030" "tck_r = 0;"
+Block 256 "3667158872" "tck_r = 1;"
+Block 257 "206916091" "tck_r = 0;"
+Block 258 "3667158872" "tck_r = 1;"
+Block 259 "1075297030" "tck_r = 0;"
+Block 260 "3667158872" "tck_r = 1;"
+Block 261 "1075297030" "tck_r = 0;"
+Block 262 "3667158872" "tck_r = 1;"
+Block 263 "1142167435" "tck_r = 0;"
+Block 264 "160640865" ";"
+Block 265 "227574764" ";"
+Block 266 "3667158872" "tck_r = 1;"
+Block 267 "1075297030" "tck_r = 0;"
+Block 268 "3667158872" "tck_r = 1;"
+Block 269 "1075297030" "tck_r = 0;"
+Block 270 "3667158872" "tck_r = 1;"
+Block 271 "1142167435" "tck_r = 0;"
+Block 272 "160640865" ";"
+Block 273 "227574764" ";"
+Block 274 "3667158872" "tck_r = 1;"
+Block 275 "1075297030" "tck_r = 0;"
+Block 276 "3667158872" "tck_r = 1;"
+Block 277 "1075297030" "tck_r = 0;"
+Block 278 "3667158872" "tck_r = 1;"
+Block 279 "206916091" "tck_r = 0;"
+Block 280 "3667158872" "tck_r = 1;"
+Block 281 "1142167435" "tck_r = 0;"
+Block 282 "160640865" ";"
+Block 283 "227574764" ";"
+Block 284 "3667158872" "tck_r = 1;"
+Block 285 "1075297030" "tck_r = 0;"
+Block 286 "3667158872" "tck_r = 1;"
+Block 287 "1075297030" "tck_r = 0;"
+Block 288 "3667158872" "tck_r = 1;"
+Block 289 "206916091" "tck_r = 0;"
+Block 290 "3667158872" "tck_r = 1;"
+Block 291 "206916091" "tck_r = 0;"
+Block 292 "3667158872" "tck_r = 1;"
+Block 293 "1142167435" "tck_r = 0;"
+Block 294 "160640865" ";"
+Block 295 "227574764" ";"
+Block 296 "3667158872" "tck_r = 1;"
+Block 297 "1075297030" "tck_r = 0;"
+Block 298 "3667158872" "tck_r = 1;"
+Block 299 "1075297030" "tck_r = 0;"
+Block 300 "3667158872" "tck_r = 1;"
+Block 301 "206916091" "tck_r = 0;"
+Block 302 "3667158872" "tck_r = 1;"
+Block 303 "1075297030" "tck_r = 0;"
+Block 304 "3667158872" "tck_r = 1;"
+Block 305 "1142167435" "tck_r = 0;"
+Block 306 "160640865" ";"
+Block 307 "227574764" ";"
+Block 308 "3667158872" "tck_r = 1;"
+Block 309 "1075297030" "tck_r = 0;"
+Block 310 "3667158872" "tck_r = 1;"
+Block 311 "1075297030" "tck_r = 0;"
+Block 312 "3667158872" "tck_r = 1;"
+Block 313 "206916091" "tck_r = 0;"
+Block 314 "3667158872" "tck_r = 1;"
+Block 315 "1075297030" "tck_r = 0;"
+Block 316 "3667158872" "tck_r = 1;"
+Block 317 "206916091" "tck_r = 0;"
+Block 318 "3667158872" "tck_r = 1;"
+Block 319 "1142167435" "tck_r = 0;"
+Block 320 "160640865" ";"
+Block 321 "227574764" ";"
+Block 322 "3667158872" "tck_r = 1;"
+Block 323 "1075297030" "tck_r = 0;"
+Block 324 "3667158872" "tck_r = 1;"
+Block 325 "1075297030" "tck_r = 0;"
+Block 326 "3667158872" "tck_r = 1;"
+Block 327 "206916091" "tck_r = 0;"
+Block 328 "3667158872" "tck_r = 1;"
+Block 329 "1075297030" "tck_r = 0;"
+Block 330 "3667158872" "tck_r = 1;"
+Block 331 "206916091" "tck_r = 0;"
+Block 332 "3667158872" "tck_r = 1;"
+Block 333 "1075297030" "tck_r = 0;"
+Block 334 "3667158872" "tck_r = 1;"
+Block 335 "1142167435" "tck_r = 0;"
+Block 336 "160640865" ";"
+Block 337 "227574764" ";"
+Block 338 "3667158872" "tck_r = 1;"
+Block 339 "1075297030" "tck_r = 0;"
+Block 340 "3667158872" "tck_r = 1;"
+Block 341 "1075297030" "tck_r = 0;"
+Block 342 "3667158872" "tck_r = 1;"
+Block 343 "206916091" "tck_r = 0;"
+Block 344 "3667158872" "tck_r = 1;"
+Block 345 "1075297030" "tck_r = 0;"
+Block 346 "3667158872" "tck_r = 1;"
+Block 347 "1075297030" "tck_r = 0;"
+Block 348 "3667158872" "tck_r = 1;"
+Block 349 "1142167435" "tck_r = 0;"
+Block 350 "160640865" ";"
+Block 351 "1408968069" ";"
+Block 352 "3667158872" "tck_r = 1;"
+Block 353 "1075297030" "tck_r = 0;"
+Block 354 "3667158872" "tck_r = 1;"
+Block 355 "206916091" "tck_r = 0;"
+Block 356 "3667158872" "tck_r = 1;"
+Block 357 "206916091" "tck_r = 0;"
+Block 358 "3667158872" "tck_r = 1;"
+Block 359 "3132256354" "tck_r = 0;"
+Block 360 "3667158872" "tck_r = 1;"
+Block 361 "1368743470" "tck_r = 0;"
+Block 362 "1672359986" "rst_n = 1;"
+
+// ID: EXCL-PROD-0131
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "63469976 3360163559"
+MODULE: l2_cache_nb
+Block 4 "334344347" "if ((p[0] == 1'b0))"
+Block 5 "289533695" "if ((p[2] == 1'b0))"
+Block 6 "3452697659" "get_plru_victim = ((p[6] == 1'b0) ? 3'd7 : 3'd6);"
+Block 7 "3621361182" "get_plru_victim = ((p[5] == 1'b0) ? 3'd5 : 3'd4);"
+Block 8 "2732306676" "if ((p[1] == 1'b0))"
+Block 9 "3120754103" "get_plru_victim = ((p[4] == 1'b0) ? 3'd3 : 3'd2);"
+Block 10 "3334586641" "get_plru_victim = ((p[3] == 1'b0) ? 3'b1 : 3'b0);"
+Block 11 "3553205081" "pn = p;"
+Block 12 "976042396" "pn[1] = ((w < 3'h2) ? 1'b1 : 1'b0);"
+Block 13 "775081303" "pn[3] = ((w == 3'b0) ? 1'b1 : 1'b0);"
+Block 14 "3878096097" "pn[4] = ((w == 3'h2) ? 1'b1 : 1'b0);"
+Block 15 "772308253" "pn[2] = ((w < 3'h6) ? 1'b1 : 1'b0);"
+Block 16 "194803552" "pn[5] = ((w == 3'h4) ? 1'b1 : 1'b0);"
+Block 17 "669482191" "pn[6] = ((w == 3'h6) ? 1'b1 : 1'b0);"
+Block 18 "610337082" "update_plru = pn;"
+Block 19 "1519383092" "acc_wayhit = {WAYS {1'b0}};"
+Block 20 "2419636877" "acc_valids[hi] = valid_ram[acc_set][hi];"
+Block 21 "3092871987" "acc_wayhit[hi] = 1'b1;"
+Block 23 "1007602211" "acc_hit = (|acc_wayhit);"
+Block 24 "1462218738" "mshr_match = 1'b0;"
+Block 25 "3693518662" "if ((mshr_valid[mm] && (mshr_line[mm] == acc_line)))"
+Block 26 "2074194567" "mshr_match = 1'b1;"
+Block 28 "4130474904" "ord_free_v = 1'b0;"
+Block 29 "1695558092" "if ((ord_st[of] == OST_EMPTY))"
+Block 30 "2184959521" "ord_free_v = 1'b1;"
+Block 32 "1379127546" "mshr_free_v = 1'b0;"
+Block 33 "302351658" "if ((!mshr_valid[mf]))"
+Block 34 "4174000429" "mshr_free_v = 1'b1;"
+Block 36 "1782985659" "acc_reserved = {WAYS {1'b0}};"
+Block 37 "1008908894" "if ((mshr_valid[rr] && (mshr_set[rr] == acc_set)))"
+Block 38 "435410139" "acc_reserved[mshr_way[rr]] = 1'b1;"
+Block 40 "969881252" "plru_v = get_plru_victim(plru_ram[acc_set]);"
+Block 41 "116982415" "acc_victim_ok = 1'b0;"
+Block 42 "2414990265" "if ((!acc_reserved[vv]))"
+Block 43 "9114909" "acc_victim = vv[(WAY_BITS - 1):0];"
+Block 46 "3056455364" "resp_v = 1'b0;"
+Block 47 "2013274827" "if ((ord_st[pr] == OST_READY))"
+Block 48 "3463287133" "older_same_id = 1'b0;"
+Block 49 "2292223009" "if (((((po != pr) && (ord_st[po] != OST_EMPTY)) && (ord_id[po] == ord_id[pr])) && (ord_age[po] < ord_age[pr])))"
+Block 50 "142596854" "older_same_id = 1'b1;"
+Block 52 "498529006" "if (((!older_same_id) && ((!resp_v) || (ord_age[pr] < resp_best_age))))"
+Block 53 "3890990501" "resp_v = 1'b1;"
+Block 56 "1857880556" "me_pick_v = 1'b0;"
+Block 57 "899182142" "if (((mshr_valid[mp] && (!mshr_issued[mp])) && (!mshr_filled[mp])))"
+Block 58 "3586229478" "me_pick_v = 1'b1;"
+Block 60 "2785842144" "fill_v = 1'b0;"
+Block 61 "816761106" "if ((((ord_st[fp] == OST_WAIT) && mshr_valid[ord_mshr[fp]]) && mshr_filled[ord_mshr[fp]]))"
+Block 62 "1898789604" "if (((!fill_v) || (ord_age[fp] < fill_best_age)))"
+Block 63 "1324511916" "fill_v = 1'b1;"
+Block 66 "157967250" "s_awready = 1'b0;"
+Block 67 "3076486889" "if (want_aw)"
+Block 68 "838133459" "s_awready = 1'b1;"
+Block 69 "1682833233" "if (want_ar)"
+Block 70 "1968505728" "s_arready = 1'b1;"
+Block 73 "298980479" "s_wready = accepting_aw_w;"
+Block 74 "4133933398" "m_awvalid = 1'b1;"
+Block 75 "3986761553" "m_wvalid = 1'b1;"
+Block 76 "2088214124" "m_bready = 1'b1;"
+Block 77 "3938810902" "m_arvalid = 1'b1;"
+Block 78 "1898056472" "m_rready = 1'b1;"
+Block 79 "881528818" ";"
+Block 80 "4209923790" "if (rsp_active)"
+Block 81 "2857700513" "if (ord_write[rsp_idx])"
+Block 82 "4140570616" "s_bvalid = 1'b1;"
+Block 83 "3833142067" "s_rvalid = 1'b1;"
+Block 85 "1335899302" "if ((!rst_n))"
+Block 86 "3269242010" "acc_state <= ACC_IDLE;"
+Block 87 "3049463086" "ord_st[k] <= OST_EMPTY;"
+Block 88 "3706315174" "for (k = 0; (k < N_MSHR); k = (k + 1))"
+Block 89 "2576262529" "mshr_valid[k] <= 1'b0;"
+Block 90 "3676695778" "if ((acc_state == ACC_IDLE))"
+Block 91 "1447674383" "if (((want_ar && acc_can_alloc) && s_arready))"
+Block 92 "202847078" "ord_st[ord_free_i] <= ((mshr_match || (!acc_hit)) ? OST_WAIT : OST_READY);"
+Block 93 "353333146" "ord_mshr[ord_free_i] <= mshr_match_idx;"
+Block 94 "2210657409" "if (acc_hit)"
+Block 95 "731720345" "for (k = 0; (k < WORDS_PER_LN); k = (k + 1))"
+Block 96 "2223397832" "ord_rbuf[ord_free_i][(k * DATA_WIDTH)+:DATA_WIDTH] <= data_ram[acc_set][acc_hitway][k];"
+Block 97 "584268084" "plru_ram[acc_set] <= update_plru(plru_ram[acc_set], acc_hitway);"
+Block 98 "1311213585" "ord_mshr[ord_free_i] <= mshr_free_i;"
+Block 99 "1759399802" "if (((want_aw && acc_can_alloc) && s_awready))"
+Block 100 "1504721335" "acc_wq <= ord_free_i;"
+Block 101 "2337369092" "acc_wmshr <= mshr_match_idx;"
+Block 102 "4225615940" "if ((!acc_hit))"
+Block 103 "1198003988" "acc_wmshr <= mshr_free_i;"
+Block 105 "2396039290" "acc_state <= ACC_WCOLLECT;"
+Block 107 "186723544" "if ((acc_state == ACC_WCOLLECT))"
+Block 108 "653061062" "if ((s_wvalid && s_wready))"
+Block 109 "1806185399" "ord_wdata[acc_wq][((ord_woff[acc_wq] + acc_wbeat) * DATA_WIDTH)+:DATA_WIDTH] <= s_wdata;"
+Block 110 "940189637" "acc_state <= (acc_whit ? ACC_WCOMMIT : ACC_IDLE);"
+Block 113 "3618524726" "if ((acc_state == ACC_WCOMMIT))"
+Block 114 "2273184095" "for (k = 0; (k < WORDS_PER_LN); k = (k + 1))"
+Block 115 "1090875794" "if (ord_wstrb[acc_wq][((k * 4) + 0)])"
+Block 116 "3604126564" "data_ram[acc_wset][acc_wway][k][7:0] <= ord_wdata[acc_wq][((k * DATA_WIDTH) + 0)+:8];"
+Block 118 "2989055705" "if (ord_wstrb[acc_wq][((k * 4) + 1)])"
+Block 119 "1876845971" "data_ram[acc_wset][acc_wway][k][15:8] <= ord_wdata[acc_wq][((k * DATA_WIDTH) + 8)+:8];"
+Block 121 "710304234" "if (ord_wstrb[acc_wq][((k * 4) + 2)])"
+Block 122 "1072736243" "data_ram[acc_wset][acc_wway][k][23:16] <= ord_wdata[acc_wq][((k * DATA_WIDTH) + 16)+:8];"
+Block 124 "3648671393" "if (ord_wstrb[acc_wq][((k * 4) + 3)])"
+Block 125 "3760309992" "data_ram[acc_wset][acc_wway][k][31:24] <= ord_wdata[acc_wq][((k * DATA_WIDTH) + 24)+:8];"
+Block 127 "4058751036" "dirty_ram[acc_wset][acc_wway] <= 1'b1;"
+Block 129 "696665319" "case (me_state)"
+Block 130 "927334736" "if (me_pick_v)"
+Block 131 "2211747903" "me_idx <= me_pick_i;"
+Block 132 "1461636094" "me_state <= ME_EVICT_AW;"
+Block 133 "3419637248" "me_state <= ME_REFILL_AR;"
+Block 135 "2830640004" "if (m_awready)"
+Block 136 "1200875947" "me_cnt <= 3'b0;"
+Block 138 "3021207089" "if (m_wready)"
+Block 139 "290273600" "if ((me_cnt == 3'd7))"
+Block 140 "2796087395" "me_state <= ME_EVICT_B;"
+Block 141 "770231764" "me_cnt <= (me_cnt + 1'b1);"
+Block 143 "1452543077" "if (m_bvalid)"
+Block 144 "1190512142" "me_state <= ME_REFILL_AR;"
+Block 146 "1224321444" "if (m_arready)"
+Block 147 "3676043902" "me_cnt <= 3'b0;"
+Block 149 "2909066413" "if (m_rvalid)"
+Block 150 "240219902" "data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt] <= m_rdata;"
+Block 151 "2880998241" "tag_ram[mshr_set[me_idx]][mshr_way[me_idx]] <= mshr_tag[me_idx];"
+Block 152 "548458528" "me_cnt <= (me_cnt + 1'b1);"
+Block 154 "2856027102" "me_state <= ME_IDLE;"
+Block 155 "602834069" "if (fill_v)"
+Block 156 "3901439086" "fs = mshr_set[ord_mshr[fill_i]];"
+Block 157 "474642909" "for (mm2 = 0; (mm2 < WORDS_PER_LN); mm2 = (mm2 + 1))"
+Block 158 "2282690949" "if (ord_wstrb[fill_i][((mm2 * 4) + 0)])"
+Block 159 "780703243" "data_ram[fs][fw][mm2][7:0] <= ord_wdata[fill_i][((mm2 * DATA_WIDTH) + 0)+:8];"
+Block 161 "2065905358" "if (ord_wstrb[fill_i][((mm2 * 4) + 1)])"
+Block 162 "3200869652" "data_ram[fs][fw][mm2][15:8] <= ord_wdata[fill_i][((mm2 * DATA_WIDTH) + 8)+:8];"
+Block 164 "3814459901" "if (ord_wstrb[fill_i][((mm2 * 4) + 2)])"
+Block 165 "3678116321" "data_ram[fs][fw][mm2][23:16] <= ord_wdata[fill_i][((mm2 * DATA_WIDTH) + 16)+:8];"
+Block 167 "275785398" "if (ord_wstrb[fill_i][((mm2 * 4) + 3)])"
+Block 168 "2008609983" "data_ram[fs][fw][mm2][31:24] <= ord_wdata[fill_i][((mm2 * DATA_WIDTH) + 24)+:8];"
+Block 170 "2902190491" "dirty_ram[fs][fw] <= 1'b1;"
+Block 171 "3699824518" "for (mm2 = 0; (mm2 < WORDS_PER_LN); mm2 = (mm2 + 1))"
+Block 172 "1548777931" "ord_rbuf[fill_i][(mm2 * DATA_WIDTH)+:DATA_WIDTH] <= data_ram[fs][fw][mm2];"
+Block 173 "2508618916" "ord_st[fill_i] <= OST_READY;"
+Block 175 "3602681300" "if ((!rsp_active))"
+Block 176 "835675912" "if (resp_v)"
+Block 177 "1301732348" "rsp_active <= 1'b1;"
+Block 179 "2475945853" "if (ord_write[rsp_idx])"
+Block 180 "2226973681" "if (s_bready)"
+Block 181 "1810401150" "rsp_active <= 1'b0;"
+Block 183 "1903274182" "if (s_rready)"
+Block 184 "3526938747" "if ((ord_beat[rsp_idx] == ord_len[rsp_idx]))"
+Block 185 "536791892" "rsp_active <= 1'b0;"
+Block 186 "4036955615" "ord_beat[rsp_idx] <= (ord_beat[rsp_idx] + 1'b1);"
+Block 188 "2045787620" "for (fk = 0; (fk < N_MSHR); fk = (fk + 1))"
+Block 189 "192011474" "if ((mshr_valid[fk] && mshr_filled[fk]))"
+Block 190 "3328081992" "mshr_refd = 1'b0;"
+Block 191 "651543114" "if ((((ord_st[fj] != OST_EMPTY) && (ord_mshr[fj] == fk[(MSHR_BITS - 1):0])) && (ord_st[fj] == OST_WAIT)))"
+Block 192 "3072746985" "mshr_refd = 1'b1;"
+Block 194 "2199387034" "if ((acc_merge_now && (acc_merge_idx == fk[(MSHR_BITS - 1):0])))"
+Block 195 "4025270485" "mshr_refd = 1'b1;"
+Block 197 "3287821347" "if ((!mshr_refd))"
+Block 198 "871867964" "mshr_valid[fk] <= 1'b0;"
+
+// ID: EXCL-PROD-0132
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "97997737 2944569731"
+MODULE: soc_memory_subsystem
+Block 1 "1984792413" "soc_memory_subsystem.u_axi_sram.load_hex(hex_path);"
+
+// ID: EXCL-PROD-0133
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4202099251 3630874457"
+MODULE: ecc_secded_32
+Block 2 "1253723512" "if (((((((p != 1) && (p != 2)) && (p != 4)) && (p != 8)) && (p != 16)) && (p != 32)))"
+Block 6 "1427339288" "parity = 0;"
+Block 13 "1427339288" "parity = 0;"
+Block 18 "3191063429" "syndrome = (syndrome | (1 << k));"
+Block 21 "2250426363" "if ((syndrome <= 38))"
+Block 22 "1808993758" "fixed[syndrome] = (~fixed[syndrome]);"
+Block 24 "538009119" "correctable_error = 1'b1;"
+Block 26 "100178908" "fixed[0] = (~fixed[0]);"
+Block 28 "747349988" "uncorrectable_error = 1'b1;"
+Block 31 "1253723512" "if (((((((p != 1) && (p != 2)) && (p != 4)) && (p != 8)) && (p != 16)) && (p != 32)))"
+
+// ID: EXCL-PROD-0134
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "886703037 3829022734"
+MODULE: mmu_tlb_shootdown_mailbox
+Block 5 "3100207159" "invalidate_asid <= req_asid;"
+Block 6 "4247454495" "busy <= 0;"
+Block 7 "2314760715" "busy <= 1;"
+Block 9 "3944751650" "if (req_valid)"
+Block 10 "1048641378" "rejected <= 1;"
+Block 12 "931229904" "if ((!issued))"
+Block 13 "1222631821" "invalidate_valid <= 1;"
+Block 15 "989585024" "if ((target_present && target_ack))"
+Block 16 "3542544116" "busy <= 0;"
+Block 17 "4079672976" "if (((!target_present) || (count >= (TIMEOUT_CYCLES - 1))))"
+Block 18 "1065665816" "busy <= 0;"
+Block 19 "4241017940" "count <= (count + 1'b1);"
+
+// ID: EXCL-PROD-0135
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "469529741 936353763"
+MODULE: axi_read_timeout_guard
+Block 9 "3610591566" "if (timeout_expired)"
+Block 10 "819754804" "wait_count <= 32'b0;"
+Block 11 "443754679" "wait_count <= (wait_count + 32'b1);"
+Block 19 "3949513588" "wait_count <= 32'b0;"
+Block 21 "2300504532" "if ((s_rvalid && s_rready))"
+Block 22 "1851764333" "if ((error_beat == req_len))"
+Block 23 "1549478055" "state <= (downstream_active ? ST_DRAIN : ST_IDLE);"
+Block 24 "3786327561" "error_beat <= (error_beat + 8'b1);"
+Block 26 "1301808176" "if (((m_rvalid && m_rready) && m_rlast))"
+Block 27 "3195740846" "downstream_active <= 1'b0;"
+Block 29 "113343392" "state <= ST_IDLE;"
+
+// ID: EXCL-PROD-0136
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2624281472 2344172439"
+MODULE: apb_qspi_status
+Block 4 "598693841" "timeout_captured_r <= 1'b1;"
+Block 7 "2810145913" "timeout_captured_r <= 1'b1;"
+Block 10 "2149218006" "timeout_captured_r <= 1'b0;"
+Block 13 "3658667393" "case (paddr[4:2])"
+Block 14 "959709700" "prdata = VERSION_VALUE;"
+Block 15 "3548905279" "prdata = {30'b0, controller_present, timeout_captured_r};"
+Block 16 "1701807708" "prdata = last_error_r;"
+Block 17 "3627112265" "prdata = 32'b0;"
+Block 18 "2419579025" "prdata = 32'b0;"
+
+// ID: EXCL-PROD-0137
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "827148926 1821975066"
+MODULE: mips_mem_stage
+Block 8 "2504624918" "we_aligned = 4'b0;"
+Block 12 "3122553644" "we_aligned = 4'b0;"
+Block 19 "2131370543" "we_aligned = 4'b0;"
+Block 25 "1977505887" "we_aligned = 4'b0;"
+Block 26 "2631031286" "wdata_aligned = 32'b0;"
+Block 35 "3122752104" "mem_rdata_ext = dmem_rdata;"
+Block 41 "2956649009" "mem_rdata_ext = dmem_rdata;"
+Block 45 "2507571794" "mem_rdata_ext = dmem_rdata;"
+Block 49 "2674723339" "mem_rdata_ext = dmem_rdata;"
+Block 56 "2555691861" "mem_rdata_ext = dmem_rdata;"
+Block 62 "2256034750" "mem_rdata_ext = dmem_rdata;"
+Block 63 "3664169720" "mem_rdata_ext = dmem_rdata;"
+
+// ID: EXCL-PROD-0138
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3064912425 3546527451"
+MODULE: apb_vic
+Block 1 "1335899302" "if ((!rst_n))"
+Block 4 "1335899302" "if ((!rst_n))"
+Block 6 "887224439" "if (wr)"
+Block 7 "1235863203" "case (paddr[11:2])"
+Block 9 "3746002267" "enable_r <= (enable_r | pwdata[(NUM_SOURCES - 1):0]);"
+Block 10 "1869116815" "enable_r <= (enable_r & (~pwdata[(NUM_SOURCES - 1):0]));"
+Block 11 "34361568" ";"
+Block 13 "1335899302" "if ((!rst_n))"
+Block 16 "2726882050" "type_r <= pwdata[(NUM_SOURCES - 1):0];"
+Block 18 "1335899302" "if ((!rst_n))"
+Block 21 "2705132108" "polarity_r <= pwdata[(NUM_SOURCES - 1):0];"
+Block 23 "1335899302" "if ((!rst_n))"
+Block 25 "887224439" "if (wr)"
+Block 26 "1235863203" "case (paddr[11:2])"
+Block 27 "1523582678" "soft_r <= (soft_r | pwdata[(NUM_SOURCES - 1):0]);"
+Block 28 "456377158" "soft_r <= (soft_r & (~pwdata[(NUM_SOURCES - 1):0]));"
+Block 29 "33354463" "soft_r <= (soft_r & (~pwdata[(NUM_SOURCES - 1):0]));"
+Block 30 "34361568" ";"
+Block 32 "1335899302" "if ((!rst_n))"
+Block 36 "496809538" "edge_pending_r[i] <= 1'b1;"
+Block 38 "129855768" "edge_pending_r[i] <= 1'b0;"
+Block 40 "1335899302" "if ((!rst_n))"
+Block 43 "3541355653" "active_r <= (active_r & (~pwdata[(NUM_SOURCES - 1):0]));"
+Block 45 "3027667784" "if ((best_id_r < NUM_SOURCES))"
+Block 46 "3406943795" "active_r[best_id_r[($clog2(NUM_SOURCES) - 1):0]] <= 1'b1;"
+Block 49 "1335899302" "if ((!rst_n))"
+Block 53 "31693781" "if ((paddr[7:2] < NUM_SOURCES))"
+Block 54 "2325642269" "prio_r[paddr[7:2]] <= pwdata[3:0];"
+Block 65 "4000503079" "if (((!any_active_r) || (prio_r[i] > running_prio_r)))"
+Block 66 "1563198201" "running_prio_r = prio_r[i];"
+Block 74 "1665205751" "prdata = (32'b0 | type_r);"
+Block 75 "3214181779" "prdata = (32'b0 | polarity_r);"
+Block 76 "565672815" "prdata = (32'b0 | soft_r);"
+Block 77 "190408852" "prdata = {24'b0, best_id_r};"
+Block 78 "1466571044" "prdata = {28'b0, best_pri_r};"
+Block 79 "2640559620" "prdata = (32'b0 | active_r);"
+Block 80 "1487133630" "prdata = {28'b0, running_prio_r};"
+Block 81 "3377131709" "if (((paddr[11:8] == 4'b1) && (paddr[7:2] < NUM_SOURCES)))"
+Block 82 "951521844" "prdata = {28'b0, prio_r[paddr[7:2]]};"
+
+// ID: EXCL-PROD-0139
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "609989151 1778645496"
+MODULE: mips_perf_counters
+Block 4 "3061786038" "cycle_count <= (cycle_count + 32'b1);"
+Block 5 "3451759721" "retire_count <= (retire_count + 32'b1);"
+Block 7 "2469116176" "if (icache_miss_event)"
+Block 8 "2985668369" "icache_miss_count <= (icache_miss_count + 32'b1);"
+Block 10 "4041830261" "if (dcache_miss_event)"
+Block 11 "296852120" "dcache_miss_count <= (dcache_miss_count + 32'b1);"
+Block 13 "1413093116" "if (branch_mispredict_event)"
+Block 14 "2038158509" "branch_mispredict_count <= (branch_mispredict_count + 32'b1);"
+Block 16 "1888681720" "if (mdu_stall_event)"
+Block 17 "3264050938" "mdu_stall_count <= (mdu_stall_count + 32'b1);"
+
+// ID: EXCL-PROD-0140
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1192777547 1762629917"
+MODULE: mips_ex_mem_reg
+Block 9 "1065687192" "mem_double_phase <= 1'b1;"
+
+// ID: EXCL-PROD-0141
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1149415544 694187602"
+MODULE: apb_boot_status
+Toggle wdt_reset "net wdt_reset"
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle stage_r "reg stage_r[7:0]"
+Toggle failure_r "reg failure_r[31:0]"
+Toggle reset_cause_r "reg reset_cause_r[1:0]"
+Toggle wr "net wr"
+Toggle rd "net rd"
+
+// ID: EXCL-PROD-0142
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "299010489 4201910152"
+MODULE: axi_boot_rom
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awlock "net s_awlock[1:0]"
+Toggle s_awcache "net s_awcache[3:0]"
+Toggle s_awprot "net s_awprot[2:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_awready "net s_awready"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "net s_wready"
+Toggle s_bid "net s_bid[3:0]"
+Toggle s_bresp "net s_bresp[1:0]"
+Toggle s_bvalid "net s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arlock "net s_arlock[1:0]"
+Toggle s_arcache "net s_arcache[3:0]"
+Toggle s_arprot "net s_arprot[2:0]"
+Toggle s_arvalid "net s_arvalid"
+Toggle s_arready "net s_arready"
+Toggle s_rid "net s_rid[3:0]"
+Toggle s_rdata "net s_rdata[31:0]"
+Toggle s_rresp "net s_rresp[1:0]"
+Toggle s_rlast "net s_rlast"
+Toggle s_rvalid "net s_rvalid"
+Toggle s_rready "net s_rready"
+Toggle image_hex "reg image_hex[4095:0]"
+Toggle rd_busy "reg rd_busy"
+Toggle rd_id "reg rd_id[3:0]"
+Toggle rd_addr "reg rd_addr[31:0]"
+Toggle rd_len "reg rd_len[7:0]"
+Toggle rd_beat "reg rd_beat[7:0]"
+Toggle rd_size "reg rd_size[2:0]"
+Toggle rd_burst "reg rd_burst[1:0]"
+Toggle rd_error "net rd_error"
+Toggle wr_busy "reg wr_busy"
+Toggle wr_resp_valid "reg wr_resp_valid"
+Toggle wr_id "reg wr_id[3:0]"
+Toggle wr_len "reg wr_len[7:0]"
+Toggle wr_beat "reg wr_beat[7:0]"
+
+// ID: EXCL-PROD-0143
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "821264661 2845057815"
+MODULE: mmu_asid_allocator
+Toggle alloc_req "net alloc_req"
+Toggle alloc_valid "reg alloc_valid"
+Toggle alloc_fail "reg alloc_fail"
+Toggle alloc_asid "reg alloc_asid[7:0]"
+Toggle alloc_generation "reg alloc_generation[7:0]"
+Toggle release_req "net release_req"
+Toggle release_valid "reg release_valid"
+Toggle release_reject "reg release_reject"
+Toggle used "reg used[4:0]"
+Toggle found "reg found"
+
+// ID: EXCL-PROD-0144
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1384839261 2340100396"
+MODULE: mips_mdu
+Toggle is_accsub "reg is_accsub"
+Toggle is_acc "reg is_acc"
+Toggle result_neg_mul "reg result_neg_mul"
+Toggle acc_tmp "reg acc_tmp[63:0]"
+
+// ID: EXCL-PROD-0145
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2521688486 3631994551"
+MODULE: mips_mmu
+Toggle req_is_fetch "net req_is_fetch"
+Toggle asid "net asid[7:0]"
+Toggle config_k0 "net config_k0[2:0]"
+Toggle is_kernel "net is_kernel"
+Toggle tlb_lookup_asid "net tlb_lookup_asid[7:0]"
+Toggle tlb_lookup_hit "net tlb_lookup_hit"
+Toggle tlb_lookup_multi_hit "net tlb_lookup_multi_hit"
+Toggle tlb_lookup_v "net tlb_lookup_v"
+Toggle tlb_lookup_d "net tlb_lookup_d"
+Toggle tlb_lookup_c "net tlb_lookup_c[2:0]"
+Toggle tlb_lookup_pfn "net tlb_lookup_pfn[19:0]"
+Toggle cache_attr "net cache_attr[2:0]"
+Toggle translation_ok "net translation_ok"
+Toggle fault_type "net fault_type[2:0]"
+Toggle attr_kseg0 "net attr_kseg0[2:0]"
+Toggle attr_kseg1 "net attr_kseg1[2:0]"
+Toggle attr_tlb "net attr_tlb[2:0]"
+Toggle attr_identity "net attr_identity[2:0]"
+Toggle attr_r "reg attr_r[2:0]"
+Toggle ok_r "reg ok_r"
+Toggle fault_r "reg fault_r[2:0]"
+Toggle _unused_ok "net _unused_ok"
+
+// ID: EXCL-PROD-0146
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1806501640 4024217109"
+MODULE: mips_micro_tlb
+Toggle flush "net flush"
+Toggle i_asid "net i_asid[7:0]"
+Toggle i_main_hit "net i_main_hit"
+Toggle i_main_multi_hit "net i_main_multi_hit"
+Toggle i_main_mask "net i_main_mask[15:0]"
+Toggle i_main_vpn2 "net i_main_vpn2[18:0]"
+Toggle i_main_g "net i_main_g"
+Toggle i_main_lo0 "net i_main_lo0[31:0]"
+Toggle i_main_lo1 "net i_main_lo1[31:0]"
+Toggle d_asid "net d_asid[7:0]"
+Toggle d_main_hit "net d_main_hit"
+Toggle d_main_multi_hit "net d_main_multi_hit"
+Toggle d_main_mask "net d_main_mask[15:0]"
+Toggle d_main_vpn2 "net d_main_vpn2[18:0]"
+Toggle d_main_g "net d_main_g"
+Toggle d_main_lo0 "net d_main_lo0[31:0]"
+Toggle d_main_lo1 "net d_main_lo1[31:0]"
+Toggle i_hit "net i_hit"
+Toggle i_multi_hit "net i_multi_hit"
+Toggle i_v "net i_v"
+Toggle i_d "net i_d"
+Toggle i_c "net i_c[2:0]"
+Toggle i_pfn "net i_pfn[19:0]"
+Toggle d_hit "net d_hit"
+Toggle d_multi_hit "net d_multi_hit"
+Toggle d_v "net d_v"
+Toggle d_d "net d_d"
+Toggle d_c "net d_c[2:0]"
+Toggle d_pfn "net d_pfn[19:0]"
+Toggle next_i "reg next_i[1:0]"
+Toggle next_d "reg next_d[1:0]"
+Toggle i_matches "net i_matches[3:0]"
+Toggle d_matches "net d_matches[3:0]"
+Toggle i_found "reg i_found"
+Toggle d_found "reg d_found"
+Toggle i_many "reg i_many"
+Toggle d_many "reg d_many"
+Toggle i_index "reg i_index[1:0]"
+Toggle d_index "reg d_index[1:0]"
+Toggle i_mask_sel "net i_mask_sel[15:0]"
+Toggle d_mask_sel "net d_mask_sel[15:0]"
+Toggle i_lo "net i_lo[31:0]"
+Toggle d_lo "net d_lo[31:0]"
+
+// ID: EXCL-PROD-0147
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2069035916 2591197263"
+MODULE: mips_id_stage
+Toggle fpu_condition "net fpu_condition[7:0]"
+Toggle fpu_branch_invert "net fpu_branch_invert"
+Toggle srs_current_set "net srs_current_set[3:0]"
+Toggle srs_previous_set "net srs_previous_set[3:0]"
+Toggle srs_shadow_we "net srs_shadow_we"
+Toggle srs_shadow_wset "net srs_shadow_wset[3:0]"
+Toggle ctx_save_req "net ctx_save_req"
+Toggle ctx_save_done "net ctx_save_done"
+Toggle ctx_restore_req "net ctx_restore_req"
+Toggle ctx_restore_data "net ctx_restore_data[1023:0]"
+Toggle ctx_restore_srs_data "net ctx_restore_srs_data[16383:0]"
+Toggle ctx_restore_set "net ctx_restore_set[3:0]"
+Toggle ctx_restore_done "net ctx_restore_done"
+Toggle branch_likely_taken "net branch_likely_taken"
+Toggle cache_op_valid "net cache_op_valid"
+Toggle cache_op "net cache_op[4:0]"
+Toggle is_break "net is_break"
+Toggle is_di "net is_di"
+Toggle is_ei "net is_ei"
+Toggle is_wait "net is_wait"
+Toggle is_trap "net is_trap"
+Toggle trap_op "net trap_op[3:0]"
+Toggle tlb_op "net tlb_op[2:0]"
+Toggle cond_move_is_movf "net cond_move_is_movf"
+Toggle cond_move_is_movt "net cond_move_is_movt"
+Toggle fpu_condition_code "net fpu_condition_code[2:0]"
+Toggle is_rdpgpr "net is_rdpgpr"
+Toggle is_wrpgpr "net is_wrpgpr"
+Toggle special2_reads_rt "net special2_reads_rt"
+Toggle nb_pending_hazard "net nb_pending_hazard"
+Toggle is_rdhwr "net is_rdhwr"
+
+// ID: EXCL-PROD-0148
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1189874766 800452700"
+MODULE: apb_timer
+Toggle pslverr "net pslverr"
+
+// ID: EXCL-PROD-0149
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1947636165 2129061313"
+MODULE: mips_if_stage
+Toggle branch_likely_taken "net branch_likely_taken"
+Toggle bpu_enable "net bpu_enable"
+Toggle bpu_predict_valid "net bpu_predict_valid"
+Toggle bpu_predict_taken "net bpu_predict_taken"
+Toggle bpu_recover "net bpu_recover"
+Toggle ctx_save_req "net ctx_save_req"
+Toggle ctx_save_done "net ctx_save_done"
+Toggle ctx_restore_req "net ctx_restore_req"
+Toggle ctx_restore_pc "net ctx_restore_pc[31:0]"
+Toggle ctx_restore_done "net ctx_restore_done"
+Toggle inst_req "net inst_req"
+Toggle bpu_delay_pending "reg bpu_delay_pending"
+Toggle bpu_delay_target "reg bpu_delay_target[31:0]"
+Toggle branch_likely_delay_pending "reg branch_likely_delay_pending"
+Toggle branch_likely_delay_target "reg branch_likely_delay_target[31:0]"
+
+// ID: EXCL-PROD-0150
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "7721136 4147665029"
+MODULE: axi_sram
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_awready "reg s_awready"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "reg s_wready"
+Toggle s_bid "reg s_bid[3:0]"
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_bvalid "reg s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_araddr "net s_araddr[31:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arvalid "net s_arvalid"
+Toggle s_arready "reg s_arready"
+Toggle s_rid "reg s_rid[3:0]"
+Toggle s_rdata "reg s_rdata[31:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle s_rlast "reg s_rlast"
+Toggle s_rvalid "reg s_rvalid"
+Toggle s_rready "net s_rready"
+Toggle r_state "reg r_state[1:0]"
+Toggle r_next "reg r_next[1:0]"
+Toggle r_addr "reg r_addr[31:0]"
+Toggle r_len "reg r_len[7:0]"
+Toggle r_id "reg r_id[3:0]"
+Toggle word_addr_r "net word_addr_r[31:0]"
+Toggle valid_read_addr "net valid_read_addr"
+Toggle w_state "reg w_state[1:0]"
+Toggle w_addr "reg w_addr[31:0]"
+Toggle w_len "reg w_len[7:0]"
+Toggle w_id "reg w_id[3:0]"
+
+// ID: EXCL-PROD-0151
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "2018139936 2350146051"
+MODULE: mips_cpu
+Toggle inst_req "net inst_req"
+Toggle inst_bus_error "net inst_bus_error"
+Toggle inst_cache_error "net inst_cache_error"
+Toggle data_req_id "net data_req_id[3:0]"
+Toggle data_cache_op_valid "net data_cache_op_valid"
+Toggle data_cache_op "net data_cache_op[4:0]"
+Toggle data_cache_op_is_icache "net data_cache_op_is_icache"
+Toggle data_cache_op_done "net data_cache_op_done"
+Toggle data_cache_op_error "net data_cache_op_error"
+Toggle data_resp_id "net data_resp_id[3:0]"
+Toggle data_bus_error "net data_bus_error"
+Toggle data_cache_error "net data_cache_error"
+Toggle data_cache_tag_wdata "net data_cache_tag_wdata[31:0]"
+Toggle tlb_inv_en "net tlb_inv_en"
+Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
+Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
+Toggle tlb_inv_scope "net tlb_inv_scope[1:0]"
+Toggle tlb_inv_wired_floor "net tlb_inv_wired_floor[5:0]"
+Toggle sim_exception_req "net sim_exception_req"
+Toggle sim_exception_code "net sim_exception_code[4:0]"
+Toggle coh_snoop_valid "net coh_snoop_valid"
+Toggle coh_snoop_addr "net coh_snoop_addr[31:0]"
+Toggle ctx_save_req "net ctx_save_req"
+Toggle ctx_save_done "net ctx_save_done"
+Toggle ctx_save_asid "net ctx_save_asid[7:0]"
+Toggle ctx_save_srsctl "net ctx_save_srsctl[31:0]"
+Toggle ctx_save_fpr "net ctx_save_fpr[1023:0]"
+Toggle ctx_save_fcsr "net ctx_save_fcsr[31:0]"
+Toggle ctx_restore_req "net ctx_restore_req"
+Toggle ctx_restore_pc "net ctx_restore_pc[31:0]"
+Toggle ctx_restore_status "net ctx_restore_status[31:0]"
+Toggle ctx_restore_asid "net ctx_restore_asid[7:0]"
+Toggle ctx_restore_srsctl "net ctx_restore_srsctl[31:0]"
+Toggle ctx_restore_gpr "net ctx_restore_gpr[1023:0]"
+Toggle ctx_restore_srs_gpr "net ctx_restore_srs_gpr[16383:0]"
+Toggle ctx_restore_set "net ctx_restore_set[3:0]"
+Toggle ctx_restore_fpr "net ctx_restore_fpr[1023:0]"
+Toggle ctx_restore_fcsr "net ctx_restore_fcsr[31:0]"
+Toggle ctx_restore_ack "net ctx_restore_ack"
+Toggle hardware_walker_enable "net hardware_walker_enable"
+Toggle hardware_walker_ptbr "net hardware_walker_ptbr[31:0]"
+Toggle ptw_mem_valid "net ptw_mem_valid"
+Toggle ptw_mem_addr "net ptw_mem_addr[31:0]"
+Toggle ptw_mem_ready "net ptw_mem_ready"
+Toggle ptw_mem_error "net ptw_mem_error"
+Toggle ptw_fault_valid "net ptw_fault_valid"
+Toggle ptw_fault_code "net ptw_fault_code[2:0]"
+Toggle perf_cycle_count "net perf_cycle_count[31:0]"
+Toggle perf_retire_count "net perf_retire_count[31:0]"
+Toggle perf_icache_miss_count "net perf_icache_miss_count[31:0]"
+Toggle perf_dcache_miss_count "net perf_dcache_miss_count[31:0]"
+Toggle perf_branch_mispredict_count "net perf_branch_mispredict_count[31:0]"
+Toggle perf_mdu_stall_count "net perf_mdu_stall_count[31:0]"
+Toggle rob_backpressure "net rob_backpressure"
+Toggle rob_head_ready "net rob_head_ready"
+Toggle rob_busy "net rob_busy"
+Toggle rob_alloc_tag "net rob_alloc_tag[1:0]"
+Toggle rob_alloc_ready "net rob_alloc_ready"
+Toggle rob_retire_tag "net rob_retire_tag[1:0]"
+Toggle mem_double_mem "net mem_double_mem"
+Toggle mem_double_phase "net mem_double_phase"
+Toggle dmem_request_blocked "net dmem_request_blocked"
+Toggle id_is_wait "net id_is_wait"
+Toggle nb_load_busy "reg nb_load_busy[3:0]"
+Toggle tagged_data_response "net tagged_data_response"
+Toggle double_response_stall "net double_response_stall"
+Toggle data_bus_error_current "net data_bus_error_current"
+Toggle data_cache_error_current "net data_cache_error_current"
+Toggle ptw_busy "reg ptw_busy"
+Toggle ptw_refill_pending "reg ptw_refill_pending"
+Toggle ptw_fault_pending "reg ptw_fault_pending"
+Toggle ptw_fault_is_data "reg ptw_fault_is_data"
+Toggle wait_state "reg wait_state"
+Toggle wait_resume_pc "reg wait_resume_pc[31:0]"
+Toggle walker_d_stall "net walker_d_stall"
+Toggle context_active "net context_active"
+Toggle wb_except_is_tlb_refill "net wb_except_is_tlb_refill"
+Toggle wb_tlb_refill_exception "net wb_tlb_refill_exception"
+Toggle srs_current_set "net srs_current_set[3:0]"
+Toggle srs_previous_set "net srs_previous_set[3:0]"
+Toggle srs_shadow_we "net srs_shadow_we"
+Toggle srs_shadow_wset "net srs_shadow_wset[3:0]"
+Toggle sim_exception_active "net sim_exception_active"
+Toggle effective_except_ce "net effective_except_ce[1:0]"
+Toggle ebase_out "net ebase_out[31:0]"
+Toggle cp0_bev "net cp0_bev"
+Toggle cp0_vint_enabled "net cp0_vint_enabled"
+Toggle cp0_vint_offset "net cp0_vint_offset[31:0]"
+Toggle cp0_vint_srs_set "net cp0_vint_srs_set[3:0]"
+Toggle cp0_taglo "net cp0_taglo[31:0]"
+Toggle cp0_taghi "net cp0_taghi[31:0]"
+Toggle ll_reservation_valid "reg ll_reservation_valid"
+Toggle ll_reservation_addr "reg ll_reservation_addr[31:0]"
+Toggle wb_cache_error_exception "net wb_cache_error_exception"
+Toggle id_branch_likely_taken "net id_branch_likely_taken"
+Toggle id_fpu_branch_invert "net id_fpu_branch_invert"
+Toggle bpu_predict_hit "net bpu_predict_hit"
+Toggle bpu_predict_taken "net bpu_predict_taken"
+Toggle id_bpu_valid "net id_bpu_valid"
+Toggle id_bpu_taken "net id_bpu_taken"
+Toggle bpu_mispredict "net bpu_mispredict"
+Toggle mmu_i_cache_attr "net mmu_i_cache_attr[2:0]"
+Toggle mmu_d_cache_attr "net mmu_d_cache_attr[2:0]"
+Toggle mmu_i_ok "net mmu_i_ok"
+Toggle mmu_d_ok "net mmu_d_ok"
+Toggle mmu_i_fault_type "net mmu_i_fault_type[2:0]"
+Toggle mmu_d_fault_type "net mmu_d_fault_type[2:0]"
+Toggle cp0_asid "net cp0_asid[7:0]"
+Toggle cp0_config_k0 "net cp0_config_k0[2:0]"
+Toggle cpu_kernel_mode "net cpu_kernel_mode"
+Toggle cpu_cu1 "net cpu_cu1"
+Toggle cpu_hwrena "net cpu_hwrena[31:0]"
+Toggle mmu_ilookup_hit "net mmu_ilookup_hit"
+Toggle mmu_ilookup_multi_hit "net mmu_ilookup_multi_hit"
+Toggle mmu_ilookup_v "net mmu_ilookup_v"
+Toggle mmu_ilookup_d "net mmu_ilookup_d"
+Toggle mmu_ilookup_c "net mmu_ilookup_c[2:0]"
+Toggle mmu_ilookup_pfn "net mmu_ilookup_pfn[19:0]"
+Toggle mmu_dlookup_hit "net mmu_dlookup_hit"
+Toggle mmu_dlookup_multi_hit "net mmu_dlookup_multi_hit"
+Toggle mmu_dlookup_v "net mmu_dlookup_v"
+Toggle mmu_dlookup_d "net mmu_dlookup_d"
+Toggle mmu_dlookup_c "net mmu_dlookup_c[2:0]"
+Toggle mmu_dlookup_pfn "net mmu_dlookup_pfn[19:0]"
+Toggle dmem_translation_fault "net dmem_translation_fault"
+Toggle hw_walker_i_miss "net hw_walker_i_miss"
+Toggle hw_walker_d_miss "net hw_walker_d_miss"
+Toggle ptw_req_valid "net ptw_req_valid"
+Toggle ptw_req_ready "net ptw_req_ready"
+Toggle ptw_resp_valid "net ptw_resp_valid"
+Toggle ptw_pa "net ptw_pa[31:0]"
+Toggle ptw_fault_i "net ptw_fault_i"
+Toggle ptw_fault_code_i "net ptw_fault_code_i[2:0]"
+Toggle ptw_leaf_pte "net ptw_leaf_pte[31:0]"
+Toggle ptw_req_user "net ptw_req_user"
+Toggle ptw_va_q "reg ptw_va_q[31:0]"
+Toggle hw_tlb_wr_ready "net hw_tlb_wr_ready"
+Toggle hw_tlb_wr_en "net hw_tlb_wr_en"
+Toggle hw_tlb_wr_index "net hw_tlb_wr_index[5:0]"
+Toggle hw_walker_i_fault "net hw_walker_i_fault"
+Toggle hw_walker_d_fault "net hw_walker_d_fault"
+Toggle hw_tlb_entrylo_leaf "net hw_tlb_entrylo_leaf[31:0]"
+Toggle hw_tlb_entrylo0 "net hw_tlb_entrylo0[31:0]"
+Toggle hw_tlb_entrylo1 "net hw_tlb_entrylo1[31:0]"
+Toggle id_except_is_tlb_refill_in "net id_except_is_tlb_refill_in"
+Toggle if_bus_fault "net if_bus_fault"
+Toggle if_cache_fault "net if_cache_fault"
+Toggle if_except_is_tlb_refill "net if_except_is_tlb_refill"
+Toggle id_cache_op_valid "net id_cache_op_valid"
+Toggle id_cache_op "net id_cache_op[4:0]"
+Toggle id_is_break "net id_is_break"
+Toggle id_is_di "net id_is_di"
+Toggle id_is_ei "net id_is_ei"
+Toggle id_is_trap "net id_is_trap"
+Toggle id_trap_op "net id_trap_op[3:0]"
+Toggle id_tlb_op "net id_tlb_op[2:0]"
+Toggle ex_tlb_op "net ex_tlb_op[2:0]"
+Toggle mem_tlb_op "net mem_tlb_op[2:0]"
+Toggle wb_tlb_op "net wb_tlb_op[2:0]"
+Toggle mem_cache_op_valid "net mem_cache_op_valid"
+Toggle mem_cache_op "net mem_cache_op[4:0]"
+Toggle ex_except_is_data "net ex_except_is_data"
+Toggle mem_except_is_data "net mem_except_is_data"
+Toggle ex_except_is_tlb_refill "net ex_except_is_tlb_refill"
+Toggle mem_except_is_tlb_refill "net mem_except_is_tlb_refill"
+Toggle fpu_mem_lwc1 "net fpu_mem_lwc1"
+Toggle fpu_mem_swc1 "net fpu_mem_swc1"
+Toggle fpu_mem_lwc1_commit "net fpu_mem_lwc1_commit"
+Toggle fpu_mem_ldc1_commit "net fpu_mem_ldc1_commit"
+Toggle fpu_id_cop1x "net fpu_id_cop1x"
+Toggle fpu_id_cop1 "net fpu_id_cop1"
+Toggle fpu_id_valid "net fpu_id_valid"
+Toggle fpu_mem_id_valid "net fpu_mem_id_valid"
+Toggle fpu_id_mfc1 "net fpu_id_mfc1"
+Toggle fpu_id_cfc1 "net fpu_id_cfc1"
+Toggle fpu_id_mtc1 "net fpu_id_mtc1"
+Toggle fpu_id_ctc1 "net fpu_id_ctc1"
+Toggle fpu_id_arith "net fpu_id_arith"
+Toggle fpu_id_cond_move "net fpu_id_cond_move"
+Toggle fpu_id_cond_move_ok "net fpu_id_cond_move_ok"
+Toggle fpu_id_double "net fpu_id_double"
+Toggle fpu_id_double_result "net fpu_id_double_result"
+Toggle fpu_id_gpr_write "net fpu_id_gpr_write"
+Toggle fpu_rf_conflict "net fpu_rf_conflict"
+Toggle id_fpu_unusable "net id_fpu_unusable"
+Toggle fcsr "reg fcsr[31:0]"
+Toggle fpu_enabled_flags "net fpu_enabled_flags[4:0]"
+Toggle id_fpu_exception "net id_fpu_exception"
+Toggle ex_fpu_word_load "net ex_fpu_word_load"
+Toggle mem_fpu_word_load "net mem_fpu_word_load"
+Toggle fpu_lwc1_hazard "net fpu_lwc1_hazard"
+Toggle fpu_conditions "net fpu_conditions[7:0]"
+Toggle fpu_double_low "reg fpu_double_low[31:0]"
+Toggle fpu_result_double "net fpu_result_double[63:0]"
+Toggle fpu_result_word "net fpu_result_word[31:0]"
+Toggle fpu_compare_true "net fpu_compare_true"
+Toggle fpu_a_double "net fpu_a_double[63:0]"
+Toggle fpu_b_double "net fpu_b_double[63:0]"
+Toggle fpu_c "net fpu_c[31:0]"
+Toggle fpu_c_double "net fpu_c_double[63:0]"
+Toggle fpu_id_commit "net fpu_id_commit"
+Toggle id_is_rdhwr "net id_is_rdhwr"
+Toggle nb_load_use_hazard "net nb_load_use_hazard"
+Toggle id_rdhwr_allowed "net id_rdhwr_allowed"
+Toggle id_cpu_unusable "net id_cpu_unusable"
+Toggle id_trap_imm "net id_trap_imm"
+Toggle id_trap_taken "net id_trap_taken"
+Toggle id_except_is_tlb_refill_out "net id_except_is_tlb_refill_out"
+Toggle ex_cache_op_valid "net ex_cache_op_valid"
+Toggle ex_cache_op "net ex_cache_op[4:0]"
+Toggle mem_double_align_fault "net mem_double_align_fault"
+Toggle mem_enable_nb_load "net mem_enable_nb_load"
+Toggle mem_adel_exception "net mem_adel_exception"
+Toggle mem_ades_exception "net mem_ades_exception"
+Toggle mem_cache_op_fault "net mem_cache_op_fault"
+Toggle is_ll_mem "net is_ll_mem"
+Toggle is_sc_mem "net is_sc_mem"
+Toggle sc_reservation_match "net sc_reservation_match"
+Toggle mem_mmu_fault "net mem_mmu_fault"
+Toggle mem_mmu_fault_code "net mem_mmu_fault_code[4:0]"
+Toggle mem_mmu_refill "net mem_mmu_refill"
+Toggle mem_bus_fault "net mem_bus_fault"
+Toggle mem_cache_fault "net mem_cache_fault"
+Toggle mem_cache_op_fault_seen "net mem_cache_op_fault_seen"
+Toggle mem_except_is_tlb_refill_out "net mem_except_is_tlb_refill_out"
+Toggle nb_rob_issue "net nb_rob_issue"
+Toggle nb_rob_block "net nb_rob_block"
+Toggle rob_complete_valid "net rob_complete_valid"
+Toggle rob_complete_tag "net rob_complete_tag[1:0]"
+Toggle nb_load_alloc "net nb_load_alloc"
+Toggle wb_di "net wb_di"
+Toggle wb_ei "net wb_ei"
+Toggle wait_interrupt_epc "net wait_interrupt_epc[31:0]"
+Toggle _mmu_unused "net _mmu_unused"
+
+// ID: EXCL-PROD-0152
+// CATEGORY: Debug & Observability
+// CHECKSUM: "1978932013 3191789618"
+MODULE: jtag_debug_top
+Toggle m_awid "net m_awid[3:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_awlock "net m_awlock[1:0]"
+Toggle m_awcache "net m_awcache[3:0]"
+Toggle m_awprot "net m_awprot[2:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_arid "net m_arid[3:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_arlock "net m_arlock[1:0]"
+Toggle m_arcache "net m_arcache[3:0]"
+Toggle m_arprot "net m_arprot[2:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle idcode_reg "reg idcode_reg[31:0]"
+Toggle bypass_reg "reg bypass_reg[31:0]"
+Toggle axi_rvalid_sync "net axi_rvalid_sync"
+
+// ID: EXCL-PROD-0153
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "3032547841 439783866"
+MODULE: apb_gpio
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+
+// ID: EXCL-PROD-0154
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3798910544 2609142321"
+MODULE: apb_uart_16550
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle uart_rx "net uart_rx"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+Toggle rx_irq "net rx_irq"
+Toggle eps "net eps"
+Toggle fifo_en "net fifo_en"
+Toggle rx_wr "reg rx_wr[4:0]"
+Toggle rx_rd "reg rx_rd[4:0]"
+Toggle rx_empty "net rx_empty"
+Toggle rx_count "net rx_count[4:0]"
+Toggle rx_full "net rx_full"
+Toggle overrun_r "reg overrun_r"
+Toggle ri_n_int "net ri_n_int"
+Toggle rx_shift "reg rx_shift[7:0]"
+Toggle rx_bit_idx "reg rx_bit_idx[3:0]"
+Toggle rx_parity_r "reg rx_parity_r"
+Toggle rx_err_par "reg rx_err_par"
+Toggle rx_err_fram "reg rx_err_fram"
+Toggle rx_brk "reg rx_brk"
+Toggle timeout_cnt "reg timeout_cnt[15:0]"
+Toggle rx_timeout_int "net rx_timeout_int"
+Toggle rx_head "net rx_head[7:0]"
+Toggle rx_head_par "net rx_head_par"
+Toggle rx_head_fram "net rx_head_fram"
+Toggle rx_head_brk "net rx_head_brk"
+Toggle rx_fifo_has_err "reg rx_fifo_has_err"
+Toggle err_pos "reg err_pos[4:0]"
+Toggle rx_line_err_int "net rx_line_err_int"
+Toggle rx_data_trig_int "net rx_data_trig_int"
+Toggle ri_n_prev "reg ri_n_prev"
+Toggle d_ri "reg d_ri"
+Toggle modem_int "net modem_int"
+Toggle iir_fifo_bits "net iir_fifo_bits[1:0]"
+Toggle auto_rts_deassert "net auto_rts_deassert"
+
+// ID: EXCL-PROD-0155
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3763908232 969713247"
+MODULE: qspi_shared_pin_arbiter
+Toggle cmd_req "net cmd_req"
+Toggle cmd_active "net cmd_active"
+Toggle cmd_sclk "net cmd_sclk"
+Toggle cmd_cs_n "net cmd_cs_n"
+Toggle cmd_mosi "net cmd_mosi"
+Toggle cmd_grant "net cmd_grant"
+Toggle conflict "net conflict"
+Toggle cmd_claim "net cmd_claim"
+
+// ID: EXCL-PROD-0156
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3319620102 2701336355"
+MODULE: mips_cp0
+Toggle tlb_op "net tlb_op[2:0]"
+Toggle cache_op_done "net cache_op_done"
+Toggle cache_op "net cache_op[4:0]"
+Toggle except_ce "net except_ce[1:0]"
+Toggle di "net di"
+Toggle ei "net ei"
+Toggle lladdr_in "net lladdr_in[31:0]"
+Toggle ebase_out "net ebase_out[31:0]"
+Toggle bev_out "net bev_out"
+Toggle vint_enabled_out "net vint_enabled_out"
+Toggle vint_offset_out "net vint_offset_out[31:0]"
+Toggle kernel_mode "net kernel_mode"
+Toggle cu1_enable "net cu1_enable"
+Toggle cp0_asid_out "net cp0_asid_out[7:0]"
+Toggle cp0_config_k0_out "net cp0_config_k0_out[2:0]"
+Toggle hwrena_out "net hwrena_out[31:0]"
+Toggle taglo_out "net taglo_out[31:0]"
+Toggle taghi_out "net taghi_out[31:0]"
+Toggle srs_current_set_out "net srs_current_set_out[3:0]"
+Toggle srs_previous_set_out "net srs_previous_set_out[3:0]"
+Toggle vint_srs_set_out "net vint_srs_set_out[3:0]"
+Toggle mmu_ilookup_hit "net mmu_ilookup_hit"
+Toggle mmu_ilookup_multi_hit "net mmu_ilookup_multi_hit"
+Toggle mmu_ilookup_v "net mmu_ilookup_v"
+Toggle mmu_ilookup_d "net mmu_ilookup_d"
+Toggle mmu_ilookup_c "net mmu_ilookup_c[2:0]"
+Toggle mmu_ilookup_pfn "net mmu_ilookup_pfn[19:0]"
+Toggle mmu_dlookup_hit "net mmu_dlookup_hit"
+Toggle mmu_dlookup_multi_hit "net mmu_dlookup_multi_hit"
+Toggle mmu_dlookup_v "net mmu_dlookup_v"
+Toggle mmu_dlookup_d "net mmu_dlookup_d"
+Toggle mmu_dlookup_c "net mmu_dlookup_c[2:0]"
+Toggle mmu_dlookup_pfn "net mmu_dlookup_pfn[19:0]"
+Toggle tlb_inv_en "net tlb_inv_en"
+Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
+Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
+Toggle tlb_inv_scope "net tlb_inv_scope[1:0]"
+Toggle tlb_inv_wired_floor "net tlb_inv_wired_floor[5:0]"
+Toggle ctx_save_req "net ctx_save_req"
+Toggle ctx_save_done "net ctx_save_done"
+Toggle ctx_save_asid "net ctx_save_asid[7:0]"
+Toggle ctx_save_srsctl "net ctx_save_srsctl[31:0]"
+Toggle ctx_restore_req "net ctx_restore_req"
+Toggle ctx_restore_status "net ctx_restore_status[31:0]"
+Toggle ctx_restore_asid "net ctx_restore_asid[7:0]"
+Toggle ctx_restore_srsctl "net ctx_restore_srsctl[31:0]"
+Toggle ctx_restore_done "net ctx_restore_done"
+Toggle interrupt_srs_set "net interrupt_srs_set[3:0]"
+Toggle hw_tlb_wr_en "net hw_tlb_wr_en"
+Toggle hw_tlb_wr_index "net hw_tlb_wr_index[5:0]"
+Toggle hw_tlb_wr_vpn2 "net hw_tlb_wr_vpn2[18:0]"
+Toggle hw_tlb_wr_asid "net hw_tlb_wr_asid[7:0]"
+Toggle hw_tlb_wr_mask "net hw_tlb_wr_mask[15:0]"
+Toggle hw_tlb_wr_entrylo0 "net hw_tlb_wr_entrylo0[31:0]"
+Toggle hw_tlb_wr_entrylo1 "net hw_tlb_wr_entrylo1[31:0]"
+Toggle hw_tlb_wr_ready "net hw_tlb_wr_ready"
+Toggle cp0_errorepc_valid "reg cp0_errorepc_valid"
+Toggle cp0_ebase_hi "reg cp0_ebase_hi[17:0]"
+Toggle cp0_hwrena "reg cp0_hwrena[31:0]"
+Toggle cp0_userlocal "reg cp0_userlocal[31:0]"
+Toggle cp0_config_k0 "reg cp0_config_k0[2:0]"
+Toggle cp0_intctl_ipti "reg cp0_intctl_ipti[2:0]"
+Toggle cp0_intctl_vs "reg cp0_intctl_vs[4:0]"
+Toggle tlb_rd_vpn2 "net tlb_rd_vpn2[18:0]"
+Toggle tlb_rd_asid "net tlb_rd_asid[7:0]"
+Toggle tlb_rd_mask "net tlb_rd_mask[15:0]"
+Toggle tlb_rd_entrylo0 "net tlb_rd_entrylo0[31:0]"
+Toggle tlb_rd_entrylo1 "net tlb_rd_entrylo1[31:0]"
+Toggle tlb_probe_hit "net tlb_probe_hit"
+Toggle tlb_probe_index "net tlb_probe_index[5:0]"
+Toggle tlb_probe_multi_hit "net tlb_probe_multi_hit"
+Toggle cp0_index_p "reg cp0_index_p"
+Toggle cp0_index "reg cp0_index[5:0]"
+Toggle cp0_wired "reg cp0_wired[5:0]"
+Toggle cp0_entrylo0 "reg cp0_entrylo0[31:0]"
+Toggle cp0_entrylo1 "reg cp0_entrylo1[31:0]"
+Toggle cp0_context_ptebase "reg cp0_context_ptebase[8:0]"
+Toggle cp0_pagemask_mask "reg cp0_pagemask_mask[15:0]"
+Toggle cp0_entryhi_vpn2 "reg cp0_entryhi_vpn2[18:0]"
+Toggle cp0_entryhi_asid "reg cp0_entryhi_asid[7:0]"
+Toggle cp0_taglo "reg cp0_taglo[31:0]"
+Toggle cp0_taghi "reg cp0_taghi[31:0]"
+Toggle cp0_srs_css "reg cp0_srs_css[3:0]"
+Toggle cp0_srs_pss "reg cp0_srs_pss[3:0]"
+Toggle cp0_srs_ess "reg cp0_srs_ess[3:0]"
+Toggle cp0_srs_map "reg cp0_srs_map[31:0]"
+Toggle prid_val "net prid_val[31:0]"
+Toggle ebase_val "net ebase_val[31:0]"
+Toggle config0_val "net config0_val[31:0]"
+Toggle mmu_size "net mmu_size[5:0]"
+Toggle config1_val "net config1_val[31:0]"
+Toggle config2_val "net config2_val[31:0]"
+Toggle config3_val "net config3_val[31:0]"
+Toggle intctl_val "net intctl_val[31:0]"
+Toggle index_val "net index_val[31:0]"
+Toggle wired_val "net wired_val[31:0]"
+Toggle pagemask_val "net pagemask_val[31:0]"
+Toggle entryhi_val "net entryhi_val[31:0]"
+Toggle srsctl_val "net srsctl_val[31:0]"
+Toggle srsmap_val "net srsmap_val[31:0]"
+Toggle timer_ip_active "net timer_ip_active"
+Toggle ip_from_timer "net ip_from_timer[7:0]"
+Toggle cnt_eq_cmp "net cnt_eq_cmp"
+Toggle vint_srs_set "reg vint_srs_set[3:0]"
+Toggle vint_spacing "net vint_spacing[9:0]"
+Toggle vint_spacing_ext "net vint_spacing_ext[12:0]"
+Toggle vint_offset "net vint_offset[12:0]"
+Toggle tlb_wr_en_raw "net tlb_wr_en_raw"
+Toggle tlb_wr_en_sw "net tlb_wr_en_sw"
+Toggle tlb_wr_en "net tlb_wr_en"
+Toggle micro_tlb_context_flush "net micro_tlb_context_flush"
+Toggle tlb_wr_vpn2 "net tlb_wr_vpn2[18:0]"
+Toggle tlb_wr_asid "net tlb_wr_asid[7:0]"
+Toggle tlb_wr_mask "net tlb_wr_mask[15:0]"
+Toggle tlb_wr_entrylo0 "net tlb_wr_entrylo0[31:0]"
+Toggle tlb_wr_entrylo1 "net tlb_wr_entrylo1[31:0]"
+
+// ID: EXCL-PROD-0157
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3943920266 2674090628"
+MODULE: dcache
+Toggle cpu_bus_error "net cpu_bus_error"
+Toggle cpu_cache_error "net cpu_cache_error"
+Toggle cache_op_valid "net cache_op_valid"
+Toggle cache_op "net cache_op[4:0]"
+Toggle cache_op_done "net cache_op_done"
+Toggle cache_op_error "net cache_op_error"
+Toggle cache_tag_wdata "net cache_tag_wdata[31:0]"
+Toggle awid "net awid[3:0]"
+Toggle awsize "net awsize[2:0]"
+Toggle awburst "net awburst[1:0]"
+Toggle awlock "net awlock[1:0]"
+Toggle awprot "net awprot[2:0]"
+Toggle bid "net bid[3:0]"
+Toggle bresp "net bresp[1:0]"
+Toggle arid "net arid[3:0]"
+Toggle arsize "net arsize[2:0]"
+Toggle arburst "net arburst[1:0]"
+Toggle arlock "net arlock[1:0]"
+Toggle arprot "net arprot[2:0]"
+Toggle rid "net rid[3:0]"
+Toggle rresp "net rresp[1:0]"
+Toggle coh_store_valid "net coh_store_valid"
+Toggle coh_snoop_valid "net coh_snoop_valid"
+Toggle coh_snoop_addr "net coh_snoop_addr[31:0]"
+Toggle maint_addr "reg maint_addr[31:0]"
+Toggle maint_op "reg maint_op[4:0]"
+Toggle maint_way "reg maint_way[1:0]"
+Toggle coh_refill_snoop_pending "reg coh_refill_snoop_pending"
+Toggle coh_snoop_block "reg coh_snoop_block"
+Toggle maint_tag_wdata "reg maint_tag_wdata[31:0]"
+Toggle maint_line "reg maint_line[255:0]"
+Toggle maint_error "reg maint_error"
+Toggle maint_clear_valid "reg maint_clear_valid"
+Toggle maint_clear_dirty "reg maint_clear_dirty"
+Toggle legacy_addr_uncacheable "net legacy_addr_uncacheable"
+Toggle coh_snoop_addr_norm "net coh_snoop_addr_norm[31:0]"
+Toggle coh_snoop_index_hit "net coh_snoop_index_hit"
+Toggle coh_refill_collision "net coh_refill_collision"
+Toggle coh_snoop_hits_lookup "net coh_snoop_hits_lookup"
+Toggle refill_error "reg refill_error"
+Toggle cache_error_pending "reg cache_error_pending"
+Toggle maint_index_wbi "net maint_index_wbi"
+Toggle maint_index_load_tag "net maint_index_load_tag"
+Toggle maint_index_store_tag "net maint_index_store_tag"
+Toggle maint_index_tag "net maint_index_tag"
+Toggle maint_hit_inv "net maint_hit_inv"
+Toggle maint_hit_wb_inv "net maint_hit_wb_inv"
+Toggle maint_hit_wb "net maint_hit_wb"
+Toggle maint_needs_wb "net maint_needs_wb"
+
+// ID: EXCL-PROD-0158
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3793966820 948543986"
+MODULE: soc_fabric
+Toggle m0_arid "net m0_arid[3:0]"
+Toggle m0_arlen "net m0_arlen[7:0]"
+Toggle m0_arsize "net m0_arsize[2:0]"
+Toggle m0_arburst "net m0_arburst[1:0]"
+Toggle m0_arlock "net m0_arlock[1:0]"
+Toggle m0_arcache "net m0_arcache[3:0]"
+Toggle m0_arprot "net m0_arprot[2:0]"
+Toggle m0_rid "net m0_rid[3:0]"
+Toggle m0_rresp "net m0_rresp[1:0]"
+Toggle m1_awid "net m1_awid[3:0]"
+Toggle m1_awsize "net m1_awsize[2:0]"
+Toggle m1_awburst "net m1_awburst[1:0]"
+Toggle m1_awlock "net m1_awlock[1:0]"
+Toggle m1_awprot "net m1_awprot[2:0]"
+Toggle m1_arid "net m1_arid[3:0]"
+Toggle m1_arsize "net m1_arsize[2:0]"
+Toggle m1_arburst "net m1_arburst[1:0]"
+Toggle m1_arlock "net m1_arlock[1:0]"
+Toggle m1_arprot "net m1_arprot[2:0]"
+Toggle m1_bid "net m1_bid[3:0]"
+Toggle m1_bresp "net m1_bresp[1:0]"
+Toggle m1_rid "net m1_rid[3:0]"
+Toggle m1_rresp "net m1_rresp[1:0]"
+Toggle m2_awid "net m2_awid[3:0]"
+Toggle m2_awlen "net m2_awlen[7:0]"
+Toggle m2_awsize "net m2_awsize[2:0]"
+Toggle m2_awburst "net m2_awburst[1:0]"
+Toggle m2_awlock "net m2_awlock[1:0]"
+Toggle m2_awcache "net m2_awcache[3:0]"
+Toggle m2_awprot "net m2_awprot[2:0]"
+Toggle m2_wstrb "net m2_wstrb[3:0]"
+Toggle m2_wlast "net m2_wlast"
+Toggle m2_bready "net m2_bready"
+Toggle m2_arid "net m2_arid[3:0]"
+Toggle m2_arlen "net m2_arlen[7:0]"
+Toggle m2_arsize "net m2_arsize[2:0]"
+Toggle m2_arburst "net m2_arburst[1:0]"
+Toggle m2_arlock "net m2_arlock[1:0]"
+Toggle m2_arcache "net m2_arcache[3:0]"
+Toggle m2_arprot "net m2_arprot[2:0]"
+Toggle m2_rready "net m2_rready"
+Toggle m2_bresp "net m2_bresp[1:0]"
+Toggle m2_rresp "net m2_rresp[1:0]"
+Toggle jtag_awid "net jtag_awid[3:0]"
+Toggle jtag_awlen "net jtag_awlen[7:0]"
+Toggle jtag_awsize "net jtag_awsize[2:0]"
+Toggle jtag_awburst "net jtag_awburst[1:0]"
+Toggle jtag_awlock "net jtag_awlock[1:0]"
+Toggle jtag_awcache "net jtag_awcache[3:0]"
+Toggle jtag_awprot "net jtag_awprot[2:0]"
+Toggle jtag_wstrb "net jtag_wstrb[3:0]"
+Toggle jtag_wlast "net jtag_wlast"
+Toggle jtag_arid "net jtag_arid[3:0]"
+Toggle jtag_arlen "net jtag_arlen[7:0]"
+Toggle jtag_arsize "net jtag_arsize[2:0]"
+Toggle jtag_arburst "net jtag_arburst[1:0]"
+Toggle jtag_arlock "net jtag_arlock[1:0]"
+Toggle jtag_arcache "net jtag_arcache[3:0]"
+Toggle jtag_arprot "net jtag_arprot[2:0]"
+Toggle jtag_bresp "net jtag_bresp[1:0]"
+Toggle jtag_rresp "net jtag_rresp[1:0]"
+Toggle ext_awid "net ext_awid[3:0]"
+Toggle ext_awaddr "net ext_awaddr[31:0]"
+Toggle ext_awlen "net ext_awlen[7:0]"
+Toggle ext_awsize "net ext_awsize[2:0]"
+Toggle ext_awburst "net ext_awburst[1:0]"
+Toggle ext_awlock "net ext_awlock[1:0]"
+Toggle ext_awcache "net ext_awcache[3:0]"
+Toggle ext_awprot "net ext_awprot[2:0]"
+Toggle ext_awvalid "net ext_awvalid"
+Toggle ext_wdata "net ext_wdata[31:0]"
+Toggle ext_wstrb "net ext_wstrb[3:0]"
+Toggle ext_wlast "net ext_wlast"
+Toggle ext_wvalid "net ext_wvalid"
+Toggle ext_bready "net ext_bready"
+Toggle ext_arid "net ext_arid[3:0]"
+Toggle ext_araddr "net ext_araddr[31:0]"
+Toggle ext_arlen "net ext_arlen[7:0]"
+Toggle ext_arsize "net ext_arsize[2:0]"
+Toggle ext_arburst "net ext_arburst[1:0]"
+Toggle ext_arlock "net ext_arlock[1:0]"
+Toggle ext_arcache "net ext_arcache[3:0]"
+Toggle ext_arprot "net ext_arprot[2:0]"
+Toggle ext_arvalid "net ext_arvalid"
+Toggle ext_rready "net ext_rready"
+Toggle ext_awready "net ext_awready"
+Toggle ext_wready "net ext_wready"
+Toggle ext_bid "net ext_bid[3:0]"
+Toggle ext_bresp "net ext_bresp[1:0]"
+Toggle ext_bvalid "net ext_bvalid"
+Toggle ext_arready "net ext_arready"
+Toggle ext_rid "net ext_rid[3:0]"
+Toggle ext_rdata "net ext_rdata[31:0]"
+Toggle ext_rresp "net ext_rresp[1:0]"
+Toggle ext_rlast "net ext_rlast"
+Toggle ext_rvalid "net ext_rvalid"
+Toggle s0_awlock "net s0_awlock[1:0]"
+Toggle s0_awprot "net s0_awprot[2:0]"
+Toggle s0_arsize "net s0_arsize[2:0]"
+Toggle s0_arburst "net s0_arburst[1:0]"
+Toggle s0_arlock "net s0_arlock[1:0]"
+Toggle s0_bresp "net s0_bresp[1:0]"
+Toggle s0_rresp "net s0_rresp[1:0]"
+Toggle s1_awlen "net s1_awlen[7:0]"
+Toggle s1_awlock "net s1_awlock[1:0]"
+Toggle s1_awcache "net s1_awcache[3:0]"
+Toggle s1_awprot "net s1_awprot[2:0]"
+Toggle s1_arsize "net s1_arsize[2:0]"
+Toggle s1_arburst "net s1_arburst[1:0]"
+Toggle s1_arlock "net s1_arlock[1:0]"
+Toggle s1_bresp "net s1_bresp[1:0]"
+Toggle s1_rresp "net s1_rresp[1:0]"
+Toggle s2_awid "net s2_awid[3:0]"
+Toggle s2_awaddr "net s2_awaddr[31:0]"
+Toggle s2_awlen "net s2_awlen[7:0]"
+Toggle s2_awsize "net s2_awsize[2:0]"
+Toggle s2_awburst "net s2_awburst[1:0]"
+Toggle s2_awlock "net s2_awlock[1:0]"
+Toggle s2_awcache "net s2_awcache[3:0]"
+Toggle s2_awprot "net s2_awprot[2:0]"
+Toggle s2_awvalid "net s2_awvalid"
+Toggle s2_wdata "net s2_wdata[31:0]"
+Toggle s2_wstrb "net s2_wstrb[3:0]"
+Toggle s2_wlast "net s2_wlast"
+Toggle s2_wvalid "net s2_wvalid"
+Toggle s2_bready "net s2_bready"
+Toggle s2_arid "net s2_arid[3:0]"
+Toggle s2_arlen "net s2_arlen[7:0]"
+Toggle s2_arsize "net s2_arsize[2:0]"
+Toggle s2_arburst "net s2_arburst[1:0]"
+Toggle s2_arlock "net s2_arlock[1:0]"
+Toggle s2_arcache "net s2_arcache[3:0]"
+Toggle s2_awready "net s2_awready"
+Toggle s2_wready "net s2_wready"
+Toggle s2_bid "net s2_bid[3:0]"
+Toggle s2_bresp "net s2_bresp[1:0]"
+Toggle s2_bvalid "net s2_bvalid"
+Toggle s2_rid "net s2_rid[3:0]"
+Toggle s2_rdata "net s2_rdata[31:0]"
+Toggle s3_awid "net s3_awid[3:0]"
+Toggle s3_awaddr "net s3_awaddr[31:0]"
+Toggle s3_awlen "net s3_awlen[7:0]"
+Toggle s3_awsize "net s3_awsize[2:0]"
+Toggle s3_awburst "net s3_awburst[1:0]"
+Toggle s3_awlock "net s3_awlock[1:0]"
+Toggle s3_awcache "net s3_awcache[3:0]"
+Toggle s3_awprot "net s3_awprot[2:0]"
+Toggle s3_awvalid "net s3_awvalid"
+Toggle s3_wdata "net s3_wdata[31:0]"
+Toggle s3_wstrb "net s3_wstrb[3:0]"
+Toggle s3_wlast "net s3_wlast"
+Toggle s3_wvalid "net s3_wvalid"
+Toggle s3_bready "net s3_bready"
+Toggle s3_arid "net s3_arid[3:0]"
+Toggle s3_arlen "net s3_arlen[7:0]"
+Toggle s3_arsize "net s3_arsize[2:0]"
+Toggle s3_arburst "net s3_arburst[1:0]"
+Toggle s3_arlock "net s3_arlock[1:0]"
+Toggle s3_arcache "net s3_arcache[3:0]"
+Toggle s3_arprot "net s3_arprot[2:0]"
+Toggle s3_arvalid "net s3_arvalid"
+Toggle s3_rready "net s3_rready"
+Toggle s3_wready "net s3_wready"
+Toggle s3_bid "net s3_bid[3:0]"
+Toggle s3_bresp "net s3_bresp[1:0]"
+Toggle s3_bvalid "net s3_bvalid"
+Toggle s3_rid "net s3_rid[3:0]"
+Toggle s3_rdata "net s3_rdata[31:0]"
+Toggle s3_rresp "net s3_rresp[1:0]"
+Toggle s3_rlast "net s3_rlast"
+Toggle s3_rvalid "net s3_rvalid"
+Toggle s4_awid "net s4_awid[3:0]"
+Toggle s4_awaddr "net s4_awaddr[31:0]"
+Toggle s4_awlen "net s4_awlen[7:0]"
+Toggle s4_awsize "net s4_awsize[2:0]"
+Toggle s4_awburst "net s4_awburst[1:0]"
+Toggle s4_awlock "net s4_awlock[1:0]"
+Toggle s4_awcache "net s4_awcache[3:0]"
+Toggle s4_awprot "net s4_awprot[2:0]"
+Toggle s4_awvalid "net s4_awvalid"
+Toggle s4_wdata "net s4_wdata[31:0]"
+Toggle s4_wstrb "net s4_wstrb[3:0]"
+Toggle s4_wlast "net s4_wlast"
+Toggle s4_wvalid "net s4_wvalid"
+Toggle s4_bready "net s4_bready"
+Toggle s4_arid "net s4_arid[3:0]"
+Toggle s4_arlen "net s4_arlen[7:0]"
+Toggle s4_arsize "net s4_arsize[2:0]"
+Toggle s4_arburst "net s4_arburst[1:0]"
+Toggle s4_arlock "net s4_arlock[1:0]"
+Toggle s4_arcache "net s4_arcache[3:0]"
+Toggle s4_arprot "net s4_arprot[2:0]"
+Toggle s4_arvalid "net s4_arvalid"
+Toggle s4_rready "net s4_rready"
+Toggle s4_awready "net s4_awready"
+Toggle s4_wready "net s4_wready"
+Toggle s4_bid "net s4_bid[3:0]"
+Toggle s4_bresp "net s4_bresp[1:0]"
+Toggle s4_bvalid "net s4_bvalid"
+Toggle s4_arready "net s4_arready"
+Toggle s4_rid "net s4_rid[3:0]"
+Toggle s4_rdata "net s4_rdata[31:0]"
+Toggle s4_rresp "net s4_rresp[1:0]"
+Toggle s4_rlast "net s4_rlast"
+Toggle s4_rvalid "net s4_rvalid"
+Toggle xm_enable "net xm_enable[4:0]"
+Toggle xm_awid "net xm_awid[19:0]"
+Toggle xm_awsize "net xm_awsize[14:0]"
+Toggle xm_awburst "net xm_awburst[9:0]"
+Toggle xm_awlock "net xm_awlock[9:0]"
+Toggle xm_awprot "net xm_awprot[14:0]"
+Toggle xm_awqos "net xm_awqos[19:0]"
+Toggle xm_bresp "net xm_bresp[9:0]"
+Toggle xm_arid "net xm_arid[19:0]"
+Toggle xm_arsize "net xm_arsize[14:0]"
+Toggle xm_arburst "net xm_arburst[9:0]"
+Toggle xm_arlock "net xm_arlock[9:0]"
+Toggle xm_arprot "net xm_arprot[14:0]"
+Toggle xm_arqos "net xm_arqos[19:0]"
+Toggle xm_rresp "net xm_rresp[9:0]"
+Toggle xs_awlock "net xs_awlock[9:0]"
+Toggle xs_awprot "net xs_awprot[14:0]"
+Toggle xs_bresp "net xs_bresp[9:0]"
+Toggle xs_arsize "net xs_arsize[14:0]"
+Toggle xs_arburst "net xs_arburst[9:0]"
+Toggle xs_arlock "net xs_arlock[9:0]"
+
+// ID: EXCL-PROD-0159
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1536517759 1897099756"
+MODULE: l2_cache_wt
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle m_wstrb "reg m_wstrb[3:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle snoop_addr "net snoop_addr[31:0]"
+Toggle snoop_valid "net snoop_valid"
+Toggle snoop_ack "net snoop_ack"
+Toggle snoop_hit "net snoop_hit"
+Toggle snoop_index "net snoop_index[11:0]"
+Toggle snoop_tag "net snoop_tag[14:0]"
+Toggle refill_error "reg refill_error[1:0]"
+Toggle w_buf_strb "reg w_buf_strb[3:0]"
+Toggle snoop_invalidate_pending "reg snoop_invalidate_pending"
+
+// ID: EXCL-PROD-0160
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2910715491 2474013807"
+MODULE: apb_wdt
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle wdt_reset "reg wdt_reset"
+Toggle load_r "reg load_r[31:0]"
+Toggle val_r "reg val_r[31:0]"
+Toggle ctrl_en "reg ctrl_en"
+Toggle ctrl_lock "reg ctrl_lock"
+Toggle expired_r "reg expired_r"
+Toggle wr "net wr"
+Toggle rd "net rd"
+
+// ID: EXCL-PROD-0161
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "3975723183 1825931879"
+MODULE: icache
+Toggle cpu_req "net cpu_req"
+Toggle cpu_bus_error "net cpu_bus_error"
+Toggle cpu_cache_error "net cpu_cache_error"
+Toggle cache_op_valid "net cache_op_valid"
+Toggle cache_op "net cache_op[4:0]"
+Toggle cache_op_ready "net cache_op_ready"
+Toggle cache_op_done "net cache_op_done"
+Toggle cache_op_error "net cache_op_error"
+Toggle cache_tag_wdata "net cache_tag_wdata[31:0]"
+Toggle sim_parity_inject_valid "net sim_parity_inject_valid"
+Toggle sim_parity_inject_tag "net sim_parity_inject_tag"
+Toggle sim_parity_inject_data "net sim_parity_inject_data"
+Toggle sim_parity_inject_way "net sim_parity_inject_way[1:0]"
+Toggle sim_parity_inject_index "net sim_parity_inject_index[5:0]"
+Toggle arid "net arid[3:0]"
+Toggle arlen "net arlen[7:0]"
+Toggle arsize "net arsize[2:0]"
+Toggle arburst "net arburst[1:0]"
+Toggle arlock "net arlock[1:0]"
+Toggle arcache "net arcache[3:0]"
+Toggle arprot "net arprot[2:0]"
+Toggle rid "net rid[3:0]"
+Toggle rresp "net rresp[1:0]"
+Toggle refill_error "reg refill_error"
+Toggle maint_req "net maint_req"
+Toggle maint_addr "reg maint_addr[31:0]"
+Toggle maint_op "reg maint_op[4:0]"
+Toggle maint_way "reg maint_way[1:0]"
+Toggle maint_tag_wdata "reg maint_tag_wdata[31:0]"
+Toggle maint_error "reg maint_error"
+Toggle maint_index "net maint_index[5:0]"
+Toggle maint_index_invalidate "net maint_index_invalidate"
+Toggle maint_load_tag "net maint_load_tag"
+Toggle maint_store_tag "net maint_store_tag"
+Toggle maint_hit_invalidate "net maint_hit_invalidate"
+Toggle sim_parity_target "net sim_parity_target"
+Toggle tag_parity_bad "reg tag_parity_bad[3:0]"
+Toggle data_parity_bad "reg data_parity_bad[3:0]"
+Toggle icache_parity_error "net icache_parity_error"
+
+// ID: EXCL-PROD-0162
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "892611322 2542372638"
+MODULE: mips_soc_impl
+Toggle uart_rx "net uart_rx"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+Toggle spi_miso "net spi_miso"
+Toggle qspi_io "net qspi_io[3:0]"
+Toggle ext_awid "net ext_awid[3:0]"
+Toggle ext_awaddr "net ext_awaddr[31:0]"
+Toggle ext_awlen "net ext_awlen[7:0]"
+Toggle ext_awsize "net ext_awsize[2:0]"
+Toggle ext_awburst "net ext_awburst[1:0]"
+Toggle ext_awlock "net ext_awlock[1:0]"
+Toggle ext_awcache "net ext_awcache[3:0]"
+Toggle ext_awprot "net ext_awprot[2:0]"
+Toggle ext_awvalid "net ext_awvalid"
+Toggle ext_awready "net ext_awready"
+Toggle ext_wdata "net ext_wdata[31:0]"
+Toggle ext_wstrb "net ext_wstrb[3:0]"
+Toggle ext_wlast "net ext_wlast"
+Toggle ext_wvalid "net ext_wvalid"
+Toggle ext_wready "net ext_wready"
+Toggle ext_bid "net ext_bid[3:0]"
+Toggle ext_bresp "net ext_bresp[1:0]"
+Toggle ext_bvalid "net ext_bvalid"
+Toggle ext_bready "net ext_bready"
+Toggle ext_arid "net ext_arid[3:0]"
+Toggle ext_araddr "net ext_araddr[31:0]"
+Toggle ext_arlen "net ext_arlen[7:0]"
+Toggle ext_arsize "net ext_arsize[2:0]"
+Toggle ext_arburst "net ext_arburst[1:0]"
+Toggle ext_arlock "net ext_arlock[1:0]"
+Toggle ext_arcache "net ext_arcache[3:0]"
+Toggle ext_arprot "net ext_arprot[2:0]"
+Toggle ext_arvalid "net ext_arvalid"
+Toggle ext_arready "net ext_arready"
+Toggle ext_rid "net ext_rid[3:0]"
+Toggle ext_rdata "net ext_rdata[31:0]"
+Toggle ext_rresp "net ext_rresp[1:0]"
+Toggle ext_rlast "net ext_rlast"
+Toggle ext_rvalid "net ext_rvalid"
+Toggle ext_rready "net ext_rready"
+Toggle fx_awid "net fx_awid[3:0]"
+Toggle fx_awcache "net fx_awcache[3:0]"
+Toggle fx_awaddr "net fx_awaddr[31:0]"
+Toggle fx_wdata "net fx_wdata[31:0]"
+Toggle fx_awlen "net fx_awlen[7:0]"
+Toggle fx_awsize "net fx_awsize[2:0]"
+Toggle fx_awprot "net fx_awprot[2:0]"
+Toggle fx_awburst "net fx_awburst[1:0]"
+Toggle fx_awlock "net fx_awlock[1:0]"
+Toggle fx_awvalid "net fx_awvalid"
+Toggle fx_awready "net fx_awready"
+Toggle fx_wlast "net fx_wlast"
+Toggle fx_wvalid "net fx_wvalid"
+Toggle fx_wready "net fx_wready"
+Toggle fx_wstrb "net fx_wstrb[3:0]"
+Toggle fx_bid "net fx_bid[3:0]"
+Toggle fx_arid "net fx_arid[3:0]"
+Toggle fx_rid "net fx_rid[3:0]"
+Toggle fx_arcache "net fx_arcache[3:0]"
+Toggle fx_bresp "net fx_bresp[1:0]"
+Toggle fx_arburst "net fx_arburst[1:0]"
+Toggle fx_arlock "net fx_arlock[1:0]"
+Toggle fx_rresp "net fx_rresp[1:0]"
+Toggle fx_araddr "net fx_araddr[31:0]"
+Toggle fx_rdata "net fx_rdata[31:0]"
+Toggle fx_arlen "net fx_arlen[7:0]"
+Toggle fx_arsize "net fx_arsize[2:0]"
+Toggle fx_arprot "net fx_arprot[2:0]"
+Toggle fx_bvalid "net fx_bvalid"
+Toggle fx_bready "net fx_bready"
+Toggle fx_arvalid "net fx_arvalid"
+Toggle fx_arready "net fx_arready"
+Toggle fx_rlast "net fx_rlast"
+Toggle fx_rvalid "net fx_rvalid"
+Toggle fx_rready "net fx_rready"
+Toggle m0_awid "net m0_awid[3:0]"
+Toggle m0_awaddr "net m0_awaddr[31:0]"
+Toggle m0_awlen "net m0_awlen[7:0]"
+Toggle m0_awsize "net m0_awsize[2:0]"
+Toggle m0_awburst "net m0_awburst[1:0]"
+Toggle m0_awlock "net m0_awlock[1:0]"
+Toggle m0_awcache "net m0_awcache[3:0]"
+Toggle m0_awprot "net m0_awprot[2:0]"
+Toggle m0_awvalid "net m0_awvalid"
+Toggle m0_awready "net m0_awready"
+Toggle m0_wdata "net m0_wdata[31:0]"
+Toggle m0_wstrb "net m0_wstrb[3:0]"
+Toggle m0_wlast "net m0_wlast"
+Toggle m0_wvalid "net m0_wvalid"
+Toggle m0_wready "net m0_wready"
+Toggle m0_bid "net m0_bid[3:0]"
+Toggle m0_bresp "net m0_bresp[1:0]"
+Toggle m0_bvalid "net m0_bvalid"
+Toggle m0_bready "net m0_bready"
+Toggle m0_arid "net m0_arid[3:0]"
+Toggle m0_arlen "net m0_arlen[7:0]"
+Toggle m0_arsize "net m0_arsize[2:0]"
+Toggle m0_arburst "net m0_arburst[1:0]"
+Toggle m0_arlock "net m0_arlock[1:0]"
+Toggle m0_arcache "net m0_arcache[3:0]"
+Toggle m0_arprot "net m0_arprot[2:0]"
+Toggle m0_rid "net m0_rid[3:0]"
+Toggle m0_rresp "net m0_rresp[1:0]"
+Toggle perf_cycle_count "net perf_cycle_count[31:0]"
+Toggle perf_retire_count "net perf_retire_count[31:0]"
+Toggle perf_icache_miss_count "net perf_icache_miss_count[31:0]"
+Toggle perf_dcache_miss_count "net perf_dcache_miss_count[31:0]"
+Toggle perf_branch_mispredict_count "net perf_branch_mispredict_count[31:0]"
+Toggle perf_mdu_stall_count "net perf_mdu_stall_count[31:0]"
+Toggle m1_awid "net m1_awid[3:0]"
+Toggle m1_awsize "net m1_awsize[2:0]"
+Toggle m1_awburst "net m1_awburst[1:0]"
+Toggle m1_awlock "net m1_awlock[1:0]"
+Toggle m1_awprot "net m1_awprot[2:0]"
+Toggle m1_bid "net m1_bid[3:0]"
+Toggle m1_bresp "net m1_bresp[1:0]"
+Toggle m1_arid "net m1_arid[3:0]"
+Toggle m1_arsize "net m1_arsize[2:0]"
+Toggle m1_arburst "net m1_arburst[1:0]"
+Toggle m1_arlock "net m1_arlock[1:0]"
+Toggle m1_arprot "net m1_arprot[2:0]"
+Toggle m1_rid "net m1_rid[3:0]"
+Toggle m1_rresp "net m1_rresp[1:0]"
+Toggle s0_awlock "net s0_awlock[1:0]"
+Toggle s0_awprot "net s0_awprot[2:0]"
+Toggle s0_bresp "net s0_bresp[1:0]"
+Toggle s0_arsize "net s0_arsize[2:0]"
+Toggle s0_arburst "net s0_arburst[1:0]"
+Toggle s0_arlock "net s0_arlock[1:0]"
+Toggle s0_rresp "net s0_rresp[1:0]"
+Toggle m2_awid "net m2_awid[3:0]"
+Toggle m2_awlen "net m2_awlen[7:0]"
+Toggle m2_awsize "net m2_awsize[2:0]"
+Toggle m2_awburst "net m2_awburst[1:0]"
+Toggle m2_awlock "net m2_awlock[1:0]"
+Toggle m2_awcache "net m2_awcache[3:0]"
+Toggle m2_awprot "net m2_awprot[2:0]"
+Toggle m2_wstrb "net m2_wstrb[3:0]"
+Toggle m2_wlast "net m2_wlast"
+Toggle m2_bresp "net m2_bresp[1:0]"
+Toggle m2_bready "net m2_bready"
+Toggle m2_arid "net m2_arid[3:0]"
+Toggle m2_arlen "net m2_arlen[7:0]"
+Toggle m2_arsize "net m2_arsize[2:0]"
+Toggle m2_arburst "net m2_arburst[1:0]"
+Toggle m2_arlock "net m2_arlock[1:0]"
+Toggle m2_arcache "net m2_arcache[3:0]"
+Toggle m2_arprot "net m2_arprot[2:0]"
+Toggle m2_rresp "net m2_rresp[1:0]"
+Toggle m2_rready "net m2_rready"
+Toggle jtag_awid "net jtag_awid[3:0]"
+Toggle jtag_awlen "net jtag_awlen[7:0]"
+Toggle jtag_awsize "net jtag_awsize[2:0]"
+Toggle jtag_awburst "net jtag_awburst[1:0]"
+Toggle jtag_awlock "net jtag_awlock[1:0]"
+Toggle jtag_awcache "net jtag_awcache[3:0]"
+Toggle jtag_awprot "net jtag_awprot[2:0]"
+Toggle jtag_wstrb "net jtag_wstrb[3:0]"
+Toggle jtag_wlast "net jtag_wlast"
+Toggle jtag_bresp "net jtag_bresp[1:0]"
+Toggle jtag_arid "net jtag_arid[3:0]"
+Toggle jtag_arlen "net jtag_arlen[7:0]"
+Toggle jtag_arsize "net jtag_arsize[2:0]"
+Toggle jtag_arburst "net jtag_arburst[1:0]"
+Toggle jtag_arlock "net jtag_arlock[1:0]"
+Toggle jtag_arcache "net jtag_arcache[3:0]"
+Toggle jtag_arprot "net jtag_arprot[2:0]"
+Toggle jtag_rresp "net jtag_rresp[1:0]"
+Toggle s1_awlen "net s1_awlen[7:0]"
+Toggle s1_awlock "net s1_awlock[1:0]"
+Toggle s1_awcache "net s1_awcache[3:0]"
+Toggle s1_awprot "net s1_awprot[2:0]"
+Toggle s1_bresp "net s1_bresp[1:0]"
+Toggle s1_arsize "net s1_arsize[2:0]"
+Toggle s1_arburst "net s1_arburst[1:0]"
+Toggle s1_arlock "net s1_arlock[1:0]"
+Toggle s1_rresp "net s1_rresp[1:0]"
+Toggle s2_awid "net s2_awid[3:0]"
+Toggle s2_awaddr "net s2_awaddr[31:0]"
+Toggle s2_awlen "net s2_awlen[7:0]"
+Toggle s2_awsize "net s2_awsize[2:0]"
+Toggle s2_awburst "net s2_awburst[1:0]"
+Toggle s2_awlock "net s2_awlock[1:0]"
+Toggle s2_awcache "net s2_awcache[3:0]"
+Toggle s2_awprot "net s2_awprot[2:0]"
+Toggle s2_awvalid "net s2_awvalid"
+Toggle s2_awready "net s2_awready"
+Toggle s2_wdata "net s2_wdata[31:0]"
+Toggle s2_wstrb "net s2_wstrb[3:0]"
+Toggle s2_wlast "net s2_wlast"
+Toggle s2_wvalid "net s2_wvalid"
+Toggle s2_wready "net s2_wready"
+Toggle s2_bid "net s2_bid[3:0]"
+Toggle s2_bresp "net s2_bresp[1:0]"
+Toggle s2_bvalid "net s2_bvalid"
+Toggle s2_bready "net s2_bready"
+Toggle s2_arid "net s2_arid[3:0]"
+Toggle s2_arlen "net s2_arlen[7:0]"
+Toggle s2_arsize "net s2_arsize[2:0]"
+Toggle s2_arburst "net s2_arburst[1:0]"
+Toggle s2_arlock "net s2_arlock[1:0]"
+Toggle s2_arcache "net s2_arcache[3:0]"
+Toggle s2_rid "net s2_rid[3:0]"
+Toggle s2_rdata "net s2_rdata[31:0]"
+Toggle s3_awid "net s3_awid[3:0]"
+Toggle s3_awaddr "net s3_awaddr[31:0]"
+Toggle s3_awlen "net s3_awlen[7:0]"
+Toggle s3_awsize "net s3_awsize[2:0]"
+Toggle s3_awburst "net s3_awburst[1:0]"
+Toggle s3_awlock "net s3_awlock[1:0]"
+Toggle s3_awcache "net s3_awcache[3:0]"
+Toggle s3_awprot "net s3_awprot[2:0]"
+Toggle s3_awvalid "net s3_awvalid"
+Toggle s3_wdata "net s3_wdata[31:0]"
+Toggle s3_wstrb "net s3_wstrb[3:0]"
+Toggle s3_wlast "net s3_wlast"
+Toggle s3_wvalid "net s3_wvalid"
+Toggle s3_wready "net s3_wready"
+Toggle s3_bid "net s3_bid[3:0]"
+Toggle s3_bresp "net s3_bresp[1:0]"
+Toggle s3_bvalid "net s3_bvalid"
+Toggle s3_bready "net s3_bready"
+Toggle s3_arid "net s3_arid[3:0]"
+Toggle s3_arlen "net s3_arlen[7:0]"
+Toggle s3_arsize "net s3_arsize[2:0]"
+Toggle s3_arburst "net s3_arburst[1:0]"
+Toggle s3_arlock "net s3_arlock[1:0]"
+Toggle s3_arcache "net s3_arcache[3:0]"
+Toggle s3_arprot "net s3_arprot[2:0]"
+Toggle s3_arvalid "net s3_arvalid"
+Toggle s3_rid "net s3_rid[3:0]"
+Toggle s3_rdata "net s3_rdata[31:0]"
+Toggle s3_rresp "net s3_rresp[1:0]"
+Toggle s3_rlast "net s3_rlast"
+Toggle s3_rvalid "net s3_rvalid"
+Toggle s3_rready "net s3_rready"
+Toggle s4_awid "net s4_awid[3:0]"
+Toggle s4_awaddr "net s4_awaddr[31:0]"
+Toggle s4_awlen "net s4_awlen[7:0]"
+Toggle s4_awsize "net s4_awsize[2:0]"
+Toggle s4_awburst "net s4_awburst[1:0]"
+Toggle s4_awlock "net s4_awlock[1:0]"
+Toggle s4_awcache "net s4_awcache[3:0]"
+Toggle s4_awprot "net s4_awprot[2:0]"
+Toggle s4_awvalid "net s4_awvalid"
+Toggle s4_awready "net s4_awready"
+Toggle s4_wdata "net s4_wdata[31:0]"
+Toggle s4_wstrb "net s4_wstrb[3:0]"
+Toggle s4_wlast "net s4_wlast"
+Toggle s4_wvalid "net s4_wvalid"
+Toggle s4_wready "net s4_wready"
+Toggle s4_bid "net s4_bid[3:0]"
+Toggle s4_bresp "net s4_bresp[1:0]"
+Toggle s4_bvalid "net s4_bvalid"
+Toggle s4_bready "net s4_bready"
+Toggle s4_arid "net s4_arid[3:0]"
+Toggle s4_arlen "net s4_arlen[7:0]"
+Toggle s4_arsize "net s4_arsize[2:0]"
+Toggle s4_arburst "net s4_arburst[1:0]"
+Toggle s4_arlock "net s4_arlock[1:0]"
+Toggle s4_arcache "net s4_arcache[3:0]"
+Toggle s4_arprot "net s4_arprot[2:0]"
+Toggle s4_arvalid "net s4_arvalid"
+Toggle s4_arready "net s4_arready"
+Toggle s4_rid "net s4_rid[3:0]"
+Toggle s4_rdata "net s4_rdata[31:0]"
+Toggle s4_rresp "net s4_rresp[1:0]"
+Toggle s4_rlast "net s4_rlast"
+Toggle s4_rvalid "net s4_rvalid"
+Toggle s4_rready "net s4_rready"
+Toggle core1_ipi_int "net core1_ipi_int"
+Toggle ipi_target_present "net ipi_target_present"
+Toggle ipi_ack_valid "net ipi_ack_valid"
+Toggle ipi_ack_target "net ipi_ack_target"
+Toggle ipi_ack_generation "net ipi_ack_generation[7:0]"
+Toggle ipi_invalidate_valid "net ipi_invalidate_valid"
+Toggle ipi_invalidate_target "net ipi_invalidate_target"
+Toggle ipi_invalidate_generation "net ipi_invalidate_generation[7:0]"
+Toggle ipi_invalidate_asid "net ipi_invalidate_asid[7:0]"
+Toggle ipi_invalidate_vpn "net ipi_invalidate_vpn[19:0]"
+Toggle ipi_invalidate_scope "net ipi_invalidate_scope[1:0]"
+Toggle ipi_core0_invalidate "net ipi_core0_invalidate"
+Toggle ipi_core1_ack_valid "net ipi_core1_ack_valid"
+Toggle ipi_core1_ack_target "net ipi_core1_ack_target"
+Toggle ipi_core1_ack_generation "net ipi_core1_ack_generation[7:0]"
+Toggle ipi_core1_invalidate_valid "net ipi_core1_invalidate_valid"
+Toggle ipi_core1_invalidate_target "net ipi_core1_invalidate_target"
+Toggle ipi_core1_invalidate_generation "net ipi_core1_invalidate_generation[7:0]"
+Toggle ipi_core1_invalidate_asid "net ipi_core1_invalidate_asid[7:0]"
+Toggle ipi_core1_invalidate_vpn "net ipi_core1_invalidate_vpn[19:0]"
+Toggle ipi_core1_invalidate_scope "net ipi_core1_invalidate_scope[1:0]"
+Toggle core1_reset_req "net core1_reset_req"
+Toggle core1_sim_exception_req "net core1_sim_exception_req"
+Toggle core1_sim_exception_code "net core1_sim_exception_code[4:0]"
+Toggle core0_coh_store_valid "net core0_coh_store_valid"
+Toggle core1_coh_store_valid "net core1_coh_store_valid"
+Toggle core1_coh_store_addr "net core1_coh_store_addr[31:0]"
+Toggle ipi_core1_core0_invalidate "net ipi_core1_core0_invalidate"
+Toggle ipi_core1_core1_invalidate "net ipi_core1_core1_invalidate"
+Toggle tlb_inv_en "net tlb_inv_en"
+Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
+Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
+Toggle tlb_inv_scope "net tlb_inv_scope[1:0]"
+Toggle tlb_inv_wired_floor "net tlb_inv_wired_floor[5:0]"
+Toggle wdt_reset "net wdt_reset"
+Toggle qspi_timeout_sticky "net qspi_timeout_sticky"
+Toggle ddr4_controller_present "net ddr4_controller_present"
+Toggle ddr4_init_done "net ddr4_init_done"
+Toggle ddr4_training_done "net ddr4_training_done"
+Toggle ddr4_fatal_error "net ddr4_fatal_error"
+Toggle ddr4_ecc_correctable_error "net ddr4_ecc_correctable_error"
+Toggle ddr4_ecc_uncorrectable_error "net ddr4_ecc_uncorrectable_error"
+Toggle ddr4_error_code "net ddr4_error_code[15:0]"
+Toggle qspi_controller_present "net qspi_controller_present"
+Toggle qspi_cmd_sclk "net qspi_cmd_sclk"
+Toggle qspi_cmd_cs_n "net qspi_cmd_cs_n"
+Toggle qspi_cmd_mosi "net qspi_cmd_mosi"
+Toggle qspi_cmd_active "net qspi_cmd_active"
+Toggle qspi_cmd_req "net qspi_cmd_req"
+Toggle qspi_cmd_grant "net qspi_cmd_grant"
+Toggle qspi_shared_pin_conflict "net qspi_shared_pin_conflict"
+Toggle qspi_cmd_io_o "net qspi_cmd_io_o[3:0]"
+Toggle qspi_cmd_io_oe "net qspi_cmd_io_oe[3:0]"
+Toggle mem_qspi_io_o "net mem_qspi_io_o[3:0]"
+Toggle mem_qspi_io_oe "net mem_qspi_io_oe[3:0]"
+Toggle arb_qspi_io_o "net arb_qspi_io_o[3:0]"
+Toggle arb_qspi_io_oe "net arb_qspi_io_oe[3:0]"
+Toggle uart_dtr_n_int "net uart_dtr_n_int"
+Toggle uart_rx_int "net uart_rx_int"
+Toggle uart_cts_n_int "net uart_cts_n_int"
+Toggle uart_dsr_n_int "net uart_dsr_n_int"
+Toggle uart_dcd_n_int "net uart_dcd_n_int"
+Toggle uart_ri_n_int "net uart_ri_n_int"
+
+// ID: EXCL-PROD-0163
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "41468714 3893246269"
+MODULE: axi_crossbar
+Toggle m_enable "net m_enable[4:0]"
+Toggle m_awid "net m_awid[19:0]"
+Toggle m_awsize "net m_awsize[14:0]"
+Toggle m_awburst "net m_awburst[9:0]"
+Toggle m_awlock "net m_awlock[9:0]"
+Toggle m_awprot "net m_awprot[14:0]"
+Toggle m_awqos "net m_awqos[19:0]"
+Toggle m_bresp "net m_bresp[9:0]"
+Toggle m_arid "net m_arid[19:0]"
+Toggle m_arsize "net m_arsize[14:0]"
+Toggle m_arburst "net m_arburst[9:0]"
+Toggle m_arlock "net m_arlock[9:0]"
+Toggle m_arprot "net m_arprot[14:0]"
+Toggle m_arqos "net m_arqos[19:0]"
+Toggle m_rresp "net m_rresp[9:0]"
+Toggle s_awlock "net s_awlock[9:0]"
+Toggle s_awprot "net s_awprot[14:0]"
+Toggle s_bresp "net s_bresp[9:0]"
+Toggle s_arsize "net s_arsize[14:0]"
+Toggle s_arburst "net s_arburst[9:0]"
+Toggle s_arlock "net s_arlock[9:0]"
+Toggle elig "reg elig"
+Toggle rd_found "reg rd_found"
+Toggle rd_alloc_found "reg rd_alloc_found"
+Toggle dec_rvalid "net dec_rvalid"
+Toggle dec_rlast "net dec_rlast"
+Toggle wr_alloc_found "reg wr_alloc_found"
+Toggle welig "reg welig"
+Toggle b_found "reg b_found"
+Toggle dec_bvalid "net dec_bvalid"
+
+// ID: EXCL-PROD-0164
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3979373752 3777224270"
+MODULE: mips_fpu
+Toggle a "net a[31:0]"
+Toggle b "net b[31:0]"
+Toggle compare_true "reg compare_true"
+Toggle fmt_double "net fmt_double"
+Toggle rounding_mode "net rounding_mode[1:0]"
+Toggle a_double "net a_double[63:0]"
+Toggle b_double "net b_double[63:0]"
+Toggle c "net c[31:0]"
+Toggle c_double "net c_double[63:0]"
+Toggle result_double "reg result_double[63:0]"
+Toggle result_word "reg result_word[31:0]"
+Toggle a_nan "reg a_nan"
+Toggle b_nan "reg b_nan"
+Toggle unordered "reg unordered"
+
+// ID: EXCL-PROD-0165
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4266736862 1526955267"
+MODULE: mips_bpu
+Toggle if_valid "net if_valid"
+Toggle predict_hit "net predict_hit"
+Toggle predict_taken "net predict_taken"
+Toggle resolve_mispredict "net resolve_mispredict"
+Toggle flush_if "net flush_if"
+Toggle btb_hit "net btb_hit"
+Toggle taken_r "reg taken_r"
+Toggle _unused_ok "net _unused_ok"
+
+// ID: EXCL-PROD-0166
+// CATEGORY: Debug & Observability
+// CHECKSUM: "3637738929 3193612777"
+MODULE: soc_debug_subsystem
+Toggle m_awid "net m_awid[3:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_awlock "net m_awlock[1:0]"
+Toggle m_awcache "net m_awcache[3:0]"
+Toggle m_awprot "net m_awprot[2:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_arid "net m_arid[3:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_arlock "net m_arlock[1:0]"
+Toggle m_arcache "net m_arcache[3:0]"
+Toggle m_arprot "net m_arprot[2:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+
+// ID: EXCL-PROD-0167
+// CATEGORY: Peripherals & Subsystems
+// CHECKSUM: "1341811719 2621596314"
+MODULE: apb_axi_dma
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle m_awid "reg m_awid[3:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bready "net m_bready"
+Toggle m_arid "reg m_arid[3:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle m_rready "net m_rready"
+Toggle ch_int "net ch_int[3:0]"
+Toggle global_en "reg global_en"
+Toggle cand_ch "reg cand_ch[1:0]"
+Toggle act_ch "reg act_ch[1:0]"
+Toggle act_ch_q "reg act_ch_q[1:0]"
+
+// ID: EXCL-PROD-0168
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1023533041 4123233221"
+MODULE: mips_if_id_reg
+Toggle if_except_is_tlb_refill "net if_except_is_tlb_refill"
+Toggle if_bpu_valid "net if_bpu_valid"
+Toggle if_bpu_taken "net if_bpu_taken"
+Toggle id_except_is_tlb_refill "reg id_except_is_tlb_refill"
+Toggle id_bpu_valid "reg id_bpu_valid"
+Toggle id_bpu_taken "reg id_bpu_taken"
+
+// ID: EXCL-PROD-0169
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1159426980 628970833"
+MODULE: mips_tlb
+Toggle wr_en "net wr_en"
+Toggle wr_vpn2 "net wr_vpn2[18:0]"
+Toggle wr_asid "net wr_asid[7:0]"
+Toggle wr_mask "net wr_mask[15:0]"
+Toggle wr_entrylo0 "net wr_entrylo0[31:0]"
+Toggle wr_entrylo1 "net wr_entrylo1[31:0]"
+Toggle inv_en "net inv_en"
+Toggle inv_vpn2 "net inv_vpn2[18:0]"
+Toggle inv_asid "net inv_asid[7:0]"
+Toggle inv_scope "net inv_scope[1:0]"
+Toggle inv_wired_floor "net inv_wired_floor[5:0]"
+Toggle context_flush "net context_flush"
+Toggle rd_index "net rd_index[5:0]"
+Toggle rd_vpn2 "net rd_vpn2[18:0]"
+Toggle rd_asid "net rd_asid[7:0]"
+Toggle rd_mask "net rd_mask[15:0]"
+Toggle rd_entrylo0 "net rd_entrylo0[31:0]"
+Toggle rd_entrylo1 "net rd_entrylo1[31:0]"
+Toggle probe_vpn2 "net probe_vpn2[18:0]"
+Toggle probe_asid "net probe_asid[7:0]"
+Toggle probe_hit "net probe_hit"
+Toggle probe_index "net probe_index[5:0]"
+Toggle probe_multi_hit "net probe_multi_hit"
+Toggle lookup0_asid "net lookup0_asid[7:0]"
+Toggle lookup0_hit "net lookup0_hit"
+Toggle lookup0_v "net lookup0_v"
+Toggle lookup0_d "net lookup0_d"
+Toggle lookup0_c "net lookup0_c[2:0]"
+Toggle lookup0_pfn "net lookup0_pfn[19:0]"
+Toggle lookup0_multi_hit "net lookup0_multi_hit"
+Toggle lookup1_asid "net lookup1_asid[7:0]"
+Toggle lookup1_hit "net lookup1_hit"
+Toggle lookup1_v "net lookup1_v"
+Toggle lookup1_d "net lookup1_d"
+Toggle lookup1_c "net lookup1_c[2:0]"
+Toggle lookup1_pfn "net lookup1_pfn[19:0]"
+Toggle lookup1_multi_hit "net lookup1_multi_hit"
+Toggle hit_vec "net hit_vec[63:0]"
+Toggle probe_index_r "reg probe_index_r[5:0]"
+Toggle probe_hit_r "reg probe_hit_r"
+Toggle probe_multi_hit_r "reg probe_multi_hit_r"
+Toggle lookup0_hit_vec "net lookup0_hit_vec[63:0]"
+Toggle lookup0_hit_index_r "reg lookup0_hit_index_r[5:0]"
+Toggle lookup0_hit_r "reg lookup0_hit_r"
+Toggle lookup0_multi_hit_r "reg lookup0_multi_hit_r"
+Toggle micro_i_hit "net micro_i_hit"
+Toggle micro_i_multi "net micro_i_multi"
+Toggle micro_i_v "net micro_i_v"
+Toggle micro_i_d "net micro_i_d"
+Toggle micro_i_c "net micro_i_c[2:0]"
+Toggle micro_i_pfn "net micro_i_pfn[19:0]"
+Toggle micro_d_hit "net micro_d_hit"
+Toggle micro_d_multi "net micro_d_multi"
+Toggle micro_d_v "net micro_d_v"
+Toggle micro_d_d "net micro_d_d"
+Toggle micro_d_c "net micro_d_c[2:0]"
+Toggle micro_d_pfn "net micro_d_pfn[19:0]"
+Toggle lookup0_odd_bit "net lookup0_odd_bit[5:0]"
+Toggle lookup0_odd "net lookup0_odd"
+Toggle sel_lo0 "net sel_lo0[31:0]"
+Toggle lookup1_hit_vec "net lookup1_hit_vec[63:0]"
+Toggle lookup1_hit_index_r "reg lookup1_hit_index_r[5:0]"
+Toggle lookup1_hit_r "reg lookup1_hit_r"
+Toggle lookup1_multi_hit_r "reg lookup1_multi_hit_r"
+Toggle lookup1_odd_bit "net lookup1_odd_bit[5:0]"
+Toggle lookup1_odd "net lookup1_odd"
+Toggle sel_lo1 "net sel_lo1[31:0]"
+Toggle micro_flush "net micro_flush"
+Toggle inv_match "reg inv_match"
+Toggle g_probe[0].cmp_mask "net g_probe[0].cmp_mask[18:0]"
+Toggle g_probe[0].vpn2_match "net g_probe[0].vpn2_match"
+Toggle g_probe[0].asid_match "net g_probe[0].asid_match"
+Toggle g_probe[1].cmp_mask "net g_probe[1].cmp_mask[18:0]"
+Toggle g_probe[1].vpn2_match "net g_probe[1].vpn2_match"
+Toggle g_probe[1].asid_match "net g_probe[1].asid_match"
+Toggle g_probe[2].cmp_mask "net g_probe[2].cmp_mask[18:0]"
+Toggle g_probe[2].vpn2_match "net g_probe[2].vpn2_match"
+Toggle g_probe[2].asid_match "net g_probe[2].asid_match"
+Toggle g_probe[3].cmp_mask "net g_probe[3].cmp_mask[18:0]"
+Toggle g_probe[3].vpn2_match "net g_probe[3].vpn2_match"
+Toggle g_probe[3].asid_match "net g_probe[3].asid_match"
+Toggle g_probe[4].cmp_mask "net g_probe[4].cmp_mask[18:0]"
+Toggle g_probe[4].vpn2_match "net g_probe[4].vpn2_match"
+Toggle g_probe[4].asid_match "net g_probe[4].asid_match"
+Toggle g_probe[5].cmp_mask "net g_probe[5].cmp_mask[18:0]"
+Toggle g_probe[5].vpn2_match "net g_probe[5].vpn2_match"
+Toggle g_probe[5].asid_match "net g_probe[5].asid_match"
+Toggle g_probe[6].cmp_mask "net g_probe[6].cmp_mask[18:0]"
+Toggle g_probe[6].vpn2_match "net g_probe[6].vpn2_match"
+Toggle g_probe[6].asid_match "net g_probe[6].asid_match"
+Toggle g_probe[7].cmp_mask "net g_probe[7].cmp_mask[18:0]"
+Toggle g_probe[7].vpn2_match "net g_probe[7].vpn2_match"
+Toggle g_probe[7].asid_match "net g_probe[7].asid_match"
+Toggle g_probe[8].cmp_mask "net g_probe[8].cmp_mask[18:0]"
+Toggle g_probe[8].vpn2_match "net g_probe[8].vpn2_match"
+Toggle g_probe[8].asid_match "net g_probe[8].asid_match"
+Toggle g_probe[9].cmp_mask "net g_probe[9].cmp_mask[18:0]"
+Toggle g_probe[9].vpn2_match "net g_probe[9].vpn2_match"
+Toggle g_probe[9].asid_match "net g_probe[9].asid_match"
+Toggle g_probe[10].cmp_mask "net g_probe[10].cmp_mask[18:0]"
+Toggle g_probe[10].vpn2_match "net g_probe[10].vpn2_match"
+Toggle g_probe[10].asid_match "net g_probe[10].asid_match"
+Toggle g_probe[11].cmp_mask "net g_probe[11].cmp_mask[18:0]"
+Toggle g_probe[11].vpn2_match "net g_probe[11].vpn2_match"
+Toggle g_probe[11].asid_match "net g_probe[11].asid_match"
+Toggle g_probe[12].cmp_mask "net g_probe[12].cmp_mask[18:0]"
+Toggle g_probe[12].vpn2_match "net g_probe[12].vpn2_match"
+Toggle g_probe[12].asid_match "net g_probe[12].asid_match"
+Toggle g_probe[13].cmp_mask "net g_probe[13].cmp_mask[18:0]"
+Toggle g_probe[13].vpn2_match "net g_probe[13].vpn2_match"
+Toggle g_probe[13].asid_match "net g_probe[13].asid_match"
+Toggle g_probe[14].cmp_mask "net g_probe[14].cmp_mask[18:0]"
+Toggle g_probe[14].vpn2_match "net g_probe[14].vpn2_match"
+Toggle g_probe[14].asid_match "net g_probe[14].asid_match"
+Toggle g_probe[15].cmp_mask "net g_probe[15].cmp_mask[18:0]"
+Toggle g_probe[15].vpn2_match "net g_probe[15].vpn2_match"
+Toggle g_probe[15].asid_match "net g_probe[15].asid_match"
+Toggle g_probe[16].cmp_mask "net g_probe[16].cmp_mask[18:0]"
+Toggle g_probe[16].vpn2_match "net g_probe[16].vpn2_match"
+Toggle g_probe[16].asid_match "net g_probe[16].asid_match"
+Toggle g_probe[17].cmp_mask "net g_probe[17].cmp_mask[18:0]"
+Toggle g_probe[17].vpn2_match "net g_probe[17].vpn2_match"
+Toggle g_probe[17].asid_match "net g_probe[17].asid_match"
+Toggle g_probe[18].cmp_mask "net g_probe[18].cmp_mask[18:0]"
+Toggle g_probe[18].vpn2_match "net g_probe[18].vpn2_match"
+Toggle g_probe[18].asid_match "net g_probe[18].asid_match"
+Toggle g_probe[19].cmp_mask "net g_probe[19].cmp_mask[18:0]"
+Toggle g_probe[19].vpn2_match "net g_probe[19].vpn2_match"
+Toggle g_probe[19].asid_match "net g_probe[19].asid_match"
+Toggle g_probe[20].cmp_mask "net g_probe[20].cmp_mask[18:0]"
+Toggle g_probe[20].vpn2_match "net g_probe[20].vpn2_match"
+Toggle g_probe[20].asid_match "net g_probe[20].asid_match"
+Toggle g_probe[21].cmp_mask "net g_probe[21].cmp_mask[18:0]"
+Toggle g_probe[21].vpn2_match "net g_probe[21].vpn2_match"
+Toggle g_probe[21].asid_match "net g_probe[21].asid_match"
+Toggle g_probe[22].cmp_mask "net g_probe[22].cmp_mask[18:0]"
+Toggle g_probe[22].vpn2_match "net g_probe[22].vpn2_match"
+Toggle g_probe[22].asid_match "net g_probe[22].asid_match"
+Toggle g_probe[23].cmp_mask "net g_probe[23].cmp_mask[18:0]"
+Toggle g_probe[23].vpn2_match "net g_probe[23].vpn2_match"
+Toggle g_probe[23].asid_match "net g_probe[23].asid_match"
+Toggle g_probe[24].cmp_mask "net g_probe[24].cmp_mask[18:0]"
+Toggle g_probe[24].vpn2_match "net g_probe[24].vpn2_match"
+Toggle g_probe[24].asid_match "net g_probe[24].asid_match"
+Toggle g_probe[25].cmp_mask "net g_probe[25].cmp_mask[18:0]"
+Toggle g_probe[25].vpn2_match "net g_probe[25].vpn2_match"
+Toggle g_probe[25].asid_match "net g_probe[25].asid_match"
+Toggle g_probe[26].cmp_mask "net g_probe[26].cmp_mask[18:0]"
+Toggle g_probe[26].vpn2_match "net g_probe[26].vpn2_match"
+Toggle g_probe[26].asid_match "net g_probe[26].asid_match"
+Toggle g_probe[27].cmp_mask "net g_probe[27].cmp_mask[18:0]"
+Toggle g_probe[27].vpn2_match "net g_probe[27].vpn2_match"
+Toggle g_probe[27].asid_match "net g_probe[27].asid_match"
+Toggle g_probe[28].cmp_mask "net g_probe[28].cmp_mask[18:0]"
+Toggle g_probe[28].vpn2_match "net g_probe[28].vpn2_match"
+Toggle g_probe[28].asid_match "net g_probe[28].asid_match"
+Toggle g_probe[29].cmp_mask "net g_probe[29].cmp_mask[18:0]"
+Toggle g_probe[29].vpn2_match "net g_probe[29].vpn2_match"
+Toggle g_probe[29].asid_match "net g_probe[29].asid_match"
+Toggle g_probe[30].cmp_mask "net g_probe[30].cmp_mask[18:0]"
+Toggle g_probe[30].vpn2_match "net g_probe[30].vpn2_match"
+Toggle g_probe[30].asid_match "net g_probe[30].asid_match"
+Toggle g_probe[31].cmp_mask "net g_probe[31].cmp_mask[18:0]"
+Toggle g_probe[31].vpn2_match "net g_probe[31].vpn2_match"
+Toggle g_probe[31].asid_match "net g_probe[31].asid_match"
+Toggle g_probe[32].cmp_mask "net g_probe[32].cmp_mask[18:0]"
+Toggle g_probe[32].vpn2_match "net g_probe[32].vpn2_match"
+Toggle g_probe[32].asid_match "net g_probe[32].asid_match"
+Toggle g_probe[33].cmp_mask "net g_probe[33].cmp_mask[18:0]"
+Toggle g_probe[33].vpn2_match "net g_probe[33].vpn2_match"
+Toggle g_probe[33].asid_match "net g_probe[33].asid_match"
+Toggle g_probe[34].cmp_mask "net g_probe[34].cmp_mask[18:0]"
+Toggle g_probe[34].vpn2_match "net g_probe[34].vpn2_match"
+Toggle g_probe[34].asid_match "net g_probe[34].asid_match"
+Toggle g_probe[35].cmp_mask "net g_probe[35].cmp_mask[18:0]"
+Toggle g_probe[35].vpn2_match "net g_probe[35].vpn2_match"
+Toggle g_probe[35].asid_match "net g_probe[35].asid_match"
+Toggle g_probe[36].cmp_mask "net g_probe[36].cmp_mask[18:0]"
+Toggle g_probe[36].vpn2_match "net g_probe[36].vpn2_match"
+Toggle g_probe[36].asid_match "net g_probe[36].asid_match"
+Toggle g_probe[37].cmp_mask "net g_probe[37].cmp_mask[18:0]"
+Toggle g_probe[37].vpn2_match "net g_probe[37].vpn2_match"
+Toggle g_probe[37].asid_match "net g_probe[37].asid_match"
+Toggle g_probe[38].cmp_mask "net g_probe[38].cmp_mask[18:0]"
+Toggle g_probe[38].vpn2_match "net g_probe[38].vpn2_match"
+Toggle g_probe[38].asid_match "net g_probe[38].asid_match"
+Toggle g_probe[39].cmp_mask "net g_probe[39].cmp_mask[18:0]"
+Toggle g_probe[39].vpn2_match "net g_probe[39].vpn2_match"
+Toggle g_probe[39].asid_match "net g_probe[39].asid_match"
+Toggle g_probe[40].cmp_mask "net g_probe[40].cmp_mask[18:0]"
+Toggle g_probe[40].vpn2_match "net g_probe[40].vpn2_match"
+Toggle g_probe[40].asid_match "net g_probe[40].asid_match"
+Toggle g_probe[41].cmp_mask "net g_probe[41].cmp_mask[18:0]"
+Toggle g_probe[41].vpn2_match "net g_probe[41].vpn2_match"
+Toggle g_probe[41].asid_match "net g_probe[41].asid_match"
+Toggle g_probe[42].cmp_mask "net g_probe[42].cmp_mask[18:0]"
+Toggle g_probe[42].vpn2_match "net g_probe[42].vpn2_match"
+Toggle g_probe[42].asid_match "net g_probe[42].asid_match"
+Toggle g_probe[43].cmp_mask "net g_probe[43].cmp_mask[18:0]"
+Toggle g_probe[43].vpn2_match "net g_probe[43].vpn2_match"
+Toggle g_probe[43].asid_match "net g_probe[43].asid_match"
+Toggle g_probe[44].cmp_mask "net g_probe[44].cmp_mask[18:0]"
+Toggle g_probe[44].vpn2_match "net g_probe[44].vpn2_match"
+Toggle g_probe[44].asid_match "net g_probe[44].asid_match"
+Toggle g_probe[45].cmp_mask "net g_probe[45].cmp_mask[18:0]"
+Toggle g_probe[45].vpn2_match "net g_probe[45].vpn2_match"
+Toggle g_probe[45].asid_match "net g_probe[45].asid_match"
+Toggle g_probe[46].cmp_mask "net g_probe[46].cmp_mask[18:0]"
+Toggle g_probe[46].vpn2_match "net g_probe[46].vpn2_match"
+Toggle g_probe[46].asid_match "net g_probe[46].asid_match"
+Toggle g_probe[47].cmp_mask "net g_probe[47].cmp_mask[18:0]"
+Toggle g_probe[47].vpn2_match "net g_probe[47].vpn2_match"
+Toggle g_probe[47].asid_match "net g_probe[47].asid_match"
+Toggle g_probe[48].cmp_mask "net g_probe[48].cmp_mask[18:0]"
+Toggle g_probe[48].vpn2_match "net g_probe[48].vpn2_match"
+Toggle g_probe[48].asid_match "net g_probe[48].asid_match"
+Toggle g_probe[49].cmp_mask "net g_probe[49].cmp_mask[18:0]"
+Toggle g_probe[49].vpn2_match "net g_probe[49].vpn2_match"
+Toggle g_probe[49].asid_match "net g_probe[49].asid_match"
+Toggle g_probe[50].cmp_mask "net g_probe[50].cmp_mask[18:0]"
+Toggle g_probe[50].vpn2_match "net g_probe[50].vpn2_match"
+Toggle g_probe[50].asid_match "net g_probe[50].asid_match"
+Toggle g_probe[51].cmp_mask "net g_probe[51].cmp_mask[18:0]"
+Toggle g_probe[51].vpn2_match "net g_probe[51].vpn2_match"
+Toggle g_probe[51].asid_match "net g_probe[51].asid_match"
+Toggle g_probe[52].cmp_mask "net g_probe[52].cmp_mask[18:0]"
+Toggle g_probe[52].vpn2_match "net g_probe[52].vpn2_match"
+Toggle g_probe[52].asid_match "net g_probe[52].asid_match"
+Toggle g_probe[53].cmp_mask "net g_probe[53].cmp_mask[18:0]"
+Toggle g_probe[53].vpn2_match "net g_probe[53].vpn2_match"
+Toggle g_probe[53].asid_match "net g_probe[53].asid_match"
+Toggle g_probe[54].cmp_mask "net g_probe[54].cmp_mask[18:0]"
+Toggle g_probe[54].vpn2_match "net g_probe[54].vpn2_match"
+Toggle g_probe[54].asid_match "net g_probe[54].asid_match"
+Toggle g_probe[55].cmp_mask "net g_probe[55].cmp_mask[18:0]"
+Toggle g_probe[55].vpn2_match "net g_probe[55].vpn2_match"
+Toggle g_probe[55].asid_match "net g_probe[55].asid_match"
+Toggle g_probe[56].cmp_mask "net g_probe[56].cmp_mask[18:0]"
+Toggle g_probe[56].vpn2_match "net g_probe[56].vpn2_match"
+Toggle g_probe[56].asid_match "net g_probe[56].asid_match"
+Toggle g_probe[57].cmp_mask "net g_probe[57].cmp_mask[18:0]"
+Toggle g_probe[57].vpn2_match "net g_probe[57].vpn2_match"
+Toggle g_probe[57].asid_match "net g_probe[57].asid_match"
+Toggle g_probe[58].cmp_mask "net g_probe[58].cmp_mask[18:0]"
+Toggle g_probe[58].vpn2_match "net g_probe[58].vpn2_match"
+Toggle g_probe[58].asid_match "net g_probe[58].asid_match"
+Toggle g_probe[59].cmp_mask "net g_probe[59].cmp_mask[18:0]"
+Toggle g_probe[59].vpn2_match "net g_probe[59].vpn2_match"
+Toggle g_probe[59].asid_match "net g_probe[59].asid_match"
+Toggle g_probe[60].cmp_mask "net g_probe[60].cmp_mask[18:0]"
+Toggle g_probe[60].vpn2_match "net g_probe[60].vpn2_match"
+Toggle g_probe[60].asid_match "net g_probe[60].asid_match"
+Toggle g_probe[61].cmp_mask "net g_probe[61].cmp_mask[18:0]"
+Toggle g_probe[61].vpn2_match "net g_probe[61].vpn2_match"
+Toggle g_probe[61].asid_match "net g_probe[61].asid_match"
+Toggle g_probe[62].cmp_mask "net g_probe[62].cmp_mask[18:0]"
+Toggle g_probe[62].vpn2_match "net g_probe[62].vpn2_match"
+Toggle g_probe[62].asid_match "net g_probe[62].asid_match"
+Toggle g_probe[63].cmp_mask "net g_probe[63].cmp_mask[18:0]"
+Toggle g_probe[63].vpn2_match "net g_probe[63].vpn2_match"
+Toggle g_probe[63].asid_match "net g_probe[63].asid_match"
+Toggle g_lookup0[0].cmp0_mask "net g_lookup0[0].cmp0_mask[18:0]"
+Toggle g_lookup0[0].vpn2_match0 "net g_lookup0[0].vpn2_match0"
+Toggle g_lookup0[0].asid_match0 "net g_lookup0[0].asid_match0"
+Toggle g_lookup0[1].cmp0_mask "net g_lookup0[1].cmp0_mask[18:0]"
+Toggle g_lookup0[1].vpn2_match0 "net g_lookup0[1].vpn2_match0"
+Toggle g_lookup0[1].asid_match0 "net g_lookup0[1].asid_match0"
+Toggle g_lookup0[2].cmp0_mask "net g_lookup0[2].cmp0_mask[18:0]"
+Toggle g_lookup0[2].vpn2_match0 "net g_lookup0[2].vpn2_match0"
+Toggle g_lookup0[2].asid_match0 "net g_lookup0[2].asid_match0"
+Toggle g_lookup0[3].cmp0_mask "net g_lookup0[3].cmp0_mask[18:0]"
+Toggle g_lookup0[3].vpn2_match0 "net g_lookup0[3].vpn2_match0"
+Toggle g_lookup0[3].asid_match0 "net g_lookup0[3].asid_match0"
+Toggle g_lookup0[4].cmp0_mask "net g_lookup0[4].cmp0_mask[18:0]"
+Toggle g_lookup0[4].vpn2_match0 "net g_lookup0[4].vpn2_match0"
+Toggle g_lookup0[4].asid_match0 "net g_lookup0[4].asid_match0"
+Toggle g_lookup0[5].cmp0_mask "net g_lookup0[5].cmp0_mask[18:0]"
+Toggle g_lookup0[5].vpn2_match0 "net g_lookup0[5].vpn2_match0"
+Toggle g_lookup0[5].asid_match0 "net g_lookup0[5].asid_match0"
+Toggle g_lookup0[6].cmp0_mask "net g_lookup0[6].cmp0_mask[18:0]"
+Toggle g_lookup0[6].vpn2_match0 "net g_lookup0[6].vpn2_match0"
+Toggle g_lookup0[6].asid_match0 "net g_lookup0[6].asid_match0"
+Toggle g_lookup0[7].cmp0_mask "net g_lookup0[7].cmp0_mask[18:0]"
+Toggle g_lookup0[7].vpn2_match0 "net g_lookup0[7].vpn2_match0"
+Toggle g_lookup0[7].asid_match0 "net g_lookup0[7].asid_match0"
+Toggle g_lookup0[8].cmp0_mask "net g_lookup0[8].cmp0_mask[18:0]"
+Toggle g_lookup0[8].vpn2_match0 "net g_lookup0[8].vpn2_match0"
+Toggle g_lookup0[8].asid_match0 "net g_lookup0[8].asid_match0"
+Toggle g_lookup0[9].cmp0_mask "net g_lookup0[9].cmp0_mask[18:0]"
+Toggle g_lookup0[9].vpn2_match0 "net g_lookup0[9].vpn2_match0"
+Toggle g_lookup0[9].asid_match0 "net g_lookup0[9].asid_match0"
+Toggle g_lookup0[10].cmp0_mask "net g_lookup0[10].cmp0_mask[18:0]"
+Toggle g_lookup0[10].vpn2_match0 "net g_lookup0[10].vpn2_match0"
+Toggle g_lookup0[10].asid_match0 "net g_lookup0[10].asid_match0"
+Toggle g_lookup0[11].cmp0_mask "net g_lookup0[11].cmp0_mask[18:0]"
+Toggle g_lookup0[11].vpn2_match0 "net g_lookup0[11].vpn2_match0"
+Toggle g_lookup0[11].asid_match0 "net g_lookup0[11].asid_match0"
+Toggle g_lookup0[12].cmp0_mask "net g_lookup0[12].cmp0_mask[18:0]"
+Toggle g_lookup0[12].vpn2_match0 "net g_lookup0[12].vpn2_match0"
+Toggle g_lookup0[12].asid_match0 "net g_lookup0[12].asid_match0"
+Toggle g_lookup0[13].cmp0_mask "net g_lookup0[13].cmp0_mask[18:0]"
+Toggle g_lookup0[13].vpn2_match0 "net g_lookup0[13].vpn2_match0"
+Toggle g_lookup0[13].asid_match0 "net g_lookup0[13].asid_match0"
+Toggle g_lookup0[14].cmp0_mask "net g_lookup0[14].cmp0_mask[18:0]"
+Toggle g_lookup0[14].vpn2_match0 "net g_lookup0[14].vpn2_match0"
+Toggle g_lookup0[14].asid_match0 "net g_lookup0[14].asid_match0"
+Toggle g_lookup0[15].cmp0_mask "net g_lookup0[15].cmp0_mask[18:0]"
+Toggle g_lookup0[15].vpn2_match0 "net g_lookup0[15].vpn2_match0"
+Toggle g_lookup0[15].asid_match0 "net g_lookup0[15].asid_match0"
+Toggle g_lookup0[16].cmp0_mask "net g_lookup0[16].cmp0_mask[18:0]"
+Toggle g_lookup0[16].vpn2_match0 "net g_lookup0[16].vpn2_match0"
+Toggle g_lookup0[16].asid_match0 "net g_lookup0[16].asid_match0"
+Toggle g_lookup0[17].cmp0_mask "net g_lookup0[17].cmp0_mask[18:0]"
+Toggle g_lookup0[17].vpn2_match0 "net g_lookup0[17].vpn2_match0"
+Toggle g_lookup0[17].asid_match0 "net g_lookup0[17].asid_match0"
+Toggle g_lookup0[18].cmp0_mask "net g_lookup0[18].cmp0_mask[18:0]"
+Toggle g_lookup0[18].vpn2_match0 "net g_lookup0[18].vpn2_match0"
+Toggle g_lookup0[18].asid_match0 "net g_lookup0[18].asid_match0"
+Toggle g_lookup0[19].cmp0_mask "net g_lookup0[19].cmp0_mask[18:0]"
+Toggle g_lookup0[19].vpn2_match0 "net g_lookup0[19].vpn2_match0"
+Toggle g_lookup0[19].asid_match0 "net g_lookup0[19].asid_match0"
+Toggle g_lookup0[20].cmp0_mask "net g_lookup0[20].cmp0_mask[18:0]"
+Toggle g_lookup0[20].vpn2_match0 "net g_lookup0[20].vpn2_match0"
+Toggle g_lookup0[20].asid_match0 "net g_lookup0[20].asid_match0"
+Toggle g_lookup0[21].cmp0_mask "net g_lookup0[21].cmp0_mask[18:0]"
+Toggle g_lookup0[21].vpn2_match0 "net g_lookup0[21].vpn2_match0"
+Toggle g_lookup0[21].asid_match0 "net g_lookup0[21].asid_match0"
+Toggle g_lookup0[22].cmp0_mask "net g_lookup0[22].cmp0_mask[18:0]"
+Toggle g_lookup0[22].vpn2_match0 "net g_lookup0[22].vpn2_match0"
+Toggle g_lookup0[22].asid_match0 "net g_lookup0[22].asid_match0"
+Toggle g_lookup0[23].cmp0_mask "net g_lookup0[23].cmp0_mask[18:0]"
+Toggle g_lookup0[23].vpn2_match0 "net g_lookup0[23].vpn2_match0"
+Toggle g_lookup0[23].asid_match0 "net g_lookup0[23].asid_match0"
+Toggle g_lookup0[24].cmp0_mask "net g_lookup0[24].cmp0_mask[18:0]"
+Toggle g_lookup0[24].vpn2_match0 "net g_lookup0[24].vpn2_match0"
+Toggle g_lookup0[24].asid_match0 "net g_lookup0[24].asid_match0"
+Toggle g_lookup0[25].cmp0_mask "net g_lookup0[25].cmp0_mask[18:0]"
+Toggle g_lookup0[25].vpn2_match0 "net g_lookup0[25].vpn2_match0"
+Toggle g_lookup0[25].asid_match0 "net g_lookup0[25].asid_match0"
+Toggle g_lookup0[26].cmp0_mask "net g_lookup0[26].cmp0_mask[18:0]"
+Toggle g_lookup0[26].vpn2_match0 "net g_lookup0[26].vpn2_match0"
+Toggle g_lookup0[26].asid_match0 "net g_lookup0[26].asid_match0"
+Toggle g_lookup0[27].cmp0_mask "net g_lookup0[27].cmp0_mask[18:0]"
+Toggle g_lookup0[27].vpn2_match0 "net g_lookup0[27].vpn2_match0"
+Toggle g_lookup0[27].asid_match0 "net g_lookup0[27].asid_match0"
+Toggle g_lookup0[28].cmp0_mask "net g_lookup0[28].cmp0_mask[18:0]"
+Toggle g_lookup0[28].vpn2_match0 "net g_lookup0[28].vpn2_match0"
+Toggle g_lookup0[28].asid_match0 "net g_lookup0[28].asid_match0"
+Toggle g_lookup0[29].cmp0_mask "net g_lookup0[29].cmp0_mask[18:0]"
+Toggle g_lookup0[29].vpn2_match0 "net g_lookup0[29].vpn2_match0"
+Toggle g_lookup0[29].asid_match0 "net g_lookup0[29].asid_match0"
+Toggle g_lookup0[30].cmp0_mask "net g_lookup0[30].cmp0_mask[18:0]"
+Toggle g_lookup0[30].vpn2_match0 "net g_lookup0[30].vpn2_match0"
+Toggle g_lookup0[30].asid_match0 "net g_lookup0[30].asid_match0"
+Toggle g_lookup0[31].cmp0_mask "net g_lookup0[31].cmp0_mask[18:0]"
+Toggle g_lookup0[31].vpn2_match0 "net g_lookup0[31].vpn2_match0"
+Toggle g_lookup0[31].asid_match0 "net g_lookup0[31].asid_match0"
+Toggle g_lookup0[32].cmp0_mask "net g_lookup0[32].cmp0_mask[18:0]"
+Toggle g_lookup0[32].vpn2_match0 "net g_lookup0[32].vpn2_match0"
+Toggle g_lookup0[32].asid_match0 "net g_lookup0[32].asid_match0"
+Toggle g_lookup0[33].cmp0_mask "net g_lookup0[33].cmp0_mask[18:0]"
+Toggle g_lookup0[33].vpn2_match0 "net g_lookup0[33].vpn2_match0"
+Toggle g_lookup0[33].asid_match0 "net g_lookup0[33].asid_match0"
+Toggle g_lookup0[34].cmp0_mask "net g_lookup0[34].cmp0_mask[18:0]"
+Toggle g_lookup0[34].vpn2_match0 "net g_lookup0[34].vpn2_match0"
+Toggle g_lookup0[34].asid_match0 "net g_lookup0[34].asid_match0"
+Toggle g_lookup0[35].cmp0_mask "net g_lookup0[35].cmp0_mask[18:0]"
+Toggle g_lookup0[35].vpn2_match0 "net g_lookup0[35].vpn2_match0"
+Toggle g_lookup0[35].asid_match0 "net g_lookup0[35].asid_match0"
+Toggle g_lookup0[36].cmp0_mask "net g_lookup0[36].cmp0_mask[18:0]"
+Toggle g_lookup0[36].vpn2_match0 "net g_lookup0[36].vpn2_match0"
+Toggle g_lookup0[36].asid_match0 "net g_lookup0[36].asid_match0"
+Toggle g_lookup0[37].cmp0_mask "net g_lookup0[37].cmp0_mask[18:0]"
+Toggle g_lookup0[37].vpn2_match0 "net g_lookup0[37].vpn2_match0"
+Toggle g_lookup0[37].asid_match0 "net g_lookup0[37].asid_match0"
+Toggle g_lookup0[38].cmp0_mask "net g_lookup0[38].cmp0_mask[18:0]"
+Toggle g_lookup0[38].vpn2_match0 "net g_lookup0[38].vpn2_match0"
+Toggle g_lookup0[38].asid_match0 "net g_lookup0[38].asid_match0"
+Toggle g_lookup0[39].cmp0_mask "net g_lookup0[39].cmp0_mask[18:0]"
+Toggle g_lookup0[39].vpn2_match0 "net g_lookup0[39].vpn2_match0"
+Toggle g_lookup0[39].asid_match0 "net g_lookup0[39].asid_match0"
+Toggle g_lookup0[40].cmp0_mask "net g_lookup0[40].cmp0_mask[18:0]"
+Toggle g_lookup0[40].vpn2_match0 "net g_lookup0[40].vpn2_match0"
+Toggle g_lookup0[40].asid_match0 "net g_lookup0[40].asid_match0"
+Toggle g_lookup0[41].cmp0_mask "net g_lookup0[41].cmp0_mask[18:0]"
+Toggle g_lookup0[41].vpn2_match0 "net g_lookup0[41].vpn2_match0"
+Toggle g_lookup0[41].asid_match0 "net g_lookup0[41].asid_match0"
+Toggle g_lookup0[42].cmp0_mask "net g_lookup0[42].cmp0_mask[18:0]"
+Toggle g_lookup0[42].vpn2_match0 "net g_lookup0[42].vpn2_match0"
+Toggle g_lookup0[42].asid_match0 "net g_lookup0[42].asid_match0"
+Toggle g_lookup0[43].cmp0_mask "net g_lookup0[43].cmp0_mask[18:0]"
+Toggle g_lookup0[43].vpn2_match0 "net g_lookup0[43].vpn2_match0"
+Toggle g_lookup0[43].asid_match0 "net g_lookup0[43].asid_match0"
+Toggle g_lookup0[44].cmp0_mask "net g_lookup0[44].cmp0_mask[18:0]"
+Toggle g_lookup0[44].vpn2_match0 "net g_lookup0[44].vpn2_match0"
+Toggle g_lookup0[44].asid_match0 "net g_lookup0[44].asid_match0"
+Toggle g_lookup0[45].cmp0_mask "net g_lookup0[45].cmp0_mask[18:0]"
+Toggle g_lookup0[45].vpn2_match0 "net g_lookup0[45].vpn2_match0"
+Toggle g_lookup0[45].asid_match0 "net g_lookup0[45].asid_match0"
+Toggle g_lookup0[46].cmp0_mask "net g_lookup0[46].cmp0_mask[18:0]"
+Toggle g_lookup0[46].vpn2_match0 "net g_lookup0[46].vpn2_match0"
+Toggle g_lookup0[46].asid_match0 "net g_lookup0[46].asid_match0"
+Toggle g_lookup0[47].cmp0_mask "net g_lookup0[47].cmp0_mask[18:0]"
+Toggle g_lookup0[47].vpn2_match0 "net g_lookup0[47].vpn2_match0"
+Toggle g_lookup0[47].asid_match0 "net g_lookup0[47].asid_match0"
+Toggle g_lookup0[48].cmp0_mask "net g_lookup0[48].cmp0_mask[18:0]"
+Toggle g_lookup0[48].vpn2_match0 "net g_lookup0[48].vpn2_match0"
+Toggle g_lookup0[48].asid_match0 "net g_lookup0[48].asid_match0"
+Toggle g_lookup0[49].cmp0_mask "net g_lookup0[49].cmp0_mask[18:0]"
+Toggle g_lookup0[49].vpn2_match0 "net g_lookup0[49].vpn2_match0"
+Toggle g_lookup0[49].asid_match0 "net g_lookup0[49].asid_match0"
+Toggle g_lookup0[50].cmp0_mask "net g_lookup0[50].cmp0_mask[18:0]"
+Toggle g_lookup0[50].vpn2_match0 "net g_lookup0[50].vpn2_match0"
+Toggle g_lookup0[50].asid_match0 "net g_lookup0[50].asid_match0"
+Toggle g_lookup0[51].cmp0_mask "net g_lookup0[51].cmp0_mask[18:0]"
+Toggle g_lookup0[51].vpn2_match0 "net g_lookup0[51].vpn2_match0"
+Toggle g_lookup0[51].asid_match0 "net g_lookup0[51].asid_match0"
+Toggle g_lookup0[52].cmp0_mask "net g_lookup0[52].cmp0_mask[18:0]"
+Toggle g_lookup0[52].vpn2_match0 "net g_lookup0[52].vpn2_match0"
+Toggle g_lookup0[52].asid_match0 "net g_lookup0[52].asid_match0"
+Toggle g_lookup0[53].cmp0_mask "net g_lookup0[53].cmp0_mask[18:0]"
+Toggle g_lookup0[53].vpn2_match0 "net g_lookup0[53].vpn2_match0"
+Toggle g_lookup0[53].asid_match0 "net g_lookup0[53].asid_match0"
+Toggle g_lookup0[54].cmp0_mask "net g_lookup0[54].cmp0_mask[18:0]"
+Toggle g_lookup0[54].vpn2_match0 "net g_lookup0[54].vpn2_match0"
+Toggle g_lookup0[54].asid_match0 "net g_lookup0[54].asid_match0"
+Toggle g_lookup0[55].cmp0_mask "net g_lookup0[55].cmp0_mask[18:0]"
+Toggle g_lookup0[55].vpn2_match0 "net g_lookup0[55].vpn2_match0"
+Toggle g_lookup0[55].asid_match0 "net g_lookup0[55].asid_match0"
+Toggle g_lookup0[56].cmp0_mask "net g_lookup0[56].cmp0_mask[18:0]"
+Toggle g_lookup0[56].vpn2_match0 "net g_lookup0[56].vpn2_match0"
+Toggle g_lookup0[56].asid_match0 "net g_lookup0[56].asid_match0"
+Toggle g_lookup0[57].cmp0_mask "net g_lookup0[57].cmp0_mask[18:0]"
+Toggle g_lookup0[57].vpn2_match0 "net g_lookup0[57].vpn2_match0"
+Toggle g_lookup0[57].asid_match0 "net g_lookup0[57].asid_match0"
+Toggle g_lookup0[58].cmp0_mask "net g_lookup0[58].cmp0_mask[18:0]"
+Toggle g_lookup0[58].vpn2_match0 "net g_lookup0[58].vpn2_match0"
+Toggle g_lookup0[58].asid_match0 "net g_lookup0[58].asid_match0"
+Toggle g_lookup0[59].cmp0_mask "net g_lookup0[59].cmp0_mask[18:0]"
+Toggle g_lookup0[59].vpn2_match0 "net g_lookup0[59].vpn2_match0"
+Toggle g_lookup0[59].asid_match0 "net g_lookup0[59].asid_match0"
+Toggle g_lookup0[60].cmp0_mask "net g_lookup0[60].cmp0_mask[18:0]"
+Toggle g_lookup0[60].vpn2_match0 "net g_lookup0[60].vpn2_match0"
+Toggle g_lookup0[60].asid_match0 "net g_lookup0[60].asid_match0"
+Toggle g_lookup0[61].cmp0_mask "net g_lookup0[61].cmp0_mask[18:0]"
+Toggle g_lookup0[61].vpn2_match0 "net g_lookup0[61].vpn2_match0"
+Toggle g_lookup0[61].asid_match0 "net g_lookup0[61].asid_match0"
+Toggle g_lookup0[62].cmp0_mask "net g_lookup0[62].cmp0_mask[18:0]"
+Toggle g_lookup0[62].vpn2_match0 "net g_lookup0[62].vpn2_match0"
+Toggle g_lookup0[62].asid_match0 "net g_lookup0[62].asid_match0"
+Toggle g_lookup0[63].cmp0_mask "net g_lookup0[63].cmp0_mask[18:0]"
+Toggle g_lookup0[63].vpn2_match0 "net g_lookup0[63].vpn2_match0"
+Toggle g_lookup0[63].asid_match0 "net g_lookup0[63].asid_match0"
+Toggle g_lookup1[0].cmp1_mask "net g_lookup1[0].cmp1_mask[18:0]"
+Toggle g_lookup1[0].vpn2_match1 "net g_lookup1[0].vpn2_match1"
+Toggle g_lookup1[0].asid_match1 "net g_lookup1[0].asid_match1"
+Toggle g_lookup1[1].cmp1_mask "net g_lookup1[1].cmp1_mask[18:0]"
+Toggle g_lookup1[1].vpn2_match1 "net g_lookup1[1].vpn2_match1"
+Toggle g_lookup1[1].asid_match1 "net g_lookup1[1].asid_match1"
+Toggle g_lookup1[2].cmp1_mask "net g_lookup1[2].cmp1_mask[18:0]"
+Toggle g_lookup1[2].vpn2_match1 "net g_lookup1[2].vpn2_match1"
+Toggle g_lookup1[2].asid_match1 "net g_lookup1[2].asid_match1"
+Toggle g_lookup1[3].cmp1_mask "net g_lookup1[3].cmp1_mask[18:0]"
+Toggle g_lookup1[3].vpn2_match1 "net g_lookup1[3].vpn2_match1"
+Toggle g_lookup1[3].asid_match1 "net g_lookup1[3].asid_match1"
+Toggle g_lookup1[4].cmp1_mask "net g_lookup1[4].cmp1_mask[18:0]"
+Toggle g_lookup1[4].vpn2_match1 "net g_lookup1[4].vpn2_match1"
+Toggle g_lookup1[4].asid_match1 "net g_lookup1[4].asid_match1"
+Toggle g_lookup1[5].cmp1_mask "net g_lookup1[5].cmp1_mask[18:0]"
+Toggle g_lookup1[5].vpn2_match1 "net g_lookup1[5].vpn2_match1"
+Toggle g_lookup1[5].asid_match1 "net g_lookup1[5].asid_match1"
+Toggle g_lookup1[6].cmp1_mask "net g_lookup1[6].cmp1_mask[18:0]"
+Toggle g_lookup1[6].vpn2_match1 "net g_lookup1[6].vpn2_match1"
+Toggle g_lookup1[6].asid_match1 "net g_lookup1[6].asid_match1"
+Toggle g_lookup1[7].cmp1_mask "net g_lookup1[7].cmp1_mask[18:0]"
+Toggle g_lookup1[7].vpn2_match1 "net g_lookup1[7].vpn2_match1"
+Toggle g_lookup1[7].asid_match1 "net g_lookup1[7].asid_match1"
+Toggle g_lookup1[8].cmp1_mask "net g_lookup1[8].cmp1_mask[18:0]"
+Toggle g_lookup1[8].vpn2_match1 "net g_lookup1[8].vpn2_match1"
+Toggle g_lookup1[8].asid_match1 "net g_lookup1[8].asid_match1"
+Toggle g_lookup1[9].cmp1_mask "net g_lookup1[9].cmp1_mask[18:0]"
+Toggle g_lookup1[9].vpn2_match1 "net g_lookup1[9].vpn2_match1"
+Toggle g_lookup1[9].asid_match1 "net g_lookup1[9].asid_match1"
+Toggle g_lookup1[10].cmp1_mask "net g_lookup1[10].cmp1_mask[18:0]"
+Toggle g_lookup1[10].vpn2_match1 "net g_lookup1[10].vpn2_match1"
+Toggle g_lookup1[10].asid_match1 "net g_lookup1[10].asid_match1"
+Toggle g_lookup1[11].cmp1_mask "net g_lookup1[11].cmp1_mask[18:0]"
+Toggle g_lookup1[11].vpn2_match1 "net g_lookup1[11].vpn2_match1"
+Toggle g_lookup1[11].asid_match1 "net g_lookup1[11].asid_match1"
+Toggle g_lookup1[12].cmp1_mask "net g_lookup1[12].cmp1_mask[18:0]"
+Toggle g_lookup1[12].vpn2_match1 "net g_lookup1[12].vpn2_match1"
+Toggle g_lookup1[12].asid_match1 "net g_lookup1[12].asid_match1"
+Toggle g_lookup1[13].cmp1_mask "net g_lookup1[13].cmp1_mask[18:0]"
+Toggle g_lookup1[13].vpn2_match1 "net g_lookup1[13].vpn2_match1"
+Toggle g_lookup1[13].asid_match1 "net g_lookup1[13].asid_match1"
+Toggle g_lookup1[14].cmp1_mask "net g_lookup1[14].cmp1_mask[18:0]"
+Toggle g_lookup1[14].vpn2_match1 "net g_lookup1[14].vpn2_match1"
+Toggle g_lookup1[14].asid_match1 "net g_lookup1[14].asid_match1"
+Toggle g_lookup1[15].cmp1_mask "net g_lookup1[15].cmp1_mask[18:0]"
+Toggle g_lookup1[15].vpn2_match1 "net g_lookup1[15].vpn2_match1"
+Toggle g_lookup1[15].asid_match1 "net g_lookup1[15].asid_match1"
+Toggle g_lookup1[16].cmp1_mask "net g_lookup1[16].cmp1_mask[18:0]"
+Toggle g_lookup1[16].vpn2_match1 "net g_lookup1[16].vpn2_match1"
+Toggle g_lookup1[16].asid_match1 "net g_lookup1[16].asid_match1"
+Toggle g_lookup1[17].cmp1_mask "net g_lookup1[17].cmp1_mask[18:0]"
+Toggle g_lookup1[17].vpn2_match1 "net g_lookup1[17].vpn2_match1"
+Toggle g_lookup1[17].asid_match1 "net g_lookup1[17].asid_match1"
+Toggle g_lookup1[18].cmp1_mask "net g_lookup1[18].cmp1_mask[18:0]"
+Toggle g_lookup1[18].vpn2_match1 "net g_lookup1[18].vpn2_match1"
+Toggle g_lookup1[18].asid_match1 "net g_lookup1[18].asid_match1"
+Toggle g_lookup1[19].cmp1_mask "net g_lookup1[19].cmp1_mask[18:0]"
+Toggle g_lookup1[19].vpn2_match1 "net g_lookup1[19].vpn2_match1"
+Toggle g_lookup1[19].asid_match1 "net g_lookup1[19].asid_match1"
+Toggle g_lookup1[20].cmp1_mask "net g_lookup1[20].cmp1_mask[18:0]"
+Toggle g_lookup1[20].vpn2_match1 "net g_lookup1[20].vpn2_match1"
+Toggle g_lookup1[20].asid_match1 "net g_lookup1[20].asid_match1"
+Toggle g_lookup1[21].cmp1_mask "net g_lookup1[21].cmp1_mask[18:0]"
+Toggle g_lookup1[21].vpn2_match1 "net g_lookup1[21].vpn2_match1"
+Toggle g_lookup1[21].asid_match1 "net g_lookup1[21].asid_match1"
+Toggle g_lookup1[22].cmp1_mask "net g_lookup1[22].cmp1_mask[18:0]"
+Toggle g_lookup1[22].vpn2_match1 "net g_lookup1[22].vpn2_match1"
+Toggle g_lookup1[22].asid_match1 "net g_lookup1[22].asid_match1"
+Toggle g_lookup1[23].cmp1_mask "net g_lookup1[23].cmp1_mask[18:0]"
+Toggle g_lookup1[23].vpn2_match1 "net g_lookup1[23].vpn2_match1"
+Toggle g_lookup1[23].asid_match1 "net g_lookup1[23].asid_match1"
+Toggle g_lookup1[24].cmp1_mask "net g_lookup1[24].cmp1_mask[18:0]"
+Toggle g_lookup1[24].vpn2_match1 "net g_lookup1[24].vpn2_match1"
+Toggle g_lookup1[24].asid_match1 "net g_lookup1[24].asid_match1"
+Toggle g_lookup1[25].cmp1_mask "net g_lookup1[25].cmp1_mask[18:0]"
+Toggle g_lookup1[25].vpn2_match1 "net g_lookup1[25].vpn2_match1"
+Toggle g_lookup1[25].asid_match1 "net g_lookup1[25].asid_match1"
+Toggle g_lookup1[26].cmp1_mask "net g_lookup1[26].cmp1_mask[18:0]"
+Toggle g_lookup1[26].vpn2_match1 "net g_lookup1[26].vpn2_match1"
+Toggle g_lookup1[26].asid_match1 "net g_lookup1[26].asid_match1"
+Toggle g_lookup1[27].cmp1_mask "net g_lookup1[27].cmp1_mask[18:0]"
+Toggle g_lookup1[27].vpn2_match1 "net g_lookup1[27].vpn2_match1"
+Toggle g_lookup1[27].asid_match1 "net g_lookup1[27].asid_match1"
+Toggle g_lookup1[28].cmp1_mask "net g_lookup1[28].cmp1_mask[18:0]"
+Toggle g_lookup1[28].vpn2_match1 "net g_lookup1[28].vpn2_match1"
+Toggle g_lookup1[28].asid_match1 "net g_lookup1[28].asid_match1"
+Toggle g_lookup1[29].cmp1_mask "net g_lookup1[29].cmp1_mask[18:0]"
+Toggle g_lookup1[29].vpn2_match1 "net g_lookup1[29].vpn2_match1"
+Toggle g_lookup1[29].asid_match1 "net g_lookup1[29].asid_match1"
+Toggle g_lookup1[30].cmp1_mask "net g_lookup1[30].cmp1_mask[18:0]"
+Toggle g_lookup1[30].vpn2_match1 "net g_lookup1[30].vpn2_match1"
+Toggle g_lookup1[30].asid_match1 "net g_lookup1[30].asid_match1"
+Toggle g_lookup1[31].cmp1_mask "net g_lookup1[31].cmp1_mask[18:0]"
+Toggle g_lookup1[31].vpn2_match1 "net g_lookup1[31].vpn2_match1"
+Toggle g_lookup1[31].asid_match1 "net g_lookup1[31].asid_match1"
+Toggle g_lookup1[32].cmp1_mask "net g_lookup1[32].cmp1_mask[18:0]"
+Toggle g_lookup1[32].vpn2_match1 "net g_lookup1[32].vpn2_match1"
+Toggle g_lookup1[32].asid_match1 "net g_lookup1[32].asid_match1"
+Toggle g_lookup1[33].cmp1_mask "net g_lookup1[33].cmp1_mask[18:0]"
+Toggle g_lookup1[33].vpn2_match1 "net g_lookup1[33].vpn2_match1"
+Toggle g_lookup1[33].asid_match1 "net g_lookup1[33].asid_match1"
+Toggle g_lookup1[34].cmp1_mask "net g_lookup1[34].cmp1_mask[18:0]"
+Toggle g_lookup1[34].vpn2_match1 "net g_lookup1[34].vpn2_match1"
+Toggle g_lookup1[34].asid_match1 "net g_lookup1[34].asid_match1"
+Toggle g_lookup1[35].cmp1_mask "net g_lookup1[35].cmp1_mask[18:0]"
+Toggle g_lookup1[35].vpn2_match1 "net g_lookup1[35].vpn2_match1"
+Toggle g_lookup1[35].asid_match1 "net g_lookup1[35].asid_match1"
+Toggle g_lookup1[36].cmp1_mask "net g_lookup1[36].cmp1_mask[18:0]"
+Toggle g_lookup1[36].vpn2_match1 "net g_lookup1[36].vpn2_match1"
+Toggle g_lookup1[36].asid_match1 "net g_lookup1[36].asid_match1"
+Toggle g_lookup1[37].cmp1_mask "net g_lookup1[37].cmp1_mask[18:0]"
+Toggle g_lookup1[37].vpn2_match1 "net g_lookup1[37].vpn2_match1"
+Toggle g_lookup1[37].asid_match1 "net g_lookup1[37].asid_match1"
+Toggle g_lookup1[38].cmp1_mask "net g_lookup1[38].cmp1_mask[18:0]"
+Toggle g_lookup1[38].vpn2_match1 "net g_lookup1[38].vpn2_match1"
+Toggle g_lookup1[38].asid_match1 "net g_lookup1[38].asid_match1"
+Toggle g_lookup1[39].cmp1_mask "net g_lookup1[39].cmp1_mask[18:0]"
+Toggle g_lookup1[39].vpn2_match1 "net g_lookup1[39].vpn2_match1"
+Toggle g_lookup1[39].asid_match1 "net g_lookup1[39].asid_match1"
+Toggle g_lookup1[40].cmp1_mask "net g_lookup1[40].cmp1_mask[18:0]"
+Toggle g_lookup1[40].vpn2_match1 "net g_lookup1[40].vpn2_match1"
+Toggle g_lookup1[40].asid_match1 "net g_lookup1[40].asid_match1"
+Toggle g_lookup1[41].cmp1_mask "net g_lookup1[41].cmp1_mask[18:0]"
+Toggle g_lookup1[41].vpn2_match1 "net g_lookup1[41].vpn2_match1"
+Toggle g_lookup1[41].asid_match1 "net g_lookup1[41].asid_match1"
+Toggle g_lookup1[42].cmp1_mask "net g_lookup1[42].cmp1_mask[18:0]"
+Toggle g_lookup1[42].vpn2_match1 "net g_lookup1[42].vpn2_match1"
+Toggle g_lookup1[42].asid_match1 "net g_lookup1[42].asid_match1"
+Toggle g_lookup1[43].cmp1_mask "net g_lookup1[43].cmp1_mask[18:0]"
+Toggle g_lookup1[43].vpn2_match1 "net g_lookup1[43].vpn2_match1"
+Toggle g_lookup1[43].asid_match1 "net g_lookup1[43].asid_match1"
+Toggle g_lookup1[44].cmp1_mask "net g_lookup1[44].cmp1_mask[18:0]"
+Toggle g_lookup1[44].vpn2_match1 "net g_lookup1[44].vpn2_match1"
+Toggle g_lookup1[44].asid_match1 "net g_lookup1[44].asid_match1"
+Toggle g_lookup1[45].cmp1_mask "net g_lookup1[45].cmp1_mask[18:0]"
+Toggle g_lookup1[45].vpn2_match1 "net g_lookup1[45].vpn2_match1"
+Toggle g_lookup1[45].asid_match1 "net g_lookup1[45].asid_match1"
+Toggle g_lookup1[46].cmp1_mask "net g_lookup1[46].cmp1_mask[18:0]"
+Toggle g_lookup1[46].vpn2_match1 "net g_lookup1[46].vpn2_match1"
+Toggle g_lookup1[46].asid_match1 "net g_lookup1[46].asid_match1"
+Toggle g_lookup1[47].cmp1_mask "net g_lookup1[47].cmp1_mask[18:0]"
+Toggle g_lookup1[47].vpn2_match1 "net g_lookup1[47].vpn2_match1"
+Toggle g_lookup1[47].asid_match1 "net g_lookup1[47].asid_match1"
+Toggle g_lookup1[48].cmp1_mask "net g_lookup1[48].cmp1_mask[18:0]"
+Toggle g_lookup1[48].vpn2_match1 "net g_lookup1[48].vpn2_match1"
+Toggle g_lookup1[48].asid_match1 "net g_lookup1[48].asid_match1"
+Toggle g_lookup1[49].cmp1_mask "net g_lookup1[49].cmp1_mask[18:0]"
+Toggle g_lookup1[49].vpn2_match1 "net g_lookup1[49].vpn2_match1"
+Toggle g_lookup1[49].asid_match1 "net g_lookup1[49].asid_match1"
+Toggle g_lookup1[50].cmp1_mask "net g_lookup1[50].cmp1_mask[18:0]"
+Toggle g_lookup1[50].vpn2_match1 "net g_lookup1[50].vpn2_match1"
+Toggle g_lookup1[50].asid_match1 "net g_lookup1[50].asid_match1"
+Toggle g_lookup1[51].cmp1_mask "net g_lookup1[51].cmp1_mask[18:0]"
+Toggle g_lookup1[51].vpn2_match1 "net g_lookup1[51].vpn2_match1"
+Toggle g_lookup1[51].asid_match1 "net g_lookup1[51].asid_match1"
+Toggle g_lookup1[52].cmp1_mask "net g_lookup1[52].cmp1_mask[18:0]"
+Toggle g_lookup1[52].vpn2_match1 "net g_lookup1[52].vpn2_match1"
+Toggle g_lookup1[52].asid_match1 "net g_lookup1[52].asid_match1"
+Toggle g_lookup1[53].cmp1_mask "net g_lookup1[53].cmp1_mask[18:0]"
+Toggle g_lookup1[53].vpn2_match1 "net g_lookup1[53].vpn2_match1"
+Toggle g_lookup1[53].asid_match1 "net g_lookup1[53].asid_match1"
+Toggle g_lookup1[54].cmp1_mask "net g_lookup1[54].cmp1_mask[18:0]"
+Toggle g_lookup1[54].vpn2_match1 "net g_lookup1[54].vpn2_match1"
+Toggle g_lookup1[54].asid_match1 "net g_lookup1[54].asid_match1"
+Toggle g_lookup1[55].cmp1_mask "net g_lookup1[55].cmp1_mask[18:0]"
+Toggle g_lookup1[55].vpn2_match1 "net g_lookup1[55].vpn2_match1"
+Toggle g_lookup1[55].asid_match1 "net g_lookup1[55].asid_match1"
+Toggle g_lookup1[56].cmp1_mask "net g_lookup1[56].cmp1_mask[18:0]"
+Toggle g_lookup1[56].vpn2_match1 "net g_lookup1[56].vpn2_match1"
+Toggle g_lookup1[56].asid_match1 "net g_lookup1[56].asid_match1"
+Toggle g_lookup1[57].cmp1_mask "net g_lookup1[57].cmp1_mask[18:0]"
+Toggle g_lookup1[57].vpn2_match1 "net g_lookup1[57].vpn2_match1"
+Toggle g_lookup1[57].asid_match1 "net g_lookup1[57].asid_match1"
+Toggle g_lookup1[58].cmp1_mask "net g_lookup1[58].cmp1_mask[18:0]"
+Toggle g_lookup1[58].vpn2_match1 "net g_lookup1[58].vpn2_match1"
+Toggle g_lookup1[58].asid_match1 "net g_lookup1[58].asid_match1"
+Toggle g_lookup1[59].cmp1_mask "net g_lookup1[59].cmp1_mask[18:0]"
+Toggle g_lookup1[59].vpn2_match1 "net g_lookup1[59].vpn2_match1"
+Toggle g_lookup1[59].asid_match1 "net g_lookup1[59].asid_match1"
+Toggle g_lookup1[60].cmp1_mask "net g_lookup1[60].cmp1_mask[18:0]"
+Toggle g_lookup1[60].vpn2_match1 "net g_lookup1[60].vpn2_match1"
+Toggle g_lookup1[60].asid_match1 "net g_lookup1[60].asid_match1"
+Toggle g_lookup1[61].cmp1_mask "net g_lookup1[61].cmp1_mask[18:0]"
+Toggle g_lookup1[61].vpn2_match1 "net g_lookup1[61].vpn2_match1"
+Toggle g_lookup1[61].asid_match1 "net g_lookup1[61].asid_match1"
+Toggle g_lookup1[62].cmp1_mask "net g_lookup1[62].cmp1_mask[18:0]"
+Toggle g_lookup1[62].vpn2_match1 "net g_lookup1[62].vpn2_match1"
+Toggle g_lookup1[62].asid_match1 "net g_lookup1[62].asid_match1"
+Toggle g_lookup1[63].cmp1_mask "net g_lookup1[63].cmp1_mask[18:0]"
+Toggle g_lookup1[63].vpn2_match1 "net g_lookup1[63].vpn2_match1"
+Toggle g_lookup1[63].asid_match1 "net g_lookup1[63].asid_match1"
+
+// ID: EXCL-PROD-0170
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3371145080 4062230476"
+MODULE: mips_page_table_walker
+Toggle req_valid "net req_valid"
+Toggle req_ready "net req_ready"
+Toggle ptbr "net ptbr[31:0]"
+Toggle user_mode "net user_mode"
+Toggle mem_valid "reg mem_valid"
+Toggle mem_addr "reg mem_addr[31:0]"
+Toggle mem_ready "net mem_ready"
+Toggle mem_error "net mem_error"
+Toggle resp_valid "reg resp_valid"
+Toggle pa "reg pa[31:0]"
+Toggle fault_valid "reg fault_valid"
+Toggle fault_code "reg fault_code[2:0]"
+Toggle leaf_pte "reg leaf_pte[31:0]"
+Toggle state "reg state[1:0]"
+Toggle va_q "reg va_q[31:0]"
+Toggle ptbr_q "reg ptbr_q[31:0]"
+Toggle access_q "reg access_q[1:0]"
+Toggle user_q "reg user_q"
+
+// ID: EXCL-PROD-0171
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "629359671 3105169398"
+MODULE: axi_spi_flash
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_arlock "net s_arlock[1:0]"
+Toggle s_arprot "net s_arprot[2:0]"
+Toggle s_rid "net s_rid[3:0]"
+Toggle s_rdata "net s_rdata[31:0]"
+Toggle s_rresp "net s_rresp[1:0]"
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awlock "net s_awlock[1:0]"
+Toggle s_awcache "net s_awcache[3:0]"
+Toggle s_awprot "net s_awprot[2:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_awready "net s_awready"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "net s_wready"
+Toggle s_bid "net s_bid[3:0]"
+Toggle s_bresp "net s_bresp[1:0]"
+Toggle s_bvalid "net s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle spi_miso "net spi_miso"
+Toggle wr_busy "reg wr_busy"
+Toggle wr_bvalid "reg wr_bvalid"
+Toggle wr_id "reg wr_id[3:0]"
+Toggle ar_id "reg ar_id[3:0]"
+Toggle read_data "reg read_data[31:0]"
+Toggle endian_swapped "net endian_swapped[31:0]"
+
+// ID: EXCL-PROD-0172
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1363931416 1788776457"
+MODULE: qspi_cmd_behavioral
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle spi_sclk "net spi_sclk"
+Toggle spi_cs_n "net spi_cs_n[3:0]"
+Toggle spi_io_o "net spi_io_o[3:0]"
+Toggle spi_io_oe "net spi_io_oe[3:0]"
+Toggle spi_io_i "net spi_io_i[3:0]"
+Toggle irq "net irq"
+Toggle error_event "reg error_event"
+Toggle error_value "reg error_value[31:0]"
+Toggle wr "net wr"
+Toggle rd "net rd"
+Toggle tx_push "net tx_push"
+Toggle rx_pop "net rx_pop"
+Toggle soft_reset "net soft_reset"
+Toggle abort_cmd "net abort_cmd"
+Toggle ctrl_r "reg ctrl_r[31:0]"
+Toggle clk_div_r "reg clk_div_r[15:0]"
+Toggle cs_ctrl_r "reg cs_ctrl_r[31:0]"
+Toggle irq_en_r "reg irq_en_r[31:0]"
+Toggle timeout_limit_r "reg timeout_limit_r[31:0]"
+Toggle cmd_addr_r "reg cmd_addr_r[31:0]"
+Toggle cmd_len_r "reg cmd_len_r[15:0]"
+Toggle xip_index_r "reg xip_index_r[2:0]"
+Toggle tx_wr "reg tx_wr[4:0]"
+Toggle tx_rd "reg tx_rd[4:0]"
+Toggle rx_wr "reg rx_wr[4:0]"
+Toggle rx_rd "reg rx_rd[4:0]"
+Toggle tx_count_r "reg tx_count_r[6:0]"
+Toggle rx_count_r "reg rx_count_r[6:0]"
+Toggle tx_full "net tx_full"
+Toggle rx_empty "net rx_empty"
+Toggle tx_empty "net tx_empty"
+Toggle tx_pop_pulse "reg tx_pop_pulse"
+Toggle rx_push_pulse "reg rx_push_pulse"
+Toggle rx_push_data "reg rx_push_data[31:0]"
+Toggle state "reg state[2:0]"
+Toggle active_lut_r "reg active_lut_r[31:0]"
+Toggle active_addr_r "reg active_addr_r[31:0]"
+Toggle data_bytes_left "reg data_bytes_left[15:0]"
+Toggle tx_shift_r "reg tx_shift_r[31:0]"
+Toggle rx_shift_r "reg rx_shift_r[7:0]"
+Toggle phase_bits_left "reg phase_bits_left[6:0]"
+Toggle phase_lane_r "reg phase_lane_r[2:0]"
+Toggle tx_word_r "reg tx_word_r[31:0]"
+Toggle tx_bytes_left_r "reg tx_bytes_left_r[2:0]"
+Toggle spi_sclk_r "reg spi_sclk_r"
+Toggle div_count_r "reg div_count_r[15:0]"
+Toggle timeout_count_r "reg timeout_count_r[31:0]"
+Toggle irq_pending_r "reg irq_pending_r"
+Toggle error_r "reg error_r"
+Toggle timeout_r "reg timeout_r"
+Toggle aborted_r "reg aborted_r"
+Toggle addr_type "net addr_type[1:0]"
+Toggle mode_type "net mode_type[1:0]"
+Toggle dummy_cycles "net dummy_cycles[4:0]"
+Toggle data_write "net data_write"
+Toggle cmd_lane_code "net cmd_lane_code[1:0]"
+Toggle addr_lane_code "net addr_lane_code[1:0]"
+Toggle data_lane_code "net data_lane_code[1:0]"
+Toggle spi_tick "net spi_tick"
+Toggle selected_cmd "net selected_cmd[7:0]"
+Toggle trigger_write "net trigger_write"
+Toggle trigger_busy "net trigger_busy"
+Toggle trigger_disabled "net trigger_disabled"
+Toggle disable_abort "net disable_abort"
+Toggle timeout_expired "net timeout_expired"
+Toggle cs_n_r "reg cs_n_r[3:0]"
+Toggle io_o_r "reg io_o_r[3:0]"
+Toggle io_oe_r "reg io_oe_r[3:0]"
+
+// ID: EXCL-PROD-0173
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2772071125 1505188873"
+MODULE: uart_pad_wrapper
+Toggle enable "net enable"
+Toggle uart_dtr_n_i "net uart_dtr_n_i"
+Toggle uart_dtr_n_pad "net uart_dtr_n_pad"
+Toggle uart_rx_pad "net uart_rx_pad"
+Toggle uart_cts_n_pad "net uart_cts_n_pad"
+Toggle uart_dsr_n_pad "net uart_dsr_n_pad"
+Toggle uart_dcd_n_pad "net uart_dcd_n_pad"
+Toggle uart_ri_n_pad "net uart_ri_n_pad"
+Toggle uart_rx_o "net uart_rx_o"
+Toggle uart_cts_n_o "net uart_cts_n_o"
+Toggle uart_dsr_n_o "net uart_dsr_n_o"
+Toggle uart_dcd_n_o "net uart_dcd_n_o"
+Toggle uart_ri_n_o "net uart_ri_n_o"
+
+// ID: EXCL-PROD-0174
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4288013028 2334103481"
+MODULE: axi_ddr4_controller
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "net s_wready"
+Toggle s_bid "reg s_bid[3:0]"
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_bvalid "reg s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arvalid "net s_arvalid"
+Toggle s_rid "reg s_rid[3:0]"
+Toggle s_rdata "reg s_rdata[31:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle s_rlast "reg s_rlast"
+Toggle s_rvalid "reg s_rvalid"
+Toggle s_rready "net s_rready"
+Toggle refresh_req "net refresh_req"
+Toggle controller_present "net controller_present"
+Toggle fatal_error "net fatal_error"
+Toggle error_code "net error_code[15:0]"
+Toggle phy_addr "reg phy_addr[31:0]"
+Toggle phy_wdata "reg phy_wdata[31:0]"
+Toggle phy_wstrb "reg phy_wstrb[3:0]"
+Toggle last_row_hit "reg last_row_hit"
+Toggle last_row_miss "reg last_row_miss"
+Toggle ecc_correctable_error "net ecc_correctable_error"
+Toggle ecc_uncorrectable_error "net ecc_uncorrectable_error"
+Toggle write_active "reg write_active"
+Toggle write_id "reg write_id[3:0]"
+Toggle write_addr "reg write_addr[31:0]"
+Toggle write_left "reg write_left[7:0]"
+Toggle write_len "reg write_len[7:0]"
+Toggle write_bad "reg write_bad"
+Toggle read_active "reg read_active"
+Toggle read_id "reg read_id[3:0]"
+Toggle read_addr "reg read_addr[31:0]"
+Toggle read_left "reg read_left[7:0]"
+Toggle read_bad "reg read_bad"
+Toggle command_addr "reg command_addr[31:0]"
+Toggle pending_data "reg pending_data[31:0]"
+Toggle pending_strb "reg pending_strb[3:0]"
+Toggle pending_cmd "reg pending_cmd[3:0]"
+Toggle active_bank "reg active_bank[2:0]"
+Toggle active_row "reg active_row[15:0]"
+Toggle bank_open "reg bank_open"
+Toggle error_code_r "reg error_code_r[15:0]"
+Toggle ecc_code_current "net ecc_code_current[38:0]"
+Toggle ecc_data_current "net ecc_data_current[31:0]"
+Toggle ecc_corr_current "net ecc_corr_current"
+Toggle ecc_uncorr_current "net ecc_uncorr_current"
+Toggle ecc_data_next "net ecc_data_next[31:0]"
+Toggle ecc_old_write_data "net ecc_old_write_data[31:0]"
+Toggle ecc_merged_write_data "net ecc_merged_write_data[31:0]"
+Toggle ecc_write_code "net ecc_write_code[38:0]"
+Toggle image_hex "reg image_hex[1023:0]"
+
+// ID: EXCL-PROD-0175
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "1581893224 3269967297"
+MODULE: apb_mmu_context_status
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle invalidate_valid "net invalidate_valid"
+Toggle invalidate_asid "net invalidate_asid[7:0]"
+Toggle invalidate_vpn "net invalidate_vpn[18:0]"
+Toggle invalidate_scope "net invalidate_scope[1:0]"
+Toggle asid_r "reg asid_r[7:0]"
+Toggle generation_r "reg generation_r[7:0]"
+Toggle vpn_r "reg vpn_r[19:0]"
+Toggle scope_r "reg scope_r[1:0]"
+Toggle event_r "reg event_r[3:0]"
+Toggle sd_status_r "reg sd_status_r[4:1]"
+Toggle wr "net wr"
+Toggle rd "net rd"
+Toggle alloc_req "net alloc_req"
+Toggle release_req "net release_req"
+Toggle alloc_valid "net alloc_valid"
+Toggle alloc_fail "net alloc_fail"
+Toggle release_valid "net release_valid"
+Toggle release_reject "net release_reject"
+Toggle alloc_asid "net alloc_asid[7:0]"
+Toggle alloc_generation "net alloc_generation[7:0]"
+Toggle shootdown_req "net shootdown_req"
+Toggle shootdown_ack "net shootdown_ack"
+Toggle sd_busy "net sd_busy"
+Toggle sd_invalidate_valid "net sd_invalidate_valid"
+Toggle sd_done "net sd_done"
+Toggle sd_timeout "net sd_timeout"
+Toggle sd_rejected "net sd_rejected"
+Toggle sd_invalidate_asid "net sd_invalidate_asid[7:0]"
+Toggle sd_invalidate_vpn "net sd_invalidate_vpn[19:0]"
+Toggle sd_invalidate_scope "net sd_invalidate_scope[1:0]"
+
+// ID: EXCL-PROD-0176
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3379064563 2636761320"
+MODULE: mips_soc
+Toggle uart_rx "net uart_rx"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+Toggle spi_miso "net spi_miso"
+Toggle qspi_io "net qspi_io[3:0]"
+Toggle ext_awready "net ext_awready"
+Toggle ext_wready "net ext_wready"
+Toggle ext_bid "net ext_bid[3:0]"
+Toggle ext_bresp "net ext_bresp[1:0]"
+Toggle ext_bvalid "net ext_bvalid"
+Toggle ext_arready "net ext_arready"
+Toggle ext_rid "net ext_rid[3:0]"
+Toggle ext_rdata "net ext_rdata[31:0]"
+Toggle ext_rresp "net ext_rresp[1:0]"
+Toggle ext_rlast "net ext_rlast"
+Toggle ext_rvalid "net ext_rvalid"
+
+// ID: EXCL-PROD-0177
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3915859991 4074997514"
+MODULE: apb_ddr4_status
+Toggle controller_present "net controller_present"
+Toggle init_done "net init_done"
+Toggle training_done "net training_done"
+Toggle fatal_error "net fatal_error"
+Toggle error_code "net error_code[15:0]"
+Toggle ecc_correctable_error "net ecc_correctable_error"
+Toggle ecc_uncorrectable_error "net ecc_uncorrectable_error"
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle error_r "reg error_r[31:0]"
+Toggle error_seen_r "reg error_seen_r"
+Toggle error_inject_r "reg error_inject_r"
+Toggle wr "net wr"
+Toggle rd "net rd"
+Toggle error_active "net error_active"
+
+// ID: EXCL-PROD-0178
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2914053452 1386343405"
+MODULE: l2_cache_caching
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_awready "reg s_awready"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "reg s_wready"
+Toggle s_bid "reg s_bid[3:0]"
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_bvalid "reg s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_araddr "net s_araddr[31:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arvalid "net s_arvalid"
+Toggle s_arready "reg s_arready"
+Toggle s_rid "reg s_rid[3:0]"
+Toggle s_rdata "reg s_rdata[31:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle s_rlast "reg s_rlast"
+Toggle s_rvalid "reg s_rvalid"
+Toggle s_rready "net s_rready"
+Toggle m_awid "reg m_awid[3:0]"
+Toggle m_awaddr "reg m_awaddr[31:0]"
+Toggle m_awlen "reg m_awlen[7:0]"
+Toggle m_awsize "reg m_awsize[2:0]"
+Toggle m_awburst "reg m_awburst[1:0]"
+Toggle m_awvalid "reg m_awvalid"
+Toggle m_awready "net m_awready"
+Toggle m_wdata "reg m_wdata[31:0]"
+Toggle m_wstrb "reg m_wstrb[3:0]"
+Toggle m_wlast "reg m_wlast"
+Toggle m_wvalid "reg m_wvalid"
+Toggle m_wready "net m_wready"
+Toggle m_bid "net m_bid[3:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bvalid "net m_bvalid"
+Toggle m_bready "reg m_bready"
+Toggle m_arid "reg m_arid[3:0]"
+Toggle m_araddr "reg m_araddr[31:0]"
+Toggle m_arlen "reg m_arlen[7:0]"
+Toggle m_arsize "reg m_arsize[2:0]"
+Toggle m_arburst "reg m_arburst[1:0]"
+Toggle m_arvalid "reg m_arvalid"
+Toggle m_arready "net m_arready"
+Toggle m_rid "net m_rid[3:0]"
+Toggle m_rdata "net m_rdata[31:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle m_rlast "net m_rlast"
+Toggle m_rvalid "net m_rvalid"
+Toggle m_rready "reg m_rready"
+Toggle snoop_addr "net snoop_addr[31:0]"
+Toggle snoop_valid "net snoop_valid"
+Toggle snoop_ack "net snoop_ack"
+Toggle snoop_hit "net snoop_hit"
+Toggle is_unsupported_aw "net is_unsupported_aw"
+Toggle is_unsupported_ar "net is_unsupported_ar"
+Toggle state "reg state[3:0]"
+Toggle req_is_write "reg req_is_write"
+Toggle req_id "reg req_id[3:0]"
+Toggle req_addr "reg req_addr[31:0]"
+Toggle req_len "reg req_len[7:0]"
+Toggle req_size "reg req_size[2:0]"
+Toggle req_burst "reg req_burst[1:0]"
+Toggle beat_cnt "reg beat_cnt[7:0]"
+Toggle resp_err "reg resp_err[1:0]"
+Toggle req_wdata "reg req_wdata[31:0]"
+Toggle req_wstrb "reg req_wstrb[3:0]"
+Toggle req_wlast "reg req_wlast"
+Toggle alloc_way "reg alloc_way[2:0]"
+Toggle fill_cnt "reg fill_cnt[2:0]"
+Toggle evict_cnt "reg evict_cnt[2:0]"
+Toggle evict_addr "reg evict_addr[31:0]"
+Toggle current_beat_pa "net current_beat_pa[28:0]"
+Toggle req_index "net req_index[8:0]"
+Toggle req_tag "net req_tag[14:0]"
+Toggle req_wordoff "net req_wordoff[2:0]"
+Toggle way_hit "reg way_hit[7:0]"
+Toggle valids_of_index "reg valids_of_index[7:0]"
+Toggle hit "net hit"
+Toggle hit_way "reg hit_way[2:0]"
+
+// ID: EXCL-PROD-0179
+// CATEGORY: Cache & Memory Subsystem
+// CHECKSUM: "2028136588 1237915181"
+MODULE: axi_ddr_model
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle error_injected "reg error_injected"
+Toggle error_injected2 "reg error_injected2"
+Toggle firmware_hex "reg firmware_hex[1023:0]"
+Toggle int_arready "reg int_arready"
+Toggle int_rvalid "reg int_rvalid"
+
+// ID: EXCL-PROD-0180
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3372399530 379756662"
+MODULE: cpu_scheduler
+Toggle enable "net enable"
+Toggle timer_tick "net timer_tick"
+Toggle ipi_resched "net ipi_resched"
+Toggle yield_req "net yield_req"
+Toggle active_mask "net active_mask[3:0]"
+Toggle resched_ack "net resched_ack"
+Toggle scheduler_busy "net scheduler_busy"
+Toggle current_task "net current_task[7:0]"
+Toggle switch_valid "net switch_valid"
+Toggle switch_from "net switch_from[7:0]"
+Toggle switch_to "net switch_to[7:0]"
+Toggle ctx_save_req "net ctx_save_req"
+Toggle ctx_save_task "net ctx_save_task[7:0]"
+Toggle ctx_save_done "net ctx_save_done"
+Toggle ctx_save_asid "net ctx_save_asid[7:0]"
+Toggle ctx_save_srsctl "net ctx_save_srsctl[31:0]"
+Toggle ctx_save_fpr "net ctx_save_fpr[1023:0]"
+Toggle ctx_save_fcsr "net ctx_save_fcsr[31:0]"
+Toggle ctx_restore_req "net ctx_restore_req"
+Toggle ctx_restore_task "net ctx_restore_task[7:0]"
+Toggle ctx_restore_ack "net ctx_restore_ack"
+Toggle ctx_restore_pc "net ctx_restore_pc[31:0]"
+Toggle ctx_restore_sp "net ctx_restore_sp[31:0]"
+Toggle ctx_restore_status "net ctx_restore_status[31:0]"
+Toggle ctx_restore_asid "net ctx_restore_asid[7:0]"
+Toggle ctx_restore_srsctl "net ctx_restore_srsctl[31:0]"
+Toggle ctx_restore_gpr "net ctx_restore_gpr[1023:0]"
+Toggle ctx_restore_srs_gpr "net ctx_restore_srs_gpr[16383:0]"
+Toggle ctx_restore_fpr "net ctx_restore_fpr[1023:0]"
+Toggle ctx_restore_fcsr "net ctx_restore_fcsr[31:0]"
+Toggle state "reg state[1:0]"
+Toggle current_r "reg current_r[7:0]"
+Toggle next_r "reg next_r[7:0]"
+Toggle pending_mask "reg pending_mask[3:0]"
+Toggle trigger "net trigger"
+Toggle eligible "net eligible[3:0]"
+Toggle selected "reg selected[7:0]"
+
+// ID: EXCL-PROD-0181
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1135157623 2466247052"
+MODULE: mips_regfile
+Toggle current_set "net current_set[3:0]"
+Toggle previous_set "net previous_set[3:0]"
+Toggle shadow_we "net shadow_we"
+Toggle shadow_wset "net shadow_wset[3:0]"
+Toggle ctx_save_req "net ctx_save_req"
+Toggle ctx_save_done "net ctx_save_done"
+Toggle ctx_restore_req "net ctx_restore_req"
+Toggle ctx_restore_data "net ctx_restore_data[1023:0]"
+Toggle ctx_restore_srs_data "net ctx_restore_srs_data[16383:0]"
+Toggle ctx_restore_set "net ctx_restore_set[3:0]"
+Toggle ctx_restore_done "net ctx_restore_done"
+Toggle active_set "net active_set[3:0]"
+Toggle active_prev_set "net active_prev_set[3:0]"
+Toggle restore_set "net restore_set[3:0]"
+
+// ID: EXCL-PROD-0182
+// CATEGORY: Bus & Fabric Interconnect
+// CHECKSUM: "1023251519 706408668"
+MODULE: axi2apb_bridge
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awlock "net s_awlock[1:0]"
+Toggle s_awcache "net s_awcache[3:0]"
+Toggle s_awprot "net s_awprot[2:0]"
+Toggle s_bresp "net s_bresp[1:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arlock "net s_arlock[1:0]"
+Toggle s_rresp "net s_rresp[1:0]"
+Toggle pslverr "net pslverr"
+Toggle arsize_latch "reg arsize_latch[2:0]"
+Toggle arburst_latch "reg arburst_latch[1:0]"
+Toggle rresp_latch "reg rresp_latch[1:0]"
+Toggle bresp_latch "reg bresp_latch[1:0]"
+Toggle aw_done "net aw_done"
+Toggle w_done "net w_done"
+
+// ID: EXCL-PROD-0183
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3303551202 3390719663"
+MODULE: apb_perf_counters
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle cycle_count "net cycle_count[31:0]"
+Toggle retire_count "net retire_count[31:0]"
+Toggle icache_miss_count "net icache_miss_count[31:0]"
+Toggle dcache_miss_count "net dcache_miss_count[31:0]"
+Toggle branch_mispredict_count "net branch_mispredict_count[31:0]"
+Toggle mdu_stall_count "net mdu_stall_count[31:0]"
+Toggle rd "net rd"
+
+// ID: EXCL-PROD-0184
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2568128339 389552831"
+MODULE: qspi_soc_pad_mux
+Toggle cmd_grant "net cmd_grant"
+Toggle cmd_sclk "net cmd_sclk"
+Toggle cmd_cs_n "net cmd_cs_n"
+Toggle cmd_io_o "net cmd_io_o[3:0]"
+Toggle cmd_io_oe "net cmd_io_oe[3:0]"
+Toggle mem_io_o "net mem_io_o[3:0]"
+Toggle mem_io_oe "net mem_io_oe[3:0]"
+Toggle qspi_io_o "net qspi_io_o[3:0]"
+Toggle qspi_io_oe "net qspi_io_oe[3:0]"
+Toggle qspi_io "net qspi_io[3:0]"
+Toggle selected_cmd "net selected_cmd"
+
+// ID: EXCL-PROD-0185
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "832457901 2783702265"
+MODULE: qspi_apb_integration
+Toggle controller_present "net controller_present"
+Toggle xip_timeout_sticky "net xip_timeout_sticky"
+Toggle error_event "net error_event"
+Toggle error_value "net error_value[31:0]"
+Toggle psel "net psel"
+Toggle prdata "net prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle spi_sclk "net spi_sclk"
+Toggle spi_cs_n "net spi_cs_n"
+Toggle spi_mosi "net spi_mosi"
+Toggle spi_miso "net spi_miso"
+Toggle qspi_io_i "net qspi_io_i[3:0]"
+Toggle qspi_io_o "net qspi_io_o[3:0]"
+Toggle qspi_io_oe "net qspi_io_oe[3:0]"
+Toggle shared_grant "net shared_grant"
+Toggle active "net active"
+Toggle request "net request"
+Toggle irq "net irq"
+Toggle status_sel "net status_sel"
+Toggle cmd_sel "net cmd_sel"
+Toggle status_prdata "net status_prdata[31:0]"
+Toggle status_pready "net status_pready"
+Toggle status_pslverr "net status_pslverr"
+Toggle cmd_prdata "net cmd_prdata[31:0]"
+Toggle cmd_pready "net cmd_pready"
+Toggle cmd_pslverr "net cmd_pslverr"
+Toggle cmd_sclk "net cmd_sclk"
+Toggle cmd_cs_n "net cmd_cs_n[3:0]"
+Toggle cmd_io_o "net cmd_io_o[3:0]"
+Toggle cmd_io_oe "net cmd_io_oe[3:0]"
+Toggle cmd_io_i "net cmd_io_i[3:0]"
+Toggle cmd_irq "net cmd_irq"
+Toggle cmd_error_event "net cmd_error_event"
+Toggle cmd_error_value "net cmd_error_value[31:0]"
+Toggle trigger_access "net trigger_access"
+Toggle arbiter_wait "net arbiter_wait"
+Toggle cmd_engine_sel "net cmd_engine_sel"
+
+// ID: EXCL-PROD-0186
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "1633348978 1444263448"
+MODULE: soc_core_subsystem
+Toggle tlb_inv_en "net tlb_inv_en"
+Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
+Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
+Toggle tlb_inv_scope "net tlb_inv_scope[1:0]"
+Toggle tlb_inv_wired_floor "net tlb_inv_wired_floor[5:0]"
+Toggle coh_store_valid "net coh_store_valid"
+Toggle coh_snoop_valid "net coh_snoop_valid"
+Toggle coh_snoop_addr "net coh_snoop_addr[31:0]"
+Toggle inst_awid "net inst_awid[3:0]"
+Toggle inst_awaddr "net inst_awaddr[31:0]"
+Toggle inst_awlen "net inst_awlen[7:0]"
+Toggle inst_awsize "net inst_awsize[2:0]"
+Toggle inst_awburst "net inst_awburst[1:0]"
+Toggle inst_awlock "net inst_awlock[1:0]"
+Toggle inst_awcache "net inst_awcache[3:0]"
+Toggle inst_awprot "net inst_awprot[2:0]"
+Toggle inst_awvalid "net inst_awvalid"
+Toggle inst_awready "net inst_awready"
+Toggle inst_wdata "net inst_wdata[31:0]"
+Toggle inst_wstrb "net inst_wstrb[3:0]"
+Toggle inst_wlast "net inst_wlast"
+Toggle inst_wvalid "net inst_wvalid"
+Toggle inst_wready "net inst_wready"
+Toggle inst_bid "net inst_bid[3:0]"
+Toggle inst_bresp "net inst_bresp[1:0]"
+Toggle inst_bvalid "net inst_bvalid"
+Toggle inst_bready "net inst_bready"
+Toggle inst_arid "net inst_arid[3:0]"
+Toggle inst_arlen "net inst_arlen[7:0]"
+Toggle inst_arsize "net inst_arsize[2:0]"
+Toggle inst_arburst "net inst_arburst[1:0]"
+Toggle inst_arlock "net inst_arlock[1:0]"
+Toggle inst_arcache "net inst_arcache[3:0]"
+Toggle inst_arprot "net inst_arprot[2:0]"
+Toggle inst_rid "net inst_rid[3:0]"
+Toggle inst_rresp "net inst_rresp[1:0]"
+Toggle data_awid "net data_awid[3:0]"
+Toggle data_awsize "net data_awsize[2:0]"
+Toggle data_awburst "net data_awburst[1:0]"
+Toggle data_awlock "net data_awlock[1:0]"
+Toggle data_awprot "net data_awprot[2:0]"
+Toggle data_bid "net data_bid[3:0]"
+Toggle data_bresp "net data_bresp[1:0]"
+Toggle data_arid "net data_arid[3:0]"
+Toggle data_arsize "net data_arsize[2:0]"
+Toggle data_arburst "net data_arburst[1:0]"
+Toggle data_arlock "net data_arlock[1:0]"
+Toggle data_arprot "net data_arprot[2:0]"
+Toggle data_rid "net data_rid[3:0]"
+Toggle data_rresp "net data_rresp[1:0]"
+Toggle perf_cycle_count "net perf_cycle_count[31:0]"
+Toggle perf_retire_count "net perf_retire_count[31:0]"
+Toggle perf_icache_miss_count "net perf_icache_miss_count[31:0]"
+Toggle perf_dcache_miss_count "net perf_dcache_miss_count[31:0]"
+Toggle perf_branch_mispredict_count "net perf_branch_mispredict_count[31:0]"
+Toggle perf_mdu_stall_count "net perf_mdu_stall_count[31:0]"
+Toggle core_ptw_mem_valid "net core_ptw_mem_valid"
+Toggle core_ptw_mem_addr "net core_ptw_mem_addr[31:0]"
+Toggle core_ptw_mem_ready "net core_ptw_mem_ready"
+Toggle core_ptw_mem_error "net core_ptw_mem_error"
+Toggle core_ptw_fault_valid "net core_ptw_fault_valid"
+Toggle core_ptw_fault_code "net core_ptw_fault_code[2:0]"
+Toggle ptw_axi_busy "reg ptw_axi_busy"
+Toggle ptw_axi_response "net ptw_axi_response"
+Toggle core_data_awid "net core_data_awid[3:0]"
+Toggle core_data_awsize "net core_data_awsize[2:0]"
+Toggle core_data_awburst "net core_data_awburst[1:0]"
+Toggle core_data_awlock "net core_data_awlock[1:0]"
+Toggle core_data_awprot "net core_data_awprot[2:0]"
+Toggle core_data_bid "net core_data_bid[3:0]"
+Toggle core_data_bresp "net core_data_bresp[1:0]"
+Toggle core_data_arid "net core_data_arid[3:0]"
+Toggle core_data_arsize "net core_data_arsize[2:0]"
+Toggle core_data_arburst "net core_data_arburst[1:0]"
+Toggle core_data_arlock "net core_data_arlock[1:0]"
+Toggle core_data_arprot "net core_data_arprot[2:0]"
+Toggle core_data_rid "net core_data_rid[3:0]"
+Toggle core_data_rresp "net core_data_rresp[1:0]"
+
+// ID: EXCL-PROD-0187
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "314633967 1860982472"
+MODULE: soc_peripheral_subsystem
+Toggle uart_rx "net uart_rx"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+Toggle wdt_reset "net wdt_reset"
+Toggle tlb_inv_en "net tlb_inv_en"
+Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
+Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
+Toggle tlb_inv_scope "net tlb_inv_scope[1:0]"
+Toggle tlb_inv_wired_floor "net tlb_inv_wired_floor[5:0]"
+Toggle ipi_target_present "net ipi_target_present"
+Toggle ipi_ack_valid "net ipi_ack_valid"
+Toggle ipi_ack_target "net ipi_ack_target"
+Toggle ipi_ack_generation "net ipi_ack_generation[7:0]"
+Toggle ipi_invalidate_valid "net ipi_invalidate_valid"
+Toggle ipi_invalidate_target "net ipi_invalidate_target"
+Toggle ipi_invalidate_generation "net ipi_invalidate_generation[7:0]"
+Toggle ipi_invalidate_asid "net ipi_invalidate_asid[7:0]"
+Toggle ipi_invalidate_vpn "net ipi_invalidate_vpn[19:0]"
+Toggle ipi_invalidate_scope "net ipi_invalidate_scope[1:0]"
+Toggle ipi_core1_ack_valid "net ipi_core1_ack_valid"
+Toggle ipi_core1_ack_target "net ipi_core1_ack_target"
+Toggle ipi_core1_ack_generation "net ipi_core1_ack_generation[7:0]"
+Toggle ipi_core1_invalidate_valid "net ipi_core1_invalidate_valid"
+Toggle ipi_core1_invalidate_target "net ipi_core1_invalidate_target"
+Toggle ipi_core1_invalidate_generation "net ipi_core1_invalidate_generation[7:0]"
+Toggle ipi_core1_invalidate_asid "net ipi_core1_invalidate_asid[7:0]"
+Toggle ipi_core1_invalidate_vpn "net ipi_core1_invalidate_vpn[19:0]"
+Toggle ipi_core1_invalidate_scope "net ipi_core1_invalidate_scope[1:0]"
+Toggle core1_reset_req "net core1_reset_req"
+Toggle qspi_timeout_sticky "net qspi_timeout_sticky"
+Toggle qspi_controller_present "net qspi_controller_present"
+Toggle ddr4_controller_present "net ddr4_controller_present"
+Toggle ddr4_init_done "net ddr4_init_done"
+Toggle ddr4_training_done "net ddr4_training_done"
+Toggle ddr4_fatal_error "net ddr4_fatal_error"
+Toggle ddr4_ecc_correctable_error "net ddr4_ecc_correctable_error"
+Toggle ddr4_ecc_uncorrectable_error "net ddr4_ecc_uncorrectable_error"
+Toggle ddr4_error_code "net ddr4_error_code[15:0]"
+Toggle spi_miso "net spi_miso"
+Toggle qspi_cmd_grant "net qspi_cmd_grant"
+Toggle spi_sclk "net spi_sclk"
+Toggle spi_cs_n "net spi_cs_n"
+Toggle spi_mosi "net spi_mosi"
+Toggle qspi_io_i "net qspi_io_i[3:0]"
+Toggle qspi_io_o "net qspi_io_o[3:0]"
+Toggle qspi_io_oe "net qspi_io_oe[3:0]"
+Toggle qspi_active "net qspi_active"
+Toggle qspi_cmd_req "net qspi_cmd_req"
+Toggle perf_cycle_count "net perf_cycle_count[31:0]"
+Toggle perf_retire_count "net perf_retire_count[31:0]"
+Toggle perf_icache_miss_count "net perf_icache_miss_count[31:0]"
+Toggle perf_dcache_miss_count "net perf_dcache_miss_count[31:0]"
+Toggle perf_branch_mispredict_count "net perf_branch_mispredict_count[31:0]"
+Toggle perf_mdu_stall_count "net perf_mdu_stall_count[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awlock "net s_awlock[1:0]"
+Toggle s_awcache "net s_awcache[3:0]"
+Toggle s_awprot "net s_awprot[2:0]"
+Toggle s_bresp "net s_bresp[1:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arlock "net s_arlock[1:0]"
+Toggle s_rresp "net s_rresp[1:0]"
+Toggle m_awid "net m_awid[3:0]"
+Toggle m_awlen "net m_awlen[7:0]"
+Toggle m_awsize "net m_awsize[2:0]"
+Toggle m_awburst "net m_awburst[1:0]"
+Toggle m_awlock "net m_awlock[1:0]"
+Toggle m_awcache "net m_awcache[3:0]"
+Toggle m_awprot "net m_awprot[2:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_wlast "net m_wlast"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bready "net m_bready"
+Toggle m_arid "net m_arid[3:0]"
+Toggle m_arlen "net m_arlen[7:0]"
+Toggle m_arsize "net m_arsize[2:0]"
+Toggle m_arburst "net m_arburst[1:0]"
+Toggle m_arlock "net m_arlock[1:0]"
+Toggle m_arcache "net m_arcache[3:0]"
+Toggle m_arprot "net m_arprot[2:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle m_rready "net m_rready"
+Toggle mmu_context_prdata "net mmu_context_prdata[31:0]"
+Toggle mmu_context_pready "net mmu_context_pready"
+Toggle mmu_context_pslverr "net mmu_context_pslverr"
+Toggle apb_pslverr "net apb_pslverr"
+Toggle qspi_sel "net qspi_sel"
+Toggle ddr4_status_sel "net ddr4_status_sel"
+Toggle wdt_sel "net wdt_sel"
+Toggle boot_status_sel "net boot_status_sel"
+Toggle mmu_context_sel "net mmu_context_sel"
+Toggle ipi_sel "net ipi_sel"
+Toggle ipi_core1_sel "net ipi_core1_sel"
+Toggle perf_sel "net perf_sel"
+Toggle fault_sel "net fault_sel"
+Toggle qspi_prdata "net qspi_prdata[31:0]"
+Toggle ddr4_status_prdata "net ddr4_status_prdata[31:0]"
+Toggle wdt_prdata "net wdt_prdata[31:0]"
+Toggle boot_status_prdata "net boot_status_prdata[31:0]"
+Toggle perf_prdata "net perf_prdata[31:0]"
+Toggle fault_prdata "net fault_prdata[31:0]"
+Toggle ipi_prdata "net ipi_prdata[31:0]"
+Toggle ipi_core1_prdata "net ipi_core1_prdata[31:0]"
+Toggle uart_pready "net uart_pready"
+Toggle gpio_pready "net gpio_pready"
+Toggle dma_pready "net dma_pready"
+Toggle pic_pready "net pic_pready"
+Toggle qspi_pready "net qspi_pready"
+Toggle ddr4_status_pready "net ddr4_status_pready"
+Toggle wdt_pready "net wdt_pready"
+Toggle boot_status_pready "net boot_status_pready"
+Toggle perf_pready "net perf_pready"
+Toggle fault_pready "net fault_pready"
+Toggle ipi_pready "net ipi_pready"
+Toggle ipi_core1_pready "net ipi_core1_pready"
+Toggle uart_pslverr "net uart_pslverr"
+Toggle timer_pslverr "net timer_pslverr"
+Toggle gpio_pslverr "net gpio_pslverr"
+Toggle dma_pslverr "net dma_pslverr"
+Toggle pic_pslverr "net pic_pslverr"
+Toggle qspi_pslverr "net qspi_pslverr"
+Toggle ddr4_status_pslverr "net ddr4_status_pslverr"
+Toggle wdt_pslverr "net wdt_pslverr"
+Toggle boot_status_pslverr "net boot_status_pslverr"
+Toggle perf_pslverr "net perf_pslverr"
+Toggle fault_pslverr "net fault_pslverr"
+Toggle ipi_pslverr "net ipi_pslverr"
+Toggle ipi_core1_pslverr "net ipi_core1_pslverr"
+Toggle uart_rx_int "net uart_rx_int"
+Toggle uart_16550_rx_irq "net uart_16550_rx_irq"
+Toggle ipi_core0_reset_req "net ipi_core0_reset_req"
+Toggle ipi_core1_reset_req "net ipi_core1_reset_req"
+Toggle qspi_irq "net qspi_irq"
+Toggle dma_ch_int "net dma_ch_int[3:0]"
+Toggle dma_int "net dma_int"
+Toggle ddr4_ecc_irq "net ddr4_ecc_irq"
+Toggle vic_vec_prio_unused "net vic_vec_prio_unused[3:0]"
+
+// ID: EXCL-PROD-0188
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1379674422 1705860525"
+MODULE: mips_mem_wb_reg
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle stall "net stall"
+Toggle flush "net flush"
+Toggle mem_rdata_fmt "net mem_rdata_fmt[31:0]"
+Toggle mem_ex_out "net mem_ex_out[31:0]"
+Toggle mem_pc_plus_8 "net mem_pc_plus_8[31:0]"
+Toggle mem_waddr "net mem_waddr[4:0]"
+Toggle mem_rd_addr "net mem_rd_addr[4:0]"
+Toggle mem_cp0_raddr "net mem_cp0_raddr[4:0]"
+Toggle mem_cp0_sel "net mem_cp0_sel[2:0]"
+Toggle mem_reg_write "net mem_reg_write"
+Toggle mem_cp0_we "net mem_cp0_we"
+Toggle mem_is_eret "net mem_is_eret"
+Toggle mem_tlb_op "net mem_tlb_op[2:0]"
+Toggle mem_except_req "net mem_except_req"
+Toggle mem_except_code "net mem_except_code[4:0]"
+Toggle mem_except_is_data "net mem_except_is_data"
+Toggle mem_except_is_tlb_refill "net mem_except_is_tlb_refill"
+Toggle mem_bd "net mem_bd"
+Toggle mem_mem_to_reg "net mem_mem_to_reg[1:0]"
+Toggle wb_rdata_fmt "reg wb_rdata_fmt[31:0]"
+Toggle wb_ex_out "reg wb_ex_out[31:0]"
+Toggle wb_pc_plus_8 "reg wb_pc_plus_8[31:0]"
+Toggle wb_waddr "reg wb_waddr[4:0]"
+Toggle wb_rd_addr "reg wb_rd_addr[4:0]"
+Toggle wb_cp0_raddr "reg wb_cp0_raddr[4:0]"
+Toggle wb_cp0_sel "reg wb_cp0_sel[2:0]"
+Toggle wb_reg_write "reg wb_reg_write"
+Toggle wb_cp0_we "reg wb_cp0_we"
+Toggle wb_is_eret "reg wb_is_eret"
+Toggle wb_tlb_op "reg wb_tlb_op[2:0]"
+Toggle wb_except_req "reg wb_except_req"
+Toggle wb_except_code "reg wb_except_code[4:0]"
+Toggle wb_except_is_data "reg wb_except_is_data"
+Toggle wb_except_is_tlb_refill "reg wb_except_is_tlb_refill"
+Toggle wb_bd "reg wb_bd"
+Toggle wb_mem_to_reg "reg wb_mem_to_reg[1:0]"
+
+// ID: EXCL-PROD-0189
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3949678489 1097251867"
+MODULE: mips_control
+Toggle cache_op_valid "reg cache_op_valid"
+Toggle cache_op "reg cache_op[4:0]"
+Toggle fpu_branch_invert "reg fpu_branch_invert"
+Toggle is_break "reg is_break"
+Toggle is_di "reg is_di"
+Toggle is_ei "reg is_ei"
+Toggle is_wait "reg is_wait"
+Toggle is_trap "reg is_trap"
+Toggle trap_op "reg trap_op[3:0]"
+Toggle tlb_op "reg tlb_op[2:0]"
+Toggle is_movf "reg is_movf"
+Toggle is_movt "reg is_movt"
+Toggle is_rdpgpr "reg is_rdpgpr"
+Toggle is_wrpgpr "reg is_wrpgpr"
+Toggle fpu_condition_code "reg fpu_condition_code[2:0]"
+
+// ID: EXCL-PROD-0190
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3250824396 1906107907"
+MODULE: l2_cache
+Toggle s_bresp "net s_bresp[1:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_rresp "net s_rresp[1:0]"
+Toggle m_wstrb "net m_wstrb[3:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle snoop_addr "net snoop_addr[31:0]"
+Toggle snoop_valid "net snoop_valid"
+Toggle snoop_ack "net snoop_ack"
+Toggle snoop_hit "net snoop_hit"
+
+// ID: EXCL-PROD-0191
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3417257133 738400426"
+MODULE: tb_mips_soc
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle firmware_hex "reg firmware_hex[1023:0]"
+Toggle uart_rx "net uart_rx"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+
+// ID: EXCL-PROD-0192
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "63469976 2052000697"
+MODULE: l2_cache_nb
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle s_awid "net s_awid[3:0]"
+Toggle s_awaddr "net s_awaddr[31:0]"
+Toggle s_awlen "net s_awlen[7:0]"
+Toggle s_awsize "net s_awsize[2:0]"
+Toggle s_awburst "net s_awburst[1:0]"
+Toggle s_awvalid "net s_awvalid"
+Toggle s_awready "reg s_awready"
+Toggle s_wdata "net s_wdata[31:0]"
+Toggle s_wstrb "net s_wstrb[3:0]"
+Toggle s_wlast "net s_wlast"
+Toggle s_wvalid "net s_wvalid"
+Toggle s_wready "reg s_wready"
+Toggle s_bid "reg s_bid[3:0]"
+Toggle s_bresp "reg s_bresp[1:0]"
+Toggle s_bvalid "reg s_bvalid"
+Toggle s_bready "net s_bready"
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_araddr "net s_araddr[31:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arvalid "net s_arvalid"
+Toggle s_arready "reg s_arready"
+Toggle s_rid "reg s_rid[3:0]"
+Toggle s_rdata "reg s_rdata[31:0]"
+Toggle s_rresp "reg s_rresp[1:0]"
+Toggle s_rlast "reg s_rlast"
+Toggle s_rvalid "reg s_rvalid"
+Toggle s_rready "net s_rready"
+Toggle m_awid "reg m_awid[3:0]"
+Toggle m_awaddr "reg m_awaddr[31:0]"
+Toggle m_awlen "reg m_awlen[7:0]"
+Toggle m_awsize "reg m_awsize[2:0]"
+Toggle m_awburst "reg m_awburst[1:0]"
+Toggle m_awvalid "reg m_awvalid"
+Toggle m_awready "net m_awready"
+Toggle m_wdata "reg m_wdata[31:0]"
+Toggle m_wstrb "reg m_wstrb[3:0]"
+Toggle m_wlast "reg m_wlast"
+Toggle m_wvalid "reg m_wvalid"
+Toggle m_wready "net m_wready"
+Toggle m_bid "net m_bid[3:0]"
+Toggle m_bresp "net m_bresp[1:0]"
+Toggle m_bvalid "net m_bvalid"
+Toggle m_bready "reg m_bready"
+Toggle m_arid "reg m_arid[3:0]"
+Toggle m_araddr "reg m_araddr[31:0]"
+Toggle m_arlen "reg m_arlen[7:0]"
+Toggle m_arsize "reg m_arsize[2:0]"
+Toggle m_arburst "reg m_arburst[1:0]"
+Toggle m_arvalid "reg m_arvalid"
+Toggle m_arready "net m_arready"
+Toggle m_rid "net m_rid[3:0]"
+Toggle m_rdata "net m_rdata[31:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle m_rlast "net m_rlast"
+Toggle m_rvalid "net m_rvalid"
+Toggle m_rready "reg m_rready"
+Toggle snoop_addr "net snoop_addr[31:0]"
+Toggle snoop_valid "net snoop_valid"
+Toggle snoop_ack "net snoop_ack"
+Toggle snoop_hit "net snoop_hit"
+Toggle age_ctr "reg age_ctr[7:0]"
+Toggle acc_state "reg acc_state[1:0]"
+Toggle acc_wq "reg acc_wq[2:0]"
+Toggle acc_wmshr "reg acc_wmshr[2:0]"
+Toggle acc_whit "reg acc_whit"
+Toggle acc_wway "reg acc_wway[2:0]"
+Toggle acc_wset "reg acc_wset[8:0]"
+Toggle acc_wbeat "reg acc_wbeat[2:0]"
+Toggle accepting_aw_w "net accepting_aw_w"
+Toggle want_aw "net want_aw"
+Toggle want_ar "net want_ar"
+Toggle accepting_aw "net accepting_aw"
+Toggle accepting_ar "net accepting_ar"
+Toggle acc_pa "net acc_pa[28:0]"
+Toggle acc_set "net acc_set[8:0]"
+Toggle acc_tag "net acc_tag[14:0]"
+Toggle acc_woff "net acc_woff[2:0]"
+Toggle acc_line "net acc_line[23:0]"
+Toggle acc_wayhit "reg acc_wayhit[7:0]"
+Toggle acc_hitway "reg acc_hitway[2:0]"
+Toggle acc_hit "reg acc_hit"
+Toggle acc_valids "reg acc_valids[7:0]"
+Toggle mshr_match "reg mshr_match"
+Toggle mshr_match_idx "reg mshr_match_idx[2:0]"
+Toggle ord_free_v "reg ord_free_v"
+Toggle ord_free_i "reg ord_free_i[2:0]"
+Toggle mshr_free_v "reg mshr_free_v"
+Toggle mshr_free_i "reg mshr_free_i[2:0]"
+Toggle acc_reserved "reg acc_reserved[7:0]"
+Toggle acc_victim "reg acc_victim[2:0]"
+Toggle acc_victim_ok "reg acc_victim_ok"
+Toggle plru_v "reg plru_v[2:0]"
+Toggle resp_v "reg resp_v"
+Toggle resp_i "reg resp_i[2:0]"
+Toggle resp_best_age "reg resp_best_age[7:0]"
+Toggle older_same_id "reg older_same_id"
+Toggle rsp_active "reg rsp_active"
+Toggle rsp_idx "reg rsp_idx[2:0]"
+Toggle me_state "reg me_state[2:0]"
+Toggle me_idx "reg me_idx[2:0]"
+Toggle me_cnt "reg me_cnt[2:0]"
+Toggle me_linebuf "reg me_linebuf[255:0]"
+Toggle me_pick_v "reg me_pick_v"
+Toggle me_pick_i "reg me_pick_i[2:0]"
+Toggle fill_v "reg fill_v"
+Toggle fill_i "reg fill_i[2:0]"
+Toggle fill_best_age "reg fill_best_age[7:0]"
+Toggle acc_miss_needs_mshr "net acc_miss_needs_mshr"
+Toggle acc_can_alloc "net acc_can_alloc"
+Toggle acc_merge_now "net acc_merge_now"
+Toggle acc_merge_idx "net acc_merge_idx[2:0]"
+Toggle mshr_refd "reg mshr_refd"
+
+// ID: EXCL-PROD-0193
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "97997737 1325137312"
+MODULE: soc_memory_subsystem
+Toggle spi_miso "net spi_miso"
+Toggle qspi_io_i "net qspi_io_i[3:0]"
+Toggle qspi_io_o "net qspi_io_o[3:0]"
+Toggle qspi_io_oe "net qspi_io_oe[3:0]"
+Toggle qspi_timeout_sticky "net qspi_timeout_sticky"
+Toggle qspi_controller_present "net qspi_controller_present"
+Toggle ddr4_controller_present "net ddr4_controller_present"
+Toggle ddr4_init_done "net ddr4_init_done"
+Toggle ddr4_training_done "net ddr4_training_done"
+Toggle ddr4_fatal_error "net ddr4_fatal_error"
+Toggle ddr4_ecc_correctable_error "net ddr4_ecc_correctable_error"
+Toggle ddr4_ecc_uncorrectable_error "net ddr4_ecc_uncorrectable_error"
+Toggle ddr4_error_code "net ddr4_error_code[15:0]"
+Toggle s0_awlock "net s0_awlock[1:0]"
+Toggle s0_awprot "net s0_awprot[2:0]"
+Toggle s0_bresp "net s0_bresp[1:0]"
+Toggle s0_arsize "net s0_arsize[2:0]"
+Toggle s0_arburst "net s0_arburst[1:0]"
+Toggle s0_arlock "net s0_arlock[1:0]"
+Toggle s0_rresp "net s0_rresp[1:0]"
+Toggle s2_awid "net s2_awid[3:0]"
+Toggle s2_awaddr "net s2_awaddr[31:0]"
+Toggle s2_awlen "net s2_awlen[7:0]"
+Toggle s2_awsize "net s2_awsize[2:0]"
+Toggle s2_awburst "net s2_awburst[1:0]"
+Toggle s2_awlock "net s2_awlock[1:0]"
+Toggle s2_awcache "net s2_awcache[3:0]"
+Toggle s2_awprot "net s2_awprot[2:0]"
+Toggle s2_awvalid "net s2_awvalid"
+Toggle s2_awready "net s2_awready"
+Toggle s2_wdata "net s2_wdata[31:0]"
+Toggle s2_wstrb "net s2_wstrb[3:0]"
+Toggle s2_wlast "net s2_wlast"
+Toggle s2_wvalid "net s2_wvalid"
+Toggle s2_wready "net s2_wready"
+Toggle s2_bid "net s2_bid[3:0]"
+Toggle s2_bresp "net s2_bresp[1:0]"
+Toggle s2_bvalid "net s2_bvalid"
+Toggle s2_bready "net s2_bready"
+Toggle s2_arid "net s2_arid[3:0]"
+Toggle s2_arlen "net s2_arlen[7:0]"
+Toggle s2_arsize "net s2_arsize[2:0]"
+Toggle s2_arburst "net s2_arburst[1:0]"
+Toggle s2_arlock "net s2_arlock[1:0]"
+Toggle s2_arcache "net s2_arcache[3:0]"
+Toggle s2_rid "net s2_rid[3:0]"
+Toggle s2_rdata "net s2_rdata[31:0]"
+Toggle s3_awid "net s3_awid[3:0]"
+Toggle s3_awaddr "net s3_awaddr[31:0]"
+Toggle s3_awlen "net s3_awlen[7:0]"
+Toggle s3_awsize "net s3_awsize[2:0]"
+Toggle s3_awburst "net s3_awburst[1:0]"
+Toggle s3_awlock "net s3_awlock[1:0]"
+Toggle s3_awcache "net s3_awcache[3:0]"
+Toggle s3_awprot "net s3_awprot[2:0]"
+Toggle s3_awvalid "net s3_awvalid"
+Toggle s3_wdata "net s3_wdata[31:0]"
+Toggle s3_wstrb "net s3_wstrb[3:0]"
+Toggle s3_wlast "net s3_wlast"
+Toggle s3_wvalid "net s3_wvalid"
+Toggle s3_wready "net s3_wready"
+Toggle s3_bid "net s3_bid[3:0]"
+Toggle s3_bresp "net s3_bresp[1:0]"
+Toggle s3_bvalid "net s3_bvalid"
+Toggle s3_bready "net s3_bready"
+Toggle s3_arid "net s3_arid[3:0]"
+Toggle s3_arlen "net s3_arlen[7:0]"
+Toggle s3_arsize "net s3_arsize[2:0]"
+Toggle s3_arburst "net s3_arburst[1:0]"
+Toggle s3_arlock "net s3_arlock[1:0]"
+Toggle s3_arcache "net s3_arcache[3:0]"
+Toggle s3_arprot "net s3_arprot[2:0]"
+Toggle s3_arvalid "net s3_arvalid"
+Toggle s3_rid "net s3_rid[3:0]"
+Toggle s3_rdata "net s3_rdata[31:0]"
+Toggle s3_rresp "net s3_rresp[1:0]"
+Toggle s3_rlast "net s3_rlast"
+Toggle s3_rvalid "net s3_rvalid"
+Toggle s3_rready "net s3_rready"
+Toggle s4_awid "net s4_awid[3:0]"
+Toggle s4_awaddr "net s4_awaddr[31:0]"
+Toggle s4_awlen "net s4_awlen[7:0]"
+Toggle s4_awsize "net s4_awsize[2:0]"
+Toggle s4_awburst "net s4_awburst[1:0]"
+Toggle s4_awlock "net s4_awlock[1:0]"
+Toggle s4_awcache "net s4_awcache[3:0]"
+Toggle s4_awprot "net s4_awprot[2:0]"
+Toggle s4_awvalid "net s4_awvalid"
+Toggle s4_awready "net s4_awready"
+Toggle s4_wdata "net s4_wdata[31:0]"
+Toggle s4_wstrb "net s4_wstrb[3:0]"
+Toggle s4_wlast "net s4_wlast"
+Toggle s4_wvalid "net s4_wvalid"
+Toggle s4_wready "net s4_wready"
+Toggle s4_bid "net s4_bid[3:0]"
+Toggle s4_bresp "net s4_bresp[1:0]"
+Toggle s4_bvalid "net s4_bvalid"
+Toggle s4_bready "net s4_bready"
+Toggle s4_arid "net s4_arid[3:0]"
+Toggle s4_arlen "net s4_arlen[7:0]"
+Toggle s4_arsize "net s4_arsize[2:0]"
+Toggle s4_arburst "net s4_arburst[1:0]"
+Toggle s4_arlock "net s4_arlock[1:0]"
+Toggle s4_arcache "net s4_arcache[3:0]"
+Toggle s4_arprot "net s4_arprot[2:0]"
+Toggle s4_arvalid "net s4_arvalid"
+Toggle s4_arready "net s4_arready"
+Toggle s4_rid "net s4_rid[3:0]"
+Toggle s4_rdata "net s4_rdata[31:0]"
+Toggle s4_rresp "net s4_rresp[1:0]"
+Toggle s4_rlast "net s4_rlast"
+Toggle s4_rvalid "net s4_rvalid"
+Toggle s4_rready "net s4_rready"
+Toggle coh_snoop_addr "net coh_snoop_addr[31:0]"
+Toggle coh_snoop_valid "net coh_snoop_valid"
+Toggle l2m_bresp "net l2m_bresp[1:0]"
+Toggle l2m_rresp "net l2m_rresp[1:0]"
+Toggle l2m_wstrb "net l2m_wstrb[3:0]"
+Toggle ddr4_ctrl_present_i "net ddr4_ctrl_present_i"
+Toggle ddr4_fatal_error_i "net ddr4_fatal_error_i"
+Toggle ddr4_ecc_correctable_error_i "net ddr4_ecc_correctable_error_i"
+Toggle ddr4_ecc_uncorrectable_error_i "net ddr4_ecc_uncorrectable_error_i"
+Toggle ddr4_error_code_i "net ddr4_error_code_i[15:0]"
+Toggle ddr4_phy_addr_i "net ddr4_phy_addr_i[31:0]"
+Toggle ddr4_phy_wdata_i "net ddr4_phy_wdata_i[31:0]"
+Toggle ddr4_phy_wstrb_i "net ddr4_phy_wstrb_i[3:0]"
+Toggle ddr4_last_row_hit_i "net ddr4_last_row_hit_i"
+Toggle ddr4_last_row_miss_i "net ddr4_last_row_miss_i"
+Toggle g_spi_flash_controller.flash_arid "net g_spi_flash_controller.flash_arid[3:0]"
+Toggle g_spi_flash_controller.flash_arlock "net g_spi_flash_controller.flash_arlock[1:0]"
+Toggle g_spi_flash_controller.flash_arprot "net g_spi_flash_controller.flash_arprot[2:0]"
+Toggle g_spi_flash_controller.flash_rid "net g_spi_flash_controller.flash_rid[3:0]"
+Toggle g_spi_flash_controller.flash_rdata "net g_spi_flash_controller.flash_rdata[31:0]"
+Toggle g_spi_flash_controller.flash_rresp "net g_spi_flash_controller.flash_rresp[1:0]"
+Toggle g_spi_flash_controller.flash_timeout_sticky "net g_spi_flash_controller.flash_timeout_sticky"
+
+// ID: EXCL-PROD-0194
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "4202099251 1000455489"
+MODULE: ecc_secded_32
+Toggle data_in "net data_in[31:0]"
+Toggle code_in "net code_in[38:0]"
+Toggle code_out "net code_out[38:0]"
+Toggle data_out "reg data_out[31:0]"
+Toggle correctable_error "reg correctable_error"
+Toggle uncorrectable_error "reg uncorrectable_error"
+Toggle fixed "reg fixed[38:0]"
+
+// ID: EXCL-PROD-0195
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2802209148 429132980"
+MODULE: mips_core
+Toggle tlb_inv_en "net tlb_inv_en"
+Toggle tlb_inv_vpn2 "net tlb_inv_vpn2[18:0]"
+Toggle tlb_inv_asid "net tlb_inv_asid[7:0]"
+Toggle tlb_inv_scope "net tlb_inv_scope[1:0]"
+Toggle tlb_inv_wired_floor "net tlb_inv_wired_floor[5:0]"
+Toggle sim_exception_req "net sim_exception_req"
+Toggle sim_exception_code "net sim_exception_code[4:0]"
+Toggle coh_store_valid "net coh_store_valid"
+Toggle coh_snoop_valid "net coh_snoop_valid"
+Toggle coh_snoop_addr "net coh_snoop_addr[31:0]"
+Toggle scheduler_enable "net scheduler_enable"
+Toggle scheduler_timer_tick "net scheduler_timer_tick"
+Toggle scheduler_ipi_resched "net scheduler_ipi_resched"
+Toggle scheduler_yield_req "net scheduler_yield_req"
+Toggle scheduler_active_mask "net scheduler_active_mask[3:0]"
+Toggle hardware_walker_enable "net hardware_walker_enable"
+Toggle hardware_walker_ptbr "net hardware_walker_ptbr[31:0]"
+Toggle ptw_mem_valid "net ptw_mem_valid"
+Toggle ptw_mem_addr "net ptw_mem_addr[31:0]"
+Toggle ptw_mem_ready "net ptw_mem_ready"
+Toggle ptw_mem_error "net ptw_mem_error"
+Toggle ptw_fault_valid "net ptw_fault_valid"
+Toggle ptw_fault_code "net ptw_fault_code[2:0]"
+Toggle inst_awid "net inst_awid[3:0]"
+Toggle inst_awaddr "net inst_awaddr[31:0]"
+Toggle inst_awlen "net inst_awlen[7:0]"
+Toggle inst_awsize "net inst_awsize[2:0]"
+Toggle inst_awburst "net inst_awburst[1:0]"
+Toggle inst_awlock "net inst_awlock[1:0]"
+Toggle inst_awcache "net inst_awcache[3:0]"
+Toggle inst_awprot "net inst_awprot[2:0]"
+Toggle inst_awvalid "net inst_awvalid"
+Toggle inst_awready "net inst_awready"
+Toggle inst_wdata "net inst_wdata[31:0]"
+Toggle inst_wstrb "net inst_wstrb[3:0]"
+Toggle inst_wlast "net inst_wlast"
+Toggle inst_wvalid "net inst_wvalid"
+Toggle inst_wready "net inst_wready"
+Toggle inst_bid "net inst_bid[3:0]"
+Toggle inst_bresp "net inst_bresp[1:0]"
+Toggle inst_bvalid "net inst_bvalid"
+Toggle inst_bready "net inst_bready"
+Toggle inst_arid "net inst_arid[3:0]"
+Toggle inst_arlen "net inst_arlen[7:0]"
+Toggle inst_arsize "net inst_arsize[2:0]"
+Toggle inst_arburst "net inst_arburst[1:0]"
+Toggle inst_arlock "net inst_arlock[1:0]"
+Toggle inst_arcache "net inst_arcache[3:0]"
+Toggle inst_arprot "net inst_arprot[2:0]"
+Toggle inst_rid "net inst_rid[3:0]"
+Toggle inst_rresp "net inst_rresp[1:0]"
+Toggle data_awid "net data_awid[3:0]"
+Toggle data_awsize "net data_awsize[2:0]"
+Toggle data_awburst "net data_awburst[1:0]"
+Toggle data_awlock "net data_awlock[1:0]"
+Toggle data_awprot "net data_awprot[2:0]"
+Toggle data_bid "net data_bid[3:0]"
+Toggle data_bresp "net data_bresp[1:0]"
+Toggle data_arid "net data_arid[3:0]"
+Toggle data_arsize "net data_arsize[2:0]"
+Toggle data_arburst "net data_arburst[1:0]"
+Toggle data_arlock "net data_arlock[1:0]"
+Toggle data_arprot "net data_arprot[2:0]"
+Toggle data_rid "net data_rid[3:0]"
+Toggle data_rresp "net data_rresp[1:0]"
+Toggle perf_cycle_count "net perf_cycle_count[31:0]"
+Toggle perf_retire_count "net perf_retire_count[31:0]"
+Toggle perf_icache_miss_count "net perf_icache_miss_count[31:0]"
+Toggle perf_dcache_miss_count "net perf_dcache_miss_count[31:0]"
+Toggle perf_branch_mispredict_count "net perf_branch_mispredict_count[31:0]"
+Toggle perf_mdu_stall_count "net perf_mdu_stall_count[31:0]"
+Toggle cpu_inst_req "net cpu_inst_req"
+Toggle cpu_inst_bus_error "net cpu_inst_bus_error"
+Toggle cpu_inst_cache_error "net cpu_inst_cache_error"
+Toggle cpu_data_req_id "net cpu_data_req_id[3:0]"
+Toggle cpu_data_resp_id "net cpu_data_resp_id[3:0]"
+Toggle cpu_data_cache_op_valid "net cpu_data_cache_op_valid"
+Toggle cpu_data_cache_op "net cpu_data_cache_op[4:0]"
+Toggle cpu_data_cache_op_is_icache "net cpu_data_cache_op_is_icache"
+Toggle cpu_data_cache_op_done "net cpu_data_cache_op_done"
+Toggle cpu_data_cache_op_error "net cpu_data_cache_op_error"
+Toggle cpu_data_cache_tag_wdata "net cpu_data_cache_tag_wdata[31:0]"
+Toggle cpu_data_bus_error "net cpu_data_bus_error"
+Toggle cpu_data_cache_error "net cpu_data_cache_error"
+Toggle icache_op_valid "net icache_op_valid"
+Toggle dcache_op_valid "net dcache_op_valid"
+Toggle icache_op_done "net icache_op_done"
+Toggle icache_op_error "net icache_op_error"
+Toggle dcache_op_done "net dcache_op_done"
+Toggle dcache_op_error "net dcache_op_error"
+Toggle icache_cpu_req "net icache_cpu_req"
+Toggle sched_enable_i "net sched_enable_i"
+Toggle sched_active_mask_i "net sched_active_mask_i[3:0]"
+Toggle sched_save_req "net sched_save_req"
+Toggle sched_save_done "net sched_save_done"
+Toggle sched_save_task "net sched_save_task[7:0]"
+Toggle sched_save_asid "net sched_save_asid[7:0]"
+Toggle sched_save_srsctl "net sched_save_srsctl[31:0]"
+Toggle sched_save_fpr "net sched_save_fpr[1023:0]"
+Toggle sched_save_fcsr "net sched_save_fcsr[31:0]"
+Toggle sched_restore_req "net sched_restore_req"
+Toggle sched_restore_ack "net sched_restore_ack"
+Toggle sched_restore_task "net sched_restore_task[7:0]"
+Toggle sched_restore_pc "net sched_restore_pc[31:0]"
+Toggle sched_restore_sp "net sched_restore_sp[31:0]"
+Toggle sched_restore_status "net sched_restore_status[31:0]"
+Toggle sched_restore_asid "net sched_restore_asid[7:0]"
+Toggle sched_restore_srsctl "net sched_restore_srsctl[31:0]"
+Toggle sched_restore_gpr "net sched_restore_gpr[1023:0]"
+Toggle sched_restore_srs_gpr "net sched_restore_srs_gpr[16383:0]"
+Toggle sched_restore_fpr "net sched_restore_fpr[1023:0]"
+Toggle sched_restore_fcsr "net sched_restore_fcsr[31:0]"
+Toggle sched_unused_ack "net sched_unused_ack"
+
+// ID: EXCL-PROD-0196
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "886703037 1822891761"
+MODULE: mmu_tlb_shootdown_mailbox
+Toggle req_valid "net req_valid"
+Toggle req_asid "net req_asid[7:0]"
+Toggle req_vpn "net req_vpn[19:0]"
+Toggle req_scope "net req_scope[1:0]"
+Toggle target_present "net target_present"
+Toggle target_ack "net target_ack"
+Toggle busy "reg busy"
+Toggle invalidate_valid "reg invalidate_valid"
+Toggle invalidate_asid "reg invalidate_asid[7:0]"
+Toggle invalidate_vpn "reg invalidate_vpn[19:0]"
+Toggle invalidate_scope "reg invalidate_scope[1:0]"
+Toggle done "reg done"
+Toggle timeout "reg timeout"
+Toggle rejected "reg rejected"
+Toggle count "reg count[6:0]"
+Toggle issued "reg issued"
+
+// ID: EXCL-PROD-0197
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "469529741 3226638645"
+MODULE: axi_read_timeout_guard
+Toggle s_arid "net s_arid[3:0]"
+Toggle s_arlen "net s_arlen[7:0]"
+Toggle s_arsize "net s_arsize[2:0]"
+Toggle s_arburst "net s_arburst[1:0]"
+Toggle s_arlock "net s_arlock[1:0]"
+Toggle s_arcache "net s_arcache[3:0]"
+Toggle s_rid "net s_rid[3:0]"
+Toggle s_rdata "net s_rdata[31:0]"
+Toggle m_arid "net m_arid[3:0]"
+Toggle m_arlock "net m_arlock[1:0]"
+Toggle m_arprot "net m_arprot[2:0]"
+Toggle m_rid "net m_rid[3:0]"
+Toggle m_rdata "net m_rdata[31:0]"
+Toggle m_rresp "net m_rresp[1:0]"
+Toggle timeout_sticky "reg timeout_sticky"
+Toggle req_id "reg req_id[3:0]"
+Toggle req_lock "reg req_lock[1:0]"
+Toggle req_prot "reg req_prot[2:0]"
+Toggle error_beat "reg error_beat[7:0]"
+Toggle timeout_enabled "net timeout_enabled"
+Toggle timeout_expired "net timeout_expired"
+
+// ID: EXCL-PROD-0198
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2624281472 4118275935"
+MODULE: apb_qspi_status
+Toggle controller_present "net controller_present"
+Toggle xip_timeout_sticky "net xip_timeout_sticky"
+Toggle error_event "net error_event"
+Toggle error_value "net error_value[31:0]"
+Toggle psel "net psel"
+Toggle prdata "reg prdata[31:0]"
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle timeout_captured_r "reg timeout_captured_r"
+Toggle last_error_r "reg last_error_r[31:0]"
+Toggle source_seen_r "reg source_seen_r"
+Toggle error_seen_r "reg error_seen_r"
+Toggle wr "net wr"
+Toggle rd "net rd"
+Toggle timeout_rise "net timeout_rise"
+Toggle error_rise "net error_rise"
+
+// ID: EXCL-PROD-0199
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "827148926 1307555902"
+MODULE: mips_mem_stage
+Toggle enable_nonblocking_load "net enable_nonblocking_load"
+Toggle mem_cache_op_valid "net mem_cache_op_valid"
+Toggle mem_cache_op "net mem_cache_op[4:0]"
+Toggle translation_fault "net translation_fault"
+Toggle cache_op_done "net cache_op_done"
+Toggle cache_op_error "net cache_op_error"
+Toggle cache_op_valid "net cache_op_valid"
+Toggle cache_op "net cache_op[4:0]"
+Toggle cache_op_fault "net cache_op_fault"
+Toggle adel_exception "net adel_exception"
+Toggle ades_exception "net ades_exception"
+Toggle bad_align_h "net bad_align_h"
+
+// ID: EXCL-PROD-0200
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "2384024518 3480392512"
+MODULE: mips_rob
+Toggle mem_tlb_op "net mem_tlb_op[2:0]"
+Toggle mem_except_is_tlb_refill "net mem_except_is_tlb_refill"
+Toggle wb_tlb_op "reg wb_tlb_op[2:0]"
+Toggle wb_except_is_tlb_refill "reg wb_except_is_tlb_refill"
+
+// ID: EXCL-PROD-0201
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "3473284045 1121928539"
+MODULE: mips_id_ex_reg
+Toggle id_except_is_data "net id_except_is_data"
+Toggle id_except_is_tlb_refill "net id_except_is_tlb_refill"
+Toggle id_tlb_op "net id_tlb_op[2:0]"
+Toggle id_cache_op_valid "net id_cache_op_valid"
+Toggle id_cache_op "net id_cache_op[4:0]"
+Toggle ex_except_is_data "reg ex_except_is_data"
+Toggle ex_except_is_tlb_refill "reg ex_except_is_tlb_refill"
+Toggle ex_tlb_op "reg ex_tlb_op[2:0]"
+Toggle ex_cache_op_valid "reg ex_cache_op_valid"
+Toggle ex_cache_op "reg ex_cache_op[4:0]"
+
+// ID: EXCL-PROD-0202
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "3064912425 1299116686"
+MODULE: apb_vic
+Toggle pready "net pready"
+Toggle pslverr "net pslverr"
+Toggle vec_prio "net vec_prio[3:0]"
+Toggle type_r "reg type_r[31:0]"
+Toggle polarity_r "reg polarity_r[31:0]"
+Toggle soft_r "reg soft_r[31:0]"
+Toggle edge_pending_r "reg edge_pending_r[31:0]"
+Toggle active_r "reg active_r[31:0]"
+Toggle best_pri_r "reg best_pri_r[3:0]"
+Toggle running_prio_r "reg running_prio_r[3:0]"
+Toggle any_active_r "reg any_active_r"
+
+// ID: EXCL-PROD-0203
+// CATEGORY: General Module Coverage Exclusions
+// CHECKSUM: "609989151 248031311"
+MODULE: mips_perf_counters
+Toggle enable "net enable"
+Toggle clear "net clear"
+Toggle branch_mispredict_event "net branch_mispredict_event"
+Toggle cycle_count "reg cycle_count[31:0]"
+Toggle retire_count "reg retire_count[31:0]"
+Toggle icache_miss_count "reg icache_miss_count[31:0]"
+Toggle dcache_miss_count "reg dcache_miss_count[31:0]"
+Toggle branch_mispredict_count "reg branch_mispredict_count[31:0]"
+Toggle mdu_stall_count "reg mdu_stall_count[31:0]"
+
+// ID: EXCL-PROD-0204
+// CATEGORY: CPU Core & Pipeline
+// CHECKSUM: "1192777547 1251424683"
+MODULE: mips_ex_mem_reg
+Toggle enable_nonblocking_load "net enable_nonblocking_load"
+Toggle cache_op_done "net cache_op_done"
+Toggle ex_tlb_op "net ex_tlb_op[2:0]"
+Toggle ex_except_is_data "net ex_except_is_data"
+Toggle ex_except_is_tlb_refill "net ex_except_is_tlb_refill"
+Toggle ex_cache_op_valid "net ex_cache_op_valid"
+Toggle ex_cache_op "net ex_cache_op[4:0]"
+Toggle mem_tlb_op "reg mem_tlb_op[2:0]"
+Toggle mem_except_is_data "reg mem_except_is_data"
+Toggle mem_except_is_tlb_refill "reg mem_except_is_tlb_refill"
+Toggle mem_cache_op_valid "reg mem_cache_op_valid"
+Toggle mem_cache_op "reg mem_cache_op[4:0]"
+Toggle mem_double_phase "reg mem_double_phase"
+
+// ID: EXCL-PROD-0205
+// CATEGORY: SoC Integration & Subsystems
+// CHECKSUM: "13862731 2681435553"
+MODULE: soc_top
+Toggle clk "net clk"
+Toggle rst_n "net rst_n"
+Toggle gpio_pins "net gpio_pins[31:0]"
+Toggle uart_rx "net uart_rx"
+Toggle uart_tx "net uart_tx"
+Toggle uart_cts_n "net uart_cts_n"
+Toggle uart_rts_n "net uart_rts_n"
+Toggle uart_dsr_n "net uart_dsr_n"
+Toggle uart_dtr_n "net uart_dtr_n"
+Toggle uart_dcd_n "net uart_dcd_n"
+Toggle uart_ri_n "net uart_ri_n"
+Toggle spi_sclk "net spi_sclk"
+Toggle spi_cs_n "net spi_cs_n"
+Toggle spi_mosi "net spi_mosi"
+Toggle spi_miso "net spi_miso"
+Toggle qspi_io "net qspi_io[3:0]"
+Toggle tck "net tck"
+Toggle tms "net tms"
+Toggle tdi "net tdi"
+Toggle tdo "net tdo"

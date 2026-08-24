@@ -7,8 +7,9 @@
 //   - N_M master ports, N_S mapped slave ports + 1 internal DECERR slave.
 //   - Per-master address decode -> target slave index.
 //   - Per-slave arbiter: QoS-priority, round-robin tie-break.
-//   - Per-slave outstanding FIFO {master_idx, id} (depth N_OT) for in-order
-//     response routing (real slaves respond in order per ID).
+//   - Per-slave bounded transaction table {master_idx, id} (depth N_OT) with
+//     RID/BID matching; different IDs may complete out of order while each ID
+//     remains ordered.
 //   - Concurrent cross-slave transactions: masters hitting DIFFERENT slaves
 //     proceed in parallel (the key win over the old shared trunk).
 //   Flat-vector ports so the pure-Verilog soc_fabric wrapper can map easily.
@@ -34,7 +35,11 @@ module axi_crossbar #(
     parameter integer IDW   = 4,
     parameter integer AW    = 32,
     parameter integer DW    = 32,
-    parameter integer QW    = 4
+    parameter integer QW    = 4,
+    // Some integrated masters are single-write-channel engines.  When set,
+    // do not accept a new AW from a master until its previous W completes.
+    // Standalone fabric tests leave this disabled to retain bounded OT tests.
+    parameter integer SERIALIZE_W_PER_MASTER = 0
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -130,6 +135,7 @@ module axi_crossbar #(
     localparam integer S_ALL   = N_S + 1;      // + DECERR virtual slave
     localparam integer DEC      = N_S;          // DECERR slave index
     localparam integer MIDW    = (N_M <= 1) ? 1 : $clog2(N_M);
+    localparam integer SIDW    = (S_ALL <= 1) ? 1 : $clog2(S_ALL);
 
     genvar gm, gs;
     integer i;
@@ -217,6 +223,7 @@ module axi_crossbar #(
     reg  [MIDW-1:0] rd_mid [0:S_ALL-1][0:N_OT-1];
     reg  [IDW-1:0]  rd_rid [0:S_ALL-1][0:N_OT-1];
     reg  [7:0]      rd_len [0:S_ALL-1][0:N_OT-1];
+    reg  [N_OT-1:0] rd_valid [0:S_ALL-1];
     integer         rd_head[0:S_ALL-1];
     integer         rd_tail[0:S_ALL-1];
     integer         rd_cnt [0:S_ALL-1];
@@ -307,22 +314,60 @@ module axi_crossbar #(
                                ar_accept[ar_tgt[gm]];
     end endgenerate
 
-    // Read response routing: FIFO head of each slave identifies target master.
-    // Real slaves supply rvalid/rdata/rresp/rlast; DECERR is synthesized.
-    wire [MIDW-1:0] rd_head_mid [0:S_ALL-1];
-    wire [IDW-1:0]  rd_head_id  [0:S_ALL-1];
-    wire [7:0]      rd_head_len [0:S_ALL-1];
-    wire            rd_occ      [0:S_ALL-1];
-    generate for (gs=0; gs<S_ALL; gs=gs+1) begin: g_rhead
-        assign rd_occ[gs]      = (rd_cnt[gs] != 0);
-        assign rd_head_mid[gs] = rd_mid[gs][rd_head[gs]];
-        assign rd_head_id[gs]  = rd_rid[gs][rd_head[gs]];
-        assign rd_head_len[gs] = rd_len[gs][rd_head[gs]];
+    // Read response routing matches the returned RID to the oldest live entry
+    // with that ID. Different IDs may complete out of order; same-ID entries
+    // retain AXI ordering. DECERR has no downstream RID and uses the oldest
+    // live entry as its response slot.
+    integer         rd_resp_slot [0:S_ALL-1];
+    reg             rd_resp_v    [0:S_ALL-1];
+    reg  [MIDW-1:0] rd_resp_mid  [0:S_ALL-1];
+    reg  [IDW-1:0]  rd_resp_id   [0:S_ALL-1];
+    reg  [7:0]      rd_resp_len  [0:S_ALL-1];
+    integer         rd_scan;
+    integer         rd_candidate;
+    integer         rd_alloc_slot [0:S_ALL-1];
+    reg             rd_found;
+    reg             rd_alloc_found;
+    wire            rd_occ [0:S_ALL-1];
+    generate for (gs=0; gs<S_ALL; gs=gs+1) begin: g_rd_occ_compat
+        assign rd_occ[gs] = (rd_cnt[gs] != 0);
     end endgenerate
+    wire [IDW-1:0] rd_slave_rid [0:N_S-1];
+    generate for (gs=0; gs<N_S; gs=gs+1) begin: g_rd_slave_rid
+        assign rd_slave_rid[gs] = s_rid[gs*IDW +: IDW];
+    end endgenerate
+    always @(*) begin
+        for (i=0; i<S_ALL; i=i+1) begin
+            rd_resp_slot[i] = 0;
+            rd_resp_v[i]    = 1'b0;
+            rd_resp_mid[i]  = {MIDW{1'b0}};
+            rd_resp_id[i]   = {IDW{1'b0}};
+            rd_resp_len[i]  = 8'd0;
+            rd_found        = 1'b0;
+            rd_alloc_slot[i] = rd_tail[i];
+            rd_alloc_found = 1'b0;
+            for (rd_scan=0; rd_scan<N_OT; rd_scan=rd_scan+1) begin
+                rd_candidate = (rd_head[i] + rd_scan) % N_OT;
+                if (!rd_found && rd_valid[i][rd_candidate] &&
+                    ((i == DEC) || (s_rvalid[i] && (rd_rid[i][rd_candidate] == rd_slave_rid[i])))) begin
+                    rd_resp_slot[i] = rd_candidate;
+                    rd_resp_v[i]    = 1'b1;
+                    rd_resp_mid[i]  = rd_mid[i][rd_candidate];
+                    rd_resp_id[i]   = rd_rid[i][rd_candidate];
+                    rd_resp_len[i]  = rd_len[i][rd_candidate];
+                    rd_found        = 1'b1;
+                end
+                if (!rd_valid[i][(rd_tail[i] + rd_scan) % N_OT] && !rd_alloc_found) begin
+                    rd_alloc_slot[i] = (rd_tail[i] + rd_scan) % N_OT;
+                    rd_alloc_found = 1'b1;
+                end
+            end
+        end
+    end
 
-    // DECERR read beat valid/last (head entry of DECERR slave)
-    wire dec_rvalid = rd_occ[DEC];
-    wire dec_rlast  = rd_occ[DEC] && (rd_beat[DEC] == rd_head_len[DEC]);
+    // DECERR read beat valid/last (oldest live entry of DECERR slave)
+    wire dec_rvalid = rd_resp_v[DEC];
+    wire dec_rlast  = rd_resp_v[DEC] && (rd_beat[DEC] == rd_resp_len[DEC]);
 
     always @(*) begin
         for (i=0;i<S_ALL;i=i+1) begin
@@ -334,41 +379,46 @@ module axi_crossbar #(
                 rlast_s2m[i][am]  = 1'b0;
             end
         end
-        // real slaves
+        // real slaves: only the RID-matching entry may contribute.
         for (i=0;i<N_S;i=i+1) begin
-            if (rd_occ[i]) begin
-                rvalid_s2m[i][rd_head_mid[i]] = s_rvalid[i];
-                rid_s2m[i][rd_head_mid[i]]    = s_rid[i*IDW +: IDW];
-                rdata_s2m[i][rd_head_mid[i]]  = s_rdata[i*DW +: DW];
-                rresp_s2m[i][rd_head_mid[i]]  = s_rresp[i*2 +: 2];
-                rlast_s2m[i][rd_head_mid[i]]  = s_rlast[i];
+            if (rd_resp_v[i]) begin
+                rvalid_s2m[i][rd_resp_mid[i]] = s_rvalid[i];
+                rid_s2m[i][rd_resp_mid[i]]    = s_rid[i*IDW +: IDW];
+                rdata_s2m[i][rd_resp_mid[i]]  = s_rdata[i*DW +: DW];
+                rresp_s2m[i][rd_resp_mid[i]]  = s_rresp[i*2 +: 2];
+                rlast_s2m[i][rd_resp_mid[i]]  = s_rlast[i];
             end
         end
         // DECERR synthesized
-        if (rd_occ[DEC]) begin
-            rvalid_s2m[DEC][rd_head_mid[DEC]] = dec_rvalid;
-            rid_s2m[DEC][rd_head_mid[DEC]]    = rd_head_id[DEC];
-            rdata_s2m[DEC][rd_head_mid[DEC]]  = {DW{1'b0}};
-            rresp_s2m[DEC][rd_head_mid[DEC]]  = `SOC_AXI_RESP_DECERR;
-            rlast_s2m[DEC][rd_head_mid[DEC]]  = dec_rlast;
+        if (rd_resp_v[DEC]) begin
+            rvalid_s2m[DEC][rd_resp_mid[DEC]] = dec_rvalid;
+            rid_s2m[DEC][rd_resp_mid[DEC]]    = rd_resp_id[DEC];
+            rdata_s2m[DEC][rd_resp_mid[DEC]]  = {DW{1'b0}};
+            rresp_s2m[DEC][rd_resp_mid[DEC]]  = `SOC_AXI_RESP_DECERR;
+            rlast_s2m[DEC][rd_resp_mid[DEC]]  = dec_rlast;
         end
     end
 
-    // Combine per-slave contributions into master R outputs.
-    // A master has at most one outstanding read (to one slave) at a time, so
-    // at most one slave contributes; OR/mux is safe.
+    // Combine per-slave contributions into master R outputs. A master may have
+    // responses pending at multiple slaves, so select one contribution and
+    // backpressure the others explicitly.
     reg             m_rvalid_c [0:N_M-1];
     reg  [IDW-1:0]  m_rid_c    [0:N_M-1];
     reg  [DW-1:0]   m_rdata_c  [0:N_M-1];
     reg  [1:0]      m_rresp_c  [0:N_M-1];
     reg             m_rlast_c  [0:N_M-1];
+    reg             r_sel_v    [0:N_M-1];
+    integer         r_sel_s    [0:N_M-1];
     always @(*) begin
         for (am=0; am<N_M; am=am+1) begin
             m_rvalid_c[am] = 1'b0; m_rid_c[am] = {IDW{1'b0}};
             m_rdata_c[am]  = {DW{1'b0}}; m_rresp_c[am] = 2'b00;
             m_rlast_c[am]  = 1'b0;
+            r_sel_v[am]    = 1'b0; r_sel_s[am] = 0;
             for (i=0;i<S_ALL;i=i+1) begin
-                if (rvalid_s2m[i][am]) begin
+                if (rvalid_s2m[i][am] && !r_sel_v[am]) begin
+                    r_sel_v[am]    = 1'b1;
+                    r_sel_s[am]    = i;
                     m_rvalid_c[am] = 1'b1;
                     m_rid_c[am]    = rid_s2m[i][am];
                     m_rdata_c[am]  = rdata_s2m[i][am];
@@ -386,19 +436,24 @@ module axi_crossbar #(
         assign m_rlast[gm]           = m_rlast_c[gm];
     end endgenerate
 
-    // s_rready to real slaves: head master's rready
+    // s_rready is asserted only for the selected slave contribution.
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_srready
-        assign s_rready[gs] = rd_occ[gs] && m_rready[rd_head_mid[gs]];
+        assign s_rready[gs] = rd_resp_v[gs] && rvalid_s2m[gs][rd_resp_mid[gs]] &&
+                              r_sel_v[rd_resp_mid[gs]] &&
+                              (r_sel_s[rd_resp_mid[gs]] == gs) &&
+                              m_rready[rd_resp_mid[gs]];
     end endgenerate
 
     // per-slave read-beat fire (for pop + DECERR beat count)
     wire rd_fire [0:S_ALL-1];
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_rfire
-        assign rd_fire[gs] = rd_occ[gs] && s_rvalid[gs] &&
-                             m_rready[rd_head_mid[gs]] && s_rlast[gs];
+        assign rd_fire[gs] = rd_resp_v[gs] && s_rvalid[gs] &&
+                             s_rready[gs] && s_rlast[gs];
     end endgenerate
-    assign rd_fire[DEC] = rd_occ[DEC] && dec_rvalid &&
-                          m_rready[rd_head_mid[DEC]] && dec_rlast;
+    assign rd_fire[DEC] = rd_resp_v[DEC] && dec_rvalid &&
+                          r_sel_v[rd_resp_mid[DEC]] &&
+                          (r_sel_s[rd_resp_mid[DEC]] == DEC) &&
+                          m_rready[rd_resp_mid[DEC]] && dec_rlast;
 
     // Read FIFO sequential update
     integer s;
@@ -406,6 +461,7 @@ module axi_crossbar #(
         if (!rst_n) begin
             for (s=0;s<S_ALL;s=s+1) begin
                 rd_head[s] <= 0; rd_tail[s] <= 0; rd_cnt[s] <= 0;
+                rd_valid[s] <= {N_OT{1'b0}};
                 rd_beat[s] <= 8'd0; rd_rr[s] <= {MIDW{1'b0}};
                 rd_lock[s] <= 1'b0; rd_lock_m[s] <= {MIDW{1'b0}};
             end
@@ -421,19 +477,24 @@ module axi_crossbar #(
                 end
                 // push on AR accept
                 if (ar_accept[s]) begin
-                    rd_mid[s][rd_tail[s]] <= rd_grant[s];
-                    rd_rid[s][rd_tail[s]] <= ar_id [rd_grant[s]];
-                    rd_len[s][rd_tail[s]] <= ar_len[rd_grant[s]];
-                    rd_tail[s] <= (rd_tail[s]+1) % N_OT;
+                    rd_mid[s][rd_alloc_slot[s]] <= rd_grant[s];
+                    rd_rid[s][rd_alloc_slot[s]] <= ar_id [rd_grant[s]];
+                    rd_len[s][rd_alloc_slot[s]] <= ar_len[rd_grant[s]];
+                    rd_valid[s][rd_alloc_slot[s]] <= 1'b1;
+                    rd_tail[s] <= (rd_alloc_slot[s]+1) % N_OT;
                     rd_rr[s]   <= (rd_grant[s]+1) % N_M;
                 end
                 // DECERR beat progression (non-last beats)
-                if (s==DEC && rd_occ[DEC] && dec_rvalid &&
-                    m_rready[rd_head_mid[DEC]] && !dec_rlast)
+                if (s==DEC && rd_resp_v[DEC] && dec_rvalid &&
+                    r_sel_v[rd_resp_mid[DEC]] &&
+                    (r_sel_s[rd_resp_mid[DEC]] == DEC) &&
+                    m_rready[rd_resp_mid[DEC]] && !dec_rlast)
                     rd_beat[DEC] <= rd_beat[DEC] + 8'd1;
                 // pop on final beat fire
                 if (rd_fire[s]) begin
-                    rd_head[s] <= (rd_head[s]+1) % N_OT;
+                    rd_valid[s][rd_resp_slot[s]] <= 1'b0;
+                    if (rd_resp_slot[s] == rd_head[s])
+                        rd_head[s] <= (rd_head[s]+1) % N_OT;
                     if (s==DEC) rd_beat[DEC] <= 8'd0;
                 end
                 // net count update
@@ -451,17 +512,37 @@ module axi_crossbar #(
     // ==================================================================
     reg  [MIDW-1:0] wr_mid [0:S_ALL-1][0:N_OT-1];
     reg  [IDW-1:0]  wr_bid [0:S_ALL-1][0:N_OT-1];
+    reg  [N_OT-1:0] wr_valid [0:S_ALL-1];
+    reg  [N_OT-1:0] wr_wdone [0:S_ALL-1];
     integer         wr_head[0:S_ALL-1];   // B pointer
     integer         wr_wptr[0:S_ALL-1];   // W-data pointer
     integer         wr_tail[0:S_ALL-1];
     integer         wr_cnt [0:S_ALL-1];   // AW outstanding count
     integer         wr_wpend[0:S_ALL-1];  // AW accepted but W not yet drained
+    integer         wr_seq_next [0:N_M-1];
+    integer         wr_seq [0:S_ALL-1][0:N_OT-1];
+    reg             master_w_pending [0:N_M-1];
+    integer         mp, mps, mpslot;
+
+    always @(*) begin
+        for (mp=0; mp<N_M; mp=mp+1) begin
+            master_w_pending[mp] = 1'b0;
+            for (mps=0; mps<S_ALL; mps=mps+1)
+                for (mpslot=0; mpslot<N_OT; mpslot=mpslot+1)
+                    if (wr_valid[mps][mpslot] && !wr_wdone[mps][mpslot] &&
+                        (wr_mid[mps][mpslot] == mp))
+                        master_w_pending[mp] = 1'b1;
+        end
+    end
 
     reg  [MIDW-1:0] wr_grant   [0:S_ALL-1];
     reg             wr_grant_v [0:S_ALL-1];
     reg  [MIDW-1:0] wr_rr      [0:S_ALL-1];
     reg             wr_lock    [0:S_ALL-1];   // AW grant lock (payload stability)
     reg  [MIDW-1:0] wr_lock_m  [0:S_ALL-1];
+    integer         wr_alloc_slot [0:S_ALL-1];
+    integer         wr_scan;
+    reg             wr_alloc_found;
 
     reg             bvalid_s2m [0:S_ALL-1][0:N_M-1];
     reg  [IDW-1:0]  bid_s2m    [0:S_ALL-1][0:N_M-1];
@@ -476,25 +557,40 @@ module axi_crossbar #(
             if (wr_lock[i]) begin
                 wr_grant[i]   = wr_lock_m[i];
                 wr_grant_v[i] = m_enable[wr_lock_m[i]] && m_awvalid[wr_lock_m[i]]
-                                && (wr_cnt[i] < N_OT);
+                                && (wr_cnt[i] < N_OT) &&
+                                (!SERIALIZE_W_PER_MASTER || !master_w_pending[wr_lock_m[i]]);
             end else begin
             wbest         = -1;
             for (aw=0; aw<N_M; aw=aw+1) begin
                 welig = m_enable[aw] && m_awvalid[aw] && (aw_tgt[aw]==i[3:0])
-                        && (wr_cnt[i] < N_OT);
+                        && (wr_cnt[i] < N_OT) &&
+                        (!SERIALIZE_W_PER_MASTER || !master_w_pending[aw]);
                 if (welig && ($signed({1'b0,aw_qos[aw]}) > wbest))
                     wbest = {1'b0,aw_qos[aw]};
             end
             for (wsc=0; wsc<N_M; wsc=wsc+1) begin
                 wmi = (wr_rr[i] + wsc) % N_M;
                 welig = m_enable[wmi] && m_awvalid[wmi] && (aw_tgt[wmi]==i[3:0])
-                        && (wr_cnt[i] < N_OT) && ({1'b0,aw_qos[wmi]}==wbest);
+                        && (wr_cnt[i] < N_OT) && ({1'b0,aw_qos[wmi]}==wbest) &&
+                        (!SERIALIZE_W_PER_MASTER || !master_w_pending[wmi]);
                 if (welig && !wr_grant_v[i]) begin
                     wr_grant[i]   = wmi[MIDW-1:0];
                     wr_grant_v[i] = 1'b1;
                 end
             end
             end
+        end
+    end
+
+    always @(*) begin
+        for (i=0; i<S_ALL; i=i+1) begin
+            wr_alloc_slot[i] = wr_tail[i];
+            wr_alloc_found = 1'b0;
+            for (wr_scan=0; wr_scan<N_OT; wr_scan=wr_scan+1)
+                if (!wr_valid[i][(wr_tail[i] + wr_scan) % N_OT] && !wr_alloc_found) begin
+                    wr_alloc_slot[i] = (wr_tail[i] + wr_scan) % N_OT;
+                    wr_alloc_found = 1'b1;
+                end
         end
     end
 
@@ -528,7 +624,9 @@ module axi_crossbar #(
                                aw_accept[aw_tgt[gm]];
     end endgenerate
 
-    // W routing: follows W-pointer entry per slave (AW-accept order).
+    // W routing follows the global AW order of each master.  The old per-slave
+    // W pointer could consume a master's W beat on the wrong target when that
+    // master had outstanding writes to multiple slaves.
     wire [MIDW-1:0] w_head_mid [0:S_ALL-1];
     wire            w_occ      [0:S_ALL-1];   // AW accepted, W not yet drained
     generate for (gs=0; gs<S_ALL; gs=gs+1) begin: g_whead
@@ -536,11 +634,70 @@ module axi_crossbar #(
         assign w_occ[gs]      = (wr_wpend[gs] != 0);
     end endgenerate
 
+    reg             wmaster_v [0:N_M-1];
+    reg  [SIDW-1:0] wmaster_s [0:N_M-1];
+    integer         wmaster_slot [0:N_M-1];
+    integer         wmaster_best;
+    integer         wm, wms, wmk;
+    reg             wdrive_v [0:S_ALL-1];
+    reg  [MIDW-1:0] wdrive_mid [0:S_ALL-1];
+    integer         wdrive_slot [0:S_ALL-1];
+    reg             wdrive_new [0:S_ALL-1];
+    integer         wdrive_best;
+    integer         wds, wdm;
+    always @(*) begin
+        for (wm=0; wm<N_M; wm=wm+1) begin
+            wmaster_v[wm] = 1'b0;
+            wmaster_s[wm] = {SIDW{1'b0}};
+            wmaster_slot[wm] = 0;
+            wmaster_best = 32'h7fffffff;
+            for (wms=0; wms<S_ALL; wms=wms+1)
+                for (wmk=0; wmk<N_OT; wmk=wmk+1)
+                    if (wr_valid[wms][wmk] && !wr_wdone[wms][wmk] &&
+                        (wr_mid[wms][wmk] == wm) && (wr_seq[wms][wmk] < wmaster_best)) begin
+                        wmaster_v[wm] = 1'b1;
+                        wmaster_s[wm] = wms[SIDW-1:0];
+                        wmaster_slot[wm] = wmk;
+                        wmaster_best = wr_seq[wms][wmk];
+                    end
+        end
+    end
+
+    always @(*) begin
+        for (wds=0; wds<S_ALL; wds=wds+1) begin
+            wdrive_v[wds] = 1'b0;
+            wdrive_mid[wds] = {MIDW{1'b0}};
+            wdrive_slot[wds] = 0;
+            wdrive_new[wds] = 1'b0;
+            wdrive_best = 32'h7fffffff;
+            for (wdm=0; wdm<N_M; wdm=wdm+1)
+                if (wmaster_v[wdm] && (wmaster_s[wdm] == wds) &&
+                    (wr_seq[wds][wmaster_slot[wdm]] < wdrive_best)) begin
+                    wdrive_v[wds] = 1'b1;
+                    wdrive_mid[wds] = wdm[MIDW-1:0];
+                    wdrive_slot[wds] = wmaster_slot[wdm];
+                    wdrive_best = wr_seq[wds][wmaster_slot[wdm]];
+                end
+            // A slave may sample AW and W in the same cycle and leave IDLE
+            // immediately after that edge. The transaction-table entry is
+            // registered at the edge, so provide a provisional W owner for
+            // this combined handshake. Existing older W owners retain
+            // priority to preserve per-master ordering.
+            if (!wdrive_v[wds] && aw_accept[wds] &&
+                m_wvalid[wr_grant[wds]]) begin
+                wdrive_v[wds] = 1'b1;
+                wdrive_mid[wds] = wr_grant[wds];
+                wdrive_slot[wds] = wr_alloc_slot[wds];
+                wdrive_new[wds] = 1'b1;
+            end
+        end
+    end
+
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_w_drive
-        assign s_wdata [gs*DW +: DW] = m_wdata[w_head_mid[gs]*DW +: DW];
-        assign s_wstrb [gs*4  +: 4 ] = m_wstrb[w_head_mid[gs]*4  +: 4];
-        assign s_wlast [gs]          = m_wlast[w_head_mid[gs]];
-        assign s_wvalid[gs]          = w_occ[gs] && m_wvalid[w_head_mid[gs]];
+        assign s_wdata [gs*DW +: DW] = m_wdata[wdrive_mid[gs]*DW +: DW];
+        assign s_wstrb [gs*4  +: 4 ] = m_wstrb[wdrive_mid[gs]*4  +: 4];
+        assign s_wlast [gs]          = m_wlast[wdrive_mid[gs]];
+        assign s_wvalid[gs]          = wdrive_v[gs] && m_wvalid[wdrive_mid[gs]];
     end endgenerate
 
     // m_wready: the master at each slave's W-head sees that slave's wready.
@@ -548,9 +705,13 @@ module axi_crossbar #(
     reg m_wready_c [0:N_M-1];
     always @(*) begin
         for (am=0; am<N_M; am=am+1) m_wready_c[am] = 1'b0;
-        for (i=0;i<N_S;i=i+1)
-            if (w_occ[i]) m_wready_c[w_head_mid[i]] = s_wready[i];
-        if (w_occ[DEC]) m_wready_c[w_head_mid[DEC]] = 1'b1;
+        for (wm=0; wm<N_M; wm=wm+1)
+            if (wmaster_v[wm] && wdrive_v[wmaster_s[wm]] &&
+                (wdrive_mid[wmaster_s[wm]] == wm))
+                m_wready_c[wm] = (wmaster_s[wm] == DEC) ? 1'b1 : s_wready[wmaster_s[wm]];
+        for (wds=0; wds<S_ALL; wds=wds+1)
+            if (wdrive_new[wds])
+                m_wready_c[wdrive_mid[wds]] = (wds == DEC) ? 1'b1 : s_wready[wds];
     end
     generate for (gm=0; gm<N_M; gm=gm+1) begin: g_wready
         assign m_wready[gm] = m_wready_c[gm];
@@ -559,23 +720,57 @@ module axi_crossbar #(
     // W-beat fire (last beat) per slave
     wire w_fire [0:S_ALL-1];
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_wfire
-        assign w_fire[gs] = w_occ[gs] && s_wvalid[gs] && s_wready[gs] && s_wlast[gs];
+        // Count the beat at the master-facing handshake. m_wready is derived
+        // from the selected slave ready, while using s_wvalid here can race
+        // the adapter's owner mux at the clock edge.
+        assign w_fire[gs] = wdrive_v[gs] &&
+                            m_wvalid[wdrive_mid[gs]] &&
+                            m_wready[wdrive_mid[gs]] &&
+                            m_wlast[wdrive_mid[gs]];
     end endgenerate
-    assign w_fire[DEC] = w_occ[DEC] && m_wvalid[w_head_mid[DEC]] &&
-                         m_wlast[w_head_mid[DEC]];
+    assign w_fire[DEC] = wdrive_v[DEC] && m_wvalid[wdrive_mid[DEC]] &&
+                         m_wlast[wdrive_mid[DEC]];
 
-    // B routing: B-pointer (wr_head) entry per slave.
-    wire [MIDW-1:0] b_head_mid [0:S_ALL-1];
-    wire [IDW-1:0]  b_head_id  [0:S_ALL-1];
-    wire            b_occ      [0:S_ALL-1];   // entries with W drained, B pending
-    generate for (gs=0; gs<S_ALL; gs=gs+1) begin: g_bhead
-        assign b_head_mid[gs] = wr_mid[gs][wr_head[gs]];
-        assign b_head_id[gs]  = wr_bid[gs][wr_head[gs]];
-        // B pending if there is an AW entry whose W has drained (wptr moved past head)
-        assign b_occ[gs]      = (wr_cnt[gs] != 0) && (wr_wpend[gs] < wr_cnt[gs]);
+    // B routing matches BID to the oldest AW entry whose W channel is done.
+    // This permits different IDs to complete out of order while preserving
+    // same-ID ordering.
+    integer         b_resp_slot [0:S_ALL-1];
+    reg             b_resp_v    [0:S_ALL-1];
+    reg  [MIDW-1:0] b_resp_mid  [0:S_ALL-1];
+    reg  [IDW-1:0]  b_resp_id   [0:S_ALL-1];
+    integer         b_scan;
+    integer         b_candidate;
+    reg             b_found;
+    wire            b_occ [0:S_ALL-1];
+    generate for (gs=0; gs<S_ALL; gs=gs+1) begin: g_b_occ_compat
+        assign b_occ[gs] = b_resp_v[gs];
     end endgenerate
+    wire [IDW-1:0] b_slave_bid [0:N_S-1];
+    generate for (gs=0; gs<N_S; gs=gs+1) begin: g_b_slave_bid
+        assign b_slave_bid[gs] = s_bid[gs*IDW +: IDW];
+    end endgenerate
+    always @(*) begin
+        for (i=0; i<S_ALL; i=i+1) begin
+            b_resp_slot[i] = 0;
+            b_resp_v[i]    = 1'b0;
+            b_resp_mid[i]  = {MIDW{1'b0}};
+            b_resp_id[i]   = {IDW{1'b0}};
+            b_found        = 1'b0;
+            for (b_scan=0; b_scan<N_OT; b_scan=b_scan+1) begin
+                b_candidate = (wr_head[i] + b_scan) % N_OT;
+                if (!b_found && wr_valid[i][b_candidate] && wr_wdone[i][b_candidate] &&
+                    ((i == DEC) || (s_bvalid[i] && (wr_bid[i][b_candidate] == b_slave_bid[i])))) begin
+                    b_resp_slot[i] = b_candidate;
+                    b_resp_v[i]    = 1'b1;
+                    b_resp_mid[i]  = wr_mid[i][b_candidate];
+                    b_resp_id[i]   = wr_bid[i][b_candidate];
+                    b_found        = 1'b1;
+                end
+            end
+        end
+    end
 
-    wire dec_bvalid = b_occ[DEC];
+    wire dec_bvalid = b_resp_v[DEC];
 
     always @(*) begin
         for (i=0;i<S_ALL;i=i+1)
@@ -585,26 +780,30 @@ module axi_crossbar #(
                 bresp_s2m[i][am]  = 2'b00;
             end
         for (i=0;i<N_S;i=i+1)
-            if (b_occ[i]) begin
-                bvalid_s2m[i][b_head_mid[i]] = s_bvalid[i];
-                bid_s2m[i][b_head_mid[i]]    = s_bid[i*IDW +: IDW];
-                bresp_s2m[i][b_head_mid[i]]  = s_bresp[i*2 +: 2];
+            if (b_resp_v[i]) begin
+                bvalid_s2m[i][b_resp_mid[i]] = s_bvalid[i];
+                bid_s2m[i][b_resp_mid[i]]    = s_bid[i*IDW +: IDW];
+                bresp_s2m[i][b_resp_mid[i]]  = s_bresp[i*2 +: 2];
             end
-        if (b_occ[DEC]) begin
-            bvalid_s2m[DEC][b_head_mid[DEC]] = dec_bvalid;
-            bid_s2m[DEC][b_head_mid[DEC]]    = b_head_id[DEC];
-            bresp_s2m[DEC][b_head_mid[DEC]]  = `SOC_AXI_RESP_DECERR;
-        end
+        if (b_resp_v[DEC]) begin
+            bvalid_s2m[DEC][b_resp_mid[DEC]] = dec_bvalid;
+            bid_s2m[DEC][b_resp_mid[DEC]]    = b_resp_id[DEC];
+            bresp_s2m[DEC][b_resp_mid[DEC]]  = `SOC_AXI_RESP_DECERR;
+            end
     end
 
     reg            m_bvalid_c [0:N_M-1];
     reg [IDW-1:0]  m_bid_c    [0:N_M-1];
     reg [1:0]      m_bresp_c  [0:N_M-1];
+    reg            b_sel_v    [0:N_M-1];
+    integer        b_sel_s    [0:N_M-1];
     always @(*) begin
         for (am=0; am<N_M; am=am+1) begin
             m_bvalid_c[am]=1'b0; m_bid_c[am]={IDW{1'b0}}; m_bresp_c[am]=2'b00;
+            b_sel_v[am]=1'b0; b_sel_s[am]=0;
             for (i=0;i<S_ALL;i=i+1)
-                if (bvalid_s2m[i][am]) begin
+                if (bvalid_s2m[i][am] && !b_sel_v[am]) begin
+                    b_sel_v[am]=1'b1; b_sel_s[am]=i;
                     m_bvalid_c[am]=1'b1; m_bid_c[am]=bid_s2m[i][am];
                     m_bresp_c[am]=bresp_s2m[i][am];
                 end
@@ -617,23 +816,36 @@ module axi_crossbar #(
     end endgenerate
 
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_sbready
-        assign s_bready[gs] = b_occ[gs] && m_bready[b_head_mid[gs]];
+        assign s_bready[gs] = b_resp_v[gs] && bvalid_s2m[gs][b_resp_mid[gs]] &&
+                              b_sel_v[b_resp_mid[gs]] &&
+                              (b_sel_s[b_resp_mid[gs]] == gs) &&
+                              m_bready[b_resp_mid[gs]];
     end endgenerate
 
     wire b_fire [0:S_ALL-1];
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_bfire
-        assign b_fire[gs] = b_occ[gs] && s_bvalid[gs] && m_bready[b_head_mid[gs]];
+        assign b_fire[gs] = b_resp_v[gs] && s_bvalid[gs] && s_bready[gs];
     end endgenerate
-    assign b_fire[DEC] = b_occ[DEC] && dec_bvalid && m_bready[b_head_mid[DEC]];
+    assign b_fire[DEC] = b_resp_v[DEC] && dec_bvalid &&
+                          b_sel_v[b_resp_mid[DEC]] &&
+                          (b_sel_s[b_resp_mid[DEC]] == DEC) &&
+                          m_bready[b_resp_mid[DEC]];
 
     // Write FIFO sequential update
     integer ws;
+    integer wn;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            for (wn=0; wn<N_M; wn=wn+1)
+                wr_seq_next[wn] <= 0;
             for (ws=0;ws<S_ALL;ws=ws+1) begin
                 wr_head[ws]<=0; wr_wptr[ws]<=0; wr_tail[ws]<=0;
                 wr_cnt[ws]<=0; wr_wpend[ws]<=0; wr_rr[ws]<={MIDW{1'b0}};
+                wr_valid[ws] <= {N_OT{1'b0}};
+                wr_wdone[ws] <= {N_OT{1'b0}};
                 wr_lock[ws]<=1'b0; wr_lock_m[ws]<={MIDW{1'b0}};
+                for (wn=0; wn<N_OT; wn=wn+1)
+                    wr_seq[ws][wn] <= 0;
             end
         end else begin
             for (ws=0;ws<S_ALL;ws=ws+1) begin
@@ -645,13 +857,24 @@ module axi_crossbar #(
                     wr_lock[ws]   <= 1'b0;
                 end
                 if (aw_accept[ws]) begin
-                    wr_mid[ws][wr_tail[ws]] <= wr_grant[ws];
-                    wr_bid[ws][wr_tail[ws]] <= aw_id[wr_grant[ws]];
-                    wr_tail[ws] <= (wr_tail[ws]+1) % N_OT;
+                    wr_mid[ws][wr_alloc_slot[ws]] <= wr_grant[ws];
+                    wr_bid[ws][wr_alloc_slot[ws]] <= aw_id[wr_grant[ws]];
+                    wr_seq[ws][wr_alloc_slot[ws]] <= wr_seq_next[wr_grant[ws]];
+                    wr_seq_next[wr_grant[ws]] <= wr_seq_next[wr_grant[ws]] + 1;
+                    wr_valid[ws][wr_alloc_slot[ws]] <= 1'b1;
+                    wr_wdone[ws][wr_alloc_slot[ws]] <= 1'b0;
+                    wr_tail[ws] <= (wr_alloc_slot[ws]+1) % N_OT;
                     wr_rr[ws]   <= (wr_grant[ws]+1) % N_M;
                 end
-                if (w_fire[ws]) wr_wptr[ws] <= (wr_wptr[ws]+1) % N_OT;
-                if (b_fire[ws]) wr_head[ws] <= (wr_head[ws]+1) % N_OT;
+                if (w_fire[ws]) begin
+                    wr_wdone[ws][wdrive_slot[ws]] <= 1'b1;
+                    wr_wptr[ws] <= (wdrive_slot[ws]+1) % N_OT;
+                end
+                if (b_fire[ws]) begin
+                    wr_valid[ws][b_resp_slot[ws]] <= 1'b0;
+                    if (b_resp_slot[ws] == wr_head[ws])
+                        wr_head[ws] <= (wr_head[ws]+1) % N_OT;
+                end
                 // wr_cnt: AW outstanding (until B)
                 case ({aw_accept[ws], b_fire[ws]})
                     2'b10: wr_cnt[ws] <= wr_cnt[ws] + 1;

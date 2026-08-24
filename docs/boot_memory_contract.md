@@ -1,5 +1,9 @@
 # Boot and Memory Product Contract
 
+Product DDR4 S3 replacement is blocked until the external PHY, DRAM part,
+board timing, and DFI inputs listed in the DDR integration manifest are
+supplied. The current contract is limited to vendor-neutral RTL simulation.
+
 > Version: v1.12 (2026-08-03)
 >
 > Status: Phase 2 architecture freeze candidate with verified Boot ROM

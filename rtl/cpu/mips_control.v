@@ -1,4 +1,5 @@
 // =============================================================================
+`include "../include/soc_config.vh"
 // File Name: mips_control.v
 // Design:    MIPS32 Control Unit & Instruction Decoder
 // Author:    Antigravity
@@ -39,7 +40,9 @@ module mips_control (
     output reg  [1:0]  mem_to_reg,   // 0: EX output, 1: MEM load data, 2: PC+8 (link address)
     
     // Branch / Jump Control
-    output reg  [2:0]  branch_op,    // 000: None, 001: BEQ, 010: BNE, 011: BLEZ, 100: BGTZ, 101: BLTZ, 110: BGEZ
+    output reg  [2:0]  branch_op,    // 000: None, 001: BEQ, 010: BNE, 011: BLEZ, 100: BGTZ, 101: BLTZ, 110: BGEZ, 111: BC1
+    output reg         branch_likely, // Branch-likely; annul the delay slot when not taken
+    output reg         fpu_branch_invert,
     output reg  [1:0]  jump_op,      // 00: None, 01: J/JAL (direct), 10: JR/JALR (register)
     
     // Exception
@@ -50,6 +53,12 @@ module mips_control (
     output reg         is_mfc0,      // MFC0 (Phase B.4: for CU0 privilege check)
     output reg         is_eret,      // Exception Return (ERET)
     output reg         is_syscall,   // SYSCALL instruction
+    output reg         is_break,     // BREAK instruction
+    output reg         is_di,        // DI: disable interrupts, return old Status
+    output reg         is_ei,        // EI: enable interrupts, return old Status
+    output reg         is_wait,      // WAIT: suspend until an interrupt is accepted
+    output reg         is_trap,      // SPECIAL trap instruction
+    output reg  [3:0]  trap_op,      // register and immediate trap variants
 
     // TLB instructions (Phase B.3.b). Encoding:
     //   000 = no TLB op   001 = TLBR    010 = TLBWI
@@ -58,12 +67,24 @@ module mips_control (
 
     // MOVN/MOVZ (Phase B ISA R2): tell id_stage to gate waddr by val_rt.
     output reg         is_movn,
-    output reg         is_movz
+    output reg         is_movz,
+
+    // COP1 conditional moves use the selected FCSR condition code in this
+    // opt-in slice; rt[1] and other reserved fields remain RI.
+    output reg         is_movf,
+    output reg         is_movt,
+    output reg         is_rdpgpr,
+    output reg         is_wrpgpr,
+    // MIPS32 COP1 condition-code selector.  MOVF/MOVT encode cc in rt[4:2],
+    // keep rt[1] reserved, and encode polarity in rt[0].
+    output reg  [2:0]  fpu_condition_code
 );
 
     wire [5:0] opcode = inst[31:26];
     wire [4:0] rs     = inst[25:21];
     wire [4:0] rt     = inst[20:16];
+    wire [4:0] rd     = inst[15:11];
+    wire [4:0] sa     = inst[10:6];
     wire [5:0] func   = inst[5:0];
 
     always @(*) begin
@@ -84,15 +105,28 @@ module mips_control (
         cache_op     = 5'd0;
         mem_to_reg   = 2'b00;
         branch_op    = 3'b000;
+        branch_likely = 1'b0;
+        fpu_branch_invert = 1'b0;
         jump_op      = 2'b00;
         illegal_inst = 1'b0;
         cp0_we       = 1'b0;
         is_mfc0      = 1'b0;
         is_eret      = 1'b0;
         is_syscall   = 1'b0;
+        is_break     = 1'b0;
+        is_di        = 1'b0;
+        is_ei        = 1'b0;
+        is_wait      = 1'b0;
+        is_trap      = 1'b0;
+        trap_op      = 4'd0;
         tlb_op       = 3'b000;
         is_movn      = 1'b0;
         is_movz      = 1'b0;
+        is_movf      = 1'b0;
+        is_movt      = 1'b0;
+        is_rdpgpr    = 1'b0;
+        is_wrpgpr    = 1'b0;
+        fpu_condition_code = 3'd0;
 
         case (opcode)
             6'b000000: begin // SPECIAL (R-type)
@@ -140,6 +174,27 @@ module mips_control (
                     6'b001100: begin // SYSCALL
                         is_syscall = 1'b1;
                     end
+                    6'b001101: begin // BREAK
+                        is_break = 1'b1;
+                    end
+                    6'b110000: begin // TGE
+                        is_trap = 1'b1; trap_op = 4'd0;
+                    end
+                    6'b110001: begin // TGEU
+                        is_trap = 1'b1; trap_op = 4'd1;
+                    end
+                    6'b110010: begin // TLT
+                        is_trap = 1'b1; trap_op = 4'd2;
+                    end
+                    6'b110011: begin // TLTU
+                        is_trap = 1'b1; trap_op = 4'd3;
+                    end
+                    6'b110100: begin // TEQ
+                        is_trap = 1'b1; trap_op = 4'd4;
+                    end
+                    6'b110110: begin // TNE
+                        is_trap = 1'b1; trap_op = 4'd5;
+                    end
                     6'b001111: begin // SYNC
                         // The pipeline is already in-order and the memory
                         // stage blocks until the preceding request completes.
@@ -156,6 +211,19 @@ module mips_control (
                         reg_write = 1'b1;
                         reg_dst   = 2'b01;
                         is_movn   = 1'b1;
+                    end
+                    6'b000001: begin // MOVF/MOVT rd, rs, cc (R2/COP1)
+                        if ((`SOC_FPU_ENABLE == 0) || rt[1] ||
+                            inst[10:8] != 3'd0 || inst[7:6] != 2'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            alu_op    = 5'b10110; // pass rs
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                            is_movf   = !rt[0];
+                            is_movt   = rt[0];
+                            fpu_condition_code = rt[4:2];
+                        end
                     end
                     6'b000000: begin // SLL
                         alu_op    = 5'b01000;
@@ -200,14 +268,24 @@ module mips_control (
                         reg_write = 1'b1;
                         reg_dst   = 2'b01;
                     end
-                    6'b001000: begin // JR
-                        jump_op   = 2'b10;
+                    6'b001000: begin // JR / JR.HB (MIPS32 R2 hazard barrier)
+                        // This in-order core has no separate fetch hazard
+                        // queue, so JR.HB shares JR's architectural path.
+                        if (rt == 5'd0 && rd == 5'd0 &&
+                            (sa == 5'd0 || sa == 5'd16))
+                            jump_op = 2'b10;
+                        else
+                            illegal_inst = 1'b1;
                     end
-                    6'b001001: begin // JALR
-                        reg_write  = 1'b1;
-                        reg_dst    = 2'b01; // writes link address to rd
-                        mem_to_reg = 2'b10;
-                        jump_op    = 2'b10;
+                    6'b001001: begin // JALR / JALR.HB
+                        if (rt == 5'd0 && (sa == 5'd0 || sa == 5'd16)) begin
+                            reg_write  = 1'b1;
+                            reg_dst    = 2'b01; // writes link address to rd
+                            mem_to_reg = 2'b10;
+                            jump_op    = 2'b10;
+                        end else begin
+                            illegal_inst = 1'b1;
+                        end
                     end
                     6'b010000: begin // MFHI
                         mdu_op      = 4'd4;
@@ -317,6 +395,30 @@ module mips_control (
                 mem_to_reg = 2'b01;
                 imm_signed = 1'b1;
             end
+            6'b110001: begin // LWC1 (single precision, opt-in)
+                if (`SOC_FPU_ENABLE == 0) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    alu_op    = 5'b00001;
+                    alu_src   = 1'b1;
+                    mem_read  = 1'b1;
+                    mem_op    = 3'b100;
+                    mem_to_reg = 2'b01;
+                    imm_signed = 1'b1;
+                end
+            end
+            6'b110101: begin // LDC1 (double precision, opt-in; even FPR pair)
+                if (`SOC_FPU_ENABLE == 0 || rt[0]) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    alu_op    = 5'b00001;
+                    alu_src   = 1'b1;
+                    mem_read  = 1'b1;
+                    mem_op    = 3'b100;
+                    mem_to_reg = 2'b01;
+                    imm_signed = 1'b1;
+                end
+            end
             6'b110000: begin // LL (word)
                 alu_op    = 5'b00001;
                 alu_src   = 1'b1;
@@ -394,6 +496,28 @@ module mips_control (
                 mem_op     = 3'b100;
                 imm_signed = 1'b1;
             end
+            6'b111001: begin // SWC1 (single precision, opt-in)
+                if (`SOC_FPU_ENABLE == 0) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    alu_op    = 5'b00001;
+                    alu_src   = 1'b1;
+                    mem_write = 1'b1;
+                    mem_op    = 3'b100;
+                    imm_signed = 1'b1;
+                end
+            end
+            6'b111101: begin // SDC1 (double precision, opt-in; even FPR pair)
+                if (`SOC_FPU_ENABLE == 0 || rt[0]) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    alu_op    = 5'b00001;
+                    alu_src   = 1'b1;
+                    mem_write = 1'b1;
+                    mem_op    = 3'b100;
+                    imm_signed = 1'b1;
+                end
+            end
             6'b111000: begin // SC (word)
                 alu_op    = 5'b00001;
                 alu_src   = 1'b1;
@@ -457,6 +581,13 @@ module mips_control (
                     default: illegal_inst = 1'b1;
                 endcase
             end
+
+            6'b110011: begin // PREF: implementation-defined cache hint
+                // PREF has no architectural result or fault in this slice.
+                // Treating the hint as an ordered no-op preserves the guest
+                // stream while leaving cache prefetch policy implementation
+                // defined.
+            end
             
             // Jumps
             6'b000010: begin // J
@@ -474,17 +605,37 @@ module mips_control (
                 branch_op  = 3'b001;
                 imm_signed = 1'b1;
             end
+            6'b010100: begin // BEQL
+                branch_op    = 3'b001;
+                branch_likely = 1'b1;
+                imm_signed   = 1'b1;
+            end
             6'b000101: begin // BNE
                 branch_op  = 3'b010;
                 imm_signed = 1'b1;
+            end
+            6'b010101: begin // BNEL
+                branch_op    = 3'b010;
+                branch_likely = 1'b1;
+                imm_signed   = 1'b1;
             end
             6'b000110: begin // BLEZ
                 branch_op  = 3'b011;
                 imm_signed = 1'b1;
             end
+            6'b010110: begin // BLEZL
+                branch_op    = 3'b011;
+                branch_likely = 1'b1;
+                imm_signed   = 1'b1;
+            end
             6'b000111: begin // BGTZ
                 branch_op  = 3'b100;
                 imm_signed = 1'b1;
+            end
+            6'b010111: begin // BGTZL
+                branch_op    = 3'b100;
+                branch_likely = 1'b1;
+                imm_signed   = 1'b1;
             end
             6'b000001: begin // REGIMM (BLTZ, BGEZ)
                 case (rt)
@@ -492,9 +643,19 @@ module mips_control (
                         branch_op  = 3'b101;
                         imm_signed = 1'b1;
                     end
+                    5'b00010: begin // BLTZL
+                        branch_op    = 3'b101;
+                        branch_likely = 1'b1;
+                        imm_signed   = 1'b1;
+                    end
                     5'b00001: begin // BGEZ
                         branch_op  = 3'b110;
                         imm_signed = 1'b1;
+                    end
+                    5'b00011: begin // BGEZL
+                        branch_op    = 3'b110;
+                        branch_likely = 1'b1;
+                        imm_signed   = 1'b1;
                     end
                     5'b10000: begin // BLTZAL
                         branch_op  = 3'b101;
@@ -503,6 +664,14 @@ module mips_control (
                         reg_dst    = 2'b10; // $ra
                         mem_to_reg = 2'b10; // PC+8
                     end
+                    5'b10010: begin // BLTZALL
+                        branch_op    = 3'b101;
+                        branch_likely = 1'b1;
+                        imm_signed   = 1'b1;
+                        reg_write    = 1'b1;
+                        reg_dst      = 2'b10;
+                        mem_to_reg   = 2'b10;
+                    end
                     5'b10001: begin // BGEZAL
                         branch_op  = 3'b110;
                         imm_signed = 1'b1;
@@ -510,12 +679,38 @@ module mips_control (
                         reg_dst    = 2'b10; // $ra
                         mem_to_reg = 2'b10; // PC+8
                     end
+                    5'b10011: begin // BGEZALL
+                        branch_op    = 3'b110;
+                        branch_likely = 1'b1;
+                        imm_signed   = 1'b1;
+                        reg_write    = 1'b1;
+                        reg_dst      = 2'b10;
+                        mem_to_reg   = 2'b10;
+                    end
                     5'b11111: begin // SYNCI offset(base), REGIMM rt=31
                         alu_op         = 5'b00001;
                         alu_src        = 1'b1;
                         cache_op_valid = 1'b1;
                         cache_op       = 5'b10000; // Hit_Invalidate_I
                         imm_signed     = 1'b1;
+                    end
+                    5'b01000: begin // TGEI rs, imm
+                        is_trap = 1'b1; trap_op = 4'd6; imm_signed = 1'b1;
+                    end
+                    5'b01001: begin // TGEIU rs, imm
+                        is_trap = 1'b1; trap_op = 4'd7; imm_signed = 1'b1;
+                    end
+                    5'b01010: begin // TLTI rs, imm
+                        is_trap = 1'b1; trap_op = 4'd8; imm_signed = 1'b1;
+                    end
+                    5'b01011: begin // TLTIU rs, imm
+                        is_trap = 1'b1; trap_op = 4'd9; imm_signed = 1'b1;
+                    end
+                    5'b01100: begin // TEQI rs, imm
+                        is_trap = 1'b1; trap_op = 4'd10; imm_signed = 1'b1;
+                    end
+                    5'b01110: begin // TNEI rs, imm
+                        is_trap = 1'b1; trap_op = 4'd11; imm_signed = 1'b1;
                     end
                     default: begin
                         illegal_inst = 1'b1;
@@ -564,8 +759,26 @@ module mips_control (
                 endcase
             end
 
-            6'b011111: begin // SPECIAL3 (Phase B ISA R2: SEB / SEH via BSHFL func 0x20)
+            6'b011111: begin // SPECIAL3 (MIPS32 R2: EXT / INS / BSHFL / RDHWR)
                 case (func)
+                    6'b000000: begin  // EXT rt, rs, pos, size (rd=size-1)
+                        if (({1'b0, inst[10:6]} + {1'b0, inst[15:11]}) < 6'd32) begin
+                            alu_op    = 5'b10111;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b00;
+                        end else begin
+                            illegal_inst = 1'b1;
+                        end
+                    end
+                    6'b000100: begin  // INS rt, rs, pos, size (msbd encoded in rd)
+                        if (inst[15:11] >= inst[10:6]) begin
+                            alu_op    = 5'b11000;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b00;
+                        end else begin
+                            illegal_inst = 1'b1;
+                        end
+                    end
                     6'b111011: begin  // RDHWR rt, rd (SYNCI_Step=1, Count=2, UserLocal=29)
                         if (rs == 5'b00011 &&
                             ((inst[15:11] == 5'd0) || (inst[15:11] == 5'd1) ||
@@ -580,27 +793,39 @@ module mips_control (
                         end
                     end
                     6'b100000: begin  // BSHFL family — sub-op in sa field (bits 10:6)
-                        case (inst[10:6])
-                            5'b00010: begin  // WSBH rd, rt (R2)
-                                alu_op    = 5'b10100;  // OP_WSBH
-                                reg_write = 1'b1;
-                                reg_dst   = 2'b01;
-                                alu_src   = 1'b0;     // op_b = rt
-                            end
-                            5'b10000: begin  // SEB rd, rt
-                                alu_op    = 5'b10010;  // OP_SEB
-                                reg_write = 1'b1;
-                                reg_dst   = 2'b01;
-                                alu_src   = 1'b0;     // op_b = rt
-                            end
-                            5'b11000: begin  // SEH rd, rt
-                                alu_op    = 5'b10011;  // OP_SEH
-                                reg_write = 1'b1;
-                                reg_dst   = 2'b01;
-                                alu_src   = 1'b0;
-                            end
-                            default: illegal_inst = 1'b1;
-                        endcase
+                        // BSHFL has rs fixed to zero; the sa field selects the
+                        // sub-operation.  Keep all other encodings reserved.
+                        if (rs != 5'b00000) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            case (inst[10:6])
+                                5'b00000: begin  // BITSWAP rd, rt (R2)
+                                    alu_op    = 5'b11001;
+                                    reg_write = 1'b1;
+                                    reg_dst   = 2'b01;
+                                    alu_src   = 1'b0;
+                                end
+                                5'b00010: begin  // WSBH rd, rt (R2)
+                                    alu_op    = 5'b10100;  // OP_WSBH
+                                    reg_write = 1'b1;
+                                    reg_dst   = 2'b01;
+                                    alu_src   = 1'b0;     // op_b = rt
+                                end
+                                5'b10000: begin  // SEB rd, rt
+                                    alu_op    = 5'b10010;  // OP_SEB
+                                    reg_write = 1'b1;
+                                    reg_dst   = 2'b01;
+                                    alu_src   = 1'b0;     // op_b = rt
+                                end
+                                5'b11000: begin  // SEH rd, rt
+                                    alu_op    = 5'b10011;  // OP_SEH
+                                    reg_write = 1'b1;
+                                    reg_dst   = 2'b01;
+                                    alu_src   = 1'b0;
+                                end
+                                default: illegal_inst = 1'b1;
+                            endcase
+                        end
                     end
                     default: illegal_inst = 1'b1;
                 endcase
@@ -609,32 +834,187 @@ module mips_control (
             6'b010000: begin // COP0
                 case (rs)
                     5'b00000: begin // MFC0
-                        reg_write  = 1'b1;
-                        reg_dst    = 2'b00; // rt
-                        mem_to_reg = 2'b11; // Data from CP0
-                        is_mfc0    = 1'b1;
+                        // Bits [2:0] are the CP0 sub-select. Bits [10:3]
+                        // remain reserved for the transfer encoding.
+                        if (inst[10:3] != 8'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            reg_write  = 1'b1;
+                            reg_dst    = 2'b00; // rt
+                            mem_to_reg = 2'b11; // Data from CP0
+                            is_mfc0    = 1'b1;
+                        end
                     end
                     5'b00100: begin // MTC0
-                        cp0_we = 1'b1;
-                        reg_dst = 2'b01; // Use rd as CP0 register index
-                        alu_op    = 5'b01000; // SLL
-                        use_sa = 1'b1;    // use sa (which is 0 for MTC0 because bits 10:6 are 0)
-                        alu_src = 1'b0;   // op_b = rt
+                        // MTC0 has the same reserved [10:3] rule; the low
+                        // three bits select the CP0 sub-register.
+                        if (inst[10:3] != 8'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            cp0_we = 1'b1;
+                            reg_dst = 2'b01; // Use rd as CP0 register index
+                            alu_op    = 5'b01000; // SLL
+                            use_sa = 1'b1;
+                            alu_src = 1'b0;   // op_b = rt
+                        end
                     end
                     5'b10000: begin // CO — CP0 privileged ops
                         case (func)
-                            6'b011000: is_eret = 1'b1;      // ERET
-                            6'b000001: tlb_op  = 3'b001;    // TLBR
-                            6'b000010: tlb_op  = 3'b010;    // TLBWI
-                            6'b000110: tlb_op  = 3'b011;    // TLBWR
-                            6'b001000: tlb_op  = 3'b100;    // TLBP
+                            6'b011000: begin                // ERET
+                                // CO fixes rs=5'b10000; remaining fields
+                                // between rs and funct are reserved for ERET.
+                                if (inst[24:6] == 19'd0)
+                                    is_eret = 1'b1;
+                                else
+                                    illegal_inst = 1'b1;
+                            end
+                            6'b000001: begin                 // TLBR
+                                if (inst[24:6] == 19'd0) tlb_op = 3'b001;
+                                else illegal_inst = 1'b1;
+                            end
+                            6'b000010: begin                 // TLBWI
+                                if (inst[24:6] == 19'd0) tlb_op = 3'b010;
+                                else illegal_inst = 1'b1;
+                            end
+                            6'b000110: begin                 // TLBWR
+                                if (inst[24:6] == 19'd0) tlb_op = 3'b011;
+                                else illegal_inst = 1'b1;
+                            end
+                            6'b001000: begin                 // TLBP
+                                if (inst[24:6] == 19'd0) tlb_op = 3'b100;
+                                else illegal_inst = 1'b1;
+                            end
+                            6'b100000: begin                 // WAIT
+                                if (inst[24:6] == 19'd0) is_wait = 1'b1;
+                                else illegal_inst = 1'b1;
+                            end
                             default:   illegal_inst = 1'b1;
                         endcase
+                    end
+                    5'b01011: begin // MFMC0: DI/EI (MIPS32 R2)
+                        if (inst[15:11] == 5'd12 && inst[10:6] == 5'd0 &&
+                            // MIPS32 R2 encodes DI as funct=0 and EI as
+                            // funct=0x20.  The latter is bit[5], not funct=1.
+                            (func == 6'b000000 || func == 6'b100000)) begin
+                            reg_write  = 1'b1;
+                            reg_dst    = 2'b00;
+                            mem_to_reg = 2'b11;
+                            is_mfc0    = 1'b1;
+                            is_di      = (func == 6'b000000);
+                            is_ei      = (func == 6'b100000);
+                        end else begin
+                            illegal_inst = 1'b1;
+                        end
+                    end
+                    5'b01010: begin // RDPGPR (shadow GPR read)
+                        if (`SOC_SRS_ENABLE != 0 && sa == 5'd0 && func == 6'd0) begin
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01; // rd receives shadow[rt]
+                            alu_op    = 5'b10110; // pass shadow read value
+                            is_rdpgpr = 1'b1;
+                        end else begin
+                            illegal_inst = 1'b1;
+                        end
+                    end
+                    5'b01110: begin // WRPGPR (shadow GPR write)
+                        if (`SOC_SRS_ENABLE != 0 && sa == 5'd0 && func == 6'd0)
+                            is_wrpgpr = 1'b1;
+                        else
+                            illegal_inst = 1'b1;
                     end
                     default: begin
                         illegal_inst = 1'b1;
                     end
                 endcase
+            end
+            6'b010011: begin // COP1X fused multiply-add/subtract
+                // PREFX is an integer-cache hint in the COP1X encoding space
+                // and remains legal when the optional FPU is disabled.
+                if (func == 6'h0f) begin
+                    // PREFX has no architectural result; model the
+                    // implementation-defined prefetch as an ordered no-op.
+                    if (sa != 5'd0)
+                        illegal_inst = 1'b1;
+                end else if (`SOC_FPU_ENABLE == 0) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    case (func)
+                        6'h20, 6'h21, 6'h28, 6'h29,
+                        6'h30, 6'h31, 6'h38, 6'h39: begin
+                            // COP1X uses rs=fr, rt=ft, rd=fs, sa=fd.
+                            // Odd function encodings are the D forms, where
+                            // every selector names the first word of a pair.
+                            if (func[0] &&
+                                (rs[0] || rt[0] || rd[0] || sa[0]))
+                                illegal_inst = 1'b1;
+                        end
+                        default: illegal_inst = 1'b1;
+                    endcase
+                end
+            end
+
+            6'b010001: begin // COP1 single/double development slice
+                if (`SOC_FPU_ENABLE == 0) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    case (rs)
+                        5'b01000: begin // BC1F/BC1T and branch-likely forms
+                            if (!(rt == 5'd0 || rt == 5'd1 ||
+                                  rt == 5'd2 || rt == 5'd3)) begin
+                                illegal_inst = 1'b1;
+                            end else begin
+                                branch_op = 3'b111;
+                                branch_likely = rt[1];
+                                fpu_branch_invert = ~rt[0];
+                                fpu_condition_code = inst[20:18];
+                            end
+                        end
+                        5'b00000, 5'b00010, 5'b00100, 5'b00110: begin
+                            // MFC1/CFC1/MTC1/CTC1 side effects are committed
+                            // by the opt-in CP1 state block in mips_cpu.
+                            // The low eleven bits are reserved for transfers;
+                            // CFC1/CTC1 expose FCSR only (fs=$31).
+                            if (inst[10:0] != 11'd0 ||
+                                ((rs == 5'b00010 || rs == 5'b00110) &&
+                                 inst[15:11] != 5'd31))
+                                illegal_inst = 1'b1;
+                        end
+                        5'b10000, 5'b10001, 5'b10100: begin
+                            case (func)
+                                6'h00, 6'h01, 6'h02, 6'h03, 6'h04,
+                                6'h05, 6'h06, 6'h07,
+                                6'h0c, 6'h0d, 6'h0e, 6'h0f,
+                                6'h15, 6'h16,
+                                6'h12, 6'h13,
+                                6'h20, 6'h21, 6'h24,
+                                6'h30, 6'h31, 6'h32, 6'h33,
+                                6'h34, 6'h35, 6'h36, 6'h37,
+                                6'h38, 6'h39, 6'h3a, 6'h3b,
+                                6'h3c, 6'h3d, 6'h3e, 6'h3f: begin end
+                                default: illegal_inst = 1'b1;
+                            endcase
+                            // fmt=D uses an even-numbered register pair for
+                            // fd/fs/ft.  Reject odd or malformed encodings at
+                            // decode so no partial FPR state can commit.
+                            // MOVZ/MOVN use the rt field as an integer GPR
+                            // condition, not as the D-format ft FPR.  Only
+                            // ordinary D operations require all three FPR
+                            // selectors to be even.
+                            if ((rs == 5'b10001) &&
+                                (inst[6] || inst[11] ||
+                                 ((func != 6'h12 && func != 6'h13) &&
+                                  inst[16])))
+                                illegal_inst = 1'b1;
+                            if ((rs == 5'b10100 &&
+                                 func != 6'h20 && func != 6'h21))
+                                illegal_inst = 1'b1;
+                            if ((rs == 5'b10000 && func == 6'h20) ||
+                                (rs == 5'b10001 && func == 6'h21))
+                                illegal_inst = 1'b1;
+                        end
+                        default: illegal_inst = 1'b1;
+                    endcase
+                end
             end
             default: begin
                 illegal_inst = 1'b1;

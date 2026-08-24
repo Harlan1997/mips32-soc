@@ -11,6 +11,7 @@ module mips_alu (
     input  wire [31:0] op_a,      // Operand A
     input  wire [31:0] op_b,      // Operand B
     input  wire [4:0]  sa,        // Shift amount (from instruction[10:6])
+    input  wire [4:0]  msbd,      // EXT/INS most-significant bit (rd field)
     input  wire [4:0]  alu_op,    // ALU operation control (Phase B ISA R2: 5-bit)
     output reg  [31:0] alu_out,   // ALU result output
     output wire        overflow,  // Signed overflow flag
@@ -40,11 +41,22 @@ module mips_alu (
     localparam OP_WSBH     = 5'b10100; // Word swap bytes within halfwords (op_b)
     localparam OP_ROTR     = 5'b10101; // Rotate right op_b by sa
     localparam OP_MOV_PASS = 5'b10110; // Pass op_a (for MOVN/MOVZ; write gate in id_stage)
+    localparam OP_EXT      = 5'b10111; // Extract size=(rd+1) bits at pos
+    localparam OP_INS      = 5'b11000; // Insert bits [rd:pos]
+    localparam OP_BITSWAP  = 5'b11001; // Reverse bit order within each byte
 
+    // SPECIAL3 EXT uses rd as size-1; INS uses rd as the high bit. The EX
+    // wrapper supplies rd separately from the ALU shift amount.
     // Internal signals for adder/subtractor and overflow detection
     wire [31:0] sub_b;
     wire [32:0] adder_sum;
     wire        is_sub;
+    wire [5:0]  field_width = {1'b0, msbd} - {1'b0, sa} + 6'd1;
+    wire [31:0] field_mask = (field_width == 6'd32) ? 32'hFFFF_FFFF :
+                              (32'hFFFF_FFFF >> (6'd32 - field_width));
+    wire [5:0]  ext_width = {1'b0, msbd} + 6'd1;
+    wire [31:0] ext_mask = (ext_width == 6'd32) ? 32'hFFFF_FFFF :
+                           (32'hFFFF_FFFF >> (6'd32 - ext_width));
 
     assign is_sub = (alu_op == OP_SUB || alu_op == OP_SUBU || alu_op == OP_SLT || alu_op == OP_SLTU);
     assign sub_b = is_sub ? (~op_b + 32'd1) : op_b;
@@ -64,6 +76,7 @@ module mips_alu (
     reg [5:0] clz_result;
     reg [5:0] clo_result;
     integer   ci;
+    integer   bi;
     always @(*) begin
         clz_result = 6'd32;   // all zeros → 32
         clo_result = 6'd32;   // all ones  → 32
@@ -145,6 +158,28 @@ module mips_alu (
             end
             OP_MOV_PASS: begin
                 alu_out = op_a;
+            end
+            OP_EXT: begin
+                alu_out = (op_a >> sa) & ext_mask;
+            end
+            OP_INS: begin
+                // The architectural destination/base is rt (op_b), while
+                // the inserted field is taken from rs (op_a).
+                alu_out = (op_b & ~(field_mask << sa)) |
+                          ((op_a & field_mask) << sa);
+            end
+            OP_BITSWAP: begin
+                alu_out = 32'd0;
+                for (bi = 0; bi < 4; bi = bi + 1) begin
+                    alu_out[bi*8 + 0] = op_b[bi*8 + 7];
+                    alu_out[bi*8 + 1] = op_b[bi*8 + 6];
+                    alu_out[bi*8 + 2] = op_b[bi*8 + 5];
+                    alu_out[bi*8 + 3] = op_b[bi*8 + 4];
+                    alu_out[bi*8 + 4] = op_b[bi*8 + 3];
+                    alu_out[bi*8 + 5] = op_b[bi*8 + 2];
+                    alu_out[bi*8 + 6] = op_b[bi*8 + 1];
+                    alu_out[bi*8 + 7] = op_b[bi*8 + 0];
+                end
             end
             default: begin
                 alu_out = 32'd0;

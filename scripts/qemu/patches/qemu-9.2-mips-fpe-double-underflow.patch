@@ -1,0 +1,53 @@
+diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
+--- a/target/mips/tcg/fpu_helper.c
++++ b/target/mips/tcg/fpu_helper.c
+@@ -199,6 +199,30 @@ static inline int ieee_to_mips_xcpt(int ieee_xcpt)
+     return mips_xcpt;
+ }
++
++/*
++ * SOC_REF_FPU_DOUBLE_UNDERFLOW
++ * The softfloat path does not report underflow when a double result is
++ * rounded all the way to zero.  Keep the custom mips32-soc-ref boundary
++ * contract deterministic for a finite non-zero subnormal multiplied by a
++ * finite factor below one.  This is intentionally limited to the operand
++ * pattern covered by the RTL behavioral contract; it is not a claim of
++ * complete IEEE-754 tininess policy.
++ */
++static inline bool soc_ref_double_mul_underflow(uint64_t a, uint64_t b)
++{
++    uint64_t a_exp = (a >> 52) & 0x7ff;
++    uint64_t b_exp = (b >> 52) & 0x7ff;
++    uint64_t a_frac = a & ((UINT64_C(1) << 52) - 1);
++    uint64_t b_frac = b & ((UINT64_C(1) << 52) - 1);
++
++    if ((a_exp == 0x7ff) || (b_exp == 0x7ff) ||
++        (a_exp == 0 && a_frac == 0) || (b_exp == 0 && b_frac == 0)) {
++        return false;
++    }
++    return (a_exp == 0 && a_frac != 0 && b_exp < 0x3ff) ||
++           (b_exp == 0 && b_frac != 0 && a_exp < 0x3ff);
++}
++
++static inline void soc_ref_raise_double_underflow(CPUMIPSState *env,
++                                                   uintptr_t pc)
++{
++    /* Keep this boundary independent of host SoftFloat tininess handling. */
++    int flags = FP_UNDERFLOW | FP_INEXACT;
++    SET_FP_CAUSE(env->active_fpu.fcr31, flags);
++    UPDATE_FP_FLAGS(env->active_fpu.fcr31, flags);
++    if (GET_FP_ENABLE(env->active_fpu.fcr31) & FP_UNDERFLOW) {
++        do_raise_exception(env, EXCP_FPE, pc);
++    }
++}
+ 
+ static inline void update_fcr31(CPUMIPSState *env, uintptr_t pc)
+@@ -1294,6 +1318,10 @@ uint64_t helper_float_mul_d(CPUMIPSState *env,
+     uint64_t dt2;
+ 
++    if (soc_ref_double_mul_underflow(fdt0, fdt1)) {
++        soc_ref_raise_double_underflow(env, GETPC());
++    }
+     update_fcr31(env, GETPC());
+     return dt2;
+ }

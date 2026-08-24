@@ -56,9 +56,32 @@ else
     echo "L2 policy: write-through (default)"
 fi
 
+vcs_extra_args=()
+if [ -n "${VCS_EXTRA_ARGS:-}" ]; then
+    read -r -a vcs_extra_args <<< "${VCS_EXTRA_ARGS}"
+fi
+
+trace_define_args=()
+trace_sim_args=()
+if [ -n "${RETIRE_TRACE:-}" ]; then
+    trace_define_args=(+define+SOC_RETIRE_TRACE_ENABLE=1)
+    trace_sim_args=(+RETIRE_TRACE="$(realpath -m "$RETIRE_TRACE")")
+    echo "Retirement trace: ${RETIRE_TRACE}"
+fi
+
+# Optional simulator-only arguments used by focused debug probes.  Keep the
+# default invocation unchanged; callers may provide a shell-word list such as
+# SIM_EXTRA_ARGS='+VIC_DEBUG'.
+extra_sim_args=()
+if [ -n "${SIM_EXTRA_ARGS:-}" ]; then
+    read -r -a extra_sim_args <<< "${SIM_EXTRA_ARGS}"
+fi
+
 echo "Compiling UVM Testbench with VCS..."
 vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
     "${l2_define_args[@]}" \
+    "${vcs_extra_args[@]}" \
+    "${trace_define_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips +incdir+"${ROOT_DIR}"/rtl/cache \
     +incdir+"${SCRIPT_DIR}"/agents +incdir+"${SCRIPT_DIR}"/env +incdir+"${SCRIPT_DIR}"/tests +incdir+"${SCRIPT_DIR}"/seqs +incdir+"${SCRIPT_DIR}"/checkers +incdir+"${SCRIPT_DIR}"/tb_top \
     "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v "${ROOT_DIR}"/rtl/cache/*.v \
@@ -68,7 +91,7 @@ vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
 
 echo "Running UVM Simulation..."
 set +e
-sim_args=(+UVM_TESTNAME="$TESTNAME" +ntb_random_seed="$SEED" +FW_HEX="$FW_HEX_ABS")
+sim_args=(+UVM_TESTNAME="$TESTNAME" +ntb_random_seed="$SEED" +FW_HEX="$FW_HEX_ABS" "${trace_sim_args[@]}" "${extra_sim_args[@]}")
 if [ -n "$FLASH_IMAGE_ABS" ]; then
     sim_args+=(+FLASH_IMAGE="$FLASH_IMAGE_ABS")
 fi

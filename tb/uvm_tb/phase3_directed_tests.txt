@@ -7,7 +7,7 @@ soc_uart_irq_test 1
 soc_apb_fault_stress_test 1
 soc_flash_image_test 1
 soc_axi_attribute_cross_sweep_test 1
-soc_apb_bit_pattern_sweep_test 1
+soc_apb_bit_pattern_sweep_test 1 apb_bit_sweep_idle
 # Isolated per-firmware CPU-only exercises. Each uses soc_base_test as a
 # boot harness and loads its own dedicated firmware — no coexistence with
 # UVM peripheral traffic, so no boot-timing race (see signoff #8 lesson).

@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] target/mips: retain accrued FCSR flags on enabled FPE
+
+The MIPS FCSR Cause field describes the operation that raised the
+exception, while the Flags field is sticky even when the corresponding
+enable bit causes a precise FPE trap.  Keep the accrued flag update before
+raising the exception so the system-mode reference matches the RTL contract.
+
+---
+ target/mips/tcg/fpu_helper.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
+index 0000000..0000000 100644
+--- a/target/mips/tcg/fpu_helper.c
++++ b/target/mips/tcg/fpu_helper.c
+@@ -207,6 +207,7 @@ static inline void update_fcr31(CPUMIPSState *env, uintptr_t pc)
+         set_float_exception_flags(0, &env->active_fpu.fp_status);
+ 
+         if (GET_FP_ENABLE(env->active_fpu.fcr31) & mips_exception_flags) {
++            UPDATE_FP_FLAGS(env->active_fpu.fcr31, mips_exception_flags);
+             do_raise_exception(env, EXCP_FPE, pc);
+         } else {
+             UPDATE_FP_FLAGS(env->active_fpu.fcr31, mips_exception_flags);

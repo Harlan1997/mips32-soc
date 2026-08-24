@@ -5,10 +5,10 @@
  * part of the default project build -- SOC_MMU_ENABLE stays 0 for every
  * other firmware/test.
  *
- * The handler models a small software-owned page table in kseg0. On a TLB
- * miss it resolves a non-identity VA->PA mapping, installs only the faulting
- * 4KB half of the TLB pair, and ERETs to retry the access. This is a bounded
- * execution-level demand-paging slice, not a production OS page allocator.
+ * The handler owns a bounded two-level software page table. On a TLB miss it
+ * allocates a backing page, populates a PTE, installs only the faulting 4KB
+ * half of the TLB pair, and ERETs to retry the access. This is an execution
+ * level OS contract for the opt-in gate, not a production Linux VM system.
  * -------------------------------------------------------------------------- */
 #include "soc_addr.h"
 #include "print.h"
@@ -29,7 +29,11 @@ static volatile unsigned int demand_fault_count = 0;
 static volatile unsigned int unexpected_exc = 0;
 static volatile unsigned int last_unexpected_code = 0;
 static volatile unsigned int last_unexpected_badv = 0;
+static volatile unsigned int last_unexpected_epc = 0;
 static volatile unsigned int hw_permission_faults = 0;
+static volatile unsigned int permission_fault_count = 0;
+static volatile unsigned int page_alloc_count = 0;
+static volatile unsigned int pair_valid[3] = { 0, 0, 0 };
 
 #ifdef SOC_HW_WALKER
 /* Root index 0 -> L2 table at physical 0x2000.  The two leaf entries cover
@@ -47,59 +51,187 @@ volatile unsigned int hw_page1 __attribute__((section(".page_data"))) = 0x246813
 volatile unsigned int hw_page_ro __attribute__((section(".page_ro"))) = 0x55AA33CCu;
 #endif
 
-struct page_mapping { unsigned int va; unsigned int pa; };
-static const struct page_mapping page_table[] = {
-    { 0x00020000u, 0x00006000u },
-    { 0x00021000u, 0x00007000u },
-    { 0x00022000u, 0x00008000u },
-    { 0x00023000u, 0x00009000u }
+/* Software-owned two-level 4KB page table. Values are PTEs, not TLB entries:
+ * [31:12] PFN, bit 4 user, bit 3 writable, bit 2 executable, bit 1 dirty,
+ * bit 0 valid. The root/L2 arrays are kernel-owned storage, so the fault
+ * handler remains reachable through kseg0 while useg is unmapped. */
+#ifndef SOC_HW_WALKER
+#ifdef SOC_MMU_OS_PRESSURE
+static unsigned int os_root[3][1024];
+static unsigned int os_l2[3][1024];
+static volatile unsigned int current_task;
+#else
+static unsigned int os_root[1024];
+static unsigned int os_l2[1024];
+#endif
+/* Keep page-table ownership uncached. The linker places these objects in the
+ * kseg0 SRAM image; adding the kseg0->kseg1 alias offset reaches the same
+ * physical SRAM while forcing AXI cache attributes to uncached. */
+#ifdef SOC_MMU_OS_PRESSURE
+#define OS_ROOT_UC ((volatile unsigned int *)((unsigned int)os_root[current_task] + 0x20000000u))
+#define OS_L2_UC   ((volatile unsigned int *)((unsigned int)os_l2[current_task] + 0x20000000u))
+#else
+#define OS_ROOT_UC ((volatile unsigned int *)((unsigned int)os_root + 0x20000000u))
+#define OS_L2_UC   ((volatile unsigned int *)((unsigned int)os_l2   + 0x20000000u))
+#endif
+static const unsigned int demand_pfns[] = { 0x06u, 0x07u, 0x08u, 0x09u };
+static const unsigned int demand_vpns[] = {
+    0x00020u, 0x00021u, 0x00022u, 0x00023u
 };
+
+#ifdef SOC_MMU_OS_PRESSURE
+static const unsigned int task_pfns[3][4] = {
+    { 0x0007u, 0x0008u, 0x000Du, 0x000Eu },
+    { 0x0009u, 0x000Au, 0x000Du, 0x000Eu },
+    { 0x000Bu, 0x000Cu, 0x000Du, 0x000Eu }
+};
+static volatile unsigned int task_allocs[3];
+
+static void switch_task(unsigned int task)
+{
+    current_task = task;
+    /* The bounded handler's pair-preservation state is software-owned. A
+     * context switch must not reuse the previous task's TLBR snapshot while
+     * installing the new ASID's even/odd half. */
+    pair_valid[0] = 0;
+    pair_valid[1] = 0;
+    asm volatile("mtc0 %0, $10, 0\n\t nop\n\t nop\n\t nop" ::
+                 "r"(task + 1u));
+}
+#endif
+
+#endif
+
+static unsigned int pte_to_entrylo(unsigned int pte) {
+    unsigned int lo = 0;
+    /* MIPS EntryLo: PFN at [29:6], C=2, D/V/G in [2:0]. */
+    lo = ((pte >> 12) << 6) | (2u << 3);
+    if (pte & (1u << 1)) lo |= (1u << 2);
+    if (pte & 1u) lo |= (1u << 1);
+    return lo;
+}
+
+#ifndef SOC_HW_WALKER
+static void invalidate_page_pair(unsigned int vpn2, unsigned int pair_id) {
+    unsigned int zero = 0;
+    unsigned int index = 16u + pair_id;
+    asm volatile("mtc0 %0, $10, 0" :: "r"(vpn2));
+    asm volatile("mtc0 %0, $5, 0" :: "r"(zero));
+    asm volatile("mtc0 %0, $0, 0\n\t nop\n\t nop\n\t nop\n\t nop" :: "r"(index));
+    asm volatile("mtc0 %0, $2, 0" :: "r"(zero));
+    asm volatile("mtc0 %0, $3, 0" :: "r"(zero));
+    asm volatile("nop\n\t nop\n\t nop\n\t nop");
+    asm volatile("tlbwi\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop" ::: "memory");
+    pair_valid[pair_id] = 0;
+}
+#endif
 
 /* The table and backing pages are kseg0 addresses, so this path does not
  * depend on the useg mapping that caused the fault. */
 static int install_page_entry(unsigned int bad_vaddr) {
     unsigned int vpn = bad_vaddr & 0xFFFFF000u;
-    unsigned int pa = 0;
+    unsigned int root_index = (vpn >> 22) & 0x3FFu;
+    unsigned int leaf_index = (vpn >> 12) & 0x3FFu;
+    unsigned int pte;
+
+#ifndef SOC_HW_WALKER
     unsigned int i;
-    int found = 0;
-    if (vpn == 0x40000000u) { pa = vpn; found = 1; }
-    for (i = 0; i < sizeof(page_table) / sizeof(page_table[0]); i++) {
-        if (page_table[i].va == vpn) { pa = page_table[i].pa; found = 1; break; }
+    unsigned int demand_index = 0xFFFFFFFFu;
+    if (vpn == 0x40000000u) {
+        /* Preserve the bootstrap identity mapping used by the SoC MMU
+         * handoff before the useg demand pages are touched. */
+        pte = (0x40000u << 12) | (1u << 4) | (1u << 3) |
+              (1u << 2) | (1u << 1) | 1u;
+        demand_index = 0xFFFFFFFEu;
     }
-    if (!found) return 0;
+    for (i = 0; i < sizeof(demand_vpns) / sizeof(demand_vpns[0]); i++) {
+        if ((vpn >> 12) == demand_vpns[i]) { demand_index = i; break; }
+    }
+    if (demand_index == 0xFFFFFFFFu) return 0;
+
+    if (!(OS_ROOT_UC[root_index] & 1u)) {
+        /* Root PTE points at the fixed L2 physical page, present+write. */
+#ifdef SOC_MMU_OS_PRESSURE
+        unsigned int l2_phys = ((unsigned int)os_l2[current_task]) & 0x1FFFF000u;
+        OS_ROOT_UC[root_index] = l2_phys | 0x3u;
+#else
+        OS_ROOT_UC[root_index] = 0x00002003u;
+#endif
+    }
+    if (demand_index == 0xFFFFFFFEu) {
+        /* Bootstrap identity PTE is synthesized above. */
+    } else pte = OS_L2_UC[leaf_index];
+    if (demand_index != 0xFFFFFFFEu && !(pte & 1u)) {
+        unsigned int pfn = demand_pfns[demand_index];
+#ifdef SOC_MMU_OS_PRESSURE
+        pfn = task_pfns[current_task][demand_index];
+#endif
+        /* User, executable and valid for the read-only page; all other
+         * demand pages are writable and dirty. A store to page 2 must take a
+         * real MIPS Modified exception and must not allocate a new page. */
+        pte = (pfn << 12) | (1u << 4) | (1u << 2) | 1u;
+        if (demand_index != 2u) pte |= (1u << 3) | (1u << 1);
+        OS_L2_UC[leaf_index] = pte;
+        page_alloc_count++;
+#ifdef SOC_MMU_OS_PRESSURE
+        task_allocs[current_task]++;
+#endif
+    }
+#else
+    /* The hardware walker gate provisions its own physical tables. */
+    pte = 0;
+    if (vpn == 0x00020000u) pte = (0x06u << 12) | 0x1Fu;
+    if (vpn == 0x00021000u) pte = (0x07u << 12) | 0x1Fu;
+    if (vpn == 0x00022000u) pte = (0x08u << 12) | 0x15u;
+    if (!pte) return 0;
+#endif
 
     unsigned int vpn2 = bad_vaddr & 0xFFFFE000u;
-    unsigned int leaf = ((pa >> 12) << 6) | (2u << 3) |
-                        (1u << 2) | (1u << 1) | (1u << 0);
+    unsigned int leaf = pte_to_entrylo(pte);
     unsigned int lo0 = ((bad_vaddr >> 12) & 1u) ? 0u : leaf;
     unsigned int lo1 = ((bad_vaddr >> 12) & 1u) ? leaf : 0u;
-    unsigned int index, old_lo0, old_lo1;
+    unsigned int index, old_lo0 = 0, old_lo1 = 0;
+    unsigned int pair_id = (vpn == 0x40000000u) ? 2u : ((vpn2 >> 13) & 1u);
 
-    asm volatile("mtc0 %0, $10, 0" :: "r"(vpn2));   /* EntryHi: VPN2 (ASID=0) */
+    {
+        unsigned int entry_hi = vpn2;
+#ifdef SOC_MMU_OS_PRESSURE
+        entry_hi |= (current_task + 1u) & 0xFFu;
+#endif
+        asm volatile("mtc0 %0, $10, 0" :: "r"(entry_hi));
+    }
     asm volatile("mtc0 %0, $5,  0" :: "r"(0));       /* PageMask: 4KB (mask=0) */
-    /* Reuse an existing VPN2 slot when the other half of a pair faults;
-     * random replacement would leave duplicate entries and raise MCheck. */
-    asm volatile("tlbp\n\t"
-                 "nop\n\t nop\n\t nop\n\t nop\n\t nop\n\t"
-                 "mfc0 %0, $0, 0" : "=r"(index));
-    if (index & 0x80000000u) {
-        asm volatile("mtc0 %0, $2, 0" :: "r"(lo0));
-        asm volatile("mtc0 %0, $3, 0" :: "r"(lo1));
-        asm volatile("nop\n\t nop\n\t nop\n\t nop\n\t nop");
-        asm volatile("tlbwr");
-    } else {
+    /* Deterministic software-owned slots avoid probe/CP0 write timing
+     * ambiguity while filling the odd half of an existing pair. */
+    index = 16u + pair_id;
+    asm volatile("mtc0 %0, $0, 0\n\t nop\n\t nop\n\t nop\n\t nop" :: "r"(index));
+    if (pair_valid[pair_id]) {
         asm volatile("tlbr\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop");
         asm volatile("mfc0 %0, $2, 0" : "=r"(old_lo0));
         asm volatile("mfc0 %0, $3, 0" : "=r"(old_lo1));
+        /* TLBR also restores the old EntryHi.  Re-assert the faulting pair
+         * tag before TLBWI; otherwise a colliding/previous pair can be
+         * rewritten under the wrong VPN2. */
+        {
+            unsigned int entry_hi = vpn2;
+#ifdef SOC_MMU_OS_PRESSURE
+            entry_hi |= (current_task + 1u) & 0xFFu;
+#endif
+            asm volatile("mtc0 %0, $10, 0\n\t nop\n\t nop\n\t nop\n\t nop" ::
+                         "r"(entry_hi));
+        }
         if ((bad_vaddr >> 12) & 1u) lo0 = old_lo0;
         else lo1 = old_lo1;
-        asm volatile("mtc0 %0, $2, 0" :: "r"(lo0));
-        asm volatile("mtc0 %0, $3, 0" :: "r"(lo1));
-        asm volatile("nop\n\t nop\n\t nop\n\t nop\n\t nop");
-        asm volatile("tlbwi");
     }
+    asm volatile("mtc0 %0, $2, 0" :: "r"(lo0));
+    asm volatile("mtc0 %0, $3, 0" :: "r"(lo1));
+    asm volatile("nop\n\t nop\n\t nop\n\t nop\n\t nop");
+    asm volatile("tlbwi");
+    pair_valid[pair_id] = 1;
     refill_count++;
-    if (vpn != 0x40000000u) demand_fault_count++;
+#ifndef SOC_HW_WALKER
+    if (demand_index != 0xFFFFFFFEu) demand_fault_count++;
+#endif
     return 1;
 }
 
@@ -118,12 +250,32 @@ void c_interrupt_handler(void) {
     }
 #endif
 
+    if (exc_code == EXC_MOD) {
+        permission_fault_count++;
+        asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
+        epc += 4;
+        asm volatile("mtc0 %0, $14, 0" :: "r"(epc));
+        return;
+    }
+
+    /* The MMU bootstrap pipeline can present a stale zero VA while the
+     * first direct-map instruction stream is being drained. It is harmless
+     * once the EPC is advanced and must not be confused with a user-page
+     * allocation failure. */
+    if ((exc_code == EXC_TLBL || exc_code == EXC_TLBS) && bad_vaddr == 0u) {
+        asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
+        epc += 4;
+        asm volatile("mtc0 %0, $14, 0" :: "r"(epc));
+        return;
+    }
+
     if (exc_code == EXC_TLBL || exc_code == EXC_TLBS) {
         if (!install_page_entry(bad_vaddr)) {
             unexpected_exc++;
             last_unexpected_code = exc_code;
             last_unexpected_badv = bad_vaddr;
             asm volatile("mfc0 %0, $14" : "=r"(epc));
+            last_unexpected_epc = epc;
             epc += 4;
             asm volatile("mtc0 %0, $14" :: "r"(epc));
         }
@@ -137,6 +289,7 @@ void c_interrupt_handler(void) {
     last_unexpected_code = exc_code;
     asm volatile("mfc0 %0, $8, 0" : "=r"(last_unexpected_badv));
     asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
+    last_unexpected_epc = epc;
     epc += 4;
     asm volatile("mtc0 %0, $14, 0" :: "r"(epc));
 }
@@ -176,40 +329,169 @@ int main(void) {
         if (ok && demand_fault_count == 0 && hw_permission_faults == 1u)
             print_str("mmu_hw_walker: PASS\n");
         else print_str("mmu_hw_walker: FAIL\n");
+        *((volatile unsigned int *)0xA000FFF0u) =
+            (ok && demand_fault_count == 0 && hw_permission_faults == 1u) ?
+            0x48415750u : 0x48415746u;
         mailbox_exit();
         return 0;
     }
 #endif
 
-    /* Touch four non-identity useg pages spread across the software table. */
+    /* Clear the software page-table storage before the first fault. */
+#ifndef SOC_HW_WALKER
+    {
+        /* The image loader initializes the SRAM image, but clear only the
+         * entries owned by this bounded address space. Avoid a full 8KB
+         * memset in the exception path and keep the gate deterministic on
+         * small SRAM models. */
+#ifdef SOC_MMU_OS_PRESSURE
+        for (current_task = 0; current_task < 3; ++current_task) {
+            OS_ROOT_UC[0] = 0;
+            OS_L2_UC[0x20] = 0;
+            OS_L2_UC[0x21] = 0;
+            OS_L2_UC[0x22] = 0;
+            OS_L2_UC[0x23] = 0;
+        }
+#else
+        OS_ROOT_UC[0] = 0;
+        OS_L2_UC[0x20] = 0;
+        OS_L2_UC[0x21] = 0;
+        OS_L2_UC[0x22] = 0;
+        OS_L2_UC[0x23] = 0;
+#endif
+    }
+#endif
+
+#ifdef SOC_MMU_OS_PRESSURE
+    {
+        volatile unsigned int *page0 = (volatile unsigned int *)0x00020000u;
+        volatile unsigned int *page1 = (volatile unsigned int *)0x00021000u;
+        unsigned int task, round, ok = 1u;
+        unsigned int last_read = 0u;
+
+        /* Same VA space, three independently owned software page tables. */
+        for (round = 0; round < 3; ++round) {
+            for (task = 0; task < 3; ++task) {
+                unsigned int value = 0xA5000000u | (task << 12) | round;
+                switch_task(task);
+                page0[0] = value;
+                page1[0] = value + 1u;
+                if (page0[0] != value || page1[0] != value + 1u)
+                    ok = 0u;
+            }
+        }
+
+        /* Invalidate only the current task's pair, then prove refill from
+         * the task-owned PTE rather than retaining a stale TLB translation. */
+        switch_task(1u);
+        for (round = 0; round < 32; ++round)
+            asm volatile("nop");
+        invalidate_page_pair(0x00020000u, 0u);
+        page0[0] = 0xA510000Fu;
+        last_read = page0[0];
+        if (last_read != 0xA510000Fu)
+            ok = 0u;
+
+        print_str("mmu_os_pressure: refills=");
+        print_hex(refill_count);
+        print_str("mmu_os_pressure: page_allocs=");
+        print_hex(page_alloc_count);
+        print_str("mmu_os_pressure: task0_allocs=");
+        print_hex(task_allocs[0]);
+        print_str("mmu_os_pressure: task1_allocs=");
+        print_hex(task_allocs[1]);
+        print_str("mmu_os_pressure: task2_allocs=");
+        print_hex(task_allocs[2]);
+        print_str("mmu_os_pressure: demand_faults=");
+        print_hex(demand_fault_count);
+        print_str("mmu_os_pressure: permission_faults=");
+        print_hex(permission_fault_count);
+        print_str("mmu_os_pressure: unexpected=");
+        print_hex(unexpected_exc);
+        print_str("mmu_os_pressure: last_badv=");
+        print_hex(last_unexpected_badv);
+        print_str("mmu_os_pressure: last_code=");
+        print_hex(last_unexpected_code);
+        print_str("mmu_os_pressure: ok=");
+        print_hex(ok);
+        print_str("mmu_os_pressure: last_read=");
+        print_hex(last_read);
+        if (ok && page_alloc_count == 6u && demand_fault_count == 19u &&
+            permission_fault_count == 0u && unexpected_exc == 0u) {
+            print_str("mmu_os_pressure: PASS\n");
+            *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5550u;
+        } else {
+            print_str("mmu_os_pressure: FAIL\n");
+            *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5546u;
+        }
+        mailbox_exit();
+        return 0;
+    }
+#endif
+
+    /* Touch four non-identity useg pages. The first access to each page
+     * allocates a backing PFN and the second pass must hit its PTE/TLB. */
     volatile unsigned int *p;
-    unsigned int i, ok = 1;
+    unsigned int i, ok = 1, ro_initial = 0;
     unsigned int bases[4] = { 0x00020000u, 0x00021000u, 0x00022000u, 0x00023000u };
 
     for (i = 0; i < 4; i++) {
         p = (volatile unsigned int *)bases[i];
-        p[0] = 0xA5A50000u + i;
+        if (i == 2) {
+            /* Read-only first touch allocates/maps the page. The following
+             * store is intentionally discarded by the Mod handler. */
+            ro_initial = p[0];
+            p[0] = 0xA5A50002u;
+        } else p[0] = 0xA5A50000u + i;
     }
+
+#ifndef SOC_HW_WALKER
+    /* Complete all prior fault/ERET retirement before modifying the TLB.
+     * This is the software serialization point required by the current
+     * in-order exception pipeline. */
+    for (i = 0; i < 32; i++)
+        asm volatile("nop");
+    invalidate_page_pair(0x00020000u, 0u);
+    p = (volatile unsigned int *)0x00020000u;
+    if (p[0] != 0xA5A50000u) ok = 0;
+    p = (volatile unsigned int *)0x00021000u;
+    if (p[0] != 0xA5A50001u) ok = 0;
+#endif
     for (i = 0; i < 4; i++) {
         p = (volatile unsigned int *)bases[i];
-        if (p[0] != (0xA5A50000u + i)) ok = 0;
+        if (i == 2) {
+            if (p[0] != ro_initial) ok = 0;
+        } else if (p[0] != (0xA5A50000u + i)) ok = 0;
     }
 
     print_str("mmu_refill: refills=");
     print_hex(refill_count);
     print_str("mmu_refill: demand_faults=");
     print_hex(demand_fault_count);
+    print_str("mmu_refill: page_allocs=");
+    print_hex(page_alloc_count);
+    print_str("mmu_refill: permission_faults=");
+    print_hex(permission_fault_count);
     print_str("mmu_refill: unexpected_exc=");
     print_hex(unexpected_exc);
     print_str("mmu_refill: last_code=");
     print_hex(last_unexpected_code);
     print_str("mmu_refill: last_badv=");
     print_hex(last_unexpected_badv);
+    print_str("mmu_refill: last_epc=");
+    print_hex(last_unexpected_epc);
+    print_str("mmu_refill: ok=");
+    print_hex(ok);
+    print_str("mmu_refill: ro_initial=");
+    print_hex(ro_initial);
 
-    if (ok && demand_fault_count == 4 && unexpected_exc == 0) {
+    if (ok && demand_fault_count == 6 && page_alloc_count == 4 &&
+        permission_fault_count == 1 && unexpected_exc == 0) {
         print_str("mmu_refill: PASS\n");
+        *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5550u;
     } else {
         print_str("mmu_refill: FAIL\n");
+        *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5546u;
     }
 
     mailbox_exit();

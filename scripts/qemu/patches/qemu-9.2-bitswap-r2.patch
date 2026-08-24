@@ -1,0 +1,21 @@
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -14202,10 +14202,11 @@ static void decode_opc_special3(CPUMIPSState *env, DisasContext *ctx)
+         case OPC_ALIGN_1:
+         case OPC_ALIGN_2:
+         case OPC_ALIGN_3:
+-        case OPC_BITSWAP:
+-            check_insn(ctx, ISA_MIPS_R6);
+-            decode_opc_special3_r6(env, ctx);
++            check_insn(ctx, ISA_MIPS_R6);
++            decode_opc_special3_r6(env, ctx);
+             break;
++        case OPC_BITSWAP:
++            /* SOC_REF_BITSWAP_R2: legacy MIPS32 R2 encoding. */
++            check_insn(ctx, ISA_MIPS_R2);
++            gen_bitswap(ctx, op2, rd, rt);
++            break;
+         default:
+             check_insn(ctx, ISA_MIPS_R2);
+             gen_bshfl(ctx, op2, rt, rd);

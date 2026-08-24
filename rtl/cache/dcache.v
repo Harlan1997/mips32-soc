@@ -34,6 +34,14 @@ module dcache #(
     // response errors. The CPU maps this sideband to MIPS CacheErr (30).
     output wire        cpu_cache_error,
 
+    // Simulation-only parity fault injection. Production instances may leave
+    // these ports unconnected; only an explicit 1 enables injection.
+    input  wire        sim_parity_inject_valid,
+    input  wire        sim_parity_inject_tag,
+    input  wire        sim_parity_inject_data,
+    input  wire [1:0]  sim_parity_inject_way,
+    input  wire [5:0]  sim_parity_inject_index,
+
     // MIPS CACHE maintenance interface. The request is held by the MEM
     // stage until cache_op_done is observed; no CPU data request is issued
     // for a maintenance operation.
@@ -206,6 +214,8 @@ module dcache #(
     // SRAM arrays (4-way). tag entry = {valid[22], dirty[21], tag[20:0]}
     reg [TAG_BITS+1:0] tag_ram  [0:WAYS-1][0:SETS-1];
     reg [255:0]        data_ram [0:WAYS-1][0:SETS-1];
+    reg                tag_parity_ram [0:WAYS-1][0:SETS-1];
+    reg                data_parity_ram [0:WAYS-1][0:SETS-1];
     reg [2:0]          plru_ram [0:SETS-1];   // tree-PLRU: b0=top, b1=left, b2=right
 
     wire coh_snoop_index_hit = tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
@@ -228,6 +238,8 @@ module dcache #(
     // Registered read-out of the indexed set
     reg [TAG_BITS+1:0] tag_rdata  [0:WAYS-1];
     reg [255:0]        data_rdata [0:WAYS-1];
+    reg                tag_parity_rdata [0:WAYS-1];
+    reg                data_parity_rdata [0:WAYS-1];
     reg [2:0]          plru_rdata;
 
     // Hit detection across 4 ways
@@ -241,6 +253,20 @@ module dcache #(
                             (tag_rdata[wi][TAG_BITS-1:0] == lookup_tag);
         end
     end
+    wire sim_parity_target = (sim_parity_inject_valid === 1'b1) &&
+                             (lookup_index == sim_parity_inject_index);
+    reg [WAYS-1:0] tag_parity_bad;
+    reg [WAYS-1:0] data_parity_bad;
+    integer pi;
+    always @(*) begin
+        for (pi=0; pi<WAYS; pi=pi+1) begin
+            tag_parity_bad[pi] = way_valid[pi] &&
+                ((^tag_rdata[pi]) != tag_parity_rdata[pi]);
+            data_parity_bad[pi] = way_hit[pi] &&
+                ((^data_rdata[pi]) != data_parity_rdata[pi]);
+        end
+    end
+    wire dcache_parity_error = (|tag_parity_bad) || (|data_parity_bad);
     wire cache_hit = |way_hit;
     wire coh_snoop_hits_lookup = ENABLE_COHERENCY && coh_snoop_valid &&
                                   (lookup_addr[31:5] == coh_snoop_addr_norm[31:5]);
@@ -303,7 +329,8 @@ module dcache #(
 
     // CPU handshakes
     assign cpu_addr_ok = (state == IDLE) || (state == COMPARE && cache_hit_for_request && !uncacheable);
-    assign cpu_data_ok = (state == COMPARE && cache_hit_for_request && !uncacheable) ||
+    assign cpu_data_ok = (state == COMPARE && cache_hit_for_request && !uncacheable &&
+                          !dcache_parity_error) ||
                          (state == UC_WRESP && bvalid) || (state == UC_RDATA && rvalid) ||
                          (state == ERROR_RESP);
     assign cpu_bus_error = ((state == UC_WRESP) && bvalid && (bresp != 2'b00)) ||
@@ -338,6 +365,14 @@ module dcache #(
                                                 cache_op_addr[10:5] : lookup_addr[10:5]];
                 data_rdata[ri] <= data_ram[ri][((state == IDLE) && cache_op_valid) ?
                                                 cache_op_addr[10:5] : lookup_addr[10:5]];
+                tag_parity_rdata[ri] <= tag_parity_ram[ri][((state == IDLE) && cache_op_valid) ?
+                                                cache_op_addr[10:5] : lookup_addr[10:5]] ^
+                    (sim_parity_target && (sim_parity_inject_way == ri) &&
+                     (sim_parity_inject_tag === 1'b1));
+                data_parity_rdata[ri] <= data_parity_ram[ri][((state == IDLE) && cache_op_valid) ?
+                                                 cache_op_addr[10:5] : lookup_addr[10:5]] ^
+                    (sim_parity_target && (sim_parity_inject_way == ri) &&
+                     (sim_parity_inject_data === 1'b1));
             end
             plru_rdata <= plru_ram[((state == IDLE) && cache_op_valid) ?
                                    cache_op_addr[10:5] : lookup_addr[10:5]];
@@ -349,11 +384,17 @@ module dcache #(
         next_state = state;
         case (state)
             IDLE: begin
-                if (cpu_req) next_state = uncacheable ? UC_REQ : COMPARE;
+                // A request is captured before the state register advances.
+                // Keep a buffered request live if the upstream master drops
+                // its pulse after address acceptance; this is required by
+                // adapters that decouple address and completion handshakes.
+                if (cpu_req || req_buf_valid)
+                    next_state = uncacheable ? UC_REQ : COMPARE;
                 else if (cache_op_valid) next_state = CACHE_LOOKUP;
             end
             COMPARE: begin
-                if (cache_hit_for_request) next_state = IDLE;
+                if (dcache_parity_error) next_state = ERROR_RESP;
+                else if (cache_hit_for_request) next_state = IDLE;
                 else next_state = victim_dirty ? WRITEBACK_REQ : REFILL_REQ;
             end
             WRITEBACK_REQ:  if (awready && awvalid) next_state = WRITEBACK_DATA;
@@ -420,7 +461,12 @@ module dcache #(
             coh_snoop_block <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
-                for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+2){1'b0}};
+                for (sw=0; sw<WAYS; sw=sw+1) begin
+                    tag_ram[sw][si] <= {(TAG_BITS+2){1'b0}};
+                    data_ram[sw][si] <= 256'd0;
+                    tag_parity_ram[sw][si] <= 1'b0;
+                    data_parity_ram[sw][si] <= 1'b0;
+                end
             end
         end else begin
             state <= next_state;
@@ -498,12 +544,17 @@ module dcache #(
                     if (!maint_needs_wb) begin
                         if (maint_index_store_tag) begin
                             tag_ram[maint_target_way][lookup_index] <= maint_tag_wdata[22:0];
+                            tag_parity_ram[maint_target_way][lookup_index] <= ^maint_tag_wdata[22:0];
                         end else if ((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) &&
                             maint_target_valid && (maint_clear_valid || maint_clear_dirty)) begin
                             if (maint_clear_valid)
                                 tag_ram[maint_target_way][lookup_index][TAG_BITS+1] <= 1'b0;
                             else if (maint_clear_dirty)
                                 tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;
+                            tag_parity_ram[maint_target_way][lookup_index] <=
+                                maint_clear_valid ?
+                                ^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]} :
+                                ^{1'b1, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]};
                         end
                     end else begin
                         maint_line <= data_rdata[maint_target_way];
@@ -547,6 +598,11 @@ module dcache #(
                                 tag_ram[maint_target_way][lookup_index][TAG_BITS+1] <= 1'b0;
                             else if (maint_clear_dirty)
                                 tag_ram[maint_target_way][lookup_index][TAG_BITS] <= 1'b0;
+                            tag_parity_ram[maint_target_way][lookup_index] <=
+                                maint_clear_valid ?
+                                ^{1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]} :
+                                ^{tag_ram[maint_target_way][lookup_index][TAG_BITS+1],
+                                  1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS-1:0]};
                         end
                     end
                 end
@@ -599,13 +655,18 @@ module dcache #(
                     else if (arready && arvalid) begin arvalid <= 1'b0; rready <= 1'b1; end
                 end
 
-                COMPARE: begin
-                    if (cache_hit_for_request) begin
+            COMPARE: begin
+                if (dcache_parity_error) begin
+                    cache_error_pending <= 1'b1;
+                end else if (cache_hit_for_request) begin
                         // Update PLRU: accessed (hit) way is MRU
                         plru_ram[lookup_index] <= plru_touch(plru_rdata, hit_way);
                         if (req_buf_we) begin
                             data_ram[hit_way][lookup_index] <= new_line;
+                            data_parity_ram[hit_way][lookup_index] <= ^new_line;
                             tag_ram[hit_way][lookup_index]  <= {1'b1, 1'b1, lookup_tag};
+                            tag_parity_ram[hit_way][lookup_index] <=
+                                ^{1'b1, 1'b1, lookup_tag};
                         end
                         req_buf_valid <= 1'b0;
                     end else begin
@@ -671,10 +732,13 @@ module dcache #(
                 WRITE_MERGE: begin
                     // Install refilled (optionally write-merged) line into victim way
                     data_ram[victim_way][lookup_index] <= new_line;
+                    data_parity_ram[victim_way][lookup_index] <= ^new_line;
                     // A peer store may have arrived after the refill had
                     // already read the affected word. Do not publish this
                     // stale line; the next access must refill from memory.
                     tag_ram[victim_way][lookup_index]  <= {~coh_refill_collision, req_buf_we, lookup_tag};
+                    tag_parity_ram[victim_way][lookup_index] <=
+                        ^{~coh_refill_collision, req_buf_we, lookup_tag};
                     // Accessed way becomes MRU
                     plru_ram[lookup_index] <= plru_touch(plru_rdata, victim_way);
                     req_buf_valid <= 1'b0;

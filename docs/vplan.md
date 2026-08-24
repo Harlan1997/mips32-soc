@@ -17,7 +17,7 @@
 | **Firmware 回归** | `tb/soc_test/` MIPS 交叉编译 | .hex 固件 + 观测 | ISA / 中断 / DMA 场景 |
 | **SVA 断言** | bind 挂 (`tb/uvm_tb/checkers/`) | 属性文件 | 协议 + 局部时序 |
 | **Formal** | VC-Formal / JasperGold FPV | 属性 + 约束 + 报告 | 关键 FSM / arbitration / TLB |
-| **ISA-Ref 联合仿真** | QEMU-MIPS 或 Sail-MIPS (`tb/isa_ref/`) | co-sim harness | 每条 retire 指令架构状态比对 |
+| **ISA-Ref 联合仿真** | QEMU-MIPS (`tb/isa_ref/`) | retire differential harness | QEMU plugin + one-insn CPU snapshots + RTL JSONL compare；完整 SoC/长期 ISA signoff 仍未闭合 |
 | **ISA Compliance** | MIPS compliance suite | pass/fail 报告 | ISA 合规 |
 | **Linux Boot 回归** | U-Boot + kernel + rootfs (`tb/linux_boot/`) | 日志 + shell 提示符检测 | 端到端功能 |
 | **Lint** | SpyGlass Lint 或 Ascent Lint | 报告 + waiver | 编码规范强制 |

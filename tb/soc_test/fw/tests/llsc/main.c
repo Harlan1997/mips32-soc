@@ -74,6 +74,16 @@ int main(void)
     if (result != 0 || *TEST_WORD != 0x05060708)
         fail("FAIL: cleared reservation result/value=", (result << 31) | (*TEST_WORD & 0x7fffffff));
 
+    /* An exception boundary terminates an LL/SC sequence.  The common
+     * firmware handler returns with ERET, so this exercises the real CPU
+     * exception flush rather than a software reservation reset. */
+    *TEST_WORD = 0x0BADB002;
+    (void)ll_word(TEST_WORD);
+    __asm__ volatile("syscall\n\tnop\n\tnop\n\tnop" ::: "memory");
+    result = sc_word(TEST_WORD, 0xFACEFEED);
+    if (result != 0 || *TEST_WORD != 0x0BADB002)
+        fail("FAIL: exception retained reservation=", (result << 31) | (*TEST_WORD & 0x7fffffff));
+
     /* Peer store notification clears reservation test. */
 #ifdef LL_SC_COHERENCY
     *TEST_WORD = 0x12345678;

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
+RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_selected_differential"}
+mkdir -p "${RUN_DIR}"
+
+run_gate() {
+    local name=$1
+    shift
+    echo "== ${name} ==" | tee "${RUN_DIR}/${name}.log"
+    "$@" >>"${RUN_DIR}/${name}.log" 2>&1
+}
+
+# Keep this list serial: every child may invoke the shared QEMU build helper,
+# and each child has an independent firmware/trace directory.
+run_gate isa_implementation_audit make -C "${ROOT_DIR}" isa-implementation-audit
+run_gate isa_r2 make -C "${ROOT_DIR}" qemu-system-isa-r2-differential-gate
+run_gate branch_likely make -C "${ROOT_DIR}" qemu-system-branch-likely-differential-gate
+run_gate exceptions make -C "${ROOT_DIR}" qemu-system-exception-differential-gate
+run_gate break make -C "${ROOT_DIR}" qemu-system-break-differential-gate
+run_gate traps make -C "${ROOT_DIR}" qemu-system-trap-differential-gate qemu-system-trap-imm-differential-gate
+run_gate privileged make -C "${ROOT_DIR}" qemu-system-di-ei-differential-gate qemu-system-wait-differential-gate
+run_gate bd_exception make -C "${ROOT_DIR}" qemu-system-bd-exception-differential-gate
+run_gate unaligned make -C "${ROOT_DIR}" qemu-system-unaligned-gate qemu-system-unaligned-differential-gate
+run_gate peripheral make -C "${ROOT_DIR}" qemu-system-peripheral-differential-gate
+run_gate vic make -C "${ROOT_DIR}" qemu-system-vic-differential-gate qemu-system-vic-cpu-differential-gate
+run_gate fpu_single make -C "${ROOT_DIR}" qemu-system-fpu-single-differential-gate
+run_gate fpu_double make -C "${ROOT_DIR}" qemu-system-fpu-double-differential-gate
+run_gate fpu_cu1 make -C "${ROOT_DIR}" qemu-system-fpu-cu1-exception-differential-gate
+
+cat >"${RUN_DIR}/completion_report.md" <<EOF
+# QEMU System Selected Differential Gate
+
+- Result: PASS
+- Machine: mips32-soc-ref
+- Sub-gates: ISA R2, branch-likely, exceptions, break/traps, DI/EI/WAIT,
+  BD/EPC, unaligned memory, peripheral/VIC, and opt-in FPU single/double/CU1.
+- Evidence: child logs in this directory and child completion reports under
+  build/isa_ref/qemu_system_*.
+- Scope: selected bare-metal RTL/QEMU retire corpora through mailbox boundaries.
+- Non-claim: this is not full MIPS32 ISA compliance, complete privileged/MMU
+  differential, complete IEEE-754/OS FPU ABI, Linux boot, or physical device
+  signoff. DMA long-form, MMU demand paging and OS-owned page tables remain
+  separate residuals.
+EOF
+echo "QEMU system selected differential gate: PASS"

@@ -6,10 +6,24 @@
 
 `timescale 1ns/1ps
 `include "soc_legacy_observation_if.sv"
+`ifdef TB_RETIRE_TRACE
+`include "../uvm_tb/tb_top/soc_observation_if.sv"
+`include "../uvm_tb/tb_top/soc_observation_bind.sv"
+`include "../isa_ref/retire_trace_capture.sv"
+`endif
+
+`ifdef TB_L1_NONBLOCKING
+`ifdef SOC_CPU_NONBLOCKING_ENABLE
+`define TB_DCACHE_PATH u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache
+`else
+`define TB_DCACHE_PATH u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache
+`endif
+`else
+`define TB_DCACHE_PATH u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache
+`endif
 `include "soc_legacy_observation_bind.sv"
 
 module tb_mips_soc;
-
 
     reg tck_r = 0;
     reg tms_r = 1;
@@ -24,17 +38,86 @@ module tb_mips_soc;
 
     reg clk;
     reg rst_n;
+
     soc_legacy_observation_if legacy_obs_if(clk, rst_n);
+`ifdef TB_RETIRE_TRACE
+    soc_observation_if retire_obs_if(clk, rst_n);
+    retire_trace_capture u_retire_trace_capture(.clk(clk), .rst_n(rst_n),
+                                                 .obs_if(retire_obs_if));
+`endif
     reg [1023:0] firmware_hex;
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
     integer cp0_ri_count;
     integer cp0_adel_count;
+    integer cp0_cacheerr_count;
     integer cp0_eret_count;
     integer dual_core_ipi_count;
     integer dual_core_reverse_ipi_count;
     integer dual_core_reset_count;
     integer dual_core_exception_count;
+`ifdef DMA_EVENT_TRACE
+    integer dma_event_fd;
+    reg [1023:0] dma_event_path;
+    reg [3:0] dma_done_seen;
+    reg [3:0] dma_err_seen;
+    reg [3:0] dma_busy_seen;
+    reg [3:0] dma_irq_seen;
+`endif
+
+`ifdef TB_DMA_RESET_STRESS
+    initial begin
+        wait (rst_n === 1'b1);
+        wait (u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.busy_r[0] === 1'b1);
+        $display("DMA_RESET_STRESS: busy observed, asserting reset in flight");
+        #20 rst_n = 1'b0;
+        #50 rst_n = 1'b1;
+        $display("DMA_RESET_STRESS: reset released");
+    end
+    always @(posedge clk) begin
+        if (rst_n && u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.busy_r[0])
+            $display("DMA_RESET_STRESS: live src=%08h dst=%08h len=%0d state=%0d ar=%b r=%b aw=%b w=%b b=%b",
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.cur_src_r[0],
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.cur_dst_r[0],
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.cur_len_r[0],
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.ch_state[0],
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_arvalid,
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_rvalid,
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_awvalid,
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_wvalid,
+                     u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_bvalid);
+    end
+`endif
+
+`ifdef TB_L1_AXI_ERROR_RESET_STRESS
+    // Exercise reset while the injected refill is genuinely in flight.  The
+    // error model and L1 state both reset, so the restarted firmware must
+    // observe the injected fault again and complete precise ErrorEPC recovery.
+    initial begin
+        wait (rst_n === 1'b1);
+        wait (u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.n_mshr_occ != 0);
+        $display("L1_AXI_ERROR_RESET: refill in flight, asserting reset");
+        #20 rst_n = 1'b0;
+        #50 rst_n = 1'b1;
+        $display("L1_AXI_ERROR_RESET: reset released");
+    end
+`endif
+
+`ifdef TB_L1_AXI_ERROR_TWO_RESET_STRESS
+    // Exercise reset after both independent L1 MSHRs are allocated.  The
+    // cache and DDR model must discard the pre-reset transactions; the
+    // restarted firmware then re-issues both faults and recovers precisely.
+    initial begin
+        wait (rst_n === 1'b1);
+        wait (u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.n_mshr_occ >= 2);
+        $display("L1_AXI_TWO_ERROR_RESET: two refills in flight mshr=%0d, asserting reset",
+                 u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.n_mshr_occ);
+        #20 rst_n = 1'b0;
+        #50 rst_n = 1'b1;
+        $display("L1_AXI_TWO_ERROR_RESET: reset released");
+    end
+`endif
+
 `ifdef SOC_L2_E2E
     integer l2_e2e_ar_total;
     integer l2_e2e_aw_total;
@@ -135,6 +218,156 @@ module tb_mips_soc;
     wire        legacy_dcache_bready = legacy_obs_if.dcache_bready;
     
     // Clock Generation
+/* obsolete L1 debug block removed from the active testbench
+            $display("ROBEX t=%0t pc=%08h code=%0d memex=%b codein=%0d cache=%b/%b op=%b/%b bus=%b/%b adel=%b/%b owner=%b/%b rsp=%b/%h dstate=%0d r=%b/%b/%h b=%b/%b/%h",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc_plus_8 - 8,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_code_out,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_req_out,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_code,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_cache_fault,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_error,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_cache_op_fault_seen,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_bus_fault,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_bus_error,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_adel_exception,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ades_exception,
+                     `TB_DCACHE_PATH.legacy_sel, `TB_DCACHE_PATH.l1_sel,
+                     `TB_DCACHE_PATH.n_rsp_valid, `TB_DCACHE_PATH.n_rsp_id,
+                     `TB_DCACHE_PATH.state,
+                     `TB_DCACHE_PATH.rready, `TB_DCACHE_PATH.rvalid,
+                     `TB_DCACHE_PATH.rresp,
+                     `TB_DCACHE_PATH.bready, `TB_DCACHE_PATH.bvalid,
+                     `TB_DCACHE_PATH.bresp);
+        if (rst_n && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req &&
+            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_code == 5'h1e)
+            $display("CACHEERR t=%0t pc=%08h wbpc=%08h wbcode=%0d wbreq=%b if=%b/%b mem=%b/%b rob=%b rsp=%h err=%b",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_cache_fault,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_bus_fault,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_cache_fault,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_bus_fault,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rob_complete_valid,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_resp_id,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_error);
+        if (rst_n && `TB_DCACHE_PATH.n_rsp_valid)
+            $display("L1RSP t=%0t id=%h err=%b data=%08h cpu_id=%h req=%b/%b addr=%08h pc=%08h bridge=%0d/%08h mline=%08h/%08h",
+                     $time, `TB_DCACHE_PATH.n_rsp_id, `TB_DCACHE_PATH.n_rsp_error,
+                     `TB_DCACHE_PATH.n_rsp_data,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req_id,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                     `TB_DCACHE_PATH.u_bridge.state, `TB_DCACHE_PATH.u_bridge.addr_q,
+                     `TB_DCACHE_PATH.u_l1.mline[0], `TB_DCACHE_PATH.u_l1.mline[1]);
+        if (rst_n && `TB_DCACHE_PATH.l1_req && `TB_DCACHE_PATH.n_cpu_ready)
+            $strobe("L1REQ t=%0t id=%h addr=%08h pc=%08h done/read/en/raw=%b/%b/%b/%b req/ok=%b/%b ready/latch=%b/%b flush/exfl/eff=%b/%b/%b eret/intr=%b/%b",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req_id,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_done,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_enable_nb_load,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req_raw,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr_ok,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rob_alloc_ready,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_mem_addr_accepted,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.flush_ex_mem,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req);
+        if (rst_n && l1_trace_count < 80 &&
+            ((u_soc.u_impl.u_soc_fabric.s0_awvalid && u_soc.u_impl.u_soc_fabric.s0_awready) ||
+             (u_soc.u_impl.u_soc_fabric.s0_wvalid && u_soc.u_impl.u_soc_fabric.s0_wready) ||
+             (u_soc.u_impl.u_soc_fabric.s0_bvalid && u_soc.u_impl.u_soc_fabric.s0_bready) ||
+             (u_soc.u_impl.u_soc_fabric.s0_arvalid && u_soc.u_impl.u_soc_fabric.s0_arready) ||
+             (u_soc.u_impl.u_soc_fabric.s0_rvalid && u_soc.u_impl.u_soc_fabric.s0_rready))) begin
+            $display("L1TRACE t=%0t aw=%b/%b/%08h w=%b/%b/%08h/%b b=%b/%b ar=%b/%b/%08h r=%b/%b/%08h/%b l2=%0d owner=%b/%b/%b l1=%b/%b bridge=%0d xwr=%b/%b/%0d/%0d",
+                     $time,
+                     u_soc.u_impl.u_soc_fabric.s0_awvalid, u_soc.u_impl.u_soc_fabric.s0_awready,
+                     u_soc.u_impl.u_soc_fabric.s0_awaddr,
+                     u_soc.u_impl.u_soc_fabric.s0_wvalid, u_soc.u_impl.u_soc_fabric.s0_wready,
+                     u_soc.u_impl.u_soc_fabric.s0_wdata, u_soc.u_impl.u_soc_fabric.s0_wlast,
+                     u_soc.u_impl.u_soc_fabric.s0_bvalid, u_soc.u_impl.u_soc_fabric.s0_bready,
+                     u_soc.u_impl.u_soc_fabric.s0_arvalid, u_soc.u_impl.u_soc_fabric.s0_arready,
+                     u_soc.u_impl.u_soc_fabric.s0_araddr,
+                     u_soc.u_impl.u_soc_fabric.s0_rvalid, u_soc.u_impl.u_soc_fabric.s0_rready,
+                     u_soc.u_impl.u_soc_fabric.s0_rdata, u_soc.u_impl.u_soc_fabric.s0_rlast,
+                     u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                     `TB_DCACHE_PATH.legacy_sel, `TB_DCACHE_PATH.l1_sel,
+                     `TB_DCACHE_PATH.legacy_aw_seen,
+                     `TB_DCACHE_PATH.n_awvalid, `TB_DCACHE_PATH.n_wvalid,
+                     `TB_DCACHE_PATH.u_bridge.state,
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_valid[0],
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_wdone[0],
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_wpend[0],
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_cnt[0]);
+            l1_trace_count = l1_trace_count + 1;
+        end
+    end
+`endif
+
+*/
+`ifdef TB_L1_NONBLOCKING_DEBUG
+    always @(posedge clk) begin
+        if (rst_n && (u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.legacy_sel ||
+                      u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.l_awvalid ||
+                      u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.bvalid ||
+                      u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.state == 5'd10)) begin
+            $display("NBDBG t=%0t state=%0d legacy=%b awseen=%b mux_aw=%b/%b/%08h mux_w=%b/%b/%08h/%b mux_b=%b/%b/%b l_aw=%b l_w=%b l_b=%b x_m1_aw=%b/%b/%08h x_m1_w=%b/%b/%08h/%b x_m1_b=%b/%b/%b x_s1_aw=%b/%b/%08h x_s1_w=%b/%b/%08h/%b x_s1_b=%b/%b/%b wr1=%b/%b/%0d/%0d",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.state,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.legacy_sel,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.legacy_aw_seen,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.awvalid,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.awready,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.awaddr,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.wvalid,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.wready,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.wdata,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.wlast,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.bvalid,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.bready,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.bresp,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.l_awvalid,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.l_wvalid,
+                     u_soc.u_impl.u_core_subsystem.u_core.g_l1_nonblocking.u_dcache.l_bready,
+                     u_soc.u_impl.u_soc_fabric.m1_awvalid,
+                     u_soc.u_impl.u_soc_fabric.m1_awready,
+                     u_soc.u_impl.u_soc_fabric.m1_awaddr,
+                     u_soc.u_impl.u_soc_fabric.m1_wvalid,
+                     u_soc.u_impl.u_soc_fabric.m1_wready,
+                     u_soc.u_impl.u_soc_fabric.m1_wdata,
+                     u_soc.u_impl.u_soc_fabric.m1_wlast,
+                     u_soc.u_impl.u_soc_fabric.m1_bvalid,
+                     u_soc.u_impl.u_soc_fabric.m1_bready,
+                     u_soc.u_impl.u_soc_fabric.m1_bresp,
+                     u_soc.u_impl.u_soc_fabric.s1_awvalid,
+                     u_soc.u_impl.u_soc_fabric.s1_awready,
+                     u_soc.u_impl.u_soc_fabric.s1_awaddr,
+                     u_soc.u_impl.u_soc_fabric.s1_wvalid,
+                     u_soc.u_impl.u_soc_fabric.s1_wready,
+                     u_soc.u_impl.u_soc_fabric.s1_wdata,
+                     u_soc.u_impl.u_soc_fabric.s1_wlast,
+                     u_soc.u_impl.u_soc_fabric.s1_bvalid,
+                     u_soc.u_impl.u_soc_fabric.s1_bready,
+                     u_soc.u_impl.u_soc_fabric.s1_bresp,
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_valid[1],
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_wdone[1],
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_wpend[1],
+                     u_soc.u_impl.u_soc_fabric.u_xbar.wr_cnt[1]);
+        end
+    end
+`endif
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
@@ -147,11 +380,22 @@ module tb_mips_soc;
         cp0_syscall_count = 0;
         cp0_ri_count = 0;
         cp0_adel_count = 0;
+        cp0_cacheerr_count = 0;
         cp0_eret_count = 0;
         dual_core_ipi_count = 0;
         dual_core_reverse_ipi_count = 0;
         dual_core_reset_count = 0;
         dual_core_exception_count = 0;
+`ifdef DMA_EVENT_TRACE
+        dma_event_fd = 0;
+        dma_event_path = "dma_rtl_events.jsonl";
+        dma_done_seen = 0;
+        dma_err_seen = 0;
+        dma_busy_seen = 0;
+        dma_irq_seen = 0;
+        if (!$value$plusargs("DMA_EVENT_TRACE=%s", dma_event_path)) begin end
+        dma_event_fd = $fopen(dma_event_path, "w");
+`endif
         uart_tx_seen_low = 1'b0;
 `ifdef SOC_UART_CTS_FLOW_CONTROL
         uart_cts_release_seen = 1'b0;
@@ -173,6 +417,37 @@ module tb_mips_soc;
         
         // We need to wait enough cycles for instruction fetch, cache miss, uncacheable writes
     end
+
+`ifdef DMA_EVENT_TRACE
+    // Architectural DMA event monitor.  Poll-cycle differences are omitted;
+    // state transitions and programmed transfer semantics remain strict.
+    always @(posedge clk) begin : dma_event_monitor
+        integer di;
+        reg [31:0] dstatus;
+        if (rst_n === 1'b1) begin
+            for (di = 0; di < 4; di = di + 1) begin
+                if (u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.done_r[di] &&
+                    !dma_done_seen[di] && !dma_busy_seen[di])
+                    $fwrite(dma_event_fd, "{\"event\":\"START\",\"ch\":%0d,\"src\":\"%08x\",\"dst\":\"%08x\",\"len\":%0d,\"sg\":%0d}\n", di, u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.src_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.dst_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.len_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.sg_mode_r[di]);
+                if (u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.busy_r[di] && !dma_busy_seen[di])
+                    $fwrite(dma_event_fd, "{\"event\":\"START\",\"ch\":%0d,\"src\":\"%08x\",\"dst\":\"%08x\",\"len\":%0d,\"sg\":%0d}\n", di, u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.src_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.dst_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.len_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.sg_mode_r[di]);
+                if (u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.done_r[di] && !dma_done_seen[di])
+                    $fwrite(dma_event_fd, "{\"event\":\"DONE\",\"ch\":%0d,\"err\":%0d,\"code\":%0d,\"src\":\"%08x\",\"dst\":\"%08x\",\"len\":%0d,\"sg\":%0d}\n", di, u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.err_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.err_code_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.src_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.dst_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.len_r[di], u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.sg_mode_r[di]);
+                if (!u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.done_r[di] && dma_done_seen[di])
+                    $fwrite(dma_event_fd, "{\"event\":\"W1C\",\"ch\":%0d}\n", di);
+                if (u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.ch_int[di] && !dma_irq_seen[di])
+                    $fwrite(dma_event_fd, "{\"event\":\"IRQ\",\"ch\":%0d,\"level\":1}\n", di);
+                if (!u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.ch_int[di] && dma_irq_seen[di])
+                    $fwrite(dma_event_fd, "{\"event\":\"IRQ\",\"ch\":%0d,\"level\":0}\n", di);
+                dma_busy_seen[di] = u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.busy_r[di];
+                dma_done_seen[di] = u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.done_r[di];
+                dma_err_seen[di] = u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.err_r[di];
+                dma_irq_seen[di] = u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.ch_int[di];
+            end
+            $fflush(dma_event_fd);
+        end
+    end
+`endif
 
 `ifdef SOC_ENABLE_DUAL_CORE
     initial begin
@@ -224,7 +499,11 @@ module tb_mips_soc;
 
         wait (rst_n === 1'b1);
 
-        while (ll_valid_rise_count < 3) begin
+        // The firmware creates reservations for the normal success case,
+        // ordinary-store invalidation, exception-boundary invalidation, and
+        // finally this peer-notification case.  Inject only after the fourth
+        // rise so the notification applies to the intended reservation.
+        while (ll_valid_rise_count < 4) begin
             @(posedge u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ll_reservation_valid);
             ll_valid_rise_count = ll_valid_rise_count + 1;
             $display("tb_mips_soc: Observed LL reservation rise #%0d at time=%0t", ll_valid_rise_count, $time);
@@ -260,42 +539,27 @@ module tb_mips_soc;
 `elsif SOC_L2_CPU_GATE
         #20000000;
 `else
-        #5000000;
+        #5200000;
 `endif
 `ifdef SOC_COHERENCY_FW_STRESS
-        $display("COH_STRESS_TIMEOUT core0_pc=%08h core1_pc=%08h c1_pc=%08h c0_state=%0d c0_req=%b/%b/%08h c1_exc=%b/%0d c1_epc=%08h c1_cause=%08h c1_bad=%08h c1_state=%0d c1_req=%b c1_we=%b c1_addr=%08h c1_wdata=%08h c1_be=%h rd=%b/%b/%08h/%b/%b owner=%b s0=%0d/%08h/%b/%b xrd=%0d/%0d/%0d/%b/%b/%b seen0=%08h seen1=%08h start=%08h ready=%08h command=%08h ack_word=%08h ack_part=%08h done=%08h fail=%08h",
+        $display("COH_STRESS_TIMEOUT core0_pc=%08h core1_pc=%08h c0_req=%b/%b/%08h c1_exc=%b/%0d c1_epc=%08h c1_req=%b/%b/%08h c1_wdata=%08h c1_be=%h rd=%b/%b/%08h/%b/%b owner=%b seen0=%08h seen1=%08h start=%08h ready=%08h command=%08h ack_word=%08h ack_part=%08h done=%08h fail=%08h",
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc,
-                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc,
-                 u_soc.u_impl.u_core_subsystem.u_core.u_dcache.state,
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.except_req,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.except_code,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_epc,
-                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_cause,
-                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_badvaddr,
-                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_dcache.state,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_req,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_we,
                  u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_addr,
-                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_dcache.req_buf_wdata,
-                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_dcache.req_buf_be,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_wdata,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_be,
                  u_soc.u_impl.fx_arvalid, u_soc.u_impl.fx_arready,
                  u_soc.u_impl.fx_araddr, u_soc.u_impl.fx_rvalid,
                  u_soc.u_impl.fx_rready,
                  u_soc.u_impl.g_dual_core.u_core1.rd_owner,
-                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.r_state,
-                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.r_addr,
-                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rvalid,
-                 u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rready,
-                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_cnt[0],
-                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_head[0],
-                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_head_mid[0],
-                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_occ[0],
-                 u_soc.u_impl.u_soc_fabric.u_xbar.s_arvalid[0],
-                 u_soc.u_impl.u_soc_fabric.u_xbar.s_rvalid[0],
                  u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2120/4],
                  u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2124/4],
                  u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2100/4],
@@ -308,16 +572,196 @@ module tb_mips_soc;
 `endif
         $display("\n==================================================");
         $display("SoC Simulation Timeout");
+`ifdef TB_L1_NONBLOCKING
+        $display("L1 timeout pc=%08h mem_vaddr=%08h data_req=%b data_we=%b data_ok=%b addr_ok=%b cause=%08h epc=%08h badv=%08h status=%08h dcache_state=%0d next=%0d req_buf=%08h/%b unc=%b legacy=%b l1=%b l_aw=%b/%b l_w=%b/%b out_w=%b/%b out_b=%b/%b bridge=%0d mshr=%0d wb=%0d rob=%0d/%0d/%0d v=%b%b%b%b r=%b%b%b%b headpc=%08h inst=%08h mr=%b mw=%b",
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_data_ok,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr_ok,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                 `TB_DCACHE_PATH.state, `TB_DCACHE_PATH.next_state,
+                 `TB_DCACHE_PATH.req_buf_addr, `TB_DCACHE_PATH.req_buf_we,
+                 `TB_DCACHE_PATH.uncacheable,
+                 `TB_DCACHE_PATH.legacy_sel, `TB_DCACHE_PATH.l1_sel,
+                 `TB_DCACHE_PATH.l_awvalid, `TB_DCACHE_PATH.awready,
+                 `TB_DCACHE_PATH.l_wvalid, `TB_DCACHE_PATH.wready,
+                 `TB_DCACHE_PATH.wvalid, `TB_DCACHE_PATH.wready,
+                 `TB_DCACHE_PATH.bvalid, `TB_DCACHE_PATH.bready,
+                 `TB_DCACHE_PATH.u_bridge.state,
+                 `TB_DCACHE_PATH.u_l1.mshr_occupancy,
+                 `TB_DCACHE_PATH.u_l1.wb_occupancy,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.head,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.tail,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.count,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.valid[3],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.valid[2],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.valid[1],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.valid[0],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.ready[3],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.ready[2],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.ready[1],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.ready[0],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.slot[
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.head][167:136],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.slot[
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.head][135:104],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.slot[
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.head][71],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.slot[
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.head][70]);
+`endif
+        $display("L1 READ TABLE valid=%b mid=%0d/%0d/%0d/%0d rid=%0d/%0d/%0d/%0d head=%0d tail=%0d cnt=%0d/%0d/%0d/%0d L2 req=%08h beat=%0d hit=%b lookup=%b snoop=%b/%08h sr=%b/%b rv=%b/%b/%08h/%b",
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_valid[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_mid[0][0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_mid[0][1],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_mid[0][2],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_mid[0][3],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_rid[0][0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_rid[0][1],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_rid[0][2],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_rid[0][3],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_head[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_tail[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_cnt[0],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_cnt[1],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_cnt[2],
+                 u_soc.u_impl.u_soc_fabric.u_xbar.rd_cnt[3],
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.req_addr,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.beat_cnt,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.hit,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.lookup_hit,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.snoop_valid,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.snoop_addr,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_rvalid,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_rready,
+                 u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                 u_soc.u_impl.u_soc_fabric.s0_rvalid,
+                 u_soc.u_impl.u_soc_fabric.s0_rdata,
+                 u_soc.u_impl.u_soc_fabric.s0_rlast);
+        $display("ICACHE state=%0d req=%b/%08h ok=%b/%b err=%b ar=%b/%b r=%b/%b/%08h/%b cpu_pc=%08h stall=%b/%b/%b id=%08h haz=%b/%b/%b ex=%b/%0d mem=%b/%0d/%b wb=%b/%0d arch=%b busy=%b rd=%0d/%0d/%0d/%0d",
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_data_ok,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.cpu_data_ok,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_cache_error,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.arready,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.rvalid,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.rready,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.rdata,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_icache.rlast,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_if,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id_raw,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_use_hazard,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_read_hazard,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_mem_read,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_waddr,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_waddr,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_to_reg,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_busy,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[0],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[1],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[2],
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[3]);
         $display("==================================================");
         $finish;
     end
     
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
+`ifdef TB_FPU_ROUND_DEBUG
+        if (rst_n && (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst == 32'h46000124 ||
+                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req))
+            $display("FPU_ROUND_DEBUG t=%0t pc=%08h id=%08h fcsr=%08h rm=%b result_word=%08h fpr4=%08h",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fcsr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fcsr[1:0],
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_result_word,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpr[4]);
+`endif
+`ifdef TB_FPU_FPE_DEBUG
+        if (rst_n && (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst == 32'h46020103 ||
+                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst == 32'h46220103 ||
+                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst == 32'h46263203 ||
+                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst == 32'h462c5382 ||
+                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req))
+            $display("FPU_FPE_DEBUG t=%0t pc=%08h id=%08h cu1=%b fcsr=%08h flags=%b en=%b idfpe=%b fpr4=%08h exc=%b code=%0d epc=%08h",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_cu1,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fcsr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_exception_flags,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_enabled_flags,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_fpu_exception,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpr[4],
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_code,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc);
+`endif
+`ifdef TB_L1_AXI_ERROR
+        if (rst_n && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req)
+            $display("L1ERR_EXC t=%0t code=%0d pc=%08h dataok=%b tagged=%b respid=%h dberr=%b cacheerr=%b model_injected=%b",
+                     $time,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_code,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_data_ok,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.tagged_data_response,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_resp_id,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_bus_error,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_error,
+                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.error_injected);
+`endif
         if (legacy_mailbox_valid) begin
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+`ifdef TB_MMU_HW_WALKER
+                if (u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'hfff0/4] != 32'h48415750) begin
+                    $display("REGRESSION_TEST_FAILED MMU hardware walker marker mismatch: %08h",
+                             u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'hfff0/4]);
+                    $finish;
+                end
+`endif
+`ifdef TB_MMU_REFILL
+`ifndef TB_MMU_HW_WALKER
+                if (u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'hfff4/4] != 32'h4D4D5550) begin
+                    $display("REGRESSION_TEST_FAILED MMU refill marker mismatch: %08h",
+                             u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'hfff4/4]);
+                    $finish;
+                end
+                $display("MMU_REFILL_MARKER_PASS");
+`endif
+`endif
+`ifdef TB_L1_AXI_ERROR
+                if (cp0_cacheerr_count == 0) begin
+                    $display("REGRESSION_TEST_FAILED L1 AXI response error did not retire CacheErr");
+                    $finish;
+                end
+`endif
+`ifdef TB_L1_AXI_ERROR_TWO
+                if (cp0_cacheerr_count < 1) begin
+                    $display("REGRESSION_TEST_FAILED L1 AXI simultaneous-response precise error count=%0d", cp0_cacheerr_count);
+                    $finish;
+                end
+                $display("L1_AXI_TWO_PRECISE_REPLAY_PASS errors=%0d", cp0_cacheerr_count);
+`endif
 `ifdef SOC_L2_E2E
                 if (l2_e2e_ar_target < 1) begin
                     $display("L2_E2E_COUNTER_MISMATCH target_ar=%0d total_ar=%0d",
@@ -376,16 +820,19 @@ module tb_mips_soc;
 `endif
 `ifndef SOC_ENABLE_DUAL_CORE
 `ifndef SOC_L2_E2E
+`ifndef TB_SKIP_UART_PIN_CHECK
                 if (!uart_tx_seen_low) begin
                     $display("REGRESSION_TEST_FAILED UART TX pin never asserted");
                     $finish;
                 end
 `endif
 `endif
+`endif
                 $display("REGRESSION_TEST_SUCCESS");
                 $finish;
-            end else if (legacy_mailbox_wdata == 32'hdeaddead) begin
-                $display("REGRESSION_TEST_FAILED");
+            end else if (legacy_mailbox_wdata == 32'hdeaddead ||
+                         legacy_mailbox_wdata[31:16] == 16'hdeaf) begin
+                $display("REGRESSION_TEST_FAILED code=%08h", legacy_mailbox_wdata);
                 $finish;
             end
         end
@@ -477,6 +924,7 @@ module tb_mips_soc;
                         5'h08: cp0_syscall_count <= cp0_syscall_count + 1;
                         5'h0a: cp0_ri_count <= cp0_ri_count + 1;
                         5'h04: cp0_adel_count <= cp0_adel_count + 1;
+                        5'h1e: cp0_cacheerr_count <= cp0_cacheerr_count + 1;
                     endcase
                 end
             end
@@ -700,9 +1148,15 @@ module tb_mips_soc;
         $display("JTAG Test Completed");
         
 `ifndef SOC_COHERENCY_FW_STRESS
-        // Wait until almost the end of simulation (3ms) before asserting reset
-        // to avoid interrupting the main CPU firmware tests.
+`ifndef TB_SKIP_JTAG_RESET_STRESS
+        // The normal regression waits until after the firmware completes. The
+        // opt-in L1 stress mode moves this sequence into the active workload
+        // so an outstanding cache transaction is actually reset in flight.
+`ifdef TB_L1_NONBLOCKING_RESET_STRESS
+        #500000;
+`else
         #3000000;
+`endif
         
         $display("Testing Async Reset in middle of operations to boost FSM transition coverage...");
         // Start a JTAG shift
@@ -859,6 +1313,7 @@ module tb_mips_soc;
         rst_n = 0;
         #50 rst_n = 1;
 `endif
+`endif
         
     end
 `endif
@@ -931,12 +1386,59 @@ bind tb_mips_soc soc_legacy_observation_bind u_soc_legacy_observation_bind (
                           (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr[4:0] == 5'h00)),
     .uart_tx_data        (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwdata[7:0]),
     .core_global_stall   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall),
-    .dcache_state        (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.state),
-    .dcache_next_state   (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.next_state),
-    .dcache_req_buf_addr (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.req_buf_addr),
-    .dcache_req_buf_we   (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.req_buf_we),
-    .dcache_uncacheable  (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.uncacheable),
-    .dcache_awvalid      (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.awvalid),
-    .dcache_wvalid       (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.wvalid),
-    .dcache_bready       (u_soc.u_impl.u_core_subsystem.u_core.u_dcache.bready)
+    .dcache_state        (`TB_DCACHE_PATH.state),
+    .dcache_next_state   (`TB_DCACHE_PATH.next_state),
+    .dcache_req_buf_addr (`TB_DCACHE_PATH.req_buf_addr),
+    .dcache_req_buf_we   (`TB_DCACHE_PATH.req_buf_we),
+    .dcache_uncacheable  (`TB_DCACHE_PATH.uncacheable),
+    .dcache_awvalid      (`TB_DCACHE_PATH.awvalid),
+    .dcache_wvalid       (`TB_DCACHE_PATH.wvalid),
+    .dcache_bready       (`TB_DCACHE_PATH.bready)
 );
+
+`ifdef TB_RETIRE_TRACE
+// Keep the standalone SoC top on the same architectural retire schema used by
+// the UVM wrapper. This bind is intentionally verification-only and does not
+// alter the RTL datapath or the production top.
+bind tb_mips_soc soc_observation_bind u_soc_retire_observation_bind (
+    .obs_if               (retire_obs_if),
+    .retire_schema        (32'h00010000),
+    .retire_valid         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_valid),
+    .retire_pc            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc),
+    .retire_instr         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst),
+    .retire_next_pc       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_next_pc),
+    .retire_gpr_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
+                           (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
+    .retire_gpr_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr),
+    .retire_gpr_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata),
+    .retire_cp0_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we),
+    .retire_cp0_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr),
+    .retire_cp0_sel       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel),
+    .retire_cp0_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out),
+    .retire_mem_valid     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace ||
+                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
+    .retire_mem_read      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace),
+    .retire_mem_write     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
+    .retire_mem_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out),
+    .retire_mem_wdata     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_val_rt),
+    .retire_mem_be        (4'b1111),
+    .retire_mem_rdata     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rdata_selected),
+    .retire_except        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req),
+    .retire_except_code   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code),
+    .retire_bd            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd),
+    .retire_eret          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret),
+    .mailbox_valid        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
+                           (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'ha000fffc)),
+    .mailbox_wdata        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata),
+    .ex_reg_write         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_reg_write),
+    .ex_pc                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc_plus_8 - 32'd8),
+    .jtag_axi_state       (u_soc.u_impl.u_debug_subsystem.u_jtag_debug_top.axi_state),
+    .cpu_cp0_except_req   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req),
+    .cpu_cp0_except_code  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code),
+    .cpu_cp0_intr_req     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req),
+    .cpu_cp0_eret         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret),
+    .cpu_cp0_exl          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[1]),
+    .cpu_cp0_epc          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc)
+);
+`endif

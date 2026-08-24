@@ -1,5 +1,12 @@
 `timescale 1ns/1ps
 `include "soc_config.vh"
+`ifdef TB_RETIRE_TRACE
+`include "soc_observation_if.sv"
+`include "soc_observation_bind.sv"
+`include "retire_trace_capture.sv"
+`define RETIRE_BIND_TARGET tb_product_mmu_asid_context
+`include "standalone_retire_trace_bind.sv"
+`endif
 
 module tb_product_mmu_asid_context;
     localparam [19:0] PFN_ASID1 = 20'h08002;
@@ -22,6 +29,11 @@ module tb_product_mmu_asid_context;
     wire uart_ri_n = 1'b1;
     wire spi_miso = 1'b0;
     wire [31:0] gpio_pins;
+`ifdef TB_RETIRE_TRACE
+    soc_observation_if retire_obs_if(clk, rst_n);
+    retire_trace_capture u_retire_trace_capture(.clk(clk), .rst_n(rst_n),
+                                                 .obs_if(retire_obs_if));
+`endif
 
     integer cycles;
     integer refill_count;

@@ -33,7 +33,7 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 累计 unit tb 覆盖 ~130 checks，SoC 冒烟 `REGRESSION_TEST_SUCCESS` 全程保持。
 
-**当前未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合、完整 ISA/compliance、BPU 性能基准与完整 speculative fetch、FPU（可选）、Linux/kernel boot、完整多页尺度与 micro-TLB、ECC、外部 EIC/VEIC、formal 和综合相关签核。`SOC_MMU_ENABLE=1` 已有最小 kseg1 Boot ROM、TLB refill/invalid/Modified、ASID/context-switch、kseg0 runtime 和 CacheErr/vector directed gates；完整 OS/MMU 语义仍未闭合。产品普通 BEV/EBase、TLB refill、有限 vectored interrupt 和 CacheErr 向量已有切片证据，但不代表量产异常策略完成。
+**当前未完成 / 明确 deferred**：Phase A.1 覆盖率 99% 闭合、完整 ISA/compliance、BPU 性能基准与完整 speculative fetch、FPU（可选）、Linux/kernel boot、完整 OS 级多页尺度压力、ECC、外部 EIC/VEIC、formal 和综合相关签核。`SOC_MMU_ENABLE=1` 已有最小 kseg1 Boot ROM、TLB refill/invalid/Modified、ASID/context-switch、opt-in I/D micro-TLB、kseg0 runtime 和 CacheErr/vector directed gates；完整 OS/MMU 语义仍未闭合。产品普通 BEV/EBase、TLB refill、有限 vectored interrupt 和 CacheErr 向量已有切片证据，但不代表量产异常策略完成。
 
 ---
 
@@ -105,11 +105,11 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 ### B.3 MMU / TLB (commits 0f6c7bd + 4160ea1 + 0b63cb1 + 43303b7)
 - [x] 64-entry 主 TLB (fully-assoc, PageMask-aware probe)
-- [ ] 4/8-entry micro-TLB 分离 (I / D) — 现用 TLB 双 lookup port 顶替
-- [ ] 7 种页尺度 — 目前 4KB assumption；PageMask-aware 变尺度 defer
+- [x] 4-entry micro-TLB 分离 (I / D) — `SOC_MICRO_TLB_ENABLE=1`，`make micro-tlb-gate product-mmu-micro-tlb-gate`
+- [x] PageMask-aware 页尺度 lookup — 4KB/16KB/64KB/256KB/1MB/4MB/16MB 已有 TLB 与 product gate；完整 OS 页表压力仍 deferred
 - [x] TLBR / TLBWI / TLBWR / TLBP 指令语义正确 (35/35 unit tb)
 - [x] Refill / Invalid / Modified 异常路径 (ExcCode 1/2/3) 挂到 pipeline
-- [ ] Machine Check (multi-hit) 检测断言 — TLB spec 涵盖，实现 defer
+- [x] Machine Check (multi-hit) 检测 — lookup/probe 对所有重复有效匹配置位 multi-hit，`make tlb-asid-policy-gate`
 - [x] ASID 8-bit 隔离 firmware 测试 —— `tlb_asid_policy`、OS context-switch 和 process-pressure gates 已通过；长期 OS allocator/shootdown 仍 deferred
 - [x] Wired / Random 语义（Random 硬件递减到 Wired，Wired 写重置 Random）
 - [x] kseg0/1 直通决策、useg/kseg2/3 走 TLB 决策（gated by SOC_MMU_ENABLE=0 默认 identity 兼容当前 firmware）
@@ -163,7 +163,7 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 
 ### B.9 综合验证
 - [ ] MIPS32 R2 ISA compliance test suite 100%
-- [ ] ISA-Ref 联合仿真 (QEMU-MIPS 或 Sail-MIPS) ≥ 1e9 retired instructions 无 mismatch
+- [ ] ISA-Ref 联合仿真 (QEMU-MIPS) ≥ 1e9 retired instructions 无 mismatch
 - [ ] CoreMark 基线跑通 + CPI 建档
 - [ ] Dhrystone 基线跑通
 - [ ] SVA 断言库 (bind checker) 全 assert 通过 + 关键 property 100% cover
@@ -218,8 +218,8 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 
 ### C.3 多 outstanding AXI Fabric
 - [x] Crossbar M×N 全连接 —— `rtl/axi/axi_crossbar.v`（5 master × 3 slave + 内置 DECERR），任意 master 可达任意 slave，不同 slave 并发。
-- [~] Per-master 至少 4 outstanding —— crossbar 边界按 `SOC_XBAR_N_OT=4` 接受；端到端同-slave 深度仍受当前单-outstanding L2/APB/flash 限制为 1。跨-slave 并发已实现（`tb_xbar_multi_ot` 证明边界深度 4 + 跨-slave 同时在途）。
-- [x] 乱序响应 + ID tag 正确 route —— 每-slave outstanding FIFO 记 {master_idx,id}，按发起顺序回路（真实 slave 按序响应）；原始 id 透传，无需加宽。
+- [x] Per-master 至少 4 outstanding（crossbar boundary）—— per-slave `SOC_XBAR_N_OT=4` 接受并跟踪；端到端同-slave 深度仍受当前单-outstanding L2/APB/flash 限制为 1。`tb_xbar_multi_ot` 证明边界深度 4 + 跨-slave 同时在途。
+- [x] 乱序响应 + ID tag 正确 route —— `tb_xbar_ooo` 证明不同 ID 反序返回时按 RID 正确回送；同 ID 采用最老 live entry，保持 AXI 顺序。
 - [x] QoS 4-bit 仲裁生效 —— per-slave arbiter 取最大 AxQOS，平局 round-robin；静态 per-master QoS class（D$>I$>DMA>jtag>ext，`soc_config.vh`）。`tb_xbar_qos` 证明优先级与 RR。动态 per-transaction QoS 待 master 输出 AxQOS 后启用。
 - [x] Round-robin 公平性长期无饥饿 —— 平局 RR 指针每次授权轮转；per-slave FIFO-full 背压不跨 slave 阻塞。`soc_bus_stress_test` 长压通过。
 - [x] 内置 DECERR slave 未映射地址响应 —— 合成 DECERR（多-beat 读 arlen+1、单-beat 写），per-master 不互相阻塞；保持 legacy decoder 语义。
@@ -259,9 +259,9 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 - [ ] Linux 引导 kernel 加载到 DDR
 
 ### D.4 VIC
-- [ ] DUT 合入后的功能完备性复审：详见功能完整性计划和证据登记
-- [ ] 32 源 × 4-bit 优先级 + 嵌套 + 软触发
-- [ ] Formal：优先级编码器 max 正确性 proven
+- [x] DUT 合入后的功能完备性复审：`make interrupt-priority-gate` 与现有 VIC block/CPU gates
+- [x] 32 源 × 4-bit 优先级 + 嵌套 + 软触发；最高优先级/最低 ID checker 已接入
+- [ ] Formal：优先级编码器 max 正确性 proven（工具未安装）
 
 ### D.5 其他外设（SD/eMMC, GMAC, USB, I2C/SPI, WDT/PWM, DMA, GPIO, eFuse）
 - [ ] `apb_axi_dma` DUT 合入后的功能完备性复审：详见功能完整性计划和证据登记
@@ -319,7 +319,7 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 - [ ] RDC 0 violation
 
 ### F.4 ISA 参考模型联合仿真
-- [ ] QEMU-MIPS 或 Sail-MIPS harness 集成到回归
+- [ ] QEMU-MIPS harness 集成到回归
 - [ ] > 1e9 retired instructions 累计无 mismatch
 - [ ] 每次 major RTL 变更后重跑至少 1e8 instructions
 

@@ -17,6 +17,9 @@ module tb_dcache;
     reg  [3:0]  cpu_be;
     wire [31:0] cpu_rdata;
     wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error, cpu_cache_error;
+    reg         sim_parity_inject_valid, sim_parity_inject_tag, sim_parity_inject_data;
+    reg [1:0]   sim_parity_inject_way;
+    reg [5:0]   sim_parity_inject_index;
     reg         cache_op_valid;
     reg  [4:0]  cache_op;
     reg  [31:0] cache_op_addr;
@@ -39,6 +42,9 @@ module tb_dcache;
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_we(cpu_we),.cpu_addr(cpu_addr),.cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be),.cpu_uncacheable(1'b0),.cpu_rdata(cpu_rdata),.cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
+        .sim_parity_inject_valid(sim_parity_inject_valid),.sim_parity_inject_tag(sim_parity_inject_tag),
+        .sim_parity_inject_data(sim_parity_inject_data),.sim_parity_inject_way(sim_parity_inject_way),
+        .sim_parity_inject_index(sim_parity_inject_index),
         .cache_op_valid(cache_op_valid),.cache_op(cache_op),.cache_op_addr(cache_op_addr),.cache_op_ready(cache_op_ready),.cache_op_done(cache_op_done),.cache_op_error(cache_op_error),
         .cache_tag_wdata(cache_tag_wdata),.cache_tag_rdata(cache_tag_rdata),
         .awid(awid),.awaddr(awaddr),.awlen(awlen),.awsize(awsize),.awburst(awburst),
@@ -180,6 +186,8 @@ module tb_dcache;
 
     initial begin
         cpu_req=0; cpu_we=0; cpu_addr=0; cpu_wdata=0; cpu_be=0; inject_read_error=0;
+        sim_parity_inject_valid=0; sim_parity_inject_tag=0; sim_parity_inject_data=0;
+        sim_parity_inject_way=0; sim_parity_inject_index=0;
         cache_op_valid=0; cache_op=0; cache_op_addr=0; cache_tag_wdata=0; inject_write_error=0;
         #23 rst_n=1; @(negedge clk);
 
@@ -307,6 +315,30 @@ module tb_dcache;
         end
         c_ar=ar_count; cpu_read(32'h0000_C040, rd);
         if (ar_count!==c_ar+1 || rd!==32'hCAFE_C013) begin $display("FAIL T13 index invalidation/refill"); errs=errs+1; end
+
+        // T13b: resident data parity corruption is a CacheErr, and clearing
+        // the injection permits the same line to be read again.
+        cpu_read(32'h0000_D040, rd);
+        @(negedge clk); sim_parity_inject_way=dut.hit_way;
+        sim_parity_inject_index=(32'h0000_D040 >> 5) & 63;
+        sim_parity_inject_valid=1; sim_parity_inject_data=1;
+        cpu_req=1; cpu_we=0; cpu_addr=32'h0000_D040; cpu_be=4'hF; cpu_wdata=0;
+        @(posedge clk); while (!cpu_data_ok) @(posedge clk);
+        if (!cpu_bus_error || !cpu_cache_error) begin
+            $display("FAIL T13b data parity did not raise CacheErr"); errs=errs+1;
+        end
+        @(negedge clk); cpu_req=0; sim_parity_inject_valid=0; sim_parity_inject_data=0;
+        cpu_read(32'h0000_D040, rd);
+
+        // T13c: tag parity uses the same architectural CacheErr path.
+        @(negedge clk); sim_parity_inject_valid=1; sim_parity_inject_tag=1;
+        cpu_req=1; cpu_we=0; cpu_addr=32'h0000_D040; cpu_be=4'hF; cpu_wdata=0;
+        @(posedge clk); while (!cpu_data_ok) @(posedge clk);
+        if (!cpu_bus_error || !cpu_cache_error) begin
+            $display("FAIL T13c tag parity did not raise CacheErr"); errs=errs+1;
+        end
+        @(negedge clk); cpu_req=0; sim_parity_inject_valid=0; sim_parity_inject_tag=0;
+        cpu_read(32'h0000_D040, rd);
 
         // T14: Index_Load/Store_Tag_D expose and replace the selected way's
         // valid/dirty/tag tuple through the CP0 TagLo contract.

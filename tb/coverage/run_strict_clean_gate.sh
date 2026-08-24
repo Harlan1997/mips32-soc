@@ -3,7 +3,9 @@ set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/coverage/strict_clean"}
-UVM_VDB=${UVM_VDB:-"${ROOT_DIR}/build/signoff/current_contract/phase2_complete/directed_cov/directed.vdb"}
+# UVM exclusions are refined from the merged current-contract database.  Using
+# the phase2-only VDB here makes every merged-module checksum look stale.
+UVM_VDB=${UVM_VDB:-"${ROOT_DIR}/build/signoff/current_contract/coverage/merged.vdb"}
 PRODUCT_VDB=${PRODUCT_VDB:-"${ROOT_DIR}/build/signoff/current_contract/phase3_complete/cpu_cp0_gate/simv.vdb"}
 mkdir -p "${RUN_DIR}"
 

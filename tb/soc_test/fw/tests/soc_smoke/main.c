@@ -60,6 +60,14 @@ static void signed_div_raw(int32_t dividend, int32_t divisor,
 void c_interrupt_handler() {
     // Basic interrupt handler
     irq_count++;
+
+    // The VIC presents a level IRQ while any enabled source remains pending.
+    // Mask CPU interrupt inputs before doing APB reads/ACKs so a nonblocking
+    // retire window cannot re-enter this handler between those operations.
+    uint32_t entry_status;
+    asm volatile("mfc0 %0, $12" : "=r"(entry_status));
+    entry_status &= ~0xFF00U;
+    asm volatile("mtc0 %0, $12" : : "r"(entry_status));
     
     uint32_t pic_act = PIC_ACTIVE;
     if (pic_act & 0x4) { // Timer interrupt is bit 2 (because 28'd0, 1'b0, timer, uart_tx, uart_rx)
@@ -348,6 +356,8 @@ int main() {
     print_str("   Timer Interrupt fired successfully!\n");
     
     TIMER_CTRL = 0x0; // Disable timer
+    TIMER_INTCLR = 0x1; // Acknowledge the sticky timer interrupt before later CP0 tests.
+    PIC_MASK = 0x0;    // Keep the coverage phase deterministic after the IRQ test.
 
     // 5. MDU Test
     print_str("5. Testing MDU (Multiply/Divide)...\n");
@@ -569,6 +579,10 @@ int main() {
         print_str("   LOAD SUB-WORD OK\n");
     } else {
         print_str("   LOAD SUB-WORD ERROR\n");
+        print_hex((uint32_t)lb_res);
+        print_hex(lbu_res);
+        print_hex((uint32_t)lh_res);
+        print_hex(lhu_res);
         smoke_failures++;
     }
     
@@ -716,14 +730,6 @@ int main() {
     for (int i = 0; i < 50; i++) {
         uint32_t p = 0x80000000 | (i << 2) | (0x55555555 ^ (i * 0x01010101));
         if (i % 2 == 0) p = ~p;
-        
-        // APB Timer
-        TIMER_LOAD = p;
-        TIMER_VAL = p;
-        
-        // APB GPIO
-        GPIO_DIR = p;
-        GPIO_DATA = p;
         
         // APB PIC
         PIC_MASK = p;

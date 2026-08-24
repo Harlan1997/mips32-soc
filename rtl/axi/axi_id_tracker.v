@@ -4,15 +4,16 @@
 // Author:    Antigravity — Phase C
 // Description:
 //   Tracks up to N_OUTSTANDING in-flight AXI transactions by ID so
-//   out-of-order responses can be reassembled. Scaffold for Phase C's
-//   multi-outstanding AXI upgrade — current fabric is single-outstanding.
+//   out-of-order responses can be reassembled. The production crossbar now
+//   owns equivalent per-slave tracking internally; this standalone table is
+//   retained as an optional master-side utility and is not instantiated.
 //
 //   Interface: master calls issue() on AR/AW handshake; retire() on R/B
 //   handshake. Table exposes "any_free" (backpressure request-issue) and
 //   "id_valid[i]" (per-slot occupancy).
 //
-//   Currently not instantiated in the DUT. Integration with axi_arbiter and
-//   axi_decoder is planned Phase C.
+//   Currently not instantiated in the DUT; integration with legacy arbiter /
+//   decoder blocks is intentionally not required by the crossbar design.
 // =============================================================================
 
 module axi_id_tracker #(

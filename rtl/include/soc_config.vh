@@ -28,6 +28,12 @@
 `define SOC_AXI_ID_WIDTH      4
 `define SOC_AXI_ADDR_WIDTH    32
 `define SOC_AXI_DATA_WIDTH    32
+// Verification-only architectural retirement trace. Consumers explicitly
+// enable/capture it; the execution path remains unchanged by default.
+`ifndef SOC_RETIRE_TRACE_ENABLE
+`define SOC_RETIRE_TRACE_ENABLE 0
+`endif
+`define SOC_RETIRE_TRACE_SCHEMA 32'h0001_0000
 `define SOC_AXI_LEN_WIDTH     8
 `define SOC_APB_ADDR_WIDTH    12
 `define SOC_APB_DATA_WIDTH    32
@@ -70,6 +76,24 @@
 // gates all pass. The prototype default preserves the SRAM-preload regressions.
 `ifndef SOC_PRODUCT_BOOT_ENABLE
 `define SOC_PRODUCT_BOOT_ENABLE 0
+`endif
+
+// Opt-in single-precision COP1 development contract. Integer-only default
+// behavior remains unchanged and unsupported COP1 instructions stay RI.
+`ifndef SOC_FPU_ENABLE
+`define SOC_FPU_ENABLE 0
+`endif
+
+// Opt-in MIPS32r2 shadow-register-set data path. The default integer CPU
+// keeps the existing single GPR bank and treats RDPGPR/WRPGPR as RI.
+`ifndef SOC_SRS_ENABLE
+`define SOC_SRS_ENABLE 0
+`endif
+
+// Verification-only second AXI response fault. Product/default builds keep
+// the existing single-fault behavior.
+`ifndef SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE
+`define SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE 0
 `endif
 
 // Address decode masks
@@ -266,6 +290,60 @@
 // valid only when MMU translation is disabled.
 `ifndef SOC_MMU_ENABLE
 `define SOC_MMU_ENABLE             0
+`endif
+
+// Optional CPU performance counters. Disabled by default so the prototype
+// CP0/SoC interface and baseline timing remain unchanged.
+`ifndef SOC_PERF_COUNTERS
+`define SOC_PERF_COUNTERS          0
+`endif
+
+// Keep the direct dual-main-TLB lookup as the compatibility baseline.  The
+// small I/D fully-associative caches are selected explicitly for MMU
+// performance experiments and product bring-up.
+`ifndef SOC_MICRO_TLB_ENABLE
+`define SOC_MICRO_TLB_ENABLE       0
+`endif
+
+// Optional hardware page-table walker page size.  The default remains the
+// original 4 KiB contract; the supported opt-in PageMask values are 16 KiB,
+// 64 KiB and 256 KiB.  Software-managed TLB operation is unaffected.
+`ifndef SOC_HARDWARE_WALKER_PAGE_MASK
+`define SOC_HARDWARE_WALKER_PAGE_MASK 16'h0000
+`endif
+
+// Experimental L1 non-blocking contract. The production CPU still selects
+// dcache's blocking interface until late-response/ROB integration is closed.
+`ifndef SOC_L1_NONBLOCKING_ENABLE
+`define SOC_L1_NONBLOCKING_ENABLE   0
+`endif
+
+// Simulation-only downstream AXI response fault injection.  The production
+// and default simulation contracts keep this disabled; opt-in CPU error gates
+// enable it to verify line-refill error propagation through L1/ROB.
+`ifndef SOC_AXI_RESP_ERROR_INJECT_ENABLE
+`define SOC_AXI_RESP_ERROR_INJECT_ENABLE 0
+`endif
+
+// The FIFO retirement path is an opt-in integration stage.  Keep it
+// independent from the cache enable so frontend and CPU compatibility gates
+// can distinguish cache behavior from retirement behavior.
+`ifndef SOC_ROB_FIFO_ENABLE
+`define SOC_ROB_FIFO_ENABLE         0
+`endif
+
+// Opt-in CPU memory issue mode.  It currently decouples cacheable loads;
+// uncached accesses, stores, maintenance and translation faults remain on
+// the blocking precise path until store-at-commit is implemented.
+`ifndef SOC_CPU_NONBLOCKING_ENABLE
+`define SOC_CPU_NONBLOCKING_ENABLE   0
+`endif
+
+// Opt-in extension for the CPU-facing nonblocking L1 to cache the real DDR
+// physical window. The default prototype keeps the established SRAM-only
+// nonblocking slice and the blocking DDR path unchanged.
+`ifndef SOC_L1_NONBLOCKING_DDR_ENABLE
+`define SOC_L1_NONBLOCKING_DDR_ENABLE 0
 `endif
 
 // Explicit opt-in for the prototype kseg0 reset/vector firmware contract.

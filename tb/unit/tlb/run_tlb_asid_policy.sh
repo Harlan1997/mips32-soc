@@ -16,6 +16,7 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+SOC_MMU_ENABLE=1 \
     +incdir+"${ROOT_DIR}/rtl/include" \
     "${ROOT_DIR}/rtl/cpu/mips_tlb.v" \
+    "${ROOT_DIR}/rtl/cpu/mips_micro_tlb.v" \
     "${ROOT_DIR}/rtl/cpu/mips_mmu.v" \
     "${SCRIPT_DIR}/tb_tlb_asid_policy.sv" \
     -top tb_tlb_asid_policy -l vcs.log > /dev/null

@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""Convert QEMU system-mode plugin state/event streams to retire JSONL."""
+import argparse
+import json
+import sys
+
+CP0_REGS = {
+    "index": (0, 0),
+    "pagemask": (5, 0),
+    "entryhi": (10, 0),
+    "status": (12, 0),
+    "cause": (13, 0),
+    "epc": (14, 0),
+}
+
+
+def load_jsonl(path):
+    values = []
+    with open(path, encoding="ascii") as stream:
+        for number, line in enumerate(stream, 1):
+            if not line.strip():
+                continue
+            try:
+                values.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{path}:{number}: invalid JSON: {exc}") from exc
+    return values
+
+
+def hex32(value):
+    return f"{int(value, 16) & 0xffffffff:08x}"
+
+
+def changed_gpr(before, after):
+    changes = [index for index in range(1, 32)
+               if before[f"r{index}"] != after[f"r{index}"]]
+    if len(changes) != 1:
+        return 0, 0, "00000000"
+    index = changes[0]
+    return 1, index, hex32(after[f"r{index}"])
+
+
+def gpr_destination(instr, before=None):
+    op = (instr >> 26) & 0x3f
+    rs = (instr >> 21) & 0x1f
+    rt = (instr >> 16) & 0x1f
+    rd = (instr >> 11) & 0x1f
+    funct = instr & 0x3f
+    # PREF is a non-trapping cache hint with no architectural GPR result.
+    if op == 0x33:
+        return None
+    # COP1 memory operations update FPRs (or only memory), never a GPR.
+    # MFC1/CFC1 are the COP1 transfers that do write the integer register
+    # file; the remaining COP1 arithmetic and control operations do not.
+    if op == 0x11:
+        return rt if rs in (0, 2) else None
+    # LDC1/SDC1 are double-word memory operations; their rt field names an
+    # even FPR pair and must never be interpreted as an integer destination.
+    if op in (0x35, 0x3d):
+        return None
+    # SPECIAL2 instructions use rd, unlike the immediate opcode family below.
+    # The implemented subset includes MUL plus the R2 CLZ/CLO operations.
+    if op == 0x1c and funct in (0x02, 0x20, 0x21):
+        return rd
+    # SPECIAL3 transforms write rd, while EXT/INS write rt.  The latter use
+    # rd only as the msbd field and must not be reported as an rd write.
+    if op == 0x1f and funct in (0x00, 0x04):
+        return rt
+    if op == 0x1f and funct == 0x20:
+        return rd
+    # REGIMM link branches write $ra. BAL is the BGEZAL encoding with $zero.
+    if op == 0x01 and rt in (0x10, 0x11, 0x12, 0x13):
+        return 31
+    if op in (0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+              0x18, 0x19, 0x1c, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25,
+              0x26, 0x27, 0x30, 0x32, 0x33, 0x34, 0x35, 0x36,
+              0x37):
+        return rt
+    if op == 0x23 or op in (0x20, 0x21, 0x22, 0x24, 0x25, 0x26, 0x27):
+        return rt
+    if op == 0x03:
+        return 31
+    if op == 0x00 and funct in (0x00, 0x02, 0x03, 0x04, 0x06, 0x07,
+                                0x0a, 0x0b, 0x10, 0x12, 0x20, 0x21, 0x22, 0x23,
+                                0x24, 0x25, 0x26, 0x27, 0x2a, 0x2b):
+        # MOVZ/MOVN write conditionally.  Use the pre-retire register state;
+        # a static destination decoder would turn a correctly suppressed
+        # conditional write into a false architectural event.
+        if funct == 0x0a and before is not None and int(before[f"r{rt}"], 16) != 0:
+            return None
+        if funct == 0x0b and before is not None and int(before[f"r{rt}"], 16) == 0:
+            return None
+        return rd
+    # MOVF/MOVT share SPECIAL funct=0x01.  FCC0 is FCSR[23]; FCC1..FCC7
+    # occupy FCSR[25..31] (FCSR[24] is reserved) in the MIPS32 layout.
+    if op == 0x00 and funct == 0x01 and (rt & 0x2) == 0:
+        cc = (rt >> 2) & 0x7
+        fcsr = int(before.get("fcsr", "0"), 16)
+        condition = (fcsr & (1 << (23 if cc == 0 else 24 + cc))) != 0
+        if (rt == 0 and condition) or (rt == 1 and not condition):
+            return None
+        return rd
+    if op == 0x00 and funct == 0x09:
+        return rd
+    # MIPS32 R2 RDPGPR is encoded in the COP0 major opcode with rs=0x0a.
+    # It reads the pre-exception shadow bank into rd; WRPGPR (rs=0x0e) has
+    # no architectural write to the current GPR file.
+    if op == 0x10 and rs == 0x0a:
+        return rd
+    if op == 0x10 and rs == 0:
+        return rt
+    # DI/EI are MFMC0 encodings. They return the previous Status value in rt.
+    if op == 0x10 and rs == 0x0b and rd == 12 and ((instr >> 6) & 0x1f) == 0:
+        return rt
+    # SPECIAL3 RDHWR: rd is the destination in the implemented contract.
+    if op == 0x1f and rs == 3 and (instr & 0x3f) == 0x3b:
+        return rt
+    return None
+
+
+def cp0_destination(instr):
+    if ((instr >> 26) & 0x3f) == 0x10 and ((instr >> 21) & 0x1f) == 4:
+        return (instr >> 11) & 0x1f, (instr >> 0) & 0x7
+    return None
+
+
+def has_delay_slot(instr):
+    op = (instr >> 26) & 0x3f
+    rs = (instr >> 21) & 0x1f
+    funct = instr & 0x3f
+    return op in (0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07) or \
+           (op == 0x11 and rs == 8) or \
+           (op == 0x00 and funct in (0x08, 0x09))
+
+
+def taken_delay_slot(events, index):
+    if index == 0 or not has_delay_slot(int(events[index - 1]["instr"], 16)):
+        return False
+    previous = int(events[index - 1]["instr"], 16)
+    op = (previous >> 26) & 0x3f
+    if op in (0x02, 0x03):
+        return True
+    previous_pc = int(events[index - 1]["pc"], 16)
+    return int(events[index]["next_pc"], 16) != previous_pc + 8
+
+
+def likely_taken(instr, state):
+    """Evaluate a MIPS32 branch-likely condition at its retire boundary."""
+    opcode = (instr >> 26) & 0x3f
+    rs = (instr >> 21) & 0x1f
+    rt = (instr >> 16) & 0x1f
+    lhs = int(state["regs"][f"r{rs}"], 16)
+    rhs = int(state["regs"][f"r{rt}"], 16)
+    lhs_signed = lhs if lhs < 0x80000000 else lhs - 0x100000000
+    if opcode == 0x14:
+        return lhs == rhs
+    if opcode == 0x15:
+        return lhs != rhs
+    if opcode == 0x16:
+        return lhs_signed <= 0
+    if opcode == 0x17:
+        return lhs_signed > 0
+    if opcode == 0x01:
+        if rt in (0x02, 0x12):
+            return lhs_signed < 0
+        if rt in (0x03, 0x13):
+            return lhs_signed >= 0
+    if opcode == 0x11 and rs == 8:
+        condition = bool(int(state["regs"].get("fcsr", "0"), 16) & (1 << 23))
+        # Only BC1FL/BC1TL annul an untaken delay slot.  BC1F/BC1T
+        # retain the ordinary MIPS branch delay slot regardless of sense.
+        if rt == 2:
+            return not condition
+        if rt == 3:
+            return condition
+    return None
+
+
+def is_annulled_likely(events, states, index):
+    """Filter the QEMU plugin event for a not-taken likely delay slot."""
+    if index == 0:
+        return False
+    branch = int(events[index - 1]["instr"], 16)
+    return (likely_taken(branch, states[index - 1]) is False and
+            int(events[index]["pc"], 16) == int(events[index - 1]["pc"], 16) + 4)
+
+
+def is_cop1_branch(instr):
+    return ((instr >> 26) & 0x3f) == 0x11 and ((instr >> 21) & 0x1f) == 8 and \
+           (((instr >> 16) & 0x1f) == 3)
+
+
+def changed_cp0(before, after):
+    changes = [(name, address, sel) for name, (address, sel) in CP0_REGS.items()
+               if before.get(name) != after.get(name)]
+    if len(changes) != 1:
+        return 0, 0, 0, "00000000"
+    name, address, sel = changes[0]
+    return 1, address, sel, hex32(after[name])
+
+
+def convert(events, states):
+    if len(states) < len(events) + 1:
+        raise ValueError(f"state records {len(states)} < events + post-state {len(events) + 1}")
+    for index, event in enumerate(events):
+        if is_annulled_likely(events, states, index):
+            continue
+        before = states[index]["regs"]
+        after = states[index + 1]["regs"]
+        if int(event["pc"], 16) != int(states[index]["pc"], 16):
+            raise ValueError(f"retire {index}: event/state PC misalignment")
+        instr = int(event["instr"], 16)
+        # The RTL retire observation currently commits the COP1 branch
+        # control through the normal delay-slot path but does not expose the
+        # branch instruction as a WB record. Keep its architectural effect in
+        # the following target/delay-slot sequence and omit this QEMU-only
+        # control event for alignment.
+        if is_cop1_branch(instr):
+            continue
+        destination = gpr_destination(instr, before)
+        if ((instr >> 26) & 0x3f) == 0x01 and \
+                ((instr >> 16) & 0x1f) in (0x12, 0x13) and \
+                likely_taken(instr, states[index]) is False:
+            destination = None
+        if destination is None or destination == 0:
+            gpr_we, gpr_addr, gpr_data = 0, 0, "00000000"
+        else:
+            gpr_we, gpr_addr, gpr_data = 1, destination, hex32(
+                after[f"r{destination}"])
+        cp0_write = cp0_destination(instr)
+        if cp0_write:
+            cp0_addr, cp0_sel = cp0_write
+            cp0_names = {0: "index", 2: "entrylo0", 3: "entrylo1",
+                         5: "pagemask", 10: "entryhi", 12: "status",
+                         13: "cause", 14: "epc"}
+            cp0_name = cp0_names.get(cp0_addr)
+            cp0_we = int(cp0_name is not None)
+            # An asynchronous interrupt can be accepted immediately after an
+            # MTC0.  The post-state then includes EXL/IP side effects, while
+            # the retire payload is the source GPR value actually written.
+            rt = (instr >> 16) & 0x1f
+            cp0_data = hex32(before[f"r{rt}"]) if cp0_name else "00000000"
+        else:
+            cp0_we, cp0_addr, cp0_sel, cp0_data = 0, 0, 0, "00000000"
+        mem_valid = int(bool(event.get("mem_valid")))
+        mem_addr = int(event.get("mem_addr", "0"), 16)
+        mem_size = int(event.get("mem_size", 0))
+        mem_be = ((1 << mem_size) - 1) << (mem_addr & 3) if mem_valid else 0xF
+        bd = int(taken_delay_slot(events, index))
+        # Cause is sticky across exception entry.  Comparing before/after
+        # Cause therefore misses a second synchronous exception (for example
+        # a trap after the handler has returned).  The retire event's next PC
+        # is the architectural indication that this instruction redirected to
+        # the general exception vector; decode the latched Cause from the
+        # post-state for the exception payload.
+        event_next_pc = int(event["next_pc"], 16)
+        # Software-managed boot-ROM guests use the physical BFC00200 vector,
+        # while the normal system differential uses the conventional 0x180
+        # vector. Both are architectural exception boundaries.
+        entered_general_vector = ((event_next_pc & 0x1fffffff) == 0x180 or
+                                  event_next_pc == 0xbfc00200)
+        cause_value = int(after.get("cause", "0"), 16)
+        exception_taken = int(entered_general_vector and
+                              ((cause_value >> 2) & 0x1f) != 0)
+        exception_code = ((cause_value >> 2) & 0x1f) if exception_taken else 0
+        exception_bd = ((cause_value >> 31) & 1) if exception_taken else bd
+        yield {
+            "schema": "00010000",
+            "pc": hex32(event["pc"]),
+            "instr": hex32(event["instr"]),
+            "next_pc": hex32(event["next_pc"]),
+            "gpr_we": gpr_we,
+            "gpr_addr": gpr_addr,
+            "gpr_data": gpr_data,
+            "cp0_we": cp0_we,
+            "cp0_addr": cp0_addr,
+            "cp0_sel": cp0_sel,
+            "cp0_data": cp0_data,
+            "mem_valid": mem_valid,
+            "mem_read": int(bool(event.get("mem_read"))),
+            "mem_write": int(bool(event.get("mem_write"))),
+            "mem_addr": hex32(event.get("mem_addr", "0")),
+            "mem_wdata": event.get("mem_value", "00000000") if event.get("mem_write") else "00000000",
+            "mem_be": f"{mem_be:x}",
+            "mem_rdata": event.get("mem_value", "00000000") if event.get("mem_read") else "xxxxxxxx",
+            "except": exception_taken,
+            "except_code": exception_code,
+            "bd": exception_bd,
+            "eret": int(instr == 0x42000018),
+        }
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("events")
+    parser.add_argument("states")
+    parser.add_argument("output")
+    args = parser.parse_args()
+    events = load_jsonl(args.events)
+    states = load_jsonl(args.states)
+    count = 0
+    with open(args.output, "w", encoding="ascii") as stream:
+        for record in convert(events, states):
+            json.dump(record, stream, separators=(",", ":"))
+            stream.write("\n")
+            count += 1
+    print(f"QEMU_SYSTEM_RETIRE_CONVERT_PASS records={count}")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"qemu_system_state_to_jsonl: {exc}", file=sys.stderr)
+        raise SystemExit(1)

@@ -18,6 +18,7 @@ module mips_ex_stage (
     input  wire [31:0] op_a,        // Operand A
     input  wire [31:0] op_b,        // Operand B
     input  wire [4:0]  sa,          // Shift amount
+    input  wire [4:0]  msbd,        // EXT/INS most-significant bit
     input  wire [4:0]  alu_op,      // ALU control (Phase B ISA R2: 5-bit)
     input  wire [3:0]  mdu_op,      // MDU control (Phase 4B: 4-bit)
     input  wire        mdu_start,   // Start multi-cycle MDU op
@@ -40,6 +41,7 @@ module mips_ex_stage (
         .op_a    (op_a),
         .op_b    (op_b),
         .sa      (sa),
+        .msbd    (msbd),
         .alu_op  (alu_op),
         .alu_out (alu_out),
         .overflow(overflow),

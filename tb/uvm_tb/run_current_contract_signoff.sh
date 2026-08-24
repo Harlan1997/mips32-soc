@@ -95,7 +95,7 @@ fail_signoff() {
         echo
         echo "## Scope Limitation"
         echo "- Current scope: RTL implementation, frontend compile/elaboration, and functional simulation verification."
-        echo "- Unclosed features: RTL multi-outstanding/reordering, UART RX, SPI-serial timing, PIC priority encoding, synthesis/STA/DFT/formal/CDC/RDC."
+        echo "- Remaining scope outside this sign-off: full ISA/MMU/Linux/QEMU differential, Linux VM ownership and multicore shootdown, complete FPU/IEEE-754/ABI semantics, real QSPI/DDR device timing and PHY training, synthesis/STA/DFT/formal/CDC/RDC."
         echo "- Scope claim: strictly limited to the current documented RTL contract. This is not synthesis, backend, production, or tapeout sign-off."
     } > "$REPORT"
     exit 1
@@ -628,6 +628,13 @@ for g in req_groups:
     lines.append(f"| `{g}` | 100.00% | 100.00% | PASS |")
 
 lines.append("")
+lines.append("## Scope Boundary")
+lines.append("")
+lines.append("- The functional RTL contract gates, CPU/CP0 gate, and 10-seed stress regression passed.")
+lines.append("- This report does not claim full MIPS32r2/FPU compliance, Linux boot, complete MMU/QEMU/RTL differential, real JEDEC QSPI/DDR behavior, or ASIC signoff.")
+lines.append("- Coverage thresholds remain a genuine failure; exclusions are not used to conceal uncovered objects.")
+
+lines.append("")
 lines.append("## Log Error Scan")
 lines.append("")
 lines.append("- Error Scan Status: **CLEAN** (0 errors/fatals found)")
@@ -636,10 +643,10 @@ lines.append("")
 lines.append("## Explicit Scope Boundaries & Open Items")
 lines.append("")
 lines.append("This sign-off applies strictly to RTL implementation and functional simulation of the current documented RTL contract. The following domains remain explicitly OPEN and OUT OF SCOPE:")
-lines.append("1. **RTL Multi-outstanding & Response Reordering**: Current fabric contract remains single-outstanding AXI.")
-lines.append("2. **UART RX Datapath & RX Interrupt**: UART RX is not implemented/signed off in current RTL.")
-lines.append("3. **SPI-Serial Protocol Timing & Real Flash Boot**: Verification models loadable AXI flash-image window.")
-lines.append("4. **PIC Priority Encoding**: Current PIC implements status, mask, active bits, and OR-reduced CPU interrupt.")
+lines.append("1. **Full RTL Multi-outstanding & Response Reordering**: Selected AXI ID/OOO slices are verified, but the default current contract still does not claim unrestricted system-wide concurrency.")
+lines.append("2. **UART Production Boundary**: Behavioral RX/TX, FIFO/CTS and RX interrupt paths are integrated and gated; pin timing, analog electrical behavior and production driver policy remain outside scope.")
+lines.append("3. **SPI-Serial Protocol Timing & Real Flash Boot**: Verification models loadable AXI flash-image behavior; JEDEC command timing, erase/program endurance and physical flash boot remain open.")
+lines.append("4. **PIC Full-System Policy**: 32-source priority/mask/active/pending, deterministic arbitration and selected vector paths are gated; unrestricted nested/preemptive OS policy remains open.")
 lines.append("5. **Static/Physical Design Claims**: No synthesis, STA, DFT, formal, lint, CDC, or RDC claims.")
 lines.append("6. **Production Tapeout**: This flow is NOT tapeout sign-off.")
 

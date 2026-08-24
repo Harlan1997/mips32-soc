@@ -1,0 +1,17 @@
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -14842,10 +14842,18 @@ static void gen_intermediate_code_internal(DisasContext *ctx,
+ 
+     case OPC_CP3:
++        op1 = MASK_CP3(ctx->opcode);
++        /* SOC_REF_PREFX_NO_FPU: PREFX is an integer indexed cache hint and
++         * remains legal when the optional COP1 is not implemented. */
++        if (op1 == OPC_PREFX) {
++            check_insn(ctx, ISA_MIPS_R2);
++            break;
++        }
+         if (ctx->CP0_Config1 & (1 << CP0C1_FP)) {
+             check_cp1_enabled(ctx);
+-            op1 = MASK_CP3(ctx->opcode);
+             switch (op1) {

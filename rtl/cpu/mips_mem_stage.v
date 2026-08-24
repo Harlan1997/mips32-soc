@@ -15,6 +15,7 @@ module mips_mem_stage (
     input  wire        mem_write,
     input  wire [2:0]  mem_op,         // 000:B, 001:BU, 010:H, 011:HU, 100:W
     input  wire        mem_done,
+    input  wire        enable_nonblocking_load,
     input  wire        mem_cache_op_valid,
     input  wire [4:0]  mem_cache_op,
     
@@ -64,8 +65,13 @@ module mips_mem_stage (
     assign cache_op_fault = cache_op_valid & cache_op_done & cache_op_error;
     
     // Stall logic
-    assign stall_req_mem = (dmem_en & ~dmem_data_ok) |
-                           (cache_op_valid & ~cache_op_done);
+    // A cacheable load may leave MEM after address acceptance; its response
+    // is completed by the tagged retirement FIFO. Stores, uncached traffic
+    // and CACHE operations retain the blocking precise handshake.
+    assign stall_req_mem = ((enable_nonblocking_load === 1'b1) && mem_read) ?
+                           (dmem_en & ~dmem_addr_ok) :
+                           ((dmem_en & ~dmem_data_ok) |
+                            (cache_op_valid & ~cache_op_done));
 
     wire [1:0] addr_align = mem_ex_out[1:0];
 

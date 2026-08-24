@@ -143,7 +143,7 @@ coverage_line=$(awk '/^SCORE[[:space:]]+LINE[[:space:]]+COND/ {getline; print; e
     echo "## Scope Boundary"
     echo
     echo "- This gate closes UVM-visible CPU/CP0 exception-entry/return coverage using the firmware exception path."
-    echo "- RTL multi-outstanding fabric support and SPI-serial boot-from-flash remain separate open items."
+    echo "- Bounded fabric multi-outstanding/ID response routing is covered by fabric-unit-gate; end-to-end L1/L2/APB/flash multi-outstanding and SPI-serial boot-from-flash remain separate open items."
     echo
     echo "## Log Scan"
     echo

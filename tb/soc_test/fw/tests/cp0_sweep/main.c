@@ -14,6 +14,7 @@
 #include "print.h"
 
 static volatile uint32_t cp_u_seen;
+static volatile uint32_t cp0_restore_kernel;
 extern uint32_t __tls_start, __tls_end, __tbss_start, __tbss_end;
 volatile uint32_t tls_seed __attribute__((section(".tdata"))) = 0x13572468U;
 volatile uint32_t tls_zero __attribute__((section(".tbss")));
@@ -26,6 +27,12 @@ void c_interrupt_handler(void) {
     asm volatile("mfc0 %0, $14" : "=r"(epc));
     if (((cause >> 2) & 0x1f) == 11) {
         cp_u_seen++;
+    }
+    if (((cause >> 2) & 0x1f) == 8 && cp0_restore_kernel) {
+        /* User code cannot write Status.  Restore kernel mode while EXL is
+         * set in the handler, then return to the instruction after syscall. */
+        asm volatile("mtc0 %0, $12\n\t" : : "r"(0U));
+        cp0_restore_kernel = 0;
     }
     epc += 4;
     asm volatile("mtc0 %0, $14" : : "r"(epc));
@@ -172,14 +179,21 @@ static uint32_t cp0_sweep(void) {
         asm volatile("mtc0 %0, $7, 0\n\t"
                      "mtc0 %1, $12, 0\n\t"
                      "ehb\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
                      :: "r"(0U), "r"(0x10U));
         (void)read_synci_step();
         (void)read_hwcount();
         (void)read_cpunum();
         (void)read_ccres();
         (void)read_userlocal();
-        asm volatile("mtc0 %0, $12, 0\n\t"
-                     "ehb\n\t" :: "r"(0U));
+        cp0_restore_kernel = 1;
+        asm volatile("syscall\n\t"
+                     "nop\n\t"
+                     "nop\n\t");
         if (cp_u_seen != 5U) {
             print_str("FAIL: RDHWR disabled user access CpU count\n");
             return 0;
@@ -190,7 +204,12 @@ static uint32_t cp0_sweep(void) {
         asm volatile("mtc0 %0, $7, 0\n\t"
                      "mtc0 %1, $12, 0\n\t"
                      "ehb\n\t"
-                     :: "r"(0x20000000U), "r"(0x10U));
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     :: "r"(0x2000000FU), "r"(0x10U));
         if (read_synci_step() != 32U || read_hwcount() == 0U ||
             read_cpunum() != 0U || read_ccres() != 2U) {
             print_str("FAIL: RDHWR enabled user standard read\n");
@@ -207,8 +226,10 @@ static uint32_t cp0_sweep(void) {
             return 0;
         }
         *((volatile uint32_t *)(uintptr_t)tls_read + 1) = 0x24681357U;
-        asm volatile("mtc0 %0, $12, 0\n\t"
-                     "ehb\n\t" :: "r"(0U));
+        cp0_restore_kernel = 1;
+        asm volatile("syscall\n\t"
+                     "nop\n\t"
+                     "nop\n\t");
         if (tls_read != userlocal) {
             print_str("FAIL: RDHWR enabled user read got ");
             print_hex(tls_read);

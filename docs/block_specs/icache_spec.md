@@ -11,6 +11,14 @@
 > 不发起 AXI 写事务；Hit invalidate 未命中时为成功 no-op。`SYNCI` 映射为
 > 同一条 Hit invalidate 维护路径；完整 OS cache-ordering ABI 仍为后续工作。
 
+当前实现还保存 tag/data parity bit，并在 lookup 时把 parity mismatch 归类为
+I-cache `CacheErr`。parity 故障注入是显式仿真端口（`sim_parity_inject_*`），
+只在端口 valid 为 `1` 时翻转指定 way/set 的 tag 或 data parity；生产
+`mips_core` 实例将全部注入端口 tie-off 为零。此前用于验证 parity 的动态二维
+memory `force/release` 会让 VCS 保留和扩展大量仿真对象，是 I-cache gate OOM
+的根因；该路径已移除。现有 I-cache unit parity test 已覆盖 data/tag mismatch
+到 CacheErr，再次取指恢复 refill。
+
 ---
 
 ## 0. 目标
@@ -247,8 +255,27 @@ module l1_icache #(
 - CoreMark I-cache hit rate ≥ 95%。
 - 冷启动 refill 全流 8 beat 无 stall（除 AXI backpressure）。
 
+### 10.1 I-cache parity/OOM closure evidence
+
+串行执行以下现有 Make gate，不改变 gate wrapper、Make 入口或进程资源限制：
+
+```text
+make cpu-icache-exec-gate
+make cpu-icache-error-gate
+make cpu-icache-product-error-gate
+make cpu-icache-stress-gate
+make cpu-icache-tag-gate
+```
+
+本次收尾结果：parity unit 输出 `REGRESSION_TEST_SUCCESS icache`；五个 CPU
+gate 均输出对应 `REGRESSION_TEST_SUCCESS`。VCS 编译/仿真均正常结束，无 OOM
+或异常内存增长；五个 Make 进程观测到的最大 RSS 约为 206--207 MB。该证据
+验证仿真 parity injection 和当前 CPU/I-cache contract，不等同于硅上 ECC
+实现或完整 OS cache ABI。
+
 ---
 
 ## 版本记录
 
 - v0 (2026-07-26)：初版规格，8 KB 4-way VIPT + pseudo-LRU + 1 MSHR + CACHE 指令子集。等待 Phase C 启动评审。
+- v1 (2026-08-09)：移除动态二维 memory parity `force/release`，改用显式仿真注入端口并对生产实例 tie-off；parity unit 与五个 CPU I-cache gate 通过，闭合 I-cache OOM 修复证据。

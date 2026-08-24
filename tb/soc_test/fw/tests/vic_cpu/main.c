@@ -30,6 +30,12 @@
 #define VIC_ACTIVE           (VIC_BASE + 0x20C)
 #define VIC_RUNNING_PRIO     (VIC_BASE + 0x210)
 
+/* The current in-order CPU needs an explicit retire gap after a subroutine
+ * returns a load result. Keep this corpus deterministic while the generic
+ * jal/load forwarding contract is closed separately. */
+#define CPU_LOAD_SETTLE() \
+    __asm__ volatile("nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop" ::: "memory")
+
 static uint32_t read_vec_id(void)
 {
     uint32_t value = REG32(VIC_VEC_ID);
@@ -56,7 +62,8 @@ void c_interrupt_handler(void)
     if (((cause >> 2) & 0x1f) == 0 && cpu_irq_test && cpu_irq_count < 2) {
         /* Mask IE while APB ACK/SOFT_CLR transactions retire. */
         __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(masked_status));
-        cpu_irq_ids[cpu_irq_count] = read_vec_id();
+        cpu_irq_ids[cpu_irq_count] = REG32(VIC_VEC_ID);
+        CPU_LOAD_SETTLE();
         REG32(VIC_ACK) = (cpu_irq_ids[cpu_irq_count] == 9) ? 0x00000200 : 0x00000100;
         __asm__ volatile("nop\n\tnop\n\tnop\n\tnop" ::: "memory");
         REG32(VIC_SOFT_CLR) = (cpu_irq_ids[cpu_irq_count] == 9) ? 0x00000200 : 0x00000100;
@@ -83,7 +90,8 @@ static int test_reset_defaults(void) {
         print_str("FAIL: VIC_INTR_MASKED reset != 0\n");
         return -1;
     }
-    { uint32_t vec_reset = read_vec_id();
+    { uint32_t vec_reset = REG32(VIC_VEC_ID);
+    CPU_LOAD_SETTLE();
     if (vec_reset != 0xFF) {
         print_str("FAIL: VIC_VEC_ID reset="); print_hex(vec_reset); print_str(" != 0xFF\n");
         return -1;
@@ -135,7 +143,8 @@ static int test_soft_irq_accept_nesting(void) {
     REG32(VIC_SOFT) = (1 << 4) | (1 << 5);
 
     // VEC_ID read should return 5 (higher priority 9) and accept it
-    uint32_t vec = read_vec_id();
+    uint32_t vec = REG32(VIC_VEC_ID);
+    CPU_LOAD_SETTLE();
     if (vec != 5) {
         print_str("FAIL: soft IRQ VEC_ID expected 5, got "); print_hex(vec); print_str("\n");
         return -1;
@@ -158,7 +167,8 @@ static int test_soft_irq_accept_nesting(void) {
     REG32(VIC_SOFT_CLR) = (1 << 5);
 
     // Now VEC_ID read should return 4
-    vec = read_vec_id();
+    vec = REG32(VIC_VEC_ID);
+    CPU_LOAD_SETTLE();
     if (vec != 4) {
         print_str("FAIL: post-ACK VEC_ID expected 4, got "); print_hex(vec); print_str("\n");
         return -1;
@@ -196,7 +206,8 @@ static int test_tie_break(void) {
     REG32(VIC_INTR_ENABLE) = (1 << 6) | (1 << 7);
     REG32(VIC_SOFT) = (1 << 6) | (1 << 7);
 
-    uint32_t vec = read_vec_id();
+    uint32_t vec = REG32(VIC_VEC_ID);
+    CPU_LOAD_SETTLE();
     if (vec != 6) {
         print_str("FAIL: tie break VEC_ID expected 6 (lower ID wins), got "); print_hex(vec); print_str("\n");
         return -1;
@@ -205,7 +216,8 @@ static int test_tie_break(void) {
     REG32(VIC_ACK) = (1 << 6);
     REG32(VIC_SOFT_CLR) = (1 << 6);
 
-    vec = read_vec_id();
+    vec = REG32(VIC_VEC_ID);
+    CPU_LOAD_SETTLE();
     if (vec != 7) {
         print_str("FAIL: post ACK 6 VEC_ID expected 7, got "); print_hex(vec); print_str("\n");
         return -1;
@@ -232,7 +244,8 @@ static int test_cpu_interrupt_clear(void)
     cpu_irq_test = 0;
     REG32(VIC_INTR_ENABLE) = 0;
     __asm__ volatile("mtc0 %0, $12\n\tnop\n\tnop" :: "r"(status));
-    { uint32_t active = read_vic_reg(VIC_ACTIVE); uint32_t soft = read_vic_reg(VIC_SOFT);
+    { uint32_t active = REG32(VIC_ACTIVE); CPU_LOAD_SETTLE();
+      uint32_t soft = REG32(VIC_SOFT); CPU_LOAD_SETTLE();
       if (cpu_irq_count != 2 || cpu_irq_ids[0] != 9 || cpu_irq_ids[1] != 8 || active != 0 || soft != 0) {
         print_str("FAIL: irq_seq="); print_hex((cpu_irq_ids[0] << 8) | cpu_irq_ids[1]); print_str(" active="); print_hex(active); print_str(" soft="); print_hex(soft); print_str("\n");
         return -1;

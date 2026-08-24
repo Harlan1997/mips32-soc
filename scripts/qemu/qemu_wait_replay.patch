@@ -1,0 +1,14 @@
+diff --git a/target/mips/tcg/exception.c b/target/mips/tcg/exception.c
+--- a/target/mips/tcg/exception.c
++++ b/target/mips/tcg/exception.c
+@@ -67,6 +67,12 @@ void helper_wait(CPUMIPSState *env)
+ {
+     CPUState *cs = env_cpu(env);
+
++    extern void qemu_mips32_soc_ref_wait(CPUMIPSState *env)
++        __attribute__((weak));
++    if (qemu_mips32_soc_ref_wait) {
++        qemu_mips32_soc_ref_wait(env);
++    }
+
+     cs->halted = 1;

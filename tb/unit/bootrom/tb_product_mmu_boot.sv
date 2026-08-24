@@ -32,6 +32,7 @@ module tb_product_mmu_boot;
     reg refill_entry_seen;
     reg apb_write_seen;
     reg mailbox_request_seen;
+    reg micro_d_hit_seen;
 
     genvar i;
     generate
@@ -82,6 +83,9 @@ module tb_product_mmu_boot;
             refill_entry_seen = 1'b0;
             apb_write_seen = 1'b0;
             mailbox_request_seen = 1'b0;
+            if (`SOC_MICRO_TLB_ENABLE) begin
+                micro_d_hit_seen = 1'b0;
+            end
         end else begin
             cycles = cycles + 1;
 
@@ -108,6 +112,11 @@ module tb_product_mmu_boot;
                 u_soc.u_impl.s1_awaddr == 32'h4000_0000)
                 apb_write_seen = 1'b1;
 
+            if (`SOC_MICRO_TLB_ENABLE) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.micro_d_hit)
+                    micro_d_hit_seen = 1'b1;
+            end
+
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we != 4'd0) &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr == 32'hA000_FFFC) begin
@@ -128,6 +137,8 @@ module tb_product_mmu_boot;
                     fail("TLBWR did not install the useg DDR refill entry");
                 if (!apb_write_seen)
                     fail("wired kseg2 mapping did not reach the APB UART address");
+                if (`SOC_MICRO_TLB_ENABLE && !micro_d_hit_seen)
+                    fail("enabled MMU boot did not observe a D-side micro-TLB hit");
                 $display("REGRESSION_TEST_SUCCESS product_mmu_boot");
                 $finish;
             end

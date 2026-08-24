@@ -20,6 +20,9 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
     "${ROOT_DIR}/rtl/perips/apb_timer.v" "${ROOT_DIR}/rtl/perips/apb_uart_16550.v" \
     "${ROOT_DIR}/rtl/perips/apb_vic.v" "${ROOT_DIR}/rtl/perips/apb_wdt.v" \
     "${ROOT_DIR}/rtl/perips/apb_boot_status.v" "${ROOT_DIR}/rtl/perips/apb_qspi_status.v" \
+    "${ROOT_DIR}/rtl/perips/apb_mmu_context_status.v" "${ROOT_DIR}/rtl/perips/apb_ddr4_status.v" \
+    "${ROOT_DIR}/rtl/cpu/mmu_tlb_shootdown_mailbox.v" "${ROOT_DIR}/rtl/cpu/mmu_asid_allocator.v" \
+    "${ROOT_DIR}/rtl/perips/apb_perf_counters.v" \
     "${ROOT_DIR}/rtl/perips/qspi_cmd_behavioral.v" "${ROOT_DIR}/rtl/perips/qspi_apb_integration.v" \
     "${ROOT_DIR}/rtl/soc_peripheral_subsystem.v" "${SCRIPT_DIR}/tb_wdt_peripheral.sv" \
     -l compile.log

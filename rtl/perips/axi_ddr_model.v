@@ -8,7 +8,12 @@
 // =============================================================================
 
 module axi_ddr_model #(
-    parameter MEM_DEPTH_WORDS = 16384 // 64KB
+    parameter MEM_DEPTH_WORDS = 16384, // 64KB
+    parameter READ_SLOTS = 2,
+    parameter INJECT_RESP_ERROR = 1'b0,
+    parameter [31:0] INJECT_RESP_ERROR_ADDR = 32'h0000_8000,
+    parameter INJECT_RESP_ERROR_TWO = 1'b0,
+    parameter [31:0] INJECT_RESP_ERROR_ADDR2 = 32'h0000_9000
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -52,6 +57,8 @@ module axi_ddr_model #(
 
     // Memory array
     reg [31:0] ram [0:MEM_DEPTH_WORDS-1];
+    reg error_injected;
+    reg error_injected2;
 
     // Initialize with 0
     integer i;
@@ -121,86 +128,74 @@ module axi_ddr_model #(
     assign s_arready = int_arready & ~ddr_busy & ~rand_backpressure;
 
     // =========================================================================
-    // Read Logic
+    // Read Logic: two independently delayed AXI read slots.  Responses are
+    // arbitrated in slot order, while the AXI ID preserves MSHR ownership.
     // =========================================================================
-    localparam R_IDLE  = 3'd0;
-    localparam R_WAIT  = 3'd1;
-    localparam R_BURST = 3'd2;
-    
-    reg [2:0]  r_state;
-    reg [31:0] r_addr;
-    reg [7:0]  r_len;
-    reg [3:0]  r_id;
-    reg [7:0]  r_wait_cycles;
+    localparam R_IDLE = 2'd0, R_WAIT = 2'd1, R_BURST = 2'd2;
+    reg [1:0] rd_state [0:READ_SLOTS-1];
+    reg [31:0] rd_addr [0:READ_SLOTS-1];
+    reg [7:0] rd_len [0:READ_SLOTS-1];
+    reg [3:0] rd_id [0:READ_SLOTS-1];
+    reg [7:0] rd_wait [0:READ_SLOTS-1];
+    reg [1:0] rd_resp [0:READ_SLOTS-1];
+    integer rd_free, rd_out, ri;
+
+    always @(*) begin
+        rd_free = -1;
+        for (ri = 0; ri < READ_SLOTS; ri = ri + 1)
+            if (rd_state[ri] == R_IDLE && rd_free < 0) rd_free = ri;
+        rd_out = -1;
+        for (ri = 0; ri < READ_SLOTS; ri = ri + 1)
+            if (rd_state[ri] == R_BURST && rd_out < 0) rd_out = ri;
+        int_arready = (rd_free >= 0);
+        s_rvalid = (rd_out >= 0);
+        s_rlast = (rd_out >= 0) && (rd_len[rd_out] == 0);
+        s_rdata = (rd_out >= 0) ? ram[rd_addr[rd_out][15:2]] : 32'd0;
+        s_rid = (rd_out >= 0) ? rd_id[rd_out] : 4'd0;
+        s_rresp = (rd_out >= 0) ? rd_resp[rd_out] : 2'd0;
+    end
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            r_state     <= R_IDLE;
-            r_addr      <= 32'd0;
-            r_len       <= 8'd0;
-            r_id        <= 4'd0;
-            r_wait_cycles <= 8'd0;
-            int_arready <= 1'b1;
-            s_rvalid    <= 1'b0;
-            s_rlast     <= 1'b0;
-            s_rdata     <= 32'd0;
-            s_rid       <= 4'd0;
-            s_rresp     <= 2'd0;
+            error_injected <= 1'b0; error_injected2 <= 1'b0;
+            for (ri = 0; ri < READ_SLOTS; ri = ri + 1) begin
+                rd_state[ri] <= R_IDLE; rd_addr[ri] <= 0; rd_len[ri] <= 0;
+                rd_id[ri] <= 0; rd_wait[ri] <= 0; rd_resp[ri] <= 0;
+            end
         end else begin
-            case (r_state)
-                R_IDLE: begin
-                    int_arready <= 1'b1;
-                    if (s_arvalid && s_arready) begin
-                        int_arready <= 1'b0;
-                        r_addr    <= s_araddr;
-                        r_len     <= s_arlen;
-                        r_id      <= s_arid;
-                        // Simulating CAS Latency (e.g., 5 to 30 cycles)
-                        r_wait_cycles <= {3'd0, lfsr[12:8]} + 8'd5;
-                        r_state   <= R_WAIT;
-                    end
+            if (s_arvalid && s_arready && rd_free >= 0) begin
+                rd_state[rd_free] <= R_WAIT;
+                rd_addr[rd_free] <= s_araddr;
+                rd_len[rd_free] <= s_arlen;
+                rd_id[rd_free] <= s_arid;
+                // Distinct slots intentionally get distinct latency so the
+                // second accepted read can complete before the first.
+                rd_wait[rd_free] <= {3'd0, lfsr[12:8]} + 8'd5 +
+                                    (s_arid[0] ? 8'd0 : 8'd3);
+                if (INJECT_RESP_ERROR && !error_injected &&
+                    (s_araddr[31:5] == INJECT_RESP_ERROR_ADDR[31:5])) begin
+                    rd_resp[rd_free] <= 2'b10; error_injected <= 1'b1;
+                    $display("axi_ddr_model: injected SLVERR addr=%08h id=%0h len=%0d", s_araddr, s_arid, s_arlen);
+                end else if (INJECT_RESP_ERROR && INJECT_RESP_ERROR_TWO &&
+                             !error_injected2 &&
+                             (s_araddr[31:5] == INJECT_RESP_ERROR_ADDR2[31:5])) begin
+                    rd_resp[rd_free] <= 2'b10; error_injected2 <= 1'b1;
+                    $display("axi_ddr_model: injected SLVERR addr=%08h id=%0h len=%0d slot=2", s_araddr, s_arid, s_arlen);
+                end else rd_resp[rd_free] <= 2'b00;
+            end
+            for (ri = 0; ri < READ_SLOTS; ri = ri + 1) begin
+                if (rd_state[ri] == R_WAIT && !ddr_busy) begin
+                    if (rd_wait[ri] != 0) rd_wait[ri] <= rd_wait[ri] - 1'b1;
+                    else rd_state[ri] <= R_BURST;
                 end
-                R_WAIT: begin
-                    if (ddr_busy) begin
-                        // Do nothing, stalled by refresh
-                    end else if (r_wait_cycles > 0) begin
-                        r_wait_cycles <= r_wait_cycles - 1'b1;
-                    end else begin
-                        r_state   <= R_BURST;
-                        s_rvalid  <= 1'b1;
-                        s_rlast   <= (r_len == 8'd0);
-                        s_rid     <= r_id;
-                        s_rresp   <= 2'b00; // OKAY
-                        s_rdata   <= ram[r_addr[15:2]];
-                    end
+            end
+            if (s_rvalid && s_rready && rd_out >= 0) begin
+                if (rd_len[rd_out] == 0) rd_state[rd_out] <= R_IDLE;
+                else begin
+                    rd_addr[rd_out] <= rd_addr[rd_out] + 4;
+                    rd_len[rd_out] <= rd_len[rd_out] - 1'b1;
                 end
-                R_BURST: begin
-                    if (s_rvalid && s_rready) begin
-                        if (r_len == 8'd0) begin
-                            s_rvalid  <= 1'b0;
-                            s_rlast   <= 1'b0;
-                            r_state   <= R_IDLE;
-                        end else begin
-                            r_addr    <= r_addr + 32'd4;
-                            r_len     <= r_len - 1'b1;
-                            s_rlast   <= (r_len == 8'd1);
-                            s_rdata   <= ram[(r_addr[15:0] + 16'd4) >> 2];
-                            
-                            // 10% chance to drop RVALID momentarily in middle of burst
-                            if (lfsr[4:2] == 3'd0) begin
-                                s_rvalid <= 1'b0;
-                                r_wait_cycles <= lfsr[10:9] + 8'd1; // wait 1-4 cycles
-                                r_state <= R_WAIT;
-                            end
-                        end
-                    end else if (s_rvalid && !s_rready) begin
-                        // stall
-                    end else if (!s_rvalid) begin
-                        // If we dropped valid to simulate bubbles
-                        s_rvalid <= 1'b1;
-                    end
-                end
-            endcase
+            end
         end
     end
 

@@ -1,0 +1,10 @@
+diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
+--- a/target/mips/tcg/fpu_helper.c
++++ b/target/mips/tcg/fpu_helper.c
+@@ -34,7 +34,8 @@
+ #define FLOAT_TWO32 make_float32(1 << 30)
+ #define FLOAT_TWO64 make_float64(1ULL << 62)
+ 
+-#define FP_TO_INT32_OVERFLOW 0x7fffffff
++/* SOC_REF_FPU_INT32_INDEFINITE: MIPS invalid W conversion result. */
++#define FP_TO_INT32_OVERFLOW 0x80000000

@@ -35,6 +35,14 @@ module icache (
     input  wire [31:0] cache_tag_wdata,
     output wire [31:0] cache_tag_rdata,
 
+    // Simulation-only parity fault injection. Production instances may
+    // leave these inputs unconnected; only an explicit 1 enables injection.
+    input  wire        sim_parity_inject_valid,
+    input  wire        sim_parity_inject_tag,
+    input  wire        sim_parity_inject_data,
+    input  wire [1:0]  sim_parity_inject_way,
+    input  wire [5:0]  sim_parity_inject_index,
+
     // AXI4 Master Interface (AR and R channels)
     output wire [3:0]  arid,
     output reg  [31:0] araddr,
@@ -92,11 +100,15 @@ module icache (
     // SRAM arrays (4-way). tag entry = {valid[21], tag[20:0]}
     reg [TAG_BITS:0] tag_ram  [0:WAYS-1][0:SETS-1];
     reg [255:0]      data_ram [0:WAYS-1][0:SETS-1];
+    reg              tag_parity_ram  [0:WAYS-1][0:SETS-1];
+    reg              data_parity_ram [0:WAYS-1][0:SETS-1];
     reg [2:0]        plru_ram [0:SETS-1];
 
     // Registered read-out of the indexed set
     reg [TAG_BITS:0] tag_rdata  [0:WAYS-1];
     reg [255:0]      data_rdata [0:WAYS-1];
+    reg              tag_parity_rdata  [0:WAYS-1];
+    reg              data_parity_rdata [0:WAYS-1];
     reg [2:0]        plru_rdata;
 
     // Refill buffer
@@ -143,6 +155,8 @@ module icache (
     wire [5:0] sram_addr = sram_write_en ? req_buf_addr[10:5] :
                            ((state == IDLE && maint_req) ? cache_op_addr[10:5] :
                             (sram_read_en ? cpu_addr[10:5] : req_buf_addr[10:5]));
+    wire sim_parity_target = (sim_parity_inject_valid === 1'b1) &&
+                             (sram_addr == sim_parity_inject_index);
 
     integer ri;
     always @(posedge clk) begin
@@ -150,6 +164,12 @@ module icache (
             for (ri=0; ri<WAYS; ri=ri+1) begin
                 tag_rdata[ri]  <= tag_ram[ri][sram_addr];
                 data_rdata[ri] <= data_ram[ri][sram_addr];
+                tag_parity_rdata[ri]  <= tag_parity_ram[ri][sram_addr] ^
+                    (sim_parity_target && (sim_parity_inject_way == ri) &&
+                     (sim_parity_inject_tag === 1'b1));
+                data_parity_rdata[ri] <= data_parity_ram[ri][sram_addr] ^
+                    (sim_parity_target && (sim_parity_inject_way == ri) &&
+                     (sim_parity_inject_data === 1'b1));
             end
             plru_rdata <= plru_ram[sram_addr];
         end
@@ -166,6 +186,15 @@ module icache (
         end
     end
     wire cache_hit = |way_hit;
+    reg  [WAYS-1:0] tag_parity_bad;
+    reg  [WAYS-1:0] data_parity_bad;
+    always @(*) begin
+        for (wi=0; wi<WAYS; wi=wi+1) begin
+            tag_parity_bad[wi]  = way_valid[wi] && ((^tag_rdata[wi]) != tag_parity_rdata[wi]);
+            data_parity_bad[wi] = way_hit[wi] && ((^data_rdata[wi]) != data_parity_rdata[wi]);
+        end
+    end
+    wire icache_parity_error = (|tag_parity_bad) || (|data_parity_bad);
     reg [1:0] hit_way;
     always @(*) begin
         hit_way = 2'd0;
@@ -228,7 +257,9 @@ module icache (
                 else if (maint_req) next_state = CACHE_LOOKUP;
             end
             LOOKUP: begin
-                if (cache_hit) begin
+                if (icache_parity_error) begin
+                    next_state = ERROR;
+                end else if (cache_hit) begin
                     if (!cpu_req) next_state = IDLE;
                 end else next_state = MISS;
             end
@@ -253,7 +284,12 @@ module icache (
             maint_tag_wdata <= 32'd0; maint_error <= 1'b0;
             for (si=0; si<SETS; si=si+1) begin
                 plru_ram[si] <= 3'd0;
-                for (sw=0; sw<WAYS; sw=sw+1) tag_ram[sw][si] <= {(TAG_BITS+1){1'b0}};
+                for (sw=0; sw<WAYS; sw=sw+1) begin
+                    tag_ram[sw][si] <= {(TAG_BITS+1){1'b0}};
+                    data_ram[sw][si] <= 256'd0;
+                    tag_parity_ram[sw][si] <= 1'b0;
+                    data_parity_ram[sw][si] <= 1'b0;
+                end
             end
         end else begin
             state <= next_state;
@@ -302,13 +338,18 @@ module icache (
                 CACHE_LOOKUP: begin
                     if (maint_index_invalidate) begin
                         tag_ram[maint_way][maint_index][TAG_BITS] <= 1'b0;
+                        tag_parity_ram[maint_way][maint_index] <= 1'b0;
                     end else if (maint_hit_invalidate) begin
-                        if (maint_hit)
+                        if (maint_hit) begin
                             tag_ram[maint_hit_way][maint_index][TAG_BITS] <= 1'b0;
+                            tag_parity_ram[maint_hit_way][maint_index] <= 1'b0;
+                        end
                     end else if (maint_store_tag) begin
                         // Ignore the D-cache dirty bit in TagLo[21].
                         tag_ram[maint_way][maint_index] <=
                             {maint_tag_wdata[22], maint_tag_wdata[20:0]};
+                        tag_parity_ram[maint_way][maint_index] <=
+                            ^{maint_tag_wdata[22], maint_tag_wdata[20:0]};
                     end else if (!maint_load_tag) begin
                         maint_error <= 1'b1;
                     end
@@ -342,6 +383,8 @@ module icache (
         if (sram_write_en) begin
             data_ram[victim_way][sram_addr] <= full_refill_line;
             tag_ram[victim_way][sram_addr]  <= {1'b1, req_buf_addr[31:11]};
+            data_parity_ram[victim_way][sram_addr] <= ^full_refill_line;
+            tag_parity_ram[victim_way][sram_addr]  <= ^{1'b1, req_buf_addr[31:11]};
             plru_ram[sram_addr]             <= plru_touch(plru_rdata, victim_way);
         end
     end

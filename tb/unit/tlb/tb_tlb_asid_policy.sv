@@ -377,7 +377,7 @@ module tb_tlb_asid_policy;
               pa == {20'h63fff, 12'h1004});
 
         // Repeated identical TLBWR entries are idempotent copies (as can be
-        // produced by a refill retry); they must not be classified as MCheck.
+        // produced by a refill retry); they must not cause a false MCheck.
         write_entry(2'd0, 19'h02000, 8'h77,
                     make_lo(20'h52000, 3'b011, 1'b1, 1'b1, 1'b0),
                     make_lo(20'h52002, 3'b011, 1'b1, 1'b1, 1'b0));
@@ -387,9 +387,8 @@ module tb_tlb_asid_policy;
         asid   = 8'h77;
         req_va = {19'h02000, 13'h0040};
         #1;
-        check("Identical duplicate entries are idempotent", tlb_hit &&
-              translation_ok && !tlb_multi_hit &&
-              pa == {20'h52000, 12'h0040});
+        check("Identical duplicate entries remain idempotent", tlb_hit &&
+              translation_ok && !tlb_multi_hit && pa == {20'h52000, 12'h040});
 
         // Overlapping valid entries are architecturally fatal (MCheck), not a
         // normal priority-encoded hit.

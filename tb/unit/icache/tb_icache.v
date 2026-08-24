@@ -10,6 +10,7 @@ module tb_icache;
     reg clk=0, rst_n=0;
     always #5 clk=~clk;
 
+
     reg         cpu_req;
     reg  [31:0] cpu_addr;
     wire [31:0] cpu_rdata;
@@ -20,10 +21,20 @@ module tb_icache;
     wire        arvalid; wire arready;
     wire [3:0]  rid; wire [31:0] rdata; wire [1:0] rresp; wire rlast, rvalid; wire rready;
 
+    reg        sim_parity_inject_valid, sim_parity_inject_tag, sim_parity_inject_data;
+    reg  [1:0] sim_parity_inject_way;
+    reg  [5:0] sim_parity_inject_index;
+
+
     icache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_addr(cpu_addr),.cpu_rdata(cpu_rdata),
         .cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
+        .sim_parity_inject_valid(sim_parity_inject_valid),.sim_parity_inject_tag(sim_parity_inject_tag),
+        .sim_parity_inject_data(sim_parity_inject_data),.sim_parity_inject_way(sim_parity_inject_way),
+        .sim_parity_inject_index(sim_parity_inject_index),
+        .cache_op_valid(1'b0),.cache_op(5'b0),.cache_op_addr(32'b0),.cache_op_ready(),.cache_op_done(),
+        .cache_op_error(),.cache_tag_wdata(32'b0),.cache_tag_rdata(),
         .arid(arid),.araddr(araddr),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .arlock(arlock),.arcache(arcache),.arprot(arprot),.arvalid(arvalid),.arready(arready),
         .rid(rid),.rdata(rdata),.rresp(rresp),.rlast(rlast),.rvalid(rvalid),.rready(rready)
@@ -90,7 +101,7 @@ module tb_icache;
     begin
         @(negedge clk);
         cpu_req=1; cpu_addr=addr;
-        @(posedge clk); while(!cpu_data_ok) @(posedge clk);
+        @(negedge clk); while(cpu_bus_error !== 1'b1) @(negedge clk);
         d=cpu_rdata;
         if (!cpu_bus_error) begin
             $display("FAIL AXI read error was not exposed to CPU"); errs=errs+1;
@@ -102,11 +113,23 @@ module tb_icache;
         @(negedge clk);
     end endtask
 
-    integer c_ar;
+    task find_cached_way(input [31:0] addr, output integer way);
+        integer fw;
+    begin
+        way = -1;
+        for (fw=0; fw<4; fw=fw+1)
+            if (dut.tag_ram[fw][addr[10:5]][21] &&
+                (dut.tag_ram[fw][addr[10:5]][20:0] == addr[31:11]))
+                way = fw;
+    end endtask
+
+    integer c_ar, parity_way, parity_index;
     localparam [31:0] WSTEP = 32'h0000_0800; // 2KB: same set, next tag
 
     initial begin
         cpu_req=0; cpu_addr=0; inject_read_error=0;
+        sim_parity_inject_valid=0; sim_parity_inject_tag=0; sim_parity_inject_data=0;
+        sim_parity_inject_way=0; sim_parity_inject_index=0;
         #23 rst_n=1; @(negedge clk);
 
         // T1: cold miss -> refill -> hit
@@ -154,6 +177,31 @@ module tb_icache;
         inject_read_error=0;
         c_ar=ar_count; check(32'h0000_6800);
         if (ar_count!==c_ar+1) begin $display("FAIL T5 error line was installed"); errs=errs+1; end
+
+        // T6: odd parity corruption in the installed data and tag entries
+        // must raise the existing I-cache CacheErr sideband.
+        check(32'h0000_7000);
+        find_cached_way(32'h0000_7000, parity_way);
+        parity_index = (32'h0000_7000 >> 5) & 63;
+        if (parity_way < 0) begin
+            $display("FAIL T6 parity target line was not installed"); errs=errs+1;
+        end else begin
+            sim_parity_inject_way = parity_way[1:0];
+            sim_parity_inject_index = parity_index[5:0];
+            sim_parity_inject_valid = 1'b1;
+            sim_parity_inject_data = 1'b1;
+            ifetch_error(32'h0000_7000);
+            sim_parity_inject_valid = 1'b0;
+            sim_parity_inject_data = 1'b0;
+            check(32'h0000_7000);
+
+            sim_parity_inject_valid = 1'b1;
+            sim_parity_inject_tag = 1'b1;
+            ifetch_error(32'h0000_7000);
+            sim_parity_inject_valid = 1'b0;
+            sim_parity_inject_tag = 1'b0;
+            check(32'h0000_7000);
+        end
 
         #50;
         if (errs==0) $display("REGRESSION_TEST_SUCCESS icache");

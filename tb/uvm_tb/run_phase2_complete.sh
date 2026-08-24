@@ -155,7 +155,7 @@ module_coverage_line=$(awk '/^Total Module Definition Coverage Summary/ {found=1
     echo
     echo "## Deferred Out Of Phase 2"
     echo
-    echo "- RTL multi-outstanding support: current product fabric contract remains single-outstanding."
+    echo "- AXI fabric boundary now covers bounded 4-entry multi-outstanding and ID-based response reordering; SoC downsteam L2/APB/flash remain single-outstanding."
     echo "- UART TX IRQ, loadable flash-image reads, APB wait/PSLVERR stress, and CPU/CP0 firmware smoke gating are Phase 3A items; use \`make phase3-complete\` for their closure gate."
     echo "- CPU/CP0 UVM-visible exception-entry/return functional coverage remains a separate post-Phase-3A item."
     echo "- SPI-serial flash protocol modeling remains future work; Phase 3A signs off the loadable AXI flash-image/XIP verification window."

@@ -28,11 +28,15 @@ all:
 all-firmwares:
 	@for d in $(TEST_DIRS); do \
 		name=$$(basename $$d); \
-		echo "==> building firmware: $$name"; \
-		$(MAKE) -C $$d OUT_DIR=$(abspath $(OUT_DIR))/$$name FW_BASE=firmware || exit 1; \
+		if [ -f $$d/Makefile ]; then \
+			echo "==> building firmware: $$name"; \
+			$(MAKE) -C $$d OUT_DIR=$(abspath $(OUT_DIR))/$$name FW_BASE=firmware || exit 1; \
+		else \
+			echo "==> skipping non-firmware test asset: $$name"; \
+		fi; \
 	done
 
 clean:
 	@for d in $(TEST_DIRS); do \
-		$(MAKE) -C $$d clean; \
+		if [ -f $$d/Makefile ]; then $(MAKE) -C $$d clean; fi; \
 	done

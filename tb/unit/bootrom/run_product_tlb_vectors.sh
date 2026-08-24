@@ -5,6 +5,11 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/unit_tb/product_tlb_vectors"}
 
+MICRO_TLB_DEFINE=()
+if [ "${SOC_MICRO_TLB_ENABLE:-0}" = "1" ]; then
+    MICRO_TLB_DEFINE=(+define+SOC_MICRO_TLB_ENABLE=1)
+fi
+
 source /etc/profile.d/modules.sh
 if [ -d /tool/module ]; then
     module use /tool/module
@@ -17,6 +22,7 @@ cd "${RUN_DIR}"
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +define+SOC_PRODUCT_BOOT_ENABLE=1 \
     +define+SOC_MMU_ENABLE=1 \
+    "${MICRO_TLB_DEFINE[@]}" \
     +incdir+"${ROOT_DIR}/rtl/include" +incdir+"${ROOT_DIR}/rtl/cpu" \
     +incdir+"${ROOT_DIR}/rtl/axi" +incdir+"${ROOT_DIR}/rtl/perips" \
     "${ROOT_DIR}"/rtl/cpu/*.v "${ROOT_DIR}"/rtl/axi/*.v "${ROOT_DIR}"/rtl/perips/*.v \

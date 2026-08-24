@@ -43,6 +43,22 @@ return AXI `DECERR`.
 | DDR4 controller | `0x6000` | frozen init/calibration/refresh/error contract; see `block_specs/ddr4_spec.md` |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
+| CPU performance counters | `0xC000` | read-only cycle/retire/cache/branch/MDU counters; opt-in `SOC_PERF_COUNTERS` |
+
+### CPU Performance Counters (`0x4000_C000`)
+
+The window is read-only and returns APB `OKAY` for writes. Counter ownership,
+enable, and reset remain in the CPU; this interface is observation-only.
+
+| Offset | Register | Access | Meaning |
+| --- | --- | --- | --- |
+| `0x000` | `CYCLE_COUNT` | RO | enabled CPU cycles |
+| `0x004` | `RETIRE_COUNT` | RO | retired/control-valid events |
+| `0x008` | `ICACHE_MISS_COUNT` | RO | I-side request miss events |
+| `0x00C` | `DCACHE_MISS_COUNT` | RO | D-side request miss events |
+| `0x010` | `BRANCH_MISPREDICT_COUNT` | RO | BPU misprediction events |
+| `0x014` | `MDU_STALL_COUNT` | RO | MDU not-ready cycles |
+| `0x018` | `VERSION` | RO | `0x5043_0001` |
 
 ### QSPI/XIP Status Registers (`0x4000_5000`)
 
