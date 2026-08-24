@@ -11,6 +11,10 @@
 #define DMA_IRQ  (DMA_BASE + 0x104U)
 #define PIC_STAT 0x40004000U
 
+#ifndef DMA_EXPECT_ERR_CODE
+#define DMA_EXPECT_ERR_CODE 2U
+#endif
+
 static void fail(const char *msg, uint32_t value)
 {
     print_str(msg);
@@ -36,7 +40,7 @@ int main(void)
         fail("dma_axi_error: TIMEOUT ", status);
 
     status = REG32(DMA_STAT);
-    if ((status & 0x3cU) != 0x14U)
+    if ((status & 0x3cU) != ((DMA_EXPECT_ERR_CODE << 3) | 0x4U))
         fail("dma_axi_error: STATUS ", status);
     if (!(REG32(DMA_IRQ) & 1U))
         fail("dma_axi_error: IRQ_STATUS ", REG32(DMA_IRQ));
