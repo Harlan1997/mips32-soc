@@ -26,6 +26,7 @@ required=(
     "${ROOT_DIR}/tb/sva/apb_protocol_props.sv"
     "${ROOT_DIR}/tb/sva/reset_sync_props.sv"
     "${ROOT_DIR}/tb/sva/cache_state_props.sv"
+    "${ROOT_DIR}/tb/sva/tlb_lookup_props.sv"
     "${ROOT_DIR}/tb/formal/arb_fairness.sva"
     "${ROOT_DIR}/tb/formal/README.md"
     "${ROOT_DIR}/docs/cdc_waivers.md"

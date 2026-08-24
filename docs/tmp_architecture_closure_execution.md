@@ -1428,3 +1428,14 @@ remains the compatibility baseline.
   does not claim full ISA/IEEE-754/OS VM semantics, unrestricted multicore
   shootdown, full RTL system-mode Linux differential, U-Boot/real QSPI-DDR
   boot, physical timing, or formal/CDC/RDC/lint signoff.
+
+### 2026-08-25 TLB SVA and verification-tool audit
+
+- Added a bind-based TLB checker to `make sva-gate`; it asserts that the real
+  I/D main-TLB multi-hit flags correspond to at least two matching entries.
+- `make sva-gate` passes after compiling the checker in the SoC SVA path, and
+  `make verification-foundation-gate` records the required assets and waiver
+  audit.
+- The environment has VCS available but no Verilator/Yosys/SBY/SpyGlass/
+  Questa CDC/VC Static/JasperGold binaries. The result is simulation assertion
+  and tool-status evidence only; formal/CDC/RDC/lint signoff remains open.

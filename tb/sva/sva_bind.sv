@@ -86,6 +86,15 @@ bind mips_page_table_walker page_table_walker_props u_page_table_walker_props (
     .resp_valid (resp_valid)
 );
 
+bind mips_tlb tlb_lookup_props #(.TLB_ENTRIES(TLB_ENTRIES)) u_tlb_lookup_props (
+    .clk               (clk),
+    .rst_n             (rst_n),
+    .lookup0_hit_vec   (lookup0_hit_vec),
+    .lookup1_hit_vec   (lookup1_hit_vec),
+    .lookup0_multi_hit (lookup0_multi_hit_r),
+    .lookup1_multi_hit (lookup1_multi_hit_r)
+);
+
 bind reset_sync reset_sync_props #(.STAGES(STAGES)) u_reset_sync_props (
     .clk       (clk),
     .rst_pre_n (rst_pre_n),
