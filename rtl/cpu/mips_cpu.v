@@ -196,12 +196,13 @@ module mips_cpu #(
     
     // Exception PC redirection
     wire sim_exception_active = (sim_exception_req === 1'b1);
-    // Both the legacy depth-1 ROB and the opt-in FIFO expose a one-cycle
-    // retirement pulse.  CP0 exceptions, ERET and interrupts must consume
-    // that pulse; treating the legacy bundle as perpetually valid re-accepts
-    // an old TLB fault after the pipeline has already been flushed, pairing
-    // its exception PC with a later WB address.
-    wire wb_arch_valid = wb_valid;
+    // Ordinary writes use the one-cycle ROB retirement pulse.  A legacy
+    // depth-1 ROB can hold a fault or ERET bundle while it suppresses the
+    // duplicate data retirement pulse; those control-flow events are still
+    // architectural commits and must remain visible to CP0.  The exception
+    // flush clears the bundle on the same edge, so including the held event
+    // here does not re-accept it after the flush.
+    wire wb_arch_valid = wb_valid || wb_except_req || wb_is_eret;
     // EXL suppresses CP0 state overwrite inside mips_cp0, but it must not
     // suppress the architectural redirect: nested synchronous faults (the
     // product refill ROM deliberately uses SYSCALL to enter its general
@@ -535,6 +536,25 @@ module mips_cpu #(
     wire if_except_is_tlb_refill = ~if_adel_exception & inst_req & ~mmu_i_ok &
                                    !hw_walker_i_fault &
                                    (mmu_i_fault_type == 3'b001) & ~mmu_ilookup_hit;
+
+    // IF faults are carried through the pipeline as control-only metadata.
+    // Once the exception reaches WB, the fetch PC has already redirected to
+    // the vector, so except_pc may describe an older kseg0 instruction rather
+    // than the virtual address that missed translation. Hold the first fault
+    // until CP0 consumes the exception bundle.
+    reg        if_fault_pending_q;
+    reg [31:0] if_fault_vaddr_q;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            if_fault_pending_q <= 1'b0;
+            if_fault_vaddr_q   <= 32'd0;
+        end else if (exception_flush) begin
+            if_fault_pending_q <= 1'b0;
+        end else if (if_fault_req && !if_fault_pending_q) begin
+            if_fault_pending_q <= 1'b1;
+            if_fault_vaddr_q   <= if_vaddr;
+        end
+    end
 
     mips_if_id_reg u_mips_if_id_reg (
         .clk          (clk),
@@ -1785,8 +1805,14 @@ module mips_cpu #(
                              ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc));
     // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
-    // faults latch the faulting fetch PC.
-    wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out : except_pc;
+    // address exceptions use the held faulting fetch VA.
+    wire wb_if_address_exception = !wb_except_is_data &&
+                                   ((wb_except_code == 5'h02) ||
+                                    (wb_except_code == 5'h03) ||
+                                    (wb_except_code == 5'h04));
+    wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out :
+                            (wb_if_address_exception && if_fault_pending_q ?
+                             if_fault_vaddr_q : except_pc);
     mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_mips_cp0 (
         .clk          (clk),
         .rst_n        (rst_n),

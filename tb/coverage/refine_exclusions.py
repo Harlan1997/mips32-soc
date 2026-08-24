@@ -344,6 +344,10 @@ def main():
         
     print(f"=== Dumping exclusions for UVM VDB: {uvm_vdb} ===")
     dump_dir_uvm = "/tmp/dump_uvm_vdb"
+    # URG writes one file per metric and does not remove files left by an
+    # earlier VDB.  Reusing the directory can silently combine checksums from
+    # different compilations and produce exclusions that strict URG rejects.
+    shutil.rmtree(dump_dir_uvm, ignore_errors=True)
     os.makedirs(dump_dir_uvm, exist_ok=True)
     dump_ret, _, dump_err = run_cmd(
         f"source /etc/profile.d/modules.sh && module load vcs && urg -dir {uvm_vdb} -dump full_exclusions -report {dump_dir_uvm}",
@@ -356,6 +360,7 @@ def main():
     
     print(f"=== Dumping exclusions for PROD VDB: {prod_vdb} ===")
     dump_dir_prod = "/tmp/dump_prod_vdb"
+    shutil.rmtree(dump_dir_prod, ignore_errors=True)
     os.makedirs(dump_dir_prod, exist_ok=True)
     dump_ret, _, dump_err = run_cmd(
         f"source /etc/profile.d/modules.sh && module load vcs && urg -dir {prod_vdb} -dump full_exclusions -report {dump_dir_prod}",
