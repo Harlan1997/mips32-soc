@@ -1393,3 +1393,15 @@ remains the compatibility baseline.
 - Fresh `make qemu-system-isa-r2-differential-gate` now passes with
   `TRACE_COMPARE_PASS records=447`, including all four ALIGN positions.
   Full ISA, privileged/MMU and Linux differential remain open.
+
+### 2026-08-24 QEMU UHI/DTB handoff
+
+- Added opt-in opaque DTB loading to `mips32-soc-ref`. The machine validates a
+  1..64 KiB blob, places it below the guest RAM limit, and initializes reset
+  registers using the MIPS UHI contract (`a0=-2`, kseg0 `a1`).
+- `make qemu-system-uhi-dtb-gate` passes with the guest checking the FDT magic
+  and reaching the QEMU success mailbox. The completion report is written to
+  `build/linux_boot/uhi_dtb/completion_report.md`.
+- This closes only the QEMU handoff boundary. A SoC-specific Linux DTS,
+  U-Boot/QSPI image loading, Linux kernel build/configuration, actual Linux
+  UART boot marker, and RTL system-mode Linux differential remain open.
