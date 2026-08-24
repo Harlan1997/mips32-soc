@@ -38,6 +38,15 @@ The script refuses to overwrite a directory whose `.source-commit` marker does
 not match the lock file. This closes source provenance only; it does not claim
 that the custom machine can boot Linux or U-Boot.
 
+## QEMU UHI/DTB contract
+
+The opt-in `make qemu-system-uhi-dtb-gate` target verifies the first Linux
+handoff boundary. It passes `-dtb` to the custom machine, which places the
+opaque blob in guest RAM and supplies the MIPS UHI arguments (`a0=-2`, kseg0
+`a1`). The guest checks the FDT magic and exits through the success mailbox.
+This is not a Linux kernel boot test and does not provide a device-specific
+DTS, U-Boot loader, or Linux driver model.
+
 ## Boot flow (target)
 
 ```

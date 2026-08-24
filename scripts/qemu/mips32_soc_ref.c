@@ -40,6 +40,7 @@
 #define SOC_FLASH_SIZE     (256 * MiB)
 #define SOC_APB_BASE       0x40000000ULL
 #define SOC_APB_SIZE       0x10000
+#define SOC_FDT_MAX_SIZE   (64 * KiB)
 
 typedef struct MIPS32SocRefState {
     MemoryRegion bootrom;
@@ -133,6 +134,8 @@ typedef struct MIPS32SocRefState {
 typedef struct MIPS32SocRefResetData {
     MIPSCPU *cpu;
     uint64_t vector;
+    target_ulong fdt_addr;
+    bool fdt_loaded;
     bool software_mmu_guest;
     bool cpu_has_fpu;
 } MIPS32SocRefResetData;
@@ -1229,6 +1232,15 @@ static void soc_ref_cpu_reset(void *opaque)
     env->CP0_Config2 = 0x80000000;
     env->CP0_Config3 = 0x00002008;
 
+    if (reset->fdt_loaded) {
+        /* Linux generic MIPS consumes the UHI FDT contract before C code:
+         * a0=-2 identifies UHI and a1 is the kseg0 virtual FDT address. */
+        env->active_tc.gpr[4] = (target_ulong)-2;
+        env->active_tc.gpr[5] = reset->fdt_addr;
+        env->active_tc.gpr[6] = 0;
+        env->active_tc.gpr[7] = 0;
+    }
+
     if (!reset->software_mmu_guest) {
         /* Prototype RTL treats kuseg addresses as physical identity mappings. */
         env->CP0_Index = 0;
@@ -1274,6 +1286,10 @@ static void mips32_soc_ref_init(MachineState *machine)
     Clock *cpuclk;
     MIPSCPU *cpu;
     uint64_t entry = 0;
+    hwaddr fdt_base = 0;
+    g_autofree gchar *fdt_data = NULL;
+    gsize fdt_size = 0;
+    bool fdt_loaded = false;
     ssize_t image_size;
 
     if (machine->ram_size < SOC_SRAM_SIZE) {
@@ -1394,8 +1410,39 @@ static void mips32_soc_ref_init(MachineState *machine)
         }
     }
 
+    if (machine->dtb) {
+        if (!g_file_get_contents(machine->dtb, &fdt_data, &fdt_size,
+                                 NULL)) {
+            error_report("could not load DTB '%s'", machine->dtb);
+            exit(EXIT_FAILURE);
+        }
+        if (fdt_size == 0 || fdt_size > SOC_FDT_MAX_SIZE) {
+            error_report("DTB '%s' must be between 1 and %zu bytes",
+                         machine->dtb, (size_t)SOC_FDT_MAX_SIZE);
+            exit(EXIT_FAILURE);
+        }
+        /* Keep the blob below the 256 MiB MIPS32 physical limit and outside
+         * the first SRAM page used by reset images. Linux receives kseg0. */
+        if (machine->ram_size < (2 * MiB)) {
+            error_report("-dtb requires at least 2 MiB of guest RAM");
+            exit(EXIT_FAILURE);
+        }
+        fdt_base = (machine->ram_size - SOC_FDT_MAX_SIZE) & ~0xfffULL;
+        if (address_space_write(&address_space_memory, fdt_base,
+                                MEMTXATTRS_UNSPECIFIED, (uint8_t *)fdt_data,
+                                fdt_size) != MEMTX_OK) {
+            error_report("could not place DTB '%s' at 0x%" HWADDR_PRIx,
+                         machine->dtb, fdt_base);
+            exit(EXIT_FAILURE);
+        }
+        fdt_loaded = true;
+    }
+
     reset = g_new0(MIPS32SocRefResetData, 1);
     reset->cpu = cpu;
+    reset->fdt_addr = fdt_loaded ?
+                      cpu_mips_phys_to_kseg0(NULL, fdt_base) : 0;
+    reset->fdt_loaded = fdt_loaded;
     reset->cpu_has_fpu = (cpu->env.CP0_Config1 & (1U << CP0C1_FP)) != 0;
     /* ELF payloads and RTL reset both start in kuseg at the physical entry.
      * soc_ref_cpu_reset installs the matching identity TLB entry before the
