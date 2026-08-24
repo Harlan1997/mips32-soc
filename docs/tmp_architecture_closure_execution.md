@@ -1352,6 +1352,10 @@ remains the compatibility baseline.
 - The SVA runner now treats the checker error text as a failure marker. This
   remains simulation assertion evidence, not formal/CDC/RDC/lint signoff.
 
+- The unified SVA path also binds `mips_page_table_walker` for state-known,
+  request/memory handshake hold and one-cycle response properties. The default
+  SoC smoke passes; translation semantics remain in the directed walker gates.
+
 - The unified SVA SoC compile also enables `vic_priority_checker` and its bind;
   the smoke run passes without a priority/vector/pending mismatch. This does
   not claim a formal interrupt-priority proof.

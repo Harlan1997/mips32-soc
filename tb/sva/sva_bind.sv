@@ -75,6 +75,17 @@ bind dcache dcache_state_props #(
     .uncacheable  (uncacheable)
 );
 
+bind mips_page_table_walker page_table_walker_props u_page_table_walker_props (
+    .clk        (clk),
+    .rst_n      (rst_n),
+    .state_r    (state),
+    .req_valid  (req_valid),
+    .req_ready  (req_ready),
+    .mem_valid  (mem_valid),
+    .mem_ready  (mem_ready),
+    .resp_valid (resp_valid)
+);
+
 bind reset_sync reset_sync_props #(.STAGES(STAGES)) u_reset_sync_props (
     .clk       (clk),
     .rst_pre_n (rst_pre_n),
