@@ -806,3 +806,14 @@ register. `make qemu-system-gpio-input-gate` passes GPIO input, timer IRQ,
 timer W1C and the existing peripheral checks. Board-level GPIO synchronization,
 physical clock accuracy and RTL pin timing remain outside this reference-model
 gate.
+
+### 2026-08-24 QEMU DDR fault/status model
+
+The opt-in `mips32-soc-ref` DDR model now accepts `ddr-fault-mode=1` for a
+vendor-neutral AXI error code (`0x00040004`) and `ddr-fault-mode=2` for a
+geometry error code (`0x00040005`). `make qemu-system-ddr-fault-gate` passes
+both cases, checks the sticky status/error classification, clears it with the
+APB W1C control, and verifies cached and uncached DDR window access afterward.
+Default mode `0` remains unchanged. This closes the QEMU reference status
+slice only; real PHY/JEDEC failure timing, ECC injection, refresh behavior and
+board-level DDR signoff remain open.
