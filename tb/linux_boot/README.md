@@ -23,6 +23,21 @@ linux-user binary; build it from the same official QEMU source with
 `scripts/qemu/build_mips32_linux_user.sh`. System-mode QEMU is not substituted
 for linux-user execution.
 
+## Reproducible source acquisition
+
+The project does not vendor Linux or U-Boot. `sources.lock` pins official
+upstream immutable archive commits, and the following command downloads them
+under the ignored `build/` dependency cache and extracts them under
+`third_party/`:
+
+```text
+make linux-boot-fetch-sources
+```
+
+The script refuses to overwrite a directory whose `.source-commit` marker does
+not match the lock file. This closes source provenance only; it does not claim
+that the custom machine can boot Linux or U-Boot.
+
 ## Boot flow (target)
 
 ```

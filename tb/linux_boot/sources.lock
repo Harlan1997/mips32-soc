@@ -1,0 +1,14 @@
+{
+  "linux": {
+    "project": "torvalds/linux",
+    "ref": "v6.6",
+    "commit": "ffc253263a1375a65fa6c9f62a893e9767fbebfa",
+    "archive": "https://github.com/torvalds/linux/archive/ffc253263a1375a65fa6c9f62a893e9767fbebfa.tar.gz"
+  },
+  "u-boot": {
+    "project": "u-boot/u-boot",
+    "ref": "v2024.10",
+    "commit": "f919c3a889f0ec7d63a48b5d0ed064386b0980bd",
+    "archive": "https://github.com/u-boot/u-boot/archive/f919c3a889f0ec7d63a48b5d0ed064386b0980bd.tar.gz"
+  }
+}

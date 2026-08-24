@@ -912,15 +912,19 @@ remains the compatibility baseline.
   MIPS32 compliance, complete privileged/MMU differential, IEEE-754/OS FPU
   ABI, Linux boot and physical device signoff remain open.
 
-### 2026-08-23 Linux boot dependency audit
+### 2026-08-24 Linux boot dependency audit and source provenance
 
 - `make linux-boot-dependency-gate` now recognizes the project-built
   `qemu-system-mipsel` custom-machine binary and the three installed MIPS
   cross-tools.
-- The gate remains intentionally `BLOCKED`: `third_party/linux` and
-  `third_party/u-boot` are absent. The linux-user QEMU prerequisite is now
-  built locally; this is a clearer external-input report, not Linux boot
-  evidence.
+- The gate initially reported the absent external sources. The project now
+  provides `tb/linux_boot/sources.lock` and
+  `tb/linux_boot/fetch_sources.sh`, pinning official Linux v6.6 commit
+  `ffc253263a1375a65fa6c9f62a893e9767fbebfa` and U-Boot v2024.10 commit
+  `f919c3a889f0ec7d63a48b5d0ed064386b0980bd`. `make
+  linux-boot-fetch-sources linux-boot-dependency-gate` passes after marker
+  verification. This closes source provenance only; Linux-specific platform
+  support, DTB/U-Boot image flow and a real boot regression remain open.
 
 ### 2026-08-23 QEMU linux-user build closure
 
