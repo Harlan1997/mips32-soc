@@ -27,9 +27,10 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Kernel: ${RUN_DIR}/kernel/vmlinux
 - Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
 - Boot protocol: MIPS UHI with an opaque DTB
-- Evidence: Linux printed its version and reached the initramfs /init
-  process. A complete userspace UART marker remains blocked because the
-  ordinary 8250 device node is not yet registered by this custom machine.
+- Evidence: Linux printed its version, registered/enabled ttyS0, and reached
+  the initramfs /init process. The final userspace UART marker is still a
+  separate open item because this simplified UART model does not yet provide
+  a stable user-write observation.
 - Linux console log: $([[ -s "${RUN_DIR}/qemu_stdout.log" ]] && rg -q "Linux version" "${RUN_DIR}/qemu_stdout.log" && echo present || echo absent)
 - Scope: generic MIPS kernel boot and UART/initramfs execution on the QEMU
   reference machine; U-Boot, real QSPI/DDR devices, Linux drivers beyond the

@@ -1405,3 +1405,14 @@ remains the compatibility baseline.
 - This closes only the QEMU handoff boundary. A SoC-specific Linux DTS,
   U-Boot/QSPI image loading, Linux kernel build/configuration, actual Linux
   UART boot marker, and RTL system-mode Linux differential remain open.
+### 2026-08-25 Linux kernel-to-init boundary
+
+- Added the opt-in `make linux-boot-build-gate` flow: pinned Linux v6.6
+  `32r2el_defconfig`, project DTS, little-endian initramfs assembly and QEMU
+  `mips32-soc-ref` UHI/DTB boot.
+- The gate passes the kernel-to-init boundary. `qemu_stdout.log` contains the
+  Linux version and `Run /init as init process`.
+- This does not close complete Linux userspace boot. Linux creates/enables
+  `ttyS0`, but the simplified QEMU UART does not yet provide a stable observed
+  userspace marker. U-Boot, real QSPI/DDR boot, RTL Linux differential, and
+  OS-owned VM/shootdown remain open.
