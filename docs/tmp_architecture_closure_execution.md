@@ -1415,3 +1415,16 @@ remains the compatibility baseline.
   `MIPS32_SOC_LINUX_BOOT_SUCCESS`.
 - This does not close product Linux boot. U-Boot, real QSPI/DDR boot, RTL
   Linux differential, and OS-owned VM/shootdown remain open.
+
+### 2026-08-25 QEMU architecture closure aggregate
+
+- Added the serial `make qemu-system-architecture-closure-gate` entry point.
+- The aggregate passes the current QEMU peripheral contract, selected
+  ISA/FPU/privileged and peripheral RTL/QEMU retire differential, MMU
+  refill/PageMask/OS-pressure differential, and the Linux userspace marker
+  gate. Its child logs and QEMU binary identity are retained under
+  `build/isa_ref/qemu_system_architecture_closure/`.
+- This closes a reproducible bounded architecture integration milestone. It
+  does not claim full ISA/IEEE-754/OS VM semantics, unrestricted multicore
+  shootdown, full RTL system-mode Linux differential, U-Boot/real QSPI-DDR
+  boot, physical timing, or formal/CDC/RDC/lint signoff.

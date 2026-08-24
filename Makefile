@@ -169,6 +169,7 @@ dcache-parity-gate:
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: qemu-system-mmu-os-pressure-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
 .PHONY: linux-boot-build-gate
+.PHONY: qemu-system-architecture-closure-gate
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
@@ -588,6 +589,10 @@ qemu-system-ddr-gate: qemu-system-mips32-soc-ref
 qemu-system-current-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_current_contract_gate.sh
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_current_contract tb/isa_ref/run_qemu_system_current_contract_gate.sh
+
+qemu-system-architecture-closure-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_architecture_closure tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
 
 qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh
