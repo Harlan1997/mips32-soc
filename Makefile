@@ -168,6 +168,7 @@ dcache-parity-gate:
 .PHONY: l1-nonblocking-maintenance-compat-gate l1-nonblocking-ddr-gate qemu-system-l1-ddr-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: qemu-system-mmu-os-pressure-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
+.PHONY: linux-boot-build-gate
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
@@ -539,6 +540,10 @@ qemu-system-sram-uart-mailbox-gate: qemu-system-mips32-soc-ref
 qemu-system-uhi-dtb-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/linux_boot/run_uhi_dtb_gate.sh
 	RUN_DIR=$(BUILD_DIR)/linux_boot/uhi_dtb tb/linux_boot/run_uhi_dtb_gate.sh
+
+linux-boot-build-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/run_linux_boot_gate.sh
+	RUN_DIR=$(BUILD_DIR)/linux_boot/real tb/linux_boot/run_linux_boot_gate.sh
 
 qemu-system-peripheral-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/soc_test/run_qemu_system_peripherals_gate.sh
