@@ -44,7 +44,7 @@ echo "--- SVA AXI SRAM gate ---"
     ./simv -cm assert -l sim.log
 )
 
-if grep -R -n -E 'SVA_FAIL|REGRESSION_TEST_FAIL|Error-[A-Z]+.*assert' \
+if grep -R -n -E 'SVA_FAIL|REGRESSION_TEST_FAIL|Error-[A-Z]+.*assert|dcache: refill did not complete|VIC_PRIORITY_CHECKER_FAIL' \
         "${SOC_RUN_DIR}/sim.log" "${RESET_RUN_DIR}/sim.log" "${AXI_RUN_DIR}/sim.log"; then
     echo "SVA gate: FAIL"
     exit 1

@@ -56,6 +56,7 @@ if [ "${SVA_ENABLE:-0}" = "1" ]; then
         "${ROOT_DIR}/rtl/clock/reset_sync.v"
         "${ROOT_DIR}/tb/sva/axi4_protocol_props.sv"
         "${ROOT_DIR}/tb/sva/apb_protocol_props.sv"
+        "${ROOT_DIR}/tb/sva/cache_state_props.sv"
         "${ROOT_DIR}/tb/sva/l1_maintenance_props.sv"
         "${ROOT_DIR}/tb/sva/l1_resource_props.sv"
         "${ROOT_DIR}/tb/sva/reset_sync_props.sv"

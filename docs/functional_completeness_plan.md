@@ -827,3 +827,13 @@ user-mode HWREna-disabled CpU exceptions, re-enabled user reads, and a real
 UserLocal/TLS read-write sequence. This closes the bounded RDHWR implementation
 slice and updates the ISA/front-end matrices; full privileged ISA compliance,
 dynamic Count semantics, OS TLS ABI and Linux boot remain open.
+
+### 2026-08-24 cache FSM SVA integration
+
+`cache_state_props.sv` is now part of the `SVA_ENABLE` SoC compile and binds
+to the default blocking `dcache`. The checker asserts a known FSM state and a
+bounded refill completion, with a documented 4096-cycle upper bound that
+includes the current SoC's legal AXI/APB backpressure. `make sva-gate` passes
+and the gate now rejects the checker error text as well as explicit `SVA_FAIL`
+markers. This is simulation assertion evidence only; formal proof, CDC/RDC,
+lint and product coverage signoff remain open.

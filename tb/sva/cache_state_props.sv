@@ -15,7 +15,8 @@
 
 `ifdef SVA_ENABLE
 module dcache_state_props #(
-    parameter STATE_WIDTH = 4
+    parameter STATE_WIDTH = 4,
+    parameter REFILL_MAX_CYCLES = 4096
 ) (
     input logic                     clk,
     input logic                     rst_n,
@@ -34,9 +35,11 @@ module dcache_state_props #(
     STATE_KNOWN: assert property (p_state_known)
         else $error("dcache: state is X/Z");
 
-    // C4: refill bounded
+    // C4: refill bounded. The SoC-level default includes legal AXI/APB
+    // backpressure, so the bound is an explicit parameter rather than an
+    // optimistic fixed 200-cycle assumption.
     property p_refill_bounded;
-        refill_start && !uncacheable |-> ##[1:200] refill_done;
+        refill_start && !uncacheable |-> ##[1:REFILL_MAX_CYCLES] refill_done;
     endproperty
     REFILL_BOUNDED: assert property (p_refill_bounded)
         else $error("dcache: refill did not complete within 200 cycles");
