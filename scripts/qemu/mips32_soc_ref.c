@@ -108,6 +108,7 @@ typedef struct MIPS32SocRefState {
     uint32_t ddr_ctrl;
     uint32_t ddr_status;
     uint32_t ddr_error;
+    uint32_t ddr_fault_mode;
     uint32_t ddr_perf_reads;
     uint32_t ddr_perf_writes;
     /* Vendor-neutral MMU context/shootdown mailbox state. */
@@ -142,6 +143,7 @@ static uint32_t soc_ref_irq_replay_pic_mask;
 static char *soc_ref_dma_event_trace_path;
 static uint32_t soc_ref_dma_fault_mode;
 static uint32_t soc_ref_gpio_input;
+static uint32_t soc_ref_ddr_fault_mode;
 static bool soc_ref_software_mmu_guest;
 static bool soc_ref_software_mmu_bootrom_guest;
 static MIPS32SocRefState *soc_ref_active_state;
@@ -1132,8 +1134,18 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
         soc_ref_update_irq(s);
         break;
     case 0x500c: if (value & 1) s->qspi_timeout = 0; break;
-    case 0x600c: if (value & 1) s->ddr_error = 0; break;
-    case 0x6034: if (value & 1) s->ddr_error = 0; break;
+    case 0x600c:
+        if (value & 1) {
+            s->ddr_error = 0;
+            s->ddr_status &= ~(1U << 5);
+        }
+        break;
+    case 0x6034:
+        if (value & 1) {
+            s->ddr_error = 0;
+            s->ddr_status &= ~(1U << 5);
+        }
+        break;
     }
     if (off >= 0x5020 && off < 0x51c0) {
         uint32_t qoff = off - 0x5020;
@@ -1277,6 +1289,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->sram = machine->ram;
     state->gpio_input = soc_ref_gpio_input;
     state->dma_fault_mode = soc_ref_dma_fault_mode;
+    state->ddr_fault_mode = soc_ref_ddr_fault_mode;
     soc_ref_load_irq_schedule(state);
     soc_ref_active_state = state;
     if (soc_ref_dma_event_trace_path) {
@@ -1362,6 +1375,11 @@ static void mips32_soc_ref_init(MachineState *machine)
     soc_ref_qspi_clear(state);
     /* controller_present + init_done + training_done */
     state->ddr_status = 7;
+    if (state->ddr_fault_mode) {
+        state->ddr_status |= 1U << 5;
+        state->ddr_error = state->ddr_fault_mode == 1 ?
+                          0x00040004U : 0x00040005U;
+    }
 
     if (machine->kernel_filename) {
         image_size = load_elf(machine->kernel_filename, NULL,
@@ -1418,6 +1436,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
                                          OBJ_PROP_FLAG_WRITE);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "gpio-input",
                                          &soc_ref_gpio_input,
+                                         OBJ_PROP_FLAG_WRITE);
+    object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "ddr-fault-mode",
+                                         &soc_ref_ddr_fault_mode,
                                          OBJ_PROP_FLAG_WRITE);
     object_class_property_add_bool(OBJECT_CLASS(mc), "software-mmu-guest",
                                    soc_ref_get_software_mmu_guest,

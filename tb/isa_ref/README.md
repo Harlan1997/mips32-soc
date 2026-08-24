@@ -100,6 +100,12 @@ model follows the RTL source-2 interrupt, sticky `0x4000100c` status and W1C
 clear contract. Run `make qemu-system-gpio-input-gate` for the combined
 GPIO-input/timer-IRQ reference-model check.
 
+For an opt-in DDR status fault model, use
+`-M mips32-soc-ref,ddr-fault-mode=1` for an AXI error or `=2` for a geometry
+error. `make qemu-system-ddr-fault-gate` verifies sticky error status, W1C,
+and continued cached/uncached DDR window access; the default mode remains
+READY with no error.
+
 The current system RTL retire gates are:
 
 ```bash

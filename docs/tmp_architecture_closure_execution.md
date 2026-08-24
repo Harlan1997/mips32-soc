@@ -1323,3 +1323,14 @@ remains the compatibility baseline.
 - This closes the selected QEMU peripheral-model slice only; external GPIO
   synchronization, physical clock/timer accuracy and board-level I/O remain
   open.
+
+### 2026-08-24 QEMU DDR fault/status model
+
+- Added opt-in `ddr-fault-mode=1/2` properties to `mips32-soc-ref`, producing
+  distinct sticky AXI (`0x00040004`) and geometry (`0x00040005`) error codes
+  with the APB status error bit set.
+- `make qemu-system-ddr-fault-gate` passes both cases, verifies APB W1C
+  clearing, and continues through cached and uncached DDR window accesses.
+- Default `ddr-fault-mode=0` remains the READY/no-error behavior. Physical
+  PHY/JEDEC fault timing, ECC injection, refresh scheduling and board-level
+  DDR signoff remain open.
