@@ -90,6 +90,10 @@ tb/soc_test/textReportFinal/
 *.so
 *.db
 
+# Reproducibly fetched Linux/U-Boot sources (see tb/linux_boot/sources.lock)
+third_party/linux/
+third_party/u-boot/
+
 # Python caches
 __pycache__/
 *.pyc
