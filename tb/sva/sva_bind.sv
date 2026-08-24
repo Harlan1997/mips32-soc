@@ -61,6 +61,20 @@ bind l1_cache_nb l1_resource_props u_l1_resource_props (
     .wb_occupancy    (wb_occupancy)
 );
 
+// The legacy blocking D-cache remains the default CPU path. Keep its FSM
+// checker in the same opt-in bind unit so the normal SVA SoC run covers both
+// nonblocking resource bounds and the default refill state contract.
+bind dcache dcache_state_props #(
+    .STATE_WIDTH(5), .REFILL_MAX_CYCLES(4096)
+) u_dcache_state_props (
+    .clk          (clk),
+    .rst_n        (rst_n),
+    .state_r      (state),
+    .refill_start (state == REFILL_REQ),
+    .refill_done  ((state == WRITE_MERGE) || (state == ERROR_RESP)),
+    .uncacheable  (uncacheable)
+);
+
 bind reset_sync reset_sync_props #(.STAGES(STAGES)) u_reset_sync_props (
     .clk       (clk),
     .rst_pre_n (rst_pre_n),

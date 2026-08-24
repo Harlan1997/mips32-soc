@@ -1342,3 +1342,12 @@ remains the compatibility baseline.
   exceptions, re-enabled user-mode reads, and UserLocal/TLS read/write.
 - This closes only the bounded MIPS32 R2 RDHWR slice. Full privileged ISA,
   dynamic Count semantics, OS TLS/scheduler ABI and Linux boot remain open.
+
+### 2026-08-24 cache FSM SVA integration
+
+- Bound `cache_state_props.sv` to the default blocking D-cache and included it
+  in the `SVA_ENABLE` SoC compile path.
+- The checker covers known FSM state and a 4096-cycle refill completion bound;
+  the bound includes legal SoC backpressure and is verified by `make sva-gate`.
+- The SVA runner now treats the checker error text as a failure marker. This
+  remains simulation assertion evidence, not formal/CDC/RDC/lint signoff.
