@@ -1461,3 +1461,17 @@ remains the compatibility baseline.
 - The probe remains `INCOMPLETE`: the image is still Malta board code and
   stops in board initialization. A SoC-specific U-Boot port, DDR/QSPI boot,
   Linux handoff and a boot prompt remain open.
+
+### 2026-08-25 QEMU explicit peripheral MMIO windows
+
+- The custom machine now exposes explicit high-priority UART, legacy DMA,
+  QSPI and DDR-status windows over the shared APB model. Each endpoint calls
+  the existing canonical CSR implementation, so state and error semantics
+  remain single-sourced.
+- Fresh `make qemu-system-sram-uart-mailbox-gate` and
+  `make qemu-system-peripheral-contract-gate` pass. The peripheral firmware
+  reports `GPIO_PASS`, `TIMER_PASS`, `DMA_PASS`, `PIC_PASS`, `QSPI_PASS` and
+  `DDR_PASS`.
+- This closes the bounded QEMU behavioral peripheral contract only; physical
+  QSPI/DDR timing, PHY/device behavior and full RTL system differential remain
+  open.
