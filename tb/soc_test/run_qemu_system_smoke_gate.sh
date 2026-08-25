@@ -21,7 +21,7 @@ sha256sum "${FW_ELF}" >"${RUN_DIR}/firmware.sha256"
 set +e
 timeout "${QEMU_TIMEOUT:-10}" "${QEMU_BIN}" \
     -M mips32-soc-ref -m 64K -kernel "${FW_ELF}" \
-    -nographic -monitor none >"${RUN_DIR}/qemu_stdout.log" \
+    -nographic -monitor none </dev/null >"${RUN_DIR}/qemu_stdout.log" \
     2>"${RUN_DIR}/qemu_stderr.log"
 status=$?
 set -e

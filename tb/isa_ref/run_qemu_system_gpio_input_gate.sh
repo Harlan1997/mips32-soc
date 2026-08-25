@@ -20,7 +20,7 @@ make -C "${ROOT_DIR}/tb/soc_test/fw/tests/qemu_system_peripherals" \
 timeout "${QEMU_TIMEOUT:-10}" "${QEMU_BIN}" \
     -M "mips32-soc-ref,gpio-input=${GPIO_EXPECTED}" \
     -cpu "${QEMU_CPU:-24Kc}" -m 64K \
-    -kernel "${FW_DIR}/firmware.elf" -nographic -monitor none \
+    -kernel "${FW_DIR}/firmware.elf" -nographic -monitor none </dev/null \
     >"${RUN_DIR}/qemu_stdout.log" 2>"${RUN_DIR}/qemu_stderr.log"
 grep -q 'QEMU_SYSTEM_PERIPH: GPIO_INPUT_PASS' "${RUN_DIR}/qemu_stdout.log"
 grep -q 'QEMU_SYSTEM_PERIPH: TIMER_IRQ_PASS' "${RUN_DIR}/qemu_stdout.log"

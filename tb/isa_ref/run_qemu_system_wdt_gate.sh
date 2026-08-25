@@ -15,7 +15,7 @@ make -C "${ROOT_DIR}/tb/soc_test/fw/tests/wdt_boot_failure" \
 timeout "${QEMU_TIMEOUT:-30}" "${QEMU_BIN}" \
     -M mips32-soc-ref -cpu "${QEMU_CPU:-24Kc}" -m 64K \
     -kernel "${FW_DIR}/firmware.elf" -nographic -monitor none \
-    >"${RUN_DIR}/qemu_stdout.log" 2>"${RUN_DIR}/qemu_stderr.log"
+    </dev/null >"${RUN_DIR}/qemu_stdout.log" 2>"${RUN_DIR}/qemu_stderr.log"
 
 grep -q 'wdt_boot_failure: REGRESSION_TEST_SUCCESS' \
     "${RUN_DIR}/qemu_stdout.log"
