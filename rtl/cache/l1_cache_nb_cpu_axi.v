@@ -1,9 +1,10 @@
 // CPU-facing opt-in wrapper for the L1 line-port cache.
 //
-// Cacheable data requests use l1_cache_nb plus the AXI line bridge.  Uncached
-// accesses and CACHE maintenance remain on the legacy dcache until the
-// nonblocking late-response contract is complete.  This split is explicit so
-// APB/flash accesses and maintenance operations are not silently cached.
+// Cacheable data requests use l1_cache_nb plus the AXI line bridge. Uncached
+// accesses and unsupported CACHE maintenance remain on the legacy dcache.
+// The opt-in line cache owns its two address-scoped invalidate operations after
+// line traffic drains, keeping APB/flash and unsupported tag/writeback traffic
+// out of the line cache.
 module l1_cache_nb_cpu_axi #(
     parameter ENABLE_LEGACY_ADDR_HEURISTIC = 1'b1,
     parameter ENABLE_COHERENCY = 1'b0,
@@ -90,6 +91,18 @@ module l1_cache_nb_cpu_axi #(
     wire l1_path_request = cpu_req && ENABLE_L1 && l1_address_supported && !cpu_uncacheable &&
                            !cache_op_valid;
 
+    // The opt-in line cache owns the two address-scoped invalidate operations
+    // it can complete without a writeback protocol. Other CACHE operations
+    // retain the legacy dcache implementation until their nonblocking tag and
+    // writeback contracts are implemented.
+    wire cache_op_addr_supported = (cache_op_addr[31:16] == 16'h0000) ||
+                                   ((`SOC_L1_NONBLOCKING_DDR_ENABLE != 0) &&
+                                    (cache_op_addr >= `SOC_DDR_BASE) &&
+                                    (cache_op_addr < (`SOC_DDR_BASE + `SOC_DDR_SIZE)));
+    wire l1_maintenance_supported = ENABLE_L1 && cache_op_addr_supported &&
+                                    ((cache_op == 5'b00001) ||
+                                     (cache_op == 5'b10101));
+
     wire [31:0] legacy_rdata;
     wire legacy_addr_ok, legacy_data_ok, legacy_bus_error, legacy_cache_error;
     wire legacy_cache_op_ready, legacy_cache_op_done, legacy_cache_op_error;
@@ -111,6 +124,7 @@ module l1_cache_nb_cpu_axi #(
     wire [3:0] n_rsp_id;
     wire [31:0] n_rsp_data;
     wire n_rsp_error;
+    wire n_cache_maint_ready, n_cache_maint_done, n_cache_maint_error;
     wire n_mem_req_valid, n_mem_req_we, n_mem_req_ready;
     wire [31:0] n_mem_req_addr;
     wire [255:0] n_mem_req_wdata;
@@ -124,9 +138,14 @@ module l1_cache_nb_cpu_axi #(
     // while the opt-in L1 has live line traffic, a queued response, or an
     // allocated request. Forwarding raw cache_op_valid to the L1 invalidate
     // sideband would otherwise discard an in-flight refill/MSHR.
-    wire maintenance_issue = cache_op_valid && !l1_bridge_active &&
+    wire maintenance_issue = cache_op_valid && !l1_maintenance_supported &&
+                              !l1_bridge_active &&
                               !n_rsp_valid && !l1_active &&
                               (l1_outstanding == 0);
+    wire l1_maintenance_issue = cache_op_valid && l1_maintenance_supported &&
+                                 n_cache_maint_ready && !l1_bridge_active &&
+                                 !n_rsp_valid && !l1_active &&
+                                 (l1_outstanding == 0);
 
     dcache #(
         .ENABLE_LEGACY_ADDR_HEURISTIC(ENABLE_LEGACY_ADDR_HEURISTIC),
@@ -194,8 +213,11 @@ module l1_cache_nb_cpu_axi #(
     l1_cache_nb #(.SETS(256)) u_l1 (
         .clk(clk), .rst_n(rst_n), .cpu_valid(l1_req), .cpu_we(cpu_we),
         .cpu_id(cpu_id), .cpu_addr(cpu_addr), .cpu_wdata(cpu_wdata),
-        .cpu_be(cpu_be), .cache_maint_invalidate(maintenance_issue),
+        .cpu_be(cpu_be), .cache_maint_invalidate(l1_maintenance_issue),
         .cache_maint_op(cache_op), .cache_maint_addr(cache_op_addr),
+        .cache_maint_ready(n_cache_maint_ready),
+        .cache_maint_done(n_cache_maint_done),
+        .cache_maint_error(n_cache_maint_error),
         .cpu_ready(n_cpu_ready), .rsp_valid(n_rsp_valid),
         .rsp_id(n_rsp_id), .rsp_rdata(n_rsp_data), .rsp_error(n_rsp_error),
         .rsp_ready(!legacy_sel), .mem_req_valid(n_mem_req_valid),
@@ -239,9 +261,12 @@ module l1_cache_nb_cpu_axi #(
     assign cpu_bus_error   = legacy_for_current ? legacy_bus_error : n_rsp_error;
     assign cpu_cache_error = legacy_for_current ? legacy_cache_error : n_rsp_error;
     assign cpu_response_id = legacy_for_current ? 4'd0 : n_rsp_id;
-    assign cache_op_ready  = legacy_cache_op_ready;
-    assign cache_op_done   = legacy_cache_op_done;
-    assign cache_op_error  = legacy_cache_op_error;
+    assign cache_op_ready  = l1_maintenance_supported ? n_cache_maint_ready :
+                              legacy_cache_op_ready;
+    assign cache_op_done   = l1_maintenance_supported ? n_cache_maint_done :
+                              legacy_cache_op_done;
+    assign cache_op_error  = l1_maintenance_supported ? n_cache_maint_error :
+                              legacy_cache_op_error;
     assign cache_tag_rdata = legacy_tag_rdata;
 
     assign awid    = legacy_sel ? l_awid : n_awid;
