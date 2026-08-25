@@ -49,6 +49,8 @@ typedef struct MIPS32SocRefState {
     MemoryRegion uart;
     MemoryRegion malta_uart;
     MemoryRegion dma_legacy;
+    MemoryRegion dma_v2_window;
+    MemoryRegion pic_window;
     MemoryRegion qspi_window;
     MemoryRegion ddr_status_window;
     MemoryRegion uart_mmu_alias;
@@ -442,6 +444,45 @@ static const MemoryRegionOps soc_ref_dma_legacy_ops = {
         .min_access_size = 4,
         .max_access_size = 4,
     },
+};
+
+static uint64_t soc_ref_dma_v2_read(void *opaque, hwaddr addr, unsigned size)
+{
+    return soc_ref_apb_read(opaque, addr + 0x3040, size);
+}
+
+static void soc_ref_dma_v2_write(void *opaque, hwaddr addr, uint64_t data,
+                                 unsigned size)
+{
+    soc_ref_apb_write(opaque, addr + 0x3040, data, size);
+}
+
+static const MemoryRegionOps soc_ref_dma_v2_ops = {
+    .read = soc_ref_dma_v2_read,
+    .write = soc_ref_dma_v2_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = {
+        .min_access_size = 4,
+        .max_access_size = 4,
+    },
+};
+
+static uint64_t soc_ref_pic_read(void *opaque, hwaddr addr, unsigned size)
+{
+    return soc_ref_apb_read(opaque, addr + 0x4000, size);
+}
+
+static void soc_ref_pic_write(void *opaque, hwaddr addr, uint64_t data,
+                              unsigned size)
+{
+    soc_ref_apb_write(opaque, addr + 0x4000, data, size);
+}
+
+static const MemoryRegionOps soc_ref_pic_ops = {
+    .read = soc_ref_pic_read,
+    .write = soc_ref_pic_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = { .min_access_size = 4, .max_access_size = 4 },
 };
 
 static uint64_t soc_ref_window_read(void *opaque, hwaddr addr, unsigned size,
@@ -1039,11 +1080,18 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
                                           --s->dma_v2_polls_remaining[ch] == 0) {
                                           s->dma_v2_status[ch] = 2;
                                           soc_ref_dma_event(s, "DONE", ch, 0, 0, 0);
-                                          if (s->dma_v2_ctrl[ch] & 4) {
-                                              s->pic_raw |= 1U << (3 + ch);
-                                              soc_ref_update_irq(s);
-                                              soc_ref_dma_event(s, "IRQ", ch, 0, 0, 1);
-                                          }
+                                      }
+                                      /* A zero-length or immediate model
+                                       * completion may already be DONE when
+                                       * the first status read arrives. The
+                                       * architectural IRQ is still generated
+                                       * at that observable completion read. */
+                                      if ((s->dma_v2_status[ch] & 2) &&
+                                          (s->dma_v2_ctrl[ch] & 4) &&
+                                          !(s->pic_raw & (1U << (3 + ch)))) {
+                                          s->pic_raw |= 1U << (3 + ch);
+                                          soc_ref_update_irq(s);
+                                          soc_ref_dma_event(s, "IRQ", ch, 0, 0, 1);
                                       }
                                       value = (s->dma_v2_status[ch] & 1) |
                                       (s->dma_v2_status[ch] & 2) |
@@ -1536,6 +1584,14 @@ static void mips32_soc_ref_init(MachineState *machine)
                           state, "mips32-soc-ref.dma-legacy", 0x10);
     memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x3000,
                                         &state->dma_legacy, 1);
+    memory_region_init_io(&state->dma_v2_window, NULL, &soc_ref_dma_v2_ops,
+                          state, "mips32-soc-ref.dma-v2-window", 0x100);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x3040,
+                                        &state->dma_v2_window, 1);
+    memory_region_init_io(&state->pic_window, NULL, &soc_ref_pic_ops, state,
+                          "mips32-soc-ref.pic-window", 0x40);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x4000,
+                                        &state->pic_window, 1);
     memory_region_init_io(&state->qspi_window, NULL, &soc_ref_qspi_ops,
                           state, "mips32-soc-ref.qspi-window", 0x200);
     memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x5000,
