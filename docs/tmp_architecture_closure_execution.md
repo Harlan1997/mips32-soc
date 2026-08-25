@@ -16,11 +16,11 @@
   with `L2_E2E_TEST_SUCCESS policy=nonblocking-write-back` in
   `build/soc_test/l2_end_to_end_nonblocking/sim.log`.
 - Remaining boundary: this is a bounded single-downstream-transaction L2
-  writeback contract. The NB L2 now has a clean-line snoop invalidate slice;
-  the standard gate reports `reads_checked=64` after the snoop-forced refill.
-  Dirty-line snoop writeback, same-cycle snoop/request ordering, complete
-  coherency/directory, arbitrary writeback error/reset timing, and default-path
-  selection are still open.
+  writeback contract. The NB L2 now has clean-line invalidate and dirty-line
+  snoop writeback through `AW/W/B`; the standard gate reports
+  `peak_wb=4` and `reads_checked=65` after both snoop-forced refills.
+  Same-cycle snoop/request ordering, complete coherency/directory, arbitrary
+  writeback error/reset timing, and default-path selection are still open.
 
 ### 2026-08-24 strict URG exclusion metadata closure
 
