@@ -1561,3 +1561,19 @@ remains the compatibility baseline.
   single-vCPU reference machine; full SMP scheduling, OS-owned page tables,
   architectural multicore TLB shootdown, coherency ordering and Linux VM
   behavior remain open.
+
+### 2026-08-26 QEMU WDT/boot-status reset contract
+
+- Added the custom-machine WDT registers at APB offsets `0x7000..0x7010`
+  and retained boot-status registers at `0x8000..0x8008`. Expiry requests a
+  guest reset, clears the running counter/enable in the reset callback, and
+  preserves expiry, boot stage, failure code and reset cause.
+- Added a deterministic read-side virtual tick for tight TCG polling loops;
+  normal virtual-clock timer scheduling remains the primary behavior.
+- The QEMU firmware gate uses KSEG1 `0xA0007000/0xA0008000` to reach the
+  reference machine's narrow low-physical compatibility aliases while RTL
+  continues to use the canonical `0x40007000/0x40008000` APB addresses.
+  Fresh `make qemu-system-wdt-gate` and `make wdt-boot-failure-gate` pass.
+- This closes the bounded reference/RTL WDT boot-failure contract only; real
+  always-on reset-domain retention, physical clock/reset behavior and product
+  board signoff remain open.

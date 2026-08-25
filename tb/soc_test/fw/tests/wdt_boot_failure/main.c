@@ -11,12 +11,18 @@
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
+#ifdef QEMU_SYSTEM_WDT
+#define WDT_BASE       0xA0007000u
+#define BOOT_STATUS_BASE 0xA0008000u
+#else
 #define WDT_BASE       0x40007000u
+#define BOOT_STATUS_BASE 0x40008000u
+#endif
 #define WDT_CTRL       (WDT_BASE + 0x00u)
 #define WDT_LOAD       (WDT_BASE + 0x04u)
+#define WDT_VAL        (WDT_BASE + 0x08u)
 #define WDT_STATUS     (WDT_BASE + 0x10u)
 
-#define BOOT_STATUS_BASE 0x40008000u
 #define BOOT_STAGE       (BOOT_STATUS_BASE + 0x00u)
 #define BOOT_FAILURE     (BOOT_STATUS_BASE + 0x04u)
 #define RESET_CAUSE      (BOOT_STATUS_BASE + 0x08u)
@@ -43,7 +49,9 @@ int main(void) {
         REG32(BOOT_FAILURE) = FAILURE_TIMEOUT;
         REG32(WDT_LOAD) = 4u;
         REG32(WDT_CTRL) = 1u;
-        while (1) { }
+        /* Polling VAL also gives the reference machine an APB boundary on
+         * each iteration; RTL still advances the watchdog independently. */
+        while (REG32(WDT_VAL) != 0u) { }
     }
 
     // The watchdog reset must preserve all diagnostics and identify itself.
