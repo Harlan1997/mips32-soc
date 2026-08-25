@@ -203,6 +203,71 @@ module tb_vic;
         apb_read(12'h210, rd_data); if (rd_data !== 32'h0) begin $display("FAIL Check 9: RUNNING_PRIO post ACK 3 non-zero"); errs=errs+1; end
 
         // ------------------------------------------------------------------
+        // Check 9b: Four-level priority nesting and reverse unwind
+        // ------------------------------------------------------------------
+        $display("--- Check 9b: Four-level priority nesting ---");
+        apb_write(12'h004, 32'h0);
+        apb_write(12'h014, 32'h0); // level-high sources
+        apb_write(12'h018, 32'h0);
+        apb_write(12'h100 + 4*2, 32'h3);
+        apb_write(12'h100 + 4*4, 32'h6);
+        apb_write(12'h100 + 4*6, 32'h9);
+        apb_write(12'h100 + 4*8, 32'hC);
+        apb_write(12'h004, 32'h00000154); // sources 2,4,6,8
+
+        // Accept one progressively higher-priority source at a time.
+        src_in = 32'h00000004;
+        repeat (4) @(negedge clk);
+        if (!irq || vec_id !== 8'd2 || vec_prio !== 4'h3) begin
+            $display("FAIL Check 9b: level 1 source 2 not selected"); errs=errs+1;
+        end
+        apb_read(12'h200, rd_data);
+        apb_read(12'h20C, rd_data);
+        if (rd_data !== 32'h00000004) begin $display("FAIL Check 9b: active level 1=%h", rd_data); errs=errs+1; end
+
+        src_in = 32'h00000014; // add source 4
+        repeat (4) @(negedge clk);
+        if (!irq || vec_id !== 8'd4 || vec_prio !== 4'h6) begin
+            $display("FAIL Check 9b: level 2 source 4 did not preempt"); errs=errs+1;
+        end
+        apb_read(12'h200, rd_data);
+        apb_read(12'h20C, rd_data);
+        if (rd_data !== 32'h00000014) begin $display("FAIL Check 9b: active level 2=%h", rd_data); errs=errs+1; end
+
+        src_in = 32'h00000054; // add source 6
+        repeat (4) @(negedge clk);
+        if (!irq || vec_id !== 8'd6 || vec_prio !== 4'h9) begin
+            $display("FAIL Check 9b: level 3 source 6 did not preempt"); errs=errs+1;
+        end
+        apb_read(12'h200, rd_data);
+        apb_read(12'h20C, rd_data);
+        if (rd_data !== 32'h00000054) begin $display("FAIL Check 9b: active level 3=%h", rd_data); errs=errs+1; end
+
+        src_in = 32'h00000154; // add source 8
+        repeat (4) @(negedge clk);
+        if (!irq || vec_id !== 8'd8 || vec_prio !== 4'hC) begin
+            $display("FAIL Check 9b: level 4 source 8 did not preempt"); errs=errs+1;
+        end
+        apb_read(12'h200, rd_data);
+        apb_read(12'h20C, rd_data);
+        if (rd_data !== 32'h00000154) begin $display("FAIL Check 9b: active level 4=%h", rd_data); errs=errs+1; end
+        apb_read(12'h210, rd_data);
+        if (rd_data !== 32'hC) begin $display("FAIL Check 9b: running priority level 4=%h", rd_data); errs=errs+1; end
+
+        // Deassert levels before ACK so each frame unwinds without re-entry.
+        src_in = 32'h0;
+        apb_write(12'h208, 32'h00000100);
+        apb_write(12'h208, 32'h00000040);
+        apb_write(12'h208, 32'h00000010);
+        apb_write(12'h208, 32'h00000004);
+        repeat (4) @(negedge clk);
+        apb_read(12'h20C, rd_data);
+        if (rd_data !== 32'h0) begin $display("FAIL Check 9b: reverse ACK left active=%h", rd_data); errs=errs+1; end
+        apb_read(12'h210, rd_data);
+        if (rd_data !== 32'h0) begin $display("FAIL Check 9b: reverse ACK left running=%h", rd_data); errs=errs+1; end
+        apb_write(12'h004, 32'h0);
+
+        // ------------------------------------------------------------------
         // Check 10: Trigger modes (level high/low, rising/falling edge)
         // ------------------------------------------------------------------
         $display("--- Check 10: Trigger modes ---");
