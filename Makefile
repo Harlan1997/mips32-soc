@@ -169,7 +169,7 @@ dcache-parity-gate:
 .PHONY: l2-nonblocking-end-to-end-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
-.PHONY: qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
+.PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
 .PHONY: linux-boot-build-gate
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
@@ -323,6 +323,18 @@ mmu-ipi-shootdown-gate:
 
 mmu-ipi-shootdown-pressure-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_ipi_shootdown_pressure tb/unit/tlb/run_mmu_ipi_shootdown_pressure.sh
+
+mmu-os-pressure-complete-gate: product-mmu-process-pressure-gate mmu-ipi-shootdown-pressure-gate qemu-system-mmu-refill-differential-gate qemu-system-mmu-pagemask-gate qemu-system-mmu-contract-gate qemu-system-mmu-process-pressure-gate
+	@mkdir -p $(BUILD_DIR)/soc_test/mmu_os_pressure_complete
+	@{ \
+		echo '# MMU OS Pressure Contract Completion Report'; \
+		echo; \
+		echo '- Result: PASS'; \
+		echo '- Evidence: software-managed CPU refill, ASID-specific process pressure, PageMask phases, TLB shootdown protocol pressure, and RTL/QEMU system-mode retire comparisons'; \
+		echo '- Boundary: bounded single-core OS-style page-table ownership and shootdown only'; \
+		echo '- Residual risk: multicore IPI ownership, Linux page-table allocator/VM ABI, arbitrary demand paging, full privileged/MMU compliance, and physical memory signoff'; \
+	} > $(BUILD_DIR)/soc_test/mmu_os_pressure_complete/mmu_os_pressure_completion_report.md
+	@echo "MMU OS pressure contract gate: PASS"
 
 apb-mmu-ipi-status-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/apb_mmu_ipi_status tb/unit/tlb/run_apb_mmu_ipi_status.sh

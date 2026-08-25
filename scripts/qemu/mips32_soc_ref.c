@@ -1817,7 +1817,11 @@ static void mips32_soc_ref_init(MachineState *machine)
 
     memory_region_init_io(&state->apb, NULL, &soc_ref_apb_ops, state,
                           "mips32-soc-ref.apb", SOC_APB_SIZE);
-    memory_region_add_subregion(system_memory, SOC_APB_BASE, &state->apb);
+    /* The flash boot alias spans through 0x4fffffff.  Keep the SoC APB
+     * window authoritative where those vendor-neutral physical ranges
+     * overlap, including the MMU context mailbox at offset 0x9000. */
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE,
+                                        &state->apb, 3);
     /* Keep the UART as a first-class device endpoint. The APB region remains
      * the owner of all other CSRs, while this higher-priority subregion makes
      * the console path explicit for both cached and MMU-translated guests. */
@@ -1873,11 +1877,8 @@ static void mips32_soc_ref_init(MachineState *machine)
                              0, SOC_APB_SIZE);
     memory_region_add_subregion(system_memory, 0x04000000ULL,
                                 &state->apb_mmu_alias);
-    memory_region_init_alias(&state->apb_mmu_odd_alias, NULL,
-                             "mips32-soc-ref.apb-mmu-odd-alias", &state->apb,
-                             0, SOC_APB_SIZE);
-    memory_region_add_subregion(system_memory, 0x04001000ULL,
-                                &state->apb_mmu_odd_alias);
+    /* Do not add a second full-size alias at 0x04001000: it would overlap
+     * the first 64KB window and remap 0x04009024 as APB offset 0x8024. */
     /* 0x7000 and 0x8000 are real physical SRAM addresses.  Do not overlay
      * them with the APB WDT/boot-status windows: the QEMU WDT contract uses
      * the architecturally mapped uncached APB aliases (0xa0007000 and

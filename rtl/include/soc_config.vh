@@ -312,8 +312,9 @@
 `define SOC_HARDWARE_WALKER_PAGE_MASK 16'h0000
 `endif
 
-// Experimental L1 non-blocking contract. The production CPU still selects
-// dcache's blocking interface until late-response/ROB integration is closed.
+// Opt-in L1 non-blocking contract. The default production configuration keeps
+// the blocking dcache; the bounded CPU/D-cache late-response path is enabled
+// only when this and the CPU/ROB options are explicitly selected.
 `ifndef SOC_L1_NONBLOCKING_ENABLE
 `define SOC_L1_NONBLOCKING_ENABLE   0
 `endif
