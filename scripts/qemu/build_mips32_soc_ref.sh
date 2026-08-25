@@ -33,7 +33,8 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-fpu-int32-indefinite.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" |
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" |
         sha256sum | awk '{print $1}'
 }
 
@@ -44,6 +45,7 @@ if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   rg -q 'qemu_mips32_soc_ref_lladdr_virtual' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
    [[ "$(<"${INPUT_STAMP}")" == "${PROJECT_INPUTS_HASH}" ]]; then
     echo "QEMU mips32-soc-ref build is up to date: ${QEMU_BUILD}/qemu-system-mipsel"
     exit 0
@@ -223,6 +225,21 @@ if ! rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c"; the
     git -C "${QEMU_SRC}" apply --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch"
 fi
+
+if ! rg -q 'qemu_mips32_soc_ref_lladdr_virtual' \
+        "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"; then
+    sed -i '/#include "internal.h"/a\
+bool qemu_mips32_soc_ref_lladdr_virtual(void) __attribute__((weak));' \
+        "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"
+    sed -i '/    env->lladdr = arg;/i\
+    if (qemu_mips32_soc_ref_lladdr_virtual &&\\
+        qemu_mips32_soc_ref_lladdr_virtual()) {\\
+        /* RTL exposes the aligned virtual LL address through MFC0. */       \\
+        env->CP0_LLAddr = (uint64_t)arg << env->CP0_LLAddr_shift;            \\
+    }' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"
+fi
+rg -q 'qemu_mips32_soc_ref_lladdr_virtual' \
+    "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"
 # Keep the opt-in custom-machine PREFX contract correct even when an older
 # build tree contains the marker but not the final ISA check.
 perl -0pi -e 's{(case OPC_PREFX:\n\s*(?:/\*[^\n]*\*/\n\s*)?)check_insn\(ctx, ISA_MIPS4 \| ISA_MIPS_R2\);}{$1check_insn(ctx, ISA_MIPS_R2);}s' \

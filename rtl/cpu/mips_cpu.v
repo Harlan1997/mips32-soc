@@ -267,6 +267,9 @@ module mips_cpu #(
     // granularity, matching the coherency write-invalidate contract.
     reg         ll_reservation_valid;
     reg [31:0]  ll_reservation_addr;
+    // Retire tracing needs the SC address separately because wb_ex_out is
+    // architecturally reused for the SC success result.
+    reg [31:0]  sc_trace_addr;
     // A synchronous WB exception always takes precedence over an interrupt;
     // only an accepted interrupt may use the Cause.IV vector table.
     wire take_interrupt = interrupt_accept &&
@@ -1415,21 +1418,27 @@ module mips_cpu #(
         if (!rst_n) begin
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+            sc_trace_addr        <= 32'd0;
         end else if (ctx_restore_req) begin
             // A reservation belongs to the executing thread, not to the
             // destination task. Never carry LL/SC state across a switch.
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+            sc_trace_addr        <= 32'd0;
         end else if (exception_flush) begin
             // An exception boundary terminates the atomic sequence.  This
             // prevents an SC after SYSCALL/interrupt/ERET from inheriting an
             // LL reservation created before the handler ran.
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+            sc_trace_addr        <= 32'd0;
         end else if (coh_snoop_valid &&
                      (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) begin
             ll_reservation_valid <= 1'b0;
         end else if (data_data_ok_current) begin
+            if (is_sc_mem) begin
+                sc_trace_addr <= {mem_vaddr[31:2], 2'b00};
+            end
             if (is_ll_mem) begin
                 ll_reservation_valid <= 1'b1;
                 ll_reservation_addr  <= {mem_vaddr[31:2], 2'b00};
