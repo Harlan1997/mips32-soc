@@ -682,6 +682,20 @@ simulation assertions rather than formal signoff. The aggregate
 `current-contract-signoff` prerequisite list now includes the maintenance
 compatibility gate, CPU error/reset gates, and `sva-gate` so the unified entry
 point executes this evidence before its existing UVM/coverage stages.
+
+### 2026-08-26 opt-in L1 nonblocking CPU contract aggregate
+
+The opt-in L1 nonblocking cache is now exercised through the real CPU/D-cache
+path by a single aggregate entry, `make l1-nonblocking-cpu-complete-gate`.
+The aggregate runs compatibility and multi-request SoC smoke, three seeds of
+mid-flight-reset stress, single/two-error recovery, reset-in-flight recovery,
+and CACHE maintenance compatibility. All runs pass on the current head, and
+the adapter's legacy observation aliases no longer emit a width-truncation
+warning during opt-in VCS elaboration. This closes the bounded opt-in CPU
+hit-under-miss/ROB response contract. Uncached/peripheral accesses and CACHE
+maintenance intentionally remain on the legacy dcache, default blocking mode
+is unchanged, and full nonblocking maintenance/coherence/physical DDR error
+behavior remain open.
 The same aggregate now executes the vendor-neutral QSPI quad/status and DDR4
 controller/stress/status/PIC bundle; physical PHY/JEDEC/device signoff remains
 outside the aggregate.
