@@ -21,6 +21,12 @@ mkdir -p "${BUILD_DIR}/rootfs/dev"
     -o "${BUILD_DIR}/rootfs/init" "${SCRIPT_DIR}/init.S"
 chmod 0755 "${BUILD_DIR}/rootfs/init"
 
+"${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
+    -nostdlib -nostartfiles -nodefaultlibs -static \
+    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" \
+    -o "${BUILD_DIR}/rootfs/vm_child" "${SCRIPT_DIR}/exec_child.S"
+chmod 0755 "${BUILD_DIR}/rootfs/vm_child"
+
 # Let the kernel's gen_init_cpio create device nodes without requiring the
 # build host to permit mknod in the output directory.
 initramfs_list="${BUILD_DIR}/initramfs.list"
@@ -29,6 +35,8 @@ initramfs_list="${BUILD_DIR}/initramfs.list"
     printf 'nod /dev/console 0600 0 0 c 5 1\n'
     printf 'nod /dev/ttyS0 0600 0 0 c 4 64\n'
     printf 'file /init %s 0755 0 0\n' "${BUILD_DIR}/rootfs/init"
+    printf 'dir /bin 0755 0 0\n'
+    printf 'file /bin/vm_child %s 0755 0 0\n' "${BUILD_DIR}/rootfs/vm_child"
 } >"${initramfs_list}"
 
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \

@@ -51,15 +51,13 @@ _start:
 	nop
 
 fork_child:
-	move	$a0, $s0
-	la	$a1, fork_child_marker
-	li	$a2, fork_child_marker_end-fork_child_marker
-	li	$v0, 4004
+	la	$a0, exec_path
+	la	$a1, exec_argv
+	la	$a2, exec_env
+	li	$v0, 4011
 	syscall
 	nop
-	li	$a0, 0
-	li	$v0, 4001
-	syscall
+	b	fork_fail
 	nop
 
 fork_parent_done:
@@ -98,10 +96,14 @@ console_path:
 boot_marker:
 	.ascii "MIPS32_SOC_LINUX_BOOT_SUCCESS\n"
 boot_marker_end:
-fork_child_marker:
-	.ascii "MIPS32_SOC_LINUX_FORK_CHILD_SUCCESS\n"
-fork_child_marker_end:
-fork_success_marker:
+	exec_path:
+	.ascii "/bin/vm_child\0"
+	.align 2
+	exec_argv:
+	.word exec_path, 0
+	exec_env:
+	.word 0
+	fork_success_marker:
 	.ascii "MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS\n"
 fork_success_marker_end:
 fork_fail_marker:
