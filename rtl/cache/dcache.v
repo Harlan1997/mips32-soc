@@ -209,6 +209,24 @@ module dcache #(
                                  {16'd0, addr[15:0]} : addr;
         end
     endfunction
+
+    function [255:0] merge_coh_word;
+        input [255:0] line;
+        input [31:0]  wdata;
+        input [3:0]   be;
+        input [2:0]   word;
+        reg [31:0] old_word;
+        reg [31:0] new_word;
+        begin
+            old_word = line[word*32 +: 32];
+            new_word[7:0]   = be[0] ? wdata[7:0]   : old_word[7:0];
+            new_word[15:8]  = be[1] ? wdata[15:8]  : old_word[15:8];
+            new_word[23:16] = be[2] ? wdata[23:16] : old_word[23:16];
+            new_word[31:24] = be[3] ? wdata[31:24] : old_word[31:24];
+            merge_coh_word = line;
+            merge_coh_word[word*32 +: 32] = new_word;
+        end
+    endfunction
     wire [31:0] coh_snoop_addr_norm = normalize_coh_addr(coh_snoop_addr);
 
     // SRAM arrays (4-way). tag entry = {valid[22], dirty[21], tag[20:0]}
@@ -635,16 +653,18 @@ module dcache #(
                                 if (tag_ram[sw][req_buf_addr[10:5]][TAG_BITS+1] &&
                                     (tag_ram[sw][req_buf_addr[10:5]][TAG_BITS-1:0] ==
                                      normalize_coh_addr(req_buf_addr)[31:11])) begin
-                                    if (req_buf_be[0])
-                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 +: 8] <= req_buf_wdata[7:0];
-                                    if (req_buf_be[1])
-                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 + 8 +: 8] <= req_buf_wdata[15:8];
-                                    if (req_buf_be[2])
-                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 + 16 +: 8] <= req_buf_wdata[23:16];
-                                    if (req_buf_be[3])
-                                        data_ram[sw][req_buf_addr[10:5]][req_buf_addr[4:2]*32 + 24 +: 8] <= req_buf_wdata[31:24];
+                                    data_ram[sw][req_buf_addr[10:5]] <=
+                                        merge_coh_word(data_ram[sw][req_buf_addr[10:5]],
+                                                       req_buf_wdata, req_buf_be,
+                                                       req_buf_addr[4:2]);
+                                    data_parity_ram[sw][req_buf_addr[10:5]] <=
+                                        ^merge_coh_word(data_ram[sw][req_buf_addr[10:5]],
+                                                        req_buf_wdata, req_buf_be,
+                                                        req_buf_addr[4:2]);
                                     tag_ram[sw][req_buf_addr[10:5]] <=
                                         {1'b1, 1'b0, normalize_coh_addr(req_buf_addr)[31:11]};
+                                    tag_parity_ram[sw][req_buf_addr[10:5]] <=
+                                        ^{1'b1, 1'b0, normalize_coh_addr(req_buf_addr)[31:11]};
                                 end
                         end
                         req_buf_valid <= 1'b0;
