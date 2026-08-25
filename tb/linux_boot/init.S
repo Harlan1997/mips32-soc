@@ -168,6 +168,18 @@ _start:
 	move	$s2, $v0
 	beq	$s2, $zero, fork_child
 	nop
+	/* Exercise an explicit scheduler yield before blocking in wait4. */
+	li	$v0, 4162
+	syscall
+	nop
+	bnez	$v0, fork_fail
+	nop
+	move	$a0, $s0
+	la	$a1, yield_success_marker
+	li	$a2, yield_success_marker_end-yield_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	move	$a0, $s1
 	move	$a1, $zero
 	move	$a2, $zero
@@ -268,6 +280,9 @@ brk_success_marker_end:
 sleep_success_marker:
 	.ascii "MIPS32_SOC_LINUX_SLEEP_SUCCESS\n"
 sleep_success_marker_end:
+yield_success_marker:
+	.ascii "MIPS32_SOC_LINUX_YIELD_SUCCESS\n"
+yield_success_marker_end:
 vm_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_FAILURE\n"
 vm_fail_marker_end:
