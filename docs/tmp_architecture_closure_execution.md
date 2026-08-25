@@ -1488,3 +1488,16 @@ remains the compatibility baseline.
   peripheral contract, DMA v2, QSPI, DDR and retire capture. The broader
   architecture aggregate remains bounded by the selected differential corpus
   and is not full ISA/MMU/Linux signoff.
+
+### 2026-08-25 QEMU VIC MMIO overlap and architecture aggregate rerun
+
+- Fixed the custom-machine PIC endpoint to cover the complete
+  `0x4000_4000..0x4000_423f` CSR span. The prior 0x40-byte endpoint left
+  priority registers and VEC/ACK registers at equal priority with the flash
+  boot alias, so priority writes could be decoded as flash-backed RAM.
+- Fresh `make qemu-system-vic-differential-gate` passes the 48-record RTL/QEMU
+  retire comparison, including VEC_ID 9 then 8 and ACK/SOFT_CLR.
+- Fixed `run_qemu_system_current_contract_gate.sh` to give each child an
+  independent evidence directory. Fresh current-contract and architecture
+  closure aggregates pass; the latter includes selected differential, MMU
+  refill/PageMask/OS pressure and Linux kernel-to-userspace marker gates.
