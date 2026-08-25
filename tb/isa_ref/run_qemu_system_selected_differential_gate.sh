@@ -5,6 +5,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_selected_differential"}
 mkdir -p "${RUN_DIR}"
+rm -f "${RUN_DIR}/completion_report.md"
 
 run_gate() {
     local name=$1
