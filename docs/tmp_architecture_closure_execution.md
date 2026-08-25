@@ -1475,3 +1475,16 @@ remains the compatibility baseline.
 - This closes the bounded QEMU behavioral peripheral contract only; physical
   QSPI/DDR timing, PHY/device behavior and full RTL system differential remain
   open.
+
+### 2026-08-25 QEMU DMA v2/PIC and current-contract rerun
+
+- Added explicit DMA v2 and PIC CSR windows over the custom machine APB map;
+  both wrappers call the canonical v2 state/PIC implementation.
+- Fixed the v2 status-read completion edge so an already-DONE transfer with
+  `INT_EN` still raises the deterministic channel PIC source. Fresh
+  `make qemu-system-dma-v2-model-gate` passes, including direct copy,
+  zero-length, SG, W1C/re-arm and PIC checks.
+- Fresh `make qemu-system-current-contract-gate` passes all five children:
+  peripheral contract, DMA v2, QSPI, DDR and retire capture. The broader
+  architecture aggregate remains bounded by the selected differential corpus
+  and is not full ISA/MMU/Linux signoff.
