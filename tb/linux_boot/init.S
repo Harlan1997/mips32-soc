@@ -125,6 +125,23 @@ _start:
 	li	$v0, 4004
 	syscall
 	nop
+	/* Yield to the kernel clocksource and scheduler for a real wakeup. */
+	sw	$zero, 24($sp)
+	li	$t0, 1000000
+	sw	$t0, 28($sp)
+	addiu	$a0, $sp, 24
+	move	$a1, $zero
+	li	$v0, 4166
+	syscall
+	nop
+	bnez	$v0, vm_fail
+	nop
+	move	$a0, $s0
+	la	$a1, sleep_success_marker
+	li	$a2, sleep_success_marker_end-sleep_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	move	$a0, $s0
 	la	$a1, vm_success_marker
 	li	$a2, vm_success_marker_end-vm_success_marker
@@ -248,6 +265,9 @@ vm_success_marker_end:
 brk_success_marker:
 	.ascii "MIPS32_SOC_LINUX_BRK_SUCCESS\n"
 brk_success_marker_end:
+sleep_success_marker:
+	.ascii "MIPS32_SOC_LINUX_SLEEP_SUCCESS\n"
+sleep_success_marker_end:
 vm_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_FAILURE\n"
 vm_fail_marker_end:
