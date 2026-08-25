@@ -32,6 +32,10 @@ if ! rg -q "MIPS32_SOC_LINUX_MPROTECT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; the
     echo "Linux boot gate: mprotect marker was not observed (status ${status})" >&2
     exit 1
 fi
+if ! rg -q "MIPS32_SOC_LINUX_MPROTECT_FAULT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: protected-write SIGSEGV marker was not observed (status ${status})" >&2
+    exit 1
+fi
 if ! rg -q "MIPS32_SOC_LINUX_BRK_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
     echo "Linux boot gate: heap brk marker was not observed (status ${status})" >&2
     exit 1
@@ -64,7 +68,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
   initramfs /init process, touched one word on each of four page-spaced user
   stack locations, faulted in five anonymous mmap2 pages, mapped and read one
   file-backed /bin/vm_child page, changed the anonymous mapping read-only and
-  back to read/write with mprotect while reading all five pages, unmapped both
+  back to read/write with mprotect while reading all five pages, verified a
+  child write terminated with SIGSEGV, unmapped both
   regions, expanded the process
   heap by five pages with brk, faulted in each heap page, restored the original
   break, forked two children, and execve'd /bin/vm_child in each child,

@@ -62,6 +62,37 @@ _start:
 	lw	$t0, 0x2000($s3)
 	lw	$t0, 0x3000($s3)
 	lw	$t0, 0x4000($s3)
+	/* A child must fault when it writes the read-only mapping. The parent
+	 * observes SIGSEGV through wait4, then restores the mapping permissions. */
+	li	$v0, 4002
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, vm_fail
+	nop
+	move	$s8, $v0
+	beq	$s8, $zero, mprotect_fault_child
+	nop
+	move	$a0, $s8
+	addiu	$a1, $sp, 32
+	move	$a2, $zero
+	move	$a3, $zero
+	li	$v0, 4114
+	syscall
+	nop
+	bne	$v0, $s8, vm_fail
+	nop
+	lw	$t0, 32($sp)
+	andi	$t0, $t0, 0x7f
+	li	$t1, 11
+	bne	$t0, $t1, vm_fail
+	nop
+	move	$a0, $s0
+	la	$a1, mprotect_fault_success_marker
+	li	$a2, mprotect_fault_success_marker_end-mprotect_fault_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	move	$a0, $s3
 	li	$a1, 0x5000
 	li	$a2, 3
@@ -232,11 +263,19 @@ _start:
 	b	fork_parent_done
 	nop
 
-fork_child:
+	fork_child:
 	la	$a0, exec_path
 	la	$a1, exec_argv
 	la	$a2, exec_env
 	li	$v0, 4011
+	syscall
+	nop
+
+mprotect_fault_child:
+	sw	$zero, 0($s3)
+	nop
+	li	$a0, 1
+	li	$v0, 4001
 	syscall
 	nop
 	b	fork_fail
@@ -315,6 +354,9 @@ yield_success_marker_end:
 mprotect_success_marker:
 	.ascii "MIPS32_SOC_LINUX_MPROTECT_SUCCESS\n"
 mprotect_success_marker_end:
+mprotect_fault_success_marker:
+	.ascii "MIPS32_SOC_LINUX_MPROTECT_FAULT_SUCCESS\n"
+mprotect_fault_success_marker_end:
 vm_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_FAILURE\n"
 vm_fail_marker_end:

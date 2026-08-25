@@ -1685,5 +1685,7 @@ remains the compatibility baseline.
 - Fresh `make linux-boot-build-gate` passes with the mmap, mprotect, brk,
   nanosleep, sched_yield, dual-exec and dual-wait markers.
 - This verifies a bounded user-visible VMA permission transition and clean
-  recovery. It does not claim a deliberate write-protection fault/recovery,
-  complete Linux page-table policy, SMP shootdown, or RTL Linux differential.
+  recovery. It now also forks a child that writes the read-only VMA and
+  verifies the resulting `SIGSEGV` status before restoring permissions. It does
+  not claim complete Linux page-table policy, SMP shootdown, or RTL Linux
+  differential.
