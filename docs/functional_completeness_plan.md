@@ -686,6 +686,19 @@ simulation assertions rather than formal signoff. The aggregate
 compatibility gate, CPU error/reset gates, and `sva-gate` so the unified entry
 point executes this evidence before its existing UVM/coverage stages.
 
+### L1 nonblocking writeback maintenance closure update (2026-08-26)
+
+The opt-in `l1_cache_nb` path now owns the documented D-cache writeback
+maintenance operations `Index_Writeback_Invalidate_D` (`00001`),
+`Hit_Writeback_Invalidate_D` (`11001`), and `Hit_Writeback_D` (`11101`) in
+addition to the existing invalidate operations. A dirty matching line is
+placed in the existing ordered writeback FIFO, CPU requests are held while
+the maintenance transaction is active, and `cache_maint_done` is delayed
+until the AXI line write has drained. The unit gate checks the writeback
+address/data and that writeback-only retains a valid clean line; the real CPU
+gate covers the instruction encodings through the adapter. Tag read/write,
+full ordering/coherency and OS cache ABI remain open.
+
 ### 2026-08-26 opt-in L1 nonblocking CPU contract aggregate
 
 The opt-in L1 nonblocking cache is now exercised through the real CPU/D-cache
@@ -697,8 +710,8 @@ the adapter's legacy observation aliases no longer emit a width-truncation
 warning during opt-in VCS elaboration. This closes the bounded opt-in CPU
 hit-under-miss/ROB response contract. Uncached/peripheral accesses and CACHE
 maintenance intentionally remain on the legacy dcache, default blocking mode
-is unchanged, and full nonblocking maintenance/coherence/physical DDR error
-behavior remain open.
+is unchanged, and full nonblocking tag access, coherence and physical DDR
+error behavior remain open.
 
 ### 2026-08-26 MMU OS-pressure aggregate boundary
 

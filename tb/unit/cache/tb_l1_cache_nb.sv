@@ -24,8 +24,10 @@ module tb_l1_cache_nb;
    while(!cpu_ready) @(negedge clk); @(negedge clk);cpu_valid=0;cpu_we=0; end
  endtask
  task maintain(input [4:0] op,input [31:0] addr);
+  integer n;
   begin @(negedge clk); cache_maint_op=op; cache_maint_addr=addr;
    cache_maint_invalidate=1; @(negedge clk);
+   for (n=0; n<40 && !cache_maint_done; n=n+1) @(negedge clk);
    if (!cache_maint_done || cache_maint_error) errors=errors+1;
    cache_maint_invalidate=0;
   end
@@ -104,6 +106,23 @@ module tb_l1_cache_nb;
    $display("FAIL index invalidate did not force a refill");errors=errors+1;
   end
   return_line(32'h00001140,32'hffff0001);
+  // A dirty hit-writeback must expose the old line on the downstream port
+  // before completion and keep the line valid for a subsequent hit.
+  issue_write(4'hc,32'h00001200,32'hcafebabe);
+  return_line(32'h00001200,32'h12000001);
+  issue_write(4'hd,32'h00001200,32'hdeadbeef);
+  maintain(5'b11101,32'h00001200);
+  if (mem_req_addr != 32'h00001200 || !mem_req_we ||
+      mem_req_wdata[31:0] != 32'hdeadbeef) begin
+   $display("FAIL hit writeback payload addr=%h we=%b data=%h",
+            mem_req_addr,mem_req_we,mem_req_wdata[31:0]);
+   errors=errors+1;
+  end
+  @(negedge clk);
+  issue_read(4'he,32'h00001200);
+  #1;if (dut.mvalid[0] || dut.mvalid[1]) begin
+   $display("FAIL hit writeback unnecessarily invalidated line");errors=errors+1;
+  end
   if(errors==0)$display("REGRESSION_TEST_SUCCESS l1nb mshr=2 wb=4");else $display("REGRESSION_TEST_FAILED l1nb errors=%0d",errors);$finish;
  end
 endmodule

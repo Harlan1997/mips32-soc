@@ -88,6 +88,7 @@ module l1_cache_nb #(
     reg [255:0] wb_data [0:WB_DEPTH-1];
     reg [WB_BITS-1:0] wb_head, wb_tail;
     reg [WB_BITS:0] wb_count;
+    reg maint_active;
 
     wire [SET_BITS-1:0] req_set = cpu_addr[5 +: SET_BITS];
     wire [TAG_BITS-1:0] req_tag = cpu_addr[31 -: TAG_BITS];
@@ -146,14 +147,14 @@ module l1_cache_nb #(
         end
     end
 
-    assign cpu_ready = (rsp_count == 0) && (hit || merge_mshr || free_mshr) &&
+    assign cpu_ready = !maint_active && (rsp_count == 0) && (hit || merge_mshr || free_mshr) &&
                        (hit || !dirty[req_set] || wb_count < WB_DEPTH) &&
                        (!merge_mshr || !secondary_valid[merge_mshr_i]);
 
     // Maintenance is accepted only after all line requests, responses and
     // queued writebacks have drained. The CPU adapter holds CACHE valid until
     // the one-cycle completion indication is observed.
-    assign cache_maint_ready = !cache_maint_done && !any_mvalid &&
+    assign cache_maint_ready = !maint_active && !cache_maint_done && !any_mvalid &&
                                (rsp_count == 0) && (wb_count == 0) &&
                                !mem_req_valid;
 
@@ -202,6 +203,7 @@ module l1_cache_nb #(
         if (!rst_n) begin
             rsp_head <= 0; rsp_tail <= 0; rsp_count <= 0;
             wb_head <= 0; wb_tail <= 0; wb_count <= 0;
+            maint_active <= 1'b0;
             cache_maint_done <= 1'b0;
             cache_maint_error <= 1'b0;
             mshr_occupancy <= 0; wb_occupancy <= 0;
@@ -212,22 +214,53 @@ module l1_cache_nb #(
         end else begin
             cache_maint_done <= 1'b0;
             cache_maint_error <= 1'b0;
+            if (maint_active && wb_count == 0) begin
+                maint_active <= 1'b0;
+                cache_maint_done <= 1'b1;
+            end
             if (cache_maint_invalidate && cache_maint_ready) begin
                 /* The adapter serializes maintenance against live traffic.
-                 * Preserve address-scoped CACHE semantics for the direct
-                 * mapped opt-in L1; unknown operations retain the legacy
-                 * compatibility behavior of invalidating the whole block. */
-                if (cache_maint_op == 5'b10101) begin // Hit_Invalidate_D
-                    if (valid[cache_maint_addr[5 +: SET_BITS]] &&
-                        tags[cache_maint_addr[5 +: SET_BITS]] ==
-                        cache_maint_addr[31 -: TAG_BITS]) begin
-                        valid[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
-                        dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
-                    end
-                end else if (cache_maint_op == 5'b00001) begin // Index_Invalidate_D
+                 * Writeback operations use the same ordered queue as normal
+                 * eviction. Completion is delayed until that queue drains,
+                 * so a following uncached access cannot observe stale data. */
+                reg maint_match;
+                reg maint_wb;
+                reg maint_inv;
+                maint_match = 1'b0;
+                maint_wb = (cache_maint_op == 5'b00001) ||
+                           (cache_maint_op == 5'b11001) ||
+                           (cache_maint_op == 5'b11101);
+                maint_inv = (cache_maint_op == 5'b00001) ||
+                            (cache_maint_op == 5'b10101) ||
+                            (cache_maint_op == 5'b11001);
+                if (cache_maint_op == 5'b10101 ||
+                    cache_maint_op == 5'b11001 ||
+                    cache_maint_op == 5'b11101) begin
+                    maint_match = valid[cache_maint_addr[5 +: SET_BITS]] &&
+                                  tags[cache_maint_addr[5 +: SET_BITS]] ==
+                                  cache_maint_addr[31 -: TAG_BITS];
+                end else if (cache_maint_op == 5'b00001) begin
+                    maint_match = valid[cache_maint_addr[5 +: SET_BITS]];
+                end
+                if (maint_match && maint_wb && dirty[cache_maint_addr[5 +: SET_BITS]]) begin
+                    wb_addr[wb_tail] <= {tags[cache_maint_addr[5 +: SET_BITS]],
+                                         cache_maint_addr[5 +: SET_BITS], 5'b0};
+                    wb_data[wb_tail] <= lines[cache_maint_addr[5 +: SET_BITS]];
+                    wb_tail <= wb_tail + 1'b1;
+                    wb_count <= wb_count + 1'b1;
+                    dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
+                    maint_active <= 1'b1;
+                end
+                if (maint_match && maint_inv) begin
                     valid[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
                     dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
-                end else begin
+                end else if (maint_match && maint_wb) begin
+                    dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
+                end else if (!maint_match &&
+                             (cache_maint_op != 5'b10101) &&
+                             (cache_maint_op != 5'b11001) &&
+                             (cache_maint_op != 5'b11101) &&
+                             (cache_maint_op != 5'b00001)) begin
                     for (k = 0; k < SETS; k = k + 1) begin
                         valid[k] <= 1'b0;
                         dirty[k] <= 1'b0;
@@ -238,7 +271,8 @@ module l1_cache_nb #(
                     miss_issued[k] <= 1'b0;
                     secondary_valid[k] <= 1'b0;
                 end
-                cache_maint_done <= 1'b1;
+                if (!(maint_match && maint_wb && dirty[cache_maint_addr[5 +: SET_BITS]]))
+                    cache_maint_done <= 1'b1;
             end
 
             if (rsp_pop)
