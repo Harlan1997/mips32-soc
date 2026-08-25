@@ -32,8 +32,9 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
 - Boot protocol: MIPS UHI with an opaque DTB
 - Evidence: Linux printed its version, registered/enabled ttyS0, reached the
-  initramfs /init process, and emitted MIPS32_SOC_LINUX_BOOT_SUCCESS through
-  the modeled UART.
+  initramfs /init process, touched one word on each of four page-spaced user
+  stack locations, and then emitted MIPS32_SOC_LINUX_BOOT_SUCCESS through the
+  modeled UART.
 - Linux console log: $([[ -s "${RUN_DIR}/qemu_stdout.log" ]] && rg -q "Linux version" "${RUN_DIR}/qemu_stdout.log" && echo present || echo absent)
 - Scope: generic MIPS kernel boot and UART/initramfs execution on the QEMU
   reference machine; U-Boot, real QSPI/DDR devices, Linux drivers beyond the
