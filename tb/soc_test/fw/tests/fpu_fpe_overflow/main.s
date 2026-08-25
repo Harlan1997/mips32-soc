@@ -42,7 +42,8 @@ _except_handler:
     nop
     srl     $k1, $k0, 12
     andi    $k1, $k1, 0x1f
-    addiu   $t0, $zero, 4
+    /* Overflow is a bit mask and includes Inexact (Overflow|Inexact=5). */
+    addiu   $t0, $zero, 5
     bne     $k1, $t0, fail
     nop
     srl     $k1, $k0, 2

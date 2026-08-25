@@ -393,6 +393,9 @@ module mips_fpu (
              (op == OP_NMADD) || (op == OP_NMSUB)) &&
             !(op == OP_DIV && b[30:23] == 0 && b[22:0] == 0)) begin
             exception_flags[2] = 1'b1;
+            // IEEE-754 overflow is inexact as well: the finite result
+            // crossed the destination format's range and was rounded.
+            exception_flags[0] = 1'b1;
         end
         if (fmt_double && result_double[62:52] == 11'h7ff &&
             result_double[51:0] == 0 && a_double[62:52] != 11'h7ff &&
@@ -402,6 +405,9 @@ module mips_fpu (
             !(op == OP_DIV && b_double[62:52] == 0 &&
               b_double[51:0] == 0)) begin
             exception_flags[2] = 1'b1;
+            // Overflow implies inexact for the same reason in the double
+            // precision path.
+            exception_flags[0] = 1'b1;
         end
         // Host real arithmetic reports several IEEE invalid operations as
         // NaN. Operand NaNs were classified above; this covers finite/
