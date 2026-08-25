@@ -1627,3 +1627,16 @@ remains the compatibility baseline.
 - Current RTL contract signoff therefore remains open. The failure is a real
   coverage gap, not a simulation or license failure; exclusions and the 99%
   policy remain unchanged.
+
+### 2026-08-26 Linux anonymous/file-backed demand-paging pressure
+
+- Extended the Linux initramfs workload with MIPS O32 `mmap2`/`munmap` calls:
+  five writable anonymous pages are written at page offsets 0..4, and one
+  file-backed page from `/bin/vm_child` is mapped and read before unmapping.
+- Fresh `make linux-boot-build-gate` passes with
+  `MIPS32_SOC_LINUX_MMAP_SUCCESS`, followed by two exec markers and the
+  dual-child wait marker. The gate requires the mmap marker in addition to the
+  existing boot/process markers.
+- This is stronger generic Linux VM evidence, but it does not close Linux
+  page-table ownership, swap/file-cache policy, scheduler ABI, multicore
+  shootdown, RTL system-mode Linux differential, or product boot.
