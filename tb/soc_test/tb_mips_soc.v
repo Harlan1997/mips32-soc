@@ -778,10 +778,14 @@ module tb_mips_soc;
                          l2_e2e_aw_target, l2_e2e_w_total, l2_e2e_b_total);
 `endif
                 $display("L2_E2E_TEST_SUCCESS policy=%s target_ar=%0d target_aw=%0d w=%0d b=%0d",
+`ifdef SOC_L2_NONBLOCKING
+                         "nonblocking-write-back",
+`else
 `ifdef SOC_L2_WRITEBACK
                          "write-back",
 `else
                          "write-through",
+`endif
 `endif
                          l2_e2e_ar_target, l2_e2e_aw_target,
                          l2_e2e_w_total, l2_e2e_b_total);

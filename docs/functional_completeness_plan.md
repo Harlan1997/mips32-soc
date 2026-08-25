@@ -572,7 +572,8 @@ four-entry writeback buffer at miss acceptance. A miss requiring a dirty
 victim is backpressured when all four slots are occupied; the buffered line
 data is used for downstream `AW/W`, and the slot is released only after the
 downstream `B` response. `make rtl-frontend-compile`, the L2 concurrency unit
-gate, and the real SoC smoke with `L2_NONBLOCKING=1` pass after the change.
+gate, and the explicit `make l2-nonblocking-end-to-end-gate` real SoC smoke pass
+after the change.
 
 The directed L2 concurrency test now fixes `WB_DEPTH=4`, establishes four
 known dirty resident lines, continuously replaces them in one set, and checks
