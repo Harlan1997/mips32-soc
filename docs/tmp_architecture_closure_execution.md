@@ -1601,6 +1601,20 @@ remains the compatibility baseline.
   anonymous/file-backed demand paging, scheduler shootdown and RTL
   system-mode Linux differential remain open.
 
+### 2026-08-26 Linux dual-child scheduler/process pressure
+
+- Extended the verified initramfs `/init` workload to fork two children in
+  sequence, execve `/bin/vm_child` in both children, and wait4 both returned
+  PIDs before the parent completion marker.
+- Fresh `make linux-boot-build-gate` passes. The QEMU console contains two
+  `MIPS32_SOC_LINUX_EXEC_SUCCESS` markers and one
+  `MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS` marker; the gate now requires the exec
+  marker count to be at least two.
+- This strengthens the generic Linux scheduler/process handoff evidence only.
+  Anonymous/file-backed demand paging ownership, a production scheduler ABI,
+  multicore shootdown, U-Boot/QSPI/DDR boot, and RTL system-mode Linux
+  differential remain open.
+
 ### 2026-08-26 Current-contract signoff audit
 
 - Fresh `make current-contract-signoff` completed the directed, coverage and
