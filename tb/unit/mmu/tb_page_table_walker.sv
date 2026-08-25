@@ -53,6 +53,37 @@ module tb_page_table_walker;
         16'h003f: if (fault_valid || pa !== 32'h0004_0123) errors=errors+1;
         default:  if (fault_valid || pa !== 32'h0000_3123) errors=errors+1;
       endcase
+
+      /* A non-zero L2 index must advance by one 32-bit PTE word for every
+       * supported large-page format.  The old implementation incorrectly
+       * used the page-size shift as the PTE byte stride. */
+      case (`TEST_PAGE_MASK)
+        16'h0003: begin
+          mem[2049]=32'h0000_800f;
+          va=32'h0000_4000;
+        end
+        16'h000f: begin
+          mem[2049]=32'h0002_000f;
+          va=32'h0001_0000;
+        end
+        16'h003f: begin
+          mem[2049]=32'h0008_000f;
+          va=32'h0004_0000;
+        end
+        default: begin
+          mem[2049]=32'h0000_300f;
+          va=32'h0000_1000;
+        end
+      endcase
+      access=2'd1; user_mode=1; req_valid=1;
+      @(posedge clk); while(!req_ready) @(posedge clk); @(negedge clk); req_valid=0;
+      while(!resp_valid) @(posedge clk);
+      case (`TEST_PAGE_MASK)
+        16'h0003: if (fault_valid || pa !== 32'h0000_8000) errors=errors+1;
+        16'h000f: if (fault_valid || pa !== 32'h0002_0000) errors=errors+1;
+        16'h003f: if (fault_valid || pa !== 32'h0008_0000) errors=errors+1;
+        default:  if (fault_valid || pa !== 32'h0000_3000) errors=errors+1;
+      endcase
     end
     else begin
     walk(32'h0000_0123,2'd1,1'b1);

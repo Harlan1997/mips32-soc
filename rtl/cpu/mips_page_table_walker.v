@@ -43,9 +43,12 @@ module mips_page_table_walker #(
         input [31:0] v;
         begin
             case (PAGE_MASK)
-                16'h0003: l2_index_offset = {20'd0, v[21:14], 4'd0};
-                16'h000f: l2_index_offset = {20'd0, v[21:16], 6'd0};
-                16'h003f: l2_index_offset = {20'd0, v[21:18], 8'd0};
+                // Each leaf PTE is still one 32-bit word. Larger pages
+                // reduce the number of L2 index bits; they do not change
+                // the byte stride between adjacent PTEs.
+                16'h0003: l2_index_offset = {22'd0, v[21:14], 2'd0};
+                16'h000f: l2_index_offset = {26'd0, v[21:16], 2'd0};
+                16'h003f: l2_index_offset = {30'd0, v[21:18], 2'd0};
                 default:  l2_index_offset = {20'd0, v[21:12], 2'd0};
             endcase
         end
