@@ -110,15 +110,14 @@ module l2_cache_nb #(
     input  wire                  m_rvalid,
     output reg                   m_rready,
 
-    // Snoop port (tied off)
+    // Snoop port. The opt-in NB cache acknowledges every request and
+    // invalidates a matching clean resident line. Dirty-line writeback and
+    // directory ownership remain a separate coherency contract.
     input  wire [ADDR_WIDTH-1:0] snoop_addr,
     input  wire                  snoop_valid,
     output wire                  snoop_ack,
     output wire                  snoop_hit
 );
-
-    assign snoop_ack = snoop_valid;
-    assign snoop_hit = 1'b0;
 
     // ---- Geometry (identical to l2_cache_caching) ----
     localparam OFFSET_BITS  = 5;
@@ -163,6 +162,34 @@ module l2_cache_nb #(
     reg                  mshr_evict  [0:N_MSHR-1]; // needs dirty writeback first
     reg [PA_WIDTH-1:0]   mshr_eaddr  [0:N_MSHR-1]; // evict address
     reg [WB_BITS-1:0]    mshr_wb_idx [0:N_MSHR-1]; // dirty victim buffer slot
+
+    wire [INDEX_BITS-1:0] snoop_set = snoop_addr[OFFSET_BITS +: INDEX_BITS];
+    wire [TAG_BITS-1:0]   snoop_tag = snoop_addr[PA_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    reg                   snoop_way_hit;
+    reg [WAY_BITS-1:0]    snoop_hitway;
+    reg                   snoop_dirty_hit;
+    reg                   snoop_mshr_match;
+    integer si, sm;
+    always @(*) begin
+        snoop_way_hit = 1'b0;
+        snoop_hitway = {WAY_BITS{1'b0}};
+        snoop_dirty_hit = 1'b0;
+        snoop_mshr_match = 1'b0;
+        for (si=0; si<WAYS; si=si+1) begin
+            if (valid_ram[snoop_set][si] &&
+                tag_ram[snoop_set][si] == snoop_tag) begin
+                snoop_way_hit = 1'b1;
+                snoop_hitway = si[WAY_BITS-1:0];
+                if (dirty_ram[snoop_set][si]) snoop_dirty_hit = 1'b1;
+            end
+        end
+        for (sm=0; sm<N_MSHR; sm=sm+1)
+            if (mshr_valid[sm] && mshr_line[sm] == snoop_addr[28:5])
+                snoop_mshr_match = 1'b1;
+    end
+    assign snoop_ack = snoop_valid;
+    assign snoop_hit = snoop_valid && snoop_way_hit &&
+                       !snoop_dirty_hit && !snoop_mshr_match;
 
     // Dirty victims are snapshotted at miss acceptance so replacement is
     // decoupled from the serial downstream AXI transaction.
@@ -467,6 +494,14 @@ module l2_cache_nb #(
             for (k=0; k<WB_DEPTH; k=k+1) wb_valid[k] <= 1'b0;
             // retention arrays: not cleared (see l2_cache_caching rationale)
         end else begin
+            // A clean snoop can invalidate immediately.  Dirty lines are
+            // deliberately left intact until a writeback-aware coherency
+            // protocol is implemented; the hit output is low for that case.
+            if (snoop_valid && snoop_way_hit && !snoop_dirty_hit &&
+                !snoop_mshr_match) begin
+                valid_ram[snoop_set][snoop_hitway] <= 1'b0;
+                dirty_ram[snoop_set][snoop_hitway] <= 1'b0;
+            end
             // ---------------------------------------------------------------
             // (A) ACCEPT STAGE
             // ---------------------------------------------------------------
