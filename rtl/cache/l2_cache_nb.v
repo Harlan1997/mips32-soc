@@ -159,6 +159,8 @@ module l2_cache_nb #(
     reg [WAY_BITS-1:0]   mshr_way    [0:N_MSHR-1]; // reserved victim way
     reg                  mshr_issued [0:N_MSHR-1]; // refill launched
     reg                  mshr_filled [0:N_MSHR-1]; // line now in array
+    reg                  mshr_error  [0:N_MSHR-1]; // downstream AXI error; no line install
+    reg                  mshr_done   [0:N_MSHR-1]; // full downstream transaction complete
     reg                  mshr_evict  [0:N_MSHR-1]; // needs dirty writeback first
     reg [PA_WIDTH-1:0]   mshr_eaddr  [0:N_MSHR-1]; // evict address
     reg [WB_BITS-1:0]    mshr_wb_idx [0:N_MSHR-1]; // dirty victim buffer slot
@@ -290,7 +292,10 @@ module l2_cache_nb #(
     always @(*) begin
         mshr_match = 1'b0; mshr_match_idx = {MSHR_BITS{1'b0}};
         for (mm=0; mm<N_MSHR; mm=mm+1)
-            if (mshr_valid[mm] && mshr_line[mm]==acc_line) begin
+            // A failed MSHR is terminal and must never accept a new secondary
+            // waiter.  It remains allocated only long enough to resolve its
+            // original order entries and then is reclaimed by MSHR FREE.
+            if (mshr_valid[mm] && !mshr_error[mm] && mshr_line[mm]==acc_line) begin
                 mshr_match = 1'b1; mshr_match_idx = mm[MSHR_BITS-1:0];
             end
     end
@@ -398,7 +403,7 @@ module l2_cache_nb #(
             end
     end
 
-    // Pick the OLDEST order entry that is waiting on a now-filled MSHR. Resolved
+    // Pick the OLDEST order entry that is waiting on a now-filled/failed MSHR. Resolved
     // one-per-cycle in age order so a write-waiter merges before any younger
     // same-line read-waiter captures (program-order correctness on a line).
     reg fill_v; reg [ORD_BITS-1:0] fill_i; reg [7:0] fill_best_age;
@@ -406,7 +411,8 @@ module l2_cache_nb #(
     always @(*) begin
         fill_v = 1'b0; fill_i = {ORD_BITS{1'b0}}; fill_best_age = 8'hFF;
         for (fp=0; fp<ORD_DEPTH; fp=fp+1)
-            if (ord_st[fp]==OST_WAIT && mshr_valid[ord_mshr[fp]] && mshr_filled[ord_mshr[fp]])
+            if (ord_st[fp]==OST_WAIT && mshr_valid[ord_mshr[fp]] &&
+                mshr_done[ord_mshr[fp]])
                 if (!fill_v || ord_age[fp] < fill_best_age) begin
                     fill_v = 1'b1; fill_i = fp[ORD_BITS-1:0]; fill_best_age = ord_age[fp];
                 end
@@ -507,7 +513,8 @@ module l2_cache_nb #(
             for (k=0; k<ORD_DEPTH; k=k+1) begin ord_st[k] <= OST_EMPTY; ord_beat[k] <= 8'd0; end
             for (k=0; k<N_MSHR; k=k+1) begin
                 mshr_valid[k] <= 1'b0; mshr_issued[k] <= 1'b0;
-                mshr_filled[k] <= 1'b0; mshr_evict[k] <= 1'b0;
+                mshr_filled[k] <= 1'b0; mshr_error[k] <= 1'b0; mshr_done[k] <= 1'b0;
+                mshr_evict[k] <= 1'b0;
                 mshr_wb_idx[k] <= {WB_BITS{1'b0}};
             end
             for (k=0; k<WB_DEPTH; k=k+1) wb_valid[k] <= 1'b0;
@@ -569,6 +576,8 @@ module l2_cache_nb #(
                         mshr_way[mshr_free_i]     <= acc_victim;
                         mshr_issued[mshr_free_i]  <= 1'b0;
                         mshr_filled[mshr_free_i]  <= 1'b0;
+                        mshr_error[mshr_free_i]   <= 1'b0;
+                        mshr_done[mshr_free_i]    <= 1'b0;
                         mshr_evict[mshr_free_i]   <= valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim];
                         mshr_eaddr[mshr_free_i]   <= {3'b000, tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
                         if (valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) begin
@@ -609,6 +618,8 @@ module l2_cache_nb #(
                         mshr_way[mshr_free_i]    <= acc_victim;
                         mshr_issued[mshr_free_i] <= 1'b0;
                         mshr_filled[mshr_free_i] <= 1'b0;
+                        mshr_error[mshr_free_i]  <= 1'b0;
+                        mshr_done[mshr_free_i]   <= 1'b0;
                         mshr_evict[mshr_free_i]  <= valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim];
                         mshr_eaddr[mshr_free_i]  <= {3'b000, tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
                         if (valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) begin
@@ -682,6 +693,16 @@ module l2_cache_nb #(
                                      snoop_wb_pending <= 1'b0;
                                      me_is_snoop_wb <= 1'b0;
                                      me_state <= ME_IDLE;
+                                 end else if (m_bresp != 2'b00) begin
+                                     // The victim reached the downstream
+                                     // fabric but was not accepted.  Do not
+                                     // launch a refill whose response would
+                                     // otherwise make the failed request look
+                                     // successful.
+                                     wb_valid[mshr_wb_idx[me_idx]] <= 1'b0;
+                                     mshr_error[me_idx] <= 1'b1;
+                                     mshr_done[me_idx] <= 1'b1;
+                                     me_state <= ME_IDLE;
                                  end else begin
                                      wb_valid[mshr_wb_idx[me_idx]] <= 1'b0;
                                      me_state <= ME_REFILL_AR;
@@ -689,16 +710,29 @@ module l2_cache_nb #(
                              end
                 ME_REFILL_AR: if (m_arready) begin me_cnt <= 3'd0; me_state <= ME_REFILL_R; end
                 ME_REFILL_R: if (m_rvalid) begin
-                                 // write refill beat straight into the array
-                                 data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt] <= m_rdata;
+                                 // Continue consuming the burst after an error
+                                 // so a single-outstanding downstream fabric is
+                                 // never left wedged.  Error responses never
+                                 // install any part of the line.
+                                 if (m_rresp != 2'b00)
+                                     mshr_error[me_idx] <= 1'b1;
+                                 if (!mshr_error[me_idx] && m_rresp == 2'b00)
+                                     data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt] <= m_rdata;
                                  me_linebuf[me_cnt*DATA_WIDTH +: DATA_WIDTH] <= m_rdata;
                                  if (m_rlast || me_cnt==3'd7) begin
-                                     // install tag/valid, clear dirty, update PLRU
-                                     tag_ram[mshr_set[me_idx]][mshr_way[me_idx]]   <= mshr_tag[me_idx];
-                                     valid_ram[mshr_set[me_idx]][mshr_way[me_idx]] <= 1'b1;
-                                     dirty_ram[mshr_set[me_idx]][mshr_way[me_idx]] <= 1'b0;
-                                     plru_ram[mshr_set[me_idx]] <= update_plru(plru_ram[mshr_set[me_idx]], mshr_way[me_idx]);
-                                     mshr_filled[me_idx] <= 1'b1;
+                                     if (mshr_error[me_idx] || m_rresp != 2'b00) begin
+                                         // A failed refill must not expose a
+                                         // partially updated cache line.
+                                         mshr_error[me_idx] <= 1'b1;
+                                         mshr_done[me_idx] <= 1'b1;
+                                     end else begin
+                                         tag_ram[mshr_set[me_idx]][mshr_way[me_idx]]   <= mshr_tag[me_idx];
+                                         valid_ram[mshr_set[me_idx]][mshr_way[me_idx]] <= 1'b1;
+                                         dirty_ram[mshr_set[me_idx]][mshr_way[me_idx]] <= 1'b0;
+                                         plru_ram[mshr_set[me_idx]] <= update_plru(plru_ram[mshr_set[me_idx]], mshr_way[me_idx]);
+                                         mshr_filled[me_idx] <= 1'b1;
+                                         mshr_done[me_idx] <= 1'b1;
+                                     end
                                      me_state <= ME_IDLE;
                                  end else me_cnt <= me_cnt + 1'b1;
                              end
@@ -714,7 +748,14 @@ module l2_cache_nb #(
             if (fill_v) begin : FILLSVC
                 reg [INDEX_BITS-1:0] fs; reg [WAY_BITS-1:0] fw;
                 fs = mshr_set[ord_mshr[fill_i]]; fw = mshr_way[ord_mshr[fill_i]];
-                if (ord_write[fill_i]) begin
+                if (mshr_error[ord_mshr[fill_i]]) begin
+                    // All primary and secondary waiters observe the same
+                    // downstream failure, while preserving normal response
+                    // ordering and allowing the MSHR to be reclaimed.
+                    ord_resp[fill_i] <= 2'b10; // AXI SLVERR
+                    ord_rbuf[fill_i] <= {LINE_W{1'b0}};
+                    ord_st[fill_i] <= OST_READY;
+                end else if (ord_write[fill_i]) begin
                     // merge write payload into the filled line (byte strobes)
                     for (mm2=0; mm2<WORDS_PER_LN; mm2=mm2+1) begin
                         if (ord_wstrb[fill_i][mm2*4+0]) data_ram[fs][fw][mm2][7:0]   <= ord_wdata[fill_i][mm2*DATA_WIDTH+0 +:8];
@@ -767,7 +808,7 @@ module l2_cache_nb #(
             // filled, release the slot for reuse.
             // ---------------------------------------------------------------
             for (fk=0; fk<N_MSHR; fk=fk+1) begin
-                if (mshr_valid[fk] && mshr_filled[fk]) begin
+                if (mshr_valid[fk] && mshr_done[fk]) begin
                     mshr_refd = 1'b0;
                     for (fj=0; fj<ORD_DEPTH; fj=fj+1)
                         if (ord_st[fj]!=OST_EMPTY && ord_mshr[fj]==fk[MSHR_BITS-1:0] &&
@@ -782,6 +823,8 @@ module l2_cache_nb #(
                         mshr_valid[fk]  <= 1'b0;
                         mshr_issued[fk] <= 1'b0;
                         mshr_filled[fk] <= 1'b0;
+                        mshr_error[fk]  <= 1'b0;
+                        mshr_done[fk]   <= 1'b0;
                         mshr_evict[fk]  <= 1'b0;
                     end
                 end
