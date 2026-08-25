@@ -169,7 +169,7 @@ dcache-parity-gate:
 .PHONY: l2-nonblocking-end-to-end-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
-.PHONY: qemu-system-mmu-os-pressure-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
+.PHONY: qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
 .PHONY: linux-boot-build-gate
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
@@ -720,6 +720,11 @@ qemu-system-mmu-os-pressure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
 	OS_PRESSURE=1 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_os_pressure \
 		tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
+
+qemu-system-mmu-ipi-contract-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_mmu_ipi_contract_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_ipi_contract \
+		tb/isa_ref/run_qemu_system_mmu_ipi_contract_gate.sh
 
 qemu-system-gpio-input-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_gpio_input_gate.sh

@@ -1540,3 +1540,18 @@ remains the compatibility baseline.
   `TRACE_COMPARE_PASS`; `make qemu-system-dma-sg-differential-gate` is the
   reproducible entry. A fixed 512-iteration delay makes the RTL bus-complete
   STATUS observation deterministic against the immediate reference model.
+
+### 2026-08-26 QEMU dual-mailbox MMU IPI contract differential
+
+- Added explicit `0x4000_A000` and `0x4000_B000` IPI windows to
+  `mips32-soc-ref`. The model implements target/generation/payload latching,
+  bounded ACK, target-absent timeout, stale-ACK timeout, rejected-while-busy,
+  sticky status and W1C behavior.
+- Added `make qemu-system-mmu-ipi-contract-gate`. The gate runs the real
+  dual-core RTL firmware path and the same guest on QEMU, then compares the
+  24 APB control writes and required done/timeout/rejected/stale outcomes.
+  Fresh result: `IPI_CONTRACT_COMPARE_PASS writes=24`.
+- This closes the bounded RTL/QEMU mailbox/event contract. QEMU remains a
+  single-vCPU reference machine; full SMP scheduling, OS-owned page tables,
+  architectural multicore TLB shootdown, coherency ordering and Linux VM
+  behavior remain open.
