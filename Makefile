@@ -573,6 +573,11 @@ qemu-system-retire-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	tb/isa_ref/run_qemu_system_differential_gate.sh
 
+qemu-system-dma-sg-data-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_dma_sg_data_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_sg_data \
+		tb/isa_ref/run_qemu_system_dma_sg_data_gate.sh
+
 qemu-system-dma-v2-model-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_v2_model tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
