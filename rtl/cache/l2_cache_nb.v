@@ -326,6 +326,8 @@ module l2_cache_nb #(
                                !snoop_wb_pending && wb_free_v;
     assign snoop_hit = snoop_valid && snoop_way_hit && !snoop_mshr_match &&
                        (!snoop_dirty_hit || snoop_dirty_accept);
+    wire snoop_line_conflict = snoop_valid && snoop_way_hit &&
+                                !snoop_mshr_match;
 
     // Ways already reserved by an in-flight MSHR for acc_set (avoid double-alloc)
     reg [WAYS-1:0] acc_reserved;
@@ -421,7 +423,7 @@ module l2_cache_nb #(
                          (acc_hit || mshr_match ||
                           (mshr_free_v && acc_victim_ok &&
                            (!acc_miss_needs_wb || wb_free_v))) &&
-                         !snoop_dirty_accept;
+                         !snoop_dirty_accept && !snoop_line_conflict;
 
     // An accept that attaches a NEW waiter to an existing MSHR this cycle (used
     // to veto a same-cycle free of that MSHR). Covers AR-accept and the AW
