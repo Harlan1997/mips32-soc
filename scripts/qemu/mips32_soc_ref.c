@@ -53,6 +53,7 @@ typedef struct MIPS32SocRefState {
     MemoryRegion pic_window;
     MemoryRegion qspi_window;
     MemoryRegion ddr_status_window;
+    MemoryRegion ipi_window[2];
     MemoryRegion uart_mmu_alias;
     MemoryRegion uart_mmu_odd_alias;
     MemoryRegion apb;
@@ -128,6 +129,17 @@ typedef struct MIPS32SocRefState {
     uint32_t mmu_context_status;
     bool mmu_context_busy;
     bool mmu_context_invalidate_seen;
+    /* Bounded dual-mailbox model for the RTL's two APB IPI endpoints.
+     * The reference machine remains single-vCPU; these state machines model
+     * target acceptance/ACK and fault behavior, not architectural SMP. */
+    uint32_t ipi_target[2];
+    uint32_t ipi_generation[2];
+    uint32_t ipi_asid[2];
+    uint32_t ipi_vpn[2];
+    uint32_t ipi_scope[2];
+    uint32_t ipi_status[2];
+    uint32_t ipi_fault[2];
+    uint32_t ipi_busy_reads[2];
     MIPSCPU *cpu;
     uint64_t retire_count;
     GArray *irq_release_after;
@@ -481,6 +493,28 @@ static void soc_ref_pic_write(void *opaque, hwaddr addr, uint64_t data,
 static const MemoryRegionOps soc_ref_pic_ops = {
     .read = soc_ref_pic_read,
     .write = soc_ref_pic_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = { .min_access_size = 4, .max_access_size = 4 },
+};
+
+static uint64_t soc_ref_ipi_read(void *opaque, hwaddr addr, unsigned size)
+{
+    unsigned bank = (uintptr_t)opaque;
+    return soc_ref_apb_read(soc_ref_active_state, addr +
+                            (bank ? 0xb000 : 0xa000), size);
+}
+
+static void soc_ref_ipi_write(void *opaque, hwaddr addr, uint64_t data,
+                              unsigned size)
+{
+    unsigned bank = (uintptr_t)opaque;
+    soc_ref_apb_write(soc_ref_active_state, addr +
+                      (bank ? 0xb000 : 0xa000), data, size);
+}
+
+static const MemoryRegionOps soc_ref_ipi_ops = {
+    .read = soc_ref_ipi_read,
+    .write = soc_ref_ipi_write,
     .endianness = DEVICE_LITTLE_ENDIAN,
     .valid = { .min_access_size = 4, .max_access_size = 4 },
 };
@@ -1003,6 +1037,47 @@ static void soc_ref_qspi_start(MIPS32SocRefState *s, uint32_t index)
     }
 }
 
+static uint32_t soc_ref_ipi_status_read(MIPS32SocRefState *s, unsigned bank)
+{
+    uint32_t status = s->ipi_status[bank];
+
+    /* The RTL target emits its ACK one clock after invalidate_valid. A
+     * polling load is the observable boundary in this machine, so expose
+     * one busy/pending sample before completing the transaction. */
+    if (s->ipi_busy_reads[bank] != 0) {
+        s->ipi_busy_reads[bank]--;
+        if (s->ipi_busy_reads[bank] == 0) {
+            s->ipi_status[bank] &= ~((1U << 0) | (1U << 1));
+            if (s->ipi_fault[bank] & (1U << 2)) {
+                s->ipi_status[bank] |= (1U << 3) | (1U << 5);
+            } else if (s->ipi_fault[bank] & (1U << 1)) {
+                s->ipi_status[bank] |= 1U << 3;
+            } else {
+                s->ipi_status[bank] |= 1U << 2;
+            }
+        }
+        status = s->ipi_status[bank];
+    }
+    return status;
+}
+
+static void soc_ref_ipi_send(MIPS32SocRefState *s, unsigned bank)
+{
+    uint32_t fault = s->ipi_fault[bank] & 0xfU;
+
+    if (s->ipi_status[bank] & (1U << 0)) {
+        s->ipi_status[bank] |= 1U << 4;
+        return;
+    }
+    s->ipi_status[bank] &= ~((1U << 2) | (1U << 3));
+    if (fault & 1U) {
+        s->ipi_status[bank] |= 1U << 3;
+        return;
+    }
+    s->ipi_status[bank] |= (1U << 0) | (1U << 1);
+    s->ipi_busy_reads[bank] = (fault & (1U << 2)) ? 65U : 2U;
+}
+
 static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
 {
     MIPS32SocRefState *s = opaque;
@@ -1010,6 +1085,20 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
     uint32_t value = 0;
     uint32_t priority;
     if (off < 0x1000) return soc_ref_uart_read(s, off, size);
+    if ((off & 0xf000) == 0xa000 || (off & 0xf000) == 0xb000) {
+        unsigned bank = ((off & 0xf000) == 0xb000) ? 1U : 0U;
+        switch (off & 0xff) {
+        case 0x20: value = (s->ipi_generation[bank] << 8) |
+                              (s->ipi_target[bank] & 1U); break;
+        case 0x24: value = s->ipi_asid[bank] & 0xffU; break;
+        case 0x28: value = s->ipi_vpn[bank] & 0xfffffU; break;
+        case 0x2c: value = s->ipi_scope[bank] & 3U; break;
+        case 0x34: value = soc_ref_ipi_status_read(s, bank); break;
+        case 0x3c: value = s->ipi_fault[bank] & 0xfU; break;
+        default: value = 0; break;
+        }
+        return value;
+    }
     switch (off) {
     case 0x9000:
         value = s->mmu_context_asid_generation;
@@ -1202,6 +1291,25 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
     uint32_t off = addr & 0xffff;
     uint32_t value = data;
     if (off < 0x1000) { soc_ref_uart_write(s, off, data, size); return; }
+    if ((off & 0xf000) == 0xa000 || (off & 0xf000) == 0xb000) {
+        unsigned bank = ((off & 0xf000) == 0xb000) ? 1U : 0U;
+        switch (off & 0xff) {
+        case 0x20:
+            s->ipi_target[bank] = value & 1U;
+            s->ipi_generation[bank] = (value >> 8) & 0xffU;
+            break;
+        case 0x24: s->ipi_asid[bank] = value & 0xffU; break;
+        case 0x28: s->ipi_vpn[bank] = value & 0xfffffU; break;
+        case 0x2c: s->ipi_scope[bank] = value & 3U; break;
+        case 0x30:
+            if (value & 1U) soc_ref_ipi_send(s, bank);
+            break;
+        case 0x38: s->ipi_status[bank] &= ~(value & 0x3fU); break;
+        case 0x3c: s->ipi_fault[bank] = value & 0xfU; break;
+        default: break;
+        }
+        return;
+    }
     if (off >= 0x3040 && off < 0x3140) {
         unsigned ch = (off - 0x3040) >> 6;
         unsigned reg = (off - 0x3040) & 0x3f;
@@ -1604,6 +1712,19 @@ static void mips32_soc_ref_init(MachineState *machine)
                           "mips32-soc-ref.ddr-status-window", 0x100);
     memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x6000,
                                         &state->ddr_status_window, 1);
+    /* Keep both IPI mailbox CSRs as explicit windows. This mirrors the RTL's
+     * separate APB selects and makes the sparse 0xA000/0xB000 decode visible
+     * even when the parent APB region is backed by an alias. */
+    memory_region_init_io(&state->ipi_window[0], NULL, &soc_ref_ipi_ops,
+                          (void *)(uintptr_t)0,
+                          "mips32-soc-ref.ipi-core0-window", 0x40);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0xa000,
+                                        &state->ipi_window[0], 2);
+    memory_region_init_io(&state->ipi_window[1], NULL, &soc_ref_ipi_ops,
+                          (void *)(uintptr_t)1,
+                          "mips32-soc-ref.ipi-core1-window", 0x40);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0xb000,
+                                        &state->ipi_window[1], 2);
     /* The RTL product-MMU firmware uses the prototype PFN encoding
      * 0x01000217 for its C000_9000 wired mapping.  Under standard MIPS
      * EntryLo decoding that resolves to physical 0x0400_0000, while the
