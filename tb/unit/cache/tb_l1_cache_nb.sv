@@ -1,7 +1,9 @@
 `timescale 1ns/1ps
 module tb_l1_cache_nb;
  reg clk=0,rst_n=0,cpu_valid=0,cpu_we=0; reg [3:0] cpu_id=0,cpu_be=4'hf;
- reg [31:0] cpu_addr=0,cpu_wdata=0; reg cache_maint_invalidate=0; wire cpu_ready,rsp_valid,rsp_error;
+ reg [31:0] cpu_addr=0,cpu_wdata=0; reg cache_maint_invalidate=0;
+ reg [4:0] cache_maint_op=0; reg [31:0] cache_maint_addr=0;
+ wire cpu_ready,rsp_valid,rsp_error;
  wire [3:0] rsp_id; wire [31:0] rsp_rdata; reg rsp_ready=1;
  wire mem_req_valid,mem_req_we; wire [31:0] mem_req_addr; wire [255:0] mem_req_wdata;
  reg mem_req_ready=1,mem_rsp_valid=0,mem_rsp_error=0; reg [31:0] mem_rsp_addr=0; reg [255:0] mem_rsp_data=0;
@@ -19,6 +21,11 @@ module tb_l1_cache_nb;
  task issue_write(input [3:0] id,input [31:0] addr,input [31:0] data);
   begin @(negedge clk);cpu_id=id;cpu_addr=addr;cpu_wdata=data;cpu_be=4'hf;cpu_we=1;cpu_valid=1;
    while(!cpu_ready) @(negedge clk); @(negedge clk);cpu_valid=0;cpu_we=0; end
+ endtask
+ task maintain(input [4:0] op,input [31:0] addr);
+  begin @(negedge clk); cache_maint_op=op; cache_maint_addr=addr;
+   cache_maint_invalidate=1; @(negedge clk); cache_maint_invalidate=0;
+  end
  endtask
  task wait_wb_empty;
   integer n;
@@ -77,6 +84,23 @@ module tb_l1_cache_nb;
   end
   cpu_valid=0;cpu_we=0;mem_req_ready=1;
   wait_wb_empty();
+  // Exercise address-scoped maintenance after all outstanding responses and
+  // writebacks are drained, so the check cannot perturb the MSHR stress.
+  issue_write(4'ha,32'h00001120,32'haaaa0001); return_line(32'h00001120,32'h12000001);
+  maintain(5'b10101,32'h00001120);
+  issue_read(4'he,32'h00001120);
+  #1;if (!dut.mvalid[0] && !dut.mvalid[1]) begin
+   $display("FAIL hit invalidate did not force a refill");errors=errors+1;
+  end
+  return_line(32'h00001120,32'heeee0001);
+  maintain(5'b00001,32'h00001140);
+  issue_write(4'hb,32'h00001140,32'hbbbb0001); return_line(32'h00001140,32'h14000001);
+  maintain(5'b00001,32'h00001140);
+  issue_read(4'hf,32'h00001140);
+  #1;if (!dut.mvalid[0] && !dut.mvalid[1]) begin
+   $display("FAIL index invalidate did not force a refill");errors=errors+1;
+  end
+  return_line(32'h00001140,32'hffff0001);
   if(errors==0)$display("REGRESSION_TEST_SUCCESS l1nb mshr=2 wb=4");else $display("REGRESSION_TEST_FAILED l1nb errors=%0d",errors);$finish;
  end
 endmodule
