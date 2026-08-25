@@ -909,3 +909,18 @@ The same unified SVA compile now enables the existing 32-source VIC priority
 checker (`VIC_PRIORITY_CHECKER_ENABLE`) and includes its bind/source files.
 `make sva-gate` remains green with no priority, vector or pending-source
 mismatch; this is simulation evidence, not a formal interrupt-priority proof.
+
+### 2026-08-26 QEMU DMA v2 SG data contract
+
+Added the bounded `qemu_system_dma_sg` firmware corpus and
+`make qemu-system-dma-sg-data-gate`. It programs two linked 16-byte DMA v2
+descriptors, runs the real RTL DMA path and the `mips32-soc-ref` model, compares
+all eight destination words in the guest, and only then writes the success
+mailbox. The no-coverage UVM RTL run and clean QEMU guest shutdown both pass;
+the evidence is under `build/isa_ref/qemu_system_dma_sg_data/`.
+
+An attempt to use the generic per-retire plugin with the full DMA firmware was
+bounded out because the long status-poll corpus does not produce a bounded
+capture. The new SG data gate therefore closes data movement only and does not
+claim full DMA retire differential, physical AXI fault/reset timing, or Linux
+DMA ABI.

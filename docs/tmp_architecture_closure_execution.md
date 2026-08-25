@@ -1524,3 +1524,15 @@ remains the compatibility baseline.
   independent evidence directory. Fresh current-contract and architecture
   closure aggregates pass; the latter includes selected differential, MMU
   refill/PageMask/OS pressure and Linux kernel-to-userspace marker gates.
+
+### 2026-08-26 DMA v2 SG data contract
+
+- Added `qemu_system_dma_sg`, a bounded custom-boot guest with two linked
+  16-byte descriptors and an eight-word post-transfer comparison.
+- `make qemu-system-dma-sg-data-gate` passes the real RTL/UVM path and the
+  `mips32-soc-ref` machine; the guest writes the success mailbox only after
+  all destination words match.
+- The generic retire-plugin attempt with the larger polling firmware was
+  rejected as unbounded rather than relaxing the comparator. Full per-retire
+  DMA differential, physical AXI fault/reset timing and Linux DMA ABI remain
+  open.
