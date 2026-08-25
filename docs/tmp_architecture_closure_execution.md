@@ -1597,3 +1597,16 @@ remains the compatibility baseline.
   path. The probe was removed from the passing gate; Linux VM demand paging,
   user-page refill diagnosis, fork/exec, scheduler shootdown and RTL
   system-mode Linux differential remain open.
+
+### 2026-08-26 Current-contract signoff audit
+
+- Fresh `make current-contract-signoff` completed the directed, coverage and
+  stress test stages successfully, then stopped at the required 99% coverage
+  threshold without changing exclusions.
+- Authoritative merged results were UVM SCORE `36.27%`, LINE `53.62%`, COND
+  `41.20%`, TOGGLE `11.28%`, FSM `28.36%`, BRANCH `46.88%`; Product CPU/CP0
+  SCORE `37.10%`, LINE `54.46%`, COND `41.10%`, TOGGLE `9.25%`, FSM `31.36%`,
+  BRANCH `49.31%`.
+- Current RTL contract signoff therefore remains open. The failure is a real
+  coverage gap, not a simulation or license failure; exclusions and the 99%
+  policy remain unchanged.
