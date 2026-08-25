@@ -26,8 +26,8 @@ _start:
 	sw	$zero, 0($t0)
 	addiu	$t0, $sp, -0x3000
 	sw	$zero, 0($t0)
-	/* Fork a child, let it report through the modeled UART, and require the
-	 * parent to reap it with wait4 before the final success marker. */
+	/* Fork two children, let each report through the modeled UART, and require
+	 * the parent to reap both with wait4 before the final success marker. */
 	li	$v0, 4002
 	syscall
 	nop
@@ -37,7 +37,26 @@ _start:
 	move	$s1, $v0
 	beq	$s1, $zero, fork_child
 	nop
+	li	$v0, 4002
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, fork_fail
+	nop
+	move	$s2, $v0
+	beq	$s2, $zero, fork_child
+	nop
 	move	$a0, $s1
+	move	$a1, $zero
+	move	$a2, $zero
+	move	$a3, $zero
+	li	$v0, 4114
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, fork_fail
+	nop
+	move	$a0, $s2
 	move	$a1, $zero
 	move	$a2, $zero
 	move	$a3, $zero
