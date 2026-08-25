@@ -167,6 +167,7 @@ dcache-parity-gate:
 .PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate
 .PHONY: l1-nonblocking-maintenance-compat-gate l1-nonblocking-ddr-gate qemu-system-l1-ddr-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
+.PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: qemu-system-mmu-os-pressure-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
 .PHONY: linux-boot-build-gate
@@ -577,6 +578,13 @@ qemu-system-dma-sg-data-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_dma_sg_data_gate.sh
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_sg_data \
 		tb/isa_ref/run_qemu_system_dma_sg_data_gate.sh
+
+qemu-system-dma-sg-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=qemu_system_dma_sg QEMU_CPU=24Kc RTL_TIMEOUT=180 \
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_sg_differential \
+	RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-dma-v2-model-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh

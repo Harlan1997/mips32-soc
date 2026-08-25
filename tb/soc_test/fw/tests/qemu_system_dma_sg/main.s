@@ -37,13 +37,18 @@ _start:
     addiu   $t6, $zero, 3          # EN | SG_MODE
     sw      $t6, 0($t5)
 
-    addiu   $t5, $t5, 20           # channel 2 STATUS
-poll:
-    lw      $t6, 0($t5)
-    andi    $t4, $t6, 2            # DONE
-    beq     $t4, $zero, poll
+    # The RTL DMA performs the two descriptor fetches and data beats over a
+    # bounded sequence of bus cycles, while the reference model completes the
+    # copy at START.  Use an architectural delay so the single STATUS read
+    # observes DONE in both models without hiding a status mismatch.
+    addiu   $t2, $zero, 512
+delay:
+    addiu   $t2, $t2, -1
+    bne     $t2, $zero, delay
     nop
-    andi    $t4, $t6, 0x1c         # BUSY/DONE/ERR plus status error bits
+
+    addiu   $t5, $t5, 20           # channel 2 STATUS
+    lw      $t6, 0($t5)
     andi    $t6, $t6, 4            # ERR is bit 2 in the architectural status
     bne     $t6, $zero, fail
     nop

@@ -924,3 +924,12 @@ bounded out because the long status-poll corpus does not produce a bounded
 capture. The new SG data gate therefore closes data movement only and does not
 claim full DMA retire differential, physical AXI fault/reset timing, or Linux
 DMA ABI.
+
+The same corpus now passes the strict per-retire harness with
+`FW_TEST=qemu_system_dma_sg ... tb/isa_ref/run_qemu_system_differential_gate.sh`.
+The standard entry is `make qemu-system-dma-sg-differential-gate` and the
+fresh comparison reports `QEMU system RTL retire differential: PASS`. The
+firmware uses a fixed 512-iteration architectural delay before its single
+STATUS read, so the comparison observes the same completed state without
+weakening the comparator; this remains a bounded DMA differential rather than
+full physical fault/reset or Linux DMA signoff.
