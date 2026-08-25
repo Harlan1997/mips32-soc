@@ -1689,3 +1689,13 @@ remains the compatibility baseline.
   verifies the resulting `SIGSEGV` status before restoring permissions. It does
   not claim complete Linux page-table policy, SMP shootdown, or RTL Linux
   differential.
+
+### 2026-08-26 Linux child exit-status verification
+
+- The parent now supplies separate status pointers to both `wait4` calls and
+  requires each returned PID and normal exit status to match. It emits
+  `MIPS32_SOC_LINUX_WAIT_STATUS_SUCCESS` before the final parent marker.
+- Fresh `make linux-boot-build-gate` passes with both exec children observed,
+  both status words equal to zero, and all prior VM/scheduler markers intact.
+- This is bounded process-lifecycle evidence; complete Linux scheduler/VM ABI,
+  SMP semantics, and RTL system-mode Linux differential remain open.

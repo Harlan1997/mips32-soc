@@ -57,6 +57,10 @@ if ! rg -q "MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; th
     echo "Linux boot gate: parent wait4 marker was not observed (status ${status})" >&2
     exit 1
 fi
+if ! rg -q "MIPS32_SOC_LINUX_WAIT_STATUS_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: child wait status marker was not observed (status ${status})" >&2
+    exit 1
+fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # MIPS32 SoC Linux Boot Gate
 
@@ -70,12 +74,12 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
   file-backed /bin/vm_child page, changed the anonymous mapping read-only and
   back to read/write with mprotect while reading all five pages, verified a
   child write terminated with SIGSEGV, unmapped both
-  regions, expanded the process
-  heap by five pages with brk, faulted in each heap page, restored the original
-  break, forked two children, and execve'd /bin/vm_child in each child,
-  restored the heap break, slept for 1 ms through nanosleep and woke normally,
-  explicitly yielded once with sched_yield, observed two new-image markers,
-  reaped both with wait4, and then emitted the
+  regions, expanded the process heap by five pages with brk, faulted in each
+  heap page, restored the original break, slept for 1 ms through nanosleep and
+  woke normally, explicitly yielded once with sched_yield, forked two children,
+  execve'd /bin/vm_child in each child, observed two new-image markers, reaped
+  both with wait4 and verified normal exit status 0 for each child, and then
+  emitted the
   boot and fork/wait success markers through the modeled UART.
 - Linux console log: $([[ -s "${RUN_DIR}/qemu_stdout.log" ]] && rg -q "Linux version" "${RUN_DIR}/qemu_stdout.log" && echo present || echo absent)
 - Scope: generic MIPS kernel boot and UART/initramfs execution on the QEMU
