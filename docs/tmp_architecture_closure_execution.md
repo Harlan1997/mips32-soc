@@ -1439,3 +1439,14 @@ remains the compatibility baseline.
 - The environment has VCS available but no Verilator/Yosys/SBY/SpyGlass/
   Questa CDC/VC Static/JasperGold binaries. The result is simulation assertion
   and tool-status evidence only; formal/CDC/RDC/lint signoff remains open.
+
+### 2026-08-25 Official U-Boot build prerequisite
+
+- Added `make linux-uboot-build-gate`, which verifies the locked U-Boot
+  source marker and builds `maltael_defconfig` with the MIPS32LE cross
+  toolchain. The gate passes and retains the binary hashes under
+  `build/linux_boot/uboot/`.
+- This closes source/build reproducibility only. The Malta configuration is
+  not a port of `mips32-soc-ref`; QSPI image loading, DDR initialization,
+  SoC-specific U-Boot support, Linux handoff and RTL Linux differential remain
+  open.
