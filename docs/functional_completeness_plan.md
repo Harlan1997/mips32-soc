@@ -610,18 +610,20 @@ pass. This closes the bounded L2-NB AXI error/drain/resource-recovery slice;
 snoop-writeback error reporting, arbitrary error/reset interleavings, full
 coherency/directory behavior, and product signoff remain open.
 
-### 2026-08-25 current-head dual-core coherency recheck
+### 2026-08-25 current-head dual-core coherency recheck and parity fix
 
-The fresh current-head recheck of `make coherency-stress-gate` did not reach
-the documented pass marker: the SoC watchdog expired at `20_000_000 ns` while
-core 1 was still polling the shared `COMMAND` APB register and core 0 was in
-the exception-handler stack path. The same workload with
-`L2_NONBLOCKING=1` also expired; its diagnostic snapshot showed one L2-NB
-MSHR in `ME_REFILL_R` and the DDR model read slot still in `R_WAIT`. These
-runs are not signoff evidence and reopen the dual-core coherency integration
-gate for the current HEAD. The earlier passing logs in this document are
-historical evidence and must not be used as a current regression result until
-the failure is reproduced with a focused trace and fixed.
+The current-head `make coherency-stress-gate` recheck initially reproduced a
+core-0 `CacheErr` during the shared-memory stress. The failure was caused by
+the coherency-mode uncached-store write-through update changing a resident
+D-cache line without recomputing its data/tag parity. The fix updates the
+resident line through one byte-merge helper and refreshes both parity bits.
+
+Fresh gates now pass: `make coherency-stress-gate`,
+`make dcache-coherency-gate`, `make dual-core-soc-gate`,
+`make llsc-coherency-gate`, and `make rtl-frontend-compile` (`8/8`). The
+bounded dual-core shared-memory coherency gate is closed again for the current
+HEAD. This remains a write-invalidate/notification contract; full
+MESI/directory ordering and commercial coherency signoff remain outside scope.
 
 ### Micro-TLB and L1 transaction closure update (2026-08-10)
 
