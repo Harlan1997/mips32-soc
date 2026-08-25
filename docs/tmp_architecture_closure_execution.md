@@ -1595,8 +1595,10 @@ remains the compatibility baseline.
 - A four-page BSS probe was rejected because it terminates before its marker.
   A controlled four-page user-stack probe now passes: `/init` stores at
   `SP`, `SP-0x1000`, `SP-0x2000` and `SP-0x3000` before the existing success
-  marker. Full anonymous/file-backed demand paging, fork/exec, scheduler
-  shootdown and RTL system-mode Linux differential remain open.
+  marker. The same init now forks one child, observes its marker, and the
+  parent reaps it with `wait4` before emitting `MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS`.
+  Full anonymous/file-backed demand paging, exec, scheduler shootdown and RTL
+  system-mode Linux differential remain open.
 
 ### 2026-08-26 Current-contract signoff audit
 

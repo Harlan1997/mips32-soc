@@ -26,12 +26,67 @@ _start:
 	sw	$zero, 0($t0)
 	addiu	$t0, $sp, -0x3000
 	sw	$zero, 0($t0)
+	/* Fork a child, let it report through the modeled UART, and require the
+	 * parent to reap it with wait4 before the final success marker. */
+	li	$v0, 4002
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, fork_fail
+	nop
+	move	$s1, $v0
+	beq	$s1, $zero, fork_child
+	nop
+	move	$a0, $s1
+	move	$a1, $zero
+	move	$a2, $zero
+	move	$a3, $zero
+	li	$v0, 4114
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, fork_fail
+	nop
+	b	fork_parent_done
+	nop
+
+fork_child:
+	move	$a0, $s0
+	la	$a1, fork_child_marker
+	li	$a2, fork_child_marker_end-fork_child_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 0
+	li	$v0, 4001
+	syscall
+	nop
+
+fork_parent_done:
 	move	$a0, $s0
 	la	$a1, boot_marker
 	li	$v0, 4004
 	syscall
 	nop
+	move	$a0, $s0
+	la	$a1, fork_success_marker
+	li	$a2, fork_success_marker_end-fork_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	li	$a0, 0
+	li	$v0, 4001
+	syscall
+	nop
+
+fork_fail:
+	move	$a0, $s0
+	la	$a1, fork_fail_marker
+	li	$a2, fork_fail_marker_end-fork_fail_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 1
 	li	$v0, 4001
 	syscall
 	nop
@@ -43,3 +98,12 @@ console_path:
 boot_marker:
 	.ascii "MIPS32_SOC_LINUX_BOOT_SUCCESS\n"
 boot_marker_end:
+fork_child_marker:
+	.ascii "MIPS32_SOC_LINUX_FORK_CHILD_SUCCESS\n"
+fork_child_marker_end:
+fork_success_marker:
+	.ascii "MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS\n"
+fork_success_marker_end:
+fork_fail_marker:
+	.ascii "MIPS32_SOC_LINUX_FORK_WAIT_FAILURE\n"
+fork_fail_marker_end:

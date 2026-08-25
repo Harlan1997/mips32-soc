@@ -17,7 +17,7 @@ mkdir -p "${BUILD_DIR}/rootfs/dev"
 
 "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
     -nostdlib -nostartfiles -nodefaultlibs -static \
-    -Wl,-e,_start -Wl,-Ttext=0x00400000 \
+    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" \
     -o "${BUILD_DIR}/rootfs/init" "${SCRIPT_DIR}/init.S"
 chmod 0755 "${BUILD_DIR}/rootfs/init"
 
