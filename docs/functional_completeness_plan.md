@@ -696,8 +696,14 @@ placed in the existing ordered writeback FIFO, CPU requests are held while
 the maintenance transaction is active, and `cache_maint_done` is delayed
 until the AXI line write has drained. The unit gate checks the writeback
 address/data and that writeback-only retains a valid clean line; the real CPU
-gate covers the instruction encodings through the adapter. Tag read/write,
-full ordering/coherency and OS cache ABI remain open.
+gate covers the instruction encodings through the adapter.
+
+The same opt-in path now also routes `Index_Load_Tag_D` (`00101`) and
+`Index_Store_Tag_D` (`01001`) to the L1 tag array. TagLo uses the bounded
+architectural tuple valid/dirty/tag in bits `[22:0]`; the unit gate verifies
+load/store/load round-trip and the CPU gate verifies the CP0 path on a real
+cached line. Full cache ordering, coherency, physical DDR error timing and the
+production OS cache ABI remain open.
 
 ### 2026-08-26 opt-in L1 nonblocking CPU contract aggregate
 
@@ -708,10 +714,10 @@ mid-flight-reset stress, single/two-error recovery, reset-in-flight recovery,
 and CACHE maintenance compatibility. All runs pass on the current head, and
 the adapter's legacy observation aliases no longer emit a width-truncation
 warning during opt-in VCS elaboration. This closes the bounded opt-in CPU
-hit-under-miss/ROB response contract. Uncached/peripheral accesses and CACHE
-maintenance intentionally remain on the legacy dcache, default blocking mode
-is unchanged, and full nonblocking tag access, coherence and physical DDR
-error behavior remain open.
+hit-under-miss/ROB response contract. Uncached/peripheral accesses and
+unsupported CACHE operations intentionally remain on the legacy dcache,
+default blocking mode is unchanged, and full nonblocking coherence and
+physical DDR error behavior remain open.
 
 ### 2026-08-26 MMU OS-pressure aggregate boundary
 

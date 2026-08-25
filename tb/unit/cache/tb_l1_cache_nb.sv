@@ -3,13 +3,19 @@ module tb_l1_cache_nb;
  reg clk=0,rst_n=0,cpu_valid=0,cpu_we=0; reg [3:0] cpu_id=0,cpu_be=4'hf;
  reg [31:0] cpu_addr=0,cpu_wdata=0; reg cache_maint_invalidate=0;
  reg [4:0] cache_maint_op=0; reg [31:0] cache_maint_addr=0;
+ reg [31:0] cache_tag_wdata=0; wire [31:0] cache_tag_rdata;
  wire cache_maint_ready, cache_maint_done, cache_maint_error;
  wire cpu_ready,rsp_valid,rsp_error;
  wire [3:0] rsp_id; wire [31:0] rsp_rdata; reg rsp_ready=1;
  wire mem_req_valid,mem_req_we; wire [31:0] mem_req_addr; wire [255:0] mem_req_wdata;
  reg mem_req_ready=1,mem_rsp_valid=0,mem_rsp_error=0; reg [31:0] mem_rsp_addr=0; reg [255:0] mem_rsp_data=0;
- wire [3:0] mshr_occupancy,wb_occupancy; integer errors=0;
+ wire [3:0] mshr_occupancy,wb_occupancy; integer errors=0; reg saw_hit_wb=0;
  always #5 clk=~clk;
+ always @(posedge clk) begin
+  if (mem_req_valid && mem_req_we && mem_req_ready &&
+      mem_req_addr == 32'h00001200 && mem_req_wdata[31:0] == 32'hdeadbeef)
+   saw_hit_wb <= 1'b1;
+ end
  l1_cache_nb dut(.*);
  task issue_read(input [3:0] id,input [31:0] addr);
   begin @(negedge clk); cpu_id=id;cpu_addr=addr;cpu_we=0;cpu_valid=1;
@@ -112,16 +118,27 @@ module tb_l1_cache_nb;
   return_line(32'h00001200,32'h12000001);
   issue_write(4'hd,32'h00001200,32'hdeadbeef);
   maintain(5'b11101,32'h00001200);
-  if (mem_req_addr != 32'h00001200 || !mem_req_we ||
-      mem_req_wdata[31:0] != 32'hdeadbeef) begin
-   $display("FAIL hit writeback payload addr=%h we=%b data=%h",
-            mem_req_addr,mem_req_we,mem_req_wdata[31:0]);
+  if (!saw_hit_wb) begin
+   $display("FAIL hit writeback payload was not observed");
    errors=errors+1;
   end
   @(negedge clk);
   issue_read(4'he,32'h00001200);
   #1;if (dut.mvalid[0] || dut.mvalid[1]) begin
    $display("FAIL hit writeback unnecessarily invalidated line");errors=errors+1;
+  end
+  // Index tag operations use the same completion contract as maintenance.
+  maintain(5'b00101,32'h00001200);
+  if (cache_tag_rdata !== 32'h00400024) begin
+   $display("FAIL tag load data=%h expected=%h",cache_tag_rdata,32'h00400024);
+   errors=errors+1;
+  end
+  cache_tag_wdata = 32'h00612345;
+  maintain(5'b01001,32'h00001200);
+  maintain(5'b00101,32'h00001200);
+  if (cache_tag_rdata !== 32'h00612345) begin
+   $display("FAIL tag store/load data=%h expected=%h",cache_tag_rdata,32'h00612345);
+   errors=errors+1;
   end
   if(errors==0)$display("REGRESSION_TEST_SUCCESS l1nb mshr=2 wb=4");else $display("REGRESSION_TEST_FAILED l1nb errors=%0d",errors);$finish;
  end

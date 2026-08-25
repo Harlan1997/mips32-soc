@@ -23,6 +23,8 @@ module l1_cache_nb #(
     input  wire        cache_maint_invalidate,
     input  wire [4:0]  cache_maint_op,
     input  wire [31:0] cache_maint_addr,
+    input  wire [31:0] cache_tag_wdata,
+    output wire [31:0] cache_tag_rdata,
     output wire        cache_maint_ready,
     output reg         cache_maint_done,
     output reg         cache_maint_error,
@@ -94,6 +96,19 @@ module l1_cache_nb #(
     wire [TAG_BITS-1:0] req_tag = cpu_addr[31 -: TAG_BITS];
     wire [31:0] req_line = {cpu_addr[31:5], 5'b0};
     wire hit = valid[req_set] && tags[req_set] == req_tag;
+    wire [SET_BITS-1:0] maint_set = cache_maint_addr[5 +: SET_BITS];
+    wire maint_index_load_tag = (cache_maint_op == 5'b00101);
+    wire maint_index_store_tag = (cache_maint_op == 5'b01001);
+    reg [20:0] maint_arch_tag;
+    integer tag_bit;
+    always @(*) begin
+        maint_arch_tag = 21'd0;
+        for (tag_bit = 0; tag_bit < 21; tag_bit = tag_bit + 1)
+            if (tag_bit < TAG_BITS)
+                maint_arch_tag[tag_bit] = tags[maint_set][tag_bit];
+    end
+    assign cache_tag_rdata = {9'd0, valid[maint_set], dirty[maint_set],
+                              maint_arch_tag};
     reg free_mshr;
     reg [MSHR_BITS-1:0] free_mshr_i;
     reg merge_mshr;
@@ -242,7 +257,12 @@ module l1_cache_nb #(
                 end else if (cache_maint_op == 5'b00001) begin
                     maint_match = valid[cache_maint_addr[5 +: SET_BITS]];
                 end
-                if (maint_match && maint_wb && dirty[cache_maint_addr[5 +: SET_BITS]]) begin
+                if (maint_index_store_tag) begin
+                    valid[maint_set] <= cache_tag_wdata[22];
+                    dirty[maint_set] <= cache_tag_wdata[21] && cache_tag_wdata[22];
+                    for (k = 0; k < TAG_BITS; k = k + 1)
+                        tags[maint_set][k] <= (k < 21) ? cache_tag_wdata[k] : 1'b0;
+                end else if (maint_match && maint_wb && dirty[cache_maint_addr[5 +: SET_BITS]]) begin
                     wb_addr[wb_tail] <= {tags[cache_maint_addr[5 +: SET_BITS]],
                                          cache_maint_addr[5 +: SET_BITS], 5'b0};
                     wb_data[wb_tail] <= lines[cache_maint_addr[5 +: SET_BITS]];
@@ -260,7 +280,8 @@ module l1_cache_nb #(
                              (cache_maint_op != 5'b10101) &&
                              (cache_maint_op != 5'b11001) &&
                              (cache_maint_op != 5'b11101) &&
-                             (cache_maint_op != 5'b00001)) begin
+                             (cache_maint_op != 5'b00001) &&
+                             !maint_index_load_tag && !maint_index_store_tag) begin
                     for (k = 0; k < SETS; k = k + 1) begin
                         valid[k] <= 1'b0;
                         dirty[k] <= 1'b0;
