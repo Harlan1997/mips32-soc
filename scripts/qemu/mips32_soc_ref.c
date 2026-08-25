@@ -59,6 +59,8 @@ typedef struct MIPS32SocRefState {
     MemoryRegion apb;
     MemoryRegion apb_mmu_alias;
     MemoryRegion apb_mmu_odd_alias;
+    MemoryRegion wdt_legacy_alias;
+    MemoryRegion boot_status_legacy_alias;
     MemoryRegion ddr;
     MemoryRegion flash;
     MemoryRegion flash_boot_alias;
@@ -68,6 +70,15 @@ typedef struct MIPS32SocRefState {
     uint32_t timer_int;
     uint64_t timer_deadline;
     QEMUTimer *timer;
+    uint32_t wdt_load;
+    uint32_t wdt_value;
+    uint32_t wdt_ctrl;
+    bool wdt_lock;
+    bool wdt_expired;
+    QEMUTimer *wdt_timer;
+    uint32_t boot_stage;
+    uint32_t boot_failure;
+    uint32_t boot_reset_cause;
     uint32_t gpio_data;
     uint32_t gpio_dir;
     uint32_t gpio_input;
@@ -802,6 +813,30 @@ static uint32_t soc_ref_timer_value(MIPS32SocRefState *s)
     return (remaining + 19) / 20; /* 50 MHz reference clock */
 }
 
+static void soc_ref_wdt_cb(void *opaque)
+{
+    MIPS32SocRefState *s = opaque;
+
+    if (!(s->wdt_ctrl & 1U))
+        return;
+    s->wdt_value = 0;
+    s->wdt_ctrl &= ~1U;
+    s->wdt_expired = true;
+    s->boot_reset_cause |= 2U;
+    qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
+}
+
+static void soc_ref_wdt_reset(void *opaque)
+{
+    MIPS32SocRefState *s = opaque;
+
+    /* The RTL WDT is in the always-on domain: expiry and boot diagnostics
+     * survive the reset pulse, while the running counter and enable clear. */
+    s->wdt_ctrl &= ~1U;
+    s->wdt_value = 0;
+    timer_del(s->wdt_timer);
+}
+
 static void soc_ref_dma_start(MIPS32SocRefState *s)
 {
     uint8_t buf[256];
@@ -1159,6 +1194,24 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
     case 0x1004: value = s->timer_load; break;
     case 0x1008: value = soc_ref_timer_value(s); break;
     case 0x100c: value = s->timer_int; break;
+    case 0x7000: value = (s->wdt_ctrl & 1U) | (s->wdt_lock ? 2U : 0U); break;
+    case 0x7004: value = s->wdt_load; break;
+    case 0x7008:
+        value = s->wdt_value;
+        /* Bare-metal reference guests commonly spin in a short MMIO poll.
+         * Advance one virtual watchdog tick at that observation boundary so
+         * expiry remains deterministic even when a tight TCG loop does not
+         * yield enough host virtual-clock time for the timer callback. */
+        if ((s->wdt_ctrl & 1U) && s->wdt_value) {
+            s->wdt_value--;
+            if (s->wdt_value == 0)
+                soc_ref_wdt_cb(s);
+        }
+        break;
+    case 0x7010: value = s->wdt_expired ? 1U : 0U; break;
+    case 0x8000: value = s->boot_stage & 0xffU; break;
+    case 0x8004: value = s->boot_failure; break;
+    case 0x8008: value = s->boot_reset_cause & 3U; break;
     case 0x2000: value = (s->gpio_data & s->gpio_dir) |
                               (s->gpio_input & ~s->gpio_dir); break;
     case 0x2004: value = s->gpio_dir; break;
@@ -1465,6 +1518,41 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
             soc_ref_update_irq(s);
         }
         break;
+    case 0x7000:
+        if (!s->wdt_lock) {
+            s->wdt_ctrl = value & 1U;
+            if (value & 2U)
+                s->wdt_lock = true;
+            if (s->wdt_ctrl & 1U) {
+                s->wdt_value = s->wdt_load;
+                timer_mod(s->wdt_timer,
+                          qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                          (uint64_t)s->wdt_load * 20);
+            } else {
+                s->wdt_value = 0;
+                timer_del(s->wdt_timer);
+            }
+        }
+        break;
+    case 0x7004:
+        if (!s->wdt_lock)
+            s->wdt_load = value;
+        break;
+    case 0x700c:
+        if (value == 0x1acce551U && (s->wdt_ctrl & 1U)) {
+            s->wdt_value = s->wdt_load;
+            timer_mod(s->wdt_timer,
+                      qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                      (uint64_t)s->wdt_load * 20);
+        }
+        break;
+    case 0x7010:
+        if (value & 1U)
+            s->wdt_expired = false;
+        break;
+    case 0x8000: s->boot_stage = value & 0xffU; break;
+    case 0x8004: s->boot_failure = value; break;
+    case 0x8008: s->boot_reset_cause &= ~(value & 3U); break;
     case 0x2000: s->gpio_data = value; break;
     case 0x2004: s->gpio_dir = value; break;
     case 0x3000: s->dma_src = value; break;
@@ -1784,6 +1872,18 @@ static void mips32_soc_ref_init(MachineState *machine)
                              0, SOC_APB_SIZE);
     memory_region_add_subregion(system_memory, 0x04001000ULL,
                                 &state->apb_mmu_odd_alias);
+    /* Keep narrow low-physical aliases for reset images whose prototype
+     * identity TLB resolves the upper APB half through the SRAM window. */
+    memory_region_init_alias(&state->wdt_legacy_alias, NULL,
+                             "mips32-soc-ref.wdt-legacy-alias", &state->apb,
+                             0x7000, 0x1000);
+    memory_region_add_subregion_overlap(system_memory, 0x00007000ULL,
+                                        &state->wdt_legacy_alias, 2);
+    memory_region_init_alias(&state->boot_status_legacy_alias, NULL,
+                             "mips32-soc-ref.boot-status-legacy-alias",
+                             &state->apb, 0x8000, 0x1000);
+    memory_region_add_subregion_overlap(system_memory, 0x00008000ULL,
+                                        &state->boot_status_legacy_alias, 2);
     memory_region_init_alias(&state->uart_mmu_alias, NULL,
                              "mips32-soc-ref.uart-mmu-alias", &state->uart,
                              0, SOC_UART_SIZE);
@@ -1833,6 +1933,9 @@ static void mips32_soc_ref_init(MachineState *machine)
                                         &state->mailbox, 1);
 
     state->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, soc_ref_timer_cb, state);
+    state->wdt_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, soc_ref_wdt_cb, state);
+    state->wdt_load = UINT32_MAX;
+    state->boot_reset_cause = 1U; /* POR */
     state->pic_mask = 0;
     soc_ref_qspi_clear(state);
     /* controller_present + init_done + training_done */
@@ -1897,6 +2000,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     reset->software_mmu_guest = soc_ref_software_mmu_guest ||
                                 (entry == 0xbfc00000ULL);
     qemu_register_reset(soc_ref_cpu_reset, reset);
+    qemu_register_reset(soc_ref_wdt_reset, state);
     qemu_register_reset(soc_ref_dma_reset, state);
 
     cpu_mips_irq_init_cpu(cpu);

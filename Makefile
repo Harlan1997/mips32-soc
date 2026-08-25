@@ -212,6 +212,7 @@ mips-fpu-recip-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_fpu_recip tb/unit/cpu_test/run_mips_fpu_recip.sh
 .PHONY: dma-reset-inflight-gate
 .PHONY: qemu-system-dma-reset-inflight-gate
+.PHONY: qemu-system-wdt-gate
 
 linux-boot-dependency-gate:
 	bash tb/linux_boot/check_dependencies.sh
@@ -603,6 +604,11 @@ qemu-system-dma-reset-inflight-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_dma_reset_inflight_gate.sh
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_reset_inflight \
 		tb/isa_ref/run_qemu_system_dma_reset_inflight_gate.sh
+
+qemu-system-wdt-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_wdt_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_wdt \
+		tb/isa_ref/run_qemu_system_wdt_gate.sh
 
 qemu-system-unaligned-gate:
 	chmod +x tb/soc_test/run_qemu_system_unaligned_gate.sh
