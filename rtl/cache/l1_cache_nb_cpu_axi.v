@@ -101,7 +101,9 @@ module l1_cache_nb_cpu_axi #(
                                     ((cache_op == 5'b00001) ||
                                      (cache_op == 5'b10101) ||
                                      (cache_op == 5'b11001) ||
-                                     (cache_op == 5'b11101));
+                                     (cache_op == 5'b11101) ||
+                                     (cache_op == 5'b00101) ||
+                                     (cache_op == 5'b01001));
 
     wire [31:0] legacy_rdata;
     wire legacy_addr_ok, legacy_data_ok, legacy_bus_error, legacy_cache_error;
@@ -125,6 +127,7 @@ module l1_cache_nb_cpu_axi #(
     wire [31:0] n_rsp_data;
     wire n_rsp_error;
     wire n_cache_maint_ready, n_cache_maint_done, n_cache_maint_error;
+    wire [31:0] n_cache_tag_rdata;
     wire n_mem_req_valid, n_mem_req_we, n_mem_req_ready;
     wire [31:0] n_mem_req_addr;
     wire [255:0] n_mem_req_wdata;
@@ -215,6 +218,7 @@ module l1_cache_nb_cpu_axi #(
         .cpu_id(cpu_id), .cpu_addr(cpu_addr), .cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be), .cache_maint_invalidate(l1_maintenance_issue),
         .cache_maint_op(cache_op), .cache_maint_addr(cache_op_addr),
+        .cache_tag_wdata(cache_tag_wdata), .cache_tag_rdata(n_cache_tag_rdata),
         .cache_maint_ready(n_cache_maint_ready),
         .cache_maint_done(n_cache_maint_done),
         .cache_maint_error(n_cache_maint_error),
@@ -267,7 +271,8 @@ module l1_cache_nb_cpu_axi #(
                               legacy_cache_op_done;
     assign cache_op_error  = l1_maintenance_supported ? n_cache_maint_error :
                               legacy_cache_op_error;
-    assign cache_tag_rdata = legacy_tag_rdata;
+    assign cache_tag_rdata = l1_maintenance_supported ? n_cache_tag_rdata :
+                             legacy_tag_rdata;
 
     assign awid    = legacy_sel ? l_awid : n_awid;
     assign awaddr  = legacy_sel ? l_awaddr : n_awaddr;

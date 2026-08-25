@@ -759,7 +759,7 @@ module tb_mips_soc;
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
 `ifdef TB_L1_MAINTENANCE
-                if (l1_maintenance_count != 2 ||
+                if (l1_maintenance_count != 5 ||
                     l1_maintenance_refill_count < 2) begin
                     $display("REGRESSION_TEST_FAILED L1 maintenance count=%0d refill_after=%0d",
                              l1_maintenance_count, l1_maintenance_refill_count);

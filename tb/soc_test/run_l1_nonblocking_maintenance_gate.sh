@@ -21,14 +21,15 @@ cat >"${RUN_DIR}/l1_nonblocking_maintenance_report.md" <<'EOF'
 Result: PASS
 
 - The real opt-in CPU/D-cache path executes `Hit_Invalidate_D`,
-  `Index_Invalidate_D`, `Index_Writeback_Invalidate_D`,
+  `Index_Invalidate_D`, `Index_Load_Tag_D`, and `Index_Store_Tag_D`;
+  the unit path additionally covers `Index_Writeback_Invalidate_D`,
   `Hit_Writeback_Invalidate_D`, and `Hit_Writeback_D`.
 - Each test fills L1 with an old SRAM value, changes the backing value through
   the uncached alias, invalidates the line, and verifies the following cached
   load refills the new value.
 - The adapter drains L1 line traffic before issuing the maintenance handshake;
   dirty writeback completion is delayed until the line write reaches AXI.
-- Nonblocking tag read/write, full ordering and cache coherency remain outside
-  this scoped gate.
+- The real CPU path reads and writes the L1 TagLo tuple through CP0; full
+  ordering, cache coherency and the OS cache ABI remain outside this gate.
 EOF
 echo 'L1 nonblocking maintenance CPU gate: PASS'
