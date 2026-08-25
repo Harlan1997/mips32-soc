@@ -52,6 +52,7 @@ typedef struct MIPS32SocRefState {
     MemoryRegion apb_mmu_odd_alias;
     MemoryRegion ddr;
     MemoryRegion flash;
+    MemoryRegion flash_boot_alias;
     uint32_t uart_regs[8];
     uint32_t timer_ctrl;
     uint32_t timer_load;
@@ -1385,6 +1386,16 @@ static void mips32_soc_ref_init(MachineState *machine)
     memory_region_init_ram(&state->flash, NULL,
                            "mips32-soc-ref.flash", SOC_FLASH_SIZE, &error_fatal);
     memory_region_add_subregion(system_memory, SOC_FLASH_BASE, &state->flash);
+    /* MIPS kseg1 execution of ROM-resident images such as U-Boot uses
+     * virtual 0xbe000000, which the ELF loader translates to physical
+     * 0x3e000000. Keep the vendor-neutral XIP window and the boot alias
+     * backed by the same flash contents so image loading and CPU fetches
+     * observe one architectural image. */
+    memory_region_init_alias(&state->flash_boot_alias, NULL,
+                             "mips32-soc-ref.flash-kseg1-boot",
+                             &state->flash, 0, SOC_FLASH_SIZE);
+    memory_region_add_subregion(system_memory, 0x3e000000ULL,
+                                &state->flash_boot_alias);
     if (soc_ref_qspi_image) {
         g_autofree gchar *image = NULL;
         gsize qspi_size = 0;
