@@ -17,6 +17,15 @@ _start:
 	li	$v0, 4005
 	syscall
 	move	$s0, $v0
+	/* Exercise Linux user-stack growth across four page boundaries before the
+	 * completion marker. The marker is emitted only after all stores retire. */
+	sw	$zero, 0($sp)
+	addiu	$t0, $sp, -0x1000
+	sw	$zero, 0($t0)
+	addiu	$t0, $sp, -0x2000
+	sw	$zero, 0($t0)
+	addiu	$t0, $sp, -0x3000
+	sw	$zero, 0($t0)
 	move	$a0, $s0
 	la	$a1, boot_marker
 	li	$v0, 4004
