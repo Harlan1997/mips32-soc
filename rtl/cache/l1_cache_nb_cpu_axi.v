@@ -195,6 +195,7 @@ module l1_cache_nb_cpu_axi #(
         .clk(clk), .rst_n(rst_n), .cpu_valid(l1_req), .cpu_we(cpu_we),
         .cpu_id(cpu_id), .cpu_addr(cpu_addr), .cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be), .cache_maint_invalidate(maintenance_issue),
+        .cache_maint_op(cache_op), .cache_maint_addr(cache_op_addr),
         .cpu_ready(n_cpu_ready), .rsp_valid(n_rsp_valid),
         .rsp_id(n_rsp_id), .rsp_rdata(n_rsp_data), .rsp_error(n_rsp_error),
         .rsp_ready(!legacy_sel), .mem_req_valid(n_mem_req_valid),

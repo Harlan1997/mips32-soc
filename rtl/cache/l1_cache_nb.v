@@ -21,6 +21,8 @@ module l1_cache_nb #(
     input  wire [31:0] cpu_wdata,
     input  wire [3:0]  cpu_be,
     input  wire        cache_maint_invalidate,
+    input  wire [4:0]  cache_maint_op,
+    input  wire [31:0] cache_maint_addr,
     output wire        cpu_ready,
     output reg         rsp_valid,
     output reg  [3:0]  rsp_id,
@@ -194,9 +196,25 @@ module l1_cache_nb #(
             end
         end else begin
             if (cache_maint_invalidate) begin
-                for (k = 0; k < SETS; k = k + 1) begin
-                    valid[k] <= 1'b0;
-                    dirty[k] <= 1'b0;
+                /* The adapter serializes maintenance against live traffic.
+                 * Preserve address-scoped CACHE semantics for the direct
+                 * mapped opt-in L1; unknown operations retain the legacy
+                 * compatibility behavior of invalidating the whole block. */
+                if (cache_maint_op == 5'b10101) begin // Hit_Invalidate_D
+                    if (valid[cache_maint_addr[5 +: SET_BITS]] &&
+                        tags[cache_maint_addr[5 +: SET_BITS]] ==
+                        cache_maint_addr[31 -: TAG_BITS]) begin
+                        valid[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
+                        dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
+                    end
+                end else if (cache_maint_op == 5'b00001) begin // Index_Invalidate_D
+                    valid[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
+                    dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
+                end else begin
+                    for (k = 0; k < SETS; k = k + 1) begin
+                        valid[k] <= 1'b0;
+                        dirty[k] <= 1'b0;
+                    end
                 end
                 for (k = 0; k < MSHR_COUNT; k = k + 1) begin
                     mvalid[k] <= 1'b0;
