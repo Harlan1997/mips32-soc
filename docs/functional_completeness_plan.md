@@ -696,6 +696,16 @@ hit-under-miss/ROB response contract. Uncached/peripheral accesses and CACHE
 maintenance intentionally remain on the legacy dcache, default blocking mode
 is unchanged, and full nonblocking maintenance/coherence/physical DDR error
 behavior remain open.
+
+### 2026-08-26 MMU OS-pressure aggregate boundary
+
+Added `make mmu-os-pressure-complete-gate` as the single bounded entry for
+software-managed CPU demand refill, ASID-specific process pressure, four
+PageMask phases, TLB shootdown protocol pressure, and the corresponding
+system-mode RTL/QEMU retire comparisons. The aggregate is intentionally named
+for its evidence boundary: it closes single-core OS-style page-table and
+shootdown pressure, but does not claim multicore IPI ownership, Linux page-table
+allocator/VM ABI, arbitrary demand paging, or full privileged/MMU compliance.
 The same aggregate now executes the vendor-neutral QSPI quad/status and DDR4
 controller/stress/status/PIC bundle; physical PHY/JEDEC/device signoff remains
 outside the aggregate.
