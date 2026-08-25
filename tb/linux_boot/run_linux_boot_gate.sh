@@ -24,6 +24,14 @@ if ! rg -q "MIPS32_SOC_LINUX_BOOT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
     echo "Linux boot gate: kernel reached /init but userspace marker was not observed (status ${status})" >&2
     exit 1
 fi
+if ! rg -q "MIPS32_SOC_LINUX_FORK_CHILD_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: fork child marker was not observed (status ${status})" >&2
+    exit 1
+fi
+if ! rg -q "MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: parent wait4 marker was not observed (status ${status})" >&2
+    exit 1
+fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # MIPS32 SoC Linux Boot Gate
 
@@ -33,8 +41,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Boot protocol: MIPS UHI with an opaque DTB
 - Evidence: Linux printed its version, registered/enabled ttyS0, reached the
   initramfs /init process, touched one word on each of four page-spaced user
-  stack locations, and then emitted MIPS32_SOC_LINUX_BOOT_SUCCESS through the
-  modeled UART.
+  stack locations, forked a child, reaped it with wait4, and then emitted the
+  boot and fork/wait success markers through the modeled UART.
 - Linux console log: $([[ -s "${RUN_DIR}/qemu_stdout.log" ]] && rg -q "Linux version" "${RUN_DIR}/qemu_stdout.log" && echo present || echo absent)
 - Scope: generic MIPS kernel boot and UART/initramfs execution on the QEMU
   reference machine; U-Boot, real QSPI/DDR devices, Linux drivers beyond the
