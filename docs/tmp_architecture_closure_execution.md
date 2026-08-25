@@ -1450,3 +1450,14 @@ remains the compatibility baseline.
   not a port of `mips32-soc-ref`; QSPI image loading, DDR initialization,
   SoC-specific U-Boot support, Linux handoff and RTL Linux differential remain
   open.
+### 2026-08-25 QEMU custom-machine U-Boot boundary probe
+
+- Added the opt-in `malta-u-boot-compat` property to `mips32-soc-ref`. It
+  supplies the Malta revision probe value and a byte-spaced legacy UART alias
+  without changing the default SoC UART/APB contract.
+- Added `make linux-uboot-custom-machine-probe`. A separate U-Boot build with
+  `CONFIG_SKIP_LOWLEVEL_INIT` now executes through the kseg1 flash boot alias
+  and reaches `board_init_f` under the custom machine.
+- The probe remains `INCOMPLETE`: the image is still Malta board code and
+  stops in board initialization. A SoC-specific U-Boot port, DDR/QSPI boot,
+  Linux handoff and a boot prompt remain open.
