@@ -12,6 +12,9 @@
   tb/unit/cache/run_concurrency_gate.sh` -> `peak_mshr=8 peak_wb=4`,
   `hit_under_miss_beats=32`, `reads_checked=63`, PASS.
 - `L2_NONBLOCKING=1 make soc-smoke` and `make rtl-frontend-compile` also pass.
+- The named integration entry `make l2-nonblocking-end-to-end-gate` passes
+  with `L2_E2E_TEST_SUCCESS policy=nonblocking-write-back` in
+  `build/soc_test/l2_end_to_end_nonblocking/sim.log`.
 - Remaining boundary: this is a bounded single-downstream-transaction L2
   writeback contract; complete L2 coherency/snoop/directory, arbitrary
   writeback error/reset timing, and default-path selection are still open.
