@@ -565,6 +565,24 @@ prevents the late reset from restarting the test after the shared watchdog
 budget has mostly elapsed. The gate uses a 20 ms watchdog for the deliberately
 long 8 KB cache sweep; the default SoC watchdog remains 5 ms.
 
+### L2 nonblocking dirty writeback buffer closure (2026-08-25)
+
+The opt-in `l2_cache_nb` path now snapshots dirty victims into a fixed
+four-entry writeback buffer at miss acceptance. A miss requiring a dirty
+victim is backpressured when all four slots are occupied; the buffered line
+data is used for downstream `AW/W`, and the slot is released only after the
+downstream `B` response. `make rtl-frontend-compile`, the L2 concurrency unit
+gate, and the real SoC smoke with `L2_NONBLOCKING=1` pass after the change.
+
+The directed L2 concurrency test now fixes `WB_DEPTH=4`, establishes four
+known dirty resident lines, continuously replaces them in one set, and checks
+the backing-memory scoreboard. The fresh run reports
+`peak_mshr=8 peak_wb=4 hit_under_miss_beats=32` and
+`REGRESSION_TEST_SUCCESS l2nb (reads_checked=63)`. This closes the bounded
+four-entry dirty-victim buffering contract. L2 coherency/snoop/directory,
+arbitrary writeback error/reset interleavings, and CPU default-path selection
+remain open.
+
 ### Micro-TLB and L1 transaction closure update (2026-08-10)
 
 `make product-mmu-micro-tlb-gate` now compiles the real SoC with
