@@ -42,7 +42,8 @@ module l2_cache_nb #(
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32,
     parameter N_MSHR     = 8,   // outstanding miss slots
-    parameter ORD_DEPTH  = 8    // in-flight accepted-request slots
+    parameter ORD_DEPTH  = 8,   // in-flight accepted-request slots
+    parameter WB_DEPTH   = 4    // buffered dirty victim lines
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -130,6 +131,7 @@ module l2_cache_nb #(
     localparam WAY_BITS     = $clog2(WAYS);                        // 3
     localparam MSHR_BITS    = $clog2(N_MSHR);
     localparam ORD_BITS     = $clog2(ORD_DEPTH);
+    localparam WB_BITS      = $clog2(WB_DEPTH);
     localparam LINE_W       = DATA_WIDTH * WORDS_PER_LN;           // 256
 
     // ---- Storage arrays (retention; cold-boot init only) ----
@@ -160,6 +162,13 @@ module l2_cache_nb #(
     reg                  mshr_filled [0:N_MSHR-1]; // line now in array
     reg                  mshr_evict  [0:N_MSHR-1]; // needs dirty writeback first
     reg [PA_WIDTH-1:0]   mshr_eaddr  [0:N_MSHR-1]; // evict address
+    reg [WB_BITS-1:0]    mshr_wb_idx [0:N_MSHR-1]; // dirty victim buffer slot
+
+    // Dirty victims are snapshotted at miss acceptance so replacement is
+    // decoupled from the serial downstream AXI transaction.
+    reg                  wb_valid [0:WB_DEPTH-1];
+    reg [23:0]           wb_line  [0:WB_DEPTH-1];
+    reg [LINE_W-1:0]     wb_data  [0:WB_DEPTH-1];
 
     // ---- Order queue: accepted requests, resolved out of order ----
     // st: 0=empty 1=wait(miss pending) 2=ready(can respond) 3=responding
@@ -277,6 +286,14 @@ module l2_cache_nb #(
             if (!mshr_valid[mf]) begin mshr_free_v=1'b1; mshr_free_i=mf[MSHR_BITS-1:0]; end
     end
 
+    reg wb_free_v; reg [WB_BITS-1:0] wb_free_i;
+    integer wf;
+    always @(*) begin
+        wb_free_v = 1'b0; wb_free_i = {WB_BITS{1'b0}};
+        for (wf=WB_DEPTH-1; wf>=0; wf=wf-1)
+            if (!wb_valid[wf]) begin wb_free_v=1'b1; wb_free_i=wf[WB_BITS-1:0]; end
+    end
+
     // Ways already reserved by an in-flight MSHR for acc_set (avoid double-alloc)
     reg [WAYS-1:0] acc_reserved;
     integer rr;
@@ -363,9 +380,13 @@ module l2_cache_nb #(
     // Need a free order slot; a miss additionally needs (merge target) OR
     // (free MSHR + a non-reserved victim way).
     wire acc_miss_needs_mshr = !acc_hit && !mshr_match;
+    wire acc_miss_needs_wb = acc_miss_needs_mshr &&
+                             valid_ram[acc_set][acc_victim] &&
+                             dirty_ram[acc_set][acc_victim];
     wire acc_can_alloc = ord_free_v &&
                          (acc_hit || mshr_match ||
-                          (mshr_free_v && acc_victim_ok));
+                          (mshr_free_v && acc_victim_ok &&
+                           (!acc_miss_needs_wb || wb_free_v)));
 
     // An accept that attaches a NEW waiter to an existing MSHR this cycle (used
     // to veto a same-cycle free of that MSHR). Covers AR-accept and the AW
@@ -397,7 +418,10 @@ module l2_cache_nb #(
         // master defaults
         m_awvalid=1'b0; m_awid=4'd0; m_awaddr=mshr_eaddr[me_idx]; m_awlen=8'd7;
         m_awsize=3'b010; m_awburst=2'b01;
-        m_wvalid=1'b0; m_wdata=data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt];
+        m_wvalid=1'b0;
+        m_wdata = mshr_evict[me_idx] ?
+                  wb_data[mshr_wb_idx[me_idx]][me_cnt*DATA_WIDTH +: DATA_WIDTH] :
+                  data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt];
         m_wstrb=4'hF; m_wlast=(me_cnt==3'd7);
         m_bready=1'b0;
         m_arvalid=1'b0; m_arid=4'd0;
@@ -438,7 +462,9 @@ module l2_cache_nb #(
             for (k=0; k<N_MSHR; k=k+1) begin
                 mshr_valid[k] <= 1'b0; mshr_issued[k] <= 1'b0;
                 mshr_filled[k] <= 1'b0; mshr_evict[k] <= 1'b0;
+                mshr_wb_idx[k] <= {WB_BITS{1'b0}};
             end
+            for (k=0; k<WB_DEPTH; k=k+1) wb_valid[k] <= 1'b0;
             // retention arrays: not cleared (see l2_cache_caching rationale)
         end else begin
             // ---------------------------------------------------------------
@@ -478,6 +504,14 @@ module l2_cache_nb #(
                         mshr_filled[mshr_free_i]  <= 1'b0;
                         mshr_evict[mshr_free_i]   <= valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim];
                         mshr_eaddr[mshr_free_i]   <= {3'b000, tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
+                        if (valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) begin
+                            mshr_wb_idx[mshr_free_i] <= wb_free_i;
+                            wb_valid[wb_free_i] <= 1'b1;
+                            wb_line[wb_free_i] <= {tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
+                            for (k=0; k<WORDS_PER_LN; k=k+1)
+                                wb_data[wb_free_i][k*DATA_WIDTH +: DATA_WIDTH] <=
+                                    data_ram[acc_set][acc_victim][k];
+                        end
                     end
                 end else if (want_aw && acc_can_alloc && s_awready) begin
                     // latch write, go collect W beats. Same priority as reads:
@@ -510,6 +544,14 @@ module l2_cache_nb #(
                         mshr_filled[mshr_free_i] <= 1'b0;
                         mshr_evict[mshr_free_i]  <= valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim];
                         mshr_eaddr[mshr_free_i]  <= {3'b000, tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
+                        if (valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) begin
+                            mshr_wb_idx[mshr_free_i] <= wb_free_i;
+                            wb_valid[wb_free_i] <= 1'b1;
+                            wb_line[wb_free_i] <= {tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
+                            for (k=0; k<WORDS_PER_LN; k=k+1)
+                                wb_data[wb_free_i][k*DATA_WIDTH +: DATA_WIDTH] <=
+                                    data_ram[acc_set][acc_victim][k];
+                        end
                     end
                     acc_state <= ACC_WCOLLECT;
                 end
@@ -559,7 +601,10 @@ module l2_cache_nb #(
                                  if (me_cnt==3'd7) me_state <= ME_EVICT_B;
                                  else me_cnt <= me_cnt + 1'b1;
                              end
-                ME_EVICT_B:  if (m_bvalid) begin me_state <= ME_REFILL_AR; end
+                ME_EVICT_B:  if (m_bvalid) begin
+                                 wb_valid[mshr_wb_idx[me_idx]] <= 1'b0;
+                                 me_state <= ME_REFILL_AR;
+                             end
                 ME_REFILL_AR: if (m_arready) begin me_cnt <= 3'd0; me_state <= ME_REFILL_R; end
                 ME_REFILL_R: if (m_rvalid) begin
                                  // write refill beat straight into the array

@@ -615,6 +615,10 @@ module tb_mips_soc;
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.slot[
                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.g_fifo_rob.u_mips_rob.head][70]);
 `endif
+`ifndef SOC_L2_NONBLOCKING
+        // These probes belong to the blocking L2 implementation.  Keep the
+        // timeout diagnostics buildable when the opt-in NB implementation is
+        // selected; its internal state is intentionally different.
         $display("L1 READ TABLE valid=%b mid=%0d/%0d/%0d/%0d rid=%0d/%0d/%0d/%0d head=%0d tail=%0d cnt=%0d/%0d/%0d/%0d L2 req=%08h beat=%0d hit=%b lookup=%b snoop=%b/%08h sr=%b/%b rv=%b/%b/%08h/%b",
                  u_soc.u_impl.u_soc_fabric.u_xbar.rd_valid[0],
                  u_soc.u_impl.u_soc_fabric.u_xbar.rd_mid[0][0],
@@ -643,6 +647,7 @@ module tb_mips_soc;
                  u_soc.u_impl.u_soc_fabric.s0_rvalid,
                  u_soc.u_impl.u_soc_fabric.s0_rdata,
                  u_soc.u_impl.u_soc_fabric.s0_rlast);
+`endif
         $display("ICACHE state=%0d req=%b/%08h ok=%b/%b err=%b ar=%b/%b r=%b/%b/%08h/%b cpu_pc=%08h stall=%b/%b/%b id=%08h haz=%b/%b/%b ex=%b/%0d mem=%b/%0d/%b wb=%b/%0d arch=%b busy=%b rd=%0d/%0d/%0d/%0d",
                  u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
