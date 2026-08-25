@@ -16,6 +16,10 @@ timeout "${QEMU_TIMEOUT:-60s}" "${QEMU_SYSTEM_BIN}" \
     2>"${RUN_DIR}/qemu_stderr.log"
 status=$?
 set -e
+if rg -q "MIPS32_SOC_LINUX_(MMAP|MPROTECT|BRK|SLEEP|YIELD|FORK_WAIT)_FAILURE" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: userspace failure marker was observed (status ${status})" >&2
+    exit 1
+fi
 if ! rg -q "Run /init as init process" "${RUN_DIR}/qemu_stdout.log"; then
     echo "Linux boot gate: kernel did not reach initramfs /init (status ${status})" >&2
     exit 1
