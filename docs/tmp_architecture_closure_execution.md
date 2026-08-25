@@ -1586,3 +1586,14 @@ remains the compatibility baseline.
 - This strengthens the bounded shootdown protocol evidence but does not close
   OS page-table ownership, scheduler coordination, multicore execution or
   Linux VM behavior.
+
+### 2026-08-26 Linux TLB ownership boundary probe
+
+- Fixed the QEMU reset path so a DTB/UHI Linux guest does not receive the
+  bare-metal prototype wired TLB entries; Linux owns TLB refill state after
+  handoff, while bare-metal guests retain the existing fixed mappings.
+- A four-page zero-filled BSS touch probe was attempted, but the init process
+  terminates before its marker on the current generic Linux/custom-machine
+  path. The probe was removed from the passing gate; Linux VM demand paging,
+  user-page refill diagnosis, fork/exec, scheduler shootdown and RTL
+  system-mode Linux differential remain open.
