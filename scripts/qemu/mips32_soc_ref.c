@@ -1588,8 +1588,11 @@ static void mips32_soc_ref_init(MachineState *machine)
                           state, "mips32-soc-ref.dma-v2-window", 0x100);
     memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x3040,
                                         &state->dma_v2_window, 1);
+    /* The flash boot alias overlaps the APB range at equal priority. Keep
+     * the complete VIC CSR span explicit so priority and VEC/ACK registers
+     * cannot be decoded as flash-backed RAM. */
     memory_region_init_io(&state->pic_window, NULL, &soc_ref_pic_ops, state,
-                          "mips32-soc-ref.pic-window", 0x40);
+                          "mips32-soc-ref.pic-window", 0x240);
     memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x4000,
                                         &state->pic_window, 1);
     memory_region_init_io(&state->qspi_window, NULL, &soc_ref_qspi_ops,
