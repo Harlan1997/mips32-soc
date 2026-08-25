@@ -1653,3 +1653,15 @@ remains the compatibility baseline.
 - This remains bounded single-CPU Linux VM/process evidence. Full page-table
   ownership policy, swap/file-cache behavior, scheduler ABI, multicore
   shootdown, RTL Linux differential and product boot remain open.
+
+### 2026-08-26 Linux scheduler clocksource sleep/wakeup pressure
+
+- Added an O32 `nanosleep` call for 1 ms after the VM/heap phases. The gate
+  requires `MIPS32_SOC_LINUX_SLEEP_SUCCESS`, which is emitted only after the
+  syscall returns successfully and execution resumes.
+- Fresh `make linux-boot-build-gate` passes with the boot, mmap, brk, sleep,
+  dual-exec and dual-wait markers. Kernel logs show the MIPS clocksource is
+  selected; this is a real blocking/wakeup path rather than a polling delay.
+- The evidence remains single-CPU generic Linux integration. SoC timer driver
+  binding, full scheduler policy/ABI, multicore shootdown and RTL system-mode
+  Linux differential remain open.

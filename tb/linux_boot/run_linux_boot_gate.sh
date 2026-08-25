@@ -32,6 +32,10 @@ if ! rg -q "MIPS32_SOC_LINUX_BRK_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
     echo "Linux boot gate: heap brk marker was not observed (status ${status})" >&2
     exit 1
 fi
+if ! rg -q "MIPS32_SOC_LINUX_SLEEP_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+    echo "Linux boot gate: nanosleep wakeup marker was not observed (status ${status})" >&2
+    exit 1
+fi
 exec_count=$(rg -c "MIPS32_SOC_LINUX_EXEC_SUCCESS" "${RUN_DIR}/qemu_stdout.log" || true)
 if [[ "${exec_count}" -lt 2 ]]; then
     echo "Linux boot gate: expected two exec child markers, observed ${exec_count} (status ${status})" >&2
@@ -54,6 +58,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
   file-backed /bin/vm_child page, unmapped both regions, expanded the process
   heap by five pages with brk, faulted in each heap page, restored the original
   break, forked two children, and execve'd /bin/vm_child in each child,
+  restored the heap break, slept for 1 ms through nanosleep and woke normally,
   observed two new-image markers, reaped both with wait4, and then emitted the
   boot and fork/wait success markers through the modeled UART.
 - Linux console log: $([[ -s "${RUN_DIR}/qemu_stdout.log" ]] && rg -q "Linux version" "${RUN_DIR}/qemu_stdout.log" && echo present || echo absent)
