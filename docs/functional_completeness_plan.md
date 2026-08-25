@@ -933,3 +933,18 @@ firmware uses a fixed 512-iteration architectural delay before its single
 STATUS read, so the comparison observes the same completed state without
 weakening the comparator; this remains a bounded DMA differential rather than
 full physical fault/reset or Linux DMA signoff.
+
+### 2026-08-26 QEMU LL/SC system differential closure
+
+Added `make qemu-system-llsc-differential-gate` to the architecture closure
+aggregate. The real RTL CPU and `mips32-soc-ref` now compare 293 aligned retire
+records covering virtual `LLAddr` visibility, successful `SC`, unreserved
+`SC`, ordinary-store invalidation, exception-cleared reservation and mailbox
+completion. QEMU's custom-machine LL helper exposes the RTL virtual-address
+diagnostic contract while retaining its virtual reservation comparison; the
+RTL observation bind has a dedicated SC address capture because `wb_ex_out`
+holds the architectural success result. The QEMU converter reconstructs the
+attempted SC address/data for fast-failed atomic callbacks. The gate passes with
+`TRACE_COMPARE_PASS records=293` and is bounded evidence only: complete MIPS
+memory ordering, arbitrary atomic interleavings, MESI/directory ordering and
+Linux atomic ABI remain open.

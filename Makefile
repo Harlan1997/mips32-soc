@@ -173,7 +173,7 @@ dcache-parity-gate:
 .PHONY: linux-boot-build-gate
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
-.PHONY: qemu-system-architecture-closure-gate
+.PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
@@ -633,6 +633,10 @@ qemu-system-current-contract-gate: qemu-system-mips32-soc-ref
 qemu-system-architecture-closure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_architecture_closure tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
+
+qemu-system-llsc-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=llsc QEMU_CPU=24Kc QEMU_TIMEOUT=5 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_llsc_differential RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh

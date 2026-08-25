@@ -28,6 +28,8 @@ def load_jsonl(path):
 
 
 def hex32(value):
+    if isinstance(value, int):
+        return f"{value & 0xffffffff:08x}"
     return f"{int(value, 16) & 0xffffffff:08x}"
 
 
@@ -74,7 +76,7 @@ def gpr_destination(instr, before=None):
     if op in (0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
               0x18, 0x19, 0x1c, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25,
               0x26, 0x27, 0x30, 0x32, 0x33, 0x34, 0x35, 0x36,
-              0x37):
+              0x37, 0x38):
         return rt
     if op == 0x23 or op in (0x20, 0x21, 0x22, 0x24, 0x25, 0x26, 0x27):
         return rt
@@ -246,6 +248,22 @@ def convert(events, states):
         mem_addr = int(event.get("mem_addr", "0"), 16)
         mem_size = int(event.get("mem_size", 0))
         mem_be = ((1 << mem_size) - 1) << (mem_addr & 3) if mem_valid else 0xF
+        # QEMU's atomic callback reports the old memory value for a failed
+        # SC, whereas the RTL retire contract reports the attempted store.
+        # Reconstruct the latter from the SC source register pre-state.
+        is_sc = ((instr >> 26) & 0x3f) == 0x38
+        sc_store_data = hex32(before[f"r{(instr >> 16) & 0x1f}"]) if is_sc else None
+        if is_sc:
+            rs = (instr >> 21) & 0x1f
+            imm = instr & 0xffff
+            if imm & 0x8000:
+                imm -= 0x10000
+            mem_valid = 1
+            mem_read = 0
+            mem_write = 1
+            mem_addr = (int(before[f"r{rs}"], 16) + imm) & 0xffffffff
+            mem_size = 4
+            mem_be = 0xF
         bd = int(taken_delay_slot(events, index))
         # Cause is sticky across exception entry.  Comparing before/after
         # Cause therefore misses a second synchronous exception (for example
@@ -277,10 +295,12 @@ def convert(events, states):
             "cp0_sel": cp0_sel,
             "cp0_data": cp0_data,
             "mem_valid": mem_valid,
-            "mem_read": int(bool(event.get("mem_read"))),
-            "mem_write": int(bool(event.get("mem_write"))),
-            "mem_addr": hex32(event.get("mem_addr", "0")),
-            "mem_wdata": event.get("mem_value", "00000000") if event.get("mem_write") else "00000000",
+            "mem_read": mem_read if is_sc else int(bool(event.get("mem_read"))),
+            "mem_write": mem_write if is_sc else int(bool(event.get("mem_write"))),
+            "mem_addr": hex32(mem_addr),
+            "mem_wdata": (sc_store_data if sc_store_data is not None else
+                          event.get("mem_value", "00000000")) if
+                         (is_sc or event.get("mem_write")) else "00000000",
             "mem_be": f"{mem_be:x}",
             "mem_rdata": event.get("mem_value", "00000000") if event.get("mem_read") else "xxxxxxxx",
             "except": exception_taken,

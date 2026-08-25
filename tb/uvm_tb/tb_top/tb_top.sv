@@ -114,7 +114,9 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
                            u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
     .retire_mem_read      (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace),
     .retire_mem_write     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
-    .retire_mem_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
+    .retire_mem_addr      (((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b111000)) ?
+                           u_dut.u_core_subsystem.u_core.u_cpu.sc_trace_addr :
+                           u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
     .retire_mem_wdata     (u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt),
     // Derive the observed byte lanes from the retired opcode.  This keeps
     // the trace contract tied to the architectural access size even when a

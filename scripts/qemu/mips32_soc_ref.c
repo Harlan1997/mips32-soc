@@ -26,6 +26,12 @@
 #include "cpu.h"
 #include "elf.h"
 
+/* The RTL CP0 contract exposes LLAddr as the aligned virtual address. */
+bool qemu_mips32_soc_ref_lladdr_virtual(void)
+{
+    return true;
+}
+
 #define SOC_SRAM_SIZE      (64 * KiB)
 #define SOC_BOOTROM_BASE   0x1fc00000ULL
 #define SOC_BOOTROM_SIZE   (64 * KiB)

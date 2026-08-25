@@ -1,0 +1,25 @@
+diff --git a/target/mips/tcg/ldst_helper.c b/target/mips/tcg/ldst_helper.c
+index 0000000000..0000000000 100644
+--- a/target/mips/tcg/ldst_helper.c
++++ b/target/mips/tcg/ldst_helper.c
+@@ -27,6 +27,8 @@
+ #include "exec/memop.h"
+ #include "internal.h"
+
++bool qemu_mips32_soc_ref_lladdr_virtual(void) __attribute__((weak));
++
+ #ifndef CONFIG_USER_ONLY
+
+ #define HELPER_LD_ATOMIC(name, insn, almask, do_cast)                         \
+@@ -39,6 +41,11 @@ target_ulong helper_##name(CPUMIPSState *env, target_ulong arg, int mem_idx)  \
+     }                                                                     \
+     env->CP0_LLAddr = cpu_mips_translate_address(env, arg, MMU_DATA_LOAD,     \
+                                                  GETPC());                    \
++    if (qemu_mips32_soc_ref_lladdr_virtual &&                                \
++        qemu_mips32_soc_ref_lladdr_virtual()) {                             \
++        /* RTL exposes the aligned virtual LL address through MFC0. */       \
++        env->CP0_LLAddr = (uint64_t)arg << env->CP0_LLAddr_shift;            \
++    }                                                                         \
+     env->lladdr = arg;                                                        \
+     env->llval = do_cast cpu_##insn##_mmuidx_ra(env, arg, mem_idx, GETPC());  \
+     return env->llval;                                                        \
