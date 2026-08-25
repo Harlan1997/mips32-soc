@@ -58,6 +58,12 @@ not claim a complete product Linux boot because U-Boot, real QSPI/DDR devices,
 the full device-driver set, and RTL system-mode Linux differential remain
 outside this gate.
 
+The separate opt-in `make linux-uboot-build-gate` target builds the pinned
+official U-Boot `maltael_defconfig` with the MIPS32 little-endian cross
+toolchain. This is a source/build prerequisite only: Malta is not the
+`mips32-soc-ref` machine, so the gate does not claim QSPI loading, DDR init,
+SoC-specific U-Boot support, or Linux handoff.
+
 ## Boot flow (target)
 
 ```
