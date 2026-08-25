@@ -23,6 +23,9 @@ module l1_cache_nb #(
     input  wire        cache_maint_invalidate,
     input  wire [4:0]  cache_maint_op,
     input  wire [31:0] cache_maint_addr,
+    output wire        cache_maint_ready,
+    output reg         cache_maint_done,
+    output reg         cache_maint_error,
     output wire        cpu_ready,
     output reg         rsp_valid,
     output reg  [3:0]  rsp_id,
@@ -79,6 +82,7 @@ module l1_cache_nb #(
     reg rsp_fifo_error [0:RSP_DEPTH-1];
     reg [RSP_BITS-1:0] rsp_head, rsp_tail;
     reg [RSP_BITS:0] rsp_count;
+    reg any_mvalid;
 
     reg [31:0] wb_addr [0:WB_DEPTH-1];
     reg [255:0] wb_data [0:WB_DEPTH-1];
@@ -97,7 +101,9 @@ module l1_cache_nb #(
     always @(*) begin
         free_mshr = 1'b0; free_mshr_i = 0;
         merge_mshr = 1'b0; merge_mshr_i = 0;
+        any_mvalid = 1'b0;
         for (i = 0; i < MSHR_COUNT; i = i + 1) begin
+            if (mvalid[i]) any_mvalid = 1'b1;
             if (!mvalid[i] && !free_mshr) begin free_mshr = 1'b1; free_mshr_i = i; end
             if (mvalid[i] && mline[i] == req_line) begin merge_mshr = 1'b1; merge_mshr_i = i; end
         end
@@ -144,6 +150,13 @@ module l1_cache_nb #(
                        (hit || !dirty[req_set] || wb_count < WB_DEPTH) &&
                        (!merge_mshr || !secondary_valid[merge_mshr_i]);
 
+    // Maintenance is accepted only after all line requests, responses and
+    // queued writebacks have drained. The CPU adapter holds CACHE valid until
+    // the one-cycle completion indication is observed.
+    assign cache_maint_ready = !cache_maint_done && !any_mvalid &&
+                               (rsp_count == 0) && (wb_count == 0) &&
+                               !mem_req_valid;
+
     integer j;
     always @(*) begin
         mem_req_valid = 1'b0; mem_req_we = 1'b0; mem_req_addr = 0;
@@ -189,13 +202,17 @@ module l1_cache_nb #(
         if (!rst_n) begin
             rsp_head <= 0; rsp_tail <= 0; rsp_count <= 0;
             wb_head <= 0; wb_tail <= 0; wb_count <= 0;
+            cache_maint_done <= 1'b0;
+            cache_maint_error <= 1'b0;
             mshr_occupancy <= 0; wb_occupancy <= 0;
             for (k = 0; k < SETS; k = k + 1) begin valid[k] <= 0; dirty[k] <= 0; end
             for (k = 0; k < MSHR_COUNT; k = k + 1) begin
                 mvalid[k] <= 0; miss_issued[k] <= 0; secondary_valid[k] <= 0;
             end
         end else begin
-            if (cache_maint_invalidate) begin
+            cache_maint_done <= 1'b0;
+            cache_maint_error <= 1'b0;
+            if (cache_maint_invalidate && cache_maint_ready) begin
                 /* The adapter serializes maintenance against live traffic.
                  * Preserve address-scoped CACHE semantics for the direct
                  * mapped opt-in L1; unknown operations retain the legacy
@@ -221,6 +238,7 @@ module l1_cache_nb #(
                     miss_issued[k] <= 1'b0;
                     secondary_valid[k] <= 1'b0;
                 end
+                cache_maint_done <= 1'b1;
             end
 
             if (rsp_pop)

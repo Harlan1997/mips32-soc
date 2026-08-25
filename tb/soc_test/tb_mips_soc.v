@@ -56,6 +56,11 @@ module tb_mips_soc;
     integer dual_core_reverse_ipi_count;
     integer dual_core_reset_count;
     integer dual_core_exception_count;
+`ifdef TB_L1_MAINTENANCE
+    integer l1_maintenance_count;
+    integer l1_maintenance_refill_count;
+    reg l1_maintenance_waiting_refill;
+`endif
 `ifdef DMA_EVENT_TRACE
     integer dma_event_fd;
     reg [1023:0] dma_event_path;
@@ -386,6 +391,11 @@ module tb_mips_soc;
         dual_core_reverse_ipi_count = 0;
         dual_core_reset_count = 0;
         dual_core_exception_count = 0;
+`ifdef TB_L1_MAINTENANCE
+        l1_maintenance_count = 0;
+        l1_maintenance_refill_count = 0;
+        l1_maintenance_waiting_refill = 1'b0;
+`endif
 `ifdef DMA_EVENT_TRACE
         dma_event_fd = 0;
         dma_event_path = "dma_rtl_events.jsonl";
@@ -688,6 +698,17 @@ module tb_mips_soc;
     
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
+`ifdef TB_L1_MAINTENANCE
+        if (rst_n && `TB_DCACHE_PATH.l1_maintenance_issue) begin
+            l1_maintenance_count = l1_maintenance_count + 1;
+            l1_maintenance_waiting_refill = 1'b1;
+        end
+        if (rst_n && l1_maintenance_waiting_refill &&
+            `TB_DCACHE_PATH.n_mem_req_valid) begin
+            l1_maintenance_refill_count = l1_maintenance_refill_count + 1;
+            l1_maintenance_waiting_refill = 1'b0;
+        end
+`endif
 `ifdef TB_FPU_ROUND_DEBUG
         if (rst_n && (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst == 32'h46000124 ||
                       u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req))
@@ -737,6 +758,16 @@ module tb_mips_soc;
             $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
                      cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
+`ifdef TB_L1_MAINTENANCE
+                if (l1_maintenance_count != 2 ||
+                    l1_maintenance_refill_count < 2) begin
+                    $display("REGRESSION_TEST_FAILED L1 maintenance count=%0d refill_after=%0d",
+                             l1_maintenance_count, l1_maintenance_refill_count);
+                    $finish;
+                end
+                $display("L1_MAINTENANCE_PATH_PASS issues=%0d refills=%0d",
+                         l1_maintenance_count, l1_maintenance_refill_count);
+`endif
 `ifdef TB_MMU_HW_WALKER
                 if (u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'hfff0/4] != 32'h48415750) begin
                     $display("REGRESSION_TEST_FAILED MMU hardware walker marker mismatch: %08h",

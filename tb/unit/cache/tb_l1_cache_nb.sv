@@ -3,6 +3,7 @@ module tb_l1_cache_nb;
  reg clk=0,rst_n=0,cpu_valid=0,cpu_we=0; reg [3:0] cpu_id=0,cpu_be=4'hf;
  reg [31:0] cpu_addr=0,cpu_wdata=0; reg cache_maint_invalidate=0;
  reg [4:0] cache_maint_op=0; reg [31:0] cache_maint_addr=0;
+ wire cache_maint_ready, cache_maint_done, cache_maint_error;
  wire cpu_ready,rsp_valid,rsp_error;
  wire [3:0] rsp_id; wire [31:0] rsp_rdata; reg rsp_ready=1;
  wire mem_req_valid,mem_req_we; wire [31:0] mem_req_addr; wire [255:0] mem_req_wdata;
@@ -24,7 +25,9 @@ module tb_l1_cache_nb;
  endtask
  task maintain(input [4:0] op,input [31:0] addr);
   begin @(negedge clk); cache_maint_op=op; cache_maint_addr=addr;
-   cache_maint_invalidate=1; @(negedge clk); cache_maint_invalidate=0;
+   cache_maint_invalidate=1; @(negedge clk);
+   if (!cache_maint_done || cache_maint_error) errors=errors+1;
+   cache_maint_invalidate=0;
   end
  endtask
  task wait_wb_empty;

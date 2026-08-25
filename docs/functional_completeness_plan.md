@@ -663,14 +663,17 @@ open.
 
 ### L1 maintenance compatibility closure update (2026-08-20)
 
-`make l1-nonblocking-maintenance-compat-gate` passes the CPU CACHE completion
-and stall contract plus CP0 TagLo/TagHi/SYNC tests, and audits that the opt-in
-L1 adapter routes `cache_op_*` to the legacy dcache. The adapter now holds the
-maintenance issue until L1 bridge traffic, response FIFO, active request and
-outstanding count are idle, preventing an in-flight MSHR from being cleared.
-This closes the explicit compatibility boundary while nonblocking maintenance,
-concurrent maintenance with outstanding L1 responses, full ordering, and OS
-cache ABI remain open.
+`make l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate`
+passes the CPU CACHE completion
+and stall contract plus CP0 TagLo/TagHi/SYNC tests. The opt-in L1 adapter now
+routes `Index_Invalidate_D` and `Hit_Invalidate_D` to the line cache only after
+L1 bridge traffic, response FIFO, active request and outstanding count are
+idle; the operation completes through a one-cycle handshake. Tag, writeback and
+unsupported operations still use legacy dcache. This closes the two scoped
+invalidates while nonblocking tag/writeback maintenance, concurrent maintenance
+before drain, full ordering, and OS cache ABI remain open. The CPU gate uses the
+real SoC hierarchy to count both L1 maintenance issues and the subsequent line
+requests; the direct unit gate checks the architectural data invalidation.
 
 The opt-in SVA checker is included in `make sva-gate` and the L1 error/reset
 gate was rerun with `SVA_ENABLE=1`; no maintenance-idle assertion fired. This
