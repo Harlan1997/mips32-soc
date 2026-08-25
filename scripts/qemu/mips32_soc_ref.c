@@ -1693,8 +1693,10 @@ static void soc_ref_cpu_reset(void *opaque)
         env->active_tc.gpr[7] = 0;
     }
 
-    if (!reset->software_mmu_guest) {
-        /* Prototype RTL treats kuseg addresses as physical identity mappings. */
+    if (!reset->software_mmu_guest && !reset->fdt_loaded) {
+        /* Bare-metal prototype guests use fixed identity mappings. Linux
+         * owns the TLB after the DTB/UHI handoff and must start with no
+         * prototype wired entries competing with its page-table refill path. */
         env->CP0_Index = 0;
         env->CP0_PageMask = 0x0007e000; /* 256-KB pages, 512-KB pair */
         env->CP0_EntryHi = 0;
