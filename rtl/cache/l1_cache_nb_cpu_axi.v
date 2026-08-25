@@ -91,17 +91,17 @@ module l1_cache_nb_cpu_axi #(
     wire l1_path_request = cpu_req && ENABLE_L1 && l1_address_supported && !cpu_uncacheable &&
                            !cache_op_valid;
 
-    // The opt-in line cache owns the two address-scoped invalidate operations
-    // it can complete without a writeback protocol. Other CACHE operations
-    // retain the legacy dcache implementation until their nonblocking tag and
-    // writeback contracts are implemented.
+    // The opt-in line cache owns the address-scoped invalidate and writeback
+    // operations whose completion is reported after the line writeback drains.
     wire cache_op_addr_supported = (cache_op_addr[31:16] == 16'h0000) ||
                                    ((`SOC_L1_NONBLOCKING_DDR_ENABLE != 0) &&
                                     (cache_op_addr >= `SOC_DDR_BASE) &&
                                     (cache_op_addr < (`SOC_DDR_BASE + `SOC_DDR_SIZE)));
     wire l1_maintenance_supported = ENABLE_L1 && cache_op_addr_supported &&
                                     ((cache_op == 5'b00001) ||
-                                     (cache_op == 5'b10101));
+                                     (cache_op == 5'b10101) ||
+                                     (cache_op == 5'b11001) ||
+                                     (cache_op == 5'b11101));
 
     wire [31:0] legacy_rdata;
     wire legacy_addr_ok, legacy_data_ok, legacy_bus_error, legacy_cache_error;
