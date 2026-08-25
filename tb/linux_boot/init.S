@@ -241,7 +241,7 @@ _start:
 	syscall
 	nop
 	move	$a0, $s1
-	move	$a1, $zero
+	addiu	$a1, $sp, 36
 	move	$a2, $zero
 	move	$a3, $zero
 	li	$v0, 4114
@@ -249,9 +249,14 @@ _start:
 	nop
 	slt	$t1, $v0, $zero
 	bnez	$t1, fork_fail
+	nop
+	bne	$v0, $s1, fork_fail
+	nop
+	lw	$t0, 36($sp)
+	bnez	$t0, fork_fail
 	nop
 	move	$a0, $s2
-	move	$a1, $zero
+	addiu	$a1, $sp, 40
 	move	$a2, $zero
 	move	$a3, $zero
 	li	$v0, 4114
@@ -259,6 +264,17 @@ _start:
 	nop
 	slt	$t1, $v0, $zero
 	bnez	$t1, fork_fail
+	nop
+	bne	$v0, $s2, fork_fail
+	nop
+	lw	$t0, 40($sp)
+	bnez	$t0, fork_fail
+	nop
+	move	$a0, $s0
+	la	$a1, wait_status_success_marker
+	li	$a2, wait_status_success_marker_end-wait_status_success_marker
+	li	$v0, 4004
+	syscall
 	nop
 	b	fork_parent_done
 	nop
@@ -357,6 +373,9 @@ mprotect_success_marker_end:
 mprotect_fault_success_marker:
 	.ascii "MIPS32_SOC_LINUX_MPROTECT_FAULT_SUCCESS\n"
 mprotect_fault_success_marker_end:
+wait_status_success_marker:
+	.ascii "MIPS32_SOC_LINUX_WAIT_STATUS_SUCCESS\n"
+wait_status_success_marker_end:
 vm_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_FAILURE\n"
 vm_fail_marker_end:
