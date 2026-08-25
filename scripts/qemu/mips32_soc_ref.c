@@ -88,6 +88,7 @@ typedef struct MIPS32SocRefState {
     uint32_t dma_v2_polls_remaining[4];
     /* Opt-in model hook: 0=normal, 1=read response error, 2=write response error. */
     uint32_t dma_fault_mode;
+    bool dma_reset_injected;
     FILE *dma_event_trace;
     uint32_t pic_raw;
     uint32_t pic_mask;
@@ -166,6 +167,7 @@ static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
 static char *soc_ref_dma_event_trace_path;
 static uint32_t soc_ref_dma_fault_mode;
+static bool soc_ref_dma_reset_inflight;
 static uint32_t soc_ref_gpio_input;
 static bool soc_ref_malta_uboot_compat;
 static uint32_t soc_ref_ddr_fault_mode;
@@ -245,6 +247,17 @@ static void soc_ref_set_malta_uboot_compat(Object *obj, bool value,
                                            Error **errp)
 {
     soc_ref_malta_uboot_compat = value;
+}
+
+static bool soc_ref_get_dma_reset_inflight(Object *obj, Error **errp)
+{
+    return soc_ref_dma_reset_inflight;
+}
+
+static void soc_ref_set_dma_reset_inflight(Object *obj, bool value,
+                                           Error **errp)
+{
+    soc_ref_dma_reset_inflight = value;
 }
 
 static char *soc_ref_get_irq_schedule(Object *obj, Error **errp)
@@ -800,6 +813,15 @@ static void soc_ref_dma_start(MIPS32SocRefState *s)
     s->dma_status = 1; /* legacy CTRL bit 0: busy */
     if (s->dma_src || s->dma_dst || s->dma_len)
         soc_ref_dma_event_legacy(s, "START", 0, 0);
+    if (soc_ref_dma_reset_inflight && !s->dma_reset_injected) {
+        /* Keep the first transaction genuinely in flight: the reset request
+         * is queued before any source data is copied.  The reset callback
+         * clears the DMA state; the restarted guest must issue a new start. */
+        s->dma_reset_injected = true;
+        soc_ref_dma_event_legacy(s, "RESET_IN_FLIGHT", 0, 0);
+        qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
+        return;
+    }
     while (left) {
         uint32_t n = MIN(left, (uint32_t)sizeof(buf));
         result = address_space_read(&address_space_memory, src,
@@ -820,6 +842,27 @@ static void soc_ref_dma_start(MIPS32SocRefState *s)
      * polls produce four BUSY observations and the following read observes
      * DONE, matching the RTL retire trace. */
     s->dma_polls_remaining = s->dma_len <= 4 ? 4 : 4 + (s->dma_len / 2) - 1;
+}
+
+static void soc_ref_dma_reset(void *opaque)
+{
+    MIPS32SocRefState *s = opaque;
+
+    s->dma_src = 0;
+    s->dma_dst = 0;
+    s->dma_len = 0;
+    s->dma_ctrl = 0;
+    s->dma_status = 0;
+    s->dma_completion_status = 0;
+    s->dma_polls_remaining = 0;
+    for (unsigned ch = 0; ch < 4; ++ch) {
+        s->dma_v2_ctrl[ch] = 0;
+        s->dma_v2_status[ch] = 0;
+        s->dma_v2_err_code[ch] = 0;
+        s->dma_v2_polls_remaining[ch] = 0;
+    }
+    s->pic_raw &= ~((1U << 3) | (1U << 4) | (1U << 5) | (1U << 6));
+    soc_ref_update_irq(s);
 }
 
 static void soc_ref_dma_v2_start(MIPS32SocRefState *s, unsigned ch)
@@ -1854,6 +1897,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     reset->software_mmu_guest = soc_ref_software_mmu_guest ||
                                 (entry == 0xbfc00000ULL);
     qemu_register_reset(soc_ref_cpu_reset, reset);
+    qemu_register_reset(soc_ref_dma_reset, state);
 
     cpu_mips_irq_init_cpu(cpu);
     cpu_mips_clock_init(cpu);
@@ -1887,6 +1931,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "dma-fault-mode",
                                          &soc_ref_dma_fault_mode,
                                          OBJ_PROP_FLAG_WRITE);
+    object_class_property_add_bool(OBJECT_CLASS(mc), "dma-reset-inflight",
+                                   soc_ref_get_dma_reset_inflight,
+                                   soc_ref_set_dma_reset_inflight);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "gpio-input",
                                          &soc_ref_gpio_input,
                                          OBJ_PROP_FLAG_WRITE);

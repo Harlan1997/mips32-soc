@@ -312,6 +312,12 @@
   channel 0 is busy, then requires the restarted firmware to complete and
   verify a 256-byte uncached transfer plus DONE/W1C. Physical DMA/DDR reset
   policy and arbitrary multi-channel reset interleavings remain open.
+- `make qemu-system-dma-reset-inflight-gate` now covers the matching opt-in
+  custom-machine boundary. The QEMU reference requests one reset before the
+  first transfer copies data, clears DMA busy/status/IRQ state in its reset
+  callback, and the restarted guest completes the same 256-byte transfer and
+  DONE/W1C check. This remains a reference-machine contract, not physical
+  DDR reset timing or multi-channel reset signoff.
 - The opt-in L1 AXI bridge now accepts two refill reads with IDs 0/1 and
   routes each burst response by ID; the behavioral DDR model gives slots
   independent latency so the second read may complete first. Existing CPU
