@@ -86,7 +86,8 @@ _except_handler:
     addiu   $k1, $zero, 16
     beq     $t0, $k1, check_invalid
     nop
-    addiu   $k1, $zero, 4
+    /* Overflow is a bit mask and includes Inexact (Overflow|Inexact=5). */
+    addiu   $k1, $zero, 5
     beq     $t0, $k1, check_overflow
     nop
     b       fail
@@ -101,7 +102,8 @@ check_invalid:
     b       check_common
     nop
 check_overflow:
-    addiu   $t0, $zero, 4
+    /* Overflow is a bit mask and includes Inexact (Overflow|Inexact=5). */
+    addiu   $t0, $zero, 5
 
 check_common:
     cfc1    $k1, $31

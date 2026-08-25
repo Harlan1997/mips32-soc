@@ -26,6 +26,8 @@ run_gate mmu_pagemask_differential \
     make -C "${ROOT_DIR}" qemu-system-mmu-pagemask-gate
 run_gate mmu_os_pressure \
     make -C "${ROOT_DIR}" qemu-system-mmu-os-pressure-gate
+run_gate fpu_fpe_boundary_differential \
+    make -C "${ROOT_DIR}" qemu-system-fpu-fpe-boundary-differential-gate
 run_gate linux_userspace_marker \
     make -C "${ROOT_DIR}" linux-boot-build-gate
 
@@ -41,8 +43,9 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Result: PASS
 - Machine: mips32-soc-ref
 - Sub-gates: current peripheral contract, selected ISA/FPU/privileged and
-  peripheral retire differential, MMU refill/PageMask/OS-pressure differential,
-  and generic Linux kernel-to-userspace marker boot.
+  peripheral retire differential, FPU precise exception boundary differential,
+  MMU refill/PageMask/OS-pressure differential, and generic Linux
+  kernel-to-userspace marker boot.
 - Evidence: child logs in this directory, QEMU build identity, and child
   reports under build/isa_ref/ and build/linux_boot/real/.
 - Boundary: this is a bounded architecture integration gate. It does not claim
