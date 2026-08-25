@@ -1640,3 +1640,16 @@ remains the compatibility baseline.
 - This is stronger generic Linux VM evidence, but it does not close Linux
   page-table ownership, swap/file-cache policy, scheduler ABI, multicore
   shootdown, RTL system-mode Linux differential, or product boot.
+
+### 2026-08-26 Linux heap brk demand-paging pressure
+
+- Extended the initramfs workload with MIPS O32 `brk` growth and shrink:
+  it grows the process heap by five pages, writes one word per page to force
+  anonymous heap faults, restores the original break, and emits
+  `MIPS32_SOC_LINUX_BRK_SUCCESS`.
+- Fresh `make linux-boot-build-gate` passes with the mmap marker, heap marker,
+  two exec markers, and dual-child wait marker. The generated completion report
+  was also made shell-safe so literal paths are not evaluated while writing it.
+- This remains bounded single-CPU Linux VM/process evidence. Full page-table
+  ownership policy, swap/file-cache behavior, scheduler ABI, multicore
+  shootdown, RTL Linux differential and product boot remain open.
