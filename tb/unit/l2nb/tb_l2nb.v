@@ -71,6 +71,9 @@ module tb_l2nb;
     // single-outstanding tracker: assert if two bursts overlap on master port
     reg dn_busy; reg [1:0] dn_kind; // 1=read 2=write
     reg [31:0] dn_addr; reg [7:0] dn_len; reg [7:0] dn_beat;
+    reg inject_r_error, inject_b_error;
+    reg [31:0] inject_r_addr;
+    integer expected_error_responses;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -87,7 +90,8 @@ module tb_l2nb;
             end
             // ---- read data burst ----
             if (dn_busy && dn_kind==1 && !m_rvalid) begin
-                m_rvalid<=1; m_rdata<=mem[(dn_addr[21:2])+dn_beat]; m_rlast<=(dn_beat==dn_len); m_rresp<=0;
+                m_rvalid<=1; m_rdata<=mem[(dn_addr[21:2])+dn_beat]; m_rlast<=(dn_beat==dn_len);
+                m_rresp <= (inject_r_error && dn_addr == inject_r_addr) ? 2'b10 : 2'b00;
             end
             if (m_rvalid && m_rready) begin
                 if (m_rlast) begin dn_busy<=0; m_rvalid<=0; m_rlast<=0; end
@@ -104,7 +108,9 @@ module tb_l2nb;
                 m_wready<=1;
                 if (m_wvalid && m_wready) begin
                     mem[(dn_addr[21:2])+dn_beat] <= m_wdata;
-                    if (m_wlast) begin m_wready<=0; m_bvalid<=1; m_bid<=m_awid; m_bresp<=0; end
+                    if (m_wlast) begin m_wready<=0; m_bvalid<=1; m_bid<=m_awid;
+                        m_bresp <= inject_b_error ? 2'b10 : 2'b00;
+                    end
                     else dn_beat<=dn_beat+1;
                 end
             end
@@ -133,7 +139,11 @@ module tb_l2nb;
             if (!exp_v[s_rid]) begin
                 $display("FAIL unexpected R for id=%0d @%t", s_rid, $time); errs=errs+1;
             end else begin
-                if (s_rdata !== golden[(exp_addr[s_rid][21:2])+exp_beat[s_rid]]) begin
+                if (s_rresp != 2'b00) begin
+                    if (expected_error_responses == 0) begin
+                        $display("FAIL unexpected read error id=%0d @%t", s_rid, $time); errs=errs+1;
+                    end else expected_error_responses = expected_error_responses - 1;
+                end else if (s_rdata !== golden[(exp_addr[s_rid][21:2])+exp_beat[s_rid]]) begin
                     $display("FAIL read id=%0d beat=%0d @%h got=%h exp=%h", s_rid,
                         exp_beat[s_rid], exp_addr[s_rid]+(exp_beat[s_rid]<<2),
                         s_rdata, golden[(exp_addr[s_rid][21:2])+exp_beat[s_rid]]); errs=errs+1;
@@ -165,6 +175,13 @@ module tb_l2nb;
         s_wdata=wd; s_wstrb=4'hF; s_wlast=1; s_wvalid=1;
         @(posedge clk); while(!s_wready) @(posedge clk);
         @(negedge clk); s_wvalid=0; s_wlast=0;
+    end endtask
+
+    task issue_write_wait(input [3:0] id, input [31:0] addr, input [31:0] wd);
+    begin
+        issue_write(id, addr, wd);
+        while (!s_bvalid) @(posedge clk);
+        @(posedge clk);
     end endtask
 
     // wait until all outstanding reads have drained
@@ -203,6 +220,8 @@ module tb_l2nb;
     initial begin
         s_awvalid=0; s_wvalid=0; s_arvalid=0; s_wlast=0;
         snoop_addr=0; snoop_valid=0;
+        inject_r_error=0; inject_b_error=0; inject_r_addr=0;
+        expected_error_responses=0;
         s_bready=1; s_rready=1;
         s_awid=0; s_awaddr=0; s_awlen=0; s_awsize=0; s_awburst=1;
         s_arid=0; s_araddr=0; s_arlen=0; s_arsize=0; s_arburst=1;
@@ -322,6 +341,50 @@ module tb_l2nb;
         issue_read(4'd12, 32'h0020_0000, 8'd0);               // hit P under miss
         issue_read(4'd13, 32'h0020_0000, 8'd0);               // hit P again
         wait_reads;
+
+        // T9 refill error: both a primary waiter and a secondary waiter must
+        // receive SLVERR, and the failed line must not be installed.  The
+        // retry below therefore performs a clean refill and returns normally.
+        inject_r_addr = 32'h0030_0000;
+        inject_r_error = 1'b1;
+        expected_error_responses = 2;
+        issue_read(4'd1, 32'h0030_0000, 8'd0);
+        issue_read(4'd2, 32'h0030_0004, 8'd0);
+        wait_reads;
+        repeat(2) @(posedge clk);
+        if (expected_error_responses != 0) begin
+            $display("FAIL refill error waiters not all resolved: %0d", expected_error_responses); errs=errs+1;
+        end
+        inject_r_error = 1'b0;
+        issue_read(4'd1, 32'h0030_0000, 8'd0); wait_reads;
+
+        // T10 writeback error: fill one set with dirty lines, inject a B
+        // response error on the next replacement, and require the associated
+        // write request to fail.  A later request proves MSHR/WB recovery.
+        begin : T10 integer j;
+          for (j=0;j<9;j=j+1)
+            issue_write_wait(4'd6, 32'h0500_0000 | (j<<16) | 32'h0000_0040, 32'h4000_0000|j);
+        end
+        s_bready = 1'b0;
+        inject_b_error = 1'b1;
+        issue_write(4'd7, 32'h050A_0000 | 32'h0000_0040, 32'hBAD0_0001);
+        while (!s_bvalid) @(posedge clk);
+        #1;
+        if (s_bresp != 2'b10 || s_bid != 4'd7) begin
+            $display("FAIL writeback error response id=%0d resp=%b", s_bid, s_bresp); errs=errs+1;
+        end
+        @(posedge clk); s_bready = 1'b1; inject_b_error = 1'b0;
+        issue_read(4'd7, 32'h050B_0000 | 32'h0000_0040, 8'd0); wait_reads;
+
+        // T11 reset while a refill is active.  Flush the abandoned upstream
+        // order entry, release reset, and prove the port can refill again.
+        issue_read(4'd14, 32'h0060_0000, 8'd0);
+        exp_v[14] = 1'b0;
+        @(negedge clk); rst_n = 1'b0;
+        repeat(2) @(posedge clk);
+        @(negedge clk); rst_n = 1'b1;
+        repeat(2) @(negedge clk);
+        issue_read(4'd14, 32'h0060_0000, 8'd0); wait_reads;
 
         repeat(20) @(negedge clk);
         $display("INFO l2nb concurrency: peak_mshr=%0d peak_wb=%0d hit_under_miss_beats=%0d", peak_mshr, peak_wb, hum_events);

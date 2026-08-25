@@ -587,9 +587,28 @@ refill. The standard gate reports
 `peak_mshr=8 peak_wb=4 hit_under_miss_beats=32` and
 `REGRESSION_TEST_SUCCESS l2nb (reads_checked=65)`. The same-cycle matching
 snoop/request case is backpressured before the invalidation edge. This closes
-the bounded snoop invalidate/writeback and ordering slice. Coherency/directory,
-arbitrary writeback error/reset interleavings, and CPU default-path selection
-remain open.
+the bounded snoop invalidate/writeback and ordering slice. Coherency/directory
+and CPU default-path selection remain open.
+
+### L2 nonblocking AXI error and reset recovery (2026-08-25)
+
+The L2-NB miss engine now distinguishes an observed AXI error from completion
+of the complete downstream transaction. A refill with a non-OKAY `RRESP` keeps
+`RREADY` asserted through the burst, never installs the line, marks the MSHR
+terminal only at `RLAST`, and resolves every merged waiter with `SLVERR`.
+A dirty-victim `BRESP` error skips the refill, propagates `SLVERR` to the
+associated order entries, and releases the writeback slot and MSHR. Failed
+MSHRs cannot accept new secondary waiters while they are being retired.
+
+The updated `make cache-concurrency-gate` passes with
+`peak_mshr=8 peak_wb=4 hit_under_miss_beats=33` and
+`REGRESSION_TEST_SUCCESS l2nb (reads_checked=68)`. Its directed tail covers
+merged refill errors, a clean retry after a failed refill, dirty-writeback
+error recovery, and reset during an active refill. The real CPU/L1/SoC
+`make l2-nonblocking-end-to-end-gate` and `make rtl-frontend-compile` also
+pass. This closes the bounded L2-NB AXI error/drain/resource-recovery slice;
+snoop-writeback error reporting, arbitrary error/reset interleavings, full
+coherency/directory behavior, and product signoff remain open.
 
 ### Micro-TLB and L1 transaction closure update (2026-08-10)
 
