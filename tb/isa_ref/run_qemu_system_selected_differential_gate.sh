@@ -29,6 +29,7 @@ run_gate vic make -C "${ROOT_DIR}" qemu-system-vic-differential-gate qemu-system
 run_gate fpu_single make -C "${ROOT_DIR}" qemu-system-fpu-single-differential-gate
 run_gate fpu_double make -C "${ROOT_DIR}" qemu-system-fpu-double-differential-gate
 run_gate fpu_cu1 make -C "${ROOT_DIR}" qemu-system-fpu-cu1-exception-differential-gate
+run_gate dma_sg make -C "${ROOT_DIR}" qemu-system-dma-sg-differential-gate
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # QEMU System Selected Differential Gate
@@ -36,13 +37,14 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Result: PASS
 - Machine: mips32-soc-ref
 - Sub-gates: ISA R2, branch-likely, exceptions, break/traps, DI/EI/WAIT,
-  BD/EPC, unaligned memory, peripheral/VIC, and opt-in FPU single/double/CU1.
+  BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/CU1,
+  and bounded DMA v2 SG.
 - Evidence: child logs in this directory and child completion reports under
   build/isa_ref/qemu_system_*.
 - Scope: selected bare-metal RTL/QEMU retire corpora through mailbox boundaries.
 - Non-claim: this is not full MIPS32 ISA compliance, complete privileged/MMU
   differential, complete IEEE-754/OS FPU ABI, Linux boot, or physical device
-  signoff. DMA long-form, MMU demand paging and OS-owned page tables remain
-  separate residuals.
+  signoff. DMA physical fault/reset timing, MMU demand paging and OS-owned
+  page tables remain separate residuals.
 EOF
 echo "QEMU system selected differential gate: PASS"

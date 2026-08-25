@@ -1536,3 +1536,7 @@ remains the compatibility baseline.
   rejected as unbounded rather than relaxing the comparator. Full per-retire
   DMA differential, physical AXI fault/reset timing and Linux DMA ABI remain
   open.
+- The dedicated SG corpus now passes strict RTL/QEMU retire comparison with
+  `TRACE_COMPARE_PASS`; `make qemu-system-dma-sg-differential-gate` is the
+  reproducible entry. A fixed 512-iteration delay makes the RTL bus-complete
+  STATUS observation deterministic against the immediate reference model.
