@@ -177,9 +177,10 @@ module tb_l2nb;
         end
     end endtask
 
-    integer ar_seen, snoop_ar_before;
-    integer dbg_ar_count=0;
+    integer ar_seen, snoop_ar_before, snoop_aw_before;
+    integer dbg_ar_count=0, dbg_aw_count=0;
     always @(posedge clk) if (rst_n && m_arvalid && m_arready) dbg_ar_count<=dbg_ar_count+1;
+    always @(posedge clk) if (rst_n && m_awvalid && m_awready) dbg_aw_count<=dbg_aw_count+1;
 
     // ---- Concurrency proof monitors (hierarchical peek into DUT) ----
     integer peak_mshr=0, peak_wb=0, hum_events=0;
@@ -218,7 +219,8 @@ module tb_l2nb;
         if (!snoop_ack || !snoop_hit) begin
             $display("FAIL clean snoop did not report a hit"); errs=errs+1;
         end
-        @(posedge clk); @(negedge clk); snoop_valid=1'b0;
+        @(posedge clk);
+        @(negedge clk); snoop_valid=1'b0;
         issue_read(4'd1, 32'h0000_1000, 8'd0); wait_reads;
         if ((dbg_ar_count-snoop_ar_before) != 1) begin
             $display("FAIL clean snoop did not force a refill"); errs=errs+1;
@@ -251,6 +253,20 @@ module tb_l2nb;
         // T5 write then read-back (write hit path + dirty), and write-miss alloc
         issue_write(4'd9, 32'h0000_1000, 32'hDEAD_BEEF);      // hit (line resident from T1)
         issue_read (4'd9, 32'h0000_1000, 8'd0); wait_reads;   // must read DEADBEEF
+        // T5b dirty-line snoop: snapshot the modified line, write it back,
+        // then force a refill and verify the scoreboard still sees DEADBEEF.
+        snoop_aw_before = dbg_aw_count;
+        @(negedge clk); snoop_addr=32'h0000_1000; snoop_valid=1'b1;
+        #1;
+        if (!snoop_ack || !snoop_hit) begin
+            $display("FAIL dirty snoop did not accept a WB slot"); errs=errs+1;
+        end
+        @(posedge clk);
+        @(negedge clk); snoop_valid=1'b0;
+        issue_read(4'd9, 32'h0000_1000, 8'd0); wait_reads;
+        if ((dbg_aw_count-snoop_aw_before) < 1) begin
+            $display("FAIL dirty snoop did not issue writeback"); errs=errs+1;
+        end
         issue_write(4'd10,32'h000A_0000, 32'hCAFE_0001);      // write miss -> alloc+merge
         issue_read (4'd10,32'h000A_0000, 8'd0); wait_reads;   // must read CAFE0001
 

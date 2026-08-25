@@ -580,10 +580,14 @@ known dirty resident lines, continuously replaces them in one set, and checks
 the backing-memory scoreboard. The fresh run reports
 `peak_mshr=8 peak_wb=4 hit_under_miss_beats=32` and
 `REGRESSION_TEST_SUCCESS l2nb (reads_checked=63)`. This closes the bounded
-four-entry dirty-victim buffering contract. The same test now also drives a
-clean-line snoop, checks `snoop_hit`, and proves the next access refills the
-invalidated line; the standard gate reports `reads_checked=64`. This closes
-only clean-line invalidation. L2 dirty-line snoop writeback, coherency/directory,
+four-entry dirty-victim buffering contract. The same test now also drives
+clean and dirty snoops: clean lines invalidate directly, while dirty lines are
+snapshotted to the WB buffer and drained through downstream `AW/W/B` before a
+refill. The standard gate reports
+`peak_mshr=8 peak_wb=4 hit_under_miss_beats=32` and
+`REGRESSION_TEST_SUCCESS l2nb (reads_checked=65)`. This closes the bounded
+snoop invalidate/writeback slice. Snoop/read same-cycle ordering,
+coherency/directory,
 arbitrary writeback error/reset interleavings, and CPU default-path selection
 remain open.
 

@@ -169,6 +169,8 @@ module l2_cache_nb #(
     reg [WAY_BITS-1:0]    snoop_hitway;
     reg                   snoop_dirty_hit;
     reg                   snoop_mshr_match;
+    reg                   snoop_wb_pending;
+    reg [WB_BITS-1:0]     snoop_wb_idx;
     integer si, sm;
     always @(*) begin
         snoop_way_hit = 1'b0;
@@ -188,8 +190,6 @@ module l2_cache_nb #(
                 snoop_mshr_match = 1'b1;
     end
     assign snoop_ack = snoop_valid;
-    assign snoop_hit = snoop_valid && snoop_way_hit &&
-                       !snoop_dirty_hit && !snoop_mshr_match;
 
     // Dirty victims are snapshotted at miss acceptance so replacement is
     // decoupled from the serial downstream AXI transaction.
@@ -321,6 +321,12 @@ module l2_cache_nb #(
             if (!wb_valid[wf]) begin wb_free_v=1'b1; wb_free_i=wf[WB_BITS-1:0]; end
     end
 
+    wire snoop_dirty_accept = snoop_valid && snoop_way_hit &&
+                               snoop_dirty_hit && !snoop_mshr_match &&
+                               !snoop_wb_pending && wb_free_v;
+    assign snoop_hit = snoop_valid && snoop_way_hit && !snoop_mshr_match &&
+                       (!snoop_dirty_hit || snoop_dirty_accept);
+
     // Ways already reserved by an in-flight MSHR for acc_set (avoid double-alloc)
     reg [WAYS-1:0] acc_reserved;
     integer rr;
@@ -377,6 +383,7 @@ module l2_cache_nb #(
     reg [MSHR_BITS-1:0] me_idx;      // MSHR being serviced
     reg [2:0]           me_cnt;      // beat counter (evict/refill)
     reg [LINE_W-1:0]    me_linebuf;  // assembled refill line
+    reg                 me_is_snoop_wb;
 
     // Pick an MSHR needing service (valid, not issued, not filled)
     reg me_pick_v; reg [MSHR_BITS-1:0] me_pick_i;
@@ -413,7 +420,8 @@ module l2_cache_nb #(
     wire acc_can_alloc = ord_free_v &&
                          (acc_hit || mshr_match ||
                           (mshr_free_v && acc_victim_ok &&
-                           (!acc_miss_needs_wb || wb_free_v)));
+                           (!acc_miss_needs_wb || wb_free_v))) &&
+                         !snoop_dirty_accept;
 
     // An accept that attaches a NEW waiter to an existing MSHR this cycle (used
     // to veto a same-cycle free of that MSHR). Covers AR-accept and the AW
@@ -443,10 +451,16 @@ module l2_cache_nb #(
         s_wready = accepting_aw_w;
 
         // master defaults
-        m_awvalid=1'b0; m_awid=4'd0; m_awaddr=mshr_eaddr[me_idx]; m_awlen=8'd7;
+        m_awvalid=1'b0; m_awid=4'd0;
+        m_awaddr = me_is_snoop_wb ?
+                   {3'b000, wb_line[snoop_wb_idx], 5'b00000} :
+                   mshr_eaddr[me_idx];
+        m_awlen=8'd7;
         m_awsize=3'b010; m_awburst=2'b01;
         m_wvalid=1'b0;
-        m_wdata = mshr_evict[me_idx] ?
+        m_wdata = me_is_snoop_wb ?
+                  wb_data[snoop_wb_idx][me_cnt*DATA_WIDTH +: DATA_WIDTH] :
+                  mshr_evict[me_idx] ?
                   wb_data[mshr_wb_idx[me_idx]][me_cnt*DATA_WIDTH +: DATA_WIDTH] :
                   data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt];
         m_wstrb=4'hF; m_wlast=(me_cnt==3'd7);
@@ -484,7 +498,10 @@ module l2_cache_nb #(
         if (!rst_n) begin
             acc_state <= ACC_IDLE; acc_wbeat <= 3'd0; age_ctr <= 8'd0;
             me_state <= ME_IDLE; me_idx <= 0; me_cnt <= 3'd0; me_linebuf <= 0;
+            me_is_snoop_wb <= 1'b0;
             rsp_active <= 1'b0; rsp_idx <= 0;
+            snoop_wb_pending <= 1'b0;
+            snoop_wb_idx <= {WB_BITS{1'b0}};
             for (k=0; k<ORD_DEPTH; k=k+1) begin ord_st[k] <= OST_EMPTY; ord_beat[k] <= 8'd0; end
             for (k=0; k<N_MSHR; k=k+1) begin
                 mshr_valid[k] <= 1'b0; mshr_issued[k] <= 1'b0;
@@ -494,9 +511,22 @@ module l2_cache_nb #(
             for (k=0; k<WB_DEPTH; k=k+1) wb_valid[k] <= 1'b0;
             // retention arrays: not cleared (see l2_cache_caching rationale)
         end else begin
-            // A clean snoop can invalidate immediately.  Dirty lines are
-            // deliberately left intact until a writeback-aware coherency
-            // protocol is implemented; the hit output is low for that case.
+            // Snapshot a dirty snooped line before invalidating it. The miss
+            // engine drains this entry through the same AXI AW/W/B path used
+            // by dirty replacement victims.
+            if (snoop_dirty_accept) begin
+                snoop_wb_pending <= 1'b1;
+                snoop_wb_idx <= wb_free_i;
+                wb_valid[wb_free_i] <= 1'b1;
+                wb_line[wb_free_i] <= {tag_ram[snoop_set][snoop_hitway],
+                                        snoop_set};
+                for (k=0; k<WORDS_PER_LN; k=k+1)
+                    wb_data[wb_free_i][k*DATA_WIDTH +: DATA_WIDTH] <=
+                        data_ram[snoop_set][snoop_hitway][k];
+                valid_ram[snoop_set][snoop_hitway] <= 1'b0;
+                dirty_ram[snoop_set][snoop_hitway] <= 1'b0;
+            end
+            // A clean snoop can invalidate immediately.
             if (snoop_valid && snoop_way_hit && !snoop_dirty_hit &&
                 !snoop_mshr_match) begin
                 valid_ram[snoop_set][snoop_hitway] <= 1'b0;
@@ -542,7 +572,7 @@ module l2_cache_nb #(
                         if (valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) begin
                             mshr_wb_idx[mshr_free_i] <= wb_free_i;
                             wb_valid[wb_free_i] <= 1'b1;
-                            wb_line[wb_free_i] <= {tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
+                            wb_line[wb_free_i] <= {tag_ram[acc_set][acc_victim], acc_set};
                             for (k=0; k<WORDS_PER_LN; k=k+1)
                                 wb_data[wb_free_i][k*DATA_WIDTH +: DATA_WIDTH] <=
                                     data_ram[acc_set][acc_victim][k];
@@ -582,7 +612,7 @@ module l2_cache_nb #(
                         if (valid_ram[acc_set][acc_victim] && dirty_ram[acc_set][acc_victim]) begin
                             mshr_wb_idx[mshr_free_i] <= wb_free_i;
                             wb_valid[wb_free_i] <= 1'b1;
-                            wb_line[wb_free_i] <= {tag_ram[acc_set][acc_victim], acc_set, {OFFSET_BITS{1'b0}}};
+                            wb_line[wb_free_i] <= {tag_ram[acc_set][acc_victim], acc_set};
                             for (k=0; k<WORDS_PER_LN; k=k+1)
                                 wb_data[wb_free_i][k*DATA_WIDTH +: DATA_WIDTH] <=
                                     data_ram[acc_set][acc_victim][k];
@@ -623,8 +653,16 @@ module l2_cache_nb #(
             // ---------------------------------------------------------------
             case (me_state)
                 ME_IDLE: begin
-                    if (me_pick_v) begin
+                    // A dirty snoop must reach memory before a younger miss can
+                    // refill the invalidated line; otherwise the refill could
+                    // observe the pre-writeback backing value.
+                    if (snoop_wb_pending) begin
+                        me_is_snoop_wb <= 1'b1;
+                        me_cnt <= 3'd0;
+                        me_state <= ME_EVICT_AW;
+                    end else if (me_pick_v) begin
                         me_idx <= me_pick_i;
+                        me_is_snoop_wb <= 1'b0;
                         mshr_issued[me_pick_i] <= 1'b1;
                         me_cnt <= 3'd0;
                         if (mshr_evict[me_pick_i]) me_state <= ME_EVICT_AW;
@@ -637,8 +675,15 @@ module l2_cache_nb #(
                                  else me_cnt <= me_cnt + 1'b1;
                              end
                 ME_EVICT_B:  if (m_bvalid) begin
-                                 wb_valid[mshr_wb_idx[me_idx]] <= 1'b0;
-                                 me_state <= ME_REFILL_AR;
+                                 if (me_is_snoop_wb) begin
+                                     wb_valid[snoop_wb_idx] <= 1'b0;
+                                     snoop_wb_pending <= 1'b0;
+                                     me_is_snoop_wb <= 1'b0;
+                                     me_state <= ME_IDLE;
+                                 end else begin
+                                     wb_valid[mshr_wb_idx[me_idx]] <= 1'b0;
+                                     me_state <= ME_REFILL_AR;
+                                 end
                              end
                 ME_REFILL_AR: if (m_arready) begin me_cnt <= 3'd0; me_state <= ME_REFILL_R; end
                 ME_REFILL_R: if (m_rvalid) begin
