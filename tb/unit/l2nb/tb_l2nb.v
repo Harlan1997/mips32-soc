@@ -33,7 +33,7 @@ module tb_l2nb;
     wire [1:0]  m_arburst; wire m_arvalid; reg m_arready;
     reg  [3:0]  m_rid; reg [31:0] m_rdata; reg [1:0] m_rresp; reg m_rlast; reg m_rvalid; wire m_rready;
 
-    l2_cache_nb #(.N_MSHR(8), .ORD_DEPTH(8)) dut (
+    l2_cache_nb #(.N_MSHR(8), .ORD_DEPTH(8), .WB_DEPTH(4)) dut (
         .clk(clk), .rst_n(rst_n),
         .s_awid(s_awid),.s_awaddr(s_awaddr),.s_awlen(s_awlen),.s_awsize(s_awsize),
         .s_awburst(s_awburst),.s_awvalid(s_awvalid),.s_awready(s_awready),
@@ -176,15 +176,18 @@ module tb_l2nb;
     always @(posedge clk) if (rst_n && m_arvalid && m_arready) dbg_ar_count<=dbg_ar_count+1;
 
     // ---- Concurrency proof monitors (hierarchical peek into DUT) ----
-    integer peak_mshr=0, hum_events=0;
-    integer cm, cur_mshr, cur_unfilled;
+    integer peak_mshr=0, peak_wb=0, hum_events=0;
+    integer cm, cw, cur_mshr, cur_unfilled, cur_wb;
     always @(posedge clk) if (rst_n) begin
-        cur_mshr=0; cur_unfilled=0;
+        cur_mshr=0; cur_unfilled=0; cur_wb=0;
         for (cm=0; cm<8; cm=cm+1) begin
             if (dut.mshr_valid[cm]) cur_mshr=cur_mshr+1;
             if (dut.mshr_valid[cm] && !dut.mshr_filled[cm]) cur_unfilled=cur_unfilled+1;
         end
+        for (cw=0; cw<4; cw=cw+1)
+            if (dut.wb_valid[cw]) cur_wb=cur_wb+1;
         if (cur_mshr > peak_mshr) peak_mshr=cur_mshr;
+        if (cur_wb > peak_wb) peak_wb=cur_wb;
         // a read beat delivered to the master while a miss is still unfilled =
         // hit-under-miss (that response did not wait for the pending miss).
         if (s_rvalid && s_rready && cur_unfilled>0) hum_events=hum_events+1;
@@ -239,6 +242,25 @@ module tb_l2nb;
           for (j=0;j<12;j=j+1) begin issue_read(4'd12,(j<<16)|32'h0000_0040,8'd0); wait_reads; end
         end
 
+        // T6b establish four known dirty resident lines, then fill all four
+        // dirty-victim slots before the serial downstream engine can retire
+        // them.  All addresses map to one set; the replacement misses must be
+        // accepted only while WB slots remain available.
+        begin : T6B integer j;
+          for (j=20;j<24;j=j+1)
+            issue_write(4'd2, (j<<16)|32'h0000_0040, 32'h2000_0000|j);
+          for (j=20;j<24;j=j+1) begin
+            issue_read(4'd3, (j<<16)|32'h0000_0040,8'd0);
+            wait_reads;
+          end
+          for (j=24;j<28;j=j+1)
+            issue_write(4'd4, (j<<16)|32'h0000_0040, 32'h3000_0000|j);
+          for (j=24;j<28;j=j+1) begin
+            issue_read(4'd5, (j<<16)|32'h0000_0040,8'd0);
+            wait_reads;
+          end
+        end
+
         // T7 CONCURRENT STRESS — no draining between ops. Issue reads to distinct
         // fresh lines with distinct ids back-to-back (miss-under-miss, fills the
         // MSHR file + order queue, exercises backpressure via s_arready), then a
@@ -261,8 +283,9 @@ module tb_l2nb;
         wait_reads;
 
         repeat(20) @(negedge clk);
-        $display("INFO l2nb concurrency: peak_mshr=%0d hit_under_miss_beats=%0d", peak_mshr, hum_events);
+        $display("INFO l2nb concurrency: peak_mshr=%0d peak_wb=%0d hit_under_miss_beats=%0d", peak_mshr, peak_wb, hum_events);
         if (peak_mshr < 2) begin $display("FAIL no miss-under-miss observed"); errs=errs+1; end
+        if (peak_wb < 4) begin $display("FAIL WB buffer did not reach four entries (peak=%0d)", peak_wb); errs=errs+1; end
         if (hum_events < 1) begin $display("FAIL no hit-under-miss observed"); errs=errs+1; end
         if (errs==0) $display("REGRESSION_TEST_SUCCESS l2nb (reads_checked=%0d)", reads_checked);
         else         $display("REGRESSION_TEST_FAIL errs=%0d", errs);

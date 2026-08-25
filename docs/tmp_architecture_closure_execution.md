@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-25 L2 nonblocking dirty writeback buffer closure
+
+- `rtl/cache/l2_cache_nb.v` now has an opt-in fixed `WB_DEPTH=4` dirty-victim
+  buffer. Miss acceptance snapshots the victim line/data, blocks dirty
+  replacement when no slot is free, drives downstream `AW/W` from the
+  snapshot, and frees the slot after `B`.
+- The L2 unit test fixes the four-entry configuration and adds a known-dirty
+  four-line replacement pressure sequence. Fresh evidence:
+  `RUN_DIR=build/unit_tb/cache_concurrency_wb_depth4_retry
+  tb/unit/cache/run_concurrency_gate.sh` -> `peak_mshr=8 peak_wb=4`,
+  `hit_under_miss_beats=32`, `reads_checked=63`, PASS.
+- `L2_NONBLOCKING=1 make soc-smoke` and `make rtl-frontend-compile` also pass.
+- Remaining boundary: this is a bounded single-downstream-transaction L2
+  writeback contract; complete L2 coherency/snoop/directory, arbitrary
+  writeback error/reset timing, and default-path selection are still open.
+
 ### 2026-08-24 strict URG exclusion metadata closure
 
 - `make coverage-strict-clean-gate` now passes for both the merged UVM VDB and
