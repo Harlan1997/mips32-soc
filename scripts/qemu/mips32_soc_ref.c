@@ -48,6 +48,11 @@ typedef struct MIPS32SocRefState {
     MemoryRegion *sram;
     MemoryRegion uart;
     MemoryRegion malta_uart;
+    MemoryRegion dma_legacy;
+    MemoryRegion qspi_window;
+    MemoryRegion ddr_status_window;
+    MemoryRegion uart_mmu_alias;
+    MemoryRegion uart_mmu_odd_alias;
     MemoryRegion apb;
     MemoryRegion apb_mmu_alias;
     MemoryRegion apb_mmu_odd_alias;
@@ -402,6 +407,91 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
             soc_ref_uart_update_irq(s);
     }
 }
+
+static const MemoryRegionOps soc_ref_uart_ops = {
+    .read = soc_ref_uart_read,
+    .write = soc_ref_uart_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = {
+        .min_access_size = 1,
+        .max_access_size = 4,
+    },
+};
+
+static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size);
+static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
+                              unsigned size);
+
+static uint64_t soc_ref_dma_legacy_read(void *opaque, hwaddr addr,
+                                        unsigned size)
+{
+    return soc_ref_apb_read(opaque, addr + 0x3000, size);
+}
+
+static void soc_ref_dma_legacy_write(void *opaque, hwaddr addr,
+                                     uint64_t data, unsigned size)
+{
+    soc_ref_apb_write(opaque, addr + 0x3000, data, size);
+}
+
+static const MemoryRegionOps soc_ref_dma_legacy_ops = {
+    .read = soc_ref_dma_legacy_read,
+    .write = soc_ref_dma_legacy_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = {
+        .min_access_size = 4,
+        .max_access_size = 4,
+    },
+};
+
+static uint64_t soc_ref_window_read(void *opaque, hwaddr addr, unsigned size,
+                                    hwaddr base)
+{
+    return soc_ref_apb_read(opaque, addr + base, size);
+}
+
+static void soc_ref_window_write(void *opaque, hwaddr addr, uint64_t data,
+                                 unsigned size, hwaddr base)
+{
+    soc_ref_apb_write(opaque, addr + base, data, size);
+}
+
+static uint64_t soc_ref_qspi_read(void *opaque, hwaddr addr, unsigned size)
+{
+    return soc_ref_window_read(opaque, addr, size, 0x5000);
+}
+
+static void soc_ref_qspi_write(void *opaque, hwaddr addr, uint64_t data,
+                               unsigned size)
+{
+    soc_ref_window_write(opaque, addr, data, size, 0x5000);
+}
+
+static uint64_t soc_ref_ddr_status_read(void *opaque, hwaddr addr,
+                                        unsigned size)
+{
+    return soc_ref_window_read(opaque, addr, size, 0x6000);
+}
+
+static void soc_ref_ddr_status_write(void *opaque, hwaddr addr,
+                                     uint64_t data, unsigned size)
+{
+    soc_ref_window_write(opaque, addr, data, size, 0x6000);
+}
+
+static const MemoryRegionOps soc_ref_qspi_ops = {
+    .read = soc_ref_qspi_read,
+    .write = soc_ref_qspi_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = { .min_access_size = 4, .max_access_size = 4 },
+};
+
+static const MemoryRegionOps soc_ref_ddr_status_ops = {
+    .read = soc_ref_ddr_status_read,
+    .write = soc_ref_ddr_status_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = { .min_access_size = 4, .max_access_size = 4 },
+};
 
 /* Optional compatibility endpoint for a preloaded upstream Malta U-Boot.
  * The normal SoC UART is a 32-bit MMIO contract; Malta's NS16550 node uses
@@ -1435,6 +1525,26 @@ static void mips32_soc_ref_init(MachineState *machine)
     memory_region_init_io(&state->apb, NULL, &soc_ref_apb_ops, state,
                           "mips32-soc-ref.apb", SOC_APB_SIZE);
     memory_region_add_subregion(system_memory, SOC_APB_BASE, &state->apb);
+    /* Keep the UART as a first-class device endpoint. The APB region remains
+     * the owner of all other CSRs, while this higher-priority subregion makes
+     * the console path explicit for both cached and MMU-translated guests. */
+    memory_region_init_io(&state->uart, NULL, &soc_ref_uart_ops, state,
+                          "mips32-soc-ref.uart", SOC_UART_SIZE);
+    memory_region_add_subregion_overlap(system_memory, SOC_UART_BASE,
+                                        &state->uart, 1);
+    memory_region_init_io(&state->dma_legacy, NULL, &soc_ref_dma_legacy_ops,
+                          state, "mips32-soc-ref.dma-legacy", 0x10);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x3000,
+                                        &state->dma_legacy, 1);
+    memory_region_init_io(&state->qspi_window, NULL, &soc_ref_qspi_ops,
+                          state, "mips32-soc-ref.qspi-window", 0x200);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x5000,
+                                        &state->qspi_window, 1);
+    memory_region_init_io(&state->ddr_status_window, NULL,
+                          &soc_ref_ddr_status_ops, state,
+                          "mips32-soc-ref.ddr-status-window", 0x100);
+    memory_region_add_subregion_overlap(system_memory, SOC_APB_BASE + 0x6000,
+                                        &state->ddr_status_window, 1);
     /* The RTL product-MMU firmware uses the prototype PFN encoding
      * 0x01000217 for its C000_9000 wired mapping.  Under standard MIPS
      * EntryLo decoding that resolves to physical 0x0400_0000, while the
@@ -1451,6 +1561,16 @@ static void mips32_soc_ref_init(MachineState *machine)
                              0, SOC_APB_SIZE);
     memory_region_add_subregion(system_memory, 0x04001000ULL,
                                 &state->apb_mmu_odd_alias);
+    memory_region_init_alias(&state->uart_mmu_alias, NULL,
+                             "mips32-soc-ref.uart-mmu-alias", &state->uart,
+                             0, SOC_UART_SIZE);
+    memory_region_add_subregion_overlap(system_memory, 0x04000000ULL,
+                                        &state->uart_mmu_alias, 1);
+    memory_region_init_alias(&state->uart_mmu_odd_alias, NULL,
+                             "mips32-soc-ref.uart-mmu-odd-alias", &state->uart,
+                             0, SOC_UART_SIZE);
+    memory_region_add_subregion_overlap(system_memory, 0x04001000ULL,
+                                        &state->uart_mmu_odd_alias, 1);
 
     memory_region_init_ram(&state->ddr, NULL,
                            "mips32-soc-ref.ddr", SOC_DDR_SIZE, &error_fatal);
