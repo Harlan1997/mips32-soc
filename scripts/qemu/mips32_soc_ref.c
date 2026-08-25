@@ -59,8 +59,6 @@ typedef struct MIPS32SocRefState {
     MemoryRegion apb;
     MemoryRegion apb_mmu_alias;
     MemoryRegion apb_mmu_odd_alias;
-    MemoryRegion wdt_legacy_alias;
-    MemoryRegion boot_status_legacy_alias;
     MemoryRegion ddr;
     MemoryRegion flash;
     MemoryRegion flash_boot_alias;
@@ -1874,18 +1872,10 @@ static void mips32_soc_ref_init(MachineState *machine)
                              0, SOC_APB_SIZE);
     memory_region_add_subregion(system_memory, 0x04001000ULL,
                                 &state->apb_mmu_odd_alias);
-    /* Keep narrow low-physical aliases for reset images whose prototype
-     * identity TLB resolves the upper APB half through the SRAM window. */
-    memory_region_init_alias(&state->wdt_legacy_alias, NULL,
-                             "mips32-soc-ref.wdt-legacy-alias", &state->apb,
-                             0x7000, 0x1000);
-    memory_region_add_subregion_overlap(system_memory, 0x00007000ULL,
-                                        &state->wdt_legacy_alias, 2);
-    memory_region_init_alias(&state->boot_status_legacy_alias, NULL,
-                             "mips32-soc-ref.boot-status-legacy-alias",
-                             &state->apb, 0x8000, 0x1000);
-    memory_region_add_subregion_overlap(system_memory, 0x00008000ULL,
-                                        &state->boot_status_legacy_alias, 2);
+    /* 0x7000 and 0x8000 are real physical SRAM addresses.  Do not overlay
+     * them with the APB WDT/boot-status windows: the QEMU WDT contract uses
+     * the architecturally mapped uncached APB aliases (0xa0007000 and
+     * 0xa0008000), and low aliases would corrupt ordinary SRAM workloads. */
     memory_region_init_alias(&state->uart_mmu_alias, NULL,
                              "mips32-soc-ref.uart-mmu-alias", &state->uart,
                              0, SOC_UART_SIZE);

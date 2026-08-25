@@ -106,11 +106,29 @@ printf ' %q' "${qemu_cmd[@]}" >>"${RUN_DIR}/qemu_command.txt"
 printf '\n' >>"${RUN_DIR}/qemu_command.txt"
 status=124
 attempts=1
+qemu_exit_note=""
 for attempt in 1 2; do
     attempts=${attempt}
-    timeout "${QEMU_TIMEOUT:-30}" "${qemu_cmd[@]}" \
+    # The capture is deliberately non-interactive.  Closing the inherited
+    # terminal input prevents QEMU from being stopped by job-control signals
+    # when a caller launches the gate from a PTY (for example, make via VCS).
+    timeout "${QEMU_TIMEOUT:-30}" "${qemu_cmd[@]}" </dev/null \
         >"${RUN_DIR}/qemu_stdout.log" 2>"${RUN_DIR}/qemu_stderr.log"
     status=$?
+    # A QEMU process can outlive the final guest shutdown long enough for
+    # timeout(1) to report 124 even after the plugin flushed a complete
+    # architectural capture. Preserve that first complete capture; retrying
+    # would delete valid evidence and can turn a passing guest into a false
+    # failure if the second startup races the first process teardown.
+    if [[ ${status} -eq 124 && ${attempt} -eq 1 &&
+          -s "${RUN_DIR}/qemu_instruction_events.jsonl" &&
+          -s "${RUN_DIR}/qemu_state.jsonl" &&
+          -s "${RUN_DIR}/qemu_registers.txt" ]]; then
+        qemu_exit_note="timeout after complete capture (status ${status}, attempts ${attempts})"
+        echo "QEMU system retire capture: ${qemu_exit_note}" >&2
+        status=0
+        break
+    fi
     [[ ${status} -eq 124 && ${attempt} -eq 1 ]] || break
 done
 set -e
