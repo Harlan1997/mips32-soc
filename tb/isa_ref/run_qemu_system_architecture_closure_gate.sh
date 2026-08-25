@@ -28,6 +28,8 @@ run_gate mmu_os_pressure \
     make -C "${ROOT_DIR}" qemu-system-mmu-os-pressure-gate
 run_gate fpu_fpe_boundary_differential \
     make -C "${ROOT_DIR}" qemu-system-fpu-fpe-boundary-differential-gate
+run_gate fpu_fpe_double_differential \
+    make -C "${ROOT_DIR}" qemu-system-fpu-fpe-double-differential-gate
 run_gate linux_userspace_marker \
     make -C "${ROOT_DIR}" linux-boot-build-gate
 
