@@ -47,6 +47,7 @@ typedef struct MIPS32SocRefState {
     MemoryRegion mailbox;
     MemoryRegion *sram;
     MemoryRegion uart;
+    MemoryRegion malta_uart;
     MemoryRegion apb;
     MemoryRegion apb_mmu_alias;
     MemoryRegion apb_mmu_odd_alias;
@@ -147,6 +148,7 @@ static uint32_t soc_ref_irq_replay_pic_mask;
 static char *soc_ref_dma_event_trace_path;
 static uint32_t soc_ref_dma_fault_mode;
 static uint32_t soc_ref_gpio_input;
+static bool soc_ref_malta_uboot_compat;
 static uint32_t soc_ref_ddr_fault_mode;
 static bool soc_ref_software_mmu_guest;
 static bool soc_ref_software_mmu_bootrom_guest;
@@ -213,6 +215,17 @@ static void soc_ref_set_qspi_image(Object *obj, const char *value,
 {
     g_free(soc_ref_qspi_image);
     soc_ref_qspi_image = g_strdup(value);
+}
+
+static bool soc_ref_get_malta_uboot_compat(Object *obj, Error **errp)
+{
+    return soc_ref_malta_uboot_compat;
+}
+
+static void soc_ref_set_malta_uboot_compat(Object *obj, bool value,
+                                           Error **errp)
+{
+    soc_ref_malta_uboot_compat = value;
 }
 
 static char *soc_ref_get_irq_schedule(Object *obj, Error **errp)
@@ -389,6 +402,47 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
             soc_ref_uart_update_irq(s);
     }
 }
+
+/* Optional compatibility endpoint for a preloaded upstream Malta U-Boot.
+ * The normal SoC UART is a 32-bit MMIO contract; Malta's NS16550 node uses
+ * byte-spaced registers at the legacy PCI I/O address. */
+static uint64_t soc_ref_malta_uart_read(void *opaque, hwaddr addr,
+                                        unsigned size)
+{
+    MIPS32SocRefState *s = opaque;
+    unsigned reg = addr & 7;
+
+    if (reg == 2)
+        return (s->uart_regs[1] & 0x2) ? 0x2 : 0x1;
+    if (reg == 5)
+        return 0x60;
+    return reg < ARRAY_SIZE(s->uart_regs) ? s->uart_regs[reg] : 0;
+}
+
+static void soc_ref_malta_uart_write(void *opaque, hwaddr addr,
+                                     uint64_t data, unsigned size)
+{
+    MIPS32SocRefState *s = opaque;
+    unsigned reg = addr & 7;
+
+    if (reg == 0) {
+        putchar(data & 0xff);
+        fflush(stdout);
+        return;
+    }
+    if (reg < ARRAY_SIZE(s->uart_regs))
+        s->uart_regs[reg] = data;
+}
+
+static const MemoryRegionOps soc_ref_malta_uart_ops = {
+    .read = soc_ref_malta_uart_read,
+    .write = soc_ref_malta_uart_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = {
+        .min_access_size = 1,
+        .max_access_size = 4,
+    },
+};
 
 static void soc_ref_update_irq(MIPS32SocRefState *s)
 {
@@ -1352,6 +1406,12 @@ static void mips32_soc_ref_init(MachineState *machine)
     memory_region_init_ram(&state->bootrom, NULL,
                            "mips32-soc-ref.bootrom", SOC_BOOTROM_SIZE,
                            &error_fatal);
+    if (soc_ref_malta_uboot_compat) {
+        /* CONFIG_TARGET_MALTA probes this YAMON revision field before its
+         * low-level board setup. The value selects the GT64120 path. */
+        stl_le_p(memory_region_get_ram_ptr(&state->bootrom) + 0x10,
+                 1U << 10);
+    }
     memory_region_add_subregion(system_memory, SOC_BOOTROM_BASE,
                                 &state->bootrom);
     memory_region_init_alias(bootrom_alias, NULL,
@@ -1359,6 +1419,18 @@ static void mips32_soc_ref_init(MachineState *machine)
                              &state->bootrom, 0, SOC_BOOTROM_SIZE);
     memory_region_add_subregion(system_memory, 0xbfc00000ULL,
                                 bootrom_alias);
+
+    if (soc_ref_malta_uboot_compat) {
+        /* Malta's GT64120 PCI I/O window is physical 0x18000000 and its
+         * serial node is at +0x3f8. This alias is opt-in and deliberately
+         * does not change the vendor-neutral SoC UART address. */
+        memory_region_init_io(&state->malta_uart, NULL,
+                              &soc_ref_malta_uart_ops, state,
+                              "mips32-soc-ref.malta-uart", 0x40);
+        memory_region_add_subregion_overlap(system_memory,
+                                             0x180003f8ULL,
+                                             &state->malta_uart, 2);
+    }
 
     memory_region_init_io(&state->apb, NULL, &soc_ref_apb_ops, state,
                           "mips32-soc-ref.apb", SOC_APB_SIZE);
@@ -1499,6 +1571,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_str(OBJECT_CLASS(mc), "qspi-image",
                                   soc_ref_get_qspi_image,
                                   soc_ref_set_qspi_image);
+    object_class_property_add_bool(OBJECT_CLASS(mc), "malta-u-boot-compat",
+                                   soc_ref_get_malta_uboot_compat,
+                                   soc_ref_set_malta_uboot_compat);
     object_class_property_add_str(OBJECT_CLASS(mc), "irq-schedule",
                                   soc_ref_get_irq_schedule,
                                   soc_ref_set_irq_schedule);

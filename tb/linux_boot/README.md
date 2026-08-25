@@ -64,6 +64,14 @@ toolchain. This is a source/build prerequisite only: Malta is not the
 `mips32-soc-ref` machine, so the gate does not claim QSPI loading, DDR init,
 SoC-specific U-Boot support, or Linux handoff.
 
+The diagnostic `make linux-uboot-custom-machine-probe` target uses a separate
+U-Boot build with `CONFIG_SKIP_LOWLEVEL_INIT` and the opt-in
+`malta-u-boot-compat=on` QEMU property. It proves that the custom machine can
+load the ELF through its kseg1 flash alias and execute into U-Boot
+`board_init_f`. The probe currently stops during board initialization because
+the image still contains Malta board code; it is evidence for the porting
+boundary, not a custom-machine boot gate.
+
 ## Boot flow (target)
 
 ```
