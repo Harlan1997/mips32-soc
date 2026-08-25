@@ -92,6 +92,39 @@ _start:
 	li	$v0, 4006
 	syscall
 	nop
+	/* Exercise the process heap separately from mmap-managed VMAs. */
+	move	$a0, $zero
+	li	$v0, 4045
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, vm_fail
+	nop
+	move	$s6, $v0
+	addiu	$s7, $s6, 0x5000
+	move	$a0, $s7
+	li	$v0, 4045
+	syscall
+	nop
+	bne	$v0, $s7, vm_fail
+	nop
+	sw	$zero, 0($s6)
+	sw	$zero, 0x1000($s6)
+	sw	$zero, 0x2000($s6)
+	sw	$zero, 0x3000($s6)
+	sw	$zero, 0x4000($s6)
+	move	$a0, $s6
+	li	$v0, 4045
+	syscall
+	nop
+	bne	$v0, $s6, vm_fail
+	nop
+	move	$a0, $s0
+	la	$a1, brk_success_marker
+	li	$a2, brk_success_marker_end-brk_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	move	$a0, $s0
 	la	$a1, vm_success_marker
 	li	$a2, vm_success_marker_end-vm_success_marker
@@ -212,6 +245,9 @@ fork_success_marker_end:
 vm_success_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_SUCCESS\n"
 vm_success_marker_end:
+brk_success_marker:
+	.ascii "MIPS32_SOC_LINUX_BRK_SUCCESS\n"
+brk_success_marker_end:
 vm_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_FAILURE\n"
 vm_fail_marker_end:
