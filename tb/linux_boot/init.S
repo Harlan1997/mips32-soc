@@ -47,6 +47,35 @@ _start:
 	sw	$zero, 0x2000($s3)
 	sw	$zero, 0x3000($s3)
 	sw	$zero, 0x4000($s3)
+	/* Change the anonymous VMA to read-only, read every page, then restore
+	 * read/write permissions before releasing it. */
+	move	$a0, $s3
+	li	$a1, 0x5000
+	li	$a2, 1
+	li	$v0, 4125
+	syscall
+	nop
+	bnez	$v0, vm_fail
+	nop
+	lw	$t0, 0($s3)
+	lw	$t0, 0x1000($s3)
+	lw	$t0, 0x2000($s3)
+	lw	$t0, 0x3000($s3)
+	lw	$t0, 0x4000($s3)
+	move	$a0, $s3
+	li	$a1, 0x5000
+	li	$a2, 3
+	li	$v0, 4125
+	syscall
+	nop
+	bnez	$v0, vm_fail
+	nop
+	move	$a0, $s0
+	la	$a1, mprotect_success_marker
+	li	$a2, mprotect_success_marker_end-mprotect_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	move	$a0, $s3
 	li	$a1, 0x5000
 	li	$v0, 4091
@@ -283,6 +312,9 @@ sleep_success_marker_end:
 yield_success_marker:
 	.ascii "MIPS32_SOC_LINUX_YIELD_SUCCESS\n"
 yield_success_marker_end:
+mprotect_success_marker:
+	.ascii "MIPS32_SOC_LINUX_MPROTECT_SUCCESS\n"
+mprotect_success_marker_end:
 vm_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_FAILURE\n"
 vm_fail_marker_end:

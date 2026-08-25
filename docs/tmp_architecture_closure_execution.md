@@ -1676,3 +1676,14 @@ remains the compatibility baseline.
 - This remains bounded single-CPU scheduler evidence; it does not establish
   Linux scheduler policy/ABI, SMP scheduling, shootdown coordination, or RTL
   system-mode Linux differential.
+
+### 2026-08-26 Linux mmap permission-transition pressure
+
+- The anonymous five-page mapping is now changed to read-only with O32
+  `mprotect`, read at every page offset, restored to read/write, and then
+  unmapped. The gate requires `MIPS32_SOC_LINUX_MPROTECT_SUCCESS`.
+- Fresh `make linux-boot-build-gate` passes with the mmap, mprotect, brk,
+  nanosleep, sched_yield, dual-exec and dual-wait markers.
+- This verifies a bounded user-visible VMA permission transition and clean
+  recovery. It does not claim a deliberate write-protection fault/recovery,
+  complete Linux page-table policy, SMP shootdown, or RTL Linux differential.
