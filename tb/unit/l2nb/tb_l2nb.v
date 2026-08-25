@@ -215,12 +215,17 @@ module tb_l2nb;
         // NB L2 clean invalidate is visible at the downstream AXI boundary.
         snoop_ar_before = dbg_ar_count;
         @(negedge clk); snoop_addr=32'h0000_1000; snoop_valid=1'b1;
+        s_arid=4'd14; s_araddr=32'h0000_1000; s_arlen=0; s_arsize=3'b010;
+        s_arburst=2'b01; s_arvalid=1'b1;
         #1;
         if (!snoop_ack || !snoop_hit) begin
             $display("FAIL clean snoop did not report a hit"); errs=errs+1;
         end
+        if (s_arready) begin
+            $display("FAIL snoop did not backpressure same-cycle read"); errs=errs+1;
+        end
         @(posedge clk);
-        @(negedge clk); snoop_valid=1'b0;
+        @(negedge clk); snoop_valid=1'b0; s_arvalid=1'b0;
         issue_read(4'd1, 32'h0000_1000, 8'd0); wait_reads;
         if ((dbg_ar_count-snoop_ar_before) != 1) begin
             $display("FAIL clean snoop did not force a refill"); errs=errs+1;

@@ -19,8 +19,9 @@
   writeback contract. The NB L2 now has clean-line invalidate and dirty-line
   snoop writeback through `AW/W/B`; the standard gate reports
   `peak_wb=4` and `reads_checked=65` after both snoop-forced refills.
-  Same-cycle snoop/request ordering, complete coherency/directory, arbitrary
-  writeback error/reset timing, and default-path selection are still open.
+  Same-cycle matching snoop/request ordering is backpressured and covered;
+  complete coherency/directory, arbitrary writeback error/reset timing, and
+  default-path selection are still open.
 
 ### 2026-08-24 strict URG exclusion metadata closure
 
