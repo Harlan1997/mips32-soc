@@ -33,6 +33,11 @@ module tb_l2nb;
     wire [1:0]  m_arburst; wire m_arvalid; reg m_arready;
     reg  [3:0]  m_rid; reg [31:0] m_rdata; reg [1:0] m_rresp; reg m_rlast; reg m_rvalid; wire m_rready;
 
+    reg [31:0] snoop_addr;
+    reg        snoop_valid;
+    wire       snoop_ack;
+    wire       snoop_hit;
+
     l2_cache_nb #(.N_MSHR(8), .ORD_DEPTH(8), .WB_DEPTH(4)) dut (
         .clk(clk), .rst_n(rst_n),
         .s_awid(s_awid),.s_awaddr(s_awaddr),.s_awlen(s_awlen),.s_awsize(s_awsize),
@@ -51,7 +56,8 @@ module tb_l2nb;
         .m_arburst(m_arburst),.m_arvalid(m_arvalid),.m_arready(m_arready),
         .m_rid(m_rid),.m_rdata(m_rdata),.m_rresp(m_rresp),.m_rlast(m_rlast),
         .m_rvalid(m_rvalid),.m_rready(m_rready),
-        .snoop_addr(32'd0),.snoop_valid(1'b0),.snoop_ack(),.snoop_hit()
+        .snoop_addr(snoop_addr),.snoop_valid(snoop_valid),
+        .snoop_ack(snoop_ack),.snoop_hit(snoop_hit)
     );
 
     integer errs=0;
@@ -171,7 +177,7 @@ module tb_l2nb;
         end
     end endtask
 
-    integer ar_seen;
+    integer ar_seen, snoop_ar_before;
     integer dbg_ar_count=0;
     always @(posedge clk) if (rst_n && m_arvalid && m_arready) dbg_ar_count<=dbg_ar_count+1;
 
@@ -195,6 +201,7 @@ module tb_l2nb;
 
     initial begin
         s_awvalid=0; s_wvalid=0; s_arvalid=0; s_wlast=0;
+        snoop_addr=0; snoop_valid=0;
         s_bready=1; s_rready=1;
         s_awid=0; s_awaddr=0; s_awlen=0; s_awsize=0; s_awburst=1;
         s_arid=0; s_araddr=0; s_arlen=0; s_arsize=0; s_arburst=1;
@@ -203,6 +210,19 @@ module tb_l2nb;
 
         // T1 parity: cold miss, then hit (same line), single-beat reads
         issue_read(4'd1, 32'h0000_1000, 8'd0); wait_reads;
+        // T1b clean-line snoop: the next access must miss again, proving the
+        // NB L2 clean invalidate is visible at the downstream AXI boundary.
+        snoop_ar_before = dbg_ar_count;
+        @(negedge clk); snoop_addr=32'h0000_1000; snoop_valid=1'b1;
+        #1;
+        if (!snoop_ack || !snoop_hit) begin
+            $display("FAIL clean snoop did not report a hit"); errs=errs+1;
+        end
+        @(posedge clk); @(negedge clk); snoop_valid=1'b0;
+        issue_read(4'd1, 32'h0000_1000, 8'd0); wait_reads;
+        if ((dbg_ar_count-snoop_ar_before) != 1) begin
+            $display("FAIL clean snoop did not force a refill"); errs=errs+1;
+        end
         issue_read(4'd1, 32'h0000_1000, 8'd0); wait_reads; // hit
 
         // T2 miss-under-miss: 3 distinct lines, all outstanding at once
