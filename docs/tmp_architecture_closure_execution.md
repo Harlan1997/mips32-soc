@@ -1665,3 +1665,14 @@ remains the compatibility baseline.
 - The evidence remains single-CPU generic Linux integration. SoC timer driver
   binding, full scheduler policy/ABI, multicore shootdown and RTL system-mode
   Linux differential remain open.
+
+### 2026-08-26 Linux explicit scheduler-yield pressure
+
+- Added O32 `sched_yield` after the two-child fork and before the parent
+  `wait4` calls. The parent emits `MIPS32_SOC_LINUX_YIELD_SUCCESS` only after
+  the syscall returns successfully.
+- Fresh `make linux-boot-build-gate` passes with the existing mmap, brk,
+  nanosleep, dual-exec and dual-wait evidence plus the yield marker.
+- This remains bounded single-CPU scheduler evidence; it does not establish
+  Linux scheduler policy/ABI, SMP scheduling, shootdown coordination, or RTL
+  system-mode Linux differential.
