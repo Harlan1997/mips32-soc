@@ -1577,3 +1577,12 @@ remains the compatibility baseline.
 - This closes the bounded reference/RTL WDT boot-failure contract only; real
   always-on reset-domain retention, physical clock/reset behavior and product
   board signoff remain open.
+
+### 2026-08-26 MMU IPI shootdown pressure evidence
+
+- Fresh `make mmu-ipi-shootdown-pressure-gate` passes with 35 RTL shootdown
+  requests, including 32 repeated generation/ASID/VPN invalidations plus busy
+  rejection, stale ACK, timeout recovery and request sequencing.
+- This strengthens the bounded shootdown protocol evidence but does not close
+  OS page-table ownership, scheduler coordination, multicore execution or
+  Linux VM behavior.
