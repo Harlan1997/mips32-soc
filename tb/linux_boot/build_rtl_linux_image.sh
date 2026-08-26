@@ -11,6 +11,7 @@ DTC=${DTC:-"${ROOT_DIR}/build/linux_boot/real/kernel/scripts/dtc/dtc"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 ELF2HEX=${ELF2HEX:-"${ROOT_DIR}/tb/soc_test/fw/common/elf2hex.py"}
 DTB_OFFSET=${DTB_OFFSET:-0x00f00000}
+KERNEL_LOAD_PHYSICAL=0x08000000
 
 mkdir -p "${RUN_DIR}"
 command -v "${CROSS_COMPILE}gcc" >/dev/null
@@ -50,7 +51,7 @@ cat >"${RUN_DIR}/image_manifest.txt" <<EOF
 KERNEL=${KERNEL}
 KERNEL_ENTRY=${entry}
 KERNEL_LOAD_VIRTUAL=0x88000000
-KERNEL_LOAD_PHYSICAL=0x08000000
+KERNEL_LOAD_PHYSICAL=${KERNEL_LOAD_PHYSICAL}
 DTB_LOAD_VIRTUAL=0x88f00000
 DTB_LOAD_PHYSICAL=0x08f00000
 DTB_OFFSET=${dtb_offset}

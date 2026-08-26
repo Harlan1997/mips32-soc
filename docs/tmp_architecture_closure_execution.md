@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-26 RTL Linux physical-memory contract correction
+
+- Corrected `tb/linux_boot/mips32_soc_ref_rtl.dts` so the RTL Linux memory
+  resource starts at physical `0x08000000`, matching the DDR window and the
+  image produced by `build_rtl_linux_image.sh`. The previous `reg = <0 0x01000000>`
+  declaration made Linux treat low physical addresses as RAM even though the
+  Linux-only crossbar alias mapped them into the DDR region containing kernel
+  text; a dirty D-cache writeback could therefore overwrite executable code.
+- `build_rtl_linux_image.sh` now emits the same physical base from one named
+  manifest constant. Fresh image construction passes and records
+  `KERNEL_LOAD_PHYSICAL=0x08000000`; `make rtl-frontend-compile
+  RUN_ROOT=/tmp/rtl_frontend_after_linux_dts` passes all `8/8` configurations.
+- A fresh bounded RTL Linux run was resource-safe but did not reach a marker
+  within 240 seconds, so this fixes the proven address-contract defect without
+  closing RTL Linux userspace boot or the full RTL/QEMU Linux differential.
+  The remaining diagnosis must follow post-entry CPU progress with a bounded
+  retirement/progress probe.
+
 ### 2026-08-25 L2 nonblocking dirty writeback buffer closure
 
 - `rtl/cache/l2_cache_nb.v` now has an opt-in fixed `WB_DEPTH=4` dirty-victim
