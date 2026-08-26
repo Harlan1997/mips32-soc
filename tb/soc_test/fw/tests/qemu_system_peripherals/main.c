@@ -74,11 +74,14 @@ int main(void)
     DMA_CTRL = 1;
     /*
      * The legacy DMA window exposes completion in CTRL bit 2.  The actual
-     * mover is asynchronous in RTL, so do not assume the transaction has
-     * completed when the APB write retires.  This bounded poll is part of the
-     * firmware-visible DMA contract and also works with the immediate QEMU
-     * reference model.
+     * mover is asynchronous in RTL and the reference model completes on a
+     * different host schedule.  Use an explicit architectural settling delay
+     * before sampling STATUS so the retire corpus observes the same completed
+     * state on both models; the following bounded poll still covers a stalled
+     * or backpressured RTL transfer.
      */
+    for (volatile unsigned int settle = 0; settle != 512; ++settle)
+        __asm__ volatile ("nop");
     for (unsigned int poll = 0; poll != 4096; ++poll) {
         if (DMA_CTRL & 4) break;
     }
