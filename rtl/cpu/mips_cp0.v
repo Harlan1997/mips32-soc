@@ -259,10 +259,19 @@ module mips_cp0 #(
     // -------------------------------------------------------------------------
     // Static reads (hardcoded constants from soc_config.vh)
     // -------------------------------------------------------------------------
+`ifdef SOC_LINUX_BOOT_ENABLE
+    // The Linux/UHI contract uses the QEMU 24Kc reference identity so the
+    // kernel's cpu_probe() selects a supported MIPS CPU type.  Keep the
+    // project-specific PRId for the frozen bare-metal/default differential
+    // path; Linux opt-in is the only mode that changes this architectural
+    // identity.
+    wire [31:0] prid_val = 32'h0001_9300;
+`else
     wire [31:0] prid_val = { `SOC_CP0_PRID_COMPANY_OPTS,
                              `SOC_CP0_PRID_COMPANY_ID,
                              `SOC_CP0_PRID_PROCESSOR_ID,
                              `SOC_CP0_PRID_REVISION };
+`endif
 
     wire [31:0] ebase_val = { 2'b10, cp0_ebase_hi, 2'b00, `SOC_CP0_CPUNUM };
     assign ebase_out = ebase_val;
