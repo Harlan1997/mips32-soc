@@ -46,6 +46,9 @@ module tb_mips_soc;
                                                  .obs_if(retire_obs_if));
 `endif
     reg [1023:0] firmware_hex;
+`ifdef TB_LINUX_BOOT
+    reg [1023:0] ddr_hex;
+`endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
     integer cp0_ri_count;
@@ -421,6 +424,17 @@ module tb_mips_soc;
         end
         u_soc.preload_sram_hex(firmware_hex);
 
+`ifdef TB_LINUX_BOOT
+        ddr_hex = "";
+        if ($value$plusargs("DDR_HEX=%s", ddr_hex)) begin
+            $display("tb_mips_soc: loading DDR image from %0s", ddr_hex);
+            u_soc.u_impl.u_memory_subsystem.preload_ddr_hex(ddr_hex);
+        end else begin
+            $display("tb_mips_soc: ERROR: TB_LINUX_BOOT requires +DDR_HEX");
+            $finish;
+        end
+`endif
+
         // Wait a few cycles
         #25;
         rst_n = 1;
@@ -548,6 +562,10 @@ module tb_mips_soc;
         #20000000;
 `elsif SOC_L2_CPU_GATE
         #20000000;
+`elsif TB_LINUX_BOOT
+        // Linux boot is intentionally a long-running opt-in integration
+        // test; the ordinary firmware watchdog remains unchanged.
+        #2000000000;
 `else
         #5200000;
 `endif
