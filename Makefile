@@ -179,6 +179,7 @@ dcache-parity-gate:
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
+.PHONY: cpu-irq-delay-slot-gate
 
 isa-implementation-audit:
 	@mkdir -p $(BUILD_DIR)/isa_audit
@@ -919,6 +920,10 @@ cpu-cp0-gate: firmware
 
 cpu-load-return-gate:
 	tb/soc_test/run_cpu_load_return_gate.sh
+
+cpu-irq-delay-slot-gate:
+	chmod +x tb/soc_test/run_cpu_irq_delay_slot_gate.sh
+	tb/soc_test/run_cpu_irq_delay_slot_gate.sh
 
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
