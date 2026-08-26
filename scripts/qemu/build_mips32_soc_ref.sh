@@ -164,6 +164,31 @@ void qemu_mips32_soc_ref_interrupt_fixup(CPUMIPSState *env) __attribute__((weak)
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
 
+if ! rg -q 'SOC_REF_INTERRUPT_BD_HOOK' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    sed -i '/void qemu_mips32_soc_ref_interrupt_fixup/a\bool qemu_mips32_soc_ref_interrupt_bd(void) __attribute__((weak));' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+    perl -0pi -e 's{(            if \(env->hflags & MIPS_HFLAG_BMASK\) \{\n                env->CP0_Cause \|= \(1U << CP0Ca_BD\);\n            \} else \{\n                env->CP0_Cause &= ~\(1U << CP0Ca_BD\);\n            \}\n)}{$1            /* SOC_REF_INTERRUPT_BD_HOOK */\n            if (qemu_mips32_soc_ref_interrupt_bd &&\n                qemu_mips32_soc_ref_interrupt_bd()) {\n                env->CP0_Cause |= (1U << CP0Ca_BD);\n            }\n}s' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+fi
+if ! rg -q 'SOC_REF_INTERRUPT_FORCE_BD' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    sed -i '/void qemu_mips32_soc_ref_interrupt_fixup/a\bool qemu_mips32_soc_ref_interrupt_force_bd(void) __attribute__((weak));' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+    perl -0pi -e 's{(            if \(env->hflags & MIPS_HFLAG_BMASK\) \{\n                env->CP0_Cause \|= \(1U << CP0Ca_BD\);\n            \} else \{\n                env->CP0_Cause &= ~\(1U << CP0Ca_BD\);\n            \}\n)}{$1            if (cs->exception_index == EXCP_EXT_INTERRUPT &&\n                qemu_mips32_soc_ref_interrupt_force_bd &&\n                qemu_mips32_soc_ref_interrupt_force_bd()) {\n                env->CP0_Cause |= (1U << CP0Ca_BD);\n            } /* SOC_REF_INTERRUPT_FORCE_BD */\n}s' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+fi
+# Normalize an interrupted, previously partially patched source tree to the
+# single hook block above.  This repair is idempotent and runs before the
+# marker check on subsequent invocations.
+if rg -q 'qemu_mips32_soc_ref_interrupt_bd &&' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
+   ! rg -q 'SOC_REF_INTERRUPT_BD_HOOK' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    perl -0pi -e 's{\n\s*if \(qemu_mips32_soc_ref_interrupt_bd &&\n\s*qemu_mips32_soc_ref_interrupt_bd\(\)\) \{\n\s*env->CP0_Cause \|= \(1U << CP0Ca_BD\);\n\s*\}\n}{}g' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+fi
+
 if ! rg -q '^bool qemu_mips32_soc_ref_bootrom_mmu_guest' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '0,/^void qemu_mips32_soc_ref_interrupt_fixup.*;$/a\bool qemu_mips32_soc_ref_bootrom_mmu_guest(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
