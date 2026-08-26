@@ -1954,3 +1954,20 @@ remains the compatibility baseline.
   It closes the repeatable progress/evidence infrastructure only; RTL Linux
   userspace boot, full RTL/QEMU Linux differential, and the remaining OS/ISA
   boundaries are still open.
+
+### 2026-08-27 bounded RTL Linux probe without coverage database
+
+- Added explicit `SKIP_COVERAGE=1` handling to `tb/soc_test/run.sh`. It omits
+  VCS coverage instrumentation and URG database/report generation only for an
+  explicit caller opt-in; ordinary unit, SoC, UVM and signoff paths retain the
+  existing coverage and exclusion checks.
+- `SKIP_COVERAGE=1 make soc-smoke SOC_TEST_RUN_DIR=build/soc_test/smoke_nocov`
+  passed with `REGRESSION_TEST_SUCCESS`; the VCS simulation reported 1.1 MiB
+  of data structure usage.
+- A fresh relocated RTL Linux run with the existing kernel image completed
+  15,000,000 cycles in `build/linux_boot/rtl_progress_nocov_15m/` and passed
+  the bounded post-reset progress check. It observed no Linux userspace
+  success marker, so RTL Linux userspace boot and RTL/QEMU Linux differential
+  remain OPEN. This confirms the long diagnostic path avoids coverage-database
+  growth and remains memory-bounded; it does not alter the default signoff
+  configuration.

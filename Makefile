@@ -73,6 +73,7 @@ PRODUCT_KERNEL_BOOT_DIR ?= $(BUILD_DIR)/unit_tb/product_kernel_boot
 PRODUCT_MMU_ASID_CONTEXT_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_asid_context
 PRODUCT_MMU_PROCESS_PRESSURE_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_process_pressure
 PRODUCT_MMU_PAGEMASK_DIR ?= $(BUILD_DIR)/soc_test/product_mmu_pagemask
+RTL_LINUX_PROGRESS_DIR ?= $(BUILD_DIR)/linux_boot/rtl_progress_gate
 CPU_CACHE_ERROR_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cache_error
 CPU_CACHE_OP_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cacheop
 CPU_CACHE_TAG_DIR ?= $(BUILD_DIR)/unit_tb/cpu_cachetag
@@ -571,7 +572,7 @@ linux-boot-build-gate: qemu-system-mips32-soc-ref
 
 rtl-linux-progress-gate:
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh tb/linux_boot/run_rtl_linux_progress_gate.sh
-	RUN_DIR=$(BUILD_DIR)/linux_boot/rtl_progress_gate tb/linux_boot/run_rtl_linux_progress_gate.sh
+	RUN_DIR=$(RTL_LINUX_PROGRESS_DIR) tb/linux_boot/run_rtl_linux_progress_gate.sh
 
 linux-uboot-build-gate:
 	chmod +x tb/linux_boot/run_uboot_build_gate.sh
