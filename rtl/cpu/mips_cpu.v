@@ -1091,9 +1091,12 @@ module mips_cpu #(
     wire id_except_is_tlb_refill_out = id_except_req_in & id_except_is_tlb_refill_in;
 
     // Phase B.5: delay-slot detector. The current ID-stage instruction is in a
-    // delay slot iff the *previous* cycle's ID decoded a branch or jump (both
-    // conditional branches and jumps require the following instruction to be
-    // executed per MIPS ISA). The pipeline advances when !global_stall.
+    // delay slot iff the *previous* cycle's ID decoded a control transfer that
+    // is advancing. Use control_valid rather than branch_taken: ordinary MIPS
+    // branches execute their delay slot even when not taken, and a branch can
+    // be held by a data hazard while its resolved taken bit is suppressed.
+    // A not-taken branch-likely is the one exception because its slot is
+    // annulled by the IF/ID flush.
     reg id_bd_r;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
@@ -1101,7 +1104,7 @@ module mips_cpu #(
         else if (if_id_flush)
             id_bd_r <= 1'b0;
         else if (!global_stall)
-            id_bd_r <= id_branch_taken | id_jump_taken;
+            id_bd_r <= id_control_valid && !id_branch_likely_annul;
     end
     assign id_bd = id_bd_r;
 
@@ -1109,7 +1112,7 @@ module mips_cpu #(
         if (!rst_n || if_id_flush) begin
             id_delay_slot_next_pc_r <= 32'd0;
         end else if (!global_stall) begin
-            if (id_branch_taken || id_jump_taken) begin
+            if (id_control_valid && !id_branch_likely_annul) begin
                 id_delay_slot_next_pc_r <= id_control_taken ? id_control_target :
                                            id_pc_plus_4 + 32'd4;
             end else begin
@@ -1808,15 +1811,14 @@ module mips_cpu #(
     // An interrupt can be accepted before the interrupted instruction reaches
     // WB.  In that case wb_bd is not available yet, but an in-flight delay
     // slot still has the architectural EPC/BD rule: EPC points to its branch
-    // and Cause.BD is set.  Select the marker from the same oldest stage used
-    // for oldest_flushed_pc so the two fields cannot describe different
-    // instructions.
-    wire oldest_flushed_bd =
-        (mem_pc_plus_8 != 32'd0) ? mem_bd :
-        (ex_pc_plus_8  != 32'd0) ? ex_bd :
-        (id_pc_plus_4  != 32'd0) ? id_bd :
-        1'b0;
-    wire interrupt_except_bd = interrupt_accept && oldest_flushed_bd;
+    // and Cause.BD is set.  EPC remains selected from the oldest valid stage;
+    // BD must inspect every younger stage being flushed as well.  For example,
+    // when the branch is in MEM and its delay slot is in EX, mem_bd is zero but
+    // ex_bd is the architectural evidence that the interrupt hit the slot.
+    wire interrupt_except_bd = interrupt_accept &&
+                               ((mem_pc_plus_8 != 32'd0 && mem_bd) ||
+                                (ex_pc_plus_8  != 32'd0 && ex_bd)  ||
+                                (id_pc_plus_4  != 32'd0 && id_bd));
     wire exception_bd = (wb_bd && wb_arch_valid) | interrupt_except_bd;
         
     // An interrupt accepted while the core is suspended by WAIT is taken

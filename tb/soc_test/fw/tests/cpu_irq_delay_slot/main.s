@@ -12,8 +12,9 @@ _start:
     mtc0    $zero, $12
     ehb
     lui     $t0, 0x4000
-    sw      $zero, 0x4004($t0)       /* PIC_MASK: all sources unmasked */
     ori     $t1, $zero, 0x0004
+    sw      $t1, 0x4004($t0)         /* PIC_MASK: enable timer source 2 */
+    ori     $t1, $zero, 0x0064
     sw      $t1, 0x1004($t0)         /* TIMER_LOAD */
     ori     $t1, $zero, 0x0003
     sw      $t1, 0x1000($t0)         /* TIMER_CTRL: enable + IRQ enable */
