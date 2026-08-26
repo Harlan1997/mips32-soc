@@ -1971,3 +1971,19 @@ remains the compatibility baseline.
   remain OPEN. This confirms the long diagnostic path avoids coverage-database
   growth and remains memory-bounded; it does not alter the default signoff
   configuration.
+
+### 2026-08-27 bounded RTL Linux UART probe
+
+- Added opt-in `LINUX_UART_TRACE` and `LINUX_UART_TRACE_LIMIT` controls to the
+  RTL Linux progress gate. The testbench samples the actual APB UART transmit
+  transaction at `soc_peripheral_subsystem -> apb_uart_16550`, in addition to
+  the external UART pin observation.
+- A fresh no-coverage 2M-cycle probe passed with a 1.1 MiB VCS data structure;
+  a fresh 10M-cycle run also completed without simulator failure. Neither run
+  observed a UART APB transmit transaction or
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`. The longer trace shows the CPU progressing
+  through kernel initialization and timer exception handling, so the current
+  evidence does not support a UART pin-wiring failure as the userspace blocker.
+- RTL Linux userspace boot, OS-owned page-table boot, and RTL/QEMU Linux
+  differential remain OPEN. The next implementation diagnosis must isolate the
+  kernel initialization/exception path before adding a UART model workaround.
