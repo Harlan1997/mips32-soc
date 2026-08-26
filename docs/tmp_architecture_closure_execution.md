@@ -1765,3 +1765,17 @@ remains the compatibility baseline.
   `make l1-nonblocking-cpu-multi-gate` pass. The opt-in L1 contract remains
   bounded; full coherence, arbitrary reset/error timing and Linux cache ABI
   are still open.
+
+### 2026-08-26 Linux diagnostic trace OOM guard
+
+- The Linux testbench's optional vector-store trace was previously enabled by
+  default and had no line limit. Linux exception-vector activity therefore
+  produced duplicate store lines continuously and could exhaust memory or
+  disk during a long RTL run.
+- The trace now defaults to disabled and accepts the bounded
+  `LINUX_VECTOR_TRACE_LIMIT` plusarg (default 1000) when explicitly enabled.
+  A 2000-cycle Linux RTL probe produced zero vector-store lines and an 8-KiB
+  simulation log; the RTL frontend gate remains PASS (`8/8`).
+- This closes the diagnostic resource-safety issue only. Linux RTL userspace
+  boot, post-refill I-cache progress, and RTL/QEMU Linux differential remain
+  open.

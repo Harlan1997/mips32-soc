@@ -52,6 +52,9 @@ module tb_mips_soc;
 `ifdef TB_LINUX_BOOT_TRACE
     integer linux_trace_cycle;
     integer linux_trace_limit;
+    integer linux_vector_trace;
+    integer linux_vector_trace_limit;
+    integer linux_vector_trace_count;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -210,7 +213,9 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_ebase_hi,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.ebase_out);
             end
-            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+            if (linux_vector_trace != 0 &&
+                linux_vector_trace_count < linux_vector_trace_limit &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
                 ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'h8000_0000) &&
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < 32'h8000_2000))) begin
@@ -220,6 +225,7 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be);
+                linux_vector_trace_count = linux_vector_trace_count + 1;
             end
             if ((linux_trace_cycle < 20) ||
                 (linux_trace_cycle % 100000 == 0) ||
@@ -272,6 +278,11 @@ module tb_mips_soc;
     initial begin
         linux_trace_limit = 0;
         if (!$value$plusargs("LINUX_TRACE_LIMIT=%d", linux_trace_limit)) begin end
+        linux_vector_trace = 0;
+        if (!$value$plusargs("LINUX_VECTOR_TRACE=%d", linux_vector_trace)) begin end
+        linux_vector_trace_limit = 1000;
+        if (!$value$plusargs("LINUX_VECTOR_TRACE_LIMIT=%d", linux_vector_trace_limit)) begin end
+        linux_vector_trace_count = 0;
     end
 `endif
 
