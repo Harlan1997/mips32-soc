@@ -1699,3 +1699,18 @@ remains the compatibility baseline.
   both status words equal to zero, and all prior VM/scheduler markers intact.
 - This is bounded process-lifecycle evidence; complete Linux scheduler/VM ABI,
   SMP semantics, and RTL system-mode Linux differential remain open.
+
+### 2026-08-26 QEMU peripheral retire differential timing closure
+
+- `make qemu-system-peripheral-differential-gate` passes in the fresh
+  independent run `build/isa_ref/qemu_system_peripheral_differential_repro4/`.
+- The guest adds a fixed architectural settling delay after starting the
+  four-word legacy DMA transfer. The QEMU reference model now completes small
+  legacy transfers at the same architectural boundary as RTL, while larger
+  transfers retain bounded BUSY-poll behavior.
+- The strict comparator reports
+  `QEMU system RTL retire differential: PASS`; the guest emits GPIO, timer,
+  DMA, PIC, QSPI and DDR markers before the mailbox.
+- This closes the selected peripheral differential slice only. Full DMA
+  fault/reset timing, Linux device drivers, physical QSPI/DDR timing and full
+  system-mode Linux differential remain open.

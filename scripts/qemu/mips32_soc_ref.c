@@ -877,10 +877,22 @@ static void soc_ref_dma_start(MIPS32SocRefState *s)
      * legacy mover.  The copy itself remains immediate; only the visible
      * completion boundary is modeled here. */
     s->dma_completion_status = result == MEMTX_OK ? 4 : (4 | 0x10);
-    /* The status read returns the pre-decrement value, so four remaining
-     * polls produce four BUSY observations and the following read observes
-     * DONE, matching the RTL retire trace. */
-    s->dma_polls_remaining = s->dma_len <= 4 ? 4 : 4 + (s->dma_len / 2) - 1;
+    /* Small legacy transfers complete in the same architectural window as
+     * the RTL model after the guest's settling delay.  Larger transfers keep
+     * a bounded read-side latency so software can still exercise BUSY
+     * polling without making the reference timing part of the contract. */
+    s->dma_polls_remaining = s->dma_len <= 4 ? 0 : 4 + (s->dma_len / 2) - 1;
+    if (s->dma_polls_remaining == 0) {
+        s->dma_status = s->dma_completion_status;
+        if (s->dma_src || s->dma_dst || s->dma_len)
+            soc_ref_dma_event_legacy(s, "DONE", (s->dma_status & 0x10) != 0,
+                                     (s->dma_status & 0x10) ? 2 : 0);
+        if (s->dma_ctrl & 2) {
+            s->pic_raw |= 1U << 3;
+            soc_ref_update_irq(s);
+            soc_ref_dma_event(s, "IRQ", 0, 0, 0, 1);
+        }
+    }
 }
 
 static void soc_ref_dma_reset(void *opaque)

@@ -995,3 +995,16 @@ attempted SC address/data for fast-failed atomic callbacks. The gate passes with
 `TRACE_COMPARE_PASS records=293` and is bounded evidence only: complete MIPS
 memory ordering, arbitrary atomic interleavings, MESI/directory ordering and
 Linux atomic ABI remain open.
+
+### 2026-08-26 QEMU peripheral retire differential timing closure
+
+`make qemu-system-peripheral-differential-gate` passes in the independent
+fresh run `build/isa_ref/qemu_system_peripheral_differential_repro4/` with a
+strict `TRACE_COMPARE_PASS`. The peripheral guest now uses an architectural
+settling delay after the four-word legacy DMA start, and the custom-machine
+reference model completes small transfers at that same observation boundary;
+larger transfers retain bounded BUSY polling. The real RTL/QEMU corpus covers
+GPIO, timer, DMA status, PIC marker, QSPI status/XIP and DDR status before the
+mailbox. This remains a selected peripheral differential slice and does not
+close full DMA fault/reset timing, physical device timing, Linux drivers or
+full RTL system-mode Linux differential.
