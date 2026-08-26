@@ -927,7 +927,7 @@ module mips_cpu #(
                                   !(wb_except_req && wb_arch_valid));
 
     wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
-                       (id_inst[25:21] == 5'b00011) &&
+                       (id_inst[25:21] == 5'b00000) &&
                        ((id_inst[15:11] == 5'd0) || (id_inst[15:11] == 5'd1) ||
                         (id_inst[15:11] == 5'd2) || (id_inst[15:11] == 5'd3) ||
                         (id_inst[15:11] == 5'd29)) &&

@@ -134,11 +134,11 @@ static uint32_t isa_r2_sweep(void) {
     /* Enable the standard RDHWR targets before exercising the user-visible
      * SYNCI_Step register; the CPU correctly raises RI when HWREna is clear. */
     asm volatile("li $t9, 0x0000000f; mtc0 $t9, $7, 0; ehb" ::: "$t9", "memory");
-    asm volatile(".word 0x7c68083b\n\tmove %0, $8"
+    asm volatile(".word 0x7c08083b\n\tmove %0, $8"
                  : "=r"(rdhwr_step) : : "$8", "memory");
-    asm volatile(".word 0x7c68003b\n\tmove %0, $8"
+    asm volatile(".word 0x7c08003b\n\tmove %0, $8"
                  : "=r"(rdhwr_cpunum) : : "$8", "memory");
-    asm volatile(".word 0x7c68183b\n\tmove %0, $8"
+    asm volatile(".word 0x7c08183b\n\tmove %0, $8"
                  : "=r"(rdhwr_ccres) : : "$8", "memory");
 
     if (rdhwr_step != 32U || rdhwr_cpunum != 0U || rdhwr_ccres != 2U ||

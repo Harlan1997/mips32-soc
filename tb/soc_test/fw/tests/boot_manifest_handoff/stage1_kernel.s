@@ -15,7 +15,7 @@
 
 stage1_entry:
     /* CPUNum is returned in t0 by RDHWR $0. */
-    .word   0x7c68003b
+    .word   0x7c08003b
     nop
     nop
     nop

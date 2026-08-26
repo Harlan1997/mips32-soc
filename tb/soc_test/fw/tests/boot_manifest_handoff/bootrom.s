@@ -8,7 +8,7 @@ _start:
     /* Serialize dual-core reset boot. CP0 EBase carries CPUNum; secondary
      * waits for primary to finish manifest copy/CRC before entering the
      * shared kernel image, avoiding interleaved SPI transactions. */
-    .word   0x7c68003b
+    .word   0x7c08003b
     beq     $t0, $zero, boot_primary
     nop
 

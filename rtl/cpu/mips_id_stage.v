@@ -335,12 +335,12 @@ module mips_id_stage (
 
     assign stall_req = load_use_hazard || wb_use_hazard || nb_pending_hazard;
     
-    // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=3,
+    // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=0,
     // funct=0x3b; hwreg selector is rd. UserLocal (29) maps to CP0 (4,2),
     // while CPUNum (0) uses CP0 (15,2), SYNCI_Step (1) uses CP0 (7,1),
     // Count (2) uses CP0 (9,0), and CCRes (3) uses CP0 (9,1).
     wire is_rdhwr = (inst[31:26] == 6'b011111) &&
-                              (inst[25:21] == 5'b00011) &&
+                              (inst[25:21] == 5'b00000) &&
                               ((inst[15:11] == 5'd0) || (inst[15:11] == 5'd1) ||
                                (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) ||
                                (inst[15:11] == 5'd29)) &&

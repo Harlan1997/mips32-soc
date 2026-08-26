@@ -780,7 +780,7 @@ module mips_control (
                         end
                     end
                     6'b111011: begin  // RDHWR rt, rd (SYNCI_Step=1, Count=2, UserLocal=29)
-                        if (rs == 5'b00011 &&
+                        if (rs == 5'b00000 &&
                             ((inst[15:11] == 5'd0) || (inst[15:11] == 5'd1) ||
                              (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) ||
                              (inst[15:11] == 5'd29))) begin
