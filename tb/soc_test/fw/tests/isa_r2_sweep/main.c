@@ -2,7 +2,7 @@
  * isa_r2_sweep — isolated ISA R2 instruction sweep (Phase A coverage helper).
  *
  * Exercises MIPS32 R2 additions the base firmware doesn't reach: CLZ / CLO /
- * SEB / SEH / WSBH / BITSWAP / ALIGN / ROTR / ROTRV / MOVN / MOVZ / BAL. Plus a static MFC0
+ * SEB / SEH / WSBH / WSBW / BITSWAP / ALIGN / ROTR / ROTRV / MOVN / MOVZ / BAL. Plus a static MFC0
  * of PRId / Config / Config1 / EBase to hit CP0 read paths.
  *
  * Terminates via mailbox exit; uses weak default exception handler.
@@ -12,7 +12,7 @@
 #include "print.h"
 
 static uint32_t isa_r2_sweep(void) {
-    uint32_t clz_r, clo_r, seb_r, seh_r, wsbh_r, bitswap_r, rotr_r, rotrv_r;
+    uint32_t clz_r, clo_r, seb_r, seh_r, wsbh_r, wsbw_r, bitswap_r, rotr_r, rotrv_r;
     uint32_t ext_r, ins_r, align0_r, align1_r, align2_r, align3_r;
     uint32_t movn_r, movz_r, bal_r;
     uint32_t prid_v, cfg0_v, cfg1_v, ebase_v;
@@ -30,6 +30,12 @@ static uint32_t isa_r2_sweep(void) {
 
     asm volatile(".set push; .set mips32r2; wsbh %0, %1; .set pop"
                  : "=r"(wsbh_r) : "r"(0x11223344U));
+    /* gas support for WSBW is toolchain-dependent.  This is the architectural
+     * SPECIAL3/BSHFL encoding: WSBW $t1,$t0 (sa=6, funct=0x20). */
+    register uint32_t wsbw_in asm("$t0") = 0x11223344U;
+    register uint32_t wsbw_out asm("$t1");
+    asm volatile(".word 0x7c0849a0" : "=r"(wsbw_out) : "r"(wsbw_in));
+    wsbw_r = wsbw_out;
     /* gas does not expose legacy BITSWAP under its mips32r2 alias, so use
      * the architecturally defined SPECIAL3 encoding with fixed temporaries:
      * BITSWAP $t1,$t0 = 0x7c084820. */
@@ -143,21 +149,22 @@ static uint32_t isa_r2_sweep(void) {
 
     if (rdhwr_step != 32U || rdhwr_cpunum != 0U || rdhwr_ccres != 2U ||
         seb_r != 0xFFFFFF80U || seh_r != 0xFFFF8000U ||
-        wsbh_r != 0x22114433U || bitswap_r != 0x80C4A2E6U ||
+        wsbh_r != 0x22114433U || wsbw_r != 0x33441122U ||
+        bitswap_r != 0x80C4A2E6U ||
         align0_r != 0xAABBCCDDU || align1_r != 0xBBCCDD11U ||
         align2_r != 0xCCDD1122U || align3_r != 0xDD112233U ||
         rotr_r != 0xDDAABBCCU || rotrv_r != 0x41122334U ||
         jr_hb_marker != 0x1111U || jalr_hb_link == 0U)
         {
         print_str("R2V="); print_hex(clz_r); print_hex(clo_r);
-        print_hex(seb_r); print_hex(seh_r); print_hex(wsbh_r);
+        print_hex(seb_r); print_hex(seh_r); print_hex(wsbh_r); print_hex(wsbw_r);
         print_hex(bitswap_r); print_hex(rotr_r); print_hex(rotrv_r);
         print_hex(align0_r); print_hex(align1_r); print_hex(align2_r);
         print_hex(align3_r); print_hex(jr_hb_marker); print_hex(jalr_hb_link);
         print_str("ISA_R2_SPECIAL_FAIL\n");
         }
 
-    return clz_r ^ clo_r ^ seb_r ^ seh_r ^ wsbh_r ^ bitswap_r ^ rotr_r ^ rotrv_r
+    return clz_r ^ clo_r ^ seb_r ^ seh_r ^ wsbh_r ^ wsbw_r ^ bitswap_r ^ rotr_r ^ rotrv_r
          ^ movn_r ^ movz_r ^ bal_r
          ^ align0_r ^ align1_r ^ align2_r ^ align3_r
          ^ prid_v ^ cfg0_v ^ cfg1_v ^ ebase_v ^ rdhwr_step ^

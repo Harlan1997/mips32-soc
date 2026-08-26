@@ -30,6 +30,7 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-srs.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-align-r2.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-bitswap-r2.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-wsbw-r2.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-fpu-int32-indefinite.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
@@ -41,6 +42,7 @@ project_inputs_hash() {
 PROJECT_INPUTS_HASH=$(project_inputs_hash)
 if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
@@ -131,7 +133,8 @@ if ! rg -q 'qemu_mips32_soc_ref_wait' "${QEMU_SRC}/target/mips/tcg/exception.c";
         "${QEMU_SRC}/target/mips/tcg/exception.c"
 fi
 
-if ! rg -q 'qemu_mips32_soc_ref_irq_replay_active\(CPUMIPSState' "${QEMU_SRC}/target/mips/tcg/exception.c"; then
+if ! rg -q 'extern bool qemu_mips32_soc_ref_irq_replay_active\(void\)' \
+        "${QEMU_SRC}/target/mips/tcg/exception.c"; then
     sed -i '/extern void qemu_mips32_soc_ref_wait/a\    extern bool qemu_mips32_soc_ref_irq_replay_active(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/exception.c"
 fi
@@ -197,6 +200,14 @@ if ! rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     # ALIGN is applied first above, so a clean upstream tree reaches this
     # second shape instead of the original combined R6 ALIGN/BITSWAP case.
     perl -0pi -e 's{(        case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n            check_insn\(ctx, ISA_MIPS_R2\); /\* SOC_REF_ALIGN_R2 \*/\n            gen_align\(ctx, 32, rd, rs, rt, sa & 3\);\n            break;\n)        case OPC_BITSWAP:\n            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);\n            break;}{$1        case OPC_BITSWAP:\n            /* SOC_REF_BITSWAP_R2: legacy MIPS32 R2 encoding. */\n            check_insn(ctx, ISA_MIPS_R2);\n            gen_bitswap(ctx, op2, rd, rt);\n            break;}s' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+fi
+
+if ! rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    QEMU_REL=${QEMU_SRC#"${ROOT_DIR}/"}
+    git -C "${ROOT_DIR}" apply --directory="${QEMU_REL}" --recount \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-wsbw-r2.patch"
+    sed -i '/OPC_WSBW      =/a\    /* SOC_REF_WSBW_R2 */' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 

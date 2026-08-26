@@ -198,7 +198,9 @@ def main():
            follows_async_interrupt_boundary(rtl, idx) or \
            follows_async_interrupt_boundary(golden, idx) or \
            follows_delay_slot(rtl, idx) or \
-           follows_delay_slot(golden, idx):
+           follows_delay_slot(golden, idx) or \
+           has_delay_slot(r[1].get("instr")) or \
+           has_delay_slot(g[1].get("instr")):
             fields = [field for field in fields if field not in ("next_pc", "bd")]
         if r[1].get("gpr_we") or g[1].get("gpr_we"):
             fields += ["gpr_we", "gpr_addr", "gpr_data"]

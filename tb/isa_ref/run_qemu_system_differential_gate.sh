@@ -27,6 +27,10 @@ RTL_DIR=$(realpath -m "${RTL_DIR}")
 RTL_TRACE=$(realpath -m "${RTL_TRACE}")
 
 mkdir -p "${RUN_DIR}" "${RTL_DIR}"
+# Never leave a previous PASS report behind when a new run fails before it can
+# replace the report.  The trace comparator and current artifacts remain the
+# authoritative result for this invocation.
+rm -f "${RUN_DIR}/completion_report.md" "${RUN_DIR}/qemu_gate.log"
 make -C "${ROOT_DIR}/tb/soc_test/fw/tests/${FW_TEST}" \
     OUT_DIR="$(realpath -m "${FW_DIR}")" FW_BASE=firmware >"${RUN_DIR}/firmware_build.log" 2>&1
 sha256sum "${FW_HEX}" "${FW_ELF}" >"${RUN_DIR}/firmware.sha256"

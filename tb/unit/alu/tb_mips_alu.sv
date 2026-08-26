@@ -8,6 +8,7 @@
 module tb_mips_alu;
     reg  [31:0] op_a, op_b;
     reg  [4:0]  sa;
+    reg  [4:0]  msbd;
     reg  [4:0]  alu_op;
     wire [31:0] alu_out;
     wire        overflow, zero;
@@ -70,6 +71,11 @@ module tb_mips_alu;
         op_b   = 32'hAABB_CCDD;  #1; check("WSBH(0xAABBCCDD) = 0xBBAADDCC", 32'hBBAA_DDCC);
         op_b   = 32'h0000_0000;  #1; check("WSBH(0) = 0",                    32'h0000_0000);
         op_b   = 32'hFFFF_FFFF;  #1; check("WSBH(-1) = -1",                  32'hFFFF_FFFF);
+
+        // ----- WSBW (5'b11100) — swap the two halfwords -----
+        alu_op = 5'b11100;
+        op_b   = 32'h1122_3344;  #1; check("WSBW(0x11223344) = 0x33441122", 32'h3344_1122);
+        op_b   = 32'hAABB_CCDD;  #1; check("WSBW(0xAABBCCDD) = 0xCCDDAABB", 32'hCCDD_AABB);
 
         // ----- ROTR (5'b10101) — rotate op_b right by sa -----
         alu_op = 5'b10101;
