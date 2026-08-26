@@ -115,7 +115,7 @@ def gpr_destination(instr, before=None):
     if op == 0x10 and rs == 0x0b and rd == 12 and ((instr >> 6) & 0x1f) == 0:
         return rt
     # SPECIAL3 RDHWR: rd is the destination in the implemented contract.
-    if op == 0x1f and rs == 3 and (instr & 0x3f) == 0x3b:
+    if op == 0x1f and rs == 0 and (instr & 0x3f) == 0x3b:
         return rt
     return None
 

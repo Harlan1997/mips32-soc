@@ -41,7 +41,7 @@ static void wait_for_bus_quiet(void)
 static uint32_t read_cpunum(void)
 {
     uint32_t value;
-    __asm__ volatile(".word 0x7c68003b\n\t"
+    __asm__ volatile(".word 0x7c08003b\n\t"
                      "move %0, $8\n\t"
                      : "=r"(value) : : "$8");
     return value;

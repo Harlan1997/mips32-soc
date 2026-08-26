@@ -40,7 +40,7 @@ void c_interrupt_handler(void) {
 
 static uint32_t read_userlocal(void) {
     uint32_t value;
-    asm volatile(".word 0x7c68e83b\n\t"
+    asm volatile(".word 0x7c08e83b\n\t"
                  "nop\n\t"
                  "nop\n\t"
                  "move %0, $8\n\t"
@@ -50,7 +50,7 @@ static uint32_t read_userlocal(void) {
 
 static uint32_t read_synci_step(void) {
     uint32_t value;
-    asm volatile(".word 0x7c68083b\n\t"
+    asm volatile(".word 0x7c08083b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -58,7 +58,7 @@ static uint32_t read_synci_step(void) {
 
 static uint32_t read_hwcount(void) {
     uint32_t value;
-    asm volatile(".word 0x7c68103b\n\t"
+    asm volatile(".word 0x7c08103b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -66,7 +66,7 @@ static uint32_t read_hwcount(void) {
 
 static uint32_t read_cpunum(void) {
     uint32_t value;
-    asm volatile(".word 0x7c68003b\n\t"
+    asm volatile(".word 0x7c08003b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -74,7 +74,7 @@ static uint32_t read_cpunum(void) {
 
 static uint32_t read_ccres(void) {
     uint32_t value;
-    asm volatile(".word 0x7c68183b\n\t"
+    asm volatile(".word 0x7c08183b\n\t"
                  "move %0, $8\n\t"
                  : "=r"(value) : : "$8");
     return value;
@@ -113,7 +113,7 @@ static uint32_t cp0_sweep(void) {
 
     /* Kernel establishes a thread pointer and enables user RDHWR $29.
      * The explicit word keeps this test independent of assembler RDHWR aliases:
-     * SPECIAL3 rs=3, rt=$8, rd=$29, funct=0x3b. */
+     * SPECIAL3 rs=0, rt=$8, rd=$29, funct=0x3b. */
     {
         uint32_t userlocal = (uint32_t)(uintptr_t)&__tls_start;
         uint32_t hwrena = 0x2000000FU;

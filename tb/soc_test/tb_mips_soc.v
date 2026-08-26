@@ -459,7 +459,7 @@ module tb_mips_soc;
                 (linux_trace_cycle % 100000 == 0) ||
                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
                  (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c))) begin
-                $display("LINUX_REFILL_TRACE cycle=%0d pc=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h dr=%b/%b/%08h/%0h/%b",
+                $display("LINUX_REFILL_TRACE cycle=%0d pc=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h dr=%b/%b/%08h/%0h/%b cpu=%b/%b/%08h/%08h stall=%b dc=%0d aw=%b/%b/%08h w=%b/%b/%08h/%h/%b b=%b/%b da=%b/%b/%08h/%0h dr=%b/%b/%08h/%0h/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
@@ -498,7 +498,32 @@ module tb_mips_soc;
                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rready,
                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rdata,
                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rid,
-                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rlast);
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rlast,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.awvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.awready,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.awaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.wvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.wready,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.wstrb,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.wlast,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.bvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.bready,
+                    u_soc.u_impl.m1_arvalid,
+                    u_soc.u_impl.m1_arready,
+                    u_soc.u_impl.m1_araddr,
+                    u_soc.u_impl.m1_arlen,
+                    u_soc.u_impl.m1_rvalid,
+                    u_soc.u_impl.m1_rready,
+                    u_soc.u_impl.m1_rdata,
+                    u_soc.u_impl.m1_rid,
+                    u_soc.u_impl.m1_rlast);
             end
         end
     end

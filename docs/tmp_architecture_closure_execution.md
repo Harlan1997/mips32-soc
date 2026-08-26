@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-26 Linux RDHWR architectural encoding correction
+
+- Linux clocksource initialization exposed that the RTL and project fixtures
+  had encoded `RDHWR` with `rs=3`. GNU MIPS32R2 emits the architectural
+  `SPECIAL3` form with `rs=0`; for example `RDHWR v0,$2` is `0x7c02103b`.
+- Corrected the RTL control decode, CPU privilege allowance, ID-stage CP0
+  mapping, QEMU retire decoder, and all affected firmware fixtures to the
+  standard encoding. This removes the previous false confidence from tests
+  that shared the RTL's non-standard encoding.
+- The fresh Linux RTL trace reached the prior RI at `PC=0x88cf34d8`, so this
+  correction targets the proven post-boot blocker. The RDHWR and ISA gates
+  must be rerun before claiming closure; full Linux RTL userspace boot and
+  complete ISA compliance remain open.
+
 ### 2026-08-26 RTL Linux physical-memory contract correction
 
 - Corrected `tb/linux_boot/mips32_soc_ref_rtl.dts` so the RTL Linux memory
