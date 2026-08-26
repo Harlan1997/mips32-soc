@@ -284,7 +284,8 @@ module mips_cpu #(
     // TLBL/TLBS; its sideband survives the pipeline to select the refill slot.
     wire [31:0] veic_offset = 32'h0000_0200 + ({24'd0, external_vec_id} << 5);
     wire [31:0] exception_vector = wb_is_eret ? epc_out :
-                                  (`SOC_PRODUCT_BOOT_ENABLE != 0) ?
+                                  ((`SOC_PRODUCT_BOOT_ENABLE != 0) ||
+                                   (`SOC_LINUX_BOOT_ENABLE != 0)) ?
                                   (cp0_bev ? (wb_cache_error_exception ? 32'hBFC0_0100 :
                                               wb_tlb_refill_exception ? 32'hBFC0_0200 : 32'hBFC0_0380) :
                                              (wb_cache_error_exception ? (ebase_out + 32'h0000_0100) :
