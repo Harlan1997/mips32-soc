@@ -40,7 +40,11 @@ module retire_trace_capture (
               obs_if.retire_mem_addr, obs_if.retire_mem_wdata,
               obs_if.retire_mem_be, obs_if.retire_mem_rdata,
               known_bit(obs_if.retire_except), known_int(obs_if.retire_except_code),
-              known_bit(obs_if.retire_bd), known_bit(obs_if.retire_eret));
+              // `retire_bd` is also used internally as the pipeline delay-slot
+              // marker.  The trace schema reserves BD for an architectural
+              // exception payload, so suppress it on ordinary retire records.
+              known_bit(obs_if.retire_except && obs_if.retire_bd),
+              known_bit(obs_if.retire_eret));
         end
     end
 

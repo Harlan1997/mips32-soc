@@ -1500,8 +1500,30 @@ remains the compatibility baseline.
   generator for the legacy SPECIAL3 encoding; upstream QEMU routes this
   encoding through the MIPS32r6-only path on `24Kc`.
 - Fresh `make qemu-system-isa-r2-differential-gate` now passes with
-  `TRACE_COMPARE_PASS records=447`, including all four ALIGN positions.
+  `TRACE_COMPARE_PASS records=454`, including all four ALIGN positions and
+  the WSBW retirement result. The custom machine's bare-metal CP0 PRId and
+  Config1 values are aligned with the RTL contract.
   Full ISA, privileged/MMU and Linux differential remain open.
+
+### 2026-08-27 execution update: WSBW and differential gate integrity
+
+- Added MIPS32 R2 `WSBW` decode/ALU support and a firmware assertion covering
+  the architectural halfword swap result.
+- Added the corresponding QEMU 9.2 custom-machine patch and included it in
+  the build input hash/marker checks. The project build uses `git apply` from
+  the repository root because the vendored QEMU source tree is not an
+  independent worktree.
+- Corrected the custom-machine bare-metal CP0 identity (`PRId=0x00019300`)
+  and cache geometry (`Config1=0xfe231180`) to match the actual RTL retire
+  contract.
+- Fixed the differential wrapper to remove the prior completion report before
+  a run. A failed comparator can therefore no longer leave an old PASS report
+  that is mistaken for current evidence.
+- Fixed an idempotence predicate that repeatedly inserted the weak IRQ replay
+  declaration into the generated QEMU source. This removes the repeated
+  declaration growth that had increased build memory and log volume.
+- Fresh evidence: `make qemu-system-isa-r2-differential-gate` passes with
+  `TRACE_COMPARE_PASS records=454`.
 
 ### 2026-08-24 QEMU UHI/DTB handoff
 

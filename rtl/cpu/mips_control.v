@@ -825,6 +825,12 @@ module mips_control (
                                     reg_dst   = 2'b01;
                                     alu_src   = 1'b0;     // op_b = rt
                                 end
+                                5'b00110: begin  // WSBW rd, rt (R2)
+                                    alu_op    = 5'b11100;  // OP_WSBW
+                                    reg_write = 1'b1;
+                                    reg_dst   = 2'b01;
+                                    alu_src   = 1'b0;     // op_b = rt
+                                end
                                 5'b10000: begin  // SEB rd, rt
                                     alu_op    = 5'b10010;  // OP_SEB
                                     reg_write = 1'b1;

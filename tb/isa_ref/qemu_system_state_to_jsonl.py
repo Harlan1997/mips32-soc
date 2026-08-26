@@ -192,6 +192,58 @@ def is_cop1_branch(instr):
            (((instr >> 16) & 0x1f) == 3)
 
 
+def signed32(value):
+    return value if value < 0x80000000 else value - 0x100000000
+
+
+def architectural_next_pc(instr, pc, regs, fallback):
+    """Return the PC after a control-transfer delay slot has executed.
+
+    QEMU's post-instruction snapshot is taken while the delay slot is the
+    current PC.  RTL retirement reports the architectural next PC instead,
+    so reconstruct the latter from the pre-instruction register state.
+    """
+    opcode = (instr >> 26) & 0x3f
+    rs = (instr >> 21) & 0x1f
+    rt = (instr >> 16) & 0x1f
+    funct = instr & 0x3f
+    if opcode in (0x02, 0x03):
+        return ((pc + 4) & 0xf0000000) | ((instr & 0x03ffffff) << 2)
+    if opcode == 0x00 and funct in (0x08, 0x09):
+        return int(regs[f"r{rs}"], 16) & 0xfffffffc
+    condition = None
+    if opcode in (0x04, 0x14):
+        condition = int(regs[f"r{rs}"] , 16) == int(regs[f"r{rt}"], 16)
+    elif opcode in (0x05, 0x15):
+        condition = int(regs[f"r{rs}"], 16) != int(regs[f"r{rt}"], 16)
+    elif opcode in (0x06, 0x16):
+        condition = signed32(int(regs[f"r{rs}"], 16)) <= 0
+    elif opcode in (0x07, 0x17):
+        condition = signed32(int(regs[f"r{rs}"], 16)) > 0
+    elif opcode == 0x01:
+        value = signed32(int(regs[f"r{rs}"], 16))
+        if rt in (0x00, 0x10, 0x02, 0x12):
+            condition = value < 0 if rt in (0x02, 0x12) else value < 0
+        elif rt in (0x01, 0x11, 0x03, 0x13):
+            condition = value >= 0 if rt in (0x03, 0x13) else value >= 0
+    elif opcode == 0x11 and rs == 8:
+        fcsr = int(regs.get("fcsr", "0"), 16)
+        cc = (rt >> 2) & 0x7
+        bit = 23 if cc == 0 else 24 + cc
+        condition_bit = bool(fcsr & (1 << bit))
+        condition = condition_bit if (rt & 1) else not condition_bit
+    if condition is not None:
+        offset = int(instr & 0xffff)
+        if offset & 0x8000:
+            offset -= 0x10000
+        target = (pc + 4 + (offset << 2)) & 0xffffffff
+        # Both ordinary branches and taken branch-likely instructions execute
+        # the delay slot.  An untaken branch-likely skips it and still lands at
+        # PC+8, which is the same final address used here.
+        return target if condition else (pc + 8) & 0xffffffff
+    return fallback
+
+
 def changed_cp0(before, after):
     changes = [(name, address, sel) for name, (address, sel) in CP0_REGS.items()
                if before.get(name) != after.get(name)]
@@ -264,7 +316,6 @@ def convert(events, states):
             mem_addr = (int(before[f"r{rs}"], 16) + imm) & 0xffffffff
             mem_size = 4
             mem_be = 0xF
-        bd = int(taken_delay_slot(events, index))
         # Cause is sticky across exception entry.  Comparing before/after
         # Cause therefore misses a second synchronous exception (for example
         # a trap after the handler has returned).  The retire event's next PC
@@ -281,12 +332,16 @@ def convert(events, states):
         exception_taken = int(entered_general_vector and
                               ((cause_value >> 2) & 0x1f) != 0)
         exception_code = ((cause_value >> 2) & 0x1f) if exception_taken else 0
-        exception_bd = ((cause_value >> 31) & 1) if exception_taken else bd
+        exception_bd = ((cause_value >> 31) & 1) if exception_taken else 0
+        # The event stream's next_pc is the immediate post-instruction PC.
+        # For a control transfer this is the delay-slot PC; the comparator
+        # handles the producer-specific delay-slot boundary explicitly.
+        event_next_pc = int(event["next_pc"], 16)
         yield {
             "schema": "00010000",
             "pc": hex32(event["pc"]),
             "instr": hex32(event["instr"]),
-            "next_pc": hex32(event["next_pc"]),
+            "next_pc": hex32(event_next_pc),
             "gpr_we": gpr_we,
             "gpr_addr": gpr_addr,
             "gpr_data": gpr_data,

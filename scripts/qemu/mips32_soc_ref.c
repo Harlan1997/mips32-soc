@@ -1689,9 +1689,11 @@ static void soc_ref_cpu_reset(void *opaque)
      * identification: Linux cpu_probe uses PRid/Config to select errata and
      * traps if the prototype values describe an unknown processor. */
     if (!reset->fdt_loaded) {
-        env->CP0_PRid = 0x00008010;
+        /* Match the RTL's fixed custom AP-lite processor identity. */
+        env->CP0_PRid = 0x00019300;
         env->CP0_Config0 = 0x80000503;
-        env->CP0_Config1 = 0xFEA83480;
+        /* Match the RTL's current 4-way, 64-set cache geometry. */
+        env->CP0_Config1 = 0xFE231180;
         if (reset->cpu_has_fpu) {
             /* COP1 availability is controlled by Status.CU1 after reset. */
             env->CP0_Config1 |= (1U << CP0C1_FP);

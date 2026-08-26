@@ -39,6 +39,7 @@ module mips_alu (
     localparam OP_SEB      = 5'b10010; // Sign-extend byte from op_b[7:0]
     localparam OP_SEH      = 5'b10011; // Sign-extend halfword from op_b[15:0]
     localparam OP_WSBH     = 5'b10100; // Word swap bytes within halfwords (op_b)
+    localparam OP_WSBW     = 5'b11100; // Word swap halfwords (op_b)
     localparam OP_ROTR     = 5'b10101; // Rotate right op_b by sa
     localparam OP_MOV_PASS = 5'b10110; // Pass op_a (for MOVN/MOVZ; write gate in id_stage)
     localparam OP_EXT      = 5'b10111; // Extract size=(rd+1) bits at pos
@@ -151,6 +152,10 @@ module mips_alu (
             OP_WSBH: begin
                 // Swap byte order within each halfword of op_b
                 alu_out = { op_b[23:16], op_b[31:24], op_b[7:0], op_b[15:8] };
+            end
+            OP_WSBW: begin
+                // Swap the two halfwords of op_b (MIPS32R2 WSBW).
+                alu_out = { op_b[15:0], op_b[31:16] };
             end
             OP_ROTR: begin
                 // Rotate-right op_b by sa via double-word right shift trick.
