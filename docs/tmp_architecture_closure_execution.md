@@ -1987,3 +1987,22 @@ remains the compatibility baseline.
 - RTL Linux userspace boot, OS-owned page-table boot, and RTL/QEMU Linux
   differential remain OPEN. The next implementation diagnosis must isolate the
   kernel initialization/exception path before adding a UART model workaround.
+
+### 2026-08-27 synchronous MMU fault versus IRQ priority
+
+- Fixed `mips_cpu` so an IF/MEM address or translation fault blocks
+  asynchronous interrupt acceptance until the synchronous fault reaches WB.
+  Previously a timer IRQ could flush an outstanding Linux TLB miss, causing
+  the faulting high-address store to retry indefinitely without entering the
+  refill path.
+- Added the `SVA_ENABLE` assertion
+  `p_sync_translation_fault_priority`, which checks that an active IF/MEM
+  translation fault and `interrupt_accept` are never simultaneous.
+- Verification: `make rtl-frontend-compile`, `make cpu-mmu-complete`,
+  `make product-mmu-boot-gate`, and `make sva-gate` pass. A no-coverage
+  18M-cycle relocated Linux probe now reports a real `TLBS (code=3)` at
+  `0xc0000000` before later progress, rather than silently losing the fault
+  to an interrupt.
+- Boundary: Linux's runtime-generated refill vector still does not complete
+  the OS-owned page-table refill, so RTL Linux userspace boot and full
+  RTL/QEMU system-mode differential remain OPEN.
