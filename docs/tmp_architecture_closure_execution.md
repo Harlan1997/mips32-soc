@@ -1751,3 +1751,17 @@ remains the compatibility baseline.
   host budget without a marker, so RTL Linux userspace boot and the full
   RTL/QEMU Linux differential remain OPEN. The next run must continue from
   this post-entry state with a bounded progress/watchdog diagnostic.
+
+### 2026-08-26 L1 nonblocking legacy request replay guard
+
+- Added transaction identity tracking to `l1_cache_nb_cpu_axi`. After a
+  legacy/uncached response completes, the adapter suppresses only an identical
+  still-asserted request; a changed address or write payload remains eligible
+  for back-to-back acceptance. This prevents duplicate uncached stores at the
+  adapter boundary without stalling consecutive CPU memory operations.
+- Fresh `make rtl-frontend-compile`, default `make soc-smoke
+  SOC_TEST_RUN_DIR=build/soc_test/smoke_legacy_rearm`,
+  `make l1-nonblocking-cpu-compat-gate`, and
+  `make l1-nonblocking-cpu-multi-gate` pass. The opt-in L1 contract remains
+  bounded; full coherence, arbitrary reset/error timing and Linux cache ABI
+  are still open.
