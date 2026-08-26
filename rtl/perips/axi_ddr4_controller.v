@@ -190,7 +190,7 @@ module axi_ddr4_controller #(
     // otherwise the crossbar can enqueue an AR/AW that the controller never
     // captures, leaving the fabric transaction table permanently occupied.
     wire refresh_due = refresh_req ||
-                       ((REFRESH_INTERVAL_CYCLES > 0) &&
+                       ((!FAST_MODE) && (REFRESH_INTERVAL_CYCLES > 0) &&
                         refresh_timer >= REFRESH_INTERVAL_CYCLES-1 &&
                         controller_ready);
     assign controller_present = 1'b1;
