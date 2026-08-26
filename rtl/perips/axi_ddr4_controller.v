@@ -13,6 +13,10 @@ module axi_ddr4_controller #(
     parameter integer REFRESH_INTERVAL_CYCLES = 64,
     parameter integer REFRESH_CYCLES = 4,
     parameter integer COMMAND_LATENCY = 1,
+    // Linux boot uses a deterministic protocol model so long kernel memory
+    // initialization is not dominated by synthetic refresh stalls. The
+    // default contract keeps the periodic refresh pressure enabled.
+    parameter integer FAST_MODE = 1'b0,
     parameter integer INJECT_INIT_FAIL = 1'b0,
     parameter integer INJECT_FATAL = 1'b0,
     parameter integer ENABLE_ECC = 1'b0,
@@ -200,9 +204,10 @@ module axi_ddr4_controller #(
     assign s_wready = (state == ST_WRITE_DATA) && write_active;
 
     initial begin
-        for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1)
+        for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1) begin
             ram[i] = 32'd0;
             ecc_ram[i] = 39'd0;
+        end
     end
 
     // Simulation-only firmware preload hook retained under the new instance
@@ -284,7 +289,7 @@ module axi_ddr4_controller #(
                         end
                     end
                     ST_READY: begin
-                        if (refresh_req || ((REFRESH_INTERVAL_CYCLES > 0) &&
+                        if (refresh_req || ((!FAST_MODE) && (REFRESH_INTERVAL_CYCLES > 0) &&
                             refresh_timer >= REFRESH_INTERVAL_CYCLES-1 && controller_ready)) begin
                             state <= ST_REFRESH;
                             timer <= (REFRESH_CYCLES < 1) ? 1 : REFRESH_CYCLES;
