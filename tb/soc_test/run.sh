@@ -50,6 +50,12 @@ fi
 sva_args=()
 sva_sources=()
 cm_args="line+cond+fsm+branch+tgl"
+coverage_enabled=1
+if [ "${SKIP_COVERAGE:-0}" = "1" ]; then
+    coverage_enabled=0
+    cm_args=""
+    echo "Coverage: disabled by explicit SKIP_COVERAGE=1"
+fi
 if [ "${SVA_ENABLE:-0}" = "1" ]; then
     sva_args=(+define+SVA_ENABLE +define+VIC_PRIORITY_CHECKER_ENABLE)
     sva_sources=(
@@ -66,10 +72,16 @@ if [ "${SVA_ENABLE:-0}" = "1" ]; then
         "${ROOT_DIR}/tb/sva/reset_sync_props.sv"
         "${ROOT_DIR}/tb/sva/sva_bind.sv"
     )
-    cm_args="line+cond+fsm+branch+tgl+assert"
+    if [ "${coverage_enabled}" = "1" ]; then
+        cm_args="line+cond+fsm+branch+tgl+assert"
+    fi
 fi
 
-vcs -full64 -sverilog -timescale=1ns/1ps -cm "${cm_args}" \
+vcs_args=(-full64 -sverilog -timescale=1ns/1ps)
+if [ "${coverage_enabled}" = "1" ]; then
+    vcs_args+=(-cm "${cm_args}")
+fi
+vcs "${vcs_args[@]}" \
     "${l2_define_args[@]}" \
     "${sva_args[@]}" \
     "${vcs_extra_args[@]}" \
@@ -100,7 +112,11 @@ sim_extra_args=()
 if [ -n "${SIM_EXTRA_ARGS:-}" ]; then
     read -r -a sim_extra_args <<< "${SIM_EXTRA_ARGS}"
 fi
-./simv +FW_HEX="$FW_HEX_ABS" "${sim_extra_args[@]}" -cm "${cm_args}" -l sim.log
+sim_args=(+FW_HEX="$FW_HEX_ABS" "${sim_extra_args[@]}")
+if [ "${coverage_enabled}" = "1" ]; then
+    sim_args+=(-cm "${cm_args}")
+fi
+./simv "${sim_args[@]}" -l sim.log
 if grep -q "SoC Simulation Timeout" sim.log; then
     echo "ERROR: SoC simulation watchdog expired"
     exit 1
@@ -109,9 +125,11 @@ if grep -Eq "REGRESSION_TEST_FAILED|Comprehensive SoC Test Failed" sim.log; then
     echo "ERROR: SoC firmware regression reported failure"
     exit 1
 fi
-urg -dir simv.vdb -report textReportRaw -format text
-if [ "${SKIP_URG_EXCLUSION_CHECK:-0}" = "1" ]; then
-    echo "URG exclusion application: SKIPPED by explicit caller opt-in"
-else
-    urg -dir simv.vdb -elfile "${ROOT_DIR}/tb/coverage/product_exclusions.el" -excl_strict -report textReportFinal -format text
+if [ "${coverage_enabled}" = "1" ]; then
+    urg -dir simv.vdb -report textReportRaw -format text
+    if [ "${SKIP_URG_EXCLUSION_CHECK:-0}" = "1" ]; then
+        echo "URG exclusion application: SKIPPED by explicit caller opt-in"
+    else
+        urg -dir simv.vdb -elfile "${ROOT_DIR}/tb/coverage/product_exclusions.el" -excl_strict -report textReportFinal -format text
+    fi
 fi
