@@ -83,6 +83,10 @@ module tb_mips_soc;
     integer linux_tlb_trace;
     integer linux_tlb_trace_limit;
     integer linux_tlb_trace_count;
+    integer linux_vector_line_trace;
+    integer linux_vector_line_trace_limit;
+    integer linux_vector_line_trace_count;
+    reg [26:0] linux_vector_line;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -338,6 +342,81 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be);
                 linux_vector_trace_count = linux_vector_trace_count + 1;
+            end
+            // Follow the generated EBase+0x200 instruction line through all
+            // cache and DDR boundaries.  The line is configurable because a
+            // relocated image may choose a different EBase.  This observes
+            // only existing signals and is intentionally bounded.
+            if (linux_vector_line_trace != 0 &&
+                linux_vector_line_trace_count < linux_vector_line_trace_limit &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req &&
+                  ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr[31:5] ==
+                    (linux_vector_line + 27'h4000000)) ||
+                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr[31:5] ==
+                    linux_vector_line))) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] ==
+                   linux_vector_line)))) begin
+                $display("LINUX_VECTOR_LINE_TRACE cycle=%0d pc=%08h if=%b/%08h/%08h ok=%b/%b err=%b/%b ic=%0d req=%b/%08h ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b cnt=%0d install=%b line=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h dc=%0d dreq=%b/%b/%08h/%08h/%h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_data_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_bus_error,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_cache_error,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.req_buf_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.req_buf_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rlast,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_word_cnt,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.sram_write_en,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[31:0],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[63:32],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[95:64],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[127:96],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[159:128],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[191:160],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[223:192],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[255:224],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.state,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e08200 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e08204 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e08208 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e0820c >> 2],
+                    `TB_DCACHE_PATH.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be);
+                linux_vector_line_trace_count = linux_vector_line_trace_count + 1;
             end
             // Follow the known failing instruction line through the actual
             // Linux S3 DDR path. This is opt-in and independently bounded so
@@ -673,6 +752,13 @@ module tb_mips_soc;
         linux_tlb_trace_limit = 256;
         if (!$value$plusargs("LINUX_TLB_TRACE_LIMIT=%d", linux_tlb_trace_limit)) begin end
         linux_tlb_trace_count = 0;
+        linux_vector_line_trace = 0;
+        if (!$value$plusargs("LINUX_VECTOR_LINE_TRACE=%d", linux_vector_line_trace)) begin end
+        linux_vector_line_trace_limit = 256;
+        if (!$value$plusargs("LINUX_VECTOR_LINE_TRACE_LIMIT=%d", linux_vector_line_trace_limit)) begin end
+        linux_vector_line_trace_count = 0;
+        linux_vector_line = 27'h470410;
+        if (!$value$plusargs("LINUX_VECTOR_LINE=%h", linux_vector_line)) begin end
     end
 `endif
 
