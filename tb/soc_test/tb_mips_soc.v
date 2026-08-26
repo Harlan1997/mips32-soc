@@ -192,6 +192,21 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
                     `TB_DCACHE_PATH.state);
             end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd15) &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel == 3'd1)) begin
+                $display("LINUX_EBASE_WRITE_TRACE cycle=%0d pc=%08h inst=%08h data=%08h status=%08h bev=%b exl=%b ebase_hi=%05h ebase=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[22],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[1],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_ebase_hi,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.ebase_out);
+            end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
                 ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'h8000_0000) &&

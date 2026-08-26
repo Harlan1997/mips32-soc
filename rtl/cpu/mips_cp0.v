@@ -187,7 +187,7 @@ module mips_cp0 #(
     //   13   0    Cause      [31]=BD, [30]=TI, [27]=DC, [23]=IV, [15:8]=IP, [6:2]=ExcCode
     //   14   0    EPC
     //   15   0    PRId       Read-only, hardcoded via soc_config.vh
-    //   15   1    EBase      [31:30]=10 (hw), [29:12]=writable, [9:0]=CPUNum
+    //   15   1    EBase      [31:30]=10 (hw), [29:12]=writable, [11]=WG, [9:0]=CPUNum
     //   16   0    Config     [31]=M=1 (Config1 follows), [2:0]=K0
     //   16   1    Config1    Read-only, geometry-derived
     //   16   2    Config2    M=1 (Config3 follows), rest 0
@@ -203,7 +203,8 @@ module mips_cp0 #(
     // Product reset starts with ERL=1, so the first startup CacheErr must still
     // capture a precise PC even though ERL is already asserted.
     reg        cp0_errorepc_valid;
-    reg [17:0] cp0_ebase_hi;      // EBase[29:12] (bits [31:30]=10 forced; [11:10]=0; [9:0]=CPUNum)
+    reg [17:0] cp0_ebase_hi;      // EBase[29:12] (bits [31:30]=10 forced)
+    reg        cp0_ebase_wg;      // EBase.WG[11], used by Linux to probe writable top bits
     reg [31:0] cp0_hwrena;
     // UserLocal is the software-managed per-thread pointer exposed by CP0
     // (4,2).  RDHWR integration remains a separate decode slice; MFC0/MTC0
@@ -273,7 +274,7 @@ module mips_cp0 #(
                              `SOC_CP0_PRID_REVISION };
 `endif
 
-    wire [31:0] ebase_val = { 2'b10, cp0_ebase_hi, 2'b00, `SOC_CP0_CPUNUM };
+    wire [31:0] ebase_val = { 2'b10, cp0_ebase_hi, cp0_ebase_wg, 1'b0, `SOC_CP0_CPUNUM };
     assign ebase_out = ebase_val;
     assign bev_out   = cp0_status[22];
     assign srs_current_set_out = (`SOC_SRS_ENABLE != 0) ? cp0_srs_css : 4'd0;
@@ -537,6 +538,7 @@ module mips_cp0 #(
             cp0_errorepc    <= 32'd0;
             cp0_errorepc_valid <= 1'b0;
             cp0_ebase_hi    <= `SOC_CP0_EBASE_RESET_HI;
+            cp0_ebase_wg    <= 1'b0;
             cp0_hwrena      <= 32'd0;
             cp0_userlocal   <= 32'd0;
             cp0_config_k0   <= `SOC_CP0_CONFIG_K0_RESET;
@@ -808,11 +810,21 @@ module mips_cp0 #(
                         cp0_epc          <= wdata;
                     end
                     {5'd15, 3'd1}: begin
-                        // EBase: only [29:12] are writable, bits [31:30] hw-forced to 10,
-                        // [11:10] reserved, [9:0] CPUNum read-only.
-                        // Additionally per MIPS spec only writable when Status.EXL=0 && Status.BEV=0.
-                        if (cp0_status[1] == 1'b0 && cp0_status[22] == 1'b0)
-                            cp0_ebase_hi <= wdata[29:12];
+                        // EBase: only [29:12] and WG[11] are writable, bits [31:30]
+                        // hw-forced to 10, bit 10 reserved, [9:0] CPUNum read-only. MIPS/Linux probes
+                        // EBase.WG with BEV set; changing EBase while BEV is clear is
+                        // architecturally undefined, so the two paths intentionally use
+                        // the corresponding mode-specific write condition.
+                        if (cp0_status[1] == 1'b0 &&
+`ifdef SOC_LINUX_BOOT_ENABLE
+                            cp0_status[22] == 1'b1)
+`else
+                            cp0_status[22] == 1'b0)
+`endif
+                            begin
+                                cp0_ebase_hi <= wdata[29:12];
+                                cp0_ebase_wg  <= wdata[11];
+                            end
                     end
                     {5'd16, 3'd0}: begin
                         // Config: only K0 is software-writable
