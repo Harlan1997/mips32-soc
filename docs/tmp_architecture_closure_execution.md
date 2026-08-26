@@ -1714,3 +1714,20 @@ remains the compatibility baseline.
 - This closes the selected peripheral differential slice only. Full DMA
   fault/reset timing, Linux device drivers, physical QSPI/DDR timing and full
   system-mode Linux differential remain open.
+
+### 2026-08-26 RTL Linux DDR fast-mode diagnosis
+
+- Added the Linux-only `DDR_FAST_MODE` path through `mips_soc_impl` and
+  `soc_memory_subsystem` into `axi_ddr4_controller`. It suppresses synthetic
+  periodic refresh stalls only for `SOC_LINUX_BOOT_ENABLE`; the default DDR4
+  controller contract remains unchanged. The controller initialization loop
+  was also corrected to initialize both backing arrays.
+- `make ddr4-controller-gate ddr4-controller-stress-gate rtl-frontend-compile`
+  passes, including the default refresh/backpressure stress cases and all
+  frontend configurations.
+- A fresh Linux RTL run with the opt-in mode still fails to reach
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`. The trace remains stuck at the I-cache
+  refill for physical address `0x08a55ca0`, so refresh pressure is not the
+  blocker. This narrows the next investigation to S3 crossbar/DDR request
+  acceptance and response routing; RTL Linux boot and RTL/QEMU Linux
+  differential remain OPEN.
