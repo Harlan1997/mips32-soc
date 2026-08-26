@@ -199,6 +199,10 @@ module axi_crossbar #(
                 ((a & 32'hFFFE_0000) == 32'h8000_0000) ||
                 ((a & 32'hFFFE_0000) == 32'hA000_0000))
                 decode_slave = 4'd0;                 // S0 SRAM
+            else if (((a >= 32'h0002_0000) && (a < 32'h0800_0000)) ||
+                     ((a >= 32'h8002_0000) && (a < 32'h8800_0000)) ||
+                     ((a >= 32'hA002_0000) && (a < 32'hA800_0000)))
+                decode_slave = 4'd3;                 // low-RAM alias to DDR
             else
 `endif
             if (((a & `SOC_64KB_REGION_MASK) == `SOC_BOOT_BASE) ||
@@ -219,6 +223,37 @@ module axi_crossbar #(
                 decode_slave = DEC[3:0];             // DECERR
         end
     endfunction
+
+`ifdef SOC_LINUX_BOOT_ENABLE
+    // The Linux reference machine exposes one contiguous RAM resource at
+    // physical address zero, while the RTL product map reserves the first
+    // 128 KiB for on-chip SRAM and places the backing DDR at 0x0800_0000.
+    // Translate only the opt-in low-RAM alias after decode; the request and
+    // response bookkeeping continues to use the original master address.
+    function [AW-1:0] slave_address;
+        input [3:0] target;
+        input [AW-1:0] a;
+        begin
+            slave_address = a;
+            if (target == 4'd3) begin
+                if ((a >= 32'h0002_0000) && (a < 32'h0800_0000))
+                    slave_address = `SOC_DDR_BASE + a;
+                else if ((a >= 32'h8002_0000) && (a < 32'h8800_0000))
+                    slave_address = `SOC_DDR_BASE + (a - 32'h8000_0000);
+                else if ((a >= 32'hA002_0000) && (a < 32'hA800_0000))
+                    slave_address = `SOC_DDR_BASE + (a - 32'hA000_0000);
+            end
+        end
+    endfunction
+`else
+    function [AW-1:0] slave_address;
+        input [3:0] target;
+        input [AW-1:0] a;
+        begin
+            slave_address = a;
+        end
+    endfunction
+`endif
 
     wire [3:0] ar_tgt [0:N_M-1];
     wire [3:0] aw_tgt [0:N_M-1];
@@ -325,7 +360,7 @@ module axi_crossbar #(
 
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_ar_drive
         assign s_arid   [gs*IDW +: IDW] = ar_id  [rg[gs]];
-        assign s_araddr [gs*AW  +: AW ] = ar_addr[rg[gs]];
+        assign s_araddr [gs*AW  +: AW ] = slave_address(ar_tgt[rg[gs]], ar_addr[rg[gs]]);
         assign s_arlen  [gs*8   +: 8  ] = ar_len [rg[gs]];
         assign s_arsize [gs*3   +: 3  ] = ar_size[rg[gs]];
         assign s_arburst[gs*2   +: 2  ] = ar_bst [rg[gs]];
@@ -637,7 +672,7 @@ module axi_crossbar #(
 
     generate for (gs=0; gs<N_S; gs=gs+1) begin: g_aw_drive
         assign s_awid   [gs*IDW +: IDW] = aw_id  [wg[gs]];
-        assign s_awaddr [gs*AW  +: AW ] = aw_addr[wg[gs]];
+        assign s_awaddr [gs*AW  +: AW ] = slave_address(aw_tgt[wg[gs]], aw_addr[wg[gs]]);
         assign s_awlen  [gs*8   +: 8  ] = aw_len [wg[gs]];
         assign s_awsize [gs*3   +: 3  ] = aw_size[wg[gs]];
         assign s_awburst[gs*2   +: 2  ] = aw_bst [wg[gs]];

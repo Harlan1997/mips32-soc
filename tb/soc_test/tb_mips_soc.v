@@ -111,7 +111,7 @@ module tb_mips_soc;
         end else begin
             linux_trace_cycle = linux_trace_cycle + 1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
-                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h",
+                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
@@ -125,15 +125,74 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_i_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_i_fault_type,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_hit,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_multi_hit,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_v,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_pfn,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_fault_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_fault_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_fault_vaddr_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_data,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_tlb_refill,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_is_data,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_is_tlb_refill,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translate_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_fault_type);
+            end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                (((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= 32'h8800_d800) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= 32'h8800_d850)) ||
+                 ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= 32'h8000_0000) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < 32'h8000_0200)))) begin
+                $display("LINUX_WB_TRACE cycle=%0d pc=%08h inst=%08h valid=%b ex=%b/%0d/%b/%b w=%b/%0d/%08h gpr=%08h/%08h/%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_data,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_tlb_refill,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19]);
             end
             if ((linux_trace_cycle < 20) ||
                 (linux_trace_cycle % 100000 == 0) ||
                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
                  (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c))) begin
-                $display("LINUX_REFILL_TRACE cycle=%0d pc=%08h ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h dr=%b/%b/%08h/%0h/%b",
+                $display("LINUX_REFILL_TRACE cycle=%0d pc=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h dr=%b/%b/%08h/%0h/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_i_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_i_fault_type,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_hit,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_multi_hit,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_v,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_pfn,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.arready,
