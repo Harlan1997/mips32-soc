@@ -123,6 +123,10 @@ module mips_cpu #(
     wire [1:0] rob_retire_tag;
     wire [31:0] wb_pc_plus_8;
     wire [31:0] ex_inst;
+    // Forward declarations used by interrupt priority logic.  Their
+    // combinational definitions are kept next to the IF/MEM fault logic.
+    wire        if_fault_req;
+    wire        dmem_translation_fault;
     wire [31:0] mem_inst;
     wire        mem_double_mem = (`SOC_FPU_ENABLE != 0) &&
                                  ((mem_inst[31:26] == 6'b110101) ||
@@ -221,6 +225,14 @@ module mips_cpu #(
     // the pipeline. Otherwise the handler may observe a pre-load register
     // value while the response is still in the ROB.
     wire interrupt_accept = intr_req &&
+                            // A synchronous address/translation fault is
+                            // already the oldest architectural event.  Do
+                            // not let a timer or external IRQ flush it from
+                            // IF/MEM before it reaches WB; otherwise the
+                            // faulting instruction retries forever and the
+                            // handler never gets a chance to refill TLB.
+                            !if_fault_req &&
+                            !dmem_translation_fault &&
                             // WAIT must reach retirement before a pending
                             // interrupt is accepted.  Otherwise the interrupt
                             // can preempt the instruction in an earlier stage
@@ -412,7 +424,6 @@ module mips_cpu #(
     // translation fails, so deriving the MMU request from it would hide the
     // fault and deadlock the pipeline waiting for data_data_ok.
     wire dmem_translate_req;
-    wire dmem_translation_fault;
 
     wire hw_walker_i_miss = (hardware_walker_enable === 1'b1) &&
                              inst_req && !mmu_i_ok &&
@@ -525,9 +536,9 @@ module mips_cpu #(
     // optional cache-error sideband electrically quiet rather than X-active.
     wire        if_bus_fault  = inst_req & inst_data_ok & (inst_bus_error === 1'b1);
     wire        if_cache_fault = inst_req & inst_data_ok & (inst_cache_error === 1'b1);
-    wire        if_fault_req  = if_adel_exception | if_cache_fault | if_bus_fault |
-                                hw_walker_i_fault |
-                                ((~mmu_i_ok & inst_req) & !hw_walker_i_miss);
+    assign if_fault_req  = if_adel_exception | if_cache_fault | if_bus_fault |
+                           hw_walker_i_fault |
+                           ((~mmu_i_ok & inst_req) & !hw_walker_i_miss);
     wire [4:0]  if_fault_code = hw_walker_i_fault            ? 5'h02 :  // walker TLBL
                                 if_adel_exception            ? 5'h04 :  // misaligned PC
                                 if_cache_fault                ? 5'h1E :  // CacheErr
@@ -1285,6 +1296,19 @@ module mips_cpu #(
     // untranslated address to the data fabric.  The architectural exception
     // remains deferred until the walker returns a latched fault.
     assign dmem_request_blocked = dmem_translation_fault | hw_walker_d_miss;
+
+`ifdef SVA_ENABLE
+    // Synchronous translation faults have priority over asynchronous IRQs.
+    // Losing this ordering flushes the faulting instruction before CP0 can
+    // update BadVAddr/EntryHi and makes a software TLB refill impossible.
+    property p_sync_translation_fault_priority;
+        @(posedge clk) disable iff (!rst_n)
+            (if_fault_req || dmem_translation_fault) |-> !interrupt_accept;
+    endproperty
+    assert property (p_sync_translation_fault_priority)
+        else $error("synchronous translation fault was preempted by IRQ");
+`endif
+
     assign fpu_mem_lwc1 = (`SOC_FPU_ENABLE != 0) &&
                           mem_mem_read && (mem_inst[31:26] == 6'b110001);
     assign fpu_mem_swc1 = (`SOC_FPU_ENABLE != 0) &&
