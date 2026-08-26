@@ -7,6 +7,8 @@ LINUX_SOURCE_DIR=${LINUX_SOURCE_DIR:-"${ROOT_DIR}/third_party/linux"}
 BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build/linux_boot/real"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 JOBS=${JOBS:-2}
+KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
+BUILD_DIR=$(realpath -m "${BUILD_DIR}")
 
 test -f "${LINUX_SOURCE_DIR}/Makefile"
 command -v "${CROSS_COMPILE}gcc" >/dev/null
@@ -45,7 +47,16 @@ make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
     ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" scripts
 scripts_config="${LINUX_SOURCE_DIR}/scripts/config"
 test -x "${scripts_config}"
+kernel_config_args=()
+if [[ "${KERNEL_PHYSICAL_START}" != "0x88000000" &&
+      "${KERNEL_PHYSICAL_START}" != "0X88000000" ]]; then
+    # PHYSICAL_START is conditionally visible in the MIPS Kconfig and is
+    # gated by CRASH_DUMP. Enable the dependency only for relocated builds;
+    # the ordinary QEMU build keeps its historical configuration unchanged.
+    kernel_config_args+=(--enable CONFIG_CRASH_DUMP)
+fi
 "${scripts_config}" --file "${BUILD_DIR}/kernel/.config" \
+    "${kernel_config_args[@]}" \
     --enable CONFIG_SERIAL_8250 \
     --enable CONFIG_SERIAL_8250_CONSOLE \
     --enable CONFIG_DEVTMPFS \
@@ -53,7 +64,8 @@ test -x "${scripts_config}"
     --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
     --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_list}" \
     --enable CONFIG_CMDLINE_BOOL \
-    --set-str CONFIG_CMDLINE "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init"
+    --set-str CONFIG_CMDLINE "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init" \
+    --set-val CONFIG_PHYSICAL_START "${KERNEL_PHYSICAL_START}"
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
     ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" olddefconfig
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \

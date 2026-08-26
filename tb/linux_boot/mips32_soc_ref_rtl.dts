@@ -11,13 +11,10 @@
 		bootargs = "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init";
 		stdout-path = "serial0:115200n8";
 	};
-	/*
-	 * The RTL image stores the kernel at the physical DDR window
-	 * 0x08000000.  Keep the Linux physical RAM resource at that same base;
-	 * declaring RAM at zero would make ordinary kseg0 data accesses alias the
-	 * beginning of the kernel image through the Linux-only crossbar mapping.
-	 */
-	memory@8000000 { device_type = "memory"; reg = <0x08000000 0x01000000>; };
+	/* The RTL image reserves the first 8 MiB of its DDR backing store for the
+	 * low-physical-address alias path and places the kernel at 0x08800000.
+	 * This is an RTL-only layout; QEMU keeps its independent RAM-at-zero DTS. */
+	memory@8000000 { device_type = "memory"; reg = <0x08000000 0x02000000>; };
 
 	cpus {
 		#address-cells = <1>;
