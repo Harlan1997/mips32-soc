@@ -730,6 +730,14 @@ static void soc_ref_instruction_tick(CPUState *cpu)
     s->irq_replay_bd_pending =
         (s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0 ||
         s->irq_replay_pic_mask != 0;
+    /* The RTL VIC schedule samples a pending source at the retire boundary
+     * before the next sequential instruction is fetched.  QEMU's interrupt
+     * path observes the already-advanced PC for subsequent replay entries;
+     * recover the RTL EPC boundary without changing ordinary IRQ replay. */
+    if (s->irq_replay_pic_mask && s->irq_release_index > 0) {
+        s->irq_replay_epc = s->cpu->env.active_tc.PC - 4;
+        s->irq_replay_epc_fixup = true;
+    }
     if (s->irq_release_index == 0 && s->irq_replay_pic_mask) {
         /* Some RTL IRQ replays originate in the SoC VIC.  The CPU replay
          * line is injected independently, so mirror the explicitly supplied

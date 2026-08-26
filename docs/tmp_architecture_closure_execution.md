@@ -822,10 +822,12 @@ DMA physical signoff is claimed.
   compare/branch slice is separately gated, but is not a full COP1 compliance
   claim.
 - Fixed-version Buildroot/Linux QEMU boot, RTL boot, deterministic device-event replay, and full architectural retire differential.
-- The latest fresh `qemu-system-vic-cpu-differential-gate` run passes 735
-  retire records after the VIC corpus changed its readbacks to direct caller
-  MMIO loads. The generic CPU subroutine-return/load forwarding bug remains a
-  separate residual and is not hidden by this corpus-specific workaround.
+- The latest fresh `qemu-system-vic-cpu-differential-gate` run passes 736
+  retire records after the VIC replay EPC boundary was aligned to the RTL.
+  Source traces contain 737 records on each side; the comparator drops one
+  producer-specific asynchronous boundary record. The generic CPU
+  subroutine-return/load forwarding bug remains a separate residual and is not
+  hidden by this corpus-specific workaround.
 
 ### 2026-08-20 execution update
 
