@@ -55,9 +55,20 @@ module tb_mips_soc;
     integer linux_vector_trace;
     integer linux_vector_trace_limit;
     integer linux_vector_trace_count;
+    integer linux_cacheop_trace_limit;
+    integer linux_cacheop_trace_count;
     integer linux_ddr_trace;
     integer linux_ddr_trace_limit;
     integer linux_ddr_trace_count;
+    integer linux_late_icache_trace;
+    integer linux_late_icache_trace_limit;
+    integer linux_late_icache_trace_count;
+    integer linux_ddr_write_trace;
+    integer linux_ddr_write_trace_limit;
+    integer linux_ddr_write_trace_count;
+    integer linux_target_dside_trace;
+    integer linux_target_dside_trace_limit;
+    integer linux_target_dside_trace_count;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -185,7 +196,8 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19]);
             end
-            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid) begin
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid &&
+                linux_cacheop_trace_count < linux_cacheop_trace_limit) begin
                 $display("LINUX_CACHEOP_TRACE cycle=%0d op=%02h addr=%08h ic=%b done=%b err=%0d daw=%b/%b/%08h/%08h/%b ist=%0d dst=%0d",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op,
@@ -200,6 +212,7 @@ module tb_mips_soc;
                     `TB_DCACHE_PATH.wlast,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
                     `TB_DCACHE_PATH.state);
+                linux_cacheop_trace_count = linux_cacheop_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
@@ -286,6 +299,162 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[255:224]);
                 linux_ddr_trace_count = linux_ddr_trace_count + 1;
             end
+            // Follow the later Linux instruction line that previously
+            // retired as 0xffffffff. This trace is independently bounded and
+            // includes the refill install state so a bad line can be
+            // attributed to DDR, L2, AXI routing, or I-cache installation.
+            if (linux_late_icache_trace != 0 &&
+                linux_late_icache_trace_count < linux_late_icache_trace_limit &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h00484a34) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h00484a34) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h00484a34) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h00484a34))) begin
+                $display("LINUX_LATE_ICACHE_TRACE cycle=%0d ic=%0d req=%b/%08h ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b cnt=%0d err=%b victim=%0d saddr=%0d install=%b line=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h tag=%08h/%08h/%08h/%08h data=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.req_buf_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.req_buf_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rlast,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_word_cnt,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_error,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.victim_way,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.sram_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.sram_write_en,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[31:0],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[63:32],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[95:64],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[127:96],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[159:128],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[191:160],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[223:192],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.full_refill_line[255:224],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.tag_rdata[0],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.tag_rdata[1],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.tag_rdata[2],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.tag_rdata[3],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][31:0],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][63:32],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][95:64],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][127:96],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][159:128],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][191:160],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][223:192],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.data_rdata[0][255:224],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.state,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00094680 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00094684 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00094688 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h0009468c >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00094690 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00094694 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00094698 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h0009469c >> 2]);
+                linux_late_icache_trace_count = linux_late_icache_trace_count + 1;
+            end
+            if (linux_ddr_write_trace != 0 &&
+                linux_ddr_write_trace_count < linux_ddr_write_trace_limit &&
+                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awaddr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.write_addr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awaddr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awaddr[31:5] == 27'h0040133b))) begin
+                $display("LINUX_DDR_WRITE_TRACE cycle=%0d ddr=%0d aw=%b/%b/%08h/%0h/%b w=%b/%b/%08h/%h/%b active=%b/%0d/%08h l2=%0d maw=%b/%b/%08h mw=%b/%b/%08h/%h/%b saw=%b/%b/%08h sw=%b/%b/%08h/%h/%b dc=%0d daw=%b/%b/%08h dw=%b/%b/%08h/%h/%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.state,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awaddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awlen,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wdata,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wstrb,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.write_active,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.write_left,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.write_addr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awaddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_wvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_wready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_wdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_wstrb,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_wlast,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awaddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wstrb,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wlast,
+                    `TB_DCACHE_PATH.state,
+                    `TB_DCACHE_PATH.awvalid,
+                    `TB_DCACHE_PATH.awready,
+                    `TB_DCACHE_PATH.awaddr,
+                    `TB_DCACHE_PATH.wvalid,
+                    `TB_DCACHE_PATH.wready,
+                    `TB_DCACHE_PATH.wdata,
+                    `TB_DCACHE_PATH.wstrb,
+                    `TB_DCACHE_PATH.wlast);
+                linux_ddr_write_trace_count = linux_ddr_write_trace_count + 1;
+            end
+            if (linux_target_dside_trace != 0 &&
+                linux_target_dside_trace_count < linux_target_dside_trace_limit &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == 27'h000133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out[31:5] == 27'h000133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr[31:5] == 27'h000133b))) begin
+                $display("LINUX_TARGET_DSIDE_TRACE cycle=%0d pc=%08h mempc=%08h va=%08h pa=%08h we=%b wdata=%08h be=%h memop=%03h done=%b req=%b dstate=%0d reqbuf=%b/%b/%08h/%08h/%h victim=%0d/%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_op,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_done,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_be,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_way,
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_tag_entry);
+                linux_target_dside_trace_count = linux_target_dside_trace_count + 1;
+            end
             if ((linux_trace_cycle < 20) ||
                 (linux_trace_cycle % 100000 == 0) ||
                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
@@ -342,11 +511,29 @@ module tb_mips_soc;
         linux_vector_trace_limit = 1000;
         if (!$value$plusargs("LINUX_VECTOR_TRACE_LIMIT=%d", linux_vector_trace_limit)) begin end
         linux_vector_trace_count = 0;
+        linux_cacheop_trace_limit = 2000;
+        if (!$value$plusargs("LINUX_CACHEOP_TRACE_LIMIT=%d", linux_cacheop_trace_limit)) begin end
+        linux_cacheop_trace_count = 0;
         linux_ddr_trace = 0;
         if (!$value$plusargs("LINUX_DDR_TRACE=%d", linux_ddr_trace)) begin end
         linux_ddr_trace_limit = 200;
         if (!$value$plusargs("LINUX_DDR_TRACE_LIMIT=%d", linux_ddr_trace_limit)) begin end
         linux_ddr_trace_count = 0;
+        linux_late_icache_trace = 0;
+        if (!$value$plusargs("LINUX_LATE_ICACHE_TRACE=%d", linux_late_icache_trace)) begin end
+        linux_late_icache_trace_limit = 160;
+        if (!$value$plusargs("LINUX_LATE_ICACHE_TRACE_LIMIT=%d", linux_late_icache_trace_limit)) begin end
+        linux_late_icache_trace_count = 0;
+        linux_ddr_write_trace = 0;
+        if (!$value$plusargs("LINUX_DDR_WRITE_TRACE=%d", linux_ddr_write_trace)) begin end
+        linux_ddr_write_trace_limit = 240;
+        if (!$value$plusargs("LINUX_DDR_WRITE_TRACE_LIMIT=%d", linux_ddr_write_trace_limit)) begin end
+        linux_ddr_write_trace_count = 0;
+        linux_target_dside_trace = 0;
+        if (!$value$plusargs("LINUX_TARGET_DSIDE_TRACE=%d", linux_target_dside_trace)) begin end
+        linux_target_dside_trace_limit = 160;
+        if (!$value$plusargs("LINUX_TARGET_DSIDE_TRACE_LIMIT=%d", linux_target_dside_trace_limit)) begin end
+        linux_target_dside_trace_count = 0;
     end
 `endif
 

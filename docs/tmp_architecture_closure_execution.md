@@ -1796,3 +1796,21 @@ remains the compatibility baseline.
   bounded run and remains open. The next diagnosis must follow CPU retirement
   and D-cache progress after the correct refill, rather than add more DDR
   traffic or increase unbounded trace duration.
+
+### 2026-08-26 Linux D-cache writeback and diagnostic bounds
+
+- The target line was later observed being overwritten by a D-cache dirty
+  writeback. At cycle 2264401, the controller accepted AW=0x08026760;
+  the following eight W beats were 0x80026760, 0x80026760, zeros,
+  0xffffffff, 0x00000001, and zero. The controller therefore performed
+  the AXI write correctly; the corruption is upstream of the DDR backing RAM.
+- The D-cache emitted the writeback address as low alias 0x00026760, which
+  the Linux crossbar maps to 0x08026760. This identifies the remaining
+  Linux failure as an alias/dirty-line or page-mapping interaction, not an
+  I-cache last-beat assembly problem. Linux RTL boot and RTL/QEMU Linux
+  differential remain OPEN pending the originating D-side request.
+- Added independently bounded LINUX_DDR_WRITE_TRACE and
+  LINUX_TARGET_DSIDE_TRACE plusargs. Also bounded LINUX_CACHEOP_TRACE at
+  2000 lines (override with LINUX_CACHEOP_TRACE_LIMIT) so diagnostic
+  options cannot recreate the prior OOM. These are verification-only and
+  default off.
