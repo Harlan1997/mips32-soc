@@ -5,7 +5,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/linux_boot/rtl"}
 KERNEL=${KERNEL:-"${ROOT_DIR}/build/linux_boot/rtl_prep/kernel/vmlinux"}
-DTB=${DTB:-"${ROOT_DIR}/build/linux_boot/real/mips32_soc_ref.dtb"}
+DTB=${DTB:-"${RUN_DIR}/mips32_soc_ref_rtl.dtb"}
+DTB_SOURCE=${DTB_SOURCE:-"${SCRIPT_DIR}/mips32_soc_ref_rtl.dts"}
+DTC=${DTC:-"${ROOT_DIR}/build/linux_boot/real/kernel/scripts/dtc/dtc"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 ELF2HEX=${ELF2HEX:-"${ROOT_DIR}/tb/soc_test/fw/common/elf2hex.py"}
 DTB_OFFSET=${DTB_OFFSET:-0x00f00000}
@@ -14,6 +16,10 @@ mkdir -p "${RUN_DIR}"
 command -v "${CROSS_COMPILE}gcc" >/dev/null
 command -v "${CROSS_COMPILE}objcopy" >/dev/null
 test -f "${KERNEL}"
+if [[ ! -f "${DTB}" || "${DTB_SOURCE}" -nt "${DTB}" ]]; then
+    test -x "${DTC}"
+    "${DTC}" -I dts -O dtb -o "${DTB}" "${DTB_SOURCE}"
+fi
 test -f "${DTB}"
 
 entry=$(${CROSS_COMPILE}readelf -h "${KERNEL}" | awk '/Entry point address:/ {print $NF}')

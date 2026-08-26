@@ -12,7 +12,10 @@ module soc_memory_subsystem #(
     parameter ENABLE_SHARED_ARB = 1'b0,
     parameter ENABLE_QSPI_QUAD = 1'b0,
     parameter ENABLE_DDR4_STATUS = 1'b0,
-    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0
+    parameter ENABLE_DDR4_STATUS_FATAL = 1'b0,
+    parameter DDR_ADDRESS_BASED_INDEX = 1'b0,
+    parameter [31:0] DDR_BASE_ADDR = 32'h0800_0000,
+    parameter DDR_FAST_MODE = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -237,6 +240,9 @@ module soc_memory_subsystem #(
 
     axi_ddr_model #(
         .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS),
+        .ADDRESS_BASED_INDEX (DDR_ADDRESS_BASED_INDEX),
+        .BASE_ADDR (DDR_BASE_ADDR),
+        .FAST_MODE (DDR_FAST_MODE),
         .INJECT_RESP_ERROR (`SOC_AXI_RESP_ERROR_INJECT_ENABLE != 0),
         .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0)
     ) u_axi_sram (
@@ -275,6 +281,9 @@ module soc_memory_subsystem #(
 `else
     axi_ddr_model #(
         .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS),
+        .ADDRESS_BASED_INDEX (DDR_ADDRESS_BASED_INDEX),
+        .BASE_ADDR (DDR_BASE_ADDR),
+        .FAST_MODE (DDR_FAST_MODE),
         .INJECT_RESP_ERROR (`SOC_AXI_RESP_ERROR_INJECT_ENABLE != 0),
         .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0)
     ) u_axi_sram (
