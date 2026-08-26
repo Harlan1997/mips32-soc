@@ -55,7 +55,7 @@ module l1_cache_nb_cpu_axi #(
     // A cache operation is independent of the data request in the CPU MEM
     // contract.  Keep it exclusively on the legacy cache until maintenance
     // has an explicit nonblocking completion contract.
-    reg legacy_active, l1_active, l1_response_seen;
+    reg legacy_active, legacy_request_held, l1_active, l1_response_seen;
     reg legacy_aw_seen;
     reg [2:0] l1_outstanding;
     reg legacy_req_we_q;
@@ -75,7 +75,17 @@ module l1_cache_nb_cpu_axi #(
     // independent cache states and makes a store followed by a load stale.
     // Only uncached traffic and the legacy-disabled configuration remain on
     // the blocking cache.
-    wire legacy_data_req = cpu_req &&
+    // The CPU MEM request can remain asserted through the completion edge.
+    // Do not feed the same transaction level back into the legacy cache after
+    // its response. A changed address or write payload is a new back-to-back
+    // transaction and must remain admissible even without a low valid gap.
+    wire legacy_same_request = legacy_request_held &&
+                               (cpu_we == legacy_req_we_q) &&
+                               (cpu_addr == legacy_req_addr_q) &&
+                               (cpu_wdata == legacy_req_wdata_q) &&
+                               (cpu_be == legacy_req_be_q) &&
+                               (cpu_uncacheable == legacy_req_uncacheable_q);
+    wire legacy_data_req = cpu_req && !legacy_same_request &&
                            (cpu_uncacheable || !ENABLE_L1 || !l1_address_supported);
     wire legacy_cpu_req = legacy_active || legacy_data_req;
     wire legacy_cpu_we = legacy_active ? legacy_req_we_q : cpu_we;
@@ -303,6 +313,7 @@ module l1_cache_nb_cpu_axi #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             legacy_active <= 1'b0;
+            legacy_request_held <= 1'b0;
             legacy_aw_seen <= 1'b0;
             legacy_req_we_q <= 1'b0;
             legacy_req_addr_q <= 32'd0;
@@ -313,10 +324,13 @@ module l1_cache_nb_cpu_axi #(
             l1_response_seen <= 1'b0;
             l1_outstanding <= 3'd0;
         end else begin
+            if (!cpu_req)
+                legacy_request_held <= 1'b0;
             if ((legacy_data_req && legacy_addr_ok) ||
                 (maintenance_issue && legacy_cache_op_ready))
                 legacy_active <= 1'b1;
             if (legacy_data_req && legacy_addr_ok) begin
+                legacy_request_held <= 1'b1;
                 legacy_req_we_q <= cpu_we;
                 legacy_req_addr_q <= cpu_addr;
                 legacy_req_wdata_q <= cpu_wdata;
