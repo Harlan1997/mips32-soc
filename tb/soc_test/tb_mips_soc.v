@@ -55,6 +55,9 @@ module tb_mips_soc;
     integer linux_vector_trace;
     integer linux_vector_trace_limit;
     integer linux_vector_trace_count;
+    integer linux_ddr_trace;
+    integer linux_ddr_trace_limit;
+    integer linux_ddr_trace_count;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -227,6 +230,62 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be);
                 linux_vector_trace_count = linux_vector_trace_count + 1;
             end
+            // Follow the known failing instruction line through the actual
+            // Linux S3 DDR path. This is opt-in and independently bounded so
+            // a stuck refill cannot recreate the previous OOM failure.
+            if (linux_ddr_trace != 0 &&
+                linux_ddr_trace_count < linux_ddr_trace_limit &&
+                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h0040133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h0040133b))) begin
+                $display("LINUX_DDR_TRACE cycle=%0d ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h icbuf=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.state,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00026760 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00026764 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00026768 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h0002676c >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00026770 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00026774 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00026778 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h0002677c >> 2],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[31:0],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[63:32],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[95:64],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[127:96],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[159:128],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[191:160],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[223:192],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.refill_buf[255:224]);
+                linux_ddr_trace_count = linux_ddr_trace_count + 1;
+            end
             if ((linux_trace_cycle < 20) ||
                 (linux_trace_cycle % 100000 == 0) ||
                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
@@ -283,6 +342,11 @@ module tb_mips_soc;
         linux_vector_trace_limit = 1000;
         if (!$value$plusargs("LINUX_VECTOR_TRACE_LIMIT=%d", linux_vector_trace_limit)) begin end
         linux_vector_trace_count = 0;
+        linux_ddr_trace = 0;
+        if (!$value$plusargs("LINUX_DDR_TRACE=%d", linux_ddr_trace)) begin end
+        linux_ddr_trace_limit = 200;
+        if (!$value$plusargs("LINUX_DDR_TRACE_LIMIT=%d", linux_ddr_trace_limit)) begin end
+        linux_ddr_trace_count = 0;
     end
 `endif
 
