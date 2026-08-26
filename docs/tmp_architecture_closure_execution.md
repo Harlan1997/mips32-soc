@@ -1868,3 +1868,17 @@ remains the compatibility baseline.
   access as `VA=0x88026760 -> PA=0x08026760`, with no Linux success marker yet.
   Full RTL system-mode userspace boot and RTL/QEMU Linux differential remain
   OPEN; this change closes the image address/capacity precondition only.
+
+### 2026-08-27 bounded RTL Linux progress gate
+
+- Added `make rtl-linux-progress-gate` as a reproducible, host-time-bounded
+  RTL Linux probe. It builds the Linux kernel and relocated Boot ROM/DDR image
+  in one run directory, compiles the Linux opt-in SoC configuration, and
+  requires a post-reset CPU progress trace before passing.
+- The gate disables all verbose diagnostic streams by default and bounds the
+  testbench heartbeat with `RTL_CYCLE_LIMIT`, so an incomplete Linux run cannot
+  recreate the earlier trace-driven OOM condition.
+- This gate intentionally does not require `MIPS32_SOC_LINUX_BOOT_SUCCESS`.
+  It closes the repeatable progress/evidence infrastructure only; RTL Linux
+  userspace boot, full RTL/QEMU Linux differential, and the remaining OS/ISA
+  boundaries are still open.
