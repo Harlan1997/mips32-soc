@@ -1779,3 +1779,20 @@ remains the compatibility baseline.
 - This closes the diagnostic resource-safety issue only. Linux RTL userspace
   boot, post-refill I-cache progress, and RTL/QEMU Linux differential remain
   open.
+
+### 2026-08-26 Linux S3 DDR line trace diagnosis
+
+- Added the opt-in `LINUX_DDR_TRACE` diagnostic with an independent line-count
+  limit. It follows physical line `0x08026760` through the actual S3 DDR4
+  controller, including the controller backing array, downstream AXI state and
+  I-cache refill buffer.
+- The bounded run reached the target refill at cycle `2228861`. The backing
+  words and the eight-word refill buffer contained the expected instruction
+  line, including `0x8f83000c` at `0x08026774`; the controller returned all
+  eight beats with `OKAY` and `RLAST` on the final beat. The earlier hypothesis
+  that S3 DDR returned corrupted data is therefore not reproduced by the
+  current RTL.
+- Linux RTL still does not emit `MIPS32_SOC_LINUX_BOOT_SUCCESS` within the
+  bounded run and remains open. The next diagnosis must follow CPU retirement
+  and D-cache progress after the correct refill, rather than add more DDR
+  traffic or increase unbounded trace duration.
