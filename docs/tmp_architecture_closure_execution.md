@@ -1846,3 +1846,25 @@ remains the compatibility baseline.
   2000 lines (override with LINUX_CACHEOP_TRACE_LIMIT) so diagnostic
   options cannot recreate the prior OOM. These are verification-only and
   default off.
+
+### 2026-08-26 RTL Linux image relocation and DDR capacity contract
+
+- The RTL-only Linux image builder now derives the kernel backing offset from
+  the ELF kseg0 load address. It no longer assumes that the first kernel byte
+  belongs at DDR offset zero, and it rejects kernel/DTB overlap or backing
+  window overflow before generating `ddr.hex`.
+- `build_linux_boot.sh` accepts `KERNEL_PHYSICAL_START`; non-default relocated
+  builds enable the required `CONFIG_CRASH_DUMP` dependency so
+  `CONFIG_PHYSICAL_START` is not silently discarded. Output directories are
+  normalized to absolute paths for reliable `scripts/config` operation.
+- The RTL bring-up layout uses kernel VA `0x88800000` / physical
+  `0x08800000` (backing offset `0x00800000`) and DTB VA `0x89f00000`.
+  `mips32_soc_ref_rtl.dts` declares the corresponding 32 MiB DDR resource.
+  QEMU's generic Linux layout remains unchanged.
+- DDR backing capacity is now independently parameterized. Linux opt-in uses
+  32 MiB while the default RTL contract remains 16 MiB.
+- Evidence: relocated kernel build and image generation pass; a fresh 5M-cycle
+  RTL run reaches the relocated kernel and observes the formerly conflicting
+  access as `VA=0x88026760 -> PA=0x08026760`, with no Linux success marker yet.
+  Full RTL system-mode userspace boot and RTL/QEMU Linux differential remain
+  OPEN; this change closes the image address/capacity precondition only.

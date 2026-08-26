@@ -1108,6 +1108,7 @@ module mips_soc_impl #(
         .ENABLE_FLASH_IMAGE_MODEL (ENABLE_FLASH_IMAGE_MODEL),
 `ifdef SOC_LINUX_BOOT_ENABLE
         .SRAM_DEPTH_WORDS         (4194304),
+        .DDR_DEPTH_WORDS          (8388608),
         .DDR_ADDRESS_BASED_INDEX  (1'b1),
         .DDR_FAST_MODE            (1'b1),
 `else

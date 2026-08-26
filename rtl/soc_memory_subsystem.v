@@ -15,7 +15,8 @@ module soc_memory_subsystem #(
     parameter ENABLE_DDR4_STATUS_FATAL = 1'b0,
     parameter DDR_ADDRESS_BASED_INDEX = 1'b0,
     parameter [31:0] DDR_BASE_ADDR = 32'h0800_0000,
-    parameter DDR_FAST_MODE = 1'b0
+    parameter DDR_FAST_MODE = 1'b0,
+    parameter integer DDR_DEPTH_WORDS = 4194304
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -239,7 +240,7 @@ module soc_memory_subsystem #(
     );
 
     axi_ddr_model #(
-        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS),
+        .MEM_DEPTH_WORDS (DDR_DEPTH_WORDS),
         .ADDRESS_BASED_INDEX (DDR_ADDRESS_BASED_INDEX),
         .BASE_ADDR (DDR_BASE_ADDR),
         .FAST_MODE (DDR_FAST_MODE),
@@ -280,7 +281,7 @@ module soc_memory_subsystem #(
     );
 `else
     axi_ddr_model #(
-        .MEM_DEPTH_WORDS (SRAM_DEPTH_WORDS),
+        .MEM_DEPTH_WORDS (DDR_DEPTH_WORDS),
         .ADDRESS_BASED_INDEX (DDR_ADDRESS_BASED_INDEX),
         .BASE_ADDR (DDR_BASE_ADDR),
         .FAST_MODE (DDR_FAST_MODE),
@@ -344,6 +345,7 @@ module soc_memory_subsystem #(
     wire [3:0] ddr4_phy_wstrb_i;
     wire ddr4_last_row_hit_i, ddr4_last_row_miss_i;
     axi_ddr4_controller #(
+        .MEM_DEPTH_WORDS(DDR_DEPTH_WORDS),
         .INJECT_FATAL(ENABLE_DDR4_STATUS_FATAL),
         .ENABLE_ECC(ENABLE_DDR4_STATUS),
         .FAST_MODE(DDR_FAST_MODE)
