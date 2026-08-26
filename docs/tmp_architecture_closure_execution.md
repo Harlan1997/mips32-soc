@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 asynchronous interrupt branch-delay EPC correction
+
+- `rtl/cpu/mips_cpu.v` now derives the interrupt `Cause.BD` bit from the same
+  oldest in-flight pipeline stage used to select the interrupted PC. This
+  preserves the MIPS rule for an IRQ accepted before WB: a delay-slot
+  interruption records the branch PC in EPC and resumes by re-executing the
+  branch after ERET.
+- `make rtl-frontend-compile`, `make soc-smoke`, and `make cpu-cp0-gate` pass
+  after the change. The existing gates cover synchronous BD/EPC and ordinary
+  interrupt/ERET behavior, but no dedicated runtime test currently forces an
+  IRQ at a branch delay slot; that targeted evidence remains open.
+- This correction is a CPU architectural bug fix, not Linux boot closure.
+  Full RTL Linux userspace boot, complete ISA compliance, and RTL/QEMU
+  differential signoff remain open.
+
 ### 2026-08-27 bounded RTL Linux delay/interrupt diagnostic
 
 - Added opt-in `LINUX_DELAY_TRACE`, `LINUX_DELAY_TRACE_LIMIT`,
