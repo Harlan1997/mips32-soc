@@ -1106,7 +1106,13 @@ module mips_soc_impl #(
 
     soc_memory_subsystem #(
         .ENABLE_FLASH_IMAGE_MODEL (ENABLE_FLASH_IMAGE_MODEL),
+`ifdef SOC_LINUX_BOOT_ENABLE
+        .SRAM_DEPTH_WORDS         (4194304),
+        .DDR_ADDRESS_BASED_INDEX  (1'b1),
+        .DDR_FAST_MODE            (1'b1),
+`else
         .SRAM_DEPTH_WORDS         (32768),
+`endif
         .SPI_READ_TIMEOUT_CYCLES  (SPI_READ_TIMEOUT_CYCLES),
         .ENABLE_SHARED_ARB        (1'b1),
         .ENABLE_QSPI_QUAD         (ENABLE_QSPI_QUAD)

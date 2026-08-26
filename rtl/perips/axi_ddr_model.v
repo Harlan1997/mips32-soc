@@ -13,7 +13,12 @@ module axi_ddr_model #(
     parameter INJECT_RESP_ERROR = 1'b0,
     parameter [31:0] INJECT_RESP_ERROR_ADDR = 32'h0000_8000,
     parameter INJECT_RESP_ERROR_TWO = 1'b0,
-    parameter [31:0] INJECT_RESP_ERROR_ADDR2 = 32'h0000_9000
+    parameter [31:0] INJECT_RESP_ERROR_ADDR2 = 32'h0000_9000,
+    // The legacy model indexes the low SRAM address bits. Linux boot uses a
+    // physical DDR window and needs a distinct address-relative index path.
+    parameter ADDRESS_BASED_INDEX = 1'b0,
+    parameter [31:0] BASE_ADDR = 32'h0800_0000,
+    parameter FAST_MODE = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -57,6 +62,16 @@ module axi_ddr_model #(
 
     // Memory array
     reg [31:0] ram [0:MEM_DEPTH_WORDS-1];
+
+    function [31:0] mem_word_index;
+        input [31:0] addr;
+        begin
+            if (ADDRESS_BASED_INDEX)
+                mem_word_index = ((addr - BASE_ADDR) >> 2) % MEM_DEPTH_WORDS;
+            else
+                mem_word_index = addr[15:2];
+        end
+    endfunction
     reg error_injected;
     reg error_injected2;
 
@@ -100,7 +115,7 @@ module axi_ddr_model #(
 
     // Random backpressure & delay generation
     // 25% chance of asserting backpressure (READY = 0)
-    wire rand_backpressure = (lfsr[1:0] == 2'd0);
+    wire rand_backpressure = FAST_MODE ? 1'b0 : (lfsr[1:0] == 2'd0);
     // Periodically simulate DDR Refresh (5% chance, takes 10-20 cycles)
     reg [7:0] refresh_counter;
     always @(posedge clk or negedge rst_n) begin
@@ -109,7 +124,7 @@ module axi_ddr_model #(
         end else begin
             if (refresh_counter > 0)
                 refresh_counter <= refresh_counter - 1'b1;
-            else if (lfsr[11:6] == 6'd0) // Low probability
+            else if (!FAST_MODE && lfsr[11:6] == 6'd0) // Low probability
                 refresh_counter <= lfsr[7:3] + 8'd10; // Random refresh stall
         end
     end
@@ -150,7 +165,7 @@ module axi_ddr_model #(
         int_arready = (rd_free >= 0);
         s_rvalid = (rd_out >= 0);
         s_rlast = (rd_out >= 0) && (rd_len[rd_out] == 0);
-        s_rdata = (rd_out >= 0) ? ram[rd_addr[rd_out][15:2]] : 32'd0;
+        s_rdata = (rd_out >= 0) ? ram[mem_word_index(rd_addr[rd_out])] : 32'd0;
         s_rid = (rd_out >= 0) ? rd_id[rd_out] : 4'd0;
         s_rresp = (rd_out >= 0) ? rd_resp[rd_out] : 2'd0;
     end
@@ -235,7 +250,7 @@ module axi_ddr_model #(
                         w_addr    <= s_awaddr;
                         w_len     <= s_awlen;
                         w_id      <= s_awid;
-                        w_wait_cycles <= lfsr[8:5] + 8'd2; // 2 to 17 cycles before WREADY
+                w_wait_cycles <= FAST_MODE ? 8'd0 : lfsr[8:5] + 8'd2; // 2 to 17 cycles before WREADY
                         w_state   <= W_WAIT;
                     end
                 end
@@ -251,10 +266,10 @@ module axi_ddr_model #(
                 
                 W_DATA: begin
                     if (s_wvalid && s_wready) begin
-                        if (s_wstrb[0]) ram[w_addr[15:2]][7:0]   <= s_wdata[7:0];
-                        if (s_wstrb[1]) ram[w_addr[15:2]][15:8]  <= s_wdata[15:8];
-                        if (s_wstrb[2]) ram[w_addr[15:2]][23:16] <= s_wdata[23:16];
-                        if (s_wstrb[3]) ram[w_addr[15:2]][31:24] <= s_wdata[31:24];
+                        if (s_wstrb[0]) ram[mem_word_index(w_addr)][7:0]   <= s_wdata[7:0];
+                        if (s_wstrb[1]) ram[mem_word_index(w_addr)][15:8]  <= s_wdata[15:8];
+                        if (s_wstrb[2]) ram[mem_word_index(w_addr)][23:16] <= s_wdata[23:16];
+                        if (s_wstrb[3]) ram[mem_word_index(w_addr)][31:24] <= s_wdata[31:24];
 
                         if (s_wlast) begin
                             int_wready <= 1'b0;
