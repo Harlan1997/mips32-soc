@@ -1733,3 +1733,21 @@ remains the compatibility baseline.
   `MIPS32_SOC_LINUX_BOOT_SUCCESS` (120 seconds), so Linux boot and
   RTL/QEMU Linux differential remain OPEN. The next diagnosis must follow the
   post-refill CPU/cache progress rather than refresh or initial DDR admission.
+
+### 2026-08-26 Linux kseg0 direct-map correction
+
+- The first Linux RTL instruction fetch was observed with `VA=0x88a55c78`
+  unchanged at the AXI boundary, so the crossbar synthesized `DECERR` and the
+  CPU entered a repeating CacheErr path before kernel initialization.
+- `SOC_LINUX_BOOT_ENABLE` is now an explicit configuration default and selects
+  the kseg0/kseg1 direct-map path in `mips_mmu`, while Linux also uses the
+  product-style exception-vector selection. The ordinary default remains
+  identity-mapped with the legacy vector path.
+- A 300-cycle VCS probe showed the corrected physical request
+  `0x08a55c60`, `read_bad=0`, `rresp=OKAY`, and the expected kernel words,
+  including the entry instruction at `0x08a55c78`; the previous first
+  CacheErr was absent. RTL frontend compile remains PASS (`8/8`).
+- The full marker-only Linux RTL run still exceeded the current 150-second
+  host budget without a marker, so RTL Linux userspace boot and the full
+  RTL/QEMU Linux differential remain OPEN. The next run must continue from
+  this post-entry state with a bounded progress/watchdog diagnostic.

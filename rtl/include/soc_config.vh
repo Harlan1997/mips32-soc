@@ -78,6 +78,14 @@
 `define SOC_PRODUCT_BOOT_ENABLE 0
 `endif
 
+// Opt-in Linux bring-up image.  This is kept separate from product boot:
+// the Linux testbench still starts from the SRAM boot image at address zero,
+// but the CPU must use the architectural kseg direct-map and vector rules
+// while executing the relocated kernel.
+`ifndef SOC_LINUX_BOOT_ENABLE
+`define SOC_LINUX_BOOT_ENABLE 0
+`endif
+
 // Opt-in single-precision COP1 development contract. Integer-only default
 // behavior remains unchanged and unsupported COP1 instructions stay RI.
 `ifndef SOC_FPU_ENABLE

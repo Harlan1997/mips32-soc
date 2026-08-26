@@ -119,7 +119,9 @@ module mips_mmu (
             // SOC_MMU_ENABLE — the segmentation rule is architectural.
             ok_r    = 1'b0;
             fault_r = req_is_store ? 3'b101 : 3'b100;    // AdES / AdEL
-        end else if ((`SOC_MMU_ENABLE == 0) && (`SOC_PRODUCT_BOOT_ENABLE == 0)) begin
+        end else if ((`SOC_MMU_ENABLE == 0) &&
+                     (`SOC_PRODUCT_BOOT_ENABLE == 0) &&
+                     (`SOC_LINUX_BOOT_ENABLE == 0)) begin
             // Compatibility mode: identity map for every segment. See comment
             // above for the fabric-alias rationale.
             pa_r   = pa_identity;
