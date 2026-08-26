@@ -1004,10 +1004,12 @@ module tb_mips_soc;
             $write("%c", legacy_uart_tx_data);
             $fflush();
         end
+`ifndef TB_LINUX_BOOT
         if (rst_n && legacy_core_global_stall && $time > 20900000) begin
             $display("Time=%0t DCACHE: state=%0d next_state=%0d req_buf_addr=%x req_buf_we=%b uc_req=%b awv=%b wv=%b bready=%b", 
                 $time, legacy_dcache_state, legacy_dcache_next_state, legacy_dcache_req_buf_addr, legacy_dcache_req_buf_we, legacy_dcache_uncacheable, legacy_dcache_awvalid, legacy_dcache_wvalid, legacy_dcache_bready);
         end
+`endif
     end
 
     
@@ -1116,6 +1118,7 @@ module tb_mips_soc;
 `ifndef SOC_COHERENCY_FW_STRESS
 `ifndef SOC_L2_E2E
 `ifndef SOC_L2_CPU_GATE
+`ifndef TB_LINUX_BOOT
     initial begin
         // Let system reset finish
         #1500;
@@ -1374,6 +1377,7 @@ module tb_mips_soc;
 `endif
         
     end
+`endif
 `endif
 `endif
 `endif
