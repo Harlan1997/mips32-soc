@@ -1,5 +1,24 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 bounded RTL Linux delay/interrupt diagnostic
+
+- Added opt-in `LINUX_DELAY_TRACE`, `LINUX_DELAY_TRACE_LIMIT`,
+  `LINUX_DELAY_TRACE_START` and `LINUX_DELAY_TRACE_END` controls to the RTL
+  Linux progress gate. The trace observes the WB PC even when an entry is
+  invalid or has been flushed, and records `$a0`, instruction, ERET, interrupt,
+  EPC, Cause and Status without changing RTL timing.
+- `make rtl-frontend-compile` passed all `8/8` configurations after the
+  checker change. A direct no-coverage capture of the relocated image reached
+  `cycle=7,509,009` without OOM or an RTL simulator error. It observed timer
+  interrupt acceptance at `PC=0x892434e4`, with `EPC=0x892434e4`; no userspace
+  marker was observed in the bounded slice.
+- The 7.5M-cycle capture used the initial WB-valid-only probe and therefore did
+  not prove a committed `__delay` decrement because target entries were
+  flushed/invalid at the interrupt boundary. The broadened probe was compiled
+  and exercised by the fresh 1M-cycle progress gate; a longer capture is still
+  required to collect the new invalid-WB evidence. Full RTL Linux userspace
+  boot and RTL/QEMU differential signoff remain open.
+
 ### 2026-08-26 Linux RDHWR architectural encoding correction
 
 - Linux clocksource initialization exposed that the RTL and project fixtures

@@ -69,6 +69,11 @@ module tb_mips_soc;
     integer linux_target_dside_trace;
     integer linux_target_dside_trace_limit;
     integer linux_target_dside_trace_count;
+    integer linux_delay_trace;
+    integer linux_delay_trace_limit;
+    integer linux_delay_trace_count;
+    reg [31:0] linux_delay_trace_start;
+    reg [31:0] linux_delay_trace_end;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -195,6 +200,34 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19]);
+            end
+            // Trace the relocated Linux __delay loop and exception return
+            // boundary without enabling the broad instruction trace.  The
+            // address window is configurable because KASLR/image layout can
+            // move the helper, and the count bound keeps long boots bounded.
+            if (linux_delay_trace != 0 &&
+                linux_delay_trace_count < linux_delay_trace_limit &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_delay_trace_start &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= linux_delay_trace_end) begin
+                $display("LINUX_DELAY_TRACE cycle=%0d pc=%08h inst=%08h valid=%b arch=%b a0=%08h a1=%08h a2=%08h w=%b/%0d/%08h eret=%b intr=%b epc=%08h cause=%08h status=%08h bd=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[4],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[5],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[6],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[31]);
+                linux_delay_trace_count = linux_delay_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid &&
                 linux_cacheop_trace_count < linux_cacheop_trace_limit) begin
@@ -559,6 +592,14 @@ module tb_mips_soc;
         linux_target_dside_trace_limit = 160;
         if (!$value$plusargs("LINUX_TARGET_DSIDE_TRACE_LIMIT=%d", linux_target_dside_trace_limit)) begin end
         linux_target_dside_trace_count = 0;
+        linux_delay_trace = 0;
+        if (!$value$plusargs("LINUX_DELAY_TRACE=%d", linux_delay_trace)) begin end
+        linux_delay_trace_limit = 256;
+        if (!$value$plusargs("LINUX_DELAY_TRACE_LIMIT=%d", linux_delay_trace_limit)) begin end
+        linux_delay_trace_start = 32'h8924_34e0;
+        if (!$value$plusargs("LINUX_DELAY_TRACE_START=%h", linux_delay_trace_start)) begin end
+        linux_delay_trace_end = 32'h8924_34e4;
+        if (!$value$plusargs("LINUX_DELAY_TRACE_END=%h", linux_delay_trace_end)) begin end
     end
 `endif
 
