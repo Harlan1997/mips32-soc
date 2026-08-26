@@ -63,7 +63,11 @@ module icache (
 );
 
     // Fixed AXI AR signals for cache line refill
-    assign arid    = 4'd0;
+    // Keep the instruction and data masters distinct at shared slaves.  AXI
+    // IDs are local to a master, but the SoC crossbar carries the fixed-width
+    // ID through the slave interface; a dedicated I-side value makes the
+    // ownership visible and avoids ambiguity during concurrent refills.
+    assign arid    = 4'd1;
     assign arlen   = 8'd7;     // 8 transfers of 4 bytes
     assign arsize  = 3'b010;   // 4 bytes per transfer
     assign arburst = 2'b01;    // INCR

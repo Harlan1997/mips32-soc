@@ -229,6 +229,27 @@ module axi_crossbar #(
     integer         rd_cnt [0:S_ALL-1];
     reg  [7:0]      rd_beat[0:S_ALL-1];   // DECERR beat counter (head entry)
 
+    // The external AXI ID namespace is local to each master.  Since the
+    // mapped slave sees only RID (and the existing fabric keeps the ID width
+    // fixed), different masters must not have the same ID in flight to one
+    // slave; otherwise a response cannot be attributed unambiguously.  A
+    // single master may still issue repeated IDs, as AXI requires those
+    // responses to remain ordered.
+    function automatic id_in_use;
+        input integer slave_idx;
+        input [IDW-1:0] id_value;
+        input integer master_idx;
+        integer id_scan;
+        begin
+            id_in_use = 1'b0;
+            for (id_scan = 0; id_scan < N_OT; id_scan = id_scan + 1)
+                if (rd_valid[slave_idx][id_scan] &&
+                    (rd_mid[slave_idx][id_scan] != master_idx) &&
+                    (rd_rid[slave_idx][id_scan] == id_value))
+                    id_in_use = 1'b1;
+        end
+    endfunction
+
     // Per-slave read grant (combinational QoS+RR arbiter)
     reg  [MIDW-1:0] rd_grant   [0:S_ALL-1];
     reg             rd_grant_v [0:S_ALL-1];
@@ -257,13 +278,15 @@ module axi_crossbar #(
                 // Hold the locked master's grant until AR is accepted.
                 rd_grant[i]   = rd_lock_m[i];
                 rd_grant_v[i] = m_enable[rd_lock_m[i]] && m_arvalid[rd_lock_m[i]]
-                                && (rd_cnt[i] < N_OT);
+                                && (rd_cnt[i] < N_OT)
+                                && !id_in_use(i, ar_id[rd_lock_m[i]], rd_lock_m[i]);
             end else begin
                 best_q = -1;
                 // pass 1: find highest QoS among eligible masters targeting slave i
                 for (am=0; am<N_M; am=am+1) begin
                     elig = m_enable[am] && m_arvalid[am] && (ar_tgt[am]==i[3:0])
-                           && (rd_cnt[i] < N_OT);
+                           && (rd_cnt[i] < N_OT)
+                           && !id_in_use(i, ar_id[am], am);
                     if (elig && ($signed({1'b0,ar_qos[am]}) > best_q))
                         best_q = {1'b0,ar_qos[am]};
                 end
@@ -271,7 +294,9 @@ module axi_crossbar #(
                 for (sc=0; sc<N_M; sc=sc+1) begin
                     mi = (rd_rr[i] + sc) % N_M;
                     elig = m_enable[mi] && m_arvalid[mi] && (ar_tgt[mi]==i[3:0])
-                           && (rd_cnt[i] < N_OT) && ({1'b0,ar_qos[mi]}==best_q);
+                           && (rd_cnt[i] < N_OT)
+                           && !id_in_use(i, ar_id[mi], mi)
+                           && ({1'b0,ar_qos[mi]}==best_q);
                     if (elig && !rd_grant_v[i]) begin
                         rd_grant[i]   = mi[MIDW-1:0];
                         rd_grant_v[i] = 1'b1;

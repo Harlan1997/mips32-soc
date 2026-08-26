@@ -181,14 +181,22 @@ module axi_ddr4_controller #(
 
     wire controller_ready = (state == ST_READY) && !write_active &&
                              !read_active && !s_bvalid && !s_rvalid;
+    // Refresh has priority in ST_READY.  Do not advertise an AXI handshake
+    // in the same cycle that the sequential controller will enter refresh;
+    // otherwise the crossbar can enqueue an AR/AW that the controller never
+    // captures, leaving the fabric transaction table permanently occupied.
+    wire refresh_due = refresh_req ||
+                       ((REFRESH_INTERVAL_CYCLES > 0) &&
+                        refresh_timer >= REFRESH_INTERVAL_CYCLES-1 &&
+                        controller_ready);
     assign controller_present = 1'b1;
     assign init_done = (state != ST_INIT) && (state != ST_FATAL);
     assign training_done = init_done;
     assign refresh_busy = (state == ST_REFRESH);
     assign fatal_error = (state == ST_FATAL);
     assign error_code = error_code_r;
-    assign s_awready = controller_ready && !refresh_req;
-    assign s_arready = controller_ready && !refresh_req && !s_awvalid;
+    assign s_awready = controller_ready && !refresh_due;
+    assign s_arready = controller_ready && !refresh_due && !s_awvalid;
     assign s_wready = (state == ST_WRITE_DATA) && write_active;
 
     initial begin
