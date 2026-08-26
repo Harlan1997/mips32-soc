@@ -362,9 +362,9 @@ module dcache #(
     wire maint_index_load_tag = (maint_op == 5'b00101);
     wire maint_index_store_tag = (maint_op == 5'b01001);
     wire maint_index_tag = maint_index_load_tag || maint_index_store_tag;
-    wire maint_hit_inv   = (maint_op == 5'b10101);
-    wire maint_hit_wb_inv= (maint_op == 5'b11001);
-    wire maint_hit_wb    = (maint_op == 5'b11101);
+    wire maint_hit_inv   = (maint_op == 5'b10001);
+    wire maint_hit_wb_inv= (maint_op == 5'b10101);
+    wire maint_hit_wb    = (maint_op == 5'b11001);
     wire [1:0] maint_target_way = (maint_index_wbi || maint_index_tag) ? maint_way : hit_way;
     wire [TAG_BITS+1:0] maint_target_tag_entry = tag_rdata[maint_target_way];
     wire maint_target_valid = maint_target_tag_entry[TAG_BITS+1];
@@ -552,9 +552,9 @@ module dcache #(
                         maint_way  <= cache_op_addr[12:11];
                         maint_error <= 1'b0;
                         maint_clear_valid <= (cache_op == 5'b00001) ||
-                                             (cache_op == 5'b10101) ||
-                                             (cache_op == 5'b11001);
-                        maint_clear_dirty <= (cache_op == 5'b11101);
+                                             (cache_op == 5'b10001) ||
+                                             (cache_op == 5'b10101);
+                        maint_clear_dirty <= (cache_op == 5'b11001);
                     end
                 end
 

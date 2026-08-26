@@ -176,6 +176,33 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19]);
             end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid) begin
+                $display("LINUX_CACHEOP_TRACE cycle=%0d op=%02h addr=%08h ic=%b done=%b err=%0d daw=%b/%b/%08h/%08h/%b ist=%0d dst=%0d",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_is_icache,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_done,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_error,
+                    `TB_DCACHE_PATH.awvalid,
+                    `TB_DCACHE_PATH.awready,
+                    `TB_DCACHE_PATH.awaddr,
+                    `TB_DCACHE_PATH.wdata,
+                    `TB_DCACHE_PATH.wlast,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                    `TB_DCACHE_PATH.state);
+            end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'h8000_0000) &&
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < 32'h8000_2000))) begin
+                $display("LINUX_VECTOR_STORE_TRACE cycle=%0d va=%08h pa=%08h data=%08h be=%h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be);
+            end
             if ((linux_trace_cycle < 20) ||
                 (linux_trace_cycle % 100000 == 0) ||
                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&

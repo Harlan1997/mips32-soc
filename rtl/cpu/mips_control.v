@@ -569,9 +569,9 @@ module mips_control (
                     5'b00001, // Index_Writeback_Invalidate_D
                     5'b00101, // Index_Load_Tag_D
                     5'b01001, // Index_Store_Tag_D
-                    5'b10101, // Hit_Invalidate_D
-                    5'b11001, // Hit_Writeback_Invalidate_D
-                    5'b11101: begin // Hit_Writeback_D
+                    5'b10001, // Hit_Invalidate_D
+                    5'b10101, // Hit_Writeback_Invalidate_D
+                    5'b11001: begin // Hit_Writeback_D
                         alu_op         = 5'b00001;
                         alu_src        = 1'b1;
                         cache_op_valid = 1'b1;

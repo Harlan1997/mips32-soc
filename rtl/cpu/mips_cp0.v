@@ -301,6 +301,20 @@ module mips_cp0 #(
     //                 C2=0, MD=0, PC=0 (perf ctr deferred),
     //                 WR=0, CA=0, EP=0, FP=0
     wire [5:0]  mmu_size = `SOC_CP0_TLB_ENTRIES - 1;
+`ifdef SOC_LINUX_BOOT_ENABLE
+    // Linux derives its cache maintenance loops from Config1.  The RTL L1
+    // caches are 8 KiB, 4-way, 32-byte line, 64-set caches; advertise that
+    // geometry in the opt-in Linux identity path so Index_* cache operations
+    // cover the same ways and indices that the RTL implements.
+    wire [31:0] config1_val = { 1'b1,                      // M
+                                mmu_size,                  // MMUSize
+                                3'd0,                      // IS: 64 sets
+                                3'd4,                      // IL: 32-byte line
+                                3'd3,                      // IA: 4 ways
+                                3'd0,                      // DS: 64 sets
+                                3'd4,                      // DL: 32-byte line
+                                3'd3,                      // DA: 4 ways
+`else
     wire [31:0] config1_val = { 1'b1,                      // M
                                 mmu_size,                  // MMUSize
                                 `SOC_CP0_CONFIG1_IS,       // IS
@@ -309,6 +323,7 @@ module mips_cp0 #(
                                 `SOC_CP0_CONFIG1_DS,       // DS
                                 `SOC_CP0_CONFIG1_DL,       // DL
                                 `SOC_CP0_CONFIG1_DA,       // DA
+`endif
                                 1'b0,                      // C2
                                 1'b0,                      // MD
                                 1'b0,                      // PC
