@@ -62,6 +62,14 @@ tb/soc_test/fw/firmware.manifest
 tb/soc_test/fw/firmware.objdump
 tb/soc_test/fw/rand_test.s
 
+# Per-test firmware outputs generated in-place by focused gate Makefiles.
+tb/soc_test/fw/tests/*/firmware.bin
+tb/soc_test/fw/tests/*/firmware.elf
+tb/soc_test/fw/tests/*/firmware.hex
+tb/soc_test/fw/tests/*/firmware.manifest
+tb/soc_test/fw/tests/*/firmware.map
+tb/soc_test/fw/tests/*/firmware.objdump
+
 # Legacy source-tree artifacts kept out of source control during migration
 sim/compile.log
 sim/firmware.hex

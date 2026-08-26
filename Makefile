@@ -170,7 +170,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
-.PHONY: linux-boot-build-gate
+.PHONY: linux-boot-build-gate rtl-linux-progress-gate
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate
@@ -567,6 +567,10 @@ qemu-system-uhi-dtb-gate: qemu-system-mips32-soc-ref
 linux-boot-build-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/run_linux_boot_gate.sh
 	RUN_DIR=$(BUILD_DIR)/linux_boot/real tb/linux_boot/run_linux_boot_gate.sh
+
+rtl-linux-progress-gate:
+	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh tb/linux_boot/run_rtl_linux_progress_gate.sh
+	RUN_DIR=$(BUILD_DIR)/linux_boot/rtl_progress_gate tb/linux_boot/run_rtl_linux_progress_gate.sh
 
 linux-uboot-build-gate:
 	chmod +x tb/linux_boot/run_uboot_build_gate.sh
