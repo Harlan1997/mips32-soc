@@ -190,6 +190,17 @@ module axi_crossbar #(
     function [3:0] decode_slave;
         input [AW-1:0] a;
         begin
+`ifdef SOC_LINUX_BOOT_ENABLE
+            // The Linux bring-up image uses the upper part of the behavioral
+            // 128-KiB SRAM window for its relocated exception stubs (for
+            // example kseg0 0x8001_0000).  Keep this wider direct-map opt-in
+            // so the frozen default 64-KiB SRAM decode is unchanged.
+            if (((a & 32'hFFFE_0000) == 32'h0000_0000) ||
+                ((a & 32'hFFFE_0000) == 32'h8000_0000) ||
+                ((a & 32'hFFFE_0000) == 32'hA000_0000))
+                decode_slave = 4'd0;                 // S0 SRAM
+            else
+`endif
             if (((a & `SOC_64KB_REGION_MASK) == `SOC_BOOT_BASE) ||
                 ((a & `SOC_64KB_REGION_MASK) == `SOC_SRAM_ALIAS_BASE))
                 decode_slave = 4'd0;                 // S0 SRAM

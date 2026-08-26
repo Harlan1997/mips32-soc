@@ -49,6 +49,9 @@ module tb_mips_soc;
 `ifdef TB_LINUX_BOOT
     reg [1023:0] ddr_hex;
 `endif
+`ifdef TB_LINUX_BOOT_TRACE
+    integer linux_trace_cycle;
+`endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
     integer cp0_ri_count;
@@ -82,6 +85,7 @@ module tb_mips_soc;
         #50 rst_n = 1'b1;
         $display("DMA_RESET_STRESS: reset released");
     end
+
     always @(posedge clk) begin
         if (rst_n && u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.busy_r[0])
             $display("DMA_RESET_STRESS: live src=%08h dst=%08h len=%0d state=%0d ar=%b r=%b aw=%b w=%b b=%b",
@@ -94,6 +98,71 @@ module tb_mips_soc;
                      u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_awvalid,
                      u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_wvalid,
                      u_soc.u_impl.u_peripheral_subsystem.u_apb_dma.m_bvalid);
+    end
+`endif
+
+`ifdef TB_LINUX_BOOT_TRACE
+    // Keep the Linux diagnostic at the testbench boundary so it cannot alter
+    // CPU/cache timing.  The trace is opt-in and samples only the first refill
+    // path plus a sparse heartbeat to keep logs bounded.
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            linux_trace_cycle = 0;
+        end else begin
+            linux_trace_cycle = linux_trace_cycle + 1;
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
+                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    {u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_ebase_hi, 12'd0},
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out);
+            end
+            if ((linux_trace_cycle < 20) ||
+                (linux_trace_cycle % 100000 == 0) ||
+                (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c))) begin
+                $display("LINUX_REFILL_TRACE cycle=%0d pc=%08h ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h dr=%b/%b/%08h/%0h/%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.arready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rvalid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.rd_state[0],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rlast);
+            end
+        end
     end
 `endif
 
