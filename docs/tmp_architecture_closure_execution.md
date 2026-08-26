@@ -2,18 +2,32 @@
 
 ### 2026-08-27 asynchronous interrupt branch-delay EPC correction
 
-- `rtl/cpu/mips_cpu.v` now derives the interrupt `Cause.BD` bit from the same
-  oldest in-flight pipeline stage used to select the interrupted PC. This
-  preserves the MIPS rule for an IRQ accepted before WB: a delay-slot
-  interruption records the branch PC in EPC and resumes by re-executing the
-  branch after ERET.
+- `rtl/cpu/mips_cpu.v` now selects the interrupted PC from the oldest valid
+  in-flight pipeline stage and derives interrupt `Cause.BD` from all flushed
+  MEM/EX/ID delay-slot markers. This preserves the MIPS rule for an IRQ
+  accepted before WB: a delay-slot interruption records the branch PC in EPC
+  and resumes by re-executing the branch after ERET.
 - `make rtl-frontend-compile`, `make soc-smoke`, and `make cpu-cp0-gate` pass
-  after the change. The existing gates cover synchronous BD/EPC and ordinary
-  interrupt/ERET behavior, but no dedicated runtime test currently forces an
-  IRQ at a branch delay slot; that targeted evidence remains open.
+  after the change. A dedicated runtime branch-delay IRQ gate was added and is
+  recorded in the following entry.
 - This correction is a CPU architectural bug fix, not Linux boot closure.
   Full RTL Linux userspace boot, complete ISA compliance, and RTL/QEMU
   differential signoff remain open.
+
+### 2026-08-27 branch-delay IRQ runtime regression closure
+
+- Added `make cpu-irq-delay-slot-gate`, which enables timer source 2, accepts a
+  real SoC interrupt while a looping branch is in flight, and requires the
+  handler to observe `Cause.BD=1` before writing the success mailbox.
+- The first run exposed two real issues: the test had inverted the PIC enable
+  value, and the CPU delay-slot metadata used `branch_taken` instead of the
+  advancing control-transfer indication. The RTL now marks ordinary branch
+  slots (including not-taken branches), excludes annulled branch-likely slots,
+  and derives interrupt BD from all flushed MEM/EX/ID slots. The passing run
+  exercised the important `branch in MEM / delay slot in EX` case.
+- The gate passed with `REGRESSION_TEST_SUCCESS`, `CPU_CP0_SUMMARY intr=1`, and
+  no watchdog expiry. This closes the targeted asynchronous IRQ BD/EPC runtime
+  slice; full Linux IRQ ABI and complete privileged-ISA signoff remain open.
 
 ### 2026-08-27 bounded RTL Linux delay/interrupt diagnostic
 
