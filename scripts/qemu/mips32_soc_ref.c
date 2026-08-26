@@ -163,6 +163,8 @@ typedef struct MIPS32SocRefState {
     bool irq_replay_enabled;
     bool irq_replay_armed;
     bool irq_replay_wake_pending;
+    bool irq_replay_bd_pending;
+    bool irq_replay_bd_forced;
     bool irq_replay_epc_fixup;
     target_ulong irq_replay_epc;
     uint32_t irq_replay_pic_mask;
@@ -239,6 +241,22 @@ void helper_soc_ref_retire_tick(CPUMIPSState *env);
 bool qemu_mips32_soc_ref_irq_replay_active(void)
 {
     return soc_ref_active_state && soc_ref_active_state->irq_replay_enabled;
+}
+
+bool qemu_mips32_soc_ref_interrupt_bd(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    bool bd = s && s->irq_replay_bd_pending;
+    if (s)
+        s->irq_replay_bd_pending = false;
+    return bd;
+}
+
+bool qemu_mips32_soc_ref_interrupt_force_bd(void)
+{
+    /* The converter carries the bounded replay BD bit from the RTL schedule;
+     * QEMU's native exception path owns the architectural Cause state. */
+    return false;
 }
 
 static char *soc_ref_get_qspi_image(Object *obj, Error **errp)
@@ -704,6 +722,14 @@ static void soc_ref_instruction_tick(CPUState *cpu)
         return;
     }
     s->irq_replay_armed = true;
+    /* The VIC replay schedule is aligned to the RTL's accepted interrupt
+     * boundary.  The RTL records the pending branch-delay context even when
+     * QEMU has already committed the delay-slot TB, so preserve BD for this
+     * explicit source replay.  Other replay schedules retain QEMU's native
+     * branch-delay observation. */
+    s->irq_replay_bd_pending =
+        (s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0 ||
+        s->irq_replay_pic_mask != 0;
     if (s->irq_release_index == 0 && s->irq_replay_pic_mask) {
         /* Some RTL IRQ replays originate in the SoC VIC.  The CPU replay
          * line is injected independently, so mirror the explicitly supplied

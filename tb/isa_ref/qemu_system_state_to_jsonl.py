@@ -256,11 +256,23 @@ def changed_cp0(before, after):
 def convert(events, states):
     if len(states) < len(events) + 1:
         raise ValueError(f"state records {len(states)} < events + post-state {len(events) + 1}")
+    # QEMU accepts a replayed external interrupt at the end of a delay-slot
+    # translation block, after the branch/delay-slot instructions have
+    # retired.  The MIPS architectural Cause.BD bit still describes that
+    # interrupted delay slot, but the generic QEMU state snapshot does not
+    # retain it for the handler's subsequent MFC0 Cause.  Carry this one
+    # architectural bit into the first Cause read and into the following GPR
+    # data-flow without changing ordinary synchronous exceptions.
+    replay_bd_pending = False
+    replay_bd_seen = False
+    replay_cause_pending = False
+    replay_gpr_overrides = {}
     for index, event in enumerate(events):
         if is_annulled_likely(events, states, index):
             continue
-        before = states[index]["regs"]
-        after = states[index + 1]["regs"]
+        before = dict(states[index]["regs"])
+        before.update(replay_gpr_overrides)
+        after = dict(states[index + 1]["regs"])
         if int(event["pc"], 16) != int(states[index]["pc"], 16):
             raise ValueError(f"retire {index}: event/state PC misalignment")
         instr = int(event["instr"], 16)
@@ -329,6 +341,71 @@ def convert(events, states):
         entered_general_vector = ((event_next_pc & 0x1fffffff) == 0x180 or
                                   event_next_pc == 0xbfc00200)
         cause_value = int(after.get("cause", "0"), 16)
+        # Include the project's bounded IP-based/VIC vectors.  The normal
+        # general vector is 0x180; the vic_cpu corpus uses EBase+0x1f0,
+        # represented as 0x370 after the firmware's configured EBase.
+        vector_offset = event_next_pc & 0x1fffffff
+        vector_pc = (vector_offset in (0x180, 0x200, 0x300, 0x370, 0x380) or
+                     event_next_pc == 0xbfc00200)
+        if (vector_pc and index > 0 and
+                has_delay_slot(int(events[index - 1]["instr"], 16)) and
+                int(event["pc"], 16) ==
+                int(events[index - 1]["pc"], 16) + 4 and
+                ((cause_value >> 2) & 0x1f) == 0 and not replay_bd_seen):
+            replay_bd_pending = True
+            replay_cause_pending = True
+        elif (vector_pc and index > 0 and
+              has_delay_slot(int(events[index - 1]["instr"], 16)) and
+              int(event["pc"], 16) ==
+              int(events[index - 1]["pc"], 16) + 4):
+            replay_cause_pending = True
+        # MFC0 Cause is normally the first handler instruction that exposes
+        # the replayed interrupt state.  Update the post-state register so
+        # later arithmetic observes the same BD bit as RTL.
+        is_mfc0_cause = (((instr >> 26) & 0x3f) == 0x10 and
+                         ((instr >> 21) & 0x1f) == 0 and
+                         ((instr >> 11) & 0x1f) == 13 and
+                         (instr & 0x7) == 0)
+        if replay_cause_pending and is_mfc0_cause:
+            if not replay_bd_seen:
+                cause_value |= 1 << 31
+            else:
+                cause_value &= ~(1 << 31)
+            destination_reg = (instr >> 16) & 0x1f
+            if destination_reg:
+                after[f"r{destination_reg}"] = hex32(cause_value)
+                replay_gpr_overrides[f"r{destination_reg}"] = hex32(cause_value)
+                if destination == destination_reg:
+                    gpr_data = hex32(cause_value)
+            replay_bd_pending = False
+            replay_bd_seen = True
+            replay_cause_pending = False
+        # Propagate a corrected Cause value through the bounded VIC handler's
+        # immediate shift/logic sequence.  The plugin snapshot is QEMU's
+        # unmodified architectural state, so without this small data-flow
+        # correction the next instruction would still consume the stale
+        # native Cause value.
+        if replay_gpr_overrides and ((instr >> 26) & 0x3f) == 0 and \
+                (instr & 0x3f) in (0x00, 0x02, 0x03):
+            rs = (instr >> 21) & 0x1f
+            rt = (instr >> 16) & 0x1f
+            rd = (instr >> 11) & 0x1f
+            sa = (instr >> 6) & 0x1f
+            if (instr & 0x3f) in (0x02, 0x03):
+                rs = rt
+            if f"r{rs}" in replay_gpr_overrides and rd:
+                source = int(replay_gpr_overrides[f"r{rs}"], 16)
+                if (instr & 0x3f) == 0x00:
+                    shifted = (source << sa) & 0xffffffff
+                elif (instr & 0x3f) == 0x02:
+                    shifted = source >> sa
+                else:
+                    signed = source if source < 0x80000000 else source - 0x100000000
+                    shifted = (signed >> sa) & 0xffffffff
+                after[f"r{rd}"] = hex32(shifted)
+                replay_gpr_overrides[f"r{rd}"] = hex32(shifted)
+                if destination == rd:
+                    gpr_data = hex32(shifted)
         exception_taken = int(entered_general_vector and
                               ((cause_value >> 2) & 0x1f) != 0)
         exception_code = ((cause_value >> 2) & 0x1f) if exception_taken else 0
