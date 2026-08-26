@@ -1804,6 +1804,20 @@ module mips_cpu #(
         (ex_pc_plus_8  != 32'd0) ? ex_pc :
         (id_pc_plus_4  != 32'd0) ? id_pc :
         if_pc_plus_4 - 32'd4;
+
+    // An interrupt can be accepted before the interrupted instruction reaches
+    // WB.  In that case wb_bd is not available yet, but an in-flight delay
+    // slot still has the architectural EPC/BD rule: EPC points to its branch
+    // and Cause.BD is set.  Select the marker from the same oldest stage used
+    // for oldest_flushed_pc so the two fields cannot describe different
+    // instructions.
+    wire oldest_flushed_bd =
+        (mem_pc_plus_8 != 32'd0) ? mem_bd :
+        (ex_pc_plus_8  != 32'd0) ? ex_bd :
+        (id_pc_plus_4  != 32'd0) ? id_bd :
+        1'b0;
+    wire interrupt_except_bd = interrupt_accept && oldest_flushed_bd;
+    wire exception_bd = (wb_bd && wb_arch_valid) | interrupt_except_bd;
         
     // An interrupt accepted while the core is suspended by WAIT is taken
     // after WAIT has retired.  Save the sequential PC so ERET resumes at the
@@ -1843,7 +1857,7 @@ module mips_cpu #(
         .except_code  (effective_except_req ? effective_except_code : 5'h00), // 0x00 for INT
         .except_ce    (effective_except_req ? effective_except_ce : 2'b00),
         .except_pc    (except_pc),
-        .except_bd    (wb_bd && wb_arch_valid),
+        .except_bd    (exception_bd),
         .eret         (wb_is_eret && wb_arch_valid),
         .di           (wb_di),
         .ei           (wb_ei),
