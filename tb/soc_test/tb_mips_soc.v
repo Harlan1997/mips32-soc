@@ -80,6 +80,9 @@ module tb_mips_soc;
     integer linux_uart_trace;
     integer linux_uart_trace_limit;
     integer linux_uart_trace_count;
+    integer linux_tlb_trace;
+    integer linux_tlb_trace_limit;
+    integer linux_tlb_trace_count;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -149,6 +152,48 @@ module tb_mips_soc;
                          u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr,
                          legacy_uart_tx_data);
                 linux_uart_trace_count = linux_uart_trace_count + 1;
+            end
+            // Linux installs generated exception vectors through the
+            // uncached CKSEG1 alias. Keep this trace narrow and bounded so it
+            // can distinguish vector writes, vector fetches and actual TLB
+            // writes without turning a long boot into an unbounded log.
+            if (linux_tlb_trace != 0 &&
+                linux_tlb_trace_count < linux_tlb_trace_limit &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
+                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'ha8e0_0000) &&
+                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < 32'ha8e1_0000) ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr >= 32'h88e0_0000) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr < 32'h88e1_0000) ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_en ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                  (|u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_tlb_op))) begin
+                $display("LINUX_TLB_TRACE cycle=%0d pc=%08h inst=%08h vr=%b/%08h/%08h dw=%b/%08h/%08h/%h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be);
+                $display("LINUX_TLB_STATE cycle=%0d tlb=%b/%0d/%08h/%08h/%08h/%08h op=%0d hit=%b/%0d/%b/%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_en,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_index,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_vpn2,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_entrylo0,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_entrylo1,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_mask,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_tlb_op,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_fault_type,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_pfn,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_pfn);
+                linux_tlb_trace_count = linux_tlb_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
                 $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b",
@@ -623,6 +668,11 @@ module tb_mips_soc;
         linux_uart_trace_limit = 256;
         if (!$value$plusargs("LINUX_UART_TRACE_LIMIT=%d", linux_uart_trace_limit)) begin end
         linux_uart_trace_count = 0;
+        linux_tlb_trace = 0;
+        if (!$value$plusargs("LINUX_TLB_TRACE=%d", linux_tlb_trace)) begin end
+        linux_tlb_trace_limit = 256;
+        if (!$value$plusargs("LINUX_TLB_TRACE_LIMIT=%d", linux_tlb_trace_limit)) begin end
+        linux_tlb_trace_count = 0;
     end
 `endif
 
