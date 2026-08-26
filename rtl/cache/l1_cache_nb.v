@@ -243,14 +243,14 @@ module l1_cache_nb #(
                 reg maint_inv;
                 maint_match = 1'b0;
                 maint_wb = (cache_maint_op == 5'b00001) ||
-                           (cache_maint_op == 5'b11001) ||
-                           (cache_maint_op == 5'b11101);
+                           (cache_maint_op == 5'b10101) ||
+                           (cache_maint_op == 5'b11001);
                 maint_inv = (cache_maint_op == 5'b00001) ||
-                            (cache_maint_op == 5'b10101) ||
-                            (cache_maint_op == 5'b11001);
-                if (cache_maint_op == 5'b10101 ||
-                    cache_maint_op == 5'b11001 ||
-                    cache_maint_op == 5'b11101) begin
+                            (cache_maint_op == 5'b10001) ||
+                            (cache_maint_op == 5'b10101);
+                if (cache_maint_op == 5'b10001 ||
+                    cache_maint_op == 5'b10101 ||
+                    cache_maint_op == 5'b11001) begin
                     maint_match = valid[cache_maint_addr[5 +: SET_BITS]] &&
                                   tags[cache_maint_addr[5 +: SET_BITS]] ==
                                   cache_maint_addr[31 -: TAG_BITS];
@@ -277,9 +277,9 @@ module l1_cache_nb #(
                 end else if (maint_match && maint_wb) begin
                     dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
                 end else if (!maint_match &&
+                             (cache_maint_op != 5'b10001) &&
                              (cache_maint_op != 5'b10101) &&
                              (cache_maint_op != 5'b11001) &&
-                             (cache_maint_op != 5'b11101) &&
                              (cache_maint_op != 5'b00001) &&
                              !maint_index_load_tag && !maint_index_store_tag) begin
                     for (k = 0; k < SETS; k = k + 1) begin

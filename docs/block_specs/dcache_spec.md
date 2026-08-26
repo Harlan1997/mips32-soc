@@ -172,11 +172,11 @@ MIPS `CACHE op[4:2]==001` (D-cache) 子集：
 | op[4:0] | 助记 | 行为 |
 |:-:|---|---|
 | 5'b00001 | Index_Writeback_Invalidate_D | **已实现**：若 dirty → writeback；然后 clear valid。way 由 `addr[12:11]` 选择，set 由 `addr[10:5]` |
-| 5'b10001 | Index_Load_Tag_D             | 读 tag 到 TagLo |
+| 5'b00101 | Index_Load_Tag_D             | 读 tag 到 TagLo |
 | 5'b01001 | Index_Store_Tag_D            | 写 TagLo 到 index |
-| 5'b10101 | Hit_Invalidate_D             | **已实现**：若命中 → clear valid（不 writeback，可能丢失 dirty）|
-| 5'b11001 | Hit_Writeback_Invalidate_D   | **已实现**：若命中 → writeback + clear valid |
-| 5'b11101 | Hit_Writeback_D              | **已实现**：若命中且 dirty → writeback + clear dirty，保留 valid |
+| 5'b10001 | Hit_Invalidate_D             | **已实现**：若命中 → clear valid（不 writeback，可能丢失 dirty）|
+| 5'b10101 | Hit_Writeback_Invalidate_D   | **已实现**：若命中 → writeback + clear valid |
+| 5'b11001 | Hit_Writeback_D              | **已实现**：若命中且 dirty → writeback + clear dirty，保留 valid |
 
 CACHE 指令走 MEM 阶段专用端口；产生维护 bubble（Hit_Writeback 需等 AXI）。
 AXI 写回 `SLVERR/DECERR` 时，维护请求完成并通过 `cache_op_error` 触发
