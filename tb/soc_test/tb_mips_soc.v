@@ -39,6 +39,9 @@ module tb_mips_soc;
     reg clk;
     reg rst_n;
 
+    wire        legacy_uart_tx_valid;
+    wire [7:0]  legacy_uart_tx_data;
+
     soc_legacy_observation_if legacy_obs_if(clk, rst_n);
 `ifdef TB_RETIRE_TRACE
     soc_observation_if retire_obs_if(clk, rst_n);
@@ -74,6 +77,9 @@ module tb_mips_soc;
     integer linux_delay_trace_count;
     reg [31:0] linux_delay_trace_start;
     reg [31:0] linux_delay_trace_end;
+    integer linux_uart_trace;
+    integer linux_uart_trace_limit;
+    integer linux_uart_trace_count;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -135,6 +141,15 @@ module tb_mips_soc;
             linux_trace_cycle = linux_trace_cycle + 1;
             if (linux_trace_limit > 0 && linux_trace_cycle >= linux_trace_limit)
                 $finish;
+            if (linux_uart_trace != 0 &&
+                linux_uart_trace_count < linux_uart_trace_limit &&
+                legacy_uart_tx_valid) begin
+                $display("LINUX_UART_TRACE cycle=%0d paddr=%08h data=%02h",
+                         linux_trace_cycle,
+                         u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr,
+                         legacy_uart_tx_data);
+                linux_uart_trace_count = linux_uart_trace_count + 1;
+            end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
                 $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b",
                     linux_trace_cycle,
@@ -603,6 +618,11 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_DELAY_TRACE_START=%h", linux_delay_trace_start)) begin end
         linux_delay_trace_end = 32'h8924_34e4;
         if (!$value$plusargs("LINUX_DELAY_TRACE_END=%h", linux_delay_trace_end)) begin end
+        linux_uart_trace = 0;
+        if (!$value$plusargs("LINUX_UART_TRACE=%d", linux_uart_trace)) begin end
+        linux_uart_trace_limit = 256;
+        if (!$value$plusargs("LINUX_UART_TRACE_LIMIT=%d", linux_uart_trace_limit)) begin end
+        linux_uart_trace_count = 0;
     end
 `endif
 
@@ -722,8 +742,8 @@ module tb_mips_soc;
     wire        legacy_cp0_intr_req = legacy_obs_if.cp0_intr_req;
     wire        legacy_cp0_exl = legacy_obs_if.cp0_exl;
     wire        legacy_cp0_eret = legacy_obs_if.cp0_eret;
-    wire        legacy_uart_tx_valid = legacy_obs_if.uart_tx_valid;
-    wire [7:0]  legacy_uart_tx_data = legacy_obs_if.uart_tx_data;
+    assign legacy_uart_tx_valid = legacy_obs_if.uart_tx_valid;
+    assign legacy_uart_tx_data  = legacy_obs_if.uart_tx_data;
     wire        legacy_core_global_stall = legacy_obs_if.core_global_stall;
     wire [3:0]  legacy_dcache_state = legacy_obs_if.dcache_state;
     wire [3:0]  legacy_dcache_next_state = legacy_obs_if.dcache_next_state;
