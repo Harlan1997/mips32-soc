@@ -1725,9 +1725,11 @@ remains the compatibility baseline.
 - `make ddr4-controller-gate ddr4-controller-stress-gate rtl-frontend-compile`
   passes, including the default refresh/backpressure stress cases and all
   frontend configurations.
-- A fresh Linux RTL run with the opt-in mode still fails to reach
-  `MIPS32_SOC_LINUX_BOOT_SUCCESS`. The trace remains stuck at the I-cache
-  refill for physical address `0x08a55ca0`, so refresh pressure is not the
-  blocker. This narrows the next investigation to S3 crossbar/DDR request
-  acceptance and response routing; RTL Linux boot and RTL/QEMU Linux
-  differential remain OPEN.
+- The first implementation missed the combinational `refresh_due` gate, so
+  `s_arready` remained low even after the sequential refresh state was
+  suppressed. That was corrected and rechecked: S3 accepts the Linux refill,
+  and the later S0 L2 backing read exits `R_WAIT` normally.
+- A fresh marker-only Linux RTL run still timed out before
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS` (120 seconds), so Linux boot and
+  RTL/QEMU Linux differential remain OPEN. The next diagnosis must follow the
+  post-refill CPU/cache progress rather than refresh or initial DDR admission.
