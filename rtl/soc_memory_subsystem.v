@@ -345,7 +345,8 @@ module soc_memory_subsystem #(
     wire ddr4_last_row_hit_i, ddr4_last_row_miss_i;
     axi_ddr4_controller #(
         .INJECT_FATAL(ENABLE_DDR4_STATUS_FATAL),
-        .ENABLE_ECC(ENABLE_DDR4_STATUS)
+        .ENABLE_ECC(ENABLE_DDR4_STATUS),
+        .FAST_MODE(DDR_FAST_MODE)
     ) u_axi_ddr4_controller (
         .clk             (clk),
         .rst_n           (rst_n),
