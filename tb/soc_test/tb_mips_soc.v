@@ -51,6 +51,7 @@ module tb_mips_soc;
 `endif
 `ifdef TB_LINUX_BOOT_TRACE
     integer linux_trace_cycle;
+    integer linux_trace_limit;
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -110,6 +111,8 @@ module tb_mips_soc;
             linux_trace_cycle = 0;
         end else begin
             linux_trace_cycle = linux_trace_cycle + 1;
+            if (linux_trace_limit > 0 && linux_trace_cycle >= linux_trace_limit)
+                $finish;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
                 $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d",
                     linux_trace_cycle,
@@ -264,6 +267,11 @@ module tb_mips_soc;
                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_rlast);
             end
         end
+    end
+
+    initial begin
+        linux_trace_limit = 0;
+        if (!$value$plusargs("LINUX_TRACE_LIMIT=%d", linux_trace_limit)) begin end
     end
 `endif
 
