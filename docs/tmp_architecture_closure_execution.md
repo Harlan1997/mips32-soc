@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 SPECIAL3 regression fixture correction
+
+- `tb/unit/cpu_test/tb_mips_control_special3.sv` had retained the obsolete
+  non-standard `RDHWR` encoding with `rs=3`, and its reserved-field sweep did
+  not include the legal MIPS32 R2 `WSBW` sub-operation (`sa=6`).
+- Corrected the fixture to use architectural `RDHWR rs=0, rd=2` and added the
+  legal `WSBW` check. The RTL decoder was not loosened.
+- Fresh evidence: `make mips-control-special3-gate cp0-rdhwr-gate
+  isa-r2-gate` passes. Complete ISA and privileged-ISA compliance remain
+  outside this selected corpus.
+
 ### 2026-08-27 Linux progress gate uses independent heartbeat
 
 - The progress gate now checks `LINUX_PROGRESS_TRACE`, while detailed refill
