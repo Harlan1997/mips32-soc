@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 Linux progress gate uses independent heartbeat
+
+- The progress gate now checks `LINUX_PROGRESS_TRACE`, while detailed refill
+  diagnostics remain independently controllable through
+  `LINUX_REFILL_TRACE` and the other trace plusargs.
+- Fresh end-to-end no-coverage run with detailed traces disabled passed at
+  `RTL_CYCLE_LIMIT=1000000`; the generated report records zero Linux userspace
+  markers, while the simulator completed normally with a 1.1 MiB VCS data
+  structure.
+- This closes the progress-gate observability defect only. RTL Linux
+  userspace boot and full RTL/QEMU Linux differential remain open.
+
 ### 2026-08-27 Linux progress evidence decoupled from detailed traces
 
 - Added a bounded `LINUX_PROGRESS_TRACE` heartbeat to the Linux RTL
