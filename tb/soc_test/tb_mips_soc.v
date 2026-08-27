@@ -60,6 +60,9 @@ module tb_mips_soc;
     integer linux_vector_trace_count;
     integer linux_cacheop_trace_limit;
     integer linux_cacheop_trace_count;
+    reg [26:0] linux_cacheop_trace_line;
+    integer linux_cp0_trace_limit;
+    integer linux_cp0_trace_count;
     integer linux_ddr_trace;
     integer linux_ddr_trace_limit;
     integer linux_ddr_trace_count;
@@ -297,6 +300,9 @@ module tb_mips_soc;
                 linux_delay_trace_count = linux_delay_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid &&
+                ((linux_cacheop_trace_line == 27'd0) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_addr[31:5] ==
+                  linux_cacheop_trace_line)) &&
                 linux_cacheop_trace_count < linux_cacheop_trace_limit) begin
                 $display("LINUX_CACHEOP_TRACE cycle=%0d op=%02h addr=%08h ic=%b done=%b err=%0d daw=%b/%b/%08h/%08h/%b ist=%0d dst=%0d",
                     linux_trace_cycle,
@@ -313,6 +319,25 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
                     `TB_DCACHE_PATH.state);
                 linux_cacheop_trace_count = linux_cacheop_trace_count + 1;
+            end
+            if (linux_cp0_trace_count < linux_cp0_trace_limit &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd9) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd11) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd12))) begin
+                $display("LINUX_CP0_TRACE cycle=%0d pc=%08h rd=%0d sel=%0d data=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req);
+                linux_cp0_trace_count = linux_cp0_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
@@ -713,7 +738,12 @@ module tb_mips_soc;
         linux_vector_trace_count = 0;
         linux_cacheop_trace_limit = 2000;
         if (!$value$plusargs("LINUX_CACHEOP_TRACE_LIMIT=%d", linux_cacheop_trace_limit)) begin end
+        linux_cacheop_trace_line = 27'd0;
+        if (!$value$plusargs("LINUX_CACHEOP_TRACE_LINE=%h", linux_cacheop_trace_line)) begin end
         linux_cacheop_trace_count = 0;
+        linux_cp0_trace_limit = 256;
+        if (!$value$plusargs("LINUX_CP0_TRACE_LIMIT=%d", linux_cp0_trace_limit)) begin end
+        linux_cp0_trace_count = 0;
         linux_ddr_trace = 0;
         if (!$value$plusargs("LINUX_DDR_TRACE=%d", linux_ddr_trace)) begin end
         linux_ddr_trace_limit = 200;
