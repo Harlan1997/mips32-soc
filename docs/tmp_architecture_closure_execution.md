@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 Linux progress evidence decoupled from detailed traces
+
+- Added a bounded `LINUX_PROGRESS_TRACE` heartbeat to the Linux RTL
+  testbench and made the progress gate check it instead of requiring the
+  verbose `LINUX_REFILL_TRACE` stream.
+- The gate forwards the new control independently. Detailed refill,
+  exception, EBase and WB traces can now be disabled without invalidating the
+  post-reset progress criterion or changing RTL behavior.
+- Fresh VCS compile/elaboration/link passed with coverage disabled. A 1000
+  cycle run with all detailed traces disabled emitted only the independent
+  progress heartbeat and completed at the explicit cycle limit with a 1.1 MiB
+  VCS data structure. This improves probe resource control; RTL Linux
+  userspace boot and full RTL/QEMU Linux differential remain open.
+
 ### 2026-08-27 Linux RTL probe trace gating and long-run evidence
 
 - Added explicit `LINUX_REFILL_TRACE`, `LINUX_EXCEPTION_TRACE` and

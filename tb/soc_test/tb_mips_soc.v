@@ -56,6 +56,7 @@ module tb_mips_soc;
     integer linux_trace_cycle;
     integer linux_trace_limit;
     integer linux_refill_trace;
+    integer linux_progress_trace;
     integer linux_exception_trace;
     integer linux_ebase_trace;
     integer linux_wb_trace;
@@ -662,6 +663,14 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_tag_entry);
                 linux_target_dside_trace_count = linux_target_dside_trace_count + 1;
             end
+            if (linux_progress_trace != 0 &&
+                ((linux_trace_cycle < 20) ||
+                 (linux_trace_cycle % 100000 == 0) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c)))) begin
+                $display("LINUX_PROGRESS_TRACE cycle=%0d pc=%08h", linux_trace_cycle,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc);
+            end
             if (linux_refill_trace != 0 &&
                 ((linux_trace_cycle < 20) ||
                  (linux_trace_cycle % 100000 == 0) ||
@@ -741,6 +750,8 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_TRACE_LIMIT=%d", linux_trace_limit)) begin end
         linux_refill_trace = 1;
         if (!$value$plusargs("LINUX_REFILL_TRACE=%d", linux_refill_trace)) begin end
+        linux_progress_trace = 1;
+        if (!$value$plusargs("LINUX_PROGRESS_TRACE=%d", linux_progress_trace)) begin end
         linux_exception_trace = 1;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE=%d", linux_exception_trace)) begin end
         linux_ebase_trace = 1;
