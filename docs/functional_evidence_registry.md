@@ -1,5 +1,13 @@
 # RTL Functional Evidence Registry
 
+## 2026-08-27 maintenance
+
+The SPECIAL3 decoder regression fixture now uses the architectural MIPS32 R2
+`RDHWR` encoding (`rs=0`) and explicitly covers legal `WSBW` (`sa=6`). Fresh
+`mips-control-special3-gate`, `cp0-rdhwr-gate`, and `isa-r2-gate` runs pass.
+This confirms the selected implemented-subset evidence; it does not upgrade
+the project claim to full ISA or privileged-ISA compliance.
+
 Status levels used by this registry:
 
 - `IMPLEMENTED`: RTL and interface contract are present.
