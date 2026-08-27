@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 Linux RTL probe trace gating and long-run evidence
+
+- Added explicit `LINUX_REFILL_TRACE`, `LINUX_EXCEPTION_TRACE` and
+  `LINUX_EBASE_TRACE` controls to `TB_LINUX_BOOT_TRACE`; all three remain
+  enabled by default for the progress gate and can be disabled for resource
+  controlled probes.
+- Previously passing `+LINUX_REFILL_TRACE=0` did not suppress the sparse
+  heartbeat, so a purported low-log run still emitted periodic refill lines.
+  The testbench and `run_rtl_linux_progress_gate.sh` now forward and honor the
+  controls independently.
+- Recompiled the MMU-enabled Linux RTL testbench with coverage disabled and
+  ran a fresh 10M-cycle probe. It ended at the explicit cycle limit with a
+  1.1 MiB VCS data structure, no RTL regression/error/watchdog failure, and
+  no userspace success marker. The remaining Linux RTL boot closure is still
+  open; this change only fixes probe observability and resource behavior.
+
 ### 2026-08-27 Linux refill probe resource safety and runtime TLBWR evidence
 
 - `tb/linux_boot/run_rtl_linux_progress_gate.sh` now forwards the bounded

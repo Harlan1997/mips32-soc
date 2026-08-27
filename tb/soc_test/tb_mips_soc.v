@@ -55,6 +55,10 @@ module tb_mips_soc;
 `ifdef TB_LINUX_BOOT_TRACE
     integer linux_trace_cycle;
     integer linux_trace_limit;
+    integer linux_refill_trace;
+    integer linux_exception_trace;
+    integer linux_ebase_trace;
+    integer linux_wb_trace;
     integer linux_vector_trace;
     integer linux_vector_trace_limit;
     integer linux_vector_trace_count;
@@ -202,7 +206,8 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_pfn);
                 linux_tlb_trace_count = linux_tlb_trace_count + 1;
             end
-            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
+            if (linux_exception_trace != 0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
                 $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
@@ -250,7 +255,8 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_bd,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_bd);
             end
-            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+            if (linux_wb_trace != 0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 (((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= 32'h8800_d800) &&
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= 32'h8800_d850)) ||
                  ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= 32'h8000_0000) &&
@@ -339,7 +345,8 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req);
                 linux_cp0_trace_count = linux_cp0_trace_count + 1;
             end
-            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+            if (linux_ebase_trace != 0 &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd15) &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel == 3'd1)) begin
@@ -655,10 +662,11 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_tag_entry);
                 linux_target_dside_trace_count = linux_target_dside_trace_count + 1;
             end
-            if ((linux_trace_cycle < 20) ||
-                (linux_trace_cycle % 100000 == 0) ||
-                (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c))) begin
+            if (linux_refill_trace != 0 &&
+                ((linux_trace_cycle < 20) ||
+                 (linux_trace_cycle % 100000 == 0) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c)))) begin
                 $display("LINUX_REFILL_TRACE cycle=%0d pc=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h dr=%b/%b/%08h/%0h/%b cpu=%b/%b/%08h/%08h stall=%b dc=%0d aw=%b/%b/%08h w=%b/%b/%08h/%h/%b b=%b/%b da=%b/%b/%08h/%0h dr=%b/%b/%08h/%0h/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
@@ -731,6 +739,14 @@ module tb_mips_soc;
     initial begin
         linux_trace_limit = 0;
         if (!$value$plusargs("LINUX_TRACE_LIMIT=%d", linux_trace_limit)) begin end
+        linux_refill_trace = 1;
+        if (!$value$plusargs("LINUX_REFILL_TRACE=%d", linux_refill_trace)) begin end
+        linux_exception_trace = 1;
+        if (!$value$plusargs("LINUX_EXCEPTION_TRACE=%d", linux_exception_trace)) begin end
+        linux_ebase_trace = 1;
+        if (!$value$plusargs("LINUX_EBASE_TRACE=%d", linux_ebase_trace)) begin end
+        linux_wb_trace = 1;
+        if (!$value$plusargs("LINUX_WB_TRACE=%d", linux_wb_trace)) begin end
         linux_vector_trace = 0;
         if (!$value$plusargs("LINUX_VECTOR_TRACE=%d", linux_vector_trace)) begin end
         linux_vector_trace_limit = 1000;
