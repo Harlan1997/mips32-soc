@@ -2045,3 +2045,18 @@ remains the compatibility baseline.
 - Boundary: Linux's runtime-generated refill vector still does not complete
   the OS-owned page-table refill, so RTL Linux userspace boot and full
   RTL/QEMU system-mode differential remain OPEN.
+
+### 2026-08-27 D-side fault VA retention
+
+- `mips_cpu` now retains the first D-side translation-fault virtual address
+  through the MEM/WB/ROB flush edge and supplies it to CP0 when the exception
+  is consumed. This prevents `BadVAddr` and `EntryHi` from observing the
+  post-flush bubble instead of the faulting operation.
+- The `mmu_refill` firmware now treats the read-only page's `Mod` exception
+  as a negative architectural check: `permission_badvaddr_ok=1` requires
+  `BadVAddr=0x00022000`. Fresh `make mmu-refill-gate` evidence passes with
+  `refills=7`, `demand_faults=6`, `permission_faults=1`, and
+  `unexpected_exc=0`; frontend compile and CPU/CP0 regression also pass.
+- This closes the selected D-side `BadVAddr` precision slice. Linux's
+  runtime-generated refill handler, OS page-table ownership, and full RTL
+  Linux/QEMU differential remain open.

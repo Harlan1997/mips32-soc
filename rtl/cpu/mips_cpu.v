@@ -1297,6 +1297,24 @@ module mips_cpu #(
     // remains deferred until the walker returns a latched fault.
     assign dmem_request_blocked = dmem_translation_fault | hw_walker_d_miss;
 
+    // The MEM/WB and ROB control bundles are flushed on the same edge that
+    // CP0 consumes a translation exception.  Keep the original virtual
+    // address independently of that flush so BadVAddr/EntryHi cannot be
+    // replaced by the following bubble (or by a younger instruction).
+    reg        d_fault_vaddr_pending_q;
+    reg [31:0] d_fault_vaddr_q;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            d_fault_vaddr_pending_q <= 1'b0;
+            d_fault_vaddr_q         <= 32'd0;
+        end else if (exception_flush) begin
+            d_fault_vaddr_pending_q <= 1'b0;
+        end else if (dmem_translation_fault && !d_fault_vaddr_pending_q) begin
+            d_fault_vaddr_pending_q <= 1'b1;
+            d_fault_vaddr_q         <= mem_vaddr;
+        end
+    end
+
 `ifdef SVA_ENABLE
     // Synchronous translation faults have priority over asynchronous IRQs.
     // Losing this ordering flushes the faulting instruction before CP0 can
@@ -1860,7 +1878,9 @@ module mips_cpu #(
                                    ((wb_except_code == 5'h02) ||
                                     (wb_except_code == 5'h03) ||
                                     (wb_except_code == 5'h04));
-    wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out :
+    wire [31:0] bad_vaddr = (wb_except_is_data &&
+                             d_fault_vaddr_pending_q) ? d_fault_vaddr_q :
+                            wb_except_is_data ? wb_ex_out :
                             (wb_if_address_exception && if_fault_pending_q ?
                              if_fault_vaddr_q : except_pc);
     mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_mips_cp0 (
