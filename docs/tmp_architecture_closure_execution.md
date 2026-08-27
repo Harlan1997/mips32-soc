@@ -1,5 +1,25 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 QEMU retire converter vector false-positive fix
+
+- The `fpu_fpe_double` differential mismatch at retire 94 was traced to
+  `qemu_system_state_to_jsonl.py`, not to QEMU's CP0 EPC state. A normal
+  firmware branch-delay slot targeting the vector-shaped address `0x200` was
+  incorrectly treated as an asynchronous interrupt boundary. Its stale
+  Cause.BD data-flow override changed a later `0x0000003c` Cause value into
+  `0x8000003c`.
+- The converter now rejects a vector-shaped `next_pc` when the preceding
+  instruction is an ordinary branch whose architectural target is that same
+  address. Existing QEMU kseg0 vector PC behavior remains unchanged, including
+  the VIC contract's explicit `0x80000180` checks.
+- Fresh evidence: `make qemu-system-selected-differential-gate` and
+  `make qemu-system-architecture-closure-gate` both pass. The latter includes
+  current-contract, selected ISA/exception/privileged/peripheral/VIC/FPU/DMA
+  differential, MMU refill/PageMask/OS-pressure differential, FPE boundary and
+  double differential, LL/SC differential, and the Linux userspace marker
+  gate. Full RTL Linux userspace boot and complete ISA/privileged/FPU/product
+  signoff remain open.
+
 ### 2026-08-27 Linux vector cache-maintenance boundary diagnosis
 
 - Added bounded `LINUX_CACHEOP_TRACE_LINE` and `LINUX_CP0_TRACE_LIMIT`
