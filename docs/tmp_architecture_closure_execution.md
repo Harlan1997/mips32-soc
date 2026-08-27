@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 Linux refill probe resource safety and runtime TLBWR evidence
+
+- `tb/linux_boot/run_rtl_linux_progress_gate.sh` now forwards the bounded
+  `LINUX_TLB_TRACE`, `LINUX_VECTOR_TRACE` and corresponding line limits to the
+  simulator. This keeps runtime-vector diagnosis reproducible without enabling
+  unbounded trace streams or changing the default Linux probe behavior.
+- A 20M-cycle no-coverage run completed with a 1.1 MiB VCS data structure and
+  no simulator error or OOM. The run reproduced the first real D-side `TLBS`
+  at cycle `16265490` for `VA=0xc0000000`.
+- A bounded 17M-cycle trace then observed the Linux-generated refill handler
+  execute `TLBWR` at cycle `16265617`, writing `VPN2=0x60000` and a valid
+  `EntryLo0`, followed by normal timer-handler progress. The vector was
+  therefore written and executed; the remaining failure is deeper Linux boot
+  progress, not missing runtime-vector installation.
+- The progress gate still reports zero userspace success markers. Full RTL
+  Linux userspace boot, OS-owned VM/shootdown semantics and RTL/QEMU Linux
+  differential remain open.
+
 ### 2026-08-27 QEMU retire converter vector false-positive fix
 
 - The `fpu_fpe_double` differential mismatch at retire 94 was traced to
