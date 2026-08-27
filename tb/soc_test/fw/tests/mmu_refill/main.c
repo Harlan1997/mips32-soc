@@ -32,6 +32,7 @@ static volatile unsigned int last_unexpected_badv = 0;
 static volatile unsigned int last_unexpected_epc = 0;
 static volatile unsigned int hw_permission_faults = 0;
 static volatile unsigned int permission_fault_count = 0;
+static volatile unsigned int permission_badvaddr_ok = 0;
 static volatile unsigned int page_alloc_count = 0;
 static volatile unsigned int pair_valid[3] = { 0, 0, 0 };
 
@@ -252,6 +253,8 @@ void c_interrupt_handler(void) {
 
     if (exc_code == EXC_MOD) {
         permission_fault_count++;
+        if (bad_vaddr == 0x00022000u)
+            permission_badvaddr_ok++;
         asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
         epc += 4;
         asm volatile("mtc0 %0, $14, 0" :: "r"(epc));
@@ -472,6 +475,8 @@ int main(void) {
     print_hex(page_alloc_count);
     print_str("mmu_refill: permission_faults=");
     print_hex(permission_fault_count);
+    print_str("mmu_refill: permission_badvaddr_ok=");
+    print_hex(permission_badvaddr_ok);
     print_str("mmu_refill: unexpected_exc=");
     print_hex(unexpected_exc);
     print_str("mmu_refill: last_code=");
@@ -486,7 +491,8 @@ int main(void) {
     print_hex(ro_initial);
 
     if (ok && demand_fault_count == 6 && page_alloc_count == 4 &&
-        permission_fault_count == 1 && unexpected_exc == 0) {
+        permission_fault_count == 1 && permission_badvaddr_ok == 1 &&
+        unexpected_exc == 0) {
         print_str("mmu_refill: PASS\n");
         *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5550u;
     } else {
