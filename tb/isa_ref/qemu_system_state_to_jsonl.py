@@ -192,6 +192,30 @@ def is_cop1_branch(instr):
            (((instr >> 16) & 0x1f) == 3)
 
 
+def is_direct_branch_to_next_pc(events, index):
+    """Reject ordinary branches that happen to target an exception offset.
+
+    The converter uses vector-shaped ``next_pc`` values to reconstruct an
+    interrupt boundary. A firmware branch can legitimately target 0x200 (or
+    another vector-shaped address), especially inside an exception test. Such
+    a delay slot is ordinary control flow, not an asynchronously accepted
+    interrupt.
+    """
+    if index == 0:
+        return False
+    instr = int(events[index - 1]["instr"], 16)
+    opcode = (instr >> 26) & 0x3f
+    if opcode not in (0x01, 0x04, 0x05, 0x06, 0x07,
+                      0x14, 0x15, 0x16, 0x17):
+        return False
+    offset = instr & 0xffff
+    if offset & 0x8000:
+        offset -= 0x10000
+    branch_pc = int(events[index - 1]["pc"], 16)
+    target = (branch_pc + 4 + (offset << 2)) & 0xffffffff
+    return target == int(events[index]["next_pc"], 16)
+
+
 def signed32(value):
     return value if value < 0x80000000 else value - 0x100000000
 
@@ -347,14 +371,15 @@ def convert(events, states):
         vector_offset = event_next_pc & 0x1fffffff
         vector_pc = (vector_offset in (0x180, 0x200, 0x300, 0x370, 0x380) or
                      event_next_pc == 0xbfc00200)
-        if (vector_pc and index > 0 and
+        ordinary_vector_branch = is_direct_branch_to_next_pc(events, index)
+        if (vector_pc and not ordinary_vector_branch and index > 0 and
                 has_delay_slot(int(events[index - 1]["instr"], 16)) and
                 int(event["pc"], 16) ==
                 int(events[index - 1]["pc"], 16) + 4 and
                 ((cause_value >> 2) & 0x1f) == 0 and not replay_bd_seen):
             replay_bd_pending = True
             replay_cause_pending = True
-        elif (vector_pc and index > 0 and
+        elif (vector_pc and not ordinary_vector_branch and index > 0 and
               has_delay_slot(int(events[index - 1]["instr"], 16)) and
               int(event["pc"], 16) ==
               int(events[index - 1]["pc"], 16) + 4):
