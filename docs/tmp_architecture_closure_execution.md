@@ -1,5 +1,24 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-27 Linux vector cache-maintenance boundary diagnosis
+
+- Added bounded `LINUX_CACHEOP_TRACE_LINE` and `LINUX_CP0_TRACE_LIMIT`
+  controls to the RTL Linux trace path, and exposed them through
+  `run_rtl_linux_progress_gate.sh`. The target line is selected by physical
+  cache-line address, so early whole-cache operations cannot exhaust the
+  diagnostic budget.
+- A fresh 8M-cycle VCS capture observed Linux issuing `op=15`
+  (`Hit_Writeback_Invalidate_D`) for physical line `0x08e08200`. The D-cache
+  drove `AW=0x08e08200` and all eight `W` beats, and the backing DDR model
+  retained the generated vector word `0x0a0008e8`. The following `op=10`
+  invalidated the I-cache line and refill returned that word.
+- The same capture showed CP0 Compare writes and `Cause.TI` clearing after
+  each timer interrupt. A no-trace 16M-cycle run completed without simulator
+  error or OOM, entered deeper kernel code, but did not emit
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`. Therefore the current Linux blocker is not
+  proven to be D-cache writeback or Compare/TI clearing; RTL Linux userspace
+  boot and RTL/QEMU Linux differential remain open.
+
 ### 2026-08-27 asynchronous interrupt branch-delay EPC correction
 
 - `rtl/cpu/mips_cpu.v` now selects the interrupted PC from the oldest valid
