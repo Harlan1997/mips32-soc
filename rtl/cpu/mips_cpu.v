@@ -1883,10 +1883,17 @@ module mips_cpu #(
     // after WAIT has retired.  Save the sequential PC so ERET resumes at the
     // instruction following WAIT instead of re-executing it forever.
     wire [31:0] wait_interrupt_epc = wait_resume_pc;
+    // WB can still be retiring the delay slot while a younger branch target
+    // is visible in MEM.  When the interrupt is accepted on that edge, the
+    // WB delay-slot PC is the precise fault PC; using oldest_flushed_pc would
+    // select the younger target and Cause.BD would then subtract four from
+    // the wrong address (skipping back into the preceding instruction).
     wire [31:0] except_pc = sim_exception_active ? inst_addr :
                              ((interrupt_accept && wait_state) ?
                               wait_interrupt_epc :
-                             ((wb_except_req && wb_arch_valid) ? wb_pc : oldest_flushed_pc));
+                             ((wb_except_req && wb_arch_valid) ? wb_pc :
+                              ((interrupt_accept && wb_bd && wb_arch_valid) ?
+                               wb_pc : oldest_flushed_pc)));
     // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
     // address exceptions use the held faulting fetch VA.

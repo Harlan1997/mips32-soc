@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 Linux interrupt delay-slot EPC fix
+
+- Fixed the asynchronous interrupt PC selection in `rtl/cpu/mips_cpu.v`.
+  When WB retires a branch delay-slot instruction on the same edge that a
+  younger MEM instruction is visible, the precise interrupt PC is the WB
+  delay-slot PC. The old selection used the younger MEM PC, and CP0's normal
+  BD adjustment then saved an address inside the wrong function epilogue.
+- Fresh `make cpu-irq-delay-slot-gate`, `make cpu-cp0-gate`, and
+  `make cpu-load-return-gate` all pass. A no-coverage RTL Linux run through
+  19,000,000 cycles no longer jumps to `0x895b0000`; it reaches the legal
+  `__udelay` loop at `0x89243530`/`0x89243534` with bounded simulator memory.
+- The Linux userspace marker is still absent. The remaining RTL Linux issue
+  has moved past the corrupted `alloc_inode` return and now requires a timer
+  / `__udelay` progress diagnosis; full RTL Linux userspace boot and full
+  RTL/QEMU Linux differential remain open.
+
 ### 2026-08-29 RTL Linux stack-return diagnosis and bounded IRQ recheck
 
 - Added `ex_inst/ex_val_rt` and `mem_inst/mem_val_rt` fields to the bounded
