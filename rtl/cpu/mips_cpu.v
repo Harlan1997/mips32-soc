@@ -1868,6 +1868,9 @@ module mips_cpu #(
                                (mem_flush_valid ?
                                 (mem_bd ||
                                  (ex_flush_valid && ex_bd &&
+                                  (ex_pc == mem_pc + 32'd4)) ||
+                                 (ex_flush_valid && id_flush_valid && id_bd &&
+                                  (id_pc == ex_pc + 32'd4) &&
                                   (ex_pc == mem_pc + 32'd4))) :
                                 (ex_flush_valid ?
                                  (ex_bd ||
