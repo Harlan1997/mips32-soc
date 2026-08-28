@@ -2177,3 +2177,15 @@ remains the compatibility baseline.
   and a normal simulator exit. The run observed post-reset progress and zero
   userspace markers, so the Linux boot boundary remains open; this closes the
   reproducibility/resource-control defect in the Make entry.
+
+### 2026-08-29 Linux progress Make coverage forwarding
+
+- The same Make entry now forwards `SKIP_COVERAGE` and
+  `SKIP_URG_EXCLUSION_CHECK` as well. Without this forwarding, a caller could
+  request a low-resource probe while `tb/soc_test/run.sh` still enabled VCS
+  coverage and URG processing.
+- Fresh evidence: `SKIP_COVERAGE=1 KERNEL=... SKIP_LINUX_BUILD=1
+  RTL_CYCLE_LIMIT=2000000 make rtl-linux-progress-gate` completes in 24.2 s,
+  exits normally at the explicit cycle limit, and reports a 1.1 MiB VCS data
+  structure. No userspace marker is observed; this remains resource-control
+  evidence rather than Linux boot closure.

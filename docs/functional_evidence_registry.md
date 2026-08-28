@@ -9,6 +9,10 @@ Make entry passed with an existing kernel and zero userspace markers. This is
 resource/reproducibility evidence only; RTL Linux userspace boot and full
 RTL/QEMU Linux differential remain open.
 
+The entry also forwards `SKIP_COVERAGE` and
+`SKIP_URG_EXCLUSION_CHECK`; a fresh no-coverage run completed in 24.2 s with
+1.1 MiB simulator data structure size and a normal bounded exit.
+
 ## 2026-08-27 maintenance
 
 The SPECIAL3 decoder regression fixture now uses the architectural MIPS32 R2
