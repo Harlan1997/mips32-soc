@@ -2150,3 +2150,16 @@ remains the compatibility baseline.
   boot, full RTL/QEMU Linux differential, and full ISA/privileged/MMU/FPU
   compliance therefore remain open; this change closes only the IRQ BD
   ownership bug and its bounded evidence.
+
+### 2026-08-29 Linux progress gate kernel reuse safety
+
+- Fixed `run_rtl_linux_progress_gate.sh` so supplying an existing `KERNEL`
+  automatically reuses that image. Previously a caller could provide a valid
+  kernel path while the wrapper still rebuilt the full Linux tree, creating a
+  large temporary build and increasing OOM/disk-pressure risk. Explicit
+  `SKIP_LINUX_BUILD=1` remains supported and still requires `KERNEL`.
+- `bash -n tb/linux_boot/run_rtl_linux_progress_gate.sh` passes. The fresh
+  no-coverage run using the existing kernel completes 17,000,000 RTL cycles
+  with bounded simulator memory. The progress gate passes, but no userspace
+  success marker is observed; Linux userspace boot and full RTL/QEMU Linux
+  differential remain open.

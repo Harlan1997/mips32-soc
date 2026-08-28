@@ -38,14 +38,18 @@ mkdir -p "${RUN_DIR}"
 # Build a self-contained relocated image.  Keeping the kernel, DTB, Boot ROM,
 # DDR image and simulator in one run directory makes this probe reproducible
 # and avoids accidentally reusing an image from a different address layout.
-if [[ "${SKIP_LINUX_BUILD}" == "1" ]]; then
-    test -n "${KERNEL_INPUT}" || {
+if [[ "${SKIP_LINUX_BUILD}" == "1" || -n "${KERNEL_INPUT}" ]]; then
+    if [[ "${SKIP_LINUX_BUILD}" == "1" && -z "${KERNEL_INPUT}" ]]; then
         echo "SKIP_LINUX_BUILD=1 requires KERNEL=/path/to/vmlinux" >&2
         exit 1
-    }
+    fi
+    if [[ -z "${KERNEL_INPUT}" ]]; then
+        echo "RTL Linux progress gate: no KERNEL supplied for build skip" >&2
+        exit 1
+    fi
     test -s "${KERNEL_INPUT}"
     KERNEL_PATH=$(realpath "${KERNEL_INPUT}")
-    printf 'Linux kernel build: SKIPPED\nKERNEL=%s\n' "${KERNEL_PATH}" >"${RUN_DIR}/build.log"
+    printf 'Linux kernel build: SKIPPED (reusing supplied KERNEL)\nKERNEL=%s\n' "${KERNEL_PATH}" >"${RUN_DIR}/build.log"
 else
     BUILD_DIR="${RUN_DIR}" JOBS="${JOBS}" KERNEL_PHYSICAL_START="${KERNEL_PHYSICAL_START}" \
         "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
