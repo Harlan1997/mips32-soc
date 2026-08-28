@@ -1,5 +1,27 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 RTL Linux stack-return diagnosis and bounded IRQ recheck
+
+- Added `ex_inst/ex_val_rt` and `mem_inst/mem_val_rt` fields to the bounded
+  `LINUX_DELAY_TRACE`, so a Linux stack fault can be compared at EX/MEM,
+  MEM/WB, and the external D-cache request boundary.
+- A fresh no-coverage capture reproduced the failure at the `alloc_inode`
+  return path. The load `lw ra,28(sp)` reads `0x895b0000` from physical
+  `0x08423d64`, and the subsequent `jr ra` transfers to `0x895b0000`; the
+  trace does not show the expected `alloc_inode` prologue store in the
+  captured window. The earlier `0x895b0000` store is a valid caller register
+  save, so the previous conclusion that `sw ra` directly wrote a bad value
+  was rejected.
+- The same capture shows a prior asynchronous interrupt at a Linux kernel
+  control-flow boundary. The dedicated `make cpu-irq-delay-slot-gate` passes,
+  including the unit-level `Cause.BD`/EPC contract, but this does not yet
+  prove the full Linux pipeline/interruption interaction. No speculative RTL
+  cache or pipeline change was made from the incomplete evidence.
+- RTL Linux userspace boot still has no `MIPS32_SOC_LINUX_BOOT_SUCCESS` marker;
+  full RTL Linux userspace boot and full RTL/QEMU Linux differential remain
+  open. The next diagnosis must capture the call-entry window and the exact
+  interrupt/return transaction before changing architectural state handling.
+
 ### 2026-08-27 SPECIAL3 regression fixture correction
 
 - `tb/unit/cpu_test/tb_mips_control_special3.sv` had retained the obsolete
