@@ -244,11 +244,15 @@ module tb_mips_soc;
             end
             if (linux_exception_trace != 0 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
-                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b",
+                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b accept=%b wbei=%b wbctl=%b/%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ei,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_to_reg,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
