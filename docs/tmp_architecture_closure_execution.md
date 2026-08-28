@@ -2294,3 +2294,24 @@ remains the compatibility baseline.
   differential signoff remain open. No CPU semantic change is justified
   until the interrupt's saved frame and Linux `die()` policy are compared
   against the architectural reference.
+
+### 2026-08-29 EI/interrupt retirement ordering check
+
+- Added an architectural ordering guard in `mips_cpu`: a pending interrupt is
+  deferred when the WB stage is retiring `EI`. This allows CP0 to commit the
+  `Status.IE` update before an interrupt can be accepted on the following
+  boundary; otherwise CP0's exception-priority branch could suppress the
+  same-edge `EI` state update.
+- Verification: `make rtl-frontend-compile`,
+  `make cpu-irq-delay-slot-gate`, `make cpu-cp0-gate`, and
+  `make qemu-system-di-ei-differential-gate` pass. A 14M-cycle no-coverage
+  Linux probe through `make rtl-linux-progress-gate` also passes its bounded
+  progress criterion with a 1.1 MiB VCS data structure.
+- Negative evidence: the Linux probe still reaches the same first failure at
+  cycle `13490880` (`die()` at `0x88808c34`, then
+  `panic("Fatal exception in interrupt")`), so this ordering fix does not
+  close the Linux boot blocker. The remaining exception-frame/interrupt
+  interaction needs a separately controlled reproducer or reference trace.
+- Boundary: this closes only the DI/EI retirement ordering slice. It is not
+  full privileged-ISA, Linux userspace, or RTL/QEMU Linux differential
+  signoff.

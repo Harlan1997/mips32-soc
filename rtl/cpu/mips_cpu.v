@@ -191,6 +191,8 @@ module mips_cpu #(
     wire [31:0] epc_out;
     wire [31:0] wb_inst;
     wire [31:0] wb_val_rt;
+    wire        wb_reg_write;
+    wire [1:0]  wb_mem_to_reg;
     wire [3:0]  srs_current_set;
     wire [3:0]  srs_previous_set;
     wire        srs_shadow_we;
@@ -215,6 +217,19 @@ module mips_cpu #(
     wire effective_except_req = (wb_except_req && wb_arch_valid) |
                                 sim_exception_active;
     wire [4:0] effective_except_code = sim_exception_active ? sim_exception_code : wb_except_code;
+    // Decode DI/EI at the architectural WB boundary. These signals are
+    // declared before interrupt arbitration because an EI commit must not
+    // accept a pending interrupt on the same edge.
+    wire wb_di = wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
+                 (wb_inst[31:26] == 6'b010000) &&
+                 (wb_inst[25:21] == 5'b01011) &&
+                 (wb_inst[15:11] == 5'd12) &&
+                 (wb_inst[10:6] == 5'd0) && !wb_inst[5];
+    wire wb_ei = wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
+                 (wb_inst[31:26] == 6'b010000) &&
+                 (wb_inst[25:21] == 5'b01011) &&
+                 (wb_inst[15:11] == 5'd12) &&
+                 (wb_inst[10:6] == 5'd0) && wb_inst[5];
     // MIPS Cause.CE identifies the coprocessor that raised CpU.  The
     // pipeline retains the faulting instruction through WB, so the opt-in
     // COP1 unusable path can report CE=1 without affecting CP0/RI traps.
@@ -225,6 +240,13 @@ module mips_cpu #(
     // the pipeline. Otherwise the handler may observe a pre-load register
     // value while the response is still in the ROB.
     wire interrupt_accept = intr_req &&
+                            // EI updates Status.IE in CP0 at this same
+                            // retirement edge. Do not accept the pending IRQ
+                            // from the pre-update pipeline state; otherwise
+                            // an EI immediately followed by EHB can be
+                            // interrupted before EI has architecturally
+                            // completed (Linux die() relies on this boundary).
+                            !wb_ei &&
                             // A synchronous address/translation fault is
                             // already the oldest architectural event.  Do
                             // not let a timer or external IRQ flush it from
@@ -663,9 +685,7 @@ module mips_cpu #(
     wire        mem_cache_op_valid;
     wire [4:0]  mem_cache_op;
     
-    wire        wb_reg_write;
     wire        wb_cp0_we;
-    wire [1:0]  wb_mem_to_reg;
     wire [1:0]  id_mem_to_reg;
     
     wire        ex_illegal_inst;
@@ -696,6 +716,7 @@ module mips_cpu #(
     wire        ex_is_eret;
     wire [1:0]  ex_mem_to_reg;
     wire [1:0]  mem_mem_to_reg;
+
 
     // Opt-in COP1 development slice. State is committed in ID because the
     // existing integer pipeline has no CP1 payload fields. MFC1/CFC1 use the
@@ -1796,16 +1817,6 @@ module mips_cpu #(
     // Write Back (WB) Stage
     // =========================================================================
     wire [31:0] cp0_rdata;
-    wire wb_di = wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
-                 (wb_inst[31:26] == 6'b010000) &&
-                 (wb_inst[25:21] == 5'b01011) &&
-                 (wb_inst[15:11] == 5'd12) &&
-                 (wb_inst[10:6] == 5'd0) && !wb_inst[5];
-    wire wb_ei = wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
-                 (wb_inst[31:26] == 6'b010000) &&
-                 (wb_inst[25:21] == 5'b01011) &&
-                 (wb_inst[15:11] == 5'd12) &&
-                 (wb_inst[10:6] == 5'd0) && wb_inst[5];
     // WRPGPR has no ordinary GPR destination. Commit its source value to the
     // bank selected by SRSCtl.PSS at the same architectural WB edge.
     assign srs_shadow_we = (`SOC_SRS_ENABLE != 0) && wb_arch_valid &&
