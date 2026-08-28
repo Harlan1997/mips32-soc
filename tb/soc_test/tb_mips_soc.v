@@ -284,17 +284,23 @@ module tb_mips_soc;
             // move the helper, and the count bound keeps long boots bounded.
             if (linux_delay_trace != 0 &&
                 linux_delay_trace_count < linux_delay_trace_limit &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_delay_trace_start &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= linux_delay_trace_end) begin
-                $display("LINUX_DELAY_TRACE cycle=%0d pc=%08h inst=%08h valid=%b arch=%b a0=%08h a1=%08h a2=%08h w=%b/%0d/%08h eret=%b intr=%b epc=%08h cause=%08h status=%08h bd=%b",
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_delay_trace_start &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= linux_delay_trace_end) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc >= linux_delay_trace_start &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc <= linux_delay_trace_end))) begin
+                $display("LINUX_DELAY_TRACE cycle=%0d pc=%08h ifpc=%08h inst=%08h valid=%b arch=%b a0=%08h a1=%08h a2=%08h v0=%08h ra=%08h gp=%08h w=%b/%0d/%08h eret=%b intr=%b epc=%08h cause=%08h status=%08h bd=%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_valid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[4],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[5],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[6],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[31],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
@@ -795,6 +801,7 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_DELAY_TRACE=%d", linux_delay_trace)) begin end
         linux_delay_trace_limit = 256;
         if (!$value$plusargs("LINUX_DELAY_TRACE_LIMIT=%d", linux_delay_trace_limit)) begin end
+        linux_delay_trace_count = 0;
         linux_delay_trace_start = 32'h8924_34e0;
         if (!$value$plusargs("LINUX_DELAY_TRACE_START=%h", linux_delay_trace_start)) begin end
         linux_delay_trace_end = 32'h8924_34e4;
