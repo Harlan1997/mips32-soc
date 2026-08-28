@@ -2266,3 +2266,31 @@ remains the compatibility baseline.
   commit, so this is not a load-use or random D-cache response corruption.
   The remaining RTL Linux blocker is the interrupt/exception recovery stack
   frame/control-flow interaction; userspace boot remains open.
+
+### 2026-08-29 Linux fatal-interrupt panic capture
+
+- Added opt-in, bounded `LINUX_PANIC_TRACE` support to the Linux RTL
+  progress probe. The trace samples the kernel panic entry window and live
+  GPR/CP0 context without changing RTL behavior or enabling a default
+  high-volume stream.
+- A fresh 14M-cycle, no-coverage run using the existing relocated kernel
+  captured the first failure chain. At cycle `13490880`, an asynchronous
+  interrupt was accepted while Linux was executing `die()` at
+  `0x88808c34` (`ehb` immediately after `ei`); the associated trace reports
+  `Cause=0x40808008` and the pre-update EPC is the preceding TLB exception
+  (`0x8923af20`). Linux then reaches `0x88808cac`, which calls
+  `panic("Fatal exception in interrupt")`.
+- The panic context was captured at cycle `13517530`; the call site is the
+  `die()` fatal-interrupt path, not the `__udelay` loop itself. This rules out
+  the earlier timer/Count-deadlock hypothesis, but does not by itself prove
+  whether the remaining contract defect is IRQ acceptance timing, nested
+  exception state propagation, or Linux's expected `die()` recovery policy.
+- Verification for this diagnostic change: `bash -n
+  tb/linux_boot/run_rtl_linux_progress_gate.sh` and
+  `make rtl-frontend-compile` (`8/8`) pass. The bounded Linux run exits at
+  the explicit cycle limit with a 1.1 MiB VCS data structure and no OOM.
+- Boundary: the run remains a progress/diagnostic gate. RTL Linux userspace
+  boot, OS-owned demand paging/shootdown, and full RTL/QEMU Linux
+  differential signoff remain open. No CPU semantic change is justified
+  until the interrupt's saved frame and Linux `die()` policy are compared
+  against the architectural reference.
