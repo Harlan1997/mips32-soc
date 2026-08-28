@@ -2212,3 +2212,19 @@ remains the compatibility baseline.
   step is to capture the panic entry/reason text or the preceding failing
   initialization contract; no timer/Count RTL change is justified by this
   evidence.
+
+### 2026-08-29 Linux RTL return-path stack diagnosis
+
+- Parameterized the Linux target D-side and DDR write traces by physical
+  cache-line address and cycle window. Defaults retain the existing directed
+  diagnostic target, while Linux callers can select a stack line without
+  changing RTL behavior.
+- A 20M-cycle no-coverage capture selected the `alloc_inode` stack line
+  (`PA 0x08423d60`) and window `18.6M..18.72M`. It shows a real store from
+  `lookup_one_len` writing `0x895b0000` to `PA 0x08423d64`; the subsequent
+  `alloc_inode` return-path load reads that value and jumps into
+  `udp_encap_needed_key` at `0x895b0484`.
+- Earlier capture showed a correct `lw ra,28(sp)` D-side response and WB
+  commit, so this is not a load-use or random D-cache response corruption.
+  The remaining RTL Linux blocker is the interrupt/exception recovery stack
+  frame/control-flow interaction; userspace boot remains open.

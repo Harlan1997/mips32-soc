@@ -80,6 +80,9 @@ module tb_mips_soc;
     integer linux_target_dside_trace;
     integer linux_target_dside_trace_limit;
     integer linux_target_dside_trace_count;
+    reg [26:0] linux_target_trace_line;
+    integer linux_target_trace_cycle_start;
+    integer linux_target_trace_cycle_end;
     integer linux_delay_trace;
     integer linux_delay_trace_limit;
     integer linux_delay_trace_count;
@@ -603,10 +606,10 @@ module tb_mips_soc;
             end
             if (linux_ddr_write_trace != 0 &&
                 linux_ddr_write_trace_count < linux_ddr_write_trace_limit &&
-                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awaddr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.write_addr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awaddr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awaddr[31:5] == 27'h0040133b))) begin
+                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awaddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.write_addr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awaddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awaddr[31:5] == linux_target_trace_line))) begin
                 $display("LINUX_DDR_WRITE_TRACE cycle=%0d ddr=%0d aw=%b/%b/%08h/%0h/%b w=%b/%b/%08h/%h/%b active=%b/%0d/%08h l2=%0d maw=%b/%b/%08h mw=%b/%b/%08h/%h/%b saw=%b/%b/%08h sw=%b/%b/%08h/%h/%b dc=%0d daw=%b/%b/%08h dw=%b/%b/%08h/%h/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.state,
@@ -653,12 +656,12 @@ module tb_mips_soc;
             end
             if (linux_target_dside_trace != 0 &&
                 linux_target_dside_trace_count < linux_target_dside_trace_limit &&
-                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == 27'h000133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out[31:5] == 27'h000133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr[31:5] == 27'h000133b))) begin
+                linux_trace_cycle >= linux_target_trace_cycle_start &&
+                (linux_target_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_target_trace_cycle_end) &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr[31:5] == linux_target_trace_line))) begin
                 $display("LINUX_TARGET_DSIDE_TRACE cycle=%0d pc=%08h mempc=%08h va=%08h pa=%08h we=%b wdata=%08h be=%h memop=%03h done=%b req=%b dstate=%0d reqbuf=%b/%b/%08h/%08h/%h victim=%0d/%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
@@ -809,6 +812,12 @@ module tb_mips_soc;
         linux_target_dside_trace_limit = 160;
         if (!$value$plusargs("LINUX_TARGET_DSIDE_TRACE_LIMIT=%d", linux_target_dside_trace_limit)) begin end
         linux_target_dside_trace_count = 0;
+        linux_target_trace_line = 27'h0040_133b;
+        if (!$value$plusargs("LINUX_TARGET_TRACE_LINE=%h", linux_target_trace_line)) begin end
+        linux_target_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_TARGET_TRACE_CYCLE_START=%d", linux_target_trace_cycle_start)) begin end
+        linux_target_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_TARGET_TRACE_CYCLE_END=%d", linux_target_trace_cycle_end)) begin end
         linux_delay_trace = 0;
         if (!$value$plusargs("LINUX_DELAY_TRACE=%d", linux_delay_trace)) begin end
         linux_delay_trace_limit = 256;
