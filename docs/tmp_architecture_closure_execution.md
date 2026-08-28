@@ -2189,3 +2189,9 @@ remains the compatibility baseline.
   exits normally at the explicit cycle limit, and reports a 1.1 MiB VCS data
   structure. No userspace marker is observed; this remains resource-control
   evidence rather than Linux boot closure.
+
+- A follow-up 10M-cycle no-coverage run through the same Make entry completes
+  in 105.7 s with a 1.1 MiB VCS data structure and continuous post-reset
+  heartbeat through cycle 9.9M. It still observes zero userspace markers,
+  confirming that the remaining Linux RTL issue is not merely the former
+  coverage/timeout configuration defect.

@@ -12,6 +12,9 @@ RTL/QEMU Linux differential remain open.
 The entry also forwards `SKIP_COVERAGE` and
 `SKIP_URG_EXCLUSION_CHECK`; a fresh no-coverage run completed in 24.2 s with
 1.1 MiB simulator data structure size and a normal bounded exit.
+A follow-up 10M-cycle no-coverage run completed in 105.7 s with the same
+bounded memory profile and continuous CPU progress, but still no userspace
+marker.
 
 ## 2026-08-27 maintenance
 
