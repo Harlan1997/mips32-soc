@@ -2315,3 +2315,19 @@ remains the compatibility baseline.
 - Boundary: this closes only the DI/EI retirement ordering slice. It is not
   full privileged-ISA, Linux userspace, or RTL/QEMU Linux differential
   signoff.
+
+### 2026-08-29 Linux exception-request versus interrupt-accept trace
+
+- Extended `LINUX_EXCEPTION_TRACE` with the CPU's actual
+  `interrupt_accept`, `wb_ei`, `wb_reg_write`, and `wb_mem_to_reg` signals.
+  The previous `intr=1` field was CP0's combinational pending request and was
+  insufficient to prove that the CPU accepted an interrupt on that edge.
+- The resulting bounded trace preserves the same failure chain: a TLB load
+  exception at `0x8923af20` with `BadVAddr=0x0000006c` is followed by Linux's
+  `die()` path at `0x88808c34` and then the fatal-interrupt panic. This keeps
+  the active investigation focused on the originating kernel data/exception
+  path and its saved frame, rather than treating CP0 pending-IP state as an
+  accepted interrupt.
+- `make rtl-frontend-compile` passes after the trace extension. The trace is
+  opt-in and bounded; it has no effect on RTL behavior or default regression
+  configuration.
