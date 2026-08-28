@@ -2163,3 +2163,17 @@ remains the compatibility baseline.
   with bounded simulator memory. The progress gate passes, but no userspace
   success marker is observed; Linux userspace boot and full RTL/QEMU Linux
   differential remain open.
+
+### 2026-08-29 Linux progress Make entry parameter forwarding
+
+- Fixed the `rtl-linux-progress-gate` Make target to forward the wrapper's
+  kernel/build, cycle/timeout, and bounded trace controls. GNU Make command
+  line variables are not implicitly exported to the recipe, so before this
+  fix `RTL_CYCLE_LIMIT`, `HOST_TIMEOUT`, `KERNEL`, and
+  `SKIP_LINUX_BUILD` could be silently ignored when invoking the documented
+  Make entry.
+- A fresh `KERNEL=... SKIP_LINUX_BUILD=1 RTL_CYCLE_LIMIT=2000000` run through
+  `make rtl-linux-progress-gate` passed with the requested low-log settings
+  and a normal simulator exit. The run observed post-reset progress and zero
+  userspace markers, so the Linux boot boundary remains open; this closes the
+  reproducibility/resource-control defect in the Make entry.
