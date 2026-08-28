@@ -1853,14 +1853,27 @@ module mips_cpu #(
     // An interrupt can be accepted before the interrupted instruction reaches
     // WB.  In that case wb_bd is not available yet, but an in-flight delay
     // slot still has the architectural EPC/BD rule: EPC points to its branch
-    // and Cause.BD is set.  EPC remains selected from the oldest valid stage;
-    // BD must inspect every younger stage being flushed as well.  For example,
-    // when the branch is in MEM and its delay slot is in EX, mem_bd is zero but
-    // ex_bd is the architectural evidence that the interrupt hit the slot.
+    // and Cause.BD is set.  BD must belong to the oldest flushed event.  An
+    // arbitrary younger delay slot must not mark an older ordinary instruction
+    // as a branch-delay exception (that would subtract four from EPC).
+    //
+    // When the branch is in MEM and its delay slot is in EX, mem_bd is zero but
+    // ex_bd is valid evidence only when the two stage PCs are adjacent.  The
+    // same relation applies to EX/ID.  This keeps the marker tied to the
+    // architectural branch rather than to stale pipeline metadata.
+    wire mem_flush_valid = (mem_pc_plus_8 != 32'd0);
+    wire ex_flush_valid  = (ex_pc_plus_8  != 32'd0);
+    wire id_flush_valid  = (id_pc_plus_4  != 32'd0);
     wire interrupt_except_bd = interrupt_accept &&
-                               ((mem_pc_plus_8 != 32'd0 && mem_bd) ||
-                                (ex_pc_plus_8  != 32'd0 && ex_bd)  ||
-                                (id_pc_plus_4  != 32'd0 && id_bd));
+                               (mem_flush_valid ?
+                                (mem_bd ||
+                                 (ex_flush_valid && ex_bd &&
+                                  (ex_pc == mem_pc + 32'd4))) :
+                                (ex_flush_valid ?
+                                 (ex_bd ||
+                                 (id_flush_valid && id_bd &&
+                                   (id_pc == ex_pc + 32'd4))) :
+                                 (id_flush_valid && id_bd)));
     wire exception_bd = (wb_bd && wb_arch_valid) | interrupt_except_bd;
         
     // An interrupt accepted while the core is suspended by WAIT is taken
