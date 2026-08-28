@@ -2131,3 +2131,22 @@ remains the compatibility baseline.
 - This closes the selected D-side `BadVAddr` precision slice. Linux's
   runtime-generated refill handler, OS page-table ownership, and full RTL
   Linux/QEMU differential remain open.
+
+### 2026-08-29 asynchronous IRQ branch-delay ownership
+
+- Corrected `mips_cpu` asynchronous interrupt `Cause.BD` selection. The
+  previous pipeline-wide OR allowed a stale younger delay-slot marker to
+  classify an older ordinary instruction as a branch-delay exception. The
+  updated logic selects the oldest valid flushed stage and requires adjacent
+  MEM->EX->ID PCs before propagating a delay-slot marker from the younger ID
+  stage.
+- Verification: `make rtl-frontend-compile` passes all 8 configurations;
+  `make cpu-irq-delay-slot-gate` and `make cpu-cp0-gate` pass; the VIC CPU
+  RTL/QEMU retire differential passes with `TRACE_COMPARE_PASS records=736`;
+  and the selected system differential aggregate passes.
+- A no-coverage RTL Linux progress run reusing the existing kernel image
+  completes 17,000,000 cycles with bounded memory and post-reset progress.
+  It observes no `MIPS32_SOC_LINUX_BOOT_SUCCESS` marker. RTL Linux userspace
+  boot, full RTL/QEMU Linux differential, and full ISA/privileged/MMU/FPU
+  compliance therefore remain open; this change closes only the IRQ BD
+  ownership bug and its bounded evidence.
