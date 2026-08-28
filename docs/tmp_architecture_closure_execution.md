@@ -2195,3 +2195,20 @@ remains the compatibility baseline.
   heartbeat through cycle 9.9M. It still observes zero userspace markers,
   confirming that the remaining Linux RTL issue is not merely the former
   coverage/timeout configuration defect.
+
+### 2026-08-29 Linux RTL panic-loop diagnosis
+
+- Extended the bounded Linux delay trace with IF-PC selection and live
+  `v0/ra/gp` values, and initialized its previously uninitialized sample
+  counter. The old X counter made the trace condition false and could hide
+  the target loop entirely.
+- A fresh 30M-cycle no-coverage capture reaches the Linux delay loop at
+  cycle `19884206`. The return address `0x89246004` resolves to the
+  `panic()` delay loop, while `v0=0x00106256` then decreases monotonically
+  (`0x4000`, `0x3fff`, `0x3ffe`, ...). This proves the observed late loop is a
+  kernel panic wait, not a stuck Count decrement or a TLB refill loop.
+- The run still exits normally at the explicit 30M limit with 1.1 MiB VCS
+  data structure size and zero userspace markers. The next Linux closure
+  step is to capture the panic entry/reason text or the preceding failing
+  initialization contract; no timer/Count RTL change is justified by this
+  evidence.

@@ -15,6 +15,11 @@ The entry also forwards `SKIP_COVERAGE` and
 A follow-up 10M-cycle no-coverage run completed in 105.7 s with the same
 bounded memory profile and continuous CPU progress, but still no userspace
 marker.
+The bounded delay diagnostic was also corrected to initialize its sample
+counter and observe the active IF-PC/live registers. A 30M-cycle capture
+shows the late loop is Linux `panic()`'s `__udelay` with monotonically
+decreasing `v0`, not a Count or TLB deadlock; the panic-entry reason remains
+open.
 
 ## 2026-08-27 maintenance
 
