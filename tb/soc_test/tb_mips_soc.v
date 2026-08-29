@@ -330,7 +330,7 @@ module tb_mips_soc;
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= linux_delay_trace_end) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc >= linux_delay_trace_start &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc <= linux_delay_trace_end))) begin
-                $display("LINUX_DELAY_TRACE cycle=%0d pc=%08h ifpc=%08h inst=%08h valid=%b arch=%b sp=%08h a0=%08h a1=%08h a2=%08h a3=%08h t0=%08h v0=%08h v1=%08h ra=%08h gp=%08h ex=%08h/%08h mem=%08h/%08h d=%b/%b/%08h/%08h/%08h r=%b/%08h w=%b/%0d/%08h eret=%b intr=%b epc=%08h cause=%08h status=%08h bd=%b wb_bd=%b",
+                $display("LINUX_DELAY_TRACE cycle=%0d pc=%08h ifpc=%08h inst=%08h valid=%b arch=%b sp=%08h a0=%08h a1=%08h a2=%08h a3=%08h t0=%08h v0=%08h v1=%08h ra=%08h gp=%08h ex=%08h/%08h mem=%08h/%08h d=%b/%b/%08h/%08h/%08h r=%b/%08h w=%b/%0d/%08h eret=%b intr=%b epc=%08h cause=%08h status=%08h bd=%b wb_bd=%b wbds=%08h wbpc=%08h mempc=%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
@@ -367,7 +367,10 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[31],
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_delay_slot_next_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc);
                 linux_delay_trace_count = linux_delay_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_cache_op_valid &&
