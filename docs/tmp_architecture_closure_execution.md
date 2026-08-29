@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 QEMU synchronous-exception retire conversion
+
+- Fixed `tb/isa_ref/qemu_system_state_to_jsonl.py` so a retire event that
+  enters a synchronous exception vector cannot report a GPR write from a
+  transient post-state register delta. The converter now prioritizes the
+  exception boundary and emits no architectural GPR commit for the faulting
+  instruction.
+- Fresh `python3 -m py_compile` and
+  `BUILD_DIR=/tmp/mips32-qemu-converter-fix make
+  qemu-system-exception-differential-gate` passed. The existing syscall/ERET
+  corpus remains green; this change improves exception capture semantics but
+  does not claim that QEMU currently supplies a complete integer-overflow
+  exception differential corpus.
+
 ### 2026-08-29 Integer signed-overflow exception path
 
 - Routed the existing signed `ADD/SUB/ADDI` ALU overflow indication through
