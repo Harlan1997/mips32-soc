@@ -15,6 +15,11 @@
   frontend matrix passed all 8 configurations. This is a targeted CPU
   recovery fix; RTL Linux userspace boot and full RTL/QEMU Linux differential
   remain open until a fresh long Linux run proves them.
+- A fresh no-coverage 20M-cycle probe under
+  `/tmp/rtl_linux_after_delay_metadata_fix` reached the dynamic Linux TLB
+  boundary and continued through approximately 17.4M cycles before the
+  runner timeout, with no userspace marker. It is useful progress evidence but
+  not a Linux boot pass; the full Linux items remain open.
 
 ### 2026-08-29 current-contract external build-root isolation
 
