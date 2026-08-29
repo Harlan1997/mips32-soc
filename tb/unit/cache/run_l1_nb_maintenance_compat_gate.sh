@@ -32,7 +32,7 @@ cat >"${RUN_DIR}/l1_nb_maintenance_compat_report.md" <<'EOF'
 - `Index_Invalidate_D` and `Hit_Invalidate_D` are accepted by the opt-in L1
   only after outstanding line traffic and responses drain, then complete with
   a one-cycle L1 maintenance handshake.
-- CP0 TagLo/TagHi read/write and SYNC ordered-no-op behavior passes.
+- CP0 TagLo/TagHi read/write and SYNC ordered-drain behavior passes.
 - The opt-in L1 adapter source audit confirms maintenance requests are not
   silently allocated into the nonblocking line cache.
 
