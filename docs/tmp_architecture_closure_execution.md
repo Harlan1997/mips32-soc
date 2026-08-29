@@ -2330,4 +2330,24 @@ remains the compatibility baseline.
   accepted interrupt.
 - `make rtl-frontend-compile` passes after the trace extension. The trace is
   opt-in and bounded; it has no effect on RTL behavior or default regression
-  configuration.
+configuration.
+
+# 2026-08-29 QEMU aggregate gate path and resource closure
+
+- Fixed the QEMU system aggregate Make targets so child gates receive the
+  caller's `BUILD_DIR`; current-contract, selected-differential, and
+  architecture-closure runs no longer silently mix temporary traces with
+  stale artifacts under the repository `build/` tree.
+- Fixed the unaligned RTL and differential targets to pass explicit `RUN_DIR`
+  and `FW_DIR`, and fixed the opt-in FPU system differential targets to use
+  the matching `BUILD_DIR` firmware directory.
+- Evidence before cleanup: selected system differential passed all 15 child
+  gates in an isolated `/tmp` build; unaligned and FPU-invalid differential
+  gates passed independently; current-contract and MMU pressure children
+  passed. The architecture aggregate reached the FPU boundary and then hit
+  host `ENOSPC` while VCS created `binmap.sdb`, so that aggregate was not
+  claimed as passed.
+- The repository `build/` and stale temporary verification trees were then
+  removed through the project clean target. Source, git metadata, and the
+  generated QEMU source/build inputs remain reproducible but must be rebuilt
+  before the next full aggregate run.

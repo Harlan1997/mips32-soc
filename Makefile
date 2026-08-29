@@ -657,11 +657,14 @@ qemu-system-wdt-gate: qemu-system-mips32-soc-ref
 
 qemu-system-unaligned-gate:
 	chmod +x tb/soc_test/run_qemu_system_unaligned_gate.sh
-	tb/soc_test/run_qemu_system_unaligned_gate.sh
+	RUN_DIR=$(BUILD_DIR)/soc_test/qemu_system_unaligned \
+		tb/soc_test/run_qemu_system_unaligned_gate.sh
 
 qemu-system-unaligned-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_unaligned_differential_gate.sh
-	tb/isa_ref/run_qemu_system_unaligned_differential_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_unaligned_differential \
+	FW_DIR=$(BUILD_DIR)/firmware/qemu_system_unaligned \
+		tb/isa_ref/run_qemu_system_unaligned_differential_gate.sh
 
 qemu-system-qspi-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/soc_test/run_qemu_system_qspi_gate.sh
@@ -673,11 +676,11 @@ qemu-system-ddr-gate: qemu-system-mips32-soc-ref
 
 qemu-system-current-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_current_contract_gate.sh
-	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_current_contract tb/isa_ref/run_qemu_system_current_contract_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_current_contract tb/isa_ref/run_qemu_system_current_contract_gate.sh
 
 qemu-system-architecture-closure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
-	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_architecture_closure tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_architecture_closure tb/isa_ref/run_qemu_system_architecture_closure_gate.sh
 
 qemu-system-llsc-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -685,7 +688,7 @@ qemu-system-llsc-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh
-	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_selected_differential tb/isa_ref/run_qemu_system_selected_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_selected_differential tb/isa_ref/run_qemu_system_selected_differential_gate.sh
 
 qemu-system-isa-r2-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -693,43 +696,43 @@ qemu-system-isa-r2-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-fpu-single-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_single QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_single_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_single FW_DIR=$(BUILD_DIR)/firmware/fpu_single QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_single_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-double-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_double QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_double_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_double FW_DIR=$(BUILD_DIR)/firmware/fpu_double QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_double_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-cu1-exception-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_cu1_exception QEMU_CPU=24Kf RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_cu1_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_cu1_exception FW_DIR=$(BUILD_DIR)/firmware/fpu_cu1_exception QEMU_CPU=24Kf RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_cu1_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-inexact-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_inexact_differential_v2 RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_inexact FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_inexact_differential_v2 RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-double-inexact-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_double_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_inexact_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_double_inexact FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_inexact_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-double-underflow-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_double_underflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_underflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_double_underflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double_underflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_underflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-double-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_double QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_double FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_double QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_double_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-invalid-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_invalid QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_invalid_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_invalid FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_invalid QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_invalid_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-overflow-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_overflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_overflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_overflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_overflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_overflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-underflow-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_fpe_underflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_underflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_underflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_underflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_underflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-boundary-differential-gate: qemu-system-mips32-soc-ref
 	$(MAKE) qemu-system-fpu-fpe-invalid-differential-gate
