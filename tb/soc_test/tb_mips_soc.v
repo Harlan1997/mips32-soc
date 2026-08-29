@@ -58,6 +58,8 @@ module tb_mips_soc;
     integer linux_refill_trace;
     integer linux_progress_trace;
     integer linux_exception_trace;
+    integer linux_exception_trace_limit;
+    integer linux_exception_trace_count;
     integer linux_ebase_trace;
     integer linux_wb_trace;
     integer linux_vector_trace;
@@ -252,6 +254,7 @@ module tb_mips_soc;
                 linux_tlb_trace_count = linux_tlb_trace_count + 1;
             end
             if (linux_exception_trace != 0 &&
+                linux_exception_trace_count < linux_exception_trace_limit &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
                 $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b accept=%b wbei=%b wbctl=%b/%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b tlb41=%b/%08h/%08h/%08h/%b asid=%02h/%02h va=%08h",
                     linux_trace_cycle,
@@ -311,6 +314,7 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[41],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_va);
+                linux_exception_trace_count = linux_exception_trace_count + 1;
             end
             // Trace architectural GPR writeback only when explicitly enabled.
             // Register and cycle filters keep long Linux probes bounded.
@@ -965,6 +969,9 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_PROGRESS_TRACE=%d", linux_progress_trace)) begin end
         linux_exception_trace = 1;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE=%d", linux_exception_trace)) begin end
+        linux_exception_trace_limit = 256;
+        if (!$value$plusargs("LINUX_EXCEPTION_TRACE_LIMIT=%d", linux_exception_trace_limit)) begin end
+        linux_exception_trace_count = 0;
         linux_ebase_trace = 1;
         if (!$value$plusargs("LINUX_EBASE_TRACE=%d", linux_ebase_trace)) begin end
         linux_wb_trace = 1;

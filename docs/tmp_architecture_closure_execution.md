@@ -2839,3 +2839,22 @@ configuration.
   `make rtl-frontend-compile` pass (`8/8`). This closes encoding consistency
   for the bounded CACHE maintenance contract only; complete cache ordering,
   coherency and OS cache ABI remain open.
+
+# 2026-08-30 Linux diagnostic trace resource bound
+
+- Root-cause audit found that `LINUX_EXCEPTION_TRACE` was enabled by default
+  but had no record limit. A repeated exception/interrupt loop could therefore
+  append indefinitely to the simulator log and create host disk/memory
+  pressure, even though the RTL itself remained bounded.
+- Added `LINUX_EXCEPTION_TRACE_LIMIT` (default `256`) and a testbench counter;
+  the Linux progress runner forwards the limit through `LINUX_EXTRA_SIM_ARGS`.
+  The default functional path and all RTL configuration defines are unchanged.
+- Verification: `bash -n tb/linux_boot/run_rtl_linux_progress_gate.sh`,
+  `git diff --check`, isolated `make rtl-frontend-compile` (`8/8`), and a
+  100k-cycle no-coverage Linux probe passed with a 1.1 MiB VCS data structure.
+  The probe observed no exception records in that early window; the bounded
+  limit is therefore verified by elaboration/parameter plumbing and remains
+  available for long exception diagnostics.
+- This fixes the diagnostic OOM/log-growth risk only. RTL Linux userspace boot,
+  full RTL/QEMU Linux differential, and the underlying Linux exception/control
+  flow blocker remain open.
