@@ -99,6 +99,7 @@ module l1_cache_nb #(
     wire [SET_BITS-1:0] maint_set = cache_maint_addr[5 +: SET_BITS];
     wire maint_index_load_tag = (cache_maint_op == 5'b00101);
     wire maint_index_store_tag = (cache_maint_op == 5'b01001);
+    wire maint_sync = (cache_maint_op == 5'b11110);
     reg [20:0] maint_arch_tag;
     integer tag_bit;
     always @(*) begin
@@ -244,7 +245,8 @@ module l1_cache_nb #(
                 maint_match = 1'b0;
                 maint_wb = (cache_maint_op == 5'b00001) ||
                            (cache_maint_op == 5'b10101) ||
-                           (cache_maint_op == 5'b11001);
+                           (cache_maint_op == 5'b11001) ||
+                           (cache_maint_op == 5'b11101);
                 maint_inv = (cache_maint_op == 5'b00001) ||
                             (cache_maint_op == 5'b10001) ||
                             (cache_maint_op == 5'b10101);
@@ -257,7 +259,11 @@ module l1_cache_nb #(
                 end else if (cache_maint_op == 5'b00001) begin
                     maint_match = valid[cache_maint_addr[5 +: SET_BITS]];
                 end
-                if (maint_index_store_tag) begin
+                if (maint_sync) begin
+                    // SYNC is a drain-only operation. cache_maint_ready
+                    // already proves that all MSHRs, responses, writebacks
+                    // and the current line request are idle.
+                end else if (maint_index_store_tag) begin
                     valid[maint_set] <= cache_tag_wdata[22];
                     dirty[maint_set] <= cache_tag_wdata[21] && cache_tag_wdata[22];
                     for (k = 0; k < TAG_BITS; k = k + 1)
@@ -281,6 +287,7 @@ module l1_cache_nb #(
                              (cache_maint_op != 5'b10101) &&
                              (cache_maint_op != 5'b11001) &&
                              (cache_maint_op != 5'b00001) &&
+                             (cache_maint_op != 5'b11110) &&
                              !maint_index_load_tag && !maint_index_store_tag) begin
                     for (k = 0; k < SETS; k = k + 1) begin
                         valid[k] <= 1'b0;
