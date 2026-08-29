@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 P1 isolated-build firmware path closure
+
+- The `dual-core-soc-gate` Make target now passes `FW_DIR=$(BUILD_DIR)/firmware/dual_core_ipi`
+  to its runner. Previously, an isolated `BUILD_DIR` still caused the runner's
+  default firmware path to fall back to the repository `build/` directory,
+  contaminating aggregate runs with out-of-tree artifacts.
+- Fresh `BUILD_DIR` verification completed `make dual-core-soc-gate` with the
+  firmware and run artifacts entirely below the temporary build root and
+  reported `dual-core SoC gate: PASS`. This closes aggregate artifact
+  reproducibility for this child gate only; it does not expand the dual-core
+  coherency or Linux/MMU contract.
+
 ### 2026-08-29 RTL Linux load-address forwarding probe
 
 - Extended the opt-in Linux delay trace with `id_val_rs`, `ex_val_rs`,
