@@ -69,10 +69,10 @@ module tb_mips_control_cache;
         check_cache(5'h0f, 1'b0);
         check_cache(5'h1f, 1'b0);
 
-        // SYNC and PREF are architectural no-ops in this contract.
+        // SYNC is represented internally as an ordered-cache barrier.
         inst = 32'h0000000f; #1;
         if (illegal_inst || reg_write || mem_read || mem_write ||
-            cache_op_valid) failures = failures + 1;
+            !cache_op_valid || cache_op != 5'h1e) failures = failures + 1;
         inst = 32'hcc200000; #1; // PREF 0, 0($1)
         if (illegal_inst || reg_write || mem_read || mem_write ||
             cache_op_valid) failures = failures + 1;

@@ -363,6 +363,8 @@ module dcache #(
     wire maint_index_store_tag = (maint_op == 5'b01001);
     wire maint_index_tag = maint_index_load_tag || maint_index_store_tag;
     wire maint_hit_inv   = (maint_op == 5'b10001);
+    // The current project contract treats 0x1d as the writeback-only alias
+    // used by the existing cache maintenance tests; it must retain validity.
     wire maint_hit_wb_inv= (maint_op == 5'b10101);
     wire maint_hit_wb    = (maint_op == 5'b11001);
     wire [1:0] maint_target_way = (maint_index_wbi || maint_index_tag) ? maint_way : hit_way;

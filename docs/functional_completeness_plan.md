@@ -16,6 +16,16 @@
 
 `CONTRACT_CLOSED` 仅表示当前文档化 RTL contract 的仿真证据闭合。
 
+### 2026-08-29 opt-in L1 SYNC drain barrier
+
+`SYNC` is now decoded to a private maintenance encoding and is accepted by the
+opt-in L1 only after its MSHRs, response FIFO, writeback queue, and line-port
+request are idle. The blocking dcache treats the encoding as an ordered no-op,
+preserving the default path. `make l1-nonblocking-sync-gate`, the CACHE/SYNC
+decoder gate, and isolated `make rtl-frontend-compile` pass. This closes only
+the bounded L1 drain contract; OS cache ABI, multicore ordering, and complete
+MIPS memory-model compliance remain open.
+
 ## 1A. 当前交付边界：RTL 前端
 
 本阶段的明确目标是 **RTL 功能编写、前端编译/elaboration 和功能仿真**。
