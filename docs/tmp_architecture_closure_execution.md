@@ -2676,3 +2676,19 @@ configuration.
 - This is evidence about the source memory/data path and does not justify an
   exception, forwarding, or MMU semantic change. RTL Linux userspace boot and
   full RTL/QEMU Linux differential remain open.
+
+# 2026-08-29 RTL Linux dirty-line ownership diagnosis
+
+- Added bounded, default-off `LINUX_CACHE_OWNER_TRACE` support. It records
+  only real CPU store acceptance and D-cache refill/writeback handshakes,
+  with the target line, CPU MEM PC, request buffer and line words.
+- A fresh 5.7M-cycle no-coverage probe shows the target line `0x08402100`
+  initially refills as zero. Linux then performs the real store
+  `0x889f12e0: sw a1,4(s2)` with `a1=0x01001000` at cycle `5348440`; the
+  subsequent D-cache writeback emits the same value at word 1, and the later
+  refill returns it unchanged. No cache-generated value or writeback data
+  corruption is observed.
+- This closes the dirty-line ownership diagnosis for this target and moves
+  the open RTL Linux blocker upstream to Linux runtime/control-flow or a
+  different CPU architectural contract. It does not close RTL Linux userspace
+  boot, OS VM ownership, or full RTL/QEMU Linux differential.
