@@ -2,6 +2,16 @@
 
 ## 2026-08-29 Linux progress Make entry maintenance
 
+## 2026-08-29 current-contract build-root isolation
+
+The current-contract Make entry now propagates an explicit external build root
+through all Phase 2/3 wrappers and the IRQ delay-slot prerequisite. The default
+path remains repository-local, while long runs can use an isolated scratch
+directory without writing generated VCS output into `build/`. A fresh isolated
+run passed all functional prerequisites and 10/10 stress seeds; it correctly
+stopped at the existing 99% coverage policy (UVM 36.24%, Product 36.97%). This
+is resource/reproducibility evidence and does not claim coverage closure.
+
 The `rtl-linux-progress-gate` Make target now forwards the supplied kernel,
 build-skip, cycle/timeout, and bounded trace controls to
 `run_rtl_linux_progress_gate.sh`. A fresh 2M-cycle no-coverage run through the

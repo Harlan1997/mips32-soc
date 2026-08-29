@@ -12,9 +12,15 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 SIGNOFF_BASE_DIR=$(realpath -m "${ROOT_DIR}/build/signoff")
 RUN_ROOT_INPUT=${RUN_ROOT:-"${SIGNOFF_BASE_DIR}/current_contract"}
 CANON_RUN_ROOT=$(realpath -m "${RUN_ROOT_INPUT}")
+ALLOW_EXTERNAL_RUN_ROOT=${ALLOW_EXTERNAL_RUN_ROOT:-0}
 
-# Validate RUN_ROOT path safely
-if [[ "${CANON_RUN_ROOT}" != "${SIGNOFF_BASE_DIR}/"* ]] || [[ "${CANON_RUN_ROOT}" == "${SIGNOFF_BASE_DIR}" ]]; then
+# Validate RUN_ROOT path safely. External roots are accepted only when the
+# caller explicitly opts in, so the default invocation remains constrained to
+# the repository build tree while large signoff runs can use a dedicated
+# scratch filesystem.
+if [[ "${ALLOW_EXTERNAL_RUN_ROOT}" != "1" && \
+      ( "${CANON_RUN_ROOT}" != "${SIGNOFF_BASE_DIR}/"* ||
+        "${CANON_RUN_ROOT}" == "${SIGNOFF_BASE_DIR}" ) ]]; then
     echo "ERROR: RUN_ROOT must be a child directory of ${SIGNOFF_BASE_DIR}, got: ${RUN_ROOT_INPUT} (canonical: ${CANON_RUN_ROOT})"
     exit 1
 fi
