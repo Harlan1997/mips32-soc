@@ -13,6 +13,14 @@ _start:
     bnez    $t1, fail
     nop
 
+    /* The reference machine and RTL Linux image builder share this fixed
+     * prototype DDR handoff address.  Checking it here prevents a valid FDT
+     * at an implementation-specific address from hiding a differential
+     * boot-argument mismatch. */
+    lui     $t0, 0x89f0
+    bne     $a1, $t0, fail
+    nop
+
     lw      $t2, 0($a1)
     lui     $t0, 0xedfe
     ori     $t0, $t0, 0x0dd0

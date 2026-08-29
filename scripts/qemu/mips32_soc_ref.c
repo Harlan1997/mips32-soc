@@ -42,6 +42,7 @@ bool qemu_mips32_soc_ref_lladdr_virtual(void)
 #define SOC_MAILBOX_MAGIC  0xdeadbeefU
 #define SOC_DDR_BASE       0x08000000ULL
 #define SOC_DDR_SIZE       (128 * MiB)
+#define SOC_LINUX_FDT_BASE 0x09f00000ULL
 #define SOC_FLASH_BASE     0x10000000ULL
 #define SOC_FLASH_SIZE     (256 * MiB)
 #define SOC_APB_BASE       0x40000000ULL
@@ -2023,13 +2024,16 @@ static void mips32_soc_ref_init(MachineState *machine)
                          machine->dtb, (size_t)SOC_FDT_MAX_SIZE);
             exit(EXIT_FAILURE);
         }
-        /* Keep the blob below the 256 MiB MIPS32 physical limit and outside
-         * the first SRAM page used by reset images. Linux receives kseg0. */
+        /* Keep the Linux handoff identical to the RTL image builder. The
+         * prototype DDR contract places the DTB at physical 0x09f00000,
+         * which Linux receives through the kseg0 alias as 0x89f00000. Do not
+         * derive this from -m: the RTL DDR window and the QEMU machine RAM
+         * size are intentionally separate implementation details. */
         if (machine->ram_size < (2 * MiB)) {
             error_report("-dtb requires at least 2 MiB of guest RAM");
             exit(EXIT_FAILURE);
         }
-        fdt_base = (machine->ram_size - SOC_FDT_MAX_SIZE) & ~0xfffULL;
+        fdt_base = SOC_LINUX_FDT_BASE;
         if (address_space_write(&address_space_memory, fdt_base,
                                 MEMTXATTRS_UNSPECIFIED, (uint8_t *)fdt_data,
                                 fdt_size) != MEMTX_OK) {
