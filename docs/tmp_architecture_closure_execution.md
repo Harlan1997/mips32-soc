@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 verification-foundation tool availability refresh
+
+- Fresh `scripts/run_verification_foundation_gate.sh` evidence was generated
+  under `/tmp/mips32-verification-foundation`.
+- VCS is available at `/data/disk/vcs/X-2025.06/bin/vcs`; Verilator, Yosys,
+  SymbiYosys, Verilator coverage, SpyGlass, Questa CDC, VC Static and
+  JasperGold are unavailable in the current environment.
+- The SVA/formal asset presence and two waiver-file broad-exclusion audits
+  pass. The report correctly remains `FOUNDATION_READY_WITH_EXPLICIT_TOOL_STATUS`
+  and explicitly does not claim formal, CDC/RDC, lint or coverage signoff.
+
 ### 2026-08-29 CPU/MMU aggregate recursive-build isolation
 
 - `tb/soc_test/run_cpu_mmu_complete.sh` now propagates the caller's
