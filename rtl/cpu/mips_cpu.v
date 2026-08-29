@@ -1887,9 +1887,29 @@ module mips_cpu #(
     wire mem_flush_valid = (mem_pc_plus_8 != 32'd0);
     wire ex_flush_valid  = (ex_pc_plus_8  != 32'd0);
     wire id_flush_valid  = (id_pc_plus_4  != 32'd0);
+    // The delay-slot metadata is normally carried with the younger
+    // instruction.  A branch can nevertheless be in WB while its slot is in
+    // MEM when an asynchronous interrupt is accepted; in that window the
+    // metadata may already have been cleared by a replay/flush.  Recover the
+    // architectural relation from the adjacent PCs and the older instruction
+    // encoding so EPC/BD remain precise for real Linux interrupt traffic.
+    wire wb_is_control_transfer =
+        (wb_inst[31:26] == 6'b000001) || // REGIMM branches
+        (wb_inst[31:26] == 6'b000010) || // J
+        (wb_inst[31:26] == 6'b000011) || // JAL
+        ((wb_inst[31:26] >= 6'b000100) &&
+         (wb_inst[31:26] <= 6'b000111)) || // conditional branches
+        ((wb_inst[31:26] == 6'b000000) &&
+         ((wb_inst[5:0] == 6'b001000) || // JR/JR.HB
+          (wb_inst[5:0] == 6'b001001)));  // JALR/JALR.HB
+    wire interrupt_wb_branch_delay = interrupt_accept &&
+                                      mem_flush_valid &&
+                                      (wb_pc_plus_8 != 32'd0) &&
+                                      (mem_pc == (wb_pc + 32'd4)) &&
+                                      wb_is_control_transfer;
     wire interrupt_except_bd = interrupt_accept &&
                                (mem_flush_valid ?
-                                (mem_bd ||
+                                (mem_bd || interrupt_wb_branch_delay ||
                                  (ex_flush_valid && ex_bd &&
                                   (ex_pc == mem_pc + 32'd4)) ||
                                  (ex_flush_valid && id_flush_valid && id_bd &&
@@ -1922,7 +1942,9 @@ module mips_cpu #(
                              ((interrupt_accept && wait_state) ?
                               wait_interrupt_epc :
                              ((wb_except_req && wb_arch_valid) ? wb_pc :
-                              ((interrupt_accept && wb_bd && wb_arch_valid) ?
+                             ((interrupt_accept &&
+                               ((wb_bd && wb_arch_valid) ||
+                                interrupt_wb_branch_delay)) ?
                                wb_pc : oldest_flushed_pc)));
     // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
