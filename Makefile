@@ -173,7 +173,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
-.PHONY: linux-boot-build-gate rtl-linux-progress-gate
+.PHONY: linux-boot-build-gate rtl-linux-progress-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate
@@ -592,6 +592,11 @@ rtl-linux-progress-gate:
 	LINUX_REFILL_TRACE=$(LINUX_REFILL_TRACE) \
 	LINUX_PROGRESS_TRACE=$(LINUX_PROGRESS_TRACE) \
 	LINUX_EXCEPTION_TRACE=$(LINUX_EXCEPTION_TRACE) \
+	LINUX_EXCEPTION_TRACE_LIMIT=$(LINUX_EXCEPTION_TRACE_LIMIT) \
+	LINUX_EXCEPTION_FRAME_TRACE=$(LINUX_EXCEPTION_FRAME_TRACE) \
+	LINUX_EXCEPTION_FRAME_TRACE_LIMIT=$(LINUX_EXCEPTION_FRAME_TRACE_LIMIT) \
+	LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START=$(LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START) \
+	LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END=$(LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END) \
 	LINUX_EBASE_TRACE=$(LINUX_EBASE_TRACE) LINUX_WB_TRACE=$(LINUX_WB_TRACE) \
 	LINUX_TLB_TRACE=$(LINUX_TLB_TRACE) LINUX_TLB_TRACE_LIMIT=$(LINUX_TLB_TRACE_LIMIT) \
 	LINUX_VECTOR_TRACE=$(LINUX_VECTOR_TRACE) LINUX_VECTOR_TRACE_LIMIT=$(LINUX_VECTOR_TRACE_LIMIT) \
@@ -602,6 +607,10 @@ rtl-linux-progress-gate:
 	LINUX_VECTOR_LINE_TRACE_LIMIT=$(LINUX_VECTOR_LINE_TRACE_LIMIT) \
 	LINUX_VECTOR_LINE=$(LINUX_VECTOR_LINE) \
 	tb/linux_boot/run_rtl_linux_progress_gate.sh
+
+linux-exception-frame-check:
+	@test -n "$(LOG)" || (echo "LOG=/path/to/sim.log is required" >&2; exit 2)
+	python3 scripts/check_linux_exception_frame_trace.py "$(LOG)"
 
 linux-uboot-build-gate:
 	chmod +x tb/linux_boot/run_uboot_build_gate.sh

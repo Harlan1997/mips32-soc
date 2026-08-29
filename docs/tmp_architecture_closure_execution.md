@@ -2899,3 +2899,8 @@ configuration.
   data structure; userspace marker count remained zero. Linux userspace boot,
   OS-owned demand paging/shootdown and full RTL/QEMU Linux differential remain
   open.
+- Added `scripts/check_linux_exception_frame_trace.py` and the
+  `make linux-exception-frame-check LOG=...` entry point. The checker pairs the
+  event and post-CP0 records and enforces EXL, EPC, and Cause.BD invariants;
+  ERET records remain trace-visible but are excluded from the frame-save check.
+  It passes the fresh window capture with `pairs=1`.
