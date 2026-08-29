@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 RTL Linux load-address forwarding probe
+
+- Extended the opt-in Linux delay trace with `id_val_rs`, `ex_val_rs`,
+  `ex_out`, `ex_reg_write`, `ex_waddr` and `id_inst`. This observes the
+  producer/consumer forwarding boundary without changing CPU timing or the
+  default trace volume.
+- The relocated kernel maps the failing runtime PC `0x8923af20` to
+  `lbu v1,0(v1)`, preceded by `addu v1,t0,a1`; the historical bad address
+  `0x0000006c` is therefore consistent with a stale `v1` value. A new
+  20M-cycle probe remained resource-bounded but timed out at the host limit
+  before reaching that window, so no RTL forwarding change is claimed yet.
+- `make rtl-frontend-compile RUN_ROOT=/tmp/rtl_frontend_linux_trace_fix`
+  passes all `8/8` configurations. The next diagnosis uses the bounded
+  trace window around the exact producer/consumer pair.
+
 ### 2026-08-29 RTL Linux isolated image DTC resolution
 
 - Fixed `build_rtl_linux_image.sh` to resolve DTC next to the supplied
