@@ -177,6 +177,7 @@ MIPS `CACHE op[4:2]==001` (D-cache) 子集：
 | 5'b10001 | Hit_Invalidate_D             | **已实现**：若命中 → clear valid（不 writeback，可能丢失 dirty）|
 | 5'b10101 | Hit_Writeback_Invalidate_D   | **已实现**：若命中 → writeback + clear valid |
 | 5'b11001 | Hit_Writeback_D              | **已实现**：若命中且 dirty → writeback + clear dirty，保留 valid |
+| 5'b11101 | Hit_Writeback_D (R2 alias)   | **已实现**：与 `11001` 同义，保留 valid |
 
 CACHE 指令走 MEM 阶段专用端口；产生维护 bubble（Hit_Writeback 需等 AXI）。
 AXI 写回 `SLVERR/DECERR` 时，维护请求完成并通过 `cache_op_error` 触发

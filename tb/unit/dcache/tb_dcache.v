@@ -298,7 +298,7 @@ module tb_dcache;
 
         // T12: Hit_Writeback_Invalidate_D writes memory and removes the line.
         cpu_write(32'h0000_B000, 32'hCAFE_B012, 4'hF);
-        cache_maint(5'b11001, 32'h0000_B000);
+        cache_maint(5'b10101, 32'h0000_B000);
         if (mem[32'h0000_B000>>2]!==32'hCAFE_B012) begin
             $display("FAIL T12 writeback memory=%h", mem[32'h0000_B000>>2]); errs=errs+1;
         end
