@@ -702,7 +702,8 @@ point executes this evidence before its existing UVM/coverage stages.
 
 The opt-in `l1_cache_nb` path now owns the documented D-cache writeback
 maintenance operations `Index_Writeback_Invalidate_D` (`00001`),
-`Hit_Writeback_Invalidate_D` (`11001`), and `Hit_Writeback_D` (`11101`) in
+`Hit_Writeback_Invalidate_D` (`10101`), and `Hit_Writeback_D` (`11001` or
+the MIPS32 R2 alias `11101`) in
 addition to the existing invalidate operations. A dirty matching line is
 placed in the existing ordered writeback FIFO, CPU requests are held while
 the maintenance transaction is active, and `cache_maint_done` is delayed

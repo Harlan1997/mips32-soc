@@ -2786,3 +2786,19 @@ configuration.
   byte limits, and a 100k-cycle RTL Linux probe emits 20,000 valid retire
   records. These are capture-plumbing proofs; Linux userspace boot and full
   RTL/QEMU Linux differential remain open.
+
+# 2026-08-29 D-cache CACHE writeback alias consistency
+
+- The blocking `dcache` recognized only `0x19` for `Hit_Writeback_D`, while
+  the decoder, opt-in nonblocking L1, and maintenance contract also expose the
+  MIPS32 R2 `0x1d` alias. This caused the blocking maintenance regression to
+  skip the writeback and fail its error, memory-visibility, and retention
+  checks.
+- Added `0x1d` as a writeback-only alias in the blocking cache and corrected the
+  unit test's writeback+invalidate case to use the documented `0x15` encoding.
+  The alias clears dirty only after a successful writeback and preserves valid;
+  `0x15` still invalidates after writeback.
+- Fresh evidence: `make dcache-parity-gate cpu-cache-op-gate` and isolated
+  `make rtl-frontend-compile` pass (`8/8`). This closes encoding consistency
+  for the bounded CACHE maintenance contract only; complete cache ordering,
+  coherency and OS cache ABI remain open.
