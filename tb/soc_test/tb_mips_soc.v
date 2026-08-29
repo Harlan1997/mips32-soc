@@ -63,6 +63,8 @@ module tb_mips_soc;
     integer linux_exception_frame_trace;
     integer linux_exception_frame_trace_limit;
     integer linux_exception_frame_trace_count;
+    integer linux_exception_frame_trace_cycle_start;
+    integer linux_exception_frame_trace_cycle_end;
     integer linux_exception_frame_pending;
     integer linux_exception_frame_pending_cycle;
     reg [31:0] linux_exception_frame_pending_pc;
@@ -346,7 +348,10 @@ module tb_mips_soc;
                 linux_exception_frame_pending = 0;
             end
             if (linux_exception_frame_trace != 0 &&
-                linux_exception_frame_count < linux_exception_frame_trace_limit &&
+                linux_exception_frame_trace_count < linux_exception_frame_trace_limit &&
+                linux_trace_cycle >= linux_exception_frame_trace_cycle_start &&
+                (linux_exception_frame_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_exception_frame_trace_cycle_end) &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req ||
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept ||
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_req ||
@@ -1040,6 +1045,10 @@ module tb_mips_soc;
         linux_exception_frame_trace_limit = 64;
         if (!$value$plusargs("LINUX_EXCEPTION_FRAME_TRACE_LIMIT=%d", linux_exception_frame_trace_limit)) begin end
         linux_exception_frame_trace_count = 0;
+        linux_exception_frame_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START=%d", linux_exception_frame_trace_cycle_start)) begin end
+        linux_exception_frame_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END=%d", linux_exception_frame_trace_cycle_end)) begin end
         linux_exception_frame_pending = 0;
         linux_exception_frame_pending_cycle = 0;
         linux_exception_frame_pending_pc = 32'd0;

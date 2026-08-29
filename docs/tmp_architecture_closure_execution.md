@@ -2880,3 +2880,22 @@ configuration.
   OS-owned demand paging/shootdown and full RTL/QEMU Linux differential remain
   open pending a bounded frame capture and comparison with Linux's handler
   expectations.
+
+### 2026-08-30 Linux exception-frame window capture
+
+- Added cycle-window controls `LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START` and
+  `LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END` so a long Linux run can capture a
+  specific exception/IRQ/ERET interval without producing a broad trace.
+- A fresh 14M-cycle no-coverage run passed the bounded progress gate and
+  captured the suspected fatal-interrupt neighborhood at cycle 13,506,661:
+  the accepted IRQ occurred at `0x88852ddc`, the delay slot of a branch at
+  `0x88852dd8`. The before/after pair shows `Status.EXL` changing 0->1,
+  `EPC=0x88852dd8`, `Cause.BD=1`, and a later ERET clearing EXL while retaining
+  the saved EPC. This is consistent with the MIPS branch-delay exception
+  contract and does not justify a CPU semantic change by itself.
+- The first probe exposed and fixed an undeclared Linux-testbench trace counter
+  that the ordinary RTL frontend target does not compile. The Linux-specific
+  testbench then compiled and the windowed run completed with a 1.1 MiB VCS
+  data structure; userspace marker count remained zero. Linux userspace boot,
+  OS-owned demand paging/shootdown and full RTL/QEMU Linux differential remain
+  open.
