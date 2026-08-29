@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 RTL Linux TLB refill recheck: lookup path cleared
+
+- Added bounded exception diagnostics for the main TLB slot, its ASID, and the
+  D-side lookup VA/hit vector. A fresh 20M-cycle no-coverage run is recorded
+  under `/tmp/mips32-rtl-linux-tlb-asid`.
+- At the post-refill `c0000220` trace point, TLB[41] is still
+  `valid=1/VPN2=0x00060000/PageMask=0/EntryLo0=0x00211f5f`, the active and
+  stored ASIDs are both `0x00`, the lookup VA is `0xc0000220`, and
+  `lookup1_hit_vec[41]=1`. The D-side fields are `dmem_translate_req=0` and
+  `mmu_d_ok=1`; the displayed `Cause.ExcCode=3` is the pre-edge value while a
+  separate timer interrupt is being accepted, not a second TLB fault.
+- This rules out TLB slot eviction, ASID mismatch, and the main lookup compare
+  as the cause of that observed boundary. No TLB or MMU semantic change is
+  justified by this probe; the remaining RTL Linux userspace failure stays in
+  the interrupt/kernel control-flow path and requires a separate diagnosis.
+
 ### 2026-08-29 relocated Linux 2M-cycle RTL/QEMU differential expansion
 
 - Rebuilt the RTL Linux image from the relocated kernel with
