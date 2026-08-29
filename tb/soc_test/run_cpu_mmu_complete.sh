@@ -4,6 +4,12 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_ROOT=${RUN_ROOT:-"${ROOT_DIR}/build/cpu_mmu_complete"}
+BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
+
+# This script invokes make recursively.  BUILD_DIR is a make command-line
+# variable in aggregate runs, so propagate it explicitly to those child
+# invocations instead of allowing them to fall back to the repository build.
+export BUILD_DIR
 
 mkdir -p -- "${RUN_ROOT}"
 REPORT="${RUN_ROOT}/cpu_mmu_completion_report.md"
@@ -29,7 +35,7 @@ EOF
 run_gate() {
     local gate=$1
     echo "[CPU/MMU] ${gate}" | tee -a "${LOG}"
-    if make "${gate}" 2>&1 | tee -a "${LOG}"; then
+    if BUILD_DIR="${BUILD_DIR}" make "${gate}" 2>&1 | tee -a "${LOG}"; then
         printf -- "- \`%s\`: PASS\n" "${gate}" >> "${REPORT}"
     else
         printf -- "- \`%s\`: FAIL\n" "${gate}" >> "${REPORT}"

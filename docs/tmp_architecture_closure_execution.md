@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 CPU/MMU aggregate recursive-build isolation
+
+- `tb/soc_test/run_cpu_mmu_complete.sh` now propagates the caller's
+  `BUILD_DIR` into every recursive `make` invocation. Previously an isolated
+  P1 aggregate could pass `BUILD_DIR` to the outer target while child gates
+  silently defaulted back to the repository `build/` directory.
+- Fresh `BUILD_DIR=/tmp/mips32-cpu-mmu-isolated` verification completed
+  `make cpu-mmu-complete`; all 25 CPU/MMU child gates passed and the report was
+  written below the temporary root. Firmware and simulation artifacts were
+  likewise confined to that root.
+- This closes recursive artifact isolation for the CPU/MMU aggregate. It does
+  not change the documented open scope of full Linux/OS semantics, complete
+  ISA/FPU compliance, or production backend signoff.
+
 ### 2026-08-29 MMU refill isolated firmware output closure
 
 - Separated the MMU refill runner's firmware source directory from its output
