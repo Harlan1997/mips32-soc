@@ -2410,3 +2410,18 @@ configuration.
   both wait4 reaps and wait-status validation.
 - An experimental `WNOHANG` polling version was rejected because it did not
   complete the same gate; it was reverted and is not part of the change.
+
+# 2026-08-29 final bounded architecture aggregate rerun
+
+- Fresh final-source run: `source /etc/profile.d/modules.sh && module load vcs
+  && SKIP_COVERAGE=1 BUILD_DIR=/tmp/mips32-linux-forkwait-fix
+  HOST_TIMEOUT=900 RTL_TIMEOUT=180 make
+  qemu-system-architecture-closure-gate` passes.
+- The aggregate covers current-contract, selected system-mode retire
+  differential, MMU refill/PageMask/OS-pressure, FPU exception boundaries,
+  LL/SC, and the QEMU generic Linux kernel-to-userspace/fork/wait gate.
+- This is the final bounded architecture evidence for the current source
+  line. It does not close RTL system-mode Linux userspace boot, full ISA or
+  privileged-ISA compliance, unrestricted OS page-table/shootdown semantics,
+  full RTL/QEMU Linux differential, physical DDR/QSPI PHY/device timing, or
+  formal/CDC/RDC/lint/synthesis/STA/DFT signoff.
