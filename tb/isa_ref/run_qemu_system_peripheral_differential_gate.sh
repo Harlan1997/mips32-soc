@@ -3,7 +3,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_peripheral_differential"}
-FW_DIR=${FW_DIR:-"${ROOT_DIR}/build/firmware/qemu_system_peripherals"}
+BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
+FW_DIR=${FW_DIR:-"${BUILD_DIR}/firmware/qemu_system_peripherals"}
 FLASH_IMAGE=${FLASH_IMAGE:-"${RUN_DIR}/firmware.flash.hex"}
 mkdir -p "${RUN_DIR}"
 make -C "${ROOT_DIR}/tb/soc_test/fw/tests/qemu_system_peripherals" \
