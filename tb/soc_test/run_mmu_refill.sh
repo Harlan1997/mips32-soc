@@ -15,7 +15,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/soc_test/mmu_refill"}
-FW_DIR="${ROOT_DIR}/tb/soc_test/fw/tests/mmu_refill"
+FW_SOURCE_DIR=${FW_SOURCE_DIR:-"${ROOT_DIR}/tb/soc_test/fw/tests/mmu_refill"}
+FW_DIR=${FW_DIR:-"${RUN_DIR}/firmware"}
 FW_HEX="${FW_DIR}/firmware.hex"
 HW_WALKER=${HW_WALKER:-0}
 OS_PRESSURE=${OS_PRESSURE:-0}
@@ -29,11 +30,14 @@ module load vcs
 
 echo "--- Building mmu_refill firmware ---"
 if [ "${HW_WALKER}" = 1 ]; then
-    make -C "${FW_DIR}" EXTRA_CFLAGS=-DSOC_HW_WALKER clean all
+    make -C "${FW_SOURCE_DIR}" OUT_DIR="${FW_DIR}" FW_BASE=firmware \
+        EXTRA_CFLAGS=-DSOC_HW_WALKER clean all
 elif [ "${OS_PRESSURE}" = 1 ]; then
-    make -C "${FW_DIR}" EXTRA_CFLAGS='-DSOC_MMU_REFILL -DSOC_MMU_OS_PRESSURE' clean all
+    make -C "${FW_SOURCE_DIR}" OUT_DIR="${FW_DIR}" FW_BASE=firmware \
+        EXTRA_CFLAGS='-DSOC_MMU_REFILL -DSOC_MMU_OS_PRESSURE' clean all
 else
-    make -C "${FW_DIR}" EXTRA_CFLAGS=-DSOC_MMU_REFILL clean all
+    make -C "${FW_SOURCE_DIR}" OUT_DIR="${FW_DIR}" FW_BASE=firmware \
+        EXTRA_CFLAGS=-DSOC_MMU_REFILL clean all
 fi
 
 if [ ! -f "$FW_HEX" ]; then

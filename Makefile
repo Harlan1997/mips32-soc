@@ -960,10 +960,12 @@ cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
 
 mmu-refill-gate:
+	FW_DIR=$(BUILD_DIR)/firmware/mmu_refill \
 	RUN_DIR=$(MMU_REFILL_DIR) tb/soc_test/run_mmu_refill.sh
 
 mmu-hardware-walker-soc-gate:
-	HW_WALKER=1 RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_soc tb/soc_test/run_mmu_refill.sh
+	HW_WALKER=1 FW_DIR=$(BUILD_DIR)/firmware/mmu_refill_hw \
+	RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_soc tb/soc_test/run_mmu_refill.sh
 
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate

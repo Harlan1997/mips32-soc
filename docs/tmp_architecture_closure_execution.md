@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 MMU refill isolated firmware output closure
+
+- Separated the MMU refill runner's firmware source directory from its output
+  directory. `run_mmu_refill.sh` now accepts `FW_SOURCE_DIR` and `FW_DIR`,
+  defaults output below `RUN_DIR/firmware`, and never runs `clean all` against
+  the source tree's generated artifacts.
+- The `mmu-refill-gate` and hardware-walker SoC target now pass build-root
+  specific firmware directories. A fresh hardware-walker run passed, and a
+  before/after SHA256 check confirmed the pre-existing source-tree firmware
+  was unchanged. This closes isolated artifact handling for this runner only;
+  it does not close Linux VM ownership or full MMU/OS semantics.
+
 ### 2026-08-29 P1 isolated-build firmware path closure
 
 - The `dual-core-soc-gate` Make target now passes `FW_DIR=$(BUILD_DIR)/firmware/dual_core_ipi`
