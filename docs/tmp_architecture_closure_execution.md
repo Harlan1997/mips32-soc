@@ -2692,3 +2692,16 @@ configuration.
   the open RTL Linux blocker upstream to Linux runtime/control-flow or a
   different CPU architectural contract. It does not close RTL Linux userspace
   boot, OS VM ownership, or full RTL/QEMU Linux differential.
+
+# 2026-08-29 Linux system-mode retire capture plumbing
+
+- Extended `run_qemu_system_retire_capture_gate.sh` with opt-in
+  `QEMU_KERNEL`, `QEMU_DTB`, `QEMU_MEMORY` and `QEMU_APPEND` inputs. Existing
+  bare-metal `FW_ELF` invocations retain their defaults and behavior.
+- Added opt-in `LINUX_RETIRE_TRACE=1` support to the RTL Linux progress runner;
+  `tb/soc_test/run.sh` passes `RETIRE_TRACE` only when explicitly requested.
+- Fresh checks pass: the bare-metal QEMU retire capture gate passes, a QEMU
+  Linux kernel/DTB capture probe completes conversion under explicit event and
+  byte limits, and a 100k-cycle RTL Linux probe emits 20,000 valid retire
+  records. These are capture-plumbing proofs; Linux userspace boot and full
+  RTL/QEMU Linux differential remain open.
