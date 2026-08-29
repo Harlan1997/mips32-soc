@@ -20,6 +20,20 @@
   userspace boot, full-length Linux differential, complete ISA/privileged/MMU
   semantics, and product signoff remain open.
 
+### 2026-08-29 RTL Linux dynamic TLB fault boundary
+
+- A fresh 20M-cycle no-coverage probe with the relocated kernel reaches Linux's
+  first dynamic store TLB miss at cycle `16296236`: `0x8890cd90: sw v0,32(s1)`
+  accesses `0xc0000000` and reports `ExcCode=3`.
+- Linux's generated refill handler then performs `TLBWR` with the expected
+  `VPN2=0x00060000` and a valid `EntryLo0` before the retry. The RTL continues
+  to execute and reaches later kernel code, so this event is not evidence of a
+  TLB write hazard or a stuck walker.
+- The probe still observes zero userspace success markers. The remaining
+  blocker is unrestricted Linux VM/page-table and runtime progress behavior,
+  not a justified local TLB semantic change; full RTL Linux userspace boot and
+  full Linux differential remain open.
+
 ### 2026-08-29 opt-in L1 SYNC drain contract
 
 - Added private internal maintenance encoding `0x1e` for architectural
