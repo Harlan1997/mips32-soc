@@ -2612,3 +2612,17 @@ configuration.
   This closes verification resource safety for the retire differential runner
   only; it does not close RTL Linux userspace boot, full ISA/privileged
   compliance, full RTL/QEMU Linux differential, or product signoff.
+
+# 2026-08-29 VCS gate log separation
+
+- Updated `tb/soc_test/run.sh` so VCS writes its runtime `-l` file to
+  `sim_runtime.log`, while simulator stdout/stderr is captured in the stable
+  `sim.log` consumed by gate checks.
+- This removes the two-writer log collision that made wrapper-invoked long
+  diagnostics susceptible to truncation/interleaving, without changing RTL,
+  default configuration, or coverage behavior.
+- Fresh evidence: `make rtl-frontend-compile` passes all 8 configurations;
+  `SKIP_COVERAGE=1 make cpu-load-return-gate` and `SKIP_COVERAGE=1 make
+  soc-smoke` both pass with `REGRESSION_TEST_SUCCESS` in `sim.log`.
+- This closes diagnostic artifact integrity only; RTL Linux userspace boot,
+  full ISA/privileged/FPU compliance, and full plan signoff remain open.
