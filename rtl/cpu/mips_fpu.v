@@ -60,7 +60,8 @@ module mips_fpu (
         end
     endfunction
     shortreal ar, br, rr;
-    real ar_double, br_double, cr_double, rr_double, exact_single;
+    real ar_double, br_double, cr_double, rr_double, exact_single,
+         exact_double;
     reg a_nan, b_nan, unordered;
     always @(*) begin
         ar = $bitstoshortreal(a);
@@ -77,6 +78,7 @@ module mips_fpu (
         a_nan = 1'b0;
         b_nan = 1'b0;
         unordered = 1'b0;
+        exact_double = 0.0;
         if (fmt_double) begin
             a_nan = (a_double[62:52] == 11'h7ff && a_double[51:0] != 0);
             b_nan = (b_double[62:52] == 11'h7ff && b_double[51:0] != 0);
@@ -358,13 +360,15 @@ module mips_fpu (
         // simulator host floating-point status flags.
         if (!fmt_double && a[30:23] != 8'hff &&
             ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
-             (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) ||
+             (op == OP_DIV) || (op == OP_SQRT) || (op == OP_MADD) || (op == OP_MSUB) ||
              (op == OP_NMADD) || (op == OP_NMSUB))) begin
             case (op)
                 OP_ADD:  exact_single = ar + br;
                 OP_SUB:  exact_single = ar - br;
                 OP_MUL:  exact_single = ar * br;
                 OP_DIV:  if (b[30:23] != 0 || b[22:0] != 0) exact_single = ar / br;
+                OP_SQRT: if (!a[31] && a[30:23] != 0)
+                             exact_single = rr * rr;
                 OP_MADD: exact_single = (ar * br) + $bitstoshortreal(c);
                 OP_MSUB: exact_single = (ar * br) - $bitstoshortreal(c);
                 OP_NMADD: exact_single = -((ar * br) + $bitstoshortreal(c));
@@ -375,6 +379,16 @@ module mips_fpu (
                 exception_flags[1] = 1'b1;
             if (exact_single != 0.0 &&
                 ($bitstoshortreal(result) != exact_single))
+                exception_flags[0] = 1'b1;
+        end
+        // SQRT.D is rounded to the destination double format by result_double;
+        // compare its square with the finite positive operand to expose the
+        // architectural Inexact condition without host FP status flags.
+        if (fmt_double && op == OP_SQRT && !a_nan &&
+            !a_double[63] && a_double[62:52] != 11'h7ff &&
+            a_double[62:52] != 0) begin
+            exact_double = rr_double * rr_double;
+            if (exact_double != ar_double)
                 exception_flags[0] = 1'b1;
         end
         // Some simulators flush the smallest shortreal subnormals while
