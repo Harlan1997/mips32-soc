@@ -90,6 +90,12 @@ module tb_mips_soc;
     integer linux_delay_trace_cycle_end;
     reg [31:0] linux_delay_trace_start;
     reg [31:0] linux_delay_trace_end;
+    integer linux_gpr_trace;
+    integer linux_gpr_trace_limit;
+    integer linux_gpr_trace_count;
+    integer linux_gpr_trace_cycle_start;
+    integer linux_gpr_trace_cycle_end;
+    reg [4:0] linux_gpr_trace_reg;
     integer linux_uart_trace;
     integer linux_uart_trace_limit;
     integer linux_uart_trace_count;
@@ -294,6 +300,34 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_bd,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_bd,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_bd);
+            end
+            // Trace architectural GPR writeback only when explicitly enabled.
+            // Register and cycle filters keep long Linux probes bounded.
+            if (linux_gpr_trace != 0 &&
+                linux_gpr_trace_count < linux_gpr_trace_limit &&
+                linux_trace_cycle >= linux_gpr_trace_cycle_start &&
+                (linux_gpr_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_gpr_trace_cycle_end) &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0 &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr == linux_gpr_trace_reg) ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_req)) begin
+                $display("LINUX_GPR_WRITE_TRACE cycle=%0d pc=%08h inst=%08h rd=%0d data=%08h restore=%b restore_s0=%08h s0=%08h sp=%08h ra=%08h epc=%08h cause=%08h status=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_gpr[16*32 +: 32],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[29],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[31],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status);
+                linux_gpr_trace_count = linux_gpr_trace_count + 1;
             end
             if (linux_wb_trace != 0 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
@@ -883,6 +917,17 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_DELAY_TRACE_START=%h", linux_delay_trace_start)) begin end
         linux_delay_trace_end = 32'h8924_34e4;
         if (!$value$plusargs("LINUX_DELAY_TRACE_END=%h", linux_delay_trace_end)) begin end
+        linux_gpr_trace = 0;
+        if (!$value$plusargs("LINUX_GPR_TRACE=%d", linux_gpr_trace)) begin end
+        linux_gpr_trace_limit = 256;
+        if (!$value$plusargs("LINUX_GPR_TRACE_LIMIT=%d", linux_gpr_trace_limit)) begin end
+        linux_gpr_trace_count = 0;
+        linux_gpr_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_GPR_TRACE_CYCLE_START=%d", linux_gpr_trace_cycle_start)) begin end
+        linux_gpr_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_GPR_TRACE_CYCLE_END=%d", linux_gpr_trace_cycle_end)) begin end
+        linux_gpr_trace_reg = 5'd16;
+        if (!$value$plusargs("LINUX_GPR_TRACE_REG=%d", linux_gpr_trace_reg)) begin end
         linux_uart_trace = 0;
         if (!$value$plusargs("LINUX_UART_TRACE=%d", linux_uart_trace)) begin end
         linux_uart_trace_limit = 256;
