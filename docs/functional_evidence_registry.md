@@ -1,14 +1,14 @@
 # RTL Functional Evidence Registry
 
-## 2026-08-30 Linux guest LL/SC semantic isolation
+## 2026-08-30 Linux guest LL/SC A/B conclusion
 
-Added an explicit `linux-guest=on` machine property. Linux boot and Linux
-retire-differential runners select it so QEMU keeps its native reservation
-identity; bare-metal `mips32-soc-ref` retains the RTL virtual-`LLAddr`
-compatibility behavior. The rebuilt QEMU bare-metal smoke gate passes. This
-removes one cross-guest semantic hazard, but the fresh Linux image still
-stalls after the intentional SIGSEGV child fault, so Linux userspace closure
-and full system differential remain open.
+The attempted `linux-guest=on` machine-property isolation was reverted after
+an A/B run with the same fresh kernel. Physical reservation identity stalled
+Linux after the intentional SIGSEGV child fault, while the existing virtual
+`LLAddr` behavior completed all boot, VM, fork/exec, and wait4 markers. The
+custom machine therefore keeps the existing virtual-`LLAddr` contract for
+both bare-metal and Linux guests; Linux userspace closure and full RTL/QEMU
+system differential remain open.
 
 ## 2026-08-30 Linux fresh-image reproducibility recheck
 

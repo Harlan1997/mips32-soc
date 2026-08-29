@@ -10,7 +10,7 @@ BUILD_DIR="${RUN_DIR}" "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.lo
 test -x "${QEMU_SYSTEM_BIN}"
 set +e
 timeout "${QEMU_TIMEOUT:-60s}" "${QEMU_SYSTEM_BIN}" \
-    -M mips32-soc-ref,linux-guest=on -m 64M -cpu 24Kc \
+    -M mips32-soc-ref -m 64M -cpu 24Kc \
     -kernel "${RUN_DIR}/kernel/vmlinux" -dtb "${RUN_DIR}/mips32_soc_ref.dtb" \
     -display none -monitor none >"${RUN_DIR}/qemu_stdout.log" \
     2>"${RUN_DIR}/qemu_stderr.log"
