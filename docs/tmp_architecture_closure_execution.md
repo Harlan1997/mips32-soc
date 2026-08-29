@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 QEMU/RTL Linux DTB handoff alignment
+
+- The custom QEMU machine previously placed `-dtb` at the top of its generic
+  RAM allocation (`0x87ff0000` for the 128 MiB profile), while the RTL Linux
+  image builder passes the fixed prototype DDR handoff VA `0x89f00000`.
+  This changed register `a1` before the first kernel save and was the first
+  long differential mismatch (`0x89f00000` versus `0x87ff0000`).
+- `scripts/qemu/mips32_soc_ref.c` now places Linux DTBs at physical
+  `0x09f00000`, yielding kseg0 VA `0x89f00000`; the UHI firmware gate checks
+  the exact address as well as the FDT magic. `make qemu-system-uhi-dtb-gate`
+  passes with the rebuilt custom machine.
+- This closes the QEMU/RTL Linux boot-argument address precondition. The
+  relocated Linux RTL build and full system-mode differential remain open;
+  no comparator relaxation or TLB behavior change is claimed.
+
 ### 2026-08-29 bounded RTL/QEMU Linux retire differential
 
 - Added `tb/isa_ref/run_qemu_linux_differential_gate.sh` and the Make entry
