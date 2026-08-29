@@ -2904,3 +2904,17 @@ configuration.
   event and post-CP0 records and enforces EXL, EPC, and Cause.BD invariants;
   ERET records remain trace-visible but are excluded from the frame-save check.
   It passes the fresh window capture with `pairs=1`.
+
+### 2026-08-30 Linux TLB-fault neighborhood frame check
+
+- A fresh 20M-cycle no-coverage run with a narrow `19.57M..19.61M` cycle
+  window captured the next suspected failure boundary and passed the frame
+  checker. The event at `0x8925dccc` is an accepted branch-delay-slot IRQ;
+  CP0 records `EXL=1`, `EPC=0x8925dcc8`, `Cause.BD=1`, and preserves
+  `BadVAddr=0xc0000020`, followed by the normal ERET recovery sequence outside
+  the selected window.
+- This is additional negative evidence against CP0 frame corruption or bad
+  delay-slot EPC handling as the immediate Linux blocker. The probe still has
+  zero userspace success markers, so no Linux boot or full RTL/QEMU differential
+  closure is claimed; the remaining issue is still in the Linux exception/
+  refill/control-flow interaction.
