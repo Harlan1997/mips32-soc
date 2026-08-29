@@ -11,6 +11,11 @@ The targeted `cpu-irq-delay-slot-gate`, `cpu-cp0-gate`, and 8-configuration
 `/tmp/mips32-delay-metadata-fix`. This is a targeted RTL recovery fix; RTL
 Linux userspace boot and full RTL/QEMU Linux differential remain open.
 
+A fresh no-coverage 20M-cycle RTL Linux probe at
+`/tmp/rtl_linux_after_delay_metadata_fix` progressed through the dynamic TLB
+boundary and timed out near 17.4M cycles without a userspace marker. This is
+not sufficient evidence for Linux boot closure.
+
 ## 2026-08-29 Linux progress Make entry maintenance
 
 ## 2026-08-29 current-contract build-root isolation
