@@ -46,6 +46,7 @@ rtl_trace="${RUN_DIR}/rtl/sim/rtl_retire.jsonl"
 
 env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_KERNEL="${KERNEL}" QEMU_DTB="${DTB}" QEMU_MEMORY="${QEMU_MEMORY}" \
+    QEMU_MACHINE_PROPERTIES=linux-guest=on \
     QEMU_APPEND="${QEMU_APPEND}" QEMU_TIMEOUT="${QEMU_TIMEOUT}" \
     MAX_QEMU_EVENTS="${MAX_TRACE_RECORDS}" \
     MAX_QEMU_STATES="$((MAX_TRACE_RECORDS + 1))" \

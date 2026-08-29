@@ -1,5 +1,15 @@
 # RTL Functional Evidence Registry
 
+## 2026-08-30 Linux guest LL/SC semantic isolation
+
+Added an explicit `linux-guest=on` machine property. Linux boot and Linux
+retire-differential runners select it so QEMU keeps its native reservation
+identity; bare-metal `mips32-soc-ref` retains the RTL virtual-`LLAddr`
+compatibility behavior. The rebuilt QEMU bare-metal smoke gate passes. This
+removes one cross-guest semantic hazard, but the fresh Linux image still
+stalls after the intentional SIGSEGV child fault, so Linux userspace closure
+and full system differential remain open.
+
 ## 2026-08-30 Linux fresh-image reproducibility recheck
 
 The rebuilt image under `/tmp/mips32-linux-deterministic-a.8XZ10T` still
