@@ -56,6 +56,18 @@ if [[ ! -s "${RTL_TRACE}" ]]; then
     exit 1
 fi
 
+# A guest stuck before the completion mailbox must fail boundedly.  Without
+# this guard, the verification-only JSONL sink can consume the host filesystem
+# while a broken exception handler or firmware loop is being diagnosed.
+MAX_TRACE_BYTES=${MAX_TRACE_BYTES:-268435456}
+MAX_TRACE_RECORDS=${MAX_TRACE_RECORDS:-1000000}
+rtl_trace_bytes=$(stat -c '%s' "${RTL_TRACE}")
+rtl_trace_records=$(wc -l < "${RTL_TRACE}")
+if (( rtl_trace_bytes > MAX_TRACE_BYTES || rtl_trace_records > MAX_TRACE_RECORDS )); then
+    echo "QEMU system differential: FAIL (RTL trace bound exceeded: bytes=${rtl_trace_bytes}/${MAX_TRACE_BYTES} records=${rtl_trace_records}/${MAX_TRACE_RECORDS})" >&2
+    exit 1
+fi
+
 irq_replay_args=()
 if [[ "${RTL_IRQ_REPLAY}" == "1" ]]; then
     IRQ_SCHEDULE="${RUN_DIR}/rtl_irq_schedule.txt"

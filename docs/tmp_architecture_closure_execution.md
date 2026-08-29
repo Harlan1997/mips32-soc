@@ -10,9 +10,24 @@
 - Fresh `python3 -m py_compile` and
   `BUILD_DIR=/tmp/mips32-qemu-converter-fix make
   qemu-system-exception-differential-gate` passed. The existing syscall/ERET
-  corpus remains green; this change improves exception capture semantics but
-  does not claim that QEMU currently supplies a complete integer-overflow
-  exception differential corpus.
+  corpus remains green; this change improves exception capture semantics.
+
+### 2026-08-29 QEMU integer signed-overflow retire differential
+
+- Extended `qemu_system_exception` with real `ADD`, `SUB`, and `ADDI` signed
+  overflow instructions and an `ADDIU` wrap boundary. The handler checks
+  `Cause.ExcCode=12` and returns over each faulting instruction; each target
+  register remains at its sentinel value, while `ADDIU` commits `0x80000000`.
+- Added a corpus-specific post-comparison assertion requiring all three
+  overflow opcodes, no faulting GPR commit in both traces, exactly one syscall,
+  and the non-trapping `ADDIU` result. A fresh isolated RTL/QEMU run passed.
+- The RTL trace bind now suppresses `retire_gpr_we` on an exception record, so
+  the observation contract agrees with the architectural no-commit rule rather
+  than relying only on comparator field filtering. Trace-size and record-count
+  bounds also fail a stuck guest before it can exhaust host storage.
+- This closes selected signed integer-overflow differential evidence only; it
+  does not claim complete MIPS32/privileged ISA compliance or arbitrary
+  exception-priority coverage.
 
 ### 2026-08-29 Integer signed-overflow exception path
 

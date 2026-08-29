@@ -12,6 +12,7 @@ bind `RETIRE_BIND_TARGET soc_observation_bind u_soc_retire_observation_bind (
     .retire_instr         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst),
     .retire_next_pc       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_next_pc),
     .retire_gpr_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
+                           !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
                            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
     .retire_gpr_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr),
     .retire_gpr_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata),
