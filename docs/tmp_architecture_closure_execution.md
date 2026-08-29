@@ -2943,3 +2943,16 @@ configuration.
   zero userspace success markers, so no Linux boot or full RTL/QEMU differential
   closure is claimed; the remaining issue is still in the Linux exception/
   refill/control-flow interaction.
+
+### 2026-08-30 generic Linux wait4 PID verification
+
+- Rebuilt the Linux v6.6 kernel and embedded initramfs from the updated
+  `tb/linux_boot/init.S`, then ran
+  `RUN_DIR=/tmp/linux_gate_pid_repro QEMU_TIMEOUT=60s JOBS=2
+  tb/linux_boot/run_linux_boot_gate.sh`.
+- The fresh `mips32-soc-ref` run passed the complete generic userspace gate:
+  boot, mmap/mprotect and protection fault, brk, nanosleep, sched_yield, two
+  fork/exec children, exact-PID `wait4`, and both normal exit-status checks.
+- The wait4 regression is therefore closed for this QEMU generic userspace
+  contract. RTL Linux userspace boot, unrestricted Linux VM/page-table
+  ownership and full RTL/QEMU Linux differential remain open.

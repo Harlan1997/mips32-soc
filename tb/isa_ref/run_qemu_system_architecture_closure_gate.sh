@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_architecture_closure"}
+BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
+export BUILD_DIR
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md"
 
