@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 FPU SQRT negative-zero boundary
+
+- Corrected `rtl/cpu/mips_fpu.v`: `SQRT.S(-0)` and `SQRT.D(-0)` now preserve
+  the negative-zero bit pattern and do not raise Invalid; negative non-zero
+  operands retain the Invalid behavior.
+- Added direct primitive checks to `tb/unit/cpu_test/tb_mips_fpu_flags.sv`.
+  Fresh `mips-fpu-flags-gate` passed, followed by real CPU/SoC
+  `fpu-single-gate` and `fpu-double-gate` passes.
+- This closes the negative-zero SQRT boundary only. Complete IEEE-754 edge
+  behavior, precise FPE policy, Linux FPU ABI and full ISA compliance remain
+  open.
+
 ### 2026-08-29 verification-foundation tool availability refresh
 
 - Fresh `scripts/run_verification_foundation_gate.sh` evidence was generated
