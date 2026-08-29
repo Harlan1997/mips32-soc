@@ -104,6 +104,14 @@ module tb_mips_fpu_flags;
             failures = failures + 1;
         end
 
+        // Non-perfect square roots are rounded and must report Inexact.
+        fmt_double = 0;
+        a = 32'h40000000; // 2.0f
+        check_flags(5'b00001, "single_sqrt_inexact");
+        fmt_double = 1;
+        a_double = 64'h4000000000000000; // 2.0d
+        check_flags(5'b00001, "double_sqrt_inexact");
+
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_fpu_flags invalid=7 underflow=1 conversion=1");
         else

@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 FPU SQRT Inexact classification
+
+- Extended `rtl/cpu/mips_fpu.v` to classify non-perfect finite positive
+  `SQRT.S`/`SQRT.D` results as Inexact by comparing the rounded result back to
+  the source operand. Exact roots remain clear, and the previously fixed
+  negative-zero/Invalid boundary is preserved.
+- Added direct checks for `sqrt(2.0f)` and `sqrt(2.0d)` to
+  `tb/unit/cpu_test/tb_mips_fpu_flags.sv`. The primitive flags gate passed;
+  fresh real CPU/SoC `fpu-single-gate` and `fpu-double-gate` also passed.
+- This closes only the SQRT Inexact slice. Full IEEE-754 tininess/rounding,
+  precise FPE policy, Linux FPU ABI and complete ISA compliance remain open.
+
 ### 2026-08-29 SVA checker execution refresh
 
 - Fresh isolated run `BUILD_DIR=/tmp/mips32-sva-closure SKIP_COVERAGE=1 make
