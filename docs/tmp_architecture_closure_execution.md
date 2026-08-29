@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 SVA checker execution refresh
+
+- Fresh isolated run `BUILD_DIR=/tmp/mips32-sva-closure SKIP_COVERAGE=1 make
+  sva-gate` passed all three SVA scenarios: SoC bind, reset synchronizer and
+  AXI SRAM protocol test.
+- The SoC compile included the bound cache FSM, TLB lookup, page-table walker,
+  L1 resource/maintenance and VIC checkers, in addition to AXI/APB/reset
+  properties. No assertion or regression failure was reported.
+- This confirms simulation assertion execution and failure propagation. It is
+  not a formal proof and does not close CDC/RDC/lint, coverage percentage,
+  Linux, complete ISA/FPU or product physical signoff.
+
 ### 2026-08-29 FPU SQRT negative-zero boundary
 
 - Corrected `rtl/cpu/mips_fpu.v`: `SQRT.S(-0)` and `SQRT.D(-0)` now preserve
