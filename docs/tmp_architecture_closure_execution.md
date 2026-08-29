@@ -2971,3 +2971,14 @@ configuration.
   still stalls after Linux reports the SIGSEGV. This isolates the remaining
   issue to the custom QEMU/Linux signal-exit or scheduler path; no comparator,
   timeout relaxation, or Linux success claim was added.
+
+### 2026-08-30 Linux guest LL/SC semantic isolation
+
+- Added an explicit `linux-guest=on` property to `mips32-soc-ref` and selected
+  it from the generic Linux boot and Linux retire-differential runners.
+- Linux now uses QEMU's native reservation identity for LL/SC; the default
+  bare-metal machine still exposes the RTL virtual `LLAddr` contract.
+- Rebuilt QEMU and ran `qemu-system-sram-uart-mailbox-gate`; the bare-metal
+  smoke gate passed. The fresh Linux image still reproduces the post-SIGSEGV
+  scheduler/child-exit stall, so this semantic isolation is not claimed as a
+  complete Linux fix.
