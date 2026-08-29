@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 RTL Linux isolated image DTC resolution
+
+- Fixed `build_rtl_linux_image.sh` to resolve DTC next to the supplied
+  `vmlinux`, with an explicit override and actionable failure when no
+  executable DTC exists. `run_rtl_linux_progress_gate.sh` now passes the
+  matching DTC for both freshly built and reused kernels.
+- Before this fix, an isolated `RUN_DIR` could build the kernel successfully
+  and then fail silently during image construction because the script looked
+  only under the unrelated repository `build/linux_boot/real` directory.
+- Fresh verification with a newly built relocated kernel completed image
+  generation and a 1000-cycle RTL probe: progress gate PASS, simulator data
+  structure 1.1 MiB, userspace marker count 0. This closes the reproducibility
+  issue only; RTL Linux userspace boot and RTL/QEMU Linux differential remain
+  open.
+
 ### 2026-08-29 Linux interrupt delay-slot EPC fix
 
 - Fixed the asynchronous interrupt PC selection in `rtl/cpu/mips_cpu.v`.

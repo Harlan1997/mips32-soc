@@ -8,7 +8,7 @@ RUN_DIR=$(realpath -m "${RUN_DIR}")
 KERNEL=${KERNEL:-"${ROOT_DIR}/build/linux_boot/rtl_prep/kernel/vmlinux"}
 DTB=${DTB:-"${RUN_DIR}/mips32_soc_ref_rtl.dtb"}
 DTB_SOURCE=${DTB_SOURCE:-"${SCRIPT_DIR}/mips32_soc_ref_rtl.dts"}
-DTC=${DTC:-"${ROOT_DIR}/build/linux_boot/real/kernel/scripts/dtc/dtc"}
+DTC=${DTC:-}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 ELF2HEX=${ELF2HEX:-"${ROOT_DIR}/tb/soc_test/fw/common/elf2hex.py"}
 dtb_load_virtual_input=${DTB_LOAD_VIRTUAL-}
@@ -33,8 +33,17 @@ mkdir -p "${RUN_DIR}"
 command -v "${CROSS_COMPILE}gcc" >/dev/null
 command -v "${CROSS_COMPILE}objcopy" >/dev/null
 test -f "${KERNEL}"
+# Prefer the DTC built alongside the supplied kernel.  This keeps an isolated
+# RUN_DIR self-contained and avoids silently selecting a stale DTC from an
+# unrelated Linux build directory.
+if [[ -z "${DTC}" ]]; then
+    DTC="$(dirname "${KERNEL}")/scripts/dtc/dtc"
+fi
+if [[ ! -x "${DTC}" ]]; then
+    echo "missing executable DTC: ${DTC} (set DTC=/path/to/dtc to override)" >&2
+    exit 1
+fi
 if [[ ! -f "${DTB}" || "${DTB_SOURCE}" -nt "${DTB}" ]]; then
-    test -x "${DTC}"
     "${DTC}" -I dts -O dtb -o "${DTB}" "${DTB_SOURCE}"
 fi
 test -f "${DTB}"
