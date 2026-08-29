@@ -2649,3 +2649,17 @@ configuration.
   post-reset CPU progress and stable `sim.log`/`sim_runtime.log` artifacts.
   It observes zero userspace success markers, so this closes runner resource
   behavior only; RTL Linux userspace boot remains an open functional item.
+
+# 2026-08-29 Linux link-instruction overflow false positive
+
+- Diagnosed the first post-reset Linux loop: `start_kernel`'s `jal
+  smp_setup_processor_id` was carrying the ALU's default-add overflow bit,
+  and the old `ex_overflow && ex_reg_write && !mem_read && !mem_write` gate
+  incorrectly converted that link instruction into `ExcCode=12`.
+- Restricted the overflow exception to the architectural `ADD`, `SUB`, and
+  `ADDI` encodings. `JAL/JALR` link writes no longer inherit arithmetic
+  overflow state.
+- Fresh evidence: `make qemu-system-exception-differential-gate` passes, and
+  the 20M-cycle no-coverage RTL Linux probe advances beyond the old
+  `start_kernel` loop. It still reports no userspace marker; the next blocker
+  is a distinct `0x0100101c` MMU/address fault around cycle 19.8M.
