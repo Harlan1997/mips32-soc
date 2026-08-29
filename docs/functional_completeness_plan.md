@@ -1008,3 +1008,18 @@ GPIO, timer, DMA status, PIC marker, QSPI status/XIP and DDR status before the
 mailbox. This remains a selected peripheral differential slice and does not
 close full DMA fault/reset timing, physical device timing, Linux drivers or
 full RTL system-mode Linux differential.
+
+### 2026-08-29 QEMU integer overflow differential and trace resource bound
+
+`qemu_system_exception` now executes signed `ADD`, `SUB`, and `ADDI` overflow
+cases and the non-trapping `ADDIU` wrap boundary. The real RTL and
+`mips32-soc-ref` retire streams both observe three `ExcCode=12` records with
+no faulting GPR commit, one syscall exception, and an `ADDIU` result of
+`0x80000000`. The corpus-specific gate assertion rejects a reduced
+syscall-only image. The RTL UVM and standalone observation bindings suppress
+transient GPR writeback on exception records, and the generic differential
+runner rejects oversized RTL traces before a stuck guest can exhaust host
+storage. Fresh isolated overflow, ISA R2, BREAK, trap, branch-delay exception,
+and RTL frontend (`8/8`) gates pass. This closes selected signed integer
+overflow differential evidence and verification resource safety only; full
+MIPS32/privileged ISA, Linux/OS semantics and product signoff remain open.
