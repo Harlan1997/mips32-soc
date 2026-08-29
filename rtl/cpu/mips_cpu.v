@@ -1257,6 +1257,15 @@ module mips_cpu #(
     wire        ex_zero;
     wire [31:0] ex_hi_val;
     wire [31:0] ex_lo_val;
+
+    // ADD/SUB/ADDI overflow is an architectural synchronous exception.  The
+    // ALU reports it in EX; carry it through the existing exception bundle so
+    // the instruction reaches CP0 precisely and cannot write its wrapped
+    // result to the register file.
+    wire ex_overflow_exception = ex_overflow && ex_reg_write &&
+                                 !ex_mem_read && !ex_mem_write;
+    wire ex_except_req_out = ex_except_req | ex_overflow_exception;
+    wire [4:0] ex_except_code_out = ex_except_req ? ex_except_code : 5'h0C;
     
     mips_ex_stage u_mips_ex_stage (
         .clk         (clk),
@@ -1390,8 +1399,8 @@ module mips_cpu #(
         .ex_cp0_we       (ex_cp0_we),
         .ex_is_eret      (ex_is_eret),
         .ex_tlb_op       (ex_tlb_op),
-        .ex_except_req   (ex_except_req),
-        .ex_except_code  (ex_except_code),
+        .ex_except_req   (ex_except_req_out),
+        .ex_except_code  (ex_except_code_out),
         .ex_except_is_data (ex_except_is_data),
         .ex_except_is_tlb_refill (ex_except_is_tlb_refill),
         .ex_bd           (ex_bd),
