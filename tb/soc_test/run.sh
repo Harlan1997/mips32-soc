@@ -116,11 +116,19 @@ sim_args=(+FW_HEX="$FW_HEX_ABS" "${sim_extra_args[@]}")
 if [ "${coverage_enabled}" = "1" ]; then
     sim_args+=(-cm "${cm_args}")
 fi
-# Keep VCS's internal runtime log separate from the shell-captured stdout.
-# Using the same path for both causes two writers to truncate/interleave the
-# gate log, which makes long Linux diagnostics unreliable and needlessly
-# increases the amount of retained output.
-./simv "${sim_args[@]}" -l sim_runtime.log >sim.log 2>&1
+# Keep VCS's internal runtime log separate from any caller's stdout
+# redirection.  Some long-running gates invoke this script as `run.sh
+# >sim.log`; writing sim.log here as well would give two writers ownership of
+# the same file and can truncate or interleave diagnostics.  Publish the
+# complete VCS log only after simulation has exited.
+set +e
+./simv "${sim_args[@]}" -l sim_runtime.log
+sim_status=$?
+set -e
+cp sim_runtime.log sim.log
+if [ "${sim_status}" -ne 0 ]; then
+    exit "${sim_status}"
+fi
 if grep -q "SoC Simulation Timeout" sim.log; then
     echo "ERROR: SoC simulation watchdog expired"
     exit 1
