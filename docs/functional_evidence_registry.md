@@ -1,5 +1,18 @@
 # RTL Functional Evidence Registry
 
+## 2026-08-30 EDA host-OOM containment
+
+Kernel logs attribute the prior high-water event to a VCS compiler process
+reaching about 2 GiB in an `eda-*` cgroup; separate historical global OOM
+events killed concurrent Python processes. The long RTL Linux probe itself
+was measured at about 160 MiB. The aggregate SoC, UVM, directed-regression,
+SVA, and current-contract entry points now use
+`scripts/run_eda_cgroup.sh` for VCS, `simv`, and URG, with `VCS_JOBS=1` by
+default and explicit `EDA_MEMORY_MAX`/`EDA_SWAP_MAX` overrides. Isolated
+no-coverage `soc-smoke` and all three SVA scenarios passed. This is resource
+containment evidence only; standalone unit scripts and the open Linux/ISA/
+MMU closure claims are unchanged.
+
 ## 2026-08-30 Linux guest LL/SC A/B conclusion
 
 The attempted `linux-guest=on` machine-property isolation was reverted after

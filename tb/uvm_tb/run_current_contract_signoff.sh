@@ -30,6 +30,7 @@ FW_HEX=${FW_HEX:-"${ROOT_DIR}/build/firmware/soc_smoke/firmware.hex"}
 FLASH_IMAGE=${FLASH_IMAGE:-"${SCRIPT_DIR}/data/flash_xip_image.hex"}
 SEED_BASE=${SEED_BASE:-1}
 NUM_TESTS=${NUM_TESTS:-10}
+EDA_RUNNER=${EDA_RUNNER:-"${ROOT_DIR}/scripts/run_eda_cgroup.sh"}
 
 # Validate numerical inputs
 if ! [[ "$NUM_TESTS" =~ ^[0-9]+$ ]] || [ "$NUM_TESTS" -lt 10 ]; then
@@ -63,6 +64,11 @@ if [ -d /tool/module ]; then
     module use /tool/module
 fi
 module load vcs
+
+if [[ ! -x "${EDA_RUNNER}" ]]; then
+    echo "ERROR: EDA runner is not executable: ${EDA_RUNNER}" >&2
+    exit 1
+fi
 
 if [ ! -f "$FW_HEX" ]; then
     echo "ERROR: FW_HEX does not exist: $FW_HEX"
@@ -171,7 +177,7 @@ mkdir -p -- "$MERGED_COV_DIR"
 
 set +e
 # Generate raw report first without exclusions
-urg -dir "${PHASE2_ROOT}/directed_cov/directed.vdb" \
+"${EDA_RUNNER}" urg -dir "${PHASE2_ROOT}/directed_cov/directed.vdb" \
         "${PHASE3_ROOT}/directed_cov/directed.vdb" \
         "${PHASE3B_ROOT}/directed_cov/directed.vdb" \
         "${PHASE3C_ROOT}/directed_cov/directed.vdb" \
@@ -193,7 +199,7 @@ PRODUCT_STRICT_ELFILELIST=$(python3 "${ROOT_DIR}/tb/coverage/dump_strict_exclusi
     "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" "${PHASE3_ROOT}/cpu_cp0_gate/strict_exclusions" product)
 
 # Refresh Product textReportFinal using fresh strict per-metric exclusions
-urg -dir "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" \
+"${EDA_RUNNER}" urg -dir "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" \
     -elfilelist "${PRODUCT_STRICT_ELFILELIST}" \
     -excl_strict \
     -format text \
@@ -201,7 +207,7 @@ urg -dir "${PHASE3_ROOT}/cpu_cp0_gate/simv.vdb" \
     -log "${PHASE3_ROOT}/cpu_cp0_gate/urg_final.log"
 
 # Generate final adjusted report with strict exclusions
-urg -dir "${MERGED_COV_DIR}/merged.vdb" \
+"${EDA_RUNNER}" urg -dir "${MERGED_COV_DIR}/merged.vdb" \
     -elfilelist "${UVM_STRICT_ELFILELIST}" \
     -excl_strict \
     -format both \
