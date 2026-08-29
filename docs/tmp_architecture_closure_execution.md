@@ -2981,3 +2981,15 @@ configuration.
 - The custom machine and both Linux runners therefore retain the existing
   virtual-`LLAddr` contract. Linux userspace closure and full RTL/QEMU
   system-mode differential remain open.
+
+### 2026-08-30 Linux single-vCPU TCG scheduling containment
+
+- The same kernel and rebuilt custom machine were compared under default
+  multi-threaded TCG and `-accel tcg,thread=single`.
+- Multi-threaded TCG reproducibly stalled in the Linux `wait4` path after the
+  intentional SIGSEGV child fault. Single-threaded TCG completed both exec
+  children, both wait-status checks, and the final fork/wait marker.
+- The generic Linux boot and bounded Linux differential runners now select
+  single-threaded TCG explicitly. This contains a host execution-mode issue
+  for the single-vCPU contract; it does not close SMP, Linux VM ownership, or
+  full RTL/QEMU Linux differential.
