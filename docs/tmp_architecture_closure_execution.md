@@ -2663,3 +2663,16 @@ configuration.
   the 20M-cycle no-coverage RTL Linux probe advances beyond the old
   `start_kernel` loop. It still reports no userspace marker; the next blocker
   is a distinct `0x0100101c` MMU/address fault around cycle 19.8M.
+
+# 2026-08-29 RTL Linux GPR source diagnosis
+
+- Added default-off, register/cycle-filtered `LINUX_GPR_TRACE` support to the
+  RTL Linux progress runner and testbench. It also records the context-restore
+  request and restored `$s0` image when applicable.
+- A bounded 20M-cycle capture proves `$a0` is written as `0x01001000` by
+  `0x889aa6f4: lw a0,4(a0)` at cycle `19808323`, then copied to `$s0` by
+  `0x889f0b5c: or s0,a0,zero`. No context-restore write is observed in the
+  target window.
+- This is evidence about the source memory/data path and does not justify an
+  exception, forwarding, or MMU semantic change. RTL Linux userspace boot and
+  full RTL/QEMU Linux differential remain open.
