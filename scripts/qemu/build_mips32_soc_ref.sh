@@ -86,31 +86,10 @@ fi
 # QEMU 9.2 does not publish a MIPS core XML feature list for plugin register
 # access. Apply it idempotently with exact context rather than line ranges.
 if ! rg -q 'case 73: return gdb_get_regl\(mem_buf, env->CP0_EPC\)' "${QEMU_SRC}/target/mips/gdbstub.c"; then
-    patch -d "${QEMU_SRC}" -p1 <<'PATCH'
-*** Begin Patch
-*** Update File: target/mips/gdbstub.c
-@@
-     case 37:
-         return gdb_get_regl(mem_buf, env->active_tc.PC |
-                                      !!(env->hflags & MIPS_HFLAG_M16));
-+    case 73: return gdb_get_regl(mem_buf, env->CP0_EPC);
-+    case 74: return gdb_get_regl(mem_buf, env->CP0_Index);
-+    case 75: return gdb_get_regl(mem_buf, env->CP0_EntryHi);
-+    case 76: return gdb_get_regl(mem_buf, env->CP0_PageMask);
-     case 72:
-@@
-     case 37:
-         env->active_tc.PC = tmp & ~(target_ulong)1;
-@@
-         }
-         break;
-+    case 73: env->CP0_EPC = tmp; break;
-+    case 74: env->CP0_Index = tmp; break;
-+    case 75: env->CP0_EntryHi = tmp; break;
-+    case 76: env->CP0_PageMask = tmp; break;
-     case 72: /* fp, ignored */
-*** End Patch
-PATCH
+    sed -i '/^[[:space:]]*case 72:$/i\    case 73: return gdb_get_regl(mem_buf, env->CP0_EPC);\n    case 74: return gdb_get_regl(mem_buf, env->CP0_Index);\n    case 75: return gdb_get_regl(mem_buf, env->CP0_EntryHi);\n    case 76: return gdb_get_regl(mem_buf, env->CP0_PageMask);' \
+        "${QEMU_SRC}/target/mips/gdbstub.c"
+    sed -i '/^[[:space:]]*case 72: \/\* fp, ignored \*\/$/i\    case 73: env->CP0_EPC = tmp; break;\n    case 74: env->CP0_Index = tmp; break;\n    case 75: env->CP0_EntryHi = tmp; break;\n    case 76: env->CP0_PageMask = tmp; break;' \
+        "${QEMU_SRC}/target/mips/gdbstub.c"
 fi
 
 if ! rg -q 'qemu_mips32_soc_ref_retire_tick' "${QEMU_SRC}/accel/tcg/cpu-exec.c"; then
@@ -189,8 +168,8 @@ if rg -q 'qemu_mips32_soc_ref_interrupt_bd &&' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
 
-if ! rg -q '^bool qemu_mips32_soc_ref_bootrom_mmu_guest' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
-    sed -i '0,/^void qemu_mips32_soc_ref_interrupt_fixup.*;$/a\bool qemu_mips32_soc_ref_bootrom_mmu_guest(void) __attribute__((weak));' \
+if ! rg -q 'qemu_mips32_soc_ref_bootrom_mmu_guest' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    sed -i '/#include "exec\/helper-proto.h"/a\bool qemu_mips32_soc_ref_bootrom_mmu_guest(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
 
@@ -205,8 +184,10 @@ fi
 # QEMU 9.2 unconditionally writes the link register for BLTZALL/BGEZALL
 # before resolving the likely condition. MIPS32 links only when taken.
 if ! rg -q 'SOC_REF_FIX_BLIKELY_LINK' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    git -C "${QEMU_SRC}" apply \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-branch-likely-link.patch"
+    perl -0pi -e 's{(        case OPC_BGEZALL:\n            tcg_gen_setcondi_tl\(TCG_COND_GE, bcond, t0, 0\);)\n            blink = 31;\n            goto likely;}{$1\n            /* SOC_REF_FIX_BLIKELY_LINK: link only on the taken path. */\n            tcg_gen_movcond_tl(TCG_COND_NE, cpu_gpr[31], bcond,\n                               tcg_constant_tl(0),\n                               tcg_constant_tl(ctx->base.pc_next + 8),\n                               cpu_gpr[31]);\n            goto likely;}s' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+    perl -0pi -e 's{(        case OPC_BLTZALL:\n            tcg_gen_setcondi_tl\(TCG_COND_LT, bcond, t0, 0\);)\n            blink = 31;\n        likely:}{$1\n            /* SOC_REF_FIX_BLIKELY_LINK: link only on the taken path. */\n            tcg_gen_movcond_tl(TCG_COND_NE, cpu_gpr[31], bcond,\n                               tcg_constant_tl(0),\n                               tcg_constant_tl(ctx->base.pc_next + 8),\n                               cpu_gpr[31]);\n        likely:}s' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
 if ! rg -q 'srs_gpr\[16\]\[32\]' "${QEMU_SRC}/target/mips/cpu.h"; then
@@ -301,6 +282,10 @@ fi
 # the compact 24Kc model normally exposes only 16.  The backing QEMU TLB
 # array is larger than both limits, so widen only the opt-in custom-machine
 # MMU guest path.  Default QEMU CPU behavior remains unchanged.
+if ! rg -q 'qemu_mips32_soc_ref_rtl_mmu_guest' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    sed -i '/#include "exec\/helper-proto.h"/a\bool qemu_mips32_soc_ref_rtl_mmu_guest(void) __attribute__((weak));' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+fi
 if ! rg -q 'SOC_REF_SOFTWARE_TLB_64' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/env->tlb->nb_tlb = 1 + ((def->CP0_Config1 >> CP0C1_MMU) \& 63);/c\    env->tlb->nb_tlb = (qemu_mips32_soc_ref_rtl_mmu_guest && qemu_mips32_soc_ref_rtl_mmu_guest()) ? 64 : 1 + ((def->CP0_Config1 >> CP0C1_MMU) \& 63); /* SOC_REF_SOFTWARE_TLB_64 */' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
