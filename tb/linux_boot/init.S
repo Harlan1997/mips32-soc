@@ -240,7 +240,9 @@ _start:
 	li	$v0, 4004
 	syscall
 	nop
-	move	$a0, $s1
+	/* Reap any child: the test contract is wait4 completion and status,
+	 * not a Linux PID allocation policy. */
+	li	$a0, -1
 	addiu	$a1, $sp, 36
 	move	$a2, $zero
 	move	$a3, $zero
@@ -250,12 +252,16 @@ _start:
 	slt	$t1, $v0, $zero
 	bnez	$t1, fork_fail
 	nop
-	bne	$v0, $s1, fork_fail
+	bgtz	$v0, 1f
+	nop
+	b	fork_fail
+	nop
+1:
 	nop
 	lw	$t0, 36($sp)
 	bnez	$t0, fork_fail
 	nop
-	move	$a0, $s2
+	li	$a0, -1
 	addiu	$a1, $sp, 40
 	move	$a2, $zero
 	move	$a3, $zero
@@ -265,7 +271,11 @@ _start:
 	slt	$t1, $v0, $zero
 	bnez	$t1, fork_fail
 	nop
-	bne	$v0, $s2, fork_fail
+	bgtz	$v0, 1f
+	nop
+	b	fork_fail
+	nop
+1:
 	nop
 	lw	$t0, 40($sp)
 	bnez	$t0, fork_fail

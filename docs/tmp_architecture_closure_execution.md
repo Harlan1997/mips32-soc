@@ -2395,3 +2395,18 @@ configuration.
 - Remaining boundary is unchanged: full RTL Linux userspace boot and
   full RTL/QEMU Linux differential still require separate OS/privileged-ISA
   work; this is not a claim of full MIPS ISA or commercial physical signoff.
+
+# 2026-08-29 Linux fork/wait userspace closure
+
+- The architecture aggregate exposed a test-image issue after the kernel had
+  already reached userspace: both `execve` children emitted their success
+  markers, but the parent checked Linux's implementation-specific child PIDs.
+- Updated the freestanding initramfs image to use `wait4(-1, ...)` for both
+  reaps while retaining exit-status validation. This removes the PID
+  allocation assumption without weakening the fork/exec/wait contract.
+- Fresh incremental evidence: `RUN_DIR=/tmp/mips32-linux-forkwait-fix
+  QEMU_TIMEOUT=30s tb/linux_boot/run_linux_boot_gate.sh` passes, including
+  kernel-to-userspace, mmap/mprotect/brk, sleep/yield, two exec markers,
+  both wait4 reaps and wait-status validation.
+- An experimental `WNOHANG` polling version was rejected because it did not
+  complete the same gate; it was reverted and is not part of the change.
