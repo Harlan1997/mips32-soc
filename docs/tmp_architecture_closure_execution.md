@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 stale delay-slot metadata guard
+
+- Fixed `rtl/cpu/mips_cpu.v` so asynchronous interrupt BD/EPC inference requires
+  both the stage delay-slot marker and its nonzero paired resume-target
+  metadata. A stale `id_bd` left on a post-flush bubble can no longer classify
+  an ordinary instruction as a branch delay slot.
+- The diagnosed Linux window at cycle `23479196` had been taking EPC
+  `0x8923af20` for `lbu v1,0(v1)` after the producer at `0x8923af1c` was
+  discarded. The guard removes that false BD path while retaining the
+  contiguous MEM->EX->ID legal delay-slot recovery logic.
+- Fresh `SKIP_COVERAGE=1 BUILD_DIR=/tmp/mips32-delay-metadata-fix make
+  cpu-irq-delay-slot-gate cpu-cp0-gate rtl-frontend-compile` passed. The
+  frontend matrix passed all 8 configurations. This is a targeted CPU
+  recovery fix; RTL Linux userspace boot and full RTL/QEMU Linux differential
+  remain open until a fresh long Linux run proves them.
+
 ### 2026-08-29 current-contract external build-root isolation
 
 - Fixed the current-contract signoff wrapper and Phase 2/3 completion wrappers

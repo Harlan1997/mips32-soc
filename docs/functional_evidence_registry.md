@@ -1,5 +1,16 @@
 # RTL Functional Evidence Registry
 
+## 2026-08-29 stale delay-slot metadata recovery guard
+
+`mips_cpu` now requires a valid paired delay-slot resume target when deriving
+asynchronous interrupt `Cause.BD`/`EPC` from MEM, EX, or ID. This prevents stale
+post-flush `id_bd` from rewinding an ordinary Linux instruction to an EPC that
+skips its producer, while preserving the contiguous legal delay-slot path.
+The targeted `cpu-irq-delay-slot-gate`, `cpu-cp0-gate`, and 8-configuration
+`rtl-frontend-compile` run passed under
+`/tmp/mips32-delay-metadata-fix`. This is a targeted RTL recovery fix; RTL
+Linux userspace boot and full RTL/QEMU Linux differential remain open.
+
 ## 2026-08-29 Linux progress Make entry maintenance
 
 ## 2026-08-29 current-contract build-root isolation
