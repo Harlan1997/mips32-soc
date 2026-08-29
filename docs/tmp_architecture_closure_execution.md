@@ -13,8 +13,8 @@
   the prefix mode is opt-in and does not alter default strict comparisons.
 - Fresh evidence: `SKIP_COVERAGE=1 BUILD_DIR=build KERNEL=... DTB=...
   RTL_CYCLE_LIMIT=100000 QEMU_TIMEOUT=2s make
-  qemu-system-linux-differential-gate` passes with 28,836 QEMU retire records
-  matching the RTL prefix after the handoff; the RTL capture contains 48,803
+  qemu-system-linux-differential-gate` passes with 70,764 QEMU retire records
+  matching the RTL prefix after the handoff; the RTL capture contains 119,395
   records including its pre-handoff ROM prefix.
 - This closes only a bounded Linux kernel retire-prefix differential. Linux
   userspace boot, full-length Linux differential, complete ISA/privileged/MMU
