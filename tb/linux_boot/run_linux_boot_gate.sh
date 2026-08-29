@@ -10,6 +10,7 @@ BUILD_DIR="${RUN_DIR}" "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.lo
 test -x "${QEMU_SYSTEM_BIN}"
 set +e
 timeout "${QEMU_TIMEOUT:-60s}" "${QEMU_SYSTEM_BIN}" \
+    -accel tcg,thread=single \
     -M mips32-soc-ref -m 64M -cpu 24Kc \
     -kernel "${RUN_DIR}/kernel/vmlinux" -dtb "${RUN_DIR}/mips32_soc_ref.dtb" \
     -display none -monitor none >"${RUN_DIR}/qemu_stdout.log" \
@@ -72,6 +73,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Kernel: ${RUN_DIR}/kernel/vmlinux
 - Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
 - Boot protocol: MIPS UHI with an opaque DTB
+- TCG execution: single-threaded for the single-vCPU Linux contract
 - Evidence: Linux printed its version, registered/enabled ttyS0, reached the
   initramfs /init process, touched one word on each of four page-spaced user
   stack locations, faulted in five anonymous mmap2 pages, mapped and read one

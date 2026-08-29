@@ -10,6 +10,13 @@ custom machine therefore keeps the existing virtual-`LLAddr` contract for
 both bare-metal and Linux guests; Linux userspace closure and full RTL/QEMU
 system differential remain open.
 
+The fresh-image rerun also isolated a separate host execution issue: default
+multi-threaded TCG can leave the single-vCPU guest in a `wait4` stall after a
+SIGSEGV child exit, while `-accel tcg,thread=single` completes the same
+markers. The Linux boot and bounded Linux differential runners now select
+single-threaded TCG explicitly; this is a QEMU execution-mode containment for
+the single-vCPU contract, not evidence of SMP or full Linux closure.
+
 ## 2026-08-30 Linux fresh-image reproducibility recheck
 
 The rebuilt image under `/tmp/mips32-linux-deterministic-a.8XZ10T` still

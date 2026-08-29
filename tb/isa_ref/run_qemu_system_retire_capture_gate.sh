@@ -21,6 +21,7 @@ IRQ_SCHEDULE=${IRQ_SCHEDULE:-}
 DMA_EVENT_TRACE=${DMA_EVENT_TRACE:-}
 IRQ_REPLAY_PIC_MASK=${IRQ_REPLAY_PIC_MASK:-}
 QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-}
+QEMU_ACCEL=${QEMU_ACCEL:-}
 # Bound pathological guests before the Python converter materializes JSONL.
 # Normal current-contract guests are well below these limits; callers can
 # raise them explicitly for a reviewed long-running capture.
@@ -82,13 +83,20 @@ if [[ -n "${QSPI_IMAGE}" ]]; then
     machine_spec+=" ,qspi-image=$(realpath "${QSPI_IMAGE}")"
 fi
 accel_args=()
+if [[ -n "${QEMU_ACCEL}" ]]; then
+    accel_args=(-accel "${QEMU_ACCEL}")
+fi
 if [[ -n "${IRQ_SCHEDULE}" ]]; then
     [[ -s "${IRQ_SCHEDULE}" ]]
     machine_spec+=" ,irq-schedule=$(realpath "${IRQ_SCHEDULE}")"
     if [[ -n "${QSPI_IMAGE}" ]]; then
         :
     fi
-    accel_args=(-accel tcg,one-insn-per-tb=on)
+    if [[ -n "${QEMU_ACCEL}" ]]; then
+        accel_args=(-accel "${QEMU_ACCEL},one-insn-per-tb=on")
+    else
+        accel_args=(-accel tcg,one-insn-per-tb=on)
+    fi
 fi
 if [[ -n "${IRQ_REPLAY_PIC_MASK}" ]]; then
     machine_spec+=" ,irq-replay-pic-mask=${IRQ_REPLAY_PIC_MASK}"
@@ -247,6 +255,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - QEMU GDB registers: $(wc -l <"${RUN_DIR}/qemu_registers.txt")
 - QEMU build identity: qemu_build_identity.txt
 - QEMU attempts: ${attempts}
+- QEMU accelerator: ${QEMU_ACCEL:-default}
 - QEMU exit: ${qemu_exit_note}
 - Evidence: plugin_compile.log, qemu_build_identity.txt, qemu_command.txt, qemu_instruction_events.jsonl, qemu_state.jsonl, qemu_retire.jsonl, qemu_trace_capture.log, qemu_stdout.log, qemu_stderr.log
 - Differential: ${differential}
