@@ -22,6 +22,7 @@
 
 volatile uint32_t irq_count = 0;
 volatile uint32_t smoke_failures = 0;
+volatile uint32_t overflow_count = 0;
 
 void print_str(const char *str) {
     while (*str) {
@@ -80,7 +81,10 @@ void c_interrupt_handler() {
     uint32_t exc_code = (cause >> 2) & 0x1F;
     
     if (exc_code != 0) {
-        if (exc_code == 8) { // Syscall exception
+        if (exc_code == 12) { // Arithmetic overflow exception
+            overflow_count++;
+            print_str("   INTEGER OVERFLOW EXCEPTION CAUGHT\n");
+        } else if (exc_code == 8) { // Syscall exception
             print_str("   SYSCALL EXCEPTION CAUGHT\n");
         } else if (exc_code == 4) { // AdEL exception
             print_str("   AdEL EXCEPTION CAUGHT, ENDING TEST OK\n");
@@ -799,7 +803,29 @@ int main() {
     // Just delay a bit for it to finish
     for(volatile int k = 0; k < 100; k++);
     DMA_CTRL = 4; // Clear DONE bit
-    
+
+    // Signed ADD overflow must trap with ExcCode 12 before its wrapped result
+    // can commit.  Keep this as a real CPU path check rather than only an ALU
+    // unit check; the handler advances EPC over the faulting ADD.
+    print_str("--- Testing Integer Overflow Exception ---\n");
+    uint32_t overflow_before = overflow_count;
+    asm volatile(
+        ".set push\n"
+        ".set noreorder\n"
+        "lui  $t0, 0x7fff\n"
+        "ori  $t0, $t0, 0xffff\n"
+        "addiu $t1, $zero, 1\n"
+        "add  $t2, $t0, $t1\n"
+        "nop\n"
+        ".set pop\n"
+        ::: "t0", "t1", "t2", "memory");
+    if (overflow_count != overflow_before + 1) {
+        print_str("   INTEGER OVERFLOW EXCEPTION ERROR\n");
+        smoke_failures++;
+    } else {
+        print_str("   INTEGER OVERFLOW EXCEPTION OK\n");
+    }
+
     // Final CP0 Status & Cause Toggle
     uint32_t dummy_cp0;
     asm volatile("mfc0 %0, $8" : "=r"(dummy_cp0)); // Hit mips_cp0 read default branch
