@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_current_contract"}
+BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
 mkdir -p "${RUN_DIR}"
 
 run_gate() {
@@ -14,19 +15,19 @@ run_gate() {
 }
 
 run_gate qemu_system_peripheral_contract \
-    env RUN_DIR="${ROOT_DIR}/build/isa_ref/qemu_system_peripherals" \
+    env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_peripherals" \
     make -C "${ROOT_DIR}" qemu-system-peripheral-contract-gate
 run_gate qemu_system_dma_v2_model \
-    env RUN_DIR="${ROOT_DIR}/build/isa_ref/qemu_system_dma_v2_model" \
+    env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_dma_v2_model" \
     make -C "${ROOT_DIR}" qemu-system-dma-v2-model-gate
 run_gate qemu_system_qspi \
-    env RUN_DIR="${ROOT_DIR}/build/isa_ref/qemu_system_qspi" \
+    env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_qspi" \
     make -C "${ROOT_DIR}" qemu-system-qspi-gate
 run_gate qemu_system_ddr \
-    env RUN_DIR="${ROOT_DIR}/build/isa_ref/qemu_system_ddr" \
+    env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_ddr" \
     make -C "${ROOT_DIR}" qemu-system-ddr-gate
 run_gate qemu_system_retire_capture \
-    env RUN_DIR="${ROOT_DIR}/build/isa_ref/qemu_system_retire" \
+    env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_retire" \
     make -C "${ROOT_DIR}" qemu-system-retire-capture-gate
 
 QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
@@ -36,11 +37,11 @@ QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu
 } >"${RUN_DIR}/qemu_build_identity.txt"
 
 reports=(
-    "${ROOT_DIR}/build/isa_ref/qemu_system_peripherals/completion_report.md"
-    "${ROOT_DIR}/build/isa_ref/qemu_system_dma_v2_model/completion_report.md"
-    "${ROOT_DIR}/build/isa_ref/qemu_system_qspi/completion_report.md"
-    "${ROOT_DIR}/build/isa_ref/qemu_system_ddr/completion_report.md"
-    "${ROOT_DIR}/build/isa_ref/qemu_system_retire/completion_report.md"
+    "${BUILD_DIR}/isa_ref/qemu_system_peripherals/completion_report.md"
+    "${BUILD_DIR}/isa_ref/qemu_system_dma_v2_model/completion_report.md"
+    "${BUILD_DIR}/isa_ref/qemu_system_qspi/completion_report.md"
+    "${BUILD_DIR}/isa_ref/qemu_system_ddr/completion_report.md"
+    "${BUILD_DIR}/isa_ref/qemu_system_retire/completion_report.md"
 )
 for report in "${reports[@]}"; do
     [[ -s "${report}" ]]
