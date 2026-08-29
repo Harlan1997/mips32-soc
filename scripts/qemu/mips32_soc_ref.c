@@ -26,13 +26,10 @@
 #include "cpu.h"
 #include "elf.h"
 
-static bool soc_ref_linux_guest;
-
 /* The RTL CP0 contract exposes LLAddr as the aligned virtual address. */
 bool qemu_mips32_soc_ref_lladdr_virtual(void)
 {
-    /* Linux relies on QEMU's physical reservation identity for LL/SC. */
-    return !soc_ref_linux_guest;
+    return true;
 }
 
 #define SOC_SRAM_SIZE      (64 * KiB)
@@ -284,16 +281,6 @@ static void soc_ref_set_malta_uboot_compat(Object *obj, bool value,
                                            Error **errp)
 {
     soc_ref_malta_uboot_compat = value;
-}
-
-static bool soc_ref_get_linux_guest(Object *obj, Error **errp)
-{
-    return soc_ref_linux_guest;
-}
-
-static void soc_ref_set_linux_guest(Object *obj, bool value, Error **errp)
-{
-    soc_ref_linux_guest = value;
 }
 
 static bool soc_ref_get_dma_reset_inflight(Object *obj, Error **errp)
@@ -2092,9 +2079,6 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_bool(OBJECT_CLASS(mc), "malta-u-boot-compat",
                                    soc_ref_get_malta_uboot_compat,
                                    soc_ref_set_malta_uboot_compat);
-    object_class_property_add_bool(OBJECT_CLASS(mc), "linux-guest",
-                                   soc_ref_get_linux_guest,
-                                   soc_ref_set_linux_guest);
     object_class_property_add_str(OBJECT_CLASS(mc), "irq-schedule",
                                   soc_ref_get_irq_schedule,
                                   soc_ref_set_irq_schedule);
