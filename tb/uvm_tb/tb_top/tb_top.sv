@@ -103,6 +103,7 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b010001) &&
                             ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00000) ||
                              (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00010)))) &&
+                           !u_dut.u_core_subsystem.u_core.u_cpu.wb_except_req &&
                            (u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
     .retire_gpr_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr),
     .retire_gpr_data      (u_dut.u_core_subsystem.u_core.u_cpu.wb_wdata),
