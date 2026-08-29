@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/uvm/single"}
+VCS_JOBS=${VCS_JOBS:-1}
+EDA_RUNNER=${EDA_RUNNER:-"${ROOT_DIR}/scripts/run_eda_cgroup.sh"}
 TESTNAME=${TESTNAME:-soc_bus_stress_test}
 SEED=${SEED:-1}
 
@@ -45,6 +47,15 @@ if [ -d /tool/module ]; then
 fi
 module load vcs
 
+if ! [[ "${VCS_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: VCS_JOBS must be a positive integer: ${VCS_JOBS}" >&2
+    exit 1
+fi
+if [[ ! -x "${EDA_RUNNER}" ]]; then
+    echo "ERROR: EDA runner is not executable: ${EDA_RUNNER}" >&2
+    exit 1
+fi
+
 # Opt-in L2 write-back selection. Default (unset/0) keeps the reset-safe
 # write-through impl (l2_cache_wt). L2_WRITEBACK=1 appends +define+SOC_L2_WRITEBACK
 # so l2_cache.v selects the write-back/write-allocate impl (l2_cache_caching).
@@ -78,7 +89,7 @@ if [ -n "${SIM_EXTRA_ARGS:-}" ]; then
 fi
 
 echo "Compiling UVM Testbench with VCS..."
-vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
+"${EDA_RUNNER}" vcs -j"${VCS_JOBS}" -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
     "${l2_define_args[@]}" \
     "${vcs_extra_args[@]}" \
     "${trace_define_args[@]}" \
@@ -95,7 +106,7 @@ sim_args=(+UVM_TESTNAME="$TESTNAME" +ntb_random_seed="$SEED" +FW_HEX="$FW_HEX_AB
 if [ -n "$FLASH_IMAGE_ABS" ]; then
     sim_args+=(+FLASH_IMAGE="$FLASH_IMAGE_ABS")
 fi
-./simv "${sim_args[@]}" 2>&1 | tee vcs_uvm.log
+"${EDA_RUNNER}" ./simv "${sim_args[@]}" 2>&1 | tee vcs_uvm.log
 sim_status=${PIPESTATUS[0]}
 set -e
 

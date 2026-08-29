@@ -7,6 +7,8 @@ RUN_ROOT=${RUN_ROOT:-"${ROOT_DIR}/build/sva"}
 SOC_RUN_DIR=${SOC_RUN_DIR:-"${RUN_ROOT}/soc_smoke"}
 RESET_RUN_DIR=${RESET_RUN_DIR:-"${RUN_ROOT}/reset_sync"}
 AXI_RUN_DIR=${AXI_RUN_DIR:-"${RUN_ROOT}/axi_sram"}
+VCS_JOBS=${VCS_JOBS:-1}
+EDA_RUNNER=${EDA_RUNNER:-"${ROOT_DIR}/scripts/run_eda_cgroup.sh"}
 
 mkdir -p "${RUN_ROOT}" "${RESET_RUN_DIR}" "${AXI_RUN_DIR}"
 
@@ -21,27 +23,35 @@ if [ -d /tool/module ]; then
     module use /tool/module
 fi
 module load vcs
+if ! [[ "${VCS_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: VCS_JOBS must be a positive integer: ${VCS_JOBS}" >&2
+    exit 1
+fi
+if [[ ! -x "${EDA_RUNNER}" ]]; then
+    echo "ERROR: EDA runner is not executable: ${EDA_RUNNER}" >&2
+    exit 1
+fi
 (
     cd "${RESET_RUN_DIR}"
-    vcs -full64 -sverilog -timescale=1ns/1ps -cm assert \
+    "${EDA_RUNNER}" vcs -j"${VCS_JOBS}" -full64 -sverilog -timescale=1ns/1ps -cm assert \
         +define+SVA_ENABLE \
         "${ROOT_DIR}/rtl/clock/reset_sync.v" \
         "${ROOT_DIR}/tb/sva/reset_sync_props.sv" \
         "${ROOT_DIR}/tb/sva/reset_sync_bind.sv" \
         "${ROOT_DIR}/tb/unit/clock/tb_reset_sync.v" -l compile.log
-    ./simv -cm assert -l sim.log
+    "${EDA_RUNNER}" ./simv -cm assert -l sim.log
 )
 
 echo "--- SVA AXI SRAM gate ---"
 (
     cd "${AXI_RUN_DIR}"
-    vcs -full64 -sverilog -timescale=1ns/1ps -cm assert \
+    "${EDA_RUNNER}" vcs -j"${VCS_JOBS}" -full64 -sverilog -timescale=1ns/1ps -cm assert \
         +define+SVA_ENABLE \
         "${ROOT_DIR}/rtl/perips/axi_sram.v" \
         "${ROOT_DIR}/tb/sva/axi4_protocol_props.sv" \
         "${ROOT_DIR}/tb/sva/axi_sram_bind.sv" \
         "${ROOT_DIR}/tb/sva/tb_axi_sram_sva.sv" -l compile.log
-    ./simv -cm assert -l sim.log
+    "${EDA_RUNNER}" ./simv -cm assert -l sim.log
 )
 
 if grep -R -n -E 'SVA_FAIL|REGRESSION_TEST_FAIL|Error-[A-Z]+.*assert|dcache: refill did not complete|VIC_PRIORITY_CHECKER_FAIL' \

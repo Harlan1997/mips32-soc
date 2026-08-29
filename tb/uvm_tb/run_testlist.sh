@@ -13,6 +13,8 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/uvm/directed"}
 TESTLIST=${TESTLIST:-"${SCRIPT_DIR}/phase2_directed_tests.txt"}
 ENABLE_COV=${ENABLE_COV:-0}
+VCS_JOBS=${VCS_JOBS:-1}
+EDA_RUNNER=${EDA_RUNNER:-"${ROOT_DIR}/scripts/run_eda_cgroup.sh"}
 
 if [ -z "${FW_HEX:-}" ]; then
     echo "ERROR: FW_HEX must point to the firmware hex artifact."
@@ -62,6 +64,15 @@ if [ -d /tool/module ]; then
 fi
 module load vcs
 
+if ! [[ "${VCS_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: VCS_JOBS must be a positive integer: ${VCS_JOBS}" >&2
+    exit 1
+fi
+if [[ ! -x "${EDA_RUNNER}" ]]; then
+    echo "ERROR: EDA runner is not executable: ${EDA_RUNNER}" >&2
+    exit 1
+fi
+
 compile_cov_args=()
 run_cov_args=()
 if [ "$ENABLE_COV" = "1" ]; then
@@ -80,7 +91,7 @@ else
 fi
 
 echo "Compiling UVM testbench with VCS..."
-vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
+"${EDA_RUNNER}" vcs -j"${VCS_JOBS}" -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
     "${compile_cov_args[@]}" "${l2_define_args[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips +incdir+"${ROOT_DIR}"/rtl/cache \
     +incdir+"${SCRIPT_DIR}"/agents +incdir+"${SCRIPT_DIR}"/env +incdir+"${SCRIPT_DIR}"/tests +incdir+"${SCRIPT_DIR}"/seqs +incdir+"${SCRIPT_DIR}"/checkers +incdir+"${SCRIPT_DIR}"/tb_top \
@@ -177,9 +188,9 @@ while read -r test_name seed fw_variant _; do
         sim_args+=(+FLASH_IMAGE="$FLASH_IMAGE_ABS")
     fi
     if [ "$ENABLE_COV" = "1" ]; then
-        ./simv "${sim_args[@]}" "${run_cov_args[@]}" -cm_name "${test_name}_${seed}" > "$log_file" 2>&1
+        "${EDA_RUNNER}" ./simv "${sim_args[@]}" "${run_cov_args[@]}" -cm_name "${test_name}_${seed}" > "$log_file" 2>&1
     else
-        ./simv "${sim_args[@]}" > "$log_file" 2>&1
+        "${EDA_RUNNER}" ./simv "${sim_args[@]}" > "$log_file" 2>&1
     fi
     sim_status=$?
     set -e
@@ -208,7 +219,7 @@ if [ "$ENABLE_COV" = "1" ]; then
     log_summary "======================================================================"
 
     set +e
-    urg -dir directed.vdb -format both -report urgReport -log urg.log
+    "${EDA_RUNNER}" urg -dir directed.vdb -format both -report urgReport -log urg.log
     urg_status=$?
     set -e
 

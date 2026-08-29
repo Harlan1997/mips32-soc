@@ -2993,3 +2993,21 @@ configuration.
   single-threaded TCG explicitly. This contains a host execution-mode issue
   for the single-vCPU contract; it does not close SMP, Linux VM ownership, or
   full RTL/QEMU Linux differential.
+
+### 2026-08-30 EDA host-OOM containment
+
+- Kernel OOM records identified the previous high-water event as a VCS
+  compiler process reaching roughly 2 GiB inside an `eda-*` cgroup, with
+  separate historical global OOM events caused by concurrent Python jobs.
+  The long RTL Linux simulator itself was observed at roughly 160 MiB and
+  was not the source of that event.
+- The high-load SoC, UVM single-test, UVM regression, UVM directed-test,
+  SVA, and current-contract coverage/URG entry points now run VCS, `simv`,
+  and URG through `scripts/run_eda_cgroup.sh`. VCS compilation defaults to
+  `VCS_JOBS=1`; `EDA_MEMORY_MAX`, `EDA_SWAP_MAX`, `VCS_JOBS`, and
+  `EDA_RUNNER` remain explicit overrides.
+- Isolated no-coverage `soc-smoke` and all three SVA scenarios passed under
+  temporary roots. This closes resource containment and exit-code propagation
+  for the aggregate entry points; it does not make arbitrary standalone unit
+  scripts resource-isolated, nor does it change architectural coverage or
+  Linux closure status.

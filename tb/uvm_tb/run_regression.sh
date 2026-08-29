@@ -12,6 +12,8 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/uvm/regression"}
 TESTNAME=${TESTNAME:-soc_bus_stress_test}
 NUM_TESTS=${NUM_TESTS:-10}
+VCS_JOBS=${VCS_JOBS:-1}
+EDA_RUNNER=${EDA_RUNNER:-"${ROOT_DIR}/scripts/run_eda_cgroup.sh"}
 
 SEED_BASE=${SEED_BASE:-1}
 
@@ -44,6 +46,15 @@ if [ -d /tool/module ]; then
 fi
 module load vcs
 
+if ! [[ "${VCS_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: VCS_JOBS must be a positive integer: ${VCS_JOBS}" >&2
+    exit 1
+fi
+if [[ ! -x "${EDA_RUNNER}" ]]; then
+    echo "ERROR: EDA runner is not executable: ${EDA_RUNNER}" >&2
+    exit 1
+fi
+
 # Opt-in L2 write-back selection (default = reset-safe write-through).
 l2_define_args=()
 if [ "${L2_WRITEBACK:-0}" = "1" ]; then
@@ -54,7 +65,7 @@ else
 fi
 
 echo "Compiling design..."
-vcs -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
+"${EDA_RUNNER}" vcs -j"${VCS_JOBS}" -full64 -sverilog -ntb_opts uvm -timescale=1ns/1ps -debug_access+all \
     "${l2_define_args[@]}" \
     -cm line+cond+fsm+tgl+branch -cm_dir regression.vdb -cm_hier "${SCRIPT_DIR}"/cov.cfg \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu +incdir+"${ROOT_DIR}"/rtl/axi +incdir+"${ROOT_DIR}"/rtl/perips +incdir+"${ROOT_DIR}"/rtl/cache \
@@ -116,7 +127,7 @@ for i in $(seq 1 $NUM_TESTS); do
     echo -n "Running Test $i/$NUM_TESTS with Seed $SEED... "
     
     set +e
-    ./simv +UVM_TESTNAME="$TESTNAME" +ntb_random_seed="$SEED" +FW_HEX="$FW_HEX_ABS" \
+    "${EDA_RUNNER}" ./simv +UVM_TESTNAME="$TESTNAME" +ntb_random_seed="$SEED" +FW_HEX="$FW_HEX_ABS" \
         -cm line+cond+fsm+tgl+branch -cm_dir regression.vdb -cm_name "test_${i}_seed_${SEED}" > "$LOG_FILE" 2>&1
     sim_status=$?
     set -e
@@ -144,7 +155,7 @@ echo " Generating Coverage Report"
 echo "======================================================================"
 
 set +e
-urg -dir regression.vdb -format both -report urgReport -log urg.log
+"${EDA_RUNNER}" urg -dir regression.vdb -format both -report urgReport -log urg.log
 urg_status=$?
 set -e
 

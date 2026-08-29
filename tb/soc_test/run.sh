@@ -5,6 +5,8 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/soc_test/smoke"}
 FW_HEX=${FW_HEX:-"${ROOT_DIR}/build/firmware/soc_smoke/firmware.hex"}
+VCS_JOBS=${VCS_JOBS:-1}
+EDA_RUNNER=${EDA_RUNNER:-"${ROOT_DIR}/scripts/run_eda_cgroup.sh"}
 
 if [ ! -f "$FW_HEX" ]; then
     echo "ERROR: FW_HEX does not exist: $FW_HEX"
@@ -26,6 +28,15 @@ if [ -d /tool/module ]; then
     module use /tool/module
 fi
 module load vcs
+
+if ! [[ "${VCS_JOBS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: VCS_JOBS must be a positive integer: ${VCS_JOBS}" >&2
+    exit 1
+fi
+if [[ ! -x "${EDA_RUNNER}" ]]; then
+    echo "ERROR: EDA runner is not executable: ${EDA_RUNNER}" >&2
+    exit 1
+fi
 
 # Opt-in L2 selection (default = reset-safe write-through).
 #   L2_NONBLOCKING=1 -> non-blocking write-back (full MSHR) drop-in
@@ -81,7 +92,7 @@ vcs_args=(-full64 -sverilog -timescale=1ns/1ps)
 if [ "${coverage_enabled}" = "1" ]; then
     vcs_args+=(-cm "${cm_args}")
 fi
-vcs "${vcs_args[@]}" \
+"${EDA_RUNNER}" vcs -j"${VCS_JOBS}" "${vcs_args[@]}" \
     "${l2_define_args[@]}" \
     "${sva_args[@]}" \
     "${vcs_extra_args[@]}" \
@@ -129,7 +140,7 @@ fi
 # the same file and can truncate or interleave diagnostics.  Publish the
 # complete VCS log only after simulation has exited.
 set +e
-./simv "${sim_args[@]}" -l sim_runtime.log
+"${EDA_RUNNER}" ./simv "${sim_args[@]}" -l sim_runtime.log
 sim_status=$?
 set -e
 cp sim_runtime.log sim.log
