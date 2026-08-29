@@ -221,6 +221,12 @@ if [[ -n "${RTL_TRACE}" && -s "${RTL_TRACE}" ]]; then
     if [[ "${STOP_AFTER_MAILBOX:-0}" == "1" ]]; then
         compare_args+=(--stop-after-mailbox)
     fi
+    if [[ -n "${TRACE_COMPARE_ALIGN_FIRST_PC:-}" ]]; then
+        compare_args+=(--align-first-pc "${TRACE_COMPARE_ALIGN_FIRST_PC}")
+    fi
+    if [[ "${TRACE_COMPARE_ALLOW_GOLDEN_PREFIX:-0}" == "1" ]]; then
+        compare_args+=(--allow-golden-prefix)
+    fi
     python3 "${SCRIPT_DIR}/trace_compare.py" "${compare_args[@]}" "${RTL_TRACE}" \
         "${RUN_DIR}/qemu_retire.jsonl" >"${RUN_DIR}/trace_compare.log" 2>&1
     differential=PASS

@@ -1,5 +1,25 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 bounded RTL/QEMU Linux retire differential
+
+- Added `tb/isa_ref/run_qemu_linux_differential_gate.sh` and the Make entry
+  `qemu-system-linux-differential-gate`. The gate runs the real RTL Linux
+  progress path and QEMU `mips32-soc-ref` with the same relocated kernel and
+  DTB, then compares retire records after an explicit Boot ROM-to-kernel
+  handoff anchor.
+- The comparator now supports an explicit exact PC+instruction handoff and a
+  reviewed golden-prefix mode. It still compares every record in the QEMU
+  capture and all architectural fields covered by the existing comparator;
+  the prefix mode is opt-in and does not alter default strict comparisons.
+- Fresh evidence: `SKIP_COVERAGE=1 BUILD_DIR=build KERNEL=... DTB=...
+  RTL_CYCLE_LIMIT=100000 QEMU_TIMEOUT=2s make
+  qemu-system-linux-differential-gate` passes with 28,836 QEMU retire records
+  matching the RTL prefix after the handoff; the RTL capture contains 48,803
+  records including its pre-handoff ROM prefix.
+- This closes only a bounded Linux kernel retire-prefix differential. Linux
+  userspace boot, full-length Linux differential, complete ISA/privileged/MMU
+  semantics, and product signoff remain open.
+
 ### 2026-08-29 opt-in L1 SYNC drain contract
 
 - Added private internal maintenance encoding `0x1e` for architectural

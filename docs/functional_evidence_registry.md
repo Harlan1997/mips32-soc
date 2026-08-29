@@ -42,6 +42,7 @@ Status levels used by this registry:
 
 | Block | Status | Primary evidence | Log location | Residual risk / boundary |
 |---|---|---|---|---|
+| Bounded RTL/QEMU Linux retire differential | `SYSTEM_DIFFERENTIAL`, opt-in | `make qemu-system-linux-differential-gate` with `KERNEL` and `DTB` | `build/isa_ref/qemu_linux_differential/completion_report.md`, `rtl_gate.log`, `qemu/trace_compare.log` | Same relocated Linux kernel/DTB compares one retire at a time after an exact Boot ROM-to-kernel PC/instruction anchor; 24,452 QEMU records pass as a bounded golden prefix. This is not Linux userspace boot, full-length Linux differential, complete ISA/privileged/MMU signoff, or physical product signoff |
 | QSPI command/FIFO | `CONTRACT_CLOSED` | `make qspi-cmd-behavioral-gate` | `build/unit_tb/qspi_cmd_behavioral/sim.log` | Vendor-specific command timing and device modes are out of scope |
 | QEMU system QSPI command model | `SOC_INTEGRATED` | `make qemu-system-qspi-gate` | `build/isa_ref/qemu_system_qspi/completion_report.md`, `qemu_stdout.log` | Image-backed transaction model covers APB command/FIFO, x1/quad reads, TX/RX, IRQ/DONE W1C, abort and timeout; no pin timing, PHY, JEDEC device, erase/program or RTL retire differential claim |
 | QSPI canonical error taxonomy | `CONTRACT_CLOSED` | `make qspi-error-taxonomy-gate qspi-retry-policy-gate` | `build/unit_tb/qspi_error_taxonomy/sim.log`, `build/unit_tb/qspi_retry_policy/sim.log` | Secure-boot authentication and production policy are out of scope |

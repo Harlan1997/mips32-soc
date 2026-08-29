@@ -174,18 +174,53 @@ def align_async_vector_window(rtl, golden):
     aligned_golden.extend(golden[gi:])
     return aligned_rtl, aligned_golden
 
+def align_first_retire(rtl, golden, pc):
+    """Drop a producer-specific prefix at an explicit architectural handoff.
+
+    A boot-ROM-backed RTL run retires its ROM instructions before entering a
+    kernel that QEMU receives through ``-kernel``.  Prefix removal is allowed
+    only when the first golden record and an RTL record have the same PC and
+    instruction, so this option cannot turn an arbitrary mismatch into an
+    alignment.  All records after the handoff remain subject to normal
+    comparison, including the length check.
+    """
+    if not golden:
+        raise ValueError("cannot align an empty golden trace")
+    try:
+        wanted_pc = normalize_direct_map(f"{int(pc, 16) & 0xffffffff:08x}")
+    except ValueError as exc:
+        raise ValueError(f"invalid alignment PC: {pc!r}") from exc
+    golden_first = golden[0][1]
+    if normalize_direct_map(golden_first.get("pc")) != wanted_pc:
+        raise ValueError(
+            "golden trace first PC does not match --align-first-pc: "
+            f"{golden_first.get('pc')!r} != {wanted_pc!r}")
+    for index, (_, record) in enumerate(rtl):
+        if (normalize_direct_map(record.get("pc")) == wanted_pc and
+                record.get("instr") == golden_first.get("instr")):
+            return rtl[index:], golden
+    raise ValueError(
+        "RTL trace has no matching PC/instruction handoff for "
+        f"{wanted_pc} / {golden_first.get('instr')}")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("rtl")
     ap.add_argument("golden")
     ap.add_argument("--max-mismatches", type=int, default=1)
     ap.add_argument("--stop-after-mailbox", action="store_true")
+    ap.add_argument("--align-first-pc", metavar="PC",
+                    help="align the first golden retire at an exact RTL PC/instruction")
+    ap.add_argument("--allow-golden-prefix", action="store_true",
+                    help="accept a fully matching golden prefix when RTL has extra records")
     args = ap.parse_args()
     rtl = list(load(args.rtl))
     golden = list(load(args.golden))
     if args.stop_after_mailbox:
         rtl = truncate_at_mailbox(rtl)
         golden = truncate_at_mailbox(golden)
+    if args.align_first_pc:
+        rtl, golden = align_first_retire(rtl, golden, args.align_first_pc)
     rtl, golden = align_async_vector_window(rtl, golden)
     mismatches = []
     for idx, (r, g) in enumerate(zip(rtl, golden)):
@@ -267,13 +302,21 @@ def main():
                 break
         if len(mismatches) >= args.max_mismatches:
             break
-    if len(rtl) != len(golden) and len(mismatches) < args.max_mismatches:
+    if (len(rtl) != len(golden) and not
+            (args.allow_golden_prefix and len(rtl) >= len(golden)) and
+            len(mismatches) < args.max_mismatches):
         mismatches.append((min(len(rtl), len(golden)), "trace_length", len(rtl), len(golden)))
     if mismatches:
         for idx, field, got, expected in mismatches:
             print(f"MISMATCH retire={idx} field={field} rtl={got!r} golden={expected!r}", file=sys.stderr)
         return 1
-    print(f"TRACE_COMPARE_PASS records={len(rtl)}")
+    compared_records = min(len(rtl), len(golden))
+    if args.allow_golden_prefix and len(rtl) != len(golden):
+        print(f"TRACE_COMPARE_PASS records={compared_records} "
+              f"rtl_records={len(rtl)} golden_records={len(golden)} "
+              "mode=golden-prefix")
+    else:
+        print(f"TRACE_COMPARE_PASS records={compared_records}")
     return 0
 
 if __name__ == "__main__":
