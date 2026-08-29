@@ -65,6 +65,7 @@ else
     KERNEL_PATH="${RUN_DIR}/kernel/vmlinux"
 fi
 KERNEL="${KERNEL_PATH}" \
+    DTC="$(dirname "${KERNEL_PATH}")/scripts/dtc/dtc" \
     RUN_DIR="${RUN_DIR}/image" \
     "${SCRIPT_DIR}/build_rtl_linux_image.sh" >"${RUN_DIR}/image.log" 2>&1
 
