@@ -5,11 +5,13 @@
 
 _start:
     /*
-     * Linux installs its exception vectors in the relocated kseg0 image.
-     * Product reset leaves BEV/ERL asserted, which is appropriate for the
-     * mask-ROM handoff but would route an early kernel trap back into ROM.
+     * Match the reset-visible CP0 Status of mips32-soc-ref: BEV and ERL are
+     * asserted until the kernel's own startup code takes ownership of the
+     * exception vectors.  In particular, Linux uses this value while
+     * constructing its initial Status image before the first mtc0.
      */
-    lui     $t1, 0x1000
+    lui     $t1, 0x0040
+    ori     $t1, $t1, 0x0004
     mtc0    $t1, $12
     nop
     nop
