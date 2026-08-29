@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 relocated Linux 2M-cycle RTL/QEMU differential expansion
+
+- Rebuilt the RTL Linux image from the relocated kernel with
+  `KERNEL_LOAD_VIRTUAL=0x88800000` and the fixed DTB handoff
+  `DTB_LOAD_VIRTUAL=0x89f00000` after the DTB-address correction.
+- Fresh isolated evidence:
+  `BUILD_DIR=/tmp/mips32-qemu-dtb-fix-2m KERNEL=... DTB=...
+  RTL_CYCLE_LIMIT=2000000 QEMU_TIMEOUT=10s HOST_TIMEOUT=240s
+  SKIP_COVERAGE=1 make qemu-system-linux-differential-gate` passes.
+  The exact run reports `TRACE_COMPARE_PASS` and compares the complete QEMU
+  capture as a golden prefix after the explicit PC/instruction handoff anchor.
+- This expands the checked relocated-kernel prefix beyond the earlier 100k
+  probe without changing comparator semantics. It still does not prove RTL
+  Linux userspace boot, a full-length Linux differential, unrestricted demand
+  paging, complete privileged/ISA/FPU compliance, or product signoff.
+
 ### 2026-08-29 QEMU/RTL Linux DTB handoff alignment
 
 - The custom QEMU machine previously placed `-dtb` at the top of its generic
