@@ -12,6 +12,7 @@ FW_ELF=${FW_ELF:-"${FW_DIR}/firmware.elf"}
 FW_HEX=${FW_HEX:-"${FW_DIR}/firmware.hex"}
 QEMU_DIR=${QEMU_DIR:-"${RUN_DIR}/qemu"}
 OS_PRESSURE=${OS_PRESSURE:-0}
+QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-"software-mmu-guest=on"}
 if [[ "${OS_PRESSURE}" == 1 ]]; then
     WORKLOAD_SCOPE="three-ASID OS-style page-table ownership pressure, task switching and post-shootdown demand refill"
 else
@@ -38,7 +39,7 @@ RUN_DIR="${RTL_RUN_DIR}" OS_PRESSURE="${OS_PRESSURE}" TB_RETIRE_TRACE=1 RETIRE_T
 sha256sum "${FW_HEX}" "${FW_ELF}" >"${RUN_DIR}/firmware.sha256"
 
 env RUN_DIR="${QEMU_DIR}" FW_ELF="${FW_ELF}" RTL_TRACE="${RTL_TRACE}" \
-    QEMU_CPU=24Kc QEMU_MACHINE_PROPERTIES="software-mmu-guest=on" \
+    QEMU_CPU=24Kc QEMU_MACHINE_PROPERTIES="${QEMU_MACHINE_PROPERTIES}" \
     REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=1 \
     "${SCRIPT_DIR}/run_qemu_system_retire_capture_gate.sh" \
     >"${RUN_DIR}/qemu_gate.log" 2>&1
