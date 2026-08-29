@@ -16,6 +16,8 @@ RTL_TRACE=${RTL_TRACE:-"${RTL_DIR}/rtl_retire.jsonl"}
 RTL_IRQ_REPLAY=${RTL_IRQ_REPLAY:-0}
 RTL_VCS_EXTRA_ARGS=${RTL_VCS_EXTRA_ARGS:-}
 QEMU_CAPTURE_TMPDIR=${QEMU_CAPTURE_TMPDIR:-0}
+MAX_TRACE_BYTES=${MAX_TRACE_BYTES:-268435456}
+MAX_TRACE_RECORDS=${MAX_TRACE_RECORDS:-1000000}
 
 # Normalize caller-provided relative paths before passing RETIRE_TRACE through
 # the UVM wrapper, which resolves its own run directory relative to the repo.
@@ -39,6 +41,7 @@ sha256sum "${FW_HEX}" "${FW_ELF}" >"${RUN_DIR}/firmware.sha256"
 # the simulation, so its trace corresponds only to the guest execution.
 rtl_env=(FW_HEX="${FW_HEX}" TESTNAME=soc_base_test SEED=1 RUN_DIR="${RTL_DIR}"
          RETIRE_TRACE="${RTL_TRACE}")
+rtl_env+=(SIM_EXTRA_ARGS="+RETIRE_TRACE_MAX_RECORDS=${MAX_TRACE_RECORDS} ${SIM_EXTRA_ARGS:-}")
 if [[ -n "${RTL_VCS_EXTRA_ARGS}" ]]; then
     rtl_env+=(VCS_EXTRA_ARGS="${RTL_VCS_EXTRA_ARGS}")
 fi
@@ -59,8 +62,6 @@ fi
 # A guest stuck before the completion mailbox must fail boundedly.  Without
 # this guard, the verification-only JSONL sink can consume the host filesystem
 # while a broken exception handler or firmware loop is being diagnosed.
-MAX_TRACE_BYTES=${MAX_TRACE_BYTES:-268435456}
-MAX_TRACE_RECORDS=${MAX_TRACE_RECORDS:-1000000}
 rtl_trace_bytes=$(stat -c '%s' "${RTL_TRACE}")
 rtl_trace_records=$(wc -l < "${RTL_TRACE}")
 if (( rtl_trace_bytes > MAX_TRACE_BYTES || rtl_trace_records > MAX_TRACE_RECORDS )); then
@@ -81,6 +82,12 @@ fi
 
 qemu_run_dir="${RUN_DIR}/qemu"
 qemu_tmp_dir=""
+cleanup_qemu_tmp() {
+    if [[ -n "${qemu_tmp_dir}" && -d "${qemu_tmp_dir}" ]]; then
+        rm -rf -- "${qemu_tmp_dir}"
+    fi
+}
+trap cleanup_qemu_tmp EXIT
 if [[ "${QEMU_CAPTURE_TMPDIR}" == "1" ]]; then
     qemu_tmp_dir=$(mktemp -d /tmp/mips32-qemu-capture.XXXXXX)
     qemu_run_dir="${qemu_tmp_dir}"
@@ -95,6 +102,7 @@ if [[ -n "${qemu_tmp_dir}" ]]; then
     mkdir -p "${RUN_DIR}/qemu"
     cp -a "${qemu_tmp_dir}/." "${RUN_DIR}/qemu/"
     rm -rf "${qemu_tmp_dir}"
+    qemu_tmp_dir=""
 fi
 
 if ! grep -q '^TRACE_COMPARE_PASS ' "${RUN_DIR}/qemu/trace_compare.log"; then

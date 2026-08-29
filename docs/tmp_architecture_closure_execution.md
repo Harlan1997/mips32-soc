@@ -2596,3 +2596,19 @@ configuration.
   privileged-ISA compliance, unrestricted OS page-table/shootdown semantics,
   full RTL/QEMU Linux differential, physical DDR/QSPI PHY/device timing, or
   formal/CDC/RDC/lint/synthesis/STA/DFT signoff.
+
+# 2026-08-29 retire differential resource bound
+
+- The RTL `retire_trace_capture` sink now accepts `+RETIRE_TRACE_MAX_RECORDS`
+  and stops with a nonzero simulator status before writing record N+1 when a
+  nonzero limit is reached. The default is 1,000,000 records; `0` is reserved
+  for an explicitly reviewed unbounded capture.
+- `run_qemu_system_differential_gate.sh` passes its existing
+  `MAX_TRACE_RECORDS` threshold into the RTL run, while retaining the
+  post-run byte/record integrity check. When `QEMU_CAPTURE_TMPDIR=1`, an EXIT
+  trap removes the exact temporary directory created by that invocation on
+  success and failure.
+- Fresh `qemu-system-wait-differential-gate` evidence passes with the change.
+  This closes verification resource safety for the retire differential runner
+  only; it does not close RTL Linux userspace boot, full ISA/privileged
+  compliance, full RTL/QEMU Linux differential, or product signoff.

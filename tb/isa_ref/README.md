@@ -61,6 +61,11 @@ Requires a **retire event bundle** exposed from writeback stage:
 can capture it with `RETIRE_TRACE=/path/trace.jsonl` (the compile is opt-in via
 `SOC_RETIRE_TRACE_ENABLE=1`). Run the QEMU differential gate with:
 
+The differential wrapper also passes `RETIRE_TRACE_MAX_RECORDS` into the RTL
+simulation (default `1000000`). A nonzero limit stops a stuck guest before its
+JSONL sink can grow without bound; set it to `0` only for a deliberately
+reviewed unbounded capture.
+
 ```text
 QEMU_ELF=/path/to/exact_guest.elf \
 RTL_TRACE=/path/to/rtl_retire.jsonl \
