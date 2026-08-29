@@ -5,10 +5,11 @@
 - Routed the existing signed `ADD/SUB/ADDI` ALU overflow indication through
   the EX/MEM exception bundle in `rtl/cpu/mips_cpu.v`, preserving an upstream
   exception code and assigning architectural `ExcCode=12` for overflow.
-- Added a real `soc_smoke` CPU test that executes a signed `ADD` overflow and
-  requires the CP0 exception handler to observe exactly one integer-overflow
-  exception before continuing. Fresh `rtl-frontend-compile`,
-  `cpu-cp0-gate`, and `isa-r2-gate` runs passed after the change.
+- Added a real `soc_smoke` CPU test that executes signed `ADD`, `SUB`, and
+  `ADDI` overflow cases and requires CP0 to observe one exception for each;
+  the neighboring wrapping `ADDIU` case must not increment the count. Fresh
+  `soc-smoke`, `rtl-frontend-compile`, `cpu-cp0-gate`, and `isa-r2-gate` runs
+  passed after the change.
 - This closes the selected signed integer overflow path only; it does not
   claim complete MIPS32 ISA/privileged-ISA compliance or complete exception
   priority/precision coverage.

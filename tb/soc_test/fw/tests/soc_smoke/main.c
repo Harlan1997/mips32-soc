@@ -826,6 +826,34 @@ int main() {
         print_str("   INTEGER OVERFLOW EXCEPTION OK\n");
     }
 
+    // SUB and ADDI have the same signed-overflow exception contract.  ADDIU
+    // must not trap even when its two's-complement result wraps.
+    overflow_before = overflow_count;
+    asm volatile(
+        ".set push\n"
+        ".set noreorder\n"
+        "lui  $t0, 0x7fff\n"
+        "ori  $t0, $t0, 0xffff\n"
+        "addiu $t1, $zero, -1\n"
+        "sub  $t2, $t0, $t1\n"
+        "nop\n"
+        "lui  $t0, 0x7fff\n"
+        "ori  $t0, $t0, 0xffff\n"
+        "addi  $t2, $t0, 1\n"
+        "nop\n"
+        "lui  $t0, 0x7fff\n"
+        "ori  $t0, $t0, 0xffff\n"
+        "addiu $t2, $t0, 1\n"
+        "nop\n"
+        ".set pop\n"
+        ::: "t0", "t1", "t2", "memory");
+    if (overflow_count != overflow_before + 2) {
+        print_str("   SUB/ADDIU OVERFLOW CONTRACT ERROR\n");
+        smoke_failures++;
+    } else {
+        print_str("   SUB OVERFLOW AND ADDIU WRAP OK\n");
+    }
+
     // Final CP0 Status & Cause Toggle
     uint32_t dummy_cp0;
     asm volatile("mfc0 %0, $8" : "=r"(dummy_cp0)); // Hit mips_cp0 read default branch
