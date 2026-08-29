@@ -82,6 +82,16 @@ module tb_mips_cpu_cachetag;
                             failures = failures + 1;
                         end
                     end
+                    2: begin
+                        if (cache_op !== 5'b11110) begin
+                            $display("FAIL cache op[2]=%b expected SYNC barrier", cache_op);
+                            failures = failures + 1;
+                        end
+                        if (cache_op_addr !== 32'd0) begin
+                            $display("FAIL SYNC address=%h expected zero", cache_op_addr);
+                            failures = failures + 1;
+                        end
+                    end
                     default: begin
                         $display("FAIL unexpected extra cache op=%b", cache_op);
                         failures = failures + 1;
@@ -133,8 +143,8 @@ module tb_mips_cpu_cachetag;
 
         #17 rst_n = 1'b1;
         #500;
-        if (op_count != 2) begin
-            $display("FAIL cache op count=%0d expected 2", op_count);
+        if (op_count != 3) begin
+            $display("FAIL cache op count=%0d expected 3", op_count);
             failures = failures + 1;
         end
         if (u_cpu.u_mips_id_stage.u_mips_regfile.regs[9] !== TAGLO_VALUE) begin
