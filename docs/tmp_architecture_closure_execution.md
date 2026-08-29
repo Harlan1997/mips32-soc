@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 opt-in L1 SYNC drain contract
+
+- Added private internal maintenance encoding `0x1e` for architectural
+  `SYNC`. The opt-in L1 accepts it only when MSHRs, response FIFO, writeback
+  queue, and line-port activity are drained; it has no tag/data side effects.
+- Added `l1-nonblocking-sync-gate`, which holds an outstanding refill, checks
+  that SYNC cannot complete early, then checks completion after the refill
+  response drains. The decoder gate and isolated `rtl-frontend-compile` also
+  pass. Default blocking dcache behavior remains unchanged.
+- Corrected the existing CACHE `0x1d` test contract as writeback-only, keeping
+  the resident line valid after completion. Full OS cache ABI, multicore
+  ordering, and complete MIPS memory-model compliance remain open.
+
 ### 2026-08-29 QEMU synchronous-exception retire conversion
 
 - Fixed `tb/isa_ref/qemu_system_state_to_jsonl.py` so a retire event that
