@@ -253,7 +253,7 @@ module tb_mips_soc;
             end
             if (linux_exception_trace != 0 &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
-                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b accept=%b wbei=%b wbctl=%b/%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b",
+                $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b accept=%b wbei=%b wbctl=%b/%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h mem=%b/%0d/%b/%b/%08h dside=%b/%b/%08h/%0d bd=%b/%b/%b tlb41=%b/%08h/%08h/%08h/%b asid=%02h/%02h va=%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
@@ -302,7 +302,15 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_fault_type,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_bd,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_bd,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_bd);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[41],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_vpn2[41],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_mask[41],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[41],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_vec[41],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[41],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_va);
             end
             // Trace architectural GPR writeback only when explicitly enabled.
             // Register and cycle filters keep long Linux probes bounded.
