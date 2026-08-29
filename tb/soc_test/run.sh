@@ -117,6 +117,9 @@ if [ -n "${LINUX_EXTRA_SIM_ARGS:-}" ]; then
     sim_extra_args+=("${linux_extra_sim_args[@]}")
 fi
 sim_args=(+FW_HEX="$FW_HEX_ABS" "${sim_extra_args[@]}")
+if [ -n "${RETIRE_TRACE:-}" ]; then
+    sim_args+=(+RETIRE_TRACE="$(realpath -m "${RETIRE_TRACE}")")
+fi
 if [ "${coverage_enabled}" = "1" ]; then
     sim_args+=(-cm "${cm_args}")
 fi

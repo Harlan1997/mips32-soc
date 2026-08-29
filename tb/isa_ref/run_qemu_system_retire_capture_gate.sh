@@ -8,6 +8,10 @@ QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu
 # Match the default RTL contract. FPU-specific gates select 24Kf explicitly.
 QEMU_CPU=${QEMU_CPU:-24Kc}
 FW_ELF=${FW_ELF:-"${ROOT_DIR}/build/firmware/qemu_system_smoke/firmware.elf"}
+QEMU_KERNEL=${QEMU_KERNEL:-}
+QEMU_DTB=${QEMU_DTB:-}
+QEMU_MEMORY=${QEMU_MEMORY:-64K}
+QEMU_APPEND=${QEMU_APPEND:-}
 QSPI_IMAGE=${QSPI_IMAGE:-}
 PLUGIN_INCLUDE=${PLUGIN_INCLUDE:-""}
 PLUGIN_SOURCE=${PLUGIN_SOURCE:-"${ROOT_DIR}/tb/isa_ref/qemu_retire_plugin.c"}
@@ -25,7 +29,15 @@ MAX_QEMU_STATES=${MAX_QEMU_STATES:-100001}
 MAX_QEMU_CAPTURE_BYTES=${MAX_QEMU_CAPTURE_BYTES:-268435456}
 
 mkdir -p "${RUN_DIR}"
-[[ -x "${QEMU_BIN}" && -s "${FW_ELF}" ]]
+[[ -x "${QEMU_BIN}" ]]
+if [[ -n "${QEMU_KERNEL}" ]]; then
+    [[ -s "${QEMU_KERNEL}" ]]
+else
+    [[ -s "${FW_ELF}" ]]
+fi
+if [[ -n "${QEMU_DTB}" ]]; then
+    [[ -s "${QEMU_DTB}" ]]
+fi
 
 # A timed-out QEMU process can leave a complete-looking capture from an older
 # invocation in place.  Remove every run-owned artifact before starting so a
@@ -99,8 +111,19 @@ qemu_cmd=(
     -M "${machine_spec}"
     "${cpu_args[@]}"
     "${accel_args[@]}"
-    -m 64K -kernel "${FW_ELF}" -nographic -monitor none
+    -m "${QEMU_MEMORY}" -nographic -monitor none
 )
+if [[ -n "${QEMU_KERNEL}" ]]; then
+    qemu_cmd+=( -kernel "${QEMU_KERNEL}" )
+else
+    qemu_cmd+=( -kernel "${FW_ELF}" )
+fi
+if [[ -n "${QEMU_DTB}" ]]; then
+    qemu_cmd+=( -dtb "${QEMU_DTB}" )
+fi
+if [[ -n "${QEMU_APPEND}" ]]; then
+    qemu_cmd+=( -append "${QEMU_APPEND}" )
+fi
 printf 'QEMU command:' >"${RUN_DIR}/qemu_command.txt"
 printf ' %q' "${qemu_cmd[@]}" >>"${RUN_DIR}/qemu_command.txt"
 printf '\n' >>"${RUN_DIR}/qemu_command.txt"
@@ -212,7 +235,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 
 - Capture: PASS
 - Machine: mips32-soc-ref
-- Firmware: ${FW_ELF}
+- Guest kernel/firmware: ${QEMU_KERNEL:-${FW_ELF}}
 - Instruction events: ${events}
 - State-boundary records: ${states}
 - QEMU GDB registers: $(wc -l <"${RUN_DIR}/qemu_registers.txt")
