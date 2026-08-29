@@ -9,6 +9,11 @@ CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 JOBS=${JOBS:-2}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
 BUILD_DIR=$(realpath -m "${BUILD_DIR}")
+SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-946684800}
+KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-"2000-01-01 00:00:00"}
+export SOURCE_DATE_EPOCH KBUILD_BUILD_TIMESTAMP
+export KBUILD_BUILD_USER=${KBUILD_BUILD_USER:-build}
+export KBUILD_BUILD_HOST=${KBUILD_BUILD_HOST:-build}
 
 test -f "${LINUX_SOURCE_DIR}/Makefile"
 command -v "${CROSS_COMPILE}gcc" >/dev/null
@@ -19,15 +24,22 @@ mkdir -p "${BUILD_DIR}/rootfs/dev"
 
 "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
     -nostdlib -nostartfiles -nodefaultlibs -static \
-    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" \
+    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" -Wl,--build-id=none \
     -o "${BUILD_DIR}/rootfs/init" "${SCRIPT_DIR}/init.S"
 chmod 0755 "${BUILD_DIR}/rootfs/init"
 
 "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
     -nostdlib -nostartfiles -nodefaultlibs -static \
-    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" \
+    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" -Wl,--build-id=none \
     -o "${BUILD_DIR}/rootfs/vm_child" "${SCRIPT_DIR}/exec_child.S"
 chmod 0755 "${BUILD_DIR}/rootfs/vm_child"
+
+# Keep the generated cpio metadata stable across isolated build roots. The
+# binaries already have deterministic linker metadata above; fixing mtimes
+# also prevents initramfs contents from changing solely because a rebuild ran
+# at a different wall-clock time.
+touch -d "@${SOURCE_DATE_EPOCH}" \
+    "${BUILD_DIR}/rootfs/init" "${BUILD_DIR}/rootfs/vm_child"
 
 # Let the kernel's gen_init_cpio create device nodes without requiring the
 # build host to permit mknod in the output directory.

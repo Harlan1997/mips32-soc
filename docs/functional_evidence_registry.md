@@ -1,5 +1,15 @@
 # RTL Functional Evidence Registry
 
+## 2026-08-30 Linux fresh-image reproducibility recheck
+
+The rebuilt image under `/tmp/mips32-linux-deterministic-a.8XZ10T` still
+reaches `/init` and the intentional read-only write fault, but the parent does
+not advance to the next marker before the QEMU timeout. Adding a bounded
+`wait4(WNOHANG)` poll did not change that boundary. The standalone image under
+`/tmp/linux_gate_pid_repro` previously passed the generic userspace gate, so
+the current result is retained as an open custom-machine SIGSEGV/child-exit
+reproducibility issue rather than being treated as a Linux gate pass.
+
 ## 2026-08-30 generic Linux wait4 PID verification
 
 `RUN_DIR=/tmp/linux_gate_pid_repro QEMU_TIMEOUT=60s JOBS=2
@@ -247,5 +257,5 @@ Status levels used by this registry:
 | Linux exception-frame cycle-window capture | `BLOCK_VERIFIED`, diagnostic only | `LINUX_EXCEPTION_FRAME_TRACE=1 LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START=13450000 LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END=13550000 ... tb/linux_boot/run_rtl_linux_progress_gate.sh` | `/tmp/rtl_linux_exception_frame_window/completion_report.md`, `/tmp/rtl_linux_exception_frame_window/sim/sim.log` | A 14M-cycle no-coverage RTL Linux probe captures an IRQ in the delay slot at `0x88852ddc`: post-frame `EXL=1`, `EPC=0x88852dd8`, `Cause.BD=1`, followed by ERET clearing EXL. The frame is consistent with the architectural delay-slot contract; no semantic fix is justified. Userspace marker count is 0, so RTL Linux boot and full RTL/QEMU Linux differential remain open |
 | Linux exception-frame invariant checker | `IMPLEMENTED`, opt-in | `make linux-exception-frame-check LOG=/path/to/sim.log` | `scripts/check_linux_exception_frame_trace.py`, `/tmp/rtl_linux_exception_frame_window2/sim/sim.log` | Pairs bounded `LINUX_EXCEPTION_FRAME_BEFORE/AFTER` records and checks post-event EXL, EPC delay-slot adjustment, and Cause.BD consistency. The fresh window log passes with `LINUX_EXCEPTION_FRAME_CHECK_PASS pairs=1`; this is an architectural diagnostic checker, not Linux boot or full differential signoff |
 | QEMU MMU differential stale-firmware fix | `SYSTEM_DIFFERENTIAL` | `BUILD_DIR=/tmp/qemu_arch_refill_fixed SKIP_COVERAGE=1 make qemu-system-mmu-refill-differential-gate` | `/tmp/qemu_arch_refill_fixed/isa_ref/qemu_system_mmu_refill_differential/qemu/trace_compare.log`, `completion_report.md` | QEMU now consumes the exact run-local ELF rebuilt by the RTL child; isolated rerun passes the MMU refill RTL/QEMU retire differential. This fixes artifact selection, not full privileged/MMU or Linux differential closure |
-| Generic Linux wait4 PID selection fix | `VERIFIED`, opt-in | `RUN_DIR=/tmp/linux_gate_pid_repro QEMU_TIMEOUT=60s JOBS=2 tb/linux_boot/run_linux_boot_gate.sh` | `/tmp/linux_gate_pid_repro/build.log`, `/tmp/linux_gate_pid_repro/qemu_stdout.log`, `/tmp/linux_gate_pid_repro/completion_report.md` | Fresh rebuilt-kernel/initramfs run reaches both exec children, reaps each exact fork PID, and verifies both status words. This closes the wait4 PID-selection regression only; full Linux VM/page-table ownership, RTL Linux userspace boot and full RTL/QEMU Linux differential remain open |
+| Generic Linux wait4 PID selection fix | `INCOMPLETE`, opt-in | `tb/linux_boot/init.S`; prior standalone run passed, deterministic fresh-image recheck remains open | `/tmp/linux_gate_pid_repro/qemu_stdout.log`, `/tmp/qemu_arch_closure_wait4/linux_boot/real/qemu_stdout.log`, `/tmp/mips32-linux-deterministic-a.8XZ10T/qemu_stdout.log` | The exact-PID final fork/exec wait change passed in the earlier standalone image, but a fresh image consistently stalls after the intentional SIGSEGV child fault before the subsequent mmap marker. A bounded `wait4(WNOHANG)` poll did not resolve it. Custom-machine signal/child-exit behavior remains open; Linux VM ownership and RTL Linux differential remain open |
 | Linux TLB-fault neighborhood frame check | `BLOCK_VERIFIED`, diagnostic only | `LINUX_EXCEPTION_FRAME_TRACE=1 LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START=19570000 LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END=19610000 ... tb/linux_boot/run_rtl_linux_progress_gate.sh` | `/tmp/rtl_linux_exception_frame_fault/completion_report.md`, `/tmp/rtl_linux_exception_frame_fault/sim/sim.log` | The 20M-cycle probe and checker pass for the accepted delay-slot IRQ at `0x8925dccc`: `EXL=1`, `EPC=0x8925dcc8`, `Cause.BD=1`, `BadVAddr=0xc0000020`. This further rules out immediate CP0 frame corruption but does not close the zero-marker Linux boot blocker |

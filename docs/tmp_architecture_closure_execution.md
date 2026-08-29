@@ -2953,6 +2953,21 @@ configuration.
 - The fresh `mips32-soc-ref` run passed the complete generic userspace gate:
   boot, mmap/mprotect and protection fault, brk, nanosleep, sched_yield, two
   fork/exec children, exact-PID `wait4`, and both normal exit-status checks.
-- The wait4 regression is therefore closed for this QEMU generic userspace
-  contract. RTL Linux userspace boot, unrestricted Linux VM/page-table
-  ownership and full RTL/QEMU Linux differential remain open.
+- The earlier standalone image passed this gate, but a fresh isolated image
+  used by the architecture aggregate stalled after the intentional SIGSEGV
+  child fault. Repeating the same image reproduced the stall; changing that
+  first wait to bounded `wait4(WNOHANG)` polling did not advance it. The exact
+  final fork/exec PID change therefore remains useful but is not declared
+  closed until the custom-machine signal/child-exit path is reproducible.
+
+### 2026-08-30 deterministic Linux image and SIGSEGV boundary
+
+- `build_linux_boot.sh` now fixes Kbuild metadata, linker build-id metadata,
+  and initramfs file mtimes so isolated kernel/initramfs images are not
+  needlessly different across build roots.
+- The first epoch value (`0`) was rejected by Linux `gen_init_cpio`; it was
+  corrected to `2000-01-01`. The resulting image builds successfully.
+- A bounded `wait4(WNOHANG)` poll around the intentional read-only child fault
+  still stalls after Linux reports the SIGSEGV. This isolates the remaining
+  issue to the custom QEMU/Linux signal-exit or scheduler path; no comparator,
+  timeout relaxation, or Linux success claim was added.
