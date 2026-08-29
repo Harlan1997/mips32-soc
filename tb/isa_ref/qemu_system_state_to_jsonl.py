@@ -27,6 +27,88 @@ def load_jsonl(path):
     return values
 
 
+def iter_jsonl(path):
+    """Yield JSONL records without retaining the capture in memory."""
+    with open(path, encoding="ascii") as stream:
+        for number, line in enumerate(stream, 1):
+            if not line.strip():
+                continue
+            try:
+                yield json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{path}:{number}: invalid JSON: {exc}") from exc
+
+
+class StateWindow:
+    """Three-record state window used by the streaming converter."""
+
+    streaming = True
+
+    def __init__(self, path):
+        self._records = iter_jsonl(path)
+        self.position = 0
+        try:
+            self.current = next(self._records)
+            self.next = next(self._records)
+        except StopIteration as exc:
+            raise ValueError(f"state stream {path} needs at least two records") from exc
+        self.previous = None
+
+    def advance(self):
+        self.previous = self.current
+        self.current = self.next
+        try:
+            self.next = next(self._records)
+        except StopIteration:
+            self.next = None
+        self.position += 1
+
+    def __getitem__(self, index):
+        if index == self.position:
+            value = self.current
+        elif index == self.position - 1:
+            value = self.previous
+        elif index == self.position + 1:
+            value = self.next
+        else:
+            raise IndexError(f"streaming state window cannot access index {index}")
+        if value is None:
+            raise ValueError("state stream ended before events + post-state")
+        return value
+
+
+class EventWindow:
+    """Stream events while keeping the previous/current event pair."""
+
+    streaming = True
+
+    def __init__(self, path, states):
+        self._records = iter_jsonl(path)
+        self.states = states
+        self.position = -1
+        self.current = None
+        self.previous = None
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        event = next(self._records)
+        self.previous = self.current
+        self.current = event
+        self.position += 1
+        if self.position:
+            self.states.advance()
+        return event
+
+    def __getitem__(self, index):
+        if index == self.position:
+            return self.current
+        if index == self.position - 1:
+            return self.previous
+        raise IndexError(f"streaming event window cannot access index {index}")
+
+
 def hex32(value):
     if isinstance(value, int):
         return f"{value & 0xffffffff:08x}"
@@ -278,7 +360,8 @@ def changed_cp0(before, after):
 
 
 def convert(events, states):
-    if len(states) < len(events) + 1:
+    if (not getattr(states, "streaming", False) and
+            len(states) < len(events) + 1):
         raise ValueError(f"state records {len(states)} < events + post-state {len(events) + 1}")
     # QEMU accepts a replayed external interrupt at the end of a delay-slot
     # translation block, after the branch/delay-slot instructions have
@@ -478,8 +561,8 @@ def main():
     parser.add_argument("states")
     parser.add_argument("output")
     args = parser.parse_args()
-    events = load_jsonl(args.events)
-    states = load_jsonl(args.states)
+    states = StateWindow(args.states)
+    events = EventWindow(args.events, states)
     count = 0
     with open(args.output, "w", encoding="ascii") as stream:
         for record in convert(events, states):
