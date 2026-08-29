@@ -1258,12 +1258,15 @@ module mips_cpu #(
     wire [31:0] ex_hi_val;
     wire [31:0] ex_lo_val;
 
-    // ADD/SUB/ADDI overflow is an architectural synchronous exception.  The
-    // ALU reports it in EX; carry it through the existing exception bundle so
-    // the instruction reaches CP0 precisely and cannot write its wrapped
-    // result to the register file.
-    wire ex_overflow_exception = ex_overflow && ex_reg_write &&
-                                 !ex_mem_read && !ex_mem_write;
+    // ADD/SUB/ADDI overflow is an architectural synchronous exception. The
+    // ALU also reports overflow for its default add operation, so a register
+    // write enable is not enough: JAL/JALR write a link register but must not
+    // be classified as arithmetic overflow.
+    wire ex_signed_arith = (ex_inst[31:26] == 6'b001000) ||
+                           ((ex_inst[31:26] == 6'b000000) &&
+                            ((ex_inst[5:0] == 6'b100000) ||
+                             (ex_inst[5:0] == 6'b100010)));
+    wire ex_overflow_exception = ex_overflow && ex_reg_write && ex_signed_arith;
     wire ex_except_req_out = ex_except_req | ex_overflow_exception;
     wire [4:0] ex_except_code_out = ex_except_req ? ex_except_code : 5'h0C;
     
