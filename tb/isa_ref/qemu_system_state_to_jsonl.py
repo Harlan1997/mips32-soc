@@ -435,6 +435,11 @@ def convert(events, states):
                               ((cause_value >> 2) & 0x1f) != 0)
         exception_code = ((cause_value >> 2) & 0x1f) if exception_taken else 0
         exception_bd = ((cause_value >> 31) & 1) if exception_taken else 0
+        # A synchronous exception is taken instead of committing the
+        # faulting instruction. QEMU's post-state snapshot can still expose
+        # a transient register delta, so it must not become a retire write.
+        if exception_taken:
+            gpr_we, gpr_addr, gpr_data = 0, 0, "00000000"
         # The event stream's next_pc is the immediate post-instruction PC.
         # For a control transfer this is the delay-slot PC; the comparator
         # handles the producer-specific delay-slot boundary explicitly.
