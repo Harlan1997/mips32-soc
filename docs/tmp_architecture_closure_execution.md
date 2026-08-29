@@ -2638,3 +2638,14 @@ configuration.
   `SKIP_COVERAGE=1 make l1-nonblocking-cpu-two-error-reset-gate` pass, with
   `REGRESSION_TEST_SUCCESS` and the two injected `SLVERR` paths preserved in
   the published logs.
+
+# 2026-08-29 RTL Linux coverage propagation
+
+- Fixed `tb/linux_boot/run_rtl_linux_progress_gate.sh` to forward
+  `SKIP_COVERAGE` into the nested SoC runner. Long Linux diagnostics therefore
+  honor explicit no-coverage mode and do not allocate VCS coverage databases
+  accidentally.
+- Fresh evidence: a 100k-cycle probe using the existing kernel passes with
+  post-reset CPU progress and stable `sim.log`/`sim_runtime.log` artifacts.
+  It observes zero userspace success markers, so this closes runner resource
+  behavior only; RTL Linux userspace boot remains an open functional item.
