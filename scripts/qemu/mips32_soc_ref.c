@@ -1704,6 +1704,12 @@ static void soc_ref_cpu_reset(void *opaque)
     CPUMIPSState *env = &reset->cpu->env;
 
     cpu_reset(CPU(reset->cpu));
+    /* SRAM-linked software-MMU guests place their general exception handler
+     * at EBase+0x180. Boot-ROM guests keep BEV set for BFC00200. */
+    if (reset->software_mmu_guest &&
+        !soc_ref_software_mmu_bootrom_guest) {
+        env->CP0_Status &= ~(1U << CP0St_BEV);
+    }
     /* Match the opt-in RTL SRSCtl static HSS field.  CSS/PSS/ESS remain
      * software and exception controlled below this implementation. */
     env->CP0_SRSCtl = (0xfU << 23);

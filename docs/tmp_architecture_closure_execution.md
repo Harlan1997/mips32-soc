@@ -2372,3 +2372,26 @@ configuration.
   bare-metal system differential. It does not close full ISA/privileged/FPU
   compliance, RTL Linux userspace boot, full Linux RTL/QEMU differential, or
   physical DDR/QSPI signoff.
+
+# 2026-08-29 software-MMU vector and LL/SC differential repair
+
+- Fixed the custom QEMU reset contract for SRAM-linked software-MMU guests:
+  reset now clears `Status.BEV`, while Boot-ROM MMU guests retain BEV for
+  `BFC00200`.
+- Fixed the QEMU TLBL/TLBS refill offset split. SRAM guests enter the RTL
+  handler at `EBase+0x180`; Boot-ROM guests retain the fixed Boot-ROM refill
+  offset. The build script applies this patch idempotently.
+- Fresh evidence: `make qemu-system-mmu-refill-differential-gate` passes for
+  both the normal MMU refill and `OS_PRESSURE=1` paths. The architecture
+  aggregate reached all later children; its only failure was the pre-existing
+  LL/SC hook detection issue.
+- Corrected the QEMU build-script LLAddr hook check to require the complete
+  marker/body, not merely the weak callback declaration. The generated QEMU
+  model now exposes the aligned virtual LL address required by the RTL.
+- Fresh evidence: `SKIP_COVERAGE=1 BUILD_DIR=/tmp/mips32-qemu-llsc-fix
+  HOST_TIMEOUT=30 RTL_TIMEOUT=120 make qemu-system-llsc-differential-gate`
+  passes. Current-contract, selected-differential, MMU PageMask, MMU refill,
+  MMU OS pressure, and FPU boundary children also passed in the aggregate.
+- Remaining boundary is unchanged: full RTL Linux userspace boot and
+  full RTL/QEMU Linux differential still require separate OS/privileged-ISA
+  work; this is not a claim of full MIPS ISA or commercial physical signoff.
