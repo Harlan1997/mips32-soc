@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 
 module tb_mips_fpu_flags;
-    localparam OP_MUL = 5'd2, OP_DIV = 5'd3, OP_SUB = 5'd1;
+    localparam OP_MUL = 5'd2, OP_DIV = 5'd3, OP_SUB = 5'd1,
+               OP_SQRT = 5'd4;
     reg [4:0] op;
     reg [31:0] a, b, c;
     reg [3:0] compare_condition;
@@ -80,6 +81,28 @@ module tb_mips_fpu_flags;
         end
         a_double = 64'h41e0000000000000; // +2^31
         check_flags(5'b10000, "double_cvt_w_out_of_range");
+
+        // IEEE-754 preserves the sign of zero through sqrt and does not
+        // classify -0 as an Invalid operation.
+        fmt_double = 0;
+        op = OP_SQRT;
+        a = 32'h80000000;
+        b = 0;
+        check_flags(5'b00000, "single_sqrt_negative_zero_flags");
+        #1;
+        if (result !== 32'h80000000) begin
+            $display("FPU_FLAGS_FAIL single sqrt(-0) result=%08h", result);
+            failures = failures + 1;
+        end
+        fmt_double = 1;
+        a_double = 64'h8000000000000000;
+        b_double = 0;
+        check_flags(5'b00000, "double_sqrt_negative_zero_flags");
+        #1;
+        if (result_double !== 64'h8000000000000000) begin
+            $display("FPU_FLAGS_FAIL double sqrt(-0) result=%016h", result_double);
+            failures = failures + 1;
+        end
 
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_fpu_flags invalid=7 underflow=1 conversion=1");

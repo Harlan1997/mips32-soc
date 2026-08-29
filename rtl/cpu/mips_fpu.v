@@ -103,10 +103,12 @@ module mips_fpu (
                     if (a_nan) begin
                         rr_double = ar_double;
                         exception_flags[4] = 1'b1;
-                    end else if (a_double[63] ||
-                                 (ar_double < 0.0)) begin
+                    end else if (a_double[63] && (a_double[62:0] != 0)) begin
                         rr_double = 0.0;
                         exception_flags[4] = 1'b1;
+                    end else if (a_double == 64'h8000000000000000) begin
+                        // IEEE-754 sqrt(-0) is -0 and is not Invalid.
+                        rr_double = $bitstoreal(a_double);
                     end else begin
                         rr_double = $sqrt(ar_double);
                     end
@@ -230,9 +232,12 @@ module mips_fpu (
                     if (a_nan) begin
                         rr = ar;
                         exception_flags[4] = 1'b1;
-                    end else if (a[31] || (ar < 0.0)) begin
+                    end else if (a[31] && (a[30:0] != 0)) begin
                         rr = 0.0;
                         exception_flags[4] = 1'b1;
+                    end else if (a == 32'h80000000) begin
+                        // IEEE-754 sqrt(-0) is -0 and is not Invalid.
+                        rr = $bitstoshortreal(a);
                     end else begin
                         rr = $sqrt(ar);
                     end
