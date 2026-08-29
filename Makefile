@@ -984,6 +984,7 @@ dual-core-frontend-compile:
 	RUN_ROOT=$(BUILD_DIR)/dual_core_frontend tb/unit/run_dual_core_frontend_compile.sh
 
 dual-core-soc-gate:
+	FW_DIR=$(BUILD_DIR)/firmware/dual_core_ipi \
 	RUN_DIR=$(BUILD_DIR)/soc_test/dual_core tb/soc_test/run_dual_core_gate.sh
 
 dcache-coherency-gate:
