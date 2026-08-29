@@ -1888,7 +1888,14 @@ module mips_cpu #(
                                  (id_flush_valid && id_bd &&
                                    (id_pc == ex_pc + 32'd4))) :
                                  (id_flush_valid && id_bd)));
-    wire exception_bd = (wb_bd && wb_arch_valid) | interrupt_except_bd;
+    // A delay-slot marker is architectural only when its paired resume target
+    // is present.  Pipeline flush/replay can transiently leave wb_bd asserted
+    // on a bubble or on the retried instruction while the target metadata has
+    // already been cleared; forwarding that lone bit would fabricate
+    // Cause.BD and subtract four from a non-delay-slot exception EPC.
+    wire exception_bd = (wb_bd && wb_arch_valid &&
+                         (wb_delay_slot_next_pc != 32'd0)) |
+                        interrupt_except_bd;
         
     // An interrupt accepted while the core is suspended by WAIT is taken
     // after WAIT has retired.  Save the sequential PC so ERET resumes at the
