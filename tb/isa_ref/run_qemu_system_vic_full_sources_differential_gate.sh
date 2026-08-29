@@ -3,7 +3,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-${ROOT_DIR}/build/isa_ref/qemu_system_vic_full_sources_differential}
-FW_DIR=${FW_DIR:-${ROOT_DIR}/build/firmware/vic_full_sources}
+BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
+FW_DIR=${FW_DIR:-${BUILD_DIR}/firmware/vic_full_sources}
 
 FW_TEST=vic_full_sources FW_DIR="${FW_DIR}" RUN_DIR="${RUN_DIR}" \
   RTL_VCS_EXTRA_ARGS="${RTL_VCS_EXTRA_ARGS:-} +define+TB_SKIP_UART_PIN_CHECK" \

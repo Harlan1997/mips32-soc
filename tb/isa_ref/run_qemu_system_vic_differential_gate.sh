@@ -4,7 +4,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_vic_irq_differential"}
-FW_DIR=${FW_DIR:-"${ROOT_DIR}/build/firmware/qemu_system_vic_irq"}
+BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
+FW_DIR=${FW_DIR:-"${BUILD_DIR}/firmware/qemu_system_vic_irq"}
 
 FW_TEST=qemu_system_vic_irq FW_DIR="${FW_DIR}" RUN_DIR="${RUN_DIR}" \
     "${SCRIPT_DIR}/run_qemu_system_differential_gate.sh"

@@ -39,6 +39,7 @@ static FILE *register_file;
 static char *register_path;
 static FILE *state_file;
 static char *state_path;
+static char *last_state_line;
 static GPtrArray *state_registers;
 
 static void vcpu_init(qemu_plugin_id_t id, unsigned int cpu_index)
@@ -66,25 +67,31 @@ static void vcpu_init(qemu_plugin_id_t id, unsigned int cpu_index)
 
 static void emit_state(unsigned int cpu_index, InsnInfo *insn)
 {
+    GString *line;
     (void)cpu_index;
     if (!state_file || !state_registers) {
         return;
     }
-    fprintf(state_file, "{\"pc\":\"%08" PRIx64 "\",\"regs\":{",
-            insn->pc);
+    line = g_string_new(NULL);
+    g_string_append_printf(line, "{\"pc\":\"%08" PRIx64 "\",\"regs\":{",
+                           insn->pc);
     for (guint i = 0; i < state_registers->len; ++i) {
         StateRegister *reg = g_ptr_array_index(state_registers, i);
         g_autoptr(GByteArray) value = g_byte_array_new();
         int size = qemu_plugin_read_register(reg->handle, value);
-        fprintf(state_file, "%s\"%s\":\"", i ? "," : "", reg->name);
+        g_string_append_printf(line, "%s\"%s\":\"", i ? "," : "", reg->name);
         if (size > 0) {
             for (int b = size - 1; b >= 0; --b) {
-                fprintf(state_file, "%02x", value->data[b]);
+                g_string_append_printf(line, "%02x", value->data[b]);
             }
         }
-        fputs("\"", state_file);
+        g_string_append_c(line, '"');
     }
-    fputs("}}\n", state_file);
+    g_string_append(line, "}}\n");
+    fputs(line->str, state_file);
+    g_free(last_state_line);
+    last_state_line = g_strdup(line->str);
+    g_string_free(line, true);
     fflush(state_file);
 }
 
@@ -170,6 +177,21 @@ static void plugin_exit(qemu_plugin_id_t id, void *userdata)
 {
     (void)id;
     (void)userdata;
+    /* A mailbox write can request guest shutdown from its memory callback
+     * before QEMU delivers vcpu_exit.  Flush the instruction whose execution
+     * callback already ran so the terminal retire event is not lost. */
+    if (states) {
+        for (unsigned int i = 0; i < state_count; ++i) {
+            emit_pending(&states[i], states[i].pc + 4);
+            if (last_state_line) {
+                /* plugin_exit has no current vCPU, so emit_state cannot read
+                 * registers here. The terminal mailbox store has no state
+                 * side effect; duplicating the last snapshot supplies the
+                 * required post-state without violating plugin API rules. */
+                fputs(last_state_line, state_file);
+            }
+        }
+    }
     fflush(trace_file);
     fclose(trace_file);
     if (register_file) {
@@ -181,6 +203,7 @@ static void plugin_exit(qemu_plugin_id_t id, void *userdata)
     g_free(trace_path);
     g_free(register_path);
     g_free(state_path);
+    g_free(last_state_line);
     if (state_registers) {
         g_ptr_array_free(state_registers, true);
     }

@@ -2351,3 +2351,24 @@ configuration.
   removed through the project clean target. Source, git metadata, and the
   generated QEMU source/build inputs remain reproducible but must be rebuilt
   before the next full aggregate run.
+
+# 2026-08-29 isolated QEMU selected differential rerun
+
+- Propagated the caller's `BUILD_DIR` through the remaining system-mode
+  differential Make targets and wrapper defaults. This prevents selected
+  differential children from rebuilding firmware under the repository
+  `build/` directory when an isolated build root is requested.
+- Fixed the QEMU retire plugin's shutdown boundary. A mailbox write can stop
+  QEMU before `vcpu_exit`, so the pending terminal instruction is now flushed;
+  its final state snapshot is duplicated from the last valid vCPU snapshot
+  without calling the plugin register API after the vCPU has gone away.
+- Fresh evidence: `SKIP_COVERAGE=1 BUILD_DIR=/tmp/mips32-qemu-selected-pathfix2
+  HOST_TIMEOUT=600 RTL_TIMEOUT=120 make
+  qemu-system-selected-differential-gate` passes all 15 serial child gates,
+  including the immediate-trap, unaligned, VIC, opt-in FPU, and DMA SG
+  differentials. The isolated trap-imm child passes after comparing 92
+  terminal records.
+- This closes reproducibility and terminal-event integrity for the selected
+  bare-metal system differential. It does not close full ISA/privileged/FPU
+  compliance, RTL Linux userspace boot, full Linux RTL/QEMU differential, or
+  physical DDR/QSPI signoff.

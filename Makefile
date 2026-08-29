@@ -684,7 +684,7 @@ qemu-system-architecture-closure-gate: qemu-system-mips32-soc-ref
 
 qemu-system-llsc-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=llsc QEMU_CPU=24Kc QEMU_TIMEOUT=5 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_llsc_differential RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=llsc FW_DIR=$(BUILD_DIR)/firmware/llsc QEMU_CPU=24Kc QEMU_TIMEOUT=5 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_llsc_differential RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh
@@ -692,7 +692,7 @@ qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-isa-r2-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=isa_r2_sweep RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_isa_r2_differential tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=isa_r2_sweep FW_DIR=$(BUILD_DIR)/firmware/isa_r2_sweep RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_isa_r2_differential tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-single-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -741,51 +741,51 @@ qemu-system-fpu-fpe-boundary-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-branch-likely-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=branch_likely RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_branch_likely_differential tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=branch_likely FW_DIR=$(BUILD_DIR)/firmware/branch_likely RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_branch_likely_differential tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-exception-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_exception_differential_gate.sh
-	tb/isa_ref/run_qemu_system_exception_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_exception_differential tb/isa_ref/run_qemu_system_exception_differential_gate.sh
 
 qemu-system-break-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_break_differential_gate.sh
-	tb/isa_ref/run_qemu_system_break_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_break_differential tb/isa_ref/run_qemu_system_break_differential_gate.sh
 
 qemu-system-trap-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_trap_differential_gate.sh
-	tb/isa_ref/run_qemu_system_trap_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_trap_differential tb/isa_ref/run_qemu_system_trap_differential_gate.sh
 
 qemu-system-trap-imm-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_trap_imm_differential_gate.sh
-	tb/isa_ref/run_qemu_system_trap_imm_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_trap_imm_differential tb/isa_ref/run_qemu_system_trap_imm_differential_gate.sh
 
 qemu-system-di-ei-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_di_ei_differential_gate.sh
-	tb/isa_ref/run_qemu_system_di_ei_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_di_ei_differential tb/isa_ref/run_qemu_system_di_ei_differential_gate.sh
 
 qemu-system-wait-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_wait_differential_gate.sh
-	tb/isa_ref/run_qemu_system_wait_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_wait_differential tb/isa_ref/run_qemu_system_wait_differential_gate.sh
 
 qemu-system-bd-exception-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_bd_exception_differential_gate.sh
-	tb/isa_ref/run_qemu_system_bd_exception_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_bd_exception_differential tb/isa_ref/run_qemu_system_bd_exception_differential_gate.sh
 
 qemu-system-peripheral-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_peripheral_differential_gate.sh
-	tb/isa_ref/run_qemu_system_peripheral_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_peripheral_differential tb/isa_ref/run_qemu_system_peripheral_differential_gate.sh
 
 qemu-system-vic-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_vic_differential_gate.sh
-	tb/isa_ref/run_qemu_system_vic_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_vic_differential tb/isa_ref/run_qemu_system_vic_differential_gate.sh
 
 qemu-system-vic-cpu-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_vic_cpu_differential_gate.sh
-	tb/isa_ref/run_qemu_system_vic_cpu_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_vic_cpu_differential tb/isa_ref/run_qemu_system_vic_cpu_differential_gate.sh
 
 qemu-system-vic-full-sources-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_vic_full_sources_differential_gate.sh
-	FW_TEST=vic_full_sources RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_vic_full_sources_differential \
+	BUILD_DIR=$(BUILD_DIR) FW_TEST=vic_full_sources FW_DIR=$(BUILD_DIR)/firmware/vic_full_sources RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_vic_full_sources_differential \
 		tb/isa_ref/run_qemu_system_vic_full_sources_differential_gate.sh
 
 qemu-system-mmu-contract-gate: qemu-system-mips32-soc-ref
