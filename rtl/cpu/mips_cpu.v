@@ -1887,6 +1887,16 @@ module mips_cpu #(
     wire mem_flush_valid = (mem_pc_plus_8 != 32'd0);
     wire ex_flush_valid  = (ex_pc_plus_8  != 32'd0);
     wire id_flush_valid  = (id_pc_plus_4  != 32'd0);
+    // The stage bit alone is not sufficient at an exception boundary.  A
+    // flush can leave a stale delay-slot bit on a bubble while the paired
+    // branch target metadata has already been cleared.  Treat the marker as
+    // architectural only when its companion resume target is present.
+    wire mem_delay_slot_valid = mem_bd &&
+                                 (mem_delay_slot_next_pc != 32'd0);
+    wire ex_delay_slot_valid  = ex_bd &&
+                                (ex_delay_slot_next_pc != 32'd0);
+    wire id_delay_slot_valid  = id_bd &&
+                                (id_delay_slot_next_pc != 32'd0);
     // The delay-slot metadata is normally carried with the younger
     // instruction.  A branch can nevertheless be in WB while its slot is in
     // MEM when an asynchronous interrupt is accepted; in that window the
@@ -1909,17 +1919,17 @@ module mips_cpu #(
                                       wb_is_control_transfer;
     wire interrupt_except_bd = interrupt_accept &&
                                (mem_flush_valid ?
-                                (mem_bd || interrupt_wb_branch_delay ||
-                                 (ex_flush_valid && ex_bd &&
+                                (mem_delay_slot_valid || interrupt_wb_branch_delay ||
+                                 (ex_flush_valid && ex_delay_slot_valid &&
                                   (ex_pc == mem_pc + 32'd4)) ||
-                                 (ex_flush_valid && id_flush_valid && id_bd &&
-                                  (id_pc == ex_pc + 32'd4) &&
-                                  (ex_pc == mem_pc + 32'd4))) :
+                                 (ex_flush_valid && id_flush_valid && id_delay_slot_valid &&
+                                   (id_pc == ex_pc + 32'd4) &&
+                                   (ex_pc == mem_pc + 32'd4))) :
                                 (ex_flush_valid ?
-                                 (ex_bd ||
-                                 (id_flush_valid && id_bd &&
+                                 (ex_delay_slot_valid ||
+                                 (id_flush_valid && id_delay_slot_valid &&
                                    (id_pc == ex_pc + 32'd4))) :
-                                 (id_flush_valid && id_bd)));
+                                 id_delay_slot_valid));
     // A delay-slot marker is architectural only when its paired resume target
     // is present.  Pipeline flush/replay can transiently leave wb_bd asserted
     // on a bubble or on the retried instruction while the target metadata has
