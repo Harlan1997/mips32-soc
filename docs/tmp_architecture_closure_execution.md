@@ -2851,10 +2851,11 @@ configuration.
   The default functional path and all RTL configuration defines are unchanged.
 - Verification: `bash -n tb/linux_boot/run_rtl_linux_progress_gate.sh`,
   `git diff --check`, isolated `make rtl-frontend-compile` (`8/8`), and a
-  100k-cycle no-coverage Linux probe passed with a 1.1 MiB VCS data structure.
-  The probe observed no exception records in that early window; the bounded
-  limit is therefore verified by elaboration/parameter plumbing and remains
-  available for long exception diagnostics.
+  20M-cycle no-coverage Linux run with
+  `LINUX_EXCEPTION_TRACE_LIMIT=7` produced exactly seven exception records,
+  a 5.4 KiB simulator log, and a 1.1 MiB VCS data structure. The runner's
+  progress criterion was intentionally disabled for this diagnostic-only
+  run; VCS exited normally at the explicit cycle limit.
 - This fixes the diagnostic OOM/log-growth risk only. RTL Linux userspace boot,
   full RTL/QEMU Linux differential, and the underlying Linux exception/control
   flow blocker remain open.
