@@ -2626,3 +2626,15 @@ configuration.
   soc-smoke` both pass with `REGRESSION_TEST_SUCCESS` in `sim.log`.
 - This closes diagnostic artifact integrity only; RTL Linux userspace boot,
   full ISA/privileged/FPU compliance, and full plan signoff remain open.
+
+# 2026-08-29 VCS log publication race correction
+
+- Corrected the first log-separation implementation: Linux callers redirect
+  `run.sh` stdout to `sim.log`, so `run.sh` must not write that path while the
+  command is running. VCS now writes only `sim_runtime.log`; after exit,
+  `run.sh` copies that complete file to `sim.log` and then applies the original
+  simulator status to the gate.
+- Fresh evidence: `SKIP_COVERAGE=1 make soc-smoke` and
+  `SKIP_COVERAGE=1 make l1-nonblocking-cpu-two-error-reset-gate` pass, with
+  `REGRESSION_TEST_SUCCESS` and the two injected `SLVERR` paths preserved in
+  the published logs.
