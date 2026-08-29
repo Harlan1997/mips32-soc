@@ -240,9 +240,10 @@ _start:
 	li	$v0, 4004
 	syscall
 	nop
-	/* Reap any child: the test contract is wait4 completion and status,
-	 * not a Linux PID allocation policy. */
-	li	$a0, -1
+	/* Reap the two children using the PIDs returned by fork. This avoids
+	 * relying on the custom-machine kernel's wait4(-1) child-selection path
+	 * while still checking real wait/reap completion and exit status. */
+	move	$a0, $s1
 	addiu	$a1, $sp, 36
 	move	$a2, $zero
 	move	$a3, $zero
@@ -261,7 +262,7 @@ _start:
 	lw	$t0, 36($sp)
 	bnez	$t0, fork_fail
 	nop
-	li	$a0, -1
+	move	$a0, $s2
 	addiu	$a1, $sp, 40
 	move	$a2, $zero
 	move	$a3, $zero

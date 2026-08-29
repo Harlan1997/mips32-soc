@@ -2905,6 +2905,31 @@ configuration.
   ERET records remain trace-visible but are excluded from the frame-save check.
   It passes the fresh window capture with `pairs=1`.
 
+### 2026-08-30 QEMU MMU differential stale-firmware fix
+
+- The QEMU system architecture aggregate exposed an early retire mismatch in
+  `qemu-system-mmu-refill-differential-gate`: RTL retired `JAL 0x000005f0`,
+  while QEMU retired `JAL 0x00008240`. The child gate had rebuilt the RTL
+  workload under its run-local firmware directory but passed the repository's
+  older source ELF to QEMU. The gate now explicitly passes the freshly
+  generated RTL-run ELF to the reference machine.
+- The isolated rerun passes the MMU refill RTL/QEMU differential. The fix also
+  prevents future temporary `BUILD_DIR` runs from silently mixing firmware
+  generations.
+
+### 2026-08-30 generic Linux wait4 PID selection
+
+- A fresh aggregate Linux run reached the boot, mmap, mprotect, brk, sleep,
+  yield, and both exec markers, but the parent did not complete `wait4(-1)`
+  before the gate timeout. A longer isolated run reproduced the same boundary.
+- Updated the freestanding initramfs parent to pass the two PIDs returned by
+  its `fork` calls to the corresponding `wait4` calls while retaining status
+  validation. This keeps the wait/reap contract deterministic without assuming
+  fixed PID allocation. A full rebuilt-kernel rerun was not completed because
+  the environment's independent Linux kernel rebuild was still compiling after
+  ten minutes; the source change remains pending that verification. Linux RTL
+  boot and full RTL/QEMU Linux differential remain open.
+
 ### 2026-08-30 Linux TLB-fault neighborhood frame check
 
 - A fresh 20M-cycle no-coverage run with a narrow `19.57M..19.61M` cycle

@@ -36,6 +36,13 @@ RUN_DIR="${RTL_RUN_DIR}" OS_PRESSURE="${OS_PRESSURE}" TB_RETIRE_TRACE=1 RETIRE_T
     tb/soc_test/run_mmu_refill.sh >"${RUN_DIR}/rtl_gate.log" 2>&1
 [[ -s "${RTL_TRACE}" && -s "${FW_ELF}" && -s "${FW_HEX}" ]]
 
+# The RTL runner rebuilds the workload into its run-local firmware directory.
+# Point QEMU at that exact ELF; using the repository source ELF here can leave
+# a stale build in the reference path and cause an early retire mismatch.
+FW_ELF="${RTL_RUN_DIR}/firmware/firmware.elf"
+FW_ELF=$(realpath -m "${FW_ELF}")
+[[ -s "${FW_ELF}" ]]
+
 sha256sum "${FW_HEX}" "${FW_ELF}" >"${RUN_DIR}/firmware.sha256"
 
 env RUN_DIR="${QEMU_DIR}" FW_ELF="${FW_ELF}" RTL_TRACE="${RTL_TRACE}" \
