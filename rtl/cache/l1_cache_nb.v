@@ -252,6 +252,7 @@ module l1_cache_nb #(
                             (cache_maint_op == 5'b10101);
                 if (cache_maint_op == 5'b10001 ||
                     cache_maint_op == 5'b10101 ||
+                    cache_maint_op == 5'b11101 ||
                     cache_maint_op == 5'b11001) begin
                     maint_match = valid[cache_maint_addr[5 +: SET_BITS]] &&
                                   tags[cache_maint_addr[5 +: SET_BITS]] ==
