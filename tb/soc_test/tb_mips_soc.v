@@ -60,6 +60,14 @@ module tb_mips_soc;
     integer linux_exception_trace;
     integer linux_exception_trace_limit;
     integer linux_exception_trace_count;
+    integer linux_exception_frame_trace;
+    integer linux_exception_frame_trace_limit;
+    integer linux_exception_frame_trace_count;
+    integer linux_exception_frame_pending;
+    integer linux_exception_frame_pending_cycle;
+    reg [31:0] linux_exception_frame_pending_pc;
+    reg [4:0]  linux_exception_frame_pending_code;
+    reg        linux_exception_frame_pending_interrupt;
     integer linux_ebase_trace;
     integer linux_wb_trace;
     integer linux_vector_trace;
@@ -315,6 +323,61 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_va);
                 linux_exception_trace_count = linux_exception_trace_count + 1;
+            end
+            // Capture the CP0 exception frame across the clock boundary.  The
+            // event line observes the pre-NBA state; the following line
+            // observes the state after CP0 has consumed the event.  This is
+            // intentionally independent from the broad exception trace and
+            // remains bounded for long Linux probes.
+            if (linux_exception_frame_trace != 0 &&
+                linux_exception_frame_pending != 0) begin
+                $display("LINUX_EXCEPTION_FRAME_AFTER cycle=%0d event_cycle=%0d event_pc=%08h event_code=%0d event_int=%b status=%08h cause=%08h epc=%08h errorepc=%08h bad=%08h entryhi=%08h",
+                    linux_trace_cycle,
+                    linux_exception_frame_pending_cycle,
+                    linux_exception_frame_pending_pc,
+                    linux_exception_frame_pending_code,
+                    linux_exception_frame_pending_interrupt,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_errorepc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                    {u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_ebase_hi, 12'd0});
+                linux_exception_frame_pending = 0;
+            end
+            if (linux_exception_frame_trace != 0 &&
+                linux_exception_frame_count < linux_exception_frame_trace_limit &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_req ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret)) begin
+                $display("LINUX_EXCEPTION_FRAME_BEFORE cycle=%0d pc=%08h code=%0d int=%b accept=%b eret=%b restore=%b status=%08h cause=%08h epc=%08h errorepc=%08h bad=%08h entryhi=%08h wbpc=%08h wbinst=%08h wbex=%b/%0d/%b/%b bd=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_errorepc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                    {u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_ebase_hi, 12'd0},
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_data,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_tlb_refill,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd);
+                linux_exception_frame_pending = 1;
+                linux_exception_frame_pending_cycle = linux_trace_cycle;
+                linux_exception_frame_pending_pc = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc;
+                linux_exception_frame_pending_code = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code;
+                linux_exception_frame_pending_interrupt = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept;
+                linux_exception_frame_trace_count = linux_exception_frame_trace_count + 1;
             end
             // Trace architectural GPR writeback only when explicitly enabled.
             // Register and cycle filters keep long Linux probes bounded.
@@ -972,6 +1035,16 @@ module tb_mips_soc;
         linux_exception_trace_limit = 256;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE_LIMIT=%d", linux_exception_trace_limit)) begin end
         linux_exception_trace_count = 0;
+        linux_exception_frame_trace = 0;
+        if (!$value$plusargs("LINUX_EXCEPTION_FRAME_TRACE=%d", linux_exception_frame_trace)) begin end
+        linux_exception_frame_trace_limit = 64;
+        if (!$value$plusargs("LINUX_EXCEPTION_FRAME_TRACE_LIMIT=%d", linux_exception_frame_trace_limit)) begin end
+        linux_exception_frame_trace_count = 0;
+        linux_exception_frame_pending = 0;
+        linux_exception_frame_pending_cycle = 0;
+        linux_exception_frame_pending_pc = 32'd0;
+        linux_exception_frame_pending_code = 5'd0;
+        linux_exception_frame_pending_interrupt = 1'b0;
         linux_ebase_trace = 1;
         if (!$value$plusargs("LINUX_EBASE_TRACE=%d", linux_ebase_trace)) begin end
         linux_wb_trace = 1;

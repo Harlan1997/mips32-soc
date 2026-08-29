@@ -2859,3 +2859,24 @@ configuration.
 - This fixes the diagnostic OOM/log-growth risk only. RTL Linux userspace boot,
   full RTL/QEMU Linux differential, and the underlying Linux exception/control
   flow blocker remain open.
+
+# 2026-08-30 Linux exception-frame before/after trace
+
+- Added opt-in, bounded `LINUX_EXCEPTION_FRAME_TRACE` support to the RTL Linux
+  progress testbench. For each selected exception, interrupt acceptance, ERET,
+  or context-restore event it emits a `LINUX_EXCEPTION_FRAME_BEFORE` record and
+  the following-cycle `LINUX_EXCEPTION_FRAME_AFTER` record. The pair includes
+  event PC/code, interrupt acceptance, WB exception metadata, Status, Cause,
+  EPC, ErrorEPC, BadVAddr and the exception-vector base. The runner forwards
+  both the enable and limit controls through `LINUX_EXTRA_SIM_ARGS`; default
+  operation remains disabled and bounded to 64 event pairs.
+- This separates the pre-NBA event view from the post-CP0 architectural frame,
+  which is required to distinguish a bad saved frame from a later Linux
+  handler/control-flow decision. `make rtl-frontend-compile` passes all 8/8
+  configurations; `SKIP_COVERAGE=1 make cpu-irq-delay-slot-gate cpu-cp0-gate`
+  also passes.
+- Boundary: no CPU semantic change was made and no Linux userspace success
+  marker was produced by this infrastructure change. RTL Linux userspace boot,
+  OS-owned demand paging/shootdown and full RTL/QEMU Linux differential remain
+  open pending a bounded frame capture and comparison with Linux's handler
+  expectations.
