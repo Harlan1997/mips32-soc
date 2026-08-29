@@ -102,6 +102,9 @@ module tb_mips_soc;
     integer linux_panic_trace;
     integer linux_panic_trace_limit;
     integer linux_panic_trace_count;
+    integer linux_cache_owner_trace;
+    integer linux_cache_owner_trace_limit;
+    integer linux_cache_owner_trace_count;
     integer linux_tlb_trace;
     integer linux_tlb_trace_limit;
     integer linux_tlb_trace_count;
@@ -740,6 +743,99 @@ module tb_mips_soc;
                     `TB_DCACHE_PATH.wlast);
                 linux_ddr_write_trace_count = linux_ddr_write_trace_count + 1;
             end
+            // Record ownership events for one physical line.  Unlike the
+            // broad DDR trace above, these conditions are actual channel
+            // handshakes, so a held valid signal cannot manufacture repeated
+            // writes.  The cache line snapshots make the originating CPU
+            // store/refill distinguishable from a downstream protocol issue.
+            if (linux_cache_owner_trace != 0 &&
+                linux_cache_owner_trace_count < linux_cache_owner_trace_limit) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr_ok &&
+                    !`TB_DCACHE_PATH.req_buf_valid &&
+                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == linux_target_trace_line)) begin
+                    $display("LINUX_CACHE_OWNER_TRACE kind=CPU_STORE_ACCEPT cycle=%0d pc=%08h mempc=%08h addr=%08h data=%08h be=%h dstate=%0d reqbuf=%b/%b/%08h/%08h/%h",
+                        linux_trace_cycle,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be,
+                        `TB_DCACHE_PATH.state,
+                        `TB_DCACHE_PATH.req_buf_valid,
+                        `TB_DCACHE_PATH.req_buf_we,
+                        `TB_DCACHE_PATH.req_buf_addr,
+                        `TB_DCACHE_PATH.req_buf_wdata,
+                        `TB_DCACHE_PATH.req_buf_be);
+                    linux_cache_owner_trace_count = linux_cache_owner_trace_count + 1;
+                end else if (`TB_DCACHE_PATH.state == 5'd2 &&
+                             `TB_DCACHE_PATH.awvalid && `TB_DCACHE_PATH.awready &&
+                             (`TB_DCACHE_PATH.awaddr[31:5] == linux_target_trace_line)) begin
+                    $display("LINUX_CACHE_OWNER_TRACE kind=DCACHE_WB_AW cycle=%0d pc=%08h mempc=%08h aw=%08h victim_way=%0d victim_tag=%08h line=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h reqbuf=%b/%b/%08h/%08h/%h",
+                        linux_trace_cycle,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                        `TB_DCACHE_PATH.awaddr,
+                        `TB_DCACHE_PATH.victim_way,
+                        `TB_DCACHE_PATH.victim_tag_entry,
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][31:0],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][63:32],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][95:64],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][127:96],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][159:128],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][191:160],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][223:192],
+                        `TB_DCACHE_PATH.data_rdata[`TB_DCACHE_PATH.victim_way][255:224],
+                        `TB_DCACHE_PATH.req_buf_valid,
+                        `TB_DCACHE_PATH.req_buf_we,
+                        `TB_DCACHE_PATH.req_buf_addr,
+                        `TB_DCACHE_PATH.req_buf_wdata,
+                        `TB_DCACHE_PATH.req_buf_be);
+                    linux_cache_owner_trace_count = linux_cache_owner_trace_count + 1;
+                end else if (`TB_DCACHE_PATH.state == 5'd3 &&
+                             `TB_DCACHE_PATH.wvalid && `TB_DCACHE_PATH.wready &&
+                             (`TB_DCACHE_PATH.awaddr[31:5] == linux_target_trace_line)) begin
+                    $display("LINUX_CACHE_OWNER_TRACE kind=DCACHE_WB_W cycle=%0d pc=%08h mempc=%08h aw=%08h word=%0d wdata=%08h wstrb=%h wlast=%b victim_way=%0d victim_tag=%08h",
+                        linux_trace_cycle,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                        `TB_DCACHE_PATH.awaddr,
+                        `TB_DCACHE_PATH.word_cnt,
+                        `TB_DCACHE_PATH.wdata,
+                        `TB_DCACHE_PATH.wstrb,
+                        `TB_DCACHE_PATH.wlast,
+                        `TB_DCACHE_PATH.victim_way,
+                        `TB_DCACHE_PATH.victim_tag_entry);
+                    linux_cache_owner_trace_count = linux_cache_owner_trace_count + 1;
+                end else if (`TB_DCACHE_PATH.state == 5'd6 &&
+                             `TB_DCACHE_PATH.rready && `TB_DCACHE_PATH.rvalid &&
+                             (`TB_DCACHE_PATH.araddr[31:5] == linux_target_trace_line)) begin
+                    $display("LINUX_CACHE_OWNER_TRACE kind=DCACHE_REFILL_R cycle=%0d pc=%08h mempc=%08h ar=%08h word=%0d rdata=%08h rresp=%h rlast=%b linebuf=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h reqbuf=%b/%b/%08h/%08h/%h",
+                        linux_trace_cycle,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                        `TB_DCACHE_PATH.araddr,
+                        `TB_DCACHE_PATH.word_cnt,
+                        `TB_DCACHE_PATH.rdata,
+                        `TB_DCACHE_PATH.rresp,
+                        `TB_DCACHE_PATH.rlast,
+                        `TB_DCACHE_PATH.line_buf[31:0],
+                        `TB_DCACHE_PATH.line_buf[63:32],
+                        `TB_DCACHE_PATH.line_buf[95:64],
+                        `TB_DCACHE_PATH.line_buf[127:96],
+                        `TB_DCACHE_PATH.line_buf[159:128],
+                        `TB_DCACHE_PATH.line_buf[191:160],
+                        `TB_DCACHE_PATH.line_buf[223:192],
+                        `TB_DCACHE_PATH.line_buf[255:224],
+                        `TB_DCACHE_PATH.req_buf_valid,
+                        `TB_DCACHE_PATH.req_buf_we,
+                        `TB_DCACHE_PATH.req_buf_addr,
+                        `TB_DCACHE_PATH.req_buf_wdata,
+                        `TB_DCACHE_PATH.req_buf_be);
+                    linux_cache_owner_trace_count = linux_cache_owner_trace_count + 1;
+                end
+            end
             if (linux_target_dside_trace != 0 &&
                 linux_target_dside_trace_count < linux_target_dside_trace_limit &&
                 linux_trace_cycle >= linux_target_trace_cycle_start &&
@@ -938,6 +1034,11 @@ module tb_mips_soc;
         linux_panic_trace_limit = 32;
         if (!$value$plusargs("LINUX_PANIC_TRACE_LIMIT=%d", linux_panic_trace_limit)) begin end
         linux_panic_trace_count = 0;
+        linux_cache_owner_trace = 0;
+        if (!$value$plusargs("LINUX_CACHE_OWNER_TRACE=%d", linux_cache_owner_trace)) begin end
+        linux_cache_owner_trace_limit = 256;
+        if (!$value$plusargs("LINUX_CACHE_OWNER_TRACE_LIMIT=%d", linux_cache_owner_trace_limit)) begin end
+        linux_cache_owner_trace_count = 0;
         linux_tlb_trace = 0;
         if (!$value$plusargs("LINUX_TLB_TRACE=%d", linux_tlb_trace)) begin end
         linux_tlb_trace_limit = 256;
