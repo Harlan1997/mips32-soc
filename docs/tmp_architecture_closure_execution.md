@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-29 current-contract external build-root isolation
+
+- Fixed the current-contract signoff wrapper and Phase 2/3 completion wrappers
+  so an external `RUN_ROOT` is accepted only with the explicit
+  `ALLOW_EXTERNAL_RUN_ROOT=1` opt-in. The default remains constrained to the
+  repository `build` tree.
+- Updated the Makefile current-contract entry and its IRQ delay-slot
+  prerequisite to propagate `BUILD_DIR`, eliminating the remaining fixed
+  `build/` write from this long-running path.
+- A fresh isolated run under
+  `/tmp/mips32-current-contract-post-cache-fix2` completed all functional
+  prerequisites, Phase 2/3 completion, and 10/10 stress seeds. The run then
+  correctly failed the existing 99% coverage policy at UVM 36.24% and Product
+  36.97%; no coverage threshold was relaxed. Repository build output was not
+  used by the corrected run.
+
 ### 2026-08-29 RTL Linux TLB refill recheck: lookup path cleared
 
 - Added bounded exception diagnostics for the main TLB slot, its ASID, and the

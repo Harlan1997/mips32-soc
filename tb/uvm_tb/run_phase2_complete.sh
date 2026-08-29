@@ -9,7 +9,8 @@ FW_HEX=${FW_HEX:-"${ROOT_DIR}/build/firmware/soc_smoke/firmware.hex"}
 
 BUILD_DIR=$(realpath -m "${ROOT_DIR}/build")
 RUN_ROOT=$(realpath -m "$RUN_ROOT")
-if [[ "${RUN_ROOT}" != "${BUILD_DIR}/"* ]]; then
+ALLOW_EXTERNAL_RUN_ROOT=${ALLOW_EXTERNAL_RUN_ROOT:-0}
+if [[ "${ALLOW_EXTERNAL_RUN_ROOT}" != "1" && "${RUN_ROOT}" != "${BUILD_DIR}/"* ]]; then
     echo "ERROR: RUN_ROOT must be a child directory of ${BUILD_DIR}, got: ${RUN_ROOT}"
     exit 1
 fi

@@ -948,7 +948,7 @@ phase3c-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_PHASE3C_TESTLIST) RUN_ROOT=$(UVM_PHASE3C_COMPLETE_DIR) tb/uvm_tb/run_phase3c_complete.sh
 
 current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate dcache-parity-gate verification-foundation-gate cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
-	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) tb/uvm_tb/run_current_contract_signoff.sh
+	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) ALLOW_EXTERNAL_RUN_ROOT=1 tb/uvm_tb/run_current_contract_signoff.sh
 
 soc-smoke: firmware
 	FW_HEX=$(FW_HEX) RUN_DIR=$(SOC_TEST_RUN_DIR) L2_WRITEBACK=$(L2_WRITEBACK) L2_NONBLOCKING=$(L2_NONBLOCKING) tb/soc_test/run.sh
@@ -961,7 +961,9 @@ cpu-load-return-gate:
 
 cpu-irq-delay-slot-gate:
 	chmod +x tb/soc_test/run_cpu_irq_delay_slot_gate.sh
-	tb/soc_test/run_cpu_irq_delay_slot_gate.sh
+	FW_DIR=$(BUILD_DIR)/firmware/cpu_irq_delay_slot \
+	RUN_DIR=$(BUILD_DIR)/soc_test/cpu_irq_delay_slot \
+		tb/soc_test/run_cpu_irq_delay_slot_gate.sh
 
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
