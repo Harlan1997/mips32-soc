@@ -723,20 +723,19 @@ static void soc_ref_instruction_tick(CPUState *cpu)
         return;
     }
     s->irq_replay_armed = true;
-    /* The VIC replay schedule is aligned to the RTL's accepted interrupt
-     * boundary.  The RTL records the pending branch-delay context even when
-     * QEMU has already committed the delay-slot TB, so preserve BD for this
-     * explicit source replay.  Other replay schedules retain QEMU's native
-     * branch-delay observation. */
+    /* Preserve BD only when QEMU is actually at a delay-slot boundary.  A
+     * VIC replay can also arrive after an ordinary instruction; forcing BD
+     * merely because a PIC mask was supplied corrupts Cause reads in the
+     * handler and diverges from the RTL's precise exception state. */
     s->irq_replay_bd_pending =
-        (s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0 ||
-        s->irq_replay_pic_mask != 0;
+        (s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0;
     /* The RTL VIC schedule samples a pending source at the retire boundary
      * before the next sequential instruction is fetched.  QEMU's interrupt
      * path observes the already-advanced PC for subsequent replay entries;
      * recover the RTL EPC boundary without changing ordinary IRQ replay. */
     if (s->irq_replay_pic_mask && s->irq_release_index > 0) {
-        s->irq_replay_epc = s->cpu->env.active_tc.PC - 4;
+        s->irq_replay_epc = s->irq_replay_bd_pending ?
+            s->cpu->env.active_tc.PC - 4 : s->cpu->env.active_tc.PC;
         s->irq_replay_epc_fixup = true;
     }
     if (s->irq_release_index == 0 && s->irq_replay_pic_mask) {
@@ -1741,6 +1740,28 @@ static void soc_ref_cpu_reset(void *opaque)
         }
         env->CP0_Config2 = 0x80000000;
         env->CP0_Config3 = 0x00002008;
+        /* Match the RTL CP0 timer reset contract. QEMU's generic MIPS
+         * reset leaves Compare at its reset value, which can set Cause.TI
+         * during a short differential corpus and expose an unrelated IP7
+         * bit in MFC0 Cause reads. */
+        if (env->timer) {
+            /* The helper also clears a previously latched Cause.TI and
+             * re-arms the generic QEMU timer against the new Compare value. */
+            cpu_mips_store_count(env, 0);
+            cpu_mips_store_compare(env, UINT32_MAX);
+        } else {
+            /* cpu_mips_clock_init() has not run on the earliest reset path. */
+            env->CP0_Count = 0;
+            env->CP0_Compare = UINT32_MAX;
+            env->CP0_Cause &= ~(1U << CP0Ca_TI);
+        }
+        /* A generic MIPS reset can leave an already-raised timer IRQ line
+         * behind even after the Cause.TI bit is cleared.  The RTL reset has
+         * no pending hardware interrupt, so clear every line before the
+         * guest starts. */
+        for (int irq = 0; irq < 8; ++irq) {
+            qemu_set_irq(env->irq[irq], false);
+        }
     }
 
     if (reset->fdt_loaded) {
