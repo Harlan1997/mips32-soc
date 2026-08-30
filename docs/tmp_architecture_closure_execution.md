@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 RTL Linux MEM interruption state trace
+
+- Extended the bounded Linux exception trace with `wb_valid`,
+  `wb_arch_valid`, MEM/EX instruction words, `oldest_flushed_pc`, delay-slot
+  markers and the WB-branch-delay classification.
+- The fresh `13.6M`-cycle run proves that the first problematic interrupt at
+  cycle `13503087` has `wb_valid=0`, while MEM still holds
+  `lw s1,44(s1)` at `0x88852ca4` and `oldest_flushed_pc=0x88852ca4`. The
+  following retry eventually faults at `0xfffffffc` with `wb_valid=1`.
+  Thus the remaining issue is recovery/state preservation for an interrupted
+  but not-yet-retired MEM transaction; it is not evidence that the load had
+  already committed or that EPC alone explains the panic.
+- This diagnostic evidence does not close RTL Linux userspace boot, full
+  RTL/QEMU differential, or complete ISA/MMU/OS closure.
+
 ### 2026-08-30 Linux asynchronous-interrupt EPC precision follow-up
 
 - RTL Linux diagnostics isolated a real precision hazard at the first
