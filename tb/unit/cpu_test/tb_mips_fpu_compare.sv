@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 module tb_mips_fpu_compare;
-    reg [3:0] op;
+    reg [4:0] op;
     reg [3:0] condition;
     reg [31:0] a, b;
     reg fmt_double;
@@ -79,7 +79,7 @@ module tb_mips_fpu_compare;
     initial begin
         failures = 0;
         rounding_mode = 2'b00;
-        op = 4'h8;
+        op = 5'h8;
         // 1.0 < 2.0: ordered less predicates and their unordered-inclusive
         // counterparts are true; equality and unordered-only predicates false.
         check_vector(32'h3f800000, 32'h40000000,
@@ -155,6 +155,22 @@ module tb_mips_fpu_compare;
         #1;
         if (exception_flags[1:0] !== 2'b11) begin
             $display("FAIL underflow/inexact flags=%b want=11", exception_flags[1:0]);
+            failures = failures + 1;
+        end
+
+        // Double ROUND.W.D uses ties-away-from-zero as well.
+        fmt_double = 1'b1;
+        a_double = 64'h4004000000000000; // +2.5
+        op = 5'd19;
+        #1;
+        if (result_word !== 32'd3) begin
+            $display("FAIL round.w.d positive tie got=%08h want=00000003", result_word);
+            failures = failures + 1;
+        end
+        a_double = 64'hbff8000000000000; // -1.5
+        #1;
+        if (result_word !== -32'sd2) begin
+            $display("FAIL round.w.d negative tie got=%08h want=fffffffe", result_word);
             failures = failures + 1;
         end
 
