@@ -998,7 +998,7 @@ mmu-hardware-walker-soc-gate:
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
 # contracts and are intentionally not hidden behind this aggregate gate.
-p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
+p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-walker-page-sizes-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-hardware-walker-page-sizes-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
 	@mkdir -p $(P1_COMPLETE_DIR)
 	@{ \
 		echo '# P1 RTL/Simulation Extension Completion Report'; \
