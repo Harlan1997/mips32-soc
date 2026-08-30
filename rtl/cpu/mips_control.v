@@ -724,39 +724,65 @@ module mips_control (
             6'b011100: begin // SPECIAL2 (MIPS32 R2: MADD/MADDU/MUL/MSUB/MSUBU/CLZ/CLO)
                 case (func)
                     6'b000000: begin // MADD rs, rt
-                        mdu_op    = 4'd8;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            mdu_op    = 4'd8;
+                            mdu_start = 1'b1;
+                        end
                     end
                     6'b000001: begin // MADDU rs, rt
-                        mdu_op    = 4'd9;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            mdu_op    = 4'd9;
+                            mdu_start = 1'b1;
+                        end
                     end
                     6'b000010: begin // MUL rd, rs, rt (R2)
-                        mdu_op      = 4'd12;
-                        mdu_start   = 1'b1;
-                        sel_mdu_out = 1'b1;
-                        reg_write   = 1'b1;
-                        reg_dst     = 2'b01;
+                        if (sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            mdu_op      = 4'd12;
+                            mdu_start   = 1'b1;
+                            sel_mdu_out = 1'b1;
+                            reg_write   = 1'b1;
+                            reg_dst     = 2'b01;
+                        end
                     end
                     6'b000100: begin // MSUB rs, rt
-                        mdu_op    = 4'd10;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            mdu_op    = 4'd10;
+                            mdu_start = 1'b1;
+                        end
                     end
                     6'b000101: begin // MSUBU rs, rt
-                        mdu_op    = 4'd11;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            mdu_op    = 4'd11;
+                            mdu_start = 1'b1;
+                        end
                     end
                     6'b100000: begin  // CLZ rd, rs
-                        alu_op    = 5'b10000;  // OP_CLZ
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;     // rd
-                        // Standard MIPS32 requires rd==rt but we ignore that
-                        // constraint here; ALU uses op_a (=rs) only.
+                        if (rt != rd || sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            alu_op    = 5'b10000;  // OP_CLZ
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;     // rd
+                        end
                     end
                     6'b100001: begin  // CLO rd, rs
-                        alu_op    = 5'b10001;  // OP_CLO
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (rt != rd || sa != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            alu_op    = 5'b10001;  // OP_CLO
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     default: illegal_inst = 1'b1;
                 endcase

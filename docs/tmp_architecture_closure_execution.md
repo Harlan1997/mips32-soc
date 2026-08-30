@@ -3141,3 +3141,21 @@ configuration.
 - Added the corresponding `p_blocking_mem_irq_barrier` simulation assertion
   under `SVA_ENABLE`; the isolated SVA gate and direct unit gate remain
   required evidence for this boundary.
+
+### 2026-08-30 SPECIAL2 reserved-field enforcement
+
+- Corrected `rtl/cpu/mips_control.v` so canonical MIPS32 R2 SPECIAL2 encodings
+  are accepted while reserved fields are rejected before any architectural
+  side effect: MADD/MADDU/MSUB/MSUBU require `rd=0, sa=0`, MUL requires
+  `sa=0`, and CLZ/CLO require `rt=rd, sa=0`.
+- Added `make mips-control-special2-gate`, including positive coverage for all
+  five MDU encodings and CLZ/CLO plus seven negative reserved-field cases.
+  The gate passed with VCS; `rtl-frontend-compile` passed all 8 configurations,
+  `mdu-cpu-gate` and `cpu-cp0-gate` also passed, and ISA matrix audit reported
+  `ISA_IMPLEMENTATION_AUDIT_PASS rows=19`.
+- A fresh `qemu-system-isa-r2-differential-gate` also passed after correcting
+  the CLZ/CLO field interpretation, confirming RTL/QEMU retire agreement for
+  the existing ISA R2 corpus.
+- This closes the SPECIAL2 decoder reserved-field slice only. Complete
+  MIPS32/privileged ISA compliance, FPU ABI, Linux boot and full differential
+  remain open.
