@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 legal SLL decode and BREAK differential recovery
+
+- Corrected the SPECIAL/SLL decoder to accept all architecturally legal
+  `SLL rd,rt,sa` encodings when `rs=0`. The previous predicate rejected
+  non-NOP shifts, which caused the BREAK exception handler's legal
+  `sll k1,k1,2` to raise Reserved Instruction and loop at the exception
+  vector.
+- Fresh `qemu-system-break-differential-gate` passes through the BREAK
+  ExcCode 9 handler, EPC+4, ERET, and mailbox retirement. Fresh
+  `qemu-system-isa-r2-differential-gate` and no-coverage `rtl-frontend-compile`
+  also pass all 8 frontend configurations.
+- This closes the identified SLL decode defect and its system differential
+  regression. It does not claim complete MIPS32 ISA or privileged ISA
+  compliance.
+
 ### 2026-08-30 MEM-stage merge/load-store scoreboard closure
 
 - Corrected the standalone MEM-stage UVM interface to match the RTL contract:
