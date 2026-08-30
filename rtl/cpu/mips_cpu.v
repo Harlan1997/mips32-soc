@@ -307,6 +307,9 @@ module mips_cpu #(
     // granularity, matching the coherency write-invalidate contract.
     reg         ll_reservation_valid;
     reg [31:0]  ll_reservation_addr;
+    // LLAddr is an architectural diagnostic view of the virtual LL address;
+    // the reservation itself is physical so MMU aliases cannot bypass snoops.
+    reg [31:0]  lladdr_visible;
     // Retire tracing needs the SC address separately because wb_ex_out is
     // architecturally reused for the SC success result.
     reg [31:0]  sc_trace_addr;
@@ -1512,8 +1515,20 @@ module mips_cpu #(
 
     wire is_ll_mem = mem_mem_read  && (mem_mem_op == 3'b111);
     wire is_sc_mem = mem_mem_write && (mem_mem_op == 3'b111);
+    // Coherency producers normally emit physical addresses, but the legacy
+    // kseg1 test/integration path may emit its uncached virtual alias.
+    function [31:0] normalize_ll_snoop_addr;
+        input [31:0] addr;
+        begin
+            normalize_ll_snoop_addr = ((addr[31:28] == 4'hA) &&
+                                       (addr[27:16] == 12'd0)) ?
+                                      {16'd0, addr[15:0]} : addr;
+        end
+    endfunction
+    wire [31:0] coh_snoop_addr_phys = normalize_ll_snoop_addr(coh_snoop_addr);
+    wire [31:0] reservation_data_addr = normalize_ll_snoop_addr(data_addr);
     wire sc_reservation_match = ll_reservation_valid &&
-                                 (ll_reservation_addr == {mem_vaddr[31:2], 2'b00});
+                                 (ll_reservation_addr == reservation_data_addr);
     assign data_we = data_we_raw && (!is_sc_mem || sc_reservation_match);
     wire [31:0] mem_ex_out_wb = is_sc_mem ? {31'd0, sc_reservation_match} : mem_ex_out;
 
@@ -1521,12 +1536,14 @@ module mips_cpu #(
         if (!rst_n) begin
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+            lladdr_visible       <= 32'd0;
             sc_trace_addr        <= 32'd0;
         end else if (ctx_restore_req) begin
             // A reservation belongs to the executing thread, not to the
             // destination task. Never carry LL/SC state across a switch.
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+            lladdr_visible       <= 32'd0;
             sc_trace_addr        <= 32'd0;
         end else if (exception_flush) begin
             // An exception boundary terminates the atomic sequence.  This
@@ -1534,17 +1551,22 @@ module mips_cpu #(
             // LL reservation created before the handler ran.
             ll_reservation_valid <= 1'b0;
             ll_reservation_addr  <= 32'd0;
+            lladdr_visible       <= 32'd0;
             sc_trace_addr        <= 32'd0;
         end else if (coh_snoop_valid &&
-                     (ll_reservation_addr[31:5] == coh_snoop_addr[31:5])) begin
+                     (ll_reservation_addr[31:5] == coh_snoop_addr_phys[31:5])) begin
             ll_reservation_valid <= 1'b0;
         end else if (data_data_ok_current) begin
             if (is_sc_mem) begin
                 sc_trace_addr <= {mem_vaddr[31:2], 2'b00};
+                // An SC attempt consumes the reservation, even when the
+                // address or validity check makes the store fail.
+                ll_reservation_valid <= 1'b0;
             end
             if (is_ll_mem) begin
                 ll_reservation_valid <= 1'b1;
-                ll_reservation_addr  <= {mem_vaddr[31:2], 2'b00};
+                ll_reservation_addr  <= reservation_data_addr;
+                lladdr_visible       <= {mem_vaddr[31:2], 2'b00};
             end else if (mem_mem_write) begin
                 ll_reservation_valid <= 1'b0;
             end
@@ -2059,7 +2081,7 @@ module mips_cpu #(
         .di           (wb_di),
         .ei           (wb_ei),
         .bad_vaddr    (bad_vaddr),
-        .lladdr_in    (ll_reservation_addr),
+        .lladdr_in    (lladdr_visible),
         .ctx_save_req (ctx_save_req),
         .ctx_save_done(),
         .ctx_save_status(ctx_save_status),

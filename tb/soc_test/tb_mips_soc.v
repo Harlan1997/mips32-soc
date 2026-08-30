@@ -1597,9 +1597,9 @@ module tb_mips_soc;
 
         // The firmware creates reservations for the normal success case,
         // ordinary-store invalidation, exception-boundary invalidation, and
-        // finally this peer-notification case.  Inject only after the fourth
+        // finally this peer-notification case.  Inject only after the fifth
         // rise so the notification applies to the intended reservation.
-        while (ll_valid_rise_count < 4) begin
+        while (ll_valid_rise_count < 5) begin
             @(posedge u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ll_reservation_valid);
             ll_valid_rise_count = ll_valid_rise_count + 1;
             $display("tb_mips_soc: Observed LL reservation rise #%0d at time=%0t", ll_valid_rise_count, $time);

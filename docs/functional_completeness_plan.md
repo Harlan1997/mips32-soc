@@ -1032,6 +1032,17 @@ mailbox. This remains a selected peripheral differential slice and does not
 close full DMA fault/reset timing, physical device timing, Linux drivers or
 full RTL system-mode Linux differential.
 
+### 2026-08-31 LL/SC physical reservation and SC-consumption repair
+
+The CPU now compares and stores LL/SC reservations using the translated,
+aligned physical `data_addr`, so MMU aliases and physical coherency snoops
+cannot bypass reservation invalidation. CP0 LLAddr and retire tracing retain
+the existing aligned virtual-address diagnostic contract. Every completed SC
+attempt clears the reservation, including a failed attempt; the LL/SC firmware
+gate now checks that a mismatched failed SC cannot be retried successfully.
+This strengthens the bounded single-core/opt-in coherency contract only and
+does not claim full MIPS memory ordering, arbitrary SMP atomicity or MESI.
+
 ### 2026-08-30 hardware walker large-page completion
 
 The opt-in two-level hardware walker now implements the remaining contract
