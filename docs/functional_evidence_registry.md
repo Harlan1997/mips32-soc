@@ -19,6 +19,15 @@ the protected-page SIGSEGV or during the later fork/wait path before all
 markers. Generic Linux userspace therefore remains an open reproducibility
 item despite the earlier standalone marker-complete run.
 
+The runner also terminates QEMU immediately after the final fork/wait marker;
+this avoids waiting for the intentionally exiting `init` to cause a kernel
+panic and does not accept a partial marker set.
+
+After clearing the accumulated historical `/tmp` gate artifacts, a fresh
+`JOBS=2 QEMU_TIMEOUT=120s make linux-boot-build-gate` passed with the complete
+marker set and exited through the new bounded runner shutdown path. Earlier
+resource-loaded A/B failures remain recorded as residual reproducibility risk.
+
 ## 2026-08-30 EDA host-OOM containment
 
 Kernel logs attribute the prior high-water event to a VCS compiler process
