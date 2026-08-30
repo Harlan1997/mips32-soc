@@ -13,6 +13,9 @@ module tb_cpu_hardware_walker;
   wire [31:0] walker_leaf_base = (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h0003) ? 32'h0000_4000 :
                                   (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h000f) ? 32'h0001_0000 :
                                   (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h003f) ? 32'h0004_0000 :
+                                  (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h00ff) ? 32'h0010_0000 :
+                                  (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h03ff) ? 32'h0040_0000 :
+                                  (`SOC_HARDWARE_WALKER_PAGE_MASK == 16'h0fff) ? 32'h0100_0000 :
                                   32'h0000_3000;
 
   wire [31:0] zero32 = 32'd0;

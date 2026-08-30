@@ -2,8 +2,8 @@
 // PTE format: V[0], TABLE[1] for non-leaf entries, W[1], X[2], U[3] for leaf
 // entries, PFN[31:12]. One read is outstanding at a time.  PAGE_MASK changes
 // the leaf-page offset and L2 index while retaining the existing 10-bit L1
-// directory geometry.  This supports the four product contract page sizes
-// 4 KiB, 16 KiB, 64 KiB and 256 KiB without changing the default interface.
+// directory geometry.  This supports the contract page sizes 4 KiB, 16 KiB,
+// 64 KiB, 256 KiB, 1 MiB, 4 MiB and 16 MiB without changing the interface.
 module mips_page_table_walker #(
     parameter [15:0] PAGE_MASK = 16'h0000
 ) (
@@ -49,6 +49,9 @@ module mips_page_table_walker #(
                 16'h0003: l2_index_offset = {22'd0, v[21:14], 2'd0};
                 16'h000f: l2_index_offset = {26'd0, v[21:16], 2'd0};
                 16'h003f: l2_index_offset = {30'd0, v[21:18], 2'd0};
+                16'h00ff: l2_index_offset = {30'd0, v[21:20], 2'd0};
+                16'h03ff,
+                16'h0fff: l2_index_offset = 32'd0;
                 default:  l2_index_offset = {20'd0, v[21:12], 2'd0};
             endcase
         end
@@ -63,6 +66,9 @@ module mips_page_table_walker #(
                 16'h0003: leaf_format_valid = (pte[13:12] == 2'b00);
                 16'h000f: leaf_format_valid = (pte[15:12] == 4'b0000);
                 16'h003f: leaf_format_valid = (pte[17:12] == 6'b000000);
+                16'h00ff: leaf_format_valid = (pte[19:12] == 8'b00000000);
+                16'h03ff: leaf_format_valid = (pte[21:12] == 10'b0000000000);
+                16'h0fff: leaf_format_valid = (pte[23:12] == 12'b000000000000);
                 default:  leaf_format_valid = 1'b1;
             endcase
         end
@@ -76,6 +82,9 @@ module mips_page_table_walker #(
                 16'h0003: leaf_pa = {pte[31:14], v[13:0]};
                 16'h000f: leaf_pa = {pte[31:16], v[15:0]};
                 16'h003f: leaf_pa = {pte[31:18], v[17:0]};
+                16'h00ff: leaf_pa = {pte[31:20], v[19:0]};
+                16'h03ff: leaf_pa = {pte[31:22], v[21:0]};
+                16'h0fff: leaf_pa = {pte[31:24], v[23:0]};
                 default:  leaf_pa = {pte[31:12], v[11:0]};
             endcase
         end

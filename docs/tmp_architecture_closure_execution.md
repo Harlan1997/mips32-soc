@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 hardware walker seven-page-size matrix
+
+- Extended the opt-in page-table walker to support the remaining contract
+  PageMask values: 1 MiB (`0x00ff`), 4 MiB (`0x03ff`) and 16 MiB (`0x0fff`).
+  The implementation now reduces L2 index width, validates leaf alignment,
+  preserves the larger page offset in PA formation, and carries the matching
+  even/odd selector into the CPU hardware-refill TLB write path.
+- Fresh `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M BUILD_DIR=/tmp/mips32-walker-pages-3 make page-table-walker-page-sizes-gate`
+  passed all seven configurations: 4K, 16K, 64K, 256K, 1M, 4M and 16M.
+- This closes the bounded hardware-walker page-size matrix only. The walker
+  remains two-level, single-outstanding and opt-in; unrestricted demand
+  paging, OS page-table ownership, Linux VM and full privileged/MMU closure
+  remain open.
+
 ### 2026-08-30 L1 nonblocking real CPU/D-cache path closure
 
 - Confirmed `mips_core` selects `l1_cache_nb_cpu_axi` under the opt-in

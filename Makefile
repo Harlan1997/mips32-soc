@@ -1202,7 +1202,7 @@ page-table-walker-gate:
 
 page-table-walker-page-sizes-gate:
 	@set -e; \
-	for spec in "4K:" "16K:WALKER_16K" "64K:WALKER_64K" "256K:WALKER_256K"; do \
+	for spec in "4K:" "16K:WALKER_16K" "64K:WALKER_64K" "256K:WALKER_256K" "1M:WALKER_1M" "4M:WALKER_4M" "16M:WALKER_16M"; do \
 		name=$${spec%%:*}; define=$${spec#*:}; \
 		dir=$(BUILD_DIR)/unit_tb/page_table_walker_pages/$${name}; \
 		if [ -n "$${define}" ]; then VCS_DEFINES="+define+$${define}" RUN_DIR="$${dir}" tb/unit/mmu/run_page_table_walker.sh; \
@@ -1222,7 +1222,7 @@ cpu-hardware-walker-page-size-gate:
 
 cpu-hardware-walker-page-sizes-gate:
 	@set -e; \
-	for spec in "16K:16'h0003" "64K:16'h000f" "256K:16'h003f"; do \
+	for spec in "16K:16'h0003" "64K:16'h000f" "256K:16'h003f" "1M:16'h00ff" "4M:16'h03ff" "16M:16'h0fff"; do \
 		name=$${spec%%:*}; mask=$${spec#*:}; \
 		VCS_DEFINES="+define+SOC_HARDWARE_WALKER_PAGE_MASK=$${mask}" \
 		RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_hardware_walker_$${name} \

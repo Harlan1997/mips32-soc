@@ -315,7 +315,8 @@
 
 // Optional hardware page-table walker page size.  The default remains the
 // original 4 KiB contract; the supported opt-in PageMask values are 16 KiB,
-// 64 KiB and 256 KiB.  Software-managed TLB operation is unaffected.
+// 64 KiB, 256 KiB, 1 MiB, 4 MiB and 16 MiB. Software-managed TLB operation is
+// unaffected.
 `ifndef SOC_HARDWARE_WALKER_PAGE_MASK
 `define SOC_HARDWARE_WALKER_PAGE_MASK 16'h0000
 `endif
