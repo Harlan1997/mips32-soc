@@ -1364,6 +1364,16 @@ module mips_cpu #(
     endproperty
     assert property (p_sync_translation_fault_priority)
         else $error("synchronous translation fault was preempted by IRQ");
+
+    // A blocking data request remains the owner of MEM until its response
+    // edge. In particular, the address-accepted/waiting-response cycle must
+    // not be mistaken for an idle cycle by interrupt arbitration.
+    property p_blocking_mem_irq_barrier;
+        @(posedge clk) disable iff (!rst_n)
+            (data_req_raw && !data_data_ok_current) |-> !interrupt_accept;
+    endproperty
+    assert property (p_blocking_mem_irq_barrier)
+        else $error("blocking MEM request was interrupted before response");
 `endif
 
     assign fpu_mem_lwc1 = (`SOC_FPU_ENABLE != 0) &&
