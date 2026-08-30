@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 L1 nonblocking real CPU/D-cache path closure
+
+- Confirmed `mips_core` selects `l1_cache_nb_cpu_axi` under the opt-in
+  `SOC_L1_NONBLOCKING_ENABLE`/`SOC_CPU_NONBLOCKING_ENABLE` configuration; the
+  adapter is connected to the real CPU data request and SoC AXI fabric, while
+  the default blocking dcache path remains unchanged.
+- Fresh `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M BUILD_DIR=/tmp/mips32-l1-complete`
+  `make l1-nonblocking-cpu-complete-gate` passed compatibility, multi-request,
+  three-seed reset stress, single/two-response AXI errors, reset-in-flight and
+  maintenance CPU gates. Firmware reached `REGRESSION_TEST_SUCCESS` for every
+  requested seed.
+- Corrected the opt-in wrapper's diagnostic FSM aliases from 4 bits to the
+  full 5-bit legacy dcache state width. A fresh no-coverage RTL frontend matrix
+  passed all 8 configurations, including `cpu_nonblocking`.
+- This closes the real CPU/D-cache opt-in integration contract. Default
+  blocking behavior, full L1/L2 ordering/coherency, SMP cache protocol and
+  product default-path migration remain separate open items.
+
 ### 2026-08-30 legal SLL decode and BREAK differential recovery
 
 - Corrected the SPECIAL/SLL decoder to accept all architecturally legal
