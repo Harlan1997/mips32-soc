@@ -3042,3 +3042,37 @@ configuration.
   for the aggregate entry points; it does not make arbitrary standalone unit
   scripts resource-isolated, nor does it change architectural coverage or
   Linux closure status.
+
+### 2026-08-30 RTL Linux 100M-cycle delay boundary
+
+- Ran a fresh relocated kernel image with coverage disabled and bounded
+  resources: `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  SKIP_COVERAGE=1 RTL_CYCLE_LIMIT=100000000 HOST_TIMEOUT=600s
+  make rtl-linux-progress-gate`.
+- The simulator reached approximately 62.5M cycles before the 600-second
+  host timeout, with stable RSS near 158 MiB and no simulator OOM. The final
+  progress records repeatedly show the legal Linux `__udelay` loop at
+  `0x89243530/0x89243534`; no Linux userspace success marker was observed.
+- This rules out the old short-budget explanation for the current boundary,
+  but does not yet identify whether the delay value, CP0 Count/clockevent
+  calibration, or RTL pipeline throughput is responsible. The next diagnostic
+  must capture the loop's `v0`, CP0 Count/Compare and timer interrupt boundary
+  in one run before any CP0 or Linux timing semantic change. RTL Linux
+  userspace boot and full RTL/QEMU Linux differential remain open.
+
+### 2026-08-30 RTL Linux delay/CP0 correlation probe
+
+- Ran the existing 20M-cycle no-coverage probe with the narrow
+  `LINUX_DELAY_TRACE` window at `0x89243530..0x89243534` and a bounded CP0
+  trace. The simulator completed normally and produced a 1.1 MiB VCS data
+  structure; the wrapper returned a diagnostic failure only because progress
+  heartbeat output was intentionally disabled for this trace-only run.
+- The captured `__udelay` sequence shows `v0=0x00106256` and then a normal
+  decrement on each loop iteration (two RTL cycles per decrement). CP0 Count
+  advances continuously, Linux Compare writes are visible, and the timer
+  `Cause.TI`/interrupt state changes at the expected compare boundaries.
+- This rules out a stopped Count or a missed Compare event as the immediate
+  cause. The remaining RTL Linux boundary is repeated/long delay activity
+  relative to RTL throughput or a higher-level Linux initialization path. No
+  CP0 timing semantic change is justified by this evidence; userspace boot
+  and full RTL/QEMU Linux differential remain open.
