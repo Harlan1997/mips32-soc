@@ -10,6 +10,15 @@ qemu-system-ddr-gate` and `make qemu-system-current-contract-gate` also pass.
 The QEMU evidence covers the behavioral GPIO/timer/DMA/PIC/QSPI/DDR contract,
 not physical device timing, RTL Linux boot, or full RTL/QEMU differential.
 
+The generic Linux runner now gives the single-vCPU QEMU guest a 120-second
+default host budget. The gate still requires `/init`, VM/protection, timer,
+fork/exec, exact-PID wait/reap, and exit-status markers; this change only
+contains host scheduling variance and does not relax a functional check. A
+fresh rerun remains nondeterministic in this environment: it can stop after
+the protected-page SIGSEGV or during the later fork/wait path before all
+markers. Generic Linux userspace therefore remains an open reproducibility
+item despite the earlier standalone marker-complete run.
+
 ## 2026-08-30 EDA host-OOM containment
 
 Kernel logs attribute the prior high-water event to a VCS compiler process

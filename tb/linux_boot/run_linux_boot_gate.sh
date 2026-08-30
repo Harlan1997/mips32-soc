@@ -9,7 +9,7 @@ mkdir -p "${RUN_DIR}"
 BUILD_DIR="${RUN_DIR}" "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
 test -x "${QEMU_SYSTEM_BIN}"
 set +e
-timeout "${QEMU_TIMEOUT:-60s}" "${QEMU_SYSTEM_BIN}" \
+timeout "${QEMU_TIMEOUT:-120s}" "${QEMU_SYSTEM_BIN}" \
     -accel tcg,thread=single \
     -M mips32-soc-ref -m 64M -cpu 24Kc \
     -kernel "${RUN_DIR}/kernel/vmlinux" -dtb "${RUN_DIR}/mips32_soc_ref.dtb" \
