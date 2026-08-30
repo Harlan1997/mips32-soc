@@ -1100,7 +1100,7 @@ l1-nonblocking-ddr-gate:
 
 qemu-system-l1-ddr-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=qemu_system_l1_ddr \
+	FW_TEST=qemu_system_l1_ddr FW_DIR=$(BUILD_DIR)/firmware/qemu_system_l1_ddr \
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_l1_ddr_differential \
 	RTL_TIMEOUT=180 \
 	RTL_VCS_EXTRA_ARGS='+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 +define+TB_SKIP_UART_PIN_CHECK' \

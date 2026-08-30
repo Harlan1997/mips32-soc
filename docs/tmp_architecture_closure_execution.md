@@ -18,6 +18,19 @@
   blocking behavior, full L1/L2 ordering/coherency, SMP cache protocol and
   product default-path migration remain separate open items.
 
+### 2026-08-30 L1 nonblocking DDR system differential
+
+- Added `FW_DIR=$(BUILD_DIR)/firmware/qemu_system_l1_ddr` to the Make target so
+  an external build root isolates firmware as well as RTL/QEMU logs.
+- Fresh bounded run with `BUILD_DIR=/tmp/mips32-l1-ddr-isolated`, VCS memory
+  limits and the opt-in `SOC_L1_NONBLOCKING_DDR_ENABLE=1` configuration passed
+  the real RTL/QEMU `mips32-soc-ref` retire differential with
+  `TRACE_COMPARE_PASS records=22`. Both sides reached the firmware mailbox
+  boundary.
+- This closes the checked L1 nonblocking CPU-to-DDR behavioral integration
+  slice. It does not close arbitrary DDR contention, full L1/L2 ordering or
+  coherency, physical DDR PHY/timing, or product default-path migration.
+
 ### 2026-08-30 legal SLL decode and BREAK differential recovery
 
 - Corrected the SPECIAL/SLL decoder to accept all architecturally legal
