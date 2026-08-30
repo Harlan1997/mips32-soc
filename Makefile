@@ -182,7 +182,7 @@ dcache-parity-gate:
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
-.PHONY: cpu-irq-delay-slot-gate
+.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
 
 isa-implementation-audit:
 	@mkdir -p $(BUILD_DIR)/isa_audit
@@ -957,7 +957,7 @@ phase3c-regression: firmware
 phase3c-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_PHASE3C_TESTLIST) RUN_ROOT=$(UVM_PHASE3C_COMPLETE_DIR) tb/uvm_tb/run_phase3c_complete.sh
 
-current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate dcache-parity-gate verification-foundation-gate cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
+current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate dcache-parity-gate verification-foundation-gate cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
 	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) ALLOW_EXTERNAL_RUN_ROOT=1 tb/uvm_tb/run_current_contract_signoff.sh
 
 soc-smoke: firmware
@@ -974,6 +974,11 @@ cpu-irq-delay-slot-gate:
 	FW_DIR=$(BUILD_DIR)/firmware/cpu_irq_delay_slot \
 	RUN_DIR=$(BUILD_DIR)/soc_test/cpu_irq_delay_slot \
 		tb/soc_test/run_cpu_irq_delay_slot_gate.sh
+
+cpu-irq-mem-pending-gate:
+	chmod +x tb/unit/cpu_test/run_mips_cpu_irq_mem_pending.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_irq_mem_pending \
+		tb/unit/cpu_test/run_mips_cpu_irq_mem_pending.sh
 
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh

@@ -27,6 +27,17 @@ preserving the default path. `make l1-nonblocking-sync-gate`,
 the bounded L1 drain contract; OS cache ABI, multicore ordering, and complete
 MIPS memory-model compliance remain open.
 
+### 2026-08-30 blocking MEM/IRQ precision directed slice
+
+`make cpu-irq-mem-pending-gate` passes a direct `mips_cpu` test which accepts
+the data address, delays the blocking load response for four cycles while IP2
+is asserted, and proves that the interrupt is not accepted while the request
+is live. The same run observes one architectural writeback of the load value
+and a later interrupt acceptance. The gate is included in
+`current-contract-signoff`; it closes this handshake slice only and does not
+close Linux userspace boot, arbitrary reset-in-flight behavior, or full
+exception recovery.
+
 ## 1A. 当前交付边界：RTL 前端
 
 本阶段的明确目标是 **RTL 功能编写、前端编译/elaboration 和功能仿真**。

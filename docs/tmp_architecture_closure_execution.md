@@ -3123,3 +3123,14 @@ configuration.
   condition and added an ELF load-address check. A rebuilt kernel now reports
   `0x88000000`, and the RTL Boot ROM/DDR image generator passes with the
   relocated image.
+
+### 2026-08-30 blocking MEM/IRQ directed regression
+
+- Added `make cpu-irq-mem-pending-gate`, a direct `mips_cpu` test which accepts
+  a blocking load address, delays its response for four cycles while IP2 is
+  asserted, and checks that no interrupt is accepted during the live request.
+- The same test checks the load data is retired exactly once and that the
+  pending interrupt is accepted after the response. This is a narrow unit
+  contract for the asynchronous interrupt/MEM handshake; Linux userspace,
+  arbitrary reset-in-flight timing, and complete exception recovery remain
+  open.
