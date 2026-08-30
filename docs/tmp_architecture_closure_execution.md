@@ -3108,3 +3108,18 @@ configuration.
   relative to RTL throughput or a higher-level Linux initialization path. No
   CP0 timing semantic change is justified by this evidence; userspace boot
   and full RTL/QEMU Linux differential remain open.
+
+### 2026-08-30 blocking MEM transaction IRQ barrier
+
+- Tightened `mips_cpu` interrupt acceptance so an active MEM data transaction
+  (`data_req_raw`) cannot be flushed by an asynchronous IRQ before its
+  response and architectural retirement. `stall_req_mem` alone did not cover
+  the address-accepted/waiting-response boundary.
+- RTL frontend compile (`8/8`), CPU/CP0 firmware, and IRQ delay-slot gates
+  pass. A fresh 14M-cycle no-coverage RTL Linux progress probe also passes;
+  userspace marker count remains zero, so this is a targeted recovery fix and
+  not Linux boot closure.
+- Corrected the Linux build script's reversed `CONFIG_CRASH_DUMP` dependency
+  condition and added an ELF load-address check. A rebuilt kernel now reports
+  `0x88000000`, and the RTL Boot ROM/DDR image generator passes with the
+  relocated image.
