@@ -3159,3 +3159,16 @@ configuration.
 - This closes the SPECIAL2 decoder reserved-field slice only. Complete
   MIPS32/privileged ISA compliance, FPU ABI, Linux boot and full differential
   remain open.
+
+### 2026-08-30 SPECIAL fixed-field enforcement
+
+- Extended `rtl/cpu/mips_control.v` fixed-field checks to SPECIAL ALU,
+  shifts, variable shifts, compares, traps, MOVZ/MOVN, MFHI/MFLO, MTHI/MTLO,
+  and MULT/DIV instructions. Invalid reserved fields now produce RI without
+  control side effects; the architectural R2 `SLL $0,$0,3` EHB alias remains
+  accepted.
+- Expanded `mips-control-special2-gate` with valid ADD/SLL/SLLV/EHB cases and
+  eight invalid SPECIAL encodings. The gate passed, as did a fresh
+  `qemu-system-isa-r2-differential-gate`.
+- This closes only the tested SPECIAL fixed-field slice. Other privileged and
+  FPU semantics, Linux RTL boot, and full ISA compliance remain open.
