@@ -43,12 +43,10 @@ module l1_cache_nb_cpu_axi #(
     // Preserve the debug/testbench hierarchy used by the blocking cache
     // while the opt-in adapter is active.  These are observation aliases;
     // functional ownership remains in the instantiated legacy cache.
-    // The legacy observation interface intentionally exposes the low four
-    // state bits. Keep the aliases at that width so opt-in elaboration does
-    // not create a truncation warning; functional state remains owned by the
-    // instantiated dcache.
-    wire [3:0] state;
-    wire [3:0] next_state;
+    // Preserve the full legacy observation width in the opt-in wrapper so
+    // diagnostics do not truncate the blocking-cache FSM state.
+    wire [4:0] state;
+    wire [4:0] next_state;
     wire [31:0] req_buf_addr;
     wire req_buf_we;
     wire uncacheable;
