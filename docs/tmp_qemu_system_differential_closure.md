@@ -24,12 +24,12 @@ QEMU user-mode reference regression remains a separate Linux-user path.
 | SRAM/kseg aliases | DONE | `build/isa_ref/qemu_system_smoke/completion_report.md` | Differential smoke |
 | UART TX/LSR | PASS | `build/isa_ref/qemu_system_smoke/qemu_stdout.log` | RTL/QEMU compare |
 | Exit mailbox | PASS | `build/isa_ref/qemu_system_smoke/completion_report.md` | Negative mailbox case |
-| GPIO | PASS | `build/isa_ref/qemu_system_peripherals/completion_report.md` | external pin model remains abstract |
-| Timer | PASS | `build/isa_ref/qemu_system_peripherals/completion_report.md` | virtual-clock behavioral model |
-| PIC | PASS | `build/isa_ref/qemu_system_peripherals/completion_report.md` | full priority/replay pending |
-| DMA | PASS (RTL v1/v2 contract; QEMU v1/v2 model implemented) | `build/soc_test/dma_cpu_gate/sim.log`, `build/isa_ref/qemu_system_dma_v2_differential_pass_final2/completion_report.md` | Full long-form retire differential is blocked by implementation-dependent RTL status-poll latency; QEMU v2 SG/error/reset remains out of scope |
-| QSPI/XIP | PASS (RTL x1/quad contract; QEMU transaction-level command/FIFO model) | `build/unit_tb/qspi_cmd_behavioral/sim.log`, `build/unit_tb/qspi_axi_xip_quad/sim.log`, `build/isa_ref/qemu_system_qspi/completion_report.md` | QEMU covers APB command/FIFO, x1/quad image-backed reads, TX/RX, IRQ/DONE W1C, abort and timeout; pin timing, PHY, JEDEC behavior and RTL retire differential remain open |
-| DDR | PASS (RTL protocol/ECC contract; QEMU behavioral window model) | `build/unit_tb/axi_ddr4_controller_stress/sim.log`, `build/unit_tb/ecc_secded_32/sim.log`, `build/isa_ref/qemu_system_ddr/completion_report.md` | QEMU covers status/version/error/W1C and cached/uncached access to the 128 MiB behavioral window; PHY training, JEDEC timing, refresh scheduling, ECC injection and physical device signoff remain open |
+| GPIO | PASS | `build/isa_ref/qemu_system_peripherals/completion_report.md`, `build/isa_ref/qemu_system_gpio_input/completion_report.md` | external pin electrical/synchronizer model remains abstract |
+| Timer | PASS | `build/isa_ref/qemu_system_peripherals/completion_report.md`, `build/isa_ref/qemu_system_gpio_input/completion_report.md` | virtual-clock behavioral model; physical clock signoff remains open |
+| PIC | PASS | `build/isa_ref/qemu_system_peripherals/completion_report.md`, `build/isa_ref/qemu_system_vic_full_sources_differential/completion_report.md` | selected priority/replay and 32-source contract pass; arbitrary OS nesting remains open |
+| DMA | PASS (RTL v1/v2 contract; QEMU v1/v2 model implemented) | `build/soc_test/dma_cpu_gate/sim.log`, `build/isa_ref/qemu_system_dma_v2_differential_pass_final2/completion_report.md` | Full long-form retire differential remains bounded by implementation-dependent RTL status-poll latency; physical AXI timing and Linux DMA ABI remain open |
+| QSPI/XIP | PASS (RTL x1/quad contract; QEMU transaction-level command/FIFO model) | `build/unit_tb/qspi_cmd_behavioral/sim.log`, `build/unit_tb/qspi_axi_xip_quad/sim.log`, `build/isa_ref/qemu_system_qspi/completion_report.md` | QEMU covers APB command/FIFO, x1/quad image-backed reads, TX/RX, IRQ/DONE W1C, abort and timeout; pin timing, PHY, JEDEC behavior, erase/program and physical-device signoff remain open |
+| DDR | PASS (RTL protocol/ECC contract; QEMU behavioral window model) | `build/unit_tb/axi_ddr4_controller_stress/sim.log`, `build/unit_tb/ecc_secded_32/sim.log`, `build/isa_ref/qemu_system_ddr/completion_report.md` | QEMU covers status/version/error/W1C and cached/uncached access to the 128 MiB behavioral window; PHY training, JEDEC timing, physical refresh/ECC device behavior and board signoff remain open |
 | System retire trace | PASS | `build/isa_ref/qemu_system_retire/completion_report.md` | broader exception/interrupt corpus |
 | RTL/QEMU baseline differential | PASS | `build/isa_ref/qemu_system_differential/completion_report.md` | 10 retire records through a minimal SRAM/mailbox guest's magic-mailbox-store retirement boundary |
 | RTL/QEMU architectural differential | PASS (selected system corpus) | `make qemu-system-retire-differential-gate`, exception/BD/peripheral/VIC gates | Baseline, CP0 syscall/ERET, branch-delay BD/EPC, GPIO/timer/DMA/QSPI/DDR, VIC IRQ, and full `vic_cpu` corpus now have dedicated RTL/QEMU retire evidence; full ISA compliance, physical interrupt timing, and production device behavior remain open |
@@ -114,17 +114,25 @@ positive truncated trace.
 - The gate stops both streams at the mailbox-store retirement boundary so QEMU
   host exit timing cannot mask or create an architectural mismatch.
 
-### 2. APB foundation
+### 2. APB foundation (DONE for the bounded reference contract)
 
-- Add GPIO, deterministic timer, and PIC models.
-- Keep MMIO state resettable and all reads deterministic.
-- Add directed firmware and negative/reset-in-flight tests.
+- GPIO, deterministic virtual-clock timer, and PIC models are implemented in
+  `scripts/qemu/mips32_soc_ref.c`.
+- MMIO state is resettable and deterministic; directed GPIO/timer, PIC and
+  full-source priority tests have passing reports.
+- External pin synchronization, physical timer clock behavior, and arbitrary
+  OS interrupt nesting remain outside this reference-machine contract.
 
-### 3. Data movers and memories
+### 3. Data movers and memories (DONE for the bounded behavioral contract)
 
-- Add DMA copy/status/error behavior.
-- Add image-backed QSPI APB/XIP behavior.
-- Add DDR behavioral memory and controller status/performance registers.
+- DMA copy/status/error/reset and v2 event behavior are implemented and have
+  RTL/QEMU contract evidence.
+- Image-backed QSPI APB/XIP x1 and quad command/FIFO behavior is implemented;
+  timeout, abort, IRQ/DONE W1C and shared model state are covered.
+- DDR behavioral memory plus controller status/error/performance registers are
+  implemented and covered with the RTL protocol/ECC contract.
+- Physical DDR PHY/JEDEC timing, physical QSPI device timing/erase/program,
+  and full unrestricted RTL retire differential remain product-level residuals.
 
 ### 4. Exception differential (PASS)
 
