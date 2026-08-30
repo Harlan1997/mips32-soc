@@ -15,6 +15,8 @@ package mips_mem_stage_pkg;
         rand logic        mem_write;
         rand logic [2:0]  mem_op;
         rand logic [31:0] dmem_rdata;
+        rand logic        mem_done;
+        rand logic        translation_fault;
 
         logic [31:0] dmem_addr;
         logic [31:0] dmem_wdata;
@@ -42,6 +44,11 @@ package mips_mem_stage_pkg;
             };
         }
 
+        constraint response_state_c {
+            mem_done dist {1'b0 := 90, 1'b1 := 10};
+            translation_fault dist {1'b0 := 80, 1'b1 := 20};
+        }
+
         `uvm_object_utils_begin(mem_transaction)
             `uvm_field_int(mem_ex_out, UVM_ALL_ON)
             `uvm_field_int(mem_val_rt, UVM_ALL_ON)
@@ -49,6 +56,8 @@ package mips_mem_stage_pkg;
             `uvm_field_int(mem_write, UVM_ALL_ON)
             `uvm_field_int(mem_op, UVM_ALL_ON)
             `uvm_field_int(dmem_rdata, UVM_ALL_ON)
+            `uvm_field_int(mem_done, UVM_ALL_ON)
+            `uvm_field_int(translation_fault, UVM_ALL_ON)
             `uvm_field_int(dmem_addr, UVM_ALL_ON)
             `uvm_field_int(dmem_wdata, UVM_ALL_ON)
             `uvm_field_int(dmem_we, UVM_ALL_ON)
@@ -116,6 +125,8 @@ package mips_mem_stage_pkg;
                 vif.mem_write  = req.mem_write;
                 vif.mem_op     = req.mem_op;
                 vif.dmem_rdata = req.dmem_rdata;
+                vif.mem_done = req.mem_done;
+                vif.translation_fault = req.translation_fault;
                 #1; // wait for comb logic
                 seq_item_port.item_done();
             end
@@ -148,6 +159,8 @@ package mips_mem_stage_pkg;
                 tr.mem_write = vif.mem_write;
                 tr.mem_op = vif.mem_op;
                 tr.dmem_rdata = vif.dmem_rdata;
+                tr.mem_done = vif.mem_done;
+                tr.translation_fault = vif.translation_fault;
                 tr.dmem_addr = vif.dmem_addr;
                 tr.dmem_wdata = vif.dmem_wdata;
                 tr.dmem_we = vif.dmem_we;
@@ -283,7 +296,8 @@ package mips_mem_stage_pkg;
 
             exp_adel = tr.mem_read & ((tr.mem_op inside {3'b010, 3'b011} & align[0]) | (tr.mem_op == 3'b100 & align != 2'b00));
             exp_ades = tr.mem_write & ((tr.mem_op inside {3'b010, 3'b011} & align[0]) | (tr.mem_op == 3'b100 & align != 2'b00));
-            exp_dmem_en = (tr.mem_read | tr.mem_write) & !exp_adel & !exp_ades;
+            exp_dmem_en = (tr.mem_read | tr.mem_write) & !exp_adel & !exp_ades &
+                          !tr.translation_fault & !tr.mem_done;
 
             if (tr.dmem_addr !== exp_dmem_addr || tr.dmem_en !== exp_dmem_en || tr.dmem_wdata !== exp_dmem_wdata ||
                 tr.dmem_we !== exp_dmem_we || tr.dmem_be !== exp_dmem_be || tr.mem_rdata_ext !== exp_mem_rdata_ext ||
