@@ -51,6 +51,15 @@ module tb_mips_control_special2;
         begin special2 = {6'b011100, rs, rt, rd, sa, funct}; end
     endfunction
 
+    function automatic [31:0] special;
+        input [4:0] rs;
+        input [4:0] rt;
+        input [4:0] rd;
+        input [4:0] sa;
+        input [5:0] funct;
+        begin special = {6'b000000, rs, rt, rd, sa, funct}; end
+    endfunction
+
     task automatic expect_reserved;
         input [31:0] value;
         begin
@@ -119,8 +128,25 @@ module tb_mips_control_special2;
         expect_reserved(special2(5'd1, 5'd2, 5'd7, 5'd0, 6'h20));
         expect_reserved(special2(5'd1, 5'd7, 5'd7, 5'd1, 6'h21));
 
+        // SPECIAL fixed-field checks, including the R2 EHB alias.
+        expect_alu(special(5'd1, 5'd2, 5'd3, 5'd0, 6'h20), 5'b00000);
+        expect_alu(special(5'd0, 5'd2, 5'd3, 5'd0, 6'h00), 5'b01000);
+        expect_alu(special(5'd1, 5'd2, 5'd3, 5'd0, 6'h04), 5'b01000);
+        inst = special(5'd0, 5'd0, 5'd0, 5'd3, 6'h00);
+        #1;
+        if (illegal_inst || !reg_write || alu_op != 5'b01000) begin
+            $display("FAIL EHB alias inst=%08h illegal=%b reg=%b alu=%0d",
+                     inst, illegal_inst, reg_write, alu_op);
+            failures = failures + 1;
+        end
+        expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd1, 6'h20));
+        expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd1, 6'h04));
+        expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd1, 6'h00));
+        expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd0, 6'h08));
+        expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd0, 6'h18));
+
         if (failures == 0)
-            $display("REGRESSION_TEST_SUCCESS mips_control_special2 reserved=7");
+            $display("REGRESSION_TEST_SUCCESS mips_control_special2 reserved=15");
         else
             $display("REGRESSION_TEST_FAIL mips_control_special2 failures=%0d", failures);
         $finish;

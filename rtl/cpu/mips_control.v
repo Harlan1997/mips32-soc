@@ -132,44 +132,68 @@ module mips_control (
             6'b000000: begin // SPECIAL (R-type)
                 case (func)
                     6'b100000: begin // ADD
-                        alu_op    = 5'b00000;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00000;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100001: begin // ADDU
-                        alu_op    = 5'b00001;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00001;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100010: begin // SUB
-                        alu_op    = 5'b00010;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00010;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100011: begin // SUBU
-                        alu_op    = 5'b00011;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00011;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100100: begin // AND
-                        alu_op    = 5'b00100;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00100;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100101: begin // OR
-                        alu_op    = 5'b00101;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00101;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100110: begin // XOR
-                        alu_op    = 5'b00110;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00110;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b100111: begin // NOR
-                        alu_op    = 5'b00111;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b00111;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b001100: begin // SYSCALL
                         is_syscall = 1'b1;
@@ -178,22 +202,28 @@ module mips_control (
                         is_break = 1'b1;
                     end
                     6'b110000: begin // TGE
-                        is_trap = 1'b1; trap_op = 4'd0;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin is_trap = 1'b1; trap_op = 4'd0; end
                     end
                     6'b110001: begin // TGEU
-                        is_trap = 1'b1; trap_op = 4'd1;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin is_trap = 1'b1; trap_op = 4'd1; end
                     end
                     6'b110010: begin // TLT
-                        is_trap = 1'b1; trap_op = 4'd2;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin is_trap = 1'b1; trap_op = 4'd2; end
                     end
                     6'b110011: begin // TLTU
-                        is_trap = 1'b1; trap_op = 4'd3;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin is_trap = 1'b1; trap_op = 4'd3; end
                     end
                     6'b110100: begin // TEQ
-                        is_trap = 1'b1; trap_op = 4'd4;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin is_trap = 1'b1; trap_op = 4'd4; end
                     end
                     6'b110110: begin // TNE
-                        is_trap = 1'b1; trap_op = 4'd5;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin is_trap = 1'b1; trap_op = 4'd5; end
                     end
                     6'b001111: begin // SYNC
                         // The pipeline is already in-order and the memory
@@ -203,16 +233,22 @@ module mips_control (
                         cache_op       = 5'b11110;
                     end
                     6'b001010: begin // MOVZ rd, rs, rt (R2)
-                        alu_op    = 5'b10110;  // OP_MOV_PASS (rd = rs)
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
-                        is_movz   = 1'b1;      // id_stage gates waddr on val_rt==0
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b10110;  // OP_MOV_PASS (rd = rs)
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                            is_movz   = 1'b1;      // id_stage gates waddr on val_rt==0
+                        end
                     end
                     6'b001011: begin // MOVN rd, rs, rt (R2)
-                        alu_op    = 5'b10110;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
-                        is_movn   = 1'b1;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b10110;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                            is_movn   = 1'b1;
+                        end
                     end
                     6'b000001: begin // MOVF/MOVT rd, rs, cc (R2/COP1)
                         if ((`SOC_FPU_ENABLE == 0) || rt[1] ||
@@ -228,47 +264,73 @@ module mips_control (
                         end
                     end
                     6'b000000: begin // SLL
-                        alu_op    = 5'b01000;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (rs != 5'd0 ||
+                            (sa != 5'd0 && !(rt == 5'd0 && rd == 5'd0 && sa == 5'd3)))
+                            illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b01000;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b000010: begin // SRL / ROTR (R2: rs[0]=1 → ROTR)
-                        alu_op    = (rs[0]) ? 5'b10101 : 5'b01001;  // OP_ROTR : OP_SRL
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (rs[4:1] != 4'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = (rs[0]) ? 5'b10101 : 5'b01001;  // OP_ROTR : OP_SRL
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b000011: begin // SRA
-                        alu_op    = 5'b01010;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (rs != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b01010;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b000100: begin // SLLV
-                        alu_op    = 5'b01000;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
-                        use_sa    = 1'b0; // shift amount from rs
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b01000;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                            use_sa    = 1'b0; // shift amount from rs
+                        end
                     end
                     6'b000110: begin // SRLV / ROTRV (R2: inst[6]=1 → ROTRV)
-                        alu_op    = (inst[6]) ? 5'b10101 : 5'b01001;  // OP_ROTR : OP_SRL
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
-                        use_sa    = 1'b0; // shift amount from rs
+                        if (inst[10:7] != 4'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = (inst[6]) ? 5'b10101 : 5'b01001;  // OP_ROTR : OP_SRL
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                            use_sa    = 1'b0; // shift amount from rs
+                        end
                     end
                     6'b000111: begin // SRAV
-                        alu_op    = 5'b01010;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
-                        use_sa    = 1'b0; // shift amount from rs
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b01010;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                            use_sa    = 1'b0; // shift amount from rs
+                        end
                     end
                     6'b101010: begin // SLT
-                        alu_op    = 5'b01011;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b01011;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b101011: begin // SLTU
-                        alu_op    = 5'b01100;
-                        reg_write = 1'b1;
-                        reg_dst   = 2'b01;
+                        if (sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            alu_op    = 5'b01100;
+                            reg_write = 1'b1;
+                            reg_dst   = 2'b01;
+                        end
                     end
                     6'b001000: begin // JR / JR.HB (MIPS32 R2 hazard barrier)
                         // This in-order core has no separate fetch hazard
@@ -290,40 +352,46 @@ module mips_control (
                         end
                     end
                     6'b010000: begin // MFHI
-                        mdu_op      = 4'd4;
-                        sel_mdu_out = 1'b1;
-                        reg_write   = 1'b1;
-                        reg_dst     = 2'b01;
+                        if (rs != 5'd0 || rt != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            mdu_op      = 4'd4;
+                            sel_mdu_out = 1'b1;
+                            reg_write   = 1'b1;
+                            reg_dst     = 2'b01;
+                        end
                     end
                     6'b010010: begin // MFLO
-                        mdu_op      = 4'd5;
-                        sel_mdu_out = 1'b1;
-                        reg_write   = 1'b1;
-                        reg_dst     = 2'b01;
+                        if (rs != 5'd0 || rt != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin
+                            mdu_op      = 4'd5;
+                            sel_mdu_out = 1'b1;
+                            reg_write   = 1'b1;
+                            reg_dst     = 2'b01;
+                        end
                     end
                     6'b010001: begin // MTHI
-                        mdu_op    = 4'd6;
-                        mdu_start = 1'b1;
+                        if (rt != 5'd0 || rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin mdu_op = 4'd6; mdu_start = 1'b1; end
                     end
                     6'b010011: begin // MTLO
-                        mdu_op    = 4'd7;
-                        mdu_start = 1'b1;
+                        if (rt != 5'd0 || rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin mdu_op = 4'd7; mdu_start = 1'b1; end
                     end
                     6'b011000: begin // MULT
-                        mdu_op    = 4'd0;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin mdu_op = 4'd0; mdu_start = 1'b1; end
                     end
                     6'b011001: begin // MULTU
-                        mdu_op    = 4'd1;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin mdu_op = 4'd1; mdu_start = 1'b1; end
                     end
                     6'b011010: begin // DIV
-                        mdu_op    = 4'd2;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin mdu_op = 4'd2; mdu_start = 1'b1; end
                     end
                     6'b011011: begin // DIVU
-                        mdu_op    = 4'd3;
-                        mdu_start = 1'b1;
+                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
+                        else begin mdu_op = 4'd3; mdu_start = 1'b1; end
                     end
                     default: begin
                         illegal_inst = 1'b1;
