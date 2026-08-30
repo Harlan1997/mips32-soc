@@ -11,6 +11,18 @@
   This is behavioral custom-machine evidence; physical DDR/QSPI timing,
   RTL Linux userspace boot, and full RTL/QEMU system differential remain open.
 
+### 2026-08-30 Linux userspace host-budget stabilization
+
+- A fresh run completed all Linux VM, protection, timer, fork/exec and
+  exact-PID wait markers but exceeded the old 60-second host budget under
+  concurrent host load. A direct 120-second run completed the same marker set.
+- Increased the generic Linux gate's default QEMU host budget to 120 seconds;
+  all marker assertions remain unchanged. This addresses host scheduling
+  variance only. Follow-up plain and `-icount` A/B runs still stopped at
+  different post-SIGSEGV/fork-wait boundaries, so this remains a diagnostic
+  stabilization and does not close generic Linux reproducibility, RTL Linux
+  boot or full system differential.
+
 ### 2026-08-29 stale delay-slot metadata guard
 
 - Fixed `rtl/cpu/mips_cpu.v` so asynchronous interrupt BD/EPC inference requires
