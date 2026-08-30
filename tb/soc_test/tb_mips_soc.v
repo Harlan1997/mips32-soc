@@ -32,6 +32,7 @@ module tb_mips_soc;
     wire spi_sclk;
     wire spi_cs_n;
     wire spi_mosi;
+    wire [3:0] qspi_io;
     wire uart_tx;
     wire uart_rts_n;
     wire uart_dtr_n;
@@ -644,10 +645,10 @@ module tb_mips_soc;
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr,
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rid,
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rlast,
-                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e08200 >> 2],
-                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e08204 >> 2],
-                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e08208 >> 2],
-                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h000e0820c >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00e08200 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00e08204 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00e08208 >> 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[32'h00e0820c >> 2],
                     `TB_DCACHE_PATH.state,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
@@ -661,10 +662,10 @@ module tb_mips_soc;
             // a stuck refill cannot recreate the previous OOM failure.
             if (linux_ddr_trace != 0 &&
                 linux_ddr_trace_count < linux_ddr_trace_limit &&
-                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h0040133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h0040133b))) begin
+                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h40133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h40133b) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h40133b) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h40133b))) begin
                 $display("LINUX_DDR_TRACE cycle=%0d ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h icbuf=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
@@ -718,10 +719,10 @@ module tb_mips_soc;
             // attributed to DDR, L2, AXI routing, or I-cache installation.
             if (linux_late_icache_trace != 0 &&
                 linux_late_icache_trace_count < linux_late_icache_trace_limit &&
-                ((u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h00484a34) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h00484a34) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h00484a34) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h00484a34))) begin
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h484a34) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h484a34) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h484a34) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h484a34))) begin
                 $display("LINUX_LATE_ICACHE_TRACE cycle=%0d ic=%0d req=%b/%08h ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b cnt=%0d err=%b victim=%0d saddr=%0d install=%b line=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h tag=%08h/%08h/%08h/%08h data=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
@@ -1107,7 +1108,7 @@ module tb_mips_soc;
         linux_target_dside_trace_limit = 160;
         if (!$value$plusargs("LINUX_TARGET_DSIDE_TRACE_LIMIT=%d", linux_target_dside_trace_limit)) begin end
         linux_target_dside_trace_count = 0;
-        linux_target_trace_line = 27'h0040_133b;
+        linux_target_trace_line = 27'h40133b;
         if (!$value$plusargs("LINUX_TARGET_TRACE_LINE=%h", linux_target_trace_line)) begin end
         linux_target_trace_cycle_start = 0;
         if (!$value$plusargs("LINUX_TARGET_TRACE_CYCLE_START=%d", linux_target_trace_cycle_start)) begin end
@@ -1269,6 +1270,7 @@ module tb_mips_soc;
         .spi_cs_n   (spi_cs_n),
         .spi_mosi   (spi_mosi),
         .spi_miso   (1'b0),
+        .qspi_io    (qspi_io),
         .tck        (tck_r),
         .tms        (tms_r),
         .tdi        (tdi_r),
