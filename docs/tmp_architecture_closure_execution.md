@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 MEM-stage merge/load-store scoreboard closure
+
+- Corrected the standalone MEM-stage UVM interface to match the RTL contract:
+  `dmem_we` is one bit and `dmem_be` is checked as the four byte enables.
+  Previously the interface widened `dmem_we` and omitted `dmem_be`, so the
+  scoreboard could not prove the actual write mask.
+- Added LWL/LWR/SWL/SWR and LL/SC to the randomized reference model, including
+  little-endian merge formulas and suppression of requests on AdEL/AdES.
+- Added the reproducible root target `make mem-stage-gate`; it requires a
+  `SCB_PASS` result and rejects `SCB_FAIL` rather than trusting VCS's process
+  exit status. A fresh isolated VCS run passed all 2,009 transactions.
+- This closes the MEM-stage byte-mask and merge-reference verification gap;
+  cross-page exception sequencing, Linux unaligned policy and full ISA remain
+  open.
+
 ### 2026-08-30 RTL Linux MEM interruption state trace
 
 - Extended the bounded Linux exception trace with `wb_valid`,

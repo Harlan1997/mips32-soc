@@ -183,6 +183,7 @@ dcache-parity-gate:
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
 .PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
+.PHONY: mem-stage-gate
 
 isa-implementation-audit:
 	@mkdir -p $(BUILD_DIR)/isa_audit
@@ -1262,6 +1263,13 @@ soc-random-regression:
 
 stage-sim:
 	$(MAKE) -C sim STAGE=$(STAGE) BUILD_DIR=$(BUILD_DIR) all
+
+mem-stage-gate:
+	$(MAKE) -C sim STAGE=mem BUILD_DIR=$(BUILD_DIR) all
+	@test -s "$(BUILD_DIR)/stage/mem/sim.log"
+	@grep -q 'SCB_PASS' "$(BUILD_DIR)/stage/mem/sim.log"
+	@! grep -q 'SCB_FAIL' "$(BUILD_DIR)/stage/mem/sim.log"
+	@echo "MEM-stage merge/load-store gate: PASS"
 
 project-tree:
 	@echo "Source directories:"
