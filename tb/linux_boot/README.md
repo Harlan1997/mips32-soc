@@ -72,6 +72,11 @@ load the ELF through its kseg1 flash alias and execute into U-Boot
 the image still contains Malta board code; it is evidence for the porting
 boundary, not a custom-machine boot gate.
 
+For a trace-only RTL Linux probe, set `LINUX_REQUIRE_PROGRESS=0` together with
+the desired diagnostic trace switches. The normal default remains strict and
+requires a post-reset progress heartbeat; the opt-out is only for a simulator
+run whose purpose is collecting a bounded diagnostic window.
+
 ## Boot flow (target)
 
 ```
