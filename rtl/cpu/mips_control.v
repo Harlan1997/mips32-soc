@@ -691,22 +691,34 @@ module mips_control (
                 imm_signed   = 1'b1;
             end
             6'b000110: begin // BLEZ
-                branch_op  = 3'b011;
-                imm_signed = 1'b1;
+                if (rt != 5'd0) illegal_inst = 1'b1;
+                else begin
+                    branch_op  = 3'b011;
+                    imm_signed = 1'b1;
+                end
             end
             6'b010110: begin // BLEZL
-                branch_op    = 3'b011;
-                branch_likely = 1'b1;
-                imm_signed   = 1'b1;
+                if (rt != 5'd0) illegal_inst = 1'b1;
+                else begin
+                    branch_op    = 3'b011;
+                    branch_likely = 1'b1;
+                    imm_signed   = 1'b1;
+                end
             end
             6'b000111: begin // BGTZ
-                branch_op  = 3'b100;
-                imm_signed = 1'b1;
+                if (rt != 5'd0) illegal_inst = 1'b1;
+                else begin
+                    branch_op  = 3'b100;
+                    imm_signed = 1'b1;
+                end
             end
             6'b010111: begin // BGTZL
-                branch_op    = 3'b100;
-                branch_likely = 1'b1;
-                imm_signed   = 1'b1;
+                if (rt != 5'd0) illegal_inst = 1'b1;
+                else begin
+                    branch_op    = 3'b100;
+                    branch_likely = 1'b1;
+                    imm_signed   = 1'b1;
+                end
             end
             6'b000001: begin // REGIMM (BLTZ, BGEZ)
                 case (rt)

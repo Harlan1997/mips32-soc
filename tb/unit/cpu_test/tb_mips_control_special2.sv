@@ -60,6 +60,14 @@ module tb_mips_control_special2;
         begin special = {6'b000000, rs, rt, rd, sa, funct}; end
     endfunction
 
+    function automatic [31:0] branch_i;
+        input [5:0] op;
+        input [4:0] rs;
+        input [4:0] rt;
+        input [15:0] imm;
+        begin branch_i = {op, rs, rt, imm}; end
+    endfunction
+
     task automatic expect_reserved;
         input [31:0] value;
         begin
@@ -144,9 +152,13 @@ module tb_mips_control_special2;
         expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd1, 6'h00));
         expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd0, 6'h08));
         expect_reserved(special(5'd1, 5'd2, 5'd3, 5'd0, 6'h18));
+        expect_reserved(branch_i(6'b000110, 5'd1, 5'd2, 16'd1));
+        expect_reserved(branch_i(6'b010110, 5'd1, 5'd2, 16'd1));
+        expect_reserved(branch_i(6'b000111, 5'd1, 5'd2, 16'd1));
+        expect_reserved(branch_i(6'b010111, 5'd1, 5'd2, 16'd1));
 
         if (failures == 0)
-            $display("REGRESSION_TEST_SUCCESS mips_control_special2 reserved=15");
+            $display("REGRESSION_TEST_SUCCESS mips_control_special2 reserved=19");
         else
             $display("REGRESSION_TEST_FAIL mips_control_special2 failures=%0d", failures);
         $finish;

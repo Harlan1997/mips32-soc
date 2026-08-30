@@ -3172,3 +3172,10 @@ configuration.
   `qemu-system-isa-r2-differential-gate`.
 - This closes only the tested SPECIAL fixed-field slice. Other privileged and
   FPU semantics, Linux RTL boot, and full ISA compliance remain open.
+
+### 2026-08-30 branch fixed-field enforcement
+
+- Added the MIPS32 rule that BLEZ/BLEZL/BGTZ/BGTZL require `rt=0`; malformed
+  encodings now raise RI before branch control is emitted.
+- Added four negative cases to `mips-control-special2-gate`; the gate and the
+  QEMU system ISA R2 retire differential remain passing.
