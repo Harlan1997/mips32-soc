@@ -22,6 +22,14 @@
   different post-SIGSEGV/fork-wait boundaries, so this remains a diagnostic
   stabilization and does not close generic Linux reproducibility, RTL Linux
   boot or full system differential.
+- The runner now stops QEMU after the final fork/wait marker and retains the
+  full marker assertions, avoiding the expected post-test `init` panic and
+  reducing host resource consumption on successful runs.
+- After clearing the accumulated historical `/tmp` outputs, a fresh
+  `JOBS=2 QEMU_TIMEOUT=120s make linux-boot-build-gate` passed through the
+  bounded shutdown path. The earlier resource-loaded A/B failures remain
+  useful residual evidence, so this closes the runner execution boundary but
+  not full Linux/RTL differential or OS VM signoff.
 
 ### 2026-08-29 stale delay-slot metadata guard
 
