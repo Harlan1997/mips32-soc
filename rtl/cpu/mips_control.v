@@ -264,8 +264,12 @@ module mips_control (
                         end
                     end
                     6'b000000: begin // SLL
-                        if (rs != 5'd0 ||
-                            (sa != 5'd0 && !(rt == 5'd0 && rd == 5'd0 && sa == 5'd3)))
+                        // SLL is valid for every rt/rd/shamt combination as
+                        // long as rs is zero.  The previous check admitted
+                        // only NOP (plus one unrelated special encoding),
+                        // causing legal exception handlers such as
+                        // `sll k1,k1,2` to take Reserved Instruction.
+                        if (rs != 5'd0)
                             illegal_inst = 1'b1;
                         else begin
                             alu_op    = 5'b01000;
