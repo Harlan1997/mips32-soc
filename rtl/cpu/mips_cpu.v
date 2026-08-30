@@ -420,6 +420,8 @@ module mips_cpu #(
     // combinationally translates to the PA that leaves the CPU boundary.
     wire [31:0] if_vaddr;
     wire [31:0] mem_vaddr;
+    wire [31:0] mem_access_addr;
+    wire [31:0] mmu_d_pa;
     wire [2:0]  mmu_i_cache_attr;
     wire [2:0]  mmu_d_cache_attr;
     wire        mmu_i_ok;
@@ -469,7 +471,10 @@ module mips_cpu #(
     wire ptw_fault_i;
     wire [2:0] ptw_fault_code_i;
     wire [31:0] ptw_leaf_pte;
-    wire [31:0] ptw_req_va = hw_walker_i_miss ? if_vaddr : mem_vaddr;
+    // The walker must see the original effective VA.  mem_vaddr is the
+    // word-aligned address emitted by the MEM formatter and loses the page
+    // offset needed to classify a merge access at a page boundary.
+    wire [31:0] ptw_req_va = hw_walker_i_miss ? if_vaddr : mem_access_addr;
     wire [1:0] ptw_req_access = hw_walker_i_miss ? 2'd0 :
                                  (data_we ? 2'd2 : 2'd1);
     wire ptw_req_user = !cpu_kernel_mode;
@@ -1312,7 +1317,7 @@ module mips_cpu #(
 
     // Only cacheable loads use the decoupled issue path.  MMU faults,
     // uncached accesses, stores and CACHE operations remain blocking.
-    wire [31:0] mem_access_addr = mem_ex_out + (mem_double_phase ? 32'd4 : 32'd0);
+    assign mem_access_addr = mem_ex_out + (mem_double_phase ? 32'd4 : 32'd0);
     wire mem_double_align_fault = mem_double_mem && (mem_ex_out[2:0] != 3'b000);
     wire mem_enable_nb_load = (`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
@@ -1350,7 +1355,7 @@ module mips_cpu #(
             d_fault_vaddr_pending_q <= 1'b0;
         end else if (dmem_translation_fault && !d_fault_vaddr_pending_q) begin
             d_fault_vaddr_pending_q <= 1'b1;
-            d_fault_vaddr_q         <= mem_vaddr;
+            d_fault_vaddr_q         <= mem_access_addr;
         end
     end
 
@@ -2156,7 +2161,7 @@ module mips_cpu #(
 
     mips_mmu u_mmu_d (
         .req_valid       (dmem_translate_req),
-        .req_va          (mem_vaddr),
+        .req_va          (mem_access_addr),
         .req_is_store    (data_we),
         .req_is_fetch    (1'b0),
         .asid            (cp0_asid),
@@ -2170,11 +2175,16 @@ module mips_cpu #(
         .tlb_lookup_d    (mmu_dlookup_d),
         .tlb_lookup_c    (mmu_dlookup_c),
         .tlb_lookup_pfn  (mmu_dlookup_pfn),
-        .pa              (data_addr),
+        .pa              (mmu_d_pa),
         .cache_attr      (mmu_d_cache_attr),
         .translation_ok  (mmu_d_ok),
         .fault_type      (mmu_d_fault_type)
     );
+
+    // The MMU receives the raw effective VA so page-boundary accesses fault
+    // on the correct page.  The external D-cache contract remains word
+    // aligned, so discard only the byte offset after translation.
+    assign data_addr = {mmu_d_pa[31:2], 2'b00};
 
     mips_page_table_walker #(.PAGE_MASK(`SOC_HARDWARE_WALKER_PAGE_MASK)) u_hardware_walker (
         .clk(clk), .rst_n(rst_n),
