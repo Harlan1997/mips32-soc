@@ -1,5 +1,7 @@
 # RTL Functional Evidence Registry
 
+| RTL Linux asynchronous-interrupt EPC precision | `BLOCK_VERIFIED`, diagnostic follow-up | `SKIP_COVERAGE=1 BUILD_DIR=/tmp/mips32-epc-fix2 make rtl-frontend-compile cpu-cp0-gate cpu-irq-delay-slot-gate`; `SKIP_LINUX_BUILD=1 KERNEL=... RTL_CYCLE_LIMIT=16000000 LINUX_REQUIRE_PROGRESS=0 tb/linux_boot/run_rtl_linux_progress_gate.sh` | `/tmp/mips32-linux-epcfix/completion_report.md`, `/tmp/mips32-linux-epcfix/sim/sim.log` | Delay-slot recovery now requires control-transfer opcode evidence and an ordinary WB instruction retires before an asynchronous-interrupt EPC resumes. Frontend 8/8 and targeted CPU gates pass; the 16M RTL Linux probe still panics at the later `BadVAddr=0x2c` boundary, so this does not close Linux userspace or full system differential |
+
 ## 2026-08-30 fresh Linux/QEMU build and system peripheral recheck
 
 `make linux-boot-build-gate` rebuilt the QEMU 9.2.0 `mipsel-softmmu`

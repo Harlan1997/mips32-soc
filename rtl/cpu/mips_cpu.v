@@ -1896,13 +1896,9 @@ module mips_cpu #(
     wire ex_delay_slot_valid  = ex_bd &&
                                 (ex_delay_slot_next_pc != 32'd0);
     wire id_delay_slot_valid  = id_bd &&
-                                (id_delay_slot_next_pc != 32'd0);
-    // The delay-slot metadata is normally carried with the younger
-    // instruction.  A branch can nevertheless be in WB while its slot is in
-    // MEM when an asynchronous interrupt is accepted; in that window the
-    // metadata may already have been cleared by a replay/flush.  Recover the
-    // architectural relation from the adjacent PCs and the older instruction
-    // encoding so EPC/BD remain precise for real Linux interrupt traffic.
+                                 (id_delay_slot_next_pc != 32'd0);
+    wire wb_delay_slot_valid  = wb_bd &&
+                                (wb_delay_slot_next_pc != 32'd0);
     wire wb_is_control_transfer =
         (wb_inst[31:26] == 6'b000001) || // REGIMM branches
         (wb_inst[31:26] == 6'b000010) || // J
@@ -1912,6 +1908,39 @@ module mips_cpu #(
         ((wb_inst[31:26] == 6'b000000) &&
          ((wb_inst[5:0] == 6'b001000) || // JR/JR.HB
           (wb_inst[5:0] == 6'b001001)));  // JALR/JALR.HB
+    // A stalled/replayed instruction can be present in both WB and MEM on
+    // the interrupt edge.  Its carried delay-slot bit belongs to an older
+    // pipeline transaction and must not manufacture Cause.BD.  When WB is
+    // valid, accept MEM's marker only for the strictly adjacent younger PC;
+    // when WB is empty, the existing MEM/EX/ID ordering checks apply.
+    wire interrupt_mem_delay_slot = mem_delay_slot_valid &&
+                                    ((!wb_arch_valid) ||
+                                     (wb_is_control_transfer &&
+                                      (mem_pc == (wb_pc + 32'd4))));
+    // The delay-slot metadata is normally carried with the younger
+    // instruction.  A branch can nevertheless be in WB while its slot is in
+    // MEM when an asynchronous interrupt is accepted; in that window the
+    // metadata may already have been cleared by a replay/flush.  Recover the
+    // architectural relation from the adjacent PCs and the older instruction
+    // encoding so EPC/BD remain precise for real Linux interrupt traffic.
+    wire mem_is_control_transfer =
+        (mem_inst[31:26] == 6'b000001) ||
+        (mem_inst[31:26] == 6'b000010) ||
+        (mem_inst[31:26] == 6'b000011) ||
+        ((mem_inst[31:26] >= 6'b000100) &&
+         (mem_inst[31:26] <= 6'b000111)) ||
+        ((mem_inst[31:26] == 6'b000000) &&
+         ((mem_inst[5:0] == 6'b001000) ||
+          (mem_inst[5:0] == 6'b001001)));
+    wire ex_is_control_transfer =
+        (ex_inst[31:26] == 6'b000001) ||
+        (ex_inst[31:26] == 6'b000010) ||
+        (ex_inst[31:26] == 6'b000011) ||
+        ((ex_inst[31:26] >= 6'b000100) &&
+         (ex_inst[31:26] <= 6'b000111)) ||
+        ((ex_inst[31:26] == 6'b000000) &&
+         ((ex_inst[5:0] == 6'b001000) ||
+          (ex_inst[5:0] == 6'b001001)));
     wire interrupt_wb_branch_delay = interrupt_accept &&
                                       mem_flush_valid &&
                                       (wb_pc_plus_8 != 32'd0) &&
@@ -1919,17 +1948,29 @@ module mips_cpu #(
                                       wb_is_control_transfer;
     wire interrupt_except_bd = interrupt_accept &&
                                (mem_flush_valid ?
-                                (mem_delay_slot_valid || interrupt_wb_branch_delay ||
+                                 (interrupt_mem_delay_slot || interrupt_wb_branch_delay ||
                                  (ex_flush_valid && ex_delay_slot_valid &&
+                                  mem_is_control_transfer &&
                                   (ex_pc == mem_pc + 32'd4)) ||
                                  (ex_flush_valid && id_flush_valid && id_delay_slot_valid &&
+                                   mem_is_control_transfer &&
+                                   ex_is_control_transfer &&
                                    (id_pc == ex_pc + 32'd4) &&
                                    (ex_pc == mem_pc + 32'd4))) :
                                 (ex_flush_valid ?
                                  (ex_delay_slot_valid ||
                                  (id_flush_valid && id_delay_slot_valid &&
+                                   ex_is_control_transfer &&
                                    (id_pc == ex_pc + 32'd4))) :
                                  id_delay_slot_valid));
+    // If an ordinary instruction is retiring in WB on the same edge as an
+    // asynchronous interrupt, it has already committed architecturally.
+    // Resume after it; selecting the oldest visible MEM/EX PC can point back
+    // at that completed load and re-execute it with a changed base register.
+    wire interrupt_wb_sequential_epc = interrupt_accept &&
+                                       wb_arch_valid &&
+                                       !wb_delay_slot_valid &&
+                                       !interrupt_wb_branch_delay;
     // A delay-slot marker is architectural only when its paired resume target
     // is present.  Pipeline flush/replay can transiently leave wb_bd asserted
     // on a bubble or on the retried instruction while the target metadata has
@@ -1952,10 +1993,11 @@ module mips_cpu #(
                              ((interrupt_accept && wait_state) ?
                               wait_interrupt_epc :
                              ((wb_except_req && wb_arch_valid) ? wb_pc :
+                             (interrupt_wb_sequential_epc ? (wb_pc + 32'd4) :
                              ((interrupt_accept &&
                                ((wb_bd && wb_arch_valid) ||
                                 interrupt_wb_branch_delay)) ?
-                               wb_pc : oldest_flushed_pc)));
+                               wb_pc : oldest_flushed_pc))));
     // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
     // address exceptions use the held faulting fetch VA.

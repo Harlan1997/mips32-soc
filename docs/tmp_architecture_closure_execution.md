@@ -1,5 +1,22 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 Linux asynchronous-interrupt EPC precision follow-up
+
+- RTL Linux diagnostics isolated a real precision hazard at the first
+  `alloc_pid` failure window: a normal `lw s1,44(s1)` at `0x88852ca4` could
+  be re-entered after an asynchronous interrupt because the exception frame
+  selected a stale pipeline PC. The CPU now requires valid control-transfer
+  evidence for delay-slot recovery and advances EPC past an already-retiring
+  ordinary WB instruction.
+- Fresh `SKIP_COVERAGE=1 make rtl-frontend-compile cpu-cp0-gate
+  cpu-irq-delay-slot-gate` passed, including all 8 frontend configurations.
+- A fresh 16M-cycle relocated RTL Linux probe still reaches the same kernel
+  `die()`/panic boundary, although the original false `Cause.BD`/EPC rollback
+  is removed. The remaining failure is an independent architectural-state
+  mismatch: subsequent exception handling still reaches `BadVAddr=0x2c` and
+  the Linux userspace marker remains absent. RTL Linux userspace boot, full
+  Linux differential, and complete ISA/MMU/OS closure therefore remain open.
+
 ### 2026-08-30 fresh Linux/QEMU build and system peripheral recheck
 
 - Reclaimed only failed Linux kernel objects and obsolete source download
