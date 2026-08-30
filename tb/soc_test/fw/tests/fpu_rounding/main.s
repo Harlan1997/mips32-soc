@@ -81,15 +81,25 @@ _start:
     bne     $t1, $t2, fail5
     nop
 
-    /* Fixed ROUND.W.S remains nearest-even regardless of FCSR.RM=RM. */
-    lui     $t0, 0x3fc0
+    /* Fixed ROUND.W.S is ties-away-from-zero, regardless of FCSR.RM. */
+    lui     $t0, 0x4020       /* +2.5 -> +3, unlike CVT.W.S nearest-even */
     mtc1    $t0, $f0
     round.w.s $f4, $f0
     mfc1    $t1, $f4
     nop
     nop
-    addiu   $t2, $zero, 2
+    addiu   $t2, $zero, 3
     bne     $t1, $t2, fail6
+    nop
+
+    lui     $t0, 0xbfc0       /* -1.5 -> -2 */
+    mtc1    $t0, $f0
+    round.w.s $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, -2
+    bne     $t1, $t2, fail7
     nop
 
     lui     $t0, 0xa000
@@ -123,6 +133,10 @@ fail5:
     nop
 fail6:
     addiu   $t1, $zero, 6
+    b       fail_emit
+    nop
+fail7:
+    addiu   $t1, $zero, 7
     b       fail_emit
     nop
 fail:

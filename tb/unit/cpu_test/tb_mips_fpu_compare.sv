@@ -116,6 +116,20 @@ module tb_mips_fpu_compare;
             $display("FAIL round.w.s got=%08h want=00000004", result_word);
             failures = failures + 1;
         end
+        a = 32'h40200000; // 2.5: fixed ROUND is ties-away, not ties-even.
+        #1;
+        if (result_word !== 32'd3) begin
+            $display("FAIL round.w.s positive tie got=%08h want=00000003", result_word);
+            failures = failures + 1;
+        end
+        a = 32'hbfc00000; // -1.5 -> -2 under ties-away.
+        #1;
+        if (result_word !== -32'sd2) begin
+            $display("FAIL round.w.s negative tie got=%08h want=fffffffe", result_word);
+            failures = failures + 1;
+        end
+        a = 32'h40600000; // Restore 3.5 for the trunc/ceil/floor checks.
+        #1;
         op = 4'd12; #1;
         if (result_word !== 32'd3) begin
             $display("FAIL trunc.w.s got=%08h want=00000003", result_word);

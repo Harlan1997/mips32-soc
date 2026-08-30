@@ -59,6 +59,18 @@ module mips_fpu (
             round_real_to_word = rounded;
         end
     endfunction
+    // MIPS ROUND.W.{S,D} uses round-to-nearest with ties away from zero.
+    // Keep this separate from CVT.W.*, whose 00 mode is nearest-even.
+    function automatic signed [31:0] round_real_nearest_away;
+        input real value;
+        real magnitude;
+        integer rounded_abs;
+        begin
+            magnitude = (value < 0.0) ? -value : value;
+            rounded_abs = $rtoi($floor(magnitude + 0.5));
+            round_real_nearest_away = (value < 0.0) ? -rounded_abs : rounded_abs;
+        end
+    endfunction
     shortreal ar, br, rr;
     real ar_double, br_double, cr_double, rr_double, exact_single,
          exact_double;
@@ -173,8 +185,7 @@ module mips_fpu (
                                 result_word = round_real_to_word(ar_double,
                                                                  2'b01);
                             OP_ROUND_W_D:
-                                result_word = round_real_to_word(ar_double,
-                                                                 2'b00);
+                                result_word = round_real_nearest_away(ar_double);
                             OP_CEIL_W_D:
                                 result_word = round_real_to_word(ar_double,
                                                                  2'b10);
@@ -291,7 +302,7 @@ module mips_fpu (
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
-                        result_word = round_real_to_word(ar, 2'b00);
+                        result_word = round_real_nearest_away(ar);
                         if (ar != $itor($rtoi(ar)))
                             exception_flags[0] = 1'b1;
                     end

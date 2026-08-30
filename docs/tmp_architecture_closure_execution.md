@@ -1,5 +1,13 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 fixed FPU rounding tie semantics
+
+- `ROUND.W.S` and `ROUND.W.D` now use MIPS round-to-nearest ties-away-from-zero;
+  `CVT.W.*` RM=00 remains nearest-even and other FCSR modes remain unchanged.
+- Primitive and SoC firmware tests add positive `2.5 -> 3` and negative
+  `-1.5 -> -2` checks. This closes the tested fixed-rounding tie boundary only;
+  complete IEEE-754 edge cases and OS FPU ABI remain open.
+
 ### 2026-08-31 LL/SC physical reservation and SC-consumption repair
 
 - Reservation matching/storage now uses translated physical `data_addr`,
