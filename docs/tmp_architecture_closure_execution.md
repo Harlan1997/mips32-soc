@@ -3134,3 +3134,10 @@ configuration.
   contract for the asynchronous interrupt/MEM handshake; Linux userspace,
   arbitrary reset-in-flight timing, and complete exception recovery remain
   open.
+
+- The RTL now also asserts `p_blocking_mem_irq_barrier` under `SVA_ENABLE`,
+  enforcing the same invariant on every SoC simulation cycle. An isolated
+  `SKIP_COVERAGE=1 make sva-gate` rerun passed all three SVA scenarios.
+- Added the corresponding `p_blocking_mem_irq_barrier` simulation assertion
+  under `SVA_ENABLE`; the isolated SVA gate and direct unit gate remain
+  required evidence for this boundary.
