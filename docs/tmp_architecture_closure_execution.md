@@ -17,6 +17,14 @@
 
 ### 2026-08-30 RTL Linux MEM interruption state trace
 
+### 2026-08-30 D-cache diagnostic state-width correction
+
+- Matched the legacy SoC observation interface and bind to the 5-bit D-cache
+  FSM state and next-state registers. The previous 4-bit observation silently
+  truncated FSM states and produced VCS port-width warnings in Linux probes.
+- This changes diagnostic observability only; it does not claim to fix the
+  remaining RTL Linux userspace boot or full RTL/QEMU differential failure.
+
 - Extended the bounded Linux exception trace with `wb_valid`,
   `wb_arch_valid`, MEM/EX instruction words, `oldest_flushed_pc`, delay-slot
   markers and the WB-branch-delay classification.
