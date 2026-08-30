@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-30 fresh Linux/QEMU build and system peripheral recheck
+
+- Reclaimed only failed Linux kernel objects and obsolete source download
+  caches after the previous kernel link stopped with `ENOSPC`; QEMU source,
+  its built custom-machine binary, and Linux/U-Boot source trees were kept.
+- `make linux-boot-build-gate` now passes, rebuilding the Linux v6.6 image and
+  the QEMU 9.2.0 `mipsel-softmmu` `mips32-soc-ref` machine.
+- Fresh QEMU peripheral, QSPI, DDR, and unified current-contract gates pass.
+  This is behavioral custom-machine evidence; physical DDR/QSPI timing,
+  RTL Linux userspace boot, and full RTL/QEMU system differential remain open.
+
 ### 2026-08-29 stale delay-slot metadata guard
 
 - Fixed `rtl/cpu/mips_cpu.v` so asynchronous interrupt BD/EPC inference requires

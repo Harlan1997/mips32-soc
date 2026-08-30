@@ -1,5 +1,15 @@
 # RTL Functional Evidence Registry
 
+## 2026-08-30 fresh Linux/QEMU build and system peripheral recheck
+
+`make linux-boot-build-gate` rebuilt the QEMU 9.2.0 `mipsel-softmmu`
+`mips32-soc-ref` binary and the Linux v6.6 kernel successfully after removing
+only failed kernel objects and source download caches. Fresh
+`make qemu-system-peripheral-contract-gate qemu-system-qspi-gate
+qemu-system-ddr-gate` and `make qemu-system-current-contract-gate` also pass.
+The QEMU evidence covers the behavioral GPIO/timer/DMA/PIC/QSPI/DDR contract,
+not physical device timing, RTL Linux boot, or full RTL/QEMU differential.
+
 ## 2026-08-30 EDA host-OOM containment
 
 Kernel logs attribute the prior high-water event to a VCS compiler process
