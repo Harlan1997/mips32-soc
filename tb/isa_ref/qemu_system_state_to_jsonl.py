@@ -460,7 +460,11 @@ def convert(events, states):
                 int(event["pc"], 16) ==
                 int(events[index - 1]["pc"], 16) + 4 and
                 ((cause_value >> 2) & 0x1f) == 0 and not replay_bd_seen):
-            replay_bd_pending = True
+            # The event stream is the architectural retire contract.  A
+            # vector reached from a translated delay-slot TB is not by
+            # itself sufficient evidence for Cause.BD: the RTL can accept a
+            # replayed asynchronous IRQ at that boundary with bd=0.
+            replay_bd_pending = bool(event.get("bd", 0))
             replay_cause_pending = True
         elif (vector_pc and not ordinary_vector_branch and index > 0 and
               has_delay_slot(int(events[index - 1]["instr"], 16)) and
@@ -475,7 +479,7 @@ def convert(events, states):
                          ((instr >> 11) & 0x1f) == 13 and
                          (instr & 0x7) == 0)
         if replay_cause_pending and is_mfc0_cause:
-            if not replay_bd_seen:
+            if not replay_bd_seen and replay_bd_pending:
                 cause_value |= 1 << 31
             else:
                 cause_value &= ~(1 << 31)
@@ -527,6 +531,11 @@ def convert(events, states):
         # For a control transfer this is the delay-slot PC; the comparator
         # handles the producer-specific delay-slot boundary explicitly.
         event_next_pc = int(event["next_pc"], 16)
+        if instr == 0x42000018:
+            # The plugin samples ERET before the custom MIPS exception path
+            # has restored the precise EPC.  The post-state is authoritative
+            # for the architectural return boundary.
+            event_next_pc = int(after["epc"], 16)
         yield {
             "schema": "00010000",
             "pc": hex32(event["pc"]),
