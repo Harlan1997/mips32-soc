@@ -60,11 +60,12 @@ make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
 scripts_config="${LINUX_SOURCE_DIR}/scripts/config"
 test -x "${scripts_config}"
 kernel_config_args=()
-if [[ "${KERNEL_PHYSICAL_START}" != "0x88000000" &&
-      "${KERNEL_PHYSICAL_START}" != "0X88000000" ]]; then
-    # PHYSICAL_START is conditionally visible in the MIPS Kconfig and is
-    # gated by CRASH_DUMP. Enable the dependency only for relocated builds;
-    # the ordinary QEMU build keeps its historical configuration unchanged.
+# PHYSICAL_START is conditionally visible in the MIPS Kconfig and is gated by
+# CRASH_DUMP. Enable the dependency for every explicitly relocated image. The
+# default 0x88000000 image is the RTL DDR layout, so treating that value as an
+# unrelocated build silently produces a kernel linked at 0x80100000.
+if [[ "${KERNEL_PHYSICAL_START}" != "0x80000000" &&
+      "${KERNEL_PHYSICAL_START}" != "0X80000000" ]]; then
     kernel_config_args+=(--enable CONFIG_CRASH_DUMP)
 fi
 "${scripts_config}" --file "${BUILD_DIR}/kernel/.config" \
@@ -88,3 +89,13 @@ make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
     -o "${BUILD_DIR}/mips32_soc_ref.dtb" "${SCRIPT_DIR}/mips32_soc_ref.dts"
 test -s "${BUILD_DIR}/kernel/vmlinux"
 test -s "${BUILD_DIR}/mips32_soc_ref.dtb"
+
+kernel_load_virtual=$(${CROSS_COMPILE}readelf -l "${BUILD_DIR}/kernel/vmlinux" | \
+    awk '$1 == "LOAD" {print $3; exit}')
+test -n "${kernel_load_virtual}"
+expected_kernel_virtual=$((KERNEL_PHYSICAL_START))
+if (( kernel_load_virtual != expected_kernel_virtual )); then
+    echo "kernel load address ${kernel_load_virtual} does not match CONFIG_PHYSICAL_START ${KERNEL_PHYSICAL_START}" >&2
+    exit 1
+fi
+echo "Linux kernel build: PASS (physical start ${KERNEL_PHYSICAL_START})"

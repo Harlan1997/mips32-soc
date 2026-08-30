@@ -265,10 +265,16 @@ module mips_cpu #(
                                wb_inst == 32'h42000020)) &&
                             // An interrupt sampled while an uncached or
                             // blocking load/store is still in MEM can race
-                            // the response edge.  Defer acceptance until the
-                            // current transaction has completed so its APB
-                            // side effect and load data retire precisely.
+                            // the response edge.  `stall_req_mem` alone is
+                            // insufficient here: on an address-accepted
+                            // request it can be low for one cycle even though
+                            // the cache still owns the transaction and the
+                            // load has not reached architectural retirement.
+                            // Keep the IRQ behind the complete MEM handshake;
+                            // the following cycle is the first precise point
+                            // at which the request can no longer be flushed.
                             !stall_req_mem &&
+                            !data_req_raw &&
                             !((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_ROB_FIFO_ENABLE != 0) &&
