@@ -5,6 +5,12 @@
   `define TEST_PAGE_MASK 16'h000f
 `elsif WALKER_256K
   `define TEST_PAGE_MASK 16'h003f
+`elsif WALKER_1M
+  `define TEST_PAGE_MASK 16'h00ff
+`elsif WALKER_4M
+  `define TEST_PAGE_MASK 16'h03ff
+`elsif WALKER_16M
+  `define TEST_PAGE_MASK 16'h0fff
 `else
   `define TEST_PAGE_MASK 16'h0000
 `endif
@@ -40,6 +46,9 @@ module tb_page_table_walker;
       16'h0003: mem[2048]=32'h0000_400f;
       16'h000f: mem[2048]=32'h0001_000f;
       16'h003f: mem[2048]=32'h0004_000f;
+      16'h00ff: mem[2048]=32'h0010_000f;
+      16'h03ff: mem[2048]=32'h0040_000f;
+      16'h0fff: mem[2048]=32'h0100_000f;
       default:  mem[2048]=32'h0000_300f;
     endcase
     /* The common 4KB matrix below remains the detailed permission corpus. */
@@ -51,6 +60,9 @@ module tb_page_table_walker;
         16'h0003: if (fault_valid || pa !== 32'h0000_4123) errors=errors+1;
         16'h000f: if (fault_valid || pa !== 32'h0001_0123) errors=errors+1;
         16'h003f: if (fault_valid || pa !== 32'h0004_0123) errors=errors+1;
+        16'h00ff: if (fault_valid || pa !== 32'h0010_0123) errors=errors+1;
+        16'h03ff: if (fault_valid || pa !== 32'h0040_0123) errors=errors+1;
+        16'h0fff: if (fault_valid || pa !== 32'h0100_0123) errors=errors+1;
         default:  if (fault_valid || pa !== 32'h0000_3123) errors=errors+1;
       endcase
 
@@ -70,6 +82,18 @@ module tb_page_table_walker;
           mem[2049]=32'h0008_000f;
           va=32'h0004_0000;
         end
+        16'h00ff: begin
+          mem[2050]=32'h0020_000f;
+          va=32'h0020_0000;
+        end
+        16'h03ff: begin
+          mem[2048]=32'h0080_000f;
+          va=32'h0000_4004;
+        end
+        16'h0fff: begin
+          mem[2048]=32'h0200_000f;
+          va=32'h0001_0008;
+        end
         default: begin
           mem[2049]=32'h0000_300f;
           va=32'h0000_1000;
@@ -82,6 +106,9 @@ module tb_page_table_walker;
         16'h0003: if (fault_valid || pa !== 32'h0000_8000) errors=errors+1;
         16'h000f: if (fault_valid || pa !== 32'h0002_0000) errors=errors+1;
         16'h003f: if (fault_valid || pa !== 32'h0008_0000) errors=errors+1;
+        16'h00ff: if (fault_valid || pa !== 32'h0020_0000) errors=errors+1;
+        16'h03ff: if (fault_valid || pa !== 32'h0080_4004) errors=errors+1;
+        16'h0fff: if (fault_valid || pa !== 32'h0201_0008) errors=errors+1;
         default:  if (fault_valid || pa !== 32'h0000_3000) errors=errors+1;
       endcase
     end

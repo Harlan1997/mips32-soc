@@ -81,7 +81,7 @@ MIPS32 硬编码 4 段：
    - `MATCH_VPN_i = (VA[31:13] & ~MASK_i[28:13]) == (VPN2_i & ~MASK_i[28:13])`
    - `MATCH_ASID_i = G_i || (ASID_i == ASID_curr)`
    - `HIT_i = Valid_i && MATCH_VPN_i && MATCH_ASID_i`
-2. **奇偶选择位** = 页偏移范围以上的 VA 位：PageMask `0x0000/0x0003/0x000F/0x003F/0x00FF/0x03FF/0x0FFF/0x3FFF` 分别使用 `VA[12/14/16/18/20/22/24/26]`（等效于按页尺度将 entry 分成偶奇两半）。RTL 对非法/非连续 mask 回退到 4 KiB 选择位。
+2. **奇偶选择位** = 页偏移范围以上的 VA 位：PageMask `0x0000/0x0003/0x000F/0x003F/0x00FF/0x03FF/0x0FFF/0x3FFF` 分别使用 `VA[12/14/16/18/20/22/24/26]`（等效于按页尺度将 entry 分成偶奇两半）。RTL 对非法/非连续 mask 回退到 4 KiB 选择位。硬件 walker 的 opt-in 页尺度矩阵覆盖其中 4KB 至 16MB 的七种编码。
    - 若选择位 = 0 → 用 `Lo0`（PFN0/C0/D0/V0）
     - 若选择位 = 1 → 用 `Lo1`
    - PA 由现有 `{PFN, VA[11:0]}` MMU 接口形成；RTL 在大 PageMask 下将 `VA[13:12]` 等额外页内偏移位折入 PFN 低位，保持完整物理页内偏移。

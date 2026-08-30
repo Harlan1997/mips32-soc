@@ -1032,6 +1032,18 @@ mailbox. This remains a selected peripheral differential slice and does not
 close full DMA fault/reset timing, physical device timing, Linux drivers or
 full RTL system-mode Linux differential.
 
+### 2026-08-30 hardware walker large-page completion
+
+The opt-in two-level hardware walker now implements the remaining contract
+PageMask values for 1 MiB (`0x00ff`), 4 MiB (`0x03ff`) and 16 MiB
+(`0x0fff`), including reduced L2 indexing, leaf alignment checks and full
+page-offset preservation. `make page-table-walker-page-sizes-gate` covers all
+seven 4 KiB through 16 MiB configurations, and the RTL frontend matrix remains
+`8/8`. This closes the page-size matrix for the bounded walker; it remains a
+single-outstanding, two-level, opt-in implementation and does not close
+unrestricted demand paging, OS page-table ownership, Linux VM, or complete
+privileged/MMU compliance.
+
 ### 2026-08-29 QEMU integer overflow differential and trace resource bound
 
 `qemu_system_exception` now executes signed `ADD`, `SUB`, and `ADDI` overflow
