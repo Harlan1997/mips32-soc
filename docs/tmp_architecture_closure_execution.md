@@ -1,5 +1,15 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 LL/SC physical reservation and SC-consumption repair
+
+- Reservation matching/storage now uses translated physical `data_addr`,
+  while CP0 LLAddr and retire tracing preserve the virtual diagnostic address.
+- Every completed SC attempt consumes the reservation, including mismatched or
+  otherwise failed SC; the firmware gate checks that a second SC cannot inherit
+  the first LL after a failed attempt.
+- Full memory ordering, arbitrary SMP atomicity and MESI/directory behavior
+  remain outside this bounded contract.
+
 ### 2026-08-30 hardware walker seven-page-size matrix
 
 - Extended the opt-in page-table walker to support the remaining contract

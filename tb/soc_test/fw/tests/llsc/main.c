@@ -66,6 +66,18 @@ int main(void)
     if (result != 0 || *TEST_WORD != 0xA5A5A5A5)
         fail("FAIL: unreserved SC result/value=", (result << 31) | (*TEST_WORD & 0x7fffffff));
 
+    /* Every SC attempt consumes LL state, including a failed attempt to a
+     * different aligned word.  A retry must not inherit the old reservation. */
+    *TEST_WORD = 0x13579BDF;
+    *(TEST_WORD + 1) = 0x0A0B0C0D;
+    (void)ll_word(TEST_WORD);
+    result = sc_word(TEST_WORD + 1, 0x2468ACE0);
+    if (result != 0 || *(TEST_WORD + 1) != 0x0A0B0C0D)
+        fail("FAIL: mismatched SC unexpectedly succeeded=", result);
+    result = sc_word(TEST_WORD, 0xCAFED00D);
+    if (result != 0 || *TEST_WORD != 0x13579BDF)
+        fail("FAIL: failed SC retained reservation=", (result << 31) | (*TEST_WORD & 0x7fffffff));
+
     /* Any completed ordinary store clears the reservation. */
     *TEST_WORD = 0x01020304;
     (void)ll_word(TEST_WORD);
