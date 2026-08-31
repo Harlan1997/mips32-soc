@@ -152,10 +152,13 @@ module mips_cp0 #(
     output wire       ctx_save_done,
     output wire [31:0] ctx_save_status,
     output wire [7:0]  ctx_save_asid,
+    output wire [31:0] ctx_save_ptebase,
     output wire [31:0] ctx_save_srsctl,
     input wire        ctx_restore_req,
     input wire [31:0] ctx_restore_status,
     input wire [7:0]  ctx_restore_asid,
+    input wire [31:0] ctx_restore_ptebase,
+    input wire        ctx_restore_ptebase_valid,
     input wire [31:0] ctx_restore_srsctl,
     output wire       ctx_restore_done
     ,input wire [3:0] interrupt_srs_set
@@ -477,6 +480,7 @@ module mips_cp0 #(
     assign ctx_save_done = ctx_save_req;
     assign ctx_save_status = cp0_status;
     assign ctx_save_asid = cp0_entryhi_asid;
+    assign ctx_save_ptebase = {cp0_context_ptebase, 23'b0};
     assign ctx_save_srsctl = srsctl_val;
     assign ctx_restore_done = ctx_restore_req;
 
@@ -625,6 +629,8 @@ module mips_cp0 #(
                 cp0_status[15:8] <= ctx_restore_status[15:8];
                 cp0_status[4:0]  <= ctx_restore_status[4:0];
                 cp0_entryhi_asid <= ctx_restore_asid;
+                if (ctx_restore_ptebase_valid === 1'b1)
+                    cp0_context_ptebase <= ctx_restore_ptebase[31:23];
                 if (`SOC_SRS_ENABLE != 0) begin
                     cp0_srs_css <= ctx_restore_srsctl[3:0];
                     cp0_srs_pss <= ctx_restore_srsctl[9:6];
@@ -863,8 +869,12 @@ module mips_cp0 #(
     wire        tlb_wr_en_sw  = tlb_wr_en_raw && tlb_wr_gate;
     assign hw_tlb_wr_ready = !tlb_wr_en_sw;
     wire        tlb_wr_en     = tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready);
-    wire        context_root_flush = we && (waddr == 5'd4) &&
+    wire        context_root_write = we && (waddr == 5'd4) &&
                                      (wsel == 3'd0);
+    wire        context_restore_root_flush = ctx_restore_req &&
+                                             (ctx_restore_ptebase_valid === 1'b1) &&
+                                             (ctx_restore_ptebase[31:23] != cp0_context_ptebase);
+    wire        context_root_flush = context_root_write || context_restore_root_flush;
     wire        micro_tlb_context_flush = (we &&
                                            ((waddr == 5'd4) ||
                                             (waddr == 5'd5) ||

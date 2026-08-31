@@ -22,6 +22,7 @@ module cpu_scheduler #(
     input wire ctx_save_done,
     input wire [31:0] ctx_save_pc, input wire [31:0] ctx_save_sp,
     input wire [31:0] ctx_save_status, input wire [7:0] ctx_save_asid,
+    input wire [31:0] ctx_save_ptebase,
     input wire [31:0] ctx_save_srsctl,
     input wire [1023:0] ctx_save_gpr,
     input wire [16383:0] ctx_save_srs_gpr,
@@ -31,6 +32,8 @@ module cpu_scheduler #(
     input wire ctx_restore_ack,
     output wire [31:0] ctx_restore_pc, output wire [31:0] ctx_restore_sp,
     output wire [31:0] ctx_restore_status, output wire [7:0] ctx_restore_asid,
+    output wire [31:0] ctx_restore_ptebase,
+    output wire ctx_restore_ptebase_valid,
     output wire [31:0] ctx_restore_srsctl,
     output wire [1023:0] ctx_restore_gpr,
     output wire [16383:0] ctx_restore_srs_gpr,
@@ -44,6 +47,7 @@ module cpu_scheduler #(
     reg [31:0] sp_bank [0:TASKS-1];
     reg [31:0] status_bank [0:TASKS-1];
     reg [7:0] asid_bank [0:TASKS-1];
+    reg [31:0] ptebase_bank [0:TASKS-1];
     reg [31:0] srsctl_bank [0:TASKS-1];
     reg [1023:0] gpr_bank [0:TASKS-1];
     reg [16383:0] srs_gpr_bank [0:TASKS-1];
@@ -77,6 +81,8 @@ module cpu_scheduler #(
     assign ctx_restore_sp = sp_bank[next_r];
     assign ctx_restore_status = status_bank[next_r];
     assign ctx_restore_asid = asid_bank[next_r];
+    assign ctx_restore_ptebase = ptebase_bank[next_r];
+    assign ctx_restore_ptebase_valid = (state == ST_RESTORE);
     assign ctx_restore_srsctl = srsctl_bank[next_r];
     assign ctx_restore_gpr = gpr_bank[next_r];
     assign ctx_restore_srs_gpr = srs_gpr_bank[next_r];
@@ -88,6 +94,7 @@ module cpu_scheduler #(
             state <= ST_RUN; current_r <= 0; next_r <= 0; pending_mask <= 0;
             for (k = 0; k < TASKS; k = k + 1) begin
                 pc_bank[k] <= 0; sp_bank[k] <= 0; status_bank[k] <= 0; asid_bank[k] <= 0;
+                ptebase_bank[k] <= 0;
                 srsctl_bank[k] <= 0;
                 gpr_bank[k] <= 0; srs_gpr_bank[k] <= 0;
                 fpr_bank[k] <= 0; fcsr_bank[k] <= 0;
@@ -104,6 +111,7 @@ module cpu_scheduler #(
                     sp_bank[current_r] <= ctx_save_sp;
                     status_bank[current_r] <= ctx_save_status;
                     asid_bank[current_r] <= ctx_save_asid;
+                    ptebase_bank[current_r] <= ctx_save_ptebase;
                     srsctl_bank[current_r] <= ctx_save_srsctl;
                     gpr_bank[current_r] <= ctx_save_gpr;
                     srs_gpr_bank[current_r] <= ctx_save_srs_gpr;

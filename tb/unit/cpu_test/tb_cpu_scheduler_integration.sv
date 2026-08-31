@@ -11,6 +11,8 @@ module tb_cpu_scheduler_integration;
   wire [16383:0] save_srs_gpr, restore_srs_gpr;
   wire [1023:0] save_fpr, restore_fpr;
   wire [31:0] save_fcsr, restore_fcsr;
+  wire [31:0] save_ptebase, restore_ptebase;
+  wire restore_ptebase_valid;
   wire [31:0] save_sp = save_gpr[29*32 +: 32];
   integer errors=0, cycles=0;
 
@@ -24,12 +26,15 @@ module tb_cpu_scheduler_integration;
     .ctx_save_req(save_req), .ctx_save_task(save_task),
     .ctx_save_done(save_done), .ctx_save_pc(save_pc), .ctx_save_sp(save_sp),
     .ctx_save_status(save_status), .ctx_save_asid(save_asid),
+    .ctx_save_ptebase(save_ptebase),
     .ctx_save_srsctl(save_srsctl), .ctx_save_srs_gpr(save_srs_gpr),
     .ctx_save_gpr(save_gpr), .ctx_save_fpr(save_fpr), .ctx_save_fcsr(save_fcsr),
     .ctx_restore_req(restore_req),
     .ctx_restore_task(restore_task), .ctx_restore_ack(restore_ack),
     .ctx_restore_pc(restore_pc), .ctx_restore_sp(),
     .ctx_restore_status(restore_status), .ctx_restore_asid(restore_asid),
+    .ctx_restore_ptebase(restore_ptebase),
+    .ctx_restore_ptebase_valid(restore_ptebase_valid),
     .ctx_restore_srsctl(restore_srsctl), .ctx_restore_srs_gpr(restore_srs_gpr),
     .ctx_restore_gpr(restore_gpr), .ctx_restore_fpr(restore_fpr),
     .ctx_restore_fcsr(restore_fcsr)
@@ -53,11 +58,14 @@ module tb_cpu_scheduler_integration;
     .coh_snoop_addr(32'd0), .ctx_save_req(save_req),
     .ctx_save_done(save_done), .ctx_save_pc(save_pc),
     .ctx_save_status(save_status), .ctx_save_asid(save_asid),
+    .ctx_save_ptebase(save_ptebase),
     .ctx_save_srsctl(save_srsctl), .ctx_save_srs_gpr(save_srs_gpr),
     .ctx_save_gpr(save_gpr), .ctx_save_fpr(save_fpr), .ctx_save_fcsr(save_fcsr),
     .ctx_restore_req(restore_req),
     .ctx_restore_pc(restore_pc), .ctx_restore_status(restore_status),
     .ctx_restore_asid(restore_asid), .ctx_restore_srsctl(restore_srsctl),
+    .ctx_restore_ptebase(restore_ptebase),
+    .ctx_restore_ptebase_valid(restore_ptebase_valid),
     .ctx_restore_gpr(restore_gpr), .ctx_restore_srs_gpr(restore_srs_gpr),
     .ctx_restore_set(restore_srsctl[3:0]),
     .ctx_restore_fpr(restore_fpr), .ctx_restore_fcsr(restore_fcsr),
@@ -96,6 +104,7 @@ module tb_cpu_scheduler_integration;
     u_sched.pc_bank[1] = 32'h0000_0200;
     u_sched.status_bank[1] = 32'h0000_0001;
     u_sched.asid_bank[1] = 8'h2a;
+    u_sched.ptebase_bank[1] = 32'h4000_0000;
     u_sched.gpr_bank[1] = 1024'd0;
     u_sched.gpr_bank[1][32 +: 32] = 32'h2222_0002;
 `ifdef SRS_CONTEXT_TEST
@@ -111,6 +120,8 @@ module tb_cpu_scheduler_integration;
     yield_req = 1'b0;
     while (!restore_req && cycles < 100) begin @(posedge clk); cycles=cycles+1; end
     if (!restore_req) errors = errors + 1;
+    if (restore_ptebase !== 32'h4000_0000 || !restore_ptebase_valid)
+      errors = errors + 1;
     @(posedge clk);
     #1;
 `ifdef SRS_CONTEXT_TEST
@@ -123,6 +134,7 @@ module tb_cpu_scheduler_integration;
     if (u_cpu.u_mips_if_stage.pc !== 32'h0000_0200 &&
         u_cpu.u_mips_if_stage.pc !== 32'h0000_0204) errors = errors + 1;
     if (u_cpu.u_mips_cp0.cp0_entryhi_asid !== 8'h2a) errors = errors + 1;
+    if (u_cpu.u_mips_cp0.cp0_context_ptebase !== 9'h080) errors = errors + 1;
     if (u_cpu.u_mips_cp0.cp0_status[0] !== 1'b1) errors = errors + 1;
 `ifdef SRS_CONTEXT_TEST
     if (u_cpu.u_mips_cp0.cp0_srs_css !== 4'h1 ||
