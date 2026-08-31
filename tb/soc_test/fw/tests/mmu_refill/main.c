@@ -58,8 +58,8 @@ volatile unsigned int hw_page_ro __attribute__((section(".page_ro"))) = 0x55AA33
  * handler remains reachable through kseg0 while useg is unmapped. */
 #ifndef SOC_HW_WALKER
 #ifdef SOC_MMU_OS_PRESSURE
-static unsigned int os_root[3][1024];
-static unsigned int os_l2[3][1024];
+static unsigned int os_root[4][1024];
+static unsigned int os_l2[4][1024];
 static volatile unsigned int current_task;
 #else
 static unsigned int os_root[1024];
@@ -81,12 +81,15 @@ static const unsigned int demand_vpns[] = {
 };
 
 #ifdef SOC_MMU_OS_PRESSURE
-static const unsigned int task_pfns[3][4] = {
+static const unsigned int task_pfns[4][4] = {
     { 0x0007u, 0x0008u, 0x000Du, 0x000Eu },
     { 0x0009u, 0x000Au, 0x000Du, 0x000Eu },
-    { 0x000Bu, 0x000Cu, 0x000Du, 0x000Eu }
+    { 0x000Bu, 0x000Cu, 0x000Du, 0x000Eu },
+    /* Keep every backing page inside the 64 KiB SRAM visible to both the
+     * RTL behavioral memory and mips32-soc-ref's fixed-size guest RAM. */
+    { 0x0005u, 0x0006u, 0x000Fu, 0x000Eu }
 };
-static volatile unsigned int task_allocs[3];
+static volatile unsigned int task_allocs[4];
 
 static void switch_task(unsigned int task)
 {
@@ -348,7 +351,7 @@ int main(void) {
          * memset in the exception path and keep the gate deterministic on
          * small SRAM models. */
 #ifdef SOC_MMU_OS_PRESSURE
-        for (current_task = 0; current_task < 3; ++current_task) {
+        for (current_task = 0; current_task < 4; ++current_task) {
             OS_ROOT_UC[0] = 0;
             OS_L2_UC[0x20] = 0;
             OS_L2_UC[0x21] = 0;
@@ -369,16 +372,23 @@ int main(void) {
     {
         volatile unsigned int *page0 = (volatile unsigned int *)0x00020000u;
         volatile unsigned int *page1 = (volatile unsigned int *)0x00021000u;
+        volatile unsigned int *page2 = (volatile unsigned int *)0x00022000u;
+        volatile unsigned int *page3 = (volatile unsigned int *)0x00023000u;
         unsigned int task, round, ok = 1u;
         unsigned int last_read = 0u;
 
-        /* Same VA space, three independently owned software page tables. */
-        for (round = 0; round < 3; ++round) {
-            for (task = 0; task < 3; ++task) {
+        /* Same VA space, four independently owned software page tables. */
+        for (round = 0; round < 4; ++round) {
+            for (task = 0; task < 4; ++task) {
                 unsigned int value = 0xA5000000u | (task << 12) | round;
                 switch_task(task);
                 page0[0] = value;
                 page1[0] = value + 1u;
+                /* Pages 2 and 3 are read-only/read-mostly pressure points.
+                 * Reading them forces a separate demand refill without
+                 * converting a legitimate Modified fault into allocation. */
+                (void)page2[0];
+                (void)page3[0];
                 if (page0[0] != value || page1[0] != value + 1u)
                     ok = 0u;
             }
@@ -405,6 +415,8 @@ int main(void) {
         print_hex(task_allocs[1]);
         print_str("mmu_os_pressure: task2_allocs=");
         print_hex(task_allocs[2]);
+        print_str("mmu_os_pressure: task3_allocs=");
+        print_hex(task_allocs[3]);
         print_str("mmu_os_pressure: demand_faults=");
         print_hex(demand_fault_count);
         print_str("mmu_os_pressure: permission_faults=");
@@ -419,7 +431,7 @@ int main(void) {
         print_hex(ok);
         print_str("mmu_os_pressure: last_read=");
         print_hex(last_read);
-        if (ok && page_alloc_count == 6u && demand_fault_count == 19u &&
+        if (ok && page_alloc_count == 16u && demand_fault_count == 65u &&
             permission_fault_count == 0u && unexpected_exc == 0u) {
             print_str("mmu_os_pressure: PASS\n");
             *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5550u;

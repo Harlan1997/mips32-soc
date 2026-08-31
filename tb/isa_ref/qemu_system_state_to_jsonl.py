@@ -533,6 +533,12 @@ def convert(events, states):
         # a transient register delta, so it must not become a retire write.
         if exception_taken:
             gpr_we, gpr_addr, gpr_data = 0, 0, "00000000"
+        # A Cause replay override models only the value flowing through the
+        # bounded interrupt handler.  Once an ordinary architectural write
+        # commits the same GPR, the override must be retired as well; keeping
+        # it alive would corrupt a later source operand (notably MTC0 data).
+        if destination and not exception_taken and not is_mfc0_cause:
+            replay_gpr_overrides.pop(f"r{destination}", None)
         # The event stream's next_pc is the immediate post-instruction PC.
         # For a control transfer this is the delay-slot PC; the comparator
         # handles the producer-specific delay-slot boundary explicitly.

@@ -3385,3 +3385,22 @@ configuration.
   boot and full RTL/QEMU system differential; full ISA/privileged ISA and
   IEEE-754/FPU ABI; unrestricted OS-owned demand paging and shootdown; full
   coherency/cache ordering; and physical DDR/QSPI implementation signoff.
+
+### 2026-09-01 four-task MMU OS-pressure differential
+
+- Extended `tb/soc_test/fw/tests/mmu_refill/main.c`'s opt-in
+  `SOC_MMU_OS_PRESSURE` workload from three to four independently owned
+  ASID/root/L2 contexts and from two touched pages to four demand pages.
+  The additional read-only/read-mostly pages exercise separate TLB pair
+  refills without turning a permission fault into an allocation.
+- Fixed the QEMU reference conversion bug exposed by the longer run: a
+  temporary Cause replay GPR override was not cleared after a real GPR write,
+  corrupting a later `MTC0` source value. The override now expires at the
+  architectural write boundary.
+- Fresh `make qemu-system-mmu-os-pressure-gate` passes with strict
+  `TRACE_COMPARE_PASS`. RTL reports `refills=0x43`, `page_allocs=0x10`,
+  `demand_faults=0x41`, four allocations per task, no permission or unexpected
+  exceptions, and the post-shootdown readback succeeds.
+- This strengthens the bounded single-core OS-style page-table pressure
+  evidence. Linux VM ownership, arbitrary demand paging, SMP scheduling and
+  multicore shootdown policy remain open.
