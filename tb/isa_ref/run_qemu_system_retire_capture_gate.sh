@@ -235,13 +235,31 @@ if [[ -n "${RTL_TRACE}" && -s "${RTL_TRACE}" ]]; then
     if [[ "${TRACE_COMPARE_ALLOW_GOLDEN_PREFIX:-0}" == "1" ]]; then
         compare_args+=(--allow-golden-prefix)
     fi
+    if [[ "${TRACE_COMPARE_GOLDEN_TO_RTL:-0}" == "1" ]]; then
+        compare_args+=(--truncate-golden-to-rtl)
+    fi
+    compare_golden="${RUN_DIR}/qemu_retire.jsonl"
+    if [[ -n "${TRACE_COMPARE_GOLDEN_LIMIT:-}" ]]; then
+        if ! [[ "${TRACE_COMPARE_GOLDEN_LIMIT}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "TRACE_COMPARE_GOLDEN_LIMIT must be a positive integer" >&2
+            exit 2
+        fi
+        compare_golden="${RUN_DIR}/qemu_retire_compare_prefix.jsonl"
+        head -n "${TRACE_COMPARE_GOLDEN_LIMIT}" "${RUN_DIR}/qemu_retire.jsonl" >"${compare_golden}"
+        if [[ "$(wc -l <"${compare_golden}")" -ne "${TRACE_COMPARE_GOLDEN_LIMIT}" ]]; then
+            echo "QEMU system retire capture: golden trace shorter than requested compare prefix" >&2
+            exit 2
+        fi
+    fi
     python3 "${SCRIPT_DIR}/trace_compare.py" "${compare_args[@]}" "${RTL_TRACE}" \
-        "${RUN_DIR}/qemu_retire.jsonl" >"${RUN_DIR}/trace_compare.log" 2>&1
+        "${compare_golden}" >"${RUN_DIR}/trace_compare.log" 2>&1
+    compare_records=$(wc -l <"${compare_golden}")
     differential=PASS
     differential_reason="RTL/QEMU retire traces compare equal"
 else
     differential=BLOCKED
     differential_reason="RTL_TRACE was not supplied; QEMU reference trace is complete but no RTL trace was compared"
+    compare_records=0
 fi
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF
@@ -259,6 +277,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - QEMU exit: ${qemu_exit_note}
 - Evidence: plugin_compile.log, qemu_build_identity.txt, qemu_command.txt, qemu_instruction_events.jsonl, qemu_state.jsonl, qemu_retire.jsonl, qemu_trace_capture.log, qemu_stdout.log, qemu_stderr.log
 - Differential: ${differential}
+- Compared records: ${compare_records}
 - Differential reason: ${differential_reason}
 - Residual risk: interrupt replay scheduling, multi-event instructions, and broader exception corpus remain unclosed.
 EOF

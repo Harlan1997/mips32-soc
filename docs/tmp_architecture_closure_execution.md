@@ -3354,3 +3354,18 @@ configuration.
   encodings now raise RI before branch control is emitted.
 - Added four negative cases to `mips-control-special2-gate`; the gate and the
   QEMU system ISA R2 retire differential remain passing.
+
+### 2026-09-01 bounded RTL/QEMU Linux kernel retire differential
+
+- Corrected `tb/isa_ref/run_qemu_linux_differential_gate.sh`'s stale default
+  handoff anchor from `0x89255c78` to the current relocated kernel entry
+  `0x88a55c78`.
+- The capture runner now supports an explicit golden-prefix limit derived
+  from the aligned RTL trace length. This preserves the complete bounded
+  QEMU capture while comparing only the common post-handoff RTL prefix; the
+  comparator remains strict for every compared record.
+- Fresh evidence with the relocated Linux vmlinux/DTB passes
+  `TRACE_COMPARE_PASS records=48781`; `make linux-boot-build-gate` also
+  passes the QEMU kernel-to-userspace marker. RTL Linux still reaches no
+  userspace marker in the 100k-cycle bounded run, so full Linux system-mode
+  differential and complete OS/ISA/MMU signoff remain open.
