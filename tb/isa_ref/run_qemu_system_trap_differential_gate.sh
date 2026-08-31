@@ -15,7 +15,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 
 - Result: PASS
 - Firmware: ${FW_DIR}/firmware.elf
-- Scope: TGE/TGEU/TLT/TLTU/TEQ/TNE conditional traps, Trap ExcCode 13, ERET and mailbox retirement.
+- Scope: TGE/TGEU/TLT/TLTU/TEQ/TNE conditional traps, including a non-zero
+  ten-bit R-type trap code, Trap ExcCode 13, ERET and mailbox retirement.
 - Evidence: firmware.sha256, rtl_gate.log, rtl/vcs_uvm_compile.log, rtl/vcs_uvm.log, qemu/qemu_retire.jsonl, qemu/trace_compare.log
 - Residual risk: complete privileged ISA, full FPU/ISA compliance and Linux boot remain open.
 EOF
