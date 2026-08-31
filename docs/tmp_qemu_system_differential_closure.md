@@ -45,7 +45,8 @@ updates. The fresh rerun with bounded state matching passes:
 `qemu-system-fpu-single-differential-gate: PASS`.
 The FPU state matcher uses a bounded 12-retire-record window for the observed
 ID-to-WB snapshot latency; it is not a general trace resynchronization rule.
-The double corpus also passes with `TRACE_COMPARE_PASS records=291`, including
+The double corpus also passes with `TRACE_COMPARE_PASS records=297`, including
+the selected `SQRT.D` result check,
 the MIPS default-NaN result for invalid `DIV.D 0/0`.
 
 | Slice | State | Evidence | Remaining |
