@@ -28,6 +28,10 @@ module tb_mmu_page_table_allocator;
     if(!release_valid) fail("valid release rejected");
     @(negedge clk); release_req=0; alloc_req=1; @(posedge clk); #1;
     if(!alloc_valid || alloc_root !== roots[2] || alloc_generation !== gens[2]+1) fail("root reuse generation");
+    @(negedge clk); alloc_req=0; release_req=1; release_root=roots[2];
+    release_generation=gens[2]+1; alloc_req=1; @(posedge clk); #1;
+    if(!release_valid || !alloc_valid || alloc_root !== roots[2] ||
+       alloc_generation !== gens[2]+2) fail("atomic release+alloc");
     $display("REGRESSION_TEST_SUCCESS mmu_page_table_allocator"); $finish;
   end
 endmodule
