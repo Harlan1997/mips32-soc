@@ -159,6 +159,10 @@ formal-static-audit:
 	@mkdir -p $(BUILD_DIR)/verification_foundation
 	python3 scripts/check_formal_assets.py | tee $(BUILD_DIR)/verification_foundation/formal_static_audit.log
 
+formal-bind-compile-gate:
+	chmod +x scripts/run_formal_bind_compile_gate.sh
+	RUN_ROOT=$(BUILD_DIR)/verification_foundation/formal_bind_compile scripts/run_formal_bind_compile_gate.sh
+
 mdu-flush-gate:
 	RUN_DIR=$(MDU_FLUSH_DIR) tb/unit/mdu/run_flush_gate.sh
 
@@ -189,6 +193,7 @@ dcache-parity-gate:
 .PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
 .PHONY: mem-stage-gate
 .PHONY: formal-static-audit
+.PHONY: formal-bind-compile-gate
 
 isa-implementation-audit:
 	@mkdir -p $(BUILD_DIR)/isa_audit

@@ -8,6 +8,8 @@ inventory="${RUN_ROOT}/tool_inventory.tsv"
 report="${RUN_ROOT}/verification_foundation_report.md"
 static_audit="${RUN_ROOT}/formal_static_audit.log"
 python3 "${ROOT_DIR}/scripts/check_formal_assets.py" | tee "${static_audit}"
+bind_compile="${RUN_ROOT}/formal_bind_compile"
+RUN_ROOT="${bind_compile}" bash "${ROOT_DIR}/scripts/run_formal_bind_compile_gate.sh" > "${RUN_ROOT}/formal_bind_compile.log"
 printf 'tool\tstatus\tpath\tnote\n' > "${inventory}"
 
 probe() {
@@ -63,5 +65,6 @@ cat > "${report}" <<EOF
 - Waiver audit: ${waiver_count} waiver files checked; broad exclusions rejected.
 - Evidence root: ${RUN_ROOT}
 - Static audit log: ${static_audit}
+- DUT bind compile log: ${RUN_ROOT}/formal_bind_compile.log
 EOF
 echo "verification foundation gate: PASS (tool availability is reported, not overstated)"
