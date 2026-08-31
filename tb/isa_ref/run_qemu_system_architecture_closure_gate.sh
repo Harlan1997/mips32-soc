@@ -32,6 +32,8 @@ run_gate fpu_fpe_boundary_differential \
     make -C "${ROOT_DIR}" qemu-system-fpu-fpe-boundary-differential-gate
 run_gate fpu_fpe_double_differential \
     make -C "${ROOT_DIR}" qemu-system-fpu-fpe-double-differential-gate
+run_gate fpu_rounding_differential \
+    make -C "${ROOT_DIR}" qemu-system-fpu-rounding-differential-gate
 run_gate llsc_differential \
     make -C "${ROOT_DIR}" qemu-system-llsc-differential-gate
 run_gate linux_userspace_marker \
@@ -48,7 +50,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 
 - Result: PASS
 - Machine: mips32-soc-ref
-- Sub-gates: current peripheral contract, selected ISA/FPU/privileged and
+- Sub-gates: current peripheral contract, selected ISA/FPU/rounding/privileged and
   peripheral retire differential, FPU precise exception boundary differential,
   MMU refill/PageMask/OS-pressure differential, LL/SC reservation differential,
   and generic Linux kernel-to-userspace marker boot.
