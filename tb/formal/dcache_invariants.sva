@@ -1,0 +1,21 @@
+// Bounded dcache FSM invariants. A formal harness must bind these ports to
+// the selected cache configuration and constrain legal downstream responses.
+`ifdef FORMAL_ENABLE
+module dcache_invariant_props #(
+    parameter STATE_WIDTH = 5,
+    parameter REFILL_BOUND = 4096
+) (
+    input logic clk,
+    input logic rst_n,
+    input logic [STATE_WIDTH-1:0] state,
+    input logic refill_start,
+    input logic refill_done
+);
+    default clocking cb @(posedge clk); endclocking
+    default disable iff (!rst_n);
+    state_known: assert property (!$isunknown(state));
+    refill_completes: assert property (
+        refill_start |-> ##[1:REFILL_BOUND] refill_done
+    );
+endmodule
+`endif

@@ -3518,3 +3518,13 @@ configuration.
   still bounded QEMU reference evidence and retains a long-host-timeout
   residual risk; RTL Linux userspace boot, full RTL/QEMU Linux differential,
   and complete OS/ISA/MMU closure remain open.
+
+### 2026-09-01 formal asset audit expansion
+
+- Added `scripts/check_formal_assets.py` and `make formal-static-audit`.
+- The check validates all four formal property modules and eight assertions,
+  rejects permanently disabled properties and broad waiver selectors, and is
+  run automatically by `verification-foundation-gate`.
+- Fresh output is `FORMAL_ASSET_AUDIT_PASS files=4 modules=4 assertions=8`.
+  Tool inventory remains VCS-only; no formal, CDC, RDC or lint proof is
+  claimed.

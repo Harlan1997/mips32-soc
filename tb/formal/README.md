@@ -1,6 +1,8 @@
 # Formal Verification Harness (Phase F)
 
-Placeholder directory for JasperGold / VC Formal property files and setup scripts.
+Property scaffolds for JasperGold / VC Formal and a solver-independent content
+audit. The current environment has no formal engine, so the audit and
+simulation assertions are not formal proof results.
 
 ## Scope (per `docs/vplan.md`)
 
@@ -32,6 +34,13 @@ tb/formal/
   ...
 ```
 
+## Current property assets
+
+- `arb_fairness.sva`: bounded arbiter fairness.
+- `dcache_invariants.sva`: known-state and bounded refill completion.
+- `tlb_invariants.sva`: lookup multi-hit consistency.
+- `interrupt_priority.sva`: selected-source safety checks.
+
 ## Wiring in (future work)
 
 1. License: JasperGold / VC Formal (target ~2 seat lease)
@@ -40,7 +49,7 @@ tb/formal/
 
 ## Placeholder property (arbiter fairness)
 
-See `arb_fairness.sva` (also placeholder) — expresses that within any
+See `arb_fairness.sva` — expresses that within any
 1000-cycle window, if M0 has continuously asserted arvalid while M1 has
 been idle, M0 must have received at least one arready. Real proof will
 require refining assumptions on downstream slave arready behavior.

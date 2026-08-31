@@ -1,0 +1,23 @@
+// PIC priority safety properties. A complete proof adds tie-break and ACK
+// assumptions supplied by the selected formal harness.
+`ifdef FORMAL_ENABLE
+module interrupt_priority_props (
+    input logic clk,
+    input logic rst_n,
+    input logic [31:0] pending,
+    input logic selected_valid,
+    input logic [4:0] selected_source
+);
+    default clocking cb @(posedge clk); endclocking
+    default disable iff (!rst_n);
+    selected_source_in_range: assert property (
+        selected_valid |-> (selected_source <= 5'd31)
+    );
+    selected_source_pending: assert property (
+        selected_valid |-> pending[selected_source]
+    );
+    no_selection_without_pending: assert property (
+        (pending == 32'd0) |-> !selected_valid
+    );
+endmodule
+`endif

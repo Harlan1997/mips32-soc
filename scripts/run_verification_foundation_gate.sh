@@ -6,6 +6,8 @@ RUN_ROOT=${RUN_ROOT:-"${ROOT_DIR}/build/verification_foundation"}
 mkdir -p "${RUN_ROOT}"
 inventory="${RUN_ROOT}/tool_inventory.tsv"
 report="${RUN_ROOT}/verification_foundation_report.md"
+static_audit="${RUN_ROOT}/formal_static_audit.log"
+python3 "${ROOT_DIR}/scripts/check_formal_assets.py" | tee "${static_audit}"
 printf 'tool\tstatus\tpath\tnote\n' > "${inventory}"
 
 probe() {
@@ -56,9 +58,10 @@ cat > "${report}" <<EOF
 - Status: FOUNDATION_READY_WITH_EXPLICIT_TOOL_STATUS
 - Tool probes: ${available_count}/${total_count} available; see tool_inventory.tsv.
 - SVA assets: AXI/APB/reset/cache property sources present.
-- Formal assets: harness and fairness property present; this is not a formal proof.
+- Formal assets: static content audit passed; this is not a formal proof.
 - CDC/RDC/lint: availability is recorded; missing tools are deferred explicitly.
 - Waiver audit: ${waiver_count} waiver files checked; broad exclusions rejected.
 - Evidence root: ${RUN_ROOT}
+- Static audit log: ${static_audit}
 EOF
 echo "verification foundation gate: PASS (tool availability is reported, not overstated)"

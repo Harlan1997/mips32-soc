@@ -1,0 +1,22 @@
+// Main-TLB lookup invariants. The environment constrains the bound TLB.
+`ifdef FORMAL_ENABLE
+module tlb_invariant_props #(
+    parameter TLB_ENTRIES = 64
+) (
+    input logic clk,
+    input logic rst_n,
+    input logic [TLB_ENTRIES-1:0] lookup0_hit_vec,
+    input logic [TLB_ENTRIES-1:0] lookup1_hit_vec,
+    input logic lookup0_multi_hit,
+    input logic lookup1_multi_hit
+);
+    default clocking cb @(posedge clk); endclocking
+    default disable iff (!rst_n);
+    lookup0_multi_hit_consistent: assert property (
+        lookup0_multi_hit == ($countones(lookup0_hit_vec) > 1)
+    );
+    lookup1_multi_hit_consistent: assert property (
+        lookup1_multi_hit == ($countones(lookup1_hit_vec) > 1)
+    );
+endmodule
+`endif

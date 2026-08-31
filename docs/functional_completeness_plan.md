@@ -4,6 +4,19 @@
 >
 > 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据。
 
+### 2026-09-01 formal asset content audit and property scaffolds
+
+Added `scripts/check_formal_assets.py` and the `formal-static-audit` Make
+target. The audit checks every repository formal `.sva` file for a module and
+at least one assertion, rejects permanently disabled assertions and broad
+coverage selectors, and records exact file/module/assertion counts. The
+formal asset set now includes bounded dcache FSM, TLB multi-hit consistency
+and interrupt source safety properties in addition to arbiter fairness.
+`make formal-static-audit verification-foundation-gate` passes with
+`files=4 modules=4 assertions=8`; the environment still has only VCS and no
+formal/CDC/RDC/lint engine. This closes the solver-independent asset audit
+fallback only; it is not formal proof or CDC/RDC/lint signoff.
+
 ## 1. 完成等级
 
 ### 2026-09-01 LWL/LWR cross-page precise-fault slice
