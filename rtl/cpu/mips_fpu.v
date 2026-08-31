@@ -419,7 +419,7 @@ module mips_fpu (
                 OP_MUL:  exact_single = ar * br;
                 OP_DIV:  if (b[30:23] != 0 || b[22:0] != 0) exact_single = ar / br;
                 OP_SQRT: if (!a[31] && a[30:23] != 0)
-                             exact_single = rr * rr;
+                             exact_single = rr;
                 OP_MADD: exact_single = (ar * br) + $bitstoshortreal(c);
                 OP_MSUB: exact_single = (ar * br) - $bitstoshortreal(c);
                 OP_NMADD: exact_single = -((ar * br) + $bitstoshortreal(c));
@@ -430,6 +430,12 @@ module mips_fpu (
                 exception_flags[1] = 1'b1;
             if (exact_single != 0.0 &&
                 ($bitstoshortreal(result) != exact_single))
+                exception_flags[0] = 1'b1;
+            // For sqrt, compare the rounded result squared with the input.
+            // Comparing the result itself with result*result incorrectly
+            // marks every non-unit square root as inexact.
+            if (op == OP_SQRT && !a[31] && a[30:23] != 0 &&
+                (rr * rr) != ar)
                 exception_flags[0] = 1'b1;
         end
         // SQRT.D is rounded to the destination double format by result_double;

@@ -901,13 +901,15 @@
   `scripts/qemu/patches/qemu-9.2-mips32-fpu-int32-indefinite.patch` makes
   invalid/overflow W conversions return the MIPS architectural indefinite
   value `0x80000000`, matching the RTL. Direct system-mode execution prints
-  `FPU PASS`; the fresh differential reports `TRACE_COMPARE_PASS records=1248`.
+  `FPU PASS`; the fresh differential reports `TRACE_COMPARE_PASS records=1320`.
 - The same fresh differential now includes correctly encoded COP1X
-  `MADD.S/MSUB.S/NMADD.S/NMSUB.S` and passes `TRACE_COMPARE_PASS records=1248`;
+  `MADD.S/MSUB.S/NMADD.S/NMSUB.S` and passes `TRACE_COMPARE_PASS records=1320`;
   the double guest includes the four D forms and passes
   `TRACE_COMPARE_PASS records=225`. COP1X uses QEMU's architectural
   `fs * ft +/- fr` field mapping (`rd`, `rt`, `rs`) and rejects odd D-pair
-  selectors in all four register fields.
+  selectors in all four register fields. The closure pass also fixes the
+  behavioral `SQRT.S` inexact classification and treats COP1X indexed double
+  accesses as the same two-beat producer boundary as `LDC1`/`SDC1`.
 - `make fpu-single-gate` covers real `LWC1`/`SWC1` traffic and the opt-in
   blocking `LDC1`/`SDC1` two-word path through the CPU data path, including
   FPR load-use ordering and the behavioral DDR window at `0x00008000`.
