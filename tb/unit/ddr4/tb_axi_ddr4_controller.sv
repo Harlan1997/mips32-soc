@@ -202,6 +202,8 @@ module tb_axi_ddr4_controller;
         timeout = 0;
         while (!init_done && timeout < 50) begin @(posedge clk); timeout = timeout + 1; end
         check(controller_present && init_done && training_done, "controller initialization completes");
+        check(dut.ram[0] == 32'h1357_9bdf, "DDR image preload survives initialization");
+        check(dut.ram[1] == 32'h2468_ace0, "DDR image preload preserves adjacent word");
 
         write_beat(`SOC_DDR_BASE + 32'h100, 32'hCAFE_4401, 0, 2'b00);
         check(last_row_miss, "first access opens a row with ACT");
