@@ -334,6 +334,22 @@ module tb_cp0_timer;
         mfc0(5'd0, 3'd0, rd); check("TLBP hit returns Index=5, P=0",
                                      rd == 32'h0000_0005);
 
+        // Changing the software-owned walker root must not retain dynamic
+        // translations learned from the previous root.  Wired entries are
+        // protected by the TLB invalidate floor, but this entry is dynamic.
+        mtc0(5'd10, 3'd0, 32'h0002_A007);
+        mmu_ilookup_va = 32'h0002_A000;
+        @(negedge clk);
+        check("dynamic mapping hits before Context root change",
+              mmu_ilookup_hit == 1'b1);
+        // The earlier Random/Wired test leaves Wired=8; make TLB[5] a
+        // dynamic entry for this explicit root-flush check.
+        mtc0(5'd6, 3'd0, 32'd0);
+        mtc0(5'd4, 3'd0, 32'hFF80_0000);
+        @(negedge clk);
+        check("dynamic mapping flushed by Context root change",
+              mmu_ilookup_hit == 1'b0);
+
         // 3) TLBP with mismatched ASID and non-global entry
         //    First write a non-global TLB[6] with distinctive VPN2/ASID
         mtc0(5'd10, 3'd0, 32'h0004_A008);            // VPN2=0x00025, ASID=0x08

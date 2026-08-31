@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 Context-root translation invalidation
+
+- A `Context.PTEBase` write now invalidates both I/D micro-TLB state and all
+  non-wired main-TLB entries. The existing Wired floor is honored, so wired
+  kernel mappings remain available across a root switch.
+- The CP0 test first observes a dynamic TLB mapping, changes the Context root,
+  and verifies that the mapping no longer hits. `tb/unit/cp0/run.sh` and
+  `make rtl-frontend-compile` pass.
+- This closes stale-translation prevention for root ownership; it does not
+  implement OS PTE allocation/population, accessed/dirty updates, demand
+  paging, multicore shootdown, Linux userspace boot, or full differential.
+
 ### 2026-08-31 CP0-owned hardware walker root plumbing
 
 - Added `cp0_ptebase_out`, exposing the software-written `Context.PTEBase`
