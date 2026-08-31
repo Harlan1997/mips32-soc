@@ -11,7 +11,7 @@ test -x "${QEMU_SYSTEM_BIN}"
 set +e
 "${QEMU_SYSTEM_BIN}" \
     -accel tcg,thread=single \
-    -M mips32-soc-ref -m 64M -cpu 24Kc \
+    -M mips32-soc-ref,linux-guest=on -m 64M -cpu 24Kc \
     -kernel "${RUN_DIR}/kernel/vmlinux" -dtb "${RUN_DIR}/mips32_soc_ref.dtb" \
     -display none -monitor none >"${RUN_DIR}/qemu_stdout.log" \
     2>"${RUN_DIR}/qemu_stderr.log" &

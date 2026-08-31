@@ -3447,6 +3447,22 @@ configuration.
   slice. Full MIPS memory ordering, arbitrary SMP atomicity, and
   MESI/directory coherency remain open.
 
+### 2026-09-01 Linux LL/SC A/B and explicit guest policy
+
+- A direct A/B run with the same Linux kernel and single-threaded TCG showed
+  that the unconditional SC reservation-consume change can stop the guest
+  after the mprotect child fault, while the no-consume binary reached both
+  exec markers, `wait_status`, and `MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS`.
+- The custom machine now exposes `linux-guest=on`. The strict reservation
+  consume behavior remains the default for bare-metal/RTL differential; the
+  Linux boot and bounded Linux differential runners pass the property
+  explicitly and use QEMU's historical Linux-compatible behavior.
+- The property was observed in the rebuilt QEMU callback (`linux_guest=1`),
+  but a subsequent run still reproduced a later second `fork/wait4` timeout.
+  Linux userspace reproducibility and the underlying custom-machine scheduler
+  or wait-path issue therefore remain open; this change does not relax any
+  marker or comparator requirement.
+
 ### 2026-09-01 Linux boot build incremental-resource repair
 
 - `tb/linux_boot/build_linux_boot.sh` now hashes the guest assembly/linker
