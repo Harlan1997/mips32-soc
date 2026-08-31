@@ -394,6 +394,9 @@ main:
      * encodings explicit so this regression also checks the legacy MIPS32
      * R2 form independently of assembler pseudo-op availability. */
     addiu   $t9, $zero, 0
+    nop
+    nop
+    nop
     .word   0x4f197000             /* lwxc1  $f14,$t9($t8) */
     mfc1    $t4, $f14
     bne     $t4, $t0, fail
@@ -402,7 +405,7 @@ main:
     mfc1    $t4, $f16
     bne     $t4, $t0, fail
     nop
-    mfc1    $t4, $f18
+    .word   0x440c8800             /* mfc1 $t4,$f17 (odd partner) */
     bne     $t4, $t1, fail
     nop
     .word   0x4f191008             /* swxc1  $f2,$t9($t8) */
