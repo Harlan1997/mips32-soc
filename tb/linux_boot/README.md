@@ -77,6 +77,12 @@ the desired diagnostic trace switches. The normal default remains strict and
 requires a post-reset progress heartbeat; the opt-out is only for a simulator
 run whose purpose is collecting a bounded diagnostic window.
 
+To make the same runner a strict userspace gate, set
+`LINUX_REQUIRE_USERSPACE=1`. The run then records a failure report and exits
+nonzero unless `MIPS32_SOC_LINUX_BOOT_SUCCESS` appears in the RTL UART log;
+the default remains the diagnostic progress gate so existing bounded probes
+are not reclassified as Linux boot signoff.
+
 ## Boot flow (target)
 
 ```
