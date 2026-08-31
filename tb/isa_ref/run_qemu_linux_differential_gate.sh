@@ -61,6 +61,7 @@ capture_records=${MAX_TRACE_RECORDS}
 env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_KERNEL="${KERNEL}" QEMU_DTB="${DTB}" QEMU_MEMORY="${QEMU_MEMORY}" \
     QEMU_ACCEL=tcg,thread=single \
+    QEMU_MACHINE_PROPERTIES="linux-guest=on" \
     QEMU_APPEND="${QEMU_APPEND}" QEMU_TIMEOUT="${QEMU_TIMEOUT}" \
     MAX_QEMU_EVENTS="${capture_records}" \
     MAX_QEMU_STATES="$((capture_records + 1))" \

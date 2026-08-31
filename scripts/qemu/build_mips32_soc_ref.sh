@@ -54,6 +54,7 @@ if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
    rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    [[ "$(<"${INPUT_STAMP}")" == "${PROJECT_INPUTS_HASH}" ]]; then
     echo "QEMU mips32-soc-ref build is up to date: ${QEMU_BUILD}/qemu-system-mipsel"
     exit 0
@@ -286,12 +287,20 @@ rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
 
 if ! rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    perl -0pi -e 's{(    gen_store_gpr\(tcg_constant_tl\(0\), rt\);\n)(    tcg_gen_br\(done\);)}{$1    /* MIPS32 SoC contract: every completed SC attempt consumes LL state. */\n    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n$2}s' \
+    perl -0pi -e 's{(    gen_store_gpr\(tcg_constant_tl\(0\), rt\);\n)(    tcg_gen_br\(done\);)}{$1    /* MIPS32 SoC contract: every completed SC attempt consumes LL state. */\n    if (!qemu_mips32_soc_ref_sc_consume_reservation || qemu_mips32_soc_ref_sc_consume_reservation()) {\n        tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n    }\n$2}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
-    perl -0pi -e 's{(    gen_store_gpr\(t0, rt\);\n)(\n    gen_set_label\(done\);)}{$1    /* Successful and failed compare-exchange attempts both consume LL. */\n    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n$2}s' \
+    perl -0pi -e 's{(    gen_store_gpr\(t0, rt\);\n)(\n    gen_set_label\(done\);)}{$1    /* Successful and failed compare-exchange attempts both consume LL. */\n    if (!qemu_mips32_soc_ref_sc_consume_reservation || qemu_mips32_soc_ref_sc_consume_reservation()) {\n        tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n    }\n$2}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
+    "${QEMU_SRC}/target/mips/tcg/translate.c"
+if ! rg -q '^extern bool qemu_mips32_soc_ref_sc_consume_reservation' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    sed -i '/\/\* Store conditional \*\//a\\
+extern bool qemu_mips32_soc_ref_sc_consume_reservation(void) __attribute__((weak));' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+fi
+rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 
 # Keep the opt-in custom-machine PREFX contract correct even when an older
