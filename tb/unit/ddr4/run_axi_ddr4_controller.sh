@@ -11,6 +11,6 @@ vcs -full64 -sverilog -timescale=1ns/1ps \
   "${ROOT_DIR}/rtl/perips/ecc_secded_32.v" "${ROOT_DIR}/rtl/perips/axi_ddr4_controller.v" \
     "${SCRIPT_DIR}/tb_axi_ddr4_controller.sv" \
     +incdir+"${ROOT_DIR}/rtl/include" -l compile.log
-./simv -l sim.log
+./simv +DDR_HEX="${SCRIPT_DIR}/ddr_preload.hex" -l sim.log
 grep -q "REGRESSION_TEST_SUCCESS axi_ddr4_controller" sim.log
 echo "DDR4 controller protocol gate: PASS"

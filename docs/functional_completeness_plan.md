@@ -4,6 +4,19 @@
 >
 > 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据。
 
+### 2026-09-01 DDR image preload race fix
+
+`axi_ddr4_controller` now performs simulation `+DDR_HEX` loading in the same
+time-zero process, after clearing the backing array. This removes the race
+between the 4M-word initialization loop and the Linux testbench's explicit
+`load_hex()` call. The controller unit gate now loads two sentinel words and
+asserts both values after initialization; `make ddr4-controller-gate` and
+`make rtl-frontend-compile` pass. A fresh target-line trace confirms the
+Linux DDR burst at `0x080946a0..0x080946bc` returns all eight image words.
+The 14M-cycle RTL Linux probe still observes no userspace marker, so Linux
+userspace boot and full RTL/QEMU Linux differential remain open; later kernel
+execution reaches timer/idle paths.
+
 ### 2026-09-01 EDA 默认内存预算收紧
 
 `scripts/run_eda_cgroup.sh` 的默认 cgroup 预算调整为

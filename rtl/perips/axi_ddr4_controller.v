@@ -203,13 +203,6 @@ module axi_ddr4_controller #(
     assign s_arready = controller_ready && !refresh_due && !s_awvalid;
     assign s_wready = (state == ST_WRITE_DATA) && write_active;
 
-    initial begin
-        for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1) begin
-            ram[i] = 32'd0;
-            ecc_ram[i] = 39'd0;
-        end
-    end
-
     // Simulation-only firmware preload hook retained under the new instance
     // name so existing SoC boot tests can load a DDR image explicitly.
     // synopsys translate_off
@@ -218,11 +211,22 @@ module axi_ddr4_controller #(
         input [1023:0] hex_path;
         begin $readmemh(hex_path, ram); end
     endtask
+    // synopsys translate_on
+
     initial begin
+        for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1) begin
+            ram[i] = 32'd0;
+            ecc_ram[i] = 39'd0;
+        end
+        // Keep image loading in the same time-zero process as the backing
+        // store initialization.  The Linux testbench also calls load_hex()
+        // explicitly, so a separate initial block here would race that call
+        // with the large clearing loop and could overwrite loaded words.
+        // synopsys translate_off
         image_hex = "";
         if ($value$plusargs("DDR_HEX=%s", image_hex)) load_hex(image_hex);
+        // synopsys translate_on
     end
-    // synopsys translate_on
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
