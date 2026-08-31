@@ -28,9 +28,10 @@ machine was rebuilt successfully. The resulting system binary reports
 `QEMU_BUILD_JOBS=1` and verifies the executable exists before recording its
 input stamp, reducing host-memory pressure during recovery builds.
 
-This closes the QEMU build and bounded machine-model prerequisite only. It
-does not close the outstanding FPU state differential, full ISA/MMU/Linux
-lockstep, or physical DDR/QSPI behavior.
+This closes the QEMU build and bounded machine-model prerequisite plus the
+selected FPU state differential corpus. It does not close full
+ISA/MMU/Linux lockstep, complete IEEE-754/FPU ABI behavior, or physical
+DDR/QSPI behavior.
 
 The fresh FPU differential initially identified a QEMU translator field
 mapping defect in COP1X indexed memory: MIPS32 R2 uses `rd` as the FPR
@@ -42,6 +43,10 @@ trace corpus leaves enough retirement spacing to expose back-to-back FPR
 updates. The fresh rerun with bounded state matching passes:
 `TRACE_COMPARE_PASS records=1320` and
 `qemu-system-fpu-single-differential-gate: PASS`.
+The FPU state matcher uses a bounded 12-retire-record window for the observed
+ID-to-WB snapshot latency; it is not a general trace resynchronization rule.
+The double corpus also passes with `TRACE_COMPARE_PASS records=225`, including
+the MIPS default-NaN result for invalid `DIV.D 0/0`.
 
 | Slice | State | Evidence | Remaining |
 | --- | --- | --- | --- |

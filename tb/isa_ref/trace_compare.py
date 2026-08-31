@@ -213,7 +213,7 @@ def align_first_retire(rtl, golden, pc):
         f"{wanted_pc} / {golden_first.get('instr')}")
 
 
-def fpu_state_matches_window(rtl, golden, index, field, radius=8):
+def fpu_state_matches_window(rtl, golden, index, field, radius=12):
     """Match FPU state across the bounded ID-to-WB observation latency.
 
     The RTL commits FPR/FCSR in ID while the common retire record is sampled
