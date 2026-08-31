@@ -201,29 +201,26 @@ module mips_control (
                     6'b001101: begin // BREAK
                         is_break = 1'b1;
                     end
-                    6'b110000: begin // TGE
-                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
-                        else begin is_trap = 1'b1; trap_op = 4'd0; end
+                    6'b110000: begin // TGE (code is bits [15:6])
+                        // Unlike ordinary R-type instructions, rd/sa are the
+                        // ten-bit architecturally ignored trap code field.
+                        // Linux uses a non-zero code in BUG_ON call sites.
+                        is_trap = 1'b1; trap_op = 4'd0;
                     end
-                    6'b110001: begin // TGEU
-                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
-                        else begin is_trap = 1'b1; trap_op = 4'd1; end
+                    6'b110001: begin // TGEU (code is bits [15:6])
+                        is_trap = 1'b1; trap_op = 4'd1;
                     end
-                    6'b110010: begin // TLT
-                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
-                        else begin is_trap = 1'b1; trap_op = 4'd2; end
+                    6'b110010: begin // TLT (code is bits [15:6])
+                        is_trap = 1'b1; trap_op = 4'd2;
                     end
-                    6'b110011: begin // TLTU
-                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
-                        else begin is_trap = 1'b1; trap_op = 4'd3; end
+                    6'b110011: begin // TLTU (code is bits [15:6])
+                        is_trap = 1'b1; trap_op = 4'd3;
                     end
-                    6'b110100: begin // TEQ
-                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
-                        else begin is_trap = 1'b1; trap_op = 4'd4; end
+                    6'b110100: begin // TEQ (code is bits [15:6])
+                        is_trap = 1'b1; trap_op = 4'd4;
                     end
-                    6'b110110: begin // TNE
-                        if (rd != 5'd0 || sa != 5'd0) illegal_inst = 1'b1;
-                        else begin is_trap = 1'b1; trap_op = 4'd5; end
+                    6'b110110: begin // TNE (code is bits [15:6])
+                        is_trap = 1'b1; trap_op = 4'd5;
                     end
                     6'b001111: begin // SYNC
                         // The pipeline is already in-order and the memory

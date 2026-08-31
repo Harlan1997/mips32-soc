@@ -18,7 +18,9 @@ _start:
     nop
     teq     $t0, $t1
     nop
-    tne     $t0, $t1
+    # R-type trap instructions use rd:sa as the ten-bit code field.  Keep a
+    # non-zero code because Linux emits TNE with code 0xc in __BUG_ON.
+    .word   0x01090336              # tne $t0, $t1, 0xc
     nop
 
     lui     $t1, 0xa000

@@ -1,5 +1,22 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 R-type trap code field and Linux BUG_ON boundary
+
+- The Linux progress trace identified `0x00040336` at `0x880e89a4` as the
+  legal `TNE $zero,$a0,0xc` form used by `__BUG_ON`, not a coprocessor
+  instruction. The RTL decoder had incorrectly required `rd` and `sa` to be
+  zero, turning the instruction into RI (`ExcCode=10`).
+- Removed that false fixed-field check for all six R-type conditional traps;
+  `rd:sa` is the architecturally ignored ten-bit trap code.
+- `make rtl-frontend-compile qemu-system-trap-differential-gate
+  qemu-system-trap-imm-differential-gate` passes from a fresh temporary build.
+  The R-type differential firmware now explicitly encodes `TNE` with code
+  `0xc`.
+- A fresh 2M-cycle no-coverage RTL Linux probe passes its bounded progress
+  gate and reaches normal kernel addresses after the fix; the former
+  `RI@__BUG_ON` is absent. Userspace boot and full RTL/QEMU Linux differential
+  remain open.
+
 ### 2026-08-31 FPU bit-preserving sign and move operations
 
 - `MOV.S/D`, `ABS.S/D` and `NEG.S/D` preserve IEEE bit patterns, including
