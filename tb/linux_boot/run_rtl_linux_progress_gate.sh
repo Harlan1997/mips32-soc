@@ -164,9 +164,9 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Linux userspace success markers observed: ${marker_count}
 - Scope: relocated Linux image construction, Boot ROM/DDR preload, RTL
   compilation/elaboration and bounded post-reset CPU progress.
-- Boundary: this is not RTL Linux userspace boot and not RTL/QEMU Linux
-  differential signoff; the userspace marker is intentionally reported but
-  is not required by this progress gate.
+- Boundary: this is not RTL/QEMU Linux differential signoff. The userspace
+  marker is informational by default and becomes a required boot criterion
+  when LINUX_REQUIRE_USERSPACE=1.
 EOF
 
 if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
