@@ -37,7 +37,8 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" |
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-round-w-ties-away.patch" |
         sha256sum | awk '{print $1}'
 }
 
@@ -48,6 +49,7 @@ if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
    [[ "$(<"${INPUT_STAMP}")" == "${PROJECT_INPUTS_HASH}" ]]; then
@@ -224,6 +226,19 @@ if ! rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helpe
     sed -i 's/^#define FP_TO_INT32_OVERFLOW 0x7fffffff$/\/\* SOC_REF_FPU_INT32_INDEFINITE: MIPS invalid W conversion result. \*\/\n#define FP_TO_INT32_OVERFLOW 0x80000000/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 fi
+
+if ! rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
+    # The vendored QEMU tree is not a git checkout. Apply the small source
+    # change by function body so this remains deterministic for extracted
+    # release archives as well as git worktrees.
+    sed -i '/uint32_t helper_float_round_w_d(CPUMIPSState \*env, uint64_t fdt0)/,/^}/ s/float_round_nearest_even/float_round_ties_away/' \
+        "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+    sed -i '/uint32_t helper_float_round_w_s(CPUMIPSState \*env, uint32_t fst0)/,/^}/ s/float_round_nearest_even/float_round_ties_away/' \
+        "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+    sed -i '/set_float_rounding_mode(float_round_ties_away,/a\    /* SOC_REF_FPU_ROUND_W_TIES_AWAY */' \
+        "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+fi
+rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
 if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\) \{\n            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
