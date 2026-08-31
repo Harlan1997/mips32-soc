@@ -252,6 +252,8 @@ def main():
                     help="align the first golden retire at an exact RTL PC/instruction")
     ap.add_argument("--allow-golden-prefix", action="store_true",
                     help="accept a fully matching golden prefix when RTL has extra records")
+    ap.add_argument("--truncate-golden-to-rtl", action="store_true",
+                    help="after alignment, compare only the golden prefix available in the RTL trace")
     args = ap.parse_args()
     rtl = list(load(args.rtl))
     golden = list(load(args.golden))
@@ -261,6 +263,11 @@ def main():
     if args.align_first_pc:
         rtl, golden = align_first_retire(rtl, golden, args.align_first_pc)
     rtl, golden = align_async_vector_window(rtl, golden)
+    if args.truncate_golden_to_rtl:
+        # Linux RTL runs are cycle-bounded while QEMU capture is wall-clock
+        # bounded.  The handoff alignment above may also remove a producer
+        # prefix, so derive the common compare length after both operations.
+        golden = golden[:len(rtl)]
     mismatches = []
     for idx, (r, g) in enumerate(zip(rtl, golden)):
         fields = list(BASE_FIELDS)
