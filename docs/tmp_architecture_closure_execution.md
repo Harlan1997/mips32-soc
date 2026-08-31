@@ -3432,3 +3432,17 @@ configuration.
 - This closes the bounded ASID lease lifecycle race. It remains separate from
   Linux ASID lifetime, page-table population, scheduler policy, multicore
   shootdown, and complete privileged/MMU compliance.
+
+### 2026-09-01 QEMU LL/SC reservation-consume differential repair
+
+- The QEMU 9.2 `mips32-soc-ref` reference path previously left `lladdr` live
+  after a completed mismatched `SC`, so a following `SC` could incorrectly
+  inherit the old reservation. The custom build now applies the explicit
+  `qemu-9.2-mips32-sc-consume-reservation.patch` contract through an
+  idempotent source-tree transformation.
+- The real system-mode gate now passes with strict retire comparison:
+  `TRACE_COMPARE_PASS records=320`, QEMU capture 328 compared records, and
+  the firmware reports `REGRESSION_TEST_SUCCESS`.
+- This closes the QEMU/RTL bounded LL/SC reservation-consumption differential
+  slice. Full MIPS memory ordering, arbitrary SMP atomicity, and
+  MESI/directory coherency remain open.

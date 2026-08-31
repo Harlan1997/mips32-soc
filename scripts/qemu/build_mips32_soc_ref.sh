@@ -37,6 +37,7 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-sc-consume-reservation.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-round-w-ties-away.patch" |
         sha256sum | awk '{print $1}'
@@ -52,6 +53,7 @@ if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
+   rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    [[ "$(<"${INPUT_STAMP}")" == "${PROJECT_INPUTS_HASH}" ]]; then
     echo "QEMU mips32-soc-ref build is up to date: ${QEMU_BUILD}/qemu-system-mipsel"
     exit 0
@@ -280,6 +282,16 @@ if ! rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch"
 fi
 rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
+    "${QEMU_SRC}/target/mips/tcg/translate.c"
+
+if ! rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    perl -0pi -e 's{(    gen_store_gpr\(tcg_constant_tl\(0\), rt\);\n)(    tcg_gen_br\(done\);)}{$1    /* MIPS32 SoC contract: every completed SC attempt consumes LL state. */\n    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n$2}s' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+    perl -0pi -e 's{(    gen_store_gpr\(t0, rt\);\n)(\n    gen_set_label\(done\);)}{$1    /* Successful and failed compare-exchange attempts both consume LL. */\n    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n$2}s' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+fi
+rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 
 # Keep the opt-in custom-machine PREFX contract correct even when an older
