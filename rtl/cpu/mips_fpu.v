@@ -102,7 +102,10 @@ module mips_fpu (
             a_nan = (a_double[62:52] == 11'h7ff && a_double[51:0] != 0);
             b_nan = (b_double[62:52] == 11'h7ff && b_double[51:0] != 0);
             unordered = a_nan || b_nan;
-            if (unordered)
+            // MOV/ABS/NEG are bitwise operations.  A NaN operand is not an
+            // invalid arithmetic operation for these instructions; preserve
+            // the payload without changing FCSR sticky Invalid.
+            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG)
                 exception_flags[4] = 1'b1;
             if (op == OP_DIV && b_double[62:52] == 0 &&
                 b_double[51:0] == 0) begin
@@ -246,7 +249,9 @@ module mips_fpu (
             a_nan = (a[30:23] == 8'hff && a[22:0] != 0);
             b_nan = (b[30:23] == 8'hff && b[22:0] != 0);
             unordered = a_nan || b_nan;
-            if (unordered)
+            // The sign/move operations above are non-arithmetic and must not
+            // raise Invalid merely because their operand is a NaN.
+            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG)
                 exception_flags[4] = 1'b1;
             if (op == OP_DIV && b[30:23] == 0 && b[22:0] == 0) begin
                 if ((a[30:23] == 0 && a[22:0] == 0) ||
