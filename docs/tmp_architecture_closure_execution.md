@@ -3446,3 +3446,16 @@ configuration.
 - This closes the QEMU/RTL bounded LL/SC reservation-consumption differential
   slice. Full MIPS memory ordering, arbitrary SMP atomicity, and
   MESI/directory coherency remain open.
+
+### 2026-09-01 Linux boot build incremental-resource repair
+
+- `tb/linux_boot/build_linux_boot.sh` now hashes the guest assembly/linker
+  inputs and only rebuilds `init`/`vm_child` when those inputs change. It also
+  replaces `initramfs.list` only when its contents change and skips repeated
+  kernel defconfig/config rewriting when the configuration inputs are stable.
+- This prevents an unchanged Linux gate from rewriting the embedded initramfs
+  configuration and triggering a full kernel rebuild, reducing avoidable CPU,
+  memory, and disk pressure. The first post-repair kernel rebuild was
+  intentionally interrupted after confirming the previous stale-config path;
+  a fresh full Linux marker gate is still required before changing its open
+  status.
