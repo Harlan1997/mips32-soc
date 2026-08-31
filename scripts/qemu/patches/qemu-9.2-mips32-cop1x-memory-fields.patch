@@ -1,0 +1,13 @@
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -14902,7 +14902,8 @@ static bool decode_opc(DisasContext *ctx)
+             case OPC_SWXC1:
+             case OPC_SDXC1:
+                 check_insn(ctx, ISA_MIPS4 | ISA_MIPS_R2);
+-                gen_flt3_ldst(ctx, op1, sa, rd, rs, rt);
++                /* SOC_REF_COP1X_MEMORY_FIELDS: MIPS32 uses rd as fd/fs. */
++                gen_flt3_ldst(ctx, op1, rd, rd, rs, rt);
+                 break;
+             case OPC_PREFX:
+                 check_insn(ctx, ISA_MIPS_R2);
