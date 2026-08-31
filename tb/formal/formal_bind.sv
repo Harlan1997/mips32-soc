@@ -19,8 +19,8 @@ bind mips_tlb tlb_invariant_props #(
     .rst_n              (rst_n),
     .lookup0_hit_vec   (lookup0_hit_vec),
     .lookup1_hit_vec   (lookup1_hit_vec),
-    .lookup0_multi_hit (lookup0_multi_hit),
-    .lookup1_multi_hit (lookup1_multi_hit)
+    .lookup0_main_multi_hit (lookup0_multi_hit_r),
+    .lookup1_main_multi_hit (lookup1_multi_hit_r)
 );
 
 bind apb_vic interrupt_priority_props u_formal_interrupt_props (

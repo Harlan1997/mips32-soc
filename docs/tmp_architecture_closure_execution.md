@@ -3522,9 +3522,9 @@ configuration.
 ### 2026-09-01 formal asset audit expansion
 
 - Added `scripts/check_formal_assets.py` and `make formal-static-audit`.
-- The check validates all four formal property modules and eight assertions,
+- The check validates all four formal property modules and ten assertions,
   rejects permanently disabled properties and broad waiver selectors, and is
   run automatically by `verification-foundation-gate`.
-- Fresh output is `FORMAL_ASSET_AUDIT_PASS files=4 modules=4 assertions=8`.
+- Fresh output is `FORMAL_ASSET_AUDIT_PASS files=4 modules=4 assertions=10`.
   Tool inventory remains VCS-only; no formal, CDC, RDC or lint proof is
   claimed.
