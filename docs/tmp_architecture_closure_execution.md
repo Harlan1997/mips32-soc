@@ -889,7 +889,7 @@
   conversion/rounding slice: `CVT.S.D`, `CVT.D.S`, `CVT.D.W`, `CVT.W.D`, and
   `ROUND/TRUNC/CEIL/FLOOR.W.D`, plus `MOVZ.D`/`MOVN.D`.
 - `make qemu-system-fpu-double-differential-gate` passes with the fresh
-  `TRACE_COMPARE_PASS records=225`, comparing the same double arithmetic and
+  `TRACE_COMPARE_PASS records=291`, comparing the same double arithmetic and
   conversion/rounding and conditional-move guest through the system-mode
   retire boundary.
 - `make mips-fpu-recip-gate` passes the standalone single/double primitive
@@ -905,7 +905,7 @@
 - The same fresh differential now includes correctly encoded COP1X
   `MADD.S/MSUB.S/NMADD.S/NMSUB.S` and passes `TRACE_COMPARE_PASS records=1320`;
   the double guest includes the four D forms and passes
-  `TRACE_COMPARE_PASS records=225`. COP1X uses QEMU's architectural
+  `TRACE_COMPARE_PASS records=291`. COP1X uses QEMU's architectural
   `fs * ft +/- fr` field mapping (`rd`, `rt`, `rs`) and rejects odd D-pair
   selectors in all four register fields. The closure pass also fixes the
   behavioral `SQRT.S` inexact classification and treats COP1X indexed double
