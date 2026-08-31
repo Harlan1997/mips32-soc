@@ -75,6 +75,9 @@ module mips_fpu (
     real ar_double, br_double, cr_double, rr_double, exact_single,
          exact_double;
     reg a_nan, b_nan, unordered;
+    reg single_bits_override_valid, double_bits_override_valid;
+    reg [31:0] single_bits_override;
+    reg [63:0] double_bits_override;
     always @(*) begin
         ar = $bitstoshortreal(a);
         br = $bitstoshortreal(b);
@@ -90,6 +93,10 @@ module mips_fpu (
         a_nan = 1'b0;
         b_nan = 1'b0;
         unordered = 1'b0;
+        single_bits_override_valid = 1'b0;
+        double_bits_override_valid = 1'b0;
+        single_bits_override = 32'd0;
+        double_bits_override = 64'd0;
         exact_double = 0.0;
         if (fmt_double) begin
             a_nan = (a_double[62:52] == 11'h7ff && a_double[51:0] != 0);
@@ -127,9 +134,21 @@ module mips_fpu (
                         rr_double = $sqrt(ar_double);
                     end
                 end
-                OP_ABS:  rr_double = (ar_double < 0.0) ? -ar_double : ar_double;
-                OP_MOV:  rr_double = ar_double;
-                OP_NEG:  rr_double = -ar_double;
+                OP_ABS: begin
+                    rr_double = (ar_double < 0.0) ? -ar_double : ar_double;
+                    double_bits_override_valid = 1'b1;
+                    double_bits_override = a_double & 64'h7fff_ffff_ffff_ffff;
+                end
+                OP_MOV: begin
+                    rr_double = ar_double;
+                    double_bits_override_valid = 1'b1;
+                    double_bits_override = a_double;
+                end
+                OP_NEG: begin
+                    rr_double = -ar_double;
+                    double_bits_override_valid = 1'b1;
+                    double_bits_override = a_double ^ 64'h8000_0000_0000_0000;
+                end
                 OP_MADD:  rr_double = (ar_double * br_double) + cr_double;
                 OP_MSUB:  rr_double = (ar_double * br_double) - cr_double;
                 OP_NMADD: rr_double = -((ar_double * br_double) + cr_double);
@@ -255,9 +274,21 @@ module mips_fpu (
                         rr = $sqrt(ar);
                     end
                 end
-                OP_ABS:  rr = (ar < 0.0) ? -ar : ar;
-                OP_MOV:  rr = ar;
-                OP_NEG:  rr = -ar;
+                OP_ABS: begin
+                    rr = (ar < 0.0) ? -ar : ar;
+                    single_bits_override_valid = 1'b1;
+                    single_bits_override = a & 32'h7fff_ffff;
+                end
+                OP_MOV: begin
+                    rr = ar;
+                    single_bits_override_valid = 1'b1;
+                    single_bits_override = a;
+                end
+                OP_NEG: begin
+                    rr = -ar;
+                    single_bits_override_valid = 1'b1;
+                    single_bits_override = a ^ 32'h8000_0000;
+                end
                 OP_MADD:  rr = (ar * br) + $bitstoshortreal(c);
                 OP_MSUB:  rr = (ar * br) - $bitstoshortreal(c);
                 OP_NMADD: rr = -((ar * br) + $bitstoshortreal(c));
@@ -365,6 +396,10 @@ module mips_fpu (
         end
         result = $shortrealtobits(rr);
         result_double = $realtobits(rr_double);
+        if (single_bits_override_valid)
+            result = single_bits_override;
+        if (double_bits_override_valid)
+            result_double = double_bits_override;
         // Compare the rounded single result against a real-precision
         // intermediate for arithmetic operations. This gives deterministic
         // behavioral inexact/underflow classification without depending on

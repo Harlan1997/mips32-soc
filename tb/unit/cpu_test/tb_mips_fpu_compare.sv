@@ -174,6 +174,51 @@ module tb_mips_fpu_compare;
             failures = failures + 1;
         end
 
+        // Non-arithmetic sign/move operations preserve IEEE bit patterns.
+        fmt_double = 1'b0;
+        op = 5'd6; a = 32'h80000000; #1;
+        if (result !== 32'h80000000) begin
+            $display("FAIL MOV.S negative zero got=%08h", result);
+            failures = failures + 1;
+        end
+        op = 5'd5; #1;
+        if (result !== 32'h00000000) begin
+            $display("FAIL ABS.S negative zero got=%08h", result);
+            failures = failures + 1;
+        end
+        op = 5'd7; #1;
+        if (result !== 32'h00000000) begin
+            $display("FAIL NEG.S negative zero got=%08h", result);
+            failures = failures + 1;
+        end
+        op = 5'd6; a = 32'hffc12345; #1;
+        if (result !== 32'hffc12345) begin
+            $display("FAIL MOV.S NaN payload got=%08h", result);
+            failures = failures + 1;
+        end
+
+        fmt_double = 1'b1;
+        op = 5'd6; a_double = 64'h8000000000000000; #1;
+        if (result_double !== 64'h8000000000000000) begin
+            $display("FAIL MOV.D negative zero got=%016h", result_double);
+            failures = failures + 1;
+        end
+        op = 5'd5; #1;
+        if (result_double !== 64'h0000000000000000) begin
+            $display("FAIL ABS.D negative zero got=%016h", result_double);
+            failures = failures + 1;
+        end
+        op = 5'd7; #1;
+        if (result_double !== 64'h0000000000000000) begin
+            $display("FAIL NEG.D negative zero got=%016h", result_double);
+            failures = failures + 1;
+        end
+        op = 5'd6; a_double = 64'hfff8000000001234; #1;
+        if (result_double !== 64'hfff8000000001234) begin
+            $display("FAIL MOV.D NaN payload got=%016h", result_double);
+            failures = failures + 1;
+        end
+
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_fpu_compare predicates=16 nan=1");
         else

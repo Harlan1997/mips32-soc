@@ -6,6 +6,14 @@
 
 ## 1. 完成等级
 
+### 2026-08-31 FPU bit-preserving sign and move operations
+
+`MOV.S/D`, `ABS.S/D` and `NEG.S/D` now produce direct IEEE bit-pattern
+results, preserving NaN payloads and signed zero instead of relying on host
+floating-point conversion. The primitive gate checks single/double negative
+zero and NaN payload preservation. Complete IEEE-754 arithmetic flags/traps
+and OS FPU ABI remain open.
+
 每项功能必须逐级推进，禁止直接把块级通过标成 SoC 完成：
 
 1. `IMPLEMENTED`：RTL 已提交，接口和非目标已写入 spec。

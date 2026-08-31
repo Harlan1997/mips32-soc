@@ -1,5 +1,13 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 FPU bit-preserving sign and move operations
+
+- `MOV.S/D`, `ABS.S/D` and `NEG.S/D` preserve IEEE bit patterns, including
+  NaN payloads and signed zero, through explicit result overrides.
+- The primitive gate checks single and double negative-zero and NaN payload
+  behavior. Complete IEEE-754 arithmetic flags/traps and OS FPU ABI remain
+  open.
+
 ### 2026-08-31 fixed FPU rounding tie semantics
 
 - `ROUND.W.S` and `ROUND.W.D` now use MIPS round-to-nearest ties-away-from-zero;
