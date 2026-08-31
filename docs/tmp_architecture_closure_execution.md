@@ -3525,6 +3525,9 @@ configuration.
 - The check validates all four formal property modules and ten assertions,
   rejects permanently disabled properties and broad waiver selectors, and is
   run automatically by `verification-foundation-gate`.
+- `make formal-bind-compile-gate` now reproduces the four real-DUT binding
+  elaborations (`dcache`, `mips_tlb`, `apb_vic`, `soc_fabric`) and is called by
+  the foundation runner.
 - `formal_bind.sv` now selects one loaded DUT with `FORMAL_BIND_DCACHE`,
   `FORMAL_BIND_TLB`, `FORMAL_BIND_VIC` or `FORMAL_BIND_FABRIC`, avoiding
   unrelated bind-target warnings in per-block formal elaboration.

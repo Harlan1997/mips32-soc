@@ -20,6 +20,8 @@ The real-DUT bind is selected per formal top with `FORMAL_BIND_DCACHE`,
 `files=4 modules=4 assertions=10`; the environment still has only VCS and no
 formal/CDC/RDC/lint engine. This closes the solver-independent asset audit
 fallback only; it is not formal proof or CDC/RDC/lint signoff.
+The repeatable `make formal-bind-compile-gate` target also elaborates the
+four target-selected real-DUT bindings and is invoked by the foundation gate.
 
 ### 2026-09-01 QEMU architecture aggregate recheck
 
