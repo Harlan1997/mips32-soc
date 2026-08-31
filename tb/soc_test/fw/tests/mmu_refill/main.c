@@ -35,6 +35,10 @@ static volatile unsigned int permission_fault_count = 0;
 static volatile unsigned int permission_badvaddr_ok = 0;
 static volatile unsigned int page_alloc_count = 0;
 static volatile unsigned int pair_valid[3] = { 0, 0, 0 };
+static volatile unsigned int cross_page_active = 0;
+static volatile unsigned int cross_page_store_active = 0;
+static volatile unsigned int cross_page_faults = 0;
+static volatile unsigned int cross_page_read_faults = 0;
 
 #ifdef SOC_HW_WALKER
 /* Root index 0 -> L2 table at physical 0x2000.  The two leaf entries cover
@@ -276,6 +280,9 @@ void c_interrupt_handler(void) {
     }
 
     if (exc_code == EXC_TLBL || exc_code == EXC_TLBS) {
+        if ((cross_page_active || cross_page_store_active) &&
+            bad_vaddr == 0x00020FFDu)
+            cross_page_faults++;
         if (!install_page_entry(bad_vaddr)) {
             unexpected_exc++;
             last_unexpected_code = exc_code;
@@ -463,6 +470,75 @@ int main(void) {
         } else p[0] = 0xA5A50000u + i;
     }
 
+    /* LWL/LWR are separate architectural instructions.  Keep the odd
+     * (second) page resident, invalidate the pair, and then execute a pair
+     * whose LWL reaches 0x21000 while its LWR faults at 0x20ffd.  The first
+     * instruction must retire its partial merge; only the second instruction
+     * may enter the refill handler. */
+    {
+        volatile unsigned int *page0 = (volatile unsigned int *)0x00020000u;
+        volatile unsigned int *page1 = (volatile unsigned int *)0x00021000u;
+        unsigned int cross_value;
+        page0[1023] = 0x11223344u;
+        page1[0] = 0x55667788u;
+        for (i = 0; i < 32; i++)
+            asm volatile("nop");
+        invalidate_page_pair(0x00020000u, 0u);
+        if (page1[0] != 0x55667788u)
+            ok = 0;
+        cross_page_faults = 0;
+        cross_page_active = 1;
+        cross_value = 0;
+        asm volatile("lwl %0, 3(%1)\n\t"
+                     "nop\n\t"
+                     "lwr %0, 0(%1)\n\t"
+                     "nop\n\t"
+                     : "+r"(cross_value)
+                     : "r"((volatile unsigned char *)0x00020FFDu)
+                     : "memory");
+        cross_page_active = 0;
+        print_str("mmu_refill: cross_value=");
+        print_hex(cross_value);
+        if (cross_value != 0x88112233u || cross_page_faults != 1u)
+            ok = 0;
+        cross_page_read_faults = cross_page_faults;
+        /* Restore the ordinary page-1 fixture for the legacy refill checks
+         * below; the cross-page assertion has already consumed both beats. */
+        page1[0] = 0xA5A50001u;
+
+        /* The store pair has the same two independent page accesses.  After
+         * invalidation, SWL must complete on the resident odd page; SWR must
+         * take TLBS before its byte enables reach the even page, then retry
+         * and merge all three bytes precisely. */
+        for (i = 0; i < 32; i++)
+            asm volatile("nop");
+        invalidate_page_pair(0x00020000u, 0u);
+        if (page1[0] != 0xA5A50001u)
+            ok = 0;
+        cross_page_faults = 0;
+        cross_page_store_active = 1;
+        cross_value = 0xA1B2C3D4u;
+        asm volatile("swl %0, 3(%1)\n\t"
+                     "nop\n\t"
+                     "swr %0, 0(%1)\n\t"
+                     "nop\n\t"
+                     :
+                     : "r"(cross_value),
+                       "r"((volatile unsigned char *)0x00020FFDu)
+                     : "memory");
+        cross_page_store_active = 0;
+        print_str("mmu_refill: cross_store_faults=");
+        print_hex(cross_page_faults);
+        print_str("mmu_refill: cross_store_page0=");
+        print_hex(page0[1023]);
+        print_str("mmu_refill: cross_store_page1=");
+        print_hex(page1[0]);
+        if (cross_page_faults != 1u || page0[1023] != 0xB2C3D444u ||
+            page1[0] != 0xA5A500A1u)
+            ok = 0;
+        page1[0] = 0xA5A50001u;
+    }
+
 #ifndef SOC_HW_WALKER
     /* Complete all prior fault/ERET retirement before modifying the TLB.
      * This is the software serialization point required by the current
@@ -500,12 +576,16 @@ int main(void) {
     print_hex(last_unexpected_badv);
     print_str("mmu_refill: last_epc=");
     print_hex(last_unexpected_epc);
+    print_str("mmu_refill: cross_page_read_faults=");
+    print_hex(cross_page_read_faults);
+    print_str("mmu_refill: cross_page_faults=");
+    print_hex(cross_page_faults);
     print_str("mmu_refill: ok=");
     print_hex(ok);
     print_str("mmu_refill: ro_initial=");
     print_hex(ro_initial);
 
-    if (ok && demand_fault_count == 6 && page_alloc_count == 4 &&
+    if (ok && demand_fault_count == 10 && page_alloc_count == 4 &&
         permission_fault_count == 1 && permission_badvaddr_ok == 1 &&
         unexpected_exc == 0) {
         print_str("mmu_refill: PASS\n");
