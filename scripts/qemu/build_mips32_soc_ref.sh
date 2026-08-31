@@ -196,7 +196,7 @@ if ! rg -q 'SOC_REF_FIX_BLIKELY_LINK' "${QEMU_SRC}/target/mips/tcg/translate.c";
 fi
 
 if ! rg -q 'srs_gpr\[16\]\[32\]' "${QEMU_SRC}/target/mips/cpu.h"; then
-    git -C "${QEMU_SRC}" apply --recount \
+    git -C "${QEMU_SRC}" apply --no-index --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-srs.patch"
 fi
 
@@ -215,8 +215,7 @@ if ! rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
 fi
 
 if ! rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    QEMU_REL=${QEMU_SRC#"${ROOT_DIR}/"}
-    git -C "${ROOT_DIR}" apply --directory="${QEMU_REL}" --recount \
+    git -C "${QEMU_SRC}" apply --no-index --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-wsbw-r2.patch"
     sed -i '/OPC_WSBW      =/a\    /* SOC_REF_WSBW_R2 */' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
@@ -242,7 +241,7 @@ rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
 if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\) \{\n            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
-    git -C "${QEMU_SRC}" apply --recount \
+    git -C "${QEMU_SRC}" apply --no-index --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch"
     sed -i '/if (GET_FP_ENABLE(env->active_fpu.fcr31) \& mips_exception_flags) {/a\
             /* SOC_REF_FPU_FPE_STICKY_FLAGS */\
@@ -252,12 +251,12 @@ fi
 
 if ! rg -q 'SOC_REF_FPU_DOUBLE_UNDERFLOW' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
-    git -C "${QEMU_SRC}" apply --recount \
+    git -C "${QEMU_SRC}" apply --no-index --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch"
 fi
 
 if ! rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    git -C "${QEMU_SRC}" apply --recount \
+    git -C "${QEMU_SRC}" apply --no-index --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch"
 fi
 
@@ -277,8 +276,7 @@ rg -q 'SOC_REF_LLADDR_VIRTUAL' \
 
 if ! rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    QEMU_REL=${QEMU_SRC#"${ROOT_DIR}/"}
-    git -C "${ROOT_DIR}" apply --directory="${QEMU_REL}" --recount \
+    git -C "${QEMU_SRC}" apply --no-index --recount \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch"
 fi
 rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
