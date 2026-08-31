@@ -47,6 +47,7 @@ module tb_cp0_timer;
     // Phase B.3.c MMU pass-through signals (unused inside this timer/TLB tb but
     // required for `.*` wildcard connectivity to mips_cp0's post-B.3.c ports).
     wire [7:0]  cp0_asid_out;
+    wire [31:0] cp0_ptebase_out;
     wire [2:0]  cp0_config_k0_out;
     reg  [31:0] mmu_ilookup_va = 0;
     wire        mmu_ilookup_hit;
@@ -277,6 +278,8 @@ module tb_cp0_timer;
         mtc0(5'd4,  3'd0, 32'hFF80_0000);            // PTEBase = 0x1FF
         mfc0(5'd4,  3'd0, rd); check("Context PTEBase readback",
                                      rd == {9'h1FF, 23'b0});
+        check("Context PTEBase drives walker root",
+              cp0_ptebase_out == 32'hFF80_0000);
 
         // -----------------------------------------------------------------
         // Phase B.3.b TLB instruction round-trip

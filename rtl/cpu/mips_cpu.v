@@ -110,6 +110,7 @@ module mips_cpu #(
     // =========================================================================
     // Pipeline Control Signals
     // =========================================================================
+    wire [31:0] cp0_ptebase;
     wire stall_req_if;
     wire stall_req_id_raw;
     wire stall_req_id;
@@ -2122,6 +2123,7 @@ module mips_cpu #(
 
         // MMU pass-through
         .cp0_asid_out       (cp0_asid),
+        .cp0_ptebase_out    (cp0_ptebase),
         .cp0_config_k0_out  (cp0_config_k0),
         .taglo_out          (cp0_taglo),
         .taghi_out          (cp0_taghi),
@@ -2211,10 +2213,17 @@ module mips_cpu #(
     // aligned, so discard only the byte offset after translation.
     assign data_addr = {mmu_d_pa[31:2], 2'b00};
 
+    // A fixed integration root remains the compatibility override.  A zero
+    // root selects Context.PTEBase so an OS can change the page-table root
+    // with MTC0 without rebuilding the SoC.  This path is only observable
+    // when the hardware walker is explicitly enabled.
+    wire [31:0] hardware_walker_root = (hardware_walker_ptbr != 32'd0) ?
+                                        hardware_walker_ptbr : cp0_ptebase;
+
     mips_page_table_walker #(.PAGE_MASK(`SOC_HARDWARE_WALKER_PAGE_MASK)) u_hardware_walker (
         .clk(clk), .rst_n(rst_n),
         .req_valid(ptw_req_valid), .req_ready(ptw_req_ready),
-        .ptbr(hardware_walker_ptbr), .va(ptw_req_va),
+        .ptbr(hardware_walker_root), .va(ptw_req_va),
         .access(ptw_req_access), .user_mode(ptw_req_user),
         .mem_valid(ptw_mem_valid), .mem_addr(ptw_mem_addr),
         .mem_ready(ptw_mem_ready), .mem_rdata(ptw_mem_rdata),
