@@ -203,6 +203,23 @@ def align_first_retire(rtl, golden, pc):
         "RTL trace has no matching PC/instruction handoff for "
         f"{wanted_pc} / {golden_first.get('instr')}")
 
+
+def fpu_state_matches_window(rtl, golden, index, field, radius=4):
+    """Match FPU state across the bounded ID-to-WB observation latency.
+
+    The RTL commits FPR/FCSR in ID while the common retire record is sampled
+    from MEM/WB. Cache and exception stalls can move that observation by a few
+    retire records. The window is deliberately small and compares the complete
+    packed state; it is not a general trace resynchronization mechanism.
+    """
+    expected = golden[index][1].get(field)
+    if expected is None:
+        return True
+    start = max(0, index - radius)
+    stop = min(len(rtl), index + radius + 1)
+    return any(rtl[candidate][1].get(field) == expected
+               for candidate in range(start, stop))
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("rtl")
@@ -241,6 +258,8 @@ def main():
             fields += ["gpr_we", "gpr_addr", "gpr_data"]
         if comparable_cp0_write(r[1]) or comparable_cp0_write(g[1]):
             fields += ["cp0_we", "cp0_addr", "cp0_sel", "cp0_data"]
+        if r[1].get("fpr_state") is not None or g[1].get("fpr_state") is not None:
+            fields += ["fpr_state", "fcsr_state"]
         if r[1].get("mem_valid") or g[1].get("mem_valid"):
             fields += ["mem_valid", "mem_read", "mem_write", "mem_addr", "mem_be"]
             if r[1].get("mem_write") or g[1].get("mem_write"):
@@ -290,6 +309,9 @@ def main():
         for field in fields:
             got = comparable(field, r[1].get(field))
             expected = comparable(field, g[1].get(field))
+            if field in ("fpr_state", "fcsr_state"):
+                if fpu_state_matches_window(rtl, golden, idx, field):
+                    continue
             if field == "mem_addr" and (is_merge_memory_instruction(r[1]) or
                                          is_merge_memory_instruction(g[1])):
                 try:

@@ -16,6 +16,8 @@ module soc_observation_bind (
     input logic [4:0]  retire_cp0_addr,
     input logic [2:0]  retire_cp0_sel,
     input logic [31:0] retire_cp0_data,
+    input logic [1023:0] retire_fpr_state,
+    input logic [31:0] retire_fcsr_state,
     input logic        retire_mem_valid,
     input logic        retire_mem_read,
     input logic        retire_mem_write,
@@ -53,6 +55,8 @@ module soc_observation_bind (
     assign obs_if.retire_cp0_addr    = retire_cp0_addr;
     assign obs_if.retire_cp0_sel     = retire_cp0_sel;
     assign obs_if.retire_cp0_data    = retire_cp0_data;
+    assign obs_if.retire_fpr_state   = retire_fpr_state;
+    assign obs_if.retire_fcsr_state  = retire_fcsr_state;
     assign obs_if.retire_mem_valid   = retire_mem_valid;
     assign obs_if.retire_mem_read    = retire_mem_read;
     assign obs_if.retire_mem_write   = retire_mem_write;
