@@ -1117,6 +1117,18 @@ and RTL frontend (`8/8`) gates pass. This closes selected signed integer
 overflow differential evidence and verification resource safety only; full
 MIPS32/privileged ISA, Linux/OS semantics and product signoff remain open.
 
+### 2026-09-01 MMU four-page-per-ASID pressure extension
+
+The `mmu_process_pressure` corpus now touches four 4-KiB demand pages for
+each of four software ASIDs, covering two TLB pairs per context. The refill
+handler allocates non-overlapping four-page PFN regions, the reverse context
+pass checks isolation, and the post-shootdown pass forces all sixteen
+page/context mappings to refill again. The real RTL gate passes with
+`refills=16`; the existing QEMU system differential gate is updated to require
+the same result and remains strict. This advances bounded demand paging
+coverage only; unrestricted Linux VM/page-table ownership, scheduler policy,
+multicore shootdown and complete MMU compliance remain open.
+
 ### 2026-09-01 QEMU MDU retire differential closure
 
 Added `make qemu-system-mdu-differential-gate` and included it in the

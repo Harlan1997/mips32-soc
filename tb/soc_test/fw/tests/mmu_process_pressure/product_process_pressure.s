@@ -49,26 +49,46 @@ _start:
     nop
     nop
 
-    /* First pass: allocate four software ASIDs and touch each process page. */
+    /* The fixed refill vector occupies 0xBFC00200. Keep the pressure body
+       after that vector while retaining the reset entry at 0xBFC00000. */
+    j       _pressure_body
+    nop
+
+    .section .text.body, "ax"
+    .globl _pressure_body
+_pressure_body:
+
+    /* First pass: allocate four software ASIDs and touch four demand pages
+       per process. Four pages exercise two independent 4-KiB TLB pairs. */
     addiu   $s0, $zero, 1
 first_process:
     mtc0    $s0, $10
     nop
     nop
     nop
+    addiu   $s1, $zero, 0
+first_page:
     lui     $t0, 0x0800
+    sll     $t3, $s1, 12
+    addu    $t0, $t0, $t3
     lui     $t1, 0x1000
-    or      $t1, $t1, $s0
+    sll     $t3, $s0, 12
+    addu    $t1, $t1, $t3
+    addu    $t1, $t1, $s1
     sw      $t1, 0($t0)
     lw      $t2, 0($t0)
     bne     $t1, $t2, fail
+    nop
+    addiu   $s1, $s1, 1
+    slti    $t0, $s1, 4
+    bne     $t0, $zero, first_page
     nop
     addiu   $s0, $s0, 1
     slti    $t0, $s0, 5
     bne     $t0, $zero, first_process
     nop
 
-    /* Reverse round-robin: all four mappings must remain isolated. */
+    /* Reverse round-robin: all four mappings and pages remain isolated. */
     addiu   $s0, $zero, 4
 second_process:
     beq     $s0, $zero, second_done
@@ -77,12 +97,25 @@ second_process:
     nop
     nop
     nop
+    addiu   $s1, $zero, 3
+second_page:
     lui     $t0, 0x0800
+    sll     $t3, $s1, 12
+    addu    $t0, $t0, $t3
     lui     $t1, 0x1000
-    or      $t1, $t1, $s0
+    sll     $t3, $s0, 12
+    addu    $t1, $t1, $t3
+    addu    $t1, $t1, $s1
     lw      $t2, 0($t0)
     bne     $t1, $t2, fail
     nop
+    addiu   $s1, $s1, -1
+    slti    $t0, $s1, 0
+    bne     $t0, $zero, second_next_process
+    nop
+    b       second_page
+    nop
+second_next_process:
     addiu   $s0, $s0, -1
     b       second_process
     nop
@@ -113,18 +146,28 @@ flush_dynamic:
     addiu   $t1, $zero, 0x005A
     sw      $t1, 0($t0)
 
-    /* Second allocation pass: each process must refill after shootdown. */
+    /* Second allocation pass: every process page must refill after shootdown. */
     addiu   $s0, $zero, 1
 third_process:
     mtc0    $s0, $10
     nop
     nop
     nop
+    addiu   $s1, $zero, 0
+third_page:
     lui     $t0, 0x0800
+    sll     $t3, $s1, 12
+    addu    $t0, $t0, $t3
     lui     $t1, 0x1000
-    or      $t1, $t1, $s0
+    sll     $t3, $s0, 12
+    addu    $t1, $t1, $t3
+    addu    $t1, $t1, $s1
     lw      $t2, 0($t0)
     bne     $t1, $t2, fail
+    nop
+    addiu   $s1, $s1, 1
+    slti    $t0, $s1, 4
+    bne     $t0, $zero, third_page
     nop
     addiu   $s0, $s0, 1
     slti    $t0, $s0, 5
@@ -184,10 +227,15 @@ _tlb_refill:
     nop
     nop
 
-    /* Four software PTEs: PFN_BASE + ASID, one physical page per process. */
+    /* Four software PTE pages per process. Each TLB pair is aligned to an
+       even virtual page: page 0/1 and page 2/3 share a pair. */
     lui     $t2, 0x0000
     ori     $t2, $t2, PFN_BASE
-    addu    $t2, $t2, $t1
+    sll     $t3, $t1, 2
+    addu    $t2, $t2, $t3
+    srl     $t3, $k0, 12
+    andi    $t3, $t3, 0x0002
+    addu    $t2, $t2, $t3
     sll     $t2, $t2, 6
     /* C=3, D=1, V=1: keep this ASID-pressure test on the cacheable DDR
        path; uncached AXI read response behavior is covered separately. */

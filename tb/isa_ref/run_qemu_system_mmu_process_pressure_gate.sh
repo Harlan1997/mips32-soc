@@ -23,7 +23,7 @@ TB_RETIRE_TRACE=1 RUN_DIR="${RUN_DIR}/rtl" RETIRE_TRACE="${RTL_TRACE}" \
 RTL_RUN_DIR="${RUN_DIR}/rtl"
 FW_DIR="${RTL_RUN_DIR}/firmware"
 FW_ELF="${FW_DIR}/firmware.elf"
-grep -q "REGRESSION_TEST_SUCCESS product_mmu_process_pressure refills=8" "${RTL_RUN_DIR}/sim.log"
+grep -q "REGRESSION_TEST_SUCCESS product_mmu_process_pressure refills=16" "${RTL_RUN_DIR}/sim.log"
 
 [[ -x "${QEMU_BIN}" ]]
 [[ -s "${FW_ELF}" ]]
@@ -47,7 +47,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 
 - Result: PASS
 - Firmware: ${FW_ELF}
-- RTL evidence: product_mmu_process_pressure, refills=8
+- RTL evidence: product_mmu_process_pressure, refills=16 (four ASIDs, four pages/task)
 - QEMU machine: mips32-soc-ref
 - Evidence: rtl_gate.log, firmware.sha256, rtl/rtl_retire.jsonl, qemu_gate.log, qemu/qemu_build_identity.txt, qemu/qemu_retire.jsonl, qemu/trace_compare.log
 - Checked behavior: four software ASIDs, distinct PFN mappings, context reuse,

@@ -20,6 +20,10 @@ SECTIONS
         KEEP(*(.text.init))
     } > BOOT_ROM
 
+    .text.body 0xBFC00400 : {
+        KEEP(*(.text.body))
+    } > BOOT_ROM
+
     .tlb_refill 0xBFC00200 : {
         KEEP(*(.tlb_refill))
     } > BOOT_ROM
