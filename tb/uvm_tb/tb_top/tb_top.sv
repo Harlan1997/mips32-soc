@@ -111,6 +111,8 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
     .retire_cp0_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_rd_addr),
     .retire_cp0_sel       (u_dut.u_core_subsystem.u_core.u_cpu.wb_cp0_sel),
     .retire_cp0_data      (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
+    .retire_fpr_state     (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fpr),
+    .retire_fcsr_state    (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fcsr),
     .retire_mem_valid     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace ||
                            u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
     .retire_mem_read      (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace),

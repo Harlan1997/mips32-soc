@@ -115,6 +115,12 @@ def hex32(value):
     return f"{int(value, 16) & 0xffffffff:08x}"
 
 
+def fpr_state(regs):
+    """Serialize FPR0..FPR31 in the same high-to-low order as RTL ctx_save_fpr."""
+    return "".join(hex32(regs.get(f"fpr{index}", "00000000"))
+                   for index in range(31, -1, -1))
+
+
 def changed_gpr(before, after):
     changes = [index for index in range(1, 32)
                if before[f"r{index}"] != after[f"r{index}"]]
@@ -548,6 +554,8 @@ def convert(events, states):
             "cp0_addr": cp0_addr,
             "cp0_sel": cp0_sel,
             "cp0_data": cp0_data,
+            "fpr_state": fpr_state(after),
+            "fcsr_state": hex32(after.get("fcsr", "00000000")),
             "mem_valid": mem_valid,
             "mem_read": mem_read if is_sc else int(bool(event.get("mem_read"))),
             "mem_write": mem_write if is_sc else int(bool(event.get("mem_write"))),
