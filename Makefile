@@ -155,6 +155,10 @@ sva-gate: firmware
 verification-foundation-gate:
 	RUN_ROOT=$(BUILD_DIR)/verification_foundation scripts/run_verification_foundation_gate.sh
 
+formal-static-audit:
+	@mkdir -p $(BUILD_DIR)/verification_foundation
+	python3 scripts/check_formal_assets.py | tee $(BUILD_DIR)/verification_foundation/formal_static_audit.log
+
 mdu-flush-gate:
 	RUN_DIR=$(MDU_FLUSH_DIR) tb/unit/mdu/run_flush_gate.sh
 
@@ -184,6 +188,7 @@ dcache-parity-gate:
 .PHONY: dcache-parity-gate
 .PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
 .PHONY: mem-stage-gate
+.PHONY: formal-static-audit
 
 isa-implementation-audit:
 	@mkdir -p $(BUILD_DIR)/isa_audit
