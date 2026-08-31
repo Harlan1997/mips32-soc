@@ -318,6 +318,8 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 
 ## 9. 执行记录
 
+| 2026-09-01 | `product-boot-expansion` | `make qemu-system-llsc-differential-gate` | PASS：`TRACE_COMPARE_PASS records=320`；QEMU 328 条记录参与比较；firmware `REGRESSION_TEST_SUCCESS` | 修正 QEMU 9.2 custom machine 在已完成 mismatched/failed `SC` 后保留旧 `lladdr` 的参考模型缺口，并将 `qemu-9.2-mips32-sc-consume-reservation.patch` 纳入可审计构建输入。仅闭合 bounded LL/SC reservation differential；完整 memory ordering、SMP atomicity 和 MESI/directory coherency 仍开放。 |
+
 | 时间 | 基线 | 命令 | 结果 | 结论 |
 |---|---|---|---|---|
 | 2026-08-01 | `phase-c2-l2-nonblocking@4baf139`，firmware SHA256 `6e413366bc7d91feafaba9edfa416a177f504eb225345fd2b5827a1ae387317e` | `make uvm UVM_TEST=soc_bus_stress_test UVM_SEED=10 UVM_RUN_DIR=build/uvm/seed10_dma_fix` | FAIL：14.49 us 时 SRAM/S0 AR payload 在 `ARVALID && !ARREADY` 期间变化，14.51 us 时 `ARVALID` 提前撤销；随后 CPU memory stall 直至 watchdog | `4baf139` 未关闭该 SoC blocker。暂停 Phase 1 的后续 gate，先定位 S0 AR 驱动路径。日志：`build/uvm/seed10_dma_fix/vcs_uvm.log` |
