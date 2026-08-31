@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 Scheduler context page-table-root isolation
+
+- Extended the scheduler context bank with one `PTEBase` value per task and
+  connected it through `mips_core` and `mips_cpu` into CP0.
+- A restore updates CP0 `Context.PTEBase` only when the new valid handshake is
+  asserted. A changed root invalidates dynamic main-TLB entries and both
+  micro-TLBs through the existing root-switch path.
+- `tb/unit/cpu_test/run_cpu_scheduler_integration.sh` verifies task 1's
+  `0x40000000` root and ASID are restored together; the test and frontend
+  compile pass. This closes hardware context-root isolation only. OS page-table
+  management, demand paging, shootdown pressure, Linux userspace, and full
+  RTL/QEMU differential remain open.
+
 ### 2026-08-31 Context-root translation invalidation
 
 - A `Context.PTEBase` write now invalidates both I/D micro-TLB state and all
