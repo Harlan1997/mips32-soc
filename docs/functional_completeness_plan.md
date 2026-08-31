@@ -1,8 +1,16 @@
 # SoC 功能完整性计划
 
-> 版本：v1.48（2026-09-01）
+> 版本：v1.49（2026-09-01）
 >
 > 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据。
+
+### 2026-09-01 EDA 默认内存预算收紧
+
+`scripts/run_eda_cgroup.sh` 的默认 cgroup 预算调整为
+`MemoryMax=1500M`、`MemorySwapMax=512M`。该组合已用于当前
+`perf-counters`、`perf-cpu` 和 `perf-workloads` gates，并在此前 VCS 高水位
+约 2 GiB 的宿主 OOM 事件后验证通过。`EDA_MEMORY_MAX`、`EDA_SWAP_MAX` 仍可
+显式覆盖；本改动只收紧默认资源保护，不改变 RTL、coverage 或功能契约。
 
 ### 2026-09-01 formal asset content audit and property scaffolds
 
