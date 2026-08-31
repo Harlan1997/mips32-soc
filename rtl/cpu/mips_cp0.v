@@ -863,10 +863,20 @@ module mips_cp0 #(
     wire        tlb_wr_en_sw  = tlb_wr_en_raw && tlb_wr_gate;
     assign hw_tlb_wr_ready = !tlb_wr_en_sw;
     wire        tlb_wr_en     = tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready);
+    wire        context_root_flush = we && (waddr == 5'd4) &&
+                                     (wsel == 3'd0);
     wire        micro_tlb_context_flush = (we &&
-                                           ((waddr == 5'd5) ||
+                                           ((waddr == 5'd4) ||
+                                            (waddr == 5'd5) ||
                                             (waddr == 5'd10))) ||
                                           ctx_restore_req;
+    // A walker root change invalidates translations populated from the old
+    // root.  Keep wired entries intact; the main TLB's dynamic invalidate
+    // scope is specifically defined for this purpose.
+    wire        tlb_inv_effective_en = tlb_inv_en || context_root_flush;
+    wire [1:0]  tlb_inv_effective_scope = context_root_flush ? 2'd2 : tlb_inv_scope;
+    wire [5:0]  tlb_inv_effective_floor = context_root_flush ? cp0_wired :
+                                          tlb_inv_wired_floor;
     wire [TLB_IDX_BITS-1:0] tlb_wr_index = hw_tlb_wr_en ? hw_tlb_wr_index :
                                             (tlb_op == 3'b010) ? cp0_index : cp0_random;
     wire [18:0] tlb_wr_vpn2 = hw_tlb_wr_en ? hw_tlb_wr_vpn2 : cp0_entryhi_vpn2;
@@ -889,11 +899,11 @@ module mips_cp0 #(
         .wr_mask     (tlb_wr_mask),
         .wr_entrylo0 (tlb_wr_entrylo0),
         .wr_entrylo1 (tlb_wr_entrylo1),
-        .inv_en      (tlb_inv_en),
+        .inv_en      (tlb_inv_effective_en),
         .inv_vpn2    (tlb_inv_vpn2),
         .inv_asid    (tlb_inv_asid),
-        .inv_scope   (tlb_inv_scope),
-        .inv_wired_floor(tlb_inv_wired_floor),
+        .inv_scope   (tlb_inv_effective_scope),
+        .inv_wired_floor(tlb_inv_effective_floor),
         .context_flush(micro_tlb_context_flush),
 
         .rd_index    (cp0_index),
