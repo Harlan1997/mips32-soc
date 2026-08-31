@@ -502,6 +502,24 @@ module mips_fpu (
              (op == OP_NMADD) || (op == OP_NMSUB))) begin
             exception_flags[4] = 1'b1;
         end
+        // MIPS uses a target-defined default NaN when an arithmetic
+        // operation is invalid.  Do not expose simulator/host NaN payloads
+        // through the architectural FPR state; QEMU's pre-2008 MIPS mode
+        // uses these same default patterns (SNaN bit is one).
+        if (fmt_double && exception_flags[4] &&
+            ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
+             (op == OP_DIV) || (op == OP_SQRT) || (op == OP_MADD) ||
+             (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) begin
+            double_bits_override_valid = 1'b1;
+            double_bits_override = 64'h7ff7_ffff_ffff_ffff;
+        end
+        if (!fmt_double && exception_flags[4] &&
+            ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
+             (op == OP_DIV) || (op == OP_SQRT) || (op == OP_MADD) ||
+             (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) begin
+            single_bits_override_valid = 1'b1;
+            single_bits_override = 32'h7fbf_ffff;
+        end
         // A finite non-zero result in the double subnormal range is the
         // underflow boundary for this behavioral contract. Exact cancellation
         // to zero is deliberately excluded.
@@ -524,5 +542,12 @@ module mips_fpu (
             exception_flags[1] = 1'b1;
             exception_flags[0] = 1'b1;
         end
+        // Apply overrides after all host-result classification has completed.
+        // This ordering is required because invalid arithmetic is discovered
+        // below the initial result materialization.
+        if (single_bits_override_valid)
+            result = single_bits_override;
+        if (double_bits_override_valid)
+            result_double = double_bits_override;
     end
 endmodule
