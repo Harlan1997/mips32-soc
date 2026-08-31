@@ -18,6 +18,7 @@ run_gate() {
 # and each child has an independent firmware/trace directory.
 run_gate isa_implementation_audit make -C "${ROOT_DIR}" isa-implementation-audit
 run_gate isa_r2 make -C "${ROOT_DIR}" qemu-system-isa-r2-differential-gate
+run_gate mdu make -C "${ROOT_DIR}" qemu-system-mdu-differential-gate
 run_gate branch_likely make -C "${ROOT_DIR}" qemu-system-branch-likely-differential-gate
 run_gate exceptions make -C "${ROOT_DIR}" qemu-system-exception-differential-gate
 run_gate break make -C "${ROOT_DIR}" qemu-system-break-differential-gate
