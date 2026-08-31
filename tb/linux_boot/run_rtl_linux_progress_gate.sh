@@ -36,6 +36,7 @@ LINUX_RETIRE_TRACE_MAX_RECORDS=${LINUX_RETIRE_TRACE_MAX_RECORDS:-1000000}
 LINUX_REFILL_TRACE=${LINUX_REFILL_TRACE:-1}
 LINUX_PROGRESS_TRACE=${LINUX_PROGRESS_TRACE:-1}
 LINUX_REQUIRE_PROGRESS=${LINUX_REQUIRE_PROGRESS:-1}
+LINUX_REQUIRE_USERSPACE=${LINUX_REQUIRE_USERSPACE:-0}
 LINUX_EXCEPTION_TRACE=${LINUX_EXCEPTION_TRACE:-1}
 LINUX_EXCEPTION_TRACE_LIMIT=${LINUX_EXCEPTION_TRACE_LIMIT:-256}
 LINUX_EXCEPTION_FRAME_TRACE=${LINUX_EXCEPTION_FRAME_TRACE:-0}
@@ -137,10 +138,14 @@ if rg -q 'REGRESSION_TEST_FAILED|Comprehensive SoC Test Failed|tb_mips_soc: ERRO
 fi
 
 marker_count=$(rg -c 'MIPS32_SOC_LINUX_BOOT_SUCCESS' "${sim_dir}/sim.log" || echo 0)
+result="PASS (bounded post-reset progress probe)"
+if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
+    result="FAIL (Linux userspace marker not observed)"
+fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # RTL Linux Progress Gate
 
-- Result: PASS (bounded post-reset progress probe)
+- Result: ${result}
 - Host timeout: ${HOST_TIMEOUT}
 - RTL cycle limit: ${RTL_CYCLE_LIMIT}
 - Delay trace: ${LINUX_DELAY_TRACE} (limit=${LINUX_DELAY_TRACE_LIMIT}, window=${LINUX_DELAY_TRACE_START}..${LINUX_DELAY_TRACE_END})
@@ -152,6 +157,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Retire trace: ${LINUX_RETIRE_TRACE} (limit=${LINUX_RETIRE_TRACE_MAX_RECORDS})
 - Refill/progress/exception/EBase trace: ${LINUX_REFILL_TRACE}/${LINUX_PROGRESS_TRACE}/${LINUX_EXCEPTION_TRACE}/${LINUX_EBASE_TRACE}
 - Require progress heartbeat: ${LINUX_REQUIRE_PROGRESS}
+- Require userspace marker: ${LINUX_REQUIRE_USERSPACE}
 - WB trace: ${LINUX_WB_TRACE}
 - Image manifest: ${RUN_DIR}/image/image_manifest.txt
 - Simulator log: ${sim_dir}/sim.log
@@ -163,4 +169,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
   is not required by this progress gate.
 EOF
 
+if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
+    echo "RTL Linux progress gate: userspace marker not observed" >&2
+    exit 1
+fi
 echo "RTL Linux progress gate: PASS (userspace marker count=${marker_count}, simulator status=${status})"
