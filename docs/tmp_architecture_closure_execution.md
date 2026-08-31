@@ -3531,3 +3531,12 @@ configuration.
 - Fresh output is `FORMAL_ASSET_AUDIT_PASS files=4 modules=4 assertions=10`.
   Tool inventory remains VCS-only; no formal, CDC, RDC or lint proof is
   claimed.
+
+### 2026-09-01 fresh QEMU architecture aggregate
+
+- `QEMU_TIMEOUT=300 QEMU_BUILD_JOBS=2 make qemu-system-architecture-closure-gate`
+  passed from the current head.
+- The aggregate completed the current peripheral, selected retire
+  differential, MMU, FPU-boundary, LL/SC and bounded QEMU Linux marker gates.
+- Its explicit residuals remain full RTL/QEMU Linux differential, complete
+  ISA/IEEE-754/OS VM, physical DDR/QSPI timing and formal/CDC/RDC/lint proof.

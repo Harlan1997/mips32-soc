@@ -21,6 +21,17 @@ The real-DUT bind is selected per formal top with `FORMAL_BIND_DCACHE`,
 formal/CDC/RDC/lint engine. This closes the solver-independent asset audit
 fallback only; it is not formal proof or CDC/RDC/lint signoff.
 
+### 2026-09-01 QEMU architecture aggregate recheck
+
+`QEMU_TIMEOUT=300 QEMU_BUILD_JOBS=2 make qemu-system-architecture-closure-gate`
+passes from the current head. The fresh aggregate covers the current
+peripheral contract, selected ISA/MDU/FPU/privileged and peripheral retire
+differentials, FPU exception/rounding boundaries, MMU refill/PageMask/OS
+pressure, LL/SC, and the bounded QEMU Linux kernel-to-userspace marker.
+Its report continues to exclude full MIPS32/IEEE-754 compliance, unrestricted
+Linux VM ownership, full RTL system-mode Linux differential, physical DDR/
+QSPI timing, and formal/CDC/RDC/lint signoff.
+
 ## 1. 完成等级
 
 ### 2026-09-01 LWL/LWR cross-page precise-fault slice
