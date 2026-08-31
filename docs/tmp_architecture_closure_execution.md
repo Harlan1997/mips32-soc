@@ -7,6 +7,12 @@
 - The primitive gate checks single and double negative-zero and NaN payload
   behavior. Complete IEEE-754 arithmetic flags/traps and OS FPU ABI remain
   open.
+- Real `fpu_single` and `fpu_double` CPU/SoC firmware now checks the same
+  boundary, including `ABS/NEG` sign changes and no Invalid sticky update for
+  non-arithmetic NaN operations.
+- Fresh single- and double-precision QEMU system-mode retire differential
+  gates both pass. This closes the selected system slice only; complete
+  IEEE-754 arithmetic and the FPU OS ABI remain open.
 
 ### 2026-08-31 fixed FPU rounding tie semantics
 

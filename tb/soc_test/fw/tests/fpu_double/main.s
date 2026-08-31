@@ -27,6 +27,75 @@ main:
     ori     $t0, $t0, 0
     .word   0x44882800       /* mtc1 $t0,$f5 */
 
+    /* Preserve double signed-zero and NaN payload bit patterns through the
+     * non-arithmetic COP1 operations. */
+    mtc1    $zero, $f28
+    .word   0x4480e800       /* mtc1 $zero,$f29 */
+    nop
+    nop
+    nop
+    mov.d   $f30, $f28
+    nop
+    nop
+    nop
+    mfc1    $t2, $f30
+    bne     $t2, $zero, fail
+    nop
+    .word   0x440bf800       /* mfc1 $t3,$f31 */
+    bne     $t3, $zero, fail
+    nop
+    abs.d   $f30, $f28
+    mfc1    $t2, $f30
+    bne     $t2, $zero, fail
+    nop
+    .word   0x440bf800
+    bne     $t3, $zero, fail
+    nop
+    neg.d   $f30, $f28
+    mfc1    $t2, $f30
+    bne     $t2, $zero, fail
+    nop
+    .word   0x440bf800
+    lui     $t4, 0x8000
+    ori     $t4, $t4, 0
+    bne     $t3, $t4, fail
+    nop
+    lui     $t0, 0x7ff8
+    ori     $t0, $t0, 0x1234
+    lui     $t1, 0x5678
+    ori     $t1, $t1, 0x9abc
+    mtc1    $t1, $f28
+    .word   0x4488e800       /* mtc1 $t0,$f29 */
+    nop
+    nop
+    nop
+    mov.d   $f30, $f28
+    nop
+    nop
+    nop
+    mfc1    $t2, $f30
+    bne     $t2, $t1, fail
+    nop
+    .word   0x440bf800
+    bne     $t3, $t0, fail
+    nop
+    abs.d   $f30, $f28
+    mfc1    $t2, $f30
+    bne     $t2, $t1, fail
+    nop
+    .word   0x440bf800
+    bne     $t3, $t0, fail
+    nop
+    neg.d   $f30, $f28
+    mfc1    $t2, $f30
+    bne     $t2, $t1, fail
+    nop
+    .word   0x440bf800
+    lui     $t4, 0xfff8
+    ori     $t4, $t4, 0x1234
+    bne     $t3, $t4, fail
+    nop
+
     /* Check high words for representative ADD/SUB/MUL/DIV results. */
     add.d   $f8, $f0, $f2
     mfc1    $t2, $f8

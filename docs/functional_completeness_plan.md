@@ -14,6 +14,12 @@ floating-point conversion. The primitive gate checks single/double negative
 zero and NaN payload preservation. Complete IEEE-754 arithmetic flags/traps
 and OS FPU ABI remain open.
 
+The same boundary is now exercised by real CPU/SoC firmware and both
+single- and double-precision QEMU system-mode retire differential gates. The
+system evidence covers negative zero, NaN payload preservation, `ABS/NEG`
+sign changes, and suppression of Invalid for these non-arithmetic operations;
+full IEEE-754 and FPU OS ABI remain open.
+
 每项功能必须逐级推进，禁止直接把块级通过标成 SoC 完成：
 
 1. `IMPLEMENTED`：RTL 已提交，接口和非目标已写入 spec。
@@ -524,6 +530,7 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 | FCSR rounding mode SoC slice | `make fpu-rounding-gate`、`make mips-fpu-compare-gate` | PASS：`REGRESSION_TEST_SUCCESS`；SoC log 记录 RM `00/01/10/11` 结果 `2/2/-1/2/-2`，primitive gate PASS | `CVT.W.S` 现在使用 FCSR.RM[1:0] 的 nearest-even、RZ、RP、RM；固定 `ROUND.W.S` 使用 ties-away-from-zero 且不受 RM 改变，primitive 覆盖正负半整数，SoC 覆盖 `+2.5 -> 3` 与 `-1.5 -> -2`。范围边界和完整 IEEE-754 exception signaling 仍未闭合。 |
 | FPU invalid/underflow primitive boundary | `make mips-fpu-flags-gate` | PASS：`REGRESSION_TEST_SUCCESS mips_fpu_flags invalid=3 underflow=1`；`build/unit_tb/mips_fpu_flags/sim.log` | 补齐 behavioral primitive 对 single `Inf-Inf`、double `Inf/Inf`、double `0*Inf` invalid 和 minimum-normal-times-half double underflow 的分类；不扩展为完整 IEEE-754、double precise FPE 或 OS FPU ABI。 |
 | QEMU FPU W-conversion indefinite boundary | `make fpu-single-gate qemu-system-fpu-single-differential-gate` | PASS：RTL `FPU PASS`；QEMU system-mode direct run `FPU PASS`；`TRACE_COMPARE_PASS records=1248` | 项目自有 QEMU 9.2 patch 将 invalid/overflow 的 `CVT/ROUND/TRUNC/CEIL/FLOOR.W.{S,D}` 结果统一为 MIPS indefinite `0x80000000`，并纳入 custom-machine 构建输入 hash；完整 IEEE-754 和 FPU OS/ABI 仍未闭合。 |
+| FPU MOV/ABS/NEG bit-pattern system slice | `make fpu-single-gate fpu-double-gate qemu-system-fpu-single-differential-gate qemu-system-fpu-double-differential-gate` | PASS：single/double SoC gate；single/double `QEMU system RTL retire differential: PASS` | 真实 CPU 路径验证负零、NaN payload、ABS/NEG 符号变换以及非算术 NaN 操作不设置 Invalid sticky；这是 IEEE-754 位模式边界的系统级证据，不等同于完整 arithmetic exception/rounding 或 FPU OS ABI。 |
 
 | 优先级 | 问题 | 对计划的影响 | 处理条件 |
 |---|---|---|---|

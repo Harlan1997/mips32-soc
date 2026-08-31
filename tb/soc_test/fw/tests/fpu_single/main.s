@@ -87,6 +87,52 @@ main:
     mtc1    $t2, $f4
     mtc1    $t3, $f6
 
+    /* MOV/ABS/NEG must preserve the architectural bit pattern for NaNs and
+     * signed zero; host floating-point conversions are not a valid oracle. */
+    lui     $t4, 0x8000
+    mtc1    $t4, $f8
+    nop
+    nop
+    nop
+    mov.s   $f10, $f8
+    nop
+    nop
+    nop
+    mfc1    $t5, $f10
+    bne     $t5, $t4, fail
+    nop
+    abs.s   $f10, $f8
+    mfc1    $t5, $f10
+    bne     $t5, $zero, fail
+    nop
+    neg.s   $f10, $f8
+    mfc1    $t5, $f10
+    bne     $t5, $zero, fail
+    nop
+    lui     $t4, 0x7fc1
+    ori     $t4, $t4, 0x2345
+    mtc1    $t4, $f8
+    nop
+    nop
+    nop
+    mov.s   $f10, $f8
+    nop
+    nop
+    nop
+    mfc1    $t5, $f10
+    bne     $t5, $t4, fail
+    nop
+    abs.s   $f10, $f8
+    mfc1    $t5, $f10
+    bne     $t5, $t4, fail
+    nop
+    neg.s   $f10, $f8
+    mfc1    $t5, $f10
+    lui     $t6, 0xffc1
+    ori     $t6, $t6, 0x2345
+    bne     $t5, $t6, fail
+    nop
+
     /* Full C.* result matrix for 1.0 < 2.0. */
     check_compare 0, 0
     check_compare 1, 0
