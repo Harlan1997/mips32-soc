@@ -3525,6 +3525,9 @@ configuration.
 - The check validates all four formal property modules and ten assertions,
   rejects permanently disabled properties and broad waiver selectors, and is
   run automatically by `verification-foundation-gate`.
+- `formal_bind.sv` now selects one loaded DUT with `FORMAL_BIND_DCACHE`,
+  `FORMAL_BIND_TLB`, `FORMAL_BIND_VIC` or `FORMAL_BIND_FABRIC`, avoiding
+  unrelated bind-target warnings in per-block formal elaboration.
 - Fresh output is `FORMAL_ASSET_AUDIT_PASS files=4 modules=4 assertions=10`.
   Tool inventory remains VCS-only; no formal, CDC, RDC or lint proof is
   claimed.
