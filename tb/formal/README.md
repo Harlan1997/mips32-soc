@@ -40,6 +40,8 @@ tb/formal/
 - `dcache_invariants.sva`: known-state and bounded refill completion.
 - `tlb_invariants.sva`: lookup multi-hit consistency.
 - `interrupt_priority.sva`: selected-source safety checks.
+- `formal_bind.sv`: real `dcache`, `mips_tlb` and `apb_vic` bindings under
+  `FORMAL_ENABLE`.
 
 ## Wiring in (future work)
 
