@@ -318,6 +318,8 @@ MESI/directory、ISA/FPU、ECC/cache-error policy、全源 EIC/VEIC、QSPI produ
 
 ## 9. 执行记录
 
+| 2026-09-01 | `product-boot-expansion` | `QEMU_TIMEOUT=120s JOBS=2 make linux-boot-build-gate` | FAIL：QEMU 进入 `/init`，且显式 `linux-guest=on` 已生效；本次仍在第二组 `fork/wait4` 后缺少 `MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS` | 通过 machine property 将 Linux LL/SC 兼容策略与默认裸机严格 SC reservation-consume 分离；默认 `qemu-system-llsc-differential-gate` 同步回归 PASS。Linux userspace scheduler/wait reproducibility 和完整 RTL/QEMU Linux differential 仍开放。 |
+
 | 2026-09-01 | `product-boot-expansion` | `make qemu-system-llsc-differential-gate` | PASS：`TRACE_COMPARE_PASS records=320`；QEMU 328 条记录参与比较；firmware `REGRESSION_TEST_SUCCESS` | 修正 QEMU 9.2 custom machine 在已完成 mismatched/failed `SC` 后保留旧 `lladdr` 的参考模型缺口，并将 `qemu-9.2-mips32-sc-consume-reservation.patch` 纳入可审计构建输入。仅闭合 bounded LL/SC reservation differential；完整 memory ordering、SMP atomicity 和 MESI/directory coherency 仍开放。 |
 
 | 时间 | 基线 | 命令 | 结果 | 结论 |
