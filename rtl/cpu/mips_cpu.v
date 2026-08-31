@@ -827,15 +827,32 @@ module mips_cpu #(
                                      ((mem_inst[31:26] == 6'b010011) &&
                                       (mem_inst[5:0] == 6'h00 ||
                                        mem_inst[5:0] == 6'h01));
+    wire [4:0]  ex_fpu_load_reg = (ex_inst[31:26] == 6'b010011) ?
+                                   ex_inst[15:11] : ex_inst[20:16];
+    wire [4:0]  mem_fpu_load_reg = (mem_inst[31:26] == 6'b010011) ?
+                                    mem_inst[15:11] : mem_inst[20:16];
+    wire        ex_fpu_load_double = (ex_inst[31:26] == 6'b110101) ||
+                                     ((ex_inst[31:26] == 6'b010011) &&
+                                      ex_inst[5:0] == 6'h01);
+    wire        mem_fpu_load_double = (mem_inst[31:26] == 6'b110101) ||
+                                      ((mem_inst[31:26] == 6'b010011) &&
+                                       mem_inst[5:0] == 6'h01);
+    wire ex_fpu_load_hazard = ex_fpu_word_load &&
+                              ((ex_fpu_load_reg == id_inst[15:11]) ||
+                               (ex_fpu_load_double &&
+                                (ex_fpu_load_reg + 1'b1 == id_inst[15:11])) ||
+                               (ex_fpu_load_reg == id_inst[20:16]) ||
+                               (ex_fpu_load_double &&
+                                (ex_fpu_load_reg + 1'b1 == id_inst[20:16])));
+    wire mem_fpu_load_hazard = mem_fpu_word_load &&
+                               ((mem_fpu_load_reg == id_inst[15:11]) ||
+                                (mem_fpu_load_double &&
+                                 (mem_fpu_load_reg + 1'b1 == id_inst[15:11])) ||
+                                (mem_fpu_load_reg == id_inst[20:16]) ||
+                                (mem_fpu_load_double &&
+                                 (mem_fpu_load_reg + 1'b1 == id_inst[20:16])));
     wire        fpu_lwc1_hazard = fpu_id_valid &&
-                                  ((ex_fpu_word_load &&
-                                    (ex_inst[20:16] != 5'd0) &&
-                                    ((ex_inst[20:16] == id_inst[15:11]) ||
-                                     (ex_inst[20:16] == id_inst[20:16]))) ||
-                                   (mem_fpu_word_load &&
-                                    (mem_inst[20:16] != 5'd0) &&
-                                    ((mem_inst[20:16] == id_inst[15:11]) ||
-                                     (mem_inst[20:16] == id_inst[20:16]))));
+                                  (ex_fpu_load_hazard || mem_fpu_load_hazard);
     reg [31:0]  fpr [0:31];
     // FCSR condition-code layout: FCC0 is bit 23, FCC1..FCC7 are bits
     // 25..31 (bit 24 is reserved) in this vector order.  Keep the architectural selector local to
