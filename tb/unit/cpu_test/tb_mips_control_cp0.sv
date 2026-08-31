@@ -50,6 +50,14 @@ module tb_mips_control_cp0;
         begin cop1_arith = {6'b010001, fmt, ft, fs, fd, funct}; end
     endfunction
 
+    function automatic [31:0] cop1x_mem;
+        input [4:0] rs;
+        input [4:0] rt;
+        input [4:0] rd;
+        input [5:0] funct;
+        begin cop1x_mem = {6'b010011, rs, rt, rd, 5'd0, funct}; end
+    endfunction
+
     task automatic expect_reserved;
         input [31:0] value;
         begin
@@ -111,6 +119,23 @@ module tb_mips_control_cp0;
         end
     endtask
 
+    task automatic expect_cop1x_mem;
+        input [31:0] value;
+        input expect_read;
+        input expect_write;
+        begin
+            inst = value;
+            #1;
+            if (illegal_inst || mem_read != expect_read ||
+                mem_write != expect_write || mem_op != 3'b100 ||
+                alu_op != 5'b00001 || alu_src || reg_write) begin
+                $display("FAIL COP1X memory inst=%08h illegal=%b rd/wr=%b/%b alu_src=%b",
+                         inst, illegal_inst, mem_read, mem_write, alu_src);
+                failures = failures + 1;
+            end
+        end
+    endtask
+
     initial begin
         failures = 0;
         // MFC0/MTC0 and the five supported CO operations.
@@ -163,6 +188,15 @@ module tb_mips_control_cp0;
         expect_cop1_mem(6'b111101, 1'b0, 1'b1); // SDC1, even FPR pair
         expect_reserved({6'b110101, 5'd1, 5'd3, 16'h0010}); // odd pair
         expect_reserved({6'b111101, 5'd1, 5'd3, 16'h0010}); // odd pair
+
+        // COP1X indexed memory uses GPR[rs]+GPR[rt] and FPR[rd].
+        expect_cop1x_mem(cop1x_mem(5'd1, 5'd2, 5'd4, 6'h00), 1'b1, 1'b0); // LWXC1
+        expect_cop1x_mem(cop1x_mem(5'd1, 5'd2, 5'd4, 6'h01), 1'b1, 1'b0); // LDXC1
+        expect_cop1x_mem(cop1x_mem(5'd1, 5'd2, 5'd4, 6'h08), 1'b0, 1'b1); // SWXC1
+        expect_cop1x_mem(cop1x_mem(5'd1, 5'd2, 5'd4, 6'h09), 1'b0, 1'b1); // SDXC1
+        expect_reserved(cop1x_mem(5'd1, 5'd2, 5'd5, 6'h01));
+        expect_reserved(cop1x_mem(5'd1, 5'd2, 5'd5, 6'h09));
+        expect_reserved(cop1x_mem(5'd1, 5'd2, 5'd4, 6'h02));
 
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_control_cp0 valid=13 reserved=22");

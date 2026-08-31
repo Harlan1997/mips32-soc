@@ -390,6 +390,33 @@ main:
     bne     $t4, $t1, fail
     nop
 
+    /* COP1X indexed memory uses GPR[rs]+GPR[rt] and FPR[rd].  Keep the
+     * encodings explicit so this regression also checks the legacy MIPS32
+     * R2 form independently of assembler pseudo-op availability. */
+    addiu   $t9, $zero, 0
+    .word   0x4f197000             /* lwxc1  $f14,$t9($t8) */
+    mfc1    $t4, $f14
+    bne     $t4, $t0, fail
+    nop
+    .word   0x4f198001             /* ldxc1  $f16,$t9($t8) */
+    mfc1    $t4, $f16
+    bne     $t4, $t0, fail
+    nop
+    mfc1    $t4, $f18
+    bne     $t4, $t1, fail
+    nop
+    .word   0x4f191008             /* swxc1  $f2,$t9($t8) */
+    lw      $t4, 0($t8)
+    bne     $t4, $t1, fail
+    nop
+    .word   0x4f196009             /* sdxc1  $f12,$t9($t8) */
+    lw      $t4, 0($t8)
+    bne     $t4, $t0, fail
+    nop
+    lw      $t4, 4($t8)
+    bne     $t4, $t1, fail
+    nop
+
     cfc1    $t6, $31             /* FCSR is readable */
     ctc1    $t6, $31
     la      $a0, fpu_pass_msg
