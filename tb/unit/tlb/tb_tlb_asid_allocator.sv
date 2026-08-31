@@ -14,6 +14,8 @@ module tb_tlb_asid_allocator;
   @(negedge clk);release_req=1;release_asid=a1;release_generation=g1+1;@(posedge clk);#1;if(!release_reject)fail("stale release accepted");@(negedge clk);release_req=0;
   @(negedge clk);release_req=1;release_generation=g1;@(posedge clk);#1;if(!release_valid)fail("valid release rejected");@(negedge clk);release_req=0;
   @(negedge clk);alloc_req=1;@(posedge clk);#1;if(!alloc_valid||alloc_asid!=a1||alloc_generation!=g1+1)fail("generation did not advance");
+  @(negedge clk);release_req=1;release_asid=a1;release_generation=g1+1;alloc_req=1;@(posedge clk);#1;
+  if(!release_valid||!alloc_valid||alloc_asid!=a1||alloc_generation!=g1+2)fail("atomic release+alloc");
   $display("REGRESSION_TEST_SUCCESS tlb_asid_allocator");$finish;
  end
 endmodule

@@ -3419,3 +3419,16 @@ configuration.
   ownership primitive. It does not close OS page-table population, CPU
   demand-paging ownership, scheduler policy, multicore shootdown, Linux VM,
   or full privileged/MMU semantics.
+
+### 2026-09-01 ASID lease allocator atomic handoff
+
+- Applied the same generation-safe release+allocate handoff to
+  `rtl/cpu/mmu_asid_allocator.v`. A valid release can free a full-pool slot
+  and immediately transfer it to the next owner on the same clock edge; the
+  new allocation receives the incremented generation.
+- Extended `tb/unit/tlb/tb_tlb_asid_allocator.sv` to verify stale-release
+  rejection, valid release, generation advance, and full-pool atomic reuse.
+  Fresh `make tlb-asid-allocator-gate mmu-context-contract-gate` passes.
+- This closes the bounded ASID lease lifecycle race. It remains separate from
+  Linux ASID lifetime, page-table population, scheduler policy, multicore
+  shootdown, and complete privileged/MMU compliance.
