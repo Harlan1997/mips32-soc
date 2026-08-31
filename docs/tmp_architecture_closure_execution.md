@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-08-31 CP0-owned hardware walker root plumbing
+
+- Added `cp0_ptebase_out`, exposing the software-written `Context.PTEBase`
+  field as the corresponding 512 MiB-aligned byte address.
+- The CPU hardware walker now selects a non-zero integration
+  `HARDWARE_WALKER_PTBR` first; when that override is zero, it follows the
+  current CP0 `Context.PTEBase`. This keeps all existing fixed-root tests and
+  the default walker-disabled configuration unchanged.
+- `tb/unit/cp0/run.sh`, `make rtl-frontend-compile`, and
+  `make cpu-mmu-complete` pass. This closes only the root ownership plumbing;
+  Linux OS page-table population, accessed/dirty updates, demand paging,
+  shootdown integration, userspace boot, and full RTL/QEMU differential remain
+  open.
+
 ### 2026-08-31 R-type trap code field and Linux BUG_ON boundary
 
 - The Linux progress trace identified `0x00040336` at `0x880e89a4` as the

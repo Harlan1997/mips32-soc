@@ -114,6 +114,11 @@ module mips_cp0 #(
     // and CP0-owned globals the MMU needs (ASID, Config.K0). These are pure
     // combinational fanout; mips_cp0 does not consume them.
     output wire [7:0]  cp0_asid_out,
+    // Context.PTEBase is the software-owned page-table root selector used by
+    // the opt-in hardware walker when the integration does not provide a
+    // fixed root parameter.  Preserve the architectural 9-bit field and
+    // expose it as the corresponding 512 MiB-aligned byte address.
+    output wire [31:0] cp0_ptebase_out,
     output wire [2:0]  cp0_config_k0_out,
     output wire [31:0] hwrena_out,
     output wire [31:0] taglo_out,
@@ -925,6 +930,7 @@ module mips_cp0 #(
     );
 
     assign cp0_asid_out      = cp0_entryhi_asid;
+    assign cp0_ptebase_out   = {cp0_context_ptebase, 23'b0};
     assign cp0_config_k0_out = cp0_config_k0;
     assign hwrena_out        = cp0_hwrena;
 
