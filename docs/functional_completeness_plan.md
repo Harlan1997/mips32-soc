@@ -14,6 +14,8 @@ formal asset set now includes bounded dcache FSM, TLB multi-hit consistency
 and interrupt source safety properties in addition to arbiter fairness. The
 TLB checker is bound to the main-TLB multi-hit signals, because the exported
 lookup result may instead be sourced from the opt-in micro-TLB.
+The real-DUT bind is selected per formal top with `FORMAL_BIND_DCACHE`,
+`FORMAL_BIND_TLB`, `FORMAL_BIND_VIC` or `FORMAL_BIND_FABRIC`.
 `make formal-static-audit verification-foundation-gate` passes with
 `files=4 modules=4 assertions=10`; the environment still has only VCS and no
 formal/CDC/RDC/lint engine. This closes the solver-independent asset audit
