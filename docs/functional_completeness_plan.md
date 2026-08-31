@@ -1,10 +1,23 @@
 # SoC 功能完整性计划
 
-> 版本：v1.47（2026-08-06）
+> 版本：v1.48（2026-09-01）
 >
 > 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据。
 
 ## 1. 完成等级
+
+### 2026-09-01 LWL/LWR cross-page precise-fault slice
+
+The opt-in `SOC_MMU_ENABLE=1` `mmu_refill` firmware now keeps the second
+4-KiB page resident, invalidates the TLB pair, and executes load and store
+pairs across the page boundary. The first instruction reads or writes the
+resident page; the second instruction takes one precise TLBL/TLBS at
+`0x00020ffd`, is refilled and retried, and the final load merge is
+`0x88112233` while the store merge is `page0=0xB2C3D444` and
+`page1=0xA5A500A1`. RTL reports `cross_page_faults=1`, `demand_faults=10`,
+`page_allocs=4`, and `ok=1`. This closes only the precise cross-page
+load/store merge slice. Unrestricted MMU demand paging, Linux ABI behavior,
+and full ISA compliance remain open.
 
 ### 2026-08-31 FPU bit-preserving sign and move operations
 
