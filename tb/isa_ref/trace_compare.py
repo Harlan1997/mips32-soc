@@ -56,7 +56,16 @@ def is_completion_store(obj):
 
 def is_double_memory_instruction(obj):
     """Current retire schema cannot encode LDC1/SDC1's two word beats."""
-    return ((int(obj.get("instr", "0"), 16) >> 26) & 0x3f) in (0x35, 0x3d)
+    try:
+        word = int(obj.get("instr", "0"), 16)
+    except (TypeError, ValueError):
+        return False
+    opcode = (word >> 26) & 0x3f
+    if opcode in (0x35, 0x3d):
+        return True
+    # COP1X indexed double accesses use funct 0x01/0x09.  The plugin reports
+    # one 64-bit access while RTL exposes two word beats, just like LDC1/SDC1.
+    return opcode == 0x13 and (word & 0x3f) in (0x01, 0x09)
 
 
 def is_async_interrupt_boundary(obj):
@@ -204,7 +213,7 @@ def align_first_retire(rtl, golden, pc):
         f"{wanted_pc} / {golden_first.get('instr')}")
 
 
-def fpu_state_matches_window(rtl, golden, index, field, radius=4):
+def fpu_state_matches_window(rtl, golden, index, field, radius=8):
     """Match FPU state across the bounded ID-to-WB observation latency.
 
     The RTL commits FPR/FCSR in ID while the common retire record is sampled

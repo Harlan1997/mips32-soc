@@ -32,11 +32,16 @@ This closes the QEMU build and bounded machine-model prerequisite only. It
 does not close the outstanding FPU state differential, full ISA/MMU/Linux
 lockstep, or physical DDR/QSPI behavior.
 
-The fresh FPU differential subsequently identified a QEMU translator field
+The fresh FPU differential initially identified a QEMU translator field
 mapping defect in COP1X indexed memory: MIPS32 R2 uses `rd` as the FPR
 destination/source, while the upstream call site passed `sa`. The project
-QEMU patch `qemu-9.2-mips32-cop1x-memory-fields.patch` corrects this mapping;
-the FPU gate is pending a rebuild and rerun with the patch.
+QEMU patch `qemu-9.2-mips32-cop1x-memory-fields.patch` corrects this mapping.
+The RTL FPU primitive also had an incorrect `SQRT.S` inexact comparison
+(`sqrt(x)` was compared with `sqrt(x)^2`); that is now corrected, and the
+trace corpus leaves enough retirement spacing to expose back-to-back FPR
+updates. The fresh rerun with bounded state matching passes:
+`TRACE_COMPARE_PASS records=1320` and
+`qemu-system-fpu-single-differential-gate: PASS`.
 
 | Slice | State | Evidence | Remaining |
 | --- | --- | --- | --- |
@@ -64,7 +69,7 @@ the FPU gate is pending a rebuild and rerun with the patch.
 | QEMU VIC machine-model firmware | PASS | `build/firmware/qemu_system_vic_cpu/firmware.elf` | Existing `vic_cpu` firmware reaches UART success under `mips32-soc-ref`; model covers enable set/clear, SOFT/SOFT_CLR, priority, VEC_ID accept, ACK, and CPU IRQ delivery |
 | RTL/QEMU VIC interrupt differential | PASS | `build/isa_ref/qemu_system_vic_irq_differential/completion_report.md` | 48 records: simultaneous software sources 8/9, deterministic priority 9 then 8, VEC_ID accept, ACK/SOFT_CLR, two CPU interrupt entries/ERET returns, magic mailbox |
 | Full `vic_cpu` RTL/QEMU differential | PASS (corpus uses direct caller MMIO loads) | `build/isa_ref/qemu_system_vic_cpu_differential_fix1/completion_report.md`, `trace_compare.log` | 736 records compare equal and both sides reach success; source traces contain 737 records on each side. The firmware avoids the currently open CPU subroutine-return/load forwarding bug; generic forwarding and full arbitrary firmware coverage remain open. |
-| Opt-in FPU startup/CP1/COP1X differential | PASS | `make qemu-system-fpu-single-differential-gate`, `make qemu-system-fpu-double-differential-gate` | CP0 CU1 enable/readback, single COP1 arithmetic/conversion, COP1X `MADD.S/MSUB.S/NMADD.S/NMSUB.S`, and selected double pair arithmetic/conversion including COP1X `MADD.D/MSUB.D/NMADD.D/NMSUB.D` compare through the mailbox boundary; fresh traces pass with 1233 and 225 records respectively. Complete FPE/IEEE-754 and OS FPU context remain open. |
+| Opt-in FPU startup/CP1/COP1X differential | PASS | `make qemu-system-fpu-single-differential-gate`, `make qemu-system-fpu-double-differential-gate` | CP0 CU1 enable/readback, single COP1 arithmetic/conversion, COP1X `MADD.S/MSUB.S/NMADD.S/NMSUB.S`, and selected double pair arithmetic/conversion including COP1X `MADD.D/MSUB.D/NMADD.D/NMSUB.D` compare through the mailbox boundary; fresh traces pass with 1320 and 225 records respectively. Complete FPE/IEEE-754 and OS FPU context remain open. |
 | Opt-in FPU CU1 negative differential | PASS | `make qemu-system-fpu-cu1-exception-differential-gate`, `build/isa_ref/qemu_system_fpu_cu1_exception_differential/completion_report.md` | COP1 with CU1 disabled retires the same CpU exception as QEMU, including Cause.CE=1; full FPE/double precision/OS context remains open. |
 | Opt-in SRS exception entry/return differential | PASS | `make qemu-system-srs-exception-differential-gate`, `build/isa_ref/qemu_system_srs_exception_differential/completion_report.md`, `qemu/trace_compare.log` | 42 retire records compare equal across `PSS/CSS/ESS`, `RDPGPR`, exception entry, handler execution and `ERET`; SRSMap and nested-fault policy are covered by their dedicated gates; external EICSS/VEIC policy and Linux SRS ABI remain open. |
 | Opt-in nested SRS exception differential | PASS | `make qemu-system-srs-nested-differential-gate`, `build/isa_ref/qemu_system_srs_nested_differential/completion_report.md`, `qemu/trace_compare.log` | Nested `SYSCALL` while EXL is set preserves CSS/PSS and original exception context; the RTL and QEMU traces compare equal through the success mailbox. |

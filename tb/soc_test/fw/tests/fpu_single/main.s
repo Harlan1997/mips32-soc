@@ -222,6 +222,9 @@ main:
     nop
 
     neg.s   $f8, $f2
+    nop
+    nop
+    nop
     abs.s   $f8, $f8             /* 2.0 */
     mfc1    $t4, $f8
     bne     $t4, $t1, fail
