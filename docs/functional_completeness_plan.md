@@ -1116,3 +1116,18 @@ storage. Fresh isolated overflow, ISA R2, BREAK, trap, branch-delay exception,
 and RTL frontend (`8/8`) gates pass. This closes selected signed integer
 overflow differential evidence and verification resource safety only; full
 MIPS32/privileged ISA, Linux/OS semantics and product signoff remain open.
+
+### 2026-09-01 QEMU MDU retire differential closure
+
+Added `make qemu-system-mdu-differential-gate` and included it in the
+selected system differential aggregate. The gate runs the real CPU-visible
+`mdu_cpu` firmware through RTL and the custom `mips32-soc-ref`, comparing
+retire records strictly through the completion mailbox. The initial failure
+at `MADD` was traced to the QEMU state converter: SPECIAL2 opcode `0x1c` was
+also listed as an immediate opcode, incorrectly turning an HI/LO-only
+operation into an `rt` GPR write. Raw QEMU snapshots showed no GPR change.
+The converter now excludes SPECIAL2 from that fallback list, and
+`tb/isa_ref/test_qemu_system_state_to_jsonl.py` guards the destination rules
+for MADD/MADDU/MSUB/MSUBU and MUL/CLZ/CLO. The fresh MDU gate and selected
+aggregate both pass. Radix/Booth latency, low-latency division, workload
+performance, full ISA compliance and Linux MDU ABI remain open.
