@@ -29,6 +29,7 @@ run_gate peripheral make -C "${ROOT_DIR}" qemu-system-peripheral-differential-ga
 run_gate vic make -C "${ROOT_DIR}" qemu-system-vic-differential-gate qemu-system-vic-cpu-differential-gate
 run_gate fpu_single make -C "${ROOT_DIR}" qemu-system-fpu-single-differential-gate
 run_gate fpu_double make -C "${ROOT_DIR}" qemu-system-fpu-double-differential-gate
+run_gate fpu_rounding make -C "${ROOT_DIR}" qemu-system-fpu-rounding-differential-gate
 run_gate fpu_cu1 make -C "${ROOT_DIR}" qemu-system-fpu-cu1-exception-differential-gate
 run_gate dma_sg make -C "${ROOT_DIR}" qemu-system-dma-sg-differential-gate
 
@@ -38,7 +39,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Result: PASS
 - Machine: mips32-soc-ref
 - Sub-gates: ISA R2, branch-likely, exceptions, break/traps, DI/EI/WAIT,
-  BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/CU1,
+  BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/rounding/CU1,
   and bounded DMA v2 SG.
 - Evidence: child logs in this directory and child completion reports under
   build/isa_ref/qemu_system_*.
