@@ -14,7 +14,7 @@ QEMU_DIR=${QEMU_DIR:-"${RUN_DIR}/qemu"}
 OS_PRESSURE=${OS_PRESSURE:-0}
 QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-"software-mmu-guest=on"}
 if [[ "${OS_PRESSURE}" == 1 ]]; then
-    WORKLOAD_SCOPE="three-ASID OS-style page-table ownership pressure, task switching and post-shootdown demand refill"
+    WORKLOAD_SCOPE="four-ASID OS-style page-table ownership pressure, task switching and per-task post-shootdown demand refill"
 else
     WORKLOAD_SCOPE="two-level 4KB software page-table demand refill, four backing pages and permission recovery"
 fi
@@ -61,7 +61,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - QEMU trace: ${QEMU_DIR}/qemu_retire.jsonl
 - Comparator: $(grep '^TRACE_COMPARE_PASS ' "${QEMU_DIR}/trace_compare.log")
 - Scope: opt-in ${WORKLOAD_SCOPE}, ERET retry and mailbox completion.
-- OS pressure extension: ${OS_PRESSURE} (three ASID-owned roots/L2 tables, task switching and post-shootdown refill when enabled)
+- OS pressure extension: ${OS_PRESSURE} (four ASID-owned roots/L2 tables, task switching and per-task post-shootdown refill when enabled)
 - Evidence: rtl_gate.log, firmware.sha256, qemu_gate.log, qemu/completion_report.md, qemu/qemu_build_identity.txt, qemu/trace_compare.log
 - Residual risk: larger page sizes, production OS allocator/scheduler policy, multicore shootdown, full privileged/MMU compliance, Linux VM, and physical device timing remain open.
 EOF

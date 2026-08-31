@@ -394,16 +394,19 @@ int main(void) {
             }
         }
 
-        /* Invalidate only the current task's pair, then prove refill from
-         * the task-owned PTE rather than retaining a stale TLB translation. */
-        switch_task(1u);
-        for (round = 0; round < 32; ++round)
-            asm volatile("nop");
-        invalidate_page_pair(0x00020000u, 0u);
-        page0[0] = 0xA510000Fu;
-        last_read = page0[0];
-        if (last_read != 0xA510000Fu)
-            ok = 0u;
+        /* Invalidate each task's pair, then prove refill from that task's
+         * owned PTE rather than retaining a stale ASID translation. */
+        for (task = 0; task < 4; ++task) {
+            unsigned int value = 0xA5000000u | (task << 12) | 0x0Fu;
+            switch_task(task);
+            for (round = 0; round < 32; ++round)
+                asm volatile("nop");
+            invalidate_page_pair(0x00020000u, 0u);
+            page0[0] = value;
+            last_read = page0[0];
+            if (last_read != value)
+                ok = 0u;
+        }
 
         print_str("mmu_os_pressure: refills=");
         print_hex(refill_count);
@@ -431,7 +434,7 @@ int main(void) {
         print_hex(ok);
         print_str("mmu_os_pressure: last_read=");
         print_hex(last_read);
-        if (ok && page_alloc_count == 16u && demand_fault_count == 65u &&
+        if (ok && page_alloc_count == 16u && demand_fault_count == 68u &&
             permission_fault_count == 0u && unexpected_exc == 0u) {
             print_str("mmu_os_pressure: PASS\n");
             *((volatile unsigned int *)0xA000FFF4u) = 0x4D4D5550u;
