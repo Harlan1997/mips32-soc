@@ -10,6 +10,8 @@ module mmu_asid_allocator #(parameter SLOTS=4) (
  reg [SLOTS:0] used;
  reg [7:0] generation [0:SLOTS];
  integer i; reg found;
+ integer release_slot;
+ reg release_match;
  always @(posedge clk or negedge rst_n) begin
   if(!rst_n) begin
    used <= {(SLOTS+1){1'b0}}; used[0] <= 1'b1;
@@ -17,16 +19,25 @@ module mmu_asid_allocator #(parameter SLOTS=4) (
    for(i=0;i<=SLOTS;i=i+1) generation[i]<=0;
   end else begin
    alloc_valid<=0;alloc_fail<=0;release_valid<=0;release_reject<=0;
+   release_slot=-1;
+   release_match=0;
    if(release_req) begin
-    if(release_asid!=0 && release_asid<=SLOTS && used[release_asid] && generation[release_asid]===release_generation) begin
-     used[release_asid]<=0; generation[release_asid]<=generation[release_asid]+1'b1; release_valid<=1;
+    if(release_asid!=0 && release_asid<=SLOTS)
+     release_slot=release_asid;
+    if(release_slot>=1 && used[release_slot] && generation[release_slot]===release_generation) begin
+     release_match=1;
+     used[release_slot]<=0; generation[release_slot]<=generation[release_slot]+1'b1; release_valid<=1;
     end else release_reject<=1;
    end
    if(alloc_req) begin
     found=0;
     for(i=1;i<=SLOTS;i=i+1) begin
-     if(!used[i] && !found) begin
+     // A full allocator may hand a slot directly from one owner to the
+     // next. Return the incremented generation so the old lease is stale.
+     if((!used[i] || (release_match && release_slot==i)) && !found) begin
       used[i]<=1; alloc_asid<=i[7:0]; alloc_generation<=generation[i]; alloc_valid<=1; found=1;
+      if(release_match && release_slot==i)
+       alloc_generation<=generation[i]+1'b1;
      end
     end
     if(!found) alloc_fail<=1;
