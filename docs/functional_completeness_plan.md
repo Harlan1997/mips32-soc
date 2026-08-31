@@ -11,9 +11,11 @@ target. The audit checks every repository formal `.sva` file for a module and
 at least one assertion, rejects permanently disabled assertions and broad
 coverage selectors, and records exact file/module/assertion counts. The
 formal asset set now includes bounded dcache FSM, TLB multi-hit consistency
-and interrupt source safety properties in addition to arbiter fairness.
+and interrupt source safety properties in addition to arbiter fairness. The
+TLB checker is bound to the main-TLB multi-hit signals, because the exported
+lookup result may instead be sourced from the opt-in micro-TLB.
 `make formal-static-audit verification-foundation-gate` passes with
-`files=4 modules=4 assertions=8`; the environment still has only VCS and no
+`files=4 modules=4 assertions=10`; the environment still has only VCS and no
 formal/CDC/RDC/lint engine. This closes the solver-independent asset audit
 fallback only; it is not formal proof or CDC/RDC/lint signoff.
 

@@ -7,16 +7,22 @@ module tlb_invariant_props #(
     input logic rst_n,
     input logic [TLB_ENTRIES-1:0] lookup0_hit_vec,
     input logic [TLB_ENTRIES-1:0] lookup1_hit_vec,
-    input logic lookup0_multi_hit,
-    input logic lookup1_multi_hit
+    input logic lookup0_main_multi_hit,
+    input logic lookup1_main_multi_hit
 );
     default clocking cb @(posedge clk); endclocking
     default disable iff (!rst_n);
     lookup0_multi_hit_consistent: assert property (
-        lookup0_multi_hit == ($countones(lookup0_hit_vec) > 1)
+        lookup0_main_multi_hit |-> ($countones(lookup0_hit_vec) > 1)
     );
     lookup1_multi_hit_consistent: assert property (
-        lookup1_multi_hit == ($countones(lookup1_hit_vec) > 1)
+        lookup1_main_multi_hit |-> ($countones(lookup1_hit_vec) > 1)
+    );
+    lookup0_single_hit_not_multi: assert property (
+        ($countones(lookup0_hit_vec) <= 1) |-> !lookup0_main_multi_hit
+    );
+    lookup1_single_hit_not_multi: assert property (
+        ($countones(lookup1_hit_vec) <= 1) |-> !lookup1_main_multi_hit
     );
 endmodule
 `endif
