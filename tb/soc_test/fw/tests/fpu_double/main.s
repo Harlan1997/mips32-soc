@@ -252,6 +252,12 @@ main:
     lui     $t0, 0x4010              /* 4.0D high word */
     ori     $t0, $t0, 0
     .word   0x44880800               /* mtc1 $t0,$f1 */
+    sqrt.d  $f2, $f0                /* sqrt.d $f2,$f0: 2.0D */
+    .word   0x440b1800               /* mfc1 $t3,$f3 high word */
+    lui     $t4, 0x4000
+    ori     $t4, $t4, 0
+    bne     $t3, $t4, fail_conv
+    nop
     .word   0x46200095               /* recip.d $f2,$f0: 0.25D */
     .word   0x440b1800               /* mfc1 $t3,$f3 */
     lui     $t4, 0x3fd0
