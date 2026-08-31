@@ -3369,3 +3369,19 @@ configuration.
   passes the QEMU kernel-to-userspace marker. RTL Linux still reaches no
   userspace marker in the 100k-cycle bounded run, so full Linux system-mode
   differential and complete OS/ISA/MMU signoff remain open.
+
+### 2026-09-01 fresh architecture closure audit
+
+- Re-ran `make rtl-frontend-compile` on the current `product-boot-expansion`
+  HEAD. Default, product-MMU, micro-TLB, L2 nonblocking, L1 nonblocking,
+  dual-core, FPU opt-in and DDR4 configurations all passed (`8/8`).
+- Re-ran `make isa-implementation-audit`; the executable matrix audit passed
+  with 19 rows. This validates the documented implemented/partial/deferred
+  boundary only; it is not a full MIPS32 or privileged-ISA compliance result.
+- The worktree is clean and `origin/product-boot-expansion` points at the same
+  commit. No speculative RTL change was made because the remaining failures
+  are architectural scope gaps rather than frontend defects.
+- Remaining closure work is still substantive: complete RTL Linux userspace
+  boot and full RTL/QEMU system differential; full ISA/privileged ISA and
+  IEEE-754/FPU ABI; unrestricted OS-owned demand paging and shootdown; full
+  coherency/cache ordering; and physical DDR/QSPI implementation signoff.
