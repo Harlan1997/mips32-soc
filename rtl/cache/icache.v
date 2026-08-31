@@ -59,7 +59,11 @@ module icache (
     input  wire [1:0]  rresp,
     input  wire        rlast,
     input  wire        rvalid,
-    output reg         rready
+    output reg         rready,
+
+    // Redirect/restore flush from the CPU. A request whose AXI burst has not
+    // started can be discarded; an active burst is drained before restart.
+    input  wire        flush
 );
 
     // Fixed AXI AR signals for cache line refill
@@ -119,6 +123,7 @@ module icache (
     reg [255:0] refill_buf;
     reg [2:0]   refill_word_cnt;
     reg         refill_error;
+    wire        flush_active = (flush === 1'b1);
 
     // Keep legacy direct icache unit benches source-compatible while the
     // maintenance ports are added: an omitted input is Z, never a request.
@@ -295,6 +300,18 @@ module icache (
                     data_parity_ram[sw][si] <= 1'b0;
                 end
             end
+        end else if (flush_active &&
+                     !(state == REFILL) &&
+                     !(state == MISS && arvalid && arready)) begin
+            // No downstream response is outstanding in these states. Clear
+            // the request so the redirected address is sampled from IDLE.
+            state <= IDLE;
+            req_buf_valid <= 1'b0;
+            arvalid <= 1'b0;
+            rready <= 1'b0;
+            refill_word_cnt <= 3'd0;
+            refill_buf <= 256'd0;
+            refill_error <= 1'b0;
         end else begin
             state <= next_state;
             case (state)

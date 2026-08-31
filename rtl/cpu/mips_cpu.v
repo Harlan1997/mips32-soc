@@ -107,7 +107,10 @@ module mips_cpu #(
     output wire [31:0] perf_icache_miss_count,
     output wire [31:0] perf_dcache_miss_count,
     output wire [31:0] perf_branch_mispredict_count,
-    output wire [31:0] perf_mdu_stall_count
+    output wire [31:0] perf_mdu_stall_count,
+    // Invalidates any in-flight instruction-cache lookup on a precise
+    // redirect. The cache drains an already-issued AXI burst before restart.
+    output wire        inst_flush
 );
 
     // =========================================================================
@@ -405,6 +408,7 @@ module mips_cpu #(
     
     // IF flush on exception/eret
     wire if_flush = exception_flush | ctx_restore_req;
+    assign inst_flush = if_flush;
     
     // Ordinary branches retain their architectural delay slot.  A not-taken
     // branch-likely is the exception: the already-fetched slot must be
