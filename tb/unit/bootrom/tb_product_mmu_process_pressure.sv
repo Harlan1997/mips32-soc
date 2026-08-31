@@ -9,10 +9,12 @@
 `endif
 
 module tb_product_mmu_process_pressure;
-    localparam [19:0] PFN_ASID1 = 20'h08003;
-    localparam [19:0] PFN_ASID2 = 20'h08004;
-    localparam [19:0] PFN_ASID3 = 20'h08005;
-    localparam [19:0] PFN_ASID4 = 20'h08006;
+    // Four pages per ASID use a four-page PFN stride; the first pair for
+    // ASID N starts at PFN_BASE + (N << 2).
+    localparam [19:0] PFN_ASID1 = 20'h08006;
+    localparam [19:0] PFN_ASID2 = 20'h0800A;
+    localparam [19:0] PFN_ASID3 = 20'h0800E;
+    localparam [19:0] PFN_ASID4 = 20'h08012;
     localparam [31:0] PROCESS_MARK = 32'hC002_0001;
     localparam [31:0] SHOOTDOWN_MARK = 32'hC002_0002;
 
@@ -147,7 +149,7 @@ module tb_product_mmu_process_pressure;
 
             if (mailbox_seen && !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req) begin
                 if (!reset_seen) fail("reset PC was not observed");
-                if (refill_count < 8) fail("four ASIDs did not refill before and after shootdown");
+                if (refill_count < 16) fail("four ASIDs/four pages did not refill before and after shootdown");
                 if (!asid1_mapping_seen || !asid2_mapping_seen ||
                     !asid3_mapping_seen || !asid4_mapping_seen)
                     fail("all four ASID-specific PFN mappings were not observed");

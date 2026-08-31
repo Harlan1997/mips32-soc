@@ -3317,6 +3317,21 @@ configuration.
   under `SVA_ENABLE`; the isolated SVA gate and direct unit gate remain
   required evidence for this boundary.
 
+### 2026-09-01 MMU four-page-per-ASID pressure extension
+
+- Expanded `mmu_process_pressure` from one page per ASID to four contiguous
+  4-KiB demand pages per ASID, requiring two TLB pairs per context.
+- The refill handler uses non-overlapping four-page PFN strides and aligns
+  each refill to the even page of its pair. The reverse context pass checks
+  all pages, and the post-shootdown pass refills all sixteen mappings.
+- `make product-mmu-process-pressure-gate
+  PRODUCT_MMU_PROCESS_PRESSURE_DIR=/tmp/mmu_process_pressure_4pages` passed
+  with `REGRESSION_TEST_SUCCESS ... refills=16`.
+- `make qemu-system-mmu-process-pressure-gate
+  RUN_DIR=/tmp/qemu_mmu_process_pressure_4pages` passed strict RTL/QEMU
+  retire comparison. This remains bounded single-core evidence, not Linux VM
+  or unrestricted demand-paging signoff.
+
 ### 2026-09-01 QEMU system MDU differential closure
 
 - Added `qemu-system-mdu-differential-gate` and included it in the selected
