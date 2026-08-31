@@ -22,28 +22,31 @@ command -v bison >/dev/null
 mkdir -p "${BUILD_DIR}/rootfs"
 mkdir -p "${BUILD_DIR}/rootfs/dev"
 
-"${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
-    -nostdlib -nostartfiles -nodefaultlibs -static \
-    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" -Wl,--build-id=none \
-    -o "${BUILD_DIR}/rootfs/init" "${SCRIPT_DIR}/init.S"
-chmod 0755 "${BUILD_DIR}/rootfs/init"
+build_guest_binary() {
+    local source=$1
+    local output=$2
+    local stamp="${output}.input.sha256"
+    local input_hash
+    input_hash=$(sha256sum "${source}" "${SCRIPT_DIR}/init.ld" | sha256sum | awk '{print $1}')
+    if [[ ! -s "${output}" || ! -s "${stamp}" || "$(<"${stamp}")" != "${input_hash}" ]]; then
+        "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
+            -nostdlib -nostartfiles -nodefaultlibs -static \
+            -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" -Wl,--build-id=none \
+            -o "${output}" "${source}"
+        chmod 0755 "${output}"
+        # Keep generated cpio metadata stable across isolated build roots.
+        touch -d "@${SOURCE_DATE_EPOCH}" "${output}"
+        printf '%s\n' "${input_hash}" >"${stamp}"
+    fi
+}
 
-"${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
-    -nostdlib -nostartfiles -nodefaultlibs -static \
-    -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" -Wl,--build-id=none \
-    -o "${BUILD_DIR}/rootfs/vm_child" "${SCRIPT_DIR}/exec_child.S"
-chmod 0755 "${BUILD_DIR}/rootfs/vm_child"
-
-# Keep the generated cpio metadata stable across isolated build roots. The
-# binaries already have deterministic linker metadata above; fixing mtimes
-# also prevents initramfs contents from changing solely because a rebuild ran
-# at a different wall-clock time.
-touch -d "@${SOURCE_DATE_EPOCH}" \
-    "${BUILD_DIR}/rootfs/init" "${BUILD_DIR}/rootfs/vm_child"
+build_guest_binary "${SCRIPT_DIR}/init.S" "${BUILD_DIR}/rootfs/init"
+build_guest_binary "${SCRIPT_DIR}/exec_child.S" "${BUILD_DIR}/rootfs/vm_child"
 
 # Let the kernel's gen_init_cpio create device nodes without requiring the
 # build host to permit mknod in the output directory.
 initramfs_list="${BUILD_DIR}/initramfs.list"
+initramfs_list_tmp="${initramfs_list}.tmp"
 {
     printf 'dir /dev 0755 0 0\n'
     printf 'nod /dev/console 0600 0 0 c 5 1\n'
@@ -51,36 +54,58 @@ initramfs_list="${BUILD_DIR}/initramfs.list"
     printf 'file /init %s 0755 0 0\n' "${BUILD_DIR}/rootfs/init"
     printf 'dir /bin 0755 0 0\n'
     printf 'file /bin/vm_child %s 0755 0 0\n' "${BUILD_DIR}/rootfs/vm_child"
-} >"${initramfs_list}"
+} >"${initramfs_list_tmp}"
+if [[ ! -e "${initramfs_list}" ]] || ! cmp -s "${initramfs_list_tmp}" "${initramfs_list}"; then
+    mv -f "${initramfs_list_tmp}" "${initramfs_list}"
+else
+    rm -f "${initramfs_list_tmp}"
+fi
 
-make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
-    ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" 32r2el_defconfig
-make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
-    ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" scripts
 scripts_config="${LINUX_SOURCE_DIR}/scripts/config"
 test -x "${scripts_config}"
+config_stamp="${BUILD_DIR}/kernel/.mips32_soc_config.sha256"
+crash_dump_config=disabled
+if [[ "${KERNEL_PHYSICAL_START}" != "0x80000000" &&
+      "${KERNEL_PHYSICAL_START}" != "0X80000000" ]]; then
+    crash_dump_config=enabled
+fi
+config_inputs_hash=$({
+    sha256sum \
+        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic_defconfig" \
+        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/32r2.config" \
+        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config" \
+        "${initramfs_list}"
+    printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
+    printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
+} | sha256sum | awk '{print $1}')
 kernel_config_args=()
 # PHYSICAL_START is conditionally visible in the MIPS Kconfig and is gated by
 # CRASH_DUMP. Enable the dependency for every explicitly relocated image. The
 # default 0x88000000 image is the RTL DDR layout, so treating that value as an
 # unrelocated build silently produces a kernel linked at 0x80100000.
-if [[ "${KERNEL_PHYSICAL_START}" != "0x80000000" &&
-      "${KERNEL_PHYSICAL_START}" != "0X80000000" ]]; then
+if [[ "${crash_dump_config}" == enabled ]]; then
     kernel_config_args+=(--enable CONFIG_CRASH_DUMP)
 fi
-"${scripts_config}" --file "${BUILD_DIR}/kernel/.config" \
-    "${kernel_config_args[@]}" \
-    --enable CONFIG_SERIAL_8250 \
-    --enable CONFIG_SERIAL_8250_CONSOLE \
-    --enable CONFIG_DEVTMPFS \
-    --enable CONFIG_DEVTMPFS_MOUNT \
-    --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
-    --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_list}" \
-    --enable CONFIG_CMDLINE_BOOL \
-    --set-str CONFIG_CMDLINE "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init" \
-    --set-val CONFIG_PHYSICAL_START "${KERNEL_PHYSICAL_START}"
-make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
-    ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" olddefconfig
+if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash}" ]]; then
+    make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
+        ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" 32r2el_defconfig
+    make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
+        ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" scripts
+    "${scripts_config}" --file "${BUILD_DIR}/kernel/.config" \
+        "${kernel_config_args[@]}" \
+        --enable CONFIG_SERIAL_8250 \
+        --enable CONFIG_SERIAL_8250_CONSOLE \
+        --enable CONFIG_DEVTMPFS \
+        --enable CONFIG_DEVTMPFS_MOUNT \
+        --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
+        --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_list}" \
+        --enable CONFIG_CMDLINE_BOOL \
+        --set-str CONFIG_CMDLINE "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init" \
+        --set-val CONFIG_PHYSICAL_START "${KERNEL_PHYSICAL_START}"
+    make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
+        ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" olddefconfig
+    printf '%s\n' "${config_inputs_hash}" >"${config_stamp}"
+fi
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
     ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" -j"${JOBS}" vmlinux
 make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
