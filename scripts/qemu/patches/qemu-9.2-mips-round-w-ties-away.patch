@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] target/mips: make ROUND.W use ties-away rounding
+
+MIPS ROUND.W.S and ROUND.W.D use round-to-nearest with ties away from zero,
+independent of FCSR.RM. QEMU's generic helper used nearest-even, which made
+the system reference disagree with the RTL on exact half-way inputs.
+
+---
+ target/mips/tcg/fpu_helper.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
+index 0000000..0000000 100644
+--- a/target/mips/tcg/fpu_helper.c
++++ b/target/mips/tcg/fpu_helper.c
+@@ -432,7 +432,7 @@ uint64_t helper_float_round_l_s(CPUMIPSState *env, uint32_t fst0)
+ uint32_t helper_float_round_w_d(CPUMIPSState *env, uint64_t fdt0)
+ {
+     uint32_t wt2;
+ 
+-    set_float_rounding_mode(float_round_nearest_even,
++    set_float_rounding_mode(float_round_ties_away,
+                             &env->active_fpu.fp_status);
+     wt2 = float64_to_int32(fdt0, &env->active_fpu.fp_status);
+@@ -448,7 +448,7 @@ uint32_t helper_float_round_w_d(CPUMIPSState *env, uint64_t fdt0)
+ uint32_t helper_float_round_w_s(CPUMIPSState *env, uint32_t fst0)
+ {
+     uint32_t wt2;
+ 
+-    set_float_rounding_mode(float_round_nearest_even,
++    set_float_rounding_mode(float_round_ties_away,
+                             &env->active_fpu.fp_status);
+     wt2 = float32_to_int32(fst0, &env->active_fpu.fp_status);
+
