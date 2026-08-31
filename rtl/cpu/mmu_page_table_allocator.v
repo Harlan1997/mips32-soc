@@ -23,6 +23,7 @@ module mmu_page_table_allocator #(
     integer i;
     integer release_slot;
     reg found;
+    reg release_match;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -41,13 +42,15 @@ module mmu_page_table_allocator #(
             release_valid <= 1'b0;
             release_reject <= 1'b0;
 
+            release_slot = -1;
+            release_match = 1'b0;
             if (release_req) begin
-                release_slot = -1;
                 for (i = 0; i < SLOTS; i = i + 1)
                     if (release_root == (ROOT_BASE + i * ROOT_STRIDE))
                         release_slot = i;
                 if (release_slot >= 0 && used[release_slot] &&
                     generation[release_slot] === release_generation) begin
+                    release_match = 1'b1;
                     used[release_slot] <= 1'b0;
                     generation[release_slot] <= generation[release_slot] + 1'b1;
                     release_valid <= 1'b1;
@@ -59,10 +62,15 @@ module mmu_page_table_allocator #(
             if (alloc_req) begin
                 found = 1'b0;
                 for (i = 0; i < SLOTS; i = i + 1) begin
-                    if (!used[i] && !found) begin
+                    // Permit an atomic release+alloc of the same slot.  The
+                    // returned token is the incremented generation, so an
+                    // old owner cannot retain access after the handoff.
+                    if ((!used[i] || (release_match && release_slot == i)) &&
+                        !found) begin
                         used[i] <= 1'b1;
                         alloc_root <= ROOT_BASE + i * ROOT_STRIDE;
-                        alloc_generation <= generation[i];
+                        alloc_generation <= generation[i] +
+                                            ((release_match && release_slot == i) ? 1'b1 : 1'b0);
                         alloc_valid <= 1'b1;
                         found = 1'b1;
                     end

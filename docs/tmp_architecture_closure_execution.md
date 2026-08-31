@@ -3404,3 +3404,18 @@ configuration.
 - This strengthens the bounded single-core OS-style page-table pressure
   evidence. Linux VM ownership, arbitrary demand paging, SMP scheduling and
   multicore shootdown policy remain open.
+
+### 2026-09-01 page-table root allocator atomic handoff
+
+- Fixed `rtl/cpu/mmu_page_table_allocator.v` so a valid release and a new
+  allocation can consume the same root slot on one clock edge. The allocator
+  now returns the incremented generation token for the new owner, preventing
+  stale ownership tokens from surviving the handoff.
+- Extended `tb/unit/tlb/tb_mmu_page_table_allocator.sv` with the full-pool
+  release+allocate boundary. Fresh `make mmu-page-table-allocator-gate`
+  passes, and a separate `BUILD_DIR=/tmp/mips32-allocator-atomic`
+  `make rtl-frontend-compile` passes all 8 configurations.
+- This closes an allocator lifecycle race in the bounded page-table-root
+  ownership primitive. It does not close OS page-table population, CPU
+  demand-paging ownership, scheduler policy, multicore shootdown, Linux VM,
+  or full privileged/MMU semantics.
