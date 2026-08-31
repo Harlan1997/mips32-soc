@@ -144,6 +144,7 @@ module mips_core #(
     wire        cpu_inst_bus_error;
     wire        cpu_inst_cache_error;
     wire [31:0] cpu_inst_rdata;
+    wire        cpu_inst_flush;
     
     // CPU to D-Cache Interface
     wire        cpu_data_req;
@@ -260,6 +261,7 @@ module mips_core #(
         .inst_bus_error  (cpu_inst_bus_error),
         .inst_cache_error(cpu_inst_cache_error),
         .inst_rdata      (cpu_inst_rdata),
+        .inst_flush      (cpu_inst_flush),
         
         .data_req        (cpu_data_req),
         .data_req_id     (cpu_data_req_id),
@@ -356,6 +358,7 @@ module mips_core #(
         .cpu_data_ok  (cpu_inst_data_ok),
         .cpu_bus_error(cpu_inst_bus_error),
         .cpu_cache_error(cpu_inst_cache_error),
+        .flush        (cpu_inst_flush),
 
         .cache_op_valid(icache_op_valid),
         .cache_op      (cpu_data_cache_op),
