@@ -13,8 +13,11 @@ if ! command -v systemd-run >/dev/null 2>&1; then
     exit 69
 fi
 
-memory_max=${EDA_MEMORY_MAX:-2G}
-swap_max=${EDA_SWAP_MAX:-2G}
+# Keep the default below the host's observed OOM high-water mark.  The
+# aggregate VCS/URG entry points have been validated with this budget; users
+# running a larger design can still opt in to a larger cgroup explicitly.
+memory_max=${EDA_MEMORY_MAX:-1500M}
+swap_max=${EDA_SWAP_MAX:-512M}
 unit_tag=${EDA_UNIT_TAG:-run}
 unit_name="eda-${unit_tag}-${BASHPID}"
 
