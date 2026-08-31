@@ -45,6 +45,7 @@ project_inputs_hash() {
 
 PROJECT_INPUTS_HASH=$(project_inputs_hash)
 if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
+   ! strings "${QEMU_BUILD}/qemu-system-mipsel" | rg -q 'SOC_REF_SC_POLICY' &&
    rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&

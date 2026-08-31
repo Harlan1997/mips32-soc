@@ -3475,3 +3475,17 @@ configuration.
   intentionally interrupted after confirming the previous stale-config path;
   a fresh full Linux marker gate is still required before changing its open
   status.
+
+### 2026-09-01 QEMU architecture aggregate recheck
+
+- `scripts/qemu/build_mips32_soc_ref.sh` now rejects a cached QEMU binary that
+  still contains the removed `SOC_REF_SC_POLICY` diagnostic string. This
+  prevents stale generated output from bypassing the project-input hash check.
+- The architecture runner now passes `QEMU_TIMEOUT` explicitly to its nested
+  Linux boot gate. A fresh `QEMU_TIMEOUT=300s QEMU_BUILD_JOBS=2
+  make qemu-system-architecture-closure-gate` passed all aggregate sub-gates,
+  including the Linux kernel-to-userspace marker gate.
+- The rebuilt binary contains no `SOC_REF_SC_POLICY` string. The Linux gate is
+  still bounded QEMU reference evidence and retains a long-host-timeout
+  residual risk; RTL Linux userspace boot, full RTL/QEMU Linux differential,
+  and complete OS/ISA/MMU closure remain open.
