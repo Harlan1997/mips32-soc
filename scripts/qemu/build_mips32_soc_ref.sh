@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 QEMU_SRC=${QEMU_SRC:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0"}
 QEMU_BUILD=${QEMU_BUILD:-"${QEMU_SRC}/build-mipsel-softmmu"}
+QEMU_BUILD_JOBS=${QEMU_BUILD_JOBS:-1}
 
 # All system-mode gates share one patched QEMU build directory.  Serialize
 # configure/ninja so concurrent Make invocations cannot partially overwrite
@@ -344,6 +345,7 @@ fi
 # project-local MIPS GDB feature description.
 ( cd "${QEMU_BUILD}" && ../configure --target-list=mipsel-softmmu --enable-plugins --disable-werror --enable-fdt=disabled )
 
-ninja -C "${QEMU_BUILD}" qemu-system-mipsel
+ninja -C "${QEMU_BUILD}" -j"${QEMU_BUILD_JOBS}" qemu-system-mipsel
+test -x "${QEMU_BUILD}/qemu-system-mipsel"
 printf '%s\n' "${PROJECT_INPUTS_HASH}" >"${INPUT_STAMP}"
 echo "${QEMU_BUILD}/qemu-system-mipsel"

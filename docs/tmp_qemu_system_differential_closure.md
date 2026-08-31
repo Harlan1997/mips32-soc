@@ -18,6 +18,20 @@ QEMU user-mode reference regression remains a separate Linux-user path.
 
 ## Status
 
+### 2026-08-31 QEMU build recovery and bounded machine gate
+
+The official QEMU 9.2.0 source tree was restored and the project custom
+machine was rebuilt successfully. The resulting system binary reports
+`QEMU emulator version 9.2.0`, advertises `mips32-soc-ref`, and passes
+`make qemu-system-sram-uart-mailbox-gate` plus
+`make qemu-system-peripheral-contract-gate`. The build helper now defaults to
+`QEMU_BUILD_JOBS=1` and verifies the executable exists before recording its
+input stamp, reducing host-memory pressure during recovery builds.
+
+This closes the QEMU build and bounded machine-model prerequisite only. It
+does not close the outstanding FPU state differential, full ISA/MMU/Linux
+lockstep, or physical DDR/QSPI behavior.
+
 | Slice | State | Evidence | Remaining |
 | --- | --- | --- | --- |
 | QEMU system binary | DONE | `make qemu-system-mips32-soc-ref` | None for build readiness |
