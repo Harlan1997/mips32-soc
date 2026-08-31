@@ -134,7 +134,10 @@ module mips_cpu #(
     wire [31:0] mem_inst;
     wire        mem_double_mem = (`SOC_FPU_ENABLE != 0) &&
                                  ((mem_inst[31:26] == 6'b110101) ||
-                                  (mem_inst[31:26] == 6'b111101));
+                                  (mem_inst[31:26] == 6'b111101) ||
+                                  ((mem_inst[31:26] == 6'b010011) &&
+                                   (mem_inst[5:0] == 6'h01 ||
+                                    mem_inst[5:0] == 6'h09)));
     wire        mem_double_phase;
     wire        mem_done;
     wire        dmem_request_blocked;
@@ -722,6 +725,8 @@ module mips_cpu #(
     wire        fpu_mem_lwc1_commit;
     wire        fpu_mem_ldc1_commit;
     wire [31:0] mem_fpu_store_data;
+    wire [4:0]  mem_fpu_reg = (mem_inst[31:26] == 6'b010011) ?
+                               mem_inst[15:11] : mem_inst[20:16];
     // Phase B.5: delay-slot marker propagated with each instruction so an
     // exception on a delay-slot instruction can drive Cause.BD=1 and EPC=PC-4.
     wire        id_bd;
@@ -750,12 +755,26 @@ module mips_cpu #(
                                    ((id_inst[31:26] == 6'b110001) ||
                                     (id_inst[31:26] == 6'b111001) ||
                                     (id_inst[31:26] == 6'b110101) ||
-                                    (id_inst[31:26] == 6'b111101));
+                                    (id_inst[31:26] == 6'b111101) ||
+                                    ((id_inst[31:26] == 6'b010011) &&
+                                     (id_inst[5:0] == 6'h00 ||
+                                      id_inst[5:0] == 6'h01 ||
+                                      id_inst[5:0] == 6'h08 ||
+                                      id_inst[5:0] == 6'h09)));
     wire        fpu_id_mfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00000);
     wire        fpu_id_cfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00010);
     wire        fpu_id_mtc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00100);
     wire        fpu_id_ctc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00110);
-    wire        fpu_id_arith = fpu_id_cop1x ||
+    wire        fpu_id_cop1x_arith = fpu_id_cop1x &&
+                               ((id_inst[5:0] == 6'h20) ||
+                                (id_inst[5:0] == 6'h21) ||
+                                (id_inst[5:0] == 6'h28) ||
+                                (id_inst[5:0] == 6'h29) ||
+                                (id_inst[5:0] == 6'h30) ||
+                                (id_inst[5:0] == 6'h31) ||
+                                (id_inst[5:0] == 6'h38) ||
+                                (id_inst[5:0] == 6'h39));
+    wire        fpu_id_arith = fpu_id_cop1x_arith ||
                                (fpu_id_cop1 &&
                                ((id_inst[25:21] == 5'b10000) ||
                                 (id_inst[25:21] == 5'b10001) ||
@@ -799,9 +818,15 @@ module mips_cpu #(
     // COP1 instruction until the load has committed to avoid observing the
     // previous FPR value.
     wire        ex_fpu_word_load = (ex_inst[31:26] == 6'b110001) ||
-                                    (ex_inst[31:26] == 6'b110101);
+                                    (ex_inst[31:26] == 6'b110101) ||
+                                    ((ex_inst[31:26] == 6'b010011) &&
+                                     (ex_inst[5:0] == 6'h00 ||
+                                      ex_inst[5:0] == 6'h01));
     wire        mem_fpu_word_load = (mem_inst[31:26] == 6'b110001) ||
-                                     (mem_inst[31:26] == 6'b110101);
+                                     (mem_inst[31:26] == 6'b110101) ||
+                                     ((mem_inst[31:26] == 6'b010011) &&
+                                      (mem_inst[5:0] == 6'h00 ||
+                                       mem_inst[5:0] == 6'h01));
     wire        fpu_lwc1_hazard = fpu_id_valid &&
                                   ((ex_fpu_word_load &&
                                     (ex_inst[20:16] != 5'd0) &&
@@ -910,7 +935,10 @@ module mips_cpu #(
             fpu_double_low <= 32'd0;
             for (fpu_i = 0; fpu_i < 32; fpu_i = fpu_i + 1)
                 fpr[fpu_i] <= ctx_restore_fpr[fpu_i*32 +: 32];
-        end else if (mem_double_mem && (mem_inst[31:26] == 6'b110101) &&
+        end else if (mem_double_mem &&
+                     ((mem_inst[31:26] == 6'b110101) ||
+                      ((mem_inst[31:26] == 6'b010011) &&
+                       mem_inst[5:0] == 6'h01)) &&
                      !mem_double_phase && data_data_ok_current &&
                      !(data_bus_error_current === 1'b1) &&
                      !(data_cache_error_current === 1'b1) &&
@@ -919,10 +947,10 @@ module mips_cpu #(
         end else if (fpu_mem_lwc1_commit) begin
             // LWC1 is a normal word memory transaction; its architectural
             // destination is the FPR named by rt, not the GPR file.
-            fpr[mem_inst[20:16]] <= mem_rdata_fmt;
+            fpr[mem_fpu_reg] <= mem_rdata_fmt;
         end else if (fpu_mem_ldc1_commit) begin
-            fpr[mem_inst[20:16]] <= fpu_double_low;
-            fpr[mem_inst[20:16] + 1'b1] <= mem_rdata_fmt;
+            fpr[mem_fpu_reg] <= fpu_double_low;
+            fpr[mem_fpu_reg + 1'b1] <= mem_rdata_fmt;
         end else if (id_fpu_exception && fpu_id_valid && !global_stall &&
                      !stall_req_id && !exception_flush && !ctx_restore_req) begin
             // The operation is trapped before architectural FPR commit, but
@@ -1316,9 +1344,17 @@ module mips_cpu #(
     // EX/MEM Pipeline Register
     // =========================================================================
     wire [31:0] mem_val_rt;
+    wire [4:0] ex_fpu_store_reg = (ex_inst[31:26] == 6'b010011) ?
+                                   ex_inst[15:11] : ex_inst[20:16];
     wire [31:0] ex_fpu_store_data =
-                ((`SOC_FPU_ENABLE != 0) && (ex_inst[31:26] == 6'b111001)) ?
-                fpr[ex_inst[20:16]] : ex_val_rt;
+                ((`SOC_FPU_ENABLE != 0) &&
+                 ((ex_inst[31:26] == 6'b111001) ||
+                  ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h08))) ?
+                fpr[ex_fpu_store_reg] :
+                ((`SOC_FPU_ENABLE != 0) &&
+                 ((ex_inst[31:26] == 6'b111101) ||
+                  ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h09))) ?
+                fpr[ex_fpu_store_reg] : ex_val_rt;
     wire [31:0] mem_pc_plus_8;
     wire        mem_mem_write;
     wire [2:0]  mem_mem_op;
@@ -1392,24 +1428,35 @@ module mips_cpu #(
 `endif
 
     assign fpu_mem_lwc1 = (`SOC_FPU_ENABLE != 0) &&
-                          mem_mem_read && (mem_inst[31:26] == 6'b110001);
+                          mem_mem_read &&
+                          ((mem_inst[31:26] == 6'b110001) ||
+                           ((mem_inst[31:26] == 6'b010011) &&
+                            mem_inst[5:0] == 6'h00));
     assign fpu_mem_swc1 = (`SOC_FPU_ENABLE != 0) &&
-                          mem_mem_write && (mem_inst[31:26] == 6'b111001);
+                          mem_mem_write &&
+                          ((mem_inst[31:26] == 6'b111001) ||
+                           ((mem_inst[31:26] == 6'b010011) &&
+                            mem_inst[5:0] == 6'h08));
     assign fpu_mem_lwc1_commit = fpu_mem_lwc1 && data_data_ok_current &&
                                  !(data_bus_error_current === 1'b1) &&
                                  !(data_cache_error_current === 1'b1) &&
                                  !dmem_request_blocked;
     assign fpu_mem_ldc1_commit = mem_double_mem &&
-                                 (mem_inst[31:26] == 6'b110101) &&
+                                 ((mem_inst[31:26] == 6'b110101) ||
+                                  ((mem_inst[31:26] == 6'b010011) &&
+                                   mem_inst[5:0] == 6'h01)) &&
                                  mem_double_phase && data_data_ok_current &&
                                  !(data_bus_error_current === 1'b1) &&
                                  !(data_cache_error_current === 1'b1) &&
                                  !dmem_request_blocked;
     assign mem_fpu_store_data = fpu_mem_swc1 ?
-                                fpr[mem_inst[20:16]] :
-                                (mem_double_mem && (mem_inst[31:26] == 6'b111101) ?
-                                 (mem_double_phase ? fpr[mem_inst[20:16] + 1'b1] :
-                                                      fpr[mem_inst[20:16]]) : mem_val_rt);
+                                fpr[mem_fpu_reg] :
+                                (mem_double_mem &&
+                                 ((mem_inst[31:26] == 6'b111101) ||
+                                  ((mem_inst[31:26] == 6'b010011) &&
+                                   mem_inst[5:0] == 6'h09)) ?
+                                 (mem_double_phase ? fpr[mem_fpu_reg + 1'b1] :
+                                                      fpr[mem_fpu_reg]) : mem_val_rt);
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
         .clk             (clk),

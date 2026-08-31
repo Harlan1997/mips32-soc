@@ -1057,7 +1057,7 @@ module mips_control (
                     end
                 endcase
             end
-            6'b010011: begin // COP1X fused multiply-add/subtract
+            6'b010011: begin // COP1X indexed memory and fused arithmetic
                 // PREFX is an integer-cache hint in the COP1X encoding space
                 // and remains legal when the optional FPU is disabled.
                 if (func == 6'h0f) begin
@@ -1065,6 +1065,26 @@ module mips_control (
                     // implementation-defined prefetch as an ordered no-op.
                     if (sa != 5'd0)
                         illegal_inst = 1'b1;
+                end else if (func == 6'h00 || func == 6'h01 ||
+                             func == 6'h08 || func == 6'h09) begin
+                    // LWXC1/LDXC1 and SWXC1/SDXC1 use GPR[rs]+GPR[rt]
+                    // as an indexed address and rd as the FPR selector.
+                    // Double transfers require an even FPR pair.
+                    if (`SOC_FPU_ENABLE == 0 ||
+                        ((func == 6'h01 || func == 6'h09) && rd[0])) begin
+                        illegal_inst = 1'b1;
+                    end else begin
+                        alu_op    = 5'b00001;
+                        alu_src   = 1'b0;
+                        mem_op    = 3'b100;
+                        imm_signed = 1'b1;
+                        if (func == 6'h00 || func == 6'h01) begin
+                            mem_read  = 1'b1;
+                            mem_to_reg = 2'b01;
+                        end else begin
+                            mem_write = 1'b1;
+                        end
+                    end
                 end else if (`SOC_FPU_ENABLE == 0) begin
                     illegal_inst = 1'b1;
                 end else begin

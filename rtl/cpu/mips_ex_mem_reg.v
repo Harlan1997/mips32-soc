@@ -82,6 +82,12 @@ module mips_ex_mem_reg (
     output reg         mem_double_phase
 );
 
+    wire mem_is_double_mem = (mem_inst[31:26] == 6'b110101) ||
+                              (mem_inst[31:26] == 6'b111101) ||
+                              ((mem_inst[31:26] == 6'b010011) &&
+                               (mem_inst[5:0] == 6'h01 ||
+                                mem_inst[5:0] == 6'h09));
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             mem_ex_out     <= 32'd0;
@@ -142,8 +148,7 @@ module mips_ex_mem_reg (
         end else if ((!stall ||
                      (enable_nonblocking_load && mem_mem_read && !mem_done &&
                       dmem_addr_ok)) &&
-                     !(((mem_inst[31:26] == 6'b110101) ||
-                        (mem_inst[31:26] == 6'b111101)) &&
+                     !(mem_is_double_mem &&
                        dmem_data_ok)) begin
             // A nonblocking load is allocated into the ROB on this edge.  The
             // same edge may therefore replace EX/MEM with the next EX
@@ -184,8 +189,7 @@ module mips_ex_mem_reg (
             // LDC1/SDC1 use two ordered word beats.  Keep the instruction in
             // EX/MEM after beat zero so the second beat can be issued at
             // address+4; only beat one retires the memory operation.
-            if (((mem_inst[31:26] == 6'b110101) ||
-                 (mem_inst[31:26] == 6'b111101)) &&
+            if (mem_is_double_mem &&
                 !mem_double_phase && dmem_data_ok) begin
                 mem_double_phase <= 1'b1;
             end else begin
