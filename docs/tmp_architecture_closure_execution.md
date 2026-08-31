@@ -3317,6 +3317,20 @@ configuration.
   under `SVA_ENABLE`; the isolated SVA gate and direct unit gate remain
   required evidence for this boundary.
 
+### 2026-09-01 QEMU system MDU differential closure
+
+- Added `qemu-system-mdu-differential-gate` and included it in the selected
+  system differential aggregate.
+- The strict gate now passes with the real `mdu_cpu` RTL trace and the custom
+  `mips32-soc-ref` trace. The observed failure at `MADD` was a converter bug:
+  SPECIAL2 opcode `0x1c` was accidentally present in the immediate-opcode
+  destination list, so an HI/LO-only instruction was reported as an `rt` GPR
+  write. The raw QEMU state snapshots showed no `$r4` change across MADD.
+- Added `tb/isa_ref/test_qemu_system_state_to_jsonl.py` to lock down the
+  SPECIAL2 destination rules. The converter test and fresh RTL/QEMU gate both
+  pass. This closes the selected CPU-visible MDU differential slice; complete
+  ISA, latency/performance and Linux MDU ABI remain open.
+
 ### 2026-08-30 SPECIAL2 reserved-field enforcement
 
 - Corrected `rtl/cpu/mips_control.v` so canonical MIPS32 R2 SPECIAL2 encodings

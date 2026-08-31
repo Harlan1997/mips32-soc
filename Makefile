@@ -176,7 +176,7 @@ dcache-parity-gate:
 .PHONY: linux-boot-build-gate rtl-linux-progress-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
-.PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate
+.PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate qemu-system-mdu-differential-gate qemu-system-state-converter-test
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
 .PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
@@ -707,6 +707,14 @@ qemu-system-architecture-closure-gate: qemu-system-mips32-soc-ref
 qemu-system-llsc-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=llsc FW_DIR=$(BUILD_DIR)/firmware/llsc QEMU_CPU=24Kc QEMU_TIMEOUT=5 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_llsc_differential RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-state-converter-test:
+	python3 -m py_compile tb/isa_ref/qemu_system_state_to_jsonl.py tb/isa_ref/test_qemu_system_state_to_jsonl.py
+	python3 tb/isa_ref/test_qemu_system_state_to_jsonl.py
+
+qemu-system-mdu-differential-gate: qemu-system-mips32-soc-ref qemu-system-state-converter-test
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=mdu_cpu FW_DIR=$(BUILD_DIR)/firmware/mdu_cpu QEMU_CPU=24Kc QEMU_TIMEOUT=30 RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mdu_differential RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh
