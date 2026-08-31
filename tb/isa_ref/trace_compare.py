@@ -209,16 +209,29 @@ def fpu_state_matches_window(rtl, golden, index, field, radius=4):
 
     The RTL commits FPR/FCSR in ID while the common retire record is sampled
     from MEM/WB. Cache and exception stalls can move that observation by a few
-    retire records. The window is deliberately small and compares the complete
-    packed state; it is not a general trace resynchronization mechanism.
+    retire records. FPR writes can be observed independently because adjacent
+    ID commits can overtake the later WB observation by one instruction, so
+    each 32-bit FPR lane is matched to the corresponding lane in the bounded
+    RTL window. FCSR remains a complete packed-state match. This is not a
+    general trace resynchronization mechanism.
     """
     expected = golden[index][1].get(field)
     if expected is None:
         return True
     start = max(0, index - radius)
     stop = min(len(rtl), index + radius + 1)
-    return any(rtl[candidate][1].get(field) == expected
-               for candidate in range(start, stop))
+    if field == "fcsr_state":
+        return any(rtl[candidate][1].get(field) == expected
+                   for candidate in range(start, stop))
+    if field != "fpr_state" or len(expected) != 256:
+        return any(rtl[candidate][1].get(field) == expected
+                   for candidate in range(start, stop))
+    for lane_start in range(0, 256, 8):
+        lane = expected[lane_start:lane_start + 8]
+        if not any((rtl[candidate][1].get(field) or "")[lane_start:lane_start + 8] == lane
+                   for candidate in range(start, stop)):
+            return False
+    return True
 
 def main():
     ap = argparse.ArgumentParser()

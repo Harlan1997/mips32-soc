@@ -32,6 +32,12 @@ This closes the QEMU build and bounded machine-model prerequisite only. It
 does not close the outstanding FPU state differential, full ISA/MMU/Linux
 lockstep, or physical DDR/QSPI behavior.
 
+The fresh FPU differential subsequently identified a QEMU translator field
+mapping defect in COP1X indexed memory: MIPS32 R2 uses `rd` as the FPR
+destination/source, while the upstream call site passed `sa`. The project
+QEMU patch `qemu-9.2-mips32-cop1x-memory-fields.patch` corrects this mapping;
+the FPU gate is pending a rebuild and rerun with the patch.
+
 | Slice | State | Evidence | Remaining |
 | --- | --- | --- | --- |
 | QEMU system binary | DONE | `make qemu-system-mips32-soc-ref` | None for build readiness |

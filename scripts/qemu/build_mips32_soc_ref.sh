@@ -36,7 +36,8 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" |
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" |
         sha256sum | awk '{print $1}'
 }
 
@@ -258,6 +259,16 @@ bool qemu_mips32_soc_ref_lladdr_virtual(void) __attribute__((weak));' \
 fi
 rg -q 'SOC_REF_LLADDR_VIRTUAL' \
     "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"
+
+if ! rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    QEMU_REL=${QEMU_SRC#"${ROOT_DIR}/"}
+    git -C "${ROOT_DIR}" apply --directory="${QEMU_REL}" --recount \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch"
+fi
+rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
+    "${QEMU_SRC}/target/mips/tcg/translate.c"
+
 # Keep the opt-in custom-machine PREFX contract correct even when an older
 # build tree contains the marker but not the final ISA check.
 perl -0pi -e 's{(case OPC_PREFX:\n\s*(?:/\*[^\n]*\*/\n\s*)?)check_insn\(ctx, ISA_MIPS4 \| ISA_MIPS_R2\);}{$1check_insn(ctx, ISA_MIPS_R2);}s' \
