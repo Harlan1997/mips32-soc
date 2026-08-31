@@ -20,6 +20,17 @@ system evidence covers negative zero, NaN payload preservation, `ABS/NEG`
 sign changes, and suppression of Invalid for these non-arithmetic operations;
 full IEEE-754 and FPU OS ABI remain open.
 
+### 2026-08-31 RTL Linux userspace gate criterion and bounded probe
+
+The RTL Linux progress runner now accepts `LINUX_REQUIRE_USERSPACE=1`. In
+this mode it writes a failure report and returns nonzero when the
+`MIPS32_SOC_LINUX_BOOT_SUCCESS` UART marker is absent; the default diagnostic
+progress mode remains unchanged. A fresh no-coverage 30M-cycle probe after
+the R-type trap-code decoder fix runs with stable simulator memory and reaches
+the Linux `__udelay` path, but observes zero userspace markers. This keeps
+RTL Linux userspace and full RTL/QEMU Linux differential explicitly open
+instead of treating a heartbeat-only probe as boot signoff.
+
 每项功能必须逐级推进，禁止直接把块级通过标成 SoC 完成：
 
 1. `IMPLEMENTED`：RTL 已提交，接口和非目标已写入 spec。
