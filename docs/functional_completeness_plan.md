@@ -32,6 +32,16 @@ Its report continues to exclude full MIPS32/IEEE-754 compliance, unrestricted
 Linux VM ownership, full RTL system-mode Linux differential, physical DDR/
 QSPI timing, and formal/CDC/RDC/lint signoff.
 
+### 2026-09-01 bounded RTL/QEMU Linux retire recheck
+
+`SKIP_COVERAGE=1 KERNEL=build/linux_boot/real/kernel/vmlinux
+DTB=build/linux_boot/real/mips32_soc_ref.dtb RTL_CYCLE_LIMIT=100000
+HOST_TIMEOUT=180s QEMU_TIMEOUT=10s make qemu-system-linux-differential-gate`
+passes with an exact `0x88a55c78` Boot ROM-to-kernel handoff and
+`TRACE_COMPARE_PASS records=48781`. This is stronger bounded kernel-prefix
+evidence, but full-length Linux system differential and RTL Linux userspace
+boot remain open.
+
 ## 1. 完成等级
 
 ### 2026-09-01 LWL/LWR cross-page precise-fault slice

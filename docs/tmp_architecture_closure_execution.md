@@ -3540,3 +3540,11 @@ configuration.
   differential, MMU, FPU-boundary, LL/SC and bounded QEMU Linux marker gates.
 - Its explicit residuals remain full RTL/QEMU Linux differential, complete
   ISA/IEEE-754/OS VM, physical DDR/QSPI timing and formal/CDC/RDC/lint proof.
+
+### 2026-09-01 bounded Linux retire differential recheck
+
+- The bounded Linux differential gate passed with exact handoff PC
+  `0x88a55c78` and `TRACE_COMPARE_PASS records=48781`.
+- The comparison is limited by the RTL cycle/capture budget and therefore
+  remains kernel-prefix evidence; userspace boot and full-length RTL/QEMU
+  Linux differential are still open.
