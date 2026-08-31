@@ -102,6 +102,100 @@ _start:
     bne     $t1, $t2, fail7
     nop
 
+    /* Keep the fixed exception vector at 0x180 clear of the larger double
+     * corpus; continue the test from the normal text section. */
+    j       double_rounding
+    nop
+    .section .text, "ax"
+double_rounding:
+    /* Double precision uses the same FCSR.RM contract.  f0/f1 are the
+     * little-endian low/high words of each value. */
+    mtc1    $zero, $f0
+    lui     $t0, 0x3ff8       /* +1.5D */
+    .word   0x44880800        /* mtc1 $t0,$f1 */
+    ctc1    $zero, $31
+    nop
+    nop
+    cvt.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, 2
+    bne     $t1, $t2, fail8
+    nop
+
+    lui     $t0, 0x4004       /* +2.5D, nearest-even -> 2 */
+    .word   0x44880800
+    cvt.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    bne     $t1, $t2, fail9
+    nop
+
+    addiu   $t0, $zero, 1     /* toward zero: -1.75D -> -1 */
+    ctc1    $t0, $31
+    nop
+    nop
+    lui     $t0, 0xbffc
+    .word   0x44880800
+    cvt.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, -1
+    bne     $t1, $t2, fail10
+    nop
+
+    addiu   $t0, $zero, 2     /* toward +inf: +1.25D -> 2 */
+    ctc1    $t0, $31
+    nop
+    nop
+    lui     $t0, 0x3ff4
+    .word   0x44880800
+    cvt.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, 2
+    bne     $t1, $t2, fail11
+    nop
+
+    addiu   $t0, $zero, 3     /* toward -inf: -1.25D -> -2 */
+    ctc1    $t0, $31
+    nop
+    nop
+    lui     $t0, 0xbff4
+    .word   0x44880800
+    cvt.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, -2
+    bne     $t1, $t2, fail12
+    nop
+
+    /* Fixed ROUND.W.D remains ties-away regardless of RM. */
+    lui     $t0, 0x4004       /* +2.5D -> +3 */
+    .word   0x44880800
+    round.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, 3
+    bne     $t1, $t2, fail13
+    nop
+
+    lui     $t0, 0xbff8       /* -1.5D -> -2 */
+    .word   0x44880800
+    round.w.d $f4, $f0
+    mfc1    $t1, $f4
+    nop
+    nop
+    addiu   $t2, $zero, -2
+    bne     $t1, $t2, fail14
+    nop
+
     lui     $t0, 0xa000
     ori     $t0, $t0, 0xfffc
     lui     $t1, 0xdead
@@ -137,6 +231,34 @@ fail6:
     nop
 fail7:
     addiu   $t1, $zero, 7
+    b       fail_emit
+    nop
+fail8:
+    addiu   $t1, $zero, 8
+    b       fail_emit
+    nop
+fail9:
+    addiu   $t1, $zero, 9
+    b       fail_emit
+    nop
+fail10:
+    addiu   $t1, $zero, 10
+    b       fail_emit
+    nop
+fail11:
+    addiu   $t1, $zero, 11
+    b       fail_emit
+    nop
+fail12:
+    addiu   $t1, $zero, 12
+    b       fail_emit
+    nop
+fail13:
+    addiu   $t1, $zero, 13
+    b       fail_emit
+    nop
+fail14:
+    addiu   $t1, $zero, 14
     b       fail_emit
     nop
 fail:
