@@ -39,7 +39,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 
 - Result: PASS
 - Machine: mips32-soc-ref
-- Sub-gates: ISA R2, branch-likely, exceptions, break/traps, DI/EI/WAIT,
+- Sub-gates: ISA R2, CPU-visible MDU, branch-likely, exceptions, break/traps, DI/EI/WAIT,
   BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/rounding/CU1,
   and bounded DMA v2 SG.
 - Evidence: child logs in this directory and child completion reports under
