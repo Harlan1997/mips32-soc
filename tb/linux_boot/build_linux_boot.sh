@@ -47,7 +47,11 @@ build_guest_binary "${SCRIPT_DIR}/exec_child.S" "${BUILD_DIR}/rootfs/vm_child"
 # build host to permit mknod in the output directory.
 initramfs_list="${BUILD_DIR}/initramfs.list"
 initramfs_list_tmp="${initramfs_list}.tmp"
+init_hash=$(sha256sum "${BUILD_DIR}/rootfs/init" | awk '{print $1}')
+child_hash=$(sha256sum "${BUILD_DIR}/rootfs/vm_child" | awk '{print $1}')
 {
+    printf '# init_sha256=%s\n' "${init_hash}"
+    printf '# vm_child_sha256=%s\n' "${child_hash}"
     printf 'dir /dev 0755 0 0\n'
     printf 'nod /dev/console 0600 0 0 c 5 1\n'
     printf 'nod /dev/ttyS0 0600 0 0 c 4 64\n'
@@ -73,8 +77,7 @@ config_inputs_hash=$({
     sha256sum \
         "${LINUX_SOURCE_DIR}/arch/mips/configs/generic_defconfig" \
         "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/32r2.config" \
-        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config" \
-        "${initramfs_list}"
+        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config"
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
 } | sha256sum | awk '{print $1}')
