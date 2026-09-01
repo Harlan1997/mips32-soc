@@ -147,7 +147,9 @@ static uint32_t isa_r2_sweep(void) {
     asm volatile(".word 0x7c08183b\n\tmove %0, $8"
                  : "=r"(rdhwr_ccres) : : "$8", "memory");
 
-    if (rdhwr_step != 32U || rdhwr_cpunum != 0U || rdhwr_ccres != 2U ||
+    if (clz_r != 16U || clo_r != 16U ||
+        movn_r != 0x0000CCCCU || movz_r != 0x0000DDDDU || bal_r == 0U ||
+        rdhwr_step != 32U || rdhwr_cpunum != 0U || rdhwr_ccres != 2U ||
         seb_r != 0xFFFFFF80U || seh_r != 0xFFFF8000U ||
         wsbh_r != 0x22114433U || wsbw_r != 0x33441122U ||
         bitswap_r != 0x80C4A2E6U ||
@@ -161,6 +163,7 @@ static uint32_t isa_r2_sweep(void) {
         print_hex(bitswap_r); print_hex(rotr_r); print_hex(rotrv_r);
         print_hex(align0_r); print_hex(align1_r); print_hex(align2_r);
         print_hex(align3_r); print_hex(jr_hb_marker); print_hex(jalr_hb_link);
+        print_str("R2C="); print_hex(movn_r); print_hex(movz_r); print_hex(bal_r);
         print_str("ISA_R2_SPECIAL_FAIL\n");
         }
 

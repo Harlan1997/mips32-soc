@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 ISA R2 result assertions
+
+- Tightened `tb/soc_test/fw/tests/isa_r2_sweep/main.c` so the existing R2
+  sweep fails on incorrect `CLZ`, `CLO`, `MOVN`, `MOVZ`, or `BAL` results;
+  the previous check only exercised these instructions and folded their
+  values into a checksum without asserting their architectural results.
+- `make isa-r2-gate` passes after rebuilding the firmware. The run reports
+  `REGRESSION_TEST_SUCCESS`, `CPU_CP0_SUMMARY ... ri=0`, and no
+  `ISA_R2_SPECIAL_FAIL`. This strengthens implemented-subset evidence only;
+  full MIPS32/privileged ISA compliance remains open.
+
 ### 2026-09-01 current-contract coverage artifact dependency
 
 - The unified current-contract signoff now forces `SKIP_COVERAGE=0` for its
