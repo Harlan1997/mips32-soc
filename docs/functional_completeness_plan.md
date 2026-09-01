@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 QEMU Linux userspace gate fresh recheck
+
+`QEMU_TIMEOUT=30 make linux-boot-build-gate` 在当前 HEAD 重新通过。该 gate
+使用 `mips32-soc-ref`、`-accel tcg,thread=single` 和当前构建的 Linux
+vmlinux/DTB，完整观察到 `/init`、mmap/mprotect、保护页 `SIGSEGV`、brk、
+nanosleep、`sched_yield`、两次 `execve`、两次 `wait4` 及 wait status markers。
+因此 QEMU generic Linux userspace contract 的 fresh evidence 为 PASS；这
+不改变 RTL Linux userspace、完整 RTL/QEMU system differential、完整
+ISA/MMU/FPU/OS VM 和 physical signoff 的 OPEN 状态。
+
 ### 2026-09-01 RTL Linux WAIT wakeup evidence
 
 新增 default-off `LINUX_STALL_TRACE` 的 CP0 状态和 WAIT/中断边沿观测，并以

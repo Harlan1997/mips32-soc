@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 QEMU Linux userspace gate fresh recheck
+
+- `QEMU_TIMEOUT=30 make linux-boot-build-gate` passed from the current HEAD.
+  The gate ran `mips32-soc-ref` with `-accel tcg,thread=single` and verified the
+  complete generic Linux userspace marker set: `/init`, boot, mmap/mprotect,
+  protected-write `SIGSEGV`, brk, nanosleep, `sched_yield`, two `execve`
+  children, two `wait4` reaps, and wait-status validation.
+- This refreshes the QEMU generic Linux userspace evidence. It does not close
+  RTL Linux userspace boot, the full RTL/QEMU system-mode differential, or the
+  complete ISA/MMU/FPU/OS VM and physical signoff residuals.
+
 ### 2026-09-02 RTL Linux `of_core_init` focused follow-up
 
 - Replayed the existing compiled Linux RTL image with bounded, low-volume
