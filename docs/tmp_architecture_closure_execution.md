@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux `of_core_init` focused follow-up
+
+- Replayed the existing compiled Linux RTL image with bounded, low-volume
+  retire tracing around the final observed device-tree node. The traversal
+  reached node `0x88db5174`; its `parent` read as `0x88db47a0`, its
+  `full_name` pointer was in the valid `0x88db...` kernel allocation range,
+  and `__of_attach_node_sysfs()` entered `kobject_add_internal()` and then
+  `sysfs_create_dir_ns()`/`kernfs_create_dir_ns()`.
+- The trace showed completed kset-list insertion and the expected
+  `kobject_get_ownership()` path. It did not show a repeated return to
+  `__of_find_all_nodes()` with a corrupted pointer, an invalid address, or a
+  `_raw_spin_lock()` retry loop in the focused 12M-cycle window.
+- This disproves the narrow hypothesis that the current Linux stall is caused
+  by a device-tree traversal cycle or an immediately stuck spinlock. It does
+  not prove that sysfs initialization completes within the available RTL
+  budget, and it does not close Linux init-task/userspace handoff or the full
+  RTL/QEMU system differential. No speculative RTL change was made.
+
 ### 2026-09-01 QEMU architecture closure aggregate recheck
 
 - `QEMU_TIMEOUT=120 QEMU_BUILD_JOBS=2 make
