@@ -3858,3 +3858,18 @@ configuration.
 - This reopens the QEMU child-signal/wait4 boundary as an active implementation
   item. No Linux userspace, full RTL/QEMU differential, or full architecture
   signoff claim is made from the passing child gates.
+
+### 2026-09-01 QEMU Linux wait4 execution-mode A/B
+
+- Reused `build/linux_boot/real` without rebuilding the kernel and ran the
+  custom machine with `-accel tcg,thread=single` and
+  `-icount shift=0,sleep=off`.
+- The guest reproducibly passed the protected-page SIGSEGV recovery, mmap,
+  mprotect, brk, sleep, exec, and yield markers, then stopped before the
+  final wait-status/fork-wait markers. CPU/exception tracing shows the QEMU
+  process remains alive in the Linux scheduler/hrtimer path; it does not
+  terminate with a QEMU error.
+- This narrows the remaining QEMU Linux issue to child exit visibility or
+  final `wait4` wakeup/lifecycle handling. `icount` is retained as diagnostic
+  evidence only and is not enabled in the gate because it did not close the
+  boundary. No marker relaxation or retry-based pass was added.
