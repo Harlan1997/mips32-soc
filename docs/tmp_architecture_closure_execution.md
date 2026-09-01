@@ -3934,3 +3934,20 @@ configuration.
   executions through 80M cycles. This rules out the short-cycle budget as the
   explanation and narrows the open path to kernel-init/kthread completion or
   scheduler handoff before userspace. No RTL behavioral change was made.
+
+### 2026-09-01 RTL Linux kthreadd retire-only trace
+
+- Added the default-off `LINUX_PC_TRACE_RETIRE_ONLY` diagnostic switch. It
+  preserves the existing IF-or-WB PC-window trace by default; when enabled it
+  emits only an architecturally valid WB retirement whose PC is in the selected
+  symbol window. The progress runner forwards the switch and records it in its
+  completion report.
+- A fresh 15M-cycle no-coverage probe of the current QEMU-passing kernel,
+  with `LINUX_PC_TRACE_SYMBOL=kthreadd`, `RETIRE_ONLY=1`, and a 512-record
+  bound, passed its bounded progress criterion. `kthreadd` entered at cycle
+  `8453329`, retired the `schedule()` call at `0x88057b70` around cycle
+  `10051007`, and later re-entered its loop at `0x88057b78`.
+- This eliminates the narrow hypothesis that the kthread manager never runs
+  or never reaches its scheduler handoff. It remains diagnostic evidence:
+  `run_init_process` has not been observed, Linux userspace boot and the
+  full-length RTL/QEMU Linux differential remain OPEN.
