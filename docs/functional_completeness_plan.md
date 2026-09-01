@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux `r4k_wait` return/idle boundary
+
+对 `r4k_wait` (`0x88a55b7c..0x88a55ba8`) 做了 11.5M--14M 周期退休窗口追踪。
+记录显示 `lw $ra,20($sp)` (`0x88a55b9c`) 和 `jr $ra` (`0x88a55ba0`) 均正常退休，
+随后又重新进入 `r4k_wait`；14M 周期运行正常 `$finish`，VCS 数据结构约 1.1 MB，
+没有 OOM。该证据支持合法的 idle/中断返回循环，不支持修改 CPU、CP0、WAIT 或 cache。
+RTL Linux userspace、完整 RTL/QEMU system differential 和完整 ISA/MMU/FPU/OS 仍为
+OPEN。
+
 ### 2026-09-02 L1 nonblocking CPU aggregate fresh recheck
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`MemoryMax=1500M` 和
