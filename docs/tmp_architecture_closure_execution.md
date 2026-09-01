@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux kthread indirect-entry follow-up
+
+- Extended the default-off Linux PC retire diagnostic with `s0`, `s3`, and
+  `s4`, exposing the saved task context and indirect kthread entry
+  function/argument.
+- A fresh 16M-cycle focused run shows `kernel_init` entering
+  `kernel_init_freeable`; the kthread path invokes legal `worker_thread`,
+  `rescuer_thread`, and `kthread_worker_fn` targets. No `devtmpfsd` entry is
+  observed before the idle boundary.
+- A separate focused run reaches `driver_init` at `0x88ced000` after the
+  initcall and SMP/workqueue setup calls. The trace does not establish a CPU
+  semantic failure, so no speculative RTL change was made. RTL Linux userspace
+  handoff and full RTL/QEMU Linux differential remain OPEN.
+
 ### 2026-09-02 QEMU architecture aggregate completed
 
 - Added explicit kernel/DTB reuse to the aggregate's Linux userspace child so
