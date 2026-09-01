@@ -81,6 +81,7 @@ typedef struct MIPS32SocRefState {
     uint32_t uart_regs[8];
     uint32_t timer_ctrl;
     uint32_t timer_load;
+    uint32_t timer_value;
     uint32_t timer_int;
     uint64_t timer_deadline;
     QEMUTimer *timer;
@@ -842,6 +843,7 @@ static void soc_ref_timer_cb(void *opaque)
 {
     MIPS32SocRefState *s = opaque;
     if (s->timer_ctrl & 1) {
+        s->timer_value = s->timer_load;
         if (s->timer_ctrl & 2) {
             s->timer_int = 1;
             /* RTL irq_sources maps timer_int to VIC source 2. */
@@ -860,14 +862,16 @@ static uint32_t soc_ref_timer_value(MIPS32SocRefState *s)
 {
     uint64_t now, remaining;
     if (!(s->timer_ctrl & 1) || !s->timer_load || !s->timer_deadline) {
-        return s->timer_load;
+        return s->timer_value;
     }
     now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
     if (now >= s->timer_deadline) {
+        s->timer_value = 0;
         return 0;
     }
     remaining = s->timer_deadline - now;
-    return (remaining + 19) / 20; /* 50 MHz reference clock */
+    s->timer_value = (remaining + 19) / 20; /* 50 MHz reference clock */
+    return s->timer_value;
 }
 
 static void soc_ref_wdt_cb(void *opaque)
@@ -1568,18 +1572,41 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
         }
         break;
     case 0x1000:
+        if ((s->timer_ctrl & 1U) && !(value & 1U))
+            /* RTL retains the current counter when it is disabled. */
+            (void)soc_ref_timer_value(s);
         s->timer_ctrl = value;
         if (!(value & 1)) {
             s->timer_deadline = 0;
             timer_del(s->timer);
         } else if (s->timer_load) {
+            uint32_t start_value = s->timer_value ? s->timer_value :
+                                                    s->timer_load;
             s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
-                                 (uint64_t)s->timer_load * 20;
+                                 (uint64_t)start_value * 20;
             timer_mod(s->timer, s->timer_deadline);
         }
         soc_ref_update_irq(s);
         break;
-    case 0x1004: s->timer_load = value; s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + (uint64_t)value * 20; if (s->timer_ctrl & 1) timer_mod(s->timer, s->timer_deadline); break;
+    case 0x1004:
+        s->timer_load = value;
+        /* RTL LOAD also initializes the current counter value. */
+        s->timer_value = value;
+        s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                            (uint64_t)value * 20;
+        if (s->timer_ctrl & 1)
+            timer_mod(s->timer, s->timer_deadline);
+        break;
+    case 0x1008:
+        /* TMR_VAL is a writable countdown register in the RTL. Preserve the
+         * programmed value while stopped and schedule from that value when
+         * the timer is running. */
+        s->timer_value = value;
+        s->timer_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                            (uint64_t)value * 20;
+        if (s->timer_ctrl & 1)
+            timer_mod(s->timer, s->timer_deadline);
+        break;
     case 0x100c:
         if (value & 1) {
             s->timer_int = 0;
