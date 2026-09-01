@@ -5,8 +5,24 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/linux_boot/real"}
 QEMU_SYSTEM_BIN=${QEMU_SYSTEM_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
+KERNEL_INPUT=${KERNEL:-}
+DTB_INPUT=${DTB:-}
 mkdir -p "${RUN_DIR}"
-BUILD_DIR="${RUN_DIR}" "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
+if [[ "${SKIP_LINUX_BUILD:-0}" == "1" ]]; then
+    if [[ -z "${KERNEL_INPUT}" || -z "${DTB_INPUT}" ]]; then
+        echo "Linux boot gate: SKIP_LINUX_BUILD=1 requires KERNEL= and DTB=" >&2
+        exit 2
+    fi
+    test -s "${KERNEL_INPUT}" && test -s "${DTB_INPUT}"
+    KERNEL_INPUT=$(realpath "${KERNEL_INPUT}")
+    DTB_INPUT=$(realpath "${DTB_INPUT}")
+    printf 'Linux boot build: SKIPPED\nKERNEL=%s\nDTB=%s\n' \
+        "${KERNEL_INPUT}" "${DTB_INPUT}" >"${RUN_DIR}/build.log"
+else
+    BUILD_DIR="${RUN_DIR}" "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
+    KERNEL_INPUT="${RUN_DIR}/kernel/vmlinux"
+    DTB_INPUT="${RUN_DIR}/mips32_soc_ref.dtb"
+fi
 test -x "${QEMU_SYSTEM_BIN}"
 set +e
 # Use the architectural SC-consumes-reservation behavior for the Linux guest
@@ -16,7 +32,7 @@ set +e
 "${QEMU_SYSTEM_BIN}" \
     -accel tcg,thread=single \
     -M mips32-soc-ref -m 64M -cpu 24Kc \
-    -kernel "${RUN_DIR}/kernel/vmlinux" -dtb "${RUN_DIR}/mips32_soc_ref.dtb" \
+    -kernel "${KERNEL_INPUT}" -dtb "${DTB_INPUT}" \
     -display none -monitor none >"${RUN_DIR}/qemu_stdout.log" \
     2>"${RUN_DIR}/qemu_stderr.log" &
 qemu_pid=$!
@@ -58,8 +74,8 @@ fail_gate() {
 - Result: FAIL
 - Reason: ${reason}
 - QEMU exit status: ${status}
-- Kernel: ${RUN_DIR}/kernel/vmlinux
-- Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
+- Kernel: ${KERNEL_INPUT}
+- Device tree: ${DTB_INPUT}
 - Observed userspace markers: ${markers:-none}
 - QEMU stdout: ${RUN_DIR}/qemu_stdout.log
 - QEMU stderr: ${RUN_DIR}/qemu_stderr.log
@@ -121,8 +137,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 # MIPS32 SoC Linux Boot Gate
 
 - Result: PASS (kernel-to-userspace marker)
-- Kernel: ${RUN_DIR}/kernel/vmlinux
-- Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
+- Kernel: ${KERNEL_INPUT}
+- Device tree: ${DTB_INPUT}
 - Boot protocol: MIPS UHI with an opaque DTB
 - TCG execution: single-threaded for the single-vCPU Linux contract
 - Evidence: Linux printed its version, registered/enabled ttyS0, reached the

@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 QEMU architecture aggregate completed
+
+- Added explicit kernel/DTB reuse to the aggregate's Linux userspace child so
+  the final gate does not spend its bounded run window rebuilding an identical
+  Linux kernel in a temporary build root.
+- Fresh controlled run with `SKIP_COVERAGE=1`, `QEMU_TIMEOUT=120` and the
+  `1500M/512M` EDA cgroup completed all stages successfully: current-contract,
+  selected differential, MMU refill/PageMask/OS pressure, FPU exception and
+  rounding boundaries, LL/SC, and Linux userspace.
+- Result: `QEMU system architecture closure gate: PASS`. This closes the
+  bounded QEMU architecture integration aggregate only. RTL Linux userspace,
+  full RTL/QEMU Linux differential, complete ISA/MMU/FPU/OS VM, physical
+  timing and formal/CDC/RDC/lint signoff remain OPEN.
+
 ### 2026-09-02 Selected differential full recheck
 
 - `SKIP_COVERAGE=1 QEMU_TIMEOUT=180 QEMU_BUILD_JOBS=2 BUILD_DIR=/tmp/qemu-selected-full-20260902 make qemu-system-selected-differential-gate` completed successfully.

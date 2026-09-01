@@ -38,6 +38,9 @@ run_gate llsc_differential \
     make -C "${ROOT_DIR}" qemu-system-llsc-differential-gate
 run_gate linux_userspace_marker \
     env QEMU_TIMEOUT="${QEMU_TIMEOUT:-300s}" \
+    SKIP_LINUX_BUILD=1 \
+    KERNEL="${ROOT_DIR}/build/linux_boot/real/kernel/vmlinux" \
+    DTB="${ROOT_DIR}/build/linux_boot/real/mips32_soc_ref.dtb" \
     make -C "${ROOT_DIR}" linux-boot-build-gate
 
 QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
