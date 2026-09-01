@@ -117,8 +117,6 @@ module mips_cpu #(
     output wire        inst_flush
 );
 
-    assign tlb_inv_applied = tlb_inv_en;
-
     // =========================================================================
     // Pipeline Control Signals
     // =========================================================================
@@ -2205,6 +2203,7 @@ module mips_cpu #(
         .hw_tlb_wr_entrylo0(hw_tlb_entrylo0),
         .hw_tlb_wr_entrylo1(hw_tlb_entrylo1),
         .hw_tlb_wr_ready(hw_tlb_wr_ready),
+        .tlb_inv_applied(tlb_inv_applied),
         .tlb_inv_en   (tlb_inv_en),
         .tlb_inv_vpn2 (tlb_inv_vpn2),
         .tlb_inv_asid (tlb_inv_asid),

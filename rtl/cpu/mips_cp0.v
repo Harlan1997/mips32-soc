@@ -171,6 +171,7 @@ module mips_cp0 #(
     ,input wire [31:0] hw_tlb_wr_entrylo0
     ,input wire [31:0] hw_tlb_wr_entrylo1
     ,output wire       hw_tlb_wr_ready
+    ,output wire       tlb_inv_applied
 );
 
     // -------------------------------------------------------------------------
@@ -928,6 +929,7 @@ module mips_cp0 #(
         .probe_hit   (tlb_probe_hit),
         .probe_index (tlb_probe_index),
         .probe_multi_hit (tlb_probe_multi_hit),
+        .inv_applied   (tlb_inv_applied),
 
         // Phase B.3.c dual lookup ports (fanned to MMU I / D)
         .lookup0_va  (mmu_ilookup_va),
