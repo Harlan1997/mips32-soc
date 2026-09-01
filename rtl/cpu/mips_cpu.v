@@ -134,6 +134,9 @@ module mips_cpu #(
     // combinational definitions are kept next to the IF/MEM fault logic.
     wire        if_fault_req;
     wire        dmem_translation_fault;
+    wire        mem_mem_read;
+    wire        mem_mem_write;
+    wire        mem_cache_op_valid;
     wire [31:0] mem_inst;
     wire        mem_double_mem = (`SOC_FPU_ENABLE != 0) &&
                                  ((mem_inst[31:26] == 6'b110101) ||
@@ -285,6 +288,15 @@ module mips_cpu #(
                             // at which the request can no longer be flushed.
                             !stall_req_mem &&
                             !data_req_raw &&
+                            // A response cycle only marks the legacy MEM
+                            // bundle done; the instruction still has to cross
+                            // MEM/WB on the next edge.  Do not accept an IRQ
+                            // in that boundary or flush the completed load
+                            // before its architectural writeback.  Tagged
+                            // nonblocking loads are covered by the ROB guard
+                            // below and leave MEM before their response.
+                            !(mem_mem_read || mem_mem_write ||
+                              mem_cache_op_valid) &&
                             !((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_ROB_FIFO_ENABLE != 0) &&
@@ -709,8 +721,6 @@ module mips_cpu #(
     wire [4:0]  mem_except_code;
     wire [4:0]  mem_waddr;
     wire [31:0] mem_ex_out;
-    wire        mem_mem_read;
-    wire        mem_cache_op_valid;
     wire [4:0]  mem_cache_op;
     
     wire        wb_cp0_we;
@@ -1377,7 +1387,6 @@ module mips_cpu #(
                   ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h09))) ?
                 fpr[ex_fpu_store_reg] : ex_val_rt;
     wire [31:0] mem_pc_plus_8;
-    wire        mem_mem_write;
     wire [2:0]  mem_mem_op;
     wire [4:0]  mem_rd_addr;
     wire [4:0]  mem_cp0_raddr;
