@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 QEMU current-contract aggregate recheck
+
+- `QEMU_TIMEOUT=120 QEMU_BUILD_JOBS=2 make
+  qemu-system-current-contract-gate` passes from the current head.
+- The aggregate covers the custom-machine peripheral contract, DMA v2,
+  QSPI, DDR, and bounded retire capture. No RTL behavior or default blocking
+  configuration changed.
+- Physical DDR PHY/JEDEC timing, physical QSPI device timing and endurance,
+  Linux MTD/DDR drivers, full RTL system-mode Linux boot, and complete
+  RTL/QEMU differential remain OPEN.
+
 ### 2026-09-01 MMU OS pressure aggregate recheck
 
 - `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M QEMU_TIMEOUT=120
