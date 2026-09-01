@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 MMU refill differential isolated recheck
+
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M QEMU_TIMEOUT=30
+  SKIP_COVERAGE=1 BUILD_DIR=/tmp/mmu-refill-next-20260902 make
+  qemu-system-mmu-refill-differential-gate` completed with
+  `QEMU system MMU refill RTL retire differential: PASS`.
+- The isolated child passes independently; the earlier architecture aggregate
+  was interrupted while progressing through its serial MMU child and therefore
+  is not treated as a failed MMU contract or as an aggregate PASS.
+- A fresh 15M-cycle RTL Linux no-coverage probe also completed under the
+  1500M/512M cgroup budget. It still has zero userspace markers and settles in
+  the Linux `r4k_wait`/idle path. No new illegal instruction, TLB fault, or
+  exception-frame corruption was observed, so no speculative RTL change is
+  justified; RTL Linux userspace and full RTL/QEMU system differential remain
+  OPEN.
+
 ### 2026-09-02 QEMU Linux wait4 policy regression fixed
 
 - A fresh `QEMU_TIMEOUT=60 make linux-boot-build-gate` initially stopped after
