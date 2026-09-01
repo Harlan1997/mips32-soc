@@ -13,6 +13,8 @@
   requests retain the same routing rule.
 - `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M RUN_DIR=/tmp/mips32-dual-core-ack-real2 make dual-core-soc-gate` passes, and
   `make rtl-frontend-compile` passes all 8 configurations.
+- `make tlb-invalidate-gate` also passes a direct negative check that a
+  same-cycle TLB write plus invalidate does not assert `inv_applied`.
 - This closes the bounded target-consumption ACK wiring slice only. Arbitrary
   multicore OS shootdown ownership, Linux SMP VM behavior, and full MMU/ISA
   signoff remain open.
