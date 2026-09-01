@@ -2330,7 +2330,12 @@ module mips_cpu #(
         .mem_ready(ptw_mem_ready), .mem_rdata(ptw_mem_rdata),
         .mem_error(ptw_mem_error), .resp_valid(ptw_resp_valid),
         .pa(ptw_pa), .fault_valid(ptw_fault_i),
-        .fault_code(ptw_fault_code_i), .leaf_pte(ptw_leaf_pte)
+        .fault_code(ptw_fault_code_i), .leaf_pte(ptw_leaf_pte),
+        // The current SoC integration is read-only; the optional A/D
+        // transaction is exposed by the reusable walker contract but is not
+        // enabled until a page-table write port is integrated.
+        .pte_update_valid(), .pte_update_addr(), .pte_update_data(),
+        .pte_update_ready(1'b0)
     );
 
     assign ptw_fault_valid = ptw_resp_valid && ptw_fault_i;

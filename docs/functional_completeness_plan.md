@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 hardware walker optional PTE A/D update handshake
+
+`mips_page_table_walker` now has an opt-in `ENABLE_AD_UPDATE` mode. After a
+successful permission check it emits the exact leaf-PTE address and an update
+payload setting Accessed (bit 4), plus Dirty (bit 5) for a store, and holds the
+request until `pte_update_ready`. The default read-only integration remains
+unchanged. The page-table walker unit corpus now checks load A-only updates,
+store A+D updates and three cycles of update backpressure. This closes the
+walker-side PTE A/D transaction contract only; the current SoC top-level still
+uses the legacy read-only walker wiring, so OS page-table ownership and Linux
+VM semantics remain OPEN.
+
 ### 2026-09-02 P1 RTL/simulation extension fresh recheck
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`MemoryMax=1500M` 和
