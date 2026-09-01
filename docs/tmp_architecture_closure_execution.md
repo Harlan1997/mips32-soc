@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 Linux differential SC policy alignment
+
+- Removed `QEMU_MACHINE_PROPERTIES=linux-guest=on` from the bounded Linux
+  RTL/QEMU differential runner. The override preserved an LL/SC reservation
+  after `SC`, which diverged from the RTL architectural contract and had
+  already been shown to strand the generic Linux `wait4` path.
+- Fresh `SKIP_COVERAGE=1` bounded Linux differential with the same kernel and
+  DTB passes after the removal: exact Boot ROM-to-kernel handoff at
+  `0x88a55c78` and strict retire comparison of the bounded kernel prefix.
+- This aligns the reference policy for future full-length differential work;
+  it does not turn the bounded prefix into full RTL Linux boot or full-system
+  differential signoff.
+
 ### 2026-09-02 MMU refill differential isolated recheck
 
 - `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M QEMU_TIMEOUT=30
