@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 Relocated-kernel panic trace and Linux progress evidence
+
+- `run_rtl_linux_progress_gate.sh` now resolves the `panic` symbol from the
+  supplied `vmlinux` and passes a bounded `LINUX_PANIC_TRACE_START/END` window
+  to the testbench. This prevents the diagnostic from silently targeting the
+  old `0x8924...` image layout after relocation.
+- The `nm | awk` lookup consumes the complete stream, avoiding exit 141 under
+  the wrapper's `set -o pipefail` setting. The testbench still accepts explicit
+  address overrides and keeps the historical fallback for images without
+  symbols.
+- `rtl-frontend-compile`, a 1K-cycle smoke probe, and a fresh 15M-cycle
+  no-coverage probe pass. The 15M probe observes no userspace marker and ends
+  in repeated `r4k_wait` plus timer interrupts, without a panic trace; this
+  is diagnostic evidence only and leaves Linux userspace and full
+  RTL/QEMU system differential OPEN.
+
 ### 2026-08-31 Scheduler context page-table-root isolation
 
 - Extended the scheduler context bank with one `PTEBase` value per task and
