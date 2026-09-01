@@ -3,9 +3,13 @@
 // entries, PFN[31:12]. One read is outstanding at a time.  PAGE_MASK changes
 // the leaf-page offset and L2 index while retaining the existing 10-bit L1
 // directory geometry.  This supports the contract page sizes 4 KiB, 16 KiB,
-// 64 KiB, 256 KiB, 1 MiB, 4 MiB and 16 MiB without changing the interface.
+// 64 KiB, 256 KiB, 1 MiB, 4 MiB and 16 MiB without changing the read-path
+// interface.  The optional A/D sideband is described below.
 module mips_page_table_walker #(
-    parameter [15:0] PAGE_MASK = 16'h0000
+    parameter [15:0] PAGE_MASK = 16'h0000,
+    // OS-managed PTEs may expose Accessed in bit 4 and Dirty in bit 5.
+    // Keep this disabled for the legacy read-only walker integration.
+    parameter ENABLE_AD_UPDATE = 1'b0
 ) (
     input wire clk, input wire rst_n,
     input wire req_valid, output wire req_ready,
@@ -16,12 +20,20 @@ module mips_page_table_walker #(
     input wire mem_error,
     output reg resp_valid, output reg [31:0] pa,
     output reg fault_valid, output reg [2:0] fault_code,
-    output reg [31:0] leaf_pte
+    output reg [31:0] leaf_pte,
+    // Optional PTE A/D update transaction.  The request and payload remain
+    // stable until pte_update_ready, so a page-table store cannot be lost
+    // behind an AXI/APB backpressure boundary.
+    output reg pte_update_valid,
+    output reg [31:0] pte_update_addr,
+    output reg [31:0] pte_update_data,
+    input wire pte_update_ready
 );
-    localparam ST_IDLE = 2'd0, ST_L1 = 2'd1, ST_L2 = 2'd2, ST_RESP = 2'd3;
+    localparam ST_IDLE = 3'd0, ST_L1 = 3'd1, ST_L2 = 3'd2,
+               ST_RESP = 3'd3, ST_UPDATE = 3'd4;
     localparam FAULT_MISS = 3'd1, FAULT_PERM = 3'd2, FAULT_BUS = 3'd3,
                FAULT_FORMAT = 3'd4;
-    reg [1:0] state;
+    reg [2:0] state;
     reg [31:0] va_q, ptbr_q;
     reg [1:0] access_q;
     reg user_q;
@@ -94,6 +106,7 @@ module mips_page_table_walker #(
         if (!rst_n) begin
             state <= ST_IDLE; mem_valid <= 1'b0; resp_valid <= 1'b0;
             fault_valid <= 1'b0; fault_code <= 3'd0; pa <= 32'd0; leaf_pte <= 32'd0; mem_addr <= 32'd0;
+            pte_update_valid <= 1'b0; pte_update_addr <= 32'd0; pte_update_data <= 32'd0;
             va_q <= 0; ptbr_q <= 0; access_q <= 0; user_q <= 0;
         end else begin
             resp_valid <= 1'b0;
@@ -127,6 +140,23 @@ module mips_page_table_walker #(
                     end else begin
                         leaf_pte <= mem_rdata;
                         pa <= leaf_pa(mem_rdata, va_q);
+                        if (ENABLE_AD_UPDATE &&
+                            (!mem_rdata[4] ||
+                             ((access_q == 2'd2) && !mem_rdata[5]))) begin
+                            pte_update_valid <= 1'b1;
+                            pte_update_addr <= mem_addr;
+                            pte_update_data <= mem_rdata | 32'h0000_0010 |
+                                               ((access_q == 2'd2) ?
+                                                32'h0000_0020 : 32'd0);
+                            state <= ST_UPDATE;
+                        end else begin
+                            state <= ST_RESP;
+                        end
+                    end
+                end
+                ST_UPDATE: begin
+                    if (pte_update_valid && pte_update_ready) begin
+                        pte_update_valid <= 1'b0;
                         state <= ST_RESP;
                     end
                 end
