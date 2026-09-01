@@ -254,7 +254,7 @@ module tb_mips_soc;
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_pc_trace_start) &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < linux_pc_trace_end))))) begin
-                $display("LINUX_PC_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h",
+                $display("LINUX_PC_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h gp=%08h t0=%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
@@ -285,7 +285,9 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[31],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[4],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[5],
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2]);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[8]);
                 linux_pc_trace_count = linux_pc_trace_count + 1;
             end
             linux_cpu_kernel_prev =
