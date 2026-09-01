@@ -9,6 +9,9 @@
 `CPU_CP0_SUMMARY ... ri=0` 且无 `ISA_R2_SPECIAL_FAIL`。这只加强已实现
 R2 子集的证据，不改变完整 ISA/privileged compliance 仍未闭合的结论。
 
+同一 sweep 还覆盖 `MOVN`/`MOVZ` 条件不满足时禁止写回的负向结果，避免只验证
+条件成立路径。
+
 > 版本：v1.49（2026-09-01）
 >
 > 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据。

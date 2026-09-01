@@ -10,6 +10,10 @@
   `REGRESSION_TEST_SUCCESS`, `CPU_CP0_SUMMARY ... ri=0`, and no
   `ISA_R2_SPECIAL_FAIL`. This strengthens implemented-subset evidence only;
   full MIPS32/privileged ISA compliance remains open.
+- Extended the same sweep with negative-condition checks for `MOVN` and
+  `MOVZ`, requiring the pre-existing destination value to survive when the
+  predicate is false. Both conditional-move directions now have explicit
+  architectural result checks.
 
 ### 2026-09-01 current-contract coverage artifact dependency
 
