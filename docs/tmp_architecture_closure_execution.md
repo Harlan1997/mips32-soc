@@ -554,7 +554,23 @@
 - The Linux userspace marker is still absent. The remaining RTL Linux issue
   has moved past the corrupted `alloc_inode` return and now requires a timer
   / `__udelay` progress diagnosis; full RTL Linux userspace boot and full
-  RTL/QEMU Linux differential remain open.
+RTL/QEMU Linux differential remain open.
+
+### 2026-09-01 RTL Linux kernel/user transition trace
+
+- Added default-off, bounded `LINUX_MODE_TRACE` to record kernel/user mode
+  transitions and `ERET` retire context, including CP0 Status/KSU, EPC and
+  selected GPR state. The runner and Make target forward its limit and record
+  it in the completion report.
+- Fresh 15M-cycle RTL probes passed without simulator failure and produced no
+  mode transition. A follow-up probe recorded 37 `ERET` events, all with the
+  pre-update kernel state (`Status=0x10008003`, `KSU=0`); no user-mode `ERET`
+  or `KSU=2` Status write was observed. The trace reaches `rest_init`/r4k idle
+  and continues servicing timer interrupts.
+- This narrows the Linux blocker to kernel `kernel_init`/scheduler handoff or
+  `ret_from_fork` preparation. It does not justify changing CP0 timer, WAIT,
+  or ERET semantics, and Linux userspace/full RTL-QEMU differential remain
+  open.
 
 ### 2026-09-01 Linux WAIT/CP0 timer correlation
 
