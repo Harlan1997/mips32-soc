@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 P1 RTL/simulation extension fresh recheck
+
+在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`MemoryMax=1500M` 和
+`MemorySwapMax=512M` 约束下执行 `make p1-current-complete`，使用独立
+`BUILD_DIR=/tmp/p1-current-recheck-20260902`。前端、coherency stress、硬件
+walker 七种页尺度及 CPU retry、MMU/ASID/shootdown、ISA R2、vectored interrupt、
+DDR4 和其余 P1 子 gate 全部通过，最终报告为 `P1 current RTL/simulation
+extension gate: PASS`。该结果确认当前 P1 RTL/仿真 bundle 可复现，不等价于
+完整 MESI/directory、完整 ISA/FPU、Linux/OS boot 或产品 signoff。
+
 ### 2026-09-02 RTL Linux `r4k_wait` return/idle boundary
 
 对 `r4k_wait` (`0x88a55b7c..0x88a55ba8`) 做了 11.5M--14M 周期退休窗口追踪。
