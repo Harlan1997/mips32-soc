@@ -3897,3 +3897,21 @@ configuration.
 - The report records VCS as the only available tool. Verilator/Yosys/SBY,
   SpyGlass/Questa CDC, VC Static, and JasperGold are absent, so this remains
   infrastructure readiness rather than formal, CDC/RDC, or lint signoff.
+
+### 2026-09-01 QEMU architecture aggregate current recheck
+
+- With VCS constrained to one job and a 1.5 GiB memory limit,
+  `make qemu-system-architecture-closure-gate` passed all of its serial
+  sub-gates: current peripheral contract; selected ISA, MDU, FPU, privileged,
+  peripheral, VIC, DMA and MMU-IPI retire differentials; FPU exception and
+  rounding differentials; MMU refill/PageMask/four-task OS-pressure; and the
+  LL/SC reservation differential.
+- The aggregate also reran `linux-boot-build-gate`. Its current QEMU log
+  reached `/init`, the protected-page SIGSEGV contract, both exec markers,
+  `MIPS32_SOC_LINUX_WAIT_STATUS_SUCCESS`, and
+  `MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS`; the Linux gate and aggregate report
+  both record PASS.
+- This is a bounded QEMU reference-machine integration result. RTL Linux
+  userspace boot, full-length RTL/QEMU Linux differential, complete ISA and
+  IEEE-754/FPU ABI semantics, unrestricted OS VM/SMP shootdown, physical
+  DDR/QSPI timing, and formal/CDC/RDC/lint/product signoff remain open.
