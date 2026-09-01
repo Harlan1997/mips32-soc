@@ -3951,3 +3951,20 @@ configuration.
   or never reaches its scheduler handoff. It remains diagnostic evidence:
   `run_init_process` has not been observed, Linux userspace boot and the
   full-length RTL/QEMU Linux differential remain OPEN.
+
+### 2026-09-01 QEMU retire capture source limit
+
+- Moved the QEMU system-mode retire cap into `qemu_retire_plugin.c`. The
+  outer capture script still checks lines and bytes after exit, but now also
+  passes `max-records=${MAX_QEMU_EVENTS}` to the plugin, so a timeout cannot
+  first create an unbounded state JSONL.
+- A 128-record QEMU smoke probe produced exactly 128 instruction events, 129
+  state-boundary snapshots, and 128 converted retire records. The standard
+  `make qemu-system-retire-capture-gate` also passed.
+- A fresh no-coverage RTL/QEMU Linux probe with the QEMU-passing kernel,
+  `RTL_CYCLE_LIMIT=2000000` and `MAX_TRACE_RECORDS=50000` passed strict
+  aligned comparison for 49,978 kernel retire records. QEMU files were bounded
+  at 50,000 events and 50,001 states (about 75 MiB total for the QEMU streams).
+- This restores a repeatable bounded system-mode Linux differential path. It
+  does not claim RTL Linux userspace boot or a full-length Linux differential;
+  the known `devtmpfsd` scheduling/completion investigation remains active.

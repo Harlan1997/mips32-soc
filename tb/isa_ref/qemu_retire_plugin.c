@@ -1,4 +1,5 @@
 /* QEMU 9.x plugin: emit one instruction/memory record per guest execution. */
+#include <errno.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -41,6 +42,25 @@ static FILE *state_file;
 static char *state_path;
 static char *last_state_line;
 static GPtrArray *state_registers;
+/* A capture must stop at the source.  Post-run guards cannot prevent a
+ * long-running guest from filling the filesystem before QEMU exits. */
+static uint64_t max_records = UINT64_MAX;
+static uint64_t record_count;
+static bool capture_stopped;
+static bool capture_limit_reported;
+
+static bool capture_limit_reached(void)
+{
+    if (record_count < max_records) {
+        return false;
+    }
+    capture_stopped = true;
+    if (!capture_limit_reported) {
+        qemu_plugin_outs("qemu retire plugin: capture limit reached; stopping record emission\n");
+        capture_limit_reported = true;
+    }
+    return true;
+}
 
 static void vcpu_init(qemu_plugin_id_t id, unsigned int cpu_index)
 {
@@ -116,6 +136,9 @@ static void vcpu_mem(unsigned int cpu_index, qemu_plugin_meminfo_t info,
                      uint64_t vaddr, void *userdata)
 {
     (void)userdata;
+    if (capture_stopped) {
+        return;
+    }
     Pending *pending = &states[cpu_index];
     qemu_plugin_mem_value value = qemu_plugin_mem_get_value(info);
 
@@ -137,8 +160,12 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
     Pending *pending = &states[cpu_index];
     InsnInfo *insn = userdata;
 
+    if (capture_limit_reached()) {
+        return;
+    }
     emit_state(cpu_index, insn);
     emit_pending(pending, insn->pc);
+    ++record_count;
     pending->pc = insn->pc;
     pending->instr = insn->instr;
     pending->valid = true;
@@ -233,6 +260,14 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
             state_file = fopen(state_path, "w");
             if (!state_file) {
                 fprintf(stderr, "qemu retire plugin: cannot open state output\n");
+                return -1;
+            }
+        } else if (g_strcmp0(tokens[0], "max-records") == 0 && tokens[1]) {
+            char *end = NULL;
+            errno = 0;
+            max_records = g_ascii_strtoull(tokens[1], &end, 10);
+            if (errno != 0 || end == tokens[1] || *end != '\0' || max_records == 0) {
+                fprintf(stderr, "qemu retire plugin: max-records must be a positive integer\n");
                 return -1;
             }
         } else {
