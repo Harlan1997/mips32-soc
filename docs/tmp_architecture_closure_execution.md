@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 current-contract coverage artifact dependency
+
+- The unified current-contract signoff now forces `SKIP_COVERAGE=0` for its
+  Phase 3A CPU/CP0 gate because the final merge consumes that gate's product
+  VDB. This prevents a caller's no-coverage diagnostic setting from creating
+  an incomplete signoff run.
+- A fresh run with `VCS_JOBS=1`, `EDA_MEMORY_MAX=1500M`,
+  `EDA_SWAP_MAX=512M`, `NUM_TESTS=10`, and an external build root produced the
+  required CPU/CP0 VDB; all frontend, Phase 2/3, Phase 3B/3C, and ten-seed
+  stress tests passed. The run then correctly failed its configured 99%
+  code-coverage thresholds (UVM merged score 36.33%, product score 36.98%).
+  This is an honest coverage shortfall, not an RTL pass, and no threshold or
+  exclusion was relaxed. The full current-contract signoff therefore remains
+  OPEN.
+
 ### 2026-09-01 ID delay-slot provenance guard
 
 - Paired the ID-stage delay-slot marker with the branch PC that created it and
