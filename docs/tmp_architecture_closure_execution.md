@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 MMU OS pressure aggregate recheck
+
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M QEMU_TIMEOUT=120
+  QEMU_BUILD_JOBS=2 SKIP_COVERAGE=1 make mmu-os-pressure-complete-gate` passes.
+- The fresh run reports RTL software-managed process pressure with
+  `refills=16`, shootdown pressure PASS, and QEMU system MMU refill, PageMask,
+  contract, and process-pressure differential PASS.
+- This closes the bounded single-core OS-style MMU contract only. Linux page
+  table allocator/VM ownership, unrestricted demand paging, multicore Linux
+  shootdown, full privileged/MMU compliance, and physical memory signoff
+  remain OPEN.
+
 ### 2026-09-01 Linux trace argument propagation repair
 
 - Fixed `tb/linux_boot/run_rtl_linux_progress_gate.sh` assigning
