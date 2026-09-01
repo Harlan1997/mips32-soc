@@ -42,53 +42,75 @@ done
 wait "${qemu_pid}"
 status=$?
 set -e
+
+fail_gate() {
+    local reason=$1
+    local markers
+    markers=$(rg -o 'MIPS32_SOC_LINUX_[A-Z_]+' "${RUN_DIR}/qemu_stdout.log" |
+        sort -u | tr '\n' ' ' || true)
+    cat >"${RUN_DIR}/completion_report.md" <<EOF
+# MIPS32 SoC Linux Boot Gate
+
+- Result: FAIL
+- Reason: ${reason}
+- QEMU exit status: ${status}
+- Kernel: ${RUN_DIR}/kernel/vmlinux
+- Device tree: ${RUN_DIR}/mips32_soc_ref.dtb
+- Observed userspace markers: ${markers:-none}
+- QEMU stdout: ${RUN_DIR}/qemu_stdout.log
+- QEMU stderr: ${RUN_DIR}/qemu_stderr.log
+- Scope: this report replaces any earlier result from the same run directory.
+EOF
+    echo "Linux boot gate: ${reason} (status ${status})" >&2
+}
+
 if rg -q "MIPS32_SOC_LINUX_(MMAP|MPROTECT|BRK|SLEEP|YIELD|FORK_WAIT)_FAILURE" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: userspace failure marker was observed (status ${status})" >&2
+    fail_gate "userspace failure marker was observed"
     exit 1
 fi
 if ! rg -q "Run /init as init process" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: kernel did not reach initramfs /init (status ${status})" >&2
+    fail_gate "kernel did not reach initramfs /init"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_BOOT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: kernel reached /init but userspace marker was not observed (status ${status})" >&2
+    fail_gate "kernel reached /init but userspace marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_MMAP_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: anonymous/file-backed mmap marker was not observed (status ${status})" >&2
+    fail_gate "anonymous/file-backed mmap marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_MPROTECT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: mprotect marker was not observed (status ${status})" >&2
+    fail_gate "mprotect marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_MPROTECT_FAULT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: protected-write SIGSEGV marker was not observed (status ${status})" >&2
+    fail_gate "protected-write SIGSEGV marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_BRK_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: heap brk marker was not observed (status ${status})" >&2
+    fail_gate "heap brk marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_SLEEP_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: nanosleep wakeup marker was not observed (status ${status})" >&2
+    fail_gate "nanosleep wakeup marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_YIELD_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: sched_yield marker was not observed (status ${status})" >&2
+    fail_gate "sched_yield marker was not observed"
     exit 1
 fi
 exec_count=$(rg -c "MIPS32_SOC_LINUX_EXEC_SUCCESS" "${RUN_DIR}/qemu_stdout.log" || true)
 if [[ "${exec_count}" -lt 2 ]]; then
-    echo "Linux boot gate: expected two exec child markers, observed ${exec_count} (status ${status})" >&2
+    fail_gate "expected two exec child markers, observed ${exec_count}"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: parent wait4 marker was not observed (status ${status})" >&2
+    fail_gate "parent wait4 marker was not observed"
     exit 1
 fi
 if ! rg -q "MIPS32_SOC_LINUX_WAIT_STATUS_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
-    echo "Linux boot gate: child wait status marker was not observed (status ${status})" >&2
+    fail_gate "child wait status marker was not observed"
     exit 1
 fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
