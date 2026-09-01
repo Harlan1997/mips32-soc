@@ -4295,3 +4295,18 @@ configuration.
 - The remaining RTL Linux boundary is therefore later initcall completion or
   scheduler/init-task handoff. Userspace and full RTL/QEMU differential remain
   open; no CPU/CP0/cache change is justified.
+
+### 2026-09-02 RTL Linux `r4k_wait` return/idle boundary
+
+- A focused 11.5M--14M cycle retire-only trace targeted
+  `r4k_wait` (`0x88a55b7c..0x88a55ba8`) in the current QEMU-passing Linux
+  image.
+- The trace records the stack `lw $ra,20($sp)` at `0x88a55b9c` and the
+  subsequent `jr $ra` at `0x88a55ba0` retiring normally after the
+  `EI/EHB -> __r4k_wait -> DI/EHB` sequence. A later call re-enters the same
+  function and sparse progress samples remain at the load while idle.
+- The 14M-cycle run ends with normal `$finish`, approximately 1.1 MB VCS data
+  structures, and no OOM. This is evidence of a legal repeated idle/interrupt
+  return path, not a proven load or return defect. RTL Linux userspace and full
+  RTL/QEMU system differential remain open; no CPU, CP0, WAIT, or cache change
+  is justified by this probe.
