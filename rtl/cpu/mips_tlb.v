@@ -89,7 +89,8 @@ module mips_tlb #(
     output wire                  lookup1_d,
     output wire [2:0]            lookup1_c,
     output wire [19:0]           lookup1_pfn,
-    output wire                  lookup1_multi_hit
+    output wire                  lookup1_multi_hit,
+    output wire                  inv_applied
 );
 
     // -------------------------------------------------------------------------
@@ -354,12 +355,17 @@ module mips_tlb #(
     // -------------------------------------------------------------------------
     integer k;
     reg inv_match;
+    // This is the synchronous commit qualification.  The caller samples it
+    // on the same edge that executes the invalidate branch; TLB writes have
+    // priority and therefore cannot be acknowledged as invalidates.
+    assign inv_applied = inv_en && !wr_en;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             for (k = 0; k < TLB_ENTRIES; k = k + 1) begin
                 tlb_valid[k] <= 1'b0;
             end
-        end else if (wr_en) begin
+        end else begin
+            if (wr_en) begin
             tlb_vpn2    [wr_index] <= wr_vpn2;
             tlb_asid    [wr_index] <= wr_asid;
             tlb_mask    [wr_index] <= wr_mask;
@@ -372,7 +378,7 @@ module mips_tlb #(
             // explicit invalidate port clears tlb_valid and removes the slot
             // from matching altogether.
             tlb_valid   [wr_index] <= 1'b1;
-        end else if (inv_en) begin
+            end else if (inv_en) begin
             for (k = 0; k < TLB_ENTRIES; k = k + 1) begin
                 inv_match = 1'b0;
                 if (k >= inv_wired_floor) begin
@@ -387,6 +393,7 @@ module mips_tlb #(
                     endcase
                 end
                 if (inv_match) tlb_valid[k] <= 1'b0;
+            end
             end
         end
     end
