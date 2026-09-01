@@ -3915,3 +3915,22 @@ configuration.
   userspace boot, full-length RTL/QEMU Linux differential, complete ISA and
   IEEE-754/FPU ABI semantics, unrestricted OS VM/SMP shootdown, physical
   DDR/QSPI timing, and formal/CDC/RDC/lint/product signoff remain open.
+
+### 2026-09-01 RTL Linux real-time budget and idle-path recheck
+
+- A 2M-cycle strict RTL userspace gate was negative but showed continuous
+  kernel progress. Since the current QEMU image reaches `/init` around 1.46 s
+  of virtual time while the RTL clock contract is 50 MHz, the short run was
+  insufficient to distinguish a timing budget from a functional stop.
+- A fresh 15M-cycle diagnostic and an 80M-cycle strict userspace gate reused
+  the exact `build/linux_boot/real/kernel/vmlinux` that passes the QEMU Linux
+  gate. Both RTL runs have bounded 1.1 MiB VCS data structures and complete
+  normally at their explicit limits. At 80M cycles the guest still reports
+  zero `MIPS32_SOC_LINUX_BOOT_SUCCESS` markers and remains in `r4k_wait`.
+- The RTL trace shows periodic accepted CP0 timer interrupts while idle. The
+  DTB exposes only the UART as an APB device and Linux's idle wakeup is driven
+  by CP0 Count/Compare, so the APB timer load/reload/W1C model is not evidence
+  for the current failure. The `run_init_process` symbol window has zero RTL
+  executions through 80M cycles. This rules out the short-cycle budget as the
+  explanation and narrows the open path to kernel-init/kthread completion or
+  scheduler handoff before userspace. No RTL behavioral change was made.
