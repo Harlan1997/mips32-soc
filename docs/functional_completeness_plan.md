@@ -1404,6 +1404,17 @@ target. The latest bounded probe has zero userspace markers, so this gate is
 currently expected to fail; RTL Linux userspace boot and full RTL/QEMU Linux
 system differential remain open.
 
+### 2026-09-02 QEMU architecture aggregate fresh recheck
+
+The non-PTY aggregate completed all selected RTL/QEMU differential, MMU,
+FPU, LL/SC and current-contract sub-gates successfully. The final generic
+Linux userspace sub-gate remains open: Linux reached `/init` and printed
+`MIPS32_SOC_LINUX_BOOT_SUCCESS`, but the protected-page child reached the
+expected SIGSEGV at `0x00400474` and the parent did not emit the mmap marker
+before the 120-second timeout. The failure is recorded as evidence, not
+converted into a pass; RTL Linux userspace, full RTL/QEMU Linux differential,
+and the broader full-ISA/MMU/OS/product signoff items remain open.
+
 ### 2026-09-01 Linux WAIT/CP0 timer correlation
 
 Added bounded `LINUX_WAIT_TRACE` diagnostics for WAIT pipeline retirement,
