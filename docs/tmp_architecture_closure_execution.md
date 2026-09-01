@@ -1,5 +1,30 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 Linux init-task scheduling boundary and bounded PC trace
+
+- Added default-off `LINUX_PC_TRACE` to the RTL Linux progress runner and SoC
+  testbench. It accepts a bounded address window, a record limit, and an ELF
+  symbol name; when addresses are omitted, the runner resolves the symbol from
+  the supplied `vmlinux` and passes a conservative `0x400`-byte window. The
+  trace includes IF/WB instruction context, selected GPRs, CP0 state, memory
+  handshake, and LL/SC reservation state. The output is testbench-only and
+  bounded, so it does not change CPU timing or state.
+- Fresh 15M-cycle `kernel_init` probe entered `kernel_init` at cycle `8438966`
+  and reached `kernel_init_freeable` after `wait_for_completion`; a separate
+  probe entered `smp_prepare_cpus` at cycle `8439754`. A `run_init_process`
+  symbol-window probe produced zero records through 15M cycles.
+- A focused trace of `0x88cecf20..0x88cecf50` showed Linux's refcount sequence
+  at `0x88cecf34` (`LL`) and `0x88cecf3c` (`SC`) matching physical address
+  `0x09426000`; the SC request asserted `data_we` and completed with result
+  `1`. This rules out that observed LL/SC operation as the current blocker.
+- The schedule-window probe entered `__schedule` at cycle `8433939` and
+  observed the expected `DI`, runqueue lock, task selection and context-switch
+  instruction stream. These bounded traces do not yet prove that
+  `kernel_init_freeable` returns or that a user task is restored.
+- Result: diagnostic infrastructure and evidence improved; RTL Linux userspace
+  boot, complete init-task handoff, and full RTL/QEMU Linux differential remain
+  OPEN. No speculative CP0, WAIT, ERET, or LL/SC RTL change was made.
+
 ### 2026-09-01 Relocated-kernel panic trace and Linux progress evidence
 
 - `run_rtl_linux_progress_gate.sh` now resolves the `panic` symbol from the
