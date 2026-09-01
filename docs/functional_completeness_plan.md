@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-01 RTL Linux WAIT wakeup evidence
+
+新增 default-off `LINUX_STALL_TRACE` 的 CP0 状态和 WAIT/中断边沿观测，并以
+`12M` 周期 focused probe 重跑。`cycle=11707066` 时 CPU 在无 pending IP、
+`Count<Compare` 的合法 WAIT；`cycle=11877077` 时 `Count` 越过 `Compare`，
+`Cause.TI/IP7` 和 `intr_req` 同时有效，CPU 正确接受 timer interrupt 并跳转
+到 `EBase+0x200`；随后返回 `__r4k_wait` 等待下一周期。该证据排除了当前
+实例的 CP0 timer/WAIT 唤醒缺陷，但不等价于 Linux init-task/userspace handoff。
+RTL userspace marker 和完整 RTL/QEMU system differential 继续保持 OPEN。
+
 ### 2026-09-01 QEMU architecture aggregate fresh recheck
 
 `QEMU_TIMEOUT=300 QEMU_BUILD_JOBS=2 make qemu-system-architecture-closure-gate`
