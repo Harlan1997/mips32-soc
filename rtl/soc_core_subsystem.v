@@ -103,6 +103,7 @@ module soc_core_subsystem #(
     output wire [31:0] perf_dcache_miss_count,
     output wire [31:0] perf_branch_mispredict_count,
     output wire [31:0] perf_mdu_stall_count
+    ,output wire        tlb_inv_applied
 );
 
     // The walker is an opt-in client of the D-side AXI read channel.  CPU
@@ -172,6 +173,7 @@ module soc_core_subsystem #(
         .ptw_mem_valid(core_ptw_mem_valid), .ptw_mem_addr(core_ptw_mem_addr), .ptw_mem_ready(core_ptw_mem_ready),
         .ptw_mem_rdata(core_ptw_mem_rdata), .ptw_mem_error(core_ptw_mem_error),
         .ptw_fault_valid(core_ptw_fault_valid), .ptw_fault_code(core_ptw_fault_code),
+        .tlb_inv_applied(tlb_inv_applied),
 
         .inst_awid       (inst_awid),
         .inst_awaddr     (inst_awaddr),

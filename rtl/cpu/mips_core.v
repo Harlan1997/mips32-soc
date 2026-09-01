@@ -42,6 +42,7 @@ module mips_core #(
     input  wire        ptw_mem_error,
     output wire        ptw_fault_valid,
     output wire [2:0]  ptw_fault_code,
+    output wire        tlb_inv_applied,
     
     // AXI4 Master Interface (Instruction Cache)
     output wire [3:0]  inst_awid,
@@ -298,6 +299,7 @@ module mips_core #(
         .ptw_mem_ready(ptw_mem_ready), .ptw_mem_rdata(ptw_mem_rdata),
         .ptw_mem_error(ptw_mem_error), .ptw_fault_valid(ptw_fault_valid),
         .ptw_fault_code(ptw_fault_code),
+        .tlb_inv_applied(tlb_inv_applied),
         .coh_snoop_valid (coh_snoop_valid),
         .coh_snoop_addr  (coh_snoop_addr),
         .data_wdata      (cpu_data_wdata),
