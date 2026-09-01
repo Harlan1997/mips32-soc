@@ -3816,3 +3816,15 @@ configuration.
 - This closes the bounded PageMask-aware invalidate slice only. It does not
   establish OS page-table ownership, multicore shootdown policy or full MMU
   compliance.
+
+### 2026-09-01 L1 nonblocking SYNC testbench interface repair
+
+- The current-contract signoff exposed a real compile failure in
+  `tb/unit/cache/tb_l1_cache_nb_sync.sv`: wildcard instantiation did not
+  declare the four coherency sideband signals added to `l1_cache_nb`.
+- Added explicit inactive snoop inputs and notification outputs to the unit
+  test. `make l1-nonblocking-sync-gate` now passes with
+  `REGRESSION_TEST_SUCCESS l1nb_sync`.
+- This repairs test/DUT interface synchronization only. It does not alter the
+  cache contract, default blocking path, coverage thresholds, or the open full
+  coherency/OS cache ABI boundary.

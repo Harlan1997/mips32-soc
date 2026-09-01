@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-01 L1 nonblocking SYNC testbench interface repair
+
+`tb_l1_cache_nb_sync.sv` 补齐 `l1_cache_nb` 当前 coherency sideband 的显式
+tie-off/观测信号，修复 VCS 对 `.*` 连接产生的 4 个未声明端口错误。
+`make l1-nonblocking-sync-gate` 重新通过 `REGRESSION_TEST_SUCCESS
+l1nb_sync`。这是验证基础设施与 DUT 接口同步修复，不改变 L1 行为或默认
+blocking 路径。
+
 ### 2026-09-01 PageMask-aware page-scope TLB invalidation
 
 `mips_tlb` 的 page-scope invalidate 现在按目标 entry 保存的 PageMask 比较
