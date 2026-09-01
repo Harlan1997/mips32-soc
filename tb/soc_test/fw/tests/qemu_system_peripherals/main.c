@@ -45,11 +45,15 @@ int main(void)
     TIMER_CTRL = 1;
     if (TIMER_CTRL != 1) return fail("TIMER");
     TIMER_CTRL = 0;
+    TIMER_VAL = 0x12345678;
+    if (TIMER_VAL != 0x12345678) return fail("TIMER_VAL");
     print_str("QEMU_SYSTEM_PERIPH: TIMER_PASS\n");
 
 #ifdef QEMU_TIMER_IRQ_TEST
     PIC_MASK = 1u << 2;
-    TIMER_LOAD = 4;
+    /* Keep enough virtual-clock headroom for the W1C readback to observe
+     * the cleared sticky bit before the periodic timer expires again. */
+    TIMER_LOAD = 1024;
     TIMER_CTRL = 3;
     unsigned int timer_poll;
     for (timer_poll = 0; timer_poll != 100000; ++timer_poll) {
@@ -58,10 +62,12 @@ int main(void)
     }
     if (timer_poll == 100000 || !(PIC_MASKED & (1u << 2)))
         return fail("TIMER_IRQ");
+    /* Match the RTL/UVM maintenance sequence: stop the periodic source
+     * before clearing its sticky interrupt status. */
+    TIMER_CTRL = 0;
     APB32(0x4000100c) = 1;
     if (APB32(0x4000100c) & 1u)
         return fail("TIMER_W1C");
-    TIMER_CTRL = 0;
     PIC_MASK = 0;
     print_str("QEMU_SYSTEM_PERIPH: TIMER_IRQ_PASS\n");
 #endif

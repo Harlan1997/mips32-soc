@@ -3828,3 +3828,17 @@ configuration.
 - This repairs test/DUT interface synchronization only. It does not alter the
   cache contract, default blocking path, coverage thresholds, or the open full
   coherency/OS cache ABI boundary.
+### 2026-09-01 QEMU timer current-value contract alignment
+
+- Added `timer_value` state to the `mips32-soc-ref` machine. `TMR_VAL` writes
+  now retain the programmed countdown while stopped and reschedule the timer
+  while enabled; `TMR_LOAD` initializes both reload and current values, and
+  expiry reloads the current value before raising the sticky source-2 IRQ.
+- Extended `qemu_system_peripherals` to verify disabled-state `TMR_VAL`
+  write/readback. The IRQ case uses a bounded reload value so W1C readback is
+  not coupled to a host virtual-clock race.
+- `make qemu-system-gpio-input-gate` and
+  `SKIP_COVERAGE=1 make qemu-system-peripheral-differential-gate` pass.
+- Boundary: this closes the vendor-neutral QEMU timer register model and
+  selected RTL differential only; Linux timer driver, full interrupt timing,
+  and physical clock signoff remain open.

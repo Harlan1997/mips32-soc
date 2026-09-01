@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-01 QEMU timer current-value contract alignment
+
+The `mips32-soc-ref` system-mode model now implements the writable `TMR_VAL`
+register and preserves its programmed value while stopped. `TMR_LOAD` updates
+both the reload and current values, and timer expiry reloads the current value
+before raising the sticky interrupt, matching `rtl/perips/apb_timer.v`.
+`make qemu-system-gpio-input-gate` and
+`SKIP_COVERAGE=1 make qemu-system-peripheral-differential-gate` pass after the
+peripheral firmware adds disabled-state `TMR_VAL` write/readback coverage.
+This closes only the vendor-neutral QEMU timer model slice; Linux timer driver,
+full interrupt timing, and physical timer/clock signoff remain open.
+
 ### 2026-09-01 L1 nonblocking SYNC testbench interface repair
 
 `tb_l1_cache_nb_sync.sv` 补齐 `l1_cache_nb` 当前 coherency sideband 的显式
