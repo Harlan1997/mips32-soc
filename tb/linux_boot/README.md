@@ -83,6 +83,12 @@ nonzero unless `MIPS32_SOC_LINUX_BOOT_SUCCESS` appears in the RTL UART log;
 the default remains the diagnostic progress gate so existing bounded probes
 are not reclassified as Linux boot signoff.
 
+When `LINUX_PC_TRACE=1` and `LINUX_PC_TRACE_RETIRE_ONLY=1` are enabled, the
+bounded retire record also reports `s0`, `s3`, and `s4`. These fields expose
+the saved task context and indirect kthread entry function/argument for Linux
+scheduler diagnosis. They are diagnostic fields only and do not change the
+architectural retire trace or default simulation behavior.
+
 ## Boot flow (target)
 
 ```
