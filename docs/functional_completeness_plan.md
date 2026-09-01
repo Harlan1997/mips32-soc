@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux initcall tail boundary
+
+40M 周期 retire-only 探针未捕获 `kernel_init_freeable` 尾部
+`0x88ced100..0x88ced188` 的退休记录，仿真正常结束；这表示该任务在
+该预算内尚未完成后续 initcall/异步初始化并返回 `kernel_init`。结合已确认
+的 `wait_for_initramfs` 返回、`driver_init` 返回和 `devtmpfsd` 执行，当前
+阻塞范围缩小到 `kernel_init_freeable` 后续初始化阶段。该结果不是 CPU
+语义错误证据，因此不修改 CPU/CP0/WAIT/cache；RTL userspace、完整
+RTL/QEMU differential 和完整 ISA/MMU/FPU/OS 仍保持 OPEN。
+
 ### 2026-09-02 RTL Linux `devtmpfsd` execution evidence
 
 20M 周期 retire-only 追踪 `devtmpfsd=0x88a56c40..0x88a57040` 捕获到
