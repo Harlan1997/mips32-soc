@@ -29,6 +29,14 @@ MAX_QEMU_EVENTS=${MAX_QEMU_EVENTS:-100000}
 MAX_QEMU_STATES=${MAX_QEMU_STATES:-100001}
 MAX_QEMU_CAPTURE_BYTES=${MAX_QEMU_CAPTURE_BYTES:-268435456}
 
+for limit in MAX_QEMU_EVENTS MAX_QEMU_STATES MAX_QEMU_CAPTURE_BYTES; do
+    value=${!limit}
+    if ! [[ "${value}" =~ ^[1-9][0-9]*$ ]]; then
+        echo "QEMU system retire capture: ${limit} must be a positive integer" >&2
+        exit 2
+    fi
+done
+
 mkdir -p "${RUN_DIR}"
 [[ -x "${QEMU_BIN}" ]]
 if [[ -n "${QEMU_KERNEL}" ]]; then
@@ -115,7 +123,7 @@ set +e
 # timeout status; semantic failures and other exit codes remain failures.
 qemu_cmd=(
     "${QEMU_BIN}"
-    -plugin "file=${PLUGIN},trace=${RUN_DIR}/qemu_instruction_events.jsonl,state=${RUN_DIR}/qemu_state.jsonl,registers=${RUN_DIR}/qemu_registers.txt"
+    -plugin "file=${PLUGIN},trace=${RUN_DIR}/qemu_instruction_events.jsonl,state=${RUN_DIR}/qemu_state.jsonl,registers=${RUN_DIR}/qemu_registers.txt,max-records=${MAX_QEMU_EVENTS}"
     -M "${machine_spec}"
     "${cpu_args[@]}"
     "${accel_args[@]}"
