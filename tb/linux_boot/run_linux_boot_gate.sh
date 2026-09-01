@@ -9,9 +9,13 @@ mkdir -p "${RUN_DIR}"
 BUILD_DIR="${RUN_DIR}" "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
 test -x "${QEMU_SYSTEM_BIN}"
 set +e
+# Use the architectural SC-consumes-reservation behavior for the Linux guest
+# as well. Keeping the opt-in compatibility policy here leaves wait4's LL/SC
+# retry loop with a stale reservation and can strand the parent after the
+# protected-page child exits.
 "${QEMU_SYSTEM_BIN}" \
     -accel tcg,thread=single \
-    -M mips32-soc-ref,linux-guest=on -m 64M -cpu 24Kc \
+    -M mips32-soc-ref -m 64M -cpu 24Kc \
     -kernel "${RUN_DIR}/kernel/vmlinux" -dtb "${RUN_DIR}/mips32_soc_ref.dtb" \
     -display none -monitor none >"${RUN_DIR}/qemu_stdout.log" \
     2>"${RUN_DIR}/qemu_stderr.log" &
