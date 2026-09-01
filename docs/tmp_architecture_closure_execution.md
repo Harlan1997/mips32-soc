@@ -4323,3 +4323,18 @@ configuration.
 - This revalidates the current P1 RTL/simulation bundle under the protected
   resource budget. It does not close full MESI/directory, complete ISA/FPU,
   Linux/OS boot, or product physical/EDA signoff.
+
+### 2026-09-02 QEMU architecture aggregate fresh recheck
+
+- Cleared stale `/tmp` QEMU/RTL/Linux regression directories after the root
+  filesystem reached 100%; free space recovered to about 11 GB.
+- Re-ran the aggregate without a PTY. All selected differential, MMU, FPU,
+  LL/SC and current-contract sub-gates passed, including DMA fault/reset and
+  SG cases. The earlier DMA wrapper timeout was a PTY/stdin execution issue,
+  not an RTL or QEMU contract mismatch.
+- The final Linux marker gate failed honestly. Kernel output contains
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS` and the expected child fault at
+  `0x00400474`, but the parent does not emit the mmap marker before the
+  120-second timeout. The report is `Result: FAIL`; no marker or timeout
+  criterion was weakened. Linux userspace, full RTL/QEMU Linux differential,
+  and complete ISA/MMU/OS/product signoff remain OPEN.
