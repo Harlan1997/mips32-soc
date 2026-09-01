@@ -556,6 +556,16 @@
   / `__udelay` progress diagnosis; full RTL Linux userspace boot and full
   RTL/QEMU Linux differential remain open.
 
+### 2026-09-01 Linux WAIT/CP0 timer correlation
+
+- Added bounded `LINUX_WAIT_TRACE` forwarding through the RTL Linux runner.
+- The fresh 15M-cycle trace proves `WAIT` retirement, `wait_state` entry,
+  Count/Compare progression, TI/IP7 assertion, interrupt acceptance, and
+  ERET return to `0x88002380`.
+- Linux subsequently enters the idle wait loop again without emitting the
+  userspace marker. CP0 timer/WAIT wakeup is therefore not the demonstrated
+  blocker; scheduler/runnable-task or userspace handoff behavior remains open.
+
 ### 2026-08-29 RTL Linux stack-return diagnosis and bounded IRQ recheck
 
 - Added `ex_inst/ex_val_rt` and `mem_inst/mem_val_rt` fields to the bounded

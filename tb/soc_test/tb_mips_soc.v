@@ -74,6 +74,10 @@ module tb_mips_soc;
     reg        linux_exception_frame_pending_bd;
     integer linux_ebase_trace;
     integer linux_wb_trace;
+    integer linux_wait_trace;
+    integer linux_wait_trace_limit;
+    integer linux_wait_trace_count;
+    reg     linux_wait_state_prev;
     integer linux_vector_trace;
     integer linux_vector_trace_limit;
     integer linux_vector_trace_count;
@@ -495,6 +499,36 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19]);
+            end
+            if (linux_wait_trace != 0 &&
+                linux_wait_trace_count < linux_wait_trace_limit &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state &&
+                  (!linux_wait_state_prev ||
+                   (linux_trace_cycle % 100000 == 0))) ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_is_wait ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_inst == 32'h42000020 ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst == 32'h42000020 ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst == 32'h42000020) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state))) begin
+                $display("LINUX_WAIT_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wait=%b resume=%08h intr=%b req=%b epc=%08h status=%08h cause=%08h count=%08h compare=%08h intctl_ipti=%0d intctl_vs=%0d",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_resume_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_ipti,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_vs);
+                linux_wait_trace_count = linux_wait_trace_count + 1;
             end
             // Trace the relocated Linux __delay loop and exception return
             // boundary without enabling the broad instruction trace.  The
@@ -1087,6 +1121,8 @@ module tb_mips_soc;
                     u_soc.u_impl.m1_rid,
                     u_soc.u_impl.m1_rlast);
             end
+            linux_wait_state_prev =
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state;
         end
     end
 
@@ -1121,6 +1157,12 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_EBASE_TRACE=%d", linux_ebase_trace)) begin end
         linux_wb_trace = 1;
         if (!$value$plusargs("LINUX_WB_TRACE=%d", linux_wb_trace)) begin end
+        linux_wait_trace = 0;
+        if (!$value$plusargs("LINUX_WAIT_TRACE=%d", linux_wait_trace)) begin end
+        linux_wait_trace_limit = 256;
+        if (!$value$plusargs("LINUX_WAIT_TRACE_LIMIT=%d", linux_wait_trace_limit)) begin end
+        linux_wait_trace_count = 0;
+        linux_wait_state_prev = 1'b0;
         linux_vector_trace = 0;
         if (!$value$plusargs("LINUX_VECTOR_TRACE=%d", linux_vector_trace)) begin end
         linux_vector_trace_limit = 1000;
