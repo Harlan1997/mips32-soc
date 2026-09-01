@@ -15,6 +15,13 @@ module tb_l1_cache_nb_sync;
  reg mem_req_ready=1, mem_rsp_valid=0, mem_rsp_error=0;
  reg [31:0] mem_rsp_addr=0; reg [255:0] mem_rsp_data=0;
  wire [3:0] mshr_occupancy, wb_occupancy;
+ // This unit test exercises the standalone maintenance contract.  Keep the
+ // optional coherency sideband explicitly inactive and observe notifications
+ // so wildcard connection remains complete as the DUT interface evolves.
+ reg coh_snoop_valid=0;
+ reg [31:0] coh_snoop_addr=0;
+ wire coh_store_valid;
+ wire [31:0] coh_store_addr;
  integer errors=0, cycles;
  always #5 clk=~clk;
 
