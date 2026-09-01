@@ -4272,3 +4272,14 @@ configuration.
   under the resource budget. It does not close the legacy-dcache boundary for
   uncached/peripheral and unsupported maintenance accesses, full coherency or
   the Linux cache ABI.
+
+### 2026-09-02 L1/L2 nonblocking system differential
+
+- Added `qemu-system-l1-l2-nonblocking-differential-gate` to select L1
+  nonblocking, CPU ROB, the DDR window and L2 nonblocking write-back in one
+  real RTL SoC configuration.
+- The `qemu_system_l1_ddr` workload completed with strict RTL/QEMU retire
+  comparison through the completion mailbox (`Result: PASS`).
+- The result is bounded combined-path evidence only; full MESI/directory
+  coherency, arbitrary downstream AXI ordering, error/reset interleavings and
+  Linux cache ABI remain open.
