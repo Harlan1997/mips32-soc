@@ -160,6 +160,9 @@ module l1_cache_nb_cpu_axi #(
                                  !n_rsp_valid && !l1_active &&
                                  (l1_outstanding == 0);
 
+    wire legacy_coh_store_valid;
+    wire [31:0] legacy_coh_store_addr;
+
     dcache #(
         .ENABLE_LEGACY_ADDR_HEURISTIC(ENABLE_LEGACY_ADDR_HEURISTIC),
         .ENABLE_COHERENCY(ENABLE_COHERENCY)
@@ -186,9 +189,14 @@ module l1_cache_nb_cpu_axi #(
         .arcache(l_arcache), .arprot(l_arprot), .arvalid(l_arvalid),
         .arready(arready), .rid(rid), .rdata(rdata), .rresp(rresp),
         .rlast(rlast), .rvalid(rvalid), .rready(l_rready),
-        .coh_store_valid(coh_store_valid), .coh_store_addr(coh_store_addr),
+        .coh_store_valid(legacy_coh_store_valid), .coh_store_addr(legacy_coh_store_addr),
         .coh_snoop_valid(coh_snoop_valid), .coh_snoop_addr(coh_snoop_addr)
     );
+
+    wire l1_coh_store_valid;
+    wire [31:0] l1_coh_store_addr;
+    assign coh_store_valid = legacy_coh_store_valid | l1_coh_store_valid;
+    assign coh_store_addr = l1_coh_store_valid ? l1_coh_store_addr : legacy_coh_store_addr;
 
     assign state          = u_legacy_dcache.state;
     assign next_state     = u_legacy_dcache.next_state;
@@ -223,7 +231,7 @@ module l1_cache_nb_cpu_axi #(
     // The standalone block gate uses four sets to force replacement quickly.
     // The CPU adapter keeps enough direct-mapped sets for the SoC smoke
     // scratch walk; replacement remains covered by the dedicated WB gate.
-    l1_cache_nb #(.SETS(256)) u_l1 (
+    l1_cache_nb #(.SETS(256), .ENABLE_COHERENCY(ENABLE_COHERENCY)) u_l1 (
         .clk(clk), .rst_n(rst_n), .cpu_valid(l1_req), .cpu_we(cpu_we),
         .cpu_id(cpu_id), .cpu_addr(cpu_addr), .cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be), .cache_maint_invalidate(l1_maintenance_issue),
@@ -239,6 +247,8 @@ module l1_cache_nb_cpu_axi #(
         .mem_req_wdata(n_mem_req_wdata), .mem_req_ready(n_mem_req_ready),
         .mem_rsp_valid(n_mem_rsp_valid), .mem_rsp_addr(n_mem_rsp_addr),
         .mem_rsp_data(n_mem_rsp_data), .mem_rsp_error(n_mem_rsp_error),
+        .coh_snoop_valid(coh_snoop_valid), .coh_snoop_addr(coh_snoop_addr),
+        .coh_store_valid(l1_coh_store_valid), .coh_store_addr(l1_coh_store_addr),
         .mshr_occupancy(n_mshr_occ), .wb_occupancy(n_wb_occ)
     );
 

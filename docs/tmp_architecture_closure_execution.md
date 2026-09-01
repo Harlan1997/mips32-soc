@@ -1,5 +1,25 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 L1 nonblocking coherency snoop closure
+
+- Added opt-in peer-store snoop handling to `l1_cache_nb`: clean resident
+  lines invalidate directly, dirty lines are captured by the existing four
+  entry writeback queue, and CPU requests are backpressured while snoop work
+  is pending.
+- Added local store notifications and connected the L1 and legacy dcache
+  notifications through `l1_cache_nb_cpu_axi`; the default blocking path is
+  unchanged.
+- A snoop racing an outstanding MSHR is retained. Refill responses now give
+  the pending snoop invalidate priority in the same clock edge, including a
+  dirty refill writeback when required.
+- `make l1-nonblocking-gate`,
+  `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M make
+  l1-nonblocking-cpu-multi-gate`, `make dual-core-soc-gate`, and
+  `make rtl-frontend-compile` pass (8/8 frontend configurations).
+- This closes the bounded opt-in L1 snoop/broadcast contract. Directory
+  ownership, arbitrary multicore ordering, full L2 coherency and production
+  cache signoff remain open.
+
 ### 2026-09-01 dual-core shootdown ACK target boundary
 
 - Added an explicit `tlb_inv_applied` observation path through `mips_cpu`,
