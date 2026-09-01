@@ -14,7 +14,7 @@
 static uint32_t isa_r2_sweep(void) {
     uint32_t clz_r, clo_r, seb_r, seh_r, wsbh_r, wsbw_r, bitswap_r, rotr_r, rotrv_r;
     uint32_t ext_r, ins_r, align0_r, align1_r, align2_r, align3_r;
-    uint32_t movn_r, movz_r, bal_r;
+    uint32_t movn_r, movz_r, movn_false_r, movz_false_r, bal_r;
     uint32_t prid_v, cfg0_v, cfg1_v, ebase_v;
     uint32_t rdhwr_step, rdhwr_cpunum, rdhwr_ccres;
 
@@ -94,6 +94,15 @@ static uint32_t isa_r2_sweep(void) {
     movn_r = movn_dst;
     asm volatile("movz %0, %1, %2" : "+r"(movz_dst) : "r"(0xDDDD), "r"(0));
     movz_r = movz_dst;
+    /* A false condition must suppress the architectural write. */
+    uint32_t movn_false_dst = 0x13572468U;
+    uint32_t movz_false_dst = 0x24681357U;
+    asm volatile("movn %0, %1, %2" : "+r"(movn_false_dst)
+                 : "r"(0xCAFEBABEU), "r"(0));
+    asm volatile("movz %0, %1, %2" : "+r"(movz_false_dst)
+                 : "r"(0xDEADC0DEU), "r"(1));
+    movn_false_r = movn_false_dst;
+    movz_false_r = movz_false_dst;
 
     /* BAL — branch-and-link (uses $31/ra) */
     uint32_t ra_snap = 0;
@@ -148,7 +157,9 @@ static uint32_t isa_r2_sweep(void) {
                  : "=r"(rdhwr_ccres) : : "$8", "memory");
 
     if (clz_r != 16U || clo_r != 16U ||
-        movn_r != 0x0000CCCCU || movz_r != 0x0000DDDDU || bal_r == 0U ||
+        movn_r != 0x0000CCCCU || movz_r != 0x0000DDDDU ||
+        movn_false_r != 0x13572468U || movz_false_r != 0x24681357U ||
+        bal_r == 0U ||
         rdhwr_step != 32U || rdhwr_cpunum != 0U || rdhwr_ccres != 2U ||
         seb_r != 0xFFFFFF80U || seh_r != 0xFFFF8000U ||
         wsbh_r != 0x22114433U || wsbw_r != 0x33441122U ||
@@ -163,7 +174,8 @@ static uint32_t isa_r2_sweep(void) {
         print_hex(bitswap_r); print_hex(rotr_r); print_hex(rotrv_r);
         print_hex(align0_r); print_hex(align1_r); print_hex(align2_r);
         print_hex(align3_r); print_hex(jr_hb_marker); print_hex(jalr_hb_link);
-        print_str("R2C="); print_hex(movn_r); print_hex(movz_r); print_hex(bal_r);
+        print_str("R2C="); print_hex(movn_r); print_hex(movz_r);
+        print_hex(movn_false_r); print_hex(movz_false_r); print_hex(bal_r);
         print_str("ISA_R2_SPECIAL_FAIL\n");
         }
 
