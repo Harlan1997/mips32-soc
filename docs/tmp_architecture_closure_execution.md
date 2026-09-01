@@ -4009,3 +4009,15 @@ configuration.
   `devtmpfsd` body instruction (`0x88a56c40`). The Linux userspace handoff and
   full RTL/QEMU system differential therefore remain OPEN; no CPU/WAIT/CP0
   behavioral change is justified by this observation alone.
+
+### 2026-09-01 QEMU Linux protected-child wait A/B
+
+- Rebuilt the Linux image with `norandmaps` and reran the userspace gate. The
+  result was unchanged: QEMU exited after the timeout with only the boot
+  marker, while the kernel log reported the expected protected-write fault at
+  `init` EPC `0x00400474` (the `mprotect_fault_child` write).
+- Because that fault occurs only after the parent has completed the mmap and
+  mprotect setup and has forked the child, the missing later markers narrow
+  this run to child SIGSEGV termination or parent `wait4` wakeup/lifecycle.
+  Disabling address randomization does not affect it. The gate remains strict;
+  no timeout relaxation or marker removal was made.
