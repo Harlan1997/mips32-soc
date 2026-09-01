@@ -3873,3 +3873,16 @@ configuration.
   final `wait4` wakeup/lifecycle handling. `icount` is retained as diagnostic
   evidence only and is not enabled in the gate because it did not close the
   boundary. No marker relaxation or retry-based pass was added.
+
+### 2026-09-01 Linux boot failure-report freshness
+
+- `run_linux_boot_gate.sh` now replaces `completion_report.md` on every
+  userspace-marker failure. The report records the failure reason, QEMU exit
+  status, observed marker set, and stdout/stderr paths, so an earlier passing
+  report cannot be mistaken for evidence from a failed rerun in the same
+  directory.
+- `QEMU_TIMEOUT=10s RUN_DIR=build/linux_boot/real
+  tb/linux_boot/run_linux_boot_gate.sh` intentionally returned nonzero and
+  wrote `Result: FAIL` with the missing mmap marker. This changes reporting
+  integrity only; it does not change the Linux guest, QEMU execution mode, or
+  success criterion.
