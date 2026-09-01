@@ -3968,3 +3968,17 @@ configuration.
 - This restores a repeatable bounded system-mode Linux differential path. It
   does not claim RTL Linux userspace boot or a full-length Linux differential;
   the known `devtmpfsd` scheduling/completion investigation remains active.
+
+### 2026-09-01 RTL PC retire cycle filtering
+
+- Added default-off `LINUX_PC_TRACE_CYCLE_START` and
+  `LINUX_PC_TRACE_CYCLE_END` filters to the existing retire-only PC trace.
+  The default `0..0` values preserve the prior unbounded-cycle selection, and
+  the runner records the selected interval in its completion report.
+- A fresh 100k-cycle no-coverage smoke probe passed with a
+  `0x88a55b7c..0x88a55ba8` PC window and cycle interval `90000..95000`; the
+  simulator command line contained both new plusargs. The 12M-cycle
+  `wake_up_process` probe also completed normally with the interval enabled.
+- The interval is diagnostic plumbing only. The exact kthread wake/first-run
+  event remains timing-sensitive and no RTL scheduler change is justified by
+  the current evidence.

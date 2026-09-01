@@ -86,6 +86,8 @@ module tb_mips_soc;
     integer linux_pc_trace_limit;
     integer linux_pc_trace_count;
     integer linux_pc_trace_retire_only;
+    integer linux_pc_trace_cycle_start;
+    integer linux_pc_trace_cycle_end;
     reg [31:0] linux_pc_trace_start;
     reg [31:0] linux_pc_trace_end;
     integer linux_wait_trace;
@@ -239,6 +241,9 @@ module tb_mips_soc;
             end
             if (linux_pc_trace != 0 &&
                 linux_pc_trace_count < linux_pc_trace_limit &&
+                linux_trace_cycle >= linux_pc_trace_cycle_start &&
+                (linux_pc_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_pc_trace_cycle_end) &&
                 linux_pc_trace_start != linux_pc_trace_end &&
                 ((linux_pc_trace_retire_only != 0) ?
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
@@ -1269,6 +1274,10 @@ module tb_mips_soc;
         linux_pc_trace_count = 0;
         linux_pc_trace_retire_only = 0;
         if (!$value$plusargs("LINUX_PC_TRACE_RETIRE_ONLY=%d", linux_pc_trace_retire_only)) begin end
+        linux_pc_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_PC_TRACE_CYCLE_START=%d", linux_pc_trace_cycle_start)) begin end
+        linux_pc_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_PC_TRACE_CYCLE_END=%d", linux_pc_trace_cycle_end)) begin end
         linux_pc_trace_start = 32'd0;
         if (!$value$plusargs("LINUX_PC_TRACE_START=%h", linux_pc_trace_start)) begin end
         linux_pc_trace_end = 32'd0;
