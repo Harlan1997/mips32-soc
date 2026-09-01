@@ -82,6 +82,11 @@ module tb_mips_soc;
     integer linux_mode_trace_limit;
     integer linux_mode_trace_count;
     reg     linux_cpu_kernel_prev;
+    integer linux_pc_trace;
+    integer linux_pc_trace_limit;
+    integer linux_pc_trace_count;
+    reg [31:0] linux_pc_trace_start;
+    reg [31:0] linux_pc_trace_end;
     integer linux_wait_trace;
     integer linux_wait_trace_limit;
     integer linux_wait_trace_count;
@@ -228,6 +233,48 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[5],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2]);
                 linux_mode_trace_count = linux_mode_trace_count + 1;
+            end
+            if (linux_pc_trace != 0 &&
+                linux_pc_trace_count < linux_pc_trace_limit &&
+                linux_pc_trace_start != linux_pc_trace_end &&
+                (((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc >= linux_pc_trace_start) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc < linux_pc_trace_end)) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_pc_trace_start) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < linux_pc_trace_end)))) begin
+                $display("LINUX_PC_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ll_reservation_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.is_ll_mem,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.is_sc_mem,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.sc_reservation_match,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ll_reservation_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.reservation_data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.lladdr_visible,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_data_ok_current,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[29],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[31],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[4],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[5],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2]);
+                linux_pc_trace_count = linux_pc_trace_count + 1;
             end
             linux_cpu_kernel_prev =
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode;
@@ -1204,6 +1251,15 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_MODE_TRACE_LIMIT=%d", linux_mode_trace_limit)) begin end
         linux_mode_trace_count = 0;
         linux_cpu_kernel_prev = 1'b1;
+        linux_pc_trace = 0;
+        if (!$value$plusargs("LINUX_PC_TRACE=%d", linux_pc_trace)) begin end
+        linux_pc_trace_limit = 256;
+        if (!$value$plusargs("LINUX_PC_TRACE_LIMIT=%d", linux_pc_trace_limit)) begin end
+        linux_pc_trace_count = 0;
+        linux_pc_trace_start = 32'd0;
+        if (!$value$plusargs("LINUX_PC_TRACE_START=%h", linux_pc_trace_start)) begin end
+        linux_pc_trace_end = 32'd0;
+        if (!$value$plusargs("LINUX_PC_TRACE_END=%h", linux_pc_trace_end)) begin end
         linux_wait_trace = 0;
         if (!$value$plusargs("LINUX_WAIT_TRACE=%d", linux_wait_trace)) begin end
         linux_wait_trace_limit = 256;
