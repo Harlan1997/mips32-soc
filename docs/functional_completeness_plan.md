@@ -1415,6 +1415,16 @@ before the 120-second timeout. The failure is recorded as evidence, not
 converted into a pass; RTL Linux userspace, full RTL/QEMU Linux differential,
 and the broader full-ISA/MMU/OS/product signoff items remain open.
 
+### 2026-09-02 Linux signal/reap boundary recheck
+
+A fresh Linux image with the existing strict reservation policy reaches `/init`
+and the protected-page fault, but stops before the mmap marker. An opt-in
+`linux-guest=on` run advances through mmap/mprotect, brk, sleep, yield and two
+exec markers, but the parent still does not complete the second `wait4`; a
+`WNOHANG` plus `sched_yield` experiment also failed to make the child
+reapable. The guest and runner experiments were reverted. Linux signal/child
+reap, RTL Linux userspace and full RTL/QEMU Linux differential remain open.
+
 ### 2026-09-01 Linux WAIT/CP0 timer correlation
 
 Added bounded `LINUX_WAIT_TRACE` diagnostics for WAIT pipeline retirement,

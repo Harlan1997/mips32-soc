@@ -4338,3 +4338,17 @@ configuration.
   120-second timeout. The report is `Result: FAIL`; no marker or timeout
   criterion was weakened. Linux userspace, full RTL/QEMU Linux differential,
   and complete ISA/MMU/OS/product signoff remain OPEN.
+
+### 2026-09-02 Linux signal/reap boundary recheck
+
+- A fresh strict-policy Linux run stopped after the expected protected-page
+  SIGSEGV. Enabling the existing `linux-guest=on` policy allowed the parent to
+  continue through VM markers, sleep, yield and both exec children, but the
+  final child-reap marker was still absent.
+- A `WNOHANG` plus explicit `sched_yield` polling experiment did not make the
+  first child reaping boundary progress. A second experiment using
+  `wait4(-1)` also stopped before the final wait marker.
+- The runner and guest experiments were reverted. This confirms a real
+  custom-machine/Linux signal-exit or wait4 boundary without weakening the
+  marker contract; Linux userspace, RTL Linux userspace and full
+  RTL/QEMU Linux differential remain OPEN.
