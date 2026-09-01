@@ -29,6 +29,7 @@ module tb_mips_fpu_compare;
         input [31:0] rhs;
         input [15:0] expected;
         input want_invalid;
+        input quiet_nan;
         begin
             a = lhs;
             b = rhs;
@@ -41,7 +42,8 @@ module tb_mips_fpu_compare;
                              lhs, rhs, i, compare_true, expected[i]);
                     failures = failures + 1;
                 end
-                if (exception_flags[4] !== want_invalid) begin
+                if (exception_flags[4] !== (want_invalid ||
+                                            (quiet_nan && (i >= 8)))) begin
                     $display("FAIL invalid a=%08h b=%08h cond=%0d got=%b want=%b",
                              lhs, rhs, i, exception_flags[4], want_invalid);
                     failures = failures + 1;
@@ -55,6 +57,7 @@ module tb_mips_fpu_compare;
         input [63:0] rhs;
         input [15:0] expected;
         input want_invalid;
+        input quiet_nan;
         begin
             a_double = lhs;
             b_double = rhs;
@@ -67,7 +70,8 @@ module tb_mips_fpu_compare;
                              lhs, rhs, i, compare_true, expected[i]);
                     failures = failures + 1;
                 end
-                if (exception_flags[4] !== want_invalid) begin
+                if (exception_flags[4] !== (want_invalid ||
+                                            (quiet_nan && (i >= 8)))) begin
                     $display("FAIL double invalid a=%016h b=%016h cond=%0d got=%b want=%b",
                              lhs, rhs, i, exception_flags[4], want_invalid);
                     failures = failures + 1;
@@ -83,22 +87,28 @@ module tb_mips_fpu_compare;
         // 1.0 < 2.0: ordered less predicates and their unordered-inclusive
         // counterparts are true; equality and unordered-only predicates false.
         check_vector(32'h3f800000, 32'h40000000,
-                     16'b1111000011110000, 1'b0);
+                     16'b1111000011110000, 1'b0, 1'b0);
         // Equal finite operands.
         check_vector(32'h3f800000, 32'h3f800000,
-                     16'b1100110011001100, 1'b0);
+                     16'b1100110011001100, 1'b0, 1'b0);
         // Quiet NaN: only unordered-inclusive predicates are true. The
         // selected QNaN vector reports Invalid for every predicate, matching
         // the QEMU/MIPS reference contract used by the system differential.
         check_vector(32'h7fc00001, 32'h3f800000,
-                     16'b1010101010101010, 1'b1);
+                     16'b1010101010101010, 1'b1, 1'b0);
+        // In the legacy MIPS encoding, fraction[22]=0 is a quiet NaN. Quiet
+        // predicates do not raise Invalid; signaling predicates still do.
+        check_vector(32'h7fa00001, 32'h3f800000,
+                     16'b1010101010101010, 1'b0, 1'b1);
 
         check_double_vector(64'h3ff0000000000000, 64'h4000000000000000,
-                            16'b1111000011110000, 1'b0);
+                            16'b1111000011110000, 1'b0, 1'b0);
         check_double_vector(64'h3ff0000000000000, 64'h3ff0000000000000,
-                            16'b1100110011001100, 1'b0);
+                            16'b1100110011001100, 1'b0, 1'b0);
         check_double_vector(64'h7ff8000000000001, 64'h3ff0000000000000,
-                            16'b1010101010101010, 1'b1);
+                            16'b1010101010101010, 1'b1, 1'b0);
+        check_double_vector(64'h7ff4000000000001, 64'h3ff0000000000000,
+                            16'b1010101010101010, 1'b0, 1'b1);
 
         // MIPS32 W/S conversion and rounding primitives.
         fmt_double = 1'b0;
