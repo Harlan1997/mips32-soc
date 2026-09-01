@@ -74,7 +74,7 @@ module mips_fpu (
     shortreal ar, br, rr;
     real ar_double, br_double, cr_double, rr_double, exact_single,
          exact_double;
-    reg a_nan, b_nan, unordered;
+    reg a_nan, b_nan, a_snan, b_snan, unordered;
     reg single_bits_override_valid, double_bits_override_valid;
     reg [31:0] single_bits_override;
     reg [63:0] double_bits_override;
@@ -92,6 +92,8 @@ module mips_fpu (
         exception_flags = 5'd0;
         a_nan = 1'b0;
         b_nan = 1'b0;
+        a_snan = 1'b0;
+        b_snan = 1'b0;
         unordered = 1'b0;
         single_bits_override_valid = 1'b0;
         double_bits_override_valid = 1'b0;
@@ -101,11 +103,16 @@ module mips_fpu (
         if (fmt_double) begin
             a_nan = (a_double[62:52] == 11'h7ff && a_double[51:0] != 0);
             b_nan = (b_double[62:52] == 11'h7ff && b_double[51:0] != 0);
+            // 24Kf uses the pre-NAN2008 MIPS encoding: fraction MSB one
+            // denotes signaling NaN, while zero denotes quiet NaN.
+            a_snan = a_nan && a_double[51];
+            b_snan = b_nan && b_double[51];
             unordered = a_nan || b_nan;
             // MOV/ABS/NEG are bitwise operations.  A NaN operand is not an
             // invalid arithmetic operation for these instructions; preserve
             // the payload without changing FCSR sticky Invalid.
-            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG)
+            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG &&
+                (op != OP_CMP || a_snan || b_snan || compare_condition[3]))
                 exception_flags[4] = 1'b1;
             if (op == OP_DIV && b_double[62:52] == 0 &&
                 b_double[51:0] == 0) begin
@@ -248,10 +255,15 @@ module mips_fpu (
         end else begin
             a_nan = (a[30:23] == 8'hff && a[22:0] != 0);
             b_nan = (b[30:23] == 8'hff && b[22:0] != 0);
+            // Legacy MIPS NaN encoding is opposite the IEEE-754 quiet-bit
+            // convention used by the raw bit pattern.
+            a_snan = a_nan && a[22];
+            b_snan = b_nan && b[22];
             unordered = a_nan || b_nan;
             // The sign/move operations above are non-arithmetic and must not
             // raise Invalid merely because their operand is a NaN.
-            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG)
+            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG &&
+                (op != OP_CMP || a_snan || b_snan || compare_condition[3]))
                 exception_flags[4] = 1'b1;
             if (op == OP_DIV && b[30:23] == 0 && b[22:0] == 0) begin
                 if ((a[30:23] == 0 && a[22:0] == 0) ||

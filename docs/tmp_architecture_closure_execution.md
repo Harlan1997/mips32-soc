@@ -204,6 +204,20 @@
   gates both pass. This closes the selected system slice only; complete
   IEEE-754 arithmetic and the FPU OS ABI remain open.
 
+### 2026-09-01 legacy-MIPS COP1 SNaN/QNaN compare classification
+
+- The compare primitive now distinguishes the pre-NAN2008 MIPS NaN encoding
+  used by the opt-in 24Kf contract: the fraction MSB identifies signaling NaN
+  (`0x7fc00001` single / `0x7ff8000000000001` double), while its clear form is
+  quiet NaN (`0x7fa00001` / `0x7ff4000000000001`).
+- For quiet operands, predicates 0..7 use quiet comparison and predicates 8..15
+  use signaling comparison. Signaling operands raise Invalid for every
+  predicate. The directed compare gate covers both precisions and all 16
+  predicates; the existing QEMU differential corpus retains its SNaN vector.
+- This closes only the selected legacy-MIPS compare NaN classification slice.
+  Complete IEEE-754 NAN2008 policy, all FPE classes, OS FPU ABI and full COP1
+  compliance remain open.
+
 ### 2026-08-31 fixed FPU rounding tie semantics
 
 - `ROUND.W.S` and `ROUND.W.D` now use MIPS round-to-nearest ties-away-from-zero;
