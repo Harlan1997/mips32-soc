@@ -4260,3 +4260,15 @@ configuration.
   this run to child SIGSEGV termination or parent `wait4` wakeup/lifecycle.
   Disabling address randomization does not affect it. The gate remains strict;
   no timeout relaxation or marker removal was made.
+
+### 2026-09-02 L1 nonblocking CPU aggregate fresh recheck
+
+- Re-ran `make l1-nonblocking-cpu-complete-gate` with coverage disabled and
+  the EDA cgroup budget set to `MemoryMax=1500M` and `MemorySwapMax=512M`.
+- The real CPU/D-cache opt-in path passed compatibility, multi-request,
+  three-seed reset stress, single/two AXI response-error recovery,
+  reset-in-flight and CPU maintenance gates.
+- This confirms the existing `l1_cache_nb_cpu_axi` integration is reproducible
+  under the resource budget. It does not close the legacy-dcache boundary for
+  uncached/peripheral and unsupported maintenance accesses, full coherency or
+  the Linux cache ABI.
