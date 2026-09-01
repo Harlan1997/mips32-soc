@@ -3601,3 +3601,19 @@ configuration.
   reports zero userspace markers, therefore the strict gate is intentionally
   not claimed as passed; full RTL Linux userspace boot and system-mode
   RTL/QEMU Linux differential remain open.
+
+### 2026-09-01 Linux probe OOM guard
+
+- The RTL Linux progress runner previously enabled `LINUX_WB_TRACE` and
+  `LINUX_EBASE_TRACE` by default without a record limit. A long kernel idle or
+  exception loop could therefore grow the simulator log without bound and
+  reproduce the observed host-memory pressure.
+- Both traces are now default-off, and explicit use is bounded by independent
+  `LINUX_WB_TRACE_LIMIT` and `LINUX_EBASE_TRACE_LIMIT` controls (defaults 256
+  and 64). The limits are forwarded through the Make target and recorded in
+  the completion report; the testbench also enforces them at the display
+  sites.
+- Verification: `bash -n`, `git diff --check`, `make rtl-frontend-compile`
+  (`8/8`), and a 100k-cycle probe with both traces enabled and limits set to 2
+  passed. This closes the diagnostic resource-safety issue only; RTL Linux
+  userspace boot and full RTL/QEMU Linux differential remain open.

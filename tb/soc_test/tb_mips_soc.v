@@ -73,7 +73,11 @@ module tb_mips_soc;
     reg        linux_exception_frame_pending_interrupt;
     reg        linux_exception_frame_pending_bd;
     integer linux_ebase_trace;
+    integer linux_ebase_trace_limit;
+    integer linux_ebase_trace_count;
     integer linux_wb_trace;
+    integer linux_wb_trace_limit;
+    integer linux_wb_trace_count;
     integer linux_wait_trace;
     integer linux_wait_trace_limit;
     integer linux_wait_trace_count;
@@ -479,6 +483,7 @@ module tb_mips_soc;
                 linux_gpr_trace_count = linux_gpr_trace_count + 1;
             end
             if (linux_wb_trace != 0 &&
+                linux_wb_trace_count < linux_wb_trace_limit &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 (((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= 32'h8800_d800) &&
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= 32'h8800_d850)) ||
@@ -499,6 +504,7 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19]);
+                linux_wb_trace_count = linux_wb_trace_count + 1;
             end
             if (linux_wait_trace != 0 &&
                 linux_wait_trace_count < linux_wait_trace_limit &&
@@ -633,6 +639,7 @@ module tb_mips_soc;
                 linux_cp0_trace_count = linux_cp0_trace_count + 1;
             end
             if (linux_ebase_trace != 0 &&
+                linux_ebase_trace_count < linux_ebase_trace_limit &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd15) &&
@@ -647,6 +654,7 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status[1],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_ebase_hi,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.ebase_out);
+                linux_ebase_trace_count = linux_ebase_trace_count + 1;
             end
             if (linux_vector_trace != 0 &&
                 linux_vector_trace_count < linux_vector_trace_limit &&
@@ -1153,10 +1161,16 @@ module tb_mips_soc;
         linux_exception_frame_pending_code = 5'd0;
         linux_exception_frame_pending_interrupt = 1'b0;
         linux_exception_frame_pending_bd = 1'b0;
-        linux_ebase_trace = 1;
+        linux_ebase_trace = 0;
         if (!$value$plusargs("LINUX_EBASE_TRACE=%d", linux_ebase_trace)) begin end
-        linux_wb_trace = 1;
+        linux_ebase_trace_limit = 64;
+        if (!$value$plusargs("LINUX_EBASE_TRACE_LIMIT=%d", linux_ebase_trace_limit)) begin end
+        linux_ebase_trace_count = 0;
+        linux_wb_trace = 0;
         if (!$value$plusargs("LINUX_WB_TRACE=%d", linux_wb_trace)) begin end
+        linux_wb_trace_limit = 256;
+        if (!$value$plusargs("LINUX_WB_TRACE_LIMIT=%d", linux_wb_trace_limit)) begin end
+        linux_wb_trace_count = 0;
         linux_wait_trace = 0;
         if (!$value$plusargs("LINUX_WAIT_TRACE=%d", linux_wait_trace)) begin end
         linux_wait_trace_limit = 256;
