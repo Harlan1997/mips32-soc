@@ -3982,3 +3982,15 @@ configuration.
 - The interval is diagnostic plumbing only. The exact kthread wake/first-run
   event remains timing-sensitive and no RTL scheduler change is justified by
   the current evidence.
+
+### 2026-09-01 RTL wait-context fields
+
+- Extended the bounded Linux PC retire record with `gp` and `t0` alongside the
+  existing `sp/ra/a0/a1/v0` fields. This targets the MIPS `__r4k_wait` check of
+  `gp+4` without changing CPU or cache behavior.
+- The modified testbench compiled and a bounded direct simulation completed;
+  the selected 8M/10M runs did not yet reach a retire record in the wait
+  window, so the new field has not been used to justify a functional fix.
+- Existing 30M evidence still shows the final active PC in `r4k_wait`/scheduler
+  paths and no `devtmpfsd` body retire. Linux userspace and full differential
+  remain OPEN.
