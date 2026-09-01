@@ -8,7 +8,7 @@
 
 	aliases { serial0 = &uart0; };
 	chosen {
-		bootargs = "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init";
+		bootargs = "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init";
 		stdout-path = "serial0:115200n8";
 	};
 	memory@0 { device_type = "memory"; reg = <0x00000000 0x04000000>; };
