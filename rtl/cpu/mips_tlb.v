@@ -373,7 +373,8 @@ module mips_tlb #(
                 if (k >= inv_wired_floor) begin
                     case (inv_scope)
                       2'd0: inv_match = tlb_valid[k] &&
-                                         (tlb_vpn2[k] == inv_vpn2) &&
+                                         ((((tlb_vpn2[k] ^ inv_vpn2) &
+                                            {3'b111, ~tlb_mask[k]}) == 19'b0)) &&
                                          (tlb_g[k] || (tlb_asid[k] == inv_asid));
                       2'd1: inv_match = tlb_valid[k] &&
                                          (tlb_g[k] || (tlb_asid[k] == inv_asid));

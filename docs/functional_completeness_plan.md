@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-01 PageMask-aware page-scope TLB invalidation
+
+`mips_tlb` 的 page-scope invalidate 现在按目标 entry 保存的 PageMask 比较
+VPN2；新增 16-KiB entry 的 interior-VPN2 directed case，并在 I/D
+micro-TLB 已填充后确认 invalidate 不会留下 stale translation。`make
+tlb-invalidate-gate` 通过。该修复只闭合大页 invalidate 的 block slice，
+不改变完整 OS shootdown、Linux VM 或 full MMU compliance 的开放边界。
+
 ### 2026-09-01 ISA R2 sweep result assertions
 
 `tb/soc_test/fw/tests/isa_r2_sweep/main.c` 现在对已执行的 `CLZ`、`CLO`、

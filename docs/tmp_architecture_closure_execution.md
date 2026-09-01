@@ -3804,3 +3804,15 @@ configuration.
 - Verification: isolated 100k-cycle RTL Linux smoke passed with the corrected
   entry; the 14M-cycle diagnostic completed with bounded logs and no stale
   simulator process left behind. Shell/diff checks remain clean.
+### 2026-09-01 PageMask-aware page-scope TLB invalidation
+
+- Fixed `mips_tlb` page-scope invalidation to apply the target entry's stored
+  PageMask when comparing VPN2. This matters for shootdown of an address inside
+  a 16-KiB/64-KiB/256-KiB mapping; exact VPN2 comparison could otherwise leave
+  the larger mapping valid.
+- Extended `tb_tlb_invalidate` with a 16-KiB interior-VPN2 case after filling
+  both I/D micro-TLBs. `make tlb-invalidate-gate` passes and confirms the base
+  and interior addresses both miss after the invalidate.
+- This closes the bounded PageMask-aware invalidate slice only. It does not
+  establish OS page-table ownership, multicore shootdown policy or full MMU
+  compliance.
