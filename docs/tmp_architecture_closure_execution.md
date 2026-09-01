@@ -4283,3 +4283,15 @@ configuration.
 - The result is bounded combined-path evidence only; full MESI/directory
   coherency, arbitrary downstream AXI ordering, error/reset interleavings and
   Linux cache ABI remain open.
+
+### 2026-09-02 RTL Linux `__register_sysctl_init` return boundary
+
+- A focused 10M--14M cycle retire-only trace targeted
+  `__register_sysctl_init` (`0x88d05b30..0x88d05d80`) after the last observed
+  `do_one_initcall` function pointer was `init_security_keys_sysctls`.
+- Multiple invocations entered `__register_sysctl_table` and returned through
+  `0x88d05b90`; the caller also returned. No local infinite-loop evidence was
+  found in this window.
+- The remaining RTL Linux boundary is therefore later initcall completion or
+  scheduler/init-task handoff. Userspace and full RTL/QEMU differential remain
+  open; no CPU/CP0/cache change is justified.
