@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 Selected differential full recheck
+
+- `SKIP_COVERAGE=1 QEMU_TIMEOUT=180 QEMU_BUILD_JOBS=2 BUILD_DIR=/tmp/qemu-selected-full-20260902 make qemu-system-selected-differential-gate` completed successfully.
+- All selected stages passed, including ISA audit/R2, MDU, branch-likely,
+  exceptions, break/traps, privileged DI/EI/WAIT, BD exception, unaligned,
+  peripheral/VIC, FPU single/double/rounding/CU1, DMA SG/fault/reset, VIC full
+  sources and MMU IPI. This gives a fresh complete selected differential
+  result after aligning Linux SC policy with RTL.
+- A subsequent architecture aggregate passed its current-contract stage and
+  entered selected/MMU stages, but was stopped during an independent Linux
+  kernel rebuild in the final Linux userspace child. The aggregate therefore
+  remains unclaimed; selected child evidence is authoritative for its scope.
+
 ### 2026-09-02 Linux differential SC policy alignment
 
 - Removed `QEMU_MACHINE_PROPERTIES=linux-guest=on` from the bounded Linux
