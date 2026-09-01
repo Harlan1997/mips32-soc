@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux diagnostic defaults OOM prevention
+
+将 `Makefile`、RTL Linux progress runner 和 testbench 的高频
+`LINUX_REFILL_TRACE`、`LINUX_EXCEPTION_TRACE` 默认值统一改为关闭。此前
+直接复用 `simv` 时若未显式传入 plusarg，refill trace 会按周期输出完整总线
+状态，长 Linux 仿真会造成日志/CPU/内存压力；本次修复保留所有显式 trace
+开关和 limit 参数，不改变 RTL 行为或任何功能 gate 的通过标准。变更后的
+默认 runner smoke（100K 周期）正常结束，日志约 5 KiB 且没有实际 refill/
+exception 记录；显式关闭 trace 的 20M 周期复用运行也在约 1.1 MiB VCS
+数据结构下正常结束，日志约 1.6 KiB。RTL Linux userspace、完整
+ISA/MMU/FPU/OS 及 RTL/QEMU differential 仍保持 OPEN。
+
 ### 2026-09-02 QEMU Linux userspace gate fresh recheck
 
 `QEMU_TIMEOUT=60 make linux-boot-build-gate` 在当前 HEAD 重新通过。该 gate

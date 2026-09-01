@@ -1,5 +1,22 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux high-frequency trace default fix
+
+- Root cause of the latest resource-risk reproduction was a direct reuse of a
+  compiled `simv` without the runner's explicit trace arguments. The testbench
+  defaulted `LINUX_REFILL_TRACE` to `1`, producing a large per-cycle bus-state
+  record; `LINUX_EXCEPTION_TRACE` was also enabled by default.
+- Changed the `Makefile`, RTL Linux progress runner, and testbench defaults for
+  both high-frequency streams to `0`. Explicit environment variables and
+  plusargs still enable bounded diagnostics, so focused investigations retain
+  their existing interface.
+- The changed runner was rebuilt and its default 100K-cycle no-coverage smoke
+  completed with a 1.1 MiB VCS data structure and a 4.9 KiB log containing no
+  actual refill or exception records. A separate cgroup-limited 20M-cycle
+  reuse run with explicit trace disables also completed with a 1.6 KiB log.
+  This closes the accidental diagnostic-log growth path only; RTL Linux
+  userspace and full RTL/QEMU system differential remain open.
+
 ### 2026-09-02 RTL Linux kthread indirect-entry follow-up
 
 - Extended the default-off Linux PC retire diagnostic with `s0`, `s3`, and
