@@ -135,7 +135,9 @@ fi
 
 echo "[Stage 2/5] Running Phase 3A Complete Gate..."
 set +e
-FW_HEX="$FW_HEX_ABS" FW_ROOT_DIR="${FW_ROOT_DIR:-}" FLASH_IMAGE="$FLASH_IMAGE_ABS" RUN_ROOT="$PHASE3_ROOT" CPU_CP0_DIR="${PHASE3_ROOT}/cpu_cp0_gate" "${SCRIPT_DIR}/run_phase3_complete.sh"
+# Phase 3A coverage is part of signoff, including the product CPU/CP0 VDB.
+# Keep a caller's no-coverage diagnostic setting from suppressing that input.
+SKIP_COVERAGE=0 FW_HEX="$FW_HEX_ABS" FW_ROOT_DIR="${FW_ROOT_DIR:-}" FLASH_IMAGE="$FLASH_IMAGE_ABS" RUN_ROOT="$PHASE3_ROOT" CPU_CP0_DIR="${PHASE3_ROOT}/cpu_cp0_gate" "${SCRIPT_DIR}/run_phase3_complete.sh"
 p3a_status=$?
 set -e
 if [ "$p3a_status" -ne 0 ]; then
