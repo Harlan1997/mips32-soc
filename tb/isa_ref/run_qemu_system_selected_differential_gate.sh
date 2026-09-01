@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_selected_differential"}
+QEMU_TIMEOUT=${QEMU_TIMEOUT:-60}
+export QEMU_TIMEOUT
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md"
 
@@ -33,6 +35,11 @@ run_gate fpu_double make -C "${ROOT_DIR}" qemu-system-fpu-double-differential-ga
 run_gate fpu_rounding make -C "${ROOT_DIR}" qemu-system-fpu-rounding-differential-gate
 run_gate fpu_cu1 make -C "${ROOT_DIR}" qemu-system-fpu-cu1-exception-differential-gate
 run_gate dma_sg make -C "${ROOT_DIR}" qemu-system-dma-sg-differential-gate
+run_gate dma_fault_reset make -C "${ROOT_DIR}" \
+    qemu-system-dma-fault-gate qemu-system-dma-reset-inflight-gate
+run_gate vic_full_sources make -C "${ROOT_DIR}" \
+    qemu-system-vic-full-sources-differential-gate
+run_gate mmu_ipi make -C "${ROOT_DIR}" qemu-system-mmu-ipi-contract-gate
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # QEMU System Selected Differential Gate
@@ -41,7 +48,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Machine: mips32-soc-ref
 - Sub-gates: ISA R2, CPU-visible MDU, branch-likely, exceptions, break/traps, DI/EI/WAIT,
   BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/rounding/CU1,
-  and bounded DMA v2 SG.
+  bounded DMA v2 SG/fault/reset, 32-source VIC arbitration, and MMU IPI
+  contract differential.
 - Evidence: child logs in this directory and child completion reports under
   build/isa_ref/qemu_system_*.
 - Scope: selected bare-metal RTL/QEMU retire corpora through mailbox boundaries.
