@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux initcall tail boundary
+
+- A 40M-cycle retire-only probe targeted the tail of
+  `kernel_init_freeable` (`0x88ced100..0x88ced188`) and completed normally
+  without a matching retire record.
+- This is a negative time-bound observation, not proof that the function is
+  permanently stuck. Together with the positive `wait_for_initramfs`,
+  `driver_init`, and `devtmpfsd` observations, it narrows the active path to
+  later initcall/async work before the `kernel_init` return.
+- No CPU/CP0/WAIT/cache semantic change is justified; RTL Linux userspace and
+  full RTL/QEMU system differential remain open.
+
 ### 2026-09-02 RTL Linux `devtmpfsd` execution evidence
 
 - A 20M-cycle retire-only trace of `devtmpfsd` (`0x88a56c40..0x88a57040`)
