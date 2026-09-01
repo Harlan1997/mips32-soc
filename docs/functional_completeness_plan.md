@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux `devtmpfsd` execution evidence
+
+20M 周期 retire-only 追踪 `devtmpfsd=0x88a56c40..0x88a57040` 捕获到
+1024 条记录，分别出现在约 cycle `8451674` 和 `9966955`，且退休 PC 已
+进入函数体后段。这证明内核线程确实被调度并执行，排除了“devtmpfsd 从未
+运行”这一窄假设。`run_init_process` 的后续追踪在本次主机时间预算内未
+捕获有效记录，因此仍不能推断其是否执行；RTL Linux userspace、完整
+RTL/QEMU system differential 和完整 ISA/MMU/FPU/OS 仍为 OPEN。
+
 ### 2026-09-02 RTL Linux `driver_init` return boundary
 
 复用当前 QEMU 通过的 Linux image 运行 20M 周期退休窗口，捕获

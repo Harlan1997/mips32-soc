@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux `devtmpfsd` execution evidence
+
+- A 20M-cycle retire-only trace of `devtmpfsd` (`0x88a56c40..0x88a57040`)
+  reached its 1024-record cap and captured body execution around cycles
+  `8451674` and `9966955`, with distinct task stack contexts.
+- This rules out the narrow hypothesis that `devtmpfsd` was never scheduled.
+  A separate `run_init_process` probe did not reach its target before the host
+  time budget and therefore provides no positive or negative execution claim.
+- RTL Linux userspace and full RTL/QEMU system differential remain open; no
+  CPU/CP0/WAIT/cache change is justified.
+
 ### 2026-09-02 RTL Linux `driver_init` return boundary
 
 - A cgroup-limited 20M-cycle reuse run traced the exact ELF-resolved
