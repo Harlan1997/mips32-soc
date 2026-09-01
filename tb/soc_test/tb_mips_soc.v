@@ -141,6 +141,8 @@ module tb_mips_soc;
     integer linux_tlb_trace;
     integer linux_tlb_trace_limit;
     integer linux_tlb_trace_count;
+    integer linux_tlb_trace_cycle_start;
+    integer linux_tlb_trace_cycle_end;
     integer linux_fault_trace;
     integer linux_fault_trace_limit;
     integer linux_fault_trace_count;
@@ -320,6 +322,10 @@ module tb_mips_soc;
             // writes without turning a long boot into an unbounded log.
             if (linux_tlb_trace != 0 &&
                 linux_tlb_trace_count < linux_tlb_trace_limit &&
+                (linux_tlb_trace_cycle_start == 0 ||
+                 linux_trace_cycle >= linux_tlb_trace_cycle_start) &&
+                (linux_tlb_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_tlb_trace_cycle_end) &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'ha8e0_0000) &&
@@ -1353,6 +1359,10 @@ module tb_mips_soc;
         linux_tlb_trace_limit = 256;
         if (!$value$plusargs("LINUX_TLB_TRACE_LIMIT=%d", linux_tlb_trace_limit)) begin end
         linux_tlb_trace_count = 0;
+        linux_tlb_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_TLB_TRACE_CYCLE_START=%d", linux_tlb_trace_cycle_start)) begin end
+        linux_tlb_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_TLB_TRACE_CYCLE_END=%d", linux_tlb_trace_cycle_end)) begin end
         linux_fault_trace = 0;
         if (!$value$plusargs("LINUX_FAULT_TRACE=%d", linux_fault_trace)) begin end
         linux_fault_trace_limit = 256;
