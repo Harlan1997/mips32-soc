@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 L1 nonblocking CPU aggregate fresh recheck
+
+在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`MemoryMax=1500M` 和
+`MemorySwapMax=512M` 约束下重新运行 `make
+l1-nonblocking-cpu-complete-gate`。真实 CPU/D-cache opt-in 路径的兼容、多请求、
+三 seed reset stress、单/双 AXI 错误、reset-in-flight 和 maintenance CPU
+子 gate 全部通过，并生成 aggregate completion report。该证据确认现有
+`l1_cache_nb_cpu_axi` 接入可复现，不改变默认 blocking 路径；uncached/peripheral
+及未支持的 CACHE/tag/writeback 操作仍由 legacy dcache 处理，完整 coherency、
+任意乱序组合和 Linux cache ABI 仍为 OPEN。
+
 ### 2026-09-02 RTL Linux initcall tail boundary
 
 40M 周期 retire-only 探针未捕获 `kernel_init_freeable` 尾部
