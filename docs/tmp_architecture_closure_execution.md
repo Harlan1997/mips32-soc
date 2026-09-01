@@ -4310,3 +4310,16 @@ configuration.
   return path, not a proven load or return defect. RTL Linux userspace and full
   RTL/QEMU system differential remain open; no CPU, CP0, WAIT, or cache change
   is justified by this probe.
+
+### 2026-09-02 P1 RTL/simulation extension fresh recheck
+
+- Ran `make p1-current-complete` with `SKIP_COVERAGE=1`, `VCS_JOBS=1`,
+  `MemoryMax=1500M`, `MemorySwapMax=512M`, and isolated
+  `BUILD_DIR=/tmp/p1-current-recheck-20260902`.
+- The frontend, coherency stress, seven hardware-walker page-size variants,
+  CPU/MMU/ASID/shootdown, ISA R2, vectored interrupt, and DDR4 closure gates
+  all passed. The aggregate ended with `P1 current RTL/simulation extension
+  gate: PASS`.
+- This revalidates the current P1 RTL/simulation bundle under the protected
+  resource budget. It does not close full MESI/directory, complete ISA/FPU,
+  Linux/OS boot, or product physical/EDA signoff.
