@@ -2,7 +2,7 @@
 
 ### 2026-09-02 QEMU Linux userspace gate fresh recheck
 
-`QEMU_TIMEOUT=30 make linux-boot-build-gate` 在当前 HEAD 重新通过。该 gate
+`QEMU_TIMEOUT=60 make linux-boot-build-gate` 在当前 HEAD 重新通过。该 gate
 使用 `mips32-soc-ref`、`-accel tcg,thread=single` 和当前构建的 Linux
 vmlinux/DTB，完整观察到 `/init`、mmap/mprotect、保护页 `SIGSEGV`、brk、
 nanosleep、`sched_yield`、两次 `execve`、两次 `wait4` 及 wait status markers。

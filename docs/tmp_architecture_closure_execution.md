@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 QEMU Linux wait4 policy regression fixed
+
+- A fresh `QEMU_TIMEOUT=60 make linux-boot-build-gate` initially stopped after
+  the expected protected-page child fault because the gate selected the
+  `linux-guest=on` reservation compatibility policy. That policy intentionally
+  preserves the LL/SC reservation, but it strands the parent in the Linux
+  `wait4` path for this guest.
+- Removed the Linux boot gate's compatibility property so the reference
+  machine uses the architectural SC-consumes-reservation behavior. The same
+  rebuilt kernel/DTB now passes all required markers: `/init`, mmap,
+  mprotect, protected-write `SIGSEGV`, brk, sleep, yield, two exec children,
+  exact-PID wait4 reaping and wait-status validation.
+- This closes the bounded QEMU generic Linux userspace/wait4 contract. It does
+  not close RTL Linux userspace boot, full RTL/QEMU system differential,
+  complete ISA/MMU/FPU/OS VM, or physical signoff.
+
 ### 2026-09-02 QEMU Linux userspace gate fresh recheck
 
 - `QEMU_TIMEOUT=30 make linux-boot-build-gate` passed from the current HEAD.
