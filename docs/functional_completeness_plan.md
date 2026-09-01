@@ -1217,3 +1217,17 @@ The converter now excludes SPECIAL2 from that fallback list, and
 for MADD/MADDU/MSUB/MSUBU and MUL/CLZ/CLO. The fresh MDU gate and selected
 aggregate both pass. Radix/Booth latency, low-latency division, workload
 performance, full ISA compliance and Linux MDU ABI remain open.
+
+### 2026-09-01 focused RTL Linux fault trace
+
+The RTL Linux progress runner now supports an independent, bounded fault trace
+for TLBL/TLBS/AdEL/AdES events, accesses in a configurable virtual-address
+window (default `0xc0000000..0xc0010000`), and APB/UART transactions. Its
+counter is independent from the broad TLB invalidation trace, so Linux TLB
+clear loops cannot consume the diagnostic budget. `bash -n`, `git diff
+--check`, and `make rtl-frontend-compile` pass. A fresh 15M-cycle probe with
+the trace enabled observed no target-window access and no address/TLB fault;
+the bounded exception log contained CP0 timer interrupts and periodic
+`Compare` reprogramming. This rules out the previously suspected target-window
+MMIO fault for that run, but does not prove Linux userspace progress. The
+userspace marker and full RTL/QEMU Linux differential remain open.

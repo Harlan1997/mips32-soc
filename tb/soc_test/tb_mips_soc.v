@@ -124,6 +124,13 @@ module tb_mips_soc;
     integer linux_tlb_trace;
     integer linux_tlb_trace_limit;
     integer linux_tlb_trace_count;
+    integer linux_fault_trace;
+    integer linux_fault_trace_limit;
+    integer linux_fault_trace_count;
+    reg [31:0] linux_fault_trace_start;
+    reg [31:0] linux_fault_trace_end;
+    integer linux_fault_trace_cycle_start;
+    integer linux_fault_trace_cycle_end;
     integer linux_vector_line_trace;
     integer linux_vector_line_trace_limit;
     integer linux_vector_line_trace_count;
@@ -266,6 +273,43 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_pfn,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_pfn);
                 linux_tlb_trace_count = linux_tlb_trace_count + 1;
+            end
+            // Keep fault/address evidence independent from broad TLB logs:
+            // Linux can clear many entries in a loop before the useful event.
+            if (linux_fault_trace != 0 &&
+                linux_fault_trace_count < linux_fault_trace_limit &&
+                (linux_fault_trace_cycle_start == 0 ||
+                 linux_trace_cycle >= linux_fault_trace_cycle_start) &&
+                (linux_fault_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_fault_trace_cycle_end) &&
+                (((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code == 5'd2 ||
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code == 5'd3 ||
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code == 5'd4 ||
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code == 5'd5)) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= linux_fault_trace_start) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < linux_fault_trace_end)) ||
+                 (u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.psel &&
+                  u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.penable))) begin
+                $display("LINUX_FAULT_TRACE cycle=%0d pc=%08h code=%0d bad=%08h status=%08h cause=%08h vaddr=%08h data=%b/%b/%08h/%h apb=%b/%b/%b/%08h/%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.psel,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.penable,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwrite,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.paddr,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_uart.pwdata);
+                linux_fault_trace_count = linux_fault_trace_count + 1;
             end
             if (linux_exception_trace != 0 &&
                 linux_exception_trace_count < linux_exception_trace_limit &&
@@ -1164,6 +1208,19 @@ module tb_mips_soc;
         linux_tlb_trace_limit = 256;
         if (!$value$plusargs("LINUX_TLB_TRACE_LIMIT=%d", linux_tlb_trace_limit)) begin end
         linux_tlb_trace_count = 0;
+        linux_fault_trace = 0;
+        if (!$value$plusargs("LINUX_FAULT_TRACE=%d", linux_fault_trace)) begin end
+        linux_fault_trace_limit = 256;
+        if (!$value$plusargs("LINUX_FAULT_TRACE_LIMIT=%d", linux_fault_trace_limit)) begin end
+        linux_fault_trace_count = 0;
+        linux_fault_trace_start = 32'hc000_0000;
+        if (!$value$plusargs("LINUX_FAULT_TRACE_START=%h", linux_fault_trace_start)) begin end
+        linux_fault_trace_end = 32'hc001_0000;
+        if (!$value$plusargs("LINUX_FAULT_TRACE_END=%h", linux_fault_trace_end)) begin end
+        linux_fault_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_FAULT_TRACE_CYCLE_START=%d", linux_fault_trace_cycle_start)) begin end
+        linux_fault_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_FAULT_TRACE_CYCLE_END=%d", linux_fault_trace_cycle_end)) begin end
         linux_vector_line_trace = 0;
         if (!$value$plusargs("LINUX_VECTOR_LINE_TRACE=%d", linux_vector_line_trace)) begin end
         linux_vector_line_trace_limit = 256;
