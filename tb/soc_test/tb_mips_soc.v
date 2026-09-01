@@ -64,6 +64,8 @@ module tb_mips_soc;
     integer linux_stall_trace_cycle_start;
     reg [31:0] linux_stall_trace_pc;
     reg linux_global_stall_prev;
+    reg linux_wait_trace_prev;
+    reg linux_intr_trace_prev;
     integer linux_exception_trace;
     integer linux_exception_trace_limit;
     integer linux_exception_trace_count;
@@ -231,10 +233,11 @@ module tb_mips_soc;
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc ==
                   linux_stall_trace_pc) :
                  ((linux_trace_cycle < 20) ||
-                  (linux_trace_cycle % 100000 == 0) ||
-                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall !=
-                   linux_global_stall_prev)))) begin
-                $display("LINUX_STALL_TRACE cycle=%0d pc=%08h global=%b if=%b mem=%b mdu=%b rob=%b wait=%b ifok=%b memdone=%b memrd=%b memwr=%b dreq=%b dok=%b icstate=%0d icflush=%b ichit=%b icreqv=%b icreqa=%08h icidx=%0d ictag=%08h icvalid=%b%b%b%b ichitv=%b%b%b%b dcstate=%0d mdu_ready=%b idpc=%08h exp=%b intr=%b",
+                  (linux_wait_trace_prev !=
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state) ||
+                  (linux_intr_trace_prev !=
+                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req)))) begin
+                $display("LINUX_STALL_TRACE cycle=%0d pc=%08h global=%b if=%b mem=%b mdu=%b rob=%b wait=%b ifok=%b memdone=%b memrd=%b memwr=%b dreq=%b dok=%b icstate=%0d icflush=%b ichit=%b icreqv=%b icreqa=%08h icidx=%0d ictag=%08h icvalid=%b%b%b%b ichitv=%b%b%b%b dcstate=%0d mdu_ready=%b idpc=%08h exp=%b intr=%b status=%08h cause=%08h count=%08h compare=%08h timer_ip=%b ext_int=%b wait_resume=%08h wb_eret=%b wb_arch=%b exc_flush=%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall,
@@ -268,7 +271,17 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mdu_ready,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.timer_ip_active,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ext_int,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_resume_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush);
                 linux_stall_trace_count = linux_stall_trace_count + 1;
             end
             if (linux_mode_trace != 0 &&
@@ -1278,6 +1291,10 @@ module tb_mips_soc;
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state;
             linux_global_stall_prev =
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall;
+            linux_wait_trace_prev =
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state;
+            linux_intr_trace_prev =
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req;
         end
     end
 
@@ -1298,6 +1315,8 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_STALL_TRACE_PC=%h", linux_stall_trace_pc)) begin end
         linux_stall_trace_count = 0;
         linux_global_stall_prev = 1'b0;
+        linux_wait_trace_prev = 1'b0;
+        linux_intr_trace_prev = 1'b0;
         linux_exception_trace = 1;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE=%d", linux_exception_trace)) begin end
         linux_exception_trace_limit = 256;

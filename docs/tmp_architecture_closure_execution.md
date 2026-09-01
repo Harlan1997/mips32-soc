@@ -1,5 +1,27 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 RTL Linux WAIT wakeup boundary
+
+- Extended the default-off `LINUX_STALL_TRACE` with CP0 `Status`, `Cause`,
+  `Count`, `Compare`, timer pending, external interrupt, WAIT resume PC, WB
+  and flush state. An edge-only mode avoids consuming the bounded trace on
+  ordinary cache stalls.
+- Focused run:
+  `RUN_DIR=/tmp/mips32-linux-wait-edge-20260901 KERNEL=build/linux_boot/real/kernel/vmlinux`
+  `SKIP_LINUX_BUILD=1 RTL_CYCLE_LIMIT=12000000`
+  `LINUX_STALL_TRACE=1 LINUX_STALL_TRACE_CYCLE_START=11700000`
+  `SKIP_COVERAGE=1 tb/linux_boot/run_rtl_linux_progress_gate.sh`.
+- At cycle `11707066`, the CPU is legitimately waiting with
+  `Status=0x10008001`, no pending IP, and `Count` below `Compare`. At cycle
+  `11877077`, `Count=0x005a9d6a` has crossed `Compare=0x005a9d69`, `TI=1`,
+  `IP7=1`, `intr_req=1`, and the CPU accepts the interrupt and redirects to
+  `EBase+0x200`. At cycle `11912786`, Linux has returned to `__r4k_wait` and
+  waits for the next timer period.
+- This proves the observed WAIT instance has a functioning CP0 timer wakeup;
+  it does not close Linux init-task/userspace handoff. No speculative
+  `WAIT`/CP0 RTL change was made. The RTL Linux userspace marker and full
+  RTL/QEMU system differential remain OPEN.
+
 ### 2026-09-01 Main-TLB duplicate-match Machine Check
 
 - Corrected `mips_tlb` probe and both translation lookup ports so any second
