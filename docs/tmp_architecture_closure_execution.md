@@ -3886,3 +3886,14 @@ configuration.
   wrote `Result: FAIL` with the missing mmap marker. This changes reporting
   integrity only; it does not change the Linux guest, QEMU execution mode, or
   success criterion.
+
+### 2026-09-01 Verification foundation current recheck
+
+- `make formal-static-audit` passed with four formal property modules and ten
+  assertions. The VCS bind gate compiled D-cache, TLB, VIC, and fabric assets.
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M make
+  verification-foundation-gate` passed its static asset, bind-compile, tool
+  inventory, and waiver-scope audits.
+- The report records VCS as the only available tool. Verilator/Yosys/SBY,
+  SpyGlass/Questa CDC, VC Static, and JasperGold are absent, so this remains
+  infrastructure readiness rather than formal, CDC/RDC, or lint signoff.
