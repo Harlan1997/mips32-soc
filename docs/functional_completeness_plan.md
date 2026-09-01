@@ -17,6 +17,11 @@ The 14M-cycle RTL Linux probe still observes no userspace marker, so Linux
 userspace boot and full RTL/QEMU Linux differential remain open; later kernel
 execution reaches timer/idle paths.
 
+The fixed-clock Linux build now carries `lpj=624128` in both the DT and
+`CONFIG_CMDLINE`; the kernel config hash includes this command line so a stale
+calibration-heavy image cannot be reused. A fresh userspace probe is required
+before changing the Linux status.
+
 ### 2026-09-01 EDA 默认内存预算收紧
 
 `scripts/run_eda_cgroup.sh` 的默认 cgroup 预算调整为

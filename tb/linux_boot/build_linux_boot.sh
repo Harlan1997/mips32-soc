@@ -8,6 +8,7 @@ BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build/linux_boot/real"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 JOBS=${JOBS:-2}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
+LINUX_CMDLINE=${LINUX_CMDLINE:-"console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init"}
 BUILD_DIR=$(realpath -m "${BUILD_DIR}")
 SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-946684800}
 KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-"2000-01-01 00:00:00"}
@@ -80,6 +81,7 @@ config_inputs_hash=$({
         "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config"
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
+    printf 'LINUX_CMDLINE=%s\n' "${LINUX_CMDLINE}"
 } | sha256sum | awk '{print $1}')
 kernel_config_args=()
 # PHYSICAL_START is conditionally visible in the MIPS Kconfig and is gated by
@@ -103,7 +105,7 @@ if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash
         --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
         --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_list}" \
         --enable CONFIG_CMDLINE_BOOL \
-        --set-str CONFIG_CMDLINE "console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 rdinit=/init" \
+        --set-str CONFIG_CMDLINE "${LINUX_CMDLINE}" \
         --set-val CONFIG_PHYSICAL_START "${KERNEL_PHYSICAL_START}"
     make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
         ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" olddefconfig
