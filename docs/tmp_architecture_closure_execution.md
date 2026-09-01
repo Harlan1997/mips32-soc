@@ -3567,3 +3567,17 @@ configuration.
 - The comparison is limited by the RTL cycle/capture budget and therefore
   remains kernel-prefix evidence; userspace boot and full-length RTL/QEMU
   Linux differential are still open.
+
+### 2026-09-01 focused RTL Linux fault trace
+
+- Added opt-in `LINUX_FAULT_TRACE` with independent limit, VA window, and
+  cycle window controls to the RTL Linux runner/testbench.
+- `make rtl-frontend-compile` passed `8/8`; shell syntax and whitespace checks
+  passed.
+- A fresh 15M-cycle run produced no `LINUX_FAULT_TRACE` record for
+  `0xc0000000..0xc0010000`, and the bounded exception output contained timer
+  interrupts rather than TLBL/TLBS/AdEL/AdES. CP0 trace showed Linux clears
+  and reprograms `Compare` as expected.
+- Conclusion: no target-window MMU fault was proven in this run. Linux RTL
+  userspace boot, scheduler/wait completion, and full RTL/QEMU Linux
+  differential remain open.
