@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux `driver_init` return boundary
+
+复用当前 QEMU 通过的 Linux image 运行 20M 周期退休窗口，捕获
+`driver_init=0x88d10810..0x88d11010`：入口在 cycle `11289761`，函数内部
+多个 initcall 分支正常退休，并在 `0x88d1082c` 的 `jr ra` 后返回。窗口外
+未发现反复卡在 `driver_init` 的证据，且运行正常结束、无 userspace marker。
+这将 RTL Linux 未闭合范围进一步缩小到 `driver_init` 之后的 init-task/
+scheduler handoff；不支持修改 CPU、CP0、WAIT 或 cache，也不改变完整
+RTL/QEMU differential 仍为 OPEN 的结论。
+
 ### 2026-09-02 RTL Linux diagnostic defaults OOM prevention
 
 将 `Makefile`、RTL Linux progress runner 和 testbench 的高频

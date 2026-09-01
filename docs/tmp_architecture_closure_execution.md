@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux `driver_init` return boundary
+
+- A cgroup-limited 20M-cycle reuse run traced the exact ELF-resolved
+  `driver_init` window (`0x88d10810..0x88d11010`) with retire-only records.
+- The function entered at cycle `11289761`, executed its internal initcall
+  work, and returned through `0x88d1082c` (`jr ra`) at cycle `11334679`; the
+  trace did not show a local infinite loop or repeated driver-init entry.
+- The run completed normally without a userspace marker. The active Linux
+  blocker is therefore narrowed to the subsequent init-task/scheduler handoff;
+  no RTL CPU/CP0/WAIT/cache change is justified by this evidence.
+
 ### 2026-09-02 RTL Linux high-frequency trace default fix
 
 - Root cause of the latest resource-risk reproduction was a direct reuse of a
