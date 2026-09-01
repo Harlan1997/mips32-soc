@@ -3581,3 +3581,13 @@ configuration.
 - Conclusion: no target-window MMU fault was proven in this run. Linux RTL
   userspace boot, scheduler/wait completion, and full RTL/QEMU Linux
   differential remain open.
+
+### 2026-09-01 explicit RTL Linux userspace gate
+
+- Added `make rtl-linux-userspace-gate` as a strict wrapper around the RTL
+  Linux progress runner. It requires the `MIPS32_SOC_LINUX_BOOT_SUCCESS`
+  marker and propagates a nonzero status when the marker is absent.
+- The default progress probe remains diagnostic. The current bounded RTL run
+  reports zero userspace markers, therefore the strict gate is intentionally
+  not claimed as passed; full RTL Linux userspace boot and system-mode
+  RTL/QEMU Linux differential remain open.

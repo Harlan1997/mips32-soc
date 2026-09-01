@@ -181,7 +181,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
-.PHONY: linux-boot-build-gate rtl-linux-progress-gate linux-exception-frame-check
+.PHONY: linux-boot-build-gate rtl-linux-progress-gate rtl-linux-userspace-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate qemu-system-mdu-differential-gate qemu-system-state-converter-test
@@ -623,6 +623,11 @@ rtl-linux-progress-gate:
 	LINUX_VECTOR_LINE_TRACE_LIMIT=$(LINUX_VECTOR_LINE_TRACE_LIMIT) \
 	LINUX_VECTOR_LINE=$(LINUX_VECTOR_LINE) \
 	tb/linux_boot/run_rtl_linux_progress_gate.sh
+
+rtl-linux-userspace-gate:
+	$(MAKE) rtl-linux-progress-gate \
+		RTL_LINUX_PROGRESS_DIR=$(BUILD_DIR)/linux_boot/rtl_userspace_gate \
+		LINUX_REQUIRE_USERSPACE=1
 
 linux-exception-frame-check:
 	@test -n "$(LOG)" || (echo "LOG=/path/to/sim.log is required" >&2; exit 2)

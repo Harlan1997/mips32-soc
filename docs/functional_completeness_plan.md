@@ -1231,3 +1231,13 @@ the bounded exception log contained CP0 timer interrupts and periodic
 `Compare` reprogramming. This rules out the previously suspected target-window
 MMIO fault for that run, but does not prove Linux userspace progress. The
 userspace marker and full RTL/QEMU Linux differential remain open.
+
+### 2026-09-01 explicit RTL Linux userspace gate
+
+Added `make rtl-linux-userspace-gate`, which invokes the existing bounded RTL
+Linux runner with `LINUX_REQUIRE_USERSPACE=1` and fails unless
+`MIPS32_SOC_LINUX_BOOT_SUCCESS` is present. This makes the userspace criterion
+discoverable and machine-enforced while preserving the diagnostic progress
+target. The latest bounded probe has zero userspace markers, so this gate is
+currently expected to fail; RTL Linux userspace boot and full RTL/QEMU Linux
+system differential remain open.
