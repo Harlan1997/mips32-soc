@@ -1241,3 +1241,14 @@ discoverable and machine-enforced while preserving the diagnostic progress
 target. The latest bounded probe has zero userspace markers, so this gate is
 currently expected to fail; RTL Linux userspace boot and full RTL/QEMU Linux
 system differential remain open.
+
+### 2026-09-01 Linux WAIT/CP0 timer correlation
+
+Added bounded `LINUX_WAIT_TRACE` diagnostics for WAIT pipeline retirement,
+saved resume PC, wait-state entry, wakeup, and CP0 Count/Compare/TI state. A
+fresh 15M-cycle probe shows WAIT retiring at `0x8800237c`, Count crossing
+Compare, `Cause.TI/IP7` asserting, `intr_req` and interrupt acceptance, and
+ERET returning to `0x88002380`; Linux then re-enters its idle wait loop. This
+rules out a stopped CP0 Count, missed Compare match, or WAIT wakeup failure in
+this run. No userspace marker was observed, so the runnable-task/scheduler or
+userspace handoff path and full RTL/QEMU Linux differential remain open.
