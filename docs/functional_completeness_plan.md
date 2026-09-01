@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-01 QEMU architecture aggregate fresh recheck
+
+`QEMU_TIMEOUT=300 QEMU_BUILD_JOBS=2 make qemu-system-architecture-closure-gate`
+重新执行后，peripheral、selected ISA/MDU/FPU/privileged、MMU 和 LL/SC 子项
+均继续通过；aggregate 在 `linux_userspace_marker` 失败。QEMU generic Linux
+guest 已进入 `/init` 并输出 `MIPS32_SOC_LINUX_BOOT_SUCCESS`，但在保护页子进程
+故意触发 `SIGSEGV` 后没有继续输出 mmap/fork-wait markers。该结果确认
+Linux userspace 的 child-signal/wait4 行为仍未闭合，不能把旧的 aggregate
+报告当作当前成功证据。
+
 ### 2026-09-01 QEMU timer current-value contract alignment
 
 The `mips32-soc-ref` system-mode model now implements the writable `TMR_VAL`

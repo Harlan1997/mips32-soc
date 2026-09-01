@@ -3842,3 +3842,19 @@ configuration.
 - Boundary: this closes the vendor-neutral QEMU timer register model and
   selected RTL differential only; Linux timer driver, full interrupt timing,
   and physical clock signoff remain open.
+
+### 2026-09-01 QEMU architecture aggregate fresh recheck
+
+- A fresh `QEMU_TIMEOUT=300 QEMU_BUILD_JOBS=2 make
+  qemu-system-architecture-closure-gate` run passed the peripheral, selected
+  ISA/MDU/FPU/privileged, MMU, and LL/SC children.
+- The aggregate then failed in `linux_userspace_marker`. The generic Linux
+  guest reached `/init` and printed `MIPS32_SOC_LINUX_BOOT_SUCCESS`, but the
+  intentional protected-page child fault was followed by no mmap/fork-wait
+  markers before timeout. The authoritative log is
+  `build/isa_ref/qemu_system_architecture_closure/linux_userspace_marker.log`;
+  `build/linux_boot/real/qemu_stdout.log` contains the corresponding
+  `do_page_fault()` line.
+- This reopens the QEMU child-signal/wait4 boundary as an active implementation
+  item. No Linux userspace, full RTL/QEMU differential, or full architecture
+  signoff claim is made from the passing child gates.
