@@ -58,6 +58,12 @@ module tb_mips_soc;
     integer linux_trace_limit;
     integer linux_refill_trace;
     integer linux_progress_trace;
+    integer linux_stall_trace;
+    integer linux_stall_trace_limit;
+    integer linux_stall_trace_count;
+    integer linux_stall_trace_cycle_start;
+    reg [31:0] linux_stall_trace_pc;
+    reg linux_global_stall_prev;
     integer linux_exception_trace;
     integer linux_exception_trace_limit;
     integer linux_exception_trace_count;
@@ -218,6 +224,53 @@ module tb_mips_soc;
             linux_trace_cycle = linux_trace_cycle + 1;
             if (linux_trace_limit > 0 && linux_trace_cycle >= linux_trace_limit)
                 $finish;
+            if (linux_stall_trace != 0 &&
+                linux_stall_trace_count < linux_stall_trace_limit &&
+                linux_trace_cycle >= linux_stall_trace_cycle_start &&
+                ((linux_stall_trace_pc != 32'd0) ?
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc ==
+                  linux_stall_trace_pc) :
+                 ((linux_trace_cycle < 20) ||
+                  (linux_trace_cycle % 100000 == 0) ||
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall !=
+                   linux_global_stall_prev)))) begin
+                $display("LINUX_STALL_TRACE cycle=%0d pc=%08h global=%b if=%b mem=%b mdu=%b rob=%b wait=%b ifok=%b memdone=%b memrd=%b memwr=%b dreq=%b dok=%b icstate=%0d icflush=%b ichit=%b icreqv=%b icreqa=%08h icidx=%0d ictag=%08h icvalid=%b%b%b%b ichitv=%b%b%b%b dcstate=%0d mdu_ready=%b idpc=%08h exp=%b intr=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_if,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_mem,
+                    ~u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mdu_ready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rob_backpressure,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_data_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_done,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_data_ok,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_flush,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.cache_hit,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.req_buf_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.req_buf_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.lookup_index,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.lookup_tag,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_valid[3],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_valid[2],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_valid[1],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_valid[0],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_hit[3],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_hit[2],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_hit[1],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_icache.way_hit[0],
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.state,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mdu_ready,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept);
+                linux_stall_trace_count = linux_stall_trace_count + 1;
+            end
             if (linux_mode_trace != 0 &&
                 linux_mode_trace_count < linux_mode_trace_limit &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode !=
@@ -1223,6 +1276,8 @@ module tb_mips_soc;
             end
             linux_wait_state_prev =
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state;
+            linux_global_stall_prev =
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall;
         end
     end
 
@@ -1233,6 +1288,16 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_REFILL_TRACE=%d", linux_refill_trace)) begin end
         linux_progress_trace = 1;
         if (!$value$plusargs("LINUX_PROGRESS_TRACE=%d", linux_progress_trace)) begin end
+        linux_stall_trace = 0;
+        if (!$value$plusargs("LINUX_STALL_TRACE=%d", linux_stall_trace)) begin end
+        linux_stall_trace_limit = 256;
+        if (!$value$plusargs("LINUX_STALL_TRACE_LIMIT=%d", linux_stall_trace_limit)) begin end
+        linux_stall_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_STALL_TRACE_CYCLE_START=%d", linux_stall_trace_cycle_start)) begin end
+        linux_stall_trace_pc = 32'd0;
+        if (!$value$plusargs("LINUX_STALL_TRACE_PC=%h", linux_stall_trace_pc)) begin end
+        linux_stall_trace_count = 0;
+        linux_global_stall_prev = 1'b0;
         linux_exception_trace = 1;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE=%d", linux_exception_trace)) begin end
         linux_exception_trace_limit = 256;
