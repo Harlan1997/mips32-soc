@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 Main-TLB duplicate-match Machine Check
+
+- Corrected `mips_tlb` probe and both translation lookup ports so any second
+  matching valid entry raises `multi_hit`, even when the two entries are
+  byte-for-byte identical.
+- Updated the ASID policy test to require MMU fault type `110` and
+  `TLBP.probe_multi_hit` for duplicate mappings.
+- This closes the duplicate-match detection slice required by the MMU
+  contract; exception recovery policy and OS-level table ownership remain
+  separate work.
+
 ### 2026-09-01 L1 nonblocking coherency snoop closure
 
 - Added opt-in peer-store snoop handling to `l1_cache_nb`: clean resident
