@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 ID delay-slot provenance guard
+
+- Paired the ID-stage delay-slot marker with the branch PC that created it and
+  require `id_pc == branch_pc + 4` before using the marker for asynchronous
+  interrupt `Cause.BD/EPC` recovery. A non-zero resume target by itself was
+  insufficient because a stale marker could survive a flush boundary.
+- Fresh `SKIP_COVERAGE=1 make cpu-irq-mem-pending-gate
+  cpu-irq-delay-slot-gate cpu-cp0-gate rtl-frontend-compile` passed, including
+  all 8 frontend configurations. A fresh 15M-cycle RTL Linux probe no longer
+  reproduces the earlier `AdEL` at `0x88a3df5c`; it continues through the
+  later dynamic `TLBS` path. Userspace marker count remains zero, so RTL Linux
+  userspace boot and full RTL/QEMU system differential remain OPEN.
+
 ### 2026-09-01 Linux init-task scheduling boundary and bounded PC trace
 
 - Added default-off `LINUX_PC_TRACE` to the RTL Linux progress runner and SoC

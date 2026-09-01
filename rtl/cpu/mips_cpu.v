@@ -746,6 +746,11 @@ module mips_cpu #(
     wire        id_bd;
     reg  [31:0] id_delay_slot_next_pc_r;
     wire [31:0] id_delay_slot_next_pc = id_delay_slot_next_pc_r;
+    // Keep the branch PC paired with the delay-slot metadata.  A flush can
+    // leave id_bd asserted for one sampled cycle; the resume target alone is
+    // not enough to prove that the marker belongs to the current ID word.
+    reg  [31:0] id_delay_slot_branch_pc_r;
+    wire [31:0] id_delay_slot_branch_pc = id_delay_slot_branch_pc_r;
     wire        ex_bd;
     wire [31:0] ex_delay_slot_next_pc;
     wire        mem_bd;
@@ -1223,12 +1228,15 @@ module mips_cpu #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n || if_id_flush) begin
             id_delay_slot_next_pc_r <= 32'd0;
+            id_delay_slot_branch_pc_r <= 32'd0;
         end else if (!global_stall) begin
             if (id_control_valid && !id_branch_likely_annul) begin
                 id_delay_slot_next_pc_r <= id_control_taken ? id_control_target :
                                            id_pc_plus_4 + 32'd4;
+                id_delay_slot_branch_pc_r <= id_pc_plus_4 - 32'd4;
             end else begin
                 id_delay_slot_next_pc_r <= 32'd0;
+                id_delay_slot_branch_pc_r <= 32'd0;
             end
         end
     end
@@ -2026,7 +2034,9 @@ module mips_cpu #(
     wire ex_delay_slot_valid  = ex_bd &&
                                 (ex_delay_slot_next_pc != 32'd0);
     wire id_delay_slot_valid  = id_bd &&
-                                 (id_delay_slot_next_pc != 32'd0);
+                                 (id_delay_slot_next_pc != 32'd0) &&
+                                 (id_delay_slot_branch_pc != 32'd0) &&
+                                 (id_pc == (id_delay_slot_branch_pc + 32'd4));
     wire wb_delay_slot_valid  = wb_bd &&
                                 (wb_delay_slot_next_pc != 32'd0);
     wire wb_is_control_transfer =
