@@ -22,6 +22,14 @@ The fixed-clock Linux build now carries `lpj=624128` in both the DT and
 calibration-heavy image cannot be reused. A fresh userspace probe is required
 before changing the Linux status.
 
+The RTL Linux diagnostic now derives the bounded `panic()` trace window from
+the supplied kernel ELF instead of using the stale address from an older
+relocation. The wrapper also avoids the `set -o pipefail`/`nm` SIGPIPE failure;
+frontend compile, a 1K-cycle smoke probe, and a fresh 15M-cycle no-coverage
+probe pass. The 15M probe still observes zero userspace markers and ends in
+the kernel `r4k_wait`/timer path, so RTL Linux userspace and full system
+differential remain open.
+
 ### 2026-09-01 EDA 默认内存预算收紧
 
 `scripts/run_eda_cgroup.sh` 的默认 cgroup 预算调整为
