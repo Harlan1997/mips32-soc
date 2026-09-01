@@ -1631,15 +1631,18 @@ module mips_cpu #(
         end else if (data_data_ok_current) begin
             if (is_sc_mem) begin
                 sc_trace_addr <= {mem_vaddr[31:2], 2'b00};
-                // An SC attempt consumes the reservation, even when the
-                // address or validity check makes the store fail.
-                ll_reservation_valid <= 1'b0;
+                // Linux guest compatibility is opt-in.  The default strict
+                // contract consumes every completed SC attempt, including a
+                // failed or mismatched attempt; the Linux bring-up profile
+                // retains the reservation to match its reference machine.
+                if (`SOC_LINUX_GUEST_ENABLE == 0)
+                    ll_reservation_valid <= 1'b0;
             end
             if (is_ll_mem) begin
                 ll_reservation_valid <= 1'b1;
                 ll_reservation_addr  <= reservation_data_addr;
                 lladdr_visible       <= {mem_vaddr[31:2], 2'b00};
-            end else if (mem_mem_write) begin
+            end else if (mem_mem_write && !is_sc_mem) begin
                 ll_reservation_valid <= 1'b0;
             end
         end

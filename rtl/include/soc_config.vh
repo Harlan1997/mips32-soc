@@ -86,6 +86,13 @@
 `define SOC_LINUX_BOOT_ENABLE 0
 `endif
 
+// Linux bring-up compatibility for implementations that retain an LL
+// reservation across an SC attempt.  The strict architectural reservation
+// consumption contract remains the default and is used by bare-metal gates.
+`ifndef SOC_LINUX_GUEST_ENABLE
+`define SOC_LINUX_GUEST_ENABLE 0
+`endif
+
 // Opt-in single-precision COP1 development contract. Integer-only default
 // behavior remains unchanged and unsupported COP1 instructions stay RI.
 `ifndef SOC_FPU_ENABLE
