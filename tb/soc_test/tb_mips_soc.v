@@ -1304,7 +1304,7 @@ module tb_mips_soc;
     initial begin
         linux_trace_limit = 0;
         if (!$value$plusargs("LINUX_TRACE_LIMIT=%d", linux_trace_limit)) begin end
-        linux_refill_trace = 1;
+        linux_refill_trace = 0;
         if (!$value$plusargs("LINUX_REFILL_TRACE=%d", linux_refill_trace)) begin end
         linux_progress_trace = 1;
         if (!$value$plusargs("LINUX_PROGRESS_TRACE=%d", linux_progress_trace)) begin end
@@ -1320,7 +1320,7 @@ module tb_mips_soc;
         linux_global_stall_prev = 1'b0;
         linux_wait_trace_prev = 1'b0;
         linux_intr_trace_prev = 1'b0;
-        linux_exception_trace = 1;
+        linux_exception_trace = 0;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE=%d", linux_exception_trace)) begin end
         linux_exception_trace_limit = 256;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE_LIMIT=%d", linux_exception_trace_limit)) begin end
