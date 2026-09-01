@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 QEMU architecture closure aggregate recheck
+
+- `QEMU_TIMEOUT=120 QEMU_BUILD_JOBS=2 make
+  qemu-system-architecture-closure-gate` passes from the current head.
+- The serial aggregate passes current-contract, selected retire differential,
+  MMU refill/PageMask/OS pressure, FPU exception/rounding boundaries, LL/SC,
+  and the QEMU Linux userspace marker.
+- This closes the current bounded QEMU architecture aggregate only. Full RTL
+  Linux system-mode differential, complete ISA/privileged/MMU compliance,
+  complete IEEE-754/FPU ABI, unrestricted Linux VM ownership, physical device
+  timing, and ASIC signoff remain OPEN.
+
 ### 2026-09-01 QEMU current-contract aggregate recheck
 
 - `QEMU_TIMEOUT=120 QEMU_BUILD_JOBS=2 make
