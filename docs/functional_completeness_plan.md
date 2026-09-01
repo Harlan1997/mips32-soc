@@ -11,6 +11,16 @@ l1-nonblocking-cpu-complete-gate`。真实 CPU/D-cache opt-in 路径的兼容、
 及未支持的 CACHE/tag/writeback 操作仍由 legacy dcache 处理，完整 coherency、
 任意乱序组合和 Linux cache ABI 仍为 OPEN。
 
+### 2026-09-02 L1/L2 nonblocking system differential
+
+新增 `qemu-system-l1-l2-nonblocking-differential-gate`，在同一真实 RTL
+SoC 中同时选择 L1 nonblocking、CPU ROB、DDR nonblocking window 和 L2
+nonblocking write-back，并使用 `qemu_system_l1_ddr` workload 与
+`mips32-soc-ref` 做 mailbox 边界逐条 retire 比较。当前 gate PASS；这闭合
+联合配置的 bounded system differential 入口，不改变默认 blocking/write-through
+路径，也不等价于完整 MESI/directory、任意 downstream AXI 乱序、coherency 或
+Linux cache ABI signoff。
+
 ### 2026-09-02 RTL Linux initcall tail boundary
 
 40M 周期 retire-only 探针未捕获 `kernel_init_freeable` 尾部
