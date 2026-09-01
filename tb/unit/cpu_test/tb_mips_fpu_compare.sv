@@ -88,7 +88,8 @@ module tb_mips_fpu_compare;
         check_vector(32'h3f800000, 32'h3f800000,
                      16'b1100110011001100, 1'b0);
         // Quiet NaN: only unordered-inclusive predicates are true. The
-        // behavioral primitive reports the existing sticky invalid flag.
+        // selected QNaN vector reports Invalid for every predicate, matching
+        // the QEMU/MIPS reference contract used by the system differential.
         check_vector(32'h7fc00001, 32'h3f800000,
                      16'b1010101010101010, 1'b1);
 
