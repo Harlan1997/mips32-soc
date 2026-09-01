@@ -3671,3 +3671,23 @@ configuration.
   (`8/8`), and a 100k-cycle probe with both traces enabled and limits set to 2
   passed. This closes the diagnostic resource-safety issue only; RTL Linux
   userspace boot and full RTL/QEMU Linux differential remain open.
+
+### 2026-09-01 differential aggregate coverage and simulator timeout guard
+
+- Extended `run_qemu_system_selected_differential_gate.sh` to include the
+  existing DMA fault/reset, 32-source VIC, and MMU IPI differential sub-gates.
+  The aggregate remains serial and selected/bounded; it does not change the
+  full-ISA or Linux residual boundary.
+- The aggregate now exports a configurable `QEMU_TIMEOUT` (default 60s) to
+  child QEMU contract gates. A first aggregate attempt exposed a separate
+  stale `mips_core_icache_exec` VCS process consuming about 99% CPU for hours;
+  that exact process was terminated after inspection.
+- Added a 120s default timeout with a 5s kill-after window to
+  `run_mips_core_icache_exec.sh`; `SIM_TIMEOUT=0` preserves explicit
+  unlimited execution when required.
+- Verification: isolated `make cpu-icache-exec-gate` passed, shell syntax and
+  whitespace checks passed, and the DMA fault gate reproduced independently.
+  The full selected aggregate was rerun through the newly added sub-gate
+  boundary; the remaining failure was the same environment-level QEMU timeout
+  under host load, not a trace mismatch. The functional residuals remain
+  open and are not reclassified by this change.
