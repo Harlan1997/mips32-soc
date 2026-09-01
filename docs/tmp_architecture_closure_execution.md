@@ -3994,3 +3994,18 @@ configuration.
 - Existing 30M evidence still shows the final active PC in `r4k_wait`/scheduler
   paths and no `devtmpfsd` body retire. Linux userspace and full differential
   remain OPEN.
+
+### 2026-09-01 RTL ret_from_fork retire capture
+
+- A bounded 14M-cycle trace of the exact QEMU-passing Linux image captured 256
+  retire-only records in the `ret_from_fork` window. The first record was at
+  cycle `11463030`, followed by the expected `restore_all` register-frame
+  loads, CP0 status/EPC restoration, and the `eret` path.
+- This proves that a newly scheduled kernel thread reaches the MIPS Linux
+  `ret_from_fork` entry and executes its context-restore sequence in RTL. It
+  rules out the narrower hypothesis that `kthreadd` never performs a task
+  switch or that the first kernel-thread entry is wholly absent.
+- The trace does not yet capture `schedule_tail` completion or the first
+  `devtmpfsd` body instruction (`0x88a56c40`). The Linux userspace handoff and
+  full RTL/QEMU system differential therefore remain OPEN; no CPU/WAIT/CP0
+  behavioral change is justified by this observation alone.
