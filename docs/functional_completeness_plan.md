@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-01 ISA R2 sweep result assertions
+
+`tb/soc_test/fw/tests/isa_r2_sweep/main.c` 现在对已执行的 `CLZ`、`CLO`、
+`MOVN`、`MOVZ` 和 `BAL` 结果进行显式断言；此前这些值只参与 checksum，
+存在“指令执行但结果错误仍可通过”的证据缺口。重新运行
+`make isa-r2-gate` 通过，日志包含 `REGRESSION_TEST_SUCCESS`、
+`CPU_CP0_SUMMARY ... ri=0` 且无 `ISA_R2_SPECIAL_FAIL`。这只加强已实现
+R2 子集的证据，不改变完整 ISA/privileged compliance 仍未闭合的结论。
+
 > 版本：v1.49（2026-09-01）
 >
 > 当前目标：建立一条可复现、可审计的 RTL 实现与功能仿真验证主线。本文只覆盖 RTL 编写、前端编译/elaboration、unit/firmware/SoC/UVM 仿真及其功能证据。
