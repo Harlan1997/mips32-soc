@@ -78,6 +78,10 @@ module tb_mips_soc;
     integer linux_wb_trace;
     integer linux_wb_trace_limit;
     integer linux_wb_trace_count;
+    integer linux_mode_trace;
+    integer linux_mode_trace_limit;
+    integer linux_mode_trace_count;
+    reg     linux_cpu_kernel_prev;
     integer linux_wait_trace;
     integer linux_wait_trace_limit;
     integer linux_wait_trace_count;
@@ -204,6 +208,29 @@ module tb_mips_soc;
             linux_trace_cycle = linux_trace_cycle + 1;
             if (linux_trace_limit > 0 && linux_trace_cycle >= linux_trace_limit)
                 $finish;
+            if (linux_mode_trace != 0 &&
+                linux_mode_trace_count < linux_mode_trace_limit &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode !=
+                    linux_cpu_kernel_prev ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret)) begin
+                $display("LINUX_MODE_TRACE cycle=%0d kernel=%b eret=%b pc=%08h wbpc=%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[29],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[31],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[4],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[5],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2]);
+                linux_mode_trace_count = linux_mode_trace_count + 1;
+            end
+            linux_cpu_kernel_prev =
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode;
             if (linux_uart_trace != 0 &&
                 linux_uart_trace_count < linux_uart_trace_limit &&
                 legacy_uart_tx_valid) begin
@@ -1171,6 +1198,12 @@ module tb_mips_soc;
         linux_wb_trace_limit = 256;
         if (!$value$plusargs("LINUX_WB_TRACE_LIMIT=%d", linux_wb_trace_limit)) begin end
         linux_wb_trace_count = 0;
+        linux_mode_trace = 0;
+        if (!$value$plusargs("LINUX_MODE_TRACE=%d", linux_mode_trace)) begin end
+        linux_mode_trace_limit = 64;
+        if (!$value$plusargs("LINUX_MODE_TRACE_LIMIT=%d", linux_mode_trace_limit)) begin end
+        linux_mode_trace_count = 0;
+        linux_cpu_kernel_prev = 1'b1;
         linux_wait_trace = 0;
         if (!$value$plusargs("LINUX_WAIT_TRACE=%d", linux_wait_trace)) begin end
         linux_wait_trace_limit = 256;
