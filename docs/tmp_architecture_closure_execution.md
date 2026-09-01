@@ -3691,3 +3691,22 @@ configuration.
   boundary; the remaining failure was the same environment-level QEMU timeout
   under host load, not a trace mismatch. The functional residuals remain
   open and are not reclassified by this change.
+
+### 2026-09-01 Linux TLB refill window and Make-entry defaults
+
+- Added independent `LINUX_TLB_TRACE_CYCLE_START/END` filtering and forwarded
+  it through the RTL Linux Make entry. A focused 14M-cycle run around the
+  earlier `TLBS` at `0xc0000000` observed Linux's refill sequence: the
+  handler cleared dynamic entries, loaded the page-table result, and retired
+  `TLBWR` at cycle `13873282` with `VPN2=0x00060000`, `EntryLo0=0x00251f5f`,
+  and index 63. The following `c0000020` transactions were ordinary accesses;
+  the trace's `code=0` records are not new faults.
+- No TLB RTL change is justified by this evidence. The remaining Linux
+  userspace failure is later scheduler/OS progress, while full OS-owned VM
+  semantics and full RTL/QEMU Linux differential remain open.
+- Fixed `rtl-linux-progress-gate` Make defaults so caller-provided `RUN_DIR`
+  is honored and unset variables no longer override script defaults such as
+  progress checking, cycle limits, kernel relocation, and trace controls.
+- Verification: isolated 100k-cycle RTL Linux smoke passed with the corrected
+  entry; the 14M-cycle diagnostic completed with bounded logs and no stale
+  simulator process left behind. Shell/diff checks remain clean.
