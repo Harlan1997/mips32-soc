@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 Linux trace argument propagation repair
+
+- Fixed `tb/linux_boot/run_rtl_linux_progress_gate.sh` assigning
+  `LINUX_EXTRA_SIM_ARGS` twice. The second assignment had been overwriting the
+  first, so opt-in `LINUX_PC_TRACE`, symbol-window, GPR, and exception
+  diagnostic arguments were silently absent from the simulator command.
+- `bash -n` and `git diff --check` pass. A 100K-cycle smoke probe shows the
+  command line now carries `+LINUX_PC_TRACE=1`, the resolved
+  `kernel_init=0x88a55e10` window, and retire-only mode.
+- A fresh 20M-cycle `kthreadd` probe then records real execution beginning at
+  cycle `8453329`, including the `schedule()` call and return path. This
+  disproves the narrow hypothesis that `kthreadd` never runs. Linux
+  kernel-to-userspace handoff, the RTL userspace marker, and full RTL/QEMU
+  Linux differential remain OPEN; no speculative CPU or scheduler RTL change
+  was made.
+
 ### 2026-09-01 RTL Linux WAIT wakeup boundary
 
 - Extended the default-off `LINUX_STALL_TRACE` with CP0 `Status`, `Cause`,
