@@ -10,13 +10,18 @@ module tb_l1_cache_nb;
  wire mem_req_valid,mem_req_we; wire [31:0] mem_req_addr; wire [255:0] mem_req_wdata;
  reg mem_req_ready=1,mem_rsp_valid=0,mem_rsp_error=0; reg [31:0] mem_rsp_addr=0; reg [255:0] mem_rsp_data=0;
  wire [3:0] mshr_occupancy,wb_occupancy; integer errors=0; reg saw_hit_wb=0;
+ reg coh_snoop_valid=0; reg [31:0] coh_snoop_addr=0;
+ wire coh_store_valid; wire [31:0] coh_store_addr; reg saw_coh_store=0;
+ always @(negedge clk) begin
+  if (coh_store_valid) saw_coh_store <= 1'b1;
+ end
  always #5 clk=~clk;
  always @(posedge clk) begin
   if (mem_req_valid && mem_req_we && mem_req_ready &&
       mem_req_addr == 32'h00001200 && mem_req_wdata[31:0] == 32'hdeadbeef)
    saw_hit_wb <= 1'b1;
  end
- l1_cache_nb dut(.*);
+ l1_cache_nb #(.ENABLE_COHERENCY(1'b1)) dut(.*);
  task issue_read(input [3:0] id,input [31:0] addr);
   begin @(negedge clk); cpu_id=id;cpu_addr=addr;cpu_we=0;cpu_valid=1;
    while(!cpu_ready) @(negedge clk); @(negedge clk);cpu_valid=0; end
@@ -139,6 +144,29 @@ module tb_l1_cache_nb;
   if (cache_tag_rdata !== 32'h00612345) begin
    $display("FAIL tag store/load data=%h expected=%h",cache_tag_rdata,32'h00612345);
    errors=errors+1;
+  end
+  // A peer store must invalidate a clean line and block a same-cycle CPU
+  // request; the local store event must also be broadcast to the peer.
+  issue_read(4'h1,32'h00001300); return_line(32'h00001300,32'h13000001);
+  @(negedge clk); coh_snoop_addr=32'h00001300; coh_snoop_valid=1;
+  #1;if (cpu_ready) begin $display("FAIL snoop did not block CPU"); errors=errors+1; end
+  @(posedge clk); #1;
+  if (dut.valid[0]) begin $display("FAIL clean snoop did not invalidate line valid=%b hit=%b apply=%b mshr=%b",dut.valid[0],dut.snoop_line_hit,dut.snoop_apply,dut.snoop_mshr_match); errors=errors+1; end
+  coh_snoop_valid=0;
+  issue_read(4'h2,32'h00001300); #1;
+  if (!dut.mvalid[0] && !dut.mvalid[1]) begin $display("FAIL clean snoop did not allow refill"); errors=errors+1; end
+  return_line(32'h00001300,32'h13000002);
+  // A snoop colliding with an outstanding refill is retained and applied
+  // after the refill, rather than being silently lost.
+  issue_read(4'h4,32'h00001400);
+  @(negedge clk); coh_snoop_addr=32'h00001400; coh_snoop_valid=1;
+  @(posedge clk); #1; coh_snoop_valid=0;
+  return_line(32'h00001400,32'h14000001);
+  @(posedge clk); #1;
+  if (dut.valid[0]) begin $display("FAIL pending snoop did not invalidate refill pending=%b hit=%b apply=%b mshr=%b",dut.snoop_pending,dut.snoop_line_hit,dut.snoop_apply,dut.snoop_mshr_match); errors=errors+1; end
+  issue_write(4'h3,32'h00001300,32'hfeed0001);
+  if (!saw_coh_store) begin
+   $display("FAIL local store was not broadcast addr=%h valid=%b hit=%b",coh_store_addr,coh_store_valid,dut.hit); errors=errors+1;
   end
   if(errors==0)$display("REGRESSION_TEST_SUCCESS l1nb mshr=2 wb=4");else $display("REGRESSION_TEST_FAILED l1nb errors=%0d",errors);$finish;
  end

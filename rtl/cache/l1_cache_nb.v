@@ -10,7 +10,8 @@
 module l1_cache_nb #(
     parameter MSHR_COUNT = 2,
     parameter WB_DEPTH   = 4,
-    parameter SETS       = 4
+    parameter SETS       = 4,
+    parameter ENABLE_COHERENCY = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -45,7 +46,11 @@ module l1_cache_nb #(
     input  wire [255:0] mem_rsp_data,
     input  wire        mem_rsp_error,
     output reg  [3:0]  mshr_occupancy,
-    output reg  [3:0]  wb_occupancy
+    output reg  [3:0]  wb_occupancy,
+    input  wire        coh_snoop_valid,
+    input  wire [31:0] coh_snoop_addr,
+    output reg         coh_store_valid,
+    output reg  [31:0] coh_store_addr
 );
     localparam SET_BITS = $clog2(SETS);
     localparam TAG_BITS = 32 - 5 - SET_BITS;
@@ -85,6 +90,9 @@ module l1_cache_nb #(
     reg [RSP_BITS-1:0] rsp_head, rsp_tail;
     reg [RSP_BITS:0] rsp_count;
     reg any_mvalid;
+    reg snoop_mshr_match;
+    reg snoop_pending;
+    reg [31:0] snoop_pending_addr;
 
     reg [31:0] wb_addr [0:WB_DEPTH-1];
     reg [255:0] wb_data [0:WB_DEPTH-1];
@@ -165,7 +173,25 @@ module l1_cache_nb #(
 
     assign cpu_ready = !maint_active && (rsp_count == 0) && (hit || merge_mshr || free_mshr) &&
                        (hit || !dirty[req_set] || wb_count < WB_DEPTH) &&
+                       !coh_snoop_valid && !snoop_pending &&
                        (!merge_mshr || !secondary_valid[merge_mshr_i]);
+
+    wire snoop_req_valid = snoop_pending || coh_snoop_valid;
+    wire [31:0] snoop_req_addr = snoop_pending ? snoop_pending_addr : coh_snoop_addr;
+    wire [SET_BITS-1:0] snoop_set = snoop_req_addr[5 +: SET_BITS];
+    wire [TAG_BITS-1:0] snoop_tag = snoop_req_addr[31 -: TAG_BITS];
+    wire snoop_line_hit = valid[snoop_set] && tags[snoop_set] == snoop_tag;
+    wire snoop_apply = snoop_req_valid && snoop_line_hit && !snoop_mshr_match &&
+                       (!dirty[snoop_set] || wb_count < WB_DEPTH);
+    wire pending_refill_match = snoop_pending && mem_match &&
+                                 (mem_rsp_addr[31:5] == snoop_pending_addr[31:5]);
+    integer snoop_i;
+    always @(*) begin
+        snoop_mshr_match = 1'b0;
+        for (snoop_i = 0; snoop_i < MSHR_COUNT; snoop_i = snoop_i + 1)
+            if (mvalid[snoop_i] && mline[snoop_i] == {snoop_req_addr[31:5], 5'b0})
+                snoop_mshr_match = 1'b1;
+    end
 
     // Maintenance is accepted only after all line requests, responses and
     // queued writebacks have drained. The CPU adapter holds CACHE valid until
@@ -222,6 +248,10 @@ module l1_cache_nb #(
             maint_active <= 1'b0;
             cache_maint_done <= 1'b0;
             cache_maint_error <= 1'b0;
+            coh_store_valid <= 1'b0;
+            coh_store_addr <= 32'd0;
+            snoop_pending <= 1'b0;
+            snoop_pending_addr <= 32'd0;
             mshr_occupancy <= 0; wb_occupancy <= 0;
             for (k = 0; k < SETS; k = k + 1) begin valid[k] <= 0; dirty[k] <= 0; end
             for (k = 0; k < MSHR_COUNT; k = k + 1) begin
@@ -230,6 +260,27 @@ module l1_cache_nb #(
         end else begin
             cache_maint_done <= 1'b0;
             cache_maint_error <= 1'b0;
+            coh_store_valid <= 1'b0;
+            coh_store_addr <= 32'd0;
+            // Capture a peer store that races an outstanding refill.  A
+            // matching response is handled below in the same clock edge so
+            // the refill cannot temporarily resurrect the invalidated line.
+            if (coh_snoop_valid && snoop_mshr_match && !snoop_pending) begin
+                snoop_pending <= 1'b1;
+                snoop_pending_addr <= coh_snoop_addr;
+            end else if (pending_refill_match || (snoop_apply && snoop_pending)) begin
+                snoop_pending <= 1'b0;
+            end
+            if (snoop_apply) begin
+                if (dirty[snoop_set]) begin
+                    wb_addr[wb_tail] <= {tags[snoop_set], snoop_set, 5'b0};
+                    wb_data[wb_tail] <= lines[snoop_set];
+                    wb_tail <= wb_tail + 1'b1;
+                    wb_count <= wb_count + 1'b1;
+                end
+                valid[snoop_set] <= 1'b0;
+                dirty[snoop_set] <= 1'b0;
+            end
             if (maint_active && wb_count == 0) begin
                 maint_active <= 1'b0;
                 cache_maint_done <= 1'b1;
@@ -343,6 +394,8 @@ module l1_cache_nb #(
                         if (cpu_be[3]) fill_word[31:24] = cpu_wdata[31:24];
                         lines[req_set][cpu_addr[4:2]*32 +: 32] <= fill_word;
                         dirty[req_set] <= 1'b1;
+                        coh_store_valid <= ENABLE_COHERENCY;
+                        coh_store_addr <= cpu_addr;
                     end
                 end else if (!merge_mshr) begin
                     if (valid[req_set] && dirty[req_set]) begin
@@ -380,12 +433,28 @@ module l1_cache_nb #(
                         filled_line = mem_rsp_data;
                         if (mwe[k] && !mem_rsp_error)
                             filled_line = merge_store(filled_line, maddr[k], mwdata[k], mbe[k]);
+                        if (mwe[k] && !mem_rsp_error) begin
+                            coh_store_valid <= ENABLE_COHERENCY;
+                            coh_store_addr <= maddr[k];
+                        end
                         primary_rsp_word = filled_line[maddr[k][4:2]*32 +: 32];
                         if (secondary_valid[k] && !mem_rsp_error)
                             filled_line = merge_store(filled_line, secondary_addr[k],
                                                       secondary_wdata[k], secondary_be[k]);
                         secondary_rsp_word = filled_line[secondary_addr[k][4:2]*32 +: 32];
                         lines[mem_rsp_addr[5 +: SET_BITS]] <= filled_line;
+                        if (pending_refill_match && !mem_rsp_error) begin
+                            if (mwe[k] || secondary_valid[k]) begin
+                                wb_addr[wb_tail] <= mem_rsp_addr;
+                                wb_data[wb_tail] <= filled_line;
+                                wb_tail <= wb_tail + 1'b1;
+                                wb_count <= wb_count + 1'b1;
+                            end
+                            // A pending snoop has ordering priority over the
+                            // refill's normal valid/dirty update.
+                            valid[mem_rsp_addr[5 +: SET_BITS]] <= 1'b0;
+                            dirty[mem_rsp_addr[5 +: SET_BITS]] <= 1'b0;
+                        end
                         rsp_fifo_id[rsp_tail + hit_push] <= mid[k];
                         rsp_fifo_data[rsp_tail + hit_push] <= primary_rsp_word;
                         rsp_fifo_error[rsp_tail + hit_push] <= mem_rsp_error;
@@ -393,6 +462,10 @@ module l1_cache_nb #(
                             rsp_fifo_id[rsp_tail + hit_push + 1'b1] <= secondary_id[k];
                             rsp_fifo_data[rsp_tail + hit_push + 1'b1] <= secondary_rsp_word;
                             rsp_fifo_error[rsp_tail + hit_push + 1'b1] <= mem_rsp_error;
+                            if (secondary_we[k] && !mem_rsp_error) begin
+                                coh_store_valid <= ENABLE_COHERENCY;
+                                coh_store_addr <= secondary_addr[k];
+                            end
                         end
                         secondary_valid[k] <= 1'b0;
                         mvalid[k] <= 1'b0;
