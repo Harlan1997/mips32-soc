@@ -98,6 +98,10 @@ module mips_cpu #(
     input  wire        ptw_mem_error,
     output wire        ptw_fault_valid,
     output wire [2:0]  ptw_fault_code,
+    // Pulses when the externally requested TLB invalidation is consumed by
+    // CP0/TLB on this CPU instance.  The SoC shootdown mailbox uses this as
+    // the target-side ACK boundary.
+    output wire        tlb_inv_applied,
     
     // Pipeline controls
     output wire        debug_stall,
@@ -112,6 +116,8 @@ module mips_cpu #(
     // redirect. The cache drains an already-issued AXI burst before restart.
     output wire        inst_flush
 );
+
+    assign tlb_inv_applied = tlb_inv_en;
 
     // =========================================================================
     // Pipeline Control Signals

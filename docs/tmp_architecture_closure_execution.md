@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-01 dual-core shootdown ACK target boundary
+
+- Added an explicit `tlb_inv_applied` observation path through `mips_cpu`,
+  `mips_core`, `soc_core_subsystem` and the core-1 wrapper.
+- The dual-core SoC mailbox ACK now selects the actual target CPU's invalidate
+  application boundary instead of unconditionally delaying the sender pulse.
+  Target 0 is acknowledged by core 0 and target 1 by core 1; reverse mailbox
+  requests retain the same routing rule.
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M RUN_DIR=/tmp/mips32-dual-core-ack-fix2 make dual-core-soc-gate` passes, and
+  `make rtl-frontend-compile` passes all 8 configurations.
+- This closes the bounded target-consumption ACK wiring slice only. Arbitrary
+  multicore OS shootdown ownership, Linux SMP VM behavior, and full MMU/ISA
+  signoff remain open.
+
 ### 2026-09-01 ISA R2 result assertions
 
 - Tightened `tb/soc_test/fw/tests/isa_r2_sweep/main.c` so the existing R2

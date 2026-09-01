@@ -33,7 +33,8 @@ module dual_core_axi_subsystem #(
     input wire [3:0] ext_rid, input wire [31:0] ext_rdata,
     input wire [1:0] ext_rresp, input wire ext_rlast,
     input wire ext_rvalid, output wire ext_rready,
-    output wire debug_stall, output wire debug_flush
+    output wire debug_stall, output wire debug_flush,
+    output wire tlb_inv_applied
 );
     wire [3:0] iawid, iawcache, idata_bid, darid, did;
     wire [3:0] iarid, icache;
@@ -87,6 +88,7 @@ module dual_core_axi_subsystem #(
         .ptw_mem_valid(), .ptw_mem_addr(), .ptw_mem_ready(1'b0),
         .ptw_mem_rdata(32'd0), .ptw_mem_error(1'b0),
         .ptw_fault_valid(), .ptw_fault_code(),
+        .tlb_inv_applied(tlb_inv_applied),
         .inst_awid(iawid), .inst_awaddr(iawaddr), .inst_awlen(iawlen),
         .inst_awsize(iawsize), .inst_awburst(iawburst), .inst_awlock(iawlock),
         .inst_awcache(iawcache), .inst_awprot(iawprot), .inst_awvalid(iawvalid),

@@ -488,6 +488,8 @@ module mips_soc_impl #(
     wire [4:0]  core1_sim_exception_code = 5'h0A;
     wire        core0_coh_store_valid;
     wire [31:0] core0_coh_store_addr;
+    wire        core0_tlb_inv_applied;
+    wire        core1_tlb_inv_applied;
     wire        core1_coh_store_valid;
     wire [31:0] core1_coh_store_addr;
     wire        ipi_core1_core0_invalidate = ipi_core1_invalidate_valid && !ipi_core1_invalidate_target;
@@ -610,6 +612,7 @@ module mips_soc_impl #(
         .coh_store_addr(core0_coh_store_addr),
         .coh_snoop_valid(ENABLE_DUAL_CORE && core1_coh_store_valid),
         .coh_snoop_addr(core1_coh_store_addr),
+        .tlb_inv_applied(core0_tlb_inv_applied),
 
         .inst_awid       (m0_awid),
         .inst_awaddr     (m0_awaddr),
@@ -712,6 +715,7 @@ module mips_soc_impl #(
                 .ext_rdata(fx_rdata), .ext_rresp(fx_rresp), .ext_rlast(fx_rlast),
                 .ext_rvalid(fx_rvalid), .ext_rready(fx_rready),
                 .debug_stall(), .debug_flush()
+                ,.tlb_inv_applied(core1_tlb_inv_applied)
             );
         end else begin : g_no_dual_core
             assign core1_coh_store_valid = 1'b0;
@@ -749,10 +753,13 @@ module mips_soc_impl #(
             ipi_core1_ack_target_r <= 1'b0;
             ipi_core1_ack_generation_r <= 8'd0;
         end else begin
-            ipi_ack_valid_r <= ipi_invalidate_valid;
+            ipi_ack_valid_r <= (ipi_core0_invalidate && core0_tlb_inv_applied) ||
+                               ((ipi_invalidate_valid && ipi_invalidate_target) &&
+                                core1_tlb_inv_applied);
             ipi_ack_target_r <= ipi_invalidate_target;
             ipi_ack_generation_r <= ipi_invalidate_generation;
-            ipi_core1_ack_valid_r <= ipi_core1_invalidate_valid;
+            ipi_core1_ack_valid_r <= ((ipi_core1_core0_invalidate && core0_tlb_inv_applied) ||
+                                      (ipi_core1_core1_invalidate && core1_tlb_inv_applied));
             ipi_core1_ack_target_r <= ipi_core1_invalidate_target;
             ipi_core1_ack_generation_r <= ipi_core1_invalidate_generation;
         end
