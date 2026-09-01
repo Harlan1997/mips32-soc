@@ -11,6 +11,16 @@ l1-nonblocking-cpu-complete-gate`。真实 CPU/D-cache opt-in 路径的兼容、
 及未支持的 CACHE/tag/writeback 操作仍由 legacy dcache 处理，完整 coherency、
 任意乱序组合和 Linux cache ABI 仍为 OPEN。
 
+### 2026-09-02 RTL Linux `__register_sysctl_init` return boundary
+
+针对 `do_one_initcall` 最后观察到的 `init_security_keys_sysctls`
+(`0x88d08b20`) 做了 `__register_sysctl_init` (`0x88d05b30..0x88d05d80`)
+的 10M--14M 周期 retire-only 追踪。多个 initcall 上均观察到该函数进入、
+调用 `__register_sysctl_table` 并经 `0x88d05b90` 的 `jr ra` 返回；没有局部
+死循环证据。该结果进一步把 RTL Linux userspace 阻塞范围留在后续
+init-task/scheduler handoff，不支持修改 CPU、CP0 或 cache；userspace、完整
+RTL/QEMU Linux differential 和完整 ISA/MMU/FPU/OS 仍为 OPEN。
+
 ### 2026-09-02 L1/L2 nonblocking system differential
 
 新增 `qemu-system-l1-l2-nonblocking-differential-gate`，在同一真实 RTL
