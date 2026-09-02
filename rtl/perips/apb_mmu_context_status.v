@@ -17,6 +17,8 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  wire [7:0] release_generation = pwdata[15:8];
  wire root_alloc_req = wr && (paddr[5:2] == 4'd10) && pwdata[0];
  wire root_release_req = wr && (paddr[5:2] == 4'd12) && pwdata[31];
+ wire context_alloc_req = wr && (paddr[5:2] == 4'd15) && pwdata[0];
+ wire context_release_req = wr && (paddr[5:2] == 4'd15) && pwdata[31];
  reg [31:0] root_release_root_r;
  reg [31:0] root_r;
  reg [7:0] root_generation_r;
@@ -24,6 +26,9 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  wire root_alloc_valid, root_alloc_fail, root_release_valid, root_release_reject;
  wire [31:0] root_alloc_root;
  wire [7:0] root_alloc_generation;
+ wire context_alloc_valid, context_alloc_fail, context_release_valid, context_release_reject;
+ wire [31:0] context_alloc_root;
+ wire [7:0] context_alloc_asid, context_alloc_generation;
  wire shootdown_req = wr && (paddr[5:2] == 4'd7) && pwdata[0];
  wire shootdown_ack = wr && (paddr[5:2] == 4'd8) && pwdata[0];
  wire sd_busy, sd_invalidate_valid, sd_done, sd_timeout, sd_rejected;
@@ -57,6 +62,15 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
    .release_generation(pwdata[7:0]), .release_valid(root_release_valid),
    .release_reject(root_release_reject));
 
+ mmu_context_allocator #(.SLOTS(4)) u_context_allocator (
+   .clk(clk), .rst_n(rst_n), .alloc_req(context_alloc_req),
+   .alloc_valid(context_alloc_valid), .alloc_fail(context_alloc_fail),
+   .alloc_root(context_alloc_root), .alloc_asid(context_alloc_asid),
+   .alloc_generation(context_alloc_generation),
+   .release_req(context_release_req), .release_root(root_release_root_r),
+   .release_asid(pwdata[7:0]), .release_generation(pwdata[15:8]),
+   .release_valid(context_release_valid), .release_reject(context_release_reject));
+
  assign pready = 1'b1;
  assign pslverr = 1'b0;
  assign invalidate_valid = sd_invalidate_valid;
@@ -87,6 +101,26 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      if (root_alloc_fail) root_event_r[1] <= 1'b1;
      if (root_release_valid) root_event_r[2] <= 1'b1;
      if (root_release_reject) root_event_r[3] <= 1'b1;
+     if (context_alloc_valid) begin
+       asid_r <= context_alloc_asid;
+       generation_r <= context_alloc_generation;
+       root_r <= context_alloc_root;
+       root_generation_r <= context_alloc_generation;
+       event_r[0] <= 1'b1;
+       root_event_r[0] <= 1'b1;
+     end
+     if (context_alloc_fail) begin
+       event_r[1] <= 1'b1;
+       root_event_r[1] <= 1'b1;
+     end
+     if (context_release_valid) begin
+       event_r[2] <= 1'b1;
+       root_event_r[2] <= 1'b1;
+     end
+     if (context_release_reject) begin
+       event_r[3] <= 1'b1;
+       root_event_r[3] <= 1'b1;
+     end
      if (shootdown_req) sd_status_r <= 0;
      if (sd_invalidate_valid) sd_status_r[1] <= 1'b1;
      if (sd_done) sd_status_r[2] <= 1'b1;

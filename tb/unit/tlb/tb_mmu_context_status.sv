@@ -5,7 +5,7 @@ module tb_mmu_context_status;
   wire [31:0] prdata; wire pready, pslverr;
   wire invalidate_valid; wire [7:0] invalidate_asid;
   wire [18:0] invalidate_vpn; wire [1:0] invalidate_scope;
-  integer errors=0;
+  integer errors=0, n;
   apb_mmu_context_status dut(.*);
   task apb_write(input [5:0] a,input [31:0] d); begin @(negedge clk); paddr=a;pwdata=d;pwrite=1;psel=1;penable=1; @(negedge clk); psel=0;penable=0;pwrite=0; end endtask
   task apb_read(input [5:0] a,input [31:0] exp,input [127:0] n); begin @(negedge clk);paddr=a;pwrite=0;psel=1;penable=1;#1;if(prdata!==exp) begin $display("[FAIL] %0s got %h exp %h",n,prdata,exp);errors=errors+1;end else $display("[PASS] %0s",n);@(negedge clk);psel=0;penable=0; end endtask
@@ -31,6 +31,20 @@ module tb_mmu_context_status;
     apb_write(6'h38,32'h5);
     apb_write(6'h28,32'h1); apb_read(6'h28,32'h00100000,"root generation reuse");
     apb_read(6'h2c,32'h1,"root generation increments");
+    // Atomic context leases bind the root, ASID and generation to one slot.
+    for (n=0; n<4; n=n+1) begin
+      apb_write(6'h3c,32'h1);
+      apb_read(6'h00, (n+1), "combined context ASID");
+      apb_read(6'h28, (32'h00100000 + n*32'h1000), "combined context root");
+    end
+    apb_write(6'h2c,32'h00101000);
+    apb_write(6'h3c,32'h80000002); // slot 2: ASID=2, generation=0
+    apb_write(6'h3c,32'h80000002); // second release must be rejected
+    apb_read(6'h34,32'hd,"combined stale and duplicate release events");
+    apb_write(6'h38,32'hc);
+    apb_write(6'h3c,32'h1);
+    apb_read(6'h00,32'h00000102,"combined generation reuse ASID");
+    apb_read(6'h2c,32'h1,"combined generation reuse token");
     if(!pready || pslverr) begin $display("[FAIL] APB handshake");errors=errors+1;end
     if(errors==0) $display("REGRESSION_TEST_SUCCESS mmu_context_status"); else $display("REGRESSION_TEST_FAILED mmu_context_status"); $finish;
   end

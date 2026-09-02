@@ -4921,3 +4921,18 @@ configuration.
   the bounded hardware-visible root ownership slice; it does not claim a
   general OS allocator, unrestricted demand paging, Linux VM ownership,
   multicore shootdown, or full privileged/MMU signoff.
+
+### 2026-09-02 atomic APB MMU context lease
+
+- Added `rtl/cpu/mmu_context_allocator.v`, which binds one four-slot page-table
+  root, ASID and generation token into a single allocation/release operation.
+  APB `0x3c` allocates with bit 0, or releases the staged root with bit 31,
+  ASID `[7:0]` and generation `[15:8]`.
+- Extended the context-status directed gate with four combined allocations,
+  matching-token release, duplicate-release rejection and generation reuse.
+  `RUN_DIR=/tmp/mmu-context-atomic-20260902c
+  tb/unit/tlb/run_mmu_context_status.sh` passes with
+  `REGRESSION_TEST_SUCCESS mmu_context_status`.
+- This closes atomic bounded context ownership and does not claim a general
+  OS allocator, unrestricted demand paging, Linux VM ownership, multicore
+  shootdown or full privileged/MMU signoff.

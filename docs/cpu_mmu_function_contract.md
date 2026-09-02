@@ -60,6 +60,13 @@ and increments the generation before a root can be reused.  This is a
 hardware-visible bounded ownership contract; it does not provide a general
 kernel allocator or Linux VM policy.
 
+For callers that need an indivisible address-space lease, APB `0x3c` provides
+the combined operation: write bit 0 to allocate a matching root/ASID pair, or
+write bit 31 to release the root staged at `0x2c`, with ASID in `pwdata[7:0]`
+and generation in `pwdata[15:8]`. The combined allocator uses one slot and
+generation, so a root-only or ASID-only partial handoff cannot be reported as
+an atomic context allocation.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:
