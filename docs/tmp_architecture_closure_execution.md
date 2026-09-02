@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 L2 nonblocking parallel refill error recovery
+
+- Extended `tb/unit/l2nb/tb_l2nb_parallel.v` with a concurrent error case: one
+  downstream RID returns `SLVERR` for all eight beats while another RID
+  completes normally; the failed line is then retried after the error mode is
+  removed.
+- The focused VCS gate passes with
+  `reads_checked=44 errors_checked=8 peak_downstream=3 id_switches=9
+  wb_refill_overlap=1`. This verifies full-burst error draining, per-RID
+  isolation, waiter error propagation, and post-error refill recovery for the
+  opt-in two-slot path.
+- This closes only the bounded L2 parallel error/retry slice. Arbitrary AXI
+  ordering, reset/error timing combinations, full coherency/directory
+  behavior, and default-path switching remain open.
+
 ### 2026-09-02 micro-TLB duplicate-match Machine Check
 
 - `mips_tlb` now ORs the authoritative main-TLB `multi_hit` result into the

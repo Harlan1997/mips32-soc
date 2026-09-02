@@ -62,6 +62,7 @@ module tb_l2nb_parallel;
     reg [7:0] rd_len [0:1];
     reg [7:0] rd_beat [0:1];
     reg rd_turn;
+    reg inject_r_error;
     integer rd_sel;
     reg wr_active, wr_bvalid;
     reg [3:0] wr_id;
@@ -84,17 +85,22 @@ module tb_l2nb_parallel;
             m_rvalid = 1'b1;
             m_rid = rd_id[rd_sel];
             m_rdata = mem[(rd_addr[rd_sel][21:2]) + rd_beat[rd_sel]];
+            m_rresp = (inject_r_error && rd_addr[rd_sel] == 32'h0014_0040) ?
+                      2'b10 : 2'b00;
             m_rlast = (rd_beat[rd_sel] == rd_len[rd_sel]);
         end
     end
 
     integer errs=0, peak_active=0, id_switches=0, last_id=-1, overlap_events=0;
+    integer error_checked=0;
     integer outstanding=0, checked=0;
-    reg [31:0] exp_addr [0:15]; reg [7:0] exp_beat [0:15]; reg exp_valid [0:15];
+    reg [31:0] exp_addr [0:15]; reg [7:0] exp_beat [0:15];
+    reg exp_valid [0:15]; reg exp_error [0:15];
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rd_active<=0; rd_turn<=0; wr_active<=0; wr_bvalid<=0;
+            rd_active<=0; rd_turn<=0; inject_r_error<=0;
+            wr_active<=0; wr_bvalid<=0;
             wr_id<=0; wr_addr<=0; wr_beat<=0;
             for (i=0;i<2;i=i+1) begin rd_id[i]<=0; rd_addr[i]<=0; rd_len[i]<=0; rd_beat[i]<=0; end
         end else begin
@@ -134,21 +140,36 @@ module tb_l2nb_parallel;
     end
 
     always @(posedge clk) if (rst_n && s_rvalid && s_rready) begin
-        if (!exp_valid[s_rid] || s_rresp != 2'b00 ||
-            s_rdata !== (32'hA5A5_0000 |
-                         (((exp_addr[s_rid] >> 2) + exp_beat[s_rid]) & 16'hffff))) begin
+        if (!exp_valid[s_rid] ||
+            (exp_error[s_rid] && s_rresp == 2'b00) ||
+            (!exp_error[s_rid] && s_rresp != 2'b00) ||
+            (!exp_error[s_rid] && s_rdata !== (32'hA5A5_0000 |
+                         (((exp_addr[s_rid] >> 2) + exp_beat[s_rid]) & 16'hffff)))) begin
             $display("FAIL parallel read id=%0d beat=%0d data=%h resp=%b", s_rid,
                      exp_beat[s_rid], s_rdata, s_rresp); errs=errs+1;
-        end else checked=checked+1;
+        end else if (exp_error[s_rid]) error_checked=error_checked+1;
+        else checked=checked+1;
         if (last_id >= 0 && last_id != s_rid) id_switches=id_switches+1;
         last_id=s_rid;
-        if (s_rlast) begin exp_valid[s_rid]=0; outstanding=outstanding-1; end
+        if (s_rlast) begin exp_valid[s_rid]=0; exp_error[s_rid]=0; outstanding=outstanding-1; end
         else exp_beat[s_rid]=exp_beat[s_rid]+1;
     end
 
     task issue_read(input [3:0] id, input [31:0] addr, input [7:0] len);
     begin
         exp_addr[id]=addr; exp_beat[id]=0; exp_valid[id]=1; outstanding=outstanding+1;
+        exp_error[id]=0;
+        @(negedge clk); s_arid=id; s_araddr=addr; s_arlen=len; s_arsize=3'b010;
+        s_arburst=2'b01; s_arvalid=1;
+        @(posedge clk); while (!s_arready) @(posedge clk);
+        @(negedge clk); s_arvalid=0;
+    end
+    endtask
+
+    task issue_read_expect_error(input [3:0] id, input [31:0] addr, input [7:0] len);
+    begin
+        exp_addr[id]=addr; exp_beat[id]=0; exp_valid[id]=1; exp_error[id]=1;
+        outstanding=outstanding+1;
         @(negedge clk); s_arid=id; s_araddr=addr; s_arlen=len; s_arsize=3'b010;
         s_arburst=2'b01; s_arvalid=1;
         @(posedge clk); while (!s_arready) @(posedge clk);
@@ -175,7 +196,10 @@ module tb_l2nb_parallel;
         s_awid=0; s_awaddr=0; s_awlen=0; s_awsize=0; s_awburst=1;
         s_arid=0; s_araddr=0; s_arlen=0; s_arsize=0; s_arburst=1;
         s_wdata=0; s_wstrb=0; snoop_addr=0; snoop_valid=0;
-        for (i=0;i<16;i=i+1) begin exp_valid[i]=0; exp_addr[i]=0; exp_beat[i]=0; end
+        for (i=0;i<16;i=i+1) begin
+            exp_valid[i]=0; exp_error[i]=0; exp_addr[i]=0; exp_beat[i]=0;
+        end
+        inject_r_error=0;
         #23 rst_n=1;
         // Fill and dirty one line, then force a dirty replacement while a
         // second clean miss is launched in parallel.
@@ -187,6 +211,15 @@ module tb_l2nb_parallel;
             issue_read(4'd6, 32'h000a_0040, 8'd0);
             while (outstanding != 0) @(posedge clk);
         end
+        // One parallel refill returns SLVERR while a second RID completes;
+        // the failed line must drain cleanly and succeed on retry.
+        inject_r_error=1;
+        issue_read_expect_error(4'd7, 32'h0014_0040, 8'd7);
+        issue_read(4'd8, 32'h0015_0040, 8'd7);
+        while (outstanding != 0) @(posedge clk);
+        inject_r_error=0;
+        issue_read(4'd7, 32'h0014_0040, 8'd0);
+        while (outstanding != 0) @(posedge clk);
         issue_read(4'd1,32'h0001_0000,8'd7);
         issue_read(4'd2,32'h0002_0000,8'd7);
         issue_read(4'd3,32'h0003_0000,8'd7);
@@ -196,7 +229,8 @@ module tb_l2nb_parallel;
         if (peak_active < 2) begin $display("FAIL no two downstream refills observed"); errs=errs+1; end
         if (id_switches < 1) begin $display("FAIL no cross-ID R interleave observed"); errs=errs+1; end
         if (overlap_events < 1) begin $display("FAIL no refill overlapped dirty writeback"); errs=errs+1; end
-        if (errs==0) $display("REGRESSION_TEST_SUCCESS l2nb_parallel (reads_checked=%0d peak_downstream=%0d id_switches=%0d wb_refill_overlap=%0d)", checked, peak_active, id_switches, overlap_events);
+        if (error_checked < 8) begin $display("FAIL parallel error burst did not drain (%0d beats)", error_checked); errs=errs+1; end
+        if (errs==0) $display("REGRESSION_TEST_SUCCESS l2nb_parallel (reads_checked=%0d errors_checked=%0d peak_downstream=%0d id_switches=%0d wb_refill_overlap=%0d)", checked, error_checked, peak_active, id_switches, overlap_events);
         else $display("REGRESSION_TEST_FAIL errs=%0d", errs);
         $finish;
     end
