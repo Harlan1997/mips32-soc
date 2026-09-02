@@ -2,9 +2,10 @@
 
 ### 2026-09-02 COP1 reciprocal zero-boundary closure
 
-- `mips_fpu` now models signed-zero reciprocal and reciprocal-square-root
+- `mips_fpu` now models reciprocal/reciprocal-square-root special-value
   boundaries for both single and double precision: signed infinity plus
-  Divide-by-zero, and signed-zero result for reciprocal of infinity.
+  Divide-by-zero for signed zero, signed-zero result for infinity, and
+  Invalid/default-NaN for negative RSQRT inputs.
 - Added direct primitive checks for result bits and exception flags, plus real
   CPU firmware coverage in `fpu_single` and `fpu_double`. The new consumers
   include three NOPs so the existing in-order FPU write-to-MFC1 timing contract
