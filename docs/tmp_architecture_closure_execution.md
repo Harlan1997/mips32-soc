@@ -5074,3 +5074,16 @@ configuration.
 - This closes the bounded single-core generation-ownership guard only; it does
   not claim multicore OS shootdown, scheduler policy, Linux VM or full
   privileged/MMU signoff.
+
+### 2026-09-03 P1 current RTL/simulation aggregate recheck
+
+`source /etc/profile.d/modules.sh && module load vcs && VCS_JOBS=1
+EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M SKIP_COVERAGE=1
+BUILD_DIR=/tmp/p1-current-20260903 make p1-current-complete` passed.
+The run produced `/tmp/p1-current-20260903/p1_completion_report.md` and
+passed RTL frontend compile, dual-core/coherency and MMU shootdown, hardware
+page-table walker including A/D error recovery, scheduler/timer/IPI, SECDED,
+finite VEIC, ISA R2 implemented-subset, CPU/MMU and DDR4 gates. The bounded
+aggregate remains separate from full ISA/IEEE-754, unrestricted Linux
+VM/userspace RTL, arbitrary MESI/directory coherency, formal/CDC/RDC/lint
+signoff and physical DDR/QSPI product signoff.
