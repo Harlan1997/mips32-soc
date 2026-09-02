@@ -22,6 +22,11 @@ module tb_mmu_context_status;
     apb_write(6'h1c,32'h1); repeat(18) @(negedge clk); apb_read(6'h24,32'hA,"shootdown timeout");
     apb_write(5'h0c,32'h5); apb_read(5'h0c,32'hd,"sticky events");
     apb_write(5'h10,32'h1); apb_read(5'h0c,32'hc,"W1C event");
+    apb_write(6'h1c,32'h1);
+    apb_write(6'h20,32'h00000101);
+    if (!dut.sd_status_r[5]) begin $display("[FAIL] stale shootdown ACK accepted"); errors=errors+1; end
+    apb_write(6'h20,32'h1);
+    apb_read(6'h24,32'h26,"generation-checked shootdown ACK");
     apb_write(6'h28,32'h1); apb_read(6'h28,32'h00100000,"root allocator lease");
     apb_read(6'h2c,32'h0,"root generation starts at zero");
     apb_write(6'h2c,32'h00100000);
