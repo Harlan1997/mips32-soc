@@ -2143,10 +2143,17 @@ module mips_cpu #(
                               wait_interrupt_epc :
                              ((wb_except_req && wb_arch_valid) ? wb_pc :
                              (interrupt_wb_sequential_epc ? (wb_pc + 32'd4) :
+                             // With the branch in WB and its delay slot in
+                             // MEM, exception_pc must be the actual delay
+                             // slot. CP0 applies the normal Cause.BD -4
+                             // adjustment and stores the branch PC in EPC;
+                             // passing wb_pc here would subtract twice.
+                             (interrupt_accept && interrupt_wb_branch_delay ?
+                              mem_pc :
                              ((interrupt_accept &&
                                ((wb_bd && wb_arch_valid) ||
                                 interrupt_wb_branch_delay)) ?
-                               wb_pc : oldest_flushed_pc))));
+                               wb_pc : oldest_flushed_pc)))));
     // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) latch the data
     // address that reached MEM (wb_ex_out is the pipelined mem_ex_out); IF-side
     // address exceptions use the held faulting fetch VA.
