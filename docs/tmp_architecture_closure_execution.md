@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 SRS differential coverage added to selected aggregate
+
+- 将已有的 `qemu-system-srs-exception-differential-gate`、
+  `qemu-system-srs-nested-differential-gate` 和
+  `qemu-system-srs-map-differential-gate` 纳入
+  `run_qemu_system_selected_differential_gate.sh`。
+- 这三项均使用 `SOC_SRS_ENABLE=1`、`QEMU_CPU=24Kc`，覆盖 SRS exception
+  entry/ERET、EXL-held nested fault policy 和 Cause.IP2 到 SRSMap 的映射。
+- 本次只扩大 selected bounded aggregate 的检查完整性；external VEIC/EICSS、
+  Linux SRS ABI、scheduler ownership 和完整 privileged ISA 仍保持 OPEN。
+- 首次独立重跑暴露三个 SRS differential recipe 未传播 `FW_DIR`，导致 QEMU
+  误用仓库默认 firmware 并超时；已修正为各自 `BUILD_DIR` 派生目录，避免
+  aggregate 复用 stale firmware/trace。
+- 使用修复后的 QEMU 参考机构建执行三个独立 gate，均通过
+  `TRACE_COMPARE_PASS`；随后在 `/tmp/qemu-selected-srs-20260902` 串行执行
+  完整 selected aggregate，结果为 `QEMU system selected differential gate:
+  PASS`。
+
 ### 2026-09-02 selected differential aggregate MMU child-gate integration
 
 - 将 qemu-system-mmu-refill-differential-gate、qemu-system-mmu-pagemask-gate 和

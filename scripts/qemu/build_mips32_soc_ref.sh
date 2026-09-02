@@ -46,6 +46,9 @@ project_inputs_hash() {
 PROJECT_INPUTS_HASH=$(project_inputs_hash)
 if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    ! strings "${QEMU_BUILD}/qemu-system-mipsel" | rg -q 'SOC_REF_SC_POLICY' &&
+   rg -q '^void mips_srs_exception_entry' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
+   rg -q '^target_ulong helper_rdpgpr' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c" &&
+   rg -q 'mips_srs_exception_return\(env\)' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c" &&
    rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
@@ -200,8 +203,86 @@ if ! rg -q 'SOC_REF_FIX_BLIKELY_LINK' "${QEMU_SRC}/target/mips/tcg/translate.c";
 fi
 
 if ! rg -q 'srs_gpr\[16\]\[32\]' "${QEMU_SRC}/target/mips/cpu.h"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-srs.patch"
+    sed -i '/^[[:space:]]*target_ulong gpr\[32\];$/a\    target_ulong srs_gpr[16][32];' \
+        "${QEMU_SRC}/target/mips/cpu.h"
+fi
+
+if ! rg -q 'DEF_HELPER_2\(rdpgpr, tl, env, i32\)' \
+        "${QEMU_SRC}/target/mips/helper.h"; then
+    sed -i '/^DEF_HELPER_1(raise_exception_debug/a\DEF_HELPER_2(rdpgpr, tl, env, i32)\nDEF_HELPER_3(wrpgpr, void, env, tl, i32)' \
+        "${QEMU_SRC}/target/mips/helper.h"
+fi
+
+if ! rg -q 'offsetof\(CPUMIPSState, active_tc\.srs_gpr\)' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    sed -i '/static inline void gen_load_srsgpr/,/gen_store_gpr(t0, to);/ s/tcg_gen_add_ptr(addr, tcg_env, addr);/tcg_gen_add_ptr(addr, tcg_env, addr);\n        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));/' "${QEMU_SRC}/target/mips/tcg/translate.c"
+    sed -i '/static inline void gen_store_srsgpr/,/tcg_gen_st_tl(t0, addr, sizeof(target_ulong) \* to);/ s/tcg_gen_add_ptr(addr, tcg_env, addr);/tcg_gen_add_ptr(addr, tcg_env, addr);\n        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));/' "${QEMU_SRC}/target/mips/tcg/translate.c"
+fi
+
+# A previous interrupted patch application can leave the CPU/translator SRS
+# hunks applied while omitting the exception and helper hunks. Repair that
+# partial state before compiling, and keep the repair idempotent for extracted
+# upstream archives as well as the shared build tree.
+if ! rg -q '^void mips_srs_exception_entry' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    sed -i '/^void mips_cpu_do_interrupt(CPUState \*cs)$/i\
+void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt) {\
+    uint32_t css = extract32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4);\
+    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);\
+    uint32_t ess = extract32(env->CP0_SRSCtl, CP0SRSCtl_ESS, 4);\
+    if (interrupt) {\
+        uint32_t pending = (env->CP0_Cause & CP0Ca_IP_mask) >> CP0Ca_IP;\
+        uint32_t enabled = (env->CP0_Status >> CP0St_IM) & 0xff;\
+        uint32_t active = pending & enabled;\
+        int ip;\
+        for (ip = 7; ip >= 0 && !(active & (1U << ip)); --ip) { ; }\
+        if (ip >= 0) { ess = extract32(env->CP0_SRSMap, ip * 4, 4); }\
+    }\
+    if (css >= 16 || pss >= 16 || ess >= 16) { return; }\
+    memcpy(env->active_tc.srs_gpr[css], env->active_tc.gpr, sizeof(env->active_tc.gpr));\
+    memcpy(env->active_tc.gpr, env->active_tc.srs_gpr[ess], sizeof(env->active_tc.gpr));\
+    env->active_tc.gpr[0] = 0;\
+    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4, css);\
+    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4, ess);\
+}\
+\
+void mips_srs_exception_return(CPUMIPSState *env) {\
+    uint32_t css = extract32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4);\
+    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);\
+    if (css >= 16 || pss >= 16) { return; }\
+    memcpy(env->active_tc.srs_gpr[css], env->active_tc.gpr, sizeof(env->active_tc.gpr));\
+    memcpy(env->active_tc.gpr, env->active_tc.srs_gpr[pss], sizeof(env->active_tc.gpr));\
+    env->active_tc.gpr[0] = 0;\
+    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4, pss);\
+}\
+' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+fi
+if ! rg -q 'mips_srs_exception_entry\(env,' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    sed -i '/^[[:space:]]*env->CP0_Status |= (1 << CP0St_EXL);$/i\            mips_srs_exception_entry(env, cs->exception_index == EXCP_EXT_INTERRUPT);' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+fi
+if ! rg -q '^target_ulong helper_rdpgpr' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"; then
+    sed -i '/^static void debug_pre_eret/i\
+target_ulong helper_rdpgpr(CPUMIPSState *env, uint32_t reg) {\
+    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);\
+    return pss < 16 && reg < 32 ? env->active_tc.srs_gpr[pss][reg] : 0;\
+}\
+\
+void helper_wrpgpr(CPUMIPSState *env, target_ulong value, uint32_t reg) {\
+    uint32_t pss = extract32(env->CP0_SRSCtl, CP0SRSCtl_PSS, 4);\
+    if (pss < 16 && reg != 0 && reg < 32) { env->active_tc.srs_gpr[pss][reg] = value; }\
+}\
+' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"
+fi
+if ! rg -q 'mips_srs_exception_return\(env\)' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"; then
+    sed -i '/^[[:space:]]*compute_hflags(env);$/i\    mips_srs_exception_return(env);' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"
+fi
+if ! rg -q 'void mips_srs_exception_entry' "${QEMU_SRC}/target/mips/internal.h"; then
+    sed -i '/^void cpu_mips_stop_count/a\void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt);\nvoid mips_srs_exception_return(CPUMIPSState *env);' \
+        "${QEMU_SRC}/target/mips/internal.h"
 fi
 
 if ! rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
