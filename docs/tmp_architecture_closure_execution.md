@@ -34,6 +34,17 @@
   bounded differential 之外的完整 ISA、Linux VM、coherency 或 product signoff
   声明。
 
+### 2026-09-02 MMU context contract added to selected differential aggregate
+
+- 将 qemu-system-mmu-contract-gate 加入 selected aggregate，使
+  ASID/context/shootdown 的已有 system-mode retire differential 与
+  IPI、refill、PageMask、process-pressure 子项由同一入口统一检查。
+- 在 /tmp/qemu-selected-mmu-contract-20260902 使用单线程、受控内存配置
+  串行执行完整 selected aggregate，结果为
+  QEMU system selected differential gate: PASS。
+- 该变更扩大 bounded selected gate 的检查覆盖，不改变默认 MMU 关闭路径，
+  也不宣称完整 privileged ISA、Linux VM、多核 shootdown 或产品 signoff。
+
 ### 2026-09-02 L2 nonblocking parallel refill reset-in-flight
 
 - Extended the two-slot L2 directed test to assert reset while both clean

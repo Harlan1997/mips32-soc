@@ -17,6 +17,11 @@ ISA/privileged/MMU、Linux VM、coherency 或产品 signoff。
 /tmp/qemu-selected-mmu-isolated-20260902 下均通过，确认 aggregate 的 MMU
 子项不再依赖仓库默认 build 产物。
 
+随后将已有 qemu-system-mmu-contract-gate（ASID/context/shootdown）也纳入
+selected aggregate；在 /tmp/qemu-selected-mmu-contract-20260902 的受控
+串行执行再次通过，统一入口现在覆盖 MMU contract、IPI、refill、PageMask
+和 process-pressure differential。
+
 ### 2026-09-02 CPU/MMU aggregate recheck with Machine Check runtime
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`EDA_MEMORY_MAX=1500M` 和
