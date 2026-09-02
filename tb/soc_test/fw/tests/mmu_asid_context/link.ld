@@ -27,4 +27,8 @@ SECTIONS
     .text.shootdown 0xBFC00400 : {
         KEEP(*(.text.shootdown))
     } > BOOT_ROM
+
+    .text.contract 0xBFC00600 : {
+        KEEP(*(.text.contract))
+    } > BOOT_ROM
 }

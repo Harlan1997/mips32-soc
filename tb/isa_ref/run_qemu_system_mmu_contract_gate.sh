@@ -47,7 +47,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - QEMU machine: mips32-soc-ref
 - Firmware: ${FW_ELF}
 - Evidence: rtl_gate.log, firmware.sha256, rtl/rtl_retire.jsonl, qemu_gate.log, qemu/qemu_build_identity.txt, qemu/qemu_retire.jsonl, qemu/trace_compare.log
-- Checked behavior: ASID-specific refill, ASID reuse, shootdown ACK, post-shootdown refill, wired APB mapping, success mailbox boundary
+- Checked behavior: ASID-specific refill, ASID reuse, shootdown ACK, post-shootdown refill, wired APB mapping, root lease stale/valid release and generation reuse, atomic root/ASID lease allocation/reuse, success mailbox boundary
 - Differential: $(grep '^TRACE_COMPARE_PASS ' "${QEMU_DIR}/trace_compare.log")
 - Residual risk: demand paging, OS page-table ownership, multi-core shootdown, Linux boot, complete privileged ISA, and full MMU differential remain open.
 EOF

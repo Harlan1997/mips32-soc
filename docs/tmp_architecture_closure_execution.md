@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 QEMU MMU root/context lease differential
+
+- `mips32-soc-ref` now mirrors the RTL APB four-slot root allocator and atomic
+  root/ASID context allocator, including generation tokens, stale release
+  rejection, sticky event/W1C behavior, valid release and generation reuse.
+- The `mmu_asid_context` firmware contract workload exercises root lease
+  allocation/release and all four combined context slots. Its new code is placed
+  at `BFC00600` so the fixed TLB refill and shootdown vectors remain unchanged.
+- RTL execution passes `REGRESSION_TEST_SUCCESS product_mmu_asid_context`; the
+  system differential passes `TRACE_COMPARE_PASS records=349` in
+  `/tmp/mmu-context-qemu-lease2-20260902`.
+- This closes the bounded single-core QEMU/RTL ownership-token slice only.
+  Linux page-table allocation, unrestricted demand paging, multicore shootdown,
+  complete privileged/MMU compliance and product signoff remain OPEN.
+
 ### 2026-09-02 SRS differential coverage added to selected aggregate
 
 - 将已有的 `qemu-system-srs-exception-differential-gate`、
