@@ -1468,6 +1468,10 @@ runaway unit simulator can no longer consume CPU indefinitely. This closes
 the resource-safety boundary for this unit entry point only and does not
 change the walker contract or imply formal signoff.
 
+The adjacent `page_table_tlb_refill` unit runner now has the same 30-second
+default watchdog and explicit timeout failure propagation, extending the
+observed unit-entry resource containment to both walker/MMU unit gates.
+
 ### 2026-09-02 FPU doubleword memory round-trip
 
 Extended `tb/soc_test/fw/tests/fpu_double/main.s` with a real CPU data-path
