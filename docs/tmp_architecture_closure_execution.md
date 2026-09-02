@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 scheduler busy-time reschedule retention
+
+- `cpu_scheduler` now latches a timer/IPI/yield trigger that arrives during
+  `ST_SAVE` or `ST_RESTORE` in the existing `pending_mask`, then consumes that
+  request when the next `ST_RUN` switch is launched. This prevents a context
+  transaction from losing a reschedule event while avoiding repeated switches
+  caused by the level of `active_mask`.
+- `tb_scheduler_timer_ipi` injects an IPI during save, verifies a second save
+  begins after the first restore, and verifies the scheduler returns idle after
+  that deferred switch. The scheduler unit test and `rtl-frontend-compile`
+  (`8/8`) also pass.
+- This closes the bounded hardware scheduler handshake only. Linux scheduler
+  policy, OS runnable-task/page-table ownership, SMP scheduling and long-term
+  shootdown remain OPEN.
+
 ### 2026-09-02 COP1 reciprocal zero-boundary closure
 
 - `mips_fpu` now models reciprocal/reciprocal-square-root special-value
