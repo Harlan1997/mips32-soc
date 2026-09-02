@@ -180,6 +180,7 @@ module tb_mips_soc;
     integer hw_ad_aw_count;
     integer hw_ad_w_count;
     integer hw_ad_delayed_w_count;
+    integer hw_ad_reset_seen;
     reg hw_ad_aw_pending;
     time hw_ad_aw_time;
 `endif
@@ -1800,6 +1801,7 @@ module tb_mips_soc;
         hw_ad_aw_count = 0;
         hw_ad_w_count = 0;
         hw_ad_delayed_w_count = 0;
+        hw_ad_reset_seen = 0;
         hw_ad_aw_pending = 1'b0;
         hw_ad_aw_time = 0;
 `endif
@@ -2153,6 +2155,26 @@ module tb_mips_soc;
     end
 `endif
 
+`ifdef TB_MMU_HW_WALKER_AD_RESET
+    // Reset only after the walker has accepted AW while W is still pending.
+    // This exercises cancellation of the shared AXI write owner and requires
+    // the firmware's post-reset sequence to reproduce all three writebacks.
+    initial begin
+        wait (rst_n === 1'b1);
+        wait (u_soc.u_impl.u_core_subsystem.ptw_axi_write_busy === 1'b1);
+        wait (u_soc.u_impl.u_core_subsystem.ptw_axi_write_aw_done === 1'b1 &&
+              u_soc.u_impl.u_core_subsystem.ptw_axi_write_w_done === 1'b0);
+        @(negedge clk);
+        $display("tb_mips_soc: resetting during hardware-walker AW/W split");
+        hw_ad_reset_seen = 1;
+        rst_n = 1'b0;
+        repeat (5) @(posedge clk);
+        @(negedge clk);
+        rst_n = 1'b1;
+        $display("tb_mips_soc: hardware-walker reset released");
+    end
+`endif
+
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
 `ifdef TB_L1_MAINTENANCE
@@ -2233,7 +2255,11 @@ module tb_mips_soc;
                 end
 `endif
 `ifdef TB_MMU_HW_WALKER_AD
+`ifdef TB_MMU_HW_WALKER_AD_RESET
+                if (hw_ad_reset_seen != 1 || hw_ad_aw_count < 3 || hw_ad_w_count < 3 ||
+`else
                 if (hw_ad_aw_count != 3 || hw_ad_w_count != 3 ||
+`endif
                     hw_ad_delayed_w_count == 0 ||
                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2080/4] != 32'h0000603B ||
                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2084/4] != 32'h0000703B ||
