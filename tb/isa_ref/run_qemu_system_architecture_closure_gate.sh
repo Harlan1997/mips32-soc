@@ -5,9 +5,36 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_architecture_closure"}
 BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
+LINUX_KERNEL=${LINUX_KERNEL:-"${ROOT_DIR}/build/linux_boot/real/kernel/vmlinux"}
+LINUX_DTB=${LINUX_DTB:-"${ROOT_DIR}/build/linux_boot/real/mips32_soc_ref.dtb"}
 export BUILD_DIR
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md"
+
+# The aggregate must never silently consume an old kernel/DTB pair.  The
+# Linux gate depends on the tracked SoC VIC overlay, so audit both the kernel
+# configuration and the device-tree compatible string before running it.
+LINUX_CONFIG=${LINUX_CONFIG:-"$(dirname "${LINUX_KERNEL}")/.config"}
+test -s "${LINUX_KERNEL}" || {
+    echo "missing Linux kernel artifact: ${LINUX_KERNEL}" >&2
+    exit 2
+}
+test -s "${LINUX_DTB}" || {
+    echo "missing Linux DTB artifact: ${LINUX_DTB}" >&2
+    exit 2
+}
+test -s "${LINUX_CONFIG}" || {
+    echo "missing Linux kernel config artifact: ${LINUX_CONFIG}" >&2
+    exit 2
+}
+rg -q '^CONFIG_MIPS32_SOC_VIC=y$' "${LINUX_CONFIG}" || {
+    echo "Linux kernel artifact lacks CONFIG_MIPS32_SOC_VIC=y: ${LINUX_CONFIG}" >&2
+    exit 2
+}
+rg -a -q 'harlan,mips32-soc-vic' "${LINUX_DTB}" || {
+    echo "Linux DTB artifact lacks harlan,mips32-soc-vic: ${LINUX_DTB}" >&2
+    exit 2
+}
 
 run_gate() {
     local name=$1
@@ -39,8 +66,8 @@ run_gate llsc_differential \
 run_gate linux_userspace_marker \
     env QEMU_TIMEOUT="${QEMU_TIMEOUT:-300s}" \
     SKIP_LINUX_BUILD=1 \
-    KERNEL="${ROOT_DIR}/build/linux_boot/real/kernel/vmlinux" \
-    DTB="${ROOT_DIR}/build/linux_boot/real/mips32_soc_ref.dtb" \
+    KERNEL="${LINUX_KERNEL}" \
+    DTB="${LINUX_DTB}" \
     make -C "${ROOT_DIR}" linux-boot-build-gate
 
 QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
