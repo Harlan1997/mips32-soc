@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 Hardware walker A/D aggregate gate
+
+- Added `mmu-hardware-walker-ad-complete-gate` and included it in
+  `p1-current-complete`.
+- The aggregate reruns and requires the positive A/D writeback marker, the
+  reset-in-flight writeback marker, and the injected AXI `SLVERR` marker. The
+  controlled run passed with `aw=3,w=3`, `aw=4,w=3`, and
+  `MMU_AD_AXI_WRITE_ERROR_PASS` respectively.
+- This closes the opt-in A/D transaction-level verification bundle. OS-owned
+  page tables, arbitrary reset/error interleavings, physical fault timing,
+  Linux VM semantics and the broader full-plan residuals remain open.
+
 ### 2026-09-02 RTL Linux initcall tail boundary
 
 - A 40M-cycle retire-only probe targeted the tail of
