@@ -45,6 +45,8 @@ run_gate mmu_refill make -C "${ROOT_DIR}" qemu-system-mmu-refill-differential-ga
 run_gate mmu_pagemask make -C "${ROOT_DIR}" qemu-system-mmu-pagemask-gate
 run_gate mmu_process_pressure make -C "${ROOT_DIR}" \
     qemu-system-mmu-process-pressure-gate
+run_gate mmu_os_pressure make -C "${ROOT_DIR}" \
+    qemu-system-mmu-os-pressure-gate
 run_gate l1_l2_nonblocking make -C "${ROOT_DIR}" \
     qemu-system-l1-l2-nonblocking-differential-gate
 
