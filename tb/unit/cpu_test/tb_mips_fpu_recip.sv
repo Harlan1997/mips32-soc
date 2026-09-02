@@ -35,6 +35,22 @@ module tb_mips_fpu_recip;
         end
     endtask
 
+    task automatic check_single_flags;
+        input [4:0] want_op;
+        input [31:0] value;
+        input [31:0] expected;
+        input [4:0] expected_flags;
+        begin
+            op = want_op; a = value; b = 32'd0; c = 32'd0;
+            fmt_double = 1'b0; #1;
+            if (result !== expected || exception_flags !== expected_flags) begin
+                $display("FAIL single boundary op=%0d got=%08h flags=%02h want=%08h flags=%02h",
+                         want_op, result, exception_flags, expected, expected_flags);
+                failures = failures + 1;
+            end
+        end
+    endtask
+
     task automatic check_double;
         input [4:0] want_op;
         input [63:0] value;
@@ -48,13 +64,36 @@ module tb_mips_fpu_recip;
         end
     endtask
 
+    task automatic check_double_flags;
+        input [4:0] want_op;
+        input [63:0] value;
+        input [63:0] expected;
+        input [4:0] expected_flags;
+        begin
+            op = want_op; a_double = value; b_double = 64'd0;
+            c_double = 64'd0; fmt_double = 1'b1; #1;
+            if (result_double !== expected || exception_flags !== expected_flags) begin
+                $display("FAIL double boundary op=%0d got=%016h flags=%02h want=%016h flags=%02h",
+                         want_op, result_double, exception_flags, expected, expected_flags);
+                failures = failures + 1;
+            end
+        end
+    endtask
+
     initial begin
         failures = 0;
         rounding_mode = 2'b00;
         check_single(5'd23, 32'h40800000, 32'h3e800000);
         check_single(5'd24, 32'h40800000, 32'h3f000000);
+        // Zero reciprocal/rsqrt returns signed infinity and raises Div0.
+        check_single_flags(5'd23, 32'h00000000, 32'h7f800000, 5'b01000);
+        check_single_flags(5'd24, 32'h80000000, 32'hff800000, 5'b01000);
         check_double(5'd23, 64'h4010000000000000, 64'h3fd0000000000000);
         check_double(5'd24, 64'h4010000000000000, 64'h3fe0000000000000);
+        check_double_flags(5'd23, 64'h0000000000000000,
+                           64'h7ff0000000000000, 5'b01000);
+        check_double_flags(5'd24, 64'h8000000000000000,
+                           64'hfff0000000000000, 5'b01000);
         // a*b +/- c using exact binary vectors: 2*3 +/- 1.
         op = 5'd25; a = 32'h40000000; b = 32'h40400000;
         c = 32'h3f800000; fmt_double = 1'b0; #1;

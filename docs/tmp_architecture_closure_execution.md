@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 COP1 reciprocal zero-boundary closure
+
+- `mips_fpu` now models signed-zero reciprocal and reciprocal-square-root
+  boundaries for both single and double precision: signed infinity plus
+  Divide-by-zero, and signed-zero result for reciprocal of infinity.
+- Added direct primitive checks for result bits and exception flags, plus real
+  CPU firmware coverage in `fpu_single` and `fpu_double`. The new consumers
+  include three NOPs so the existing in-order FPU write-to-MFC1 timing contract
+  is explicit in the test stream.
+- Under the constrained EDA budget, `mips-fpu-recip-gate`, `fpu-single-gate`,
+  `fpu-double-gate`, `qemu-system-fpu-single-differential-gate`, and
+  `qemu-system-fpu-double-differential-gate` pass. This closes only the
+  reciprocal zero boundary; full IEEE-754/COP1, FPE policy, OS FPU ABI and
+  Linux boot remain OPEN.
+
 ### 2026-09-02 BPU formal invariant integration
 
 - 新增 `tb/formal/bpu_invariants.sva`，绑定真实 `mips_bpu` 的 BTB/BHT 数组，约束

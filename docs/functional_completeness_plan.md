@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 COP1 reciprocal zero-boundary closure
+
+修正 `mips_fpu` 的 `RECIP.{S,D}`/`RSQRT.{S,D}` 零边界：signed zero
+产生对应符号的 infinity，并置 Divide-by-zero；signed infinity 的 reciprocal
+产生 signed zero；负零的 RSQRT 保留符号。NaN/负数非法路径继续使用 Invalid
+和既有默认 NaN contract。新增 primitive flags、单/双精度真实 CPU 固件检查，
+并通过 `qemu-system-fpu-single-differential-gate` 与
+`qemu-system-fpu-double-differential-gate` 的逐条 retire 比较。该项闭合
+reciprocal zero-boundary，不代表完整 IEEE-754、FPE policy、OS FPU ABI 或
+完整 COP1 signoff。
+
 ### 2026-09-02 BPU formal asset integration
 
 新增 BPU DUT-bound invariant，检查 taken control resolve 的 BTB 建立，以及
