@@ -5133,3 +5133,21 @@ signoff and physical DDR/QSPI product signoff.
 - `linux-soc-vic-gate` names this integration gate. RTL Linux userspace boot,
   full RTL/QEMU Linux differential, unrestricted Linux VM/shootdown and full
   ISA/MMU/OS signoff remain open.
+
+### 2026-09-03 RTL Linux run with SoC VIC kernel
+
+- Reused the newly built kernel containing `CONFIG_MIPS32_SOC_VIC=y` and the
+  matching `mips32_soc_ref_rtl.dtb` in a real RTL run:
+  `SKIP_COVERAGE=1 VCS_JOBS=1 EDA_MEMORY_MAX=1500M
+  SKIP_LINUX_BUILD=1 KERNEL=/tmp/linux-vic-20260903/linux_boot/real/kernel/vmlinux
+  RTL_CYCLE_LIMIT=20000000 LINUX_PC_TRACE=1
+  LINUX_PC_TRACE_RETIRE_ONLY=1 LINUX_PC_TRACE_SYMBOL=kernel_init
+  RUN_DIR=/tmp/rtl-linux-vic-kinit-20260903 make rtl-linux-progress-gate`.
+- The image and VCS simulation completed normally with stable memory and
+  continuous progress. `kernel_init` retire records were observed, but no
+  `run_init_process`, userspace marker, or kernel-to-user handoff occurred;
+  the final progress window returned to `r4k_wait`.
+- This proves the Linux VIC driver change does not regress RTL elaboration or
+  early kernel execution, but it does not close RTL Linux userspace boot. The
+  remaining boundary is still the RTL kernel-init/scheduler handoff and must
+  be diagnosed from retirement/state evidence before changing CPU semantics.
