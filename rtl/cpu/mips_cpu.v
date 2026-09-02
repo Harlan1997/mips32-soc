@@ -2401,29 +2401,10 @@ module mips_cpu #(
                                       (data_cache_op == 5'b00100) ||
                                       (data_cache_op == 5'b01000) ||
                                       (data_cache_op == 5'b10000));
-    // I-cache maintenance is indexed/tagged with the same virtual address
-    // used by the instruction side.  D-cache maintenance, in contrast, sees
-    // the translated physical address.  Passing one address form to both
-    // caches makes kseg0 code-generation flushes miss the resident I-cache
-    // line after MMU translation (notably Linux's dynamic TLB handlers).
-    assign data_cache_op_addr = data_cache_op_is_icache ? cache_op_vaddr : data_addr;
-`ifdef SVA_ENABLE
-    property p_icache_maintenance_uses_virtual_address;
-        @(posedge clk) disable iff (!rst_n)
-            (data_cache_op_valid && data_cache_op_is_icache) |->
-                (data_cache_op_addr == cache_op_vaddr);
-    endproperty
-    assert property (p_icache_maintenance_uses_virtual_address)
-        else $error("I-cache maintenance did not retain its virtual address");
-
-    property p_dcache_maintenance_uses_physical_address;
-        @(posedge clk) disable iff (!rst_n)
-            (data_cache_op_valid && !data_cache_op_is_icache) |->
-                (data_cache_op_addr == data_addr);
-    endproperty
-    assert property (p_dcache_maintenance_uses_physical_address)
-        else $error("D-cache maintenance did not use translated physical address");
-`endif
+    // Both caches are physically tagged in this integration: the I-cache
+    // receives MMU output on inst_addr and exposes a physical TagLo. Keep
+    // maintenance on the translated physical address for both I and D sides.
+    assign data_cache_op_addr = data_addr;
     assign data_cache_tag_wdata = cp0_taglo;
     wire _mmu_unused = &{1'b0, mmu_i_cache_attr,
                               mmu_i_ok, mmu_d_ok,
