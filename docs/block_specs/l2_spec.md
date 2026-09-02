@@ -83,15 +83,19 @@
 - **非阻塞增强已交付**：`rtl/cache/l2_cache_nb.v`（`+define+SOC_L2_NONBLOCKING`）实现
   8-entry MSHR，支持 hit-under-miss、miss-under-miss、同 line secondary-miss 合并、跨-id
   乱序响应（同 id 保序）；MSHR/order-queue 满则反压上游（拉低 s_arready/s_awready）。
-  下游 master 口保持单-outstanding（遵守 fabric 合同）。正确性以「in-order accept 为数据
-  阵列唯一序列化点 + 乱序 responder 只读 per-entry 缓冲」保证，消除 eviction/fill 竞争。
+  默认下游 master 口保持单-outstanding；`+define+SOC_L2_DOWNSTREAM_CONCURRENT`
+  opt-in 开启两个 clean-refill AR/R transaction slots，按 RID 路由交错 R beats，
+  而 dirty victim eviction 和 snoop writeback 仍由串行 FSM 保序。正确性以「in-order
+  accept 为数据阵列唯一序列化点 + 乱序 responder 只读 per-entry 缓冲」保证，消除 eviction/fill
+  竞争。
 - 单元证明：`tb/unit/l2nb`（multi-outstanding master + 记分板 + 下游单-outstanding 断言，
   peak_mshr=8、hit_under_miss_beats=26）。SoC 层 L1 仍阻塞，故为正确 drop-in、无 perf delta，
   并发收益待 CPU/L1 hit-under-miss。
 
 ### 2.3 Write Back Buffer
 
-- 当前基线在阻塞 FSM 内直接完成 dirty victim writeback。
+- 当前基线在阻塞 FSM 内直接完成 dirty victim writeback；非阻塞 opt-in 的 dirty
+  victim 仍使用该串行 writeback FSM，clean refill 才可并行。
 - 后续商用增强目标：4-entry write-back buffer，支持 eviction 与 refill 解耦。
 
 ### 2.4 FSM

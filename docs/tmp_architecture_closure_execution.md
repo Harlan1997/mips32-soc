@@ -4714,3 +4714,20 @@ configuration.
 - This closes ID preservation for the existing serial downstream engine. It
   does not close the planned multi-transaction downstream scheduler, arbitrary
   cross-ID response concurrency, or full L1/L2 coherency.
+
+### 2026-09-02 L2 opt-in concurrent downstream refills
+
+- Added `DOWNSTREAM_SLOTS` to `l2_cache_nb`; the default remains `1`. With
+  `SOC_L2_DOWNSTREAM_CONCURRENT`, two clean refill AR transactions may be
+  outstanding simultaneously, and interleaved R beats are routed by RID into
+  independent MSHR slots. Dirty eviction remains serialized to preserve
+  writeback-before-refill ordering.
+- Added `l2-nonblocking-downstream-gate`, whose dual-slot responder accepts two
+  ARs and alternates IDs: `REGRESSION_TEST_SUCCESS l2nb_parallel
+  (reads_checked=32 peak_downstream=3 id_switches=3)`. The `peak_downstream`
+  value `3` is the two-bit active mask `2'b11`.
+- The opt-in wrapper compile and real
+  `qemu-system-l1-l2-nonblocking-differential-gate` both pass. This closes the
+  bounded two-slot clean-refill integration; arbitrary slot counts, concurrent
+  dirty writeback, full downstream AXI ordering and complete coherency remain
+  open.
