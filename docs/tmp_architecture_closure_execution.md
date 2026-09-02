@@ -4406,6 +4406,10 @@ configuration.
 - This prevents an unbounded walker unit process from consuming host CPU and
   memory indefinitely; it does not alter RTL behavior or functional scope.
 
+- The adjacent `run_page_table_tlb_refill.sh` entry point received the same
+  default 30-second watchdog and explicit failure propagation, covering both
+  page-table walker unit runners implicated in the resource audit.
+
 ### 2026-09-02 FPU doubleword memory round-trip recheck
 
 - Extended the real `fpu_double` CPU/SoC guest with an `SDC1`/`LDC1`
