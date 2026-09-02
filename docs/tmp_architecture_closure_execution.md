@@ -4936,3 +4936,18 @@ configuration.
 - This closes atomic bounded context ownership and does not claim a general
   OS allocator, unrestricted demand paging, Linux VM ownership, multicore
   shootdown or full privileged/MMU signoff.
+
+### 2026-09-02 generation-aware APB shootdown acknowledgement
+
+- `apb_mmu_context_status` now snapshots the selected context generation when
+  a shootdown request is issued. An ACK at `0x20` is accepted only when
+  `pwdata[15:8]` matches that snapshot; a stale ACK is rejected and latched in
+  status bit 5 at `0x24`.
+- The existing context-status gate was extended with stale and valid ACKs and
+  still passes timeout, busy and allocator/context checks:
+  `RUN_DIR=/tmp/mmu-context-shootdown-gen-20260902b
+  tb/unit/tlb/run_mmu_context_status.sh` reports
+  `REGRESSION_TEST_SUCCESS mmu_context_status`.
+- This closes the bounded single-core generation-ownership guard only; it does
+  not claim multicore OS shootdown, scheduler policy, Linux VM or full
+  privileged/MMU signoff.

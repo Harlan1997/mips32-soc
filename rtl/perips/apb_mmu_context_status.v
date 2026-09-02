@@ -6,7 +6,7 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  output wire pready,output wire pslverr,
  output wire invalidate_valid, output wire [7:0] invalidate_asid,
  output wire [18:0] invalidate_vpn, output wire [1:0] invalidate_scope);
- reg [7:0] asid_r,generation_r; reg [19:0] vpn_r; reg [1:0] scope_r; reg [3:0] event_r; reg [4:1] sd_status_r;
+ reg [7:0] asid_r,generation_r; reg [19:0] vpn_r; reg [1:0] scope_r; reg [3:0] event_r; reg [5:1] sd_status_r;
  wire wr = psel & penable & pwrite;
  wire rd = psel & penable & ~pwrite;
  wire alloc_req = wr && (paddr[4:2] == 3'b101) && pwdata[0];
@@ -29,12 +29,17 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  wire context_alloc_valid, context_alloc_fail, context_release_valid, context_release_reject;
  wire [31:0] context_alloc_root;
  wire [7:0] context_alloc_asid, context_alloc_generation;
- wire shootdown_req = wr && (paddr[5:2] == 4'd7) && pwdata[0];
- wire shootdown_ack = wr && (paddr[5:2] == 4'd8) && pwdata[0];
  wire sd_busy, sd_invalidate_valid, sd_done, sd_timeout, sd_rejected;
  wire [7:0] sd_invalidate_asid;
  wire [19:0] sd_invalidate_vpn;
  wire [1:0] sd_invalidate_scope;
+ wire shootdown_req = wr && (paddr[5:2] == 4'd7) && pwdata[0];
+ reg [7:0] shootdown_generation_r;
+ wire shootdown_ack_write = wr && (paddr[5:2] == 4'd8) && pwdata[0];
+ wire shootdown_ack = shootdown_ack_write &&
+                      (pwdata[15:8] == shootdown_generation_r);
+ wire shootdown_stale_ack = shootdown_ack_write && sd_busy &&
+                            (pwdata[15:8] != shootdown_generation_r);
 
  // The CPU-visible APB path needs room for an uncached read/ack round trip.
  // Keep the standalone mailbox default short, but use a 64-cycle integration
@@ -84,6 +89,7 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
    if (!rst_n) begin
      asid_r <= 0; generation_r <= 0; vpn_r <= 0; scope_r <= 0; event_r <= 0; sd_status_r <= 0;
      root_release_root_r <= 0; root_r <= 0; root_generation_r <= 0; root_event_r <= 0;
+     shootdown_generation_r <= 0;
    end else begin
      if (alloc_valid) begin
        asid_r <= alloc_asid;
@@ -126,6 +132,8 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      if (sd_done) sd_status_r[2] <= 1'b1;
      if (sd_timeout) sd_status_r[3] <= 1'b1;
      if (sd_rejected) sd_status_r[4] <= 1'b1;
+     if (shootdown_stale_ack) sd_status_r[5] <= 1'b1;
+     if (shootdown_req) shootdown_generation_r <= generation_r;
      if (wr) case (paddr[4:2])
        4'd0: begin asid_r <= pwdata[7:0]; generation_r <= pwdata[15:8]; end
        4'd1: vpn_r <= pwdata[19:0];
@@ -150,7 +158,7 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      4'd1: prdata = {12'h0, vpn_r};
      4'd2: prdata = {30'h0, scope_r};
      4'd3: prdata = {28'h0, event_r};
-     4'd9: prdata = {27'h0, sd_status_r[4], sd_status_r[3], sd_status_r[2],
+     4'd9: prdata = {26'h0, sd_status_r[5], sd_status_r[4], sd_status_r[3], sd_status_r[2],
                      sd_status_r[1], sd_busy};
      4'd10: prdata = root_r;
      4'd11: prdata = {24'h0, root_generation_r};

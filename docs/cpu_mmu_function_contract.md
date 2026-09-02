@@ -67,6 +67,12 @@ and generation in `pwdata[15:8]`. The combined allocator uses one slot and
 generation, so a root-only or ASID-only partial handoff cannot be reported as
 an atomic context allocation.
 
+The APB shootdown request at `0x1c` snapshots the selected context generation.
+The acknowledgement at `0x20` must carry bit 0 set and that generation in
+`pwdata[15:8]`; a mismatched ACK is rejected and recorded in the shootdown
+status bit 5 at `0x24`. This prevents an old owner from completing a
+shootdown after the context lease has advanced.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:
