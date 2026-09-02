@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 current architecture audit and QEMU DDR recheck
+
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M SKIP_COVERAGE=1
+  BUILD_DIR=/tmp/closure-recheck-20260902 make isa-implementation-audit
+  qemu-system-ddr-gate qemu-system-state-converter-test` passed.
+- The executable ISA matrix reports `ISA_IMPLEMENTATION_AUDIT_PASS rows=20`;
+  the custom-machine DDR behavioral window and state-converter tests also pass.
+- This refreshes bounded evidence only. Full ISA/privileged ISA, RTL Linux
+  userspace, full RTL/QEMU system differential, complete IEEE-754/OS VM,
+  physical DDR timing and ASIC signoff remain open.
+
 ### 2026-09-02 Hardware walker A/D aggregate gate
 
 - Added `mmu-hardware-walker-ad-complete-gate` and included it in

@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 current architecture audit and QEMU DDR recheck
+
+在独立 `BUILD_DIR=/tmp/closure-recheck-20260902` 下重新执行
+`make isa-implementation-audit qemu-system-ddr-gate
+qemu-system-state-converter-test`，三个 gate 均通过：ISA 矩阵当前为
+`ISA_IMPLEMENTATION_AUDIT_PASS rows=20`，`mips32-soc-ref` DDR
+behavioral window 为 `PASS`，QEMU 状态转换器单元测试为 `PASS`。这只刷新
+当前实现子集、DDR vendor-neutral 窗口和 differential 基础工具的证据；完整
+ISA/privileged ISA、RTL Linux userspace、完整 RTL/QEMU system differential、
+完整 IEEE-754/OS VM 和物理 DDR signoff 仍保持 OPEN。
+
 ### 2026-09-02 hardware walker optional PTE A/D update handshake
 
 `mips_page_table_walker` now has an opt-in `ENABLE_AD_UPDATE` mode. After a
