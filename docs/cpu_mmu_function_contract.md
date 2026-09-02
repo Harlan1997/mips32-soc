@@ -50,6 +50,16 @@ It emits a one-cycle `invalidate_valid`, rejects overlapping requests, and
 reports completion or bounded timeout. It is a logical single-core endpoint;
 it does not claim a physical inter-core interrupt fabric.
 
+The APB context block now exposes the bounded page-table root lease alongside
+the ASID lease.  `0x28` allocates a root and returns the root address,
+`0x2c` reads its generation, `0x2c` (write) stages the release root address,
+and `0x30` (write with bit 31 set) releases it using `pwdata[7:0]` as the
+generation token.  Root lease events are sticky at `0x34` and are cleared by
+write-one-to-clear at `0x38`.  The root allocator rejects stale generations
+and increments the generation before a root can be reused.  This is a
+hardware-visible bounded ownership contract; it does not provide a general
+kernel allocator or Linux VM policy.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:
