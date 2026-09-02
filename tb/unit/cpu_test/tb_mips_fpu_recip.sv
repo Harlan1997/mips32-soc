@@ -88,12 +88,21 @@ module tb_mips_fpu_recip;
         // Zero reciprocal/rsqrt returns signed infinity and raises Div0.
         check_single_flags(5'd23, 32'h00000000, 32'h7f800000, 5'b01000);
         check_single_flags(5'd24, 32'h80000000, 32'hff800000, 5'b01000);
+        check_single_flags(5'd23, 32'h7f800000, 32'h00000000, 5'b00000);
+        check_single_flags(5'd24, 32'h7f800000, 32'h00000000, 5'b00000);
+        check_single_flags(5'd24, 32'hbf800000, 32'h7fbfffff, 5'b10000);
         check_double(5'd23, 64'h4010000000000000, 64'h3fd0000000000000);
         check_double(5'd24, 64'h4010000000000000, 64'h3fe0000000000000);
         check_double_flags(5'd23, 64'h0000000000000000,
                            64'h7ff0000000000000, 5'b01000);
         check_double_flags(5'd24, 64'h8000000000000000,
                            64'hfff0000000000000, 5'b01000);
+        check_double_flags(5'd23, 64'h7ff0000000000000,
+                           64'h0000000000000000, 5'b00000);
+        check_double_flags(5'd24, 64'h7ff0000000000000,
+                           64'h0000000000000000, 5'b00000);
+        check_double_flags(5'd24, 64'hbff0000000000000,
+                           64'h7ff7ffffffffffff, 5'b10000);
         // a*b +/- c using exact binary vectors: 2*3 +/- 1.
         op = 5'd25; a = 32'h40000000; b = 32'h40400000;
         c = 32'h3f800000; fmt_double = 1'b0; #1;
