@@ -322,6 +322,38 @@ main:
     bne     $t4, $t5, fail
     nop
 
+    /* Zero boundaries: reciprocal/rsqrt preserve the zero sign in Inf and
+     * report Divide-by-zero through the sticky FCSR Flags field. */
+    mtc1    $zero, $f0
+    .word   0x46000095               /* recip.s +0 = +Inf */
+    nop
+    nop
+    nop
+    mfc1    $t4, $f2
+    lui     $t5, 0x7f80
+    bne     $t4, $t5, fail
+    nop
+    cfc1    $t6, $31
+    srl     $t7, $t6, 2
+    andi    $t7, $t7, 0x0008        /* Flags[3] = Divide-by-zero */
+    beq     $t7, $zero, fail
+    nop
+    lui     $t0, 0x8000
+    mtc1    $t0, $f0
+    .word   0x46000096               /* rsqrt.s -0 = -Inf */
+    nop
+    nop
+    nop
+    mfc1    $t4, $f2
+    lui     $t5, 0xff80
+    bne     $t4, $t5, fail
+    nop
+    cfc1    $t6, $31
+    srl     $t7, $t6, 2
+    andi    $t7, $t7, 0x0008
+    beq     $t7, $zero, fail
+    nop
+
     /* Fused arithmetic uses fd as the accumulator: 2*3 +/- 1. */
     lui     $t0, 0x4000
     ori     $t0, $t0, 0

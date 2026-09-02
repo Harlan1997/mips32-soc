@@ -164,21 +164,42 @@ module mips_fpu (
                 OP_NMADD: rr_double = -((ar_double * br_double) + cr_double);
                 OP_NMSUB: rr_double = -((ar_double * br_double) - cr_double);
                 OP_RECIP: begin
-                    if (a_nan || a_double[62:52] == 0 && a_double[51:0] == 0) begin
+                    if (a_nan) begin
                         rr_double = 0.0;
-                        if (a_nan)
-                            exception_flags[4] = 1'b1;
+                        exception_flags[4] = 1'b1;
+                    end else if (a_double[62:52] == 0 && a_double[51:0] == 0) begin
+                        // MIPS RECIP follows the IEEE divide-by-zero boundary:
+                        // reciprocal of signed zero is signed infinity.
+                        rr_double = 0.0;
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = {a_double[63], 11'h7ff, 52'd0};
+                        exception_flags[3] = 1'b1;
+                    end else if (a_double[62:52] == 11'h7ff &&
+                                 a_double[51:0] == 0) begin
+                        // The reciprocal of signed infinity is signed zero.
+                        rr_double = 0.0;
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = {a_double[63], 63'd0};
                     end else begin
                         rr_double = 1.0 / ar_double;
                     end
                 end
                 OP_RSQRT: begin
-                    if (a_nan || a_double[63] || ar_double < 0.0) begin
+                    if (a_nan || (a_double[63] && (a_double[62:0] != 0))) begin
                         rr_double = 0.0;
                         exception_flags[4] = 1'b1;
                     end else if (a_double[62:52] == 0 && a_double[51:0] == 0) begin
+                        // sqrt(-0) is -0, so its reciprocal is signed -Inf;
+                        // both signed zeros raise Divide-by-zero here.
                         rr_double = 0.0;
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = {a_double[63], 11'h7ff, 52'd0};
                         exception_flags[3] = 1'b1;
+                    end else if (a_double[62:52] == 11'h7ff &&
+                                 a_double[51:0] == 0) begin
+                        rr_double = 0.0;
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = 64'd0;
                     end else begin
                         rr_double = 1.0 / $sqrt(ar_double);
                     end
@@ -311,21 +332,40 @@ module mips_fpu (
                 OP_NMADD: rr = -((ar * br) + $bitstoshortreal(c));
                 OP_NMSUB: rr = -((ar * br) - $bitstoshortreal(c));
                 OP_RECIP: begin
-                    if (a_nan || (a[30:23] == 0 && a[22:0] == 0)) begin
+                    if (a_nan) begin
                         rr = 0.0;
-                        if (a_nan)
-                            exception_flags[4] = 1'b1;
+                        exception_flags[4] = 1'b1;
+                    end else if (a[30:23] == 0 && a[22:0] == 0) begin
+                        // Reciprocal of signed zero is signed infinity and
+                        // raises Divide-by-zero.
+                        rr = 0.0;
+                        single_bits_override_valid = 1'b1;
+                        single_bits_override = {a[31], 8'hff, 23'd0};
+                        exception_flags[3] = 1'b1;
+                    end else if (a[30:23] == 8'hff && a[22:0] == 0) begin
+                        // The reciprocal of signed infinity is signed zero.
+                        rr = 0.0;
+                        single_bits_override_valid = 1'b1;
+                        single_bits_override = {a[31], 31'd0};
                     end else begin
                         rr = 1.0 / ar;
                     end
                 end
                 OP_RSQRT: begin
-                    if (a_nan || a[31] || ar < 0.0) begin
+                    if (a_nan || (a[31] && (a[30:0] != 0))) begin
                         rr = 0.0;
                         exception_flags[4] = 1'b1;
                     end else if (a[30:23] == 0 && a[22:0] == 0) begin
+                        // Preserve the sign of zero through sqrt and its
+                        // reciprocal; both signed-zero inputs divide by zero.
                         rr = 0.0;
+                        single_bits_override_valid = 1'b1;
+                        single_bits_override = {a[31], 8'hff, 23'd0};
                         exception_flags[3] = 1'b1;
+                    end else if (a[30:23] == 8'hff && a[22:0] == 0) begin
+                        rr = 0.0;
+                        single_bits_override_valid = 1'b1;
+                        single_bits_override = 32'd0;
                     end else begin
                         rr = 1.0 / $sqrt(ar);
                     end
@@ -519,16 +559,18 @@ module mips_fpu (
         // through the architectural FPR state; QEMU's pre-2008 MIPS mode
         // uses these same default patterns (SNaN bit is one).
         if (fmt_double && exception_flags[4] &&
-            ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
+             ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
              (op == OP_DIV) || (op == OP_SQRT) || (op == OP_MADD) ||
-             (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) begin
+             (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB) ||
+             (op == OP_RECIP) || (op == OP_RSQRT))) begin
             double_bits_override_valid = 1'b1;
             double_bits_override = 64'h7ff7_ffff_ffff_ffff;
         end
         if (!fmt_double && exception_flags[4] &&
-            ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
+             ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
              (op == OP_DIV) || (op == OP_SQRT) || (op == OP_MADD) ||
-             (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB))) begin
+             (op == OP_MSUB) || (op == OP_NMADD) || (op == OP_NMSUB) ||
+             (op == OP_RECIP) || (op == OP_RSQRT))) begin
             single_bits_override_valid = 1'b1;
             single_bits_override = 32'h7fbf_ffff;
         end
