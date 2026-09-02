@@ -4696,3 +4696,20 @@ configuration.
   multiplied by `0.5`.
 - Complete IEEE-754 policy, full double FPE, Linux FPU ABI and COP1 closure
   remain open.
+
+### 2026-09-02 L2 nonblocking downstream AXI ID contract
+
+- `rtl/cache/l2_cache_nb.v` now propagates the owning MSHR ID on downstream
+  refill `ARID` and dirty-victim `AWID`; dirty snoop writeback uses the
+  reserved all-ones ID because it has no MSHR owner.
+- Downstream `RID`/`BID` are checked before refill data is installed or a
+  writeback is treated as successful. An ID mismatch follows the existing
+  precise AXI error recovery path and cannot install a partial line.
+- The L2 unit gate now retains downstream IDs in its behavioral memory and
+  checks all returned beats/responses. Fresh VCS evidence:
+  `REGRESSION_TEST_SUCCESS l2nb (reads_checked=68)`, with
+  `peak_mshr=8`, `peak_wb=4`, `hit_under_miss_beats=33`, and 85 downstream ID
+  checks.
+- This closes ID preservation for the existing serial downstream engine. It
+  does not close the planned multi-transaction downstream scheduler, arbitrary
+  cross-ID response concurrency, or full L1/L2 coherency.

@@ -70,6 +70,7 @@ module tb_l2nb;
 
     // single-outstanding tracker: assert if two bursts overlap on master port
     reg dn_busy; reg [1:0] dn_kind; // 1=read 2=write
+    reg [3:0] dn_id;
     reg [31:0] dn_addr; reg [7:0] dn_len; reg [7:0] dn_beat;
     reg inject_r_error, inject_b_error;
     reg [31:0] inject_r_addr;
@@ -79,13 +80,14 @@ module tb_l2nb;
         if (!rst_n) begin
             m_awready<=0; m_wready<=0; m_bvalid<=0; m_arready<=0;
             m_rvalid<=0; m_rlast<=0; dn_busy<=0; dn_kind<=0; dn_beat<=0;
-            m_bresp<=0; m_rresp<=0; m_bid<=0; m_rid<=0;
+            m_bresp<=0; m_rresp<=0; m_bid<=0; m_rid<=0; dn_id<=0;
         end else begin
             // ---- accept AR ----
             m_arready <= (!dn_busy);
             if (m_arvalid && m_arready && !dn_busy) begin
                 if (dn_busy) begin $display("FAIL downstream 2nd AR while busy"); errs=errs+1; end
                 dn_busy<=1; dn_kind<=1; dn_addr<=m_araddr; dn_len<=m_arlen; dn_beat<=0;
+                dn_id<=m_arid;
                 m_arready<=0; m_rid<=m_arid;
             end
             // ---- read data burst ----
@@ -94,6 +96,10 @@ module tb_l2nb;
                 m_rresp <= (inject_r_error && dn_addr == inject_r_addr) ? 2'b10 : 2'b00;
             end
             if (m_rvalid && m_rready) begin
+                if (m_rid !== dn_id) begin
+                    $display("FAIL downstream R ID mismatch got=%0d exp=%0d", m_rid, dn_id);
+                    errs=errs+1;
+                end
                 if (m_rlast) begin dn_busy<=0; m_rvalid<=0; m_rlast<=0; end
                 else begin dn_beat<=dn_beat+1; m_rvalid<=0; end
             end
@@ -102,19 +108,26 @@ module tb_l2nb;
             if (m_awvalid && m_awready && !dn_busy) begin
                 if (dn_busy) begin $display("FAIL downstream 2nd AW while busy"); errs=errs+1; end
                 dn_busy<=1; dn_kind<=2; dn_addr<=m_awaddr; dn_len<=m_awlen; dn_beat<=0; m_awready<=0;
+                dn_id<=m_awid;
             end
             // ---- write data burst ----
             if (dn_busy && dn_kind==2) begin
                 m_wready<=1;
                 if (m_wvalid && m_wready) begin
                     mem[(dn_addr[21:2])+dn_beat] <= m_wdata;
-                    if (m_wlast) begin m_wready<=0; m_bvalid<=1; m_bid<=m_awid;
+                    if (m_wlast) begin m_wready<=0; m_bvalid<=1; m_bid<=dn_id;
                         m_bresp <= inject_b_error ? 2'b10 : 2'b00;
                     end
                     else dn_beat<=dn_beat+1;
                 end
             end
-            if (m_bvalid && m_bready) begin m_bvalid<=0; dn_busy<=0; end
+            if (m_bvalid && m_bready) begin
+                if (m_bid !== dn_id) begin
+                    $display("FAIL downstream B ID mismatch got=%0d exp=%0d", m_bid, dn_id);
+                    errs=errs+1;
+                end
+                m_bvalid<=0; dn_busy<=0;
+            end
         end
     end
 
@@ -196,8 +209,15 @@ module tb_l2nb;
 
     integer ar_seen, snoop_ar_before, snoop_aw_before;
     integer dbg_ar_count=0, dbg_aw_count=0;
+    integer downstream_id_checks=0;
     always @(posedge clk) if (rst_n && m_arvalid && m_arready) dbg_ar_count<=dbg_ar_count+1;
     always @(posedge clk) if (rst_n && m_awvalid && m_awready) dbg_aw_count<=dbg_aw_count+1;
+    always @(posedge clk) if (rst_n && m_arvalid && m_arready) begin
+        downstream_id_checks<=downstream_id_checks+1;
+    end
+    always @(posedge clk) if (rst_n && m_awvalid && m_awready) begin
+        downstream_id_checks<=downstream_id_checks+1;
+    end
 
     // ---- Concurrency proof monitors (hierarchical peek into DUT) ----
     integer peak_mshr=0, peak_wb=0, hum_events=0;
@@ -387,7 +407,8 @@ module tb_l2nb;
         issue_read(4'd14, 32'h0060_0000, 8'd0); wait_reads;
 
         repeat(20) @(negedge clk);
-        $display("INFO l2nb concurrency: peak_mshr=%0d peak_wb=%0d hit_under_miss_beats=%0d", peak_mshr, peak_wb, hum_events);
+        $display("INFO l2nb concurrency: peak_mshr=%0d peak_wb=%0d hit_under_miss_beats=%0d downstream_id_checks=%0d", peak_mshr, peak_wb, hum_events, downstream_id_checks);
+        if (downstream_id_checks < 1) begin $display("FAIL no downstream AXI ID checks observed"); errs=errs+1; end
         if (peak_mshr < 2) begin $display("FAIL no miss-under-miss observed"); errs=errs+1; end
         if (peak_wb < 4) begin $display("FAIL WB buffer did not reach four entries (peak=%0d)", peak_wb); errs=errs+1; end
         if (hum_events < 1) begin $display("FAIL no hit-under-miss observed"); errs=errs+1; end
