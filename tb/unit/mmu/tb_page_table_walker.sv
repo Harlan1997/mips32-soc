@@ -19,7 +19,7 @@ module tb_page_table_walker;
   reg [31:0] ptbr,va,mem_rdata; reg [1:0] access;
   wire req_ready,mem_valid,resp_valid,fault_valid; wire [31:0] mem_addr,pa,leaf_pte;
   wire pte_update_valid; wire [31:0] pte_update_addr,pte_update_data;
-  reg pte_update_ready=1'b1; wire [2:0] fault_code;
+  reg pte_update_ready=1'b1, pte_update_error=1'b0; wire [2:0] fault_code;
   reg [31:0] mem[0:4095]; integer errors=0;
   integer pte_updates=0; reg [31:0] last_pte_update_addr,last_pte_update_data;
   mips_page_table_walker #(.PAGE_MASK(`TEST_PAGE_MASK), .ENABLE_AD_UPDATE(1'b1)) dut(.*);
