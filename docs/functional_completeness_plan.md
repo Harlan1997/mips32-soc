@@ -1458,3 +1458,14 @@ ERET returning to `0x88002380`; Linux then re-enters its idle wait loop. This
 rules out a stopped CP0 Count, missed Compare match, or WAIT wakeup failure in
 this run. No userspace marker was observed, so the runnable-task/scheduler or
 userspace handoff path and full RTL/QEMU Linux differential remain open.
+
+### 2026-09-02 FPU doubleword memory round-trip
+
+Extended `tb/soc_test/fw/tests/fpu_double/main.s` with a real CPU data-path
+`SDC1`/`LDC1` round-trip using an even FPR pair and explicit checks of both
+little-endian words. `make fpu-double-gate` passed with
+`REGRESSION_TEST_SUCCESS`, and the fresh
+`make qemu-system-fpu-double-differential-gate` run passed the strict
+`QEMU system RTL retire differential` gate. This closes the selected
+two-beat doubleword memory slice only; complete COP1/IEEE-754 behavior,
+FPU OS context/ABI and full ISA/QEMU differential remain open.

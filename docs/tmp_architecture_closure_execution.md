@@ -4395,3 +4395,14 @@ configuration.
   the original PTE value `0x0000600b`, proving `pte_update_error` reaches the
   walker without committing the failed write. Physical fault timing and
   arbitrary reset/error interleavings remain open.
+
+### 2026-09-02 FPU doubleword memory round-trip recheck
+
+- Extended the real `fpu_double` CPU/SoC guest with an `SDC1`/`LDC1`
+  round-trip and explicit low/high word checks for an even FPR pair.
+- `make fpu-double-gate` passed with `REGRESSION_TEST_SUCCESS`.
+- `make qemu-system-fpu-double-differential-gate` passed the strict
+  `QEMU system RTL retire differential` gate.
+- The result is limited to the selected two-beat doubleword memory path;
+  complete COP1/IEEE-754, FPU OS context/ABI, full ISA/QEMU Linux differential
+  and RTL Linux userspace remain open.
