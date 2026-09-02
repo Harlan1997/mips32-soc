@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 QEMU/RTL UART interrupt contract audit and compatibility fix
+
+- 对照 QEMU `hw/mips/mips_int.c` 和 RTL `mips_cp0.v` 确认 `env->irq[n]`
+  对应 `Cause.IP[n+2]`；RTL 的 `ext_int[0]` 和 QEMU VIC 聚合均对应 IP2。
+- QEMU custom machine 的默认 bare-metal 路径现在把 UART THRE level 放入
+  mirrored VIC source 1，再由 VIC 聚合到 CPU IP2，和 RTL
+  `irq_sources[1]` 一致。当前 generic Linux image 尚无 SoC VIC driver，
+  `linux-guest=on` 保留直接 CPU IP4 兼容路径，DTS `<4>` 与之匹配。
+- 新增 `scripts/check_irq_contract.py` 和 `make irq-contract-audit`；该审计
+  被 `verification-foundation-gate`/`current-contract-signoff` 调用，检查
+  source ordering、IP2 aggregate、Linux direct-IP4 fallback 和两份 DTS。
+- 验证通过：`IRQ_CONTRACT_AUDIT_PASS uart_vic_source=1 cpu_ip=2`、
+  QEMU system VIC CPU RTL retire differential（735 records）、Linux boot
+  gate（完整 userspace marker set）、RTL frontend compile（33 modules）。
+- 这闭合了当前可证明的中断 wiring/model contract；Linux VIC driver、
+  RTL Linux userspace boot、完整 RTL/QEMU Linux differential、任意深度 OS
+  IRQ 语义和完整 ISA/MMU/OS signoff 仍 OPEN。
+
 ### 2026-09-03 COP1 MTHC1/MFHC1 high-word transfer closure
 
 - 扩展 `mips_control` 的 COP1 transfer decode，加入 `MFHC1`（rs=`00011`）
