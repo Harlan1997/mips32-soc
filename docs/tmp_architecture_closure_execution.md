@@ -1,5 +1,14 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux trace hexadecimal-argument normalization
+
+- `run_rtl_linux_progress_gate.sh` 现在在转发 `%h` plusarg 前剥离可选的
+  `0x/0X` 前缀，避免当前 VCS 对带前缀地址产生截断警告。
+- 100K-cycle no-coverage smoke 使用带 `0x` 的 PC 窗口通过；命令行记录为
+  `LINUX_PC_TRACE_START=88d10844`、`END=88d11070`，日志无 `Too many digits`。
+- 该变更只改善诊断参数的可重复性，不改变 RTL 行为，也不改变 RTL Linux
+  userspace、完整 RTL/QEMU differential 仍为 OPEN 的结论。
+
 ### 2026-09-02 RTL Linux `driver_init` post-return focused trace
 
 - 使用 `LINUX_PC_TRACE_START=88d10844`、`LINUX_PC_TRACE_END=88d11070`（无
