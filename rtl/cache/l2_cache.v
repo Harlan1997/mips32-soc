@@ -96,15 +96,19 @@ module l2_cache #(
     // ---- Non-blocking write-back implementation (full MSHR) ----
     // Accepts new upstream requests while prior misses are outstanding: N-entry
     // MSHR file, hit-under-miss + miss-under-miss, secondary-miss merge, OoO
-    // responses across ids (in-order per id). Downstream master port stays
-    // single-outstanding (fabric contract). Same retention-array reset policy as
-    // l2_cache_caching. Selected with +define+SOC_L2_CACHING +SOC_L2_NONBLOCKING.
+    // responses across ids (in-order per id). Downstream clean refills remain
+    // single-outstanding by default; +define+SOC_L2_DOWNSTREAM_CONCURRENT
+    // opts into two AR/R refill slots with RID routing. Same retention-array
+    // reset policy as l2_cache_caching.
     // NOTE: current SoC L1s are blocking single-outstanding, so at SoC level this
     // sees one request at a time (a correct drop-in); its concurrency is proven
     // in tb/unit/l2nb. The perf win lands once CPU/L1 hit-under-miss exists.
     l2_cache_nb #(
         .SIZE_BYTES(SIZE_BYTES), .LINE_BYTES(LINE_BYTES), .WAYS(WAYS),
         .ID_WIDTH(ID_WIDTH), .ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)
+`ifdef SOC_L2_DOWNSTREAM_CONCURRENT
+        , .DOWNSTREAM_SLOTS(2)
+`endif
     ) u_impl (
         .clk(clk), .rst_n(rst_n),
         .s_awid(s_awid), .s_awaddr(s_awaddr), .s_awlen(s_awlen),

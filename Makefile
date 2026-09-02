@@ -1067,7 +1067,7 @@ phase3c-regression: firmware
 phase3c-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_PHASE3C_TESTLIST) RUN_ROOT=$(UVM_PHASE3C_COMPLETE_DIR) tb/uvm_tb/run_phase3c_complete.sh
 
-current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate mem-stage-gate dcache-parity-gate verification-foundation-gate cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
+current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate mem-stage-gate dcache-parity-gate verification-foundation-gate cache-concurrency-gate l2-nonblocking-downstream-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
 	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) ALLOW_EXTERNAL_RUN_ROOT=1 tb/uvm_tb/run_current_contract_signoff.sh
 
 soc-smoke: firmware
@@ -1168,6 +1168,9 @@ dcache-coherency-gate:
 cache-concurrency-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/cache_concurrency tb/unit/cache/run_concurrency_gate.sh
 
+l2-nonblocking-downstream-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/l2nb_downstream tb/unit/cache/run_l2_nb_downstream_gate.sh
+
 soc-filelist-audit:
 	bash tb/unit/run_soc_filelist_audit.sh
 
@@ -1256,7 +1259,7 @@ qemu-system-l1-l2-nonblocking-differential-gate: qemu-system-mips32-soc-ref
 	FW_TEST=qemu_system_l1_ddr FW_DIR=$(BUILD_DIR)/firmware/qemu_system_l1_ddr \
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_l1_l2_nonblocking_differential \
 	RTL_TIMEOUT=180 \
-	RTL_VCS_EXTRA_ARGS='+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 +define+SOC_L2_CACHING +define+SOC_L2_NONBLOCKING +define+TB_SKIP_UART_PIN_CHECK' \
+	RTL_VCS_EXTRA_ARGS='+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 +define+SOC_L2_CACHING +define+SOC_L2_NONBLOCKING +define+SOC_L2_DOWNSTREAM_CONCURRENT +define+TB_SKIP_UART_PIN_CHECK' \
 	tb/isa_ref/run_qemu_system_differential_gate.sh
 
 

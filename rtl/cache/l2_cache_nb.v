@@ -43,7 +43,8 @@ module l2_cache_nb #(
     parameter DATA_WIDTH = 32,
     parameter N_MSHR     = 8,   // outstanding miss slots
     parameter ORD_DEPTH  = 8,   // in-flight accepted-request slots
-    parameter WB_DEPTH   = 4    // buffered dirty victim lines
+    parameter WB_DEPTH   = 4,   // buffered dirty victim lines
+    parameter DOWNSTREAM_SLOTS = 1 // opt-in concurrent refill transactions
 ) (
     input  wire clk,
     input  wire rst_n,
@@ -131,6 +132,7 @@ module l2_cache_nb #(
     localparam MSHR_BITS    = $clog2(N_MSHR);
     localparam ORD_BITS     = $clog2(ORD_DEPTH);
     localparam WB_BITS      = $clog2(WB_DEPTH);
+    localparam RD_SLOT_BITS = (DOWNSTREAM_SLOTS <= 1) ? 1 : $clog2(DOWNSTREAM_SLOTS);
     localparam LINE_W       = DATA_WIDTH * WORDS_PER_LN;           // 256
 
     // ---- Storage arrays (retention; cold-boot init only) ----
@@ -392,6 +394,22 @@ module l2_cache_nb #(
     reg [LINE_W-1:0]    me_linebuf;  // assembled refill line
     reg                 me_is_snoop_wb;
 
+    // Optional parallel refill slots. The default preserves the historical
+    // single-outstanding miss engine; enabled slots accept multiple clean
+    // refills and route interleaved R beats by RID. Dirty eviction remains
+    // serialized through the existing writeback FSM.
+    reg                    rd_valid [0:DOWNSTREAM_SLOTS-1];
+    reg [MSHR_BITS-1:0]    rd_mshr  [0:DOWNSTREAM_SLOTS-1];
+    reg [2:0]              rd_cnt   [0:DOWNSTREAM_SLOTS-1];
+    reg                    rd_error [0:DOWNSTREAM_SLOTS-1];
+    reg                    rd_issue_v;
+    reg [MSHR_BITS-1:0]    rd_issue_i;
+    reg [RD_SLOT_BITS-1:0] rd_issue_slot;
+    reg                    rd_resp_v;
+    reg [RD_SLOT_BITS-1:0] rd_resp_slot;
+    reg                    rd_resp_id_match;
+    integer rsi, rsm;
+
     // Pick an MSHR needing service (valid, not issued, not filled)
     reg me_pick_v; reg [MSHR_BITS-1:0] me_pick_i;
     integer mp;
@@ -401,6 +419,48 @@ module l2_cache_nb #(
             if (mshr_valid[mp] && !mshr_issued[mp] && !mshr_filled[mp]) begin
                 me_pick_v = 1'b1; me_pick_i = mp[MSHR_BITS-1:0];
             end
+    end
+
+    // A clean miss can be launched into a free downstream read slot. A
+    // dirty victim first uses the serial eviction FSM, preserving writeback
+    // ordering and the existing WB-buffer ownership rules.
+    always @(*) begin
+        rd_issue_v = 1'b0;
+        rd_issue_i = {MSHR_BITS{1'b0}};
+        rd_issue_slot = {RD_SLOT_BITS{1'b0}};
+        if (DOWNSTREAM_SLOTS > 1 && me_state == ME_IDLE &&
+            !snoop_wb_pending && me_pick_v && !mshr_evict[me_pick_i]) begin
+            for (rsi=DOWNSTREAM_SLOTS-1; rsi>=0; rsi=rsi-1) begin
+                if (!rd_valid[rsi]) begin
+                    rd_issue_v = 1'b1;
+                    rd_issue_i = me_pick_i;
+                    rd_issue_slot = rsi[RD_SLOT_BITS-1:0];
+                end
+            end
+        end
+    end
+
+    // Route a returned beat to its RID owner. If a fabric violates the AXI
+    // contract and returns an unknown RID, consume it against the first live
+    // slot and mark that refill failed rather than wedging the whole cache.
+    always @(*) begin
+        rd_resp_v = 1'b0;
+        rd_resp_slot = {RD_SLOT_BITS{1'b0}};
+        rd_resp_id_match = 1'b0;
+        if (DOWNSTREAM_SLOTS > 1) begin
+            for (rsm=DOWNSTREAM_SLOTS-1; rsm>=0; rsm=rsm-1)
+                if (rd_valid[rsm] && rd_mshr[rsm] == m_rid[MSHR_BITS-1:0]) begin
+                    rd_resp_v = 1'b1;
+                    rd_resp_slot = rsm[RD_SLOT_BITS-1:0];
+                    rd_resp_id_match = 1'b1;
+                end
+            if (!rd_resp_v)
+                for (rsm=DOWNSTREAM_SLOTS-1; rsm>=0; rsm=rsm-1)
+                    if (rd_valid[rsm]) begin
+                        rd_resp_v = 1'b1;
+                        rd_resp_slot = rsm[RD_SLOT_BITS-1:0];
+                    end
+        end
     end
 
     // Pick the OLDEST order entry that is waiting on a now-filled/failed MSHR. Resolved
@@ -477,8 +537,10 @@ module l2_cache_nb #(
                   data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt];
         m_wstrb=4'hF; m_wlast=(me_cnt==3'd7);
         m_bready=1'b0;
-        m_arvalid=1'b0; m_arid=me_idx;
-        m_araddr={3'b000, mshr_line[me_idx], 5'b00000}; m_arlen=8'd7;
+        m_arvalid=1'b0;
+        m_arid = (DOWNSTREAM_SLOTS > 1) ? rd_issue_i : me_idx;
+        m_araddr = {3'b000, mshr_line[(DOWNSTREAM_SLOTS > 1) ? rd_issue_i : me_idx], 5'b00000};
+        m_arlen=8'd7;
         m_arsize=3'b010; m_arburst=2'b01;
         m_rready=1'b0;
 
@@ -486,10 +548,14 @@ module l2_cache_nb #(
             ME_EVICT_AW:  m_awvalid = 1'b1;
             ME_EVICT_W:   m_wvalid  = 1'b1;
             ME_EVICT_B:   m_bready  = 1'b1;
-            ME_REFILL_AR: m_arvalid = 1'b1;
-            ME_REFILL_R:  m_rready  = 1'b1;
+            ME_REFILL_AR: if (DOWNSTREAM_SLOTS == 1) m_arvalid = 1'b1;
+            ME_REFILL_R:  if (DOWNSTREAM_SLOTS == 1) m_rready  = 1'b1;
             default: ;
         endcase
+        if (DOWNSTREAM_SLOTS > 1) begin
+            m_arvalid = rd_issue_v;
+            m_rready = rd_resp_v;
+        end
 
         // Response burst drive (read only; writes drive s_bvalid)
         if (rsp_active) begin
@@ -504,7 +570,7 @@ module l2_cache_nb #(
     // =========================================================================
     // Sequential: accept stage, miss engine, responder (all concurrent)
     // =========================================================================
-    integer k, mm2, fk, fj;
+    integer k, mm2, fk, fj, rdj;
     reg     mshr_refd;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -520,6 +586,12 @@ module l2_cache_nb #(
                 mshr_filled[k] <= 1'b0; mshr_error[k] <= 1'b0; mshr_done[k] <= 1'b0;
                 mshr_evict[k] <= 1'b0;
                 mshr_wb_idx[k] <= {WB_BITS{1'b0}};
+            end
+            for (k=0; k<DOWNSTREAM_SLOTS; k=k+1) begin
+                rd_valid[k] <= 1'b0;
+                rd_mshr[k] <= {MSHR_BITS{1'b0}};
+                rd_cnt[k] <= 3'd0;
+                rd_error[k] <= 1'b0;
             end
             for (k=0; k<WB_DEPTH; k=k+1) wb_valid[k] <= 1'b0;
             // retention arrays: not cleared (see l2_cache_caching rationale)
@@ -677,13 +749,18 @@ module l2_cache_nb #(
                         me_is_snoop_wb <= 1'b1;
                         me_cnt <= 3'd0;
                         me_state <= ME_EVICT_AW;
-                    end else if (me_pick_v) begin
+                    end else if (me_pick_v && mshr_evict[me_pick_i]) begin
                         me_idx <= me_pick_i;
                         me_is_snoop_wb <= 1'b0;
                         mshr_issued[me_pick_i] <= 1'b1;
                         me_cnt <= 3'd0;
-                        if (mshr_evict[me_pick_i]) me_state <= ME_EVICT_AW;
-                        else                       me_state <= ME_REFILL_AR;
+                        me_state <= ME_EVICT_AW;
+                    end else if (me_pick_v && DOWNSTREAM_SLOTS == 1) begin
+                        me_idx <= me_pick_i;
+                        me_is_snoop_wb <= 1'b0;
+                        mshr_issued[me_pick_i] <= 1'b1;
+                        me_cnt <= 3'd0;
+                        me_state <= ME_REFILL_AR;
                     end
                 end
                 ME_EVICT_AW: if (m_awready) begin me_cnt <= 3'd0; me_state <= ME_EVICT_W; end
@@ -742,6 +819,55 @@ module l2_cache_nb #(
                              end
                 default: me_state <= ME_IDLE;
             endcase
+
+            // ---------------------------------------------------------------
+            // (B2) OPT-IN PARALLEL REFILLS — clean lines only.  The AXI read
+            // channel may return beats interleaved across IDs; each slot owns
+            // its beat counter and completion state independently.
+            // ---------------------------------------------------------------
+            if (DOWNSTREAM_SLOTS > 1) begin
+                if (rd_issue_v && m_arvalid && m_arready) begin
+                    rd_valid[rd_issue_slot] <= 1'b1;
+                    rd_mshr[rd_issue_slot] <= rd_issue_i;
+                    rd_cnt[rd_issue_slot] <= 3'd0;
+                    rd_error[rd_issue_slot] <= 1'b0;
+                    mshr_issued[rd_issue_i] <= 1'b1;
+                end
+                if (m_rvalid && m_rready && rd_resp_v) begin
+                    if (!rd_resp_id_match || m_rresp != 2'b00) begin
+                        rd_error[rd_resp_slot] <= 1'b1;
+                        mshr_error[rd_mshr[rd_resp_slot]] <= 1'b1;
+                    end
+                    if (rd_resp_id_match && !rd_error[rd_resp_slot] &&
+                        m_rresp == 2'b00)
+                        data_ram[mshr_set[rd_mshr[rd_resp_slot]]]
+                                 [mshr_way[rd_mshr[rd_resp_slot]]]
+                                 [rd_cnt[rd_resp_slot]] <= m_rdata;
+                    if (m_rlast || rd_cnt[rd_resp_slot] == 3'd7) begin
+                        if (rd_error[rd_resp_slot] || !rd_resp_id_match ||
+                            m_rresp != 2'b00) begin
+                            mshr_error[rd_mshr[rd_resp_slot]] <= 1'b1;
+                            mshr_done[rd_mshr[rd_resp_slot]] <= 1'b1;
+                        end else begin
+                            tag_ram[mshr_set[rd_mshr[rd_resp_slot]]]
+                                   [mshr_way[rd_mshr[rd_resp_slot]]] <=
+                                   mshr_tag[rd_mshr[rd_resp_slot]];
+                            valid_ram[mshr_set[rd_mshr[rd_resp_slot]]]
+                                     [mshr_way[rd_mshr[rd_resp_slot]]] <= 1'b1;
+                            dirty_ram[mshr_set[rd_mshr[rd_resp_slot]]]
+                                     [mshr_way[rd_mshr[rd_resp_slot]]] <= 1'b0;
+                            plru_ram[mshr_set[rd_mshr[rd_resp_slot]]] <=
+                                update_plru(plru_ram[mshr_set[rd_mshr[rd_resp_slot]]],
+                                            mshr_way[rd_mshr[rd_resp_slot]]);
+                            mshr_filled[rd_mshr[rd_resp_slot]] <= 1'b1;
+                            mshr_done[rd_mshr[rd_resp_slot]] <= 1'b1;
+                        end
+                        rd_valid[rd_resp_slot] <= 1'b0;
+                    end else begin
+                        rd_cnt[rd_resp_slot] <= rd_cnt[rd_resp_slot] + 1'b1;
+                    end
+                end
+            end
 
             // ---------------------------------------------------------------
             // (C) FILL SERVICING — when an MSHR is filled, resolve its waiters
