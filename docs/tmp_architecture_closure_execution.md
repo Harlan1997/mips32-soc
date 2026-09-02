@@ -4681,13 +4681,15 @@ configuration.
   does not close Linux page-table ownership/VM, scheduler policy, multicore
   shootdown, unrestricted demand paging, or full privileged/MMU compliance.
 
-### 2026-09-02 double FPE boundary differential
+### 2026-09-02 FPE boundary differential aggregate
 
-- Ran `qemu-system-fpu-fpe-double-inexact-differential-gate` and
-  `qemu-system-fpu-fpe-double-underflow-differential-gate` under the protected
-  VCS budget; both strict retire comparisons passed.
-- Added both targets to `qemu-system-fpu-fpe-boundary-differential-gate`.
-- The new evidence covers enabled Inexact on `CVT.W.D 1.5` and enabled
-  Underflow on the minimum positive double subnormal multiplied by `0.5`.
-  Complete IEEE-754 policy, full double FPE, Linux FPU ABI and COP1 closure
+- Expanded `qemu-system-fpu-fpe-boundary-differential-gate` to run the
+  selected single Inexact/Invalid/Overflow/Underflow slices, the double
+  divide-by-zero/Invalid/Overflow three-class slice, and the double Inexact
+  and Underflow slices.
+- The aggregate therefore covers nine selected boundary classes through the
+  strict RTL/QEMU retire comparator, including enabled Inexact on `CVT.W.D
+  1.5` and enabled Underflow on the minimum positive double subnormal
+  multiplied by `0.5`.
+- Complete IEEE-754 policy, full double FPE, Linux FPU ABI and COP1 closure
   remain open.

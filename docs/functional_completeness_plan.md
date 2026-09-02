@@ -1503,14 +1503,16 @@ MMU compliance remain open.
 
 ### 2026-09-02 double FPE inexact/underflow differential boundaries
 
-The existing double FPE boundary gates are now connected to strict
-RTL/QEMU retire differential evidence. `CVT.W.D 1.5` with Inexact enabled and
-the minimum-positive-double-subnormal times `0.5` Underflow case both pass
-against `mips32-soc-ref`. The combined
-`qemu-system-fpu-fpe-boundary-differential-gate` now includes these two double
-boundaries in addition to the selected single invalid/overflow/underflow
-cases. This does not close complete IEEE-754 range/tininess behavior, full
-double FPE coverage, lazy-FPU/signal-frame ABI, or full COP1 compliance.
+The FPE boundary slices are now connected to strict RTL/QEMU retire
+differential evidence. The combined
+`qemu-system-fpu-fpe-boundary-differential-gate` runs the selected single
+Inexact/Invalid/Overflow/Underflow cases, the double divide-by-zero/Invalid/
+Overflow three-class case, and the double Inexact and Underflow cases. The
+nine selected boundary classes pass against `mips32-soc-ref`, including
+`CVT.W.D 1.5` with Inexact enabled and the minimum-positive-double-subnormal
+times `0.5` Underflow case. This does not close complete IEEE-754
+range/tininess behavior, full double FPE coverage, lazy-FPU/signal-frame ABI,
+or full COP1 compliance.
 
 ### 2026-09-01 QEMU MDU retire differential closure
 

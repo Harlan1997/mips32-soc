@@ -858,9 +858,11 @@ qemu-system-fpu-fpe-underflow-differential-gate: qemu-system-mips32-soc-ref
 	FW_TEST=fpu_fpe_underflow FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_underflow QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_underflow_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-boundary-differential-gate: qemu-system-mips32-soc-ref
+	$(MAKE) qemu-system-fpu-fpe-inexact-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-invalid-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-overflow-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-underflow-differential-gate
+	$(MAKE) qemu-system-fpu-fpe-double-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-double-inexact-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-double-underflow-differential-gate
 
