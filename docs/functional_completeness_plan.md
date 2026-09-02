@@ -184,6 +184,13 @@ nonblocking write-back，并使用 `qemu_system_l1_ddr` workload 与
 路径，也不等价于完整 MESI/directory、任意 downstream AXI 乱序、coherency 或
 Linux cache ABI signoff。
 
+The opt-in combined-path gate is also part of
+`qemu-system-selected-differential-gate`, so the selected architecture
+regression exercises the real L1/CPU-ROB/DDR/L2 nonblocking configuration in
+addition to the standalone cache gates. This expands aggregate evidence only;
+full MESI/directory coherency, arbitrary downstream ordering, error/reset
+interleavings and Linux cache ABI remain open.
+
 ### 2026-09-02 RTL Linux initcall tail boundary
 
 40M 周期 retire-only 探针未捕获 `kernel_init_freeable` 尾部

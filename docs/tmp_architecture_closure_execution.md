@@ -4446,6 +4446,9 @@ configuration.
   real RTL SoC configuration.
 - The `qemu_system_l1_ddr` workload completed with strict RTL/QEMU retire
   comparison through the completion mailbox (`Result: PASS`).
+- The selected aggregate now runs this target as its final `l1_l2_nonblocking`
+  child; a fresh serial selected-differential run passed all prior children and
+  ended with `QEMU system selected differential gate: PASS`.
 - The result is bounded combined-path evidence only; full MESI/directory
   coherency, arbitrary downstream AXI ordering, error/reset interleavings and
   Linux cache ABI remain open.

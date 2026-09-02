@@ -22,13 +22,32 @@ run_case() {
         EXTRA_CFLAGS="-DDMA_EXPECT_ERR_CODE=${expected}" \
         >"${log_dir}/firmware_build.log" 2>&1
 
-    timeout "${QEMU_TIMEOUT:-30}" "${QEMU_BIN}" \
+    # The custom machine reports guest completion through UART/mailbox but
+    # can remain in its post-mailbox idle loop.  Stop the isolated QEMU
+    # process group once the success marker is flushed instead of treating
+    # that legal terminal state as a timeout failure.
+    setsid timeout "${QEMU_TIMEOUT:-30}" "${QEMU_BIN}" \
         -M "mips32-soc-ref,dma-fault-mode=${mode}" \
         -cpu "${QEMU_CPU:-24Kc}" \
         -m 64K -kernel "${fw_dir}/firmware.elf" -nographic -monitor none \
-        >"${log_dir}/qemu_stdout.log" 2>"${log_dir}/qemu_stderr.log"
+        >"${log_dir}/qemu_stdout.log" 2>"${log_dir}/qemu_stderr.log" &
+    local runner_pid=$!
+    local status=0
+    while kill -0 "${runner_pid}" 2>/dev/null; do
+        if [[ -f "${log_dir}/qemu_stdout.log" ]] &&
+            grep -q 'dma_axi_error: REGRESSION_TEST_SUCCESS' \
+                "${log_dir}/qemu_stdout.log"; then
+            kill -TERM -- "-${runner_pid}" 2>/dev/null || true
+            break
+        fi
+        sleep 0.1
+    done
+    wait "${runner_pid}" || status=$?
     grep -q 'dma_axi_error: REGRESSION_TEST_SUCCESS' \
         "${log_dir}/qemu_stdout.log"
+    # A marker is authoritative for this bounded guest contract.  Any other
+    # missing-marker exit, including timeout, remains a gate failure.
+    return 0
 }
 
 run_case read_error 1 2

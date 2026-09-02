@@ -11,11 +11,23 @@ mkdir -p "${RUN_DIR}"
 make -C "${ROOT_DIR}/tb/soc_test/fw/tests/dma_reset_inflight" \
     OUT_DIR="${FW_DIR}" FW_BASE=firmware >"${RUN_DIR}/firmware_build.log" 2>&1
 
-timeout "${QEMU_TIMEOUT:-30}" "${QEMU_BIN}" \
+setsid timeout "${QEMU_TIMEOUT:-30}" "${QEMU_BIN}" \
     -M "mips32-soc-ref,dma-reset-inflight=on" \
     -cpu "${QEMU_CPU:-24Kc}" -m 64K -kernel "${FW_DIR}/firmware.elf" \
     -nographic -monitor none >"${RUN_DIR}/qemu_stdout.log" \
-    2>"${RUN_DIR}/qemu_stderr.log"
+    2>"${RUN_DIR}/qemu_stderr.log" &
+runner_pid=$!
+status=0
+while kill -0 "${runner_pid}" 2>/dev/null; do
+    if [[ -f "${RUN_DIR}/qemu_stdout.log" ]] &&
+        grep -q 'dma_reset_inflight: REGRESSION_TEST_SUCCESS' \
+            "${RUN_DIR}/qemu_stdout.log"; then
+        kill -TERM -- "-${runner_pid}" 2>/dev/null || true
+        break
+    fi
+    sleep 0.1
+done
+wait "${runner_pid}" || status=$?
 
 grep -q 'dma_reset_inflight: REGRESSION_TEST_SUCCESS' \
     "${RUN_DIR}/qemu_stdout.log"
