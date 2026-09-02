@@ -34,6 +34,9 @@ run_gate fpu_single make -C "${ROOT_DIR}" qemu-system-fpu-single-differential-ga
 run_gate fpu_double make -C "${ROOT_DIR}" qemu-system-fpu-double-differential-gate
 run_gate fpu_rounding make -C "${ROOT_DIR}" qemu-system-fpu-rounding-differential-gate
 run_gate fpu_cu1 make -C "${ROOT_DIR}" qemu-system-fpu-cu1-exception-differential-gate
+run_gate fpu_branch make -C "${ROOT_DIR}" qemu-system-fpu-branch-differential-gate
+run_gate fpu_fpe_boundary make -C "${ROOT_DIR}" \
+    qemu-system-fpu-fpe-boundary-differential-gate
 run_gate dma_sg make -C "${ROOT_DIR}" qemu-system-dma-sg-differential-gate
 run_gate dma_fault_reset make -C "${ROOT_DIR}" \
     qemu-system-dma-fault-gate qemu-system-dma-reset-inflight-gate
@@ -49,6 +52,7 @@ run_gate mmu_os_pressure make -C "${ROOT_DIR}" \
     qemu-system-mmu-os-pressure-gate
 run_gate l1_l2_nonblocking make -C "${ROOT_DIR}" \
     qemu-system-l1-l2-nonblocking-differential-gate
+run_gate llsc make -C "${ROOT_DIR}" qemu-system-llsc-differential-gate
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # QEMU System Selected Differential Gate
@@ -58,7 +62,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Sub-gates: ISA R2, CPU-visible MDU, branch-likely, exceptions, break/traps, DI/EI/WAIT,
   BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/rounding/CU1,
   bounded DMA v2 SG/fault/reset, 32-source VIC arbitration, MMU context/IPI/
-  refill/PageMask/process-pressure contract differentials, plus the opt-in
+  refill/PageMask/process-pressure/OS-pressure contract differentials,
+  FPU branch/FPE boundaries and LL/SC reservation differential, plus the opt-in
   L1/CPU-ROB/DDR/L2 nonblocking combined-path differential.
 - Evidence: child logs in this directory and child completion reports under
   build/isa_ref/qemu_system_*.

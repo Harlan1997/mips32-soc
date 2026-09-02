@@ -57,6 +57,19 @@
 - 该变更扩大 bounded selected gate 的检查覆盖，不改变默认 MMU 关闭路径，
   也不宣称完整 privileged ISA、Linux VM、多核 shootdown 或产品 signoff。
 
+### 2026-09-02 selected aggregate FPU/LLSC coverage and resource recovery
+
+- 将 FPU branch differential、FPU FPE boundary aggregate 和 LL/SC reservation
+  differential 加入 selected aggregate。
+- 修正 FPU branch Makefile runner 缺少 QEMU_CPU=24Kf 的问题；此前默认
+  24Kc 造成 QEMU COP1 状态快照错误，修复后独立 FPU branch gate 通过。
+- FPE boundary 的 single/double invalid、overflow、underflow、inexact
+  子项和 LL/SC 独立 gate 均通过；在
+  /tmp/qemu-selected-full-20260902 的完整 selected aggregate 通过。
+- 中途 underflow 编译失败的直接原因是根文件系统磁盘 100% 满；仅清理本轮
+  已核验的临时 VCS/QEMU 目录后恢复约 11 GB 可用空间，重跑成功。该资源
+  处理不改变 RTL 行为或完整 ISA/FPU/Linux/product signoff 边界。
+
 ### 2026-09-02 L2 nonblocking parallel refill reset-in-flight
 
 - Extended the two-slot L2 directed test to assert reset while both clean
