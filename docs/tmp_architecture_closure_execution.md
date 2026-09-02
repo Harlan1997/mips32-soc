@@ -20,6 +20,20 @@
   compliance、unrestricted demand paging/Linux VM、full coherency 和产品
   signoff 仍保持 OPEN。
 
+### 2026-09-02 MMU differential runner build isolation recheck
+
+- 审计发现 qemu-system-mmu-contract-gate 和
+  qemu-system-mmu-pagemask-gate 的 Makefile recipe 也未传播
+  BUILD_DIR；已补齐 contract 的 RUN_DIR/RTL_RUN_DIR 与 PageMask 的
+  RUN_DIR，与 process-pressure runner 保持一致。
+- PageMask 独立 gate 在 /tmp/qemu-pagemask-fixed-20260902 通过；随后
+  selected aggregate 在 /tmp/qemu-selected-mmu-isolated-20260902 串行通过，
+  包含 ISA、FPU、DMA、VIC、MMU IPI/refill/PageMask/process-pressure 和
+  L1/L2 nonblocking 子项。
+- 这修复的是验证证据的构建隔离和可复现性，不改变默认配置，也不扩大
+  bounded differential 之外的完整 ISA、Linux VM、coherency 或 product signoff
+  声明。
+
 ### 2026-09-02 L2 nonblocking parallel refill reset-in-flight
 
 - Extended the two-slot L2 directed test to assert reset while both clean

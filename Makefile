@@ -917,7 +917,9 @@ qemu-system-vic-full-sources-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-mmu-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_contract_gate.sh
-	tb/isa_ref/run_qemu_system_mmu_contract_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_contract \
+	RTL_RUN_DIR=$(BUILD_DIR)/soc_test/product_mmu_asid_context \
+		tb/isa_ref/run_qemu_system_mmu_contract_gate.sh
 
 qemu-system-mmu-process-pressure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_process_pressure_gate.sh
@@ -952,7 +954,8 @@ qemu-system-ddr-fault-gate: qemu-system-mips32-soc-ref
 
 qemu-system-mmu-pagemask-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_pagemask_differential_gate.sh
-	tb/isa_ref/run_qemu_system_mmu_pagemask_differential_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_pagemask_differential \
+		tb/isa_ref/run_qemu_system_mmu_pagemask_differential_gate.sh
 
 perf-counters-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/perf_counters tb/unit/cpu_test/run_perf_counters.sh

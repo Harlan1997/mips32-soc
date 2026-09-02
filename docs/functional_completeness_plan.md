@@ -11,6 +11,12 @@ differential 子 gate。执行时发现 qemu-system-mmu-process-pressure-gate
 扩大 bounded selected corpus 的统一检查范围，不改变默认配置，也不宣称完整
 ISA/privileged/MMU、Linux VM、coherency 或产品 signoff。
 
+随后审计发现 qemu-system-mmu-contract-gate 和 qemu-system-mmu-pagemask-gate
+也未将 BUILD_DIR 传播到各自 runner；两者已分别补齐 RUN_DIR/RTL_RUN_DIR
+隔离。PageMask 独立重跑以及 selected aggregate 在
+/tmp/qemu-selected-mmu-isolated-20260902 下均通过，确认 aggregate 的 MMU
+子项不再依赖仓库默认 build 产物。
+
 ### 2026-09-02 CPU/MMU aggregate recheck with Machine Check runtime
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`EDA_MEMORY_MAX=1500M` 和
