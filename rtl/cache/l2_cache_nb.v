@@ -459,7 +459,11 @@ module l2_cache_nb #(
         s_wready = accepting_aw_w;
 
         // master defaults
-        m_awvalid=1'b0; m_awid=4'd0;
+        m_awvalid=1'b0;
+        // Keep the miss identity visible at the downstream AXI boundary.
+        // The all-ones value is reserved for a dirty snoop writeback, which
+        // is not owned by an MSHR.
+        m_awid = me_is_snoop_wb ? {ID_WIDTH{1'b1}} : me_idx;
         m_awaddr = me_is_snoop_wb ?
                    {3'b000, wb_line[snoop_wb_idx], 5'b00000} :
                    mshr_eaddr[me_idx];
@@ -473,7 +477,7 @@ module l2_cache_nb #(
                   data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt];
         m_wstrb=4'hF; m_wlast=(me_cnt==3'd7);
         m_bready=1'b0;
-        m_arvalid=1'b0; m_arid=4'd0;
+        m_arvalid=1'b0; m_arid=me_idx;
         m_araddr={3'b000, mshr_line[me_idx], 5'b00000}; m_arlen=8'd7;
         m_arsize=3'b010; m_arburst=2'b01;
         m_rready=1'b0;
@@ -693,7 +697,7 @@ module l2_cache_nb #(
                                      snoop_wb_pending <= 1'b0;
                                      me_is_snoop_wb <= 1'b0;
                                      me_state <= ME_IDLE;
-                                 end else if (m_bresp != 2'b00) begin
+                                 end else if (m_bid != me_idx || m_bresp != 2'b00) begin
                                      // The victim reached the downstream
                                      // fabric but was not accepted.  Do not
                                      // launch a refill whose response would
@@ -714,13 +718,13 @@ module l2_cache_nb #(
                                  // so a single-outstanding downstream fabric is
                                  // never left wedged.  Error responses never
                                  // install any part of the line.
-                                 if (m_rresp != 2'b00)
+                                 if (m_rid != me_idx || m_rresp != 2'b00)
                                      mshr_error[me_idx] <= 1'b1;
-                                 if (!mshr_error[me_idx] && m_rresp == 2'b00)
+                                 if (!mshr_error[me_idx] && m_rid == me_idx && m_rresp == 2'b00)
                                      data_ram[mshr_set[me_idx]][mshr_way[me_idx]][me_cnt] <= m_rdata;
                                  me_linebuf[me_cnt*DATA_WIDTH +: DATA_WIDTH] <= m_rdata;
                                  if (m_rlast || me_cnt==3'd7) begin
-                                     if (mshr_error[me_idx] || m_rresp != 2'b00) begin
+                                     if (mshr_error[me_idx] || m_rid != me_idx || m_rresp != 2'b00) begin
                                          // A failed refill must not expose a
                                          // partially updated cache line.
                                          mshr_error[me_idx] <= 1'b1;
