@@ -5073,7 +5073,7 @@ configuration.
   `REGRESSION_TEST_SUCCESS mmu_context_status`.
 - This closes the bounded single-core generation-ownership guard only; it does
   not claim multicore OS shootdown, scheduler policy, Linux VM or full
-privileged/MMU signoff.
+  privileged/MMU signoff.
 
 ### 2026-09-03 RTL Linux spurious-IRQ delay diagnosis
 
