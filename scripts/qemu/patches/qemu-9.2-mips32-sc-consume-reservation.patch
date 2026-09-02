@@ -11,7 +11,8 @@ index 0000000000..0000000000 100644
 @@ -2231,12 +2231,16 @@ static void gen_st_cond(DisasContext *ctx, int rt, int base, int offset,
      tcg_gen_brcond_tl(TCG_COND_EQ, addr, cpu_lladdr, l1);
      gen_store_gpr(tcg_constant_tl(0), rt);
-+    /* MIPS32 SoC contract: every completed SC attempt consumes LL state. */
++    /* Failed SC consumes the reservation in the strict bare-metal contract;
++     * Linux guest mode retains it so kernel retry loops remain architectural. */
 +    if (!qemu_mips32_soc_ref_sc_consume_reservation ||
 +        qemu_mips32_soc_ref_sc_consume_reservation()) {
 +        tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */
@@ -23,11 +24,9 @@ index 0000000000..0000000000 100644
                                eva ? MIPS_HFLAG_UM : ctx->mem_idx, tcg_mo);
      tcg_gen_setcond_tl(TCG_COND_EQ, t0, t0, cpu_llval);
      gen_store_gpr(t0, rt);
-+    /* Successful and failed compare-exchange attempts both consume LL. */
-+    if (!qemu_mips32_soc_ref_sc_consume_reservation ||
-+        qemu_mips32_soc_ref_sc_consume_reservation()) {
-+        tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */
-+    }
++    /* A successful compare-exchange always consumes LL state, including in
++     * Linux guest mode. */
++    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */
  
      gen_set_label(done);
  }

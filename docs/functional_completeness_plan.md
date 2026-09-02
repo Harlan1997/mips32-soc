@@ -12,6 +12,16 @@ kernel 冷编译。审计同时发现架构 aggregate 的 Linux 子 gate 使用�
 userspace marker 不稳定，因此不能将 Linux userspace 或完整 RTL/QEMU
 system differential 标记为闭合。该项修复只改善 artifact 路径和证据一致性。
 
+### 2026-09-03 Linux guest LL/SC policy refinement
+
+将 `mips32-soc-ref,linux-guest=on` 的参考策略细化为“失败 `SC` 保留
+reservation、成功 `SC` 消耗 reservation”，而裸机差分继续保持所有完成的
+`SC` 均消耗 reservation。QEMU 重建后裸机 LL/SC differential 通过；Linux
+userspace 三次复现中两次完成全部 marker，一次仍在 fork child 的
+`wait4` 前停滞。该修复消除了保护页 SIGSEGV 后立即卡住的主要边界，但
+Linux signal/reap 的确定性、RTL Linux userspace 和完整 RTL/QEMU
+system differential 仍为 OPEN。
+
 ### 2026-09-02 QEMU root/context lease differential closure
 
 扩展 `mips32-soc-ref` 的 MMU context APB 模型，镜像 RTL 的四槽 root lease

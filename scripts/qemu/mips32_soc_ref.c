@@ -34,8 +34,9 @@ bool qemu_mips32_soc_ref_lladdr_virtual(void)
     return true;
 }
 
-/* Linux uses QEMU's historical LL/SC completion behavior for its bounded
- * wait4 path; bare-metal RTL differential keeps the strict SC contract. */
+/* Linux keeps a reservation after a failed SC, while a successful SC consumes
+ * it.  Bare-metal RTL differential keeps the stricter SoC contract in which
+ * every completed SC attempt consumes the reservation. */
 bool qemu_mips32_soc_ref_sc_consume_reservation(void)
 {
     return !soc_ref_linux_guest;
