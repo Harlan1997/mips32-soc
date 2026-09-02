@@ -1505,3 +1505,15 @@ exact-PID wait4 reaps and wait-status validation. The bounded QEMU
 userspace/process contract is therefore closed; RTL Linux userspace, full
 RTL/QEMU Linux differential, unrestricted Linux VM ownership and full
 ISA/privileged/FPU compliance remain open.
+
+### 2026-09-02 RTL Linux kernel-init handoff trace
+
+A bounded real-RTL trace followed `kernel_init_freeable` and the exception
+return path through 13M cycles. Linux executed initcall/setup code through
+the 11.2M-cycle region, then the CPU reached idle `r4k_wait` around 11.8M;
+timer interrupts continued to wake and return to the idle loop. No
+`run_init_process`, `ret_from_kernel_thread`, kernel-to-user ERET, or
+userspace marker was observed. This rules out a first-order userspace fault
+as the cause of the current RTL Linux blocker and narrows the next diagnosis
+to a `do_basic_setup` initcall/completion wait or the kernel-init handoff;
+no speculative RTL change is justified by this trace.

@@ -4449,3 +4449,15 @@ configuration.
 - All required markers were observed, including both exact-PID wait4 reaps
   and normal wait statuses. RTL Linux userspace and full RTL/QEMU Linux
   differential remain open.
+
+### 2026-09-02 RTL Linux kernel-init handoff trace
+
+- A fresh no-coverage RTL run traced `kernel_init_freeable`, mode transitions,
+  exceptions, CP0 timer state and WAIT through 13M cycles.
+- The trace shows initcall/setup execution through the 11.2M-cycle region;
+  after about 11.8M the CPU remains in idle `r4k_wait`, with timer IRQ and
+  ERET activity continuing. It never reaches `run_init_process`,
+  `ret_from_kernel_thread`, a kernel-to-user ERET, or a userspace marker.
+- This narrows the remaining RTL Linux issue to a `do_basic_setup`
+  initcall/completion wait or the kernel-init handoff. It is diagnostic
+  evidence only; no speculative RTL change was made.
