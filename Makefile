@@ -243,7 +243,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-linux-differential-gate
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
-.PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate product-mmu-machine-check-gate
+.PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate product-mmu-machine-check-gate dual-core-mmu-shootdown-gate
 .PHONY: linux-boot-build-gate rtl-linux-progress-gate rtl-linux-userspace-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
@@ -1144,6 +1144,11 @@ mmu-hardware-walker-ad-write-error-soc-gate:
 	RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_write_error_soc \
 	VCS_EXTRA_ARGS='+define+SOC_HARDWARE_WALKER_AD_ENABLE=1 +define+TB_MMU_HW_WALKER_AD' \
 		tb/soc_test/run_mmu_refill.sh
+
+dual-core-mmu-shootdown-gate:
+	FW_DIR=$(BUILD_DIR)/firmware/mmu_dual_core_shootdown \
+	RUN_DIR=$(BUILD_DIR)/soc_test/dual_core_mmu_shootdown \
+		tb/soc_test/run_dual_core_mmu_shootdown_gate.sh
 
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
