@@ -478,17 +478,8 @@ static void soc_ref_uart_update_irq(MIPS32SocRefState *s)
 {
     bool level = (s->uart_regs[1] & 0x2) != 0;
 
-    if (soc_ref_linux_guest) {
-        /* The current generic Linux image has no driver for the SoC VIC.
-         * Preserve its existing direct CPU-IP4 UART contract until that
-         * driver exists; bare-metal/custom-SoC mode below follows RTL. */
-        if (s->cpu)
-            qemu_set_irq(s->cpu->env.irq[4], level);
-        return;
-    }
-
     /* Match RTL: UART aggregate interrupt is VIC source 1, and the VIC
-     * aggregate is routed to CPU Cause.IP2. */
+     * aggregate is routed to CPU Cause.IP2. Linux uses the same cascade. */
     if (level)
         s->pic_raw |= 1U << 1;
     else

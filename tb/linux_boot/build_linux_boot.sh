@@ -31,6 +31,12 @@ command -v bison >/dev/null
 mkdir -p "${BUILD_DIR}/rootfs"
 mkdir -p "${BUILD_DIR}/rootfs/dev"
 
+# Linux sources are reproducibly fetched but intentionally ignored by the
+# project. Apply the tracked SoC irqchip overlay before configuring Kbuild.
+chmod +x "${ROOT_DIR}/scripts/linux/apply_mips32_soc_vic.sh"
+LINUX_SOURCE_DIR="${LINUX_SOURCE_DIR}" \
+    "${ROOT_DIR}/scripts/linux/apply_mips32_soc_vic.sh"
+
 build_guest_binary() {
     local source=$1
     local output=$2
@@ -86,7 +92,10 @@ config_inputs_hash=$({
     sha256sum \
         "${LINUX_SOURCE_DIR}/arch/mips/configs/generic_defconfig" \
         "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/32r2.config" \
-        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config"
+        "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config" \
+        "${LINUX_SOURCE_DIR}/drivers/irqchip/irq-mips32-soc-vic.c" \
+        "${LINUX_SOURCE_DIR}/drivers/irqchip/Kconfig" \
+        "${LINUX_SOURCE_DIR}/drivers/irqchip/Makefile"
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
     printf 'LINUX_CMDLINE=%s\n' "${LINUX_CMDLINE}"
@@ -112,6 +121,7 @@ if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash
         "${kernel_config_args[@]}" \
         --enable CONFIG_SERIAL_8250 \
         --enable CONFIG_SERIAL_8250_CONSOLE \
+        --enable CONFIG_MIPS32_SOC_VIC \
         --enable CONFIG_DEVTMPFS \
         --enable CONFIG_DEVTMPFS_MOUNT \
         --enable CONFIG_INITRAMFS_COMPRESSION_NONE \

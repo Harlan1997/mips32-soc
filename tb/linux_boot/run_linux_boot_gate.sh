@@ -92,6 +92,16 @@ if ! rg -q "Run /init as init process" "${RUN_DIR}/qemu_stdout.log"; then
     fail_gate "kernel did not reach initramfs /init"
     exit 1
 fi
+if ! rg -q "mips32-soc-vic: 32-source cascaded controller on IRQ 2" \
+    "${RUN_DIR}/qemu_stdout.log"; then
+    fail_gate "Linux did not initialize the SoC VIC cascade on CPU IP2"
+    exit 1
+fi
+if ! rg -q "40000000\.serial: ttyS0 at MMIO .* \(irq = [0-9]+," \
+    "${RUN_DIR}/qemu_stdout.log"; then
+    fail_gate "UART did not bind through the SoC VIC child IRQ domain"
+    exit 1
+fi
 if ! rg -q "MIPS32_SOC_LINUX_BOOT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
     fail_gate "kernel reached /init but userspace marker was not observed"
     exit 1
@@ -140,6 +150,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Kernel: ${KERNEL_INPUT}
 - Device tree: ${DTB_INPUT}
 - Boot protocol: MIPS UHI with an opaque DTB
+- IRQ path: Linux SoC VIC cascade on CPU IP2; UART is a VIC child IRQ
 - TCG execution: single-threaded for the single-vCPU Linux contract
 - Evidence: Linux printed its version, registered/enabled ttyS0, reached the
   initramfs /init process, touched one word on each of four page-spaced user
