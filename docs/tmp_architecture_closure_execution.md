@@ -4775,3 +4775,15 @@ configuration.
   clean-refill path. It does not claim arbitrary slot counts, concurrent dirty
   writeback, full downstream AXI ordering, MESI/directory coherency or full
   cache signoff.
+
+### 2026-09-02 selected RTL/QEMU differential aggregate recheck
+
+- Ran `SKIP_COVERAGE=1 QEMU_TIMEOUT=180 QEMU_BUILD_JOBS=1 VCS_JOBS=1
+  EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M BUILD_DIR=/tmp/qemu-selected-recheck-20260902
+  make qemu-system-selected-differential-gate` serially.
+- The aggregate passed all selected ISA audit/R2, MDU, branch/exception,
+  DI/EI/WAIT, BD, unaligned, peripheral/VIC, FPU, DMA, MMU IPI and combined
+  L1/CPU-ROB/DDR/L2 nonblocking differential children.
+- This is a fresh recheck of the implemented bounded contracts. It does not
+  upgrade the open full ISA, complete IEEE-754, Linux VM/userspace RTL,
+  arbitrary coherency, or physical signoff claims.
