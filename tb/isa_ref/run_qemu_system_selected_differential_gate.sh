@@ -40,6 +40,8 @@ run_gate dma_fault_reset make -C "${ROOT_DIR}" \
 run_gate vic_full_sources make -C "${ROOT_DIR}" \
     qemu-system-vic-full-sources-differential-gate
 run_gate mmu_ipi make -C "${ROOT_DIR}" qemu-system-mmu-ipi-contract-gate
+run_gate l1_l2_nonblocking make -C "${ROOT_DIR}" \
+    qemu-system-l1-l2-nonblocking-differential-gate
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # QEMU System Selected Differential Gate
@@ -49,13 +51,14 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Sub-gates: ISA R2, CPU-visible MDU, branch-likely, exceptions, break/traps, DI/EI/WAIT,
   BD/EPC, unaligned memory, peripheral/VIC, opt-in FPU single/double/rounding/CU1,
   bounded DMA v2 SG/fault/reset, 32-source VIC arbitration, and MMU IPI
-  contract differential.
+  contract differential, plus the opt-in L1/CPU-ROB/DDR/L2 nonblocking
+  combined-path differential.
 - Evidence: child logs in this directory and child completion reports under
   build/isa_ref/qemu_system_*.
 - Scope: selected bare-metal RTL/QEMU retire corpora through mailbox boundaries.
 - Non-claim: this is not full MIPS32 ISA compliance, complete privileged/MMU
   differential, complete IEEE-754/OS FPU ABI, Linux boot, or physical device
-  signoff. DMA physical fault/reset timing, MMU demand paging and OS-owned
-  page tables remain separate residuals.
+  signoff. DMA physical fault/reset timing, MMU demand paging, OS-owned page
+  tables, full cache coherency and Linux cache ABI remain separate residuals.
 EOF
 echo "QEMU system selected differential gate: PASS"
