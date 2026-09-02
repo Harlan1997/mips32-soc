@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Verification foundation module-aware tool inventory
+
+- 修正 `scripts/run_verification_foundation_gate.sh`：在工具探测前按项目规则
+  初始化 `/etc/profile.d/modules.sh`，尝试加载 VCS module，并将 module 初始化与
+  VCS 加载状态写入报告，避免把未加载 module 的实际可用 VCS 误报为缺失。
+- 独立目录 `/tmp/verification-foundation-recheck-20260903` 重跑通过：静态形式资产
+  审计 `files=5 modules=5 assertions=12`，5/5 DUT bind compile，通过 waiver audit；
+  工具清单显示 VCS 可用，其余 formal solver、CDC/RDC 和 lint 工具缺失并保持明确
+  deferred。
+- 该修复只提高验证基础设施的环境可追溯性，不宣称 formal proof、CDC/RDC/lint 或
+  整体功能计划完成。
+
 ### 2026-09-03 Dual-core MMU shootdown end-to-end gate
 
 - 修正双核 shootdown 固件启动路径：core0 在完成公共 CP0/TLB 初始化后显式跳转到

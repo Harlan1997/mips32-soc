@@ -4,6 +4,27 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 RUN_ROOT=${RUN_ROOT:-"${ROOT_DIR}/build/verification_foundation"}
 mkdir -p "${RUN_ROOT}"
+
+# Tool inventory must reflect the environment used by the gates.  In this
+# project VCS and other EDA tools are module-managed, so probing PATH before
+# initializing modules can incorrectly turn an available tool into a
+# "missing" result.  Module setup is best-effort: the fallback/static gate
+# remains runnable on hosts without an EDA installation.
+module_init_status="unavailable"
+module_load_status="not-requested"
+if [[ -r /etc/profile.d/modules.sh ]]; then
+    # shellcheck disable=SC1091
+    source /etc/profile.d/modules.sh
+    module_init_status="ready"
+    if command -v module >/dev/null 2>&1; then
+        module use /tool/module >/dev/null 2>&1 || true
+        if module load vcs >/dev/null 2>&1; then
+            module_load_status="vcs-loaded"
+        else
+            module_load_status="vcs-unavailable"
+        fi
+    fi
+fi
 inventory="${RUN_ROOT}/tool_inventory.tsv"
 report="${RUN_ROOT}/verification_foundation_report.md"
 static_audit="${RUN_ROOT}/formal_static_audit.log"
@@ -59,6 +80,7 @@ cat > "${report}" <<EOF
 
 - Status: FOUNDATION_READY_WITH_EXPLICIT_TOOL_STATUS
 - Tool probes: ${available_count}/${total_count} available; see tool_inventory.tsv.
+- Module initialization: ${module_init_status}; VCS module: ${module_load_status}.
 - SVA assets: AXI/APB/reset/cache property sources present.
 - Formal assets: static content audit passed; this is not a formal proof.
 - CDC/RDC/lint: availability is recorded; missing tools are deferred explicitly.
