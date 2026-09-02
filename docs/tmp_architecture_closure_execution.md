@@ -1,5 +1,27 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 BPU mispredict resolution training
+
+- 修正 `mips_bpu` 在 `flush_if` 为 1 时跳过训练的问题；误预测仍按 ID 阶段的
+  实际架构结果更新 BTB/BHT/RAS。
+- `mips_cpu` 仅在 `exception_flush` 或 `ctx_restore_req` 时屏蔽 BPU resolve，
+  并将 IF recovery 信号与训练事件分离。
+- `make bpu-redirect-gate` 通过：BPU unit、opt-in frontend compile `9/9` 和
+  DDR4 frontend 均 PASS；独立默认 `make soc-smoke` 通过并输出
+  `REGRESSION_TEST_SUCCESS`。
+- 该项不扩大当前 BPU contract；fetch queue、多在途分支、性能/coverage 目标
+  和 formal signoff 仍未闭合。
+
+### 2026-09-02 RTL Linux `kernel_init_freeable` extended probe
+
+- 使用当前 QEMU 通过的 kernel image，针对 `0x88ced100..0x88ced188` 的
+  retire-only probe 运行至 40M RTL cycles。
+- 运行在 host timeout `180s` 后以 status `124` 结束；日志中最后仍可见
+  `kernel_init_freeable` 内的 `driver_init` 调用附近活动，但没有 userspace
+  marker 或函数尾部 retire 记录。
+- 这是资源受限的诊断结果，不是功能 gate PASS；不据此修改 CPU/CP0/WAIT/cache。
+  RTL Linux userspace 和完整 RTL/QEMU system differential 继续 OPEN。
+
 ### 2026-09-02 RTL Linux direct-sim diagnostic defaults
 
 - 将 `tb_mips_soc.v` 的 cache-op 和 CP0 trace limit 默认设为 `0`；显式
