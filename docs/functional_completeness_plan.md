@@ -22,6 +22,15 @@ userspace 三次复现中两次完成全部 marker，一次仍在 fork child 的
 Linux signal/reap 的确定性、RTL Linux userspace 和完整 RTL/QEMU
 system differential 仍为 OPEN。
 
+### 2026-09-03 Architecture aggregate Linux artifact audit
+
+架构 aggregate 现在显式接收 `LINUX_KERNEL`/`LINUX_DTB`，并在运行所有子 gate
+前检查 kernel、`.config` 中的 `CONFIG_MIPS32_SOC_VIC=y` 以及 DTB 的
+`harlan,mips32-soc-vic` compatible。此前仓库默认 artifact 可能是旧的无 VIC
+镜像，导致 aggregate 在 Linux 子项提前失败且报告与 artifact 不一致；当前
+负例审计和带 VIC artifact 的正例审计均通过。该项闭合证据输入一致性，不改变
+Linux userspace wait4、RTL Linux 或完整 system differential 的 OPEN 状态。
+
 ### 2026-09-02 QEMU root/context lease differential closure
 
 扩展 `mips32-soc-ref` 的 MMU context APB 模型，镜像 RTL 的四槽 root lease
