@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 RTL Linux bootrom absolute-address relocation fix
+
+- 定位并修复 `tb/linux_boot/rtl_bootrom.S` 的 MIPS 地址重构错误：`%hi` 与
+  `ori` 组合会在低半字最高位为 1 时多加一个高半字进位；改为 `%hi` +
+  `addiu` 后，`KERNEL_ENTRY=0x8844e6ec` 实际跳转地址恢复正确。DTB 地址加载
+  也同步使用同一安全组合。
+- 修复前实际跳到了 `0x8845e6ec`，随后产生 TLBL 并进入没有实现的 `BFC0_0200`
+  空洞；修复后的 bootrom 反汇编确认最终目标为 `0x8844e6ec`，60M-cycle RTL
+  run 的 PC 全程回到合法 kernel 地址。
+- 修复后的 60M-cycle、单线程受限 VCS run 正常结束，VCS data structure 约
+  1.1 MB，无 OOM、panic 或 simulator error；但仍未出现 userspace marker，后段
+  主要处于 `__bzero`、timer IRQ 与 TLB/page-fault 处理路径。因此 RTL Linux
+  userspace、完整 RTL/QEMU Linux differential 和完整 OS/ISA/MMU signoff 仍 OPEN。
+
 ### 2026-09-03 RTL Linux minimal-profile propagation and bounded recheck
 
 - 将 `LINUX_PROFILE` 从 Makefile 入口传播到 RTL Linux runner，再传播到
