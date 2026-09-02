@@ -1094,12 +1094,30 @@ mmu-hardware-walker-soc-gate:
 	HW_WALKER=1 FW_DIR=$(BUILD_DIR)/firmware/mmu_refill_hw \
 	RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_soc tb/soc_test/run_mmu_refill.sh
 
-.PHONY: mmu-hardware-walker-ad-soc-gate
+.PHONY: mmu-hardware-walker-ad-soc-gate mmu-hardware-walker-ad-complete-gate
 mmu-hardware-walker-ad-soc-gate:
 	HW_WALKER=1 FW_DIR=$(BUILD_DIR)/firmware/mmu_refill_hw_ad \
 	RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_soc \
 	VCS_EXTRA_ARGS='+define+SOC_HARDWARE_WALKER_AD_ENABLE=1 +define+TB_MMU_HW_WALKER_AD' \
 		tb/soc_test/run_mmu_refill.sh
+
+mmu-hardware-walker-ad-complete-gate: mmu-hardware-walker-ad-soc-gate mmu-hardware-walker-ad-reset-soc-gate mmu-hardware-walker-ad-write-error-soc-gate
+	@mkdir -p $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_complete
+	@test -s $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_soc/sim.log
+	@test -s $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_reset_soc/sim.log
+	@test -s $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_write_error_soc/sim.log
+	@grep -q 'MMU_AD_AXI_WRITEBACK_PASS' $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_soc/sim.log
+	@grep -q 'MMU_AD_AXI_WRITEBACK_PASS' $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_reset_soc/sim.log
+	@grep -q 'MMU_AD_AXI_WRITE_ERROR_PASS' $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_write_error_soc/sim.log
+	@{ \
+		echo '# Hardware Walker A/D Completion Report'; \
+		echo; \
+		echo '- Result: PASS'; \
+		echo '- Scope: opt-in Accessed/Dirty PTE writeback, reset-in-flight recovery, and AXI SLVERR propagation'; \
+		echo '- Evidence: `mmu_hardware_walker_ad_soc/sim.log`, `mmu_hardware_walker_ad_reset_soc/sim.log`, and `mmu_hardware_walker_ad_write_error_soc/sim.log`'; \
+		echo '- Boundary: OS page-table ownership, arbitrary reset/error interleavings, and physical memory fault timing remain separate contracts'; \
+	} > $(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_complete/mmu_hardware_walker_ad_completion_report.md
+	@echo "Hardware walker A/D completion gate: PASS"
 
 .PHONY: mmu-hardware-walker-ad-reset-soc-gate
 mmu-hardware-walker-ad-reset-soc-gate:
@@ -1118,14 +1136,14 @@ mmu-hardware-walker-ad-write-error-soc-gate:
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
 # contracts and are intentionally not hidden behind this aggregate gate.
-p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-walker-page-sizes-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-hardware-walker-page-sizes-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
+p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-walker-page-sizes-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-hardware-walker-page-sizes-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-hardware-walker-ad-complete-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
 	@mkdir -p $(P1_COMPLETE_DIR)
 	@{ \
 		echo '# P1 RTL/Simulation Extension Completion Report'; \
 		echo; \
 		echo '- Baseline commit: '`git rev-parse --short HEAD`; \
 		echo '- Result: PASS'; \
-		echo '- Scope: coherency v0.4 firmware stress, I/D and SoC hardware walker refill/retry plus permission matrix, bounded page-table root allocator, scheduler context, SoC 16KB PageMask, SECDED primitive, finite VEIC routing, ISA R2 implemented subset, strict coverage metadata hygiene, and existing P0 regressions'; \
+		echo '- Scope: coherency v0.4 firmware stress, I/D and SoC hardware walker refill/retry plus permission matrix, opt-in A/D writeback/reset/error recovery, bounded page-table root allocator, scheduler context, SoC 16KB PageMask, SECDED primitive, finite VEIC routing, ISA R2 implemented subset, strict coverage metadata hygiene, and existing P0 regressions'; \
 		echo '- Excluded: full MESI/directory protocol, full ISA compliance/FPU, Linux/OS boot, and production software policy'; \
 	} > $(P1_COMPLETE_DIR)/p1_completion_report.md
 	@echo "P1 current RTL/simulation extension gate: PASS"
