@@ -4875,6 +4875,18 @@ configuration.
 - This is a fresh recheck of the implemented bounded contracts. It does not
   upgrade the open full ISA, complete IEEE-754, Linux VM/userspace RTL,
   arbitrary coherency, or physical signoff claims.
+
+### 2026-09-02 RTL Linux initcall-tail retire probe
+
+- A fresh 14M-cycle retire-only probe focused on
+  `kernel_init_freeable`'s `driver_init`/post-initcall address window.
+- The real RTL reaches the `driver_init` call at cycle `11289759`, then
+  continues through the normal `r4k_wait` idle path from roughly 11.8M
+  cycles. Timer IRQ wakeups and returns continue through the run bound.
+- No `run_init_process`, kernel-to-user ERET or userspace marker is observed.
+  This narrows the next investigation to an unobserved later initcall or
+  scheduler/kernel-init handoff; it does not justify a speculative CPU, CP0,
+  WAIT or cache change.
 ## 2026-09-02 RTL Linux IRQ EPC correction
 
 - [x] Reproduced the Linux `BadVAddr=0x00000065` fault at `0x889a986c`.
