@@ -4461,3 +4461,12 @@ configuration.
 - This narrows the remaining RTL Linux issue to a `do_basic_setup`
   initcall/completion wait or the kernel-init handoff. It is diagnostic
   evidence only; no speculative RTL change was made.
+
+### 2026-09-02 RTL Linux driver-init return trace
+
+- A focused trace reached `driver_init` and `devtmpfs_init`, then observed
+  `vfs_kern_mount` return `-EINVAL`; the error propagated out of
+  `devtmpfs_init` and the trace left that function.
+- No RTL hang or architectural mismatch is proven at this return boundary.
+  The next trace must follow later `do_basic_setup` initcalls and completion
+  waits. RTL Linux userspace and full RTL/QEMU Linux differential remain open.
