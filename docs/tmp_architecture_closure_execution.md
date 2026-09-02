@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 bounded Linux RTL/QEMU retire differential recheck
+
+- Re-ran `qemu-system-linux-differential-gate` with the existing verified
+  kernel/DTB, `RTL_CYCLE_LIMIT=100000`, a single-threaded TCG reference and the
+  protected VCS memory budget.
+- The gate passed after aligning the explicit Boot ROM-to-kernel handoff:
+  RTL and `mips32-soc-ref` matched one retire at a time for the bounded prefix.
+- This refreshes the lockstep baseline. It does not close unrestricted RTL
+  Linux userspace boot, full system-mode Linux differential, or complete
+  ISA/privileged/MMU/FPU/OS VM semantics.
+
 ### 2026-09-02 hardware walker A/D independent AW/W backpressure
 
 - Re-ran `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
