@@ -374,6 +374,13 @@ if ! rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
     perl -0pi -e 's{(    gen_store_gpr\(t0, rt\);\n)(\n    gen_set_label\(done\);)}{$1    /* Successful and failed compare-exchange attempts both consume LL. */\n    if (!qemu_mips32_soc_ref_sc_consume_reservation || qemu_mips32_soc_ref_sc_consume_reservation()) {\n        tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n    }\n$2}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
+# Normalize the earlier all-or-nothing hook. Linux guest mode retains a
+# reservation after failed SC, but successful SC always consumes it.
+if rg -q 'Successful and failed compare-exchange attempts both consume LL' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    perl -0pi -e 's{    /\* Successful and failed compare-exchange attempts both consume LL\. \*/\n    if \(!qemu_mips32_soc_ref_sc_consume_reservation \|\| qemu_mips32_soc_ref_sc_consume_reservation\(\)\) \{\n        tcg_gen_movi_tl\(cpu_lladdr, -1\); /\* SOC_REF_SC_CONSUMES_RESERVATION \*/\n    \}}{    /* A successful compare-exchange always consumes LL state, including\n     * in Linux guest mode. */\n    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n}x' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"
+fi
 rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 if ! rg -q '^extern bool qemu_mips32_soc_ref_sc_consume_reservation' \
