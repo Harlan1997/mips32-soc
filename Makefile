@@ -282,7 +282,7 @@ fpu-branch-gate:
 
 qemu-system-fpu-branch-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=fpu_branch RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_branch_differential \
+	FW_TEST=fpu_branch QEMU_CPU=24Kf RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_branch_differential \
 	RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
 	tb/isa_ref/run_qemu_system_differential_gate.sh
 

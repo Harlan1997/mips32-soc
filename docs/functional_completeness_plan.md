@@ -28,6 +28,14 @@ aggregate；独立 gate 与 /tmp/qemu-selected-mmu-os-20260902 aggregate
 均通过。统一 MMU selected corpus 现覆盖 context/shootdown、IPI、普通
 refill、PageMask、八 ASID process pressure 和四任务 OS page-table pressure。
 
+本轮进一步将 FPU branch differential、FPU FPE boundary aggregate 和 LL/SC
+reservation differential 纳入 selected aggregate。审计发现 FPU branch 的
+Makefile runner 未设置 QEMU_CPU=24Kf，导致 QEMU 默认 24Kc 将 MTC1 状态
+错误表现为 GPR 变化；已补齐参数。修复后 FPU branch、FPE boundary 七项
+子 gate、LL/SC 独立 gate 及 selected aggregate 在
+/tmp/qemu-selected-full-20260902 下全部通过。磁盘耗尽导致的中途 underflow
+失败也已通过清理本轮临时 VCS/QEMU 目录并重新验证排除。
+
 ### 2026-09-02 CPU/MMU aggregate recheck with Machine Check runtime
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`EDA_MEMORY_MAX=1500M` 和
