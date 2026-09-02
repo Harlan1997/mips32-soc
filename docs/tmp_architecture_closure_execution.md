@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Dual-core MMU shootdown end-to-end gate
+
+- 修正双核 shootdown 固件启动路径：core0 在完成公共 CP0/TLB 初始化后显式跳转到
+  位于 `BFC00300` 的 core0 body，避免顺序落入固定的 `BFC00200` refill vector；同时
+  保留 product CP0 hazard 间隔，并让该 gate 跳过旧的注入式双核检查。
+- 使用 `SOC_ENABLE_DUAL_CORE`、`SOC_PRODUCT_BOOT_ENABLE=1`、`SOC_MMU_ENABLE=1` 和
+  `SOC_MICRO_TLB_ENABLE=1`，真实 CPU/SoC 固件完成 core1 首次 translated load、
+  core0 APB IPI page invalidate、target-side ACK、post-invalidate refill 和共享
+  mailbox 检查。
+- 受控命令 `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M SKIP_COVERAGE=1
+  BUILD_DIR=/tmp/mmu-dual-shootdown-20260903f FW_DIR=/tmp/mmu-dual-fw-20260903d
+  RUN_DIR=/tmp/mmu-dual-shootdown-20260903f/soc_test
+  tb/soc_test/run_dual_core_mmu_shootdown_gate.sh` 通过，输出
+  `dual-core MMU shootdown end-to-end gate: PASS`。
+- 这闭合的是当前 opt-in 双核 RTL shootdown 的端到端 bounded slice；Linux page-table
+  ownership、SMP scheduler/shootdown policy、完整 coherency、完整 privileged/MMU
+  compliance 和产品 signoff 仍保持 OPEN。
+
 ### 2026-09-02 QEMU MMU root/context lease differential
 
 - `mips32-soc-ref` now mirrors the RTL APB four-slot root allocator and atomic

@@ -2129,6 +2129,20 @@ module tb_mips_soc;
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[1],
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[2],
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.nb_load_rd[3]);
+`ifdef TB_DUAL_CORE_MMU_SHOOTDOWN
+        $display("DUAL_MMU_TIMEOUT core0_pc=%08h core1_pc=%08h c0_status=%08h c0_cause=%08h c0_epc=%08h c1_status=%08h c1_cause=%08h c1_epc=%08h c1_data=%b/%08h/%b",
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_if_stage.pc,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_status,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_cause,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.u_mips_cp0.cp0_epc,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_req,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_addr,
+                 u_soc.u_impl.g_dual_core.u_core1.u_core1.u_cpu.data_we);
+`endif
         $display("==================================================");
         $finish;
     end
@@ -2377,6 +2391,7 @@ module tb_mips_soc;
                 end
 `else
 `ifdef SOC_ENABLE_DUAL_CORE
+`ifndef TB_DUAL_CORE_MMU_SHOOTDOWN
 `ifndef SOC_COHERENCY_FW_STRESS
                 if (dual_core_ipi_count == 0) begin
                     $display("REGRESSION_TEST_FAILED dual-core IPI invalidate not observed");
@@ -2394,6 +2409,7 @@ module tb_mips_soc;
                     $display("REGRESSION_TEST_FAILED core1 exception isolation not observed");
                     $finish;
                 end
+`endif
 `endif
 `endif
 `endif
