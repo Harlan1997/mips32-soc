@@ -3,10 +3,11 @@
 ### 2026-09-02 RTL Linux trace hexadecimal-argument normalization
 
 修复 RTL Linux progress runner 对 `%h` 地址 plusarg 的输入边界：默认值和
-用户传入的 `0x/0X` 前缀现在在传给 VCS 前统一去除。100K-cycle no-coverage
-smoke 使用 `LINUX_PC_TRACE_START=0x88d10844`/`END=0x88d11070` 通过，命令行
-中为规范十六进制，且不再出现 `Too many digits` 警告。这是诊断基础设施修复，
-不改变 RTL 行为，也不闭合 RTL Linux userspace 或完整 system differential。
+用户传入的 `0x/0X` 前缀现在在传给 VCS 前统一去除，覆盖 PC、panic、stall、
+cacheop、target、delay、fault 和 vector trace 参数。100K-cycle no-coverage
+smoke 同时使用这些带 `0x` 的参数通过，命令行中均为规范十六进制，且不再
+出现 `Too many digits` 警告。这是诊断基础设施修复，不改变 RTL 行为，也不
+闭合 RTL Linux userspace 或完整 system differential。
 
 ### 2026-09-02 RTL Linux `driver_init` post-return focused trace
 
