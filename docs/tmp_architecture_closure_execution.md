@@ -4352,3 +4352,13 @@ configuration.
   custom-machine/Linux signal-exit or wait4 boundary without weakening the
   marker contract; Linux userspace, RTL Linux userspace and full
   RTL/QEMU Linux differential remain OPEN.
+
+### 2026-09-02 Hardware walker A/D SoC reset-in-flight
+
+- Added `mmu-hardware-walker-ad-reset-soc-gate`, which waits until the
+  hardware walker has accepted the PTE write address while its independent W
+  channel is still pending, then asserts reset for five clocks.
+- The restarted firmware completed all three expected A/D writebacks and the
+  gate passed with `aw=4`, `w=3`, and `delayed_w=3`. This proves the shared AXI
+  write owner clears and can be reacquired after an in-flight reset; it does
+  not close arbitrary reset/error interleavings or OS page-table ownership.
