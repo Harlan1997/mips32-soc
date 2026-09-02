@@ -25,13 +25,13 @@ else
 fi
 test -x "${QEMU_SYSTEM_BIN}"
 set +e
-# Use the architectural SC-consumes-reservation behavior for the Linux guest
-# as well. Keeping the opt-in compatibility policy here leaves wait4's LL/SC
-# retry loop with a stale reservation and can strand the parent after the
-# protected-page child exits.
+# The generic Linux userspace image exercises the kernel's wait4 LL/SC retry
+# path.  The custom machine exposes an opt-in Linux guest policy for that
+# path; bare-metal RTL/QEMU differential gates continue to use the strict
+# architectural SC-consumes-reservation contract.
 "${QEMU_SYSTEM_BIN}" \
     -accel tcg,thread=single \
-    -M mips32-soc-ref -m 64M -cpu 24Kc \
+    -M mips32-soc-ref,linux-guest=on -m 64M -cpu 24Kc \
     -kernel "${KERNEL_INPUT}" -dtb "${DTB_INPUT}" \
     -display none -monitor none >"${RUN_DIR}/qemu_stdout.log" \
     2>"${RUN_DIR}/qemu_stderr.log" &

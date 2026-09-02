@@ -1493,3 +1493,15 @@ backed mmap, mprotect plus protected-write `SIGSEGV`, brk, nanosleep,
 exit-status checks. This closes the bounded QEMU userspace/process contract;
 RTL Linux userspace, full RTL/QEMU Linux system differential, unrestricted
 Linux VM ownership and full ISA/privileged/FPU compliance remain open.
+
+### 2026-09-02 QEMU Linux wait4 policy runner correction
+
+The generic Linux userspace runner now invokes the custom machine with its
+explicit `linux-guest=on` policy. This policy is required by the Linux
+kernel's wait4 LL/SC retry path; strict SC-consumption remains the contract
+for bare-metal RTL/QEMU differential runs. A fresh 180-second run using the
+existing kernel and DTB passed every required userspace marker, including both
+exact-PID wait4 reaps and wait-status validation. The bounded QEMU
+userspace/process contract is therefore closed; RTL Linux userspace, full
+RTL/QEMU Linux differential, unrestricted Linux VM ownership and full
+ISA/privileged/FPU compliance remain open.
