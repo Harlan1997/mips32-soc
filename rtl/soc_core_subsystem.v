@@ -121,15 +121,30 @@ module soc_core_subsystem #(
     wire core_ptw_mem_error;
     wire core_ptw_fault_valid;
     wire [2:0] core_ptw_fault_code;
+    wire core_data_awvalid, core_data_awready;
+    wire core_data_wlast, core_data_wvalid, core_data_wready;
     reg ptw_axi_busy;
     reg ptw_axi_write_busy;
     reg ptw_axi_write_aw_done;
     reg ptw_axi_write_w_done;
+    reg core_axi_write_busy;
+    reg core_axi_write_aw_done;
+    reg core_axi_write_w_done;
     wire ptw_axi_response = ptw_axi_busy && data_rvalid && data_rlast;
-    wire ptw_write_selected = core_ptw_mem_write_valid && !ptw_axi_busy;
+    // The D-cache and the page-table walker share one AXI write channel.
+    // Once either AW or W has been accepted, the cache owns the channel until
+    // its B response; a walker request may only claim it between transactions.
+    wire ptw_write_selected = ptw_axi_write_busy ||
+                              (core_ptw_mem_write_valid && !ptw_axi_busy &&
+                               !core_axi_write_busy);
     wire ptw_write_b_response = ptw_axi_write_busy && data_bvalid;
     wire ptw_write_aw_fire = ptw_write_selected && !ptw_axi_write_aw_done && data_awready;
     wire ptw_write_w_fire = ptw_write_selected && !ptw_axi_write_w_done && data_wready;
+    wire core_write_selected = !ptw_write_selected && !ptw_axi_busy;
+    wire core_write_aw_fire = core_write_selected && core_data_awvalid &&
+                              !core_axi_write_aw_done && data_awready;
+    wire core_write_w_fire = core_write_selected && core_data_wvalid &&
+                             !core_axi_write_w_done && data_wready;
 
     wire [3:0] core_data_awid;
     wire [31:0] core_data_awaddr;
@@ -139,10 +154,8 @@ module soc_core_subsystem #(
     wire [1:0] core_data_awlock;
     wire [3:0] core_data_awcache;
     wire [2:0] core_data_awprot;
-    wire core_data_awvalid, core_data_awready;
     wire [31:0] core_data_wdata;
     wire [3:0] core_data_wstrb;
-    wire core_data_wlast, core_data_wvalid, core_data_wready;
     wire [3:0] core_data_bid;
     wire [1:0] core_data_bresp;
     wire core_data_bvalid, core_data_bready;
@@ -260,24 +273,24 @@ module soc_core_subsystem #(
     assign data_awcache = ptw_write_selected ? 4'd0 : core_data_awcache;
     assign data_awprot = ptw_write_selected ? 3'b010 : core_data_awprot;
     assign data_awvalid = ptw_write_selected ? !ptw_axi_write_aw_done :
-                          core_data_awvalid && !ptw_axi_write_busy && !ptw_axi_busy &&
-                          !core_ptw_mem_write_valid;
-    assign core_data_awready = !core_ptw_mem_write_valid &&
-                               !ptw_axi_write_busy && !ptw_axi_busy && data_awready;
+                          core_write_selected && core_data_awvalid &&
+                          (!core_axi_write_busy || !core_axi_write_aw_done);
+    assign core_data_awready = core_write_selected &&
+                               (!core_axi_write_busy || !core_axi_write_aw_done) &&
+                               data_awready;
     assign data_wdata = ptw_write_selected ? core_ptw_mem_write_data : core_data_wdata;
     assign data_wstrb = ptw_write_selected ? 4'b1111 : core_data_wstrb;
     assign data_wlast = ptw_write_selected ? 1'b1 : core_data_wlast;
     assign data_wvalid = ptw_write_selected ? !ptw_axi_write_w_done :
-                         core_data_wvalid && !ptw_axi_write_busy && !ptw_axi_busy &&
-                         !core_ptw_mem_write_valid;
-    assign core_data_wready = !core_ptw_mem_write_valid &&
-                              !ptw_axi_write_busy && !ptw_axi_busy && data_wready;
+                         core_write_selected && core_data_wvalid &&
+                         (!core_axi_write_busy || !core_axi_write_w_done);
+    assign core_data_wready = core_write_selected &&
+                              (!core_axi_write_busy || !core_axi_write_w_done) &&
+                              data_wready;
     assign core_data_bid = data_bid;
     assign core_data_bresp = data_bresp;
-    assign core_data_bvalid = data_bvalid && !core_ptw_mem_write_valid &&
-                              !ptw_axi_write_busy;
-    assign data_bready = (core_ptw_mem_write_valid || ptw_axi_write_busy) ?
-                         1'b1 : core_data_bready;
+    assign core_data_bvalid = data_bvalid && !ptw_axi_write_busy;
+    assign data_bready = ptw_axi_write_busy ? 1'b1 : core_data_bready;
     assign core_ptw_mem_write_ready = ptw_write_b_response &&
                                       ptw_axi_write_aw_done && ptw_axi_write_w_done;
     assign core_ptw_mem_write_error = (data_bresp != 2'b00);
@@ -304,6 +317,9 @@ module soc_core_subsystem #(
             ptw_axi_write_busy <= 1'b0;
             ptw_axi_write_aw_done <= 1'b0;
             ptw_axi_write_w_done <= 1'b0;
+            core_axi_write_busy <= 1'b0;
+            core_axi_write_aw_done <= 1'b0;
+            core_axi_write_w_done <= 1'b0;
         end
         else if (!ptw_axi_busy && ENABLE_HARDWARE_WALKER && core_ptw_mem_valid && data_arready)
             ptw_axi_busy <= 1'b1;
@@ -322,6 +338,17 @@ module soc_core_subsystem #(
                 ptw_axi_write_aw_done <= 1'b0;
                 ptw_axi_write_w_done <= 1'b0;
             end
+        end
+
+        if (!core_axi_write_busy) begin
+            if (core_write_aw_fire) core_axi_write_aw_done <= 1'b1;
+            if (core_write_w_fire) core_axi_write_w_done <= 1'b1;
+            if (core_write_aw_fire || core_write_w_fire)
+                core_axi_write_busy <= 1'b1;
+        end else if (data_bvalid && data_bready && !ptw_axi_write_busy) begin
+            core_axi_write_busy <= 1'b0;
+            core_axi_write_aw_done <= 1'b0;
+            core_axi_write_w_done <= 1'b0;
         end
     end
 

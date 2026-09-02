@@ -62,6 +62,12 @@ fi
 if [ "${OS_PRESSURE}" = 1 ]; then
     VCS_DEFINES+=(+define+SOC_MMU_OS_PRESSURE=1)
 fi
+# Keep this gate reusable for opt-in integration variants. Fixed contract
+# defines remain in force; caller arguments are appended for feature toggles.
+if [ -n "${VCS_EXTRA_ARGS:-}" ]; then
+    read -r -a extra_vcs_args <<< "${VCS_EXTRA_ARGS}"
+    VCS_DEFINES+=("${extra_vcs_args[@]}")
+fi
 
 vcs -full64 -sverilog -timescale=1ns/1ps "${VCS_DEFINES[@]}" \
     +incdir+"${ROOT_DIR}"/rtl/include +incdir+"${ROOT_DIR}"/rtl/cpu \
