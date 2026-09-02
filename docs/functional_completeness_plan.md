@@ -1681,3 +1681,13 @@ PIC/VIC, DMA, QSPI and DDR-window/status behavior for the current bounded
 contract. This closes the QEMU vendor-neutral peripheral model slice; it does
 not claim Linux driver completeness, real DDR/QSPI PHY/device timing, board
 boot, or production signoff.
+
+### 2026-09-02 selected differential aggregate recheck
+
+Fresh serial execution of `make qemu-system-selected-differential-gate` under
+the bounded VCS/QEMU memory settings passed every selected child: ISA audit/R2,
+MDU, branch/exception, DI/EI/WAIT, BD, unaligned, peripheral/VIC, FPU,
+DMA, MMU IPI and the combined L1/CPU-ROB/DDR/L2 nonblocking path. This is
+current-contract evidence only; it does not close full ISA/IEEE-754, Linux VM,
+RTL Linux userspace, unrestricted system differential, coherency or physical
+signoff.
