@@ -73,6 +73,13 @@ The acknowledgement at `0x20` must carry bit 0 set and that generation in
 status bit 5 at `0x24`. This prevents an old owner from completing a
 shootdown after the context lease has advanced.
 
+The system-mode `mips32-soc-ref` model mirrors the same bounded root and
+combined-context lease protocol at `0x28..0x3c`. Its QEMU differential gate
+checks root stale/valid release, generation reuse, four-slot combined root/ASID
+allocation, stale release rejection, and generation-aware reuse against the
+real RTL retire stream. This remains a four-slot single-core contract, not a
+Linux page allocator or SMP ownership implementation.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:

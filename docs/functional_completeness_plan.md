@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 QEMU root/context lease differential closure
+
+扩展 `mips32-soc-ref` 的 MMU context APB 模型，镜像 RTL 的四槽 root lease
+以及原子 root/ASID/generation lease，包括 stale release、有效 release、事件
+sticky/W1C 和 generation reuse。`mmu_asid_context` 固件增加了真实 root 与联合
+context 操作，链接布局保留 `0x200` TLB refill、`0x400` shootdown 向量，并将
+新增检查放到 `0x600` contract 段。RTL gate 与 QEMU system-mode gate 均通过，
+`TRACE_COMPARE_PASS records=349`。这只闭合 bounded single-core ownership-token
+差分，不宣称 Linux VM、unrestricted demand paging、multicore shootdown 或完整
+privileged/MMU signoff。
+
 ### 2026-09-02 selected differential aggregate MMU coverage and build isolation
 
 统一 qemu-system-selected-differential-gate 已纳入 MMU IPI 之外的

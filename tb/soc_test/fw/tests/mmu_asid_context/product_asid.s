@@ -116,6 +116,9 @@ _start:
     bne     $t1, $t2, fail
     nop
 
+    jal     lease_contract
+    nop
+
     /* Tell the directed testbench which phase completed, then pass. */
     lui     $t0, 0xA000
     ori     $t0, $t0, 0xFFF0
@@ -145,6 +148,97 @@ fail:
     sw      $t1, 0($t0)
 fail_loop:
     b       fail_loop
+    nop
+
+    .section .text.contract, "ax"
+    .globl lease_contract
+lease_contract:
+    /* Root lease contract: allocate slot 0, reject a stale release, then
+       release with generation 0 and verify generation-1 reuse. */
+    lui     $t7, 0xC000
+    ori     $t7, $t7, 0x9000
+    ori     $t0, $zero, 1
+    sw      $t0, 40($t7)             /* ROOT_ALLOC at 0x28 */
+    lw      $t1, 40($t7)
+    lui     $t2, 0x0010
+    bne     $t1, $t2, fail
+    nop
+    lw      $t1, 44($t7)             /* ROOT_GENERATION */
+    bne     $t1, $zero, fail
+    nop
+    sw      $t2, 44($t7)             /* ROOT_RELEASE_ROOT holding */
+    lui     $t0, 0x8000
+    ori     $t0, $t0, 1              /* stale generation 1 */
+    sw      $t0, 48($t7)             /* ROOT_RELEASE */
+    lw      $t1, 52($t7)             /* ROOT_EVENT */
+    addiu   $t0, $zero, 9
+    bne     $t1, $t0, fail
+    nop
+    addiu   $t0, $zero, 8
+    sw      $t0, 56($t7)             /* clear stale-release event */
+    sw      $t2, 44($t7)
+    lui     $t0, 0x8000              /* valid generation 0 */
+    sw      $t0, 48($t7)
+    lw      $t1, 52($t7)
+    addiu   $t0, $zero, 5
+    bne     $t1, $t0, fail
+    nop
+    sw      $t0, 56($t7)             /* clear root event bits 0 and 2 */
+    ori     $t0, $zero, 1
+    sw      $t0, 40($t7)
+    lw      $t1, 44($t7)
+    addiu   $t0, $zero, 1
+    bne     $t1, $t0, fail
+    nop
+
+    /* Atomic root/ASID leases: fill all four slots, reject a duplicate
+       release, then allocate slot 1 again with generation 1. */
+    ori     $t0, $zero, 1
+    sw      $t0, 60($t7)
+    lw      $t1, 0($t7)
+    ori     $t2, $zero, 1
+    bne     $t1, $t2, fail
+    nop
+    sw      $t0, 60($t7)
+    lw      $t1, 0($t7)
+    ori     $t2, $zero, 2
+    bne     $t1, $t2, fail
+    nop
+    sw      $t0, 60($t7)
+    lw      $t1, 0($t7)
+    ori     $t2, $zero, 3
+    bne     $t1, $t2, fail
+    nop
+    sw      $t0, 60($t7)
+    lw      $t1, 0($t7)
+    ori     $t2, $zero, 4
+    bne     $t1, $t2, fail
+    nop
+    lui     $t0, 0x0010
+    ori     $t0, $t0, 0x1000         /* slot 1 root */
+    sw      $t0, 44($t7)
+    lui     $t0, 0x8000
+    ori     $t0, $t0, 2              /* release ASID 2, generation 0 */
+    sw      $t0, 60($t7)
+    sw      $t0, 60($t7)             /* duplicate release is stale */
+    lw      $t1, 52($t7)
+    addiu   $t0, $zero, 13
+    bne     $t1, $t0, fail
+    nop
+    addiu   $t0, $zero, 12
+    sw      $t0, 56($t7)
+    ori     $t0, $zero, 1
+    sw      $t0, 60($t7)
+    lw      $t1, 0($t7)
+    addiu   $t2, $zero, 0x0102     /* generation 1, ASID 2 */
+    bne     $t1, $t2, fail
+    nop
+    lw      $t1, 44($t7)
+    ori     $t0, $zero, 1
+    bne     $t1, $t0, fail
+    nop
+
+    jr      $ra
     nop
 
     .section .text.shootdown, "ax"

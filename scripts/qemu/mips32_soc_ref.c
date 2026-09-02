@@ -156,6 +156,18 @@ typedef struct MIPS32SocRefState {
     uint32_t mmu_context_status;
     bool mmu_context_busy;
     bool mmu_context_invalidate_seen;
+    /* Mirror the bounded RTL root/context lease allocators.  These are
+     * ownership tokens for the prototype contract, not a guest heap. */
+    bool mmu_root_used[4];
+    uint8_t mmu_root_generation[4];
+    bool mmu_context_used[4];
+    uint8_t mmu_context_generation[4];
+    uint32_t mmu_root_value;
+    uint8_t mmu_root_value_generation;
+    uint32_t mmu_root_release_value;
+    uint32_t mmu_context_root_value;
+    uint32_t mmu_root_event;
+    uint32_t mmu_context_event;
     /* Bounded dual-mailbox model for the RTL's two APB IPI endpoints.
      * The reference machine remains single-vCPU; these state machines model
      * target acceptance/ACK and fault behavior, not architectural SMP. */
@@ -1263,6 +1275,18 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
     case 0x9024:
         value = s->mmu_context_status;
         break;
+    case 0x900c:
+        value = s->mmu_context_event & 0xfU;
+        break;
+    case 0x9028:
+        value = s->mmu_root_value;
+        break;
+    case 0x902c:
+        value = s->mmu_root_value_generation;
+        break;
+    case 0x9034:
+        value = s->mmu_root_event & 0xfU;
+        break;
     case 0x1000: value = s->timer_ctrl; break;
     case 0x1004: value = s->timer_load; break;
     case 0x1008: value = soc_ref_timer_value(s); break;
@@ -1568,6 +1592,145 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
                     }
                 }
                 tlb_flush(CPU(s->cpu));
+            }
+        }
+        break;
+    case 0x900c:
+        s->mmu_context_event |= value & 0xfU;
+        break;
+    case 0x9010:
+        s->mmu_context_event &= ~(value & 0xfU);
+        break;
+    case 0x9014:
+        /* ASID-only allocation command. */
+        if (value & 1U) {
+            bool found = false;
+            for (unsigned i = 0; i < 4; ++i) {
+                if (!s->mmu_context_used[i] && !found) {
+                    s->mmu_context_used[i] = true;
+                    s->mmu_context_asid_generation =
+                        ((uint32_t)s->mmu_context_generation[i] << 8) | (i + 1);
+                    s->mmu_context_event |= 1U;
+                    found = true;
+                }
+            }
+            if (!found)
+                s->mmu_context_event |= 2U;
+        }
+        break;
+    case 0x9018:
+        /* ASID-only release command. */
+        if (value & 0x80000000U) {
+            unsigned slot = (value & 0xffU);
+            if (slot >= 1 && slot <= 4 &&
+                s->mmu_context_used[slot - 1] &&
+                s->mmu_context_generation[slot - 1] ==
+                    ((value >> 8) & 0xffU)) {
+                s->mmu_context_used[slot - 1] = false;
+                s->mmu_context_generation[slot - 1]++;
+                s->mmu_context_event |= 4U;
+            } else {
+                s->mmu_context_event |= 8U;
+            }
+        }
+        break;
+    case 0x902c:
+        /* Root release payload holding register. */
+        s->mmu_root_release_value = value;
+        break;
+    case 0x9034:
+        /* ROOT_EVENT is write-one-to-set. */
+        s->mmu_root_event |= value & 0xfU;
+        break;
+    case 0x9038:
+        /* ROOT_EVENT_CLEAR is write-one-to-clear. */
+        s->mmu_root_event &= ~(value & 0xfU);
+        break;
+    case 0x9028:
+        /* Root allocation command; 0x9028 also reads the allocated root. */
+        if (value & 1U) {
+            bool found = false;
+            for (unsigned i = 0; i < 4; ++i) {
+                if (!s->mmu_root_used[i] && !found) {
+                    s->mmu_root_used[i] = true;
+                    s->mmu_root_value = 0x00100000U + i * 0x1000U;
+                    s->mmu_root_value_generation = s->mmu_root_generation[i];
+                    s->mmu_root_event |= 1U;
+                    found = true;
+                }
+            }
+            if (!found)
+                s->mmu_root_event |= 2U;
+        }
+        break;
+    case 0x9030:
+        /* Root release command; the root address is held in 0x902c. */
+        if (value & 0x80000000U) {
+            unsigned slot = 4;
+            for (unsigned i = 0; i < 4; ++i)
+                if (s->mmu_root_release_value ==
+                        0x00100000U + i * 0x1000U)
+                    slot = i;
+            if (slot < 4 && s->mmu_root_used[slot] &&
+                s->mmu_root_generation[slot] == (value & 0xffU)) {
+                s->mmu_root_used[slot] = false;
+                s->mmu_root_generation[slot]++;
+                s->mmu_root_event |= 4U;
+            } else {
+                s->mmu_root_event |= 8U;
+            }
+        }
+        break;
+    case 0x903c:
+        /* Atomic context release+allocate, matching mmu_context_allocator's
+         * slot selection and generation transition. */
+        {
+            unsigned release_slot = 4;
+            bool release_match = false;
+            uint8_t release_asid = value & 0xffU;
+            uint8_t release_generation = (value >> 8) & 0xffU;
+            if (value & 0x80000000U) {
+                for (unsigned i = 0; i < 4; ++i)
+                    if (s->mmu_root_release_value ==
+                            0x00100000U + i * 0x1000U &&
+                        release_asid == i + 1 &&
+                        s->mmu_context_used[i] &&
+                        s->mmu_context_generation[i] == release_generation)
+                        release_slot = i;
+                if (release_slot < 4) {
+                    release_match = true;
+                    s->mmu_context_used[release_slot] = false;
+                    s->mmu_context_generation[release_slot]++;
+                    s->mmu_context_event |= 4U;
+                    s->mmu_root_event |= 4U;
+                } else {
+                    s->mmu_context_event |= 8U;
+                    s->mmu_root_event |= 8U;
+                }
+            }
+            if (value & 1U) {
+                bool found = false;
+                for (unsigned i = 0; i < 4; ++i) {
+                    if ((!s->mmu_context_used[i] ||
+                         (release_match && release_slot == i)) && !found) {
+                        uint8_t generation = s->mmu_context_generation[i];
+                        if (release_match && release_slot == i)
+                            generation++;
+                        s->mmu_context_used[i] = true;
+                        s->mmu_context_asid_generation =
+                            ((uint32_t)generation << 8) | (i + 1);
+                        s->mmu_context_root_value = 0x00100000U + i * 0x1000U;
+                        s->mmu_root_value = s->mmu_context_root_value;
+                        s->mmu_root_value_generation = generation;
+                        s->mmu_context_event |= 1U;
+                        s->mmu_root_event |= 1U;
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    s->mmu_context_event |= 2U;
+                    s->mmu_root_event |= 2U;
+                }
             }
         }
         break;
