@@ -4875,3 +4875,20 @@ configuration.
 - This is a fresh recheck of the implemented bounded contracts. It does not
   upgrade the open full ISA, complete IEEE-754, Linux VM/userspace RTL,
   arbitrary coherency, or physical signoff claims.
+## 2026-09-02 RTL Linux IRQ EPC correction
+
+- [x] Reproduced the Linux `BadVAddr=0x00000065` fault at `0x889a986c`.
+- [x] Confirmed the cause: an IRQ accepted with the branch in WB and its
+  delay slot in MEM used the branch PC as `except_pc`; CP0's normal BD
+  correction then returned to the preceding `lbu`, leaving `$v1=0x65` as its
+  next address.
+- [x] Changed `rtl/cpu/mips_cpu.v` to pass the actual MEM delay-slot PC for
+  `interrupt_wb_branch_delay`.
+- [x] Verified `SKIP_COVERAGE=1 make cpu-irq-delay-slot-gate cpu-cp0-gate
+  rtl-frontend-compile`; directed IRQ/CP0 gates pass and frontend is `8/8`.
+- [x] Verified the real RTL Linux window through the old fault boundary:
+  `pc=0x889a9874` at IRQ acceptance, EPC returns to `0x889a9870`, and the
+  follow-up 8M-cycle run has no `TLBL code=2` or `BadVAddr=0x65` recurrence.
+- [ ] Full RTL Linux userspace boot and unrestricted RTL/QEMU Linux
+  differential remain open; this item only removes the confirmed EPC/BD
+  recovery defect.
