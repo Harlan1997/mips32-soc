@@ -795,8 +795,10 @@ module mips_cpu #(
                                       id_inst[5:0] == 6'h09)));
     wire        fpu_id_mfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00000);
     wire        fpu_id_cfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00010);
+    wire        fpu_id_mfhc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00011);
     wire        fpu_id_mtc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00100);
     wire        fpu_id_ctc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00110);
+    wire        fpu_id_mthc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00111);
     wire        fpu_id_cop1x_arith = fpu_id_cop1x &&
                                ((id_inst[5:0] == 6'h20) ||
                                 (id_inst[5:0] == 6'h21) ||
@@ -840,7 +842,7 @@ module mips_cpu #(
                                  (id_inst[25:21] == 5'b10000 ||
                                  id_inst[25:21] == 5'b10100) &&
                                 id_inst[5:0] == 6'h21));
-    wire        fpu_id_gpr_write = fpu_id_mfc1 | fpu_id_cfc1;
+    wire        fpu_id_gpr_write = fpu_id_mfc1 | fpu_id_cfc1 | fpu_id_mfhc1;
     wire        fpu_rf_conflict = fpu_id_gpr_write && wb_reg_write;
     wire        id_fpu_unusable = (fpu_id_valid || fpu_mem_id_valid) && !cpu_cu1;
     // FCSR Enables[11:7] correspond to the primitive flag order
@@ -1016,6 +1018,10 @@ module mips_cpu #(
         end else if (fpu_id_commit) begin
             if (fpu_id_mtc1)
                 fpr[id_inst[15:11]] <= id_val_rt;
+            else if (fpu_id_mthc1)
+                // MTHC1 writes the high word of the selected 64-bit FPR.
+                // The RTL stores a double as low=fpr[even], high=fpr[odd].
+                fpr[id_inst[15:11] + 1'b1] <= id_val_rt;
             else if (fpu_id_ctc1)
                 fcsr <= id_val_rt;
             else if (fpu_id_fpr_cond_move) begin
@@ -1056,6 +1062,7 @@ module mips_cpu #(
 
     wire [4:0]  rf_waddr_selected = fpu_id_gpr_write ? id_inst[20:16] : wb_waddr;
     wire [31:0] rf_wdata_selected = fpu_id_mfc1 ? fpr[id_inst[15:11]] :
+                                    fpu_id_mfhc1 ? fpr[id_inst[15:11] + 1'b1] :
                                     fpu_id_cfc1 ? fcsr : wb_wdata;
     // The nonblocking retirement FIFO keeps its control bundle registered,
     // while wb_valid is the one-cycle commit pulse.  Gate GPR writes with

@@ -146,6 +146,22 @@ module tb_mips_control_fpu_cond;
         expect_reserved(fpu_cond_move(5'b10001, 5'd1, 5'd2, 5'd4, 6'h11) |
                         32'h00020000); // reserved ft[1]
 
+        // MTHC1/MFHC1 use the high-word transfer encodings and require the
+        // same zeroed low fields as the other COP1 register transfers.
+        inst = {6'b010001, 5'b00111, 5'd8, 5'd2, 11'd0};
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL MTHC1 rejected");
+            failures = failures + 1;
+        end
+        inst = {6'b010001, 5'b00011, 5'd9, 5'd2, 11'd0};
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL MFHC1 rejected");
+            failures = failures + 1;
+        end
+        expect_reserved({6'b010001, 5'b00111, 5'd8, 5'd2, 11'd1});
+
         // RECIP/RSQRT are unary COP1 operations: single and even-pair D
         // formats are legal, while W-format and odd D-pair selectors are RI.
         inst = fpu_cond_move(5'b10000, 5'd0, 5'd0, 5'd2, 6'h15);

@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 COP1 MTHC1/MFHC1 high-word transfer closure
+
+- 扩展 `mips_control` 的 COP1 transfer decode，加入 `MFHC1`（rs=`00011`）
+  和 `MTHC1`（rs=`00111`），并保持低 11 位保留字段必须为零。
+- `mips_cpu` 将高字映射到 double pair 的奇数 FPR，加入 MFHC1 的 GPR
+  读回路径；默认 FPU 关闭时仍走原有 RI 兼容路径。
+- 新增 decoder reserved-field 检查以及真实 firmware 对低字保持和高字
+  写入/读回的检查。以下 gate 均通过：
+  `mips-control-fpu-cond-gate`、`rtl-frontend-compile`、
+  `fpu-single-gate`。
+- `qemu-system-fpu-single-differential-gate` 在
+  `/tmp/fpu-highword-qemu-20260903` 通过，RTL/QEMU retire 比较通过。
+- 该项只闭合 MTHC1/MFHC1 高字传送 slice；完整 IEEE-754、FPE policy、
+  lazy-FPU/signal-frame ABI、Linux FPU context 和完整 COP1 compliance 仍
+  OPEN。
+
 ### 2026-09-03 COP1 MOVF/MOVT FPR conditional move closure
 
 - 补齐 `mips_control` 对 COP1 funct `0x11` 的 `MOVF.S/MOVT.S` 和
