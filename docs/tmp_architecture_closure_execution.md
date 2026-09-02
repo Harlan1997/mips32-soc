@@ -1,5 +1,13 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux direct-sim diagnostic defaults
+
+- 将 `tb_mips_soc.v` 的 cache-op 和 CP0 trace limit 默认设为 `0`；显式
+  plusarg 仍可开启有界诊断。
+- 100K-cycle no-coverage smoke 通过，实际 cache-op/CP0 记录均为 0，日志约
+  4.3 KiB，VCS data structure 约 1.1 MB。该修复降低直接复用 `simv` 的资源
+  风险，不改变 RTL 行为；Linux userspace 与完整 differential 仍为 OPEN。
+
 ### 2026-09-02 RTL Linux trace hexadecimal-argument normalization
 
 - `run_rtl_linux_progress_gate.sh` 现在在转发 `%h` plusarg 前剥离可选的

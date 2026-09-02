@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux direct-sim diagnostic defaults
+
+将 `tb_mips_soc.v` 中 cache-op 和 CP0 诊断流的默认 limit 设为 `0`；显式
+`LINUX_CACHEOP_TRACE_LIMIT`/`LINUX_CP0_TRACE_LIMIT` 仍可开启有界追踪。
+100K-cycle no-coverage smoke 通过，实际两类记录均为 0，VCS data structure
+约 1.1 MB、日志约 4.3 KiB。这消除了直接复用 `simv` 时的默认诊断输出压力，
+不改变 RTL 行为，也不改变 Linux userspace 尚未闭合的结论。
+
 ### 2026-09-02 RTL Linux trace hexadecimal-argument normalization
 
 修复 RTL Linux progress runner 对 `%h` 地址 plusarg 的输入边界：默认值和
