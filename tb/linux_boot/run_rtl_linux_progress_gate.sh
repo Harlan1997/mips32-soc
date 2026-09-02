@@ -10,6 +10,7 @@ HOST_TIMEOUT=${HOST_TIMEOUT:-180s}
 RTL_CYCLE_LIMIT=${RTL_CYCLE_LIMIT:-1000000}
 JOBS=${JOBS:-2}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88800000}
+LINUX_PROFILE=${LINUX_PROFILE:-generic}
 LINUX_DELAY_TRACE=${LINUX_DELAY_TRACE:-0}
 LINUX_DELAY_TRACE_LIMIT=${LINUX_DELAY_TRACE_LIMIT:-256}
 LINUX_DELAY_TRACE_START=${LINUX_DELAY_TRACE_START:-892434e0}
@@ -124,6 +125,7 @@ if [[ "${SKIP_LINUX_BUILD}" == "1" || -n "${KERNEL_INPUT}" ]]; then
     printf 'Linux kernel build: SKIPPED (reusing supplied KERNEL)\nKERNEL=%s\n' "${KERNEL_PATH}" >"${RUN_DIR}/build.log"
 else
     BUILD_DIR="${RUN_DIR}" JOBS="${JOBS}" KERNEL_PHYSICAL_START="${KERNEL_PHYSICAL_START}" \
+        LINUX_PROFILE="${LINUX_PROFILE}" \
         "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
     KERNEL_PATH="${RUN_DIR}/kernel/vmlinux"
 fi
@@ -238,6 +240,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Result: ${result}
 - Host timeout: ${HOST_TIMEOUT}
 - RTL cycle limit: ${RTL_CYCLE_LIMIT}
+- Linux profile: ${LINUX_PROFILE}
 - Delay trace: ${LINUX_DELAY_TRACE} (limit=${LINUX_DELAY_TRACE_LIMIT}, window=${LINUX_DELAY_TRACE_START}..${LINUX_DELAY_TRACE_END})
 - UART trace: ${LINUX_UART_TRACE} (limit=${LINUX_UART_TRACE_LIMIT})
 - Panic trace: ${LINUX_PANIC_TRACE} (limit=${LINUX_PANIC_TRACE_LIMIT})

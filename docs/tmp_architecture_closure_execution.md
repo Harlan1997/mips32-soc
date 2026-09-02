@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 RTL Linux minimal-profile propagation and bounded recheck
+
+- 将 `LINUX_PROFILE` 从 Makefile 入口传播到 RTL Linux runner，再传播到
+  `build_linux_boot.sh`；runner completion report 现在记录实际 profile，并对未知
+  profile 提前失败。默认 `generic` 行为保持不变。
+- `rtl-minimal` kernel/image 在独立 `/tmp/mips32-linux-rtl-minimal-20260903`
+  下构建通过，随后以该 image 运行 `RTL_CYCLE_LIMIT=30000000`、单线程 VCS 的
+  严格 userspace gate。仿真正常结束，VCS data structure 约 1.1 MB，无 OOM、
+  panic 或 simulator error，但未观察到 `MIPS32_SOC_LINUX_BOOT_SUCCESS`。
+- 后段仍有持续退休进度（约 26M--30M cycles 的 PC 位于 `bfd...`），因此这不是
+  “无进度”失败；它只把 Linux RTL blocker 保持在 userspace/init-task handoff
+  范围。RTL Linux userspace、完整 RTL/QEMU Linux differential 和完整 OS/ISA/MMU
+  signoff 继续 OPEN。
+
 ### 2026-09-03 Verification foundation module-aware tool inventory
 
 - 修正 `scripts/run_verification_foundation_gate.sh`：在工具探测前按项目规则

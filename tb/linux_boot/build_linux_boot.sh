@@ -10,6 +10,13 @@ JOBS=${JOBS:-2}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
 LINUX_CMDLINE=${LINUX_CMDLINE:-"console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init"}
 LINUX_PROFILE=${LINUX_PROFILE:-generic}
+case "${LINUX_PROFILE}" in
+    generic|rtl-minimal) ;;
+    *)
+        echo "unknown LINUX_PROFILE: ${LINUX_PROFILE}" >&2
+        exit 1
+        ;;
+esac
 BUILD_DIR=$(realpath -m "${BUILD_DIR}")
 SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-946684800}
 KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-"2000-01-01 00:00:00"}
@@ -117,9 +124,6 @@ if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash
             [[ -z "${option}" || "${option}" == \#* ]] && continue
             "${scripts_config}" --file "${BUILD_DIR}/kernel/.config" --disable "${option}"
         done < "${SCRIPT_DIR}/rtl_minimal.config"
-    elif [[ "${LINUX_PROFILE}" != "generic" ]]; then
-        echo "unknown LINUX_PROFILE: ${LINUX_PROFILE}" >&2
-        exit 1
     fi
     make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
         ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" olddefconfig
