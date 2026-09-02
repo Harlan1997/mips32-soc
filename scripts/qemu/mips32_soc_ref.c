@@ -472,13 +472,28 @@ static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
     return 0;
 }
 
+static void soc_ref_update_irq(MIPS32SocRefState *s);
+
 static void soc_ref_uart_update_irq(MIPS32SocRefState *s)
 {
-    if (!s->cpu)
+    bool level = (s->uart_regs[1] & 0x2) != 0;
+
+    if (soc_ref_linux_guest) {
+        /* The current generic Linux image has no driver for the SoC VIC.
+         * Preserve its existing direct CPU-IP4 UART contract until that
+         * driver exists; bare-metal/custom-SoC mode below follows RTL. */
+        if (s->cpu)
+            qemu_set_irq(s->cpu->env.irq[4], level);
         return;
-    /* Linux uses the CPU interrupt-controller line directly for this UART.
-     * IER.THRI plus an empty holding register produces a level interrupt. */
-    qemu_set_irq(s->cpu->env.irq[4], (s->uart_regs[1] & 0x2) != 0);
+    }
+
+    /* Match RTL: UART aggregate interrupt is VIC source 1, and the VIC
+     * aggregate is routed to CPU Cause.IP2. */
+    if (level)
+        s->pic_raw |= 1U << 1;
+    else
+        s->pic_raw &= ~(1U << 1);
+    soc_ref_update_irq(s);
 }
 
 static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
