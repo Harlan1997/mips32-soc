@@ -255,8 +255,13 @@ module mips_tlb #(
 
     assign lookup0_hit = (`SOC_MICRO_TLB_ENABLE) ?
                          (micro_i_hit | lookup0_hit_r) : lookup0_hit_r;
+    // The main TLB remains authoritative for duplicate-match detection.  A
+    // micro-TLB hit must not hide a second matching architectural entry that
+    // was installed after the micro entry was filled; that condition is a
+    // precise Machine Check, not a valid fast-path hit.
     assign lookup0_multi_hit = (`SOC_MICRO_TLB_ENABLE && micro_i_hit) ?
-                               micro_i_multi : lookup0_multi_hit_r;
+                               (micro_i_multi | lookup0_multi_hit_r) :
+                               lookup0_multi_hit_r;
     wire [5:0] lookup0_odd_bit = page_odd_bit_index(tlb_mask[lookup0_hit_index_r]);
     wire        lookup0_odd = lookup0_va[lookup0_odd_bit];
     wire [31:0] sel_lo0 = lookup0_odd ? tlb_entrylo1[lookup0_hit_index_r]
@@ -300,7 +305,8 @@ module mips_tlb #(
     assign lookup1_hit = (`SOC_MICRO_TLB_ENABLE) ?
                          (micro_d_hit | lookup1_hit_r) : lookup1_hit_r;
     assign lookup1_multi_hit = (`SOC_MICRO_TLB_ENABLE && micro_d_hit) ?
-                               micro_d_multi : lookup1_multi_hit_r;
+                               (micro_d_multi | lookup1_multi_hit_r) :
+                               lookup1_multi_hit_r;
     wire [5:0] lookup1_odd_bit = page_odd_bit_index(tlb_mask[lookup1_hit_index_r]);
     wire        lookup1_odd = lookup1_va[lookup1_odd_bit];
     wire [31:0] sel_lo1 = lookup1_odd ? tlb_entrylo1[lookup1_hit_index_r]

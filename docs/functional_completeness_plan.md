@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 micro-TLB duplicate-match Machine Check closure
+
+修复 `mips_tlb` 的 I/D lookup mux：micro-TLB 命中时仍合并主 TLB 的
+`multi_hit` 结果，避免软件在 micro-TLB 已缓存后写入重叠主 TLB entry 时把
+重复匹配错误隐藏为普通命中。新增 directed case 先填充两个 micro-TLB，随后
+写入同 VPN/ASID 的第二个主 TLB entry，并在模拟 stale micro-TLB 快速命中后同时
+检查 I/D 两个端口的 `multi_hit`。`make tlb-invalidate-gate` 通过；受影响的 8 个 RTL frontend
+配置也全部通过。该修复闭合当前 MMU Machine Check 侦测 slice，不等价于完整
+privileged/MMU compliance、OS page-table ownership 或 Linux VM signoff。
+
 ### 2026-09-02 COP1 reciprocal zero-boundary closure
 
 修正 `mips_fpu` 的 `RECIP.{S,D}`/`RSQRT.{S,D}` 特殊值边界：signed zero

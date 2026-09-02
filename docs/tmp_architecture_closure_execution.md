@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 micro-TLB duplicate-match Machine Check
+
+- `mips_tlb` now ORs the authoritative main-TLB `multi_hit` result into the
+  I/D fast-path result even when a micro-TLB entry hits. This prevents a second
+  overlapping architectural entry from being hidden by a stale fast-path hit.
+- `tb_tlb_invalidate` fills both micro ports, installs a duplicate VPN2/ASID
+  entry, then forces a matching stale fast-path entry so both mux branches are
+  exercised. It checks both `lookup0_multi_hit` and `lookup1_multi_hit`; the
+  gate passes. The eight-configuration frontend matrix also passes.
+- This closes duplicate-match detection for the current MMU slice only. Full
+  privileged/MMU compliance, OS page-table ownership, unrestricted demand
+  paging and Linux VM remain open.
+
 ### 2026-09-02 streaming comparator OOM closure
 
 - The long Linux differential previously used `list(load(...))` for both JSONL
