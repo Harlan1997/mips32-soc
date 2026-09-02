@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 L2 nonblocking parallel refill reset-in-flight
+
+- Extended the two-slot L2 directed test to assert reset while both clean
+  downstream refills are active, discard the abandoned upstream expectations,
+  and issue a new post-reset refill after reset release.
+- The focused gate passes with
+  `reads_checked=45 errors_checked=8 peak_downstream=3 id_switches=10
+  wb_refill_overlap=1`, demonstrating slot/MSHR/order-queue reset cleanup,
+  downstream responder reset, and post-reset recovery.
+- This closes the tested parallel-refill reset-in-flight slice only; arbitrary
+  reset/error timing combinations, snoop writeback reset, full
+  coherency/directory behavior, and commercial signoff remain open.
+
 ### 2026-09-02 L2 nonblocking parallel refill error recovery
 
 - Extended `tb/unit/l2nb/tb_l2nb_parallel.v` with a concurrent error case: one
