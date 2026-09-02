@@ -1,5 +1,18 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux progress-gate configuration guard and freeable-tail probe
+
+`tb/linux_boot/run_rtl_linux_progress_gate.sh` now rejects the contradictory
+configuration `LINUX_REQUIRE_PROGRESS=1` with `LINUX_PROGRESS_TRACE=0` before
+building an image or starting VCS. The guard returns status 2 with an explicit
+diagnostic; shell syntax and the negative case pass. A reuse-kernel 100K-cycle
+smoke passes with the default progress criterion. A separate 40M-cycle,
+bounded retire-only probe over `kernel_init_freeable` completes normally and
+shows retirement through the post-initcall path and the `driver_init` call;
+there is no CPU/CP0/WAIT/cache mismatch evidence. RTL Linux userspace,
+full-length RTL/QEMU system differential, and full ISA/MMU/FPU/OS semantics
+remain OPEN.
+
 ### 2026-09-02 RTL Linux direct-sim diagnostic defaults
 
 将 `tb_mips_soc.v` 中 cache-op 和 CP0 诊断流的默认 limit 设为 `0`；显式
