@@ -5151,3 +5151,24 @@ signoff and physical DDR/QSPI product signoff.
   early kernel execution, but it does not close RTL Linux userspace boot. The
   remaining boundary is still the RTL kernel-init/scheduler handoff and must
   be diagnosed from retirement/state evidence before changing CPU semantics.
+### 2026-09-03 Linux TLB refill exception-boundary detail probe
+
+- Added the opt-in `LINUX_EXCEPTION_DETAIL` record to
+  `tb/soc_test/tb_mips_soc.v`. It preserves the existing exception trace
+  format while capturing the WB exception bundle, live MEM bundle, MMU
+  result, data-fault latch, D-cache request state, and DDR write handshake.
+- A narrow 5.71M-cycle RTL Linux replay confirms the first fault is the
+  architectural instruction `0x885c54c0: sw v1,16(v0)` at
+  `VA=0xc0000010`, with `ExcCode=TLBS`, `wb_except_is_data=1`, and a stable
+  `d_fault_vaddr_q=0xc0000010`. It is not a DDR `SLVERR`; no data-bus error
+  is asserted at the boundary.
+- The following handler first retires a `TLBWR` carrying an invalid/zero
+  mapping, then a later handler pass writes `VPN2=0x00060000` with a valid
+  `EntryLo0`. This is evidence about the Linux generated refill path, not a
+  justification for weakening TLB matching or changing kseg0 translation.
+- `make rtl-frontend-compile RUN_ROOT=/tmp/rtl-frontend-exception-detail-20260903`
+  passes all `8/8` configurations, including default, MMU, L1/L2
+  nonblocking, CPU nonblocking, FPU, and DDR4-controller configurations.
+  The RTL Linux userspace marker remains absent; full Linux userspace boot,
+  full RTL/QEMU system differential, and unrestricted Linux VM semantics
+  remain open.
