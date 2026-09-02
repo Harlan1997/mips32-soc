@@ -4759,3 +4759,19 @@ configuration.
   bounded two-slot clean-refill integration; arbitrary slot counts, concurrent
   dirty writeback, full downstream AXI ordering and complete coherency remain
   open.
+
+### 2026-09-02 L2 downstream out-of-order completion coverage
+
+- Extended `tb/unit/l2nb/tb_l2nb_parallel.v` with a responder mode that drains
+  the first accepted RID through all eight beats before allowing the second
+  RID to complete. The scoreboard checks that no beat from the second RID is
+  consumed before the first RID's `RLAST`, while still checking both returned
+  lines.
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M BUILD_DIR=/tmp/l2-ooo-20260902
+  make l2-nonblocking-downstream-gate` passed:
+  `REGRESSION_TEST_SUCCESS l2nb_parallel (reads_checked=61 errors_checked=8
+  peak_downstream=3 id_switches=12 wb_refill_overlap=1)`.
+- This closes the bounded cross-ID completion-order evidence for the two-slot
+  clean-refill path. It does not claim arbitrary slot counts, concurrent dirty
+  writeback, full downstream AXI ordering, MESI/directory coherency or full
+  cache signoff.
