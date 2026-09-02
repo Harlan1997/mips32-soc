@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 COP1 MOVF/MOVT FPR conditional move closure
+
+- 补齐 `mips_control` 对 COP1 funct `0x11` 的 `MOVF.S/MOVT.S` 和
+  `MOVF.D/MOVT.D` 解码。D 格式要求 `fs/fd` 为偶数寄存器对，`ft[1]` 等保留
+  位非法；`ft[4:2]` 选择 FCC，`ft[0]` 选择 false/true 条件。
+- `mips_cpu` 新增 FPR 条件移动提交路径，单精度复制 `fs -> fd`，双精度原子复制
+  两个 word，并在条件不满足时保持目的寄存器不变；该路径不修改 FCSR flags。
+- `mips-control-fpu-cond-gate`、`rtl-frontend-compile`、真实
+  `fpu-single-gate` 均通过。`qemu-system-fpu-single-differential-gate` 在
+  `/tmp/fpu-movfc-diff-20260903` 通过，`TRACE_COMPARE_PASS records=1392`。
+- 这闭合了选定 COP1 条件移动指令族的 RTL/QEMU retire slice；完整 IEEE-754、FPE
+  policy、lazy-FPU/signal-frame ABI、Linux FPU context 和完整 COP1 compliance 仍 OPEN。
+
 ### 2026-09-03 Linux static TLB handler trace and maintenance-address correction
 
 - 复核 Linux 动态 handler 后确认 RTL `icache` 接收的是 MMU 输出的

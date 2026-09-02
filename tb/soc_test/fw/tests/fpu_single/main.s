@@ -73,6 +73,53 @@ main:
     bne     $t3, $t1, fail
     nop
 
+    /* COP1 MOVF/MOVT (funct=0x11) write FPR fd from fs when the selected
+     * FCC condition matches.  The raw encodings keep the ft cc/tf fields
+     * visible to this regression: MOVF.S f10,f0,cc=0 and MOVT.S f10,f2,cc=0. */
+    lui     $t0, 0x3f80
+    ori     $t0, $t0, 0x0000
+    lui     $t1, 0x4000
+    ori     $t1, $t1, 0x0000
+    mtc1    $t0, $f0
+    mtc1    $t1, $f2
+    mtc1    $zero, $f10
+    nop
+    nop
+    nop
+    lui     $t5, 0x0000
+    ctc1    $t5, $31
+    nop
+    nop
+    .word   0x46000291       /* movf.s $f10,$f0,cc=0: FCC0 false -> move */
+    nop
+    nop
+    nop
+    mfc1    $t2, $f10
+    bne     $t2, $t0, fail
+    nop
+    lui     $t5, 0x0080       /* FCC0 = 1 */
+    ctc1    $t5, $31
+    nop
+    nop
+    .word   0x46011291       /* movt.s $f10,$f2,cc=0: FCC0 true */
+    nop
+    nop
+    nop
+    mfc1    $t2, $f10
+    bne     $t2, $t1, fail
+    nop
+    lui     $t5, 0x0000
+    ctc1    $t5, $31
+    nop
+    nop
+    .word   0x46000291       /* movf.s $f10,$f0,cc=0: FCC0 false -> move */
+    nop
+    nop
+    nop
+    mfc1    $t2, $f10
+    bne     $t2, $t0, fail
+    nop
+
     /* 1.0, 2.0, -2.0 and 4.0 as IEEE-754 bit patterns. */
     lui     $t0, 0x3f80
     ori     $t0, $t0, 0x0000

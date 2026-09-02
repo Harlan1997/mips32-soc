@@ -1134,6 +1134,7 @@ module mips_control (
                                 6'h00, 6'h01, 6'h02, 6'h03, 6'h04,
                                 6'h05, 6'h06, 6'h07,
                                 6'h0c, 6'h0d, 6'h0e, 6'h0f,
+                                6'h11,
                                 6'h15, 6'h16,
                                 6'h12, 6'h13,
                                 6'h20, 6'h21, 6'h24,
@@ -1152,8 +1153,9 @@ module mips_control (
                             // selectors to be even.
                             if ((rs == 5'b10001) &&
                                 (inst[6] || inst[11] ||
-                                 ((func != 6'h12 && func != 6'h13) &&
-                                  inst[16])))
+                                 ((func == 6'h11) ? inst[17] :
+                                  ((func != 6'h12 && func != 6'h13) &&
+                                   inst[16]))))
                                 illegal_inst = 1'b1;
                             if ((rs == 5'b10100 &&
                                  func != 6'h20 && func != 6'h21))
