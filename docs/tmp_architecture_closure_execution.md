@@ -4708,8 +4708,9 @@ configuration.
 - The L2 unit gate now retains downstream IDs in its behavioral memory and
   checks all returned beats/responses. Fresh VCS evidence:
   `REGRESSION_TEST_SUCCESS l2nb (reads_checked=68)`, with
-  `peak_mshr=8`, `peak_wb=4`, `hit_under_miss_beats=33`, and 85 downstream ID
-  checks.
+  `peak_mshr=8`, `peak_wb=4`, `hit_under_miss_beats=33`, and 87 downstream ID
+  checks. A deliberate wrong-`RID` refill is surfaced as `SLVERR`, is not
+  installed, and a clean retry succeeds (`reads_checked=69`).
 - This closes ID preservation for the existing serial downstream engine. It
   does not close the planned multi-transaction downstream scheduler, arbitrary
   cross-ID response concurrency, or full L1/L2 coherency.
