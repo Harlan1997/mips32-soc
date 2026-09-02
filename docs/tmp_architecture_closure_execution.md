@@ -17,6 +17,8 @@
 - 这闭合的是当前 opt-in 双核 RTL shootdown 的端到端 bounded slice；Linux page-table
   ownership、SMP scheduler/shootdown policy、完整 coherency、完整 privileged/MMU
   compliance 和产品 signoff 仍保持 OPEN。
+- `dual-core-mmu-shootdown-gate` 已加入 `p1-current-complete`，使 P1 扩展 aggregate
+  不会漏检该端到端能力；默认 `current-contract-signoff` 仍保持既有 baseline 范围。
 
 ### 2026-09-02 QEMU MMU root/context lease differential
 
