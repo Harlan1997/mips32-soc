@@ -64,8 +64,12 @@
 - PIC multi-source mask arbitration signoff requires
   `soc_pic_mask_arbitration_test` to observe UART, timer, and DMA pending
   sources under none, single-source, dual-source, and all-source masks with
-  required PIC groups at 100%; current RTL has no priority encoder output, so
-  priority-order signoff is not claimed
+  required PIC groups at 100%; bounded priority-order signoff additionally
+  requires `make interrupt-priority-gate` and the 32-source priority/ACK
+  differential gate. The current RTL exposes `vec_id`/`vec_prio` from a
+  deterministic maximum-priority, lower-ID tie-break encoder; arbitrary-depth
+  OS nesting, multicore IRQ ownership and Linux IRQ ABI remain outside this
+  criterion.
 - loadable flash/XIP verification signoff requires `soc_flash_image_test` with
   an explicit `FLASH_IMAGE` artifact
 - APB wait/PSLVERR stress signoff requires `soc_apb_fault_stress_test`; product
