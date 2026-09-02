@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 CPU/SoC Machine Check runtime closure
+
+新增 `product-mmu-machine-check-gate` 和专用 opt-in firmware/testbench。真实
+CPU 在 `SOC_MMU_ENABLE=1`、`SOC_MICRO_TLB_ENABLE=1` 下先填充 D micro-TLB，
+随后安装重叠主 TLB entry；testbench 注入 stale fast-path state，验证主 TLB
+duplicate match 仍产生 `Cause.ExcCode=0x18`，进入 `EBase+0x180`，并由 handler
+通过 mailbox 报告成功。gate 的 VCS compile/elaboration/runtime 均通过，并纳入
+`cpu-mmu-complete`。该项只闭合 Machine Check runtime slice；完整 privileged/MMU
+compliance、OS page-table ownership、unrestricted demand paging 和 Linux VM 仍开放。
+
 ### 2026-09-02 micro-TLB duplicate-match Machine Check closure
 
 修复 `mips_tlb` 的 I/D lookup mux：micro-TLB 命中时仍合并主 TLB 的
