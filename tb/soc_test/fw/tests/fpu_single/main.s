@@ -134,6 +134,23 @@ main:
     mtc1    $t2, $f4
     mtc1    $t3, $f6
 
+    /* MTHC1/MFHC1 transfer the high word of a 64-bit FPR pair without
+     * disturbing the low word. */
+    lui     $t4, 0x1234
+    ori     $t4, $t4, 0x5678
+    nop
+    nop
+    nop
+    .word   0x44ec0000       /* mthc1 $t4,$f0 */
+    nop
+    nop
+    .word   0x446d0000       /* mfhc1 $t5,$f0 */
+    bne     $t5, $t4, fail
+    nop
+    mfc1    $t5, $f0
+    bne     $t5, $t0, fail
+    nop
+
     /* MOV/ABS/NEG must preserve the architectural bit pattern for NaNs and
      * signed zero; host floating-point conversions are not a valid oracle. */
     lui     $t4, 0x8000

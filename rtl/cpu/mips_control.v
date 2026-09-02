@@ -1119,9 +1119,10 @@ module mips_control (
                                 fpu_condition_code = inst[20:18];
                             end
                         end
-                        5'b00000, 5'b00010, 5'b00100, 5'b00110: begin
-                            // MFC1/CFC1/MTC1/CTC1 side effects are committed
-                            // by the opt-in CP1 state block in mips_cpu.
+                        5'b00000, 5'b00010, 5'b00011,
+                        5'b00100, 5'b00110, 5'b00111: begin
+                            // MFC1/CFC1/MFHC1/MTC1/CTC1/MTHC1 side effects
+                            // are committed by the opt-in CP1 state block.
                             // The low eleven bits are reserved for transfers;
                             // CFC1/CTC1 expose FCSR only (fs=$31).
                             if (inst[10:0] != 11'd0 ||
