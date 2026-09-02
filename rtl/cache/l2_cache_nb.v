@@ -428,8 +428,10 @@ module l2_cache_nb #(
         rd_issue_v = 1'b0;
         rd_issue_i = {MSHR_BITS{1'b0}};
         rd_issue_slot = {RD_SLOT_BITS{1'b0}};
-        if (DOWNSTREAM_SLOTS > 1 && me_state == ME_IDLE &&
-            !snoop_wb_pending && me_pick_v && !mshr_evict[me_pick_i]) begin
+        if (DOWNSTREAM_SLOTS > 1 && !snoop_wb_pending && me_pick_v &&
+            !mshr_evict[me_pick_i] &&
+            (me_state == ME_IDLE || me_state == ME_EVICT_AW ||
+             me_state == ME_EVICT_W || me_state == ME_EVICT_B)) begin
             for (rsi=DOWNSTREAM_SLOTS-1; rsi>=0; rsi=rsi-1) begin
                 if (!rd_valid[rsi]) begin
                     rd_issue_v = 1'b1;
@@ -538,8 +540,11 @@ module l2_cache_nb #(
         m_wstrb=4'hF; m_wlast=(me_cnt==3'd7);
         m_bready=1'b0;
         m_arvalid=1'b0;
-        m_arid = (DOWNSTREAM_SLOTS > 1) ? rd_issue_i : me_idx;
-        m_araddr = {3'b000, mshr_line[(DOWNSTREAM_SLOTS > 1) ? rd_issue_i : me_idx], 5'b00000};
+        m_arid = (DOWNSTREAM_SLOTS > 1 && me_state != ME_REFILL_AR) ?
+                 rd_issue_i : me_idx;
+        m_araddr = {3'b000, mshr_line[(DOWNSTREAM_SLOTS > 1 &&
+                                       me_state != ME_REFILL_AR) ?
+                                       rd_issue_i : me_idx], 5'b00000};
         m_arlen=8'd7;
         m_arsize=3'b010; m_arburst=2'b01;
         m_rready=1'b0;
@@ -553,8 +558,18 @@ module l2_cache_nb #(
             default: ;
         endcase
         if (DOWNSTREAM_SLOTS > 1) begin
-            m_arvalid = rd_issue_v;
-            m_rready = rd_resp_v;
+            if (me_state == ME_REFILL_AR) begin
+                // Dirty misses still use the serial refill transaction after
+                // their victim writeback, even when clean slots are enabled.
+                m_arvalid = 1'b1;
+            end else if (me_state == ME_REFILL_R) begin
+                // A dirty miss owns the serial refill ID, but an already
+                // outstanding clean slot may return interleaved beats.
+                m_rready = (m_rid == me_idx) ? 1'b1 : rd_resp_v;
+            end else if (me_state != ME_REFILL_AR) begin
+                m_arvalid = rd_issue_v;
+                m_rready = rd_resp_v;
+            end
         end
 
         // Response burst drive (read only; writes drive s_bvalid)
@@ -790,7 +805,9 @@ module l2_cache_nb #(
                                  end
                              end
                 ME_REFILL_AR: if (m_arready) begin me_cnt <= 3'd0; me_state <= ME_REFILL_R; end
-                ME_REFILL_R: if (m_rvalid) begin
+                ME_REFILL_R: if (m_rvalid &&
+                                  (DOWNSTREAM_SLOTS == 1 ||
+                                   m_rid == me_idx || !rd_resp_v)) begin
                                  // Continue consuming the burst after an error
                                  // so a single-outstanding downstream fabric is
                                  // never left wedged.  Error responses never
