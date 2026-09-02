@@ -4653,3 +4653,14 @@ configuration.
 - The gate is now part of `cpu-mmu-complete`; complete privileged/MMU
   compliance, OS page-table ownership, unrestricted demand paging and Linux VM
   remain open.
+
+# 2026-09-02 CPU/MMU aggregate recheck
+
+- Re-ran the CPU/MMU aggregate with `SKIP_COVERAGE=1`, single-job VCS and the
+  protected EDA memory budget.
+- All CPU/CP0, TLB/MMU context, Machine Check runtime, cache-error, VEIC,
+  hardware-walker, MDU and LL/SC child gates passed, ending with
+  `SUCCESS: CPU/MMU RTL FUNCTIONAL GATE PASSED`.
+- The aggregate now proves integration of the Machine Check runtime slice;
+  complete ISA/FPU, Linux/OS VM semantics, full coherency and product signoff
+  remain open.
