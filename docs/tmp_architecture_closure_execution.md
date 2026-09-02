@@ -4433,3 +4433,19 @@ configuration.
 - This remains QEMU reference-machine evidence only; RTL Linux userspace,
   full RTL/QEMU Linux differential, unrestricted Linux VM and full ISA remain
   open.
+
+### 2026-09-02 QEMU Linux wait4 policy runner correction
+
+- Corrected `tb/linux_boot/run_linux_boot_gate.sh` to select the custom
+  machine's explicit `linux-guest=on` policy for the generic Linux userspace
+  image. Linux's wait4 implementation uses an LL/SC retry path whose
+  historical QEMU completion behavior is intentionally isolated from the
+  strict bare-metal differential contract.
+- Fresh bounded run:
+  `QEMU_TIMEOUT=180 RUN_DIR=/tmp/mips32-linux-recheck-linuxguest-20260902
+  SKIP_LINUX_BUILD=1 KERNEL=build/linux_boot/real/kernel/vmlinux
+  DTB=build/linux_boot/real/mips32_soc_ref.dtb
+  tb/linux_boot/run_linux_boot_gate.sh` -> `Linux boot gate: PASS`.
+- All required markers were observed, including both exact-PID wait4 reaps
+  and normal wait statuses. RTL Linux userspace and full RTL/QEMU Linux
+  differential remain open.
