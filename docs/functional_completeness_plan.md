@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 BPU mispredict resolution training
+
+修正 BPU 与 CPU 的恢复/训练边界：分支误预测触发 IF recovery 时，ID 阶段的
+架构 resolve 仍然更新 BTB/BHT/RAS；只有异常或上下文恢复才屏蔽该 resolve。
+新增误预测下 not-taken 训练和 BTB 保留的 directed check。`make
+bpu-redirect-gate` 通过，包含 BPU unit、默认/opt-in RTL frontend `9/9` 和
+DDR4 frontend。默认 BPU 关闭路径由 `make soc-smoke` 重跑通过。该修复闭合
+预测器误训练丢失的功能缺口，不代表 fetch queue、多在途分支、性能目标或
+formal signoff 已闭合。
+
 ### 2026-09-02 RTL Linux progress-gate configuration guard and freeable-tail probe
 
 `tb/linux_boot/run_rtl_linux_progress_gate.sh` now rejects the contradictory
