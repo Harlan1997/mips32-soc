@@ -176,6 +176,13 @@ module tb_mips_soc;
     integer dual_core_reverse_ipi_count;
     integer dual_core_reset_count;
     integer dual_core_exception_count;
+`ifdef TB_MMU_HW_WALKER_AD
+    integer hw_ad_aw_count;
+    integer hw_ad_w_count;
+    integer hw_ad_delayed_w_count;
+    reg hw_ad_aw_pending;
+    time hw_ad_aw_time;
+`endif
 `ifdef TB_L1_MAINTENANCE
     integer l1_maintenance_count;
     integer l1_maintenance_refill_count;
@@ -1789,6 +1796,13 @@ module tb_mips_soc;
         dual_core_reverse_ipi_count = 0;
         dual_core_reset_count = 0;
         dual_core_exception_count = 0;
+`ifdef TB_MMU_HW_WALKER_AD
+        hw_ad_aw_count = 0;
+        hw_ad_w_count = 0;
+        hw_ad_delayed_w_count = 0;
+        hw_ad_aw_pending = 1'b0;
+        hw_ad_aw_time = 0;
+`endif
 `ifdef TB_L1_MAINTENANCE
         l1_maintenance_count = 0;
         l1_maintenance_refill_count = 0;
@@ -2109,6 +2123,36 @@ module tb_mips_soc;
         $finish;
     end
     
+`ifdef TB_MMU_HW_WALKER_AD
+    // Observe the three fixed hardware-walker leaf PTE transactions.  The
+    // behavioral DDR endpoint holds WREADY after AW, so this also proves the
+    // shared bridge preserves the payload across independent channel timing.
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            hw_ad_aw_pending <= 1'b0;
+            hw_ad_aw_time <= 0;
+        end else begin
+            if (u_soc.u_impl.u_core_subsystem.data_awvalid &&
+                u_soc.u_impl.u_core_subsystem.data_awready &&
+                ((u_soc.u_impl.u_core_subsystem.data_awaddr == 32'h00002080) ||
+                 (u_soc.u_impl.u_core_subsystem.data_awaddr == 32'h00002084) ||
+                 (u_soc.u_impl.u_core_subsystem.data_awaddr == 32'h00002088))) begin
+                hw_ad_aw_count = hw_ad_aw_count + 1;
+                hw_ad_aw_pending <= 1'b1;
+                hw_ad_aw_time <= $time;
+            end
+            if (u_soc.u_impl.u_core_subsystem.data_wvalid &&
+                u_soc.u_impl.u_core_subsystem.data_wready &&
+                hw_ad_aw_pending) begin
+                hw_ad_w_count = hw_ad_w_count + 1;
+                if ($time > hw_ad_aw_time)
+                    hw_ad_delayed_w_count = hw_ad_delayed_w_count + 1;
+                hw_ad_aw_pending <= 1'b0;
+            end
+        end
+    end
+`endif
+
     // Mailbox Monitor for Regression Tests
     always @(posedge clk) begin
 `ifdef TB_L1_MAINTENANCE
@@ -2187,6 +2231,22 @@ module tb_mips_soc;
                              u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'hfff0/4]);
                     $finish;
                 end
+`endif
+`ifdef TB_MMU_HW_WALKER_AD
+                if (hw_ad_aw_count != 3 || hw_ad_w_count != 3 ||
+                    hw_ad_delayed_w_count == 0 ||
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2080/4] != 32'h0000603B ||
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2084/4] != 32'h0000703B ||
+                    u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2088/4] != 32'h0000801D) begin
+                    $display("REGRESSION_TEST_FAILED MMU A/D writeback aw=%0d w=%0d delayed_w=%0d ptes=%08h/%08h/%08h",
+                             hw_ad_aw_count, hw_ad_w_count, hw_ad_delayed_w_count,
+                             u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2080/4],
+                             u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2084/4],
+                             u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2088/4]);
+                    $finish;
+                end
+                $display("MMU_AD_AXI_WRITEBACK_PASS aw=%0d w=%0d delayed_w=%0d",
+                         hw_ad_aw_count, hw_ad_w_count, hw_ad_delayed_w_count);
 `endif
 `ifdef TB_MMU_REFILL
 `ifndef TB_MMU_HW_WALKER

@@ -1098,7 +1098,7 @@ mmu-hardware-walker-soc-gate:
 mmu-hardware-walker-ad-soc-gate:
 	HW_WALKER=1 FW_DIR=$(BUILD_DIR)/firmware/mmu_refill_hw_ad \
 	RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_soc \
-	VCS_EXTRA_ARGS='+define+SOC_HARDWARE_WALKER_AD_ENABLE=1' \
+	VCS_EXTRA_ARGS='+define+SOC_HARDWARE_WALKER_AD_ENABLE=1 +define+TB_MMU_HW_WALKER_AD' \
 		tb/soc_test/run_mmu_refill.sh
 
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
