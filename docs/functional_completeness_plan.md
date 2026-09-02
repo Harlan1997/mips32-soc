@@ -1669,3 +1669,15 @@ kernel-init caller was observed stuck in the completion primitive. This
 further rules out a generic completion, WAIT, or CP0 timer fix as the next
 action; the remaining RTL Linux blocker is later `do_basic_setup` initcall
 progress or the kernel-init handoff.
+
+### 2026-09-02 QEMU custom-machine vendor-neutral peripheral closure
+
+Fresh `QEMU_TIMEOUT=180 QEMU_BUILD_JOBS=1 SKIP_COVERAGE=1 make
+qemu-system-peripheral-differential-gate` passed with both
+`QEMU system RTL retire differential: PASS` and
+`QEMU system peripheral RTL retire differential: PASS`. The custom
+`mips32-soc-ref` machine therefore has verified transaction-level GPIO, timer,
+PIC/VIC, DMA, QSPI and DDR-window/status behavior for the current bounded
+contract. This closes the QEMU vendor-neutral peripheral model slice; it does
+not claim Linux driver completeness, real DDR/QSPI PHY/device timing, board
+boot, or production signoff.
