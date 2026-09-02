@@ -42,6 +42,10 @@ module cpu_scheduler #(
     localparam ST_RUN = 2'd0, ST_SAVE = 2'd1, ST_RESTORE = 2'd2;
     reg [1:0] state;
     reg [7:0] current_r, next_r;
+    // A trigger arriving while a context transaction is in flight must be
+    // serviced after the current restore.  The mask records that a runnable
+    // set existed at the time of the trigger; it is consumed when the next
+    // switch is launched so a level held by active_mask cannot cause a loop.
     reg [TASKS-1:0] pending_mask;
     reg [31:0] pc_bank [0:TASKS-1];
     reg [31:0] sp_bank [0:TASKS-1];
@@ -100,11 +104,20 @@ module cpu_scheduler #(
                 fpr_bank[k] <= 0; fcsr_bank[k] <= 0;
             end
         end else begin
-            if (trigger && state == ST_RUN) pending_mask <= active_mask;
             case (state)
-                ST_RUN: if (trigger && active_mask != 0) begin
-                    next_r <= selected;
-                    if (selected != current_r) state <= ST_SAVE;
+                ST_RUN: begin
+                    if ((trigger || pending_mask != 0) && active_mask != 0) begin
+                        next_r <= selected;
+                        // Consume the request at launch.  A new trigger in
+                        // ST_SAVE/ST_RESTORE is latched by the busy branches.
+                        pending_mask <= 0;
+                        if (selected != current_r) state <= ST_SAVE;
+                    end else if (trigger) begin
+                        // There is no runnable target to switch to.  Do not
+                        // retain a stale request when the current task is the
+                        // only active task.
+                        pending_mask <= 0;
+                    end
                 end
                 ST_SAVE: if (ctx_save_done) begin
                     pc_bank[current_r] <= ctx_save_pc;
@@ -124,6 +137,12 @@ module cpu_scheduler #(
                     state <= ST_RUN;
                 end
             endcase
+
+            // Requests are pulses at the scheduler boundary.  Preserve one
+            // pending request while save/restore is busy; the following
+            // ST_RUN cycle will select against the newly restored task.
+            if (trigger && state != ST_RUN)
+                pending_mask <= pending_mask | active_mask;
         end
     end
 endmodule

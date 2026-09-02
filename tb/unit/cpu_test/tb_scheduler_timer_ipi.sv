@@ -16,6 +16,20 @@ module tb_scheduler_timer_ipi;
     while(!restore_req)@(posedge clk); @(negedge clk);restore_ack=1; repeat(2) @(negedge clk);restore_ack=0;
     if(!switch_valid && current_task!==1) errors=errors+1;
   end endtask
+  task trigger_during_save; begin
+    while(!save_req)@(posedge clk);
+    @(negedge clk); ipi_resched=1;
+    @(posedge clk); @(negedge clk); ipi_resched=0;
+    @(negedge clk); save_done=1;
+    repeat(2) @(negedge clk); save_done=0;
+    while(!restore_req)@(posedge clk);
+    @(negedge clk); restore_ack=1;
+    repeat(2) @(negedge clk); restore_ack=0;
+    // The busy-time request must launch a second save after the first
+    // restore, rather than being silently discarded.
+    repeat(2) @(posedge clk);
+    if(!save_req) begin $display("FAIL deferred request did not launch second save"); errors=errors+1; end
+  end endtask
   initial begin
     paddr=0;pwdata=0;psel=0;penable=0;pwrite=0;timer_tick=0;ipi_resched=0;save_done=0;restore_ack=0;
     #23 rst_n=1;
@@ -26,8 +40,22 @@ module tb_scheduler_timer_ipi;
     repeat(20) @(posedge clk);
     if(!timer_int) begin $display("FAIL timer did not assert");errors=errors+1;end
     complete_switch;
+    // Stop the periodic timer so the deferred-request check observes only
+    // the deliberately injected busy-time IPI.
+    apb_write(8'h00,32'h0);
     apb_write(8'h0c,32'h1);
-    @(negedge clk);ipi_resched=1;@(posedge clk);ipi_resched=0;
+    @(negedge clk); ipi_resched=1; @(posedge clk); @(negedge clk); ipi_resched=0;
+    trigger_during_save;
+    // Finish the second switch so the test also checks that the scheduler
+    // returns to RUN after servicing the deferred request.
+    @(negedge clk); save_done=1; repeat(2) @(negedge clk); save_done=0;
+    while(!restore_req)@(posedge clk);
+    @(negedge clk); restore_ack=1; repeat(2) @(negedge clk); restore_ack=0;
+    repeat(1) @(posedge clk);
+    if(busy) begin $display("FAIL scheduler remained busy after deferred switch"); errors=errors+1; end
+    apb_write(8'h0c,32'h1);
+    @(negedge clk);ipi_resched=1;@(posedge clk);@(negedge clk);ipi_resched=0;
+    @(posedge clk);
     if(!save_req && !busy) begin $display("FAIL IPI did not enter scheduler");errors=errors+1;end
     if(errors==0)$display("REGRESSION_TEST_SUCCESS scheduler_timer_ipi");else $display("REGRESSION_TEST_FAILED scheduler_timer_ipi errors=%0d",errors);
     $finish;
