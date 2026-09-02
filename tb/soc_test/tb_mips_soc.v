@@ -181,6 +181,8 @@ module tb_mips_soc;
     integer hw_ad_w_count;
     integer hw_ad_delayed_w_count;
     integer hw_ad_reset_seen;
+    integer hw_ad_write_error_seen;
+    integer hw_ad_downstream_error_seen;
     reg hw_ad_aw_pending;
     time hw_ad_aw_time;
 `endif
@@ -1802,6 +1804,8 @@ module tb_mips_soc;
         hw_ad_w_count = 0;
         hw_ad_delayed_w_count = 0;
         hw_ad_reset_seen = 0;
+        hw_ad_write_error_seen = 0;
+        hw_ad_downstream_error_seen = 0;
         hw_ad_aw_pending = 1'b0;
         hw_ad_aw_time = 0;
 `endif
@@ -2172,6 +2176,48 @@ module tb_mips_soc;
         @(negedge clk);
         rst_n = 1'b1;
         $display("tb_mips_soc: hardware-walker reset released");
+    end
+`endif
+
+`ifdef TB_MMU_HW_WALKER_AD_WRITE_ERROR
+    // The negative gate ends only after a real walker B-channel SLVERR is
+    // observed and confirms that the failed PTE write did not commit.
+    always @(posedge u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_bvalid) begin
+        if (rst_n && u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_bresp == 2'b10)
+            hw_ad_downstream_error_seen = 1;
+    end
+
+    always @(posedge clk) begin
+        if (rst_n && hw_ad_downstream_error_seen && !hw_ad_write_error_seen &&
+            u_soc.u_impl.u_core_subsystem.core_ptw_mem_write_error === 1'b1) begin
+            hw_ad_write_error_seen = 1;
+            if (u_soc.u_impl.u_core_subsystem.core_ptw_mem_write_addr != 32'h00002080 ||
+                u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2080/4] != 32'h0000600B ||
+                u_soc.u_impl.u_core_subsystem.core_ptw_mem_write_error !== 1'b1) begin
+                $display("REGRESSION_TEST_FAILED MMU A/D write error address or commit state addr=%08h pte=%08h core_err=%b ddr_bresp=%0d impl_s0=%b/%0d/%b fabric_s0=%b/%0d/%b xbar_s0=%b m1=%b/%0d/%b",
+                         u_soc.u_impl.u_core_subsystem.core_ptw_mem_write_addr,
+                         u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2080/4],
+                         u_soc.u_impl.u_core_subsystem.core_ptw_mem_write_error,
+                         u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_bresp,
+                         u_soc.u_impl.s0_bvalid,
+                         u_soc.u_impl.s0_bresp,
+                         u_soc.u_impl.s0_bready,
+                         u_soc.u_impl.u_soc_fabric.s0_bvalid,
+                         u_soc.u_impl.u_soc_fabric.s0_bresp,
+                         u_soc.u_impl.u_soc_fabric.s0_bready,
+                         u_soc.u_impl.u_soc_fabric.u_xbar.s_bvalid[0],
+                         u_soc.u_impl.u_soc_fabric.m1_bvalid,
+                         u_soc.u_impl.u_soc_fabric.m1_bresp,
+                         u_soc.u_impl.u_soc_fabric.m1_bready);
+                $finish;
+            end
+            $display("MMU_AD_AXI_WRITE_ERROR_PASS addr=%08h resp=%0d pte=%08h",
+                     u_soc.u_impl.u_core_subsystem.core_ptw_mem_write_addr,
+                     u_soc.u_impl.u_core_subsystem.data_bresp,
+                     u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2080/4]);
+            $display("REGRESSION_TEST_SUCCESS");
+            $finish;
+        end
     end
 `endif
 

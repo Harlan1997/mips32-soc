@@ -1108,6 +1108,13 @@ mmu-hardware-walker-ad-reset-soc-gate:
 	VCS_EXTRA_ARGS='+define+SOC_HARDWARE_WALKER_AD_ENABLE=1 +define+TB_MMU_HW_WALKER_AD +define+TB_MMU_HW_WALKER_AD_RESET' \
 		tb/soc_test/run_mmu_refill.sh
 
+.PHONY: mmu-hardware-walker-ad-write-error-soc-gate
+mmu-hardware-walker-ad-write-error-soc-gate:
+	HW_WALKER=1 AD_WRITE_ERROR=1 FW_DIR=$(BUILD_DIR)/firmware/mmu_refill_hw_ad_write_error \
+	RUN_DIR=$(BUILD_DIR)/soc_test/mmu_hardware_walker_ad_write_error_soc \
+	VCS_EXTRA_ARGS='+define+SOC_HARDWARE_WALKER_AD_ENABLE=1 +define+TB_MMU_HW_WALKER_AD' \
+		tb/soc_test/run_mmu_refill.sh
+
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
 # contracts and are intentionally not hidden behind this aggregate gate.
