@@ -87,6 +87,15 @@ LINUX_VECTOR_LINE=${LINUX_VECTOR_LINE:-470410}
 SKIP_LINUX_BUILD=${SKIP_LINUX_BUILD:-0}
 KERNEL_INPUT=${KERNEL:-}
 
+# VCS warns and may truncate a %h plusarg when the payload includes 0x.
+# Normalize trace addresses before forwarding them to the Verilog testbench.
+strip_hex_prefix() {
+    local value=${1:-}
+    value=${value#0x}
+    value=${value#0X}
+    printf '%s' "${value}"
+}
+
 mkdir -p "${RUN_DIR}"
 
 # Build a self-contained relocated image.  Keeping the kernel, DTB, Boot ROM,
@@ -140,6 +149,10 @@ if [[ "${LINUX_PC_TRACE}" == "1" && -z "${LINUX_PC_TRACE_START}" &&
 fi
 LINUX_PC_TRACE_START=${LINUX_PC_TRACE_START:-0x00000000}
 LINUX_PC_TRACE_END=${LINUX_PC_TRACE_END:-0x00000000}
+LINUX_PC_TRACE_START=$(strip_hex_prefix "${LINUX_PC_TRACE_START}")
+LINUX_PC_TRACE_END=$(strip_hex_prefix "${LINUX_PC_TRACE_END}")
+LINUX_PANIC_TRACE_START=$(strip_hex_prefix "${LINUX_PANIC_TRACE_START}")
+LINUX_PANIC_TRACE_END=$(strip_hex_prefix "${LINUX_PANIC_TRACE_END}")
 KERNEL="${KERNEL_PATH}" \
     DTC="$(dirname "${KERNEL_PATH}")/scripts/dtc/dtc" \
     RUN_DIR="${RUN_DIR}/image" \
