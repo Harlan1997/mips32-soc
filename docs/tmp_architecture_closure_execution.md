@@ -20,6 +20,18 @@
   compliance、unrestricted demand paging/Linux VM、full coherency 和产品
   signoff 仍保持 OPEN。
 
+### 2026-09-02 OS page-table pressure added to selected differential aggregate
+
+- 确认 qemu-system-mmu-os-pressure-gate 与
+  qemu-system-mmu-process-pressure-gate 不是重复 workload：前者启用
+  SOC_MMU_OS_PRESSURE，使用四套独立 root/L2 页表和任务上下文切换。
+- 将 OS-pressure gate 加入 selected aggregate；独立 gate 以及
+  /tmp/qemu-selected-mmu-os-20260902 下的完整串行 aggregate 均通过。
+- selected MMU corpus 现统一检查 context/shootdown、IPI、普通 4-KiB
+  refill、PageMask、八 ASID process pressure 和四任务 OS page-table
+  pressure。范围仍是 bounded single-core differential，不扩展为 Linux VM
+  或完整 privileged/MMU signoff。
+
 ### 2026-09-02 MMU differential runner build isolation recheck
 
 - 审计发现 qemu-system-mmu-contract-gate 和

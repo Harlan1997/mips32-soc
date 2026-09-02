@@ -22,6 +22,12 @@ selected aggregate；在 /tmp/qemu-selected-mmu-contract-20260902 的受控
 串行执行再次通过，统一入口现在覆盖 MMU contract、IPI、refill、PageMask
 和 process-pressure differential。
 
+进一步确认 qemu-system-mmu-os-pressure-gate 使用独立的
+SOC_MMU_OS_PRESSURE 四任务 root/L2 workload，并将其纳入 selected
+aggregate；独立 gate 与 /tmp/qemu-selected-mmu-os-20260902 aggregate
+均通过。统一 MMU selected corpus 现覆盖 context/shootdown、IPI、普通
+refill、PageMask、八 ASID process pressure 和四任务 OS page-table pressure。
+
 ### 2026-09-02 CPU/MMU aggregate recheck with Machine Check runtime
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`EDA_MEMORY_MAX=1500M` 和
