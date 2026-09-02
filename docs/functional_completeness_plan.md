@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 BPU formal asset integration
+
+新增 BPU DUT-bound invariant，检查 taken control resolve 的 BTB 建立，以及
+`flush_if` 恢复期间 BHT 仍按实际方向更新。`make verification-foundation-gate`
+通过：formal asset audit 为 `files=5 modules=5 assertions=12`，真实 DUT bind
+compile 为 `5/5`。当前环境仍无 formal solver，因此这闭合的是可审计 property
+资产和 elaboration，不是 formal proof 或最终 assertion coverage signoff。
+
 ### 2026-09-02 BPU mispredict resolution training
 
 修正 BPU 与 CPU 的恢复/训练边界：分支误预测触发 IF recovery 时，ID 阶段的

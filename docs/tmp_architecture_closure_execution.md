@@ -1,5 +1,14 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 BPU formal invariant integration
+
+- 新增 `tb/formal/bpu_invariants.sva`，绑定真实 `mips_bpu` 的 BTB/BHT 数组，约束
+  taken resolve 的 BTB 训练和 `flush_if` 下 BHT 饱和更新。
+- `make verification-foundation-gate` 通过：静态资产审计
+  `files=5 modules=5 assertions=12`，真实 DUT bind compile `5/5`。
+- 当前环境仍只有 VCS；该结果是 property 资产与 elaboration 证据，不是 solver
+  formal proof，也不闭合 CDC/RDC/lint 或最终 assertion coverage。
+
 ### 2026-09-02 BPU mispredict resolution training
 
 - 修正 `mips_bpu` 在 `flush_if` 为 1 时跳过训练的问题；误预测仍按 ID 阶段的

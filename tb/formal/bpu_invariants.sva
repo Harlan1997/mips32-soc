@@ -1,0 +1,84 @@
+// Solver-facing invariants for the BPU update contract.
+// These properties compile against the real mips_bpu DUT. They do not claim
+// a proof when the repository has no formal engine available.
+module bpu_invariant_props #(
+    parameter BTB_ENTRIES = 256,
+    parameter BHT_ENTRIES = 256,
+    parameter BTB_IDX_BITS = 8,
+    parameter BHT_IDX_BITS = 8,
+    parameter BTB_TAG_BITS = 22
+) (
+    input logic clk,
+    input logic rst_n,
+    input logic resolve_valid,
+    input logic resolve_taken,
+    input logic [1:0] resolve_type,
+    input logic flush_if,
+    input logic [BTB_IDX_BITS-1:0] update_btb_index,
+    input logic [BHT_IDX_BITS-1:0] update_bht_index,
+    input logic [BTB_TAG_BITS-1:0] update_tag,
+    input logic [31:0] resolve_target,
+    input logic btb_valid [BTB_ENTRIES-1:0],
+    input logic [BTB_TAG_BITS-1:0] btb_tag [BTB_ENTRIES-1:0],
+    input logic [31:0] btb_target [BTB_ENTRIES-1:0],
+    input logic [1:0] bht_ctr [BHT_ENTRIES-1:0]
+);
+    default clocking cb @(posedge clk); endclocking
+    default disable iff (!rst_n);
+
+    logic btb_pending;
+    logic [BTB_IDX_BITS-1:0] btb_pending_index;
+    logic [BTB_TAG_BITS-1:0] btb_pending_tag;
+    logic [31:0] btb_pending_target;
+    logic bht_pending;
+    logic [BHT_IDX_BITS-1:0] bht_pending_index;
+    logic [1:0] bht_expected;
+
+    function automatic [1:0] next_bht;
+        input [1:0] current;
+        input        taken;
+        begin
+            if (taken)
+                next_bht = (current == 2'b11) ? 2'b11 : current + 2'd1;
+            else
+                next_bht = (current == 2'b00) ? 2'b00 : current - 2'd1;
+        end
+    endfunction
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            btb_pending        <= 1'b0;
+            btb_pending_index  <= '0;
+            btb_pending_tag    <= '0;
+            btb_pending_target <= '0;
+            bht_pending        <= 1'b0;
+            bht_pending_index  <= '0;
+            bht_expected       <= 2'b01;
+        end else begin
+            btb_pending <= resolve_valid && resolve_type != 2'b00;
+            if (resolve_valid && resolve_type != 2'b00) begin
+                btb_pending_index  <= update_btb_index;
+                btb_pending_tag    <= update_tag;
+                btb_pending_target <= resolve_target;
+            end
+
+            // IF recovery must not discard the architectural direction update.
+            bht_pending <= resolve_valid && resolve_type == 2'b00 && flush_if;
+            if (resolve_valid && resolve_type == 2'b00 && flush_if) begin
+                bht_pending_index <= update_bht_index;
+                bht_expected <= next_bht(bht_ctr[update_bht_index],
+                                        resolve_taken);
+            end
+        end
+    end
+
+    BPU_TAKEN_CONTROL_TRAIN: assert property (
+        btb_pending |=> btb_valid[btb_pending_index] &&
+            btb_tag[btb_pending_index] == btb_pending_tag &&
+            btb_target[btb_pending_index] == btb_pending_target
+    ) else $error("SVA_FAIL BPU: taken control transfer did not train BTB");
+
+    BPU_FLUSH_DIRECTION_TRAIN: assert property (
+        bht_pending |=> bht_ctr[bht_pending_index] == bht_expected
+    ) else $error("SVA_FAIL BPU: flush recovery discarded BHT training");
+endmodule
