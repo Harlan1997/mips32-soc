@@ -34,11 +34,19 @@
 		interrupt-controller;
 		compatible = "mti,cpu-interrupt-controller";
 	};
+	vic: interrupt-controller@40004000 {
+		compatible = "harlan,mips32-soc-vic";
+		reg = <0x40004000 0x1000>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		interrupt-parent = <&cpuintc>;
+		interrupts = <2>;
+	};
 	uart0: serial@40000000 {
 		compatible = "ns16550a";
-		interrupt-parent = <&cpuintc>;
-		/* linux-guest=on uses the temporary direct CPU IP4 contract. */
-		interrupts = <4>;
+		interrupt-parent = <&vic>;
+		/* UART aggregate is VIC source 1, then CPU Cause.IP2. */
+		interrupts = <1>;
 		reg = <0x40000000 0x1000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;

@@ -4,19 +4,18 @@
 
 - 对照 QEMU `hw/mips/mips_int.c` 和 RTL `mips_cp0.v` 确认 `env->irq[n]`
   对应 `Cause.IP[n+2]`；RTL 的 `ext_int[0]` 和 QEMU VIC 聚合均对应 IP2。
-- QEMU custom machine 的默认 bare-metal 路径现在把 UART THRE level 放入
-  mirrored VIC source 1，再由 VIC 聚合到 CPU IP2，和 RTL
-  `irq_sources[1]` 一致。当前 generic Linux image 尚无 SoC VIC driver，
-  `linux-guest=on` 保留直接 CPU IP4 兼容路径，DTS `<4>` 与之匹配。
+- QEMU custom machine 的默认 bare-metal 和 Linux 路径都把 UART THRE level
+  放入 mirrored VIC source 1，再由 VIC 聚合到 CPU IP2，和 RTL
+  `irq_sources[1]` 一致。Linux DTS 通过项目 irqchip overlay 使用同一级联。
 - 新增 `scripts/check_irq_contract.py` 和 `make irq-contract-audit`；该审计
   被 `verification-foundation-gate`/`current-contract-signoff` 调用，检查
-  source ordering、IP2 aggregate、Linux direct-IP4 fallback 和两份 DTS。
+  source ordering、IP2 aggregate 和两份 DTS。
 - 验证通过：`IRQ_CONTRACT_AUDIT_PASS uart_vic_source=1 cpu_ip=2`、
   QEMU system VIC CPU RTL retire differential（735 records）、Linux boot
   gate（完整 userspace marker set）、RTL frontend compile（33 modules）。
-- 这闭合了当前可证明的中断 wiring/model contract；Linux VIC driver、
-  RTL Linux userspace boot、完整 RTL/QEMU Linux differential、任意深度 OS
-  IRQ 语义和完整 ISA/MMU/OS signoff 仍 OPEN。
+- 这闭合了当前可证明的 Linux/QEMU/RTL VIC wiring/model slice；RTL Linux
+  userspace boot、完整 RTL/QEMU Linux differential、任意深度 OS IRQ 语义和
+  完整 ISA/MMU/OS signoff 仍 OPEN。
 
 ### 2026-09-03 COP1 MTHC1/MFHC1 high-word transfer closure
 
@@ -5116,3 +5115,21 @@ finite VEIC, ISA R2 implemented-subset, CPU/MMU and DDR4 gates. The bounded
 aggregate remains separate from full ISA/IEEE-754, unrestricted Linux
 VM/userspace RTL, arbitrary MESI/directory coherency, formal/CDC/RDC/lint
 signoff and physical DDR/QSPI product signoff.
+
+### 2026-09-03 Linux SoC VIC cascade integration
+
+- Added the tracked Linux irqchip overlay `tb/linux_boot/irq-mips32-soc-vic.c`,
+  applied reproducibly by `scripts/linux/apply_mips32_soc_vic.sh` because
+  fetched Linux sources remain ignored. The driver creates a 32-source linear
+  domain, cascades from CPU IRQ/IP2, masks/unmasks with `ENABLE_SET/CLR`,
+  accepts `VEC_ID`, and retires the source with `ACK`.
+- Both QEMU and RTL DTS files now describe the VIC at `0x40004000`; UART is
+  VIC source 1. QEMU Linux mode therefore uses the same source-1 -> CPU-IP2
+  path as RTL instead of the former direct IP4 compatibility route.
+- `QEMU_BUILD_JOBS=1 QEMU_TIMEOUT=120 BUILD_DIR=/tmp/linux-vic-20260903
+  make linux-boot-build-gate` passed. Evidence includes
+  `CONFIG_MIPS32_SOC_VIC=y`, linked driver symbols, boot log initialization on
+  CPU IRQ 2, UART child IRQ allocation, and all Linux userspace markers.
+- `linux-soc-vic-gate` names this integration gate. RTL Linux userspace boot,
+  full RTL/QEMU Linux differential, unrestricted Linux VM/shootdown and full
+  ISA/MMU/OS signoff remain open.
