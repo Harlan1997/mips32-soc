@@ -66,6 +66,7 @@ env RUN_DIR="${RUN_DIR}/qemu" \
     MAX_QEMU_STATES="$((capture_records + 1))" \
     MAX_QEMU_CAPTURE_BYTES="${MAX_TRACE_BYTES}" REQUIRE_SMOKE_OUTPUT=0 \
     RTL_TRACE="${rtl_trace}" TRACE_COMPARE_ALIGN_FIRST_PC="${ALIGN_FIRST_PC}" \
+    TRACE_COMPARE_STREAM=1 \
     TRACE_COMPARE_GOLDEN_TO_RTL=1 \
     TRACE_COMPARE_ALLOW_GOLDEN_PREFIX=1 \
     "${SCRIPT_DIR}/run_qemu_system_retire_capture_gate.sh" \
