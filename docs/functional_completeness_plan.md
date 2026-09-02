@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 Linux gate artifact/path audit
+
+修正 `linux-boot-build-gate` 对显式 `RUN_DIR` 的处理：传入自定义
+`BUILD_DIR` 时不再额外拼接 `linux_boot/real`，避免生成
+`<run>/linux_boot/real/linux_boot/real` 的嵌套输出目录并触发不必要的
+kernel 冷编译。审计同时发现架构 aggregate 的 Linux 子 gate 使用仓库中
+旧的、未启用 `CONFIG_MIPS32_SOC_VIC` 的 kernel/DTB 时，会在 VIC 检查处
+提前失败；使用 `/tmp/linux-vic-20260903` 中带 `CONFIG_MIPS32_SOC_VIC=y`
+的 artifact 可通过 Linux QEMU gate，但重复运行仍出现保护页 SIGSEGV 后
+userspace marker 不稳定，因此不能将 Linux userspace 或完整 RTL/QEMU
+system differential 标记为闭合。该项修复只改善 artifact 路径和证据一致性。
+
 ### 2026-09-02 QEMU root/context lease differential closure
 
 扩展 `mips32-soc-ref` 的 MMU context APB 模型，镜像 RTL 的四槽 root lease
