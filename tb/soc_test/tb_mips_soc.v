@@ -1392,12 +1392,14 @@ module tb_mips_soc;
         linux_vector_trace_limit = 1000;
         if (!$value$plusargs("LINUX_VECTOR_TRACE_LIMIT=%d", linux_vector_trace_limit)) begin end
         linux_vector_trace_count = 0;
-        linux_cacheop_trace_limit = 2000;
+        // Diagnostic streams are opt-in.  A direct simv invocation must not
+        // emit thousands of cache-maintenance records by default.
+        linux_cacheop_trace_limit = 0;
         if (!$value$plusargs("LINUX_CACHEOP_TRACE_LIMIT=%d", linux_cacheop_trace_limit)) begin end
         linux_cacheop_trace_line = 27'd0;
         if (!$value$plusargs("LINUX_CACHEOP_TRACE_LINE=%h", linux_cacheop_trace_line)) begin end
         linux_cacheop_trace_count = 0;
-        linux_cp0_trace_limit = 256;
+        linux_cp0_trace_limit = 0;
         if (!$value$plusargs("LINUX_CP0_TRACE_LIMIT=%d", linux_cp0_trace_limit)) begin end
         linux_cp0_trace_count = 0;
         linux_ddr_trace = 0;
