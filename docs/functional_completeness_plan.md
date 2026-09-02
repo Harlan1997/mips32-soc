@@ -1517,3 +1517,13 @@ userspace marker was observed. This rules out a first-order userspace fault
 as the cause of the current RTL Linux blocker and narrows the next diagnosis
 to a `do_basic_setup` initcall/completion wait or the kernel-init handoff;
 no speculative RTL change is justified by this trace.
+
+### 2026-09-02 RTL Linux driver-init return trace
+
+A narrower trace followed `driver_init` and `devtmpfs_init`. The RTL reached
+`vfs_kern_mount`, observed its `-EINVAL` return, and propagated that value out
+of `devtmpfs_init`; the trace does not show a hang or architectural mismatch
+at this boundary. The next diagnosis therefore follows later
+`do_basic_setup` initcalls and completion waits rather than changing the
+mount/error behavior speculatively. RTL Linux userspace and full RTL/QEMU
+Linux differential remain open.
