@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 hardware walker A/D independent AW/W backpressure
+
+- Re-ran `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  BUILD_DIR=/tmp/mmu-ad-backpressure-20260902 make
+  mmu-hardware-walker-ad-soc-gate`.
+- The SoC gate passed with `MMU_AD_AXI_WRITEBACK_PASS aw=3 w=3 delayed_w=3`.
+  The existing monitor verifies that W is accepted after AW and that all three
+  leaf-PTE write payloads are preserved. This closes the independent AW/W
+  backpressure and payload slice in the current RTL contract.
+- Arbitrary reset/error interleavings, OS-owned page tables, and physical DDR
+  timing remain outside this bounded behavioral contract.
+
 ### 2026-09-02 scheduler busy-time reschedule retention
 
 - `cpu_scheduler` now latches a timer/IPI/yield trigger that arrives during
