@@ -246,6 +246,9 @@ if [[ -n "${RTL_TRACE}" && -s "${RTL_TRACE}" ]]; then
     if [[ "${TRACE_COMPARE_GOLDEN_TO_RTL:-0}" == "1" ]]; then
         compare_args+=(--truncate-golden-to-rtl)
     fi
+    if [[ "${TRACE_COMPARE_STREAM:-0}" == "1" ]]; then
+        compare_args+=(--stream)
+    fi
     compare_golden="${RUN_DIR}/qemu_retire.jsonl"
     if [[ -n "${TRACE_COMPARE_GOLDEN_LIMIT:-}" ]]; then
         if ! [[ "${TRACE_COMPARE_GOLDEN_LIMIT}" =~ ^[1-9][0-9]*$ ]]; then

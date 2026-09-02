@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 streaming comparator OOM closure
+
+- The long Linux differential previously used `list(load(...))` for both JSONL
+  traces. A 606 MB RTL trace plus roughly 200 MB of QEMU state caused Python
+  RSS to reach about 3 GB and the gate to exit 137 under the host memory
+  limit.
+- Added an opt-in `--stream` comparator with one-record look-ahead. The Linux
+  differential wrapper enables it while the short selected-corpus path keeps
+  the existing list-based FPU observation-window behavior.
+- The 2M-cycle gate now passes with
+  `TRACE_COMPARE_PASS records=143248 mode=stream`; an independent large-trace
+  run measured about 10 MB maximum RSS. This closes the comparator's bounded
+  memory contract, not unrestricted RTL Linux userspace boot or full Linux
+  system differential/signoff.
+
 ### 2026-09-02 bounded Linux RTL/QEMU retire differential recheck
 
 - Re-ran `qemu-system-linux-differential-gate` with the existing verified

@@ -41,6 +41,180 @@ def load(path):
                     raise ValueError(f"{path}:{n}: invalid JSON: {e}") from e
                 yield n, obj
 
+
+class Peekable:
+    """Small look-ahead wrapper used by the bounded-memory comparator."""
+    def __init__(self, iterable):
+        self._iter = iter(iterable)
+        self._buffer = []
+
+    def peek(self):
+        if not self._buffer:
+            try:
+                self._buffer.append(next(self._iter))
+            except StopIteration:
+                return None
+        return self._buffer[0]
+
+    def peek_ahead(self, index):
+        while len(self._buffer) <= index:
+            try:
+                self._buffer.append(next(self._iter))
+            except StopIteration:
+                return None
+        return self._buffer[index]
+
+    def pop(self):
+        item = self.peek()
+        if item is not None:
+            self._buffer.pop(0)
+        return item
+
+
+def stream_fields(r, g, previous_r, previous_g, next_r, next_g):
+    """Return fields comparable for one streaming trace pair.
+
+    The long Linux differential has no FPU architectural activity, so its
+    state is compared directly.  The bounded look-ahead preserves the
+    producer-specific delay-slot and exception-vector rules without retaining
+    the complete trace in memory.  Short traces continue using the richer
+    list-based path below, including the FPU observation window.
+    """
+    fields = list(BASE_FIELDS)
+    if (is_async_interrupt_boundary(r) or is_async_interrupt_boundary(g) or
+            (previous_r is not None and
+             is_async_interrupt_boundary(previous_r)) or
+            (previous_g is not None and
+             is_async_interrupt_boundary(previous_g))):
+        fields = [field for field in fields
+                  if field not in ("next_pc", "except", "except_code", "bd")]
+    if ((previous_r is not None and has_delay_slot(previous_r.get("instr"))) or
+            (previous_g is not None and has_delay_slot(previous_g.get("instr"))) or
+            has_delay_slot(r.get("instr")) or has_delay_slot(g.get("instr")) or
+            (next_r is not None and normalize_direct_map(next_r.get("pc")) == "00000180") or
+            (next_g is not None and normalize_direct_map(next_g.get("pc")) == "00000180")):
+        fields = [field for field in fields if field not in ("next_pc", "bd")]
+    if ((r.get("gpr_we") or g.get("gpr_we"))):
+        fields += ["gpr_we", "gpr_addr", "gpr_data"]
+    if comparable_cp0_write(r) or comparable_cp0_write(g):
+        fields += ["cp0_we", "cp0_addr", "cp0_sel", "cp0_data"]
+    if r.get("fpr_state") is not None or g.get("fpr_state") is not None:
+        fields += ["fpr_state", "fcsr_state"]
+    if r.get("mem_valid") or g.get("mem_valid"):
+        fields += ["mem_valid", "mem_read", "mem_write", "mem_addr", "mem_be"]
+        if r.get("mem_write") or g.get("mem_write"):
+            fields.append("mem_wdata")
+        if r.get("mem_read") or g.get("mem_read"):
+            fields.append("mem_rdata")
+        fields.remove("mem_be")
+        if r.get("except") or g.get("except"):
+            fields = [field for field in fields if field not in
+                      ("mem_valid", "mem_read", "mem_write", "mem_addr",
+                       "mem_wdata", "mem_rdata")]
+    if r.get("except") or g.get("except"):
+        fields = [field for field in fields if field not in
+                  ("gpr_we", "gpr_addr", "gpr_data")]
+    if is_merge_memory_instruction(r) or is_merge_memory_instruction(g):
+        fields = [field for field in fields if field != "mem_rdata"]
+    if is_merge_store(r) or is_merge_store(g):
+        fields = [field for field in fields if field not in ("mem_wdata", "mem_be")]
+    if is_double_memory_instruction(r) or is_double_memory_instruction(g):
+        fields = [field for field in fields
+                  if field not in ("mem_wdata", "mem_be", "mem_rdata")]
+    return fields
+
+
+def stream_compare(rtl_path, golden_path, args):
+    """Compare traces with bounded memory, for long Linux captures."""
+    rtl = Peekable(load(rtl_path))
+    golden = Peekable(load(golden_path))
+
+    if args.align_first_pc:
+        first_golden = golden.pop()
+        if first_golden is None:
+            raise ValueError("cannot align an empty golden trace")
+        wanted_pc = normalize_direct_map(
+            f"{int(args.align_first_pc, 16) & 0xffffffff:08x}")
+        if normalize_direct_map(first_golden[1].get("pc")) != wanted_pc:
+            raise ValueError(
+                "golden trace first PC does not match --align-first-pc: "
+                f"{first_golden[1].get('pc')!r} != {wanted_pc!r}")
+        while True:
+            candidate = rtl.peek()
+            if candidate is None:
+                raise ValueError("RTL trace has no matching PC/instruction handoff")
+            if (normalize_direct_map(candidate[1].get("pc")) == wanted_pc and
+                    candidate[1].get("instr") == first_golden[1].get("instr")):
+                break
+            rtl.pop()
+        golden._buffer.insert(0, first_golden)
+
+    previous_r = previous_g = None
+    compared = 0
+    mismatches = []
+    while True:
+        r_item = rtl.peek()
+        g_item = golden.peek()
+        if r_item is None or g_item is None:
+            break
+        r = r_item[1]
+        g = g_item[1]
+
+        # Preserve the one-record general-vector alignment used by the list
+        # comparator, using only one look-ahead record on either stream.
+        r_next_item = rtl.peek_ahead(1)
+        g_next_item = golden.peek_ahead(1)
+        r_next = r_next_item[1] if r_next_item is not None else None
+        g_next = g_next_item[1] if g_next_item is not None else None
+        rtl_pc = normalize_direct_map(r.get("pc"))
+        golden_pc = normalize_direct_map(g.get("pc"))
+        if golden_pc == "00000180" and rtl_pc != golden_pc:
+            if (r_next is not None and
+                    normalize_direct_map(r_next.get("pc")) == golden_pc):
+                rtl.pop()
+                continue
+        if rtl_pc == "00000180" and golden_pc != rtl_pc:
+            if (g_next is not None and
+                    normalize_direct_map(g_next.get("pc")) == rtl_pc):
+                golden.pop()
+                continue
+
+        fields = stream_fields(r, g, previous_r, previous_g, r_next, g_next)
+        for field in fields:
+            got = comparable(field, r.get(field))
+            expected = comparable(field, g.get(field))
+            if field == "mem_addr" and (is_merge_memory_instruction(r) or
+                                         is_merge_memory_instruction(g)):
+                try:
+                    got = f"{int(got, 16) & ~3:08x}"
+                    expected = f"{int(expected, 16) & ~3:08x}"
+                except (TypeError, ValueError):
+                    pass
+            if got != expected:
+                mismatches.append((compared, field, r.get(field), g.get(field)))
+                break
+        rtl.pop()
+        golden.pop()
+        if mismatches or len(mismatches) >= args.max_mismatches:
+            break
+        previous_r, previous_g = r, g
+        compared += 1
+
+    if not mismatches and g_item is not None and r_item is None:
+        mismatches.append((compared, "trace_length", "rtl-eof", "golden-more"))
+    if not mismatches and g_item is None:
+        if not args.allow_golden_prefix:
+            extra = rtl.peek()
+            if extra is not None:
+                mismatches.append((compared, "trace_length", "rtl-more", "golden-eof"))
+    if mismatches:
+        for idx, field, got, expected in mismatches:
+            print(f"MISMATCH retire={idx} field={field} rtl={got!r} golden={expected!r}",
+                  file=sys.stderr)
+        return 1
+    print(f"TRACE_COMPARE_PASS records={compared} mode=stream")
+    return 0
+
 def is_mailbox_store(obj):
     return (obj.get("mem_valid") and obj.get("mem_write") and
             normalize_direct_map(obj.get("mem_addr")) == "0000fffc" and
@@ -254,7 +428,15 @@ def main():
                     help="accept a fully matching golden prefix when RTL has extra records")
     ap.add_argument("--truncate-golden-to-rtl", action="store_true",
                     help="after alignment, compare only the golden prefix available in the RTL trace")
+    ap.add_argument("--stream", action="store_true",
+                    help="compare line-by-line with bounded memory for long traces")
     args = ap.parse_args()
+    if args.stream:
+        try:
+            return stream_compare(args.rtl, args.golden, args)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            print(f"TRACE_COMPARE_ERROR: {exc}", file=sys.stderr)
+            return 2
     rtl = list(load(args.rtl))
     golden = list(load(args.golden))
     if args.stop_after_mailbox:

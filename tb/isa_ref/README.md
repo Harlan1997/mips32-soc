@@ -79,6 +79,17 @@ Missing guest or RTL trace returns `BLOCKED`; QEMU version readiness alone is
 never a pass. The historical `make cpu-lockstep-gate` target aliases this
 same retire differential gate.
 
+For long system-mode Linux captures, set `TRACE_COMPARE_STREAM=1` (the Linux
+differential wrapper enables it automatically). The comparator then consumes
+both JSONL files incrementally with bounded look-ahead instead of loading the
+complete traces into Python lists. This prevents the previous multi-gigabyte
+RSS failure on a 2M-cycle capture: the 606 MB RTL trace and roughly 200 MB
+QEMU state trace previously drove Python to about 3 GB RSS and exit 137. The
+streaming path passed the 2M-cycle bounded gate with `143248` compared retire
+records and about 10 MB maximum RSS. This is a resource-safety and bounded
+prefix result; it does not change the complete Linux/system-mode signoff
+boundary below.
+
 ## System-mode SoC reference machine
 
 The project bare-metal ELF is not a Linux-user guest. Build the opt-in QEMU
