@@ -9,12 +9,16 @@
 `endif
 
 module tb_product_mmu_process_pressure;
-    // Four pages per ASID use a four-page PFN stride; the first pair for
-    // ASID N starts at PFN_BASE + (N << 2).
-    localparam [19:0] PFN_ASID1 = 20'h08006;
-    localparam [19:0] PFN_ASID2 = 20'h0800A;
-    localparam [19:0] PFN_ASID3 = 20'h0800E;
-    localparam [19:0] PFN_ASID4 = 20'h08012;
+    // Eight pages per ASID use an eight-page PFN stride; the first pair for
+    // ASID N starts at PFN_BASE + (N << 3).
+    localparam [19:0] PFN_ASID1 = 20'h0800A;
+    localparam [19:0] PFN_ASID2 = 20'h08012;
+    localparam [19:0] PFN_ASID3 = 20'h0801A;
+    localparam [19:0] PFN_ASID4 = 20'h08022;
+    localparam [19:0] PFN_ASID5 = 20'h0802A;
+    localparam [19:0] PFN_ASID6 = 20'h08032;
+    localparam [19:0] PFN_ASID7 = 20'h0803A;
+    localparam [19:0] PFN_ASID8 = 20'h08042;
     localparam [31:0] PROCESS_MARK = 32'hC002_0001;
     localparam [31:0] SHOOTDOWN_MARK = 32'hC002_0002;
 
@@ -47,6 +51,10 @@ module tb_product_mmu_process_pressure;
     reg asid2_mapping_seen;
     reg asid3_mapping_seen;
     reg asid4_mapping_seen;
+    reg asid5_mapping_seen;
+    reg asid6_mapping_seen;
+    reg asid7_mapping_seen;
+    reg asid8_mapping_seen;
     reg process_marker_seen;
     reg shootdown_marker_seen;
     reg mailbox_seen;
@@ -89,6 +97,10 @@ module tb_product_mmu_process_pressure;
             asid2_mapping_seen = 1'b0;
             asid3_mapping_seen = 1'b0;
             asid4_mapping_seen = 1'b0;
+            asid5_mapping_seen = 1'b0;
+            asid6_mapping_seen = 1'b0;
+            asid7_mapping_seen = 1'b0;
+            asid8_mapping_seen = 1'b0;
             process_marker_seen = 1'b0;
             shootdown_marker_seen = 1'b0;
             mailbox_seen = 1'b0;
@@ -121,6 +133,22 @@ module tb_product_mmu_process_pressure;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[ti] == 8'd4 &&
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[ti][25:6] == PFN_ASID4)
                     asid4_mapping_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[ti] &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[ti] == 8'd5 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[ti][25:6] == PFN_ASID5)
+                    asid5_mapping_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[ti] &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[ti] == 8'd6 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[ti][25:6] == PFN_ASID6)
+                    asid6_mapping_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[ti] &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[ti] == 8'd7 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[ti][25:6] == PFN_ASID7)
+                    asid7_mapping_seen = 1'b1;
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[ti] &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[ti] == 8'd8 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[ti][25:6] == PFN_ASID8)
+                    asid8_mapping_seen = 1'b1;
             end
 
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
@@ -149,16 +177,18 @@ module tb_product_mmu_process_pressure;
 
             if (mailbox_seen && !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req) begin
                 if (!reset_seen) fail("reset PC was not observed");
-                if (refill_count < 16) fail("four ASIDs/four pages did not refill before and after shootdown");
+                if (refill_count < 64) fail("eight ASIDs/eight pages did not refill before and after shootdown");
                 if (!asid1_mapping_seen || !asid2_mapping_seen ||
-                    !asid3_mapping_seen || !asid4_mapping_seen)
-                    fail("all four ASID-specific PFN mappings were not observed");
+                    !asid3_mapping_seen || !asid4_mapping_seen ||
+                    !asid5_mapping_seen || !asid6_mapping_seen ||
+                    !asid7_mapping_seen || !asid8_mapping_seen)
+                    fail("all eight ASID-specific PFN mappings were not observed");
                 if (!process_marker_seen || !shootdown_marker_seen)
                     fail("process and shootdown phase markers were not observed");
                 $display("REGRESSION_TEST_SUCCESS product_mmu_process_pressure refills=%0d", refill_count);
                 $finish;
             end
-            if (cycles > 20000)
+            if (cycles > 50000)
                 fail("product ASID process pressure firmware timed out");
         end
     end

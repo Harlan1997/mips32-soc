@@ -2,6 +2,7 @@
     .set noat
 
     .equ PFN_BASE,       0x08002
+    .equ PAGES_PER_PROCESS, 8
     .equ PROCESS_MARK,   0xC0020001
     .equ SHOOTDOWN_MARK, 0xC0020002
 
@@ -12,6 +13,8 @@ _start:
     /* Keep bootstrap state in the direct kseg1 SRAM alias. */
     lui     $sp, 0xA001
     addiu   $sp, $sp, -256
+    addiu   $t0, $zero, 1
+    sw      $t0, 16($sp)
     lui     $t0, 0x1040
     mtc0    $t0, $12
     nop
@@ -58,8 +61,8 @@ _start:
     .globl _pressure_body
 _pressure_body:
 
-    /* First pass: allocate four software ASIDs and touch four demand pages
-       per process. Four pages exercise two independent 4-KiB TLB pairs. */
+    /* First pass: allocate eight software ASIDs and touch eight demand pages
+       per process. This fills 32 dynamic 4-KiB TLB pairs before shootdown. */
     addiu   $s0, $zero, 1
 first_process:
     mtc0    $s0, $10
@@ -80,16 +83,16 @@ first_page:
     bne     $t1, $t2, fail
     nop
     addiu   $s1, $s1, 1
-    slti    $t0, $s1, 4
+    slti    $t0, $s1, PAGES_PER_PROCESS
     bne     $t0, $zero, first_page
     nop
     addiu   $s0, $s0, 1
-    slti    $t0, $s0, 5
+    slti    $t0, $s0, 9
     bne     $t0, $zero, first_process
     nop
 
-    /* Reverse round-robin: all four mappings and pages remain isolated. */
-    addiu   $s0, $zero, 4
+    /* Reverse round-robin: all eight mappings and pages remain isolated. */
+    addiu   $s0, $zero, 8
 second_process:
     beq     $s0, $zero, second_done
     nop
@@ -97,7 +100,7 @@ second_process:
     nop
     nop
     nop
-    addiu   $s1, $zero, 3
+    addiu   $s1, $zero, 7
 second_page:
     lui     $t0, 0x0800
     sll     $t3, $s1, 12
@@ -166,11 +169,11 @@ third_page:
     bne     $t1, $t2, fail
     nop
     addiu   $s1, $s1, 1
-    slti    $t0, $s1, 4
+    slti    $t0, $s1, PAGES_PER_PROCESS
     bne     $t0, $zero, third_page
     nop
     addiu   $s0, $s0, 1
-    slti    $t0, $s0, 5
+    slti    $t0, $s0, 9
     bne     $t0, $zero, third_process
     nop
 
@@ -227,14 +230,14 @@ _tlb_refill:
     nop
     nop
 
-    /* Four software PTE pages per process. Each TLB pair is aligned to an
-       even virtual page: page 0/1 and page 2/3 share a pair. */
+    /* Eight software PTE pages per process. Each TLB pair is aligned to an
+       even virtual page: pages 0/1, 2/3, 4/5 and 6/7 share a pair. */
     lui     $t2, 0x0000
     ori     $t2, $t2, PFN_BASE
-    sll     $t3, $t1, 2
+    sll     $t3, $t1, 3
     addu    $t2, $t2, $t3
     srl     $t3, $k0, 12
-    andi    $t3, $t3, 0x0002
+    andi    $t3, $t3, 0x0006
     addu    $t2, $t2, $t3
     sll     $t2, $t2, 6
     /* C=3, D=1, V=1: keep this ASID-pressure test on the cacheable DDR
@@ -250,9 +253,24 @@ _tlb_refill:
     mtc0    $zero, $5
     nop
     nop
-    tlbwr
+    /* Use a software-owned round-robin index for this differential workload.
+       TLBWR Random is intentionally implementation-defined in this RTL/QEMU
+       pair because RTL decrements every cycle while QEMU samples per helper. */
+    lw      $t3, 16($sp)
+    mtc0    $t3, $0
     nop
     nop
+    tlbwi
+    nop
+    nop
+
+    addiu   $t3, $t3, 1
+    sltiu   $t0, $t3, 64
+    bne     $t0, $zero, refill_index_store
+    nop
+    addiu   $t3, $zero, 1
+refill_index_store:
+    sw      $t3, 16($sp)
 
     lw      $t0, 0($sp)
     lw      $t1, 4($sp)

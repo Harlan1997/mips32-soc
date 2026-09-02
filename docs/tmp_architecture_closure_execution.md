@@ -4664,3 +4664,19 @@ configuration.
 - The aggregate now proves integration of the Machine Check runtime slice;
   complete ISA/FPU, Linux/OS VM semantics, full coherency and product signoff
   remain open.
+
+### 2026-09-02 MMU 8x8 OS-pressure differential
+
+- Expanded `mmu_process_pressure` from four ASIDs/four pages to eight
+  ASIDs/eight pages, allocating 32 dynamic 4-KiB TLB pairs and checking all
+  eight PFN regions across forward/reverse context reuse and post-shootdown
+  refills.
+- The RTL gate passes with `REGRESSION_TEST_SUCCESS
+  product_mmu_process_pressure refills=73`.
+- Strict `qemu-system-mmu-process-pressure-gate` passes at
+  `/tmp/mmu-process-pressure-diff-8x8-tlbwi-20260902/qemu/trace_compare.log`.
+  The workload uses a software-owned round-robin `TLBWI` replacement index so
+  RTL and QEMU do not depend on different `TLBWR` Random timing models.
+- This is stronger bounded single-core OS-style demand-refill evidence. It
+  does not close Linux page-table ownership/VM, scheduler policy, multicore
+  shootdown, unrestricted demand paging, or full privileged/MMU compliance.
