@@ -47,4 +47,29 @@ bind soc_fabric arb_fairness_props u_formal_arbiter_props (
     .downstream_arready(s0_arready)
 );
 `endif
+
+`ifdef FORMAL_BIND_BPU
+bind mips_bpu bpu_invariant_props #(
+    .BTB_ENTRIES   (BTB_ENTRIES),
+    .BHT_ENTRIES   (BHT_ENTRIES),
+    .BTB_IDX_BITS  (BTB_IDX_BITS),
+    .BHT_IDX_BITS  (BHT_IDX_BITS),
+    .BTB_TAG_BITS  (BTB_TAG_BITS)
+) u_formal_bpu_props (
+    .clk              (clk),
+    .rst_n            (rst_n),
+    .resolve_valid    (resolve_valid),
+    .resolve_taken    (resolve_taken),
+    .resolve_type     (resolve_type),
+    .flush_if         (flush_if),
+    .update_btb_index (upd_btb_idx),
+    .update_bht_index (upd_bht_idx),
+    .update_tag       (upd_tag),
+    .resolve_target   (resolve_target),
+    .btb_valid        (btb_valid),
+    .btb_tag          (btb_tag),
+    .btb_target       (btb_target),
+    .bht_ctr          (bht_ctr)
+);
+`endif
 `endif

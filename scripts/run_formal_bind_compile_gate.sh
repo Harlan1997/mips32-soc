@@ -41,14 +41,18 @@ compile_target fabric soc_fabric FORMAL_BIND_FABRIC \
     "${ROOT_DIR}/rtl/axi/axi_id_tracker.v" "${ROOT_DIR}/rtl/axi/axi_read_timeout_guard.v" \
     "${ROOT_DIR}/rtl/soc_fabric.v" "${ROOT_DIR}/tb/formal/arb_fairness.sva" \
     "${ROOT_DIR}/tb/formal/formal_bind.sv"
+compile_target bpu mips_bpu FORMAL_BIND_BPU \
+    "${ROOT_DIR}/rtl/cpu/mips_bpu.v" \
+    "${ROOT_DIR}/tb/formal/bpu_invariants.sva" \
+    "${ROOT_DIR}/tb/formal/formal_bind.sv"
 
 cat > "${RUN_ROOT}/formal_bind_compile_report.md" <<EOF
 # Formal DUT Binding Compile Gate
 
 - Result: PASS
-- Targets: dcache, mips_tlb, apb_vic, soc_fabric
+- Targets: dcache, mips_tlb, apb_vic, soc_fabric, mips_bpu
 - Define: FORMAL_ENABLE plus target-specific FORMAL_BIND_*
 - Evidence: each target directory contains a VCS compile.log and elaborated simv.
 - Boundary: syntax/elaboration only; no formal engine proof is claimed.
 EOF
-echo "formal bind compile gate: PASS (4/4)"
+echo "formal bind compile gate: PASS (5/5)"
