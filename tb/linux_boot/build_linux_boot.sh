@@ -9,6 +9,7 @@ CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 JOBS=${JOBS:-2}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
 LINUX_CMDLINE=${LINUX_CMDLINE:-"console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init"}
+LINUX_PROFILE=${LINUX_PROFILE:-generic}
 BUILD_DIR=$(realpath -m "${BUILD_DIR}")
 SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-946684800}
 KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-"2000-01-01 00:00:00"}
@@ -82,6 +83,10 @@ config_inputs_hash=$({
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
     printf 'LINUX_CMDLINE=%s\n' "${LINUX_CMDLINE}"
+    printf 'LINUX_PROFILE=%s\n' "${LINUX_PROFILE}"
+    if [[ "${LINUX_PROFILE}" == "rtl-minimal" ]]; then
+        sha256sum "${SCRIPT_DIR}/rtl_minimal.config"
+    fi
 } | sha256sum | awk '{print $1}')
 kernel_config_args=()
 # PHYSICAL_START is conditionally visible in the MIPS Kconfig and is gated by
@@ -107,6 +112,15 @@ if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash
         --enable CONFIG_CMDLINE_BOOL \
         --set-str CONFIG_CMDLINE "${LINUX_CMDLINE}" \
         --set-val CONFIG_PHYSICAL_START "${KERNEL_PHYSICAL_START}"
+    if [[ "${LINUX_PROFILE}" == "rtl-minimal" ]]; then
+        while IFS= read -r option || [[ -n "${option}" ]]; do
+            [[ -z "${option}" || "${option}" == \#* ]] && continue
+            "${scripts_config}" --file "${BUILD_DIR}/kernel/.config" --disable "${option}"
+        done < "${SCRIPT_DIR}/rtl_minimal.config"
+    elif [[ "${LINUX_PROFILE}" != "generic" ]]; then
+        echo "unknown LINUX_PROFILE: ${LINUX_PROFILE}" >&2
+        exit 1
+    fi
     make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
         ARCH=mips CROSS_COMPILE="${CROSS_COMPILE}" olddefconfig
     printf '%s\n' "${config_inputs_hash}" >"${config_stamp}"
