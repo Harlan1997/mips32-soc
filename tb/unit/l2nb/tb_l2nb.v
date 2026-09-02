@@ -72,7 +72,7 @@ module tb_l2nb;
     reg dn_busy; reg [1:0] dn_kind; // 1=read 2=write
     reg [3:0] dn_id;
     reg [31:0] dn_addr; reg [7:0] dn_len; reg [7:0] dn_beat;
-    reg inject_r_error, inject_b_error;
+    reg inject_r_error, inject_b_error, inject_r_id;
     reg [31:0] inject_r_addr;
     integer expected_error_responses;
 
@@ -93,10 +93,11 @@ module tb_l2nb;
             // ---- read data burst ----
             if (dn_busy && dn_kind==1 && !m_rvalid) begin
                 m_rvalid<=1; m_rdata<=mem[(dn_addr[21:2])+dn_beat]; m_rlast<=(dn_beat==dn_len);
+                m_rid <= (inject_r_id && dn_addr == inject_r_addr) ? ~dn_id : dn_id;
                 m_rresp <= (inject_r_error && dn_addr == inject_r_addr) ? 2'b10 : 2'b00;
             end
             if (m_rvalid && m_rready) begin
-                if (m_rid !== dn_id) begin
+                if (m_rid !== dn_id && !(inject_r_id && dn_addr == inject_r_addr)) begin
                     $display("FAIL downstream R ID mismatch got=%0d exp=%0d", m_rid, dn_id);
                     errs=errs+1;
                 end
@@ -240,7 +241,7 @@ module tb_l2nb;
     initial begin
         s_awvalid=0; s_wvalid=0; s_arvalid=0; s_wlast=0;
         snoop_addr=0; snoop_valid=0;
-        inject_r_error=0; inject_b_error=0; inject_r_addr=0;
+        inject_r_error=0; inject_b_error=0; inject_r_id=0; inject_r_addr=0;
         expected_error_responses=0;
         s_bready=1; s_rready=1;
         s_awid=0; s_awaddr=0; s_awlen=0; s_awsize=0; s_awburst=1;
@@ -377,6 +378,19 @@ module tb_l2nb;
         end
         inject_r_error = 1'b0;
         issue_read(4'd1, 32'h0030_0000, 8'd0); wait_reads;
+
+        // T9b response-ID fault: a well-formed refill with the wrong RID must
+        // be rejected exactly like a downstream AXI error and must not leave
+        // the line installed.  The clean retry below proves recovery.
+        inject_r_addr = 32'h0031_0000;
+        inject_r_id = 1'b1;
+        expected_error_responses = 1;
+        issue_read(4'd3, 32'h0031_0000, 8'd0); wait_reads;
+        if (expected_error_responses != 0) begin
+            $display("FAIL refill RID mismatch was not surfaced"); errs=errs+1;
+        end
+        inject_r_id = 1'b0;
+        issue_read(4'd3, 32'h0031_0000, 8'd0); wait_reads;
 
         // T10 writeback error: fill one set with dirty lines, inject a B
         // response error on the next replacement, and require the associated
