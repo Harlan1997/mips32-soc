@@ -2406,7 +2406,8 @@ module mips_cpu #(
     // The architectural result is still resolved in ID. BPU state is updated
     // for every control transfer, including not-taken conditional branches;
     // the optional IF path uses the prediction only when explicitly enabled.
-    wire        bpu_resolve_v     = id_control_valid & ~global_stall;
+    wire        bpu_resolve_v     = id_control_valid & ~global_stall &
+                                    !exception_flush & !ctx_restore_req;
     wire [1:0]  bpu_resolve_type  = id_control_type;
     wire [31:0] bpu_resolve_pc    = id_pc;
     wire [31:0] bpu_resolve_tgt   = id_control_target;
@@ -2430,7 +2431,11 @@ module mips_cpu #(
         .resolve_target    (bpu_resolve_tgt),
         .resolve_type      (bpu_resolve_type),
         .resolve_mispredict(bpu_mispredict),
-        .flush_if          (bpu_mispredict)
+        // A branch mispredict is also the architectural resolution event;
+        // the BPU must learn the actual target/direction on that cycle.
+        // Suppress predictor state updates only for an unrelated precise
+        // exception or context restore.
+        .flush_if          (if_flush)
     );
 
 endmodule

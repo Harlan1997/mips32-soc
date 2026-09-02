@@ -60,6 +60,22 @@ module tb_mips_bpu;
         end
     endtask
 
+    task automatic do_resolve_flush(input [31:0] pc, input taken,
+                                    input [31:0] tgt, input [1:0] rtype);
+        begin
+            @(posedge clk);
+            resolve_valid  <= 1'b1;
+            resolve_pc     <= pc;
+            resolve_taken  <= taken;
+            resolve_target <= tgt;
+            resolve_type   <= rtype;
+            flush_if       <= 1'b1;
+            @(posedge clk);
+            resolve_valid  <= 1'b0;
+            flush_if       <= 1'b0;
+        end
+    endtask
+
     initial begin
         #12 rst_n = 1;
         @(posedge clk);
@@ -97,6 +113,17 @@ module tb_mips_bpu;
         // A not-taken conditional branch retains its BTB entry while the
         // direction counter learns the fall-through path.
         check("Not-taken: BTB entry retained", predict_hit == 1'b1);
+
+        // A mispredict is a recovery event for IF, but it is still the
+        // architectural resolution used to train the predictor.  Verify that
+        // the update is not lost when the recovery/flush indication is high.
+        do_resolve(32'h0000_1200, 1'b1, 32'h0000_1280, 2'b00);
+        if_pc = 32'h0000_1200; #1;
+        check("Mispredict setup: taken prediction", predict_taken == 1'b1);
+        do_resolve_flush(32'h0000_1200, 1'b0, 32'h0000_1280, 2'b00);
+        if_pc = 32'h0000_1200; #1;
+        check("Mispredict: BHT learns actual not-taken", predict_taken == 1'b0);
+        check("Mispredict: BTB entry retained", predict_hit == 1'b1);
 
         // 5) Direct jump: type 01 always predicted taken
         do_resolve(32'h0000_2000, 1'b1, 32'h0000_20A0, 2'b01);
