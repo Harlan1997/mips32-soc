@@ -3,8 +3,8 @@ module tb_tlb_invalidate;
   reg clk=0; always #5 clk=~clk;
   reg rst_n=0, wr_en=0, inv_en=0, context_flush=0; reg [5:0] wr_index=0; reg [18:0] wr_vpn2=0, inv_vpn2=0; reg [7:0] wr_asid=0, inv_asid=0; reg [15:0] wr_mask=0; reg [31:0] wr_lo0=0,wr_lo1=0; reg [1:0] inv_scope=0; reg [5:0] inv_wired_floor=2;
   wire [18:0] rd_vpn2; wire [7:0] rd_asid; wire [15:0] rd_mask; wire [31:0] rd_lo0,rd_lo1; wire probe_hit; wire [5:0] probe_index; wire inv_applied;
-  reg [31:0] lookup_va=0; reg [7:0] lookup_asid=0; wire lookup_hit,lookup_v; wire [2:0] lookup_c; wire lookup_d; wire [19:0] lookup_pfn; wire d_lookup_hit;
-  mips_tlb dut(.clk(clk),.rst_n(rst_n),.wr_en(wr_en),.wr_index(wr_index),.wr_vpn2(wr_vpn2),.wr_asid(wr_asid),.wr_mask(wr_mask),.wr_entrylo0(wr_lo0),.wr_entrylo1(wr_lo1),.inv_en(inv_en),.inv_vpn2(inv_vpn2),.inv_asid(inv_asid),.inv_scope(inv_scope),.inv_wired_floor(inv_wired_floor),.context_flush(context_flush),.rd_index(0),.rd_vpn2(rd_vpn2),.rd_asid(rd_asid),.rd_mask(rd_mask),.rd_entrylo0(rd_lo0),.rd_entrylo1(rd_lo1),.probe_vpn2(lookup_va[31:13]),.probe_asid(lookup_asid),.probe_hit(probe_hit),.probe_index(probe_index),.lookup0_va(lookup_va),.lookup0_asid(lookup_asid),.lookup0_hit(lookup_hit),.lookup0_v(lookup_v),.lookup0_d(lookup_d),.lookup0_c(lookup_c),.lookup0_pfn(lookup_pfn),.lookup1_va(lookup_va),.lookup1_asid(lookup_asid),.lookup1_hit(d_lookup_hit),.lookup1_v(),.lookup1_d(),.lookup1_c(),.lookup1_pfn(),.inv_applied(inv_applied));
+  reg [31:0] lookup_va=0; reg [7:0] lookup_asid=0; wire lookup_hit,lookup_v,lookup_multi; wire [2:0] lookup_c; wire lookup_d; wire [19:0] lookup_pfn; wire d_lookup_hit,d_lookup_multi;
+  mips_tlb dut(.clk(clk),.rst_n(rst_n),.wr_en(wr_en),.wr_index(wr_index),.wr_vpn2(wr_vpn2),.wr_asid(wr_asid),.wr_mask(wr_mask),.wr_entrylo0(wr_lo0),.wr_entrylo1(wr_lo1),.inv_en(inv_en),.inv_vpn2(inv_vpn2),.inv_asid(inv_asid),.inv_scope(inv_scope),.inv_wired_floor(inv_wired_floor),.context_flush(context_flush),.rd_index(0),.rd_vpn2(rd_vpn2),.rd_asid(rd_asid),.rd_mask(rd_mask),.rd_entrylo0(rd_lo0),.rd_entrylo1(rd_lo1),.probe_vpn2(lookup_va[31:13]),.probe_asid(lookup_asid),.probe_hit(probe_hit),.probe_index(probe_index),.lookup0_va(lookup_va),.lookup0_asid(lookup_asid),.lookup0_hit(lookup_hit),.lookup0_multi_hit(lookup_multi),.lookup0_v(lookup_v),.lookup0_d(lookup_d),.lookup0_c(lookup_c),.lookup0_pfn(lookup_pfn),.lookup1_va(lookup_va),.lookup1_asid(lookup_asid),.lookup1_hit(d_lookup_hit),.lookup1_multi_hit(d_lookup_multi),.lookup1_v(),.lookup1_d(),.lookup1_c(),.lookup1_pfn(),.inv_applied(inv_applied));
   task write_entry(input [5:0] i,input [18:0] vpn,input [7:0] asid,input global); begin @(negedge clk); wr_index=i;wr_vpn2=vpn;wr_asid=asid;wr_lo0={26'h0,3'b011,1'b1,1'b1,global};wr_lo1={26'h0,3'b011,1'b1,1'b1,global};wr_en=1;@(negedge clk);wr_en=0; end endtask
   task write_entry_mask(input [5:0] i,input [18:0] vpn,input [7:0] asid,input [15:0] mask); begin @(negedge clk); wr_index=i;wr_vpn2=vpn;wr_asid=asid;wr_mask=mask;wr_lo0={26'h0,3'b011,1'b1,1'b1,1'b0};wr_lo1=wr_lo0;wr_en=1;@(negedge clk);wr_en=0;wr_mask=0; end endtask
   task invalidate(input [1:0] s,input [18:0] vpn,input [7:0] asid); begin @(negedge clk);inv_scope=s;inv_vpn2=vpn;inv_asid=asid;inv_en=1;@(posedge clk);#1;if(!inv_applied) begin $display("FAIL invalidate was not committed");$finish;end @(negedge clk);inv_en=0; end endtask
@@ -44,6 +44,50 @@ module tb_tlb_invalidate;
     context_flush = 1'b1; @(negedge clk); context_flush = 1'b0; #1;
     check({19'h34567,13'h0},8'h9,1,"main TLB survives context flush");
     check_d({19'h34567,13'h0},8'h9,1,"D refill after context flush");
+    // A micro-TLB entry may already be hot when software installs an
+    // overlapping architectural entry.  Both lookup ports must expose the
+    // resulting duplicate match so the MMU can raise Machine Check; a stale
+    // micro hit must not mask the main-TLB diagnostic.
+    write_entry(9,19'h2aaaa,8'h6,0);
+    lookup_va = {19'h2aaaa,13'h0}; lookup_asid = 8'h6; #1;
+    check({19'h2aaaa,13'h0},8'h6,1,"multi-hit seed I");
+    check_d({19'h2aaaa,13'h0},8'h6,1,"multi-hit seed D");
+    write_entry(10,19'h2aaaa,8'h6,0);
+    #1;
+    if (lookup_multi !== 1'b1 || d_lookup_multi !== 1'b1) begin
+      $display("FAIL micro-TLB hid main-TLB duplicate I=%b D=%b", lookup_multi, d_lookup_multi);
+      $finish;
+    end
+    // Architectural writes normally flush the micro-TLB.  Force a matching
+    // stale fast-path entry here to cover the mux branch directly and model a
+    // duplicate becoming visible at the architectural-array boundary.
+    force dut.u_micro_tlb.valid_i[0] = 1'b1;
+    force dut.u_micro_tlb.vpn_i[0] = 19'h2aaaa;
+    force dut.u_micro_tlb.asid_i[0] = 8'h6;
+    force dut.u_micro_tlb.mask_i[0] = 16'h0000;
+    force dut.u_micro_tlb.global_i[0] = 1'b0;
+    force dut.u_micro_tlb.valid_d[0] = 1'b1;
+    force dut.u_micro_tlb.vpn_d[0] = 19'h2aaaa;
+    force dut.u_micro_tlb.asid_d[0] = 8'h6;
+    force dut.u_micro_tlb.mask_d[0] = 16'h0000;
+    force dut.u_micro_tlb.global_d[0] = 1'b0;
+    #1;
+    if (lookup_hit !== 1'b1 || d_lookup_hit !== 1'b1 ||
+        lookup_multi !== 1'b1 || d_lookup_multi !== 1'b1) begin
+      $display("FAIL stale micro-TLB masked main duplicate hit=%b/%b multi=%b/%b",
+               lookup_hit, d_lookup_hit, lookup_multi, d_lookup_multi);
+      $finish;
+    end
+    release dut.u_micro_tlb.valid_i[0];
+    release dut.u_micro_tlb.vpn_i[0];
+    release dut.u_micro_tlb.asid_i[0];
+    release dut.u_micro_tlb.mask_i[0];
+    release dut.u_micro_tlb.global_i[0];
+    release dut.u_micro_tlb.valid_d[0];
+    release dut.u_micro_tlb.vpn_d[0];
+    release dut.u_micro_tlb.asid_d[0];
+    release dut.u_micro_tlb.mask_d[0];
+    release dut.u_micro_tlb.global_d[0];
     $display("REGRESSION_TEST_SUCCESS tlb_invalidate"); $finish;
   end
 endmodule
