@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 RTL Linux `driver_init` post-return focused trace
+
+- 使用 `LINUX_PC_TRACE_START=88d10844`、`LINUX_PC_TRACE_END=88d11070`（无
+  `0x` 前缀）运行 `RTL_CYCLE_LIMIT=12200000` 的 retire-only trace，修正了
+  前一次诊断命令导致的 `%h` 地址截断警告。
+- 有效记录显示 `driver_init` 继续调用 `of_core_init`，并在 cycle `11371701`
+  从 `0x88d1084c` 正常返回；12.2M 周期仿真完成，VCS data structure 约
+  1.1 MB，userspace marker 为 0。
+- 该结果排除了 `driver_init/of_core_init` 局部死循环，继续把活动范围留在
+  后续 init-task/scheduler handoff；没有足够证据修改 CPU、CP0、WAIT 或 cache。
+  RTL Linux userspace 与完整 RTL/QEMU system differential 仍为 OPEN。
+
 ### 2026-09-02 current architecture audit and QEMU DDR recheck
 
 - `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M SKIP_COVERAGE=1

@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 RTL Linux `driver_init` post-return focused trace
+
+使用无 `0x` 前缀的 testbench 地址参数重新执行 12.2M-cycle retire-only trace，
+避免 `%h` plusarg 解析产生截断警告。有效记录确认 `driver_init` 内部调用
+`of_core_init`，并在 cycle `11371701` 从 `0x88d1084c` 返回；仿真正常结束，
+VCS data structure 约 1.1 MB，userspace marker 仍为 0。该证据排除了
+`driver_init/of_core_init` 局部死循环，但不能闭合后续 init-task handoff、
+RTL Linux userspace 或完整 RTL/QEMU system differential。
+
 ### 2026-09-02 current architecture audit and QEMU DDR recheck
 
 在独立 `BUILD_DIR=/tmp/closure-recheck-20260902` 下重新执行
