@@ -1,5 +1,25 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-02 selected differential aggregate MMU child-gate integration
+
+- 将 qemu-system-mmu-refill-differential-gate、qemu-system-mmu-pagemask-gate 和
+  qemu-system-mmu-process-pressure-gate 加入
+  run_qemu_system_selected_differential_gate.sh，使 unified selected aggregate
+  不再漏检已有 MMU differential 能力。
+- 修正 Makefile 中 process-pressure differential recipe，显式传递
+  RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_process_pressure 和
+  RTL_RUN_DIR=$(BUILD_DIR)/soc_test/product_mmu_process_pressure；这避免
+  aggregate 运行误用仓库默认 build 的 stale firmware/trace。
+- 受控串行执行通过：
+  SKIP_COVERAGE=1 QEMU_TIMEOUT=180 HOST_TIMEOUT=300 QEMU_BUILD_JOBS=1
+  VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  BUILD_DIR=/tmp/qemu-selected-mmu-fixed-20260902 make
+  qemu-system-selected-differential-gate，结果为
+  QEMU system selected differential gate: PASS。
+- 该项闭合的是 selected bounded aggregate 的检查完整性；完整 ISA/privileged
+  compliance、unrestricted demand paging/Linux VM、full coherency 和产品
+  signoff 仍保持 OPEN。
+
 ### 2026-09-02 L2 nonblocking parallel refill reset-in-flight
 
 - Extended the two-slot L2 directed test to assert reset while both clean

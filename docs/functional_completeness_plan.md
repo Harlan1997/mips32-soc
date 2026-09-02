@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 selected differential aggregate MMU coverage and build isolation
+
+统一 qemu-system-selected-differential-gate 已纳入 MMU IPI 之外的
+4-KiB demand refill、PageMask 和八 ASID process-pressure 逐条 retire
+differential 子 gate。执行时发现 qemu-system-mmu-process-pressure-gate
+原 recipe 未传播 BUILD_DIR，会在 aggregate 场景复用仓库默认路径；已修正为
+传递独立的 RUN_DIR 和 RTL_RUN_DIR。在受控单线程 VCS/QEMU 配置和
+/tmp/qemu-selected-mmu-fixed-20260902 下完整 aggregate 通过。该结果只
+扩大 bounded selected corpus 的统一检查范围，不改变默认配置，也不宣称完整
+ISA/privileged/MMU、Linux VM、coherency 或产品 signoff。
+
 ### 2026-09-02 CPU/MMU aggregate recheck with Machine Check runtime
 
 在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`EDA_MEMORY_MAX=1500M` 和

@@ -921,7 +921,9 @@ qemu-system-mmu-contract-gate: qemu-system-mips32-soc-ref
 
 qemu-system-mmu-process-pressure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_process_pressure_gate.sh
-	tb/isa_ref/run_qemu_system_mmu_process_pressure_gate.sh
+	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mmu_process_pressure \
+	RTL_RUN_DIR=$(BUILD_DIR)/soc_test/product_mmu_process_pressure \
+		tb/isa_ref/run_qemu_system_mmu_process_pressure_gate.sh
 
 qemu-system-mmu-refill-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_refill_differential_gate.sh
