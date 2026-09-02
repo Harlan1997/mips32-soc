@@ -220,6 +220,19 @@ module tb_l2nb_parallel;
         inject_r_error=0;
         issue_read(4'd7, 32'h0014_0040, 8'd0);
         while (outstanding != 0) @(posedge clk);
+        // Drop reset while both downstream read slots are active. Any
+        // abandoned upstream expectations are discarded with the reset, and
+        // a post-reset request must establish a fresh refill transaction.
+        issue_read(4'd9, 32'h0018_0040, 8'd7);
+        issue_read(4'd10, 32'h0019_0040, 8'd7);
+        while (!(dut.rd_valid[0] && dut.rd_valid[1])) @(posedge clk);
+        @(negedge clk); rst_n=1'b0;
+        repeat(2) @(posedge clk);
+        for (i=0;i<16;i=i+1) begin exp_valid[i]=0; exp_error[i]=0; end
+        outstanding=0;
+        @(negedge clk); rst_n=1'b1;
+        issue_read(4'd9, 32'h0018_0040, 8'd0);
+        while (outstanding != 0) @(posedge clk);
         issue_read(4'd1,32'h0001_0000,8'd7);
         issue_read(4'd2,32'h0002_0000,8'd7);
         issue_read(4'd3,32'h0003_0000,8'd7);
