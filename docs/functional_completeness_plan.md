@@ -1469,3 +1469,14 @@ little-endian words. `make fpu-double-gate` passed with
 `QEMU system RTL retire differential` gate. This closes the selected
 two-beat doubleword memory slice only; complete COP1/IEEE-754 behavior,
 FPU OS context/ABI and full ISA/QEMU differential remain open.
+
+### 2026-09-02 QEMU Linux userspace full-marker recheck
+
+Re-ran `make linux-boot-build-gate` with the existing kernel/DTB artifacts and
+the project QEMU `mips32-soc-ref` custom machine. The gate passed and observed
+the complete bounded userspace contract: `/init`, stack and anonymous/file
+backed mmap, mprotect plus protected-write `SIGSEGV`, brk, nanosleep,
+`sched_yield`, two `execve` children, two exact-PID `wait4` reaps and normal
+exit-status checks. This closes the bounded QEMU userspace/process contract;
+RTL Linux userspace, full RTL/QEMU Linux system differential, unrestricted
+Linux VM ownership and full ISA/privileged/FPU compliance remain open.

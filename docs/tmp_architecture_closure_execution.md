@@ -4406,3 +4406,16 @@ configuration.
 - The result is limited to the selected two-beat doubleword memory path;
   complete COP1/IEEE-754, FPU OS context/ABI, full ISA/QEMU Linux differential
   and RTL Linux userspace remain open.
+
+### 2026-09-02 QEMU Linux userspace full-marker recheck
+
+- `QEMU_TIMEOUT=120s SKIP_LINUX_BUILD=1 KERNEL=build/linux_boot/real/kernel/vmlinux
+  DTB=build/linux_boot/real/mips32_soc_ref.dtb make linux-boot-build-gate`
+  passed.
+- The existing QEMU `mips32-soc-ref` run observed all bounded userspace
+  markers, including mmap/mprotect and the expected protected-write
+  `SIGSEGV`, brk, sleep/yield, two exec children, two exact-PID wait4 reaps,
+  and normal wait status.
+- This remains QEMU reference-machine evidence only; RTL Linux userspace,
+  full RTL/QEMU Linux differential, unrestricted Linux VM and full ISA remain
+  open.
