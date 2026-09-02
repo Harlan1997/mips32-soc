@@ -141,7 +141,7 @@ module mips_bpu #(
                 bht_ctr[bi] <= 2'b01;
             ras_top   <= {RAS_PTR_BITS{1'b0}};
             ras_valid <= 1'b0;
-        end else if (resolve_valid && (flush_if !== 1'b1)) begin
+        end else if (resolve_valid) begin
             // -----------------------------------------------------------------
             // BTB: allocate on taken, update target on hit-but-target-changed
             // for indirect jumps. Not-taken conditional branches only refresh
@@ -187,12 +187,14 @@ module mips_bpu #(
                 end
             end
 
-            // resolve_mispredict is exposed for later performance-counter
-            // wiring; not consumed here.
+            // A mispredict is deliberately trained with the resolved
+            // architectural outcome.  `flush_if` only describes the IF
+            // recovery action and must not discard this update.
         end
     end
 
-    // Suppress "unused" warning for resolve_mispredict input
-    wire _unused_ok = &{1'b0, resolve_mispredict};
+    // These inputs describe pipeline recovery/diagnostics; state updates are
+    // controlled by resolve_valid, which the CPU suppresses for exceptions.
+    wire _unused_ok = &{1'b0, resolve_mispredict, flush_if};
 
 endmodule
