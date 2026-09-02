@@ -13,6 +13,10 @@
 - 这闭合了选定 COP1 条件移动指令族的 RTL/QEMU retire slice；完整 IEEE-754、FPE
   policy、lazy-FPU/signal-frame ABI、Linux FPU context 和完整 COP1 compliance 仍 OPEN。
 
+双精度 firmware 随后增加 FCC0 false/true 的 `MOVF.D/MOVT.D` 偶数寄存器对检查；
+`fpu-double-gate` 通过，`qemu-system-fpu-double-differential-gate` 在
+`/tmp/fpu-movfc-double-diff-20260903` 通过，`TRACE_COMPARE_PASS records=374`。
+
 ### 2026-09-03 Linux static TLB handler trace and maintenance-address correction
 
 - 复核 Linux 动态 handler 后确认 RTL `icache` 接收的是 MMU 输出的

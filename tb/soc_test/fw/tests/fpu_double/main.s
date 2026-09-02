@@ -27,6 +27,42 @@ main:
     ori     $t0, $t0, 0
     .word   0x44882800       /* mtc1 $t0,$f5 */
 
+    /* COP1 MOVF/MOVT.D (funct=0x11) use FCC0 and copy an even FPR pair.
+     * First clear the destination, then exercise both predicate outcomes. */
+    mtc1    $zero, $f12
+    .word   0x44806000       /* mtc1 $zero,$f13 */
+    nop
+    nop
+    nop
+    mtc1    $zero, $f6
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    .word   0x46200311       /* movf.d $f12,$f0,cc=0: FCC0 false -> move */
+    nop
+    nop
+    nop
+    .word   0x440b6800       /* mfc1 $t3,$f13 */
+    lui     $t4, 0x3ff8
+    ori     $t4, $t4, 0
+    bne     $t3, $t4, fail
+    nop
+    lui     $t0, 0x0080       /* FCC0 = 1 */
+    ctc1    $t0, $31
+    nop
+    nop
+    nop
+    .word   0x46211311       /* movt.d $f12,$f2,cc=0: FCC0 true */
+    nop
+    nop
+    nop
+    .word   0x440b6800       /* mfc1 $t3,$f13 */
+    lui     $t4, 0x4002
+    ori     $t4, $t4, 0
+    bne     $t3, $t4, fail
+    nop
+
     /* Preserve double signed-zero and NaN payload bit patterns through the
      * non-arithmetic COP1 operations. */
     mtc1    $zero, $f28
