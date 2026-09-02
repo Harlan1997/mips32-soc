@@ -96,6 +96,22 @@ main:
     bne     $t3, $t4, fail
     nop
 
+    /* Exercise the real two-beat doubleword path. SDC1 must issue both
+     * little-endian words and LDC1 must not expose the first beat as a
+     * completed pair before the second beat arrives. */
+    lui     $t7, 0xa000
+    ori     $t7, $t7, 0x1000
+    sdc1    $f28, 0($t7)
+    mtc1    $zero, $f30
+    .word   0x4480f800       /* mtc1 $zero,$f31 */
+    ldc1    $f30, 0($t7)
+    mfc1    $t2, $f30
+    bne     $t2, $t1, fail
+    nop
+    .word   0x440bf800       /* mfc1 $t3,$f31 */
+    bne     $t3, $t0, fail
+    nop
+
     /* Check high words for representative ADD/SUB/MUL/DIV results. */
     add.d   $f8, $f0, $f2
     mfc1    $t2, $f8
