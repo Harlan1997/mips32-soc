@@ -5073,7 +5073,18 @@ configuration.
   `REGRESSION_TEST_SUCCESS mmu_context_status`.
 - This closes the bounded single-core generation-ownership guard only; it does
   not claim multicore OS shootdown, scheduler policy, Linux VM or full
-  privileged/MMU signoff.
+privileged/MMU signoff.
+
+### 2026-09-03 RTL Linux spurious-IRQ delay diagnosis
+
+The 60M-cycle `rtl-minimal` trace was symbolized against the exact relocated
+kernel image. The repeated PC window `0x889b1c3c..0x889b1c44` is the real
+`__udelay` loop, reached from Linux's `try_misrouted_irq`/spurious-IRQ path;
+the earlier reported `0x0100101c` address was not reproduced in this run.
+This is evidence of an unresolved SoC interrupt-wiring/driver contract during
+the kernel-init tail, not proof of a CPU address-translation or CP0 timer bug.
+No RTL workaround or kernel boot-option relaxation is justified yet. RTL
+userspace boot and full RTL/QEMU Linux differential remain open.
 
 ### 2026-09-03 P1 current RTL/simulation aggregate recheck
 
