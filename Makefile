@@ -861,6 +861,8 @@ qemu-system-fpu-fpe-boundary-differential-gate: qemu-system-mips32-soc-ref
 	$(MAKE) qemu-system-fpu-fpe-invalid-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-overflow-differential-gate
 	$(MAKE) qemu-system-fpu-fpe-underflow-differential-gate
+	$(MAKE) qemu-system-fpu-fpe-double-inexact-differential-gate
+	$(MAKE) qemu-system-fpu-fpe-double-underflow-differential-gate
 
 qemu-system-branch-likely-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh

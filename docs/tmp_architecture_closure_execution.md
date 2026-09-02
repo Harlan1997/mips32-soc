@@ -4680,3 +4680,14 @@ configuration.
 - This is stronger bounded single-core OS-style demand-refill evidence. It
   does not close Linux page-table ownership/VM, scheduler policy, multicore
   shootdown, unrestricted demand paging, or full privileged/MMU compliance.
+
+### 2026-09-02 double FPE boundary differential
+
+- Ran `qemu-system-fpu-fpe-double-inexact-differential-gate` and
+  `qemu-system-fpu-fpe-double-underflow-differential-gate` under the protected
+  VCS budget; both strict retire comparisons passed.
+- Added both targets to `qemu-system-fpu-fpe-boundary-differential-gate`.
+- The new evidence covers enabled Inexact on `CVT.W.D 1.5` and enabled
+  Underflow on the minimum positive double subnormal multiplied by `0.5`.
+  Complete IEEE-754 policy, full double FPE, Linux FPU ABI and COP1 closure
+  remain open.
