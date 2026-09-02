@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-02 CPU/MMU aggregate recheck with Machine Check runtime
+
+在 `SKIP_COVERAGE=1`、`VCS_JOBS=1`、`EDA_MEMORY_MAX=1500M` 和
+`EDA_SWAP_MAX=512M` 约束下运行 `cpu-mmu-complete` 聚合入口。CPU/CP0、TLB
+invalidate/ASID/context、MMU boot/refill/process pressure、Machine Check runtime、
+cache error、VEIC、hardware walker、MDU 和 LL/SC 等子 gate 全部通过，最终报告为
+`SUCCESS: CPU/MMU RTL FUNCTIONAL GATE PASSED`。这验证了当前单核 CPU/MMU
+RTL/simulation bundle 的集成入口；完整 ISA/FPU/Linux VM/OS 和产品 signoff 仍开放。
+
 ### 2026-09-02 CPU/SoC Machine Check runtime closure
 
 新增 `product-mmu-machine-check-gate` 和专用 opt-in firmware/testbench。真实
