@@ -1022,13 +1022,13 @@ srs-nested-gate: srs-nested-firmware srs-gate
 
 qemu-system-srs-exception-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
-	FW_TEST=srs_exception QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=srs_exception FW_DIR=$(SRS_EXCEPTION_FW_DIR) QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-srs-nested-differential-gate: qemu-system-mips32-soc-ref
-	FW_TEST=srs_nested QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_nested_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=srs_nested FW_DIR=$(SRS_NESTED_FW_DIR) QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_nested_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-srs-map-differential-gate: qemu-system-mips32-soc-ref
-	FW_TEST=qemu_system_srs_irq QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_map_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=qemu_system_srs_irq FW_DIR=$(BUILD_DIR)/firmware/qemu_system_srs_irq QEMU_CPU=24Kc RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_srs_map_differential RTL_VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 srs-scheduler-context-gate:
 	VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+SRS_CONTEXT_TEST' RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_scheduler_srs tb/unit/cpu_test/run_cpu_scheduler_integration.sh

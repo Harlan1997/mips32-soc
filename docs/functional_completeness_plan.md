@@ -1266,6 +1266,18 @@ MIPS32 compliance suite, or complete production software policy. Those items
 require their own RTL and firmware evidence and must not be marked complete
 from block-level gates.
 
+### Selected aggregate SRS coverage update (2026-09-02)
+
+The selected QEMU system differential aggregate now runs the existing
+`qemu-system-srs-exception-differential-gate`,
+`qemu-system-srs-nested-differential-gate`, and
+`qemu-system-srs-map-differential-gate` in its opt-in `SOC_SRS_ENABLE=1` corpus.
+This closes the aggregate's coverage omission for the bounded SRS exception,
+nested-fault, and SRSMap slices; it does not change the documented open scope
+for external VEIC/EICSS, Linux SRS ABI, scheduler ownership, or complete
+privileged-ISA compliance. The independent gates and the full serial selected
+aggregate pass at `/tmp/qemu-selected-srs-20260902`.
+
 ### COP0 SRSMap state closure update (2026-08-23)
 
 The opt-in SRS implementation now exposes CP0 register `(12,3)` as SRSMap.
