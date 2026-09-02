@@ -15,52 +15,48 @@ _start:
   addiu $sp,$sp,-256
   lui   $t0,0x1040
   mtc0  $t0,$12
-  nop; nop; nop; nop
+  nop; nop; nop; nop; nop
 
   /* Each core owns its private TLB; install a wired APB pair and data pair. */
   mtc0  $zero,$0
-  nop; nop
+  nop; nop; nop; nop; nop
   lui   $t0,0xC000
   mtc0  $t0,$10
-  nop; nop
+  nop; nop; nop; nop; nop
   lui   $t0,0x0100
   ori   $t0,$t0,0x0017
   mtc0  $t0,$2
-  nop; nop
+  nop; nop; nop; nop; nop
   addiu $t0,$t0,0x0040
   mtc0  $t0,$3
-  nop; nop
-  mtc0  $zero,$5
-  nop; nop
+  nop; nop; nop; nop; nop
   tlbwi
-  nop; nop
+  nop; nop; nop; nop; nop
 
   addiu $t0,$zero,1
   mtc0  $t0,$0
-  nop; nop
+  nop; nop; nop; nop; nop
   lui   $t0,0xC000
   ori   $t0,$t0,0xA000
   mtc0  $t0,$10
-  nop; nop
+  nop; nop; nop; nop; nop
   lui   $t0,0x0100
   ori   $t0,$t0,0x0297
   mtc0  $t0,$2
-  nop; nop
+  nop; nop; nop; nop; nop
   addiu $t0,$t0,0x0040
   mtc0  $t0,$3
-  nop; nop
-  mtc0  $zero,$5
-  nop; nop
+  nop; nop; nop; nop; nop
   tlbwi
-  nop; nop
+  nop; nop; nop; nop; nop
   addiu $t0,$zero,2
   mtc0  $t0,$6
-  nop; nop
+  nop; nop; nop; nop; nop
 
   /* Index 2 is the page under test: C0009000 -> physical 9000. */
   addiu $t0,$zero,2
   mtc0  $t0,$0
-  nop; nop
+  nop; nop; nop; nop; nop
   lui   $t0,0xC000
   ori   $t0,$t0,0x9000
   mtc0  $t0,$10
@@ -71,8 +67,6 @@ _start:
   nop; nop
   ori   $t0,$t0,0x0040
   mtc0  $t0,$3
-  nop; nop
-  mtc0  $zero,$5
   nop; nop
   tlbwi
   nop; nop
@@ -88,6 +82,8 @@ _start:
   /* CPUNum is the architectural discriminator in the two-core wrapper. */
   .word 0x7c08003b       /* RDHWR t0,$29 */
   bne   $t0,$zero,core1
+  nop
+  b     core0
   nop
 
 .section .text.body, "ax"
