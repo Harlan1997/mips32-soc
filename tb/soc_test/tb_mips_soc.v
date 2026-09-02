@@ -1910,6 +1910,7 @@ module tb_mips_soc;
 `ifndef SOC_COHERENCY_LL_SC
 `ifndef SOC_COHERENCY_FW_STRESS
 `ifndef SOC_L2_E2E
+`ifndef TB_DUAL_CORE_MMU_SHOOTDOWN
     initial begin
         wait (rst_n === 1'b1);
         repeat (200) @(posedge clk);
@@ -1919,6 +1920,7 @@ module tb_mips_soc;
         release u_soc.u_impl.core1_sim_exception_req;
         $display("DUAL_CORE_CORE1_EXCEPTION_INJECTED code=0A");
     end
+`endif
 `endif
 
 `endif
