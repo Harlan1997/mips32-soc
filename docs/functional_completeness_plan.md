@@ -86,10 +86,24 @@ successful permission check it emits the exact leaf-PTE address and an update
 payload setting Accessed (bit 4), plus Dirty (bit 5) for a store, and holds the
 request until `pte_update_ready`. The default read-only integration remains
 unchanged. The page-table walker unit corpus now checks load A-only updates,
-store A+D updates and three cycles of update backpressure. This closes the
-walker-side PTE A/D transaction contract only; the current SoC top-level still
-uses the legacy read-only walker wiring, so OS page-table ownership and Linux
-VM semantics remain OPEN.
+store A+D updates and three cycles of update backpressure. The opt-in SoC
+integration routes the update through the shared D-side AXI AW/W/B owner; its
+dedicated gate observes three AW and three W handshakes, including three
+delayed-W cases, and verifies all three leaf-PTE payloads. Reset-in-flight
+recovery and `SLVERR` propagation have separate gates. OS page-table ownership,
+arbitrary reset/error interleavings and Linux VM semantics remain OPEN.
+
+### 2026-09-02 hardware walker A/D SoC independent-channel recheck
+
+`VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+BUILD_DIR=/tmp/mmu-ad-backpressure-20260902 make
+mmu-hardware-walker-ad-soc-gate` passes with
+`MMU_AD_AXI_WRITEBACK_PASS aw=3 w=3 delayed_w=3`. The
+`TB_MMU_HW_WALKER_AD` monitor checks that the update payload remains stable
+while W is delayed after AW and matches `0x0000603b`, `0x0000703b`, and
+`0x0000801d` at the three leaf PTE addresses. This closes the independent
+AW/W backpressure and payload slice of the current RTL contract, not
+OS-owned demand paging or physical DDR timing.
 
 ### 2026-09-02 P1 RTL/simulation extension fresh recheck
 
