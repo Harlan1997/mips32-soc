@@ -36,7 +36,7 @@ module mips_page_table_tlb_refill #(
         .resp_valid(resp_valid), .pa(pa), .fault_valid(fault_valid),
         .fault_code(fault_code), .leaf_pte(leaf_pte),
         .pte_update_valid(), .pte_update_addr(), .pte_update_data(),
-        .pte_update_ready(1'b0)
+        .pte_update_ready(1'b0), .pte_update_error(1'b0)
     );
 
     assign miss_ready = req_ready && !refill_pending;

@@ -27,7 +27,8 @@ module mips_page_table_walker #(
     output reg pte_update_valid,
     output reg [31:0] pte_update_addr,
     output reg [31:0] pte_update_data,
-    input wire pte_update_ready
+    input wire pte_update_ready,
+    input wire pte_update_error
 );
     localparam ST_IDLE = 3'd0, ST_L1 = 3'd1, ST_L2 = 3'd2,
                ST_RESP = 3'd3, ST_UPDATE = 3'd4;
@@ -157,6 +158,10 @@ module mips_page_table_walker #(
                 ST_UPDATE: begin
                     if (pte_update_valid && pte_update_ready) begin
                         pte_update_valid <= 1'b0;
+                        if (pte_update_error) begin
+                            fault_valid <= 1'b1;
+                            fault_code <= FAULT_BUS;
+                        end
                         state <= ST_RESP;
                     end
                 end

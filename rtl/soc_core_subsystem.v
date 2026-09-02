@@ -111,13 +111,25 @@ module soc_core_subsystem #(
     // cannot overlap a cache read and does not need an extra fabric master.
     wire core_ptw_mem_valid;
     wire [31:0] core_ptw_mem_addr;
+    wire core_ptw_mem_write_valid;
+    wire [31:0] core_ptw_mem_write_addr;
+    wire [31:0] core_ptw_mem_write_data;
+    wire core_ptw_mem_write_ready;
+    wire core_ptw_mem_write_error;
     wire core_ptw_mem_ready;
     wire [31:0] core_ptw_mem_rdata;
     wire core_ptw_mem_error;
     wire core_ptw_fault_valid;
     wire [2:0] core_ptw_fault_code;
     reg ptw_axi_busy;
+    reg ptw_axi_write_busy;
+    reg ptw_axi_write_aw_done;
+    reg ptw_axi_write_w_done;
     wire ptw_axi_response = ptw_axi_busy && data_rvalid && data_rlast;
+    wire ptw_write_selected = core_ptw_mem_write_valid && !ptw_axi_busy;
+    wire ptw_write_b_response = ptw_axi_write_busy && data_bvalid;
+    wire ptw_write_aw_fire = ptw_write_selected && !ptw_axi_write_aw_done && data_awready;
+    wire ptw_write_w_fire = ptw_write_selected && !ptw_axi_write_w_done && data_wready;
 
     wire [3:0] core_data_awid;
     wire [31:0] core_data_awaddr;
@@ -172,6 +184,11 @@ module soc_core_subsystem #(
         .hardware_walker_enable(ENABLE_HARDWARE_WALKER), .hardware_walker_ptbr(HARDWARE_WALKER_PTBR),
         .ptw_mem_valid(core_ptw_mem_valid), .ptw_mem_addr(core_ptw_mem_addr), .ptw_mem_ready(core_ptw_mem_ready),
         .ptw_mem_rdata(core_ptw_mem_rdata), .ptw_mem_error(core_ptw_mem_error),
+        .ptw_mem_write_valid(core_ptw_mem_write_valid),
+        .ptw_mem_write_addr(core_ptw_mem_write_addr),
+        .ptw_mem_write_data(core_ptw_mem_write_data),
+        .ptw_mem_write_ready(core_ptw_mem_write_ready),
+        .ptw_mem_write_error(core_ptw_mem_write_error),
         .ptw_fault_valid(core_ptw_fault_valid), .ptw_fault_code(core_ptw_fault_code),
         .tlb_inv_applied(tlb_inv_applied),
 
@@ -234,16 +251,37 @@ module soc_core_subsystem #(
         .perf_mdu_stall_count(perf_mdu_stall_count)
     );
 
-    assign data_awid = core_data_awid; assign data_awaddr = core_data_awaddr;
-    assign data_awlen = core_data_awlen; assign data_awsize = core_data_awsize;
-    assign data_awburst = core_data_awburst; assign data_awlock = core_data_awlock;
-    assign data_awcache = core_data_awcache; assign data_awprot = core_data_awprot;
-    assign data_awvalid = core_data_awvalid; assign core_data_awready = data_awready;
-    assign data_wdata = core_data_wdata; assign data_wstrb = core_data_wstrb;
-    assign data_wlast = core_data_wlast; assign data_wvalid = core_data_wvalid;
-    assign core_data_wready = data_wready; assign core_data_bid = data_bid;
-    assign core_data_bresp = data_bresp; assign core_data_bvalid = data_bvalid;
-    assign data_bready = core_data_bready; assign data_arid = core_ptw_mem_valid ? 4'd0 : core_data_arid;
+    assign data_awid = ptw_write_selected ? 4'd0 : core_data_awid;
+    assign data_awaddr = ptw_write_selected ? core_ptw_mem_write_addr : core_data_awaddr;
+    assign data_awlen = ptw_write_selected ? 8'd0 : core_data_awlen;
+    assign data_awsize = ptw_write_selected ? 3'd2 : core_data_awsize;
+    assign data_awburst = ptw_write_selected ? 2'd1 : core_data_awburst;
+    assign data_awlock = ptw_write_selected ? 2'd0 : core_data_awlock;
+    assign data_awcache = ptw_write_selected ? 4'd0 : core_data_awcache;
+    assign data_awprot = ptw_write_selected ? 3'b010 : core_data_awprot;
+    assign data_awvalid = ptw_write_selected ? !ptw_axi_write_aw_done :
+                          core_data_awvalid && !ptw_axi_write_busy && !ptw_axi_busy &&
+                          !core_ptw_mem_write_valid;
+    assign core_data_awready = !core_ptw_mem_write_valid &&
+                               !ptw_axi_write_busy && !ptw_axi_busy && data_awready;
+    assign data_wdata = ptw_write_selected ? core_ptw_mem_write_data : core_data_wdata;
+    assign data_wstrb = ptw_write_selected ? 4'b1111 : core_data_wstrb;
+    assign data_wlast = ptw_write_selected ? 1'b1 : core_data_wlast;
+    assign data_wvalid = ptw_write_selected ? !ptw_axi_write_w_done :
+                         core_data_wvalid && !ptw_axi_write_busy && !ptw_axi_busy &&
+                         !core_ptw_mem_write_valid;
+    assign core_data_wready = !core_ptw_mem_write_valid &&
+                              !ptw_axi_write_busy && !ptw_axi_busy && data_wready;
+    assign core_data_bid = data_bid;
+    assign core_data_bresp = data_bresp;
+    assign core_data_bvalid = data_bvalid && !core_ptw_mem_write_valid &&
+                              !ptw_axi_write_busy;
+    assign data_bready = (core_ptw_mem_write_valid || ptw_axi_write_busy) ?
+                         1'b1 : core_data_bready;
+    assign core_ptw_mem_write_ready = ptw_write_b_response &&
+                                      ptw_axi_write_aw_done && ptw_axi_write_w_done;
+    assign core_ptw_mem_write_error = (data_bresp != 2'b00);
+    assign data_arid = core_ptw_mem_valid ? 4'd0 : core_data_arid;
     assign data_araddr = core_ptw_mem_valid ? core_ptw_mem_addr : core_data_araddr;
     assign data_arlen = core_ptw_mem_valid ? 8'd0 : core_data_arlen;
     assign data_arsize = core_ptw_mem_valid ? 3'd2 : core_data_arsize;
@@ -261,11 +299,30 @@ module soc_core_subsystem #(
     assign core_ptw_mem_rdata = data_rdata;
     assign core_ptw_mem_error = data_rresp != 2'b00;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) ptw_axi_busy <= 1'b0;
+        if (!rst_n) begin
+            ptw_axi_busy <= 1'b0;
+            ptw_axi_write_busy <= 1'b0;
+            ptw_axi_write_aw_done <= 1'b0;
+            ptw_axi_write_w_done <= 1'b0;
+        end
         else if (!ptw_axi_busy && ENABLE_HARDWARE_WALKER && core_ptw_mem_valid && data_arready)
             ptw_axi_busy <= 1'b1;
         else if (ptw_axi_response)
             ptw_axi_busy <= 1'b0;
+
+        if (ptw_write_selected && !ptw_axi_write_busy) begin
+            ptw_axi_write_busy <= 1'b1;
+            ptw_axi_write_aw_done <= ptw_write_aw_fire;
+            ptw_axi_write_w_done <= ptw_write_w_fire;
+        end else if (ptw_axi_write_busy) begin
+            if (ptw_write_aw_fire) ptw_axi_write_aw_done <= 1'b1;
+            if (ptw_write_w_fire) ptw_axi_write_w_done <= 1'b1;
+            if (ptw_write_b_response && ptw_axi_write_aw_done && ptw_axi_write_w_done) begin
+                ptw_axi_write_busy <= 1'b0;
+                ptw_axi_write_aw_done <= 1'b0;
+                ptw_axi_write_w_done <= 1'b0;
+            end
+        end
     end
 
 endmodule

@@ -327,6 +327,10 @@
 `ifndef SOC_HARDWARE_WALKER_PAGE_MASK
 `define SOC_HARDWARE_WALKER_PAGE_MASK 16'h0000
 `endif
+`ifndef SOC_HARDWARE_WALKER_AD_ENABLE
+// Optional OS-managed Accessed/Dirty PTE writeback. Default remains read-only.
+`define SOC_HARDWARE_WALKER_AD_ENABLE 0
+`endif
 
 // Opt-in L1 non-blocking contract. The default production configuration keeps
 // the blocking dcache; the bounded CPU/D-cache late-response path is enabled

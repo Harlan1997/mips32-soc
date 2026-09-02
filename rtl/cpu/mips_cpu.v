@@ -93,9 +93,14 @@ module mips_cpu #(
     input  wire [31:0] hardware_walker_ptbr,
     output wire        ptw_mem_valid,
     output wire [31:0] ptw_mem_addr,
+    output wire        ptw_mem_write_valid,
+    output wire [31:0] ptw_mem_write_addr,
+    output wire [31:0] ptw_mem_write_data,
     input  wire        ptw_mem_ready,
     input  wire [31:0] ptw_mem_rdata,
     input  wire        ptw_mem_error,
+    input  wire        ptw_mem_write_ready,
+    input  wire        ptw_mem_write_error,
     output wire        ptw_fault_valid,
     output wire [2:0]  ptw_fault_code,
     // Pulses when the externally requested TLB invalidation is consumed by
@@ -2321,7 +2326,8 @@ module mips_cpu #(
     wire [31:0] hardware_walker_root = (hardware_walker_ptbr != 32'd0) ?
                                         hardware_walker_ptbr : cp0_ptebase;
 
-    mips_page_table_walker #(.PAGE_MASK(`SOC_HARDWARE_WALKER_PAGE_MASK)) u_hardware_walker (
+    mips_page_table_walker #(.PAGE_MASK(`SOC_HARDWARE_WALKER_PAGE_MASK),
+                             .ENABLE_AD_UPDATE(`SOC_HARDWARE_WALKER_AD_ENABLE)) u_hardware_walker (
         .clk(clk), .rst_n(rst_n),
         .req_valid(ptw_req_valid), .req_ready(ptw_req_ready),
         .ptbr(hardware_walker_root), .va(ptw_req_va),
@@ -2331,11 +2337,11 @@ module mips_cpu #(
         .mem_error(ptw_mem_error), .resp_valid(ptw_resp_valid),
         .pa(ptw_pa), .fault_valid(ptw_fault_i),
         .fault_code(ptw_fault_code_i), .leaf_pte(ptw_leaf_pte),
-        // The current SoC integration is read-only; the optional A/D
-        // transaction is exposed by the reusable walker contract but is not
-        // enabled until a page-table write port is integrated.
-        .pte_update_valid(), .pte_update_addr(), .pte_update_data(),
-        .pte_update_ready(1'b0)
+        .pte_update_valid(ptw_mem_write_valid),
+        .pte_update_addr(ptw_mem_write_addr),
+        .pte_update_data(ptw_mem_write_data),
+        .pte_update_ready(ptw_mem_write_ready),
+        .pte_update_error(ptw_mem_write_error)
     );
 
     assign ptw_fault_valid = ptw_resp_valid && ptw_fault_i;
