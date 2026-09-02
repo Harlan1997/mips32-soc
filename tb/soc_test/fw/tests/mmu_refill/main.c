@@ -132,6 +132,13 @@ static void invalidate_page_pair(unsigned int vpn2, unsigned int pair_id) {
     asm volatile("tlbwi\n\t nop\n\t nop\n\t nop\n\t nop\n\t nop" ::: "memory");
     pair_valid[pair_id] = 0;
 }
+#else
+/* The hardware walker owns refill/TLB population in this variant. Keep the
+ * shared workload source warning-free without issuing software TLB writes. */
+static void invalidate_page_pair(unsigned int vpn2, unsigned int pair_id) {
+    (void)vpn2;
+    (void)pair_id;
+}
 #endif
 
 /* The table and backing pages are kseg0 addresses, so this path does not
