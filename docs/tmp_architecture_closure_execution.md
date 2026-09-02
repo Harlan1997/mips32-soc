@@ -4509,3 +4509,19 @@ configuration.
 - No kernel-init caller was observed stuck in the completion primitive. No
   completion/WAIT/CP0 RTL change is justified; later `do_basic_setup`
   initcalls or the kernel-init handoff remain the active diagnostic scope.
+
+# 2026-09-02 RTL Linux progress-gate guard and bounded freeable-tail probe
+
+- `run_rtl_linux_progress_gate.sh` now rejects `LINUX_REQUIRE_PROGRESS=1` with
+  `LINUX_PROGRESS_TRACE=0` before image construction or VCS invocation. The
+  negative test returns status 2 and emits an explicit configuration error.
+- A reuse-kernel 100K-cycle smoke passes with the default progress trace and
+  simulator status 0. The previously launched full kernel rebuild was stopped
+  because it was unrelated to this change; no repository build artifact was
+  modified by that interruption.
+- A separate 40M-cycle bounded retire-only probe over
+  `kernel_init_freeable` completes normally. It reaches the post-initcall
+  sequence and the `driver_init` call, with no architectural mismatch or
+  OOM. This narrows the Linux handoff diagnosis but does not close RTL Linux
+  userspace, full RTL/QEMU system differential, or full ISA/MMU/FPU/OS
+  semantics.

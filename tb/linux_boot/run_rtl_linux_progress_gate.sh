@@ -87,6 +87,15 @@ LINUX_VECTOR_LINE=${LINUX_VECTOR_LINE:-470410}
 SKIP_LINUX_BUILD=${SKIP_LINUX_BUILD:-0}
 KERNEL_INPUT=${KERNEL:-}
 
+# Progress is the evidence source for the post-reset progress criterion.  Do
+# not spend a long simulator run only to reject it after completion when the
+# caller explicitly disabled that trace.
+if [[ "${LINUX_REQUIRE_PROGRESS}" == "1" &&
+      "${LINUX_PROGRESS_TRACE}" != "1" ]]; then
+    echo "RTL Linux progress gate: LINUX_REQUIRE_PROGRESS=1 requires LINUX_PROGRESS_TRACE=1" >&2
+    exit 2
+fi
+
 # VCS warns and may truncate a %h plusarg when the payload includes 0x.
 # Normalize trace addresses before forwarding them to the Verilog testbench.
 strip_hex_prefix() {
