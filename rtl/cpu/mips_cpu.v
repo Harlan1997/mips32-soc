@@ -779,6 +779,10 @@ module mips_cpu #(
     wire        fpu_id_cop1 = (id_inst[31:26] == 6'b010001);
     wire        fpu_id_valid = (`SOC_FPU_ENABLE != 0) &&
                                (fpu_id_cop1 || fpu_id_cop1x);
+    reg [31:0] fcsr;
+    // FCSR condition-code layout: FCC0 is bit 23; FCC1..FCC7 are bits
+    // 25..31, with bit 24 reserved.
+    wire [7:0] fpu_conditions = {fcsr[31:25], fcsr[23]};
     wire        fpu_mem_id_valid = (`SOC_FPU_ENABLE != 0) &&
                                    ((id_inst[31:26] == 6'b110001) ||
                                     (id_inst[31:26] == 6'b111001) ||
@@ -810,6 +814,14 @@ module mips_cpu #(
     wire        fpu_id_cond_move = fpu_id_cop1 &&
                                    (id_inst[5:0] == 6'h12 ||
                                     id_inst[5:0] == 6'h13);
+    // COP1 MOVF/MOVT use funct=0x11 and the same FCC selector/tf encoding as
+    // integer conditional moves, but commit an FPR (fd <- fs).
+    wire        fpu_id_fpr_cond_move = fpu_id_cop1 &&
+                                       (id_inst[5:0] == 6'h11) &&
+                                       (id_inst[25:21] == 5'b10000 ||
+                                        id_inst[25:21] == 5'b10001);
+    wire        fpu_id_fpr_cond_move_ok = !fpu_id_fpr_cond_move ||
+                         (fpu_conditions[id_inst[20:18]] ^ ~id_inst[16]);
     wire        fpu_id_cond_move_ok = !fpu_id_cond_move ||
                                       ((id_inst[5:0] == 6'h12) ?
                                        (id_val_rt == 32'd0) :
@@ -835,7 +847,6 @@ module mips_cpu #(
     // {invalid, div0, overflow, underflow, inexact}.  An enabled flag is a
     // precise FPE exception: the FPU result must not commit and CP0 receives
     // ExcCode 15 through the normal exception pipeline.
-    reg  [31:0] fcsr;
     wire [4:0]  fpu_exception_flags;
     wire [4:0] fpu_enabled_flags = fpu_exception_flags & fcsr[11:7];
     wire       id_fpu_exception = (`SOC_FPU_ENABLE != 0) &&
@@ -885,7 +896,6 @@ module mips_cpu #(
     // FCSR condition-code layout: FCC0 is bit 23, FCC1..FCC7 are bits
     // 25..31 (bit 24 is reserved) in this vector order.  Keep the architectural selector local to
     // the decoder so all COP1 consumers use the same mapping.
-    wire [7:0] fpu_conditions = {fcsr[31:25], fcsr[23]};
     reg [31:0]  fpu_double_low;
     integer     fpu_i;
     wire [4:0]  fpu_op = (fpu_id_cop1x &&
@@ -967,7 +977,7 @@ module mips_cpu #(
                          !exception_flush && !ctx_restore_req &&
                          !id_fpu_unusable && !id_illegal_inst &&
                          !id_fpu_exception &&
-                         fpu_id_cond_move_ok;
+                         fpu_id_cond_move_ok && fpu_id_fpr_cond_move_ok;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -1008,6 +1018,11 @@ module mips_cpu #(
                 fpr[id_inst[15:11]] <= id_val_rt;
             else if (fpu_id_ctc1)
                 fcsr <= id_val_rt;
+            else if (fpu_id_fpr_cond_move) begin
+                if (fpu_id_double)
+                    fpr[id_inst[10:6] + 1'b1] <= fpr[id_inst[15:11] + 1'b1];
+                fpr[id_inst[10:6]] <= fpr[id_inst[15:11]];
+            end
             else if (fpu_id_arith) begin
                 if (fpu_id_cop1 && id_inst[5:0] >= 6'h30) begin
                     case (id_inst[10:8])

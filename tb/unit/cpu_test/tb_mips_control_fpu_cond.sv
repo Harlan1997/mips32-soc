@@ -128,6 +128,24 @@ module tb_mips_control_fpu_cond;
         expect_reserved(fpu_cond_move(5'b10001, 5'd5, 5'd0, 5'd13, 6'h12));
         expect_reserved(fpu_cond_move(5'b10001, 5'd5, 5'd1, 5'd12, 6'h13));
 
+        // COP1 MOVF/MOVT use funct=0x11.  The condition is encoded in ft
+        // (cc[4:2], reserved bit 1, tf bit 0), while fs/fd are FPR pairs in
+        // the D format.
+        inst = fpu_cond_move(5'b10000, 5'd0, 5'd2, 5'd4, 6'h11);
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL MOVF.S rejected");
+            failures = failures + 1;
+        end
+        inst = fpu_cond_move(5'b10001, 5'd1, 5'd2, 5'd4, 6'h11);
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL MOVT.D rejected");
+            failures = failures + 1;
+        end
+        expect_reserved(fpu_cond_move(5'b10001, 5'd1, 5'd2, 5'd4, 6'h11) |
+                        32'h00020000); // reserved ft[1]
+
         // RECIP/RSQRT are unary COP1 operations: single and even-pair D
         // formats are legal, while W-format and odd D-pair selectors are RI.
         inst = fpu_cond_move(5'b10000, 5'd0, 5'd0, 5'd2, 6'h15);
