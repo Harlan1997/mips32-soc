@@ -62,6 +62,12 @@ module tb_l2nb_parallel;
     reg [7:0] rd_len [0:1];
     reg [7:0] rd_beat [0:1];
     reg rd_turn;
+    // Force one RID to drain completely before the other one.  This makes
+    // the test exercise completion reordering, not only interleaved beats.
+    reg force_ooo;
+    reg [3:0] ooo_first_id, ooo_second_id;
+    reg ooo_first_valid, ooo_second_valid, ooo_first_done, ooo_second_done;
+    integer ooo_other_before_first_done;
     reg inject_r_error;
     integer rd_sel;
     reg wr_active, wr_bvalid;
@@ -74,7 +80,15 @@ module tb_l2nb_parallel;
         m_bvalid = wr_bvalid; m_bid = wr_id; m_bresp = 2'b00;
         m_rvalid = 1'b0; m_rid = 4'd0; m_rdata = 32'd0;
         m_rresp = 2'b00; m_rlast = 1'b0; rd_sel = 0;
-        if (rd_turn == 1'b0) begin
+        if (force_ooo && ooo_first_valid) begin
+            // Keep selecting the first accepted RID until its RLAST.  The
+            // cache must still route the response by RID and install both
+            // lines correctly when completion order differs from issue order.
+            if (rd_active[0] && rd_id[0] == ooo_first_id) rd_sel = 0;
+            else if (rd_active[1] && rd_id[1] == ooo_first_id) rd_sel = 1;
+            else if (rd_active[0]) rd_sel = 0;
+            else if (rd_active[1]) rd_sel = 1;
+        end else if (rd_turn == 1'b0) begin
             if (rd_active[0]) rd_sel = 0;
             else if (rd_active[1]) rd_sel = 1;
         end else begin
@@ -99,12 +113,23 @@ module tb_l2nb_parallel;
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rd_active<=0; rd_turn<=0; inject_r_error<=0;
+            rd_active<=0; rd_turn<=0; force_ooo<=0; inject_r_error<=0;
+            ooo_first_id<=0; ooo_second_id<=0;
+            ooo_first_valid<=0; ooo_second_valid<=0;
+            ooo_first_done<=0; ooo_second_done<=0;
+            ooo_other_before_first_done<=0;
             wr_active<=0; wr_bvalid<=0;
             wr_id<=0; wr_addr<=0; wr_beat<=0;
             for (i=0;i<2;i=i+1) begin rd_id[i]<=0; rd_addr[i]<=0; rd_len[i]<=0; rd_beat[i]<=0; end
         end else begin
             if (m_arvalid && m_arready) begin
+                if (force_ooo && !ooo_first_valid) begin
+                    ooo_first_id <= m_arid;
+                    ooo_first_valid <= 1'b1;
+                end else if (force_ooo && !ooo_second_valid) begin
+                    ooo_second_id <= m_arid;
+                    ooo_second_valid <= 1'b1;
+                end
                 if (!rd_active[0]) begin
                     rd_active[0]<=1; rd_id[0]<=m_arid; rd_addr[0]<=m_araddr;
                     rd_len[0]<=m_arlen; rd_beat[0]<=0;
@@ -115,6 +140,14 @@ module tb_l2nb_parallel;
             end
             if (m_rvalid && m_rready) begin
                 rd_turn <= (rd_sel == 0) ? 1'b1 : 1'b0;
+                if (force_ooo && ooo_first_valid && !ooo_first_done) begin
+                    if (m_rid != ooo_first_id)
+                        ooo_other_before_first_done <= ooo_other_before_first_done + 1;
+                    if (m_rlast && m_rid == ooo_first_id)
+                        ooo_first_done <= 1'b1;
+                end else if (force_ooo && ooo_first_done && m_rlast) begin
+                    ooo_second_done <= 1'b1;
+                end
                 if (m_rlast) rd_active[rd_sel]<=0;
                 else rd_beat[rd_sel]<=rd_beat[rd_sel]+1'b1;
             end
@@ -238,11 +271,25 @@ module tb_l2nb_parallel;
         issue_read(4'd3,32'h0003_0000,8'd7);
         issue_read(4'd4,32'h0004_0000,8'd7);
         while (outstanding != 0) @(posedge clk);
+        // Verify out-of-order completion explicitly: the first accepted RID
+        // must reach RLAST before any beat from the second RID is consumed.
+        force_ooo=1'b1;
+        issue_read(4'd11,32'h001b_0040,8'd7);
+        issue_read(4'd12,32'h001c_0040,8'd7);
+        while (outstanding != 0) @(posedge clk);
+        force_ooo=1'b0;
         repeat(4) @(posedge clk);
         if (peak_active < 2) begin $display("FAIL no two downstream refills observed"); errs=errs+1; end
         if (id_switches < 1) begin $display("FAIL no cross-ID R interleave observed"); errs=errs+1; end
         if (overlap_events < 1) begin $display("FAIL no refill overlapped dirty writeback"); errs=errs+1; end
         if (error_checked < 8) begin $display("FAIL parallel error burst did not drain (%0d beats)", error_checked); errs=errs+1; end
+        if (!ooo_first_valid || !ooo_second_valid || !ooo_first_done ||
+            !ooo_second_done || ooo_other_before_first_done != 0) begin
+            $display("FAIL no ordered out-of-order completion first=%b second=%b done=%b/%b other_before=%0d",
+                     ooo_first_valid, ooo_second_valid, ooo_first_done,
+                     ooo_second_done, ooo_other_before_first_done);
+            errs=errs+1;
+        end
         if (errs==0) $display("REGRESSION_TEST_SUCCESS l2nb_parallel (reads_checked=%0d errors_checked=%0d peak_downstream=%0d id_switches=%0d wb_refill_overlap=%0d)", checked, error_checked, peak_active, id_switches, overlap_events);
         else $display("REGRESSION_TEST_FAIL errs=%0d", errs);
         $finish;

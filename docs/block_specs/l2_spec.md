@@ -301,6 +301,12 @@ module l2_cache #(
 
 ## 版本记录
 
+- v1.6 (2026-09-02)：`DOWNSTREAM_SLOTS=2` opt-in clean refill path adds
+  explicit RID routing and is verified with both interleaved beats and
+  cross-ID completion ordering, including reset/error recovery. The default
+  single-outstanding path remains unchanged; dirty writeback is still
+  serialized and arbitrary AXI ordering/coherency remain future work.
+
 - v1.5 (2026-07-30)：Phase C.2 交付非阻塞 full-MSHR L2（`rtl/cache/l2_cache_nb.v`，
   `+define+SOC_L2_NONBLOCKING`）：8-entry MSHR、hit-under-miss、miss-under-miss、
   同 line secondary-miss 合并、跨-id 乱序响应（同 id 保序）、下游单-outstanding。新增
