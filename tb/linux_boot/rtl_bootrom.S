@@ -26,11 +26,11 @@ _start:
     /* Linux generic MIPS consumes the UHI firmware argument pair. */
     addiu   $a0, $zero, -2
     lui     $a1, %hi(DTB_LOAD_VIRTUAL)
-    ori     $a1, $a1, %lo(DTB_LOAD_VIRTUAL)
+    addiu   $a1, $a1, %lo(DTB_LOAD_VIRTUAL)
     move    $a2, $zero
     move    $a3, $zero
     lui     $t0, %hi(KERNEL_ENTRY)
-    ori     $t0, $t0, %lo(KERNEL_ENTRY)
+    addiu   $t0, $t0, %lo(KERNEL_ENTRY)
     jr      $t0
     nop
 
