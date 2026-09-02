@@ -53,16 +53,24 @@ module tb_l2nb_parallel;
 
     // Two-entry downstream read responder.
     reg [1:0] rd_active;
+    reg [31:0] mem [0:1048575];
+    integer mi;
+    initial for (mi=0; mi<1048576; mi=mi+1)
+        mem[mi] = 32'hA5A5_0000 | mi[15:0];
     reg [3:0] rd_id [0:1];
     reg [31:0] rd_addr [0:1];
     reg [7:0] rd_len [0:1];
     reg [7:0] rd_beat [0:1];
     reg rd_turn;
     integer rd_sel;
+    reg wr_active, wr_bvalid;
+    reg [3:0] wr_id;
+    reg [31:0] wr_addr;
+    reg [7:0] wr_beat;
     always @(*) begin
         m_arready = (rd_active != 2'b11);
-        m_awready = 1'b1; m_wready = 1'b1;
-        m_bvalid = 1'b0; m_bid = 4'd0; m_bresp = 2'b00;
+        m_awready = !wr_active; m_wready = wr_active;
+        m_bvalid = wr_bvalid; m_bid = wr_id; m_bresp = 2'b00;
         m_rvalid = 1'b0; m_rid = 4'd0; m_rdata = 32'd0;
         m_rresp = 2'b00; m_rlast = 1'b0; rd_sel = 0;
         if (rd_turn == 1'b0) begin
@@ -75,18 +83,19 @@ module tb_l2nb_parallel;
         if (rd_active != 2'b00) begin
             m_rvalid = 1'b1;
             m_rid = rd_id[rd_sel];
-            m_rdata = 32'hA5A5_0000 | ((rd_addr[rd_sel] >> 2) + rd_beat[rd_sel]);
+            m_rdata = mem[(rd_addr[rd_sel][21:2]) + rd_beat[rd_sel]];
             m_rlast = (rd_beat[rd_sel] == rd_len[rd_sel]);
         end
     end
 
-    integer errs=0, peak_active=0, id_switches=0, last_id=-1;
+    integer errs=0, peak_active=0, id_switches=0, last_id=-1, overlap_events=0;
     integer outstanding=0, checked=0;
     reg [31:0] exp_addr [0:15]; reg [7:0] exp_beat [0:15]; reg exp_valid [0:15];
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rd_active<=0; rd_turn<=0;
+            rd_active<=0; rd_turn<=0; wr_active<=0; wr_bvalid<=0;
+            wr_id<=0; wr_addr<=0; wr_beat<=0;
             for (i=0;i<2;i=i+1) begin rd_id[i]<=0; rd_addr[i]<=0; rd_len[i]<=0; rd_beat[i]<=0; end
         end else begin
             if (m_arvalid && m_arready) begin
@@ -103,13 +112,31 @@ module tb_l2nb_parallel;
                 if (m_rlast) rd_active[rd_sel]<=0;
                 else rd_beat[rd_sel]<=rd_beat[rd_sel]+1'b1;
             end
+            if (m_awvalid && m_awready) begin
+                wr_active<=1'b1; wr_id<=m_awid; wr_addr<=m_awaddr; wr_beat<=0;
+            end
+            if (m_wvalid && m_wready) begin
+                wr_beat<=wr_beat+1'b1;
+                if (m_wstrb[0]) mem[(wr_addr[21:2])+wr_beat][7:0] <= m_wdata[7:0];
+                if (m_wstrb[1]) mem[(wr_addr[21:2])+wr_beat][15:8] <= m_wdata[15:8];
+                if (m_wstrb[2]) mem[(wr_addr[21:2])+wr_beat][23:16] <= m_wdata[23:16];
+                if (m_wstrb[3]) mem[(wr_addr[21:2])+wr_beat][31:24] <= m_wdata[31:24];
+                if (m_wlast) begin wr_active<=1'b0; wr_bvalid<=1'b1; end
+            end
+            if (m_bvalid && m_bready) begin
+                wr_bvalid<=1'b0;
+            end
             if (rd_active > peak_active) peak_active = rd_active;
+            if (m_arvalid && m_arready &&
+                (dut.me_state == 3'd1 || dut.me_state == 3'd2 || dut.me_state == 3'd3))
+                overlap_events=overlap_events+1;
         end
     end
 
     always @(posedge clk) if (rst_n && s_rvalid && s_rready) begin
         if (!exp_valid[s_rid] || s_rresp != 2'b00 ||
-            s_rdata !== (32'hA5A5_0000 | ((exp_addr[s_rid] >> 2) + exp_beat[s_rid]))) begin
+            s_rdata !== (32'hA5A5_0000 |
+                         (((exp_addr[s_rid] >> 2) + exp_beat[s_rid]) & 16'hffff))) begin
             $display("FAIL parallel read id=%0d beat=%0d data=%h resp=%b", s_rid,
                      exp_beat[s_rid], s_rdata, s_rresp); errs=errs+1;
         end else checked=checked+1;
@@ -129,6 +156,20 @@ module tb_l2nb_parallel;
     end
     endtask
 
+    task issue_write_wait(input [3:0] id, input [31:0] addr, input [31:0] data);
+    begin
+        @(negedge clk); s_awid=id; s_awaddr=addr; s_awlen=8'd0; s_awsize=3'b010;
+        s_awburst=2'b01; s_awvalid=1'b1;
+        @(posedge clk); while (!s_awready) @(posedge clk);
+        @(negedge clk); s_awvalid=0; s_wdata=data; s_wstrb=4'hf;
+        s_wlast=1'b1; s_wvalid=1'b1;
+        @(posedge clk); while (!s_wready) @(posedge clk);
+        @(negedge clk); s_wvalid=0; s_wlast=0;
+        while (!s_bvalid) @(posedge clk);
+        @(posedge clk);
+    end
+    endtask
+
     initial begin
         s_awvalid=0; s_wvalid=0; s_arvalid=0; s_wlast=0; s_bready=1; s_rready=1;
         s_awid=0; s_awaddr=0; s_awlen=0; s_awsize=0; s_awburst=1;
@@ -136,6 +177,16 @@ module tb_l2nb_parallel;
         s_wdata=0; s_wstrb=0; snoop_addr=0; snoop_valid=0;
         for (i=0;i<16;i=i+1) begin exp_valid[i]=0; exp_addr[i]=0; exp_beat[i]=0; end
         #23 rst_n=1;
+        // Fill and dirty one line, then force a dirty replacement while a
+        // second clean miss is launched in parallel.
+        begin : DIRTY_OVERLAP integer j;
+            issue_read(4'd0, 32'h0000_0040, 8'd0);
+            while (outstanding != 0) @(posedge clk);
+            issue_write_wait(4'd8, 32'h0000_0040, 32'h6000_0000);
+            issue_read(4'd5, 32'h0008_0040, 8'd0);
+            issue_read(4'd6, 32'h000a_0040, 8'd0);
+            while (outstanding != 0) @(posedge clk);
+        end
         issue_read(4'd1,32'h0001_0000,8'd7);
         issue_read(4'd2,32'h0002_0000,8'd7);
         issue_read(4'd3,32'h0003_0000,8'd7);
@@ -144,7 +195,8 @@ module tb_l2nb_parallel;
         repeat(4) @(posedge clk);
         if (peak_active < 2) begin $display("FAIL no two downstream refills observed"); errs=errs+1; end
         if (id_switches < 1) begin $display("FAIL no cross-ID R interleave observed"); errs=errs+1; end
-        if (errs==0) $display("REGRESSION_TEST_SUCCESS l2nb_parallel (reads_checked=%0d peak_downstream=%0d id_switches=%0d)", checked, peak_active, id_switches);
+        if (overlap_events < 1) begin $display("FAIL no refill overlapped dirty writeback"); errs=errs+1; end
+        if (errs==0) $display("REGRESSION_TEST_SUCCESS l2nb_parallel (reads_checked=%0d peak_downstream=%0d id_switches=%0d wb_refill_overlap=%0d)", checked, peak_active, id_switches, overlap_events);
         else $display("REGRESSION_TEST_FAIL errs=%0d", errs);
         $finish;
     end
