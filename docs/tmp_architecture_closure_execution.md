@@ -1,5 +1,24 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Linux dynamic TLB handler I-cache maintenance address fix
+
+- 修复 `rtl/cpu/mips_cpu.v` 中 CACHE maintenance 地址统一使用翻译后 PA 的问题：
+  I-cache 的 Hit/Index maintenance 现在保留 MEM 阶段原始 VA，D-cache maintenance
+  继续使用翻译后的 PA。Linux 在 kseg0 中生成并刷新动态 TLB handler 时，旧路径的
+  PA tag 无法匹配 I-cache 中按 VA 保存的 line，导致动态 vector/handler 取到 stale
+  word；该分流消除了这一地址形式错误。
+- 增加 `SVA_ENABLE` 下的 I/D maintenance 地址契约断言，分别约束 I-cache=VA 和
+  D-cache=PA，且不改变默认 `SOC_MMU_ENABLE=0`/blocking 路径。
+- `source /etc/profile.d/modules.sh && module load vcs && VCS_JOBS=1
+  EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M SKIP_COVERAGE=1
+  BUILD_DIR=/tmp/mips32-cache-addr-fix-20260903 make rtl-frontend-compile
+  cpu-icache-tag-gate` 通过。
+- 使用同样资源限制执行 `RTL_CYCLE_LIMIT=80000000` 的 `rtl-minimal` Linux 探针，
+  `/tmp/rtl-linux-icache-maint-fix-20260903/completion_report.md` 通过；PC 在约
+  54M 周期进入 Linux TLB/内核代码，旧的动态 vector stale-word 症状被推进到
+  后续静态 Linux TLB handler/VM 语义。userspace marker 仍为 0，因此 RTL Linux
+  userspace、完整 system-mode differential 和完整 ISA/MMU/OS signoff 仍 OPEN。
+
 ### 2026-09-03 RTL Linux bootrom absolute-address relocation fix
 
 - 定位并修复 `tb/linux_boot/rtl_bootrom.S` 的 MIPS 地址重构错误：`%hi` 与
