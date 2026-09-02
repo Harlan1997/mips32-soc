@@ -60,6 +60,7 @@ for gate in \
     product-mmu-boot-gate \
     product-mmu-ebase-modified-gate \
     product-mmu-asid-context-gate \
+    product-mmu-machine-check-gate \
     product-mmu-process-pressure-gate \
     product-mmu-context-cpu-gate \
     product-cacheerr-gate \

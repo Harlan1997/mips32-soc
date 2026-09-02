@@ -243,7 +243,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-linux-differential-gate
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
-.PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate
+.PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate product-mmu-machine-check-gate
 .PHONY: linux-boot-build-gate rtl-linux-progress-gate rtl-linux-userspace-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
@@ -519,6 +519,9 @@ product-kernel-boot-gate:
 
 product-mmu-asid-context-gate:
 	RUN_DIR=$(PRODUCT_MMU_ASID_CONTEXT_DIR) tb/soc_test/run_product_mmu_asid_context.sh
+
+product-mmu-machine-check-gate:
+	RUN_DIR=$(BUILD_DIR)/soc_test/product_mmu_machine_check tb/soc_test/run_product_mmu_machine_check.sh
 
 product-mmu-process-pressure-gate:
 	RUN_DIR=$(PRODUCT_MMU_PROCESS_PRESSURE_DIR) tb/soc_test/run_product_mmu_process_pressure.sh

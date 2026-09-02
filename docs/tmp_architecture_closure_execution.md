@@ -4638,3 +4638,18 @@ configuration.
   OOM. This narrows the Linux handoff diagnosis but does not close RTL Linux
   userspace, full RTL/QEMU system differential, or full ISA/MMU/FPU/OS
   semantics.
+
+# 2026-09-02 CPU/SoC Machine Check runtime closure
+
+- Added `product-mmu-machine-check-gate` with opt-in MMU and micro-TLB
+  configuration, dedicated firmware, and a full SoC testbench.
+- The firmware fills the D micro-TLB from main entry 1, writes an overlapping
+  main entry 2, and the testbench forces stale D fast-path state. The real CPU
+  then reaches the MCheck path and the relocated general handler validates
+  `Cause.ExcCode=0x18` and EPC before writing the success mailbox.
+- `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  BUILD_DIR=/tmp/mmu-machine-check-20260902 make
+  product-mmu-machine-check-gate` passed.
+- The gate is now part of `cpu-mmu-complete`; complete privileged/MMU
+  compliance, OS page-table ownership, unrestricted demand paging and Linux VM
+  remain open.
