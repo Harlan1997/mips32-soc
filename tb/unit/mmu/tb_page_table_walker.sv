@@ -31,13 +31,46 @@ module tb_page_table_walker;
     last_pte_update_data = pte_update_data;
     mem[pte_update_addr[13:2]] = pte_update_data;
   end
+  task automatic wait_for_resp;
+    integer guard;
+    begin
+      guard = 0;
+      while (!resp_valid && guard < 200) begin
+        @(posedge clk);
+        guard = guard + 1;
+      end
+      if (!resp_valid) begin
+        $display("TIMEOUT waiting for response: state=%0d mem_valid=%b mem_ready=%b update_valid=%b update_ready=%b req_ready=%b req=%b va=%h access=%0d mem_addr=%h mem_rdata=%h",
+                 dut.state, mem_valid, mem_ready, pte_update_valid,
+                 pte_update_ready, req_ready, req_valid, dut.va_q,
+                 dut.access_q, mem_addr, mem_rdata);
+        errors = errors + 1;
+      end
+    end
+  endtask
+  task automatic wait_for_update;
+    integer guard;
+    begin
+      guard = 0;
+      while (!pte_update_valid && guard < 200) begin
+        @(posedge clk);
+        guard = guard + 1;
+      end
+      if (!pte_update_valid) begin
+        $display("TIMEOUT waiting for A/D update: state=%0d mem_valid=%b mem_ready=%b resp_valid=%b req=%b va=%h access=%0d mem_addr=%h mem_rdata=%h pte=%h",
+                 dut.state, mem_valid, mem_ready, resp_valid, req_valid,
+                 dut.va_q, dut.access_q, mem_addr, mem_rdata, mem[2048]);
+        errors = errors + 1;
+      end
+    end
+  endtask
   task walk(input [31:0] v,input [1:0] a,input u); begin
     @(negedge clk); va=v;access=a;user_mode=u;req_valid=1;
     // The request is accepted on this edge.  Deassert valid on the next
     // falling edge; waiting for req_ready would permit a second request to
     // be sampled when an A/D update adds latency.
     @(posedge clk); @(negedge clk); req_valid=0;
-    while(!resp_valid)@(posedge clk);
+    wait_for_resp();
   end endtask
   task walk_with_backpressure(input [31:0] v,input [1:0] a,input u); begin
     @(negedge clk); va=v;access=a;user_mode=u;req_valid=1;mem_ready=0;
@@ -48,7 +81,7 @@ module tb_page_table_walker;
       if (!mem_valid) errors=errors+1;
     end
     @(negedge clk); mem_ready=1;
-    while(!resp_valid) @(posedge clk);
+    wait_for_resp();
     mem_ready=1;
   end endtask
 
@@ -70,7 +103,7 @@ module tb_page_table_walker;
     if (`TEST_PAGE_MASK != 16'h0000) begin
       @(negedge clk); va=32'h0000_0123; access=2'd1; user_mode=1; req_valid=1;
       @(posedge clk); @(negedge clk); req_valid=0;
-      while(!resp_valid) @(posedge clk);
+      wait_for_resp();
       case (`TEST_PAGE_MASK)
         16'h0003: if (fault_valid || pa !== 32'h0000_4123) errors=errors+1;
         16'h000f: if (fault_valid || pa !== 32'h0001_0123) errors=errors+1;
@@ -116,7 +149,7 @@ module tb_page_table_walker;
       endcase
       access=2'd1; user_mode=1; req_valid=1;
       @(posedge clk); @(negedge clk); req_valid=0;
-      while(!resp_valid) @(posedge clk);
+      wait_for_resp();
       case (`TEST_PAGE_MASK)
         16'h0003: if (fault_valid || pa !== 32'h0000_8000) errors=errors+1;
         16'h000f: if (fault_valid || pa !== 32'h0002_0000) errors=errors+1;
@@ -137,20 +170,26 @@ module tb_page_table_walker;
       errors=errors+1;
     /* A store sets both A and D, and the update must be held under
      * backpressure until the page-table memory accepts it. */
-    mem[2048]=32'h0000_3001; pte_update_ready=0;
+    mem[2048]=32'h0000_300B; pte_update_ready=0;
     @(negedge clk); va=32'h0000_0123; access=2'd2; user_mode=1; req_valid=1;
     // Deassert after acceptance; req_ready must not be required while the
     // accepted request is waiting for its A/D writeback consumer.
     @(posedge clk); @(negedge clk); req_valid=0;
-    while(!pte_update_valid) @(posedge clk);
+    wait_for_update();
     repeat (3) begin @(posedge clk); if(!pte_update_valid) errors=errors+1; end
-    if (pte_update_addr !== 32'h0000_2000 || pte_update_data !== 32'h0000_3031)
+    if (pte_update_addr !== 32'h0000_2000 || pte_update_data !== 32'h0000_303B)
       errors=errors+1;
     @(negedge clk); pte_update_ready=1;
-    while(!resp_valid) @(posedge clk);
+    wait_for_resp();
     if (fault_valid || pa !== 32'h0000_3123) errors=errors+1;
     mem[2048]=32'h0000_300B; walk(32'h0000_0123,2'd2,1'b1);
     if(fault_valid||pa!==32'h0000_3123) errors=errors+1;
+    /* A failed A/D writeback must be reported as a bus fault instead of
+     * returning a translation whose PTE state was not committed. */
+    mem[2048]=32'h0000_300B; pte_update_error=1;
+    walk(32'h0000_0123,2'd2,1'b1);
+    if(!fault_valid || fault_code!==3'd3) errors=errors+1;
+    pte_update_error=0;
     mem[2048]=32'h0000_3009; walk(32'h0000_0123,2'd2,1'b1);
     if(!fault_valid||fault_code!==3'd2) errors=errors+1;
     mem[2048]=32'h0000_3003; walk(32'h0000_0123,2'd1,1'b0);
