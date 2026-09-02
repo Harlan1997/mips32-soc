@@ -197,6 +197,7 @@ module l2_cache_wt #(
     wire [ADDR_WIDTH-1:0] line_base  = {beat_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
     reg  [WORD_BITS-1:0]  fill_idx;
     reg                   snoop_invalidate_pending;
+    reg [1:0]             write_resp;
 
     // -------- Default AXI drives --------
     always @(*) begin
@@ -210,7 +211,7 @@ module l2_cache_wt #(
         s_rid     = req_id;
         s_rdata   = data_ram[beat_index][beat_wordoff];
         s_rresp   = (state == ST_R_ERR_RESP) ? refill_error : 2'b00;
-        s_bresp   = 2'b00;
+        s_bresp   = (state == ST_W_RESP) ? write_resp : 2'b00;
 
         m_awvalid = 1'b0;
         m_awid    = req_id;
@@ -318,6 +319,7 @@ module l2_cache_wt #(
             w_buf_last  <= 1'b0;
             m_aw_sent   <= 1'b0;
             m_b_rcvd    <= 1'b0;
+            write_resp  <= 2'b00;
             snoop_invalidate_pending <= 1'b0;
             for (i = 0; i < NUM_SETS; i = i + 1) valid_ram[i] <= 1'b0;
         end else begin
@@ -333,6 +335,7 @@ module l2_cache_wt #(
                     beat_cnt  <= 8'h0;
                     m_aw_sent <= 1'b0;
                     m_b_rcvd  <= 1'b0;
+                    write_resp <= 2'b00;
                     refill_error <= 2'b00;
                     uc_ar_sent <= 1'b0;
                     if (s_awvalid) begin
@@ -487,6 +490,7 @@ module l2_cache_wt #(
                 ST_W_B_WAIT: begin
                     if (m_bvalid) begin
                         m_b_rcvd <= 1'b1;
+                        write_resp <= m_bresp;
                         state    <= ST_W_RESP;
                     end
                 end

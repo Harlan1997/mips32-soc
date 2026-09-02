@@ -20,6 +20,7 @@ FW_DIR=${FW_DIR:-"${RUN_DIR}/firmware"}
 FW_HEX="${FW_DIR}/firmware.hex"
 HW_WALKER=${HW_WALKER:-0}
 OS_PRESSURE=${OS_PRESSURE:-0}
+AD_WRITE_ERROR=${AD_WRITE_ERROR:-0}
 TB_RETIRE_TRACE=${TB_RETIRE_TRACE:-0}
 RETIRE_TRACE=${RETIRE_TRACE:-}
 
@@ -62,6 +63,9 @@ fi
 if [ "${OS_PRESSURE}" = 1 ]; then
     VCS_DEFINES+=(+define+SOC_MMU_OS_PRESSURE=1)
 fi
+if [ "${AD_WRITE_ERROR}" = 1 ]; then
+    VCS_DEFINES+=(+define+SOC_HARDWARE_WALKER_AD_WRITE_ERROR_ENABLE=1 +define+TB_MMU_HW_WALKER_AD_WRITE_ERROR)
+fi
 # Keep this gate reusable for opt-in integration variants. Fixed contract
 # defines remain in force; caller arguments are appended for feature toggles.
 if [ -n "${VCS_EXTRA_ARGS:-}" ]; then
@@ -86,7 +90,12 @@ if [ -n "${RETIRE_TRACE}" ]; then
 fi
 ./simv "${SIM_ARGS[@]}" -l sim.log
 
-if [ "${HW_WALKER}" = 1 ]; then
+if [ "${AD_WRITE_ERROR}" = 1 ]; then
+    if grep -q "MMU_AD_AXI_WRITE_ERROR_PASS" sim.log; then
+        echo "SUCCESS: MMU A/D WRITE ERROR GATE PASSED"
+        exit 0
+    fi
+elif [ "${HW_WALKER}" = 1 ]; then
     PASS_MARKER="mmu_hw_walker: PASS"
 elif [ "${OS_PRESSURE}" = 1 ]; then
     PASS_MARKER="mmu_os_pressure: PASS"

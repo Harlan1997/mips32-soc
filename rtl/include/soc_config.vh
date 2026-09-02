@@ -331,6 +331,10 @@
 // Optional OS-managed Accessed/Dirty PTE writeback. Default remains read-only.
 `define SOC_HARDWARE_WALKER_AD_ENABLE 0
 `endif
+`ifndef SOC_HARDWARE_WALKER_AD_WRITE_ERROR_ENABLE
+// Verification-only SLVERR on the first hardware-walker PTE writeback.
+`define SOC_HARDWARE_WALKER_AD_WRITE_ERROR_ENABLE 0
+`endif
 
 // Opt-in L1 non-blocking contract. The default production configuration keeps
 // the blocking dcache; the bounded CPU/D-cache late-response path is enabled

@@ -245,7 +245,8 @@ module soc_memory_subsystem #(
         .BASE_ADDR (DDR_BASE_ADDR),
         .FAST_MODE (DDR_FAST_MODE),
         .INJECT_RESP_ERROR (`SOC_AXI_RESP_ERROR_INJECT_ENABLE != 0),
-        .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0)
+        .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0),
+        .INJECT_WRITE_RESP_ERROR (`SOC_HARDWARE_WALKER_AD_WRITE_ERROR_ENABLE != 0)
     ) u_axi_sram (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -286,7 +287,8 @@ module soc_memory_subsystem #(
         .BASE_ADDR (DDR_BASE_ADDR),
         .FAST_MODE (DDR_FAST_MODE),
         .INJECT_RESP_ERROR (`SOC_AXI_RESP_ERROR_INJECT_ENABLE != 0),
-        .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0)
+        .INJECT_RESP_ERROR_TWO (`SOC_AXI_RESP_ERROR_INJECT_TWO_ENABLE != 0),
+        .INJECT_WRITE_RESP_ERROR (`SOC_HARDWARE_WALKER_AD_WRITE_ERROR_ENABLE != 0)
     ) u_axi_sram (
         .clk             (clk),
         .rst_n           (rst_n),

@@ -14,6 +14,8 @@ module axi_ddr_model #(
     parameter [31:0] INJECT_RESP_ERROR_ADDR = 32'h0000_8000,
     parameter INJECT_RESP_ERROR_TWO = 1'b0,
     parameter [31:0] INJECT_RESP_ERROR_ADDR2 = 32'h0000_9000,
+    parameter INJECT_WRITE_RESP_ERROR = 1'b0,
+    parameter [31:0] INJECT_WRITE_RESP_ERROR_ADDR = 32'h0000_2080,
     // The legacy model indexes the low SRAM address bits. Linux boot uses a
     // physical DDR window and needs a distinct address-relative index path.
     parameter ADDRESS_BASED_INDEX = 1'b0,
@@ -74,6 +76,7 @@ module axi_ddr_model #(
     endfunction
     reg error_injected;
     reg error_injected2;
+    reg write_error_injected;
 
     // Initialize with 0
     integer i;
@@ -173,6 +176,7 @@ module axi_ddr_model #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             error_injected <= 1'b0; error_injected2 <= 1'b0;
+            write_error_injected <= 1'b0;
             for (ri = 0; ri < READ_SLOTS; ri = ri + 1) begin
                 rd_state[ri] <= R_IDLE; rd_addr[ri] <= 0; rd_len[ri] <= 0;
                 rd_id[ri] <= 0; rd_wait[ri] <= 0; rd_resp[ri] <= 0;
@@ -266,15 +270,24 @@ module axi_ddr_model #(
                 
                 W_DATA: begin
                     if (s_wvalid && s_wready) begin
-                        if (s_wstrb[0]) ram[mem_word_index(w_addr)][7:0]   <= s_wdata[7:0];
-                        if (s_wstrb[1]) ram[mem_word_index(w_addr)][15:8]  <= s_wdata[15:8];
-                        if (s_wstrb[2]) ram[mem_word_index(w_addr)][23:16] <= s_wdata[23:16];
-                        if (s_wstrb[3]) ram[mem_word_index(w_addr)][31:24] <= s_wdata[31:24];
+                        if (INJECT_WRITE_RESP_ERROR && !write_error_injected &&
+                            (w_addr[31:5] == INJECT_WRITE_RESP_ERROR_ADDR[31:5])) begin
+                            write_error_injected <= 1'b1;
+                            $display("axi_ddr_model: injected write SLVERR addr=%08h id=%0h", w_addr, w_id);
+                        end else begin
+                            if (s_wstrb[0]) ram[mem_word_index(w_addr)][7:0]   <= s_wdata[7:0];
+                            if (s_wstrb[1]) ram[mem_word_index(w_addr)][15:8]  <= s_wdata[15:8];
+                            if (s_wstrb[2]) ram[mem_word_index(w_addr)][23:16] <= s_wdata[23:16];
+                            if (s_wstrb[3]) ram[mem_word_index(w_addr)][31:24] <= s_wdata[31:24];
+                        end
 
                         if (s_wlast) begin
                             int_wready <= 1'b0;
                             s_bvalid   <= 1'b1;
-                            s_bresp    <= 2'b00; // OKAY
+                            s_bresp    <= (INJECT_WRITE_RESP_ERROR &&
+                                           !write_error_injected &&
+                                           (w_addr[31:5] == INJECT_WRITE_RESP_ERROR_ADDR[31:5])) ?
+                                           2'b10 : 2'b00;
                             s_bid      <= w_id;
                             w_state    <= W_RESP;
                         end else begin

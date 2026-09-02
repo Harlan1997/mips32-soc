@@ -4362,3 +4362,13 @@ configuration.
   gate passed with `aw=4`, `w=3`, and `delayed_w=3`. This proves the shared AXI
   write owner clears and can be reacquired after an in-flight reset; it does
   not close arbitrary reset/error interleavings or OS page-table ownership.
+
+### 2026-09-02 Hardware walker A/D SoC writeback error
+
+- Added a behavioral DDR write-response fault at the first hardware-walker PTE
+  write address. The default L2 write-through path had been dropping the
+  downstream `BRESP`; it now latches and forwards that response upstream.
+- The negative gate observes `MMU_AD_AXI_WRITE_ERROR_PASS` with `resp=2` and
+  the original PTE value `0x0000600b`, proving `pte_update_error` reaches the
+  walker without committing the failed write. Physical fault timing and
+  arbitrary reset/error interleavings remain open.
