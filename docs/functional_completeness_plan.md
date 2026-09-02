@@ -1527,3 +1527,12 @@ at this boundary. The next diagnosis therefore follows later
 `do_basic_setup` initcalls and completion waits rather than changing the
 mount/error behavior speculatively. RTL Linux userspace and full RTL/QEMU
 Linux differential remain open.
+
+### 2026-09-02 RTL Linux completion primitive trace
+
+A focused trace of `wait_for_completion*` showed multiple entry/return pairs
+in the real RTL run, including callers in kthread creation and parking. No
+kernel-init caller was observed stuck in the completion primitive. This
+further rules out a generic completion, WAIT, or CP0 timer fix as the next
+action; the remaining RTL Linux blocker is later `do_basic_setup` initcall
+progress or the kernel-init handoff.

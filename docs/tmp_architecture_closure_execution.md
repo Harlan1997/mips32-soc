@@ -4470,3 +4470,12 @@ configuration.
 - No RTL hang or architectural mismatch is proven at this return boundary.
   The next trace must follow later `do_basic_setup` initcalls and completion
   waits. RTL Linux userspace and full RTL/QEMU Linux differential remain open.
+
+### 2026-09-02 RTL Linux completion primitive trace
+
+- A focused real-RTL trace of `wait_for_completion*` observed multiple
+  entry/return pairs, including `__kthread_create_on_node` and `kthread_park`
+  callers.
+- No kernel-init caller was observed stuck in the completion primitive. No
+  completion/WAIT/CP0 RTL change is justified; later `do_basic_setup`
+  initcalls or the kernel-init handoff remain the active diagnostic scope.
