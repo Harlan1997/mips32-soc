@@ -1,4 +1,4 @@
-// APB-visible MMU context contract.  The allocator is intentionally bounded
+// APB-visible MMU context contract.  The allocators are intentionally bounded
 // (four dynamic leases) for the current frontend/behavioral scope.
 module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  input wire clk,input wire rst_n,input wire psel,input wire penable,input wire pwrite,
@@ -15,6 +15,15 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  wire [7:0] alloc_asid, alloc_generation;
  wire [7:0] release_asid = pwdata[7:0];
  wire [7:0] release_generation = pwdata[15:8];
+ wire root_alloc_req = wr && (paddr[5:2] == 4'd10) && pwdata[0];
+ wire root_release_req = wr && (paddr[5:2] == 4'd12) && pwdata[31];
+ reg [31:0] root_release_root_r;
+ reg [31:0] root_r;
+ reg [7:0] root_generation_r;
+ reg [3:0] root_event_r;
+ wire root_alloc_valid, root_alloc_fail, root_release_valid, root_release_reject;
+ wire [31:0] root_alloc_root;
+ wire [7:0] root_alloc_generation;
  wire shootdown_req = wr && (paddr[5:2] == 4'd7) && pwdata[0];
  wire shootdown_ack = wr && (paddr[5:2] == 4'd8) && pwdata[0];
  wire sd_busy, sd_invalidate_valid, sd_done, sd_timeout, sd_rejected;
@@ -40,6 +49,14 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
    .release_asid(release_asid), .release_generation(release_generation),
    .release_valid(release_valid), .release_reject(release_reject));
 
+ mmu_page_table_allocator #(.SLOTS(4)) u_root_allocator (
+   .clk(clk), .rst_n(rst_n), .alloc_req(root_alloc_req),
+   .alloc_valid(root_alloc_valid), .alloc_fail(root_alloc_fail),
+   .alloc_root(root_alloc_root), .alloc_generation(root_alloc_generation),
+   .release_req(root_release_req), .release_root(root_release_root_r),
+   .release_generation(pwdata[7:0]), .release_valid(root_release_valid),
+   .release_reject(root_release_reject));
+
  assign pready = 1'b1;
  assign pslverr = 1'b0;
  assign invalidate_valid = sd_invalidate_valid;
@@ -52,6 +69,7 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  always @(posedge clk or negedge rst_n) begin
    if (!rst_n) begin
      asid_r <= 0; generation_r <= 0; vpn_r <= 0; scope_r <= 0; event_r <= 0; sd_status_r <= 0;
+     root_release_root_r <= 0; root_r <= 0; root_generation_r <= 0; root_event_r <= 0;
    end else begin
      if (alloc_valid) begin
        asid_r <= alloc_asid;
@@ -61,6 +79,14 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      if (alloc_fail) event_r[1] <= 1'b1;
      if (release_valid) event_r[2] <= 1'b1;
      if (release_reject) event_r[3] <= 1'b1;
+     if (root_alloc_valid) begin
+       root_r <= root_alloc_root;
+       root_generation_r <= root_alloc_generation;
+       root_event_r[0] <= 1'b1;
+     end
+     if (root_alloc_fail) root_event_r[1] <= 1'b1;
+     if (root_release_valid) root_event_r[2] <= 1'b1;
+     if (root_release_reject) root_event_r[3] <= 1'b1;
      if (shootdown_req) sd_status_r <= 0;
      if (sd_invalidate_valid) sd_status_r[1] <= 1'b1;
      if (sd_done) sd_status_r[2] <= 1'b1;
@@ -74,6 +100,12 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
        4'd4: event_r <= event_r & ~pwdata[3:0];
        default: ; // 0x14 allocate and 0x18 release are command-only
      endcase
+     if (wr && (paddr[5:2] == 4'd11))
+       root_release_root_r <= pwdata;
+     if (wr && (paddr[5:2] == 4'd13))
+       root_event_r <= root_event_r | pwdata[3:0];
+     if (wr && (paddr[5:2] == 4'd14))
+       root_event_r <= root_event_r & ~pwdata[3:0];
    end
  end
 
@@ -86,6 +118,9 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      4'd3: prdata = {28'h0, event_r};
      4'd9: prdata = {27'h0, sd_status_r[4], sd_status_r[3], sd_status_r[2],
                      sd_status_r[1], sd_busy};
+     4'd10: prdata = root_r;
+     4'd11: prdata = {24'h0, root_generation_r};
+     4'd13: prdata = {28'h0, root_event_r};
      default: prdata = 32'b0;
    endcase
  end

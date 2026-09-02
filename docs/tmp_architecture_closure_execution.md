@@ -4904,3 +4904,20 @@ configuration.
 - [ ] Full RTL Linux userspace boot and unrestricted RTL/QEMU Linux
   differential remain open; this item only removes the confirmed EPC/BD
   recovery defect.
+# 2026-09-02 APB MMU page-table root ownership slice
+
+- Integrated `rtl/cpu/mmu_page_table_allocator.v` into
+  `apb_mmu_context_status`. The APB context block now exposes a bounded
+  four-root lease in addition to the existing ASID lease: root allocation and
+  token readback use `0x28/0x2c`, release-address staging uses `0x2c`, release
+  with generation validation uses `0x30`, and root sticky status/W1C uses
+  `0x34/0x38`.
+- Extended the existing context-status directed test to cover stale-generation
+  rejection, valid release, sticky event clearing, and generation-incremented
+  reuse. `RUN_DIR=/tmp/mmu-context-root-20260902b
+  tb/unit/tlb/run_mmu_context_status.sh` passes with
+  `REGRESSION_TEST_SUCCESS mmu_context_status`.
+- Updated all SoC/unit compile filelists to include the allocator. This closes
+  the bounded hardware-visible root ownership slice; it does not claim a
+  general OS allocator, unrestricted demand paging, Linux VM ownership,
+  multicore shootdown, or full privileged/MMU signoff.

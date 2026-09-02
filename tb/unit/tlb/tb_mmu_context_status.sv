@@ -22,6 +22,15 @@ module tb_mmu_context_status;
     apb_write(6'h1c,32'h1); repeat(18) @(negedge clk); apb_read(6'h24,32'hA,"shootdown timeout");
     apb_write(5'h0c,32'h5); apb_read(5'h0c,32'hd,"sticky events");
     apb_write(5'h10,32'h1); apb_read(5'h0c,32'hc,"W1C event");
+    apb_write(6'h28,32'h1); apb_read(6'h28,32'h00100000,"root allocator lease");
+    apb_read(6'h2c,32'h0,"root generation starts at zero");
+    apb_write(6'h2c,32'h00100000);
+    apb_write(6'h30,32'h80000001); apb_read(6'h34,32'h9,"root stale-release event");
+    apb_write(6'h38,32'h8);
+    apb_write(6'h30,32'h80000000); apb_read(6'h34,32'h5,"root valid-release event");
+    apb_write(6'h38,32'h5);
+    apb_write(6'h28,32'h1); apb_read(6'h28,32'h00100000,"root generation reuse");
+    apb_read(6'h2c,32'h1,"root generation increments");
     if(!pready || pslverr) begin $display("[FAIL] APB handshake");errors=errors+1;end
     if(errors==0) $display("REGRESSION_TEST_SUCCESS mmu_context_status"); else $display("REGRESSION_TEST_FAILED mmu_context_status"); $finish;
   end
