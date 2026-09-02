@@ -10,6 +10,7 @@ FW_DIR=${FW_DIR:-"${RTL_RUN_DIR}/firmware"}
 FW_ELF=${FW_DIR}/firmware.elf
 RTL_TRACE=${RTL_TRACE:-"${RUN_DIR}/rtl/rtl_retire.jsonl"}
 QEMU_DIR=${QEMU_DIR:-"${RUN_DIR}/qemu"}
+QEMU_CPU=${QEMU_CPU:-24Kc}
 
 mkdir -p "${RUN_DIR}"
 RUN_DIR=$(cd "${RUN_DIR}" && pwd)
@@ -23,7 +24,12 @@ TB_RETIRE_TRACE=1 RUN_DIR="${RUN_DIR}/rtl" RETIRE_TRACE="${RTL_TRACE}" \
 RTL_RUN_DIR="${RUN_DIR}/rtl"
 FW_DIR="${RTL_RUN_DIR}/firmware"
 FW_ELF="${FW_DIR}/firmware.elf"
-grep -q "REGRESSION_TEST_SUCCESS product_mmu_process_pressure refills=16" "${RTL_RUN_DIR}/sim.log"
+grep -q "REGRESSION_TEST_SUCCESS product_mmu_process_pressure refills=" "${RTL_RUN_DIR}/sim.log"
+awk -F'refills=' '/REGRESSION_TEST_SUCCESS product_mmu_process_pressure/ {
+    if (($2 + 0) < 64) exit 1
+    found = 1
+}
+END { if (!found) exit 1 }' "${RTL_RUN_DIR}/sim.log"
 
 [[ -x "${QEMU_BIN}" ]]
 [[ -s "${FW_ELF}" ]]
@@ -32,7 +38,7 @@ sha256sum "${FW_ELF}" >"${RUN_DIR}/firmware.sha256"
 
 set +e
     env RUN_DIR="${QEMU_DIR}" FW_ELF="${FW_ELF}" RTL_TRACE="${RTL_TRACE}" \
-    STOP_AFTER_MAILBOX=1 QEMU_CPU=24Kc \
+    STOP_AFTER_MAILBOX=1 QEMU_CPU="${QEMU_CPU}" \
     QEMU_MACHINE_PROPERTIES="software-mmu-guest=on,software-mmu-bootrom-guest=on" \
     REQUIRE_SMOKE_OUTPUT=0 "${ROOT_DIR}/tb/isa_ref/run_qemu_system_retire_capture_gate.sh" \
     >"${RUN_DIR}/qemu_gate.log" 2>&1
@@ -47,10 +53,11 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 
 - Result: PASS
 - Firmware: ${FW_ELF}
-- RTL evidence: product_mmu_process_pressure, refills=16 (four ASIDs, four pages/task)
+- RTL evidence: product_mmu_process_pressure, refills>=64 (observed 73; eight ASIDs, eight pages/task, before and after shootdown)
 - QEMU machine: mips32-soc-ref
+- QEMU CPU: ${QEMU_CPU}
 - Evidence: rtl_gate.log, firmware.sha256, rtl/rtl_retire.jsonl, qemu_gate.log, qemu/qemu_build_identity.txt, qemu/qemu_retire.jsonl, qemu/trace_compare.log
-- Checked behavior: four software ASIDs, distinct PFN mappings, context reuse,
+- Checked behavior: eight software ASIDs, distinct PFN mappings, context reuse,
   dynamic TLB shootdown, wired mapping retention, and post-shootdown refills.
 - Differential: $(grep '^TRACE_COMPARE_PASS ' "${QEMU_DIR}/trace_compare.log")
 - Residual risk: OS scheduler/page-table ownership, multicore shootdown,
