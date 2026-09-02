@@ -1459,6 +1459,15 @@ rules out a stopped CP0 Count, missed Compare match, or WAIT wakeup failure in
 this run. No userspace marker was observed, so the runnable-task/scheduler or
 userspace handoff path and full RTL/QEMU Linux differential remain open.
 
+### 2026-09-02 Unit simulation watchdog/OOM containment
+
+Hardened `tb/unit/mmu/run_page_table_walker.sh` with a configurable
+`SIM_TIMEOUT` (default 30 seconds) and explicit nonzero failure propagation.
+The normal gate passes with `REGRESSION_TEST_SUCCESS page_table_walker`; a
+runaway unit simulator can no longer consume CPU indefinitely. This closes
+the resource-safety boundary for this unit entry point only and does not
+change the walker contract or imply formal signoff.
+
 ### 2026-09-02 FPU doubleword memory round-trip
 
 Extended `tb/soc_test/fw/tests/fpu_double/main.s` with a real CPU data-path

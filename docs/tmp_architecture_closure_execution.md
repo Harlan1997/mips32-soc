@@ -4396,6 +4396,16 @@ configuration.
   walker without committing the failed write. Physical fault timing and
   arbitrary reset/error interleavings remain open.
 
+### 2026-09-02 Unit simulation watchdog/OOM containment
+
+- `tb/unit/mmu/run_page_table_walker.sh` now wraps the VCS runtime with a
+  configurable `SIM_TIMEOUT` (default 30 seconds) and propagates timeout or
+  runtime failure as a nonzero exit.
+- The normal run passed with `REGRESSION_TEST_SUCCESS page_table_walker` and
+  completed in about 0.17 seconds.
+- This prevents an unbounded walker unit process from consuming host CPU and
+  memory indefinitely; it does not alter RTL behavior or functional scope.
+
 ### 2026-09-02 FPU doubleword memory round-trip recheck
 
 - Extended the real `fpu_double` CPU/SoC guest with an `SDC1`/`LDC1`
