@@ -656,7 +656,8 @@ qemu-system-uhi-dtb-gate: qemu-system-mips32-soc-ref
 
 linux-boot-build-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/run_linux_boot_gate.sh
-	RUN_DIR=$(BUILD_DIR)/linux_boot/real tb/linux_boot/run_linux_boot_gate.sh
+	RUN_DIR=$(if $(RUN_DIR),$(RUN_DIR),$(BUILD_DIR)/linux_boot/real) \
+		tb/linux_boot/run_linux_boot_gate.sh
 
 linux-soc-vic-gate: linux-boot-build-gate
 	@echo "Linux SoC VIC gate: PASS"
