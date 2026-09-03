@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 RTL Linux strict userspace replay with fixed seed
+
+- Added explicit `RTL_SIM_SEED` propagation through the `make
+  rtl-linux-progress-gate` recipe and recorded the selected seed in the gate
+  report. This makes long RTL Linux diagnostic replays reproducible from both
+  the script and Make entry points.
+- A fresh strict replay using `RTL_SIM_SEED=1`, the VIC-enabled kernel artifact
+  `/tmp/linux-vic-rebuild-20260903/linux_boot/real/kernel/vmlinux`, and a
+  20M-cycle limit completed normally but failed the required userspace marker
+  criterion. Evidence is in
+  `/tmp/rtl-linux-userspace-seed1-20260903/completion_report.md` and
+  `sim/sim.log`.
+- The trace shows continuous scheduler/timer activity through cycle 20M,
+  repeated task-flag loads and timer `ERET` returns, with no panic or simulator
+  error, but no `/init` UART marker. RTL Linux userspace boot, full RTL/QEMU
+  Linux differential and Linux VM/shootdown signoff remain OPEN. This is a
+  reproducibility and diagnosis update, not a functional pass.
+
 ### 2026-09-03 RTL Linux WAIT task-flag diagnostic extension
 
 - Extended the opt-in `LINUX_WAIT_TRACE` record to retain the most recent

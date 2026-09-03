@@ -263,6 +263,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Result: ${result}
 - Host timeout: ${HOST_TIMEOUT}
 - RTL cycle limit: ${RTL_CYCLE_LIMIT}
+- RTL simulation seed: ${RTL_SIM_SEED:-default}
 - Linux profile: ${LINUX_PROFILE}
 - Delay trace: ${LINUX_DELAY_TRACE} (limit=${LINUX_DELAY_TRACE_LIMIT}, window=${LINUX_DELAY_TRACE_START}..${LINUX_DELAY_TRACE_END})
 - UART trace: ${LINUX_UART_TRACE} (limit=${LINUX_UART_TRACE_LIMIT})
