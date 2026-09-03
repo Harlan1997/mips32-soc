@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-04 Verification foundation refresh
+
+在受控模块/VCS 环境下重跑 `scripts/run_verification_foundation_gate.sh`：
+formal asset audit 通过（`files=7 modules=7 assertions=16`），真实 DUT bind
+elaboration 通过 `7/7`，2 个 coverage waiver 文件的宽泛排除审计通过。工具
+清单为 `vcs 1/9`，Verilator、Yosys/SBY、商业 lint、CDC/RDC 和 formal solver
+当前缺失；因此该项只闭合 checker 资产、绑定编译和 waiver hygiene，不宣称
+solver proof、CDC/RDC/lint signoff 或完整功能闭合。证据在
+`/tmp/verification-foundation-20260904/`。
+
 ### 2026-09-04 RTL Linux delay-slot diagnostic audit
 
 新增 `scripts/check_linux_delay_trace.py` 和 `make linux-delay-trace-audit`，
