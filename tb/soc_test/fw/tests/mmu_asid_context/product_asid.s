@@ -238,6 +238,46 @@ lease_contract:
     bne     $t1, $t0, fail
     nop
 
+    /* Page-frame lease contract: bounded page allocation, stale release,
+       valid release and generation-incremented reuse. */
+    ori     $t0, $zero, 1
+    sw      $t0, 64($t7)             /* PAGE_ALLOC at 0x40 */
+    lw      $t1, 64($t7)
+    lui     $t2, 0x0000
+    ori     $t2, $t2, 0x6000
+    bne     $t1, $t2, fail
+    nop
+    lw      $t1, 68($t7)             /* PAGE_GENERATION */
+    bne     $t1, $zero, fail
+    nop
+    sw      $t2, 68($t7)             /* PAGE_RELEASE_PAGE holding */
+    lui     $t0, 0x8000
+    ori     $t0, $t0, 1              /* stale generation 1 */
+    sw      $t0, 72($t7)             /* PAGE_RELEASE */
+    lw      $t1, 76($t7)             /* PAGE_EVENT */
+    addiu   $t0, $zero, 9
+    bne     $t1, $t0, fail
+    nop
+    addiu   $t0, $zero, 8
+    sw      $t0, 80($t7)             /* PAGE_EVENT_CLEAR */
+    sw      $t2, 68($t7)
+    lui     $t0, 0x8000              /* valid generation 0 */
+    sw      $t0, 72($t7)
+    lw      $t1, 76($t7)
+    addiu   $t0, $zero, 5
+    bne     $t1, $t0, fail
+    nop
+    sw      $t0, 80($t7)             /* clear alloc/release events */
+    ori     $t0, $zero, 1
+    sw      $t0, 64($t7)
+    lw      $t1, 64($t7)
+    bne     $t1, $t2, fail
+    nop
+    lw      $t1, 68($t7)
+    addiu   $t0, $zero, 1
+    bne     $t1, $t0, fail
+    nop
+
     jr      $ra
     nop
 

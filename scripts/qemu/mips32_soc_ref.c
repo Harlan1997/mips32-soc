@@ -169,6 +169,13 @@ typedef struct MIPS32SocRefState {
     uint32_t mmu_context_root_value;
     uint32_t mmu_root_event;
     uint32_t mmu_context_event;
+    /* Mirror the bounded RTL page-frame lease pool exposed at 0x9040..0x9050. */
+    bool mmu_page_used[16];
+    uint8_t mmu_page_generation[16];
+    uint32_t mmu_page_value;
+    uint8_t mmu_page_value_generation;
+    uint32_t mmu_page_release_value;
+    uint32_t mmu_page_event;
     /* Bounded dual-mailbox model for the RTL's two APB IPI endpoints.
      * The reference machine remains single-vCPU; these state machines model
      * target acceptance/ACK and fault behavior, not architectural SMP. */
@@ -1294,6 +1301,15 @@ static uint64_t soc_ref_apb_read(void *opaque, hwaddr addr, unsigned size)
     case 0x9034:
         value = s->mmu_root_event & 0xfU;
         break;
+    case 0x9040:
+        value = s->mmu_page_value;
+        break;
+    case 0x9044:
+        value = s->mmu_page_value_generation;
+        break;
+    case 0x904c:
+        value = s->mmu_page_event & 0xfU;
+        break;
     case 0x1000: value = s->timer_ctrl; break;
     case 0x1004: value = s->timer_load; break;
     case 0x1008: value = soc_ref_timer_value(s); break;
@@ -1740,6 +1756,49 @@ static void soc_ref_apb_write(void *opaque, hwaddr addr, uint64_t data,
                 }
             }
         }
+        break;
+    case 0x9040:
+        /* Page-frame allocation command; first free slot wins, matching RTL. */
+        if (value & 1U) {
+            bool found = false;
+            for (unsigned i = 0; i < 16; ++i) {
+                if (!s->mmu_page_used[i] && !found) {
+                    s->mmu_page_used[i] = true;
+                    s->mmu_page_value = 0x00006000U + i * 0x1000U;
+                    s->mmu_page_value_generation = s->mmu_page_generation[i];
+                    s->mmu_page_event |= 1U;
+                    found = true;
+                }
+            }
+            if (!found)
+                s->mmu_page_event |= 2U;
+        }
+        break;
+    case 0x9044:
+        /* Holding register for the physical page released through 0x9048. */
+        s->mmu_page_release_value = value;
+        break;
+    case 0x9048:
+        if (value & 0x80000000U) {
+            unsigned slot = 16;
+            for (unsigned i = 0; i < 16; ++i)
+                if (s->mmu_page_release_value == 0x00006000U + i * 0x1000U)
+                    slot = i;
+            if (slot < 16 && s->mmu_page_used[slot] &&
+                s->mmu_page_generation[slot] == (value & 0xffU)) {
+                s->mmu_page_used[slot] = false;
+                s->mmu_page_generation[slot]++;
+                s->mmu_page_event |= 4U;
+            } else {
+                s->mmu_page_event |= 8U;
+            }
+        }
+        break;
+    case 0x904c:
+        s->mmu_page_event |= value & 0xfU;
+        break;
+    case 0x9050:
+        s->mmu_page_event &= ~(value & 0xfU);
         break;
     case 0x1000:
         if ((s->timer_ctrl & 1U) && !(value & 1U))

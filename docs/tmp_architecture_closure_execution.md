@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 MMU page-frame ownership in QEMU/RTL differential
+
+- Extended `scripts/qemu/mips32_soc_ref.c` with the same sixteen-slot,
+  generation-tagged page-frame lease state as RTL, exposed at APB
+  `0x9040..0x9050`.
+- Extended the `mmu_asid_context` firmware to exercise allocation, generation
+  readback, stale release rejection, sticky event/W1C, valid release and
+  generation-incremented reuse.
+- `QEMU_BUILD_JOBS=1 QEMU_TIMEOUT=120 VCS_JOBS=1 EDA_MEMORY_MAX=1500M
+  SKIP_COVERAGE=1 BUILD_DIR=/tmp/mmu-page-frame-differential-20260903
+  make qemu-system-mmu-contract-gate` passes through real MMU-enabled RTL and
+  the `mips32-soc-ref` system machine with retire differential.
+- The pool remains a bounded ownership primitive. Linux buddy allocation,
+  reclaim/swap, unrestricted demand paging, full VM policy, complete
+  privileged/MMU compliance and physical signoff remain OPEN.
+
 ### 2026-09-03 Bounded MMU page-frame lease allocator
 
 - Added opt-in `mmu_page_frame_allocator` with sixteen fixed 4-KiB pages,
