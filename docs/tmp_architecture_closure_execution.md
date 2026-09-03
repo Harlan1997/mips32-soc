@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 MDU radix-4 multiplier closure slice
+
+- Replaced the behavioral `*` multiplier in `rtl/cpu/mips_mdu.v` with a
+  synthesizable radix-4 shift/add accumulator. Four radix-4 digits are
+  consumed per normal calculation cycle, yielding a four-cycle calculation
+  plus the common result-commit boundary; two 16-bit magnitude operands use
+  an eight-digit early-exit calculation.
+- The result remains uncommitted until the `ST_DONE` boundary, preserving
+  flush cancellation and preventing consumers from observing stale HI/LO.
+- `mdu-flush-gate`, `mdu-cpu-gate`, and `qemu-system-mdu-differential-gate`
+  pass after the change. This closes the multiplier implementation slice;
+  radix-2 division latency optimization, official CoreMark/Dhrystone
+  baselines, and full MDU performance signoff remain OPEN.
+
 ### 2026-09-03 CPU performance retire boundary corrected
 
 - The CPU performance counter's retire event was previously derived from

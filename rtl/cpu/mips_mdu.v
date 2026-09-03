@@ -29,9 +29,11 @@
 //    11 MSUBU  {HI:LO} -= unsigned(rs*rt)
 //    12 MUL    rd = (rs*rt)[31:0]   (R2)  — HI/LO trashed per spec
 //
-//   Multiplier: single-cycle behavioural (Verilog *), pipelined 3 cycles to
-//   model reasonable timing. Early-exit shortcut: if |rs| <= 0xFFFF and
-//   |rt| <= 0xFFFF the result is complete after 1 cycle (fits 32 bits).
+//   Multiplier: unsigned magnitude operands are accumulated with a
+//   synthesizable radix-4 shift/add datapath. Four radix-4 digits (8
+//   multiplier bits) are consumed per cycle, followed by one result commit
+//   cycle. Signed operations use magnitude arithmetic and a final two's
+//   complement, so the INT_MIN corner remains representable.
 //
 //   Divider: 32-cycle restoring radix-2. Early-exit: if divisor > dividend
 //   in unsigned magnitude we skip iteration and return LO=0/HI=dividend.
@@ -96,7 +98,12 @@ module mips_mdu (
     // ---- Multiplier operands / result ----
     reg  [31:0] mul_a, mul_b;
     reg  [63:0] mul_prod;
-    reg  [1:0]  mul_pipe;   // 2-cycle pipeline; 0 result ready
+    reg  [65:0] mul_acc;
+    reg  [65:0] mul_mcand;
+    reg  [31:0] mul_mult;
+    reg  [2:0]  mul_ctr;     // four radix-4 chunks: 0..3
+    reg         mul_short;
+    reg         mul_commit_pending;
 
     // ---- Divider state ----
     reg  [31:0] div_divisor;
@@ -105,10 +112,72 @@ module mips_mdu (
     reg  [31:0] div_dividend_orig;
 
     // ---- Busy ----
-    assign busy = (state != ST_IDLE) && (state != ST_DONE);
+    // A multiply result parked in ST_DONE is still uncommitted. Keep the
+    // pipeline stalled through the commit edge so consumers cannot observe
+    // the previous HI/LO value in the pending-result window.
+    assign busy = ((state != ST_IDLE) && (state != ST_DONE)) ||
+                  ((state == ST_DONE) && mul_commit_pending);
 
     // Working temporary for MADD result
     reg [63:0] acc_tmp;
+
+    // Process four radix-4 digits without using a behavioural multiply.  The
+    // extra two accumulator bits absorb the intermediate carry before the
+    // final 64-bit architectural result is committed.
+    function [65:0] radix4_chunk;
+        input [65:0] acc;
+        input [65:0] mcand;
+        input [31:0] multiplier;
+        reg [65:0] t;
+        reg [65:0] digit_mcand;
+        integer digit;
+        begin
+            t = acc;
+            digit_mcand = mcand;
+            for (digit = 0; digit < 4; digit = digit + 1) begin
+                case (multiplier[(digit * 2) +: 2])
+                    2'b01: t = t + digit_mcand;
+                    2'b10: t = t + (digit_mcand << 1);
+                    2'b11: t = t + digit_mcand + (digit_mcand << 1);
+                    default: ;
+                endcase
+                digit_mcand = digit_mcand << 2;
+            end
+            radix4_chunk = t;
+        end
+    endfunction
+
+    // Short operands fit in 16 bits of magnitude.  Consume all eight
+    // radix-4 digits in one combinational early-exit step; the following
+    // state transition is still the same architectural commit boundary.
+    function [65:0] radix4_short;
+        input [65:0] acc;
+        input [65:0] mcand;
+        input [31:0] multiplier;
+        reg [65:0] t;
+        reg [65:0] digit_mcand;
+        integer digit;
+        begin
+            t = acc;
+            digit_mcand = mcand;
+            for (digit = 0; digit < 8; digit = digit + 1) begin
+                case (multiplier[(digit * 2) +: 2])
+                    2'b01: t = t + digit_mcand;
+                    2'b10: t = t + (digit_mcand << 1);
+                    2'b11: t = t + digit_mcand + (digit_mcand << 1);
+                    default: ;
+                endcase
+                digit_mcand = digit_mcand << 2;
+            end
+            radix4_short = t;
+        end
+    endfunction
+
+    wire [65:0] mul_acc_next = radix4_chunk(mul_acc, mul_mcand, mul_mult);
+    wire [65:0] mul_short_next = radix4_short(mul_acc, mul_mcand, mul_mult);
+    wire [63:0] mul_signed_next = result_neg_mul ?
+                                   (~mul_acc_next[63:0] + 64'd1) :
+                                   mul_acc_next[63:0];
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -127,7 +196,12 @@ module mips_mdu (
             mul_a             <= 32'h0;
             mul_b             <= 32'h0;
             mul_prod          <= 64'h0;
-            mul_pipe          <= 2'h0;
+            mul_acc           <= 66'h0;
+            mul_mcand         <= 66'h0;
+            mul_mult          <= 32'h0;
+            mul_ctr           <= 3'h0;
+            mul_short         <= 1'b0;
+            mul_commit_pending <= 1'b0;
             div_divisor       <= 32'h0;
             div_ws            <= 64'h0;
             div_ctr           <= 6'h0;
@@ -144,7 +218,12 @@ module mips_mdu (
                 op_r              <= 4'h0;
                 rs_r              <= 32'h0;
                 rt_r              <= 32'h0;
-                mul_pipe          <= 2'h0;
+                mul_acc           <= 66'h0;
+                mul_mcand         <= 66'h0;
+                mul_mult          <= 32'h0;
+                mul_ctr           <= 3'h0;
+                mul_short         <= 1'b0;
+                mul_commit_pending <= 1'b0;
                 div_ctr           <= 6'h0;
                 div_ws            <= 64'h0;
                 div_divisor       <= 32'h0;
@@ -176,7 +255,12 @@ module mips_mdu (
                                 mul_a          <= rs_val[31] ? (~rs_val + 1'b1) : rs_val;
                                 mul_b          <= rt_val[31] ? (~rt_val + 1'b1) : rt_val;
                                 result_neg_mul <= rs_val[31] ^ rt_val[31];
-                                mul_pipe       <= 2'd2;
+                                mul_acc        <= 66'h0;
+                                mul_mcand      <= {34'h0, (rs_val[31] ? (~rs_val + 1'b1) : rs_val)};
+                                mul_mult       <= (rt_val[31] ? (~rt_val + 1'b1) : rt_val);
+                                mul_ctr        <= 3'd0;
+                                mul_short      <= ((rs_val[31] ? (~rs_val + 1'b1) : rs_val) < 32'h0001_0000) &&
+                                                   ((rt_val[31] ? (~rt_val + 1'b1) : rt_val) < 32'h0001_0000);
                                 state          <= ST_MUL;
                             end
                             OP_MULTU, OP_MADDU, OP_MSUBU: begin
@@ -186,7 +270,12 @@ module mips_mdu (
                                 mul_a          <= rs_val;
                                 mul_b          <= rt_val;
                                 result_neg_mul <= 1'b0;
-                                mul_pipe       <= 2'd2;
+                                mul_acc        <= 66'h0;
+                                mul_mcand      <= {34'h0, rs_val};
+                                mul_mult       <= rt_val;
+                                mul_ctr        <= 3'd0;
+                                mul_short      <= (rs_val < 32'h0001_0000) &&
+                                                   (rt_val < 32'h0001_0000);
                                 state          <= ST_MUL;
                             end
                             OP_DIV: begin
@@ -229,39 +318,36 @@ module mips_mdu (
 
                 //=============================================================
                 ST_MUL: begin
-                    // 2-cycle multiply pipeline: cycle 0 latch product, cycle 1
-                    // (mul_pipe=1) idle, cycle 2 (mul_pipe=0) result ready.
-                    // Early-exit: if both operands fit in 17 bits, complete now.
-                    if (mul_pipe == 2'd2) begin
-                        mul_prod <= mul_a * mul_b;
-                        if ((mul_a[31:16] == 16'h0) && (mul_b[31:16] == 16'h0)) begin
-                            // early exit — result ≤ 32 bits, latch and finalize next cycle
-                            mul_pipe <= 2'd0;
-                        end else begin
-                            mul_pipe <= 2'd1;
-                        end
-                    end else if (mul_pipe == 2'd1) begin
-                        mul_pipe <= 2'd0;
-                    end else begin
-                        // Apply sign
-                        if (result_neg_mul) begin
-                            mul_prod <= (~mul_prod + 64'd1);
-                        end
+                    if (mul_short) begin
+                        mul_acc  <= mul_short_next;
+                        mul_prod <= result_neg_mul ? (~mul_short_next[63:0] + 64'd1) :
+                                    mul_short_next[63:0];
                         if (is_acc) begin
                             state <= ST_ACC;
-                        end else if (op_r == OP_MUL) begin
-                            // MUL rd form: low 32 bits go through lo_r for wrapper to select;
-                            // HI/LO officially undefined — we still write full 64 bits.
-                            hi_r  <= result_neg_mul ? ~mul_prod[63:32] + (mul_prod[31:0] == 32'h0 ? 32'h1 : 32'h0)
-                                                    : mul_prod[63:32];
-                            lo_r  <= result_neg_mul ? (~mul_prod[31:0] + 1'b1) : mul_prod[31:0];
-                            state <= ST_DONE;
                         end else begin
-                            hi_r  <= result_neg_mul ? ~mul_prod[63:32] + (mul_prod[31:0] == 32'h0 ? 32'h1 : 32'h0)
-                                                    : mul_prod[63:32];
-                            lo_r  <= result_neg_mul ? (~mul_prod[31:0] + 1'b1) : mul_prod[31:0];
+                            // Keep the result pending until ST_DONE so the
+                            // common flush boundary can cancel it.
+                            mul_commit_pending <= 1'b1;
                             state <= ST_DONE;
                         end
+                    end else begin
+                    // Each cycle consumes four radix-4 digits.  The fourth
+                    // chunk covers multiplier bits [31:24], so its result is
+                    // complete without a hidden behavioural multiplication.
+                    mul_acc   <= mul_acc_next;
+                    mul_mcand <= mul_mcand << 8;
+                    mul_mult  <= mul_mult >> 8;
+                    if (mul_ctr == 3'd3) begin
+                        mul_prod <= mul_signed_next;
+                        if (is_acc) begin
+                            state <= ST_ACC;
+                        end else begin
+                            mul_commit_pending <= 1'b1;
+                            state <= ST_DONE;
+                        end
+                    end else begin
+                        mul_ctr <= mul_ctr + 1'b1;
+                    end
                     end
                 end
 
@@ -315,6 +401,11 @@ module mips_mdu (
 
                 //=============================================================
                 ST_DONE: begin
+                    if (mul_commit_pending) begin
+                        hi_r <= mul_prod[63:32];
+                        lo_r <= mul_prod[31:0];
+                        mul_commit_pending <= 1'b0;
+                    end
                     done_pulse <= 1'b1;
                     state      <= ST_IDLE;
                 end
