@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 Architecture aggregate after Linux userspace polling fix
+
+新的 `make qemu-system-architecture-closure-gate` 在 commit `5d38463` 上通过。
+本次运行使用明确记录哈希的 kernel/DTB/config artifact，所有 current-contract、
+selected ISA/MDU/FPU/privileged/peripheral、MMU、LL/SC、FPE 和 Linux userspace
+子 gate 均通过。该 aggregate 现在闭合当前 bounded QEMU architecture integration
+范围；报告仍明确保留 full MIPS32/privileged ISA、完整 IEEE-754/FPU ABI、RTL
+Linux userspace/full RTL-QEMU differential、unrestricted Linux VM/shootdown、
+physical DDR/QSPI 和 formal/CDC/RDC/lint signoff 的 OPEN 边界。
+
 ### 2026-09-03 Linux userspace mprotect/wait4 polling closure
 
 `tb/linux_boot/init.S` 将保护页子进程的 exact-PID `wait4` 改为
