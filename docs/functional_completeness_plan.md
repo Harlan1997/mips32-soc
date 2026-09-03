@@ -1,5 +1,20 @@
 # SoC 功能完整性计划
 
+### 2026-09-04 RTL Linux idle/scheduler boundary recheck
+
+对已编译的 SoC-VIC Linux kernel/DTB image 做了受控 16M-cycle RTL replay，
+窗口覆盖 13M..16M 周期的 PC/GPR/exception-frame/vector/WAIT/mode trace；
+VCS 使用 `scripts/run_eda_cgroup.sh` 限制为 1500M 内存和 512M swap，运行
+正常结束且没有 OOM、VCS failure 或 kernel panic。结果确认 Linux 在约
+15.43M、15.64M 和 15.85M 周期从 `__r4k_wait` 接收 CP0 timer interrupt，
+每次 `except_pc/EPC=0x88002380`、`BD=0`，随后 ERET 返回同一顺序地址；
+这与 WAIT precise-resume contract 一致。任务 flag load 仍来自当前 idle
+task 的 `gp=0x88c38000`，userspace marker、`run_init_process` 和 kernel-to-
+user ERET 均未出现。该证据排除了此前怀疑的 WAIT EPC/BD 回归，但没有证明
+Linux scheduler/init-task handoff 已完成；RTL Linux userspace、完整
+RTL/QEMU Linux differential、Linux VM ownership 和完整 ISA/privileged
+signoff 继续保持 OPEN。没有基于此结果修改 CPU/CP0/WAIT RTL。
+
 ### 2026-09-04 Verification foundation refresh
 
 在受控模块/VCS 环境下重跑 `scripts/run_verification_foundation_gate.sh`：

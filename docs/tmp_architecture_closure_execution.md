@@ -5619,3 +5619,25 @@ remain OPEN.
   CPU, CP0, WAIT, scheduler or interrupt behavior. The run still has no
   userspace marker; RTL Linux userspace and full RTL/QEMU Linux differential
   remain OPEN.
+### 2026-09-04 RTL Linux idle/scheduler boundary recheck
+
+- Reused the compiled RTL Linux simulator under `scripts/run_eda_cgroup.sh`
+  with a 1500M memory/512M swap budget and a 16M-cycle bound. The run ended
+  normally with continuous Linux progress and no OOM, simulator failure or
+  kernel panic.
+- The 13M..16M trace captured timer IRQ acceptance while `__r4k_wait` was
+  suspended at `0x8800237c`, precise `except_pc/EPC=0x88002380`, `BD=0`, and
+  ERET back to `0x88002380` on each sampled wakeup. This matches the WAIT
+  precise-resume contract fixed in the previous change.
+- The active task flag load remains on the idle task (`gp=0x88c38000`), and
+  no `run_init_process`, kernel-to-user ERET or userspace marker is observed
+  by 16M cycles. This does not justify a speculative CPU/CP0/WAIT change; the
+  remaining boundary is Linux scheduler/init-task handoff or a later SoC
+  integration contract.
+- The direct 16M replay did not enable `LINUX_CP0_EXCEPTION_EDGE`, so it is
+  not used as the standalone WAIT checker artifact. The edge-complete
+  `/tmp/rtl-linux-wait-fixed-20260904/sim/sim_runtime.log` remains the
+  checker evidence and passes `scripts/check_linux_wait_trace.py`.
+- RTL Linux userspace, full RTL/QEMU Linux system differential, unrestricted
+  Linux VM/shootdown, complete ISA/MMU/FPU/OS semantics and product signoff
+  remain OPEN.
