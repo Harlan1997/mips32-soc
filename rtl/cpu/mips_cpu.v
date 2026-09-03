@@ -2135,11 +2135,11 @@ module mips_cpu #(
     // control-transfer encoding and PCs. This is required by Linux timing
     // loops, where a timer interrupt commonly lands on a branch delay slot.
     wire interrupt_mem_delay_from_ex = interrupt_accept &&
-                                       mem_flush_valid && ex_flush_valid &&
+                                       mem_flush_valid &&
                                        ex_is_control_transfer &&
                                        (mem_pc == (ex_pc + 32'd4));
     wire interrupt_ex_delay_from_id = interrupt_accept &&
-                                      ex_flush_valid && id_flush_valid &&
+                                      ex_flush_valid &&
                                       id_is_control_transfer &&
                                       (ex_pc == (id_pc + 32'd4));
     wire interrupt_wb_delay_from_mem = interrupt_accept &&
