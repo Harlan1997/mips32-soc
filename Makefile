@@ -238,7 +238,7 @@ dcache-parity-gate:
 
 .PHONY: cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-errors-gate l1-nonblocking-axi-bridge-gate l1-nonblocking-cpu-compat-gate l1-nonblocking-cpu-multi-gate l1-nonblocking-cpu-stress-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-gate l1-nonblocking-cpu-error-reset-gate mmu-ipi-shootdown-pressure-gate fpu-single-gate fpu-double-gate fpu-cu1-exception-gate fpu-fpe-exception-gate fpu-fpe-double-gate fpu-fpe-inexact-gate fpu-fpe-double-inexact-gate fpu-fpe-double-underflow-gate fpu-fpe-invalid-gate fpu-fpe-overflow-gate fpu-fpe-underflow-gate fpu-rounding-gate qemu-system-fpu-single-differential-gate qemu-system-fpu-double-differential-gate qemu-system-fpu-cu1-exception-differential-gate qemu-system-fpu-fpe-inexact-differential-gate qemu-system-fpu-fpe-double-inexact-differential-gate qemu-system-fpu-fpe-double-underflow-differential-gate qemu-system-fpu-fpe-double-differential-gate qemu-system-fpu-fpe-invalid-differential-gate qemu-system-fpu-fpe-overflow-differential-gate qemu-system-fpu-fpe-underflow-differential-gate qemu-system-fpu-fpe-boundary-differential-gate qemu-system-branch-likely-differential-gate cpu-reference-gate cpu-lockstep-gate perf-counters-gate qemu-system-mips32-soc-ref qemu-system-sram-uart-mailbox-gate qemu-system-peripheral-contract-gate qemu-system-qspi-gate qemu-system-ddr-gate qemu-system-current-contract-gate qemu-system-selected-differential-gate qemu-system-retire-capture-gate qemu-system-retire-differential-gate qemu-system-linux-differential-gate qemu-system-isa-r2-differential-gate qemu-system-exception-differential-gate qemu-system-break-differential-gate qemu-system-trap-differential-gate qemu-system-trap-imm-differential-gate qemu-system-di-ei-differential-gate qemu-system-wait-differential-gate qemu-system-bd-exception-differential-gate qemu-system-peripheral-differential-gate qemu-system-vic-differential-gate qemu-system-vic-cpu-differential-gate qemu-system-vic-full-sources-differential-gate qemu-system-mmu-contract-gate qemu-system-mmu-process-pressure-gate qemu-system-mmu-refill-differential-gate qemu-system-dma-v2-model-gate qemu-system-dma-v2-event-contract-gate qemu-system-dma-fault-gate qemu-system-unaligned-gate qemu-system-unaligned-differential-gate qemu-system-uhi-dtb-gate
 .PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate
-.PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-sync-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
+.PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: qemu-system-linux-differential-gate
@@ -1274,6 +1274,22 @@ l1-nonblocking-ddr-gate:
 	chmod +x tb/soc_test/run_l1_ddr_nonblocking_gate.sh
 	RUN_DIR=$(BUILD_DIR)/soc_test/l1_ddr_nonblocking \
 	tb/soc_test/run_l1_ddr_nonblocking_gate.sh
+
+# Stage-level cache concurrency gate.  Keep this opt-in aggregate separate
+# from current-contract-signoff because it selects the nonblocking CPU/L1/L2
+# path and therefore must not alter the default blocking baseline.
+l1-l2-nonblocking-complete-gate: cache-concurrency-gate l2-nonblocking-downstream-gate l1-nonblocking-cpu-complete-gate l1-nonblocking-ddr-gate qemu-system-l1-l2-nonblocking-differential-gate
+	@mkdir -p $(BUILD_DIR)/cache_concurrency_complete
+	@{ \
+		echo '# L1/L2 Nonblocking Cache Concurrency Completion Report'; \
+		echo; \
+		echo '- Result: PASS'; \
+		echo '- Configuration: opt-in two-MSHR L1, eight-MSHR L2, CPU ROB late responses, and two downstream L2 refill slots'; \
+		echo '- Evidence: standalone MSHR/AXI concurrency, real CPU/D-cache integration, DDR window, and QEMU system-mode retire differential gates'; \
+		echo '- Default path: unchanged blocking L1 and existing write-through policy'; \
+		echo '- Residual boundary: full MESI/directory coherency, arbitrary dirty-writeback ordering, Linux cache ABI, and physical DDR PHY timing remain outside this gate'; \
+	} > $(BUILD_DIR)/cache_concurrency_complete/cache_concurrency_completion_report.md
+	@echo "L1/L2 nonblocking cache concurrency gate: PASS"
 
 qemu-system-l1-ddr-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
