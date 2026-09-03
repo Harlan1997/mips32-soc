@@ -19,6 +19,15 @@ Linux FPU ABI 仍保持 OPEN。
 host timing 依赖。`make perf-workloads-gate` 用低资源配置通过；官方
 CoreMark/Dhrystone 源码、标准成绩和商用性能 signoff 仍保持 OPEN。
 
+### 2026-09-03 Official CoreMark RTL validation baseline
+
+获取并 vendored 官方 EEMBC CoreMark Apache-2.0 源码，增加 SoC bare-metal
+port：使用 APB cycle counter 计时、UART TX 输出和 mailbox 结束。新增
+`make perf-coremark-gate`；真实 RTL 运行通过 CoreMark validation CRC
+（`CoreMark Size=666`、`Total ticks=572591`、`crcfinal=0xe714`）。该配置为
+单次迭代的 validation baseline，不实现标准 10 秒 timing protocol，因此不
+宣称 CoreMark/MHz 成绩；Dhrystone、标准性能目标和商用 signoff 仍 OPEN。
+
 ### 2026-09-03 MDU divider effective-width normalization
 
 `rtl/cpu/mips_mdu.v` 的 restoring radix-2 divider 现在按被除数 magnitude

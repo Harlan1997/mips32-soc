@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Official CoreMark RTL validation baseline
+
+- Vendored the official EEMBC CoreMark Apache-2.0 sources under
+  `tb/perf/coremark` and added a SoC bare-metal port using the APB cycle
+  counter, UART TX register and mailbox completion.
+- Added `perf-coremark-gate`. The real RTL run passes with one performance
+  iteration and reports `CoreMark Size=666`, `Total ticks=572591`,
+  `crcfinal=0xe714`, followed by the SoC regression success marker.
+- This is a validation-CRC baseline, not a normalized CoreMark/MHz result:
+  the port intentionally does not claim the official ten-second timing
+  protocol. Dhrystone, standard performance targets and commercial signoff
+  remain OPEN.
+
 ### 2026-09-03 CPU workload CPI/IPC reporting
 
 - Extended the repeatable real-CPU workload firmware to report fixed-point
