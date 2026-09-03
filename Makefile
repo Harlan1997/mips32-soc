@@ -253,7 +253,7 @@ dcache-parity-gate:
 .PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
 .PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
-.PHONY: qemu-system-mdu-radix4-differential-gate
+.PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: qemu-system-linux-differential-gate
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
@@ -761,6 +761,12 @@ rtl-linux-userspace-gate:
 linux-exception-frame-check:
 	@test -n "$(LOG)" || (echo "LOG=/path/to/sim.log is required" >&2; exit 2)
 	python3 scripts/check_linux_exception_frame_trace.py "$(LOG)"
+
+linux-delay-trace-audit:
+	@test -n "$(LOG)" || (echo "LOG=/path/to/sim.log is required" >&2; exit 2)
+	python3 scripts/check_linux_delay_trace.py "$(LOG)" \
+		$(if $(BRANCH_PC),--branch-pc $(BRANCH_PC),) \
+		$(if $(DELAY_PC),--delay-pc $(DELAY_PC),)
 
 linux-uboot-build-gate:
 	chmod +x tb/linux_boot/run_uboot_build_gate.sh

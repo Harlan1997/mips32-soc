@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-04 RTL Linux delay-slot trace audit
+
+- Added `scripts/check_linux_delay_trace.py` and the `make
+  linux-delay-trace-audit LOG=... BRANCH_PC=... DELAY_PC=...` entry point.
+  The checker validates architectural branch/delay-slot alternation, the
+  `v0` decrement writeback and aligned ERET EPC values from the existing RTL
+  Linux trace; it does not modify simulation behavior or relax userspace
+  criteria.
+- Applied it to the fresh 20M-cycle low-resource replay at
+  `/tmp/rtl-linux-udelay-window-20260904/sim/sim.log`: `LINUX_DELAY_TRACE_PASS
+  records=488 erets=4`. The trace shows timer IRQ entry at `0x88801ea0`, ERET
+  return to the `__udelay` loop and monotonically decreasing `v0`. No
+  branch-delay/EPC/BD RTL defect is demonstrated, so no CPU change was made.
+  RTL Linux userspace boot and full RTL/QEMU Linux differential remain OPEN.
+
 ### 2026-09-03 RTL Linux strict userspace replay with fixed seed
 
 - Added explicit `RTL_SIM_SEED` propagation through the `make
