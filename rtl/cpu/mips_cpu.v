@@ -2186,9 +2186,15 @@ module mips_cpu #(
     // on a bubble or on the retried instruction while the target metadata has
     // already been cleared; forwarding that lone bit would fabricate
     // Cause.BD and subtract four from a non-delay-slot exception EPC.
-    wire exception_bd = (wb_bd && wb_arch_valid &&
-                         (wb_delay_slot_next_pc != 32'd0)) |
-                        interrupt_except_bd;
+    // WAIT is an architecturally retired, non-control-transfer instruction.
+    // The frozen pipeline can still contain stale delay-slot metadata from
+    // the instruction stream that preceded WAIT, so that metadata must never
+    // manufacture Cause.BD when an interrupt wakes the suspended core.  The
+    // wakeup EPC is already the sequential PC captured at WAIT retirement.
+    wire exception_bd = (interrupt_accept && wait_state) ? 1'b0 :
+                        ((wb_bd && wb_arch_valid &&
+                          (wb_delay_slot_next_pc != 32'd0)) |
+                         interrupt_except_bd);
         
     // An interrupt accepted while the core is suspended by WAIT is taken
     // after WAIT has retired.  Save the sequential PC so ERET resumes at the

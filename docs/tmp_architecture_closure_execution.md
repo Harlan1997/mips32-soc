@@ -1,5 +1,24 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-04 RTL Linux WAIT wakeup EPC/BD fix
+
+- Exact repository-kernel RTL replay exposed a real WAIT wakeup defect: stale
+  pipeline delay-slot metadata caused `Cause.BD=1` and CP0 to save
+  `EPC=0x8800237c`, re-entering WAIT after ERET instead of resuming at
+  `0x88002380`.
+- `rtl/cpu/mips_cpu.v` now gives an interrupt accepted while `wait_state` is
+  active the sequential WAIT resume PC and forces `exception_bd=0`, regardless
+  of frozen pipeline metadata. `scripts/check_linux_wait_trace.py` and
+  `make linux-wait-trace-audit` enforce the pre/post CP0 and ERET relationship.
+- Verification: `/tmp/rtl-linux-wait-fixed-20260904/sim/sim_runtime.log`
+  passes `LINUX_WAIT_TRACE_PASS waits=1 wakeups=1`; the edge has
+  `except_pc=0x88002380`, `except_bd=0`, post-edge `EPC=0x88002380`, followed
+  by ERET to the same PC. `make rtl-frontend-compile`, `make cpu-cp0-gate`,
+  and `make qemu-system-wait-differential-gate` also pass.
+- This closes the identified WAIT EPC/BD defect only. RTL Linux userspace,
+  full RTL/QEMU Linux differential, complete ISA/privileged/MMU/FPU/OS VM and
+  product signoff remain OPEN.
+
 ### 2026-09-04 Verification foundation refresh
 
 - Re-ran `scripts/run_verification_foundation_gate.sh` under the module-loaded
