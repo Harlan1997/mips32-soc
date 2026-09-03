@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 CPU workload CPI/IPC reporting
+
+- Extended the repeatable real-CPU workload firmware to report fixed-point
+  `CPI x1000` and `IPC x1000` from APB cycle/retire deltas without adding
+  freestanding floating-point dependencies.
+- `SKIP_COVERAGE=1 VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  BUILD_DIR=/tmp/perf-cpi-ipc-20260903 make perf-workloads-gate` passes; all
+  four workload cases report nonzero metrics and the regression mailbox
+  succeeds.
+- This closes the bounded counter-derived rate reporting slice. Official
+  CoreMark/Dhrystone sources and scores, branch-rate targets, and commercial
+  performance signoff remain OPEN.
+
 ### 2026-09-03 COP1 CVT.S.D CPU/QEMU exception-vector extension
 
 - Extended the real double firmware to clear FCSR and check `CVT.S.D` for
