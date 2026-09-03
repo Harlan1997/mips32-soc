@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 CPU performance retire boundary corrected
+
+- The CPU performance counter's retire event was previously derived from
+  `!global_stall && id_control_valid`, which counts decoded instructions even
+  when a later precise redirect flushes them and does not represent an
+  architectural commit.
+- It now uses the `wb_valid` one-cycle commit pulse shared by the legacy ROB
+  and opt-in nonblocking retirement FIFO. This makes the retire counter a
+  valid basis for CPI/IPC deltas while leaving the default pipeline behavior
+  unchanged.
+- Focused performance-counter and CPU workload gates are required before
+  treating this as verified; official CoreMark/Dhrystone performance and full
+  commercial performance signoff remain OPEN.
+
 ### 2026-09-03 RTL Linux IRQ/CP0 wakeup probe
 
 - A fresh 19M-cycle, low-resource RTL run with WAIT, vector, CP0 and mode
