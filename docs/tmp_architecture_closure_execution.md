@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 RTL Linux WAIT task-flag diagnostic extension
+
+- Extended the opt-in `LINUX_WAIT_TRACE` record to retain the most recent
+  completed data load matching the live `gp+4` task-flags address, including
+  cycle, PC, instruction, virtual/physical address and returned data. The
+  capture is testbench-only and does not participate in CPU handshakes.
+- The 14M-cycle replay at `/tmp/rtl-linux-taskflags-20260903` completed with
+  stable resource use and continuous post-reset progress, but this image did
+  not reach a WAIT trace event in the bounded window, so no task-flag value was
+  observed. RTL Linux userspace, full RTL/QEMU Linux differential and OS VM
+  signoff remain OPEN.
+
 ### 2026-09-03 Formal bind checker foundation extension
 
 - Added solver-facing reset synchronizer assertions for synchronized
