@@ -70,6 +70,8 @@ module tb_mips_soc;
     integer linux_exception_trace;
     integer linux_exception_trace_limit;
     integer linux_exception_trace_count;
+    integer linux_exception_trace_cycle_start;
+    integer linux_exception_trace_cycle_end;
     integer linux_exception_frame_trace;
     integer linux_exception_frame_trace_limit;
     integer linux_exception_frame_trace_count;
@@ -87,9 +89,13 @@ module tb_mips_soc;
     integer linux_wb_trace;
     integer linux_wb_trace_limit;
     integer linux_wb_trace_count;
+    integer linux_wb_trace_cycle_start;
+    integer linux_wb_trace_cycle_end;
     integer linux_mode_trace;
     integer linux_mode_trace_limit;
     integer linux_mode_trace_count;
+    integer linux_mode_trace_cycle_start;
+    integer linux_mode_trace_cycle_end;
     reg     linux_cpu_kernel_prev;
     integer linux_pc_trace;
     integer linux_pc_trace_limit;
@@ -297,6 +303,9 @@ module tb_mips_soc;
             end
             if (linux_mode_trace != 0 &&
                 linux_mode_trace_count < linux_mode_trace_limit &&
+                linux_trace_cycle >= linux_mode_trace_cycle_start &&
+                (linux_mode_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_mode_trace_cycle_end) &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode !=
                     linux_cpu_kernel_prev ||
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret)) begin
@@ -493,6 +502,9 @@ module tb_mips_soc;
             end
             if (linux_exception_trace != 0 &&
                 linux_exception_trace_count < linux_exception_trace_limit &&
+                linux_trace_cycle >= linux_exception_trace_cycle_start &&
+                (linux_exception_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_exception_trace_cycle_end) &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req) begin
                 $display("LINUX_EXCEPTION_TRACE cycle=%0d pc=%08h code=%0d intr=%b accept=%b wbei=%b wbctl=%b/%b epc=%08h bad=%08h status=%08h cause=%08h ebase=%08h d=%b/%b/%08h vaddr=%08h wbd=%08h if=%b/%08h/%08h mmui=%b/%0d k=%b tlbi=%b/%b/%b/%08h ifmeta=%b/%0d/%08h wb=%b/%0d/%b/%b/%08h/%08h valid=%b arch=%b mem=%b/%0d/%b/%b/%08h meminst=%08h exinst=%08h old=%08h ibd=%b mbd=%b ebd=%b idbd=%b dside=%b/%b/%08h/%0d dataok=%b/%08h s1=%08h s3=%08h s0=%08h bd=%b/%b/%b tlb41=%b/%08h/%08h/%08h/%b asid=%02h/%02h va=%08h",
                     linux_trace_cycle,
@@ -610,6 +622,30 @@ module tb_mips_soc;
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_bvalid,
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_bresp,
                     u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_bready);
+                $display("LINUX_INTERRUPT_PIPE cycle=%0d accept=%b mem_valid=%b ex_valid=%b id_valid=%b mem_pc=%08h ex_pc=%08h id_pc=%08h mem_inst=%08h ex_inst=%08h id_inst=%08h mem_ctrl=%b ex_ctrl=%b id_ctrl=%b mem_bd=%b ex_bd=%b id_bd=%b mem_target=%08h ex_target=%08h id_target=%08h delay=%b delay_pc=%08h bd=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_flush_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_flush_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_flush_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_is_control_transfer,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_is_control_transfer,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_is_control_transfer,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_delay_slot_next_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_delay_slot_next_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_delay_slot_next_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_delay_slot,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_delay_slot_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_bd);
                 linux_exception_trace_count = linux_exception_trace_count + 1;
             end
             // Capture the CP0 exception frame across the clock boundary.  The
@@ -700,6 +736,9 @@ module tb_mips_soc;
             end
             if (linux_wb_trace != 0 &&
                 linux_wb_trace_count < linux_wb_trace_limit &&
+                linux_trace_cycle >= linux_wb_trace_cycle_start &&
+                (linux_wb_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_wb_trace_cycle_end) &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 (((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= 32'h8800_d800) &&
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= 32'h8800_d850)) ||
@@ -1380,6 +1419,10 @@ module tb_mips_soc;
         linux_exception_trace_limit = 256;
         if (!$value$plusargs("LINUX_EXCEPTION_TRACE_LIMIT=%d", linux_exception_trace_limit)) begin end
         linux_exception_trace_count = 0;
+        linux_exception_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_EXCEPTION_TRACE_CYCLE_START=%d", linux_exception_trace_cycle_start)) begin end
+        linux_exception_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_EXCEPTION_TRACE_CYCLE_END=%d", linux_exception_trace_cycle_end)) begin end
         linux_exception_frame_trace = 0;
         if (!$value$plusargs("LINUX_EXCEPTION_FRAME_TRACE=%d", linux_exception_frame_trace)) begin end
         linux_exception_frame_trace_limit = 64;
@@ -1405,11 +1448,19 @@ module tb_mips_soc;
         linux_wb_trace_limit = 256;
         if (!$value$plusargs("LINUX_WB_TRACE_LIMIT=%d", linux_wb_trace_limit)) begin end
         linux_wb_trace_count = 0;
+        linux_wb_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_WB_TRACE_CYCLE_START=%d", linux_wb_trace_cycle_start)) begin end
+        linux_wb_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_WB_TRACE_CYCLE_END=%d", linux_wb_trace_cycle_end)) begin end
         linux_mode_trace = 0;
         if (!$value$plusargs("LINUX_MODE_TRACE=%d", linux_mode_trace)) begin end
         linux_mode_trace_limit = 64;
         if (!$value$plusargs("LINUX_MODE_TRACE_LIMIT=%d", linux_mode_trace_limit)) begin end
         linux_mode_trace_count = 0;
+        linux_mode_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_MODE_TRACE_CYCLE_START=%d", linux_mode_trace_cycle_start)) begin end
+        linux_mode_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_MODE_TRACE_CYCLE_END=%d", linux_mode_trace_cycle_end)) begin end
         linux_cpu_kernel_prev = 1'b1;
         linux_pc_trace = 0;
         if (!$value$plusargs("LINUX_PC_TRACE=%d", linux_pc_trace)) begin end
