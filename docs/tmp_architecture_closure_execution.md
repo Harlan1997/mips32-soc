@@ -5513,3 +5513,16 @@ CP0 timer path. The trace therefore rules out the currently suspected
 source-0/source-1 VIC competition for this image. RTL Linux userspace and
 full RTL/QEMU Linux differential remain OPEN; no speculative IRQ or CPU
 change was made.
+
+### 2026-09-03 RTL Linux APB/VIC transaction diagnostic trace
+
+Added the default-off `LINUX_APB_TRACE` stream to the RTL Linux progress
+runner and testbench. It records completed APB access-phase address,
+direction, write data, byte strobe, ready and slave-error state with a bounded
+record limit. An 8M-cycle replay with the freshly rebuilt VIC kernel captures
+the Linux initialization clear at `0x40004010` with `0xffffffff`, `pstrb=f`,
+`pready=1` and `pslverr=0`, while no `ENABLE_SET` write or
+`soc_vic_unmask` retire is observed. This proves the first VIC APB write
+reaches the RTL and narrows the remaining issue to Linux child-IRQ probing or
+an earlier handoff; RTL Linux userspace and full RTL/QEMU Linux differential
+remain OPEN.
