@@ -646,6 +646,29 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_delay_slot,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_delay_slot_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_bd);
+                // $display observes the active region before CP0's nonblocking
+                // assignments. Pair it with $strobe so an exception trace can
+                // distinguish the sampled inputs from the post-edge state.
+                $display("LINUX_CP0_EXCEPTION_EDGE cycle=%0d phase=pre req=%b accept=%b except_pc=%08h except_bd=%b except_code=%0d epc=%08h cause=%08h status=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status);
+                $strobe("LINUX_CP0_EXCEPTION_EDGE cycle=%0d phase=post req=%b accept=%b except_pc=%08h except_bd=%b except_code=%0d epc=%08h cause=%08h status=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status);
                 linux_exception_trace_count = linux_exception_trace_count + 1;
             end
             // Capture the CP0 exception frame across the clock boundary.  The
