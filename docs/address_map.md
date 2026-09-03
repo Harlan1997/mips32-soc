@@ -43,6 +43,7 @@ return AXI `DECERR`.
 | DDR4 controller | `0x6000` | frozen init/calibration/refresh/error contract; see `block_specs/ddr4_spec.md` |
 | Watchdog | `0x7000` | APB watchdog control/count/status; reset pulse and always-on boot-status retention are integrated |
 | Boot status | `0x8000` | always-on stage/failure/reset-cause registers; RTL/APB retention gate integrated |
+| MMU context | `0x9000` | ASID/root/context/shootdown leases; page-frame ownership extension at `0x9040..0x9050` |
 | CPU performance counters | `0xC000` | read-only cycle/retire/cache/branch/MDU counters; opt-in `SOC_PERF_COUNTERS` |
 
 ### CPU Performance Counters (`0x4000_C000`)

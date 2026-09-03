@@ -266,7 +266,7 @@ dcache-parity-gate:
 .PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate perf-benchmark-baseline-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
-.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
+.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate mmu-page-frame-allocator-gate
 .PHONY: mem-stage-gate
 .PHONY: formal-static-audit
 .PHONY: formal-bind-compile-gate
@@ -1227,7 +1227,7 @@ dual-core-mmu-shootdown-gate:
 # Current P1 is the verified RTL/simulation extension bundle. Full ISA
 # compliance, FPU, coherency protocol evolution and OS boot remain separate
 # contracts and are intentionally not hidden behind this aggregate gate.
-p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-walker-page-sizes-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-hardware-walker-page-sizes-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-hardware-walker-ad-complete-gate mmu-page-table-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate dual-core-mmu-shootdown-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
+p1-current-complete: rtl-frontend-compile dcache-coherency-gate coherency-stress-gate page-table-walker-gate page-table-walker-page-sizes-gate page-table-tlb-refill-gate cpu-hardware-walker-gate cpu-hardware-walker-page-sizes-gate cpu-dside-hardware-walker-gate mmu-hardware-walker-soc-gate mmu-hardware-walker-ad-complete-gate mmu-page-table-allocator-gate mmu-page-frame-allocator-gate cpu-scheduler-gate cpu-scheduler-integration-gate scheduler-timer-ipi-gate ecc-secded-gate product-vectored-interrupt-gate isa-r2-gate dual-core-frontend-compile dual-core-soc-gate dual-core-mmu-shootdown-gate cpu-mmu-complete product-mmu-pagemask-gate ddr4-complete-gate
 	@mkdir -p $(P1_COMPLETE_DIR)
 	@{ \
 		echo '# P1 RTL/Simulation Extension Completion Report'; \
@@ -1493,6 +1493,9 @@ coverage-strict-clean-gate:
 
 mmu-page-table-allocator-gate:
 	RUN_DIR=$(MMU_PAGE_TABLE_ALLOCATOR_DIR) tb/unit/tlb/run_mmu_page_table_allocator.sh
+
+mmu-page-frame-allocator-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mmu_page_frame_allocator tb/unit/tlb/run_mmu_page_frame_allocator.sh
 
 cpu-scheduler-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_scheduler tb/unit/cpu_test/run_cpu_scheduler.sh

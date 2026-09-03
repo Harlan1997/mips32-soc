@@ -1,5 +1,24 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Bounded MMU page-frame lease allocator
+
+- Added opt-in `mmu_page_frame_allocator` with sixteen fixed 4-KiB pages,
+  generation-tagged allocation/release, stale/duplicate release rejection,
+  pool exhaustion and atomic same-page release+allocation behavior.
+- Exposed the allocator through the MMU context APB extension:
+  `0x40` allocate/read page, `0x44` generation or release staging,
+  `0x48` release, and `0x4c`/`0x50` sticky event/W1C. The APB address input
+  was widened to retain these offsets; the default MMU-disabled SoC map and
+  existing `0x00..0x3c` contract remain unchanged.
+- `RUN_DIR=/tmp/mmu-page-frame-allocator-20260903
+  tb/unit/tlb/run_mmu_page_frame_allocator.sh` passes, APB integration passes
+  at `/tmp/mmu-context-status-page-frame-20260903c`, and the full default
+  SoC smoke passes at `/tmp/mmu-page-frame-soc-smoke-20260903` with
+  `REGRESSION_TEST_SUCCESS`.
+- This closes only bounded hardware-visible page-frame ownership. Linux page
+  allocation, reclaim/swap, unrestricted demand paging, full VM policy and
+  complete privileged/MMU signoff remain OPEN.
+
 ### 2026-09-03 CP0 exception edge-phase diagnostic closure
 
 - Added `LINUX_CP0_EXCEPTION_EDGE` active-region and `$strobe` post-NBA

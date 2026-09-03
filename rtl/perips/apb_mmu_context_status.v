@@ -2,7 +2,7 @@
 // (four dynamic leases) for the current frontend/behavioral scope.
 module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  input wire clk,input wire rst_n,input wire psel,input wire penable,input wire pwrite,
- input wire [5:0] paddr,input wire [31:0] pwdata,output reg [31:0] prdata,
+ input wire [7:0] paddr,input wire [31:0] pwdata,output reg [31:0] prdata,
  output wire pready,output wire pslverr,
  output wire invalidate_valid, output wire [7:0] invalidate_asid,
  output wire [18:0] invalidate_vpn, output wire [1:0] invalidate_scope);
@@ -23,6 +23,10 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
  reg [31:0] root_r;
  reg [7:0] root_generation_r;
  reg [3:0] root_event_r;
+ reg [31:0] page_release_page_r;
+ reg [31:0] page_r;
+ reg [7:0] page_generation_r;
+ reg [3:0] page_event_r;
  wire root_alloc_valid, root_alloc_fail, root_release_valid, root_release_reject;
  wire [31:0] root_alloc_root;
  wire [7:0] root_alloc_generation;
@@ -40,6 +44,11 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
                       (pwdata[15:8] == shootdown_generation_r);
  wire shootdown_stale_ack = shootdown_ack_write && sd_busy &&
                             (pwdata[15:8] != shootdown_generation_r);
+ wire page_alloc_req = wr && (paddr[7:2] == 6'h10) && pwdata[0];
+ wire page_release_req = wr && (paddr[7:2] == 6'h12) && pwdata[31];
+ wire page_alloc_valid, page_alloc_fail, page_release_valid, page_release_reject;
+ wire [31:0] page_alloc_page;
+ wire [7:0] page_alloc_generation;
 
  // The CPU-visible APB path needs room for an uncached read/ack round trip.
  // Keep the standalone mailbox default short, but use a 64-cycle integration
@@ -67,6 +76,15 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
    .release_generation(pwdata[7:0]), .release_valid(root_release_valid),
    .release_reject(root_release_reject));
 
+ mmu_page_frame_allocator #(.SLOTS(16), .PAGE_BASE(32'h0000_6000),
+                            .PAGE_STRIDE(32'h0000_1000)) u_page_allocator (
+   .clk(clk), .rst_n(rst_n), .alloc_req(page_alloc_req),
+   .alloc_valid(page_alloc_valid), .alloc_fail(page_alloc_fail),
+   .alloc_page(page_alloc_page), .alloc_generation(page_alloc_generation),
+   .release_req(page_release_req), .release_page(page_release_page_r),
+   .release_generation(pwdata[7:0]), .release_valid(page_release_valid),
+   .release_reject(page_release_reject));
+
  mmu_context_allocator #(.SLOTS(4)) u_context_allocator (
    .clk(clk), .rst_n(rst_n), .alloc_req(context_alloc_req),
    .alloc_valid(context_alloc_valid), .alloc_fail(context_alloc_fail),
@@ -89,6 +107,7 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
    if (!rst_n) begin
      asid_r <= 0; generation_r <= 0; vpn_r <= 0; scope_r <= 0; event_r <= 0; sd_status_r <= 0;
      root_release_root_r <= 0; root_r <= 0; root_generation_r <= 0; root_event_r <= 0;
+     page_release_page_r <= 0; page_r <= 0; page_generation_r <= 0; page_event_r <= 0;
      shootdown_generation_r <= 0;
    end else begin
      if (alloc_valid) begin
@@ -107,6 +126,14 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      if (root_alloc_fail) root_event_r[1] <= 1'b1;
      if (root_release_valid) root_event_r[2] <= 1'b1;
      if (root_release_reject) root_event_r[3] <= 1'b1;
+     if (page_alloc_valid) begin
+       page_r <= page_alloc_page;
+       page_generation_r <= page_alloc_generation;
+       page_event_r[0] <= 1'b1;
+     end
+     if (page_alloc_fail) page_event_r[1] <= 1'b1;
+     if (page_release_valid) page_event_r[2] <= 1'b1;
+     if (page_release_reject) page_event_r[3] <= 1'b1;
      if (context_alloc_valid) begin
        asid_r <= context_alloc_asid;
        generation_r <= context_alloc_generation;
@@ -148,12 +175,16 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
        root_event_r <= root_event_r | pwdata[3:0];
      if (wr && (paddr[5:2] == 4'd14))
        root_event_r <= root_event_r & ~pwdata[3:0];
+     if (wr && (paddr[7:2] == 6'h11))
+       page_release_page_r <= pwdata;
+     if (wr && (paddr[7:2] == 6'h14))
+       page_event_r <= page_event_r & ~pwdata[3:0];
    end
  end
 
  always @(*) begin
    prdata = 32'b0;
-   if (rd) case (paddr[5:2])
+   if (rd) case (paddr[7:2])
      4'd0: prdata = {16'h0, generation_r, asid_r};
      4'd1: prdata = {12'h0, vpn_r};
      4'd2: prdata = {30'h0, scope_r};
@@ -163,6 +194,9 @@ module apb_mmu_context_status #(parameter TIMEOUT_CYCLES=16)(
      4'd10: prdata = root_r;
      4'd11: prdata = {24'h0, root_generation_r};
      4'd13: prdata = {28'h0, root_event_r};
+     6'h10: prdata = page_r;
+     6'h11: prdata = {24'h0, page_generation_r};
+     6'h13: prdata = {28'h0, page_event_r};
      default: prdata = 32'b0;
    endcase
  end
