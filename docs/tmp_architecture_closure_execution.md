@@ -5255,3 +5255,19 @@ signoff and physical DDR/QSPI product signoff.
   The RTL Linux userspace marker remains absent; full Linux userspace boot,
   full RTL/QEMU system differential, and unrestricted Linux VM semantics
   remain open.
+### 2026-09-03 L1/L2 nonblocking cache concurrency aggregate
+
+- Added the opt-in `l1-l2-nonblocking-complete-gate` Make target. It requires
+  the L1 CPU/ROB aggregate, real L1-to-DDR window path, L2 eight-MSHR unit and
+  two-slot downstream RID/OOO test, plus the combined RTL/QEMU retire
+  differential.
+- The aggregate is intentionally separate from `current-contract-signoff` so
+  the default blocking cache configuration remains unchanged. It produces
+  `cache_concurrency_complete/cache_concurrency_completion_report.md` and
+  propagates failures from every child gate.
+- The focused real CPU/D-cache DDR gate passed in
+  `/tmp/l1-nb-ddr-closure-20260903`, including same-line merge, second-line
+  refill and final hit through the AXI/DDR4-controller path.
+- Full MESI/directory coherency, arbitrary dirty-writeback ordering, Linux
+  cache ABI and physical DDR PHY timing remain open; this is an opt-in
+  behavioral cache-concurrency closure, not full product cache signoff.
