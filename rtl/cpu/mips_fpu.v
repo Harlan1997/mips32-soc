@@ -500,6 +500,29 @@ module mips_fpu (
             if (exact_double != ar_double)
                 exception_flags[0] = 1'b1;
         end
+        // CVT.S.D rounds the double operand into the single destination
+        // format.  The host shortreal conversion already supplies the
+        // rounded result, but its floating-point status flags are not
+        // portable across simulators, so classify the architectural flags
+        // from the materialized result and the original double value.
+        if (fmt_double && op == OP_CVT_S_D && !a_nan &&
+            a_double[62:52] != 11'h7ff) begin
+            if (result[30:23] == 8'hff && result[22:0] == 0) begin
+                exception_flags[2] = 1'b1;
+                exception_flags[0] = 1'b1;
+            end else if (result[30:23] == 0 &&
+                         a_double[62:0] != 0 &&
+                         rr != ar_double) begin
+                // A nonzero finite double rounded into the single subnormal
+                // range, or to zero, is underflow only when information was
+                // lost.  An exactly representable single subnormal does not
+                // raise Underflow.
+                exception_flags[1] = 1'b1;
+                exception_flags[0] = 1'b1;
+            end else if (rr != ar_double) begin
+                exception_flags[0] = 1'b1;
+            end
+        end
         // Some simulators flush the smallest shortreal subnormals while
         // converting the bit pattern to a host real. Preserve the architectural
         // classification for the common subnormal-times-less-than-one case
@@ -595,6 +618,17 @@ module mips_fpu (
              (b_double[62:52] < 11'h3ff))) begin
             exception_flags[1] = 1'b1;
             exception_flags[0] = 1'b1;
+        end
+        // If the simulator flushes a result at the normal/subnormal
+        // boundary, retain the exact-underflow case from the operand fields.
+        // This covers min-normal * 0.5, whose result is the minimum subnormal
+        // and therefore raises Underflow without Inexact in this contract.
+        if (fmt_double && op == OP_MUL &&
+            (((a_double[62:52] == 11'd1) && (a_double[51:0] == 0) &&
+              (b_double[62:52] < 11'h3ff)) ||
+             ((b_double[62:52] == 11'd1) && (b_double[51:0] == 0) &&
+              (a_double[62:52] < 11'h3ff)))) begin
+            exception_flags[1] = 1'b1;
         end
         // Apply overrides after all host-result classification has completed.
         // This ordering is required because invalid arithmetic is discovered

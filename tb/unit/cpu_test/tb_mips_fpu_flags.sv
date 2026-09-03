@@ -82,6 +82,26 @@ module tb_mips_fpu_flags;
         a_double = 64'h41e0000000000000; // +2^31
         check_flags(5'b10000, "double_cvt_w_out_of_range");
 
+        // CVT.S.D must classify rounding in the destination format rather
+        // than relying on host floating-point status flags.
+        op = 5'd15; // CVT.S.D
+        a_double = 64'h3ff8000000000000; // exact 1.5
+        check_flags(5'b00000, "double_to_single_exact");
+        a_double = 64'h0000000000000001; // minimum positive double
+        check_flags(5'b00011, "double_to_single_underflow");
+        #1;
+        if (result !== 32'h00000000) begin
+            $display("FPU_FLAGS_FAIL double-to-single underflow result=%08h", result);
+            failures = failures + 1;
+        end
+        a_double = 64'h7fefffffffffffff; // maximum finite double
+        check_flags(5'b00101, "double_to_single_overflow");
+        #1;
+        if (result !== 32'h7f800000) begin
+            $display("FPU_FLAGS_FAIL double-to-single overflow result=%08h", result);
+            failures = failures + 1;
+        end
+
         // IEEE-754 preserves the sign of zero through sqrt and does not
         // classify -0 as an Invalid operation.
         fmt_double = 0;

@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 COP1 CVT.S.D destination-format flags
+
+`CVT.S.D` 现在根据 single 目标格式的实际舍入结果报告
+Overflow/Underflow/Inexact：exact single-representable double 不置位，超出
+single 范围的 finite double 置 `Overflow|Inexact`，非零 double 下溢到
+single subnormal/zero 置 `Underflow|Inexact`。同时补足 VCS 将
+min-normal double `* 0.5` flush 为零时的字段级 Underflow fallback，保持
+exact-underflow 不误报 Inexact。新增 unit vectors，真实 CPU gate 和
+QEMU system-mode retire differential 均通过。该 slice 不改变默认 FPU 关闭
+路径；完整 IEEE-754 range/tininess policy、COP1 compliance、FPE delivery 和
+Linux FPU ABI 仍保持 OPEN。
+
 ### 2026-09-03 MDU divider effective-width normalization
 
 `rtl/cpu/mips_mdu.v` 的 restoring radix-2 divider 现在按被除数 magnitude
