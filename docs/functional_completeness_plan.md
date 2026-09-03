@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 QEMU peripheral RTL/QEMU differential recheck
+
+在受控单线程 VCS/QEMU 配置下重跑
+`qemu-system-peripheral-differential-gate`，结果为 PASS；本次比较包含
+GPIO、timer、legacy DMA、PIC、QSPI、DDR 和 mailbox 访问，QEMU trace
+comparator 报告 `TRACE_COMPARE_PASS records=4455`，RTL firmware 报告
+`REGRESSION_TEST_SUCCESS`。证据目录为
+`/tmp/qemu-peripheral-recheck-20260903/isa_ref/qemu_system_peripheral_differential/`。
+该结果只刷新选定的 vendor-neutral peripheral retire differential；完整
+ISA/IEEE-754、RTL Linux userspace、无限制 Linux VM/shootdown、真实 PHY/器件
+时序和产品 signoff 仍保持 OPEN。
+
 ### 2026-09-03 Formal checker binding foundation
 
 新增 reset synchronizer 的 source-reset/deassertion 属性和 AXI SRAM R/B
