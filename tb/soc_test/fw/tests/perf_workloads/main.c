@@ -15,8 +15,14 @@ static void report_case(const char *name, uint32_t cycles, uint32_t retires,
                         uint32_t ic_miss, uint32_t dc_miss,
                         uint32_t branch_miss, uint32_t mdu_stall,
                         uint32_t checksum) {
+    /* Fixed-point rates avoid pulling floating-point support into the
+     * freestanding benchmark. Values are scaled by 1000. */
+    uint32_t cpi_x1000 = retires ? (cycles * 1000U) / retires : 0U;
+    uint32_t ipc_x1000 = cycles ? (retires * 1000U) / cycles : 0U;
     print_str("perf_workloads: "); print_str(name); print_str(" cycles=");
     print_hex(cycles); print_str(" retires="); print_hex(retires);
+    print_str(" cpi_x1000="); print_hex(cpi_x1000);
+    print_str(" ipc_x1000="); print_hex(ipc_x1000);
     print_str(" icache_miss="); print_hex(ic_miss);
     print_str(" dcache_miss="); print_hex(dc_miss);
     print_str(" branch_mispredict="); print_hex(branch_miss);
