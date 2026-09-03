@@ -687,7 +687,7 @@ linux-soc-contract-audit:
 rtl-linux-progress-gate:
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh tb/linux_boot/run_rtl_linux_progress_gate.sh
 	RUN_DIR=$(if $(RUN_DIR),$(RUN_DIR),$(RTL_LINUX_PROGRESS_DIR)) \
-	HOST_TIMEOUT=$(HOST_TIMEOUT) RTL_CYCLE_LIMIT=$(RTL_CYCLE_LIMIT) \
+	HOST_TIMEOUT=$(HOST_TIMEOUT) RTL_CYCLE_LIMIT=$(RTL_CYCLE_LIMIT) RTL_SIM_SEED=$(RTL_SIM_SEED) \
 	JOBS=$(JOBS) KERNEL_PHYSICAL_START=$(KERNEL_PHYSICAL_START) \
 	LINUX_PROFILE=$(LINUX_PROFILE) \
 	KERNEL=$(KERNEL) SKIP_LINUX_BUILD=$(SKIP_LINUX_BUILD) \
