@@ -89,6 +89,12 @@ duplicate releases are rejected and a successful release increments the
 generation before reuse. This is a bounded page-frame ownership primitive; it
 is not a Linux buddy allocator, swap implementation, or complete VM.
 
+The `mips32-soc-ref` system-mode machine mirrors this page-frame window and is
+checked with the same `mmu_asid_context` firmware as the RTL. The differential
+gate covers page leases together with the existing ASID/root and shootdown
+contract; it does not turn the bounded pool into a Linux physical-memory
+manager.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:
