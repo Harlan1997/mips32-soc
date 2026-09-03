@@ -1,5 +1,25 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Linux differential handoff anchor made artifact-derived
+
+- 短前缀重跑发现 `tb/isa_ref/run_qemu_linux_differential_gate.sh` 将 handoff
+  PC 固定为旧 kernel 的 `0x88a55c78`；当前传入 kernel 的 ELF entry 实际为
+  `0x8844e88c`，因此 QEMU trace 在首条指令前被错误拒绝。
+- runner 现在默认从 `readelf -h KERNEL` 解析 ELF entry，仍允许通过
+  `ALIGN_FIRST_PC` 显式覆盖异常 boot wrapper，并对工具缺失、解析失败和非法
+  十六进制值提前报错。
+- 低资源独立重跑：
+  `SKIP_COVERAGE=1 VCS_JOBS=1 EDA_MEMORY_MAX=1500M
+  RTL_CYCLE_LIMIT=2000000 MAX_TRACE_RECORDS=200000 QEMU_TIMEOUT=2s
+  HOST_TIMEOUT=240s BUILD_DIR=/tmp/qemu-linux-diff-entryfix-20260903
+  KERNEL=/tmp/rtl-linux-minimal-recheck-yy9j2t/kernel/vmlinux
+  DTB=/tmp/rtl-linux-minimal-recheck-yy9j2t/mips32_soc_ref.dtb
+  make qemu-system-linux-differential-gate` 通过，比较器报告
+  `TRACE_COMPARE_PASS records=29424 mode=stream`。
+- 该修复闭合的是 Linux differential artifact portability/early alignment
+  contract；RTL Linux userspace、unrestricted full system-mode differential、
+  完整 ISA/privileged/MMU/FPU/OS VM 和产品 signoff 仍 OPEN。
+
 ### 2026-09-03 P1 bounded RTL/simulation aggregate recheck
 
 - 在独立目录 `/tmp/p1-current-recheck-20260903` 以
