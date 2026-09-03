@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 Hardware walker page-size execution recheck
+
+对当前 HEAD 重新执行 `cpu-hardware-walker-page-sizes-gate`：16K、64K、
+256K、1M、4M、16M 六个参数化配置全部报告
+`REGRESSION_TEST_SUCCESS cpu_hardware_walker permission_faults=1`，无 VCS
+运行失败。该证据确认页尺度执行切片在当前版本可重现，但不扩展为 Linux
+页表管理、demand paging、reclaim/swap、scheduler/shootdown 或完整
+privileged/MMU 闭合。
+
 ### 2026-09-03 CPU hardware walker page-size matrix recheck
 
 在受控单线程 VCS 配置下重跑 `cpu-hardware-walker-page-sizes-gate`，16K、
