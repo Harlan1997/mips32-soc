@@ -56,6 +56,12 @@ def main():
         if item["pc"] != expected:
             errors.append("cycle=%d expected pc=0x%08x got=0x%08x" %
                           (item["cycle"], expected, item["pc"]))
+        if item["pc"] == args.branch_pc and item["inst"] & 0xffff0000 != 0x14400000:
+            errors.append("cycle=%d branch is not bnez (inst=0x%08x)" %
+                          (item["cycle"], item["inst"]))
+        if item["pc"] == args.delay_pc and item["inst"] & 0xffff0000 != 0x24420000:
+            errors.append("cycle=%d delay slot is not addiu v0,v0,imm (inst=0x%08x)" %
+                          (item["cycle"], item["inst"]))
         expected = args.branch_pc if expected == args.delay_pc else args.delay_pc
         if item["pc"] == args.delay_pc:
             if item["reg_en"] != 1 or item["reg"] != 2:

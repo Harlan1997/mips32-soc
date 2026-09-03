@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-04 RTL Linux delay-slot diagnostic audit
+
+新增 `scripts/check_linux_delay_trace.py` 和 `make linux-delay-trace-audit`，
+对 RTL Linux `__udelay` 窗口的架构 retire 记录校验实际 `bnez`/`addiu v0,v0`
+opcode、branch/delay-slot 顺序、`v0` 写回递减以及 ERET EPC 对齐。当前 20M
+cycle replay 通过（488 条记录、4 次 ERET），未证明 CPU/CP0 delay-slot 缺陷，
+因此没有修改 CPU 语义。该结果只关闭诊断可复现性，不关闭 RTL userspace、
+full RTL/QEMU Linux differential 或完整 ISA/MMU/OS signoff。
+
 ### 2026-09-03 Hardware walker page-size execution recheck
 
 对当前 HEAD 重新执行 `cpu-hardware-walker-page-sizes-gate`：16K、64K、
