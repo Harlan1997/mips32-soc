@@ -77,6 +77,7 @@ if [ "${SVA_ENABLE:-0}" = "1" ]; then
         "${ROOT_DIR}/tb/sva/tlb_lookup_props.sv"
         "${ROOT_DIR}/tb/sva/page_table_walker_props.sv"
         "${ROOT_DIR}/tb/sva/vic_priority_checker.sv"
+        "${ROOT_DIR}/tb/sva/vic_contract_props.sv"
         "${ROOT_DIR}/tb/sva/vic_priority_bind.sv"
         "${ROOT_DIR}/tb/sva/l1_maintenance_props.sv"
         "${ROOT_DIR}/tb/sva/l1_resource_props.sv"
