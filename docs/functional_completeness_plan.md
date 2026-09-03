@@ -8,6 +8,15 @@
 normalization/early-exit slice，18-cycle/radix-4 divider、CoreMark/Dhrystone
 性能基线和完整 MDU signoff 继续保持 OPEN。
 
+### 2026-09-03 MDU opt-in radix-4 divider
+
+新增 `SOC_MDU_DIV_RADIX=4` 的 restoring radix-4 路径，每次处理两个
+dividend bit，通过 quotient digit `0..3` 的比较/减法完成迭代；新增
+`mdu-radix4-gate`、`mdu-cpu-radix4-gate` 和
+`qemu-system-mdu-radix4-differential-gate` 均通过。默认 radix-2 配置保持
+兼容。完整性能 characterization、CoreMark/Dhrystone 基线和 commercial
+timing signoff 仍未闭合。
+
 ### 2026-09-03 Linux GPIO userspace bounded contract
 
 新增 `linux-gpio-userspace-gate` 并接入 `current-contract-signoff`。该 gate

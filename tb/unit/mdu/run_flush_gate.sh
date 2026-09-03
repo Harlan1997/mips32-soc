@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/unit_tb/mdu_flush"}
+VCS_EXTRA_ARGS=${VCS_EXTRA_ARGS:-}
 
 source /etc/profile.d/modules.sh
 if [ -d /tool/module ]; then
@@ -18,6 +19,7 @@ mkdir -p "${RUN_DIR}"
 (
     cd "${RUN_DIR}"
     vcs -full64 -sverilog -timescale=1ns/1ps \
+        ${VCS_EXTRA_ARGS} \
         +incdir+"${ROOT_DIR}/rtl/include" \
         "${ROOT_DIR}/rtl/cpu/mips_mdu.v" \
         "${ROOT_DIR}/tb/unit/mdu/tb_mdu.v" \

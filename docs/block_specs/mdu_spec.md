@@ -78,7 +78,7 @@
 ```
 ST_IDLE  → 空闲
     ST_MUL   → radix-4 分块迭代（常规 4 拍，短操作数 1 拍）
-ST_DIV   → 32-cycle radix-2 除法迭代
+ST_DIV   → radix-2 默认 / radix-4 opt-in 除法迭代
 ST_ACC   → 乘加/乘减累加
 ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 ```
@@ -105,7 +105,9 @@ datapath；常规 32-bit magnitude 乘法处理 4 个 chunk，短操作数一次
 - 检查被除数为 0 → 结果直接为 0。
 - 计数被除数前导 0，跳过对应 iter。
 
-**Radix-4**：不在当前 RTL 合同内，作为后续性能增强项。
+**Radix-4 opt-in**：`SOC_MDU_DIV_RADIX=4` 时，每拍消费两个 dividend bit，
+通过最多三次比较/减法产生 quotient digit `0..3`，最多 16 个 digit；有效
+位宽和除数大于被除数的早退出逻辑与 radix-2 共用。
 
 ### 2.4 早退出乘法 (符号 magnitude)
 

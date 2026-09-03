@@ -26,6 +26,20 @@
 - The datapath remains radix-2 restoring; the separate 18-cycle/radix-4
   divider target and official workload performance signoff remain OPEN.
 
+### 2026-09-03 MDU opt-in radix-4 divider implementation
+
+- Added `SOC_MDU_DIV_RADIX`, defaulting to `2`, and implemented the opt-in
+  radix-4 restoring path. It consumes two dividend bits per iteration and
+  selects quotient digits `0..3` through compare/subtract logic, sharing the
+  normalized effective-width and early-exit behavior.
+- Added reproducible `mdu-radix4-gate`, `mdu-cpu-radix4-gate`, and
+  `qemu-system-mdu-radix4-differential-gate` entry points. The unit and CPU
+  gates pass, including QEMU/RTL retire differential with the radix-4 RTL
+  compile configuration.
+- The default radix-2 configuration remains unchanged. Exact commercial
+  timing/throughput characterization and full ISA/OS performance signoff
+  remain OPEN.
+
 ### 2026-09-03 CPU performance retire boundary corrected
 
 - The CPU performance counter's retire event was previously derived from

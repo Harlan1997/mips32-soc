@@ -168,6 +168,7 @@ SOC_TEST_MDU_CPU_DIR ?= $(BUILD_DIR)/soc_test/mdu_cpu_gate
 MDU_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/mdu_cpu
 MDU_CPU_FW_HEX ?= $(MDU_CPU_FW_DIR)/firmware.hex
 MDU_FLUSH_DIR ?= $(BUILD_DIR)/unit_tb/mdu_flush
+MDU_RADIX4_DIR ?= $(BUILD_DIR)/unit_tb/mdu_radix4
 
 SOC_TEST_DMA_CPU_DIR ?= $(BUILD_DIR)/soc_test/dma_cpu_gate
 DMA_CPU_FW_DIR ?= $(BUILD_DIR)/firmware/dma_cpu
@@ -230,6 +231,15 @@ formal-bind-compile-gate:
 mdu-flush-gate:
 	RUN_DIR=$(MDU_FLUSH_DIR) tb/unit/mdu/run_flush_gate.sh
 
+mdu-radix4-gate:
+	VCS_EXTRA_ARGS='+define+SOC_MDU_DIV_RADIX=4' RUN_DIR=$(MDU_RADIX4_DIR) tb/unit/mdu/run_flush_gate.sh
+
+mdu-cpu-radix4-gate:
+	$(MAKE) -C tb/soc_test/fw FW_NAME=mdu_cpu OUT_DIR=$(MDU_CPU_FW_DIR) FW_BASE=firmware all
+	FW_HEX=$(MDU_CPU_FW_HEX) RUN_DIR=$(BUILD_DIR)/soc_test/mdu_cpu_radix4 \
+	VCS_EXTRA_ARGS='+define+SOC_MDU_DIV_RADIX=4 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' \
+	tb/soc_test/run_mdu_cpu_gate.sh
+
 dcache-parity-gate:
 	chmod +x tb/unit/dcache/run_parity.sh
 	RUN_DIR=$(BUILD_DIR)/unit_tb/dcache_parity tb/unit/dcache/run_parity.sh
@@ -240,6 +250,8 @@ dcache-parity-gate:
 .PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate
 .PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
+.PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
+.PHONY: qemu-system-mdu-radix4-differential-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: qemu-system-linux-differential-gate
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
@@ -823,6 +835,10 @@ qemu-system-state-converter-test:
 qemu-system-mdu-differential-gate: qemu-system-mips32-soc-ref qemu-system-state-converter-test
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=mdu_cpu FW_DIR=$(BUILD_DIR)/firmware/mdu_cpu QEMU_CPU=24Kc QEMU_TIMEOUT=30 RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mdu_differential RTL_VCS_EXTRA_ARGS='+define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-mdu-radix4-differential-gate: qemu-system-mips32-soc-ref qemu-system-state-converter-test
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=mdu_cpu FW_DIR=$(BUILD_DIR)/firmware/mdu_cpu QEMU_CPU=24Kc QEMU_TIMEOUT=30 RTL_TIMEOUT=180 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_mdu_radix4_differential RTL_VCS_EXTRA_ARGS='+define+SOC_MDU_DIV_RADIX=4 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-selected-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_selected_differential_gate.sh

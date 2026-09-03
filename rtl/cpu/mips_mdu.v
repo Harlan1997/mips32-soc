@@ -35,9 +35,12 @@
 //   cycle. Signed operations use magnitude arithmetic and a final two's
 //   complement, so the INT_MIN corner remains representable.
 //
-//   Divider: 32-cycle restoring radix-2. Early-exit: if divisor > dividend
+//   Divider: restoring radix-2 by default, with an opt-in radix-4 mode that
+//   consumes two dividend bits per cycle. Early-exit: if divisor > dividend
 //   in unsigned magnitude we skip iteration and return LO=0/HI=dividend.
 // =============================================================================
+
+`include "soc_config.vh"
 
 module mips_mdu (
     input  wire        clk,
@@ -110,6 +113,16 @@ module mips_mdu (
     reg  [63:0] div_ws;     // {rem, dividend_remaining}
     reg  [5:0]  div_ctr;
     reg  [31:0] div_dividend_orig;
+    reg  [33:0] div_r4_rem;
+    reg  [31:0] div_r4_quot;
+    reg  [31:0] div_r4_bits;
+    reg  [5:0]  div_r4_ctr;
+
+    wire [33:0] div_r4_shifted = (div_r4_rem << 2) |
+                                  {32'h0, div_r4_bits[31:30]};
+    wire [33:0] div_r4_divisor = {2'b0, div_divisor};
+    wire [33:0] div_r4_twice = div_r4_divisor << 1;
+    wire [33:0] div_r4_thrice = div_r4_twice + div_r4_divisor;
 
     // ---- Busy ----
     // A multiply result parked in ST_DONE is still uncommitted. Keep the
@@ -224,6 +237,10 @@ module mips_mdu (
             div_ws            <= 64'h0;
             div_ctr           <= 6'h0;
             div_dividend_orig <= 32'h0;
+            div_r4_rem        <= 34'h0;
+            div_r4_quot       <= 32'h0;
+            div_r4_bits       <= 32'h0;
+            div_r4_ctr        <= 6'h0;
             done_pulse        <= 1'b0;
         end else begin
             done_pulse <= 1'b0;
@@ -246,6 +263,10 @@ module mips_mdu (
                 div_ws            <= 64'h0;
                 div_divisor       <= 32'h0;
                 div_dividend_orig <= 32'h0;
+                div_r4_rem        <= 34'h0;
+                div_r4_quot       <= 32'h0;
+                div_r4_bits       <= 32'h0;
+                div_r4_ctr        <= 6'h0;
             end else case (state)
                 //=============================================================
                 ST_IDLE: begin
@@ -318,6 +339,16 @@ module mips_mdu (
                                 end else begin
                                     div_divisor       <= abs32(rt_val);
                                     div_dividend_orig <= abs32(rs_val);
+                                    div_r4_rem        <= 34'h0;
+                                    div_r4_quot       <= 32'h0;
+                                    div_r4_bits       <= abs32(rs_val);
+                                    div_r4_ctr        <= 6'h0;
+                                    if (`SOC_MDU_DIV_RADIX == 4) begin
+                                        div_r4_bits <= abs32(rs_val) <<
+                                            (leading_zeroes(abs32(rs_val)) -
+                                             ((32 - leading_zeroes(abs32(rs_val))) & 1));
+                                        div_r4_ctr <= ((32 - leading_zeroes(abs32(rs_val))) + 1) >> 1;
+                                    end
                                     div_ws            <= {32'h0, abs32(rs_val)} <<
                                                          leading_zeroes(abs32(rs_val));
                                     div_ctr           <= 6'd32 -
@@ -344,6 +375,16 @@ module mips_mdu (
                                 end else begin
                                     div_divisor       <= rt_val;
                                     div_dividend_orig <= rs_val;
+                                    div_r4_rem        <= 34'h0;
+                                    div_r4_quot       <= 32'h0;
+                                    div_r4_bits       <= rs_val;
+                                    div_r4_ctr        <= 6'h0;
+                                    if (`SOC_MDU_DIV_RADIX == 4) begin
+                                        div_r4_bits <= rs_val <<
+                                            (leading_zeroes(rs_val) -
+                                             ((32 - leading_zeroes(rs_val)) & 1));
+                                        div_r4_ctr <= ((32 - leading_zeroes(rs_val)) + 1) >> 1;
+                                    end
                                     div_ws            <= {32'h0, rs_val} <<
                                                          leading_zeroes(rs_val);
                                     div_ctr           <= 6'd32 - leading_zeroes(rs_val);
@@ -405,6 +446,27 @@ module mips_mdu (
 
                 //=============================================================
                 ST_DIV_ITR: begin
+                    if (`SOC_MDU_DIV_RADIX == 4) begin
+                        if (div_r4_ctr != 6'd0) begin
+                            div_r4_bits <= div_r4_bits << 2;
+                            if (div_r4_shifted >= div_r4_thrice) begin
+                                div_r4_rem  <= div_r4_shifted - div_r4_thrice;
+                                div_r4_quot <= (div_r4_quot << 2) | 32'd3;
+                            end else if (div_r4_shifted >= div_r4_twice) begin
+                                div_r4_rem  <= div_r4_shifted - div_r4_twice;
+                                div_r4_quot <= (div_r4_quot << 2) | 32'd2;
+                            end else if (div_r4_shifted >= div_r4_divisor) begin
+                                div_r4_rem  <= div_r4_shifted - div_r4_divisor;
+                                div_r4_quot <= (div_r4_quot << 2) | 32'd1;
+                            end else begin
+                                div_r4_rem  <= div_r4_shifted;
+                                div_r4_quot <= div_r4_quot << 2;
+                            end
+                            div_r4_ctr <= div_r4_ctr - 1'b1;
+                        end else begin
+                            state <= ST_DIV_FIX;
+                        end
+                    end else begin
                     // Restoring division, 1 bit/cycle.
                     // Early exit: if divisor > dividend (magnitude), quotient = 0
                     if (div_ctr == 6'd32 && div_divisor > div_dividend_orig) begin
@@ -426,11 +488,20 @@ module mips_mdu (
                     end else begin
                         state <= ST_DIV_FIX;
                     end
+                    end
                 end
 
                 //=============================================================
                 ST_DIV_FIX: begin
-                    if (is_signed) begin
+                    if (`SOC_MDU_DIV_RADIX == 4) begin
+                        if (is_signed) begin
+                            lo_r <= result_neg_quot ? (~div_r4_quot + 32'd1) : div_r4_quot;
+                            hi_r <= result_neg_rem ? (~div_r4_rem[31:0] + 32'd1) : div_r4_rem[31:0];
+                        end else begin
+                            lo_r <= div_r4_quot;
+                            hi_r <= div_r4_rem[31:0];
+                        end
+                    end else if (is_signed) begin
                         lo_r <= result_neg_quot ? (~div_ws[31:0]  + 1'b1) : div_ws[31:0];
                         hi_r <= result_neg_rem  ? (~div_ws[63:32] + 1'b1) : div_ws[63:32];
                     end else begin
