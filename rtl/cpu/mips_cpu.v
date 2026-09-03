@@ -2215,16 +2215,19 @@ module mips_cpu #(
                                ((wb_bd && wb_arch_valid) ||
                                 interrupt_wb_branch_delay)) ?
                                wb_pc : oldest_flushed_pc)))));
-    // Phase B.3.d: BadVAddr source. MEM-side faults (is_data=1) use the
-    // address carried by the same MEM/WB exception bundle.  `wb_ex_out` is
-    // the faulting instruction's pipelined ALU address; a separate live-MEM
-    // latch can describe a younger instruction when an exception is already
-    // in WB, so it must not take priority over this architectural value.
+    // Phase B.3.d: BadVAddr source. A data translation fault can be flushed
+    // and replayed before its exception reaches WB; in that case wb_ex_out is
+    // not guaranteed to retain the original virtual address. Prefer the
+    // fault latch captured at the first MEM translation-fault edge, then fall
+    // back to the normal MEM/WB ALU result for non-translation data faults.
+    // The latch is cleared on the same exception-flush edge, after CP0 has
+    // sampled this combinational value.
     wire wb_if_address_exception = !wb_except_is_data &&
                                    ((wb_except_code == 5'h02) ||
                                     (wb_except_code == 5'h03) ||
                                     (wb_except_code == 5'h04));
-    wire [31:0] bad_vaddr = wb_except_is_data ? wb_ex_out :
+    wire [31:0] bad_vaddr = wb_except_is_data ?
+                            (d_fault_vaddr_pending_q ? d_fault_vaddr_q : wb_ex_out) :
                             (wb_if_address_exception && if_fault_pending_q ?
                              if_fault_vaddr_q : except_pc);
     mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_mips_cp0 (
