@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 RTL Linux IRQ/CP0 wakeup probe
+
+- A fresh 19M-cycle, low-resource RTL run with WAIT, vector, CP0 and mode
+  traces completed with simulator status 0 and continuous post-reset progress.
+- CP0 records show repeated Compare programming followed by `Cause.TI` and
+  `Cause.IP7`; mode records show repeated entry at `EBase+0x200` and normal
+  `eret` return. No panic, simulator error, or missed timer wakeup was seen.
+- The RTL Linux userspace marker remains absent. This rules out a simple
+  Compare/WAIT wakeup defect for this image, but leaves the later init-task /
+  scheduler handoff and full RTL/QEMU Linux differential OPEN. No speculative
+  CPU, CP0, WAIT, timer, or IRQ wiring change is justified by this evidence.
+
 ### 2026-09-03 Linux GPIO userspace runtime closed (bounded QEMU)
 
 - The Linux kernel build with the DT-described `wd,mbl-gpio` controller and
