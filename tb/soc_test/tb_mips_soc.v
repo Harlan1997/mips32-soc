@@ -108,6 +108,13 @@ module tb_mips_soc;
     integer linux_wait_trace;
     integer linux_wait_trace_limit;
     integer linux_wait_trace_count;
+    reg        linux_wait_task_load_valid;
+    reg [31:0] linux_wait_task_load_cycle;
+    reg [31:0] linux_wait_task_load_pc;
+    reg [31:0] linux_wait_task_load_va;
+    reg [31:0] linux_wait_task_load_pa;
+    reg [31:0] linux_wait_task_load_data;
+    reg [31:0] linux_wait_task_load_inst;
     reg     linux_wait_state_prev;
     integer linux_vector_trace;
     integer linux_vector_trace_limit;
@@ -250,10 +257,32 @@ module tb_mips_soc;
     always @(posedge clk) begin
         if (!rst_n) begin
             linux_trace_cycle = 0;
+            linux_wait_task_load_valid = 1'b0;
+            linux_wait_task_load_cycle = 32'd0;
+            linux_wait_task_load_pc = 32'd0;
+            linux_wait_task_load_va = 32'd0;
+            linux_wait_task_load_pa = 32'd0;
+            linux_wait_task_load_data = 32'd0;
+            linux_wait_task_load_inst = 32'd0;
         end else begin
             linux_trace_cycle = linux_trace_cycle + 1;
             if (linux_trace_limit > 0 && linux_trace_cycle >= linux_trace_limit)
                 $finish;
+            // Save the completed load of task_struct->flags when it is
+            // visible in the real CPU data path.  This is deliberately
+            // diagnostic-only and does not participate in any handshake.
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_data_ok_current &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr ==
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28] + 32'd4))) begin
+                linux_wait_task_load_valid = 1'b1;
+                linux_wait_task_load_cycle = linux_trace_cycle;
+                linux_wait_task_load_pc = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc;
+                linux_wait_task_load_va = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr;
+                linux_wait_task_load_pa = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr;
+                linux_wait_task_load_data = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_rdata;
+                linux_wait_task_load_inst = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst;
+            end
             if (linux_stall_trace != 0 &&
                 linux_stall_trace_count < linux_stall_trace_limit &&
                 linux_trace_cycle >= linux_stall_trace_cycle_start &&
@@ -854,7 +883,7 @@ module tb_mips_soc;
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst == 32'h42000020) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state))) begin
-                $display("LINUX_WAIT_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wait=%b resume=%08h intr=%b req=%b epc=%08h status=%08h cause=%08h count=%08h compare=%08h intctl_ipti=%0d intctl_vs=%0d gp=%08h t0=%08h",
+                $display("LINUX_WAIT_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wait=%b resume=%08h intr=%b req=%b epc=%08h status=%08h cause=%08h count=%08h compare=%08h intctl_ipti=%0d intctl_vs=%0d gp=%08h t0=%08h taskload=%b/%0d/%08h/%08h/%08h/%08h/%08h/%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
@@ -871,7 +900,15 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_ipti,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_vs,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28],
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[8]);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[8],
+                    linux_wait_task_load_valid,
+                    linux_wait_task_load_cycle,
+                    linux_wait_task_load_pc,
+                    linux_wait_task_load_inst,
+                    linux_wait_task_load_va,
+                    linux_wait_task_load_pa,
+                    linux_wait_task_load_data,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28] + 32'd4);
                 linux_wait_trace_count = linux_wait_trace_count + 1;
             end
             // Trace the relocated Linux __delay loop and exception return
