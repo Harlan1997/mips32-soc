@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 P1 bounded RTL/simulation aggregate recheck
+
+- 在独立目录 `/tmp/p1-current-recheck-20260903` 以
+  `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  SKIP_COVERAGE=1` 的低资源配置重跑 `make p1-current-complete`，结果为
+  `P1 current RTL/simulation extension gate: PASS`。
+- 本次覆盖 RTL frontend `8/8`、D-cache coherency/stress、四种 page-size
+  walker、A/D writeback/reset/error、双核 MMU shootdown、CPU/MMU aggregate、
+  ISA R2、vectored interrupt 和 DDR4 functional closure；所有子 gate 均以
+  run-local artifact 完成，没有出现 OOM、license 或 simulator failure。
+- 这只刷新并确认当前 P1 bounded RTL/simulation bundle；RTL Linux userspace、
+  unrestricted Linux VM/demand paging、完整 ISA/privileged/IEEE-754/FPU ABI、
+  full coherency、formal/CDC/RDC/lint 以及物理 DDR/QSPI signoff 仍 OPEN。
+
 ### 2026-09-03 QEMU/RTL UART interrupt contract audit and compatibility fix
 
 - 对照 QEMU `hw/mips/mips_int.c` 和 RTL `mips_cp0.v` 确认 `env->irq[n]`
