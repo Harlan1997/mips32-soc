@@ -5116,6 +5116,18 @@ aggregate remains separate from full ISA/IEEE-754, unrestricted Linux
 VM/userspace RTL, arbitrary MESI/directory coherency, formal/CDC/RDC/lint
 signoff and physical DDR/QSPI product signoff.
 
+### 2026-09-03 IRQ contract audit refresh
+
+- 修正 `scripts/check_irq_contract.py` 对旧版 direct CPU IP4 UART 假设的检查。
+  当前契约由两份 DTS、RTL 和 QEMU 共同验证：UART -> VIC source 1 ->
+  CPU IP2；VIC 本身由 CPU interrupt controller 的 IP2 接收。
+- `make irq-contract-audit BUILD_DIR=/tmp/irq-contract-audit-20260903`
+  输出 `IRQ_CONTRACT_AUDIT_PASS uart_vic_source=1 cpu_ip=2`。
+- 使用项目 `eda-env` 环境并行度/内存限制执行
+  `BUILD_DIR=/tmp/irq-contract-recheck-20260903 make rtl-frontend-compile`，
+  8/8 配置通过。该修复只闭合审计器与当前级联契约的一致性，不改变 RTL、QEMU
+  或 Linux 行为。
+
 ### 2026-09-03 Linux SoC VIC cascade integration
 
 - Added the tracked Linux irqchip overlay `tb/linux_boot/irq-mips32-soc-vic.c`,
