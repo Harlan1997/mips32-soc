@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Formal bind checker foundation extension
+
+- Added solver-facing reset synchronizer assertions for synchronized
+  deassertion and source-reset dominance, plus AXI SRAM R/B response stability
+  assertions under backpressure.
+- Extended `scripts/run_formal_bind_compile_gate.sh` to bind and elaborate the
+  real `reset_sync` and `axi_sram` DUTs. The focused run passes all seven
+  targets and emits `formal_bind_compile_report.md` with `7/7` evidence.
+- `python3 scripts/check_formal_assets.py` reports
+  `FORMAL_ASSET_AUDIT_PASS files=7 modules=7 assertions=16`.
+- This closes checker attachment/elaboration coverage only. No solver proof,
+  CDC/RDC/lint signoff or formal property coverage claim is made.
+
 ### 2026-09-03 MMU page-frame full-pool pressure differential
 
 - Extended `mmu_asid_context` firmware to consume all sixteen page-frame
