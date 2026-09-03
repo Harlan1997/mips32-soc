@@ -302,7 +302,7 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 ## Phase F — 验证扩展与前端签核 (Gate F — 前端最终签核)
 
 ### F.1 SVA 断言库
-- [~] AXI / APB / reset bind checker：首批 simulation slice 已由 `make sva-gate` 接通；cache FSM / TLB / interrupt / CDC checker 仍 deferred
+- [~] AXI / APB / reset / VIC bind checker：simulation slice 已由 `make sva-gate` 接通，VIC 32-source output contract 已增加真实 DUT 断言；cache/TLB/CDC checker 和完整 assertion coverage 仍 deferred
 - [ ] 关键 property 100% assert 通过 + 100% cover 命中
 - [ ] SVA 断言覆盖率纳入 gate 门槛
 

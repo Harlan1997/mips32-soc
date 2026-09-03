@@ -1913,3 +1913,13 @@ DMA, MMU IPI and the combined L1/CPU-ROB/DDR/L2 nonblocking path. This is
 current-contract evidence only; it does not close full ISA/IEEE-754, Linux VM,
 RTL Linux userspace, unrestricted system differential, coherency or physical
 signoff.
+### 2026-09-03 VIC SVA contract assertion slice
+
+Added `tb/sva/vic_contract_props.sv` and bound it to the real `apb_vic` DUT
+under `SVA_ENABLE`. The assertions check that an asserted aggregate IRQ has a
+valid pending source ID and that the no-pending state has neither an IRQ nor a
+selected vector. `VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+SKIP_COVERAGE=1 BUILD_DIR=/tmp/vic-sva-contract-20260903 make sva-gate` passes
+the SoC, reset synchronizer and AXI SRAM SVA simulations. This closes the
+VIC simulation-assertion slice only; formal proof, assertion coverage
+signoff, CDC/RDC/lint and full product verification remain OPEN.

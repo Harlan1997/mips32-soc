@@ -40,6 +40,15 @@ bind apb_vic apb_protocol_props u_vic_apb_props (
     .pslverr (pslverr)
 );
 
+bind apb_vic vic_contract_props #(.NUM_SOURCES(NUM_SOURCES))
+u_vic_contract_props (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .pending (pending),
+    .irq     (irq),
+    .vec_id  (vec_id)
+);
+
 bind l1_cache_nb_cpu_axi l1_maintenance_props u_l1_maintenance_props (
     .clk                       (clk),
     .rst_n                     (rst_n),
