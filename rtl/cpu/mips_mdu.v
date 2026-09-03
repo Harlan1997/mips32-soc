@@ -173,6 +173,24 @@ module mips_mdu (
         end
     endfunction
 
+    function [31:0] abs32;
+        input [31:0] value;
+        begin
+            abs32 = value[31] ? (~value + 32'd1) : value;
+        end
+    endfunction
+
+    function [5:0] leading_zeroes;
+        input [31:0] value;
+        integer bit_index;
+        begin
+            leading_zeroes = 6'd32;
+            for (bit_index = 31; bit_index >= 0; bit_index = bit_index - 1)
+                if ((leading_zeroes == 6'd32) && value[bit_index])
+                    leading_zeroes = 6'd31 - bit_index;
+        end
+    endfunction
+
     wire [65:0] mul_acc_next = radix4_chunk(mul_acc, mul_mcand, mul_mult);
     wire [65:0] mul_short_next = radix4_short(mul_acc, mul_mcand, mul_mult);
     wire [63:0] mul_signed_next = result_neg_mul ?
@@ -285,11 +303,25 @@ module mips_mdu (
                                     lo_r  <= 32'hFFFF_FFFF;
                                     hi_r  <= rs_val;
                                     state <= ST_DONE;
+                                end else if (abs32(rt_val) > abs32(rs_val)) begin
+                                    // Quotient is zero when the divisor is
+                                    // already larger than the dividend. This
+                                    // is an architectural early-exit; the
+                                    // remainder keeps the dividend sign.
+                                    lo_r  <= 32'h0;
+                                    hi_r  <= rs_val;
+                                    state <= ST_DONE;
+                                end else if (rs_val == 32'h0) begin
+                                    lo_r  <= 32'h0;
+                                    hi_r  <= 32'h0;
+                                    state <= ST_DONE;
                                 end else begin
-                                    div_divisor       <= rt_val[31] ? (~rt_val + 1'b1) : rt_val;
-                                    div_dividend_orig <= rs_val[31] ? (~rs_val + 1'b1) : rs_val;
-                                    div_ws            <= {32'h0, rs_val[31] ? (~rs_val + 1'b1) : rs_val};
-                                    div_ctr           <= 6'd32;
+                                    div_divisor       <= abs32(rt_val);
+                                    div_dividend_orig <= abs32(rs_val);
+                                    div_ws            <= {32'h0, abs32(rs_val)} <<
+                                                         leading_zeroes(abs32(rs_val));
+                                    div_ctr           <= 6'd32 -
+                                                         leading_zeroes(abs32(rs_val));
                                     result_neg_quot   <= rs_val[31] ^ rt_val[31];
                                     result_neg_rem    <= rs_val[31];
                                     state             <= ST_DIV_ITR;
@@ -301,11 +333,20 @@ module mips_mdu (
                                     lo_r  <= 32'hFFFF_FFFF;
                                     hi_r  <= rs_val;
                                     state <= ST_DONE;
+                                end else if (rt_val > rs_val) begin
+                                    lo_r  <= 32'h0;
+                                    hi_r  <= rs_val;
+                                    state <= ST_DONE;
+                                end else if (rs_val == 32'h0) begin
+                                    lo_r  <= 32'h0;
+                                    hi_r  <= 32'h0;
+                                    state <= ST_DONE;
                                 end else begin
                                     div_divisor       <= rt_val;
                                     div_dividend_orig <= rs_val;
-                                    div_ws            <= {32'h0, rs_val};
-                                    div_ctr           <= 6'd32;
+                                    div_ws            <= {32'h0, rs_val} <<
+                                                         leading_zeroes(rs_val);
+                                    div_ctr           <= 6'd32 - leading_zeroes(rs_val);
                                     result_neg_quot   <= 1'b0;
                                     result_neg_rem    <= 1'b0;
                                     state             <= ST_DIV_ITR;
