@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 module tb_mmu_context_status;
   reg clk=0; always #5 clk=~clk;
-  reg rst_n=0, psel=0, penable=0, pwrite=0; reg [5:0] paddr=0; reg [31:0] pwdata=0;
+  reg rst_n=0, psel=0, penable=0, pwrite=0; reg [7:0] paddr=0; reg [31:0] pwdata=0;
   wire [31:0] prdata; wire pready, pslverr;
   wire invalidate_valid; wire [7:0] invalidate_asid;
   wire [18:0] invalidate_vpn; wire [1:0] invalidate_scope;
   integer errors=0, n;
   apb_mmu_context_status dut(.*);
-  task apb_write(input [5:0] a,input [31:0] d); begin @(negedge clk); paddr=a;pwdata=d;pwrite=1;psel=1;penable=1; @(negedge clk); psel=0;penable=0;pwrite=0; end endtask
-  task apb_read(input [5:0] a,input [31:0] exp,input [127:0] n); begin @(negedge clk);paddr=a;pwrite=0;psel=1;penable=1;#1;if(prdata!==exp) begin $display("[FAIL] %0s got %h exp %h",n,prdata,exp);errors=errors+1;end else $display("[PASS] %0s",n);@(negedge clk);psel=0;penable=0; end endtask
+  task apb_write(input [7:0] a,input [31:0] d); begin @(negedge clk); paddr=a;pwdata=d;pwrite=1;psel=1;penable=1; @(negedge clk); psel=0;penable=0;pwrite=0; end endtask
+  task apb_read(input [7:0] a,input [31:0] exp,input [127:0] n); begin @(negedge clk);paddr=a;pwrite=0;psel=1;penable=1;#1;if(prdata!==exp) begin $display("[FAIL] %0s got %h exp %h",n,prdata,exp);errors=errors+1;end else $display("[PASS] %0s",n);@(negedge clk);psel=0;penable=0; end endtask
   initial begin
     repeat(2) @(negedge clk); rst_n=1;
     apb_write(5'h00,32'h00003412); apb_read(5'h00,32'h00003412,"asid generation");
@@ -50,6 +50,16 @@ module tb_mmu_context_status;
     apb_write(6'h3c,32'h1);
     apb_read(6'h00,32'h00000102,"combined generation reuse ASID");
     apb_read(6'h2c,32'h1,"combined generation reuse token");
+    // Page-frame leases use the extended MMU context offsets 0x40..0x50.
+    apb_write(8'h40,32'h1); apb_read(8'h40,32'h00006000,"page allocator lease");
+    apb_read(8'h44,32'h0,"page generation starts at zero");
+    apb_write(8'h44,32'h00006000);
+    apb_write(8'h48,32'h80000001); apb_read(8'h4c,32'h9,"page stale-release event");
+    apb_write(8'h50,32'hc);
+    apb_write(8'h48,32'h80000000); apb_read(8'h4c,32'h5,"page valid-release event");
+    apb_write(8'h50,32'h4); // clear release event and retain allocator state
+    apb_write(8'h40,32'h1); apb_read(8'h40,32'h00006000,"page generation reuse");
+    apb_read(8'h44,32'h1,"page generation increments");
     if(!pready || pslverr) begin $display("[FAIL] APB handshake");errors=errors+1;end
     if(errors==0) $display("REGRESSION_TEST_SUCCESS mmu_context_status"); else $display("REGRESSION_TEST_FAILED mmu_context_status"); $finish;
   end

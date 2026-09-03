@@ -109,7 +109,7 @@ fi
     "${ROOT_DIR}"/rtl/cpu/mips_mem_stage.v "${ROOT_DIR}"/rtl/cpu/mips_mem_wb_reg.v "${ROOT_DIR}"/rtl/cpu/mips_rob.v "${ROOT_DIR}"/rtl/cpu/mips_regfile.v \
     "${ROOT_DIR}"/rtl/cpu/mips_wb_stage.v "${ROOT_DIR}"/rtl/cpu/mips_rob_fifo.v "${ROOT_DIR}"/rtl/axi/axi2apb_bridge.v "${ROOT_DIR}"/rtl/axi/axi_crossbar.v "${ROOT_DIR}"/rtl/axi/axi_read_timeout_guard.v \
     "${ROOT_DIR}"/rtl/perips/apb_axi_dma.v "${ROOT_DIR}"/rtl/perips/apb_gpio.v "${ROOT_DIR}"/rtl/perips/apb_vic.v "${ROOT_DIR}"/rtl/perips/apb_wdt.v "${ROOT_DIR}"/rtl/perips/apb_boot_status.v "${ROOT_DIR}"/rtl/perips/apb_ddr4_status.v "${ROOT_DIR}"/rtl/perips/apb_perf_counters.v \
-    "${ROOT_DIR}"/rtl/cpu/mmu_asid_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_page_table_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_context_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_ipi_shootdown.v \
+    "${ROOT_DIR}"/rtl/cpu/mmu_asid_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_page_table_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_page_frame_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_context_allocator.v "${ROOT_DIR}"/rtl/cpu/mmu_ipi_shootdown.v \
     "${ROOT_DIR}"/rtl/cpu/mmu_tlb_shootdown_mailbox.v \
     "${ROOT_DIR}"/rtl/perips/apb_mmu_context_status.v "${ROOT_DIR}"/rtl/perips/apb_mmu_ipi_status.v \
     "${ROOT_DIR}"/rtl/perips/apb_timer.v "${ROOT_DIR}"/rtl/perips/apb_uart_16550.v "${ROOT_DIR}"/rtl/perips/uart_pad_wrapper.v "${ROOT_DIR}"/rtl/perips/apb_qspi_status.v "${ROOT_DIR}"/rtl/perips/qspi_cmd_behavioral.v "${ROOT_DIR}"/rtl/perips/qspi_apb_integration.v "${ROOT_DIR}"/rtl/perips/qspi_shared_pin_arbiter.v "${ROOT_DIR}"/rtl/perips/qspi_soc_pad_mux.v "${ROOT_DIR}"/rtl/perips/qspi_axi_xip.v "${ROOT_DIR}"/rtl/perips/axi_spi_flash.v "${ROOT_DIR}"/rtl/perips/axi_flash_image_model.v \

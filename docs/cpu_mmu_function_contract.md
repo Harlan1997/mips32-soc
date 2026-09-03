@@ -80,6 +80,15 @@ allocation, stale release rejection, and generation-aware reuse against the
 real RTL retire stream. This remains a four-slot single-core contract, not a
 Linux page allocator or SMP ownership implementation.
 
+The MMU context window also exposes a bounded page-frame lease pool at
+`0x40..0x50`. `0x40` allocates one aligned page, `0x44` reads its generation or
+stages the page address for release, `0x48` releases it with bit 31 and the
+generation in `pwdata[7:0]`, and `0x4c`/`0x50` provide sticky events and W1C.
+The pool has sixteen fixed pages at `0x0000_6000 + n*0x1000`; stale and
+duplicate releases are rejected and a successful release increments the
+generation before reuse. This is a bounded page-frame ownership primitive; it
+is not a Linux buddy allocator, swap implementation, or complete VM.
+
 ## Acceptance evidence
 
 The CPU/MMU closure requires reproducible firmware/SoC gates for:

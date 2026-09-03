@@ -399,7 +399,7 @@ module soc_peripheral_subsystem #(
 
     apb_mmu_context_status #(.TIMEOUT_CYCLES(64)) u_apb_mmu_context_status (
         .clk(clk), .rst_n(rst_n), .psel(mmu_context_sel), .penable(apb_penable),
-        .pwrite(apb_pwrite), .paddr(apb_paddr[5:0]), .pwdata(apb_pwdata),
+        .pwrite(apb_pwrite), .paddr(apb_paddr[7:0]), .pwdata(apb_pwdata),
         .prdata(mmu_context_prdata), .pready(mmu_context_pready),
         .pslverr(mmu_context_pslverr), .invalidate_valid(tlb_inv_en),
         .invalidate_asid(tlb_inv_asid), .invalidate_vpn(tlb_inv_vpn2),
