@@ -11,6 +11,10 @@
   not reach a WAIT trace event in the bounded window, so no task-flag value was
   observed. RTL Linux userspace, full RTL/QEMU Linux differential and OS VM
   signoff remain OPEN.
+- The trace now also emits `LINUX_TASK_LOAD_TRACE` immediately when a matching
+  load completes. A 1M-cycle compile/runtime smoke at
+  `/tmp/rtl-linux-taskload-smoke-20260903` passed, with no matching load or
+  WAIT event observed; the prior 30M-cycle replay likewise had no WAIT event.
 
 ### 2026-09-03 Formal bind checker foundation extension
 
