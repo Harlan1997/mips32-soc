@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 MDU divider effective-width normalization
+
+`rtl/cpu/mips_mdu.v` 的 restoring radix-2 divider 现在按被除数 magnitude
+有效位宽迭代，并在零被除数或除数大于被除数时 issue 阶段早退出；新增单元
+向量以及 CPU/QEMU retire differential 均通过。该项只闭合当前 radix-2
+normalization/early-exit slice，18-cycle/radix-4 divider、CoreMark/Dhrystone
+性能基线和完整 MDU signoff 继续保持 OPEN。
+
 ### 2026-09-03 Linux GPIO userspace bounded contract
 
 新增 `linux-gpio-userspace-gate` 并接入 `current-contract-signoff`。该 gate

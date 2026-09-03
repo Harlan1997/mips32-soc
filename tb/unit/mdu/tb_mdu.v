@@ -105,6 +105,12 @@ module tb_mdu;
         issue_op(4'd3, 32'd100, 32'd7);
         check_hilo(32'd2, 32'd14, "DIVU 100/7");
 
+        // ---- DIVU: normalized restoring path (sparse and 16-bit boundary) ----
+        issue_op(4'd3, 32'h1234_5678, 32'h0000_1234);
+        check_hilo(32'h0000_0DA8, 32'h0001_0004, "DIVU normalized 0x12345678/0x1234");
+        issue_op(4'd3, 32'hFFFF_FFFF, 32'h8000_0001);
+        check_hilo(32'h7FFF_FFFE, 32'h0000_0001, "DIVU full-width");
+
         // ---- DIVU: divisor > dividend (early exit) ----
         issue_op(4'd3, 32'd5, 32'd100);
         check_hilo(32'd5, 32'd0, "DIVU 5/100");
@@ -117,6 +123,8 @@ module tb_mdu;
         issue_op(4'd2, -32'd20, 32'd3);
         // -20 / 3 = -6 rem -2 (MIPS: rem sign follows dividend)
         check_hilo(-32'd2, -32'd6, "DIV -20/3");
+        issue_op(4'd2, 32'h1234_5678, 32'h0000_1234);
+        check_hilo(32'h0000_0DA8, 32'h0001_0004, "DIV normalized positive");
 
         // ---- DIV: signed divide by zero ----
         issue_op(4'd2, -32'd42, 32'd0);

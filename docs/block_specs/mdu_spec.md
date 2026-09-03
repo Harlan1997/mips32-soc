@@ -13,7 +13,9 @@
 - **乘法**：可综合 radix-4 shift/add 乘法器；常规路径每拍处理 4 个
   radix-4 digit，4 个计算拍加 1 个提交拍；两个 16-bit magnitude 操作数
   走 1 拍短路径。
-- **除法**：32-cycle restoring radix-2，含确定性除零行为。
+- **除法**：restoring radix-2，按被除数 magnitude 的有效位宽执行
+  1..32 次迭代；被除数为零或除数大于被除数时在 issue 阶段早退出，含
+  确定性除零行为。
 - **流水线合同**：MDU FSM 与主流水线并行；EX 通过 HI/LO hazard 与 busy 状态 stall。
 
 **不做**：
@@ -95,11 +97,13 @@ datapath；常规 32-bit magnitude 乘法处理 4 个 chunk，短操作数一次
 
 ### 2.3 除法器实现
 
-**Radix-2 恢复余数除法**：最多 32 次 1-bit 迭代，加 setup/fixup/done 状态。
+**Radix-2 恢复余数除法**：最多 32 次 1-bit 迭代，加 setup/fixup/done 状态；
+初始化时按被除数前导零数量左移工作寄存器，跳过不会影响商的前导零迭代。
 
 **早退出**：
-- 检查 |rs| < |rt| → 商 = 0, 余数 = rs → 3 cycle 完成。
-- 计数除数前导 0，跳过对应 iter。
+- 检查 |rs| < |rt| → 商 = 0, 余数 = rs → issue 后直接完成。
+- 检查被除数为 0 → 结果直接为 0。
+- 计数被除数前导 0，跳过对应 iter。
 
 **Radix-4**：不在当前 RTL 合同内，作为后续性能增强项。
 

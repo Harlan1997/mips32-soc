@@ -14,6 +14,18 @@
   radix-2 division latency optimization, official CoreMark/Dhrystone
   baselines, and full MDU performance signoff remain OPEN.
 
+### 2026-09-03 MDU radix-2 division normalization closure slice
+
+- The restoring divider now normalizes the magnitude dividend by skipping its
+  leading zero bits, so the iteration count is the effective dividend width
+  rather than always 32. Zero dividends and divisor-greater-than-dividend
+  cases complete at issue with architecturally deterministic HI/LO values.
+- Added sparse, 16-bit-boundary, full-width, signed, zero-dividend and
+  divisor-greater-than-dividend vectors to the MDU unit corpus. The focused
+  MDU unit, CPU firmware, and QEMU/RTL retire differential gates pass.
+- The datapath remains radix-2 restoring; the separate 18-cycle/radix-4
+  divider target and official workload performance signoff remain OPEN.
+
 ### 2026-09-03 CPU performance retire boundary corrected
 
 - The CPU performance counter's retire event was previously derived from
