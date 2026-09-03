@@ -263,7 +263,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate qemu-system-mdu-differential-gate qemu-system-state-converter-test
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
-.PHONY: perf-cpu-gate perf-workloads-gate vic-nested-gate
+.PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
 .PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
@@ -1011,6 +1011,10 @@ perf-workloads-gate:
 	grep -q 'perf_workloads: REGRESSION_TEST_SUCCESS' $(BUILD_DIR)/soc_test/perf_workloads/sim.log
 	@test "$$(grep -c 'perf_workloads: .* cycles=' $(BUILD_DIR)/soc_test/perf_workloads/sim.log)" -eq 4
 	@echo "CPU performance workload observation gate: PASS"
+
+perf-coremark-gate:
+	RUN_DIR=$(BUILD_DIR)/perf/coremark \
+		bash tb/perf/run_coremark_gate.sh
 
 vic-nested-gate:
 	$(MAKE) -C tb/soc_test/fw/tests/vic_nested OUT_DIR=$(VIC_NESTED_FW_DIR) FW_BASE=firmware all

@@ -39,6 +39,7 @@ module tb_mips_soc;
 
     reg clk;
     reg rst_n;
+    integer soc_timeout_ns;
 
     wire        legacy_uart_tx_valid;
     wire [7:0]  legacy_uart_tx_data;
@@ -2021,6 +2022,8 @@ module tb_mips_soc;
 `endif
 
     initial begin
+        soc_timeout_ns = 5200000;
+        if (!$value$plusargs("SOC_TIMEOUT_NS=%d", soc_timeout_ns)) begin end
 `ifdef SOC_COHERENCY_FW_STRESS
         #20000000;
 `elsif SOC_L2_CPU_GATE
@@ -2030,7 +2033,7 @@ module tb_mips_soc;
         // test; the ordinary firmware watchdog remains unchanged.
         #2000000000;
 `else
-        #5200000;
+        #soc_timeout_ns;
 `endif
 `ifdef SOC_COHERENCY_FW_STRESS
         $display("COH_STRESS_TIMEOUT core0_pc=%08h core1_pc=%08h c0_req=%b/%b/%08h c1_exc=%b/%0d c1_epc=%08h c1_req=%b/%b/%08h c1_wdata=%08h c1_be=%h rd=%b/%b/%08h/%b/%b owner=%b seen0=%08h seen1=%08h start=%08h ready=%08h command=%08h ack_word=%08h ack_part=%08h done=%08h fail=%08h",
