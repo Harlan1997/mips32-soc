@@ -99,6 +99,12 @@
 `define SOC_FPU_ENABLE 0
 `endif
 
+// Opt-in radix-4 restoring divider. The default radix-2 path remains the
+// compatibility baseline until the separate latency gate is signed off.
+`ifndef SOC_MDU_DIV_RADIX
+`define SOC_MDU_DIV_RADIX 2
+`endif
+
 // Opt-in MIPS32r2 shadow-register-set data path. The default integer CPU
 // keeps the existing single GPR bank and treats RDPGPR/WRPGPR as RI.
 `ifndef SOC_SRS_ENABLE
