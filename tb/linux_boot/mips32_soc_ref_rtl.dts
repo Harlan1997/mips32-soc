@@ -57,4 +57,12 @@
 		no-loopback-test;
 		status = "okay";
 	};
+	gpio0: gpio@40002000 {
+		compatible = "wd,mbl-gpio";
+		reg = <0x40002000 0x4>, <0x40002004 0x4>;
+		reg-names = "dat", "dirout";
+		gpio-controller;
+		#gpio-cells = <2>;
+		status = "okay";
+	};
 };

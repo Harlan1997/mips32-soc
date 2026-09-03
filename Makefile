@@ -245,7 +245,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate product-mmu-machine-check-gate dual-core-mmu-shootdown-gate
-.PHONY: linux-boot-build-gate linux-soc-vic-gate rtl-linux-progress-gate rtl-linux-userspace-gate linux-exception-frame-check
+.PHONY: linux-boot-build-gate linux-soc-vic-gate linux-soc-contract-audit rtl-linux-progress-gate rtl-linux-userspace-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate qemu-system-mdu-differential-gate qemu-system-state-converter-test
@@ -661,6 +661,9 @@ linux-boot-build-gate: qemu-system-mips32-soc-ref
 
 linux-soc-vic-gate: linux-boot-build-gate
 	@echo "Linux SoC VIC gate: PASS"
+
+linux-soc-contract-audit:
+	python3 scripts/check_linux_soc_contract.py
 
 rtl-linux-progress-gate:
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh tb/linux_boot/run_rtl_linux_progress_gate.sh
