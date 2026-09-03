@@ -72,4 +72,31 @@ bind mips_bpu bpu_invariant_props #(
     .bht_ctr          (bht_ctr)
 );
 `endif
+
+`ifdef FORMAL_BIND_RESET_SYNC
+bind reset_sync reset_sync_invariant_props #(
+    .STAGES(STAGES)
+) u_formal_reset_sync_props (
+    .clk      (clk),
+    .rst_pre_n(rst_pre_n),
+    .rst_n    (rst_n)
+);
+`endif
+
+`ifdef FORMAL_BIND_AXI_SRAM
+bind axi_sram axi_sram_invariant_props u_formal_axi_sram_props (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .s_rvalid(s_rvalid),
+    .s_rready(s_rready),
+    .s_rid   (s_rid),
+    .s_rdata (s_rdata),
+    .s_rresp (s_rresp),
+    .s_rlast (s_rlast),
+    .s_bvalid(s_bvalid),
+    .s_bready(s_bready),
+    .s_bid   (s_bid),
+    .s_bresp (s_bresp)
+);
+`endif
 `endif

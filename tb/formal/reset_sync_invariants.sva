@@ -1,0 +1,27 @@
+// Formal property scaffold for async-assert/sync-deassert reset_sync.
+// The bind compile gate checks attachment to the real DUT; a solver run is
+// required before these properties can be called proven.
+`ifdef FORMAL_ENABLE
+module reset_sync_invariant_props #(
+    parameter integer STAGES = 3
+) (
+    input logic clk,
+    input logic rst_pre_n,
+    input logic rst_n
+);
+    default clocking cb @(posedge clk); endclocking
+    default disable iff (!rst_pre_n);
+
+    property p_deassert_is_synchronized;
+        !rst_n |-> ##STAGES rst_n;
+    endproperty
+    RESET_SYNC_DEASSERT: assert property (p_deassert_is_synchronized)
+        else $error("reset_sync: reset deasserted before %0d stages", STAGES);
+
+    property p_source_reset_dominates;
+        !rst_pre_n |-> !rst_n;
+    endproperty
+    RESET_SYNC_ASSERT: assert property (p_source_reset_dominates)
+        else $error("reset_sync: synchronized reset escaped source reset");
+endmodule
+`endif

@@ -53,6 +53,8 @@ required=(
     "${ROOT_DIR}/tb/sva/cache_state_props.sv"
     "${ROOT_DIR}/tb/sva/tlb_lookup_props.sv"
     "${ROOT_DIR}/tb/formal/arb_fairness.sva"
+    "${ROOT_DIR}/tb/formal/reset_sync_invariants.sva"
+    "${ROOT_DIR}/tb/formal/axi_sram_invariants.sva"
     "${ROOT_DIR}/tb/formal/README.md"
     "${ROOT_DIR}/docs/cdc_waivers.md"
 )
@@ -82,6 +84,8 @@ cat > "${report}" <<EOF
 - Tool probes: ${available_count}/${total_count} available; see tool_inventory.tsv.
 - Module initialization: ${module_init_status}; VCS module: ${module_load_status}.
 - SVA assets: AXI/APB/reset/cache property sources present.
+- Formal bind assets: reset synchronizer and AXI SRAM response properties are
+  attached to real DUTs by the 7-target compile gate.
 - Formal assets: static content audit passed; this is not a formal proof.
 - CDC/RDC/lint: availability is recorded; missing tools are deferred explicitly.
 - Waiver audit: ${waiver_count} waiver files checked; broad exclusions rejected.

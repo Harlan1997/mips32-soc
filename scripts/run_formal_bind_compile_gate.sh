@@ -45,14 +45,22 @@ compile_target bpu mips_bpu FORMAL_BIND_BPU \
     "${ROOT_DIR}/rtl/cpu/mips_bpu.v" \
     "${ROOT_DIR}/tb/formal/bpu_invariants.sva" \
     "${ROOT_DIR}/tb/formal/formal_bind.sv"
+compile_target reset_sync reset_sync FORMAL_BIND_RESET_SYNC \
+    "${ROOT_DIR}/rtl/clock/reset_sync.v" \
+    "${ROOT_DIR}/tb/formal/reset_sync_invariants.sva" \
+    "${ROOT_DIR}/tb/formal/formal_bind.sv"
+compile_target axi_sram axi_sram FORMAL_BIND_AXI_SRAM \
+    "${ROOT_DIR}/rtl/perips/axi_sram.v" \
+    "${ROOT_DIR}/tb/formal/axi_sram_invariants.sva" \
+    "${ROOT_DIR}/tb/formal/formal_bind.sv"
 
 cat > "${RUN_ROOT}/formal_bind_compile_report.md" <<EOF
 # Formal DUT Binding Compile Gate
 
 - Result: PASS
-- Targets: dcache, mips_tlb, apb_vic, soc_fabric, mips_bpu
+- Targets: dcache, mips_tlb, apb_vic, soc_fabric, mips_bpu, reset_sync, axi_sram
 - Define: FORMAL_ENABLE plus target-specific FORMAL_BIND_*
 - Evidence: each target directory contains a VCS compile.log and elaborated simv.
 - Boundary: syntax/elaboration only; no formal engine proof is claimed.
 EOF
-echo "formal bind compile gate: PASS (5/5)"
+echo "formal bind compile gate: PASS (7/7)"

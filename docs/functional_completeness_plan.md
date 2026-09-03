@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 Formal checker binding foundation
+
+新增 reset synchronizer 的 source-reset/deassertion 属性和 AXI SRAM R/B
+backpressure 稳定属性，并接入真实 DUT 的 formal bind elaboration。静态审计
+报告 `files=7 modules=7 assertions=16`，7 个目标全部通过 VCS elaboration。
+该项只闭合 checker 资产和绑定编译基础设施；没有宣称 solver formal proof、
+CDC/RDC/lint 或完整产品 signoff。
+
 ### 2026-09-03 COP1 CVT.S.D destination-format flags
 
 `CVT.S.D` 现在根据 single 目标格式的实际舍入结果报告
