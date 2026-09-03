@@ -13,6 +13,15 @@
   the Unix timing protocol, DMIPS/MHz, full ISA compliance, or commercial
   performance signoff; those remain open.
 
+### 2026-09-03 Integer benchmark baseline aggregate
+
+- Added `perf-benchmark-baseline-gate`, which runs the CoreMark and Dhrystone
+  real-RTL validation gates serially and records an aggregate completion
+  report under `build/perf/benchmark_baseline`.
+- The aggregate is repeatability evidence for the integer workload baseline;
+  it does not claim normalized CoreMark/MHz, DMIPS/MHz, or commercial timing
+  signoff.
+
 ### 2026-09-03 Official CoreMark RTL validation baseline
 
 - Vendored the official EEMBC CoreMark Apache-2.0 sources under

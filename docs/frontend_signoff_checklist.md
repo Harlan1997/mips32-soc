@@ -165,7 +165,7 @@ MULT/MULTU/DIV/DIVU、HI/LO 移动、MADD/MADDU/MSUB/MSUBU、MUL、除零、符�
 - [ ] MIPS32 R2 ISA compliance test suite 100%
 - [ ] ISA-Ref 联合仿真 (QEMU-MIPS) ≥ 1e9 retired instructions 无 mismatch
 - [ ] CoreMark 基线跑通 + CPI 建档
-- [ ] Dhrystone 基线跑通
+- [x] Dhrystone 基线跑通（`make perf-dhrystone-gate`；100-run RTL validation baseline；不等同于 DMIPS/MHz 成绩）
 - [ ] SVA 断言库 (bind checker) 全 assert 通过 + 关键 property 100% cover
 - [ ] Formal proof 记录：TLB FSM / 异常优先级 / BPU FSM (proven or bounded)
 
