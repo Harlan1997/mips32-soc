@@ -45,7 +45,12 @@ if ! [[ "${qemu_timeout_seconds}" =~ ^[0-9]+$ ]]; then
     exit 2
 fi
 deadline=$((SECONDS + qemu_timeout_seconds))
-success_marker='MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS'
+linux_gpio_only=${LINUX_GPIO_ONLY:-0}
+if [[ "${linux_gpio_only}" == "1" ]]; then
+    success_marker='MIPS32_SOC_LINUX_GPIO_SUCCESS'
+else
+    success_marker='MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS'
+fi
 while kill -0 "${qemu_pid}" 2>/dev/null; do
     if rg -q "${success_marker}" "${RUN_DIR}/qemu_stdout.log"; then
         # The guest has emitted every required marker. Stop before Linux kills
@@ -88,6 +93,10 @@ if rg -q "MIPS32_SOC_LINUX_(MMAP|MPROTECT|BRK|SLEEP|YIELD|FORK_WAIT)_FAILURE" "$
     fail_gate "userspace failure marker was observed"
     exit 1
 fi
+if rg -q "MIPS32_SOC_LINUX_GPIO_FAILURE" "${RUN_DIR}/qemu_stdout.log"; then
+    fail_gate "Linux GPIO userspace failure marker was observed"
+    exit 1
+fi
 if ! rg -q "Run /init as init process" "${RUN_DIR}/qemu_stdout.log"; then
     fail_gate "kernel did not reach initramfs /init"
     exit 1
@@ -105,6 +114,28 @@ fi
 if ! rg -q "MIPS32_SOC_LINUX_BOOT_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
     fail_gate "kernel reached /init but userspace marker was not observed"
     exit 1
+fi
+if [[ "${linux_gpio_only}" == "1" ]]; then
+    if ! rg -q "MIPS32_SOC_LINUX_GPIO_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
+        fail_gate "Linux GPIO userspace marker was not observed"
+        exit 1
+    fi
+    cat >"${RUN_DIR}/completion_report.md" <<EOF
+# MIPS32 SoC Linux GPIO Userspace Gate
+
+- Result: PASS
+- Kernel: ${KERNEL_INPUT}
+- Device tree: ${DTB_INPUT}
+- GPIO ABI: Linux gpio-mmio legacy sysfs, dynamic base 512
+- Evidence: Linux mounted sysfs, exported GPIO512, changed its direction to
+  output, wrote the value 1 through the value attribute, read the value back
+  and emitted MIPS32_SOC_LINUX_GPIO_SUCCESS.
+- Scope: QEMU Linux GPIO binding and userspace read/write contract. Physical
+  GPIO pads, pinmux, interrupts and RTL Linux userspace remain outside this
+  bounded gate.
+EOF
+    echo "Linux GPIO userspace gate: PASS"
+    exit 0
 fi
 if ! rg -q "MIPS32_SOC_LINUX_MMAP_SUCCESS" "${RUN_DIR}/qemu_stdout.log"; then
     fail_gate "anonymous/file-backed mmap marker was not observed"

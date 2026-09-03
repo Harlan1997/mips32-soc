@@ -70,6 +70,7 @@ child_hash=$(sha256sum "${BUILD_DIR}/rootfs/vm_child" | awk '{print $1}')
     printf 'dir /dev 0755 0 0\n'
     printf 'nod /dev/console 0600 0 0 c 5 1\n'
     printf 'nod /dev/ttyS0 0600 0 0 c 4 64\n'
+    printf 'dir /sys 0755 0 0\n'
     printf 'file /init %s 0755 0 0\n' "${BUILD_DIR}/rootfs/init"
     printf 'dir /bin 0755 0 0\n'
     printf 'file /bin/vm_child %s 0755 0 0\n' "${BUILD_DIR}/rootfs/vm_child"

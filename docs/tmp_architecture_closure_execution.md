@@ -1,17 +1,21 @@
 # Architecture Closure Execution Tracking
 
-### 2026-09-03 Linux GPIO runtime boundary remains open
+### 2026-09-03 Linux GPIO userspace runtime closed (bounded QEMU)
 
 - The Linux kernel build with the DT-described `wd,mbl-gpio` controller and
   built-in `gpio-mmio` support passes, and the controller is probed from the
   DT resource at `0x40002000/0x40002004`.
-- A QEMU Linux initramfs probe can mount sysfs, export GPIO0, and open the
-  direction/value attributes, but the attempted userspace direction/value
-  operation does not yet produce the expected data readback. The temporary
-  diagnostic run was removed and is not part of the regression gate.
-- Therefore this item is recorded as a runtime investigation boundary, not a
-  Linux GPIO signoff. The committed contract remains DT/configuration/build
-  integration only; a passing userspace GPIO read/write test is still needed.
+- The dedicated `make linux-gpio-userspace-gate` stops immediately after the
+  GPIO marker and passes: Linux mounts sysfs at `/sys`, exports GPIO512,
+  switches it to output, writes value 1 and reads value 1 back through the
+  legacy sysfs ABI.
+- The initramfs now creates the `/sys` mount point, uses the correct MIPS O32
+  `mount` syscall number (`4021`), and keeps the readback buffer in writable
+  `.bss` memory. The full generic Linux gate remains independently subject to
+  its existing intermittent parent `wait4` boundary.
+- This closes the bounded QEMU Linux GPIO userspace contract. Physical pad
+  synchronization, pinmux, GPIO interrupts, RTL Linux userspace, and full
+  product GPIO signoff remain outside this gate.
 
 ### 2026-09-03 Linux differential handoff anchor made artifact-derived
 

@@ -17,6 +17,124 @@ _start:
 	li	$v0, 4005
 	syscall
 	move	$s0, $v0
+	/* Exercise the Linux gpio-mmio binding through its userspace sysfs ABI.
+	 * gpio-mmio receives the first dynamic legacy GPIO range (512) in this
+	 * fixed DT/kernel contract; use the exported global number rather than
+	 * assuming that the legacy base is zero. */
+	li	$a0, 0
+	la	$a1, sysfs_path
+	la	$a2, sysfs_fs
+	move	$a3, $zero
+	sw	$zero, 16($sp)
+	li	$v0, 4021
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, gpio_fail
+	nop
+	la	$a0, gpio_export_path
+	li	$a1, 1
+	move	$a2, $zero
+	li	$v0, 4005
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, gpio_fail
+	nop
+	move	$s1, $v0
+	move	$a0, $s1
+	la	$a1, gpio_export_value
+	li	$a2, 4
+	li	$v0, 4004
+	syscall
+	nop
+	li	$t0, 4
+	bne	$v0, $t0, gpio_fail_close
+	nop
+	li	$v0, 4006
+	move	$a0, $s1
+	syscall
+	nop
+	la	$a0, gpio_direction_path
+	li	$a1, 1
+	move	$a2, $zero
+	li	$v0, 4005
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, gpio_fail
+	nop
+	move	$s1, $v0
+	move	$a0, $s1
+	la	$a1, gpio_direction_out
+	li	$a2, 4
+	li	$v0, 4004
+	syscall
+	nop
+	li	$t0, 4
+	bne	$v0, $t0, gpio_fail_close
+	nop
+	li	$v0, 4006
+	move	$a0, $s1
+	syscall
+	nop
+	la	$a0, gpio_value_path
+	li	$a1, 1
+	move	$a2, $zero
+	li	$v0, 4005
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, gpio_fail
+	nop
+	move	$s1, $v0
+	move	$a0, $s1
+	la	$a1, gpio_one
+	li	$a2, 2
+	li	$v0, 4004
+	syscall
+	nop
+	li	$t0, 2
+	bne	$v0, $t0, gpio_fail_close
+	nop
+	li	$v0, 4006
+	move	$a0, $s1
+	syscall
+	nop
+	la	$a0, gpio_value_path
+	move	$a1, $zero
+	move	$a2, $zero
+	li	$v0, 4005
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, gpio_fail
+	nop
+	move	$s1, $v0
+	move	$a0, $s1
+	la	$a1, gpio_readback
+	li	$a2, 4
+	li	$v0, 4003
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, gpio_read_value_fail
+	nop
+gpio_value_read_data_check:
+	lbu	$t0, gpio_readback
+	li	$t1, '1'
+	bne	$t0, $t1, gpio_read_value_fail
+	nop
+	li	$v0, 4006
+	move	$a0, $s1
+	syscall
+	nop
+	move	$a0, $s0
+	la	$a1, gpio_success_marker
+	li	$a2, gpio_success_marker_end-gpio_success_marker
+	li	$v0, 4004
+	syscall
+	nop
 	/* Exercise Linux user-stack growth across four page boundaries before the
 	 * completion marker. The marker is emitted only after all stores retire. */
 	sw	$zero, 0($sp)
@@ -360,6 +478,33 @@ fork_fail:
 	syscall
 	nop
 
+gpio_read_value_fail:
+	li	$v0, 4006
+	move	$a0, $s1
+	syscall
+	nop
+	b	gpio_fail
+	nop
+gpio_fail:
+	move	$a0, $s0
+	la	$a1, gpio_failure_marker
+	li	$a2, gpio_failure_marker_end-gpio_failure_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 1
+	li	$v0, 4001
+	syscall
+	nop
+
+gpio_fail_close:
+	li	$v0, 4006
+	move	$a0, $s1
+	syscall
+	nop
+	b	gpio_fail
+	nop
+
 vm_fail:
 	move	$a0, $s0
 	la	$a1, vm_fail_marker
@@ -380,6 +525,28 @@ vm_fail:
 	.section .rodata
 console_path:
 	.ascii "/dev/ttyS0\0"
+sysfs_fs:
+	.ascii "sysfs\0"
+sysfs_path:
+	.ascii "/sys\0"
+gpio_export_path:
+	.ascii "/sys/class/gpio/export\0"
+gpio_direction_path:
+	.ascii "/sys/class/gpio/gpio512/direction\0"
+gpio_value_path:
+	.ascii "/sys/class/gpio/gpio512/value\0"
+gpio_export_value:
+	.ascii "512\n"
+gpio_direction_out:
+	.ascii "out\n"
+gpio_one:
+	.ascii "1\n"
+gpio_success_marker:
+	.ascii "MIPS32_SOC_LINUX_GPIO_SUCCESS\n"
+gpio_success_marker_end:
+gpio_failure_marker:
+	.ascii "MIPS32_SOC_LINUX_GPIO_FAILURE\n"
+gpio_failure_marker_end:
 boot_marker:
 	.ascii "MIPS32_SOC_LINUX_BOOT_SUCCESS\n"
 boot_marker_end:
@@ -420,3 +587,7 @@ vm_fail_marker_end:
 fork_fail_marker:
 	.ascii "MIPS32_SOC_LINUX_FORK_WAIT_FAILURE\n"
 fork_fail_marker_end:
+	.section .bss
+	.align 2
+gpio_readback:
+	.space 4
