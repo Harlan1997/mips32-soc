@@ -95,7 +95,8 @@ config_inputs_hash=$({
         "${LINUX_SOURCE_DIR}/arch/mips/configs/generic/el.config" \
         "${LINUX_SOURCE_DIR}/drivers/irqchip/irq-mips32-soc-vic.c" \
         "${LINUX_SOURCE_DIR}/drivers/irqchip/Kconfig" \
-        "${LINUX_SOURCE_DIR}/drivers/irqchip/Makefile"
+        "${LINUX_SOURCE_DIR}/drivers/irqchip/Makefile" \
+        "${SCRIPT_DIR}/mips32_soc_ref.dts"
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
     printf 'LINUX_CMDLINE=%s\n' "${LINUX_CMDLINE}"
@@ -122,6 +123,9 @@ if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash
         --enable CONFIG_SERIAL_8250 \
         --enable CONFIG_SERIAL_8250_CONSOLE \
         --enable CONFIG_MIPS32_SOC_VIC \
+        --enable CONFIG_GPIOLIB \
+        --enable CONFIG_GPIO_GENERIC_PLATFORM \
+        --enable CONFIG_GPIO_SYSFS \
         --enable CONFIG_DEVTMPFS \
         --enable CONFIG_DEVTMPFS_MOUNT \
         --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
@@ -147,6 +151,8 @@ make -C "${LINUX_SOURCE_DIR}" O="${BUILD_DIR}/kernel" \
     -o "${BUILD_DIR}/mips32_soc_ref.dtb" "${SCRIPT_DIR}/mips32_soc_ref.dts"
 test -s "${BUILD_DIR}/kernel/vmlinux"
 test -s "${BUILD_DIR}/mips32_soc_ref.dtb"
+python3 "${ROOT_DIR}/scripts/check_linux_soc_contract.py" \
+    "${BUILD_DIR}/kernel/.config"
 
 kernel_load_virtual=$(${CROSS_COMPILE}readelf -l "${BUILD_DIR}/kernel/vmlinux" | \
     awk '$1 == "LOAD" {print $3; exit}')
