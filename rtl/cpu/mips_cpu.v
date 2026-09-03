@@ -2195,6 +2195,19 @@ module mips_cpu #(
                         ((wb_bd && wb_arch_valid &&
                           (wb_delay_slot_next_pc != 32'd0)) |
                          interrupt_except_bd);
+
+`ifdef SVA_ENABLE
+    // A suspended WAIT has no architectural delay slot. Guard both halves of
+    // the wakeup contract so stale frozen-pipeline metadata cannot regress
+    // the precise EPC/BD behavior fixed above.
+    property p_wait_interrupt_precise_resume;
+        @(posedge clk) disable iff (!rst_n)
+            (interrupt_accept && wait_state) |->
+                (!exception_bd && (except_pc == wait_resume_pc));
+    endproperty
+    WAIT_INTERRUPT_PRECISE_RESUME: assert property (p_wait_interrupt_precise_resume)
+        else $error("WAIT interrupt did not preserve sequential EPC/clear BD");
+`endif
         
     // An interrupt accepted while the core is suspended by WAIT is taken
     // after WAIT has retired.  Save the sequential PC so ERET resumes at the
