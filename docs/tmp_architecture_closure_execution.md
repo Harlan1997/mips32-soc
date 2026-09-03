@@ -1,5 +1,25 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 CP0 exception edge-phase diagnostic closure
+
+- Added `LINUX_CP0_EXCEPTION_EDGE` active-region and `$strobe` post-NBA
+  diagnostics to `tb/soc_test/tb_mips_soc.v`. The paired records distinguish
+  CP0 exception inputs (`except_req`, `except_pc`, `except_bd`) from the state
+  visible before and after the nonblocking CP0 update.
+- A fresh default-path smoke using
+  `source /etc/profile.d/modules.sh && module load vcs && SKIP_COVERAGE=1
+  VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  SOC_TEST_RUN_DIR=/tmp/cp0-edge-diagnostic-20260903
+  FW_HEX=build/firmware/soc_smoke/firmware.hex make soc-smoke` passed
+  `CPU_CP0_SUMMARY intr=1 syscall=1 ri=2 adel=1 eret=7` and
+  `REGRESSION_TEST_SUCCESS`.
+- The focused RTL Linux trace at cycle `16339459` already showed the correct
+  input `except_pc=0x88443ea4` and `except_bd=1`; the old EPC/Cause values were
+  active-region pre-NBA state and the next sample showed
+  `EPC=0x88443ea0/Cause.BD=1`. No speculative CPU/CP0 RTL change is justified.
+  RTL Linux userspace, full RTL/QEMU Linux differential, and complete
+  ISA/MMU/FPU/OS semantics remain OPEN.
+
 ### 2026-09-03 RTL Linux diagnostic argument propagation
 
 - `make rtl-linux-progress-gate` now forwards the runner's GPR, target data-side,
