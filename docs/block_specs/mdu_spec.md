@@ -10,7 +10,9 @@
 
 - CPU 已支持指令：`MULT / MULTU / DIV / DIVU / MFHI / MFLO / MTHI / MTLO`，`MADD / MADDU / MSUB / MSUBU`，`MUL rd, rs, rt`。
 - `CLO / CLZ` 不属于 MDU block 合同（属于 EX / ALU 路径）。
-- **乘法**：behavioral 32x32 乘法器，3-cycle 模型；小操作数早退出。
+- **乘法**：可综合 radix-4 shift/add 乘法器；常规路径每拍处理 4 个
+  radix-4 digit，4 个计算拍加 1 个提交拍；两个 16-bit magnitude 操作数
+  走 1 拍短路径。
 - **除法**：32-cycle restoring radix-2，含确定性除零行为。
 - **流水线合同**：MDU FSM 与主流水线并行；EX 通过 HI/LO hazard 与 busy 状态 stall。
 
@@ -24,7 +26,8 @@
 
 ### 1.1 有符号乘法 `MULT rs, rt`
 
-`{HI, LO} = signed(rs) * signed(rt)`（64 位）。3-5 cycle FSM。
+`{HI, LO} = signed(rs) * signed(rt)`（64 位）。常规 radix-4 路径为 5 个
+架构周期（含提交边界）。
 
 ### 1.2 无符号乘法 `MULTU rs, rt`
 
@@ -32,7 +35,7 @@
 
 ### 1.3 32-bit 乘 `MUL rd, rs, rt`（MIPS32 R2，CPU-visible）
 
-`rd = (rs * rt)[31:0]`；**HI/LO 不定**（spec 允许乱刷，但保守做法保持 HI/LO 不变或写入低 32 位）。3-5 cycle。
+`rd = (rs * rt)[31:0]`；**HI/LO 不定**（spec 允许乱刷，但保守做法保持 HI/LO 不变或写入低 32 位）。常规路径为 5 个架构周期。
 
 ### 1.4 有符号除法 `DIV rs, rt`
 
@@ -72,7 +75,7 @@
 
 ```
 ST_IDLE  → 空闲
-ST_MUL   → behavioral 乘法 3-cycle 模型或小数早退出
+    ST_MUL   → radix-4 分块迭代（常规 4 拍，短操作数 1 拍）
 ST_DIV   → 32-cycle radix-2 除法迭代
 ST_ACC   → 乘加/乘减累加
 ST_DONE  → 1 cycle 写 HI/LO 回寄存器
@@ -86,8 +89,9 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 | **B. Booth radix-4, 5-cycle** | 中 | 5 cycle | 24Kc 常见选择 |
 | C. Wallace tree pipelined 3-stage | 3 cycle (throughput 1/cycle) | 用流水化换取吞吐 |
 
-**当前 RTL**：使用 Verilog `*` 的 behavioral 乘法，配 3-cycle latency
-模型。Booth/radix-4、Wallace tree 或定制乘法器可作为后续 RTL 演进方向。
+**当前 RTL**：`rtl/cpu/mips_mdu.v` 使用可综合的 radix-4 shift/add 分块
+datapath；常规 32-bit magnitude 乘法处理 4 个 chunk，短操作数一次处理
+8 个 digit。结果在统一 `ST_DONE` 边界提交，flush 可取消尚未提交的结果。
 
 ### 2.3 除法器实现
 
@@ -99,12 +103,12 @@ ST_DONE  → 1 cycle 写 HI/LO 回寄存器
 
 **Radix-4**：不在当前 RTL 合同内，作为后续性能增强项。
 
-### 2.4 早退出乘法 (符号 extension)
+### 2.4 早退出乘法 (符号 magnitude)
 
 `MULT` / `MULTU` 检查：
-- `rs[31:16] == {16{rs[15]}}` 且 `rt[31:16] == {16{rt[15]}}` → 短 mul（3 cycle）。
-- 全 0：结果直接 0，1 cycle。
-- 覆盖 CoreMark 常见小整数乘法。
+- `|rs| < 2^16` 且 `|rt| < 2^16` → 短 mul（1 个计算拍，随后统一提交）。
+- 结果使用 shift/add digit 累加，不依赖 Verilog `*`。
+- 覆盖 CoreMark 常见小整数乘法；完整 benchmark stall 目标仍待基准工程。
 
 ---
 
