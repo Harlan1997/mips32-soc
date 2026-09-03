@@ -76,6 +76,13 @@ QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu
     sha256sum "${QEMU_BIN}"
 } >"${RUN_DIR}/qemu_build_identity.txt"
 
+# Bind the aggregate result to the exact software inputs and source revision.
+# This keeps a later report from being mistaken for a run using a different
+# kernel/DTB pair or a different working-tree revision.
+sha256sum "${LINUX_KERNEL}" "${LINUX_DTB}" "${LINUX_CONFIG}" \
+    >"${RUN_DIR}/linux_artifact_sha256.txt"
+git -C "${ROOT_DIR}" rev-parse HEAD >"${RUN_DIR}/source_commit.txt"
+
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # QEMU System Architecture Closure Gate
 
@@ -86,7 +93,12 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
   MMU refill/PageMask/OS-pressure differential, LL/SC reservation differential,
   and generic Linux kernel-to-userspace marker boot.
 - Evidence: child logs in this directory, QEMU build identity, and child
-  reports under build/isa_ref/ and build/linux_boot/real/.
+  reports under build/isa_ref/ and build/linux_boot/real/. Exact Linux input
+  hashes are in linux_artifact_sha256.txt; the source revision is in
+  source_commit.txt.
+- Linux kernel: ${LINUX_KERNEL}
+- Linux DTB: ${LINUX_DTB}
+- Linux config: ${LINUX_CONFIG}
 - Boundary: this is a bounded architecture integration gate. It does not claim
   full MIPS32 ISA compliance, complete IEEE-754/OS FPU ABI, unrestricted Linux
   VM/page-table ownership or multicore shootdown, full RTL system-mode Linux
