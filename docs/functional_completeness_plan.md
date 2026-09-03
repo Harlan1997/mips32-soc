@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 Linux GPIO userspace bounded contract
+
+新增 `linux-gpio-userspace-gate` 并接入 `current-contract-signoff`。该 gate
+在 QEMU `mips32-soc-ref` 上验证 Linux `gpio-mmio` 的 sysfs mount、GPIO512
+export、方向切换、写入和读回；本轮以现行 kernel/initramfs artifact 通过。
+该项只闭合 bounded QEMU Linux GPIO userspace，物理 GPIO、RTL Linux userspace
+和完整产品 signoff 继续保持 OPEN。
+
 ### 2026-09-03 Architecture aggregate after Linux userspace polling fix
 
 新的 `make qemu-system-architecture-closure-gate` 在 commit `5d38463` 上通过。

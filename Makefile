@@ -1091,7 +1091,7 @@ phase3c-regression: firmware
 phase3c-complete: firmware
 	FW_HEX=$(FW_HEX) TESTLIST=$(UVM_PHASE3C_TESTLIST) RUN_ROOT=$(UVM_PHASE3C_COMPLETE_DIR) tb/uvm_tb/run_phase3c_complete.sh
 
-current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate mem-stage-gate dcache-parity-gate verification-foundation-gate irq-contract-audit cache-concurrency-gate l2-nonblocking-downstream-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate
+current-contract-signoff: soc-filelist-audit rtl-frontend-compile firmware firmwares micro-tlb-gate product-mmu-micro-tlb-gate interrupt-priority-gate cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate mem-stage-gate dcache-parity-gate verification-foundation-gate irq-contract-audit cache-concurrency-gate l2-nonblocking-downstream-gate l1-nonblocking-gate l1-nonblocking-sync-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-reset-gate sva-gate qspi-vendor-neutral-complete-gate qspi-vendor-neutral-boot-gate ddr-contract-entry-audit ecc-secded-gate ddr4-complete-gate linux-gpio-userspace-gate
 	FW_HEX=$(FW_HEX) FW_ROOT_DIR=$(BUILD_DIR)/firmware RUN_ROOT=$(SIGNOFF_DIR) NUM_TESTS=$(NUM_TESTS) SEED_BASE=$(SEED_BASE) ALLOW_EXTERNAL_RUN_ROOT=1 tb/uvm_tb/run_current_contract_signoff.sh
 
 soc-smoke: firmware

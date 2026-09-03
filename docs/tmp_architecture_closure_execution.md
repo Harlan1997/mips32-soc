@@ -17,6 +17,14 @@
   synchronization, pinmux, GPIO interrupts, RTL Linux userspace, and full
   product GPIO signoff remain outside this gate.
 
+### 2026-09-03 GPIO gate wired into current-contract signoff
+
+- `current-contract-signoff` now depends on `linux-gpio-userspace-gate`, so
+  the aggregate entry point executes the bounded Linux GPIO userspace check
+  instead of relying only on RTL/APB GPIO evidence.
+- This is signoff-coverage wiring; it does not promote the bounded QEMU gate
+  to RTL Linux, physical GPIO, or full product signoff.
+
 ### 2026-09-03 Linux differential handoff anchor made artifact-derived
 
 - 短前缀重跑发现 `tb/isa_ref/run_qemu_linux_differential_gate.sh` 将 handoff
