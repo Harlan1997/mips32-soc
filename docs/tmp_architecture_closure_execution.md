@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-04 Verification foundation refresh
+
+- Re-ran `scripts/run_verification_foundation_gate.sh` under the module-loaded
+  VCS environment with bounded resource settings. The result is
+  `FORMAL_ASSET_AUDIT_PASS files=7 modules=7 assertions=16` and the real-DUT
+  formal bind compile passes all `7/7` targets.
+- The generated inventory reports `vcs 1/9` available; Verilator, Yosys/SBY,
+  commercial lint and CDC/RDC/formal solver tools are absent. The gate records
+  those limits and passes only asset/elaboration/waiver readiness. No solver
+  proof, CDC/RDC/lint signoff or overall functional closure is claimed.
+- Evidence: `/tmp/verification-foundation-20260904/verification_foundation_report.md`,
+  `tool_inventory.tsv`, and `formal_bind_compile/formal_bind_compile_report.md`.
+
 ### 2026-09-04 RTL Linux delay-slot trace audit
 
 - Added `scripts/check_linux_delay_trace.py` and the `make
