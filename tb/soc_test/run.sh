@@ -128,6 +128,10 @@ if [ -n "${LINUX_EXTRA_SIM_ARGS:-}" ]; then
     read -r -a linux_extra_sim_args <<< "${LINUX_EXTRA_SIM_ARGS}"
     sim_extra_args+=("${linux_extra_sim_args[@]}")
 fi
+if [ -n "${LINUX_APB_SIM_ARGS:-}" ]; then
+    read -r -a linux_apb_sim_args <<< "${LINUX_APB_SIM_ARGS}"
+    sim_extra_args+=("${linux_apb_sim_args[@]}")
+fi
 if [ -n "${LINUX_TRACE_WINDOW_ARGS:-}" ]; then
     read -r -a linux_trace_window_args <<< "${LINUX_TRACE_WINDOW_ARGS}"
     sim_extra_args+=("${linux_trace_window_args[@]}")
