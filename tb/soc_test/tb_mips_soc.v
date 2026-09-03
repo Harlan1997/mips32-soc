@@ -148,6 +148,14 @@ module tb_mips_soc;
     integer linux_uart_trace;
     integer linux_uart_trace_limit;
     integer linux_uart_trace_count;
+    integer linux_vic_trace;
+    integer linux_vic_trace_limit;
+    integer linux_vic_trace_count;
+    reg [31:0] linux_vic_prev_pending;
+    reg [31:0] linux_vic_prev_enable;
+    reg [31:0] linux_vic_prev_active;
+    reg        linux_vic_prev_irq;
+    reg [7:0]  linux_vic_prev_vec_id;
     integer linux_panic_trace;
     integer linux_panic_trace_limit;
     integer linux_panic_trace_count;
@@ -390,6 +398,39 @@ module tb_mips_soc;
                          legacy_uart_tx_data);
                 linux_uart_trace_count = linux_uart_trace_count + 1;
             end
+            // Sample the VIC at the SoC boundary only when requested. Keep
+            // this edge-triggered and bounded so diagnosis cannot grow logs
+            // without limit during a long Linux run.
+            if (linux_vic_trace != 0 &&
+                linux_vic_trace_count < linux_vic_trace_limit &&
+                ((linux_vic_prev_pending != u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.pending) ||
+                 (linux_vic_prev_enable != u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.enable_r) ||
+                 (linux_vic_prev_active != u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.active_r) ||
+                 (linux_vic_prev_irq != u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.irq) ||
+                 (linux_vic_prev_vec_id != u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.vec_id) ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept)) begin
+                $display("LINUX_VIC_TRACE cycle=%0d raw=%08h pending=%08h enable=%08h active=%08h irq=%b vec_id=%02h vec_prio=%1h uart_irq=%b uart_rx_irq=%b uart_tx_irq=%b cpu_accept=%b cause=%08h status=%08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.raw,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.pending,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.enable_r,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.active_r,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.irq,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.vec_id,
+                    u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.vec_prio,
+                    u_soc.u_impl.u_peripheral_subsystem.uart_16550_irq,
+                    u_soc.u_impl.u_peripheral_subsystem.uart_16550_rx_irq,
+                    u_soc.u_impl.u_peripheral_subsystem.uart_16550_tx_irq,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status);
+                linux_vic_trace_count = linux_vic_trace_count + 1;
+            end
+            linux_vic_prev_pending = u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.pending;
+            linux_vic_prev_enable = u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.enable_r;
+            linux_vic_prev_active = u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.active_r;
+            linux_vic_prev_irq = u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.irq;
+            linux_vic_prev_vec_id = u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.vec_id;
             // Capture a bounded panic context without tracing the whole wait
             // loop. This diagnostic is sampled at the testbench boundary.
             if (linux_panic_trace != 0 &&
@@ -1576,6 +1617,16 @@ module tb_mips_soc;
         linux_uart_trace_limit = 256;
         if (!$value$plusargs("LINUX_UART_TRACE_LIMIT=%d", linux_uart_trace_limit)) begin end
         linux_uart_trace_count = 0;
+        linux_vic_trace = 0;
+        if (!$value$plusargs("LINUX_VIC_TRACE=%d", linux_vic_trace)) begin end
+        linux_vic_trace_limit = 256;
+        if (!$value$plusargs("LINUX_VIC_TRACE_LIMIT=%d", linux_vic_trace_limit)) begin end
+        linux_vic_trace_count = 0;
+        linux_vic_prev_pending = 32'd0;
+        linux_vic_prev_enable = 32'd0;
+        linux_vic_prev_active = 32'd0;
+        linux_vic_prev_irq = 1'b0;
+        linux_vic_prev_vec_id = 8'hff;
         linux_panic_trace = 0;
         if (!$value$plusargs("LINUX_PANIC_TRACE=%d", linux_panic_trace)) begin end
         linux_panic_trace_limit = 32;

@@ -5500,3 +5500,16 @@ signoff and physical DDR/QSPI product signoff.
 - Full MESI/directory coherency, arbitrary dirty-writeback ordering, Linux
   cache ABI and physical DDR PHY timing remain open; this is an opt-in
   behavioral cache-concurrency closure, not full product cache signoff.
+
+### 2026-09-03 RTL Linux VIC state diagnostic trace
+
+Added the bounded opt-in `LINUX_VIC_TRACE` stream to the RTL Linux progress
+runner. It samples VIC raw/pending/enable/active/vector state, UART interrupt
+inputs, CPU interrupt acceptance, and CP0 Cause/Status only when the state
+changes or an interrupt is accepted. A 20M-cycle replay with the SoC VIC
+kernel completed with stable memory use and showed `enable=0`, `pending=0`,
+and `active=0` throughout the sampled window; accepted interrupts were the
+CP0 timer path. The trace therefore rules out the currently suspected
+source-0/source-1 VIC competition for this image. RTL Linux userspace and
+full RTL/QEMU Linux differential remain OPEN; no speculative IRQ or CPU
+change was made.
