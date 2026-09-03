@@ -854,7 +854,7 @@ module tb_mips_soc;
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst == 32'h42000020) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state))) begin
-                $display("LINUX_WAIT_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wait=%b resume=%08h intr=%b req=%b epc=%08h status=%08h cause=%08h count=%08h compare=%08h intctl_ipti=%0d intctl_vs=%0d",
+                $display("LINUX_WAIT_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wait=%b resume=%08h intr=%b req=%b epc=%08h status=%08h cause=%08h count=%08h compare=%08h intctl_ipti=%0d intctl_vs=%0d gp=%08h t0=%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
@@ -869,7 +869,9 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_ipti,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_vs);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_intctl_vs,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[8]);
                 linux_wait_trace_count = linux_wait_trace_count + 1;
             end
             // Trace the relocated Linux __delay loop and exception return

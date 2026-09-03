@@ -5526,3 +5526,15 @@ the Linux initialization clear at `0x40004010` with `0xffffffff`, `pstrb=f`,
 reaches the RTL and narrows the remaining issue to Linux child-IRQ probing or
 an earlier handoff; RTL Linux userspace and full RTL/QEMU Linux differential
 remain OPEN.
+
+### 2026-09-03 RTL Linux WAIT task-flag diagnostic
+
+- Extended `LINUX_WAIT_TRACE` with sampled architectural `gp` and `t0` values.
+  A fresh 14M-cycle RTL replay passes with stable resource use and shows timer
+  interrupt acceptance at `__r4k_wait`, followed by ERET back to the rollback
+  region. The sampled task pointer is `gp=0x88c38000`; records before the
+  `lw t0,4(gp)` completion show `t0=0`.
+- This improves visibility into the `_TIF_NEED_RESCHED` read without changing
+  CPU, CP0, WAIT, scheduler or interrupt behavior. The run still has no
+  userspace marker; RTL Linux userspace and full RTL/QEMU Linux differential
+  remain OPEN.
