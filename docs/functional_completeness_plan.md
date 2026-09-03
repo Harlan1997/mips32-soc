@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 CPU hardware walker page-size matrix recheck
+
+在受控单线程 VCS 配置下重跑 `cpu-hardware-walker-page-sizes-gate`，16K、
+64K、256K、1M、4M 和 16M 六个 `SOC_HARDWARE_WALKER_PAGE_MASK` 配置均通过
+CPU walker 正常 refill 和 permission-fault 检查。证据根目录为
+`/tmp/cpu-walker-page-sizes-recheck-20260903/unit_tb/`。该结果闭合硬件
+walker 的参数化页尺度执行切片；Linux demand paging、页表所有权、长期
+reclaim/swap、scheduler/shootdown 和完整 privileged/MMU signoff 仍保持
+OPEN。
+
 ### 2026-09-03 QEMU peripheral RTL/QEMU differential recheck
 
 在受控单线程 VCS/QEMU 配置下重跑
