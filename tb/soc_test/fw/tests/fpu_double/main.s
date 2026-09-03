@@ -229,6 +229,51 @@ main:
     ori     $t4, $t4, 0
     bne     $t2, $t4, fail_conv
     nop
+
+    /* Check CVT.S.D exception flags in the real CPU/FCSR path. */
+    ctc1    $zero, $31
+    nop
+    nop
+    addiu   $t0, $zero, 1     /* minimum positive double subnormal */
+    mtc1    $t0, $f0
+    .word   0x44800800       /* mtc1 $zero,$f1 */
+    cvt.s.d $f6, $f0
+    mfc1    $t2, $f6
+    bne     $t2, $zero, fail_conv
+    nop
+    cfc1    $t3, $31
+    srl     $t3, $t3, 2       /* FCSR Flags[4:0] */
+    andi    $t3, $t3, 0x1f
+    addiu   $t4, $zero, 3     /* Underflow|Inexact */
+    bne     $t3, $t4, fail_conv
+    nop
+
+    ctc1    $zero, $31
+    nop
+    nop
+    addiu   $t0, $zero, -1    /* low word of maximum finite double */
+    mtc1    $t0, $f0
+    lui     $t0, 0x7fef
+    ori     $t0, $t0, 0xffff
+    .word   0x44880800       /* mtc1 $t0,$f1 */
+    cvt.s.d $f6, $f0
+    mfc1    $t2, $f6
+    lui     $t4, 0x7f80       /* single +infinity */
+    bne     $t2, $t4, fail_conv
+    nop
+    cfc1    $t3, $31
+    srl     $t3, $t3, 2
+    andi    $t3, $t3, 0x1f
+    addiu   $t4, $zero, 5     /* Overflow|Inexact */
+    bne     $t3, $t4, fail_conv
+    nop
+
+    /* Restore the original 1.5D source for the remaining conversions. */
+    mtc1    $zero, $f0
+    lui     $t0, 0x3ff8
+    ori     $t0, $t0, 0
+    .word   0x44880800       /* mtc1 $t0,$f1 */
+    cvt.s.d $f6, $f0
     cvt.d.s $f8, $f6          /* 1.5S -> 1.5D */
     .word   0x440b4800        /* mfc1 $t3,$f9 */
     lui     $t4, 0x3ff8

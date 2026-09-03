@@ -1,5 +1,16 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 COP1 CVT.S.D CPU/QEMU exception-vector extension
+
+- Extended the real double firmware to clear FCSR and check `CVT.S.D` for
+  minimum positive double (Underflow|Inexact), maximum finite double
+  (Overflow|Inexact), and exact 1.5 conversion.
+- The RTL `fpu-double-gate` and QEMU `mips32-soc-ref` system-mode retire
+  differential both pass with the new vectors.
+- This strengthens the destination-format conversion evidence only; complete
+  IEEE-754 range/tininess policy, full COP1 compliance, FPE delivery and Linux
+  FPU ABI/context semantics remain OPEN.
+
 ### 2026-09-03 COP1 CVT.S.D destination-format exception classification
 
 - `mips_fpu` now classifies `CVT.S.D` after the host `shortreal` conversion:
