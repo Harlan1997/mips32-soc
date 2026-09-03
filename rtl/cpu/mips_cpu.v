@@ -405,7 +405,11 @@ module mips_cpu #(
 
     mips_perf_counters u_perf_counters (
         .clk(clk), .rst_n(rst_n), .enable(ENABLE_PERF_COUNTERS), .clear(1'b0),
-        .retire_event(!global_stall && id_control_valid),
+        // `wb_valid` is the registered one-cycle architectural commit pulse
+        // from either the legacy ROB or the opt-in nonblocking retirement
+        // FIFO.  Counting ID validity would include instructions later
+        // flushed by an exception, branch recovery, or reset/restore.
+        .retire_event(wb_valid),
         .icache_miss_event(inst_req && inst_addr_ok && !inst_data_ok),
         .dcache_miss_event(data_req && data_addr_ok && !data_data_ok_current),
         .branch_mispredict_event(bpu_mispredict),
