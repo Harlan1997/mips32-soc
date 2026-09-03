@@ -1,5 +1,17 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 MMU page-frame full-pool pressure differential
+
+- Extended `mmu_asid_context` firmware to consume all sixteen page-frame
+  leases after generation reuse, verify first-fit page addresses through
+  `0x9040`, and check the seventeenth allocation's sticky exhaustion event.
+- `BUILD_DIR=/tmp/mmu-page-frame-pressure-20260903 make
+  qemu-system-mmu-contract-gate` passes with the same firmware on real
+  MMU-enabled RTL and `mips32-soc-ref`, including retire comparison.
+- This strengthens bounded physical-page ownership evidence only. It does not
+  implement a Linux buddy allocator, reclaim/swap, unrestricted demand paging,
+  VM policy, or complete privileged/MMU signoff.
+
 ### 2026-09-03 MMU page-frame ownership in QEMU/RTL differential
 
 - Extended `scripts/qemu/mips32_soc_ref.c` with the same sixteen-slot,
