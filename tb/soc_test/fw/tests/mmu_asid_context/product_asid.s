@@ -278,6 +278,29 @@ lease_contract:
     bne     $t1, $t0, fail
     nop
 
+    /* Fill the remaining fifteen slots and verify deterministic first-fit
+       placement, then observe the pool-exhausted sticky event. */
+    addiu   $t3, $zero, 1
+page_pool_fill:
+    ori     $t0, $zero, 1
+    sw      $t0, 64($t7)
+    lw      $t1, 64($t7)
+    sll     $t2, $t3, 12
+    addiu   $t2, $t2, 0x6000
+    bne     $t1, $t2, fail
+    nop
+    addiu   $t3, $t3, 1
+    slti    $t0, $t3, 16
+    bne     $t0, $zero, page_pool_fill
+    nop
+    ori     $t0, $zero, 1
+    sw      $t0, 64($t7)
+    lw      $t1, 76($t7)
+    addiu   $t0, $zero, 3           /* alloc + pool-exhausted */
+    bne     $t1, $t0, fail
+    nop
+    sw      $t0, 80($t7)            /* clear alloc and exhaustion events */
+
     jr      $ra
     nop
 
