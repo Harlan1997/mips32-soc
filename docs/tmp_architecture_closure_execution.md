@@ -1,5 +1,26 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 RTL Linux diagnostic argument propagation
+
+- `make rtl-linux-progress-gate` now forwards the runner's GPR, target data-side,
+  fault, cache-owner, and retire-trace controls instead of silently dropping
+  them at the Make boundary.
+- Low-resource smoke recheck:
+  `source /etc/profile.d/modules.sh && module load vcs && SKIP_COVERAGE=1
+  VCS_JOBS=1 EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  BUILD_DIR=/tmp/rtl-linux-forward-audit
+  RUN_DIR=/tmp/rtl-linux-forward-audit
+  KERNEL=/tmp/rtl-linux-minimal-recheck-yy9j2t/kernel/vmlinux
+  SKIP_LINUX_BUILD=1 RTL_CYCLE_LIMIT=100000 HOST_TIMEOUT=180s
+  LINUX_GPR_TRACE=1 LINUX_GPR_TRACE_LIMIT=8 LINUX_FAULT_TRACE=1
+  LINUX_FAULT_TRACE_LIMIT=8 LINUX_RETIRE_TRACE=1
+  LINUX_RETIRE_TRACE_MAX_RECORDS=8 make rtl-linux-progress-gate`
+  passes with simulator status 0. The run-local command line records all
+  forwarded values, and the retire trace stops at the configured eight-record
+  cap without an OOM condition.
+- This closes diagnostic plumbing only; it does not claim RTL Linux userspace,
+  full RTL/QEMU Linux differential, or OS VM signoff.
+
 ### 2026-09-03 Dhrystone 2.1 RTL validation baseline
 
 - Vendored the Netlib Dhrystone C version 2.1 distribution and retained its
