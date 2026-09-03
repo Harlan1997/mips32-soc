@@ -28,6 +28,16 @@ port：使用 APB cycle counter 计时、UART TX 输出和 mailbox 结束。新�
 单次迭代的 validation baseline，不实现标准 10 秒 timing protocol，因此不
 宣称 CoreMark/MHz 成绩；Dhrystone、标准性能目标和商用 signoff 仍 OPEN。
 
+### 2026-09-03 Dhrystone 2.1 RTL validation baseline
+
+获取并保留 Netlib 分发的 Reinhold P. Weicker Dhrystone C 2.1 源码，增加
+SoC freestanding MIPS32 port：100 次固定运行、静态 allocator、APB cycle
+counter 和 UART/mailbox 收尾。新增 `make perf-dhrystone-gate`，真实 RTL
+运行验证 `Dhrystone validation: PASS`，记录 `Dhrystone cycles: 96046`，并
+达到 `REGRESSION_TEST_SUCCESS`。该配置是 validation baseline，不实现 Unix
+计时协议、校准参考机或标准 DMIPS/MHz 成绩；完整 ISA、标准性能目标和商用
+signoff 仍保持 OPEN。
+
 ### 2026-09-03 MDU divider effective-width normalization
 
 `rtl/cpu/mips_mdu.v` 的 restoring radix-2 divider 现在按被除数 magnitude
