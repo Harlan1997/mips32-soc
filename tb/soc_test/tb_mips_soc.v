@@ -282,6 +282,17 @@ module tb_mips_soc;
                 linux_wait_task_load_pa = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr;
                 linux_wait_task_load_data = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_rdata;
                 linux_wait_task_load_inst = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst;
+                if (linux_wait_trace != 0 &&
+                    linux_wait_trace_count < linux_wait_trace_limit) begin
+                    $display("LINUX_TASK_LOAD_TRACE cycle=%0d pc=%08h inst=%08h va=%08h pa=%08h data=%08h gp4=%08h",
+                        linux_trace_cycle,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_rdata,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28] + 32'd4);
+                end
             end
             if (linux_stall_trace != 0 &&
                 linux_stall_trace_count < linux_stall_trace_limit &&
