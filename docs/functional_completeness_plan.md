@@ -38,6 +38,14 @@ counter 和 UART/mailbox 收尾。新增 `make perf-dhrystone-gate`，真实 RTL
 计时协议、校准参考机或标准 DMIPS/MHz 成绩；完整 ISA、标准性能目标和商用
 signoff 仍保持 OPEN。
 
+### 2026-09-03 Integer benchmark baseline aggregate
+
+新增 `make perf-benchmark-baseline-gate`，统一串行运行 CoreMark validation
+CRC 与 Dhrystone 2.1 RTL validation 两个入口，并生成 aggregate completion
+report。该 gate 固化了当前 MIPS32 integer benchmark 的可重复 RTL baseline；
+它不改变默认配置，也不把 validation ticks/cycles 转换为标准 CoreMark/MHz
+或 DMIPS/MHz 成绩，商业性能 signoff 仍保持 OPEN。
+
 ### 2026-09-03 MDU divider effective-width normalization
 
 `rtl/cpu/mips_mdu.v` 的 restoring radix-2 divider 现在按被除数 magnitude

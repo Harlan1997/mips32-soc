@@ -263,7 +263,7 @@ dcache-parity-gate:
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate qemu-system-mdu-differential-gate qemu-system-state-converter-test
 .PHONY: soc-filelist-audit
 .PHONY: qspi-vendor-neutral-complete-gate
-.PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate vic-nested-gate
+.PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate perf-benchmark-baseline-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
 .PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate
@@ -1019,6 +1019,17 @@ perf-coremark-gate:
 perf-dhrystone-gate:
 	RUN_DIR=$(BUILD_DIR)/perf/dhrystone \
 		bash tb/perf/run_dhrystone_gate.sh
+
+perf-benchmark-baseline-gate: perf-coremark-gate perf-dhrystone-gate
+	@mkdir -p $(BUILD_DIR)/perf/benchmark_baseline
+	@{ \
+		echo '# Integer Benchmark RTL Baseline'; \
+		echo; \
+		echo '- Result: PASS'; \
+		echo '- Components: official CoreMark validation CRC and Dhrystone 2.1 validation'; \
+		echo '- Boundary: neither component is a normalized CoreMark/MHz or DMIPS/MHz signoff'; \
+	} > $(BUILD_DIR)/perf/benchmark_baseline/completion_report.md
+	@echo "Integer benchmark RTL baseline gate: PASS"
 
 vic-nested-gate:
 	$(MAKE) -C tb/soc_test/fw/tests/vic_nested OUT_DIR=$(VIC_NESTED_FW_DIR) FW_BASE=firmware all
