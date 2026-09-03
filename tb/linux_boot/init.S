@@ -73,12 +73,21 @@ _start:
 	move	$s8, $v0
 	beq	$s8, $zero, mprotect_fault_child
 	nop
+	mprotect_wait:
 	move	$a0, $s8
 	addiu	$a1, $sp, 32
-	move	$a2, $zero
+	/* Poll the exact child PID instead of sleeping in the wait queue.  The
+	 * custom single-vCPU machine has a known boundary where a SIGSEGV child
+	 * can become a zombie without waking a blocked parent wait4. */
+	li	$a2, 1
 	move	$a3, $zero
 	li	$v0, 4114
 	syscall
+	nop
+	beq	$v0, $zero, mprotect_wait_sleep
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, vm_fail
 	nop
 	bne	$v0, $s8, vm_fail
 	nop
@@ -93,6 +102,24 @@ _start:
 	li	$v0, 4004
 	syscall
 	nop
+	b	mprotect_wait_done
+	nop
+
+	mprotect_wait_sleep:
+	/* A one-millisecond sleep gives the child a scheduler/timer boundary
+	 * while keeping the wait4 operation non-blocking and exact-PID. */
+	sw	$zero, 24($sp)
+	li	$t0, 1000000
+	sw	$t0, 28($sp)
+	addiu	$a0, $sp, 24
+	move	$a1, $zero
+	li	$v0, 4166
+	syscall
+	nop
+	b	mprotect_wait
+	nop
+
+	mprotect_wait_done:
 	move	$a0, $s3
 	li	$a1, 0x5000
 	li	$a2, 3
