@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-03 Linux userspace mprotect/wait4 polling closure
+
+`tb/linux_boot/init.S` 将保护页子进程的 exact-PID `wait4` 改为
+`WNOHANG` 轮询，并在未退出时通过 1 ms `nanosleep` 让出调度边界。
+这修复了 custom machine 在 SIGSEGV 子进程成为 zombie 后阻塞父进程未被唤醒
+的实际边界，同时保留 PID、SIGSEGV 状态和正常退出状态检查。使用同一
+kernel/DTB artifact 的首次构建运行及两次复用 artifact 重跑均通过完整
+boot/mmap/mprotect/protected-fault/brk/sleep/yield/fork/exec/exact-PID
+wait4/status marker 集合。该项闭合 QEMU `mips32-soc-ref` 的 bounded Linux
+userspace contract；RTL Linux userspace、完整 RTL/QEMU system differential、
+unrestricted Linux VM 和完整 ISA/privileged/FPU signoff 仍为 OPEN。
+
 ### 2026-09-03 Linux gate artifact/path audit
 
 修正 `linux-boot-build-gate` 对显式 `RUN_DIR` 的处理：传入自定义
