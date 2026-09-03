@@ -11,11 +11,11 @@ HOST_TIMEOUT=${HOST_TIMEOUT:-180s}
 QEMU_TIMEOUT=${QEMU_TIMEOUT:-2s}
 QEMU_MEMORY=${QEMU_MEMORY:-128M}
 QEMU_APPEND=${QEMU_APPEND:-console=ttyS0 earlyprintk=serial,0x1f000900 panic=-1}
-# The relocated 32r2 kernel's first instruction in the current image is at
-# 0x88a55c78. Keep this overrideable because a different kernel configuration
-# may move the first matched instruction; the previous 0x89255c78 value was
-# stale and caused a false alignment failure before any architectural compare.
-ALIGN_FIRST_PC=${ALIGN_FIRST_PC:-88a55c78}
+# The first QEMU retire is the kernel ELF entry. Keep an explicit override for
+# unusual boot wrappers, but derive the default from the supplied artifact so
+# a different kernel configuration cannot fail before any architectural
+# comparison merely because its relocated entry moved.
+ALIGN_FIRST_PC=${ALIGN_FIRST_PC:-}
 MAX_TRACE_RECORDS=${MAX_TRACE_RECORDS:-1000000}
 MAX_TRACE_BYTES=${MAX_TRACE_BYTES:-268435456}
 
@@ -32,6 +32,27 @@ if [[ ! -s "${DTB}" ]]; then
     exit 2
 fi
 DTB=$(realpath "${DTB}")
+
+if [[ -z "${ALIGN_FIRST_PC}" ]]; then
+    readelf_bin=${READELF:-readelf}
+    if ! command -v "${readelf_bin}" >/dev/null 2>&1; then
+        echo "QEMU Linux differential: readelf is required to derive kernel entry (set ALIGN_FIRST_PC to override)" >&2
+        exit 2
+    fi
+    entry_line=$("${readelf_bin}" -h "${KERNEL}" 2>/dev/null |
+        sed -n 's/^[[:space:]]*Entry point address:[[:space:]]*//p')
+    if [[ ! "${entry_line}" =~ ^0x[0-9a-fA-F]+$ ]]; then
+        echo "QEMU Linux differential: unable to derive ELF entry from ${KERNEL}; set ALIGN_FIRST_PC" >&2
+        exit 2
+    fi
+    ALIGN_FIRST_PC=${entry_line#0x}
+fi
+ALIGN_FIRST_PC=${ALIGN_FIRST_PC#0x}
+ALIGN_FIRST_PC=${ALIGN_FIRST_PC#0X}
+if [[ ! "${ALIGN_FIRST_PC}" =~ ^[0-9a-fA-F]+$ ]]; then
+    echo "QEMU Linux differential: ALIGN_FIRST_PC must be hexadecimal: ${ALIGN_FIRST_PC}" >&2
+    exit 2
+fi
 
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md" "${RUN_DIR}/rtl_gate.log" "${RUN_DIR}/qemu_gate.log"
