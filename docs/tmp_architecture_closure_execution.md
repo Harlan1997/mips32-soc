@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Linux GPIO runtime boundary remains open
+
+- The Linux kernel build with the DT-described `wd,mbl-gpio` controller and
+  built-in `gpio-mmio` support passes, and the controller is probed from the
+  DT resource at `0x40002000/0x40002004`.
+- A QEMU Linux initramfs probe can mount sysfs, export GPIO0, and open the
+  direction/value attributes, but the attempted userspace direction/value
+  operation does not yet produce the expected data readback. The temporary
+  diagnostic run was removed and is not part of the regression gate.
+- Therefore this item is recorded as a runtime investigation boundary, not a
+  Linux GPIO signoff. The committed contract remains DT/configuration/build
+  integration only; a passing userspace GPIO read/write test is still needed.
+
 ### 2026-09-03 Linux differential handoff anchor made artifact-derived
 
 - 短前缀重跑发现 `tb/isa_ref/run_qemu_linux_differential_gate.sh` 将 handoff
