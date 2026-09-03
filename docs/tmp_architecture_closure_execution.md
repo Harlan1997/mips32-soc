@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 Dhrystone 2.1 RTL validation baseline
+
+- Vendored the Netlib Dhrystone C version 2.1 distribution and retained its
+  README, rationale, and variation notes under `tb/perf/dhrystone`.
+- Added a freestanding MIPS32 port with fixed 100-run execution, a static
+  allocator, SoC APB cycle-counter timing, UART output, result checks, and
+  mailbox completion. `make perf-dhrystone-gate` passes on real RTL with
+  `Dhrystone cycles: 96046`, `Dhrystone validation: PASS`, and
+  `REGRESSION_TEST_SUCCESS`.
+- This closes the Dhrystone validation-baseline slice only. It does not claim
+  the Unix timing protocol, DMIPS/MHz, full ISA compliance, or commercial
+  performance signoff; those remain open.
+
 ### 2026-09-03 Official CoreMark RTL validation baseline
 
 - Vendored the official EEMBC CoreMark Apache-2.0 sources under
