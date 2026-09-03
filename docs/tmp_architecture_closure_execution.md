@@ -1,5 +1,20 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-03 COP1 CVT.S.D destination-format exception classification
+
+- `mips_fpu` now classifies `CVT.S.D` after the host `shortreal` conversion:
+  exact values have no flags, finite values producing single infinity set
+  Overflow|Inexact, and nonzero values rounded into/to the single subnormal
+  range set Underflow|Inexact. A field-level fallback covers VCS flushing the
+  exact minimum subnormal from min-normal double `* 0.5`, preserving Underflow
+  without Inexact for the existing contract vector.
+- Added exact, double-subnormal and finite-double-overflow unit vectors. The
+  FPU flags unit, real CPU `fpu-single-gate`, and QEMU `mips32-soc-ref`
+  system-mode retire differential all pass under the low-resource VCS setup.
+- This closes only the `CVT.S.D` destination-format flag slice. Full
+  IEEE-754 range/tininess policy, complete COP1 compliance, precise FPE policy
+  and Linux FPU ABI/context semantics remain OPEN.
+
 ### 2026-09-03 MDU radix-4 multiplier closure slice
 
 - Replaced the behavioral `*` multiplier in `rtl/cpu/mips_mdu.v` with a
