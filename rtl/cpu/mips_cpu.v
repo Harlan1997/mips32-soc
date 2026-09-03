@@ -2116,14 +2116,49 @@ module mips_cpu #(
         ((ex_inst[31:26] == 6'b000000) &&
          ((ex_inst[5:0] == 6'b001000) ||
           (ex_inst[5:0] == 6'b001001)));
+    wire id_is_control_transfer =
+        (id_inst[31:26] == 6'b000001) ||
+        (id_inst[31:26] == 6'b000010) ||
+        (id_inst[31:26] == 6'b000011) ||
+        ((id_inst[31:26] >= 6'b000100) &&
+         (id_inst[31:26] <= 6'b000111)) ||
+        ((id_inst[31:26] == 6'b000000) &&
+         ((id_inst[5:0] == 6'b001000) ||
+          (id_inst[5:0] == 6'b001001)));
     wire interrupt_wb_branch_delay = interrupt_accept &&
                                       mem_flush_valid &&
                                       (wb_pc_plus_8 != 32'd0) &&
                                       (mem_pc == (wb_pc + 32'd4)) &&
                                       wb_is_control_transfer;
+    // Metadata can be cleared by a replay while an asynchronous interrupt is
+    // accepted. Recover the two adjacent pipeline cases from the actual
+    // control-transfer encoding and PCs. This is required by Linux timing
+    // loops, where a timer interrupt commonly lands on a branch delay slot.
+    wire interrupt_mem_delay_from_ex = interrupt_accept &&
+                                       mem_flush_valid && ex_flush_valid &&
+                                       ex_is_control_transfer &&
+                                       (mem_pc == (ex_pc + 32'd4));
+    wire interrupt_ex_delay_from_id = interrupt_accept &&
+                                      ex_flush_valid && id_flush_valid &&
+                                      id_is_control_transfer &&
+                                      (ex_pc == (id_pc + 32'd4));
+    wire interrupt_wb_delay_from_mem = interrupt_accept &&
+                                       wb_arch_valid && mem_flush_valid &&
+                                       mem_is_control_transfer &&
+                                       (wb_pc == (mem_pc + 32'd4));
+    wire interrupt_delay_slot = interrupt_wb_branch_delay ||
+                                interrupt_mem_delay_from_ex ||
+                                interrupt_ex_delay_from_id ||
+                                interrupt_wb_delay_from_mem ||
+                                (interrupt_accept && wb_delay_slot_valid);
+    wire [31:0] interrupt_delay_slot_pc =
+        interrupt_wb_branch_delay ? mem_pc :
+        interrupt_mem_delay_from_ex ? mem_pc :
+        interrupt_ex_delay_from_id ? ex_pc :
+        interrupt_wb_delay_from_mem ? wb_pc : wb_pc;
     wire interrupt_except_bd = interrupt_accept &&
                                (mem_flush_valid ?
-                                 (interrupt_mem_delay_slot || interrupt_wb_branch_delay ||
+                                 (interrupt_mem_delay_slot || interrupt_delay_slot ||
                                  (ex_flush_valid && ex_delay_slot_valid &&
                                   mem_is_control_transfer &&
                                   (ex_pc == mem_pc + 32'd4)) ||
@@ -2133,7 +2168,7 @@ module mips_cpu #(
                                    (id_pc == ex_pc + 32'd4) &&
                                    (ex_pc == mem_pc + 32'd4))) :
                                 (ex_flush_valid ?
-                                 (ex_delay_slot_valid ||
+                                 (interrupt_delay_slot || ex_delay_slot_valid ||
                                  (id_flush_valid && id_delay_slot_valid &&
                                    ex_is_control_transfer &&
                                    (id_pc == ex_pc + 32'd4))) :
@@ -2145,7 +2180,7 @@ module mips_cpu #(
     wire interrupt_wb_sequential_epc = interrupt_accept &&
                                        wb_arch_valid &&
                                        !wb_delay_slot_valid &&
-                                       !interrupt_wb_branch_delay;
+                                       !interrupt_delay_slot;
     // A delay-slot marker is architectural only when its paired resume target
     // is present.  Pipeline flush/replay can transiently leave wb_bd asserted
     // on a bubble or on the retried instruction while the target metadata has
@@ -2174,8 +2209,8 @@ module mips_cpu #(
                              // slot. CP0 applies the normal Cause.BD -4
                              // adjustment and stores the branch PC in EPC;
                              // passing wb_pc here would subtract twice.
-                             (interrupt_accept && interrupt_wb_branch_delay ?
-                              mem_pc :
+                             (interrupt_accept && interrupt_delay_slot ?
+                              interrupt_delay_slot_pc :
                              ((interrupt_accept &&
                                ((wb_bd && wb_arch_valid) ||
                                 interrupt_wb_branch_delay)) ?
