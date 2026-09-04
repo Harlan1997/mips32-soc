@@ -675,7 +675,8 @@ linux-boot-build-gate: qemu-system-mips32-soc-ref
 
 linux-gpio-userspace-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/run_linux_boot_gate.sh
-	LINUX_GPIO_ONLY=1 RUN_DIR=$(if $(RUN_DIR),$(RUN_DIR),$(BUILD_DIR)/linux_boot/gpio_userspace) \
+	LINUX_GPIO_ONLY=1 SKIP_LINUX_BUILD=$(SKIP_LINUX_BUILD) KERNEL=$(KERNEL) DTB=$(DTB) QEMU_TIMEOUT=$(QEMU_TIMEOUT) \
+	RUN_DIR=$(if $(RUN_DIR),$(RUN_DIR),$(BUILD_DIR)/linux_boot/gpio_userspace) \
 		tb/linux_boot/run_linux_boot_gate.sh
 
 linux-soc-vic-gate: linux-boot-build-gate

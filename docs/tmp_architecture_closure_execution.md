@@ -234,6 +234,20 @@
   does not close the Linux scheduler/init handoff, RTL Linux userspace boot,
   full RTL/QEMU Linux differential, or any broader ISA/MMU/OS/product item.
 
+### 2026-09-04 Linux GPIO gate artifact reuse
+
+- Extended `linux-gpio-userspace-gate` to forward `SKIP_LINUX_BUILD`,
+  `KERNEL`, `DTB` and `QEMU_TIMEOUT` to the Linux runner. This allows a
+  caller to use a known matching kernel/DTB pair and prevents an aggregate
+  run from silently starting a cold kernel build.
+- A negative reuse test with an old non-VIC DTB stopped at the expected VIC
+  initialization check. A matched VIC-enabled kernel/DTB pair then passed the
+  full bounded GPIO userspace gate, including `/init`, VIC/UART binding and
+  GPIO sysfs export/direction/write/readback.
+- This closes artifact reuse and revalidates the bounded QEMU GPIO contract;
+  it does not close RTL Linux userspace, full Linux differential, unrestricted
+  VM semantics or physical GPIO/product signoff.
+
 ### 2026-09-03 CPU workload CPI/IPC reporting
 
 - Extended the repeatable real-CPU workload firmware to report fixed-point

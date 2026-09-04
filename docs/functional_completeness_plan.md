@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-04 Linux gate artifact reuse
+
+`linux-gpio-userspace-gate` now accepts explicit matching `KERNEL`/`DTB`
+artifacts through `SKIP_LINUX_BUILD=1`, with `QEMU_TIMEOUT` also forwarded.
+The reuse path was checked with a negative non-VIC DTB and a positive
+VIC-enabled kernel/DTB pair. This improves reproducible gate execution and
+does not change the OPEN status of RTL Linux userspace or full system
+differential.
+
 ### 2026-09-04 RTL Linux idle/scheduler boundary recheck
 
 对已编译的 SoC-VIC Linux kernel/DTB image 做了受控 16M-cycle RTL replay，
