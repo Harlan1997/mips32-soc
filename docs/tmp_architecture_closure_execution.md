@@ -217,6 +217,23 @@
   protocol. Dhrystone, standard performance targets and commercial signoff
   remain OPEN.
 
+### 2026-09-04 RTL Linux APB/VIC trace propagation recheck
+
+- The RTL Linux progress Make target now forwards `LINUX_VIC_TRACE` and
+  `LINUX_VIC_TRACE_LIMIT` into the runner. A bounded 16M-cycle replay using
+  the existing Linux image was rerun with APB, VIC and UART diagnostics
+  enabled under the 1500M/512M cgroup budget; it completed normally with no
+  simulator failure, OOM or kernel panic.
+- The simulator emitted VIC records, proving the diagnostic plusargs reach the
+  testbench. In this image every sampled state remained
+  `raw=pending=enable=active=0`, with no UART IRQ, APB transaction or UART TX
+  record; accepted interrupts were CP0 timer interrupts only. Therefore the
+  earlier absence of VIC output was a runner-parameter propagation issue, but
+  this image still provides no evidence of a Linux VIC child-IRQ path.
+- This is diagnostic infrastructure and bounded idle-path evidence only. It
+  does not close the Linux scheduler/init handoff, RTL Linux userspace boot,
+  full RTL/QEMU Linux differential, or any broader ISA/MMU/OS/product item.
+
 ### 2026-09-03 CPU workload CPI/IPC reporting
 
 - Extended the repeatable real-CPU workload firmware to report fixed-point
