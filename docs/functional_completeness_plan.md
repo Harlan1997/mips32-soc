@@ -1,5 +1,14 @@
 # SoC 功能完整性计划
 
+### 2026-09-05 Bounded Linux RTL/QEMU retire differential
+
+Using a matching VIC-enabled kernel/RTL device-tree pair and a build root on
+`/data/disk/tmp`, `qemu-system-linux-differential-gate` passed a strict
+one-retire-at-a-time comparison after the explicit Boot ROM-to-kernel handoff:
+`TRACE_COMPARE_PASS records=72416`. This closes a bounded relocated-kernel
+retire prefix only. Linux userspace boot, unrestricted system-mode differential,
+full privileged/MMU semantics and product signoff remain open.
+
 ### 2026-09-05 Current-contract aggregate resource-isolated recheck
 
 The full `current-contract-signoff` was rerun with its build root on

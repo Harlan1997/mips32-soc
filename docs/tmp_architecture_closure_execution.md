@@ -264,6 +264,19 @@
   manifests were discarded after the run, leaving no generated metadata change
   in the source tree.
 
+### 2026-09-05 Bounded Linux RTL/QEMU retire differential
+
+- Ran `qemu-system-linux-differential-gate` with the matching VIC-enabled
+  kernel and RTL DTB under `/data/disk/tmp/mips32-soc/qemu-linux-diff-20260905`.
+- The comparator passed `TRACE_COMPARE_PASS records=72416 mode=stream` after
+  the explicit handoff anchor `PC 0x88a55e18`; the RTL side captured 95863
+  records including the Boot ROM prefix and the compared kernel prefix matched
+  one retire at a time.
+- This is stronger than a reference-only or mailbox-only check, but remains a
+  bounded kernel-prefix result. It does not close Linux userspace boot,
+  unrestricted full system-mode differential, complete privileged/MMU/OS
+  semantics, or product signoff.
+
 ### 2026-09-03 CPU workload CPI/IPC reporting
 
 - Extended the repeatable real-CPU workload firmware to report fixed-point
