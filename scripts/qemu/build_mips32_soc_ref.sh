@@ -5,6 +5,7 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 QEMU_SRC=${QEMU_SRC:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0"}
 QEMU_BUILD=${QEMU_BUILD:-"${QEMU_SRC}/build-mipsel-softmmu"}
 QEMU_BUILD_JOBS=${QEMU_BUILD_JOBS:-1}
+QEMU_CONFIGURE="${QEMU_SRC}/configure"
 
 # All system-mode gates share one patched QEMU build directory.  Serialize
 # configure/ninja so concurrent Make invocations cannot partially overwrite
@@ -13,7 +14,7 @@ mkdir -p "${QEMU_BUILD}"
 exec 9>"${QEMU_BUILD}.lock"
 flock 9
 
-if [[ ! -x "${QEMU_SRC}/configure" ]]; then
+if [[ ! -x "${QEMU_CONFIGURE}" ]]; then
     echo "missing QEMU source tree: ${QEMU_SRC}" >&2
     exit 2
 fi
@@ -467,7 +468,7 @@ if [[ ! -f "${QEMU_BUILD}/build.ninja" ]]; then
     mkdir -p "${QEMU_BUILD}"
     (
         cd "${QEMU_BUILD}"
-        ../configure \
+        "${QEMU_CONFIGURE}" \
             --target-list=mipsel-softmmu \
             --enable-plugins \
             --disable-werror \
@@ -477,7 +478,14 @@ fi
 
 # TARGET_XML_FILES is consumed by configure, so reconfigure after applying the
 # project-local MIPS GDB feature description.
-( cd "${QEMU_BUILD}" && ../configure --target-list=mipsel-softmmu --enable-plugins --disable-werror --enable-fdt=disabled )
+(
+    cd "${QEMU_BUILD}"
+    "${QEMU_CONFIGURE}" \
+        --target-list=mipsel-softmmu \
+        --enable-plugins \
+        --disable-werror \
+        --enable-fdt=disabled
+)
 
 ninja -C "${QEMU_BUILD}" -j"${QEMU_BUILD_JOBS}" qemu-system-mipsel
 test -x "${QEMU_BUILD}/qemu-system-mipsel"
