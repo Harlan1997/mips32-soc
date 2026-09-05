@@ -27,6 +27,7 @@
 #include "elf.h"
 
 static bool soc_ref_linux_guest;
+static bool soc_ref_rtl_cp0_identity;
 
 /* The RTL CP0 contract exposes LLAddr as the aligned virtual address. */
 bool qemu_mips32_soc_ref_lladdr_virtual(void)
@@ -321,6 +322,17 @@ static bool soc_ref_get_linux_guest(Object *obj, Error **errp)
 static void soc_ref_set_linux_guest(Object *obj, bool value, Error **errp)
 {
     soc_ref_linux_guest = value;
+}
+
+static bool soc_ref_get_rtl_cp0_identity(Object *obj, Error **errp)
+{
+    return soc_ref_rtl_cp0_identity;
+}
+
+static void soc_ref_set_rtl_cp0_identity(Object *obj, bool value,
+                                         Error **errp)
+{
+    soc_ref_rtl_cp0_identity = value;
 }
 
 static bool soc_ref_get_dma_reset_inflight(Object *obj, Error **errp)
@@ -1999,22 +2011,24 @@ static void soc_ref_cpu_reset(void *opaque)
      * guest's normal MTC0 Status sequence to enable COP1. */
     env->CP0_Status_rw_bitmask |= (1U << CP0St_CU1);
 
-    /* Bare-metal differential guests use the RTL's fixed CP0 identity and
-     * geometry. UHI/Linux guests must retain the selected QEMU CPU's native
-     * identification: Linux cpu_probe uses PRid/Config to select errata and
-     * traps if the prototype values describe an unknown processor. */
-    if (!reset->fdt_loaded) {
+    /* The differential property selects the exact RTL CP0 identity. Generic
+     * UHI/Linux remains on QEMU's native Config1..3 contract so its existing
+     * userspace workload remains independent of the RTL cache geometry. */
+    if (!reset->fdt_loaded || soc_ref_rtl_cp0_identity) {
         /* Match the RTL's fixed custom AP-lite processor identity. */
         env->CP0_PRid = 0x00019300;
         env->CP0_Config0 = 0x80000503;
-        /* Match the RTL's current 4-way, 64-set cache geometry. */
-        env->CP0_Config1 = 0xFE231180;
-        if (reset->cpu_has_fpu) {
-            /* COP1 availability is controlled by Status.CU1 after reset. */
-            env->CP0_Config1 |= (1U << CP0C1_FP);
+        if (!reset->fdt_loaded || soc_ref_rtl_cp0_identity) {
+            /* Bare-metal guests and RTL differential Linux guests match the
+             * RTL cache/MMU geometry. */
+            env->CP0_Config1 = 0xFE231180;
+            if (reset->cpu_has_fpu) {
+                /* COP1 availability is controlled by Status.CU1 after reset. */
+                env->CP0_Config1 |= (1U << CP0C1_FP);
+            }
+            env->CP0_Config2 = 0x80000000;
+            env->CP0_Config3 = 0x00002008;
         }
-        env->CP0_Config2 = 0x80000000;
-        env->CP0_Config3 = 0x00002008;
         /* Match the RTL CP0 timer reset contract. QEMU's generic MIPS
          * reset leaves Compare at its reset value, which can set Cause.TI
          * during a short differential corpus and expose an unrelated IP7
@@ -2378,6 +2392,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_bool(OBJECT_CLASS(mc), "linux-guest",
                                    soc_ref_get_linux_guest,
                                    soc_ref_set_linux_guest);
+    object_class_property_add_bool(OBJECT_CLASS(mc), "rtl-cp0-identity",
+                                   soc_ref_get_rtl_cp0_identity,
+                                   soc_ref_set_rtl_cp0_identity);
     object_class_property_add_str(OBJECT_CLASS(mc), "irq-schedule",
                                   soc_ref_get_irq_schedule,
                                   soc_ref_set_irq_schedule);

@@ -84,6 +84,7 @@ capture_records=${rtl_records}
 
 env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_KERNEL="${KERNEL}" QEMU_DTB="${DTB}" QEMU_MEMORY="${QEMU_MEMORY}" \
+    QEMU_MACHINE_PROPERTIES="rtl-cp0-identity=on" \
     QEMU_ACCEL=tcg,thread=single \
     QEMU_APPEND="${QEMU_APPEND}" QEMU_TIMEOUT="${QEMU_TIMEOUT}" \
     MAX_QEMU_EVENTS="${capture_records}" \
