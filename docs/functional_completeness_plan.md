@@ -18,6 +18,19 @@ RTL Linux userspace probe。入口和临时输出均正常，然而 kernel 在
 userspace marker。该结果保留为真实 CPU/D-cache 集成阻塞证据；默认 blocking
 路径没有改变，L1 nonblocking Linux cache ABI 仍 OPEN。
 
+### 2026-09-05 full opt-in L1/ROB/DDR Linux elaboration recheck
+
+修复了 SoC Linux testbench 对 `g_blocking.u_dcache` 的硬编码观察层级，增加
+nonblocking wrapper 的兼容观察字段，并让 runner 在 CPU+L1 nonblocking 同时打开时
+自动注入 `TB_L1_NONBLOCKING`。blocking、L1-only 和 CPU+L1 配置现在均可
+elaborate；L1 CPU compatibility/multi gate 通过。
+
+使用 `SOC_CPU_NONBLOCKING_ENABLE=1`、`SOC_L1_NONBLOCKING_ENABLE=1`、
+`SOC_ROB_FIFO_ENABLE=1`、`SOC_L1_NONBLOCKING_DDR_ENABLE=1` 的真实 Linux probe
+能进入 Linux，但在 cycle `471610` 的早期 data/TLB fault 进入 BEV 向量，未达到
+userspace marker。该项关闭 testbench/elaboration 阻塞，真实 Linux cache/MMU
+交互和 userspace boot 仍 OPEN。
+
 ### 2026-09-05 Dual-core MMU shootdown pressure closure slice
 
 在资源受限的 VCS 配置下重跑 `mmu-ipi-shootdown-pressure-gate` 和

@@ -22,6 +22,20 @@
   userspace marker is observed. The standalone L1 nonblocking contract remains
   valid, but Linux cache ABI/integration is not closed.
 
+### 2026-09-05 full opt-in L1/ROB/DDR Linux elaboration recheck
+
+- Fixed the Linux SoC testbench's hard-coded blocking-cache hierarchy and added
+  observation-compatible fields to the nonblocking CPU adapter. The RTL Linux
+  runner now selects the nonblocking observation hierarchy automatically when
+  CPU and L1 nonblocking defines are both present.
+- The full opt-in configuration (`SOC_CPU_NONBLOCKING_ENABLE=1`,
+  `SOC_L1_NONBLOCKING_ENABLE=1`, `SOC_ROB_FIFO_ENABLE=1`, and
+  `SOC_L1_NONBLOCKING_DDR_ENABLE=1`) compiles and reaches Linux in the fresh
+  probe under `/data/disk/tmp/mips32-soc/rtl-linux-nb-ddr-probe-20260905`.
+- At cycle `471610`, an early data/TLB exception enters the BEV vector and the
+  userspace marker is absent. L1 CPU compatibility and multi-request gates
+  pass, but real Linux cache/MMU integration remains OPEN.
+
 ### 2026-09-05 Dual-core MMU shootdown pressure recheck
 
 - `mmu-ipi-shootdown-pressure-gate` and `dual-core-mmu-shootdown-gate` both
