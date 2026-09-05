@@ -1,5 +1,38 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 ISA/FPU boundary audit and context recheck
+
+- `scripts/check_isa_matrix.py` passes with `rows=20`; the current ISA-R2
+  firmware sweep, FPU flags unit gate and scheduler FPR/FCSR context gate pass
+  under bounded VCS settings.
+- Evidence is rooted at
+  `/data/disk/tmp/mips32-soc/isa-fpu-audit-20260905`.
+- The result validates the frozen implemented subset and FPU context/flag
+  slices only. Full ISA/privileged compliance, complete IEEE-754 behavior,
+  FPE delivery and Linux signal/lazy-FPU ABI remain open by design.
+
+### 2026-09-05 RTL Linux nonblocking-cache integration probe
+
+- Added the controlled `LINUX_VCS_EXTRA_ARGS` pass-through to the RTL Linux
+  runner and Make entry so alternate CPU/cache configurations can be tested
+  without changing the default path.
+- A fresh 20M-cycle run with `SOC_CPU_NONBLOCKING_ENABLE=1` under
+  `/data/disk/tmp/mips32-soc/rtl-linux-nb-userspace-20260905` reaches the
+  kernel but stalls in `__raw_copy_from_user` at PC `0x88c44030`; no Linux
+  userspace marker is observed. The standalone L1 nonblocking contract remains
+  valid, but Linux cache ABI/integration is not closed.
+
+### 2026-09-05 Dual-core MMU shootdown pressure recheck
+
+- `mmu-ipi-shootdown-pressure-gate` and `dual-core-mmu-shootdown-gate` both
+  pass with `VCS_JOBS=1`, bounded VCS memory/swap, and all artifacts rooted at
+  `/data/disk/tmp/mips32-soc/mmu-shootdown-closure-20260905`.
+- The run covers mailbox request/ack/timeout pressure and real dual-core SoC
+  execution of TLB invalidation, generation/ack state and completion status.
+  This closes the current RTL hardware shootdown protocol slice only; Linux
+  page-table ownership, process scheduler/VM semantics, reclaim/swap and full
+  privileged/MMU signoff remain open.
+
 ### 2026-09-05 Final MEM->ID branch-delay interrupt recheck
 
 - Re-ran the selected QEMU system differential after the final
