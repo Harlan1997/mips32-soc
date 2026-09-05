@@ -45,7 +45,10 @@ static GPtrArray *state_registers;
 /* A capture must stop at the source.  Post-run guards cannot prevent a
  * long-running guest from filling the filesystem before QEMU exits. */
 static uint64_t max_records = UINT64_MAX;
+static uint64_t max_bytes = UINT64_MAX;
 static uint64_t record_count;
+static uint64_t trace_bytes;
+static uint64_t state_bytes;
 static bool capture_stopped;
 static bool capture_limit_reported;
 
@@ -108,7 +111,17 @@ static void emit_state(unsigned int cpu_index, InsnInfo *insn)
         g_string_append_c(line, '"');
     }
     g_string_append(line, "}}\n");
+    if (state_bytes > max_bytes || (uint64_t)line->len > max_bytes - state_bytes) {
+        capture_stopped = true;
+        if (!capture_limit_reported) {
+            qemu_plugin_outs("qemu retire plugin: byte limit reached; stopping record emission\n");
+            capture_limit_reported = true;
+        }
+        g_string_free(line, true);
+        return;
+    }
     fputs(line->str, state_file);
+    state_bytes += (uint64_t)line->len;
     g_free(last_state_line);
     last_state_line = g_strdup(line->str);
     g_string_free(line, true);
@@ -117,10 +130,12 @@ static void emit_state(unsigned int cpu_index, InsnInfo *insn)
 
 static void emit_pending(Pending *pending, uint64_t next_pc)
 {
+    char line[512];
+    int line_len;
     if (!pending->valid) {
         return;
     }
-    fprintf(trace_file,
+    line_len = snprintf(line, sizeof(line),
             "{\"pc\":\"%08" PRIx64 "\",\"instr\":\"%08" PRIx32
             "\",\"next_pc\":\"%08" PRIx64 "\",\"mem_valid\":%u"
             ",\"mem_read\":%u,\"mem_write\":%u,\"mem_addr\":\"%08" PRIx64
@@ -128,6 +143,18 @@ static void emit_pending(Pending *pending, uint64_t next_pc)
             pending->pc, pending->instr, next_pc,
             pending->mem_valid, pending->mem_read, pending->mem_write,
             pending->mem_addr, pending->mem_value, pending->mem_size);
+    if (line_len < 0 || (size_t)line_len >= sizeof(line) ||
+        trace_bytes > max_bytes || (uint64_t)line_len > max_bytes - trace_bytes) {
+        capture_stopped = true;
+        if (!capture_limit_reported) {
+            qemu_plugin_outs("qemu retire plugin: byte limit reached; stopping record emission\n");
+            capture_limit_reported = true;
+        }
+        pending->valid = false;
+        return;
+    }
+    fputs(line, trace_file);
+    trace_bytes += (uint64_t)line_len;
     fflush(trace_file);
     pending->valid = false;
 }
@@ -270,8 +297,16 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
                 fprintf(stderr, "qemu retire plugin: max-records must be a positive integer\n");
                 return -1;
             }
+        } else if (g_strcmp0(tokens[0], "max-bytes") == 0 && tokens[1]) {
+            char *end = NULL;
+            errno = 0;
+            max_bytes = g_ascii_strtoull(tokens[1], &end, 10);
+            if (errno != 0 || end == tokens[1] || *end != '\0' || max_bytes == 0) {
+                fprintf(stderr, "qemu retire plugin: max-bytes must be a positive integer\n");
+                return -1;
+            }
         } else {
-            fprintf(stderr, "qemu retire plugin: expected trace=/path, got %s\n", argv[i]);
+            fprintf(stderr, "qemu retire plugin: expected trace=/path, state=/path, max-records=N or max-bytes=N, got %s\n", argv[i]);
             return -1;
         }
     }

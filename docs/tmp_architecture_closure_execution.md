@@ -1,5 +1,24 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 QEMU Linux differential capture resource-bound fix
+
+- Reclaimed the failed `/data/disk/tmp/mips32-soc/qemu-linux-diff-1m-20260905`
+  capture, which had grown to about 1.1 GiB. The root filesystem remained at
+  about 1.4 GiB free; subsequent artifacts were kept under `/data/disk/tmp`.
+- The QEMU retire plugin now accepts `max-bytes` and checks each raw event and
+  architectural-state line before writing. This prevents a long-running guest
+  from filling storage before the post-run guard can inspect it.
+- The Linux differential wrapper now derives the QEMU instruction limit from
+  the actual RTL trace length, and the streaming comparator honors
+  `--truncate-golden-to-rtl` when the RTL prefix is shorter after handoff.
+- Fresh controlled run:
+  `BUILD_DIR=/data/disk/tmp/mips32-soc/qemu-linux-diff-300k-fixed-20260905`
+  with `RTL_CYCLE_LIMIT=300000` passes
+  `TRACE_COMPARE_PASS records=142893 mode=stream`. Raw QEMU state/event files
+  are about 200/22 MiB. This closes capture resource safety and comparator
+  option behavior only; Linux userspace boot, unrestricted system differential,
+  complete ISA/privileged/MMU/OS semantics and product signoff remain OPEN.
+
 ### 2026-09-04 RTL Linux WAIT wakeup EPC/BD fix
 
 - Exact repository-kernel RTL replay exposed a real WAIT wakeup defect: stale
