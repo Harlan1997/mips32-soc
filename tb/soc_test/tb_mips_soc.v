@@ -1431,7 +1431,7 @@ module tb_mips_soc;
                 ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == linux_target_trace_line) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out[31:5] == linux_target_trace_line) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_addr[31:5] == linux_target_trace_line))) begin
-                $display("LINUX_TARGET_DSIDE_TRACE cycle=%0d pc=%08h mempc=%08h va=%08h pa=%08h we=%b wdata=%08h be=%h memop=%03h done=%b req=%b dstate=%0d reqbuf=%b/%b/%08h/%08h/%h victim=%0d/%08h",
+                $display("LINUX_TARGET_DSIDE_TRACE cycle=%0d pc=%08h mempc=%08h va=%08h pa=%08h we=%b wdata=%08h be=%h memop=%03h done=%b req=%b rdata=%08h dok=%b dstate=%0d reqbuf=%b/%b/%08h/%08h/%h victim=%0d/%08h l2=%b/%08h/%0d/%b ddr=%0d/%b/%b/%08h/%b/%b/%08h/%0d/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
@@ -1443,6 +1443,8 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_op,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_done,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_rdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_data_ok_current,
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.state,
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_valid,
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_we,
@@ -1450,7 +1452,20 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_wdata,
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.req_buf_be,
                     u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_way,
-                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_tag_entry);
+                    u_soc.u_impl.u_core_subsystem.u_core.g_blocking.u_dcache.victim_tag_entry,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.state,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rlast);
                 linux_target_dside_trace_count = linux_target_dside_trace_count + 1;
             end
             if (linux_progress_trace != 0 &&
