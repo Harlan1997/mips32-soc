@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 RTL Linux branch-delay interrupt boundary repair
+
+- Corrected the asynchronous interrupt case where `MEM` contains the branch and
+  `EX` contains its architectural delay slot. The recovery logic now validates
+  the adjacent `MEM branch + EX delay-slot` PCs and passes the EX PC to CP0, so
+  CP0 stores the branch PC after applying `Cause.BD`.
+- A stale `mem_bd` marker is ignored unless the younger EX stage is the
+  immediately adjacent instruction. This prevents a replay marker from
+  converting a non-delay boundary into a preceding-load restart.
+- Fresh evidence passes `cpu-irq-delay-slot-gate`,
+  `cpu-irq-mem-pending-gate`, and `rtl-frontend-compile (8/8)`. The bounded
+  8.5M-cycle RTL Linux run under
+  `/data/disk/tmp/mips32-soc/rtl-linux-fix7-20260906` reaches kernel
+  initialization with no `BadVA=0x7a37`, paging fault, or kernel panic.
+- This closes the observed interrupt-precision defect only. Linux userspace,
+  full ISA/privileged/MMU semantics, unrestricted RTL/QEMU Linux differential,
+  and product signoff remain open.
+
 ### 2026-09-05 L1 nonblocking writeback accounting closure recheck
 
 - Fixed the real CPU/D-cache multi-request failure in `l1_cache_nb`: a
