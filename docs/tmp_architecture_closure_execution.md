@@ -6102,3 +6102,20 @@ remain OPEN.
 - Boundary remains explicit: this is bounded diagnostic differential
   evidence, not unrestricted RTL/QEMU Linux differential, complete Linux
   userspace boot, full ISA/MMU/FPU compliance, or product signoff.
+
+### 2026-09-06 Linux LWL/LWR dependency closure
+
+- The fresh RTL/QEMU Linux replay reached the previously reported `LWL`
+  mismatch at `0x88c4409c`. The raw memory word matched QEMU; RTL merged the
+  word with `rt=0` because the ID-stage hazard decoder did not classify
+  `LWL/LWR` as reading `rt`.
+- Added opcodes `100010` (`LWL`) and `100110` (`LWR`) to `reads_rt` in
+  `rtl/cpu/mips_id_stage.v`, restoring the required load-use stall/forwarding
+  contract for unaligned load pairs.
+- Verification: RTL frontend compile `8/8 PASS`, QEMU system unaligned RTL
+  gate `PASS`, QEMU system unaligned RTL differential `PASS`, and a fresh
+  bounded Linux RTL/QEMU replay using the exact RTL DTB passed
+  `TRACE_COMPARE_PASS records=29112`.
+- The evidence is a bounded relocated-kernel prefix. Linux userspace boot,
+  unrestricted RTL/QEMU system differential, full ISA/privileged/MMU/FPU,
+  coherency, formal/CDC/RDC/lint and physical product signoff remain OPEN.
