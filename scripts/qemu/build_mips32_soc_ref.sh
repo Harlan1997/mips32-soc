@@ -369,8 +369,7 @@ rg -q 'SOC_REF_LLADDR_VIRTUAL' \
 
 if ! rg -q '^extern bool qemu_mips32_soc_ref_sc_consume_reservation' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    sed -i '/\/\* Store conditional \*\//i\
-extern bool qemu_mips32_soc_ref_sc_consume_reservation(void) __attribute__((weak));' \
+    perl -0pi -e 's{(/\* Store conditional \*/)}{extern bool qemu_mips32_soc_ref_sc_consume_reservation(void) __attribute__((weak));\n$1}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
@@ -390,12 +389,6 @@ if rg -q 'Successful and failed compare-exchange attempts both consume LL' \
 fi
 rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
-if ! rg -q '^extern bool qemu_mips32_soc_ref_sc_consume_reservation' \
-        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    sed -i '/\/\* Store conditional \*\//a\\
-extern bool qemu_mips32_soc_ref_sc_consume_reservation(void) __attribute__((weak));' \
-        "${QEMU_SRC}/target/mips/tcg/translate.c"
-fi
 rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 
