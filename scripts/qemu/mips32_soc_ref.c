@@ -1999,7 +1999,7 @@ static void soc_ref_cpu_reset(void *opaque)
     }
     /* Match the opt-in RTL SRSCtl static HSS field.  CSS/PSS/ESS remain
      * software and exception controlled below this implementation. */
-    env->CP0_SRSCtl = (0xfU << 23);
+    env->CP0_SRSCtl = soc_ref_rtl_cp0_identity ? 0U : (0xfU << 23);
     env->active_tc.PC = reset->vector & ~(target_ulong)1;
     if (reset->vector & 1) {
         env->hflags |= MIPS_HFLAG_M16;
@@ -2010,6 +2010,13 @@ static void soc_ref_cpu_reset(void *opaque)
      * reset so the negative COP1 gate remains meaningful, while allowing the
      * guest's normal MTC0 Status sequence to enable COP1. */
     env->CP0_Status_rw_bitmask |= (1U << CP0St_CU1);
+
+    /* The RTL exposes EBase.WG (bit 11) as writable.  QEMU CPU models vary
+     * in this mask; make the behavior explicit for the opt-in differential
+     * identity so Linux's EBase capability probe follows the RTL contract. */
+    if (soc_ref_rtl_cp0_identity) {
+        env->CP0_EBaseWG_rw_bitmask |= (1U << CP0EBase_WG);
+    }
 
     /* The differential property selects the exact RTL CP0 identity. Generic
      * UHI/Linux remains on QEMU's native Config1..3 contract so its existing

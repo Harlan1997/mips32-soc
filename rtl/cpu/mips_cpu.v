@@ -1694,6 +1694,11 @@ module mips_cpu #(
         end else if (coh_snoop_valid &&
                      (ll_reservation_addr[31:5] == coh_snoop_addr_phys[31:5])) begin
             ll_reservation_valid <= 1'b0;
+        end else if (data_req_raw && is_sc_mem && !data_data_ok_current) begin
+            // Capture the effective SC address at request issue as well as
+            // at response.  A held/cacheable transaction can advance the
+            // retire bundle before the response-side sample is visible.
+            sc_trace_addr <= {mem_vaddr[31:2], 2'b00};
         end else if (data_data_ok_current) begin
             if (is_sc_mem) begin
                 sc_trace_addr <= {mem_vaddr[31:2], 2'b00};
