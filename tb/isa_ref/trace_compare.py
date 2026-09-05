@@ -200,7 +200,8 @@ def stream_compare(rtl_path, golden_path, args):
         previous_r, previous_g = r, g
         compared += 1
 
-    if not mismatches and g_item is not None and r_item is None:
+    if (not mismatches and g_item is not None and r_item is None and
+            not args.truncate_golden_to_rtl):
         mismatches.append((compared, "trace_length", "rtl-eof", "golden-more"))
     if not mismatches and g_item is None:
         if not args.allow_golden_prefix:

@@ -77,7 +77,10 @@ fi
 # reference would execute during its wall-clock capture window. Limit QEMU
 # to the exact available RTL prefix; otherwise the strict comparator reports
 # a length mismatch after an otherwise valid common prefix.
-capture_records=${MAX_TRACE_RECORDS}
+# QEMU only needs the prefix that the cycle-bounded RTL run actually retired.
+# This is also the primary resource bound: a timed-out reference guest must
+# not continue materializing states after the RTL comparison window ends.
+capture_records=${rtl_records}
 
 env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_KERNEL="${KERNEL}" QEMU_DTB="${DTB}" QEMU_MEMORY="${QEMU_MEMORY}" \

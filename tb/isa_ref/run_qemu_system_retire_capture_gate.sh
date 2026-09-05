@@ -123,7 +123,7 @@ set +e
 # timeout status; semantic failures and other exit codes remain failures.
 qemu_cmd=(
     "${QEMU_BIN}"
-    -plugin "file=${PLUGIN},trace=${RUN_DIR}/qemu_instruction_events.jsonl,state=${RUN_DIR}/qemu_state.jsonl,registers=${RUN_DIR}/qemu_registers.txt,max-records=${MAX_QEMU_EVENTS}"
+    -plugin "file=${PLUGIN},trace=${RUN_DIR}/qemu_instruction_events.jsonl,state=${RUN_DIR}/qemu_state.jsonl,registers=${RUN_DIR}/qemu_registers.txt,max-records=${MAX_QEMU_EVENTS},max-bytes=${MAX_QEMU_CAPTURE_BYTES}"
     -M "${machine_spec}"
     "${cpu_args[@]}"
     "${accel_args[@]}"
