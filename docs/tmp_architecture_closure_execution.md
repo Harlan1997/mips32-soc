@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 RTL Linux no-sysfs diagnostic recheck
+
+- Built a temporary diagnostic kernel under
+  `/data/disk/tmp/mips32-soc/rtl-linux-nosysfs-lite-20260906` with
+  `CONFIG_SYSFS=n` and `CONFIG_SYSFS_SYSCALL=n`, leaving the default kernel
+  profile unchanged. The relocated RTL image was generated successfully in
+  `/data/disk/tmp/mips32-soc/rtl-linux-nosysfs-lite-image-20260906`.
+- Reused the existing VCS simulator runtime from the temporary filesystem and
+  ran 12M cycles under the EDA cgroup limit. The kernel crossed the prior
+  kernfs/sysfs boundary and reached `driver_init`.
+- The diagnostic profile then reported `devtmpfs: Bad value for 'mode'`, a
+  platform-device release warning, and a paging request at
+  `__kmem_cache_alloc_node`; no userspace marker was emitted. This narrows the
+  current profile-specific failure but does not prove compatibility of the
+  default kernel, Linux userspace boot, or RTL/QEMU system differential.
+
 ### 2026-09-06 QEMU external-build fix and focused RTL kernfs trace
 
 - `scripts/qemu/build_mips32_soc_ref.sh` previously assumed that
