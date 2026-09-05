@@ -1,5 +1,35 @@
 # SoC 功能完整性计划
 
+### 2026-09-05 ISA/FPU boundary audit and context recheck
+
+`isa-implementation-audit` 报告 20 行边界完整；受控 VCS 下 `isa-r2-gate`、
+`mips-fpu-flags-gate` 和 `fpu-context-gate` 均通过，证据根目录为
+`/data/disk/tmp/mips32-soc/isa-fpu-audit-20260905/`。这刷新了当前冻结
+MIPS32 R2 子集、FPU sticky flag 和 scheduler FPR/FCSR context 的证据，
+但不改变矩阵中 full ISA、完整 IEEE-754/FPE delivery、Linux FPU ABI 和
+完整 privileged ISA 的 partial/deferred 边界。
+
+### 2026-09-05 RTL Linux nonblocking-cache integration probe
+
+为避免将 standalone L1 nonblocking gate 外推到 Linux，新增
+`LINUX_VCS_EXTRA_ARGS` 入口并用 `SOC_CPU_NONBLOCKING_ENABLE=1` 做 20M-cycle
+RTL Linux userspace probe。入口和临时输出均正常，然而 kernel 在
+`__raw_copy_from_user` 的顺序 store loop（PC `0x88c44030`）停滞，未观察到
+userspace marker。该结果保留为真实 CPU/D-cache 集成阻塞证据；默认 blocking
+路径没有改变，L1 nonblocking Linux cache ABI 仍 OPEN。
+
+### 2026-09-05 Dual-core MMU shootdown pressure closure slice
+
+在资源受限的 VCS 配置下重跑 `mmu-ipi-shootdown-pressure-gate` 和
+`dual-core-mmu-shootdown-gate`，两者均通过。前者覆盖 mailbox/ack/timeout
+压力，后者通过真实双核 SoC firmware 验证 shootdown 请求、对端 TLB
+失效、generation/ack 状态和完成标志。证据位于
+`/data/disk/tmp/mips32-soc/mmu-shootdown-closure-20260905/`。
+
+该项闭合当前 RTL 的多核 shootdown 硬件协议切片；Linux 页表所有权、真实
+进程调度/并发 VM、reclaim/swap、长期压力和完整 privileged/MMU signoff
+仍保持 OPEN。
+
 ### 2026-09-05 Bounded Linux RTL/QEMU retire differential
 
 Using a matching VIC-enabled kernel/RTL device-tree pair and a build root on
