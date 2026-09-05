@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-05 Current-contract aggregate resource-isolated recheck
+
+The full `current-contract-signoff` was rerun with its build root on
+`/data/disk/tmp`, VCS single-threaded and the documented 1500M/512M resource
+limits. All functional prerequisites completed successfully, including the
+16/16 Phase 2 directed tests, 8/8 Phase 3A directed tests, 10/10 stress
+seeds, MMU/cache/SVA/DDR/QSPI gates and exclusion refinement. The aggregate
+still fails honestly at the existing 99% code-coverage thresholds: merged UVM
+score 36.10% and product CPU/CP0 score 36.57%. No threshold or exclusion was
+changed; current-contract signoff therefore remains open.
+
 ### 2026-09-04 Linux gate artifact reuse
 
 `linux-gpio-userspace-gate` now accepts explicit matching `KERNEL`/`DTB`

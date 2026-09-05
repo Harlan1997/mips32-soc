@@ -248,6 +248,22 @@
   it does not close RTL Linux userspace, full Linux differential, unrestricted
   VM semantics or physical GPIO/product signoff.
 
+### 2026-09-05 Current-contract aggregate recheck on `/data/disk`
+
+- Re-ran `current-contract-signoff` with `BUILD_DIR` under
+  `/data/disk/tmp/mips32-soc/current-contract-20260905`, single-threaded VCS
+  and the 1500M/512M resource limits. The functional phases all completed:
+  16/16 Phase 2 directed tests, 8/8 Phase 3A directed tests, 10/10 stress
+  seeds, MMU/cache/SVA/QSPI/DDR and related prerequisite gates passed.
+- The run failed only at the existing `COVERAGE_THRESHOLDS` stage. The merged
+  UVM score was 36.10% and product CPU/CP0 score 36.57%, versus the required
+  99.00% thresholds. Exclusion refinement completed without changing the
+  exclusion policy. The result is evidence that functional gates pass, not a
+  current-contract signoff pass.
+- The run was resource-isolated on `/data/disk`; generated tracked coverage
+  manifests were discarded after the run, leaving no generated metadata change
+  in the source tree.
+
 ### 2026-09-03 CPU workload CPI/IPC reporting
 
 - Extended the repeatable real-CPU workload firmware to report fixed-point
