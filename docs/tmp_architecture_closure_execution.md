@@ -5785,3 +5785,21 @@ remain OPEN.
   full RTL/QEMU Linux system differential, unrestricted Linux VM ownership,
   full ISA/privileged/FPU compliance, physical device timing and product
   signoff remain OPEN.
+
+### 2026-09-05 RTL Linux userspace strict recheck
+
+- Re-ran `rtl-linux-userspace-gate` for 20M cycles with the relocated
+  `rtl-minimal` kernel and exact image under `/data/disk/tmp`. The simulator
+  completed normally within the bounded host/resource limits and showed
+  continuous kernel PC progress; the strict userspace marker requirement
+  failed because no marker was observed.
+- The trace reaches the `kernel_init`/`run_init_process` boundary and then
+  settles in the Linux panic delay loop. The matching QEMU userspace workload
+  completes, but the RTL run has no equivalent userspace UART marker. A
+  focused APB trace observes Linux's VIC clear at `0x40004010` with
+  `pready=1` and `pslverr=0`, while VIC remains disabled and has no pending
+  source. This is evidence for an RTL Linux init/console integration issue,
+  not a simulator timeout or resource failure.
+- No CPU/CP0/WAIT change is justified by this evidence. RTL Linux userspace,
+  full RTL/QEMU Linux system differential and unrestricted Linux VM semantics
+  remain OPEN.
