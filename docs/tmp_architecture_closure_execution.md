@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 MDU opt-in radix-4 end-to-end closure
+
+- Re-ran the opt-in `SOC_MDU_DIV_RADIX=4` path with all temporary VCS and
+  coverage outputs under `/tmp/mips32-soc-mdu-radix4-20260906` to avoid the
+  nearly-full `/data/disk` filesystem.
+- `mdu-radix4-gate` passed the block-level restoring radix-4 divider and flush
+  behavior. `mdu-cpu-radix4-gate` passed the real CPU/MDU integration,
+  including signed/unsigned division, divide-by-zero, HI/LO behavior and the
+  CPU mailbox regression.
+- `qemu-system-mdu-radix4-differential-gate` passed strict system-mode retire
+  comparison against the custom `mips32-soc-ref` machine. The small retained
+  gate log is at
+  `/data/disk/tmp/mips32-soc/mdu-radix4-20260906/qemu-differential.log`.
+- This closes the opt-in radix-4 MDU implementation and its bounded QEMU
+  differential. The default radix-2 setting is unchanged; complete ISA,
+  unrestricted Linux differential and workload-level performance signoff
+  remain open.
+
 ### 2026-09-06 RTL Linux no-sysfs diagnostic recheck
 
 - Built a temporary diagnostic kernel under
