@@ -11,7 +11,8 @@ module l1_cache_nb #(
     parameter MSHR_COUNT = 2,
     parameter WB_DEPTH   = 4,
     parameter SETS       = 4,
-    parameter ENABLE_COHERENCY = 1'b0
+    parameter ENABLE_COHERENCY = 1'b0,
+    parameter WRITE_THROUGH_STORES = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -173,6 +174,7 @@ module l1_cache_nb #(
 
     assign cpu_ready = !maint_active && (rsp_count == 0) && (hit || merge_mshr || free_mshr) &&
                        (hit || !dirty[req_set] || wb_count < WB_DEPTH) &&
+                       (!WRITE_THROUGH_STORES || !cpu_we || wb_count < WB_DEPTH) &&
                        !coh_snoop_valid && !snoop_pending &&
                        (!merge_mshr || !secondary_valid[merge_mshr_i]);
 
@@ -393,7 +395,21 @@ module l1_cache_nb #(
                         if (cpu_be[2]) fill_word[23:16] = cpu_wdata[23:16];
                         if (cpu_be[3]) fill_word[31:24] = cpu_wdata[31:24];
                         lines[req_set][cpu_addr[4:2]*32 +: 32] <= fill_word;
-                        dirty[req_set] <= 1'b1;
+                        if (WRITE_THROUGH_STORES) begin
+                            // Publish a post-store snapshot through the
+                            // existing ordered line writeback queue. This
+                            // keeps a following same-set miss from reading
+                            // durable memory before the store is visible.
+                            wb_addr[wb_tail] <= {tags[req_set], req_set, 5'b0};
+                            wb_data[wb_tail] <= merge_store(lines[req_set],
+                                                              cpu_addr, cpu_wdata,
+                                                              cpu_be);
+                            wb_tail <= wb_tail + 1'b1;
+                            wb_count <= wb_count + 1'b1;
+                            dirty[req_set] <= 1'b0;
+                        end else begin
+                            dirty[req_set] <= 1'b1;
+                        end
                         coh_store_valid <= ENABLE_COHERENCY;
                         coh_store_addr <= cpu_addr;
                     end
@@ -443,13 +459,14 @@ module l1_cache_nb #(
                                                       secondary_wdata[k], secondary_be[k]);
                         secondary_rsp_word = filled_line[secondary_addr[k][4:2]*32 +: 32];
                         lines[mem_rsp_addr[5 +: SET_BITS]] <= filled_line;
+                        if ((WRITE_THROUGH_STORES || pending_refill_match) &&
+                            (mwe[k] || secondary_valid[k]) && !mem_rsp_error) begin
+                            wb_addr[wb_tail] <= mem_rsp_addr;
+                            wb_data[wb_tail] <= filled_line;
+                            wb_tail <= wb_tail + 1'b1;
+                            wb_count <= wb_count + 1'b1;
+                        end
                         if (pending_refill_match && !mem_rsp_error) begin
-                            if (mwe[k] || secondary_valid[k]) begin
-                                wb_addr[wb_tail] <= mem_rsp_addr;
-                                wb_data[wb_tail] <= filled_line;
-                                wb_tail <= wb_tail + 1'b1;
-                                wb_count <= wb_count + 1'b1;
-                            end
                             // A pending snoop has ordering priority over the
                             // refill's normal valid/dirty update.
                             valid[mem_rsp_addr[5 +: SET_BITS]] <= 1'b0;

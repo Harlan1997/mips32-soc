@@ -9,7 +9,8 @@ module l1_cache_nb_cpu_axi #(
     parameter ENABLE_LEGACY_ADDR_HEURISTIC = 1'b1,
     parameter ENABLE_COHERENCY = 1'b0,
     parameter ENABLE_L1 = (`SOC_L1_NONBLOCKING_ENABLE != 0),
-    parameter ENABLE_MULTI_OUTSTANDING = 1'b0
+    parameter ENABLE_MULTI_OUTSTANDING = 1'b0,
+    parameter WRITE_THROUGH_STORES = 1'b0
 ) (
     input wire clk, input wire rst_n,
     input wire cpu_req, input wire [3:0] cpu_id,
@@ -249,7 +250,8 @@ module l1_cache_nb_cpu_axi #(
     // The standalone block gate uses four sets to force replacement quickly.
     // The CPU adapter keeps enough direct-mapped sets for the SoC smoke
     // scratch walk; replacement remains covered by the dedicated WB gate.
-    l1_cache_nb #(.SETS(256), .ENABLE_COHERENCY(ENABLE_COHERENCY)) u_l1 (
+    l1_cache_nb #(.SETS(256), .ENABLE_COHERENCY(ENABLE_COHERENCY),
+                  .WRITE_THROUGH_STORES(WRITE_THROUGH_STORES)) u_l1 (
         .clk(clk), .rst_n(rst_n), .cpu_valid(l1_req), .cpu_we(cpu_we),
         .cpu_id(cpu_id), .cpu_addr(cpu_addr), .cpu_wdata(cpu_wdata),
         .cpu_be(cpu_be), .cache_maint_invalidate(l1_maintenance_issue),
