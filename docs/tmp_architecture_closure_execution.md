@@ -12,9 +12,11 @@
 - A reused RTL simulator ran a bounded 20M-cycle PC trace over the
   `kobject_add`/kernfs address range. The trace completed normally with a 1.1
   MiB VCS data structure and no OOM, panic, invalid pointer, or proven lock
-  retry. It did not produce a Linux userspace marker, so this is diagnostic
-  evidence only; RTL Linux userspace and unrestricted RTL/QEMU differential
-  remain OPEN.
+  retry. The 6780 captured records span cycles `9181091..9617385`, include
+  `kobject_add`, `sysfs_create_dir_ns`, `kernfs_create_dir_ns` and kernfs/IDR
+  paths, and then leave the selected address window. It did not produce a
+  Linux userspace marker, so this is diagnostic evidence only; RTL Linux
+  userspace and unrestricted RTL/QEMU differential remain OPEN.
 
 ### 2026-09-06 Official QEMU source recovery and low-resource recheck
 
