@@ -199,6 +199,12 @@ module axi_crossbar #(
                 ((a & 32'hFFFE_0000) == 32'h8000_0000) ||
                 ((a & 32'hFFFE_0000) == 32'hA000_0000))
                 decode_slave = 4'd0;                 // S0 SRAM
+            else if ((a >= 32'h0400_0000) && (a < 32'h0401_0000))
+                // Linux MIPS ioremap() uses the prototype's 0x0400_0000
+                // physical alias for the 64-KiB APB window.  This must be
+                // tested before the broad low-RAM alias below; otherwise
+                // earlycon/8250 traffic is silently routed to DDR.
+                decode_slave = 4'd1;                 // S1 APB alias
             else if (((a >= 32'h0002_0000) && (a < 32'h0800_0000)) ||
                      ((a >= 32'h8002_0000) && (a < 32'h8800_0000)) ||
                      ((a >= 32'hA002_0000) && (a < 32'hA800_0000)))

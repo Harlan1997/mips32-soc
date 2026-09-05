@@ -158,6 +158,9 @@ module tb_mips_soc;
     integer linux_apb_trace;
     integer linux_apb_trace_limit;
     integer linux_apb_trace_count;
+    integer linux_apb_select_trace;
+    integer linux_apb_select_trace_limit;
+    integer linux_apb_select_trace_count;
     integer linux_vic_trace;
     integer linux_vic_trace_limit;
     integer linux_vic_trace_count;
@@ -454,6 +457,20 @@ module tb_mips_soc;
                     u_soc.u_impl.u_peripheral_subsystem.apb_pready,
                     u_soc.u_impl.u_peripheral_subsystem.apb_pslverr);
                 linux_apb_trace_count = linux_apb_trace_count + 1;
+            end
+            if (linux_apb_select_trace != 0 &&
+                linux_apb_select_trace_count < linux_apb_select_trace_limit &&
+                u_soc.u_impl.u_peripheral_subsystem.apb_psel) begin
+                $display("LINUX_APB_SELECT_TRACE cycle=%0d paddr=%08h penable=%b pwrite=%b pwdata=%08h pstrb=%1h pready=%b pslverr=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_paddr,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_penable,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pwrite,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pwdata,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pstrb,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pready,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pslverr);
+                linux_apb_select_trace_count = linux_apb_select_trace_count + 1;
             end
             // Sample the VIC at the SoC boundary only when requested. Keep
             // this edge-triggered and bounded so diagnosis cannot grow logs
@@ -1689,6 +1706,11 @@ module tb_mips_soc;
         linux_apb_trace_limit = 512;
         if (!$value$plusargs("LINUX_APB_TRACE_LIMIT=%d", linux_apb_trace_limit)) begin end
         linux_apb_trace_count = 0;
+        linux_apb_select_trace = 0;
+        if (!$value$plusargs("LINUX_APB_SELECT_TRACE=%d", linux_apb_select_trace)) begin end
+        linux_apb_select_trace_limit = 512;
+        if (!$value$plusargs("LINUX_APB_SELECT_TRACE_LIMIT=%d", linux_apb_select_trace_limit)) begin end
+        linux_apb_select_trace_count = 0;
         linux_vic_trace = 0;
         if (!$value$plusargs("LINUX_VIC_TRACE=%d", linux_vic_trace)) begin end
         linux_vic_trace_limit = 256;
