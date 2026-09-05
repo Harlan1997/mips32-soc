@@ -99,7 +99,14 @@ module l1_cache_nb_cpu_axi #(
                                (cpu_wdata == legacy_req_wdata_q) &&
                                (cpu_be == legacy_req_be_q) &&
                                (cpu_uncacheable == legacy_req_uncacheable_q);
+    // Do not let the legacy dcache advance into UC_REQ/UC_WDATA while the
+    // nonblocking line bridge owns the external AXI channels.  The previous
+    // admission path allowed the dcache to consume a peripheral request
+    // internally, then exposed its AW/W only after the bridge drained; that
+    // split the dcache state transition from the crossbar write-table entry.
+    wire legacy_can_start;
     wire legacy_data_req = cpu_req && !legacy_same_request &&
+                           legacy_can_start &&
                            (cpu_uncacheable || !ENABLE_L1 || !l1_address_supported);
     wire legacy_cpu_req = legacy_active || legacy_data_req;
     wire legacy_cpu_we = legacy_active ? legacy_req_we_q : cpu_we;
@@ -163,6 +170,8 @@ module l1_cache_nb_cpu_axi #(
     wire [3:0] n_mshr_occ, n_wb_occ;
     wire l1_bridge_active = n_awvalid || n_wvalid || n_bready ||
                             n_arvalid || n_rready || n_mem_req_valid;
+    assign legacy_can_start = !l1_bridge_active && !n_rsp_valid &&
+                              !l1_active && (l1_outstanding == 0);
     // Maintenance remains owned by the legacy dcache, but cannot be issued
     // while the opt-in L1 has live line traffic, a queued response, or an
     // allocated request. Forwarding raw cache_op_valid to the L1 invalidate
@@ -385,18 +394,24 @@ module l1_cache_nb_cpu_axi #(
             // leave W permanently gated after a valid AW handshake.
             if (l1_req && n_cpu_ready)
                 begin
-                    if (ENABLE_MULTI_OUTSTANDING)
-                        l1_outstanding <= l1_outstanding + 1'b1;
-                    else begin
+                    if (!ENABLE_MULTI_OUTSTANDING) begin
                         l1_active <= 1'b1;
                         l1_response_seen <= 1'b0;
                     end
                 end
             if (l1_rsp_fire) begin
-                if (ENABLE_MULTI_OUTSTANDING)
-                    l1_outstanding <= l1_outstanding - 1'b1;
-                else if (l1_active)
+                if (!ENABLE_MULTI_OUTSTANDING && l1_active)
                     l1_response_seen <= 1'b1;
+            end
+            // An issue and a response may occur on the same clock in the
+            // multi-outstanding mode.  Use the combined delta so the later
+            // nonblocking assignment cannot overwrite the issue count.
+            if (ENABLE_MULTI_OUTSTANDING) begin
+                case ({(l1_req && n_cpu_ready), l1_rsp_fire})
+                    2'b10: l1_outstanding <= l1_outstanding + 1'b1;
+                    2'b01: l1_outstanding <= l1_outstanding - 1'b1;
+                    default: l1_outstanding <= l1_outstanding;
+                endcase
             end
             // Keep the L1 owner until the CPU-facing response has actually
             // been consumed.  A response can remain at the head of the L1

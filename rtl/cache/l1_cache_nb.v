@@ -162,6 +162,11 @@ module l1_cache_nb #(
     end
 
     integer response_push_count;
+    // The cache array is updated on the clock edge that consumes a refill.
+    // Do not accept another request for that set in the same cycle: its hit,
+    // dirty and victim decisions would otherwise use the pre-refill tag.
+    wire refill_set_conflict = mem_rsp_valid &&
+                                (mem_rsp_addr[5 +: SET_BITS] == req_set);
     always @(*) begin
         response_push_count = 0;
         if (hit_push) response_push_count = response_push_count + 1;
@@ -175,6 +180,7 @@ module l1_cache_nb #(
     assign cpu_ready = !maint_active && (rsp_count == 0) && (hit || merge_mshr || free_mshr) &&
                        (hit || !dirty[req_set] || wb_count < WB_DEPTH) &&
                        (!WRITE_THROUGH_STORES || !cpu_we || wb_count < WB_DEPTH) &&
+                       !refill_set_conflict &&
                        !coh_snoop_valid && !snoop_pending &&
                        (!merge_mshr || !secondary_valid[merge_mshr_i]);
 
@@ -187,6 +193,18 @@ module l1_cache_nb #(
                        (!dirty[snoop_set] || wb_count < WB_DEPTH);
     wire pending_refill_match = snoop_pending && mem_match &&
                                  (mem_rsp_addr[31:5] == snoop_pending_addr[31:5]);
+    wire maint_wb_wire = (cache_maint_op == 5'b00001) ||
+                         (cache_maint_op == 5'b10101) ||
+                         (cache_maint_op == 5'b11001) ||
+                         (cache_maint_op == 5'b11101);
+    wire maint_match_wire = ((cache_maint_op == 5'b10001) ||
+                             (cache_maint_op == 5'b10101) ||
+                             (cache_maint_op == 5'b11101) ||
+                             (cache_maint_op == 5'b11001)) ?
+                            (valid[maint_set] &&
+                             tags[maint_set] == cache_maint_addr[31 -: TAG_BITS]) :
+                            (cache_maint_op == 5'b00001) ? valid[maint_set] :
+                            1'b0;
     integer snoop_i;
     always @(*) begin
         snoop_mshr_match = 1'b0;
@@ -218,6 +236,28 @@ module l1_cache_nb #(
             if (mvalid[j] && !miss_issued[j] && !mem_req_valid) begin
                 mem_req_valid = 1'b1; mem_req_addr = mline[j];
             end
+    end
+
+    // All writeback producers share one occupancy counter.  Keeping the
+    // update here prevents a dequeue and an eviction enqueue in the same
+    // cycle from overwriting each other's nonblocking assignment.
+    wire wb_pop = mem_req_valid && mem_req_ready && mem_req_we;
+    integer wb_enqueue_count;
+    always @(*) begin
+        wb_enqueue_count = 0;
+        if (snoop_apply && dirty[snoop_set])
+            wb_enqueue_count = wb_enqueue_count + 1;
+        if (cache_maint_invalidate && cache_maint_ready && maint_match_wire &&
+            maint_wb_wire && dirty[maint_set])
+            wb_enqueue_count = wb_enqueue_count + 1;
+        if (cpu_valid && cpu_ready && !hit && !merge_mshr &&
+            valid[req_set] && dirty[req_set])
+            wb_enqueue_count = wb_enqueue_count + 1;
+        if (hit_push && cpu_we && WRITE_THROUGH_STORES)
+            wb_enqueue_count = wb_enqueue_count + 1;
+        if (mem_match && (WRITE_THROUGH_STORES || pending_refill_match) &&
+            (mwe[mem_match_i] || secondary_valid[mem_match_i]) && !mem_rsp_error)
+            wb_enqueue_count = wb_enqueue_count + 1;
     end
 
     function automatic [255:0] merge_store;
@@ -278,7 +318,6 @@ module l1_cache_nb #(
                     wb_addr[wb_tail] <= {tags[snoop_set], snoop_set, 5'b0};
                     wb_data[wb_tail] <= lines[snoop_set];
                     wb_tail <= wb_tail + 1'b1;
-                    wb_count <= wb_count + 1'b1;
                 end
                 valid[snoop_set] <= 1'b0;
                 dirty[snoop_set] <= 1'b0;
@@ -327,7 +366,6 @@ module l1_cache_nb #(
                                          cache_maint_addr[5 +: SET_BITS], 5'b0};
                     wb_data[wb_tail] <= lines[cache_maint_addr[5 +: SET_BITS]];
                     wb_tail <= wb_tail + 1'b1;
-                    wb_count <= wb_count + 1'b1;
                     dirty[cache_maint_addr[5 +: SET_BITS]] <= 1'b0;
                     maint_active <= 1'b1;
                 end
@@ -375,7 +413,6 @@ module l1_cache_nb #(
 `endif
                 if (mem_req_we) begin
                     wb_head <= wb_head + 1'b1;
-                    wb_count <= wb_count - 1'b1;
                 end else begin
                     for (k = 0; k < MSHR_COUNT; k = k + 1)
                         if (mvalid[k] && !miss_issued[k] && mline[k] == mem_req_addr)
@@ -405,7 +442,6 @@ module l1_cache_nb #(
                                                               cpu_addr, cpu_wdata,
                                                               cpu_be);
                             wb_tail <= wb_tail + 1'b1;
-                            wb_count <= wb_count + 1'b1;
                             dirty[req_set] <= 1'b0;
                         end else begin
                             dirty[req_set] <= 1'b1;
@@ -418,7 +454,6 @@ module l1_cache_nb #(
                         wb_addr[wb_tail] <= {tags[req_set], req_set, 5'b0};
                         wb_data[wb_tail] <= lines[req_set];
                         wb_tail <= wb_tail + 1'b1;
-                        wb_count <= wb_count + 1'b1;
                     end
                     mvalid[free_mshr_i] <= 1'b1; miss_issued[free_mshr_i] <= 1'b0;
                     mline[free_mshr_i] <= req_line; mid[free_mshr_i] <= cpu_id;
@@ -464,7 +499,6 @@ module l1_cache_nb #(
                             wb_addr[wb_tail] <= mem_rsp_addr;
                             wb_data[wb_tail] <= filled_line;
                             wb_tail <= wb_tail + 1'b1;
-                            wb_count <= wb_count + 1'b1;
                         end
                         if (pending_refill_match && !mem_rsp_error) begin
                             // A pending snoop has ordering priority over the
@@ -497,6 +531,7 @@ module l1_cache_nb #(
 `endif
             if (response_push_count != 0 || rsp_pop)
                 rsp_count <= rsp_count + response_push_count - (rsp_pop ? 1 : 0);
+            wb_count <= wb_count + wb_enqueue_count - (wb_pop ? 1 : 0);
             // Build occupancy from the current MSHR bitmap. Nonblocking
             // assignments to the output itself would otherwise accumulate
             // from its previous value instead of counting the entries.
