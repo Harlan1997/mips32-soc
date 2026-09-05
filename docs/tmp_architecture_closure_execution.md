@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 RTL Linux early-console APB alias recheck
+
+- Added the opt-in Linux-only APB alias `0x04000000..0x0400ffff` to the RTL
+  crossbar before the overlapping low-RAM decode. The RTL DTS uses this alias
+  only for `earlycon`; the normal UART OF resource remains `0x40000000`.
+- The bounded 8M replay under
+  `/data/disk/tmp/mips32-soc/rtl-linux-earlycon-alias-20260905` records UART
+  writes and APB phases at `0x04000000`, `0x04000004` and `0x04000014`, with
+  `pready=1` and `pslverr=0`. This reduces the early-console routing issue.
+- The strict 20M replay still does not emit the userspace marker. Kernel
+  progress is continuous through SMP and early driver initialization, so the
+  remaining RTL Linux boundary is later init/userspace handoff; no Linux
+  userspace or full RTL/QEMU system differential signoff is claimed.
+
 ### 2026-09-05 RTL Linux trace-window plumbing and `__udelay` diagnosis
 
 - `Makefile` now forwards `LINUX_MODE_TRACE_CYCLE_START/END`,
