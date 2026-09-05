@@ -16,6 +16,17 @@
   current profile-specific failure but does not prove compatibility of the
   default kernel, Linux userspace boot, or RTL/QEMU system differential.
 
+### 2026-09-06 QEMU no-sysfs control recheck
+
+- Booted the same temporary no-sysfs kernel and matching RTL device tree with
+  the rebuilt `mips32-soc-ref` QEMU machine. QEMU reached `/init` and emitted
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`.
+- The generic Linux gate subsequently reported the expected GPIO sysfs failure,
+  because this diagnostic kernel intentionally has `CONFIG_SYSFS=n`. The
+  result is therefore a control result rather than a GPIO failure: the image
+  itself is executable, while the corresponding RTL replay still faults before
+  userspace. Default Linux/sysfs configuration remains unchanged.
+
 ### 2026-09-06 QEMU external-build fix and focused RTL kernfs trace
 
 - `scripts/qemu/build_mips32_soc_ref.sh` previously assumed that
