@@ -327,7 +327,7 @@ module soc_memory_subsystem #(
 
     // synopsys translate_off
     task preload_sram_hex;
-        input [1023:0] hex_path;
+        input [4095:0] hex_path;
         begin
             u_axi_sram.load_hex(hex_path);
         end
@@ -423,7 +423,7 @@ module soc_memory_subsystem #(
 
     // synopsys translate_off
     task preload_ddr_hex;
-        input [1023:0] hex_path;
+        input [4095:0] hex_path;
         begin
             u_axi_ddr4_controller.load_hex(hex_path);
         end

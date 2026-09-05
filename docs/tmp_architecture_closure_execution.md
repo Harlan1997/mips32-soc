@@ -5748,3 +5748,20 @@ remain OPEN.
 - RTL Linux userspace, full RTL/QEMU Linux system differential, unrestricted
   Linux VM/shootdown, complete ISA/MMU/FPU/OS semantics and product signoff
   remain OPEN.
+
+### 2026-09-05 Scratch-path plusarg truncation repair
+
+- A bounded MMU/OS pressure rerun moved its build root to
+  `/data/disk/tmp/mips32-soc/...` as required by the low root filesystem. The
+  RTL gate then timed out because VCS truncated the absolute `FW_HEX` path at
+  the existing 1024-bit string buffer, producing `a/disk/...` and loading no
+  firmware. This was an infrastructure/path-capacity failure, not an MMU
+  architectural failure.
+- Expanded simulation-only firmware/image path buffers and preload task ports
+  in the SoC, memory subsystem, DDR models/controller, and SoC testbench from
+  1024 to 4096 bits. A fresh isolated
+  `qemu-system-mmu-refill-differential-gate` rerun passed with the scratch path.
+- Residual scope is unchanged: the bounded MMU contract passes, while Linux
+  VM ownership, unrestricted demand paging, multicore shootdown, full
+  privileged/MMU compliance and full RTL/Linux system differential remain
+  OPEN.

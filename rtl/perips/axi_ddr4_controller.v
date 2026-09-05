@@ -206,9 +206,9 @@ module axi_ddr4_controller #(
     // Simulation-only firmware preload hook retained under the new instance
     // name so existing SoC boot tests can load a DDR image explicitly.
     // synopsys translate_off
-    reg [1023:0] image_hex;
+    reg [4095:0] image_hex;
     task load_hex;
-        input [1023:0] hex_path;
+        input [4095:0] hex_path;
         begin $readmemh(hex_path, ram); end
     endtask
     // synopsys translate_on
