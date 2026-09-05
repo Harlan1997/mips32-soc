@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-06 RTL Linux branch-delay interrupt boundary repair
+
+修复 CPU 在 `MEM` 为 branch、`EX` 为其 delay slot 时的异步中断恢复：仅在
+实际相邻的 `MEM branch + EX delay slot` 关系成立时产生 `Cause.BD`，并将
+`EX` 的 delay-slot PC 传给 CP0；同时拒绝 replay 残留的 `mem_bd` 标记。新鲜
+VCS 回归通过 `cpu-irq-delay-slot-gate`、`cpu-irq-mem-pending-gate` 和
+`rtl-frontend-compile (8/8)`。在 `/data/disk/tmp/mips32-soc/rtl-linux-fix7-20260906`
+运行 8.5M-cycle RTL Linux probe，原先的 `BadVA=0x7a37`、paging fault 和
+kernel panic 均不再出现。该结果只闭合已观察到的精确中断边界缺陷；RTL
+Linux userspace、完整 ISA/privileged/MMU、无限制 RTL/QEMU differential 和
+product signoff 仍保持 OPEN。
+
 ### 2026-09-05 L1 nonblocking writeback accounting recheck
 
 真实 CPU/D-cache multi gate 失败的根因已修复：L1 writeback 队列在同拍出队和

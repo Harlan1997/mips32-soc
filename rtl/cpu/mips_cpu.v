@@ -2235,9 +2235,19 @@ module mips_cpu #(
     // valid, accept MEM's marker only for the strictly adjacent younger PC;
     // when WB is empty, the existing MEM/EX/ID ordering checks apply.
     wire interrupt_mem_delay_slot = mem_delay_slot_valid &&
-                                    ((!wb_arch_valid) ||
-                                     (wb_is_control_transfer &&
-                                      (mem_pc == (wb_pc + 32'd4))));
+                                    // A MEM delay-slot marker is useful only
+                                    // when the younger pipeline stage carries
+                                    // the immediately following instruction.
+                                    // Without this relation, a replay can
+                                    // leave mem_bd set on an older branch
+                                    // while EX still contains the preceding
+                                    // load; treating that marker as BD makes
+                                    // ERET restart the load with a new base.
+                                    (ex_flush_valid &&
+                                     (ex_pc == (mem_pc + 32'd4)) &&
+                                     ((!wb_arch_valid) ||
+                                      (wb_is_control_transfer &&
+                                       (mem_pc == (wb_pc + 32'd4)))));
     // The delay-slot metadata is normally carried with the younger
     // instruction.  A branch can nevertheless be in WB while its slot is in
     // MEM when an asynchronous interrupt is accepted; in that window the
@@ -2282,8 +2292,9 @@ module mips_cpu #(
     // loops, where a timer interrupt commonly lands on a branch delay slot.
     wire interrupt_mem_delay_from_ex = interrupt_accept &&
                                        mem_flush_valid &&
-                                       ex_is_control_transfer &&
-                                       (mem_pc == (ex_pc + 32'd4));
+                                       mem_is_control_transfer &&
+                                       ex_flush_valid &&
+                                       (ex_pc == (mem_pc + 32'd4));
     // A data-side stall can leave the branch in MEM while its delay slot is
     // still held in ID and EX is a bubble. Recover this adjacent pair
     // directly from the stage PCs.
@@ -2310,7 +2321,7 @@ module mips_cpu #(
                                               !interrupt_delay_slot;
     wire [31:0] interrupt_delay_slot_pc =
         interrupt_wb_branch_delay ? mem_pc :
-        interrupt_mem_delay_from_ex ? mem_pc :
+        interrupt_mem_delay_from_ex ? ex_pc :
         interrupt_mem_delay_from_id ? id_pc :
         interrupt_ex_delay_from_id ? ex_pc :
         interrupt_wb_delay_from_mem ? wb_pc : wb_pc;

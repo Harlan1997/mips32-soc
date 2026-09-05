@@ -99,6 +99,10 @@ config_inputs_hash=$({
         "${LINUX_SOURCE_DIR}/drivers/irqchip/Kconfig" \
         "${LINUX_SOURCE_DIR}/drivers/irqchip/Makefile" \
         "${SCRIPT_DIR}/mips32_soc_ref.dts"
+    # The kernel embeds this generated initramfs. Include its content in the
+    # configuration stamp so a changed guest binary cannot reuse an old
+    # kernel merely because the source tree and DTS are unchanged.
+    sha256sum "${initramfs_list}"
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
     printf 'LINUX_CMDLINE=%s\n' "${LINUX_CMDLINE}"
