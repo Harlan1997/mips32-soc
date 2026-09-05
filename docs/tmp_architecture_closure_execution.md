@@ -1,5 +1,33 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 RTL Linux trace-window plumbing and `__udelay` diagnosis
+
+- `Makefile` now forwards `LINUX_MODE_TRACE_CYCLE_START/END`,
+  `LINUX_PC_TRACE_RETIRE_ONLY` and `LINUX_PC_TRACE_CYCLE_START/END` to the
+  RTL Linux runner. `make -n` and shell syntax checks pass.
+- A fresh 20M-cycle `rtl-minimal` replay with a 19M..20M trace window passes
+  the progress gate. The retire trace identifies the stable loop as Linux
+  `__udelay` at `0x88c43e60..0x88c43ea4`, with caller `ra=0x88c46558`; timer
+  returns occur at cycles 19,542,037, 19,740,272 and 19,940,337, with EPCs
+  inside the same delay loop and no RI/TLB/CacheErr evidence.
+- This is a diagnosis and observability improvement, not a userspace pass.
+  The Linux scheduler/init handoff, RTL userspace marker and full
+  RTL/QEMU Linux differential remain OPEN; no speculative RTL CPU change was
+  made.
+
+### 2026-09-05 L1/L2 nonblocking real CPU/D-cache aggregate recheck
+
+- Fresh resource-bounded `make l1-l2-nonblocking-complete-gate` completed with
+  the opt-in two-MSHR L1/ROB/L2 path. Standalone concurrency, real CPU/D-cache
+  compatibility and multi-request tests, three-seed stress, single/two-error
+  recovery, reset-in-flight, maintenance, DDR and QEMU system differential all
+  passed.
+- The aggregate report is `PASS`; the QEMU system differential reports
+  `TRACE_COMPARE_PASS records=22`. The default blocking path was not changed.
+- This closes the current opt-in nonblocking cache contract only. Full
+  MESI/directory coherency, arbitrary dirty-writeback ordering, Linux cache ABI
+  and physical DDR PHY timing remain OPEN.
+
 ### 2026-09-05 QEMU Linux differential capture resource-bound fix
 
 - Reclaimed the failed `/data/disk/tmp/mips32-soc/qemu-linux-diff-1m-20260905`
