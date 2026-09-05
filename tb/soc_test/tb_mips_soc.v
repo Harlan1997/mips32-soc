@@ -50,9 +50,9 @@ module tb_mips_soc;
     retire_trace_capture u_retire_trace_capture(.clk(clk), .rst_n(rst_n),
                                                  .obs_if(retire_obs_if));
 `endif
-    reg [1023:0] firmware_hex;
+    reg [4095:0] firmware_hex;
 `ifdef TB_LINUX_BOOT
-    reg [1023:0] ddr_hex;
+    reg [4095:0] ddr_hex;
 `endif
 `ifdef TB_LINUX_BOOT_TRACE
     integer linux_trace_cycle;

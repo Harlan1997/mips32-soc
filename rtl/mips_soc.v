@@ -133,7 +133,7 @@ module mips_soc #(
 
     // synopsys translate_off
     task preload_sram_hex;
-        input [1023:0] hex_path;
+        input [4095:0] hex_path;
         begin
             u_impl.preload_sram_hex(hex_path);
         end

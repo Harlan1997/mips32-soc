@@ -83,7 +83,7 @@ module axi_ddr_behavioral #(
 
     // Initialize with 0
     integer i;
-    reg [1023:0] image_hex;
+    reg [4095:0] image_hex;
     initial begin
         for (i = 0; i < MEM_DEPTH_WORDS; i = i + 1) begin
             ram[i] = 32'd0;
@@ -97,7 +97,7 @@ module axi_ddr_behavioral #(
 
     // synopsys translate_off
     task load_hex;
-        input [1023:0] hex_path;
+        input [4095:0] hex_path;
         begin
             $readmemh(hex_path, ram);
         end
