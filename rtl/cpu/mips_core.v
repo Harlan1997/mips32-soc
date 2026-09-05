@@ -419,7 +419,8 @@ module mips_core #(
             .ENABLE_L1((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                        (`SOC_L1_NONBLOCKING_ENABLE != 0)),
             .ENABLE_MULTI_OUTSTANDING((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
-                                       (`SOC_ROB_FIFO_ENABLE != 0))
+                                       (`SOC_ROB_FIFO_ENABLE != 0)),
+            .WRITE_THROUGH_STORES(1'b1)
         ) u_dcache (
             .clk(clk), .rst_n(rst_n), .cpu_req(cpu_data_req),
             .cpu_id(cpu_data_req_id),

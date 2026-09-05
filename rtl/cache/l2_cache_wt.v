@@ -459,6 +459,18 @@ module l2_cache_wt #(
                                 s_wstrb[0] ? s_wdata[7:0]   : data_ram[beat_index][beat_wordoff][7:0]
                             };
                         end
+                        // A full-line L1 writeback is a downstream write
+                        // transaction, not an L2 read-cache fill.  If the
+                        // line is not a matching L2 hit, retaining a valid
+                        // entry would let a later read return the old line
+                        // after the write has reached DDR.  Invalidate on
+                        // every write beat; the next read then refills from
+                        // the durable downstream store.  Matching hits are
+                        // updated above, but invalidating them as well keeps
+                        // partial-byte and burst ordering unambiguous.
+                        if (!req_uncached && valid_ram[beat_index] &&
+                            (tag_ram[beat_index] == beat_tag))
+                            valid_ram[beat_index] <= 1'b0;
                         // Forward AW exactly once per burst. Subsequent beats
                         // stream straight to the W-forward state; a second AW
                         // would violate AXI (one AW per burst) and deadlock the
