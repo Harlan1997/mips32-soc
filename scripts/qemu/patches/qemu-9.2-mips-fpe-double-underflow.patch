@@ -48,6 +48,7 @@ diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
 +    if (soc_ref_double_mul_underflow(fdt0, fdt1)) {
 +        soc_ref_raise_double_underflow(env, GETPC());
 +    }
+     dt2 = float64_mul(fdt0, fdt1, &env->active_fpu.fp_status);
      update_fcr31(env, GETPC());
      return dt2;
  }

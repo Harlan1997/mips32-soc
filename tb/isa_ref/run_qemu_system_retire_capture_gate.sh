@@ -4,7 +4,9 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_retire"}
-QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
+QEMU_SRC=${QEMU_SRC:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0"}
+QEMU_BUILD=${QEMU_BUILD:-"${QEMU_SRC}/build-mipsel-softmmu"}
+QEMU_BIN=${QEMU_BIN:-"${QEMU_BUILD}/qemu-system-mipsel"}
 # Match the default RTL contract. FPU-specific gates select 24Kf explicitly.
 QEMU_CPU=${QEMU_CPU:-24Kc}
 FW_ELF=${FW_ELF:-"${ROOT_DIR}/build/firmware/qemu_system_smoke/firmware.elf"}
@@ -64,6 +66,8 @@ rm -f "${RUN_DIR}/qemu_instruction_events.jsonl" \
 
 if [[ -z "${PLUGIN_INCLUDE}" ]]; then
     for candidate in \
+        "${QEMU_BUILD}/qemu-bundle/usr/local/include" \
+        "${QEMU_SRC}/include" \
         "${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-bundle/usr/local/include" \
         "${ROOT_DIR}/build/deps/src/qemu-9.2.0/include" \
         "${ROOT_DIR}/build/deps/qemu/include"; do

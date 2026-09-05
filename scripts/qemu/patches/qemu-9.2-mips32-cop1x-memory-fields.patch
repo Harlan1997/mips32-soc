@@ -10,4 +10,4 @@ diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 +                gen_flt3_ldst(ctx, op1, rd, rd, rs, rt);
                  break;
              case OPC_PREFX:
-                 check_insn(ctx, ISA_MIPS_R2);
+                 check_insn(ctx, ISA_MIPS4 | ISA_MIPS_R2);
