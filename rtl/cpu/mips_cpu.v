@@ -1444,12 +1444,16 @@ module mips_cpu #(
                               (mem_inst[31:26] != 6'b110001) &&
                               !mem_double_mem &&
                               !data_uncacheable &&
-                              // The integrated prototype L1 is limited to
-                              // the 64KB on-chip SRAM window. Other physical
-                              // regions use the blocking/legacy response
-                              // contract and must not allocate tagged ROB
-                              // entries.
-                              (data_addr[31:16] == 16'h0000);
+                              // The prototype L1 owns the on-chip SRAM
+                              // window by default.  The explicit DDR opt-in
+                              // extends the same tagged request/ROB
+                              // contract to the behavioral DDR model; keep
+                              // all other physical regions on the blocking
+                              // response path.
+                              ((data_addr[31:16] == 16'h0000) ||
+                               ((`SOC_L1_NONBLOCKING_DDR_ENABLE != 0) &&
+                                (data_addr >= `SOC_DDR_BASE) &&
+                                (data_addr < (`SOC_DDR_BASE + `SOC_DDR_SIZE))));
 
     assign dmem_translate_req = ((mem_mem_read | mem_mem_write) & ~mem_done) |
                                 (mem_cache_op_valid & ~mem_done);

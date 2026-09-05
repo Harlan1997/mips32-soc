@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 DDR-window nonblocking CPU path recheck
+
+- Extended `mem_enable_nb_load` so the explicit
+  `SOC_L1_NONBLOCKING_DDR_ENABLE=1` configuration uses the same tagged L1/ROB
+  request contract for the behavioral DDR window. The default blocking path
+  and the SRAM-only opt-in behavior are unchanged.
+- RTL frontend compile passes all `8/8` configurations. A 600k-cycle Linux
+  probe under `/data/disk/tmp/mips32-soc/rtl-linux-nb-ddr-real-20260905`
+  compiles and runs with real DDR nonblocking traffic, but still fails the
+  userspace criterion after a reproducible store/TLBS exception at cycle
+  `479920` (`PC=0x88c44154`, `VA=0x88ce2894`). Linux userspace and unrestricted
+  RTL/QEMU differential therefore remain OPEN.
+
 ### 2026-09-05 ISA/FPU boundary audit and context recheck
 
 - `scripts/check_isa_matrix.py` passes with `rows=20`; the current ISA-R2
