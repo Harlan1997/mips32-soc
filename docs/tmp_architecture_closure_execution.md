@@ -6077,3 +6077,28 @@ remain OPEN.
   the next differential target; it does not justify changing RTL memory or
   LL/SC semantics yet. Full RTL/Linux system differential and userspace boot
   remain OPEN.
+
+### 2026-09-06 QEMU CP0 and SC trace-boundary follow-up
+
+- Rebuilt the opt-in `rtl-cp0-identity=on` machine and replayed a bounded
+  500K QEMU retire prefix against the corrected RTL trace. The previous
+  `EBase.WG` mismatch at retire `228449` disappeared after enabling the RTL
+  writable WG bit. The next CP0 mismatch was identified as `Status` select 2
+  (`SRSCtl`), not `Config2`; setting the opt-in QEMU SRSCtl reset value to
+  the RTL-observed zero removed that branch split. `Config2=0x80000000` was
+  retained because the RTL Config2 read at the later capability probe is
+  `0x80000000`.
+- The replay then reached an SC trace boundary at retire `233633`: the RTL
+  retire binding exposed address zero while the preceding LL and QEMU both
+  used `0x88d23dec`. RTL now latches the aligned SC effective address at
+  request issue as well as response, and all three trace bindings fall back
+  to the visible LL reservation address for an old zero-valued sample.
+- Verification after the change: RTL frontend compile `8/8 PASS`, QEMU
+  system smoke `PASS`, QEMU machine rebuild `PASS`, Python comparator syntax
+  and `git diff --check` `PASS`. A fresh full RTL Linux replay was not rerun
+  in this environment because the existing bounded RTL artifact is from the
+  prior capture and VCS license/resource limits make a new long replay
+  impractical here.
+- Boundary remains explicit: this is bounded diagnostic differential
+  evidence, not unrestricted RTL/QEMU Linux differential, complete Linux
+  userspace boot, full ISA/MMU/FPU compliance, or product signoff.

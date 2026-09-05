@@ -116,6 +116,10 @@ def stream_fields(r, g, previous_r, previous_g, next_r, next_g):
                   ("gpr_we", "gpr_addr", "gpr_data")]
     if is_merge_memory_instruction(r) or is_merge_memory_instruction(g):
         fields = [field for field in fields if field != "mem_rdata"]
+    if is_narrow_load(r) or is_narrow_load(g):
+        # QEMU's plugin reports the raw 8/16-bit bus value, while the RTL
+        # retire bundle exposes the sign/zero-extended architectural result.
+        fields = [field for field in fields if field != "mem_rdata"]
     if is_merge_store(r) or is_merge_store(g):
         fields = [field for field in fields if field not in ("mem_wdata", "mem_be")]
     if is_double_memory_instruction(r) or is_double_memory_instruction(g):
@@ -318,6 +322,14 @@ def is_merge_store(obj):
         return False
     return opcode in (0x2a, 0x2e)
 
+def is_narrow_load(obj):
+    """Byte/half loads expose raw QEMU bus data but extended RTL data."""
+    try:
+        opcode = (int(obj.get("instr", ""), 16) >> 26) & 0x3f
+    except (TypeError, ValueError):
+        return False
+    return opcode in (0x20, 0x21, 0x24, 0x25)
+
 def truncate_at_mailbox(records):
     for index, record in enumerate(records):
         if is_completion_store(record[1]):
@@ -504,6 +516,10 @@ def main():
             # The architectural result is gpr_data.  The RTL observation
             # reports merge-formatted data, while QEMU reports the raw aligned
             # bus word for this instruction class.
+            fields = [field for field in fields if field != "mem_rdata"]
+        if is_narrow_load(r[1]) or is_narrow_load(g[1]):
+            # QEMU exposes raw byte/halfword data; RTL exposes the formatted
+            # sign/zero-extended load result. Compare that result via gpr_data.
             fields = [field for field in fields if field != "mem_rdata"]
         if is_merge_store(r[1]) or is_merge_store(g[1]):
             # RTL exposes the merged word/lane mask at its cache boundary;
