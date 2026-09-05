@@ -1,5 +1,21 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 QEMU external-build fix and focused RTL kernfs trace
+
+- `scripts/qemu/build_mips32_soc_ref.sh` previously assumed that
+  `QEMU_BUILD` was directly below `QEMU_SRC` and invoked `../configure`.
+  It now invokes the absolute `${QEMU_SRC}/configure` from the selected build
+  directory, so a build root relocated to `/data/disk/tmp` is supported.
+- An incremental rebuild using the repaired path completed successfully; the
+  QEMU binary remained executable and the QEMU smoke/peripheral gates stayed
+  passing.
+- A reused RTL simulator ran a bounded 20M-cycle PC trace over the
+  `kobject_add`/kernfs address range. The trace completed normally with a 1.1
+  MiB VCS data structure and no OOM, panic, invalid pointer, or proven lock
+  retry. It did not produce a Linux userspace marker, so this is diagnostic
+  evidence only; RTL Linux userspace and unrestricted RTL/QEMU differential
+  remain OPEN.
+
 ### 2026-09-06 Official QEMU source recovery and low-resource recheck
 
 - The repository's temporary QEMU source directory had been reduced to an
