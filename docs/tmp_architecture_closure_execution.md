@@ -5765,3 +5765,23 @@ remain OPEN.
   VM ownership, unrestricted demand paging, multicore shootdown, full
   privileged/MMU compliance and full RTL/Linux system differential remain
   OPEN.
+
+### 2026-09-05 Scratch-root QEMU architecture aggregate
+
+- Fixed `run_qemu_system_architecture_closure_gate.sh` to derive its default
+  Linux kernel/DTB from the caller's `BUILD_DIR` and to build the exact pair
+  with `linux-boot-build-gate` when it is absent. The previous runner checked
+  a repository `build/` pair that could be stale or missing under an isolated
+  scratch run.
+- Fresh serial run with
+  `QEMU_BUILD_JOBS=1 QEMU_TIMEOUT=180 SKIP_COVERAGE=1 VCS_JOBS=1
+  EDA_MEMORY_MAX=1500M EDA_SWAP_MAX=512M
+  BUILD_DIR=/data/disk/tmp/mips32-soc/qemu-architecture-closure-20260905
+  make qemu-system-architecture-closure-gate` passed. The aggregate built a
+  current Linux kernel/DTB in scratch, then passed current-contract, selected
+  ISA/peripheral/FPU/privileged differentials, MMU refill/PageMask/OS pressure,
+  LL/SC and the bounded QEMU Linux userspace marker gate.
+- This is a bounded QEMU architecture aggregate only. RTL Linux userspace,
+  full RTL/QEMU Linux system differential, unrestricted Linux VM ownership,
+  full ISA/privileged/FPU compliance, physical device timing and product
+  signoff remain OPEN.
