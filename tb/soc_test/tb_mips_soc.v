@@ -1153,10 +1153,10 @@ module tb_mips_soc;
             // a stuck refill cannot recreate the previous OOM failure.
             if (linux_ddr_trace != 0 &&
                 linux_ddr_trace_count < linux_ddr_trace_limit &&
-                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h40133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h40133b) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h40133b) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h40133b))) begin
+                ((u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == linux_target_trace_line))) begin
                 $display("LINUX_DDR_TRACE cycle=%0d ic=%0d ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h icbuf=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
@@ -1210,10 +1210,10 @@ module tb_mips_soc;
             // attributed to DDR, L2, AXI routing, or I-cache installation.
             if (linux_late_icache_trace != 0 &&
                 linux_late_icache_trace_count < linux_late_icache_trace_limit &&
-                ((u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h484a34) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == 27'h484a34) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == 27'h484a34) ||
-                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == 27'h484a34))) begin
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr[31:5] == linux_target_trace_line))) begin
                 $display("LINUX_LATE_ICACHE_TRACE cycle=%0d ic=%0d req=%b/%08h ar=%b/%b/%08h r=%b/%b/%08h/%0h/%b cnt=%0d err=%b victim=%0d saddr=%0d install=%b line=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h tag=%08h/%08h/%08h/%08h data=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h l2=%0d lar=%b/%b/%08h lr=%b/%b/%08h/%0h/%b ddr=%0d dar=%b/%b/%08h rd=%b/%b/%08h/%0h/%b ram=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_icache.state,
