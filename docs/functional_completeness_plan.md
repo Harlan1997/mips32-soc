@@ -1,5 +1,31 @@
 # SoC 功能完整性计划
 
+### 2026-09-06 RTL Linux 100M-cycle initcall boundary audit
+
+使用当前 `fix8` Linux image 和已编译 RTL simulator，在
+`/data/disk/tmp/mips32-soc` 下以 `EDA_MEMORY_MAX=1500M`、
+`EDA_SWAP_MAX=512M`、无高频 trace 运行 `100,000,000` 个 RTL 周期。
+仿真以 status 0 完成，VCS data structure 约 `1.1MiB`，日志约 `4.3KiB`，
+没有 OOM、TLB/CacheErr、kernel panic 或 userspace marker。
+
+当前镜像的 retire trace 显示 `kernel_init_freeable` 在约 cycle `9.106M`
+调用 `driver_init`；`driver_init` 已完成 `devtmpfs_init`、`devices_init`、
+`buses_init`、`classes_init`、`firmware_init`，随后进入 `of_core_init`。
+`of_core_init` 持续经过 `__of_attach_node_sysfs()` 和
+`__of_find_all_nodes()`，但在 `100M` 周期边界前没有返回到
+`kernel_init_freeable`。当前 DTB 只有 10 个节点、1542 字节，追踪中的节点
+指针仍位于合法内核分配区间；因此证据支持“sysfs/OF initcall 在 RTL 上未
+完成或极慢”，不支持直接修改 CPU/CP0/WAIT，也不等价于 Linux userspace
+或完整 RTL/QEMU system differential 已闭合。
+
+证据：
+`/data/disk/tmp/mips32-soc/rtl-linux-kinit-audit-20260906-run3.log`、
+`/data/disk/tmp/mips32-soc/rtl-linux-driver-audit-20260906-run1.log`、
+`/data/disk/tmp/mips32-soc/rtl-linux-ofcore-audit-20260906-run1.log`、
+`/data/disk/tmp/mips32-soc/rtl-linux-100m-20260906.log`。
+RTL Linux userspace、full RTL/QEMU differential 和完整 ISA/MMU/FPU/OS
+仍保持 OPEN。
+
 ### 2026-09-06 RTL Linux branch-delay interrupt boundary repair
 
 修复 CPU 在 `MEM` 为 branch、`EX` 为其 delay slot 时的异步中断恢复：仅在

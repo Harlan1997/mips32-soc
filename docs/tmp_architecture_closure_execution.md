@@ -1,5 +1,19 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 Current-image RTL Linux 100M audit
+
+- All new simulator outputs for this audit were placed under
+  `/data/disk/tmp/mips32-soc`.
+- A 100M-cycle no-high-frequency-trace replay completed with status 0 and no
+  OOM, but emitted no userspace marker.
+- Focused retire traces for the same image show `driver_init` entering
+  `of_core_init` and repeated `__of_attach_node_sysfs()`/
+  `__of_find_all_nodes()` activity. The current 10-node, 1542-byte DTB and
+  observed node pointers are valid; the function still does not return by the
+  100M-cycle boundary.
+- RTL Linux userspace and full RTL/QEMU differential remain OPEN. Do not claim
+  this diagnostic as a CPU/CP0 defect or as functional signoff.
+
 ### 2026-09-06 RTL Linux branch-delay interrupt boundary repair
 
 - Corrected the asynchronous interrupt case where `MEM` contains the branch and
