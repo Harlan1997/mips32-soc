@@ -5,11 +5,22 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_architecture_closure"}
 BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
-LINUX_KERNEL=${LINUX_KERNEL:-"${ROOT_DIR}/build/linux_boot/real/kernel/vmlinux"}
-LINUX_DTB=${LINUX_DTB:-"${ROOT_DIR}/build/linux_boot/real/mips32_soc_ref.dtb"}
+LINUX_KERNEL_EXPLICIT=${LINUX_KERNEL+x}
+LINUX_DTB_EXPLICIT=${LINUX_DTB+x}
+LINUX_KERNEL=${LINUX_KERNEL:-"${BUILD_DIR}/linux_boot/real/kernel/vmlinux"}
+LINUX_DTB=${LINUX_DTB:-"${BUILD_DIR}/linux_boot/real/mips32_soc_ref.dtb"}
 export BUILD_DIR
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md"
+
+# Build the exact kernel/DTB pair in the caller's BUILD_DIR when no explicit
+# pair was supplied.  This keeps scratch-root aggregate runs self-contained
+# and prevents an old repository build from being mistaken for current input.
+if [[ -z "${LINUX_KERNEL_EXPLICIT}" && -z "${LINUX_DTB_EXPLICIT}" &&
+      ( ! -s "${LINUX_KERNEL}" || ! -s "${LINUX_DTB}" ) ]]; then
+    make -C "${ROOT_DIR}" BUILD_DIR="${BUILD_DIR}" \
+        RUN_DIR="${BUILD_DIR}/linux_boot/real" linux-boot-build-gate
+fi
 
 # The aggregate must never silently consume an old kernel/DTB pair.  The
 # Linux gate depends on the tracked SoC VIC overlay, so audit both the kernel
