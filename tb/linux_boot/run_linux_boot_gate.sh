@@ -4,7 +4,10 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/linux_boot/real"}
-QEMU_SYSTEM_BIN=${QEMU_SYSTEM_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
+# Accept the common QEMU_BIN spelling used by the system-mode gates.  Keeping
+# QEMU_SYSTEM_BIN as the explicit override preserves existing callers while
+# making relocated BUILD_DIR/QEMU assets work consistently.
+QEMU_SYSTEM_BIN=${QEMU_SYSTEM_BIN:-${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}}
 KERNEL_INPUT=${KERNEL:-}
 DTB_INPUT=${DTB:-}
 mkdir -p "${RUN_DIR}"
@@ -23,7 +26,10 @@ else
     KERNEL_INPUT="${RUN_DIR}/kernel/vmlinux"
     DTB_INPUT="${RUN_DIR}/mips32_soc_ref.dtb"
 fi
-test -x "${QEMU_SYSTEM_BIN}"
+test -x "${QEMU_SYSTEM_BIN}" || {
+    echo "Linux boot gate: missing QEMU system binary: ${QEMU_SYSTEM_BIN}" >&2
+    exit 2
+}
 set +e
 # The generic Linux userspace image exercises the kernel's wait4 LL/SC retry
 # path.  The custom machine exposes an opt-in Linux guest policy for that
