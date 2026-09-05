@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-09-05 L1 nonblocking writeback accounting recheck
+
+真实 CPU/D-cache multi gate 失败的根因已修复：L1 writeback 队列在同拍出队和
+脏 victim 入队时，多个非阻塞赋值会少计 `wb_count`，使 refill 越过尚未完成的
+写回。现在由单一 delta 更新 occupancy，并禁止 refill response 与同 set 新请求
+在同一拍竞争数组更新。资源受限的真实 VCS 重跑通过
+`l1-nonblocking-cpu-multi-gate`、单/双响应 error gate、3-seed/3-reset stress、
+compatibility、standalone L1 和 `rtl-frontend-compile (8/8)`。这闭合了覆盖范围内
+的 opt-in L1/ROB CPU multi/error/reset contract；Linux nonblocking cache ABI、
+三条以上同时错误和更广随机压力仍保持 OPEN。
+
 ### 2026-09-05 ISA/FPU boundary audit and context recheck
 
 `isa-implementation-audit` 报告 20 行边界完整；受控 VCS 下 `isa-r2-gate`、

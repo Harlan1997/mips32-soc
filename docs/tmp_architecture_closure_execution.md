@@ -1,5 +1,22 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 L1 nonblocking writeback accounting closure recheck
+
+- Fixed the real CPU/D-cache multi-request failure in `l1_cache_nb`: a
+  writeback dequeue and a new dirty-victim enqueue in the same cycle could
+  overwrite separate nonblocking assignments to `wb_count`, allowing a refill
+  to pass an older writeback. The occupancy update is now one combined delta;
+  refill/set same-cycle request conflicts are also blocked until the array tag
+  update is visible.
+- Fresh real CPU/D-cache evidence passes `l1-nonblocking-cpu-multi-gate`,
+  `l1-nonblocking-cpu-error-gate`, `l1-nonblocking-cpu-two-error-gate`, and
+  `l1-nonblocking-cpu-stress-gate` (3 seeds, 3 reset runs). The logs are rooted
+  under `/data/disk/tmp/mips32-soc/`.
+- `rtl-frontend-compile` remains `8/8`, the standalone L1 gate passes, and the
+  compatibility gate passes. The opt-in L1/ROB CPU contract is therefore
+  closed for the covered multi/error/reset scope; Linux cache ABI and broad
+  random/three-or-more-error stress remain residual architecture work.
+
 ### 2026-09-05 DDR-window nonblocking CPU path recheck
 
 - Extended `mem_enable_nb_load` so the explicit
