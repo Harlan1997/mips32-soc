@@ -9,7 +9,9 @@ RUN_DIR=$(realpath -m "${RUN_DIR}")
 HOST_TIMEOUT=${HOST_TIMEOUT:-180s}
 RTL_CYCLE_LIMIT=${RTL_CYCLE_LIMIT:-1000000}
 RTL_SIM_SEED=${RTL_SIM_SEED:-}
-JOBS=${JOBS:-2}
+# Keep the default bounded because this runner invokes both the Linux build and
+# VCS. Use JOBS=2+ only on a host with enough memory.
+JOBS=${JOBS:-1}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88800000}
 LINUX_PROFILE=${LINUX_PROFILE:-generic}
 LINUX_VCS_EXTRA_ARGS=${LINUX_VCS_EXTRA_ARGS:-}
