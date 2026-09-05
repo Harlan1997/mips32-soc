@@ -1434,14 +1434,18 @@ module mips_cpu #(
     wire [4:0]  mem_rd_addr;
     wire [4:0]  mem_cp0_raddr;
 
-    // Only cacheable loads use the decoupled issue path.  MMU faults,
-    // uncached accesses, stores and CACHE operations remain blocking.
+    // Only ordinary cacheable loads use the decoupled issue path.  MMU
+    // faults, uncached accesses, stores, CACHE operations, and LL/SC remain
+    // blocking: the atomic pair needs the established reservation/response
+    // ordering and must not be reduced to an ordinary tagged load.
     assign mem_access_addr = mem_ex_out + (mem_double_phase ? 32'd4 : 32'd0);
     wire mem_double_align_fault = mem_double_mem && (mem_ex_out[2:0] != 3'b000);
     wire mem_enable_nb_load = (`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_ROB_FIFO_ENABLE != 0) &&
                               (mem_inst[31:26] != 6'b110001) &&
+                              (mem_inst[31:26] != 6'b110000) &&
+                              (mem_inst[31:26] != 6'b111000) &&
                               !mem_double_mem &&
                               !data_uncacheable &&
                               // The prototype L1 owns the on-chip SRAM
@@ -1540,7 +1544,10 @@ module mips_cpu #(
         .rst_n           (rst_n),
         .stall           (global_stall),
         .flush           (flush_ex_mem),
-        .dmem_addr_ok    (data_addr_ok_effective),
+        // Advance EX/MEM on a nonblocking address handshake, not merely on
+        // a cache-ready level. Otherwise a held load can be transferred and
+        // allocated repeatedly while the cache remains ready.
+        .dmem_addr_ok    (data_addr_ok_effective && data_req),
         .dmem_data_ok    (data_data_ok_current),
         .enable_nonblocking_load(mem_enable_nb_load),
         .cache_op_done   (data_cache_op_done),
@@ -1779,7 +1786,15 @@ module mips_cpu #(
     // must be allowed to allocate that same request. Conversely, a full ROB
     // must hide addr_ok from MEM/cache so a response cannot arrive for a
     // nonexistent slot.
-    wire nb_rob_issue = mem_enable_nb_load && data_req_raw &&
+    // A cacheable nonblocking load is issued once while its MEM bundle is
+    // held. The state is cleared when that bundle advances, allowing a later
+    // dynamic instance at the same PC to issue normally.
+    reg        nb_mem_issue_valid_q;
+    reg [31:0] nb_mem_issue_pc_q;
+    wire nb_mem_issue_active = nb_mem_issue_valid_q &&
+                               mem_enable_nb_load && mem_mem_read &&
+                               (nb_mem_issue_pc_q == mem_pc_plus_8);
+    wire nb_rob_issue = mem_enable_nb_load && data_req &&
                         data_addr_ok_effective && rob_alloc_ready;
     // A blocking response is a one-cycle architectural event.  It must be
     // captured even when an unrelated IF/exception stall is asserted in the
@@ -1791,7 +1806,8 @@ module mips_cpu #(
     wire rob_stall = global_stall && !rob_head_ready && !nb_rob_issue &&
                      !blocking_response_commit;
     wire nb_rob_block = mem_enable_nb_load && data_req_raw && !rob_alloc_ready;
-    assign data_req = data_req_raw && !nb_rob_block;
+    assign data_req = data_req_raw && !nb_rob_block &&
+                      !nb_mem_issue_active;
     assign data_addr_ok_effective = data_addr_ok && !nb_rob_block;
     // A nonblocking load must not occupy a ROB slot until its cache request
     // has actually handshaken.  `mem_done` is the legacy MEM-stage completion
@@ -1799,9 +1815,10 @@ module mips_cpu #(
     // request; admitting that bubble creates an unmatchable, permanently
     // unready ROB entry.  Faulted requests are admitted so exception ordering
     // remains precise.
-    wire nb_load_alloc_eligible = dmem_translation_fault ||
+    wire nb_load_alloc_eligible = !nb_mem_issue_active &&
+                                  (dmem_translation_fault ||
                                   mem_adel_exception || mem_ades_exception ||
-                                  (data_req && data_addr_ok_effective);
+                                  (data_req && data_addr_ok_effective));
     // The FIFO must not admit a blocking/uncached load at address acceptance:
     // its data is not available until the later data_ok edge, and no tagged
     // response will ever complete that entry.  Nonblocking cacheable loads
@@ -1815,8 +1832,20 @@ module mips_cpu #(
     // instruction to the ROB before the late data response arrives.
     wire mem_pipeline_advance = (!global_stall_pre_rob) ||
                                 (mem_enable_nb_load && mem_mem_read &&
-                                 !mem_done && data_addr_ok_effective);
+                                 !mem_done && data_req &&
+                                 data_addr_ok_effective);
+    // The FIFO may be able to accept an entry while EX/MEM is still holding
+    // the same bundle (for example at a refill/ROB stall boundary). Keep a
+    // one-shot ownership record for every MEM bundle, not only loads, so a
+    // held ALU instruction cannot be allocated twice and retire twice.
+    reg        rob_mem_bundle_valid_q;
+    reg [31:0] rob_mem_bundle_pc_q;
+    reg [31:0] rob_mem_bundle_inst_q;
+    wire rob_mem_bundle_already_allocated = rob_mem_bundle_valid_q &&
+                                             (rob_mem_bundle_pc_q == mem_pc_plus_8) &&
+                                             (rob_mem_bundle_inst_q == mem_inst);
     wire rob_alloc_valid = (mem_pc_plus_8 >= 32'd8) && mem_pipeline_advance &&
+                           !rob_mem_bundle_already_allocated &&
                            (mem_enable_nb_load && mem_mem_read ?
                             nb_load_alloc_eligible :
                             (mem_mem_read ?
@@ -1840,6 +1869,62 @@ module mips_cpu #(
                          (`SOC_ROB_FIFO_ENABLE != 0) &&
                          mem_enable_nb_load && mem_mem_read && data_req &&
                          data_addr_ok_effective && (mem_waddr != 0);
+    wire nb_load_request_accepted = (`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
+                                    (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
+                                    (`SOC_ROB_FIFO_ENABLE != 0) &&
+                                    mem_enable_nb_load && mem_mem_read &&
+                                    data_req && data_addr_ok_effective;
+
+    wire rob_alloc_fire = rob_alloc_valid && rob_alloc_ready && !rob_stall;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n || flush_mem_wb) begin
+            rob_mem_bundle_valid_q <= 1'b0;
+            rob_mem_bundle_pc_q    <= 32'd0;
+            rob_mem_bundle_inst_q  <= 32'd0;
+        end else begin
+            if (rob_mem_bundle_valid_q && !rob_mem_bundle_already_allocated)
+                rob_mem_bundle_valid_q <= 1'b0;
+            if (rob_alloc_fire) begin
+                rob_mem_bundle_valid_q <= 1'b1;
+                rob_mem_bundle_pc_q    <= mem_pc_plus_8;
+                rob_mem_bundle_inst_q  <= mem_inst;
+            end
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n || flush_mem_wb) begin
+            nb_mem_issue_valid_q <= 1'b0;
+            nb_mem_issue_pc_q    <= 32'd0;
+        end else begin
+            if (nb_mem_issue_valid_q &&
+                (mem_pc_plus_8 != nb_mem_issue_pc_q ||
+                 !mem_enable_nb_load || !mem_mem_read)) begin
+                nb_mem_issue_valid_q <= 1'b0;
+            end
+            if (nb_load_request_accepted) begin
+                nb_mem_issue_valid_q <= 1'b1;
+                nb_mem_issue_pc_q    <= mem_pc_plus_8;
+            end
+        end
+    end
+
+`ifdef SVA_ENABLE
+    property p_rob_bundle_one_allocation;
+        @(posedge clk) disable iff (!rst_n)
+            rob_mem_bundle_already_allocated |-> !rob_alloc_valid;
+    endproperty
+    assert property (p_rob_bundle_one_allocation)
+        else $error("same MEM bundle was presented for a second ROB allocation");
+
+    property p_nb_load_one_issue_per_mem_bundle;
+        @(posedge clk) disable iff (!rst_n)
+            nb_mem_issue_active |-> !data_req;
+    endproperty
+    assert property (p_nb_load_one_issue_per_mem_bundle)
+        else $error("nonblocking MEM load was re-issued after ROB allocation");
+`endif
 
     // Track only loads that have left MEM before their data response. The
     // scoreboard is indexed by the same ROB tag carried on the cache request;
