@@ -2,7 +2,9 @@ ROOT_DIR := $(CURDIR)
 BUILD_DIR ?= $(ROOT_DIR)/build
 HOST_TIMEOUT ?= 180s
 RTL_CYCLE_LIMIT ?= 1000000
-JOBS ?= 2
+# VCS and the Linux build can each consume substantial RAM. Keep the default
+# reproducible on constrained CI/VM hosts; callers may opt into parallelism.
+JOBS ?= 1
 KERNEL_PHYSICAL_START ?= 0x88800000
 LINUX_PROFILE ?= generic
 SKIP_LINUX_BUILD ?= 0

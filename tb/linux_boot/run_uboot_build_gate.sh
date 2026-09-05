@@ -6,7 +6,9 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 SOURCE_DIR=${UBOOT_SOURCE_DIR:-"${ROOT_DIR}/third_party/u-boot"}
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/linux_boot/uboot"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
-JOBS=${JOBS:-2}
+# Keep the default bounded for small CI/VM hosts; override explicitly when
+# parallel U-Boot builds are appropriate.
+JOBS=${JOBS:-1}
 EXPECTED_COMMIT=f919c3a889f0ec7d63a48b5d0ed064386b0980bd
 
 test -f "${SOURCE_DIR}/Makefile"

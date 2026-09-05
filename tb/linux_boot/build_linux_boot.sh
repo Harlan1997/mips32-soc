@@ -6,7 +6,8 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 LINUX_SOURCE_DIR=${LINUX_SOURCE_DIR:-"${ROOT_DIR}/third_party/linux"}
 BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build/linux_boot/real"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
-JOBS=${JOBS:-2}
+# Linux kernel and initramfs builds are memory-heavy in this environment.
+JOBS=${JOBS:-1}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
 LINUX_CMDLINE=${LINUX_CMDLINE:-"console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init"}
 LINUX_PROFILE=${LINUX_PROFILE:-generic}
