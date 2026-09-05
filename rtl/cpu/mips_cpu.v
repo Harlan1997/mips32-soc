@@ -224,13 +224,16 @@ module mips_cpu #(
     
     // Exception PC redirection
     wire sim_exception_active = (sim_exception_req === 1'b1);
-    // Ordinary writes use the one-cycle ROB retirement pulse.  A legacy
-    // depth-1 ROB can hold a fault or ERET bundle while it suppresses the
-    // duplicate data retirement pulse; those control-flow events are still
-    // architectural commits and must remain visible to CP0.  The exception
-    // flush clears the bundle on the same edge, so including the held event
-    // here does not re-accept it after the flush.
-    wire wb_arch_valid = wb_valid || wb_except_req || wb_is_eret;
+    // The ROB's wb_valid pulse is the sole ownership token for the registered
+    // WB bundle.  In particular, wb_except_req and wb_is_eret are payload
+    // fields, not independent valid signals: a stalled/empty FIFO may retain
+    // those fields from a prior cycle while wb_valid is already low.  Treating
+    // retained payload as an architectural event can flush a younger MEM
+    // operation with an unrelated exception (and can repeatedly enter the
+    // exception vector).  Both the legacy and FIFO ROBs assert wb_valid when
+    // a bundle is actually committed, so CP0 and redirect logic must use that
+    // transaction boundary.
+    wire wb_arch_valid = wb_valid;
     // EXL suppresses CP0 state overwrite inside mips_cp0, but it must not
     // suppress the architectural redirect: nested synchronous faults (the
     // product refill ROM deliberately uses SYSCALL to enter its general
