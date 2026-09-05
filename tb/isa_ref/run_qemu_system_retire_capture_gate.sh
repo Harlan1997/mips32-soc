@@ -38,6 +38,9 @@ for limit in MAX_QEMU_EVENTS MAX_QEMU_STATES MAX_QEMU_CAPTURE_BYTES; do
 done
 
 mkdir -p "${RUN_DIR}"
+# A failed conversion or differential comparison must not leave a prior
+# completion report that looks like evidence for the current invocation.
+rm -f "${RUN_DIR}/completion_report.md"
 [[ -x "${QEMU_BIN}" ]]
 if [[ -n "${QEMU_KERNEL}" ]]; then
     [[ -s "${QEMU_KERNEL}" ]]

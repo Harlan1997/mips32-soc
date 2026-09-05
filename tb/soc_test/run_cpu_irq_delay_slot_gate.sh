@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-FW_DIR=${ROOT_DIR}/build/firmware/cpu_irq_delay_slot
+FW_DIR=${FW_DIR:-${ROOT_DIR}/build/firmware/cpu_irq_delay_slot}
 RUN_DIR=${RUN_DIR:-${ROOT_DIR}/build/soc_test/cpu_irq_delay_slot}
 
 make -C "${ROOT_DIR}/tb/soc_test/fw" FW_NAME=cpu_irq_delay_slot \

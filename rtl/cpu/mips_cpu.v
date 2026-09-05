@@ -2072,8 +2072,62 @@ module mips_cpu #(
                                  (id_delay_slot_next_pc != 32'd0) &&
                                  (id_delay_slot_branch_pc != 32'd0) &&
                                  (id_pc == (id_delay_slot_branch_pc + 32'd4));
+    // WB delay-slot metadata can survive a replay/stall after the paired
+    // branch has left the visible pipeline.  The resume target alone is not
+    // enough to prove that the current WB instruction is the branch's slot:
+    // require the younger MEM transaction to be the immediately following
+    // instruction as well.  This prevents an asynchronous interrupt from
+    // assigning Cause.BD to an ordinary instruction and replaying it on ERET.
     wire wb_delay_slot_valid  = wb_bd &&
-                                (wb_delay_slot_next_pc != 32'd0);
+                                (wb_delay_slot_next_pc != 32'd0) &&
+                                mem_flush_valid &&
+                                (mem_pc == (wb_pc + 32'd4));
+    // Synchronous exceptions retain the WB bundle for the faulting
+    // instruction, so their architectural delay-slot bit is already tied to
+    // the exception itself.  Keep this path separate from the stricter
+    // asynchronous-interrupt validation above; otherwise a real syscall in a
+    // delay slot loses BD/EPC semantics when the branch has left MEM.
+    wire wb_exception_delay_slot_valid = wb_bd && wb_arch_valid &&
+                                         (wb_delay_slot_next_pc != 32'd0);
+
+    // The interrupt request may remain blocked during the cycle in which a
+    // load completes, then become acceptable on the following cycle after
+    // the WB pulse has already disappeared.  Remember that last ordinary
+    // retirement so the delayed interrupt cannot fall back to a stale MEM/EX
+    // PC and restart the completed instruction.
+    reg        prior_wb_arch_valid;
+    reg [31:0] prior_wb_pc;
+    reg        prior_wb_delay_slot_valid;
+    reg        prior2_wb_arch_valid;
+    reg [31:0] prior2_wb_pc;
+    reg        prior2_wb_delay_slot_valid;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            prior_wb_arch_valid      <= 1'b0;
+            prior_wb_pc              <= 32'd0;
+            prior_wb_delay_slot_valid <= 1'b0;
+            prior2_wb_arch_valid      <= 1'b0;
+            prior2_wb_pc              <= 32'd0;
+            prior2_wb_delay_slot_valid <= 1'b0;
+        end else begin
+            prior2_wb_arch_valid      <= prior_wb_arch_valid;
+            prior2_wb_pc              <= prior_wb_pc;
+            prior2_wb_delay_slot_valid <= prior_wb_delay_slot_valid;
+            prior_wb_arch_valid       <= wb_arch_valid && !wb_except_req;
+            prior_wb_pc               <= wb_pc;
+            prior_wb_delay_slot_valid <= wb_delay_slot_valid;
+        end
+    end
+    wire interrupt_after_prior_wb = interrupt_accept &&
+                                    !wb_arch_valid &&
+                                    ((prior_wb_arch_valid &&
+                                      !prior_wb_delay_slot_valid &&
+                                      ((prior_wb_pc + 32'd4 == ex_pc) ||
+                                       (prior_wb_pc + 32'd4 == id_pc))) ||
+                                     (prior2_wb_arch_valid &&
+                                      !prior2_wb_delay_slot_valid &&
+                                      ((prior2_wb_pc + 32'd4 == ex_pc) ||
+                                       (prior2_wb_pc + 32'd4 == id_pc))));
     wire wb_is_control_transfer =
         (wb_inst[31:26] == 6'b000001) || // REGIMM branches
         (wb_inst[31:26] == 6'b000010) || // J
@@ -2138,6 +2192,14 @@ module mips_cpu #(
                                        mem_flush_valid &&
                                        ex_is_control_transfer &&
                                        (mem_pc == (ex_pc + 32'd4));
+    // A data-side stall can leave the branch in MEM while its delay slot is
+    // still held in ID and EX is a bubble. Recover this adjacent pair
+    // directly from the stage PCs.
+    wire interrupt_mem_delay_from_id = interrupt_accept &&
+                                       mem_flush_valid &&
+                                       id_flush_valid &&
+                                       mem_is_control_transfer &&
+                                       (id_pc == (mem_pc + 32'd4));
     wire interrupt_ex_delay_from_id = interrupt_accept &&
                                       ex_flush_valid &&
                                       id_is_control_transfer &&
@@ -2148,12 +2210,16 @@ module mips_cpu #(
                                        (wb_pc == (mem_pc + 32'd4));
     wire interrupt_delay_slot = interrupt_wb_branch_delay ||
                                 interrupt_mem_delay_from_ex ||
+                                interrupt_mem_delay_from_id ||
                                 interrupt_ex_delay_from_id ||
                                 interrupt_wb_delay_from_mem ||
                                 (interrupt_accept && wb_delay_slot_valid);
+    wire interrupt_after_prior_wb_non_delay = interrupt_after_prior_wb &&
+                                              !interrupt_delay_slot;
     wire [31:0] interrupt_delay_slot_pc =
         interrupt_wb_branch_delay ? mem_pc :
         interrupt_mem_delay_from_ex ? mem_pc :
+        interrupt_mem_delay_from_id ? id_pc :
         interrupt_ex_delay_from_id ? ex_pc :
         interrupt_wb_delay_from_mem ? wb_pc : wb_pc;
     wire interrupt_except_bd = interrupt_accept &&
@@ -2192,8 +2258,9 @@ module mips_cpu #(
     // manufacture Cause.BD when an interrupt wakes the suspended core.  The
     // wakeup EPC is already the sequential PC captured at WAIT retirement.
     wire exception_bd = (interrupt_accept && wait_state) ? 1'b0 :
-                        ((wb_bd && wb_arch_valid &&
-                          (wb_delay_slot_next_pc != 32'd0)) |
+                        interrupt_after_prior_wb_non_delay ? 1'b0 :
+                        ((effective_except_req && wb_exception_delay_slot_valid) |
+                         (wb_delay_slot_valid && wb_arch_valid) |
                          interrupt_except_bd);
 
 `ifdef SVA_ENABLE
@@ -2223,6 +2290,12 @@ module mips_cpu #(
                               wait_interrupt_epc :
                              ((wb_except_req && wb_arch_valid) ? wb_pc :
                              (interrupt_wb_sequential_epc ? (wb_pc + 32'd4) :
+                             (interrupt_after_prior_wb_non_delay ?
+                              (prior_wb_arch_valid &&
+                               !prior_wb_delay_slot_valid &&
+                               ((prior_wb_pc + 32'd4 == ex_pc) ||
+                                (prior_wb_pc + 32'd4 == id_pc)) ?
+                               prior_wb_pc + 32'd4 : prior2_wb_pc + 32'd4) :
                              // With the branch in WB and its delay slot in
                              // MEM, exception_pc must be the actual delay
                              // slot. CP0 applies the normal Cause.BD -4
@@ -2231,9 +2304,9 @@ module mips_cpu #(
                              (interrupt_accept && interrupt_delay_slot ?
                               interrupt_delay_slot_pc :
                              ((interrupt_accept &&
-                               ((wb_bd && wb_arch_valid) ||
+                               ((wb_delay_slot_valid && wb_arch_valid) ||
                                 interrupt_wb_branch_delay)) ?
-                               wb_pc : oldest_flushed_pc)))));
+                               wb_pc : oldest_flushed_pc))))));
     // Phase B.3.d: BadVAddr source. A data translation fault can be flushed
     // and replayed before its exception reaches WB; in that case wb_ex_out is
     // not guaranteed to retain the original virtual address. Prefer the

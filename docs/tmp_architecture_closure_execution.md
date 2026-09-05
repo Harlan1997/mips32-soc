@@ -1,5 +1,60 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-05 Final MEM->ID branch-delay interrupt recheck
+
+- Re-ran the selected QEMU system differential after the final
+  `rtl/cpu/mips_cpu.v` MEM->ID delay-slot recovery change. The serial
+  aggregate passed, including ISA-R2, MDU, branch-likely, synchronous and
+  asynchronous exceptions, peripherals/VIC, FPU/FPE, DMA, MMU contracts,
+  SRS, opt-in L1/L2 nonblocking and LL/SC.
+- Re-ran `rtl-frontend-compile` with
+  `BUILD_DIR=/data/disk/tmp/mips32-soc/rtl-frontend-fix4-20260905`; all
+  `8/8` configurations passed. The CPU IRQ delay-slot and MEM-pending gates
+  also passed under
+  `/data/disk/tmp/mips32-soc/irq-fix4-20260905`.
+- This closes verification of the current precise interrupt boundary fix.
+  It does not close RTL Linux userspace boot, unrestricted RTL/QEMU Linux
+  differential, Linux demand paging/page-table ownership/shootdown, full
+  ISA/privileged ISA or IEEE-754/FPU compliance, full coherency, solver-based
+  formal/CDC/RDC/lint signoff, or physical DDR/QSPI product signoff.
+
+- The CPU IRQ delay-slot runner now honors an externally supplied `FW_DIR`,
+  so firmware artifacts can be kept off the root filesystem together with
+  VCS outputs. A fresh gate using
+  `/data/disk/tmp/mips32-soc/irq-fix5-20260905` passed and loaded firmware
+  exclusively from that temporary tree.
+
+### 2026-09-05 Synchronous branch-delay exception differential repair
+
+- The selected QEMU differential exposed a real regression: asynchronous
+  interrupt WB delay-slot validation was also suppressing BD for a synchronous
+  `SYSCALL` in a branch delay slot. RTL saved/returned `0x10`; QEMU correctly
+  observed EPC `0x0c`.
+- `rtl/cpu/mips_cpu.v` now uses a dedicated WB delay-slot predicate for
+  synchronous exceptions while retaining adjacent-PC validation for
+  asynchronous interrupts. The retire-capture runner removes stale
+  completion reports before each invocation.
+- `qemu-system-bd-exception-differential-gate` and the selected differential
+  aggregate pass, covering ISA-R2, MDU, exceptions, peripherals/VIC, FPU,
+  DMA, MMU contracts, SRS, nonblocking cache and LL/SC. The reused QEMU Linux
+  userspace gate also passes.
+- RTL Linux userspace, unrestricted RTL/QEMU Linux differential, complete
+  ISA/privileged/MMU/OS semantics and product signoff remain open.
+
+### 2026-09-05 RTL Linux delayed-interrupt WB/BD replay fix
+
+- Fixed a real precise-interrupt boundary defect in `rtl/cpu/mips_cpu.v`.
+  WB delay-slot metadata now requires the adjacent MEM instruction to match,
+  and a bounded two-retirement history supplies the sequential EPC when an
+  interrupt is accepted after the WB pulse has disappeared.
+- The fresh 10M-cycle gate and extended 20M-cycle replay under
+  `/data/disk/tmp/mips32-soc/rtl-linux-wb-bd-fix3-20260905` complete without
+  `BadVA=0x63` or kernel panic. The observed edge records
+  `cycle=9334771`, `except_pc=0x88c1d580`, `except_bd=0`.
+- This closes the observed precise-interrupt replay defect only. RTL Linux
+  userspace boot, full RTL/QEMU system-mode differential, complete
+  privileged/MMU/OS signoff and product signoff remain open.
+
 ### 2026-09-05 RTL Linux early-console APB alias recheck
 
 - Added the opt-in Linux-only APB alias `0x04000000..0x0400ffff` to the RTL
