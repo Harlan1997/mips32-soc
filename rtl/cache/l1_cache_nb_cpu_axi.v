@@ -48,7 +48,10 @@ module l1_cache_nb_cpu_axi #(
     wire [4:0] state;
     wire [4:0] next_state;
     wire [31:0] req_buf_addr;
+    wire req_buf_valid;
     wire req_buf_we;
+    wire [31:0] req_buf_wdata;
+    wire [3:0] req_buf_be;
     wire uncacheable;
     // A cache operation is independent of the data request in the CPU MEM
     // contract.  Keep it exclusively on the legacy cache until maintenance
@@ -61,6 +64,18 @@ module l1_cache_nb_cpu_axi #(
     reg [3:0] legacy_req_be_q;
     reg legacy_req_uncacheable_q;
     wire legacy_wready;
+    // Observation-only compatibility fields for the testbench diagnostics.
+    // Replacement is owned by l1_cache_nb in this configuration, so the
+    // legacy victim fields intentionally read as zero.
+    wire [255:0] line_buf = 256'd0;
+    wire [1:0] victim_way = 2'd0;
+    wire [22:0] victim_tag_entry = 23'd0;
+    wire [2:0] word_cnt = 3'd0;
+    wire [255:0] data_rdata [0:3];
+    assign data_rdata[0] = 256'd0;
+    assign data_rdata[1] = 256'd0;
+    assign data_rdata[2] = 256'd0;
+    assign data_rdata[3] = 256'd0;
     // The integrated prototype L1 is backed by the on-chip SRAM window. Keep
     // peripheral, flash, DDR and unmapped physical addresses on the legacy
     // path until their cacheability/ordering contracts are explicit.
@@ -200,8 +215,11 @@ module l1_cache_nb_cpu_axi #(
 
     assign state          = u_legacy_dcache.state;
     assign next_state     = u_legacy_dcache.next_state;
+    assign req_buf_valid  = u_legacy_dcache.req_buf_valid;
     assign req_buf_addr   = u_legacy_dcache.req_buf_addr;
     assign req_buf_we     = u_legacy_dcache.req_buf_we;
+    assign req_buf_wdata  = u_legacy_dcache.req_buf_wdata;
+    assign req_buf_be     = u_legacy_dcache.req_buf_be;
     assign uncacheable    = u_legacy_dcache.uncacheable;
 
     // CPU completion and downstream line traffic have different lifetimes:
