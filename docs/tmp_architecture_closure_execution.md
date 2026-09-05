@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 Official QEMU source recovery and low-resource recheck
+
+- The repository's temporary QEMU source directory had been reduced to an
+  incomplete tree, so the custom system-mode binary could not be rebuilt. The
+  official QEMU 9.2.0 release archive was downloaded, checksum-tested by
+  `xz -t`, and unpacked under `/data/disk/tmp/mips32-soc/qemu-9.2.0`.
+- `scripts/qemu/build_mips32_soc_ref.sh` rebuilt the system binary with
+  `QEMU_BUILD_JOBS=1`; the build completed all `1549/1549` ninja steps without
+  OOM. `qemu-system-mipsel -M help` lists `mips32-soc-ref`.
+- The rebuilt binary passes the SRAM/UART/mailbox smoke and the reused VIC
+  Linux userspace gate. Run artifacts are under
+  `/data/disk/tmp/mips32-soc/qemu-smoke-20260906` and
+  `/data/disk/tmp/mips32-soc/qemu-linux-boot-20260906`.
+- This repairs the QEMU build prerequisite and confirms the custom machine is
+  executable again. It does not change the scope of RTL Linux userspace,
+  unrestricted RTL/QEMU system differential, complete ISA/MMU/FPU semantics,
+  or product signoff, which remain OPEN.
+
 ### 2026-09-06 Current-image RTL Linux 100M audit
 
 - All new simulator outputs for this audit were placed under
