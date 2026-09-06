@@ -1,5 +1,18 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 RTL Linux devtmpfs boundary isolation
+
+- `tb/linux_boot/rtl_minimal.config` now disables `CONFIG_DEVTMPFS` and
+  `CONFIG_DEVTMPFS_MOUNT` only for the opt-in RTL-minimal diagnostic profile;
+  generic Linux remains unchanged.
+- Fresh `RUN_DIR=/tmp/mips32-soc-rtl-linux-nodevtmpfs-20260906 JOBS=1
+  RTL_CYCLE_LIMIT=12000000 LINUX_PROFILE=rtl-minimal make rtl-linux-progress-gate`
+  passes. The kernel no longer reports `devtmpfs: Bad value for 'mode'` and
+  progresses through `pinctrl core`, PPS, FUSE and block I/O scheduler initcalls.
+- No userspace marker was observed within 12M cycles, so this is a boundary
+  isolation result, not RTL Linux userspace or full RTL/QEMU differential
+  closure. The attempted unvalidated expansion of the profile was discarded.
+
 ### 2026-09-06 Current-contract coverage result and scratch-path handoff
 
 - Fresh `current-contract-signoff` completed all functional prerequisites and
