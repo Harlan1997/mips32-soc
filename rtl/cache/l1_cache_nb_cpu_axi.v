@@ -2,9 +2,9 @@
 //
 // Cacheable data requests use l1_cache_nb plus the AXI line bridge. Uncached
 // accesses and unsupported CACHE maintenance remain on the legacy dcache.
-// The opt-in line cache owns its two address-scoped invalidate operations after
-// line traffic drains, keeping APB/flash and unsupported tag/writeback traffic
-// out of the line cache.
+// The opt-in line cache owns the supported D-cache invalidate, tag and
+// writeback operations after line traffic drains, keeping APB/flash and
+// unsupported encodings out of the line cache.
 module l1_cache_nb_cpu_axi #(
     parameter ENABLE_LEGACY_ADDR_HEURISTIC = 1'b1,
     parameter ENABLE_COHERENCY = 1'b0,
@@ -59,6 +59,14 @@ module l1_cache_nb_cpu_axi #(
     // has an explicit nonblocking completion contract.
     reg legacy_active, legacy_request_held, l1_active, l1_response_seen;
     reg legacy_aw_seen;
+    localparam FORCE_UNCACHED_LINES = 4;
+    reg [FORCE_UNCACHED_LINES-1:0] force_uncached_line_valid;
+    reg [31:5] force_uncached_line [0:FORCE_UNCACHED_LINES-1];
+    integer force_i, force_j;
+    reg force_slot_free;
+    reg [1:0] force_slot_idx;
+    reg force_line_exists;
+    reg force_request_match;
     reg [2:0] l1_outstanding;
     reg legacy_req_we_q;
     reg [31:0] legacy_req_addr_q, legacy_req_wdata_q;
@@ -122,8 +130,10 @@ module l1_cache_nb_cpu_axi #(
     wire l1_path_request = cpu_req && ENABLE_L1 && l1_address_supported && !cpu_uncacheable &&
                            !cache_op_valid;
 
-    // The opt-in line cache owns the address-scoped invalidate and writeback
-    // operations whose completion is reported after the line writeback drains.
+    // The opt-in line cache owns the address-scoped invalidate, tag and
+    // writeback operations whose completion is reported after line traffic
+    // drains.  Keep the standard Hit_Invalidate_D (0x11) on this path too;
+    // routing it to the legacy cache would split the opt-in L1's tag state.
     wire cache_op_addr_supported = (cache_op_addr[31:16] == 16'h0000) ||
                                    ((`SOC_L1_NONBLOCKING_DDR_ENABLE != 0) &&
                                     (cache_op_addr >= `SOC_DDR_BASE) &&
@@ -132,6 +142,7 @@ module l1_cache_nb_cpu_axi #(
                                     ((cache_op == 5'b11110) ||
                                      (cache_op_addr_supported &&
                                     ((cache_op == 5'b00001) ||
+                                     (cache_op == 5'b10001) ||
                                      (cache_op == 5'b10101) ||
                                      (cache_op == 5'b11001) ||
                                      (cache_op == 5'b11101) ||
@@ -170,6 +181,24 @@ module l1_cache_nb_cpu_axi #(
     wire [3:0] n_mshr_occ, n_wb_occ;
     wire l1_bridge_active = n_awvalid || n_wvalid || n_bready ||
                             n_arvalid || n_rready || n_mem_req_valid;
+    always @(*) begin
+        force_slot_free = 1'b0;
+        force_slot_idx = 2'd0;
+        force_line_exists = 1'b0;
+        force_request_match = 1'b0;
+        for (force_i = 0; force_i < FORCE_UNCACHED_LINES; force_i = force_i + 1) begin
+            if (!force_uncached_line_valid[force_i] && !force_slot_free) begin
+                force_slot_free = 1'b1;
+                force_slot_idx = force_i[1:0];
+            end
+            if (force_uncached_line_valid[force_i] &&
+                (force_uncached_line[force_i] == cache_op_addr[31:5]))
+                force_line_exists = 1'b1;
+            if (force_uncached_line_valid[force_i] && n_mem_req_valid &&
+                (force_uncached_line[force_i] == n_mem_req_addr[31:5]))
+                force_request_match = 1'b1;
+        end
+    end
     assign legacy_can_start = !l1_bridge_active && !n_rsp_valid &&
                               !l1_active && (l1_outstanding == 0);
     // Maintenance remains owned by the legacy dcache, but cannot be issued
@@ -180,10 +209,16 @@ module l1_cache_nb_cpu_axi #(
                               !l1_bridge_active &&
                               !n_rsp_valid && !l1_active &&
                               (l1_outstanding == 0);
+    wire maintenance_invalidates_line = (cache_op == 5'b00001) ||
+                                        (cache_op == 5'b10001) ||
+                                        (cache_op == 5'b10101);
     wire l1_maintenance_issue = cache_op_valid && l1_maintenance_supported &&
                                  n_cache_maint_ready && !l1_bridge_active &&
                                  !n_rsp_valid && !l1_active &&
-                                 (l1_outstanding == 0);
+                                 (l1_outstanding == 0) &&
+                                 (!maintenance_invalidates_line ||
+                                  force_slot_free || force_line_exists);
+    wire force_uncached_read = force_request_match && !n_mem_req_we;
 
     wire legacy_coh_store_valid;
     wire [31:0] legacy_coh_store_addr;
@@ -285,6 +320,7 @@ module l1_cache_nb_cpu_axi #(
         .clk(clk), .rst_n(rst_n), .line_req_valid(n_mem_req_valid),
         .line_req_we(n_mem_req_we), .line_req_addr(n_mem_req_addr),
         .line_req_wdata(n_mem_req_wdata), .line_req_ready(n_mem_req_ready),
+        .force_uncached_read(force_uncached_read),
         .line_rsp_valid(n_mem_rsp_valid), .line_rsp_addr(n_mem_rsp_addr),
         .line_rsp_data(n_mem_rsp_data), .line_rsp_error(n_mem_rsp_error),
         .awid(n_awid), .awaddr(n_awaddr), .awlen(n_awlen), .awsize(n_awsize),
@@ -354,6 +390,9 @@ module l1_cache_nb_cpu_axi #(
             legacy_active <= 1'b0;
             legacy_request_held <= 1'b0;
             legacy_aw_seen <= 1'b0;
+            force_uncached_line_valid <= {FORCE_UNCACHED_LINES{1'b0}};
+            for (force_j = 0; force_j < FORCE_UNCACHED_LINES; force_j = force_j + 1)
+                force_uncached_line[force_j] <= 27'd0;
             legacy_req_we_q <= 1'b0;
             legacy_req_addr_q <= 32'd0;
             legacy_req_wdata_q <= 32'd0;
@@ -363,6 +402,17 @@ module l1_cache_nb_cpu_axi #(
             l1_response_seen <= 1'b0;
             l1_outstanding <= 3'd0;
         end else begin
+            if (n_mem_req_valid && n_mem_req_ready && !n_mem_req_we) begin
+                for (force_j = 0; force_j < FORCE_UNCACHED_LINES; force_j = force_j + 1)
+                    if (force_uncached_line_valid[force_j] &&
+                        (force_uncached_line[force_j] == n_mem_req_addr[31:5]))
+                        force_uncached_line_valid[force_j] <= 1'b0;
+            end
+            if (l1_maintenance_issue && maintenance_invalidates_line &&
+                !force_line_exists) begin
+                force_uncached_line_valid[force_slot_idx] <= 1'b1;
+                force_uncached_line[force_slot_idx] <= cache_op_addr[31:5];
+            end
             if (!cpu_req)
                 legacy_request_held <= 1'b0;
             if ((legacy_data_req && legacy_addr_ok) ||

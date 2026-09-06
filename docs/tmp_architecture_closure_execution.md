@@ -1,5 +1,23 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 Opt-in L1 Hit_Invalidate_D and L2-bypass refill closure
+
+- Added the standard MIPS32 R2 D-cache `Hit_Invalidate_D` (`0x11`) to the
+  CPU-facing nonblocking-L1 maintenance route. The previous route accepted
+  `0x15` writeback-invalidate but silently left `0x11` on the legacy cache.
+- After an L1 invalidate or writeback-invalidate, the affected line is marked
+  for one uncached AXI refill (`arcache=4'b0000`). This prevents the default
+  read-caching L2 from resurrecting a clean stale line while preserving the
+  normal `arcache=4'b0011` attribute for ordinary L1 refills.
+- Real CPU firmware now verifies standard hit invalidate, index invalidate,
+  dirty writeback-invalidate, tag read/write and the refill result. The gate
+  passes with `errors=00000000`, six maintenance operations and four refills.
+- `l1-nonblocking-maintenance-compat-gate`, bridge unit gate, RTL frontend
+  `8/8` and the opt-in L1/L2 QEMU retire differential pass. This closes the
+  bounded opt-in maintenance/refill contract only; full cache ordering,
+  virtual aliases, OS cache ABI, MESI/directory coherency and Linux
+  nonblocking-cache boot remain open.
+
 ### 2026-09-06 MDU opt-in radix-4 end-to-end closure
 
 - Re-ran the opt-in `SOC_MDU_DIV_RADIX=4` path with all temporary VCS and
@@ -6137,3 +6155,20 @@ remain OPEN.
 - The evidence is a bounded relocated-kernel prefix. Linux userspace boot,
   unrestricted RTL/QEMU system differential, full ISA/privileged/MMU/FPU,
   coherency, formal/CDC/RDC/lint and physical product signoff remain OPEN.
+
+### 2026-09-06 Opt-in L1 maintenance queue expansion
+
+- Extended the invalidated-line tracking in `l1_cache_nb_cpu_axi` from a
+  single pending line to four entries. A new invalidating maintenance request
+  is held when all entries are occupied; a matching refill clears its entry.
+- The CPU firmware now exercises standard `Hit_Invalidate_D (0x11)`, dirty
+  `Hit_Writeback_Invalidate_D (0x15)`, TagLo operations, and two distinct
+  invalidated lines queued before either refill. The maintenance mailbox
+  reports count 8 with `errors=00000000`.
+- A tracked refill is marked `arcache=4'b0000` in the L1/AXI bridge, bypassing
+  a stale lower-level read-cache line. Ordinary refills retain `4'b0011`.
+- Verification passed the CPU maintenance gate, compatibility gate, bridge
+  unit gate, RTL frontend `8/8`, and the combined L1/L2 QEMU system retire
+  differential. Default blocking behavior remains unchanged. Full cache
+  ordering, alias/OS cache ABI, MESI/directory coherency and Linux
+  nonblocking-cache boot remain OPEN.

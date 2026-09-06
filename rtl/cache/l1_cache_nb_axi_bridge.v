@@ -10,6 +10,7 @@ module l1_cache_nb_axi_bridge #(
     input wire clk, input wire rst_n,
     input wire line_req_valid, input wire line_req_we,
     input wire [31:0] line_req_addr, input wire [255:0] line_req_wdata,
+    input wire force_uncached_read,
     output wire line_req_ready,
     output reg line_rsp_valid, output reg [31:0] line_rsp_addr,
     output reg [255:0] line_rsp_data, output reg line_rsp_error,
@@ -41,6 +42,7 @@ module l1_cache_nb_axi_bridge #(
     reg rd_active [0:READ_SLOTS-1];
     reg rd_issued [0:READ_SLOTS-1];
     reg [31:0] rd_addr_q [0:READ_SLOTS-1];
+    reg rd_uncached_q [0:READ_SLOTS-1];
     reg [255:0] rd_data_q [0:READ_SLOTS-1];
     reg [2:0] rd_beat_q [0:READ_SLOTS-1];
     reg rd_error_q [0:READ_SLOTS-1];
@@ -76,7 +78,7 @@ module l1_cache_nb_axi_bridge #(
     assign arsize = 3'b010;
     assign arburst = 2'b01;
     assign arlock = 2'b00;
-    assign arcache = 4'b0011;
+    assign arcache = (ar_sel >= 0 && rd_uncached_q[ar_sel]) ? 4'b0000 : 4'b0011;
     assign arprot = 3'b000;
     assign arvalid = (ar_sel >= 0);
     assign rready = (r_sel >= 0);
@@ -105,6 +107,7 @@ module l1_cache_nb_axi_bridge #(
             for (i = 0; i < READ_SLOTS; i = i + 1) begin
                 rd_active[i] <= 1'b0; rd_issued[i] <= 1'b0;
                 rd_addr_q[i] <= 0; rd_data_q[i] <= 0;
+                rd_uncached_q[i] <= 1'b0;
                 rd_beat_q[i] <= 0; rd_error_q[i] <= 1'b0;
             end
         end else begin
@@ -119,6 +122,7 @@ module l1_cache_nb_axi_bridge #(
                     rd_active[free_rd] <= 1'b1;
                     rd_issued[free_rd] <= 1'b0;
                     rd_addr_q[free_rd] <= {line_req_addr[31:5], 5'b0};
+                    rd_uncached_q[free_rd] <= force_uncached_read;
                     rd_data_q[free_rd] <= 0; rd_beat_q[free_rd] <= 0;
                     rd_error_q[free_rd] <= 1'b0;
                 end

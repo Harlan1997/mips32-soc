@@ -1342,7 +1342,7 @@ l1-nonblocking-cpu-complete-gate: l1-nonblocking-cpu-compat-gate l1-nonblocking-
 		echo '- Result: PASS'; \
 		echo '- Configuration: opt-in SOC_L1_NONBLOCKING_ENABLE=1, SOC_CPU_NONBLOCKING_ENABLE=1, SOC_ROB_FIFO_ENABLE=1'; \
 		echo '- Evidence: compatibility, multi-request, three-seed reset stress, single/two-error recovery, reset-in-flight, and scoped CACHE invalidate maintenance gates'; \
-		echo '- Boundary: uncached/peripheral traffic and unsupported CACHE/tag/writeback operations remain on the legacy dcache; default blocking configuration is unchanged'; \
+		echo '- Boundary: uncached/peripheral traffic and unsupported CACHE encodings remain on the legacy dcache; default blocking configuration is unchanged'; \
 	} > $(BUILD_DIR)/soc_test/l1_nonblocking_cpu_complete/l1_nonblocking_cpu_completion_report.md
 	@echo "L1 nonblocking CPU contract gate: PASS"
 

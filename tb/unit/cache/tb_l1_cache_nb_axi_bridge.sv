@@ -5,6 +5,7 @@ module tb_l1_cache_nb_axi_bridge;
     reg line_req_valid = 0, line_req_we = 0;
     reg [31:0] line_req_addr = 0;
     reg [255:0] line_req_wdata = 0;
+    reg force_uncached_read = 0;
     wire line_req_ready;
     wire line_rsp_valid, line_rsp_error;
     wire [31:0] line_rsp_addr;
@@ -30,6 +31,7 @@ module tb_l1_cache_nb_axi_bridge;
     integer ar_count = 0;
     reg [3:0] seen_id0 = 0, seen_id1 = 0;
     reg seen0 = 0, seen1 = 0;
+    reg seen_uncached = 0;
 
     assign rdata = rdata_q;
     assign bid = 4'd0;
@@ -41,6 +43,7 @@ module tb_l1_cache_nb_axi_bridge;
     always @(posedge clk) begin
         if (arvalid && arready) begin
             ar_count <= ar_count + 1;
+            if (arcache == 4'b0000) seen_uncached <= 1'b1;
             if (arid == 4'd0) begin seen0 <= 1'b1; seen_id0 <= arid; end
             if (arid == 4'd1) begin seen1 <= 1'b1; seen_id1 <= arid; end
         end
@@ -104,12 +107,25 @@ module tb_l1_cache_nb_axi_bridge;
         repeat (2) @(posedge clk);
         rst_n = 1'b1;
 
+        // A maintenance-triggered refill can be marked uncached so a stale
+        // lower-level read-cache line is bypassed.
+        force_uncached_read = 1'b1;
+        issue_read(32'h00000300);
+        force_uncached_read = 1'b0;
+        @(posedge clk); #1;
+        if (!seen_uncached) begin
+            $display("FAIL uncached refill attribute was not observed");
+            errors = errors + 1;
+        end
+        send_burst(4'd0, 32'h00000300, 2'b00);
+        check_response(32'h00000300, 32'h00000300, 1'b0);
+
         // Two independent reads must be accepted before either response.
         issue_read(32'h00000040);
         issue_read(32'h00000100);
         repeat (2) @(posedge clk);
         #1;
-        if (ar_count != 2 || !seen0 || !seen1 || seen_id0 != 0 || seen_id1 != 1) begin
+        if (ar_count != 3 || !seen0 || !seen1 || seen_id0 != 0 || seen_id1 != 1) begin
             $display("FAIL AR issue count=%0d seen0=%b seen1=%b ids=%h/%h",
                      ar_count, seen0, seen1, seen_id0, seen_id1);
             errors = errors + 1;

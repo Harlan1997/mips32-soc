@@ -1,5 +1,25 @@
 # SoC 功能完整性计划
 
+### 2026-09-06 Opt-in L1 standard Hit_Invalidate_D and lower-cache refill closure
+
+修复 opt-in `l1_cache_nb_cpu_axi` 对标准 MIPS32 R2 `Hit_Invalidate_D`（`CACHE
+0x11`）的漏路由。该操作现在与 L1 的 index invalidate、TagLo 和 writeback
+maintenance 一样，在 outstanding line traffic 排空后由 L1 完成。维护操作影响的
+line 会被记录，下一次对应 refill 通过 AXI `arcache=4'b0000` 绕过默认的 L2
+read-cache，避免 L1 已失效但 L2 仍返回旧 clean line。
+
+真实 CPU firmware 新增标准 `0x11`、dirty
+`Hit_Writeback_Invalidate_D (0x15)` 和 refill 数据检查；`errors=0`、维护操作
+计数为 8，并验证两个不同 line 连续 invalidate 后分别 refill。维护追踪为
+4-entry，队列满时阻止新的 invalidating maintenance。`l1-nonblocking-maintenance-compat-gate`、
+`l1-nonblocking-maintenance-cpu-gate`、bridge unit gate、RTL frontend `8/8`
+以及 opt-in L1/L2 QEMU retire differential 均通过。默认 blocking 路径和普通
+cache refill 的 AXI 属性不变。
+
+该项只闭合 opt-in L1 的 bounded D-cache maintenance/refill contract；完整
+cache ordering、虚拟别名/OS cache ABI、MESI/directory coherency、Linux
+nonblocking cache ABI 仍保持 OPEN。
+
 ### 2026-09-06 RTL Linux 100M-cycle initcall boundary audit
 
 使用当前 `fix8` Linux image 和已编译 RTL simulator，在
