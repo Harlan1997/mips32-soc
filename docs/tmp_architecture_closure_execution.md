@@ -6202,3 +6202,21 @@ remain OPEN.
   differential. Default blocking behavior remains unchanged. Full cache
   ordering, alias/OS cache ABI, MESI/directory coherency and Linux
   nonblocking-cache boot remain OPEN.
+
+### 2026-09-06 RTL Linux taken-branch delay-slot IRQ/canary repair
+
+- A 15M-cycle `rtl-minimal` replay under `/data/disk/tmp` isolated the
+  `do_one_initcall` stack-protector report to a precise interrupt boundary,
+  not a memory write corruption. The saved canary and global guard both read
+  as `0x2c2e5df2`.
+- The failing edge had a taken `beq` at `0x88cff0f8`, its delay slot at
+  `0x88cff0fc` in WB, and the redirected target at `0x88cff108` in MEM. A
+  replay had erased `wb_bd`, so interrupt arbitration selected `0x88cff100`;
+  ERET then entered `__stack_chk_fail`.
+- `mips_cpu.v` now recovers this case from the strict `MEM PC = WB PC + 12`
+  relationship. The fresh trace records `except_pc=0x88cff0fc`, `Cause.BD=1`,
+  and `EPC=0x88cff0f8`; the panic is absent through the 15M-cycle bound.
+  RTL frontend `8/8`, `cpu-irq-delay-slot-gate`, and `cpu-cp0-gate` pass.
+- This closes only the confirmed IRQ/delay-slot boundary. No userspace marker
+  was observed, so RTL Linux userspace boot and unrestricted RTL/QEMU Linux
+  differential remain OPEN.

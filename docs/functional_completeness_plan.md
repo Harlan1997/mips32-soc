@@ -2129,3 +2129,13 @@ SKIP_COVERAGE=1 BUILD_DIR=/tmp/vic-sva-contract-20260903 make sva-gate` passes
 the SoC, reset synchronizer and AXI SRAM SVA simulations. This closes the
 VIC simulation-assertion slice only; formal proof, assertion coverage
 signoff, CDC/RDC/lint and full product verification remain OPEN.
+### 2026-09-06 Linux IRQ delay-slot boundary status
+
+The RTL Linux diagnostic replay found and fixed a precise interrupt boundary:
+when a taken branch delay slot is in WB and its redirected target is already
+in MEM, replay can erase `wb_bd`. The CPU now recognizes the strict
+`MEM PC = WB PC + 12` relation, preserving `Cause.BD` and branch EPC. RTL
+frontend `8/8`, `cpu-irq-delay-slot-gate`, and `cpu-cp0-gate` pass; the
+15M-cycle Linux replay no longer reaches `__stack_chk_fail`. This is only a
+bounded CPU/CP0 repair. RTL Linux userspace boot, unrestricted RTL/QEMU Linux
+differential, full ISA/MMU/FPU/OS semantics, and product signoff remain open.

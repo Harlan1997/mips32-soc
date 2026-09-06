@@ -2321,6 +2321,15 @@ module mips_cpu #(
                                 interrupt_mem_delay_from_id ||
                                 interrupt_ex_delay_from_id ||
                                 interrupt_wb_delay_from_mem ||
+                                // A taken branch can leave its delay slot in
+                                // WB while the redirected target is already
+                                // in MEM. Replay/flush may have erased wb_bd,
+                                // but the +12 gap is unambiguous here.
+                                (interrupt_accept && wb_arch_valid &&
+                                 mem_flush_valid &&
+                                 // From the delay-slot PC, the taken target
+                                 // is branch PC+16, i.e. WB PC+12.
+                                 (mem_pc == (wb_pc + 32'd12))) ||
                                 (interrupt_accept && wb_delay_slot_valid);
     wire interrupt_after_prior_wb_non_delay = interrupt_after_prior_wb &&
                                               !interrupt_delay_slot;
