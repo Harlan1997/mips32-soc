@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-09-06 RTL Linux devtmpfs boundary isolation
+
+在 opt-in `LINUX_PROFILE=rtl-minimal` 中禁用 `CONFIG_DEVTMPFS` 和
+`CONFIG_DEVTMPFS_MOUNT`，因为当前 RTL APB/根文件系统路径在 Linux 的
+`devtmpfs_mount(mode=0755)` 处返回 `-EINVAL`，这不是 generic profile 的
+默认配置。使用 fresh kernel/image 和 VCS 单线程受限运行，12M 周期 gate
+通过，日志不再出现 `devtmpfs: Bad value for 'mode'`，并继续到
+`pinctrl core`、PPS、FUSE 和 I/O scheduler initcall；没有 panic、TLB/CacheErr
+或 OOM。该改动只隔离无模型的 `/dev` mount 前置条件，userspace marker 尚未
+出现，因此 RTL Linux userspace、完整 system differential 和 generic Linux
+boot 仍保持 OPEN。
+
 ### 2026-09-06 Current-contract fresh evidence and low-space build routing
 
 重新执行 `current-contract-signoff` 时，RTL frontend、Phase 2/3、MMU/cache、
