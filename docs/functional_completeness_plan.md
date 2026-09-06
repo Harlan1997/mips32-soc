@@ -1,5 +1,18 @@
 # SoC 功能完整性计划
 
+### 2026-09-06 System-mode RTL/QEMU retire lockstep entry point
+
+将原来仅作为 QEMU reference alias 的 `cpu-lockstep-gate` 改为真实的
+system-mode differential 入口。该入口默认构建并运行
+`qemu_system_lockstep_min`，RTL 侧生成 retire JSONL，QEMU
+`mips32-soc-ref` 侧生成对应 retire JSONL，再由同一 comparator 逐条比较到
+mailbox 完成边界。受限低资源运行在 `/data/disk/tmp` 完成，报告为
+`TRACE_COMPARE_PASS records=10`。
+
+本项闭合 harness 接线和选定 bare-metal firmware slice，不等价于完整
+ISA/MMU/FPU、全中断 corpus、Linux userspace、无限制 system-mode
+differential 或产品 signoff；这些范围继续保持 OPEN。
+
 ### 2026-09-06 RTL Linux devtmpfs boundary isolation
 
 在 opt-in `LINUX_PROFILE=rtl-minimal` 中禁用 `CONFIG_DEVTMPFS` 和
@@ -2139,3 +2152,15 @@ frontend `8/8`, `cpu-irq-delay-slot-gate`, and `cpu-cp0-gate` pass; the
 15M-cycle Linux replay no longer reaches `__stack_chk_fail`. This is only a
 bounded CPU/CP0 repair. RTL Linux userspace boot, unrestricted RTL/QEMU Linux
 differential, full ISA/MMU/FPU/OS semantics, and product signoff remain open.
+
+### 2026-09-06 Retire differential OOM containment
+
+The ordinary non-FPU system differential path now selects the streaming
+JSONL comparator by default. The streaming comparator retains bounded
+look-ahead and now stops at the same mailbox completion record as the list
+comparator. This prevents a bounded 256 MiB capture from expanding into a
+multi-GiB Python process; FPU workloads retain the list-based state-window
+comparison unless explicitly overridden. The real `cpu-lockstep-gate` passed
+with `TRACE_COMPARE_PASS records=10` using the `mips32-soc-ref` custom machine.
+This closes verification resource containment and the selected lockstep
+slice only; the full Linux/ISA/MMU/FPU differential remains open.
