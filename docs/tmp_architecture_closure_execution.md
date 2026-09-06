@@ -1,5 +1,22 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-06 Current-contract coverage result and scratch-path handoff
+
+- Fresh `current-contract-signoff` completed all functional prerequisites and
+  `10/10` stress seeds. The only failing stage is the explicit coverage threshold
+  stage; UVM merged metrics are SCORE `36.24%`, LINE `53.71%`, COND `43.08%`,
+  TOGGLE `11.33%`, FSM `27.00%`, BRANCH `46.08%`, while product CPU/CP0 metrics
+  are SCORE `36.66%`, LINE `53.91%`, COND `42.30%`, TOGGLE `9.28%`, FSM
+  `30.23%`, BRANCH `47.56%`, against unchanged `99.00%` thresholds.
+- No threshold or exclusion was changed. The authoritative failure is
+  `/tmp/mips32-soc-current-contract-20260906/signoff/coverage_summary.json`;
+  the aggregate remains open for coverage closure.
+- Makefile now exports configurable `QEMU_SRC`, `QEMU_BUILD`, and `QEMU_BIN`,
+  allowing QEMU builds and aggregate gates to stay outside the nearly-full root
+  filesystem. CoreMark/Dhrystone validation was also rechecked: CRC `0xe714`
+  with `572591` ticks and `96046` Dhrystone cycles. These are repeatable
+  implementation-subset baselines, not normalized commercial scores.
+
 ### 2026-09-06 Opt-in L1 Hit_Invalidate_D and L2-bypass refill closure
 
 - Added the standard MIPS32 R2 D-cache `Hit_Invalidate_D` (`0x11`) to the

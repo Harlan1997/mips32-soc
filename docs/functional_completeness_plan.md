@@ -1,5 +1,24 @@
 # SoC 功能完整性计划
 
+### 2026-09-06 Current-contract fresh evidence and low-space build routing
+
+重新执行 `current-contract-signoff` 时，RTL frontend、Phase 2/3、MMU/cache、
+SVA、DDR、QSPI、QEMU current-contract 和 10-seed stress 功能阶段全部通过；
+最终仅在既有 99.00% code-coverage threshold 失败。fresh merged UVM 为
+SCORE `36.24%`、LINE `53.71%`、COND `43.08%`、TOGGLE `11.33%`、FSM
+`27.00%`、BRANCH `46.08%`，product CPU/CP0 为 SCORE `36.66%`、LINE
+`53.91%`、COND `42.30%`、TOGGLE `9.28%`、FSM `30.23%`、BRANCH `47.56%`。
+15 个 required functional groups 和 `10/10` stress seed 仍满足；没有降低
+threshold 或扩大 exclusion，因此 `current-contract-signoff` 保持 OPEN，coverage
+closure 继续由真实 stimulus/assertion 驱动。
+
+为避免根文件系统空间不足，Makefile 现在导出 `QEMU_SRC`、`QEMU_BUILD` 和
+`QEMU_BIN`，所有 QEMU aggregate 可使用独立 scratch build root；QEMU build
+helper 也使用绝对 source configure 路径。CoreMark validation CRC 和 Dhrystone
+2.1 validation fresh baseline 仍分别为 `0xe714`/`572591 ticks` 和
+`96046 cycles`，仅作为实现子集的可重复 validation，不构成标准 CoreMark/MHz、
+DMIPS/MHz 或商用性能 signoff。
+
 ### 2026-09-06 Opt-in L1 standard Hit_Invalidate_D and lower-cache refill closure
 
 修复 opt-in `l1_cache_nb_cpu_axi` 对标准 MIPS32 R2 `Hit_Invalidate_D`（`CACHE
