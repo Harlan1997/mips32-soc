@@ -4,6 +4,12 @@
 
 static inline void cache_hit_invalidate_d(const volatile void *addr)
 {
+    /* Standard MIPS32 R2 Hit_Invalidate_D encoding. */
+    __asm__ volatile("cache 0x11, 0(%0)" :: "r"(addr) : "memory");
+}
+
+static inline void cache_hit_writeback_invalidate_d(const volatile void *addr)
+{
     __asm__ volatile("cache 0x15, 0(%0)" :: "r"(addr) : "memory");
 }
 
@@ -34,7 +40,9 @@ static inline void cache_index_store_tag(const volatile void *addr, uint32_t tag
 int main(void)
 {
     volatile uint32_t *cached = (volatile uint32_t *)0x00008120U;
+    volatile uint32_t *cached2 = (volatile uint32_t *)0x00008160U;
     volatile uint32_t *uncached = (volatile uint32_t *)0xA0008120U;
+    volatile uint32_t *uncached2 = (volatile uint32_t *)0xA0008160U;
     uint32_t errors = 0;
 
     /* Fill the opt-in L1 with a clean old value, then change backing SRAM. */
@@ -46,6 +54,16 @@ int main(void)
     print_hex(*cached);
     if (*cached != 0x55667788U) errors++;
 
+    /* Queue two different invalidated lines before either refill. */
+    *uncached2 = 0xCAFEBABEU;
+    if (*cached2 != 0xCAFEBABEU) errors++;
+    *uncached = 0x01020304U;
+    *uncached2 = 0x05060708U;
+    cache_hit_invalidate_d(cached);
+    cache_hit_invalidate_d(cached2);
+    if (*cached != 0x01020304U) errors++;
+    if (*cached2 != 0x05060708U) errors++;
+
     /* Repeat through the direct-mapped index invalidate contract. */
     *uncached = 0x99AABBCCU;
     print_hex(*cached);
@@ -54,6 +72,14 @@ int main(void)
     cache_index_invalidate_d(cached);
     print_hex(*cached);
     if (*cached != 0xDDEEFF00U) errors++;
+
+    /* Dirty-line writeback+invalidate must retain the new value in memory
+     * and force the next cached load to refill it. */
+    *cached = 0x13579BDFU;
+    cache_hit_writeback_invalidate_d(cached);
+    if (*uncached != 0x13579BDFU) errors++;
+    *uncached = 0x2468ACE0U;
+    if (*cached != 0x2468ACE0U) errors++;
 
     /* Exercise the opt-in L1 TagLo path through the real CPU/CP0 interface.
      * The direct-mapped L1 has a clean valid line here; physical tag 4 is

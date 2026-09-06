@@ -20,10 +20,10 @@ cat >"${RUN_DIR}/l1_nonblocking_maintenance_report.md" <<'EOF'
 
 Result: PASS
 
-- The real opt-in CPU/D-cache path executes `Hit_Invalidate_D`,
-  `Index_Invalidate_D`, `Index_Load_Tag_D`, and `Index_Store_Tag_D`;
-  the unit path additionally covers `Index_Writeback_Invalidate_D`,
-  `Hit_Writeback_Invalidate_D`, and `Hit_Writeback_D`.
+- The real opt-in CPU/D-cache path executes standard `Hit_Invalidate_D`
+  (`0x11`), `Index_Invalidate_D`, `Index_Load_Tag_D`,
+  `Index_Store_Tag_D`, and `Hit_Writeback_Invalidate_D`; the unit path
+  additionally covers `Index_Writeback_Invalidate_D` and `Hit_Writeback_D`.
 - Each test fills L1 with an old SRAM value, changes the backing value through
   the uncached alias, invalidates the line, and verifies the following cached
   load refills the new value.
