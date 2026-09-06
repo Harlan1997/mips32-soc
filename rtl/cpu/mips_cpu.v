@@ -767,12 +767,20 @@ module mips_cpu #(
     // not enough to prove that the marker belongs to the current ID word.
     reg  [31:0] id_delay_slot_branch_pc_r;
     wire [31:0] id_delay_slot_branch_pc = id_delay_slot_branch_pc_r;
+    // Keep the producer instruction with the delay-slot metadata.  A stalled
+    // branch can otherwise leave id_bd and its PCs paired with a later
+    // ordinary instruction, causing an asynchronous IRQ to fabricate BD.
+    reg  [31:0] id_delay_slot_branch_inst_r;
+    wire [31:0] id_delay_slot_branch_inst = id_delay_slot_branch_inst_r;
     wire        ex_bd;
     wire [31:0] ex_delay_slot_next_pc;
+    wire [31:0] ex_delay_slot_branch_inst;
     wire        mem_bd;
     wire [31:0] mem_delay_slot_next_pc;
+    wire [31:0] mem_delay_slot_branch_inst;
     wire        wb_bd;
     wire [31:0] wb_delay_slot_next_pc;
+    wire [31:0] wb_delay_slot_branch_inst;
     wire        ex_cp0_we;
     wire        ex_is_eret;
     wire [1:0]  ex_mem_to_reg;
@@ -1267,14 +1275,17 @@ module mips_cpu #(
         if (!rst_n || if_id_flush) begin
             id_delay_slot_next_pc_r <= 32'd0;
             id_delay_slot_branch_pc_r <= 32'd0;
+            id_delay_slot_branch_inst_r <= 32'd0;
         end else if (!global_stall) begin
             if (id_control_valid && !id_branch_likely_annul) begin
                 id_delay_slot_next_pc_r <= id_control_taken ? id_control_target :
                                            id_pc_plus_4 + 32'd4;
                 id_delay_slot_branch_pc_r <= id_pc_plus_4 - 32'd4;
+                id_delay_slot_branch_inst_r <= id_inst;
             end else begin
                 id_delay_slot_next_pc_r <= 32'd0;
                 id_delay_slot_branch_pc_r <= 32'd0;
+                id_delay_slot_branch_inst_r <= 32'd0;
             end
         end
     end
@@ -1326,6 +1337,7 @@ module mips_cpu #(
         .id_except_is_tlb_refill (id_except_is_tlb_refill_out),
         .id_bd          (id_bd),
         .id_delay_slot_next_pc(id_delay_slot_next_pc),
+        .id_delay_slot_branch_inst(id_delay_slot_branch_inst),
         .id_cp0_we      (id_cp0_we),
         .id_is_eret     (id_is_eret),
         .id_tlb_op      (id_tlb_op),
@@ -1359,6 +1371,7 @@ module mips_cpu #(
         .ex_except_is_tlb_refill (ex_except_is_tlb_refill),
         .ex_bd          (ex_bd),
         .ex_delay_slot_next_pc(ex_delay_slot_next_pc),
+        .ex_delay_slot_branch_inst(ex_delay_slot_branch_inst),
         .ex_cp0_we      (ex_cp0_we),
         .ex_is_eret     (ex_is_eret),
         .ex_tlb_op      (ex_tlb_op),
@@ -1573,6 +1586,7 @@ module mips_cpu #(
         .ex_except_is_tlb_refill (ex_except_is_tlb_refill),
         .ex_bd           (ex_bd),
         .ex_delay_slot_next_pc(ex_delay_slot_next_pc),
+        .ex_delay_slot_branch_inst(ex_delay_slot_branch_inst),
         .ex_mem_read     (ex_mem_read),
         .ex_mem_write    (ex_mem_write),
         .ex_mem_op       (ex_mem_op),
@@ -1598,6 +1612,7 @@ module mips_cpu #(
         .mem_except_is_tlb_refill (mem_except_is_tlb_refill),
         .mem_bd          (mem_bd),
         .mem_delay_slot_next_pc(mem_delay_slot_next_pc),
+        .mem_delay_slot_branch_inst(mem_delay_slot_branch_inst),
         .mem_mem_read    (mem_mem_read),
         .mem_mem_write   (mem_mem_write),
         .mem_mem_op      (mem_mem_op),
@@ -2033,6 +2048,7 @@ module mips_cpu #(
         .mem_except_is_tlb_refill (mem_except_is_tlb_refill_out),
         .mem_bd          (mem_bd),
         .mem_delay_slot_next_pc(mem_delay_slot_next_pc),
+        .mem_delay_slot_branch_inst(mem_delay_slot_branch_inst),
         .mem_mem_to_reg  (mem_mem_to_reg),
         
         .wb_rdata_fmt    (wb_rdata_fmt),
@@ -2059,6 +2075,7 @@ module mips_cpu #(
         .wb_except_is_tlb_refill (wb_except_is_tlb_refill),
         .wb_bd           (wb_bd),
         .wb_delay_slot_next_pc(wb_delay_slot_next_pc),
+        .wb_delay_slot_branch_inst(wb_delay_slot_branch_inst),
         .wb_mem_to_reg   (wb_mem_to_reg),
         .alloc_tag       (rob_alloc_tag),
         .alloc_ready     (rob_alloc_ready),
@@ -2081,7 +2098,7 @@ module mips_cpu #(
         .mem_except_req(mem_except_req_out), .mem_except_code(mem_except_code_out),
         .mem_except_is_data(mem_except_is_data_out),
         .mem_except_is_tlb_refill(mem_except_is_tlb_refill_out), .mem_bd(mem_bd),
-        .mem_delay_slot_next_pc(mem_delay_slot_next_pc), .mem_mem_to_reg(mem_mem_to_reg),
+        .mem_delay_slot_next_pc(mem_delay_slot_next_pc), .mem_delay_slot_branch_inst(mem_delay_slot_branch_inst), .mem_mem_to_reg(mem_mem_to_reg),
         .wb_rdata_fmt(wb_rdata_fmt), .wb_ex_out(wb_ex_out), .wb_pc_plus_8(wb_pc_plus_8),
         .wb_inst(wb_inst), .wb_val_rt(wb_val_rt), .wb_mem_read(wb_mem_read_trace),
         .wb_mem_write(wb_mem_write_trace), .wb_mem_op(wb_mem_op_trace), .wb_valid(wb_valid),
@@ -2090,7 +2107,7 @@ module mips_cpu #(
         .wb_is_eret(wb_is_eret), .wb_tlb_op(wb_tlb_op), .wb_except_req(wb_except_req),
         .wb_except_code(wb_except_code), .wb_except_is_data(wb_except_is_data),
         .wb_except_is_tlb_refill(wb_except_is_tlb_refill), .wb_bd(wb_bd),
-        .wb_delay_slot_next_pc(wb_delay_slot_next_pc), .wb_mem_to_reg(wb_mem_to_reg)
+        .wb_delay_slot_next_pc(wb_delay_slot_next_pc), .wb_delay_slot_branch_inst(wb_delay_slot_branch_inst), .wb_mem_to_reg(wb_mem_to_reg)
     );
     end
     endgenerate
@@ -2161,13 +2178,38 @@ module mips_cpu #(
     // flush can leave a stale delay-slot bit on a bubble while the paired
     // branch target metadata has already been cleared.  Treat the marker as
     // architectural only when its companion resume target is present.
+    function automatic is_control_transfer_inst;
+        input [31:0] inst;
+        begin
+            is_control_transfer_inst = (inst[31:26] == 6'b000001) ||
+                                       (inst[31:26] == 6'b000010) ||
+                                       (inst[31:26] == 6'b000011) ||
+                                       ((inst[31:26] >= 6'b000100) &&
+                                        (inst[31:26] <= 6'b000111)) ||
+                                       ((inst[31:26] == 6'b000000) &&
+                                        ((inst[5:0] == 6'b001000) ||
+                                         (inst[5:0] == 6'b001001)));
+        end
+    endfunction
     wire mem_delay_slot_valid = mem_bd &&
-                                 (mem_delay_slot_next_pc != 32'd0);
+                                 (mem_delay_slot_next_pc != 32'd0) &&
+                                 is_control_transfer_inst(mem_delay_slot_branch_inst);
     wire ex_delay_slot_valid  = ex_bd &&
-                                (ex_delay_slot_next_pc != 32'd0);
+                                (ex_delay_slot_next_pc != 32'd0) &&
+                                is_control_transfer_inst(ex_delay_slot_branch_inst);
+    wire id_delay_slot_branch_is_control_transfer =
+                                   (id_delay_slot_branch_inst[31:26] == 6'b000001) ||
+                                   (id_delay_slot_branch_inst[31:26] == 6'b000010) ||
+                                   (id_delay_slot_branch_inst[31:26] == 6'b000011) ||
+                                   ((id_delay_slot_branch_inst[31:26] >= 6'b000100) &&
+                                    (id_delay_slot_branch_inst[31:26] <= 6'b000111)) ||
+                                   ((id_delay_slot_branch_inst[31:26] == 6'b000000) &&
+                                    ((id_delay_slot_branch_inst[5:0] == 6'b001000) ||
+                                     (id_delay_slot_branch_inst[5:0] == 6'b001001)));
     wire id_delay_slot_valid  = id_bd &&
                                  (id_delay_slot_next_pc != 32'd0) &&
                                  (id_delay_slot_branch_pc != 32'd0) &&
+                                 id_delay_slot_branch_is_control_transfer &&
                                  (id_pc == (id_delay_slot_branch_pc + 32'd4));
     // WB delay-slot metadata can survive a replay/stall after the paired
     // branch has left the visible pipeline.  The resume target alone is not
@@ -2185,7 +2227,8 @@ module mips_cpu #(
     // asynchronous-interrupt validation above; otherwise a real syscall in a
     // delay slot loses BD/EPC semantics when the branch has left MEM.
     wire wb_exception_delay_slot_valid = wb_bd && wb_arch_valid &&
-                                         (wb_delay_slot_next_pc != 32'd0);
+                                         (wb_delay_slot_next_pc != 32'd0) &&
+                                         is_control_transfer_inst(wb_delay_slot_branch_inst);
 
     // The interrupt request may remain blocked during the cycle in which a
     // load completes, then become acceptable on the following cycle after
@@ -2310,8 +2353,9 @@ module mips_cpu #(
                                        (id_pc == (mem_pc + 32'd4));
     wire interrupt_ex_delay_from_id = interrupt_accept &&
                                       ex_flush_valid &&
-                                      id_is_control_transfer &&
-                                      (ex_pc == (id_pc + 32'd4));
+                                      id_flush_valid &&
+                                      ex_is_control_transfer &&
+                                      (id_pc == (ex_pc + 32'd4));
     wire interrupt_wb_delay_from_mem = interrupt_accept &&
                                        wb_arch_valid && mem_flush_valid &&
                                        mem_is_control_transfer &&
@@ -2356,6 +2400,7 @@ module mips_cpu #(
                                    ex_is_control_transfer &&
                                    (id_pc == ex_pc + 32'd4))) :
                                  id_delay_slot_valid));
+
     // If an ordinary instruction is retiring in WB on the same edge as an
     // asynchronous interrupt, it has already committed architecturally.
     // Resume after it; selecting the oldest visible MEM/EX PC can point back

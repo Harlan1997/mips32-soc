@@ -41,6 +41,7 @@ module mips_ex_mem_reg (
     input  wire        ex_except_is_tlb_refill,
     input  wire        ex_bd,               // Phase B.5
     input  wire [31:0] ex_delay_slot_next_pc,
+    input  wire [31:0] ex_delay_slot_branch_inst,
     input  wire        ex_mem_read,
     input  wire        ex_mem_write,
     input  wire [2:0]  ex_mem_op,
@@ -72,6 +73,7 @@ module mips_ex_mem_reg (
     output reg         mem_except_is_tlb_refill,
     output reg         mem_bd,
     output reg  [31:0] mem_delay_slot_next_pc,
+    output reg  [31:0] mem_delay_slot_branch_inst,
     output reg         mem_mem_read,
     output reg         mem_mem_write,
     output reg  [2:0]  mem_mem_op,
@@ -115,6 +117,7 @@ module mips_ex_mem_reg (
             mem_except_is_tlb_refill <= 1'b0;
             mem_bd         <= 1'b0;
             mem_delay_slot_next_pc <= 32'd0;
+            mem_delay_slot_branch_inst <= 32'd0;
             mem_done       <= 1'b0;
             mem_double_phase <= 1'b0;
         end else if (flush) begin
@@ -143,6 +146,7 @@ module mips_ex_mem_reg (
             mem_except_is_tlb_refill <= 1'b0;
             mem_bd         <= 1'b0;
             mem_delay_slot_next_pc <= 32'd0;
+            mem_delay_slot_branch_inst <= 32'd0;
             mem_done       <= 1'b0;
             mem_double_phase <= 1'b0;
         end else if ((!stall ||
@@ -176,6 +180,7 @@ module mips_ex_mem_reg (
             mem_except_is_tlb_refill <= ex_except_is_tlb_refill;
             mem_bd         <= ex_bd;
             mem_delay_slot_next_pc <= ex_delay_slot_next_pc;
+            mem_delay_slot_branch_inst <= ex_delay_slot_branch_inst;
             mem_mem_read   <= ex_mem_read;
             mem_mem_write  <= ex_mem_write;
             mem_mem_op     <= ex_mem_op;

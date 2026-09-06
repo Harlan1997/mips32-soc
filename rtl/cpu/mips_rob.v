@@ -64,6 +64,7 @@ module mips_rob #(
     input  wire        mem_except_is_tlb_refill,
     input  wire        mem_bd,
     input  wire [31:0] mem_delay_slot_next_pc,
+    input  wire [31:0] mem_delay_slot_branch_inst,
     input  wire [1:0]  mem_mem_to_reg,
 
     // Commit outputs (to WB / CP0 / RF) — same names/semantics as wb_* ---------
@@ -90,6 +91,7 @@ module mips_rob #(
     output reg         wb_except_is_tlb_refill,
     output reg         wb_bd,
     output reg  [31:0] wb_delay_slot_next_pc,
+    output reg  [31:0] wb_delay_slot_branch_inst,
     output reg  [1:0]  wb_mem_to_reg
 );
 
@@ -128,6 +130,7 @@ module mips_rob #(
                 wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
                 wb_delay_slot_next_pc <= 32'd0;
+                wb_delay_slot_branch_inst <= 32'd0;
             end else begin
                 wb_valid          <= 1'b0;
                 if (!stall) begin
@@ -158,6 +161,7 @@ module mips_rob #(
                 wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd             <= mem_bd;
                 wb_delay_slot_next_pc <= mem_delay_slot_next_pc;
+                wb_delay_slot_branch_inst <= mem_delay_slot_branch_inst;
                 wb_mem_to_reg     <= mem_mem_to_reg;
                 end
             end
@@ -240,6 +244,7 @@ module mips_rob #(
                 wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
                 wb_delay_slot_next_pc <= 32'd0;
+                wb_delay_slot_branch_inst <= 32'd0;
             end else if (flush) begin
                 rob_head <= {PTR_W{1'b0}};
                 rob_tail <= {PTR_W{1'b0}};
@@ -271,6 +276,7 @@ module mips_rob #(
                 wb_except_is_tlb_refill <= 1'b0;
                 wb_bd             <= 1'b0;
                 wb_delay_slot_next_pc <= 32'd0;
+                wb_delay_slot_branch_inst <= 32'd0;
             end else begin
                 wb_valid          <= 1'b0;
                 if (!stall) begin
@@ -307,6 +313,7 @@ module mips_rob #(
                 wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd             <= mem_bd;
                 wb_delay_slot_next_pc <= mem_delay_slot_next_pc;
+                wb_delay_slot_branch_inst <= mem_delay_slot_branch_inst;
                 wb_mem_to_reg     <= mem_mem_to_reg;
                 end
             end
