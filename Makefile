@@ -5,6 +5,13 @@ RTL_CYCLE_LIMIT ?= 1000000
 # VCS and the Linux build can each consume substantial RAM. Keep the default
 # reproducible on constrained CI/VM hosts; callers may opt into parallelism.
 JOBS ?= 1
+# Keep the QEMU reference path configurable and visible to every recipe and
+# recursive make invoked by aggregate gates.  This is required for external
+# scratch builds when the repository's default dependency tree is absent.
+QEMU_SRC ?= $(ROOT_DIR)/build/deps/src/qemu-9.2.0
+QEMU_BUILD ?= $(QEMU_SRC)/build-mipsel-softmmu
+QEMU_BIN ?= $(QEMU_BUILD)/qemu-system-mipsel
+export QEMU_SRC QEMU_BUILD QEMU_BIN
 KERNEL_PHYSICAL_START ?= 0x88800000
 LINUX_PROFILE ?= generic
 SKIP_LINUX_BUILD ?= 0
