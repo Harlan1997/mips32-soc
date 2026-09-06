@@ -10,7 +10,9 @@ FW_DIR=${FW_DIR:-"${BUILD_DIR}/firmware/qemu_system_vic_cpu"}
 RTL_IRQ_REPLAY=1 RTL_IRQ_SCHEDULE_OFFSET=-1 IRQ_REPLAY_PIC_MASK=0x300 FW_TEST=vic_cpu FW_DIR="${FW_DIR}" RUN_DIR="${RUN_DIR}" \
     "${SCRIPT_DIR}/run_qemu_system_differential_gate.sh"
 
-grep -q '^TRACE_COMPARE_PASS records=735$' "${RUN_DIR}/qemu/trace_compare.log"
+# Streaming comparison appends its bounded-memory mode to the PASS marker.
+# Keep the record-count contract strict while accepting both comparator modes.
+grep -q '^TRACE_COMPARE_PASS records=735\( mode=stream\)\?$' "${RUN_DIR}/qemu/trace_compare.log"
 grep -q '^REGRESSION_TEST_SUCCESS$' "${RUN_DIR}/rtl/vcs_uvm.log"
 grep -q 'vic_cpu test: REGRESSION_TEST_SUCCESS' "${RUN_DIR}/qemu/qemu_stdout.log"
 cat >"${RUN_DIR}/completion_report.md" <<EOF

@@ -2164,3 +2164,17 @@ comparison unless explicitly overridden. The real `cpu-lockstep-gate` passed
 with `TRACE_COMPARE_PASS records=10` using the `mips32-soc-ref` custom machine.
 This closes verification resource containment and the selected lockstep
 slice only; the full Linux/ISA/MMU/FPU differential remains open.
+
+### 2026-09-06 Architecture closure aggregate recheck
+
+运行 `qemu-system-architecture-closure-gate` 时将构建根和 QEMU
+custom-machine binary 放在 `/data/disk/tmp/mips32-soc`，并使用
+`VCS_JOBS=1`、`QEMU_BUILD_JOBS=1`、`SKIP_COVERAGE=1` 和受限内存配置。
+首次失败定位为 VIC CPU differential gate 对旧版精确字符串
+`TRACE_COMPARE_PASS records=735` 的断言；streaming comparator 现在合法地输出
+`TRACE_COMPARE_PASS records=735 mode=stream`。断言修复后 selected aggregate
+和完整 architecture aggregate 均通过，后者同时通过 current contract、选定
+system differential、MMU/FPU/LLSC 子 gate 以及 generic Linux userspace marker。
+本项闭合 architecture aggregate 的可重复接线，不改变功能范围：RTL Linux
+userspace differential、完整 ISA/IEEE-754/OS VM、全 coherency、formal/CDC/RDC/lint
+和物理产品 signoff 仍保持 OPEN。
