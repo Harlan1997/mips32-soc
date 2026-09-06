@@ -21,7 +21,8 @@ module mips_rob_fifo #(
     input wire [2:0] mem_tlb_op, input wire mem_except_req,
     input wire [4:0] mem_except_code, input wire mem_except_is_data,
     input wire mem_except_is_tlb_refill, input wire mem_bd,
-    input wire [31:0] mem_delay_slot_next_pc, input wire [1:0] mem_mem_to_reg,
+    input wire [31:0] mem_delay_slot_next_pc, input wire [31:0] mem_delay_slot_branch_inst,
+    input wire [1:0] mem_mem_to_reg,
     output reg [31:0] wb_rdata_fmt, output reg [31:0] wb_ex_out,
     output reg [31:0] wb_pc_plus_8, output reg [31:0] wb_inst,
     output reg [31:0] wb_val_rt, output reg wb_mem_read,
@@ -32,13 +33,17 @@ module mips_rob_fifo #(
     output reg [2:0] wb_tlb_op, output reg wb_except_req,
     output reg [4:0] wb_except_code, output reg wb_except_is_data,
     output reg wb_except_is_tlb_refill, output reg wb_bd,
-    output reg [31:0] wb_delay_slot_next_pc, output reg [1:0] wb_mem_to_reg
+    output reg [31:0] wb_delay_slot_next_pc, output reg [31:0] wb_delay_slot_branch_inst,
+    output reg [1:0] wb_mem_to_reg
     , output wire [TAG_W-1:0] alloc_tag, output wire alloc_ready,
     output wire head_ready, output wire busy,
     output reg [TAG_W-1:0] wb_tag
 );
     localparam PTR_W = TAG_W;
-    localparam BW = 232;
+    // Include the control-transfer producer with the delay-slot metadata.
+    // Without this field a queued commit reaches WB with a zero producer and
+    // cannot be distinguished from stale delay-slot state.
+    localparam BW = 264;
     reg [BW-1:0] slot [0:DEPTH-1];
     reg valid [0:DEPTH-1];
     reg ready [0:DEPTH-1];
@@ -52,6 +57,7 @@ module mips_rob_fifo #(
         mem_reg_write, mem_cp0_we, mem_is_eret, mem_tlb_op,
         mem_except_req, mem_except_code, mem_except_is_data,
         mem_except_is_tlb_refill, mem_bd, mem_delay_slot_next_pc,
+        mem_delay_slot_branch_inst,
         mem_mem_to_reg
     };
     wire alloc_valid = mem_alloc_valid;
@@ -79,8 +85,8 @@ module mips_rob_fifo #(
     wire alloc_fire = alloc_valid && !stall && !cutthrough_commit &&
                       ((count < DEPTH) || buffered_commit);
     wire [31:0] head_complete_fmt = format_complete(
-        complete_rdata, slot[head][69:67], slot[head][169:168],
-        slot[head][103:72]);
+        complete_rdata, slot[head][101:99], slot[head][169:168],
+        slot[head][135:104]);
     // A response can make the head retire in the same clock edge.  The slot
     // array is updated with nonblocking assignments below, so reading
     // slot[head] here would commit its previous load value.  Bypass only the
@@ -92,11 +98,11 @@ module mips_rob_fifo #(
     // instruction and the reused tag receives the stale CacheErr metadata.
     wire [BW-1:0] head_complete_bundle = {
         head_complete_fmt,
-        slot[head][199:43],
-        complete_error ? 1'b1 : slot[head][42],
-        complete_error ? 5'h1e : slot[head][41:37],
-        complete_error ? 1'b1 : slot[head][36],
-        slot[head][35:0]
+        slot[head][231:75],
+        complete_error ? 1'b1 : slot[head][74],
+        complete_error ? 5'h1e : slot[head][73:69],
+        complete_error ? 1'b1 : slot[head][68],
+        slot[head][67:0]
     };
     wire [BW-1:0] commit_bundle = cutthrough_commit ? alloc_bundle :
                                    (head_complete_now ? head_complete_bundle :
@@ -162,7 +168,7 @@ module mips_rob_fifo #(
             wb_cp0_we <= 0; wb_is_eret <= 0; wb_tlb_op <= 0;
             wb_except_req <= 0; wb_except_code <= 0; wb_except_is_data <= 0;
             wb_except_is_tlb_refill <= 0; wb_bd <= 0;
-            wb_delay_slot_next_pc <= 0; wb_mem_to_reg <= 0;
+            wb_delay_slot_next_pc <= 0; wb_delay_slot_branch_inst <= 0; wb_mem_to_reg <= 0;
             for (i = 0; i < DEPTH; i = i + 1) begin
                 valid[i] <= 1'b0;
                 ready[i] <= 1'b0;
@@ -183,21 +189,22 @@ module mips_rob_fifo #(
             wb_valid <= commit_fire;
             if (commit_fire) begin
                 wb_tag <= cutthrough_commit ? tail : head;
-                wb_rdata_fmt <= commit_bundle[231:200];
-                wb_ex_out <= commit_bundle[199:168];
-                wb_pc_plus_8 <= commit_bundle[167:136];
-                wb_inst <= commit_bundle[135:104];
-                wb_val_rt <= commit_bundle[103:72];
-                wb_mem_read <= commit_bundle[71]; wb_mem_write <= commit_bundle[70];
-                wb_mem_op <= commit_bundle[69:67];
-                wb_waddr <= commit_bundle[66:62]; wb_rd_addr <= commit_bundle[61:57];
-                wb_cp0_raddr <= commit_bundle[56:52]; wb_cp0_sel <= commit_bundle[51:49];
-                wb_reg_write <= commit_bundle[48]; wb_cp0_we <= commit_bundle[47];
-                wb_is_eret <= commit_bundle[46]; wb_tlb_op <= commit_bundle[45:43];
-                wb_except_req <= commit_bundle[42]; wb_except_code <= commit_bundle[41:37];
-                wb_except_is_data <= commit_bundle[36];
-                wb_except_is_tlb_refill <= commit_bundle[35]; wb_bd <= commit_bundle[34];
-                wb_delay_slot_next_pc <= commit_bundle[33:2];
+                wb_rdata_fmt <= commit_bundle[263:232];
+                wb_ex_out <= commit_bundle[231:200];
+                wb_pc_plus_8 <= commit_bundle[199:168];
+                wb_inst <= commit_bundle[167:136];
+                wb_val_rt <= commit_bundle[135:104];
+                wb_mem_read <= commit_bundle[103]; wb_mem_write <= commit_bundle[102];
+                wb_mem_op <= commit_bundle[101:99];
+                wb_waddr <= commit_bundle[98:94]; wb_rd_addr <= commit_bundle[93:89];
+                wb_cp0_raddr <= commit_bundle[88:84]; wb_cp0_sel <= commit_bundle[83:81];
+                wb_reg_write <= commit_bundle[80]; wb_cp0_we <= commit_bundle[79];
+                wb_is_eret <= commit_bundle[78]; wb_tlb_op <= commit_bundle[77:75];
+                wb_except_req <= commit_bundle[74]; wb_except_code <= commit_bundle[73:69];
+                wb_except_is_data <= commit_bundle[68];
+                wb_except_is_tlb_refill <= commit_bundle[67]; wb_bd <= commit_bundle[66];
+                wb_delay_slot_next_pc <= commit_bundle[65:34];
+                wb_delay_slot_branch_inst <= commit_bundle[33:2];
                 wb_mem_to_reg <= commit_bundle[1:0];
                 if (buffered_commit) begin
                     valid[head] <= 1'b0;
@@ -231,6 +238,7 @@ module mips_rob_fifo #(
                 wb_except_is_tlb_refill <= mem_except_is_tlb_refill;
                 wb_bd <= mem_bd;
                 wb_delay_slot_next_pc <= mem_delay_slot_next_pc;
+                wb_delay_slot_branch_inst <= mem_delay_slot_branch_inst;
                 wb_mem_to_reg <= mem_mem_to_reg;
             end
             if (alloc_fire) begin
@@ -248,13 +256,13 @@ module mips_rob_fifo #(
             if (complete_valid && alloc_fire &&
                 !(buffered_commit && (complete_tag == head)) &&
                 (complete_tag == tail)) begin
-                slot[tail][231:200] <= format_complete(
-                    complete_rdata, alloc_bundle[69:67],
-                    alloc_bundle[169:168], alloc_bundle[103:72]);
+                slot[tail][263:232] <= format_complete(
+                    complete_rdata, alloc_bundle[101:99],
+                    alloc_bundle[169:168], alloc_bundle[135:104]);
                 if (complete_error) begin
-                    slot[tail][42] <= 1'b1;
-                    slot[tail][41:37] <= 5'h1E;
-                    slot[tail][36] <= 1'b1;
+                    slot[tail][74] <= 1'b1;
+                    slot[tail][73:69] <= 5'h1E;
+                    slot[tail][68] <= 1'b1;
                 end
                 ready[tail] <= 1'b1;
             end else if (complete_valid && (complete_tag < DEPTH) && valid[complete_tag] &&
@@ -262,13 +270,13 @@ module mips_rob_fifo #(
                 // A late cache response owns the data field of the original
                 // instruction.  Error is converted at retirement so younger
                 // entries cannot observe a transient response-side fault.
-                slot[complete_tag][231:200] <= format_complete(
-                    complete_rdata, slot[complete_tag][69:67],
-                    slot[complete_tag][169:168], slot[complete_tag][103:72]);
+                slot[complete_tag][263:232] <= format_complete(
+                    complete_rdata, slot[complete_tag][101:99],
+                    slot[complete_tag][169:168], slot[complete_tag][135:104]);
                 if (complete_error) begin
-                    slot[complete_tag][42] <= 1'b1;  // exception request
-                    slot[complete_tag][41:37] <= 5'h1E; // CacheErr
-                    slot[complete_tag][36] <= 1'b1; // data-side exception
+                    slot[complete_tag][74] <= 1'b1;  // exception request
+                    slot[complete_tag][73:69] <= 5'h1E; // CacheErr
+                    slot[complete_tag][68] <= 1'b1; // data-side exception
                 end
                 ready[complete_tag] <= 1'b1;
             end else if (complete_valid && (count != 0) &&
@@ -280,9 +288,9 @@ module mips_rob_fifo #(
                 // outstanding request without dropping its response.
                 ready[head] <= 1'b1;
                 if (complete_error) begin
-                    slot[head][42] <= 1'b1;
-                    slot[head][41:37] <= 5'h1E;
-                    slot[head][36] <= 1'b1;
+                    slot[head][74] <= 1'b1;
+                    slot[head][73:69] <= 5'h1E;
+                    slot[head][68] <= 1'b1;
                 end
             end
             // A cut-through commit never occupied a slot, so it must not

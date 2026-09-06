@@ -35,6 +35,7 @@ module mips_id_ex_reg (
     input  wire        id_except_is_tlb_refill,
     input  wire        id_bd,               // Phase B.5: 1 = ID inst is in a branch/jump delay slot
     input  wire [31:0] id_delay_slot_next_pc,
+    input  wire [31:0] id_delay_slot_branch_inst,
     input  wire        id_cp0_we,
     input  wire        id_is_eret,
     input  wire [2:0]  id_tlb_op,
@@ -72,6 +73,7 @@ module mips_id_ex_reg (
     output reg         ex_except_is_tlb_refill,
     output reg         ex_bd,
     output reg  [31:0] ex_delay_slot_next_pc,
+    output reg  [31:0] ex_delay_slot_branch_inst,
     output reg         ex_cp0_we,
     output reg         ex_is_eret,
     output reg  [2:0]  ex_tlb_op,
@@ -109,6 +111,7 @@ module mips_id_ex_reg (
             ex_except_is_tlb_refill <= 1'b0;
             ex_bd          <= 1'b0;
             ex_delay_slot_next_pc <= 32'd0;
+            ex_delay_slot_branch_inst <= 32'd0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
             ex_tlb_op      <= 3'd0;
@@ -143,6 +146,7 @@ module mips_id_ex_reg (
             ex_except_is_tlb_refill <= 1'b0;
             ex_bd          <= 1'b0;
             ex_delay_slot_next_pc <= 32'd0;
+            ex_delay_slot_branch_inst <= 32'd0;
             ex_cp0_we      <= 1'b0;
             ex_is_eret     <= 1'b0;
             ex_tlb_op      <= 3'd0;
@@ -182,6 +186,7 @@ module mips_id_ex_reg (
             ex_except_is_tlb_refill <= id_except_is_tlb_refill;
             ex_bd          <= id_bd;
             ex_delay_slot_next_pc <= id_delay_slot_next_pc;
+            ex_delay_slot_branch_inst <= id_delay_slot_branch_inst;
             ex_cp0_we      <= id_cp0_we;
             ex_is_eret     <= id_is_eret;
             ex_tlb_op      <= id_tlb_op;
