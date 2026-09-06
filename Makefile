@@ -669,7 +669,7 @@ mips-control-cp0-gate:
 cpu-reference-gate:
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu tb/isa_ref/run_qemu_reference_gate.sh
 
-cpu-lockstep-gate:
+cpu-lockstep-gate: qemu-system-mips32-soc-ref
 	RUN_DIR=$(BUILD_DIR)/isa_ref/lockstep tb/isa_ref/run_cpu_lockstep_gate.sh
 
 qemu-system-mips32-soc-ref:

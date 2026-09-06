@@ -38,7 +38,7 @@ tb/isa_ref/
   qemu_retire_plugin.c          ← per-instruction QEMU plugin
   qemu_cpu_trace_to_jsonl.py    ← CPU snapshot/event merger
   run_qemu_reference_gate.sh    ← QEMU retire differential gate
-  run_cpu_lockstep_gate.sh      ← compatibility alias to QEMU gate
+  run_cpu_lockstep_gate.sh      ← system-mode RTL/QEMU retire lockstep gate
 ```
 
 ## Integration hook (RTL side)
@@ -73,22 +73,28 @@ QEMU_EXPECTED_EXIT=0 \
 make cpu-reference-gate
 ```
 
-The gate writes `qemu_instruction_events.jsonl`, `qemu_cpu.log`,
+The user-mode gate writes `qemu_instruction_events.jsonl`, `qemu_cpu.log`,
 `qemu_retire.jsonl`, and `trace_compare.log` below `build/isa_ref/qemu`.
 Missing guest or RTL trace returns `BLOCKED`; QEMU version readiness alone is
-never a pass. The historical `make cpu-lockstep-gate` target aliases this
-same retire differential gate.
+never a pass.
 
-For long system-mode Linux captures, set `TRACE_COMPARE_STREAM=1` (the Linux
-differential wrapper enables it automatically). The comparator then consumes
-both JSONL files incrementally with bounded look-ahead instead of loading the
-complete traces into Python lists. This prevents the previous multi-gigabyte
-RSS failure on a 2M-cycle capture: the 606 MB RTL trace and roughly 200 MB
-QEMU state trace previously drove Python to about 3 GB RSS and exit 137. The
-streaming path passed the 2M-cycle bounded gate with `143248` compared retire
-records and about 10 MB maximum RSS. This is a resource-safety and bounded
-prefix result; it does not change the complete Linux/system-mode signoff
-boundary below.
+`make cpu-lockstep-gate` is the system-mode lockstep entry point. It builds the
+`qemu_system_lockstep_min` SoC firmware, captures the RTL retire JSONL, runs
+the custom `mips32-soc-ref` machine, and compares each retire record through
+the mailbox boundary. Its report is written below
+`build/isa_ref/lockstep`; a passing QEMU build alone cannot produce PASS.
+
+System-mode differential gates use `TRACE_COMPARE_STREAM=1` by default for
+non-FPU guests. The comparator consumes both JSONL files incrementally with
+bounded look-ahead instead of loading complete traces into Python lists; it
+also honors `STOP_AFTER_MAILBOX=1` at the common completion store. FPU guests
+retain the list-based state-window comparator unless explicitly overridden.
+This prevents the previous multi-gigabyte RSS failure on a 2M-cycle capture:
+the 606 MB RTL trace and roughly 200 MB QEMU state trace previously drove
+Python to about 3 GB RSS and exit 137. The streaming path passed the 2M-cycle
+bounded gate with `143248` compared retire records and about 10 MB maximum RSS.
+This is a resource-safety and bounded-prefix result; it does not change the
+complete Linux/system-mode signoff boundary below.
 
 ## System-mode SoC reference machine
 

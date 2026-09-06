@@ -156,6 +156,7 @@ def stream_compare(rtl_path, golden_path, args):
     previous_r = previous_g = None
     compared = 0
     mismatches = []
+    stopped_at_completion = False
     while True:
         r_item = rtl.peek()
         g_item = golden.peek()
@@ -199,15 +200,20 @@ def stream_compare(rtl_path, golden_path, args):
                 break
         rtl.pop()
         golden.pop()
+        compared += 1
+        if args.stop_after_mailbox and (is_completion_store(r) or
+                                         is_completion_store(g)):
+            stopped_at_completion = True
+            break
         if mismatches or len(mismatches) >= args.max_mismatches:
             break
         previous_r, previous_g = r, g
-        compared += 1
 
-    if (not mismatches and g_item is not None and r_item is None and
+    if (not stopped_at_completion and not mismatches and
+            g_item is not None and r_item is None and
             not args.truncate_golden_to_rtl):
         mismatches.append((compared, "trace_length", "rtl-eof", "golden-more"))
-    if not mismatches and g_item is None:
+    if not stopped_at_completion and not mismatches and g_item is None:
         if not args.allow_golden_prefix:
             extra = rtl.peek()
             if extra is not None:

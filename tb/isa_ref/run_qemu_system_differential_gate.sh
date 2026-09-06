@@ -18,6 +18,18 @@ RTL_VCS_EXTRA_ARGS=${RTL_VCS_EXTRA_ARGS:-}
 QEMU_CAPTURE_TMPDIR=${QEMU_CAPTURE_TMPDIR:-0}
 MAX_TRACE_BYTES=${MAX_TRACE_BYTES:-268435456}
 MAX_TRACE_RECORDS=${MAX_TRACE_RECORDS:-1000000}
+# The list comparator retains both complete traces and can expand a bounded
+# 256 MiB JSONL capture into multiple GiB of Python objects.  Use the bounded
+# streaming comparator for ordinary system guests.  FPU guests retain the
+# list-based path because their architectural state comparison uses a bounded
+# observation window that the streaming path deliberately does not emulate.
+TRACE_COMPARE_STREAM=${TRACE_COMPARE_STREAM:-}
+if [[ -z "${TRACE_COMPARE_STREAM}" ]]; then
+    case "${FW_TEST}" in
+        fpu_*|qemu_system_fpu_*) TRACE_COMPARE_STREAM=0 ;;
+        *) TRACE_COMPARE_STREAM=1 ;;
+    esac
+fi
 
 # Normalize caller-provided relative paths before passing RETIRE_TRACE through
 # the UVM wrapper, which resolves its own run directory relative to the repo.
@@ -94,6 +106,7 @@ if [[ "${QEMU_CAPTURE_TMPDIR}" == "1" ]]; then
 fi
 env RUN_DIR="${qemu_run_dir}" FW_ELF="${FW_ELF}" RTL_TRACE="${RTL_TRACE}" QEMU_CPU="${QEMU_CPU}" \
 REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=1 QSPI_IMAGE="${QEMU_QSPI_IMAGE}" \
+TRACE_COMPARE_STREAM="${TRACE_COMPARE_STREAM}" \
 "${irq_replay_args[@]}" \
 "${ROOT_DIR}/tb/isa_ref/run_qemu_system_retire_capture_gate.sh" \
     >"${RUN_DIR}/qemu_gate.log" 2>&1
@@ -127,6 +140,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - QEMU trace: ${RUN_DIR}/qemu/qemu_retire.jsonl
 - Evidence: firmware_build.log, firmware.sha256, rtl_gate.log, rtl/vcs_uvm_compile.log, rtl/vcs_uvm.log, qemu/qemu_build_identity.txt, qemu/qemu_trace_capture.log, qemu/trace_compare.log
 - Scope: ${FW_TEST} guest, compared through the mailbox-store retirement boundary; the selected guest defines whether CP0, exceptions, and device accesses are covered.
+- Comparator: ${TRACE_COMPARE_STREAM} (1=streaming bounded-memory mode)
 - Residual risk: CP0, exceptions, delay slots, interrupt schedule replay, QSPI command/FIFO, DMA error/reset, and broader device corpus remain separate gates.
 EOF
 echo "QEMU system RTL retire differential: PASS"
