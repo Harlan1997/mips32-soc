@@ -59,12 +59,18 @@ module l1_cache_nb_cpu_axi #(
     // has an explicit nonblocking completion contract.
     reg legacy_active, legacy_request_held, l1_active, l1_response_seen;
     reg legacy_aw_seen;
-    localparam FORCE_UNCACHED_LINES = 4;
+    // Keep one pending L2-bypass marker per direct-mapped L1 set. Linux can
+    // issue an index maintenance sweep without refilling each line between
+    // operations. The marker is therefore indexed by the same set bits as the
+    // integrated L1, rather than allocated from a first-free pool. A later
+    // invalidate of another tag in that set supersedes the older marker; it
+    // cannot make a valid maintenance request wait for table capacity.
+    localparam FORCE_UNCACHED_LINES = 256;
     reg [FORCE_UNCACHED_LINES-1:0] force_uncached_line_valid;
     reg [31:5] force_uncached_line [0:FORCE_UNCACHED_LINES-1];
     integer force_i, force_j;
     reg force_slot_free;
-    reg [1:0] force_slot_idx;
+    reg [7:0] force_slot_idx;
     reg force_line_exists;
     reg force_request_match;
     reg [2:0] l1_outstanding;
@@ -74,14 +80,31 @@ module l1_cache_nb_cpu_axi #(
     reg legacy_req_uncacheable_q;
     wire legacy_wready;
     // Observation-only compatibility fields for the testbench diagnostics.
-    // Replacement is owned by l1_cache_nb in this configuration, so the
-    // legacy victim fields intentionally read as zero.
+    // Replacement is owned by l1_cache_nb in this configuration.  Keep the
+    // legacy-shaped view available so Linux d-side traces can compile for
+    // either cache implementation; it is never consumed by the datapath.
     wire [255:0] line_buf = 256'd0;
     wire [1:0] victim_way = 2'd0;
     wire [22:0] victim_tag_entry = 23'd0;
     wire [2:0] word_cnt = 3'd0;
     wire [255:0] data_rdata [0:3];
-    assign data_rdata[0] = 256'd0;
+    wire [7:0] lookup_index = cpu_addr[12:5];
+    wire [24:0] lookup_tag = cpu_addr[31:7];
+    wire [3:0] way_hit;
+    wire [3:0] way_valid;
+    wire [1:0] hit_way = 2'd0;
+    wire [31:0] orig_word;
+    wire [31:0] tag_rdata [0:3];
+    wire [31:0] n_rsp_data;
+    assign way_hit = {3'b000, u_l1.hit};
+    assign way_valid = {3'b000, u_l1.valid[lookup_index]};
+    assign orig_word = n_rsp_data;
+    assign tag_rdata[0] = {5'd0, u_l1.valid[lookup_index],
+                           u_l1.dirty[lookup_index], u_l1.tags[lookup_index]};
+    assign tag_rdata[1] = 32'd0;
+    assign tag_rdata[2] = 32'd0;
+    assign tag_rdata[3] = 32'd0;
+    assign data_rdata[0] = u_l1.lines[lookup_index];
     assign data_rdata[1] = 256'd0;
     assign data_rdata[2] = 256'd0;
     assign data_rdata[3] = 256'd0;
@@ -168,7 +191,6 @@ module l1_cache_nb_cpu_axi #(
 
     wire n_cpu_ready, n_rsp_valid;
     wire [3:0] n_rsp_id;
-    wire [31:0] n_rsp_data;
     wire n_rsp_error;
     wire n_cache_maint_ready, n_cache_maint_done, n_cache_maint_error;
     wire [31:0] n_cache_tag_rdata;
@@ -182,15 +204,14 @@ module l1_cache_nb_cpu_axi #(
     wire l1_bridge_active = n_awvalid || n_wvalid || n_bready ||
                             n_arvalid || n_rready || n_mem_req_valid;
     always @(*) begin
-        force_slot_free = 1'b0;
-        force_slot_idx = 2'd0;
+        // One marker per direct-mapped set is always replaceable. Keeping the
+        // replacement decision deterministic also makes a complete index
+        // invalidate sweep independent of the order of earlier markers.
+        force_slot_free = 1'b1;
+        force_slot_idx = cache_op_addr[12:5];
         force_line_exists = 1'b0;
         force_request_match = 1'b0;
         for (force_i = 0; force_i < FORCE_UNCACHED_LINES; force_i = force_i + 1) begin
-            if (!force_uncached_line_valid[force_i] && !force_slot_free) begin
-                force_slot_free = 1'b1;
-                force_slot_idx = force_i[1:0];
-            end
             if (force_uncached_line_valid[force_i] &&
                 (force_uncached_line[force_i] == cache_op_addr[31:5]))
                 force_line_exists = 1'b1;
@@ -442,16 +463,20 @@ module l1_cache_nb_cpu_axi #(
             // the fabric. The legacy source can remain valid while the L1
             // owner changes during the same cycle; using l_awvalid here can
             // leave W permanently gated after a valid AW handshake.
-            if (l1_req && n_cpu_ready)
-                begin
-                    if (!ENABLE_MULTI_OUTSTANDING) begin
-                        l1_active <= 1'b1;
-                        l1_response_seen <= 1'b0;
-                    end
+            // In the single-outstanding mode the adapter presents the line
+            // response with rsp_ready tied to !legacy_sel, so l1_rsp_fire is
+            // the actual CPU-facing consume edge.  Do not wait for a second
+            // response cycle: rsp_valid is a one-cycle FIFO head event and
+            // the old response_seen-then-clear sequence could never observe
+            // that event again, permanently locking the L1 owner.
+            if (!ENABLE_MULTI_OUTSTANDING) begin
+                if (l1_rsp_fire && l1_active) begin
+                    l1_active <= 1'b0;
+                    l1_response_seen <= 1'b0;
+                end else if (l1_req && n_cpu_ready) begin
+                    l1_active <= 1'b1;
+                    l1_response_seen <= 1'b0;
                 end
-            if (l1_rsp_fire) begin
-                if (!ENABLE_MULTI_OUTSTANDING && l1_active)
-                    l1_response_seen <= 1'b1;
             end
             // An issue and a response may occur on the same clock in the
             // multi-outstanding mode.  Use the combined delta so the later
@@ -462,16 +487,6 @@ module l1_cache_nb_cpu_axi #(
                     2'b01: l1_outstanding <= l1_outstanding - 1'b1;
                     default: l1_outstanding <= l1_outstanding;
                 endcase
-            end
-            // Keep the L1 owner until the CPU-facing response has actually
-            // been consumed.  A response can remain at the head of the L1
-            // FIFO while the legacy path is otherwise idle; releasing the
-            // owner merely because the bridge is idle would make legacy_sel
-            // deassert rsp_ready and replay that same response forever.
-            if (l1_active && l1_response_seen && l1_rsp_fire &&
-                !(l1_req && n_cpu_ready)) begin
-                l1_active <= 1'b0;
-                l1_response_seen <= 1'b0;
             end
         end
     end

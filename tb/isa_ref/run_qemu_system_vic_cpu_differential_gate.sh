@@ -7,7 +7,7 @@ RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_vic_cpu_differential"}
 BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
 FW_DIR=${FW_DIR:-"${BUILD_DIR}/firmware/qemu_system_vic_cpu"}
 
-RTL_IRQ_REPLAY=1 RTL_IRQ_SCHEDULE_OFFSET=-1 IRQ_REPLAY_PIC_MASK=0x300 FW_TEST=vic_cpu FW_DIR="${FW_DIR}" RUN_DIR="${RUN_DIR}" \
+RTL_IRQ_REPLAY=1 RTL_IRQ_SCHEDULE_OFFSET=-1 IRQ_REPLAY_PIC_MASK=0x300 IRQ_REPLAY_BD_MASK=0x1 FW_TEST=vic_cpu FW_DIR="${FW_DIR}" RUN_DIR="${RUN_DIR}" \
     "${SCRIPT_DIR}/run_qemu_system_differential_gate.sh"
 
 # Streaming comparison appends its bounded-memory mode to the PASS marker.

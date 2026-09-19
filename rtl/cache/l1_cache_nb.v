@@ -472,7 +472,12 @@ module l1_cache_nb #(
 
             if (mem_rsp_valid) begin
 `ifdef L1_NB_DEBUG
-                $display("L1NB MEM_RSP addr=%h err=%b data0=%h", mem_rsp_addr, mem_rsp_error, mem_rsp_data[31:0]);
+                $display("L1NB MEM_RSP addr=%h err=%b data=%h/%h/%h/%h/%h/%h/%h/%h",
+                         mem_rsp_addr, mem_rsp_error,
+                         mem_rsp_data[31:0], mem_rsp_data[63:32],
+                         mem_rsp_data[95:64], mem_rsp_data[127:96],
+                         mem_rsp_data[159:128], mem_rsp_data[191:160],
+                         mem_rsp_data[223:192], mem_rsp_data[255:224]);
 `endif
                 for (k = 0; k < MSHR_COUNT; k = k + 1)
                     if (mvalid[k] && mline[k] == {mem_rsp_addr[31:5],5'b0}) begin

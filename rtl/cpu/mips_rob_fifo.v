@@ -85,7 +85,7 @@ module mips_rob_fifo #(
     wire alloc_fire = alloc_valid && !stall && !cutthrough_commit &&
                       ((count < DEPTH) || buffered_commit);
     wire [31:0] head_complete_fmt = format_complete(
-        complete_rdata, slot[head][101:99], slot[head][169:168],
+        complete_rdata, slot[head][101:99], slot[head][201:200],
         slot[head][135:104]);
     // A response can make the head retire in the same clock edge.  The slot
     // array is updated with nonblocking assignments below, so reading
@@ -181,6 +181,38 @@ module mips_rob_fifo #(
                 $display("ROBF alloc tag=%0d pc8=%h ready=%b head=%0d tail=%0d count=%0d", tail, mem_pc_plus_8, mem_ready_at_alloc, head, tail, count);
             if (commit_fire)
                 $display("ROBF commit tag=%0d exc=%b code=%0d head=%0d tail=%0d count=%0d v=%b%b%b%b r=%b%b%b%b", cutthrough_commit ? tail : head, commit_bundle[42], commit_bundle[41:37], head, tail, count, valid[3], valid[2], valid[1], valid[0], ready[3], ready[2], ready[1], ready[0]);
+            // Keep a focused load trace for the integrated smoke sub-word
+            // window.  The normal ROB debug stream intentionally omits the
+            // memory operation fields, which makes a late response/value
+            // mismatch indistinguishable from a request-routing failure.
+            if (alloc_fire && mem_pc_plus_8 >= 32'h00000e20 &&
+                mem_pc_plus_8 <= 32'h00000e60 && mem_mem_read)
+                $display("ROBF_LOAD_ALLOC tag=%0d pc=%08h inst=%08h addr=%08h op=%0d align=%0d waddr=%0d raw_fmt=%08h ready=%b",
+                         tail, mem_pc_plus_8 - 32'd8, mem_inst, mem_ex_out,
+                         mem_mem_op, mem_ex_out[1:0], mem_waddr,
+                         mem_rdata_fmt, mem_ready_at_alloc);
+            if (complete_valid && (complete_tag < DEPTH) &&
+                valid[complete_tag] &&
+                slot[complete_tag][199:168] >= 32'h00000e28 &&
+                slot[complete_tag][199:168] <= 32'h00000e58 &&
+                slot[complete_tag][103])
+                $display("ROBF_LOAD_COMPLETE tag=%0d pc=%08h raw=%08h op=%0d align=%0d fmt=%08h err=%b",
+                         complete_tag, slot[complete_tag][199:168] - 32'd8,
+                         complete_rdata, slot[complete_tag][101:99],
+                         slot[complete_tag][201:200],
+                         format_complete(complete_rdata,
+                                         slot[complete_tag][101:99],
+                                         slot[complete_tag][201:200],
+                                         slot[complete_tag][135:104]),
+                         complete_error);
+            if (commit_fire && commit_bundle[103] &&
+                commit_bundle[199:168] >= 32'h00000e28 &&
+                commit_bundle[199:168] <= 32'h00000e58)
+                $display("ROBF_LOAD_COMMIT pc=%08h addr=%08h op=%0d align=%0d waddr=%0d data=%08h",
+                         commit_bundle[199:168] - 32'd8,
+                         commit_bundle[231:200], commit_bundle[101:99],
+                         commit_bundle[201:200], commit_bundle[98:94],
+                         commit_bundle[263:232]);
 `endif
             // The output bundle and its valid bit are a registered interface.
             // Do not suppress commits by PC: the same PC may retire again
@@ -258,7 +290,7 @@ module mips_rob_fifo #(
                 (complete_tag == tail)) begin
                 slot[tail][263:232] <= format_complete(
                     complete_rdata, alloc_bundle[101:99],
-                    alloc_bundle[169:168], alloc_bundle[135:104]);
+                    alloc_bundle[201:200], alloc_bundle[135:104]);
                 if (complete_error) begin
                     slot[tail][74] <= 1'b1;
                     slot[tail][73:69] <= 5'h1E;
@@ -272,7 +304,7 @@ module mips_rob_fifo #(
                 // entries cannot observe a transient response-side fault.
                 slot[complete_tag][263:232] <= format_complete(
                     complete_rdata, slot[complete_tag][101:99],
-                    slot[complete_tag][169:168], slot[complete_tag][135:104]);
+                    slot[complete_tag][201:200], slot[complete_tag][135:104]);
                 if (complete_error) begin
                     slot[complete_tag][74] <= 1'b1;  // exception request
                     slot[complete_tag][73:69] <= 5'h1E; // CacheErr

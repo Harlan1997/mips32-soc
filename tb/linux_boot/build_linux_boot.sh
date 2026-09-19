@@ -42,13 +42,34 @@ build_guest_binary() {
     local source=$1
     local output=$2
     local stamp="${output}.input.sha256"
+    local object_dir
+    local object_name
+    object_dir=$(dirname "${output}")
+    # GNU ld records the input object basename in .symtab; fixed-length names
+    # keep the preserved ELF layout stable across isolated build directories.
+    case "$(basename "${source}")" in
+        init.S) object_name=init32im.o ;;
+        exec_child.S) object_name=vm_child.o ;;
+        *) object_name="$(basename "${output}").o" ;;
+    esac
+    local object_output="${object_dir}/${object_name}"
     local input_hash
-    input_hash=$(sha256sum "${source}" "${SCRIPT_DIR}/init.ld" | sha256sum | awk '{print $1}')
+    input_hash=$({
+        sha256sum "${source}" "${SCRIPT_DIR}/init.ld"
+        printf 'guest_binary_format=preserve-elf-v3-fixed-object-layout\n'
+    } | sha256sum | awk '{print $1}')
     if [[ ! -s "${output}" || ! -s "${stamp}" || "$(<"${stamp}")" != "${input_hash}" ]]; then
+        "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
+            -nostdlib -nostartfiles -nodefaultlibs -static -c \
+            -o "${object_output}" "${source}"
         "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
             -nostdlib -nostartfiles -nodefaultlibs -static \
             -Wl,-e,_start -Wl,-T,"${SCRIPT_DIR}/init.ld" -Wl,--build-id=none \
-            -o "${output}" "${source}"
+            -o "${output}" "${object_output}"
+        # Keep the complete guest ELF.  The RTL userspace contract exercises
+        # the guest's protection transition and relies on the stable ELF
+        # payload produced by this build; stripping changes the initramfs
+        # layout and can move unrelated kernel data.
         chmod 0755 "${output}"
         # Keep generated cpio metadata stable across isolated build roots.
         touch -d "@${SOURCE_DATE_EPOCH}" "${output}"
@@ -82,6 +103,25 @@ else
     rm -f "${initramfs_list_tmp}"
 fi
 
+# Keep the path recorded in CONFIG_INITRAMFS_SOURCE stable for the RTL
+# profile. Linux embeds that setting in IKCONFIG, so using BUILD_DIR here
+# makes otherwise equivalent kernels differ across scratch directories. The
+# list contents still point at the run-local guest files; only this tiny
+# configuration input path is shared and atomically replaced.
+initramfs_config_source="${initramfs_list}"
+if [[ "${LINUX_PROFILE}" == "rtl-minimal" ]]; then
+    initramfs_config_source="${ROOT_DIR}/build/linux_boot/rtl-minimal-canonical.initramfs.list"
+    stable_initramfs_tmp="${initramfs_config_source}.tmp"
+    mkdir -p "$(dirname "${initramfs_config_source}")"
+    cp "${initramfs_list}" "${stable_initramfs_tmp}"
+    if [[ ! -e "${initramfs_config_source}" ]] ||
+       ! cmp -s "${stable_initramfs_tmp}" "${initramfs_config_source}"; then
+        mv -f "${stable_initramfs_tmp}" "${initramfs_config_source}"
+    else
+        rm -f "${stable_initramfs_tmp}"
+    fi
+fi
+
 scripts_config="${LINUX_SOURCE_DIR}/scripts/config"
 test -x "${scripts_config}"
 config_stamp="${BUILD_DIR}/kernel/.mips32_soc_config.sha256"
@@ -103,6 +143,7 @@ config_inputs_hash=$({
     # configuration stamp so a changed guest binary cannot reuse an old
     # kernel merely because the source tree and DTS are unchanged.
     sha256sum "${initramfs_list}"
+    printf 'INITRAMFS_CONFIG_SOURCE=%s\n' "${initramfs_config_source}"
     printf 'KERNEL_PHYSICAL_START=%s\n' "${KERNEL_PHYSICAL_START}"
     printf 'CONFIG_CRASH_DUMP=%s\n' "${crash_dump_config}"
     printf 'LINUX_CMDLINE=%s\n' "${LINUX_CMDLINE}"
@@ -135,7 +176,7 @@ if [[ ! -s "${config_stamp}" || "$(<"${config_stamp}")" != "${config_inputs_hash
         --enable CONFIG_DEVTMPFS \
         --enable CONFIG_DEVTMPFS_MOUNT \
         --enable CONFIG_INITRAMFS_COMPRESSION_NONE \
-        --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_list}" \
+        --set-str CONFIG_INITRAMFS_SOURCE "${initramfs_config_source}" \
         --enable CONFIG_CMDLINE_BOOL \
         --set-str CONFIG_CMDLINE "${LINUX_CMDLINE}" \
         --set-val CONFIG_PHYSICAL_START "${KERNEL_PHYSICAL_START}"

@@ -71,7 +71,7 @@ class Peekable:
         return item
 
 
-def stream_fields(r, g, previous_r, previous_g, next_r, next_g):
+def stream_fields(r, g, previous_r, previous_g, next_r, next_g, args):
     """Return fields comparable for one streaming trace pair.
 
     The long Linux differential has no FPU architectural activity, so its
@@ -157,7 +157,7 @@ def stream_compare(rtl_path, golden_path, args):
     compared = 0
     mismatches = []
     stopped_at_completion = False
-    while True:
+    while args.limit is None or compared < args.limit:
         r_item = rtl.peek()
         g_item = golden.peek()
         if r_item is None or g_item is None:
@@ -184,7 +184,8 @@ def stream_compare(rtl_path, golden_path, args):
                 golden.pop()
                 continue
 
-        fields = stream_fields(r, g, previous_r, previous_g, r_next, g_next)
+        fields = stream_fields(r, g, previous_r, previous_g, r_next, g_next,
+                               args)
         for field in fields:
             got = comparable(field, r.get(field))
             expected = comparable(field, g.get(field))
@@ -209,11 +210,17 @@ def stream_compare(rtl_path, golden_path, args):
             break
         previous_r, previous_g = r, g
 
-    if (not stopped_at_completion and not mismatches and
+    limit_reached = args.limit is not None and compared >= args.limit
+    if (not limit_reached and not stopped_at_completion and not mismatches and
             g_item is not None and r_item is None and
             not args.truncate_golden_to_rtl):
         mismatches.append((compared, "trace_length", "rtl-eof", "golden-more"))
-    if not stopped_at_completion and not mismatches and g_item is None:
+    if (args.limit is not None and compared < args.limit and
+            not mismatches):
+        mismatches.append((compared, "trace_length", "shorter-than-limit",
+                           args.limit))
+    if (not limit_reached and not stopped_at_completion and not mismatches and
+            g_item is None):
         if not args.allow_golden_prefix:
             extra = rtl.peek()
             if extra is not None:
@@ -223,7 +230,8 @@ def stream_compare(rtl_path, golden_path, args):
             print(f"MISMATCH retire={idx} field={field} rtl={got!r} golden={expected!r}",
                   file=sys.stderr)
         return 1
-    print(f"TRACE_COMPARE_PASS records={compared} mode=stream")
+    suffix = " mode=stream-limit" if limit_reached else " mode=stream"
+    print(f"TRACE_COMPARE_PASS records={compared}{suffix}")
     return 0
 
 def is_mailbox_store(obj):
@@ -449,7 +457,11 @@ def main():
                     help="after alignment, compare only the golden prefix available in the RTL trace")
     ap.add_argument("--stream", action="store_true",
                     help="compare line-by-line with bounded memory for long traces")
+    ap.add_argument("--limit", type=int,
+                    help="compare exactly this many records from each stream")
     args = ap.parse_args()
+    if args.limit is not None and args.limit <= 0:
+        ap.error("--limit must be a positive integer")
     if args.stream:
         try:
             return stream_compare(args.rtl, args.golden, args)

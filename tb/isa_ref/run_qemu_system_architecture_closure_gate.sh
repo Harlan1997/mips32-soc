@@ -9,6 +9,13 @@ LINUX_KERNEL_EXPLICIT=${LINUX_KERNEL+x}
 LINUX_DTB_EXPLICIT=${LINUX_DTB+x}
 LINUX_KERNEL=${LINUX_KERNEL:-"${BUILD_DIR}/linux_boot/real/kernel/vmlinux"}
 LINUX_DTB=${LINUX_DTB:-"${BUILD_DIR}/linux_boot/real/mips32_soc_ref.dtb"}
+# The aggregate invokes child Make targets. Command-line Make variables are
+# not automatically exported to those nested makes, so make the selected
+# custom-machine build visible to every child gate explicitly.
+QEMU_SRC=${QEMU_SRC:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0"}
+QEMU_BUILD=${QEMU_BUILD:-"${QEMU_SRC}/build-mipsel-softmmu"}
+QEMU_BIN=${QEMU_BIN:-"${QEMU_BUILD}/qemu-system-mipsel"}
+export QEMU_SRC QEMU_BUILD QEMU_BIN
 export BUILD_DIR
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md"
@@ -81,7 +88,6 @@ run_gate linux_userspace_marker \
     DTB="${LINUX_DTB}" \
     make -C "${ROOT_DIR}" linux-boot-build-gate
 
-QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
 {
     "${QEMU_BIN}" --version
     sha256sum "${QEMU_BIN}"

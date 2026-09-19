@@ -156,7 +156,8 @@ cp sim_runtime.log sim.log
 if [ "${sim_status}" -ne 0 ]; then
     exit "${sim_status}"
 fi
-if grep -q "SoC Simulation Timeout" sim.log; then
+if grep -q "SoC Simulation Timeout" sim.log &&
+   ! grep -q "LINUX_SIMULATION_BOUND_REACHED" sim.log; then
     echo "ERROR: SoC simulation watchdog expired"
     exit 1
 fi

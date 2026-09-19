@@ -370,6 +370,13 @@
 `define SOC_CPU_NONBLOCKING_ENABLE   0
 `endif
 
+// Precise interrupt rollback for a WB delay-slot instruction is an opt-in
+// architectural path. Keep the Linux bring-up/default pipeline on the
+// established retirement behavior until its broader interrupt corpus closes.
+`ifndef SOC_DELAY_SLOT_ROLLBACK_ENABLE
+`define SOC_DELAY_SLOT_ROLLBACK_ENABLE 0
+`endif
+
 // Opt-in extension for the CPU-facing nonblocking L1 to cache the real DDR
 // physical window. The default prototype keeps the established SRAM-only
 // nonblocking slice and the blocking DDR path unchanged.

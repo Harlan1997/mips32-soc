@@ -22,8 +22,10 @@ RTL_TRACE=${RTL_TRACE:-}
 IRQ_SCHEDULE=${IRQ_SCHEDULE:-}
 DMA_EVENT_TRACE=${DMA_EVENT_TRACE:-}
 IRQ_REPLAY_PIC_MASK=${IRQ_REPLAY_PIC_MASK:-}
+IRQ_REPLAY_BD_MASK=${IRQ_REPLAY_BD_MASK:-}
 QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-}
 QEMU_ACCEL=${QEMU_ACCEL:-}
+QEMU_ICOUNT=${QEMU_ICOUNT:-}
 # Bound pathological guests before the Python converter materializes JSONL.
 # Normal current-contract guests are well below these limits; callers can
 # raise them explicitly for a reviewed long-running capture.
@@ -101,6 +103,10 @@ accel_args=()
 if [[ -n "${QEMU_ACCEL}" ]]; then
     accel_args=(-accel "${QEMU_ACCEL}")
 fi
+icount_args=()
+if [[ -n "${QEMU_ICOUNT}" ]]; then
+    icount_args=(-icount "${QEMU_ICOUNT}")
+fi
 if [[ -n "${IRQ_SCHEDULE}" ]]; then
     [[ -s "${IRQ_SCHEDULE}" ]]
     machine_spec+=" ,irq-schedule=$(realpath "${IRQ_SCHEDULE}")"
@@ -115,6 +121,9 @@ if [[ -n "${IRQ_SCHEDULE}" ]]; then
 fi
 if [[ -n "${IRQ_REPLAY_PIC_MASK}" ]]; then
     machine_spec+=" ,irq-replay-pic-mask=${IRQ_REPLAY_PIC_MASK}"
+fi
+if [[ -n "${IRQ_REPLAY_BD_MASK}" ]]; then
+    machine_spec+=" ,irq-replay-bd-mask=${IRQ_REPLAY_BD_MASK}"
 fi
 if [[ -n "${DMA_EVENT_TRACE}" ]]; then
     machine_spec+=" ,dma-event-trace=$(realpath -m "${DMA_EVENT_TRACE}")"
@@ -134,6 +143,7 @@ qemu_cmd=(
     -M "${machine_spec}"
     "${cpu_args[@]}"
     "${accel_args[@]}"
+    "${icount_args[@]}"
     -m "${QEMU_MEMORY}" -nographic -monitor none
 )
 if [[ -n "${QEMU_KERNEL}" ]]; then
@@ -205,7 +215,14 @@ if [[ "${REQUIRE_SMOKE_OUTPUT:-1}" == "1" ]]; then
 fi
 events=$(wc -l <"${RUN_DIR}/qemu_instruction_events.jsonl")
 states=$(wc -l <"${RUN_DIR}/qemu_state.jsonl")
-(( events > 0 && states > events - 1 ))
+(( events > 0 && states >= events + 1 )) || {
+    {
+        echo "QEMU system retire capture: incomplete event/state window"
+        echo "events=${events} states=${states} (required states >= events + 1)"
+        echo "The capture likely hit MAX_QEMU_CAPTURE_BYTES before the final post-state."
+    } | tee "${RUN_DIR}/qemu_capture_guard.log" >&2
+    exit 2
+}
 [[ -s "${RUN_DIR}/qemu_registers.txt" ]]
 for reg in r1 pc status cause epc; do
     grep -qx "${reg}" "${RUN_DIR}/qemu_registers.txt"

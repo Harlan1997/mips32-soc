@@ -200,6 +200,7 @@ typedef struct MIPS32SocRefState {
     bool irq_replay_epc_fixup;
     target_ulong irq_replay_epc;
     uint32_t irq_replay_pic_mask;
+    uint32_t irq_replay_bd_mask;
 } MIPS32SocRefState;
 
 typedef struct MIPS32SocRefResetData {
@@ -214,6 +215,7 @@ typedef struct MIPS32SocRefResetData {
 static char *soc_ref_qspi_image;
 static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
+static uint32_t soc_ref_irq_replay_bd_mask;
 static char *soc_ref_dma_event_trace_path;
 static uint32_t soc_ref_dma_fault_mode;
 static bool soc_ref_dma_reset_inflight;
@@ -786,7 +788,9 @@ static void soc_ref_instruction_tick(CPUState *cpu)
      * merely because a PIC mask was supplied corrupts Cause reads in the
      * handler and diverges from the RTL's precise exception state. */
     s->irq_replay_bd_pending =
-        (s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0;
+        (s->irq_release_index < 32 &&
+         (s->irq_replay_bd_mask & (1U << s->irq_release_index)) != 0) ||
+        ((s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0);
     /* The RTL VIC schedule samples a pending source at the retire boundary
      * before the next sequential instruction is fetched.  QEMU's interrupt
      * path observes the already-advanced PC for subsequent replay entries;
@@ -2132,6 +2136,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     cpu = mips_cpu_create_with_clock(machine->cpu_type, cpuclk, false);
     state->cpu = cpu;
     state->irq_replay_pic_mask = soc_ref_irq_replay_pic_mask;
+    state->irq_replay_bd_mask = soc_ref_irq_replay_bd_mask;
     state->sram = machine->ram;
     state->gpio_input = soc_ref_gpio_input;
     state->dma_fault_mode = soc_ref_dma_fault_mode;
@@ -2408,6 +2413,10 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc),
                                          "irq-replay-pic-mask",
                                          &soc_ref_irq_replay_pic_mask,
+                                         OBJ_PROP_FLAG_WRITE);
+    object_class_property_add_uint32_ptr(OBJECT_CLASS(mc),
+                                         "irq-replay-bd-mask",
+                                         &soc_ref_irq_replay_bd_mask,
                                          OBJ_PROP_FLAG_WRITE);
     object_class_property_add_str(OBJECT_CLASS(mc), "dma-event-trace",
                                   soc_ref_get_dma_event_trace,

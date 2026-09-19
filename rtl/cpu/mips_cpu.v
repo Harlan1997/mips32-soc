@@ -221,6 +221,38 @@ module mips_cpu #(
     wire [3:0]  srs_shadow_wset = srs_previous_set;
     wire [4:0]  srs_shadow_waddr = wb_inst[15:11];
     wire [31:0] srs_shadow_wdata = wb_val_rt;
+    // These pipeline nets are assigned by the stage registers below but
+    // participate in the earlier asynchronous-interrupt arbitration.
+    wire [31:0] id_pc_plus_4;
+    wire [31:0] ex_pc_plus_8;
+    wire [31:0] mem_pc_plus_8;
+    wire        id_bd;
+    wire        mem_is_control_transfer;
+    wire        ex_is_control_transfer;
+    wire [31:0] id_pc = id_pc_plus_4 - 32'd4;
+    wire [31:0] ex_pc = ex_pc_plus_8 - 32'd8;
+    wire [31:0] mem_pc = mem_pc_plus_8 - 32'd8;
+    wire        mem_flush_valid = (mem_pc_plus_8 != 32'd0);
+    wire        ex_flush_valid  = (ex_pc_plus_8 != 32'd0);
+    wire        id_flush_valid  = (id_pc_plus_4 != 32'd0);
+    assign mem_is_control_transfer =
+        (mem_inst[31:26] == 6'b000001) ||
+        (mem_inst[31:26] == 6'b000010) ||
+        (mem_inst[31:26] == 6'b000011) ||
+        ((mem_inst[31:26] >= 6'b000100) &&
+         (mem_inst[31:26] <= 6'b000111)) ||
+        ((mem_inst[31:26] == 6'b000000) &&
+         ((mem_inst[5:0] == 6'b001000) ||
+          (mem_inst[5:0] == 6'b001001)));
+    assign ex_is_control_transfer =
+        (ex_inst[31:26] == 6'b000001) ||
+        (ex_inst[31:26] == 6'b000010) ||
+        (ex_inst[31:26] == 6'b000011) ||
+        ((ex_inst[31:26] >= 6'b000100) &&
+         (ex_inst[31:26] <= 6'b000111)) ||
+        ((ex_inst[31:26] == 6'b000000) &&
+         ((ex_inst[5:0] == 6'b001000) ||
+          (ex_inst[5:0] == 6'b001001)));
     
     // Exception PC redirection
     wire sim_exception_active = (sim_exception_req === 1'b1);
@@ -241,20 +273,37 @@ module mips_cpu #(
     // precise-retirement guard against replaying a flushed fault.
     wire effective_except_req = (wb_except_req && wb_arch_valid) |
                                 sim_exception_active;
+    // A delay-slot interrupt restarts at the branch PC and re-executes the
+    // slot after ERET. Keep the WB bundle visible for EPC/BD bookkeeping,
+    // but suppress its architectural side effects on that edge so a slot
+    // GPR write cannot change the replayed branch condition. This rollback
+    // behavior is opt-in: the default blocking Linux path retains its
+    // established WB contract, while the focused rollback gate enables the
+    // stricter replay semantics explicitly.
+    wire wb_interrupt_delay_slot_commit;
+    wire wb_commit_valid = wb_arch_valid &&
+                            ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE == 0) ||
+                             !wb_interrupt_delay_slot_commit);
     wire [4:0] effective_except_code = sim_exception_active ? sim_exception_code : wb_except_code;
     // Decode DI/EI at the architectural WB boundary. These signals are
     // declared before interrupt arbitration because an EI commit must not
-    // accept a pending interrupt on the same edge.
-    wire wb_di = wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
+    // accept a pending interrupt on the same edge.  EI needs a separate
+    // candidate signal: wb_commit_valid is itself suppressed when an IRQ
+    // lands in a delay slot, and feeding that final signal back into
+    // interrupt_accept would create a combinational loop
+    // (wb_commit_valid -> wb_ei -> interrupt_accept -> delay-slot commit).
+    wire wb_ei_candidate = wb_arch_valid && wb_reg_write &&
+                           (wb_mem_to_reg == 2'b11) &&
+                           (wb_inst[31:26] == 6'b010000) &&
+                           (wb_inst[25:21] == 5'b01011) &&
+                           (wb_inst[15:11] == 5'd12) &&
+                           (wb_inst[10:6] == 5'd0) && wb_inst[5];
+    wire wb_di = wb_commit_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
                  (wb_inst[31:26] == 6'b010000) &&
                  (wb_inst[25:21] == 5'b01011) &&
                  (wb_inst[15:11] == 5'd12) &&
                  (wb_inst[10:6] == 5'd0) && !wb_inst[5];
-    wire wb_ei = wb_arch_valid && wb_reg_write && (wb_mem_to_reg == 2'b11) &&
-                 (wb_inst[31:26] == 6'b010000) &&
-                 (wb_inst[25:21] == 5'b01011) &&
-                 (wb_inst[15:11] == 5'd12) &&
-                 (wb_inst[10:6] == 5'd0) && wb_inst[5];
+    wire wb_ei = wb_ei_candidate;
     // MIPS Cause.CE identifies the coprocessor that raised CpU.  The
     // pipeline retains the faulting instruction through WB, so the opt-in
     // COP1 unusable path can report CE=1 without affecting CP0/RI traps.
@@ -309,6 +358,19 @@ module mips_cpu #(
                             // below and leave MEM before their response.
                             !(mem_mem_read || mem_mem_write ||
                               mem_cache_op_valid) &&
+                            // If a control transfer is in EX and its delay
+                            // slot is in ID, an older ordinary MEM
+                            // instruction must reach WB before the IRQ can
+                            // flush the pipe.  Otherwise a precise
+                            // branch-delay EPC is recorded, but the older
+                            // instruction's architectural write is lost;
+                            // Linux then returns with a stale argument
+                            // register and faults inside the callee.
+                            ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE == 0) ||
+                             !((mem_flush_valid && ex_flush_valid &&
+                                id_flush_valid && !mem_is_control_transfer &&
+                                ex_is_control_transfer && id_bd &&
+                                (id_pc == (ex_pc + 32'd4))))) &&
                             !((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_ROB_FIFO_ENABLE != 0) &&
@@ -328,7 +390,7 @@ module mips_cpu #(
         end
     end
     assign exception_flush = effective_except_req |
-                            (wb_is_eret && wb_arch_valid) |
+                            (wb_is_eret && wb_commit_valid) |
                             interrupt_accept;
     wire [31:0] ebase_out;
     wire        cp0_bev;
@@ -360,7 +422,7 @@ module mips_cpu #(
     // contract. TLB refill is distinct from Invalid even though both report
     // TLBL/TLBS; its sideband survives the pipeline to select the refill slot.
     wire [31:0] veic_offset = 32'h0000_0200 + ({24'd0, external_vec_id} << 5);
-    wire [31:0] exception_vector = wb_is_eret ? epc_out :
+    wire [31:0] exception_vector = (wb_is_eret && wb_commit_valid) ? epc_out :
                                   ((`SOC_PRODUCT_BOOT_ENABLE != 0) ||
                                    (`SOC_LINUX_BOOT_ENABLE != 0)) ?
                                   (cp0_bev ? (wb_cache_error_exception ? 32'hBFC0_0100 :
@@ -387,8 +449,6 @@ module mips_cpu #(
     wire        id_control_taken;
     wire [31:0] id_control_target;
     wire [1:0]  id_control_type;
-    wire [31:0] id_pc_plus_4;
-
     wire        bpu_predict_hit;
     wire        bpu_predict_taken;
     wire [31:0] bpu_predict_target;
@@ -741,6 +801,15 @@ module mips_cpu #(
     
     wire        wb_cp0_we;
     wire [1:0]  id_mem_to_reg;
+
+    // EX/MEM control fields can remain registered while a pipeline slot is
+    // empty (for example after a nonblocking load is admitted to the ROB or
+    // while a flush is being consumed).  Forwarding must be owned by the
+    // valid PC bundle, otherwise an old destination/value can override the
+    // register file for an unrelated ID instruction.  WB already uses the
+    // architectural commit pulse below, so keep its existing ownership rule.
+    wire        fw_ex_we  = ex_reg_write  && ex_flush_valid;
+    wire        fw_mem_we = mem_reg_write && mem_flush_valid;
     
     wire        ex_illegal_inst;
     wire        ex_except_req;
@@ -759,7 +828,6 @@ module mips_cpu #(
                                mem_inst[15:11] : mem_inst[20:16];
     // Phase B.5: delay-slot marker propagated with each instruction so an
     // exception on a delay-slot instruction can drive Cause.BD=1 and EPC=PC-4.
-    wire        id_bd;
     reg  [31:0] id_delay_slot_next_pc_r;
     wire [31:0] id_delay_slot_next_pc = id_delay_slot_next_pc_r;
     // Keep the branch PC paired with the delay-slot metadata.  A flush can
@@ -772,6 +840,16 @@ module mips_cpu #(
     // ordinary instruction, causing an asynchronous IRQ to fabricate BD.
     reg  [31:0] id_delay_slot_branch_inst_r;
     wire [31:0] id_delay_slot_branch_inst = id_delay_slot_branch_inst_r;
+    // Keep the last four control-transfer producers in flight.  The normal
+    // BD bundle is the architectural source, but a blocking MEM/WB replay
+    // can overwrite that bundle after the branch has redirected IF.  The
+    // history provides a bounded provenance record until the delay slot
+    // reaches WB.
+    reg        control_transfer_hist_valid [0:3];
+    reg [31:0] control_transfer_hist_pc    [0:3];
+    reg [31:0] control_transfer_hist_target[0:3];
+    reg [31:0] control_transfer_hist_inst  [0:3];
+    integer control_transfer_hist_i;
     wire        ex_bd;
     wire [31:0] ex_delay_slot_next_pc;
     wire [31:0] ex_delay_slot_branch_inst;
@@ -1086,7 +1164,7 @@ module mips_cpu #(
     wire        rf_we_selected = (fpu_id_gpr_write && !wb_reg_write) ?
                                  (!global_stall && !stall_req_id &&
                                   !exception_flush && !ctx_restore_req) :
-                                 (wb_reg_write && wb_arch_valid &&
+                                 (wb_reg_write && wb_commit_valid &&
                                   !(wb_except_req && wb_arch_valid));
 
     wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
@@ -1103,8 +1181,13 @@ module mips_cpu #(
                            ((ex_mem_to_reg == 2'b11) ||
                             (mem_mem_to_reg == 2'b11) ||
                             (wb_mem_to_reg == 2'b11));
+    // A tagged load can leave EX/MEM before its data reaches architectural
+    // WB.  Its consumer is not limited to a branch/jump: ordinary ALU,
+    // address-generation, store, and CP0-source instructions must also wait
+    // while the destination tag remains outstanding.  Restricting this check
+    // to id_control_valid allowed an `addu` immediately after an LHU/LW to
+    // consume the older value from the register file.
     wire nb_load_use_hazard = (`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
-                               id_control_valid &&
                                ((nb_load_busy[0] && (nb_load_rd[0] != 0) &&
                                  ((nb_load_rd[0] == id_rs_addr) ||
                                   (nb_load_rd[0] == id_rt_addr))) ||
@@ -1151,10 +1234,10 @@ module mips_cpu #(
         .ctx_restore_done(),
         
         // Forwarding
-        .fw_ex_we      (ex_reg_write),
+        .fw_ex_we      (fw_ex_we),
         .fw_ex_waddr   (ex_waddr),
         .fw_ex_val     (ex_out),
-        .fw_mem_we     (mem_reg_write),
+        .fw_mem_we     (fw_mem_we),
         .fw_mem_waddr  (mem_waddr),
         .fw_mem_val    (mem_mem_read ? mem_rdata_fmt : mem_ex_out),
         .fw_wb_we      (rf_we_selected),
@@ -1266,7 +1349,8 @@ module mips_cpu #(
             id_bd_r <= 1'b0;
         else if (if_id_flush)
             id_bd_r <= 1'b0;
-        else if (!global_stall)
+        else if (!global_stall &&
+                 ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE == 0) || !stall_req_id))
             id_bd_r <= id_control_valid && !id_branch_likely_annul;
     end
     assign id_bd = id_bd_r;
@@ -1276,7 +1360,8 @@ module mips_cpu #(
             id_delay_slot_next_pc_r <= 32'd0;
             id_delay_slot_branch_pc_r <= 32'd0;
             id_delay_slot_branch_inst_r <= 32'd0;
-        end else if (!global_stall) begin
+        end else if (!global_stall &&
+                     ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE == 0) || !stall_req_id)) begin
             if (id_control_valid && !id_branch_likely_annul) begin
                 id_delay_slot_next_pc_r <= id_control_taken ? id_control_target :
                                            id_pc_plus_4 + 32'd4;
@@ -1289,6 +1374,39 @@ module mips_cpu #(
             end
         end
     end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n || exception_flush || ctx_restore_req) begin
+            for (control_transfer_hist_i = 0;
+                 control_transfer_hist_i < 4;
+                 control_transfer_hist_i = control_transfer_hist_i + 1) begin
+                control_transfer_hist_valid[control_transfer_hist_i]  <= 1'b0;
+                control_transfer_hist_pc[control_transfer_hist_i]     <= 32'd0;
+                control_transfer_hist_target[control_transfer_hist_i] <= 32'd0;
+                control_transfer_hist_inst[control_transfer_hist_i]   <= 32'd0;
+            end
+        end else if (!global_stall && !stall_req_id) begin
+            control_transfer_hist_valid[3]  <= control_transfer_hist_valid[2];
+            control_transfer_hist_pc[3]     <= control_transfer_hist_pc[2];
+            control_transfer_hist_target[3] <= control_transfer_hist_target[2];
+            control_transfer_hist_inst[3]   <= control_transfer_hist_inst[2];
+            control_transfer_hist_valid[2]  <= control_transfer_hist_valid[1];
+            control_transfer_hist_pc[2]     <= control_transfer_hist_pc[1];
+            control_transfer_hist_target[2] <= control_transfer_hist_target[1];
+            control_transfer_hist_inst[2]   <= control_transfer_hist_inst[1];
+            control_transfer_hist_valid[1]  <= control_transfer_hist_valid[0];
+            control_transfer_hist_pc[1]     <= control_transfer_hist_pc[0];
+            control_transfer_hist_target[1] <= control_transfer_hist_target[0];
+            control_transfer_hist_inst[1]   <= control_transfer_hist_inst[0];
+            control_transfer_hist_valid[0]  <= id_control_valid &&
+                                               !id_branch_likely_annul;
+            control_transfer_hist_pc[0]     <= id_pc_plus_4 - 32'd4;
+            control_transfer_hist_target[0] <= id_control_taken ?
+                                               id_control_target :
+                                               (id_pc_plus_4 + 32'd4);
+            control_transfer_hist_inst[0]   <= id_inst;
+        end
+    end
     
     // =========================================================================
     // ID/EX Pipeline Register
@@ -1296,7 +1414,6 @@ module mips_cpu #(
     wire [31:0] ex_val_rs;
     wire [31:0] ex_val_rt;
     wire [31:0] ex_imm_ext;
-    wire [31:0] ex_pc_plus_8;
     wire [4:0]  ex_rd_addr;
     wire [4:0]  ex_cp0_raddr;
     wire [4:0]  ex_sa;
@@ -1445,7 +1562,6 @@ module mips_cpu #(
                  ((ex_inst[31:26] == 6'b111101) ||
                   ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h09))) ?
                 fpr[ex_fpu_store_reg] : ex_val_rt;
-    wire [31:0] mem_pc_plus_8;
     wire [2:0]  mem_mem_op;
     wire [4:0]  mem_rd_addr;
     wire [4:0]  mem_cp0_raddr;
@@ -1956,17 +2072,48 @@ module mips_cpu #(
     reg [31:0] nb_pending_reg_q;
     assign nb_pending_reg = nb_pending_reg_q;
 
+    // Keep a count of outstanding in-order writes per GPR instead of a
+    // single bit.  The bitmap implementation loses a dependency when an
+    // older write retires in the same register after a younger write has
+    // already been allocated: its clear wins over the younger set.  That
+    // permits the consumer to read the stale register-file value while the
+    // newer ROB entry is still waiting to retire.
+    reg [2:0] nb_pending_count [0:31];
     integer nb_pending_i;
+    integer nb_pending_bitmap_i;
+    wire nb_pending_retire = wb_valid && wb_reg_write && (wb_waddr != 5'd0);
+    wire nb_pending_alloc = rob_alloc_fire && mem_reg_write &&
+                            (mem_waddr != 5'd0);
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n || flush_mem_wb) begin
-            nb_pending_reg_q <= 32'd0;
+            for (nb_pending_i = 0; nb_pending_i < 32; nb_pending_i = nb_pending_i + 1)
+                nb_pending_count[nb_pending_i] <= 3'd0;
         end else begin
-            if (wb_valid && wb_reg_write && (wb_waddr != 5'd0))
-                nb_pending_reg_q[wb_waddr] <= 1'b0;
-            if (rob_alloc_valid && rob_alloc_ready && !rob_stall &&
-                mem_reg_write && (mem_waddr != 5'd0))
-                nb_pending_reg_q[mem_waddr] <= 1'b1;
+            for (nb_pending_i = 1; nb_pending_i < 32; nb_pending_i = nb_pending_i + 1) begin
+                case ({nb_pending_alloc && (mem_waddr == nb_pending_i[4:0]),
+                       nb_pending_retire && (wb_waddr == nb_pending_i[4:0])})
+                    2'b10:
+                        if (nb_pending_count[nb_pending_i] != 3'd7)
+                            nb_pending_count[nb_pending_i] <= nb_pending_count[nb_pending_i] + 3'd1;
+                    2'b01:
+                        if (nb_pending_count[nb_pending_i] != 3'd0)
+                            nb_pending_count[nb_pending_i] <= nb_pending_count[nb_pending_i] - 3'd1;
+                    default:
+                        nb_pending_count[nb_pending_i] <= nb_pending_count[nb_pending_i];
+                endcase
+            end
+            nb_pending_count[0] <= 3'd0;
         end
+    end
+
+    always @(*) begin
+        nb_pending_reg_q = 32'd0;
+        for (nb_pending_bitmap_i = 1;
+             nb_pending_bitmap_i < 32;
+             nb_pending_bitmap_i = nb_pending_bitmap_i + 1)
+            nb_pending_reg_q[nb_pending_bitmap_i] =
+                (nb_pending_count[nb_pending_bitmap_i] != 3'd0);
     end
 
     always @(posedge clk or negedge rst_n) begin
@@ -2118,7 +2265,7 @@ module mips_cpu #(
     wire [31:0] cp0_rdata;
     // WRPGPR has no ordinary GPR destination. Commit its source value to the
     // bank selected by SRSCtl.PSS at the same architectural WB edge.
-    assign srs_shadow_we = (`SOC_SRS_ENABLE != 0) && wb_arch_valid &&
+    assign srs_shadow_we = (`SOC_SRS_ENABLE != 0) && wb_commit_valid &&
                            !wb_except_req &&
                            (wb_inst[31:26] == 6'b010000) &&
                            (wb_inst[25:21] == 5'b01110) &&
@@ -2145,9 +2292,6 @@ module mips_cpu #(
     // Coprocessor 0
     // =========================================================================
 
-    wire [31:0] id_pc  = id_pc_plus_4 - 32'd4;
-    wire [31:0] ex_pc  = ex_pc_plus_8 - 32'd8;
-    wire [31:0] mem_pc = mem_pc_plus_8 - 32'd8;
     wire [31:0] wb_pc  = wb_pc_plus_8 - 32'd8;
     wire [31:0] wb_next_pc = (wb_except_req && wb_arch_valid) ? exception_vector :
                              ((wb_is_eret && wb_arch_valid) ? epc_out :
@@ -2171,9 +2315,6 @@ module mips_cpu #(
     // ex_bd is valid evidence only when the two stage PCs are adjacent.  The
     // same relation applies to EX/ID.  This keeps the marker tied to the
     // architectural branch rather than to stale pipeline metadata.
-    wire mem_flush_valid = (mem_pc_plus_8 != 32'd0);
-    wire ex_flush_valid  = (ex_pc_plus_8  != 32'd0);
-    wire id_flush_valid  = (id_pc_plus_4  != 32'd0);
     // The stage bit alone is not sufficient at an exception boundary.  A
     // flush can leave a stale delay-slot bit on a bubble while the paired
     // branch target metadata has already been cleared.  Treat the marker as
@@ -2191,6 +2332,23 @@ module mips_cpu #(
                                          (inst[5:0] == 6'b001001)));
         end
     endfunction
+    wire wb_history_delay_slot_valid = wb_arch_valid && mem_flush_valid &&
+                                       ((control_transfer_hist_valid[0] &&
+                                         (wb_pc == control_transfer_hist_pc[0] + 32'd4) &&
+                                         (mem_pc == control_transfer_hist_target[0]) &&
+                                         is_control_transfer_inst(control_transfer_hist_inst[0])) ||
+                                        (control_transfer_hist_valid[1] &&
+                                         (wb_pc == control_transfer_hist_pc[1] + 32'd4) &&
+                                         (mem_pc == control_transfer_hist_target[1]) &&
+                                         is_control_transfer_inst(control_transfer_hist_inst[1])) ||
+                                        (control_transfer_hist_valid[2] &&
+                                         (wb_pc == control_transfer_hist_pc[2] + 32'd4) &&
+                                         (mem_pc == control_transfer_hist_target[2]) &&
+                                         is_control_transfer_inst(control_transfer_hist_inst[2])) ||
+                                        (control_transfer_hist_valid[3] &&
+                                         (wb_pc == control_transfer_hist_pc[3] + 32'd4) &&
+                                         (mem_pc == control_transfer_hist_target[3]) &&
+                                         is_control_transfer_inst(control_transfer_hist_inst[3])));
     wire mem_delay_slot_valid = mem_bd &&
                                  (mem_delay_slot_next_pc != 32'd0) &&
                                  is_control_transfer_inst(mem_delay_slot_branch_inst);
@@ -2211,24 +2369,58 @@ module mips_cpu #(
                                  (id_delay_slot_branch_pc != 32'd0) &&
                                  id_delay_slot_branch_is_control_transfer &&
                                  (id_pc == (id_delay_slot_branch_pc + 32'd4));
-    // WB delay-slot metadata can survive a replay/stall after the paired
-    // branch has left the visible pipeline.  The resume target alone is not
-    // enough to prove that the current WB instruction is the branch's slot:
-    // require the younger MEM transaction to be the immediately following
-    // instruction as well.  This prevents an asynchronous interrupt from
-    // assigning Cause.BD to an ordinary instruction and replaying it on ERET.
-    wire wb_delay_slot_valid  = wb_bd &&
-                                (wb_delay_slot_next_pc != 32'd0) &&
-                                mem_flush_valid &&
-                                (mem_pc == (wb_pc + 32'd4));
+    // WB delay-slot metadata is the architectural producer record for the
+    // retiring instruction.  It can outlive the visible MEM/EX/ID pipeline
+    // during a replay or a nonblocking load, so requiring MEM to be the
+    // sequential next PC is incorrect for an indirect jump.  In particular,
+    // a JR delay slot has an arbitrary target (often already visible in MEM)
+    // and cannot satisfy a WB+4 adjacency test.  The carried BD bit, producer
+    // opcode, and non-zero resume target form the precise provenance check;
+    // wb_arch_valid ties it to the current architectural retirement.
+    wire wb_carried_delay_slot_valid = wb_arch_valid && wb_bd &&
+                                       (wb_delay_slot_next_pc != 32'd0) &&
+                                       is_control_transfer_inst(wb_delay_slot_branch_inst);
+    // The WB bundle carries the branch producer and its architectural resume
+    // target in every ROB mode, including the blocking/default path.  Do not
+    // require MEM to contain the sequential PC after the WB instruction:
+    // when the WB instruction is a JR/JALR delay slot, MEM already contains
+    // the indirect branch target.  That exact boundary is where a timer IRQ
+    // must save the branch PC (Cause.BD=1), otherwise ERET resumes at the
+    // cleanup label after the delay slot and reuses the caller's stack frame.
+    // The history relation remains a bounded recovery path for a replay that
+    // has cleared the carried bundle before the interrupt is accepted.
+    wire wb_prior_branch_delay_valid;
+    wire wb_prior_indirect_branch_delay_valid;
+    wire wb_rollback_delay_slot_valid = wb_carried_delay_slot_valid |
+                                         wb_history_delay_slot_valid |
+                                         wb_prior_branch_delay_valid |
+                                         (wb_arch_valid && wb_bd &&
+                                          (wb_delay_slot_next_pc != 32'd0) &&
+                                          is_control_transfer_inst(wb_delay_slot_branch_inst) &&
+                                          mem_flush_valid &&
+                                          ((mem_pc == (wb_pc + 32'd4)) ||
+                                           (mem_pc == wb_delay_slot_next_pc)));
+    // Preserve the established blocking-path predicate. The broader
+    // provenance recovery is intentionally limited to the opt-in rollback
+    // configuration so the default Linux contract is unchanged.
+    wire wb_delay_slot_valid = (`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
+                                wb_rollback_delay_slot_valid :
+                                (wb_bd &&
+                                 (wb_delay_slot_next_pc != 32'd0) &&
+                                 mem_flush_valid &&
+                                 (mem_pc == (wb_pc + 32'd4)));
+    assign wb_interrupt_delay_slot_commit = interrupt_accept &&
+                                            wb_delay_slot_valid;
     // Synchronous exceptions retain the WB bundle for the faulting
     // instruction, so their architectural delay-slot bit is already tied to
     // the exception itself.  Keep this path separate from the stricter
     // asynchronous-interrupt validation above; otherwise a real syscall in a
     // delay slot loses BD/EPC semantics when the branch has left MEM.
-    wire wb_exception_delay_slot_valid = wb_bd && wb_arch_valid &&
-                                         (wb_delay_slot_next_pc != 32'd0) &&
-                                         is_control_transfer_inst(wb_delay_slot_branch_inst);
+    wire wb_exception_delay_slot_valid = (`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
+                                          wb_rollback_delay_slot_valid :
+                                          (wb_bd && wb_arch_valid &&
+                                           (wb_delay_slot_next_pc != 32'd0) &&
+                                           is_control_transfer_inst(wb_delay_slot_branch_inst));
 
     // The interrupt request may remain blocked during the cycle in which a
     // load completes, then become acceptable on the following cycle after
@@ -2237,6 +2429,7 @@ module mips_cpu #(
     // PC and restart the completed instruction.
     reg        prior_wb_arch_valid;
     reg [31:0] prior_wb_pc;
+    reg [31:0] prior_wb_inst;
     reg        prior_wb_delay_slot_valid;
     reg        prior2_wb_arch_valid;
     reg [31:0] prior2_wb_pc;
@@ -2245,6 +2438,7 @@ module mips_cpu #(
         if (!rst_n) begin
             prior_wb_arch_valid      <= 1'b0;
             prior_wb_pc              <= 32'd0;
+            prior_wb_inst            <= 32'd0;
             prior_wb_delay_slot_valid <= 1'b0;
             prior2_wb_arch_valid      <= 1'b0;
             prior2_wb_pc              <= 32'd0;
@@ -2255,6 +2449,7 @@ module mips_cpu #(
             prior2_wb_delay_slot_valid <= prior_wb_delay_slot_valid;
             prior_wb_arch_valid       <= wb_arch_valid && !wb_except_req;
             prior_wb_pc               <= wb_pc;
+            prior_wb_inst             <= wb_inst;
             prior_wb_delay_slot_valid <= wb_delay_slot_valid;
         end
     end
@@ -2277,6 +2472,25 @@ module mips_cpu #(
         ((wb_inst[31:26] == 6'b000000) &&
          ((wb_inst[5:0] == 6'b001000) || // JR/JR.HB
           (wb_inst[5:0] == 6'b001001)));  // JALR/JALR.HB
+    // A control-transfer instruction is retired immediately before its
+    // architectural delay slot. This remains observable when a redirected
+    // target has already replaced MEM, which is the common JR/JALR case.
+    // Keep this as a precise fallback when replay has lost the carried BD
+    // metadata.
+    assign wb_prior_branch_delay_valid = wb_arch_valid &&
+                                         prior_wb_arch_valid &&
+                                         (wb_pc == (prior_wb_pc + 32'd4)) &&
+                                         is_control_transfer_inst(prior_wb_inst);
+    // The default path only needs WB-history recovery for JR/JALR. Direct
+    // branches already carry precise delay-slot metadata; applying this
+    // fallback to every control transfer changes ordinary branch IRQ restart
+    // behavior and can corrupt Linux early-boot state.
+    assign wb_prior_indirect_branch_delay_valid = wb_arch_valid &&
+                                                 prior_wb_arch_valid &&
+                                                 (wb_pc == (prior_wb_pc + 32'd4)) &&
+                                                 (prior_wb_inst[31:26] == 6'b000000) &&
+                                                 ((prior_wb_inst[5:0] == 6'b001000) ||
+                                                  (prior_wb_inst[5:0] == 6'b001001));
     // A stalled/replayed instruction can be present in both WB and MEM on
     // the interrupt edge.  Its carried delay-slot bit belongs to an older
     // pipeline transaction and must not manufacture Cause.BD.  When WB is
@@ -2302,24 +2516,6 @@ module mips_cpu #(
     // metadata may already have been cleared by a replay/flush.  Recover the
     // architectural relation from the adjacent PCs and the older instruction
     // encoding so EPC/BD remain precise for real Linux interrupt traffic.
-    wire mem_is_control_transfer =
-        (mem_inst[31:26] == 6'b000001) ||
-        (mem_inst[31:26] == 6'b000010) ||
-        (mem_inst[31:26] == 6'b000011) ||
-        ((mem_inst[31:26] >= 6'b000100) &&
-         (mem_inst[31:26] <= 6'b000111)) ||
-        ((mem_inst[31:26] == 6'b000000) &&
-         ((mem_inst[5:0] == 6'b001000) ||
-          (mem_inst[5:0] == 6'b001001)));
-    wire ex_is_control_transfer =
-        (ex_inst[31:26] == 6'b000001) ||
-        (ex_inst[31:26] == 6'b000010) ||
-        (ex_inst[31:26] == 6'b000011) ||
-        ((ex_inst[31:26] >= 6'b000100) &&
-         (ex_inst[31:26] <= 6'b000111)) ||
-        ((ex_inst[31:26] == 6'b000000) &&
-         ((ex_inst[5:0] == 6'b001000) ||
-          (ex_inst[5:0] == 6'b001001)));
     wire id_is_control_transfer =
         (id_inst[31:26] == 6'b000001) ||
         (id_inst[31:26] == 6'b000010) ||
@@ -2329,11 +2525,19 @@ module mips_cpu #(
         ((id_inst[31:26] == 6'b000000) &&
          ((id_inst[5:0] == 6'b001000) ||
           (id_inst[5:0] == 6'b001001)));
+    // A retained WB branch can have wb_arch_valid=0 after the ROB commit
+    // pulse has passed while its architectural delay slot is still visible in
+    // MEM. Recover this pair from the stage PCs and branch encoding; relying
+    // only on wb_delay_slot_valid loses the precise EPC at this boundary.
     wire interrupt_wb_branch_delay = interrupt_accept &&
                                       mem_flush_valid &&
                                       (wb_pc_plus_8 != 32'd0) &&
                                       (mem_pc == (wb_pc + 32'd4)) &&
                                       wb_is_control_transfer;
+    wire interrupt_prior_wb_branch_delay = interrupt_accept &&
+                                           ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
+                                            wb_prior_branch_delay_valid :
+                                            wb_prior_indirect_branch_delay_valid);
     // Metadata can be cleared by a replay while an asynchronous interrupt is
     // accepted. Recover the two adjacent pipeline cases from the actual
     // control-transfer encoding and PCs. This is required by Linux timing
@@ -2356,10 +2560,13 @@ module mips_cpu #(
                                       id_flush_valid &&
                                       ex_is_control_transfer &&
                                       (id_pc == (ex_pc + 32'd4));
-    wire interrupt_wb_delay_from_mem = interrupt_accept &&
-                                       wb_arch_valid && mem_flush_valid &&
-                                       mem_is_control_transfer &&
-                                       (wb_pc == (mem_pc + 32'd4));
+    wire interrupt_wb_delay_from_mem = (`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
+                                       (interrupt_accept && wb_arch_valid &&
+                                        mem_flush_valid && wb_is_control_transfer &&
+                                        (mem_pc == (wb_pc + 32'd4))) :
+                                       (interrupt_accept && wb_arch_valid &&
+                                        mem_flush_valid && mem_is_control_transfer &&
+                                        (wb_pc == (mem_pc + 32'd4)));
     wire interrupt_delay_slot = interrupt_wb_branch_delay ||
                                 interrupt_mem_delay_from_ex ||
                                 interrupt_mem_delay_from_id ||
@@ -2378,11 +2585,22 @@ module mips_cpu #(
     wire interrupt_after_prior_wb_non_delay = interrupt_after_prior_wb &&
                                               !interrupt_delay_slot;
     wire [31:0] interrupt_delay_slot_pc =
-        interrupt_wb_branch_delay ? mem_pc :
-        interrupt_mem_delay_from_ex ? ex_pc :
-        interrupt_mem_delay_from_id ? id_pc :
-        interrupt_ex_delay_from_id ? ex_pc :
-        interrupt_wb_delay_from_mem ? wb_pc : wb_pc;
+        (`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
+        (interrupt_mem_delay_from_ex ? ex_pc :
+         interrupt_mem_delay_from_id ? id_pc :
+         interrupt_ex_delay_from_id ? id_pc :
+         interrupt_wb_branch_delay ? mem_pc :
+         interrupt_wb_delay_from_mem ? wb_pc :
+         // A retained WB branch can have wb_arch_valid=0 after the ROB commit
+         // pulse has passed while its architectural delay slot is still
+         // visible in MEM. Use this bounded history only after the current
+         // pipeline adjacency has been checked above.
+         interrupt_prior_wb_branch_delay ? wb_pc : wb_pc) :
+        (interrupt_wb_branch_delay ? mem_pc :
+         interrupt_mem_delay_from_ex ? ex_pc :
+         interrupt_mem_delay_from_id ? id_pc :
+         interrupt_ex_delay_from_id ? ex_pc :
+         interrupt_wb_delay_from_mem ? wb_pc : wb_pc);
     wire interrupt_except_bd = interrupt_accept &&
                                (mem_flush_valid ?
                                  (interrupt_mem_delay_slot || interrupt_delay_slot ||
@@ -2488,7 +2706,7 @@ module mips_cpu #(
         .clk          (clk),
         .rst_n        (rst_n),
         .hw_int       (ext_int), // Connect hardware interrupt
-        .we           (wb_cp0_we && wb_arch_valid &&
+        .we           (wb_cp0_we && wb_commit_valid &&
                        !(wb_except_req && wb_arch_valid)),
         .waddr        (wb_rd_addr),
         .wsel         (wb_cp0_sel),
@@ -2496,7 +2714,7 @@ module mips_cpu #(
         .raddr        (wb_cp0_raddr),
         .rsel         (wb_cp0_sel),
         .rdata        (cp0_rdata),
-        .tlb_op       (wb_arch_valid ? wb_tlb_op : 3'd0),
+        .tlb_op       (wb_commit_valid ? wb_tlb_op : 3'd0),
         .cache_op_done(data_cache_op_done),
         .cache_op     (data_cache_op),
         .cache_tag_rdata(data_cache_tag_rdata),
@@ -2505,7 +2723,7 @@ module mips_cpu #(
         .except_ce    (effective_except_req ? effective_except_ce : 2'b00),
         .except_pc    (except_pc),
         .except_bd    (exception_bd),
-        .eret         (wb_is_eret && wb_arch_valid),
+        .eret         (wb_is_eret && wb_commit_valid),
         .di           (wb_di),
         .ei           (wb_ei),
         .bad_vaddr    (bad_vaddr),
