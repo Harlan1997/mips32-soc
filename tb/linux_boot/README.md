@@ -83,6 +83,22 @@ nonzero unless `MIPS32_SOC_LINUX_BOOT_SUCCESS` appears in the RTL UART log;
 the default remains the diagnostic progress gate so existing bounded probes
 are not reclassified as Linux boot signoff.
 
+The RTL userspace slice currently uses `LINUX_PROFILE=rtl-minimal`. This
+opt-in profile disables device-init paths without RTL models (legacy PTYs,
+virtual console, block/storage and unrelated buses) while retaining MMU,
+scheduler, initramfs, 8250 serial and GPIO. For the low-throughput RTL UART,
+use `console=null` with `earlycon` and allow a bounded run of at least 50M
+cycles. A successful run must contain both
+`MIPS32_SOC_LINUX_BOOT_SUCCESS` and `MIPS32_SOC_LINUX_GPIO_SUCCESS`; this is
+not generic Linux, a Linux APB-timer-driver gate, or full RTL/QEMU
+system-mode differential signoff.
+
+The precise WB delay-slot rollback path is controlled by
+`SOC_DELAY_SLOT_ROLLBACK_ENABLE` and defaults to `0`, preserving the established
+Linux bring-up pipeline. The focused CPU/CP0 delay-slot regression enables it
+explicitly; a Linux userspace result with the default setting must not be
+interpreted as validation of the opt-in rollback path.
+
 When `LINUX_PC_TRACE=1` and `LINUX_PC_TRACE_RETIRE_ONLY=1` are enabled, the
 bounded retire record also reports `s0`, `s3`, and `s4`. These fields expose
 the saved task context and indirect kthread entry function/argument for Linux

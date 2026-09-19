@@ -27,7 +27,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_cpu.",
-    "rule_count": 18
+    "rule_count": 30
   },
   "EXCL-UVM-0004": {
     "id": "EXCL-UVM-0004",
@@ -77,7 +77,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_cp0.",
-    "rule_count": 15
+    "rule_count": 21
   },
   "EXCL-UVM-0009": {
     "id": "EXCL-UVM-0009",
@@ -87,7 +87,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module dcache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module dcache.",
-    "rule_count": 14
+    "rule_count": 26
   },
   "EXCL-UVM-0010": {
     "id": "EXCL-UVM-0010",
@@ -127,7 +127,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_fpu.",
-    "rule_count": 6
+    "rule_count": 18
   },
   "EXCL-UVM-0014": {
     "id": "EXCL-UVM-0014",
@@ -153,34 +153,24 @@
     "id": "EXCL-UVM-0016",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
-    "target": "MODULE: mmu_page_table_allocator",
-    "metric": "branch",
-    "rationale": "Audited uncovered BRANCH objects in module mmu_page_table_allocator under the current RTL verification contract.",
-    "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mmu_page_table_allocator.",
-    "rule_count": 8
-  },
-  "EXCL-UVM-0017": {
-    "id": "EXCL-UVM-0017",
-    "category": "UNREACHABLE_CURRENT_CONTRACT",
-    "domain": "uvm",
     "target": "MODULE: axi_ddr_behavioral",
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module axi_ddr_behavioral under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module axi_ddr_behavioral.",
     "rule_count": 26
   },
-  "EXCL-UVM-0018": {
-    "id": "EXCL-UVM-0018",
+  "EXCL-UVM-0017": {
+    "id": "EXCL-UVM-0017",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_page_table_walker",
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_page_table_walker.",
-    "rule_count": 15
+    "rule_count": 23
   },
-  "EXCL-UVM-0019": {
-    "id": "EXCL-UVM-0019",
+  "EXCL-UVM-0018": {
+    "id": "EXCL-UVM-0018",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_cmd_behavioral",
@@ -189,8 +179,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module qspi_cmd_behavioral.",
     "rule_count": 17
   },
-  "EXCL-UVM-0020": {
-    "id": "EXCL-UVM-0020",
+  "EXCL-UVM-0019": {
+    "id": "EXCL-UVM-0019",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: uart_pad_wrapper",
@@ -199,8 +189,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module uart_pad_wrapper.",
     "rule_count": 24
   },
-  "EXCL-UVM-0021": {
-    "id": "EXCL-UVM-0021",
+  "EXCL-UVM-0020": {
+    "id": "EXCL-UVM-0020",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_caching",
@@ -209,8 +199,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module l2_cache_caching.",
     "rule_count": 90
   },
-  "EXCL-UVM-0022": {
-    "id": "EXCL-UVM-0022",
+  "EXCL-UVM-0021": {
+    "id": "EXCL-UVM-0021",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_soc_pad_mux",
@@ -219,8 +209,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module qspi_soc_pad_mux.",
     "rule_count": 16
   },
-  "EXCL-UVM-0023": {
-    "id": "EXCL-UVM-0023",
+  "EXCL-UVM-0022": {
+    "id": "EXCL-UVM-0022",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_apb_integration",
@@ -229,18 +219,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module qspi_apb_integration.",
     "rule_count": 10
   },
-  "EXCL-UVM-0024": {
-    "id": "EXCL-UVM-0024",
+  "EXCL-UVM-0023": {
+    "id": "EXCL-UVM-0023",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: soc_core_subsystem",
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module soc_core_subsystem.",
-    "rule_count": 24
+    "rule_count": 63
   },
-  "EXCL-UVM-0025": {
-    "id": "EXCL-UVM-0025",
+  "EXCL-UVM-0024": {
+    "id": "EXCL-UVM-0024",
     "category": "UNINSTANTIATED_CONFIGURATION",
     "domain": "uvm",
     "target": "MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )",
@@ -249,8 +239,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 ).",
     "rule_count": 48
   },
-  "EXCL-UVM-0026": {
-    "id": "EXCL-UVM-0026",
+  "EXCL-UVM-0025": {
+    "id": "EXCL-UVM-0025",
     "category": "UNINSTANTIATED_CONFIGURATION",
     "domain": "uvm",
     "target": "MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )",
@@ -259,8 +249,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 ).",
     "rule_count": 52
   },
-  "EXCL-UVM-0027": {
-    "id": "EXCL-UVM-0027",
+  "EXCL-UVM-0026": {
+    "id": "EXCL-UVM-0026",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mem_wb_reg",
@@ -269,8 +259,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_mem_wb_reg.",
     "rule_count": 5
   },
-  "EXCL-UVM-0028": {
-    "id": "EXCL-UVM-0028",
+  "EXCL-UVM-0027": {
+    "id": "EXCL-UVM-0027",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_pad_wrapper",
@@ -279,18 +269,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module qspi_pad_wrapper.",
     "rule_count": 12
   },
-  "EXCL-UVM-0029": {
-    "id": "EXCL-UVM-0029",
+  "EXCL-UVM-0028": {
+    "id": "EXCL-UVM-0028",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_nb",
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module l2_cache_nb.",
-    "rule_count": 92
+    "rule_count": 115
   },
-  "EXCL-UVM-0030": {
-    "id": "EXCL-UVM-0030",
+  "EXCL-UVM-0029": {
+    "id": "EXCL-UVM-0029",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_read_timeout_guard",
@@ -299,8 +289,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module axi_read_timeout_guard.",
     "rule_count": 37
   },
-  "EXCL-UVM-0031": {
-    "id": "EXCL-UVM-0031",
+  "EXCL-UVM-0030": {
+    "id": "EXCL-UVM-0030",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: spi_flash_behavioral",
@@ -309,8 +299,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module spi_flash_behavioral.",
     "rule_count": 33
   },
-  "EXCL-UVM-0032": {
-    "id": "EXCL-UVM-0032",
+  "EXCL-UVM-0031": {
+    "id": "EXCL-UVM-0031",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_flash_quad_behavioral",
@@ -319,8 +309,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module qspi_flash_quad_behavioral.",
     "rule_count": 18
   },
-  "EXCL-UVM-0033": {
-    "id": "EXCL-UVM-0033",
+  "EXCL-UVM-0032": {
+    "id": "EXCL-UVM-0032",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_vic",
@@ -329,8 +319,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module apb_vic.",
     "rule_count": 6
   },
-  "EXCL-UVM-0034": {
-    "id": "EXCL-UVM-0034",
+  "EXCL-UVM-0033": {
+    "id": "EXCL-UVM-0033",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_boot_status",
@@ -339,8 +329,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_boot_status.",
     "rule_count": 6
   },
-  "EXCL-UVM-0035": {
-    "id": "EXCL-UVM-0035",
+  "EXCL-UVM-0034": {
+    "id": "EXCL-UVM-0034",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_boot_rom",
@@ -348,6 +338,16 @@
     "rationale": "Audited uncovered COND objects in module axi_boot_rom under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_boot_rom.",
     "rule_count": 34
+  },
+  "EXCL-UVM-0035": {
+    "id": "EXCL-UVM-0035",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "uvm",
+    "target": "MODULE: mmu_asid_allocator",
+    "metric": "cond",
+    "rationale": "Audited uncovered COND objects in module mmu_asid_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mmu_asid_allocator.",
+    "rule_count": 5
   },
   "EXCL-UVM-0036": {
     "id": "EXCL-UVM-0036",
@@ -357,7 +357,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_mdu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_mdu.",
-    "rule_count": 26
+    "rule_count": 34
   },
   "EXCL-UVM-0037": {
     "id": "EXCL-UVM-0037",
@@ -387,7 +387,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_id_stage under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_id_stage.",
-    "rule_count": 26
+    "rule_count": 24
   },
   "EXCL-UVM-0040": {
     "id": "EXCL-UVM-0040",
@@ -417,7 +417,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_cpu.",
-    "rule_count": 482
+    "rule_count": 629
   },
   "EXCL-UVM-0043": {
     "id": "EXCL-UVM-0043",
@@ -467,7 +467,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_alu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_alu.",
-    "rule_count": 5
+    "rule_count": 1
   },
   "EXCL-UVM-0048": {
     "id": "EXCL-UVM-0048",
@@ -477,7 +477,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_cp0.",
-    "rule_count": 70
+    "rule_count": 74
   },
   "EXCL-UVM-0049": {
     "id": "EXCL-UVM-0049",
@@ -487,7 +487,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module dcache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module dcache.",
-    "rule_count": 218
+    "rule_count": 235
   },
   "EXCL-UVM-0050": {
     "id": "EXCL-UVM-0050",
@@ -497,7 +497,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module l2_cache_wt under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module l2_cache_wt.",
-    "rule_count": 38
+    "rule_count": 48
   },
   "EXCL-UVM-0051": {
     "id": "EXCL-UVM-0051",
@@ -517,7 +517,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module icache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module icache.",
-    "rule_count": 34
+    "rule_count": 35
   },
   "EXCL-UVM-0053": {
     "id": "EXCL-UVM-0053",
@@ -527,7 +527,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_soc_impl under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_soc_impl.",
-    "rule_count": 25
+    "rule_count": 42
   },
   "EXCL-UVM-0054": {
     "id": "EXCL-UVM-0054",
@@ -537,7 +537,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module axi_crossbar under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_crossbar.",
-    "rule_count": 170
+    "rule_count": 194
   },
   "EXCL-UVM-0055": {
     "id": "EXCL-UVM-0055",
@@ -557,7 +557,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_fpu.",
-    "rule_count": 221
+    "rule_count": 363
   },
   "EXCL-UVM-0057": {
     "id": "EXCL-UVM-0057",
@@ -587,7 +587,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_tlb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_tlb.",
-    "rule_count": 2118
+    "rule_count": 2119
   },
   "EXCL-UVM-0060": {
     "id": "EXCL-UVM-0060",
@@ -607,7 +607,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_page_table_walker.",
-    "rule_count": 30
+    "rule_count": 39
   },
   "EXCL-UVM-0062": {
     "id": "EXCL-UVM-0062",
@@ -617,7 +617,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module retire_trace_capture under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module retire_trace_capture.",
-    "rule_count": 4
+    "rule_count": 7
   },
   "EXCL-UVM-0063": {
     "id": "EXCL-UVM-0063",
@@ -647,7 +647,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module axi_ddr4_controller under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_ddr4_controller.",
-    "rule_count": 133
+    "rule_count": 136
   },
   "EXCL-UVM-0066": {
     "id": "EXCL-UVM-0066",
@@ -657,7 +657,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module apb_mmu_context_status under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_mmu_context_status.",
-    "rule_count": 17
+    "rule_count": 57
   },
   "EXCL-UVM-0067": {
     "id": "EXCL-UVM-0067",
@@ -687,7 +687,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module cpu_scheduler under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module cpu_scheduler.",
-    "rule_count": 25
+    "rule_count": 30
   },
   "EXCL-UVM-0070": {
     "id": "EXCL-UVM-0070",
@@ -707,7 +707,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module axi2apb_bridge under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi2apb_bridge.",
-    "rule_count": 16
+    "rule_count": 17
   },
   "EXCL-UVM-0072": {
     "id": "EXCL-UVM-0072",
@@ -747,7 +747,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_core_subsystem.",
-    "rule_count": 20
+    "rule_count": 80
   },
   "EXCL-UVM-0076": {
     "id": "EXCL-UVM-0076",
@@ -777,7 +777,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_control under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_control.",
-    "rule_count": 136
+    "rule_count": 262
   },
   "EXCL-UVM-0079": {
     "id": "EXCL-UVM-0079",
@@ -797,26 +797,26 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module l2_cache_nb.",
-    "rule_count": 140
+    "rule_count": 264
   },
   "EXCL-UVM-0081": {
     "id": "EXCL-UVM-0081",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
-    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )",
+    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 )",
     "metric": "cond",
-    "rationale": "Audited uncovered COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ) under the current RTL verification contract.",
-    "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ).",
+    "rationale": "Audited uncovered COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ) under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ).",
     "rule_count": 12
   },
   "EXCL-UVM-0082": {
     "id": "EXCL-UVM-0082",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
-    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )",
+    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 )",
     "metric": "cond",
-    "rationale": "Audited uncovered COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ) under the current RTL verification contract.",
-    "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ).",
+    "rationale": "Audited uncovered COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ) under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ).",
     "rule_count": 12
   },
   "EXCL-UVM-0083": {
@@ -917,7 +917,7 @@
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_ex_mem_reg under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_ex_mem_reg.",
-    "rule_count": 20
+    "rule_count": 18
   },
   "EXCL-UVM-0093": {
     "id": "EXCL-UVM-0093",
@@ -1017,7 +1017,7 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mmu_asid_allocator under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_asid_allocator.",
-    "rule_count": 8
+    "rule_count": 11
   },
   "EXCL-UVM-0103": {
     "id": "EXCL-UVM-0103",
@@ -1027,7 +1027,7 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_mdu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mdu.",
-    "rule_count": 12
+    "rule_count": 30
   },
   "EXCL-UVM-0104": {
     "id": "EXCL-UVM-0104",
@@ -1047,7 +1047,7 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_micro_tlb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_micro_tlb.",
-    "rule_count": 22
+    "rule_count": 20
   },
   "EXCL-UVM-0106": {
     "id": "EXCL-UVM-0106",
@@ -1087,7 +1087,7 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_cpu.",
-    "rule_count": 53
+    "rule_count": 74
   },
   "EXCL-UVM-0110": {
     "id": "EXCL-UVM-0110",
@@ -1147,7 +1147,7 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_alu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_alu.",
-    "rule_count": 1
+    "rule_count": 2
   },
   "EXCL-UVM-0116": {
     "id": "EXCL-UVM-0116",
@@ -1167,7 +1167,7 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module dcache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module dcache.",
-    "rule_count": 69
+    "rule_count": 62
   },
   "EXCL-UVM-0118": {
     "id": "EXCL-UVM-0118",
@@ -1197,20 +1197,30 @@
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module icache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module icache.",
-    "rule_count": 13
+    "rule_count": 11
   },
   "EXCL-UVM-0121": {
     "id": "EXCL-UVM-0121",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "uvm",
+    "target": "MODULE: mmu_context_allocator",
+    "metric": "line",
+    "rationale": "Audited uncovered LINE objects in module mmu_context_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_context_allocator.",
+    "rule_count": 11
+  },
+  "EXCL-UVM-0122": {
+    "id": "EXCL-UVM-0122",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_crossbar",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module axi_crossbar under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_crossbar.",
-    "rule_count": 22
+    "rule_count": 31
   },
-  "EXCL-UVM-0122": {
-    "id": "EXCL-UVM-0122",
+  "EXCL-UVM-0123": {
+    "id": "EXCL-UVM-0123",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_id_tracker",
@@ -1219,18 +1229,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_id_tracker.",
     "rule_count": 11
   },
-  "EXCL-UVM-0123": {
-    "id": "EXCL-UVM-0123",
+  "EXCL-UVM-0124": {
+    "id": "EXCL-UVM-0124",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_fpu",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_fpu.",
-    "rule_count": 135
+    "rule_count": 166
   },
-  "EXCL-UVM-0124": {
-    "id": "EXCL-UVM-0124",
+  "EXCL-UVM-0125": {
+    "id": "EXCL-UVM-0125",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_bpu",
@@ -1239,8 +1249,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_bpu.",
     "rule_count": 8
   },
-  "EXCL-UVM-0125": {
-    "id": "EXCL-UVM-0125",
+  "EXCL-UVM-0126": {
+    "id": "EXCL-UVM-0126",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: ddr4_phy_behavioral",
@@ -1249,8 +1259,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module ddr4_phy_behavioral.",
     "rule_count": 40
   },
-  "EXCL-UVM-0126": {
-    "id": "EXCL-UVM-0126",
+  "EXCL-UVM-0127": {
+    "id": "EXCL-UVM-0127",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_axi_dma",
@@ -1259,18 +1269,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_axi_dma.",
     "rule_count": 69
   },
-  "EXCL-UVM-0127": {
-    "id": "EXCL-UVM-0127",
+  "EXCL-UVM-0128": {
+    "id": "EXCL-UVM-0128",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mmu_page_table_allocator",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mmu_page_table_allocator under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_page_table_allocator.",
-    "rule_count": 16
+    "rule_count": 11
   },
-  "EXCL-UVM-0128": {
-    "id": "EXCL-UVM-0128",
+  "EXCL-UVM-0129": {
+    "id": "EXCL-UVM-0129",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_tlb",
@@ -1279,8 +1289,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_tlb.",
     "rule_count": 34
   },
-  "EXCL-UVM-0129": {
-    "id": "EXCL-UVM-0129",
+  "EXCL-UVM-0130": {
+    "id": "EXCL-UVM-0130",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_wb_stage",
@@ -1289,8 +1299,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_wb_stage.",
     "rule_count": 1
   },
-  "EXCL-UVM-0130": {
-    "id": "EXCL-UVM-0130",
+  "EXCL-UVM-0131": {
+    "id": "EXCL-UVM-0131",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_ddr_behavioral",
@@ -1299,28 +1309,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_ddr_behavioral.",
     "rule_count": 31
   },
-  "EXCL-UVM-0131": {
-    "id": "EXCL-UVM-0131",
+  "EXCL-UVM-0132": {
+    "id": "EXCL-UVM-0132",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_page_table_walker",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_page_table_walker.",
-    "rule_count": 34
+    "rule_count": 48
   },
-  "EXCL-UVM-0132": {
-    "id": "EXCL-UVM-0132",
+  "EXCL-UVM-0133": {
+    "id": "EXCL-UVM-0133",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: retire_trace_capture",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module retire_trace_capture under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module retire_trace_capture.",
-    "rule_count": 4
+    "rule_count": 6
   },
-  "EXCL-UVM-0133": {
-    "id": "EXCL-UVM-0133",
+  "EXCL-UVM-0134": {
+    "id": "EXCL-UVM-0134",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_ex_stage",
@@ -1329,8 +1339,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_ex_stage.",
     "rule_count": 1
   },
-  "EXCL-UVM-0134": {
-    "id": "EXCL-UVM-0134",
+  "EXCL-UVM-0135": {
+    "id": "EXCL-UVM-0135",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_cmd_behavioral",
@@ -1339,28 +1349,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module qspi_cmd_behavioral.",
     "rule_count": 109
   },
-  "EXCL-UVM-0135": {
-    "id": "EXCL-UVM-0135",
+  "EXCL-UVM-0136": {
+    "id": "EXCL-UVM-0136",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_ddr4_controller",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module axi_ddr4_controller under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_ddr4_controller.",
-    "rule_count": 51
+    "rule_count": 55
   },
-  "EXCL-UVM-0136": {
-    "id": "EXCL-UVM-0136",
+  "EXCL-UVM-0137": {
+    "id": "EXCL-UVM-0137",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_mmu_context_status",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module apb_mmu_context_status under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_mmu_context_status.",
-    "rule_count": 17
+    "rule_count": 44
   },
-  "EXCL-UVM-0137": {
-    "id": "EXCL-UVM-0137",
+  "EXCL-UVM-0138": {
+    "id": "EXCL-UVM-0138",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_ddr4_status",
@@ -1369,8 +1379,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_ddr4_status.",
     "rule_count": 11
   },
-  "EXCL-UVM-0138": {
-    "id": "EXCL-UVM-0138",
+  "EXCL-UVM-0139": {
+    "id": "EXCL-UVM-0139",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_caching",
@@ -1379,18 +1389,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module l2_cache_caching.",
     "rule_count": 123
   },
-  "EXCL-UVM-0139": {
-    "id": "EXCL-UVM-0139",
+  "EXCL-UVM-0140": {
+    "id": "EXCL-UVM-0140",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: cpu_scheduler",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module cpu_scheduler under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module cpu_scheduler.",
-    "rule_count": 8
+    "rule_count": 9
   },
-  "EXCL-UVM-0140": {
-    "id": "EXCL-UVM-0140",
+  "EXCL-UVM-0141": {
+    "id": "EXCL-UVM-0141",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_regfile",
@@ -1399,8 +1409,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_regfile.",
     "rule_count": 7
   },
-  "EXCL-UVM-0141": {
-    "id": "EXCL-UVM-0141",
+  "EXCL-UVM-0142": {
+    "id": "EXCL-UVM-0142",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi2apb_bridge",
@@ -1409,8 +1419,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi2apb_bridge.",
     "rule_count": 6
   },
-  "EXCL-UVM-0142": {
-    "id": "EXCL-UVM-0142",
+  "EXCL-UVM-0143": {
+    "id": "EXCL-UVM-0143",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_perf_counters",
@@ -1419,18 +1429,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_perf_counters.",
     "rule_count": 9
   },
-  "EXCL-UVM-0143": {
-    "id": "EXCL-UVM-0143",
+  "EXCL-UVM-0144": {
+    "id": "EXCL-UVM-0144",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: soc_core_subsystem",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module soc_core_subsystem.",
-    "rule_count": 2
+    "rule_count": 9
   },
-  "EXCL-UVM-0144": {
-    "id": "EXCL-UVM-0144",
+  "EXCL-UVM-0145": {
+    "id": "EXCL-UVM-0145",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "uvm",
+    "target": "MODULE: mmu_page_frame_allocator",
+    "metric": "line",
+    "rationale": "Audited uncovered LINE objects in module mmu_page_frame_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_page_frame_allocator.",
+    "rule_count": 11
+  },
+  "EXCL-UVM-0146": {
+    "id": "EXCL-UVM-0146",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mem_wb_reg",
@@ -1439,28 +1459,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mem_wb_reg.",
     "rule_count": 6
   },
-  "EXCL-UVM-0145": {
-    "id": "EXCL-UVM-0145",
+  "EXCL-UVM-0147": {
+    "id": "EXCL-UVM-0147",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_control",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_control under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_control.",
-    "rule_count": 105
+    "rule_count": 156
   },
-  "EXCL-UVM-0146": {
-    "id": "EXCL-UVM-0146",
+  "EXCL-UVM-0148": {
+    "id": "EXCL-UVM-0148",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_nb",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module l2_cache_nb.",
-    "rule_count": 154
+    "rule_count": 218
   },
-  "EXCL-UVM-0147": {
-    "id": "EXCL-UVM-0147",
+  "EXCL-UVM-0149": {
+    "id": "EXCL-UVM-0149",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: ecc_secded_32",
@@ -1469,8 +1489,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module ecc_secded_32.",
     "rule_count": 10
   },
-  "EXCL-UVM-0148": {
-    "id": "EXCL-UVM-0148",
+  "EXCL-UVM-0150": {
+    "id": "EXCL-UVM-0150",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mmu_tlb_shootdown_mailbox",
@@ -1479,8 +1499,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_tlb_shootdown_mailbox.",
     "rule_count": 12
   },
-  "EXCL-UVM-0149": {
-    "id": "EXCL-UVM-0149",
+  "EXCL-UVM-0151": {
+    "id": "EXCL-UVM-0151",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_read_timeout_guard",
@@ -1489,8 +1509,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_read_timeout_guard.",
     "rule_count": 25
   },
-  "EXCL-UVM-0150": {
-    "id": "EXCL-UVM-0150",
+  "EXCL-UVM-0152": {
+    "id": "EXCL-UVM-0152",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_qspi_status",
@@ -1499,8 +1519,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_qspi_status.",
     "rule_count": 9
   },
-  "EXCL-UVM-0151": {
-    "id": "EXCL-UVM-0151",
+  "EXCL-UVM-0153": {
+    "id": "EXCL-UVM-0153",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mem_stage",
@@ -1509,8 +1529,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mem_stage.",
     "rule_count": 12
   },
-  "EXCL-UVM-0152": {
-    "id": "EXCL-UVM-0152",
+  "EXCL-UVM-0154": {
+    "id": "EXCL-UVM-0154",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: spi_flash_behavioral",
@@ -1519,8 +1539,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module spi_flash_behavioral.",
     "rule_count": 61
   },
-  "EXCL-UVM-0153": {
-    "id": "EXCL-UVM-0153",
+  "EXCL-UVM-0155": {
+    "id": "EXCL-UVM-0155",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_flash_quad_behavioral",
@@ -1529,8 +1549,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module qspi_flash_quad_behavioral.",
     "rule_count": 31
   },
-  "EXCL-UVM-0154": {
-    "id": "EXCL-UVM-0154",
+  "EXCL-UVM-0156": {
+    "id": "EXCL-UVM-0156",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_vic",
@@ -1539,8 +1559,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_vic.",
     "rule_count": 37
   },
-  "EXCL-UVM-0155": {
-    "id": "EXCL-UVM-0155",
+  "EXCL-UVM-0157": {
+    "id": "EXCL-UVM-0157",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_perf_counters",
@@ -1549,8 +1569,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_perf_counters.",
     "rule_count": 10
   },
-  "EXCL-UVM-0156": {
-    "id": "EXCL-UVM-0156",
+  "EXCL-UVM-0158": {
+    "id": "EXCL-UVM-0158",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_ex_mem_reg",
@@ -1559,8 +1579,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_ex_mem_reg.",
     "rule_count": 1
   },
-  "EXCL-UVM-0157": {
-    "id": "EXCL-UVM-0157",
+  "EXCL-UVM-0159": {
+    "id": "EXCL-UVM-0159",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_boot_status",
@@ -1569,8 +1589,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_boot_status.",
     "rule_count": 10
   },
-  "EXCL-UVM-0158": {
-    "id": "EXCL-UVM-0158",
+  "EXCL-UVM-0160": {
+    "id": "EXCL-UVM-0160",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_boot_rom",
@@ -1579,28 +1599,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_boot_rom.",
     "rule_count": 48
   },
-  "EXCL-UVM-0159": {
-    "id": "EXCL-UVM-0159",
+  "EXCL-UVM-0161": {
+    "id": "EXCL-UVM-0161",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mmu_asid_allocator",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mmu_asid_allocator under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_asid_allocator.",
-    "rule_count": 10
+    "rule_count": 11
   },
-  "EXCL-UVM-0160": {
-    "id": "EXCL-UVM-0160",
+  "EXCL-UVM-0162": {
+    "id": "EXCL-UVM-0162",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mdu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_mdu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mdu.",
-    "rule_count": 4
+    "rule_count": 8
   },
-  "EXCL-UVM-0161": {
-    "id": "EXCL-UVM-0161",
+  "EXCL-UVM-0163": {
+    "id": "EXCL-UVM-0163",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mmu",
@@ -1609,18 +1629,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mmu.",
     "rule_count": 21
   },
-  "EXCL-UVM-0162": {
-    "id": "EXCL-UVM-0162",
+  "EXCL-UVM-0164": {
+    "id": "EXCL-UVM-0164",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_micro_tlb",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_micro_tlb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_micro_tlb.",
-    "rule_count": 43
+    "rule_count": 42
   },
-  "EXCL-UVM-0163": {
-    "id": "EXCL-UVM-0163",
+  "EXCL-UVM-0165": {
+    "id": "EXCL-UVM-0165",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_id_stage",
@@ -1629,8 +1649,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_id_stage.",
     "rule_count": 28
   },
-  "EXCL-UVM-0164": {
-    "id": "EXCL-UVM-0164",
+  "EXCL-UVM-0166": {
+    "id": "EXCL-UVM-0166",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_timer",
@@ -1639,8 +1659,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_timer.",
     "rule_count": 1
   },
-  "EXCL-UVM-0165": {
-    "id": "EXCL-UVM-0165",
+  "EXCL-UVM-0167": {
+    "id": "EXCL-UVM-0167",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_if_stage",
@@ -1649,18 +1669,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_if_stage.",
     "rule_count": 15
   },
-  "EXCL-UVM-0166": {
-    "id": "EXCL-UVM-0166",
+  "EXCL-UVM-0168": {
+    "id": "EXCL-UVM-0168",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_cpu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_cpu.",
-    "rule_count": 215
+    "rule_count": 249
   },
-  "EXCL-UVM-0167": {
-    "id": "EXCL-UVM-0167",
+  "EXCL-UVM-0169": {
+    "id": "EXCL-UVM-0169",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_page_table_tlb_refill",
@@ -1669,8 +1689,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_page_table_tlb_refill.",
     "rule_count": 37
   },
-  "EXCL-UVM-0168": {
-    "id": "EXCL-UVM-0168",
+  "EXCL-UVM-0170": {
+    "id": "EXCL-UVM-0170",
     "category": "OUT_OF_SCOPE_FEATURE",
     "domain": "uvm",
     "target": "MODULE: jtag_debug_top",
@@ -1679,8 +1699,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module jtag_debug_top.",
     "rule_count": 20
   },
-  "EXCL-UVM-0169": {
-    "id": "EXCL-UVM-0169",
+  "EXCL-UVM-0171": {
+    "id": "EXCL-UVM-0171",
     "category": "STATIC_TIEOFF_RESERVED",
     "domain": "uvm",
     "target": "MODULE: apb_gpio",
@@ -1689,8 +1709,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_gpio.",
     "rule_count": 2
   },
-  "EXCL-UVM-0170": {
-    "id": "EXCL-UVM-0170",
+  "EXCL-UVM-0172": {
+    "id": "EXCL-UVM-0172",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_uart_16550",
@@ -1699,8 +1719,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_uart_16550.",
     "rule_count": 39
   },
-  "EXCL-UVM-0171": {
-    "id": "EXCL-UVM-0171",
+  "EXCL-UVM-0173": {
+    "id": "EXCL-UVM-0173",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_shared_pin_arbiter",
@@ -1709,18 +1729,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_shared_pin_arbiter.",
     "rule_count": 15
   },
-  "EXCL-UVM-0172": {
-    "id": "EXCL-UVM-0172",
+  "EXCL-UVM-0174": {
+    "id": "EXCL-UVM-0174",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_cp0",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_cp0.",
-    "rule_count": 107
+    "rule_count": 118
   },
-  "EXCL-UVM-0173": {
-    "id": "EXCL-UVM-0173",
+  "EXCL-UVM-0175": {
+    "id": "EXCL-UVM-0175",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: dcache",
@@ -1729,28 +1749,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module dcache.",
     "rule_count": 57
   },
-  "EXCL-UVM-0174": {
-    "id": "EXCL-UVM-0174",
+  "EXCL-UVM-0176": {
+    "id": "EXCL-UVM-0176",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: soc_fabric",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module soc_fabric under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_fabric.",
-    "rule_count": 174
+    "rule_count": 173
   },
-  "EXCL-UVM-0175": {
-    "id": "EXCL-UVM-0175",
+  "EXCL-UVM-0177": {
+    "id": "EXCL-UVM-0177",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_wt",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module l2_cache_wt under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache_wt.",
-    "rule_count": 14
+    "rule_count": 16
   },
-  "EXCL-UVM-0176": {
-    "id": "EXCL-UVM-0176",
+  "EXCL-UVM-0178": {
+    "id": "EXCL-UVM-0178",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_wdt",
@@ -1759,28 +1779,38 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_wdt.",
     "rule_count": 12
   },
-  "EXCL-UVM-0177": {
-    "id": "EXCL-UVM-0177",
+  "EXCL-UVM-0179": {
+    "id": "EXCL-UVM-0179",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: icache",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module icache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module icache.",
-    "rule_count": 30
+    "rule_count": 29
   },
-  "EXCL-UVM-0178": {
-    "id": "EXCL-UVM-0178",
+  "EXCL-UVM-0180": {
+    "id": "EXCL-UVM-0180",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "uvm",
+    "target": "MODULE: mmu_context_allocator",
+    "metric": "tgl",
+    "rationale": "Audited uncovered TGL objects in module mmu_context_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_context_allocator.",
+    "rule_count": 13
+  },
+  "EXCL-UVM-0181": {
+    "id": "EXCL-UVM-0181",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_soc_impl",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_soc_impl under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_soc_impl.",
-    "rule_count": 279
+    "rule_count": 280
   },
-  "EXCL-UVM-0179": {
-    "id": "EXCL-UVM-0179",
+  "EXCL-UVM-0182": {
+    "id": "EXCL-UVM-0182",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_crossbar",
@@ -1789,8 +1819,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_crossbar.",
     "rule_count": 18
   },
-  "EXCL-UVM-0180": {
-    "id": "EXCL-UVM-0180",
+  "EXCL-UVM-0183": {
+    "id": "EXCL-UVM-0183",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_id_tracker",
@@ -1799,28 +1829,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_id_tracker.",
     "rule_count": 19
   },
-  "EXCL-UVM-0181": {
-    "id": "EXCL-UVM-0181",
+  "EXCL-UVM-0184": {
+    "id": "EXCL-UVM-0184",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_fpu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_fpu.",
-    "rule_count": 13
+    "rule_count": 17
   },
-  "EXCL-UVM-0182": {
-    "id": "EXCL-UVM-0182",
+  "EXCL-UVM-0185": {
+    "id": "EXCL-UVM-0185",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_bpu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_bpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_bpu.",
-    "rule_count": 8
+    "rule_count": 7
   },
-  "EXCL-UVM-0183": {
-    "id": "EXCL-UVM-0183",
+  "EXCL-UVM-0186": {
+    "id": "EXCL-UVM-0186",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: ddr4_phy_behavioral",
@@ -1829,8 +1859,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module ddr4_phy_behavioral.",
     "rule_count": 25
   },
-  "EXCL-UVM-0184": {
-    "id": "EXCL-UVM-0184",
+  "EXCL-UVM-0187": {
+    "id": "EXCL-UVM-0187",
     "category": "OUT_OF_SCOPE_FEATURE",
     "domain": "uvm",
     "target": "MODULE: soc_debug_subsystem",
@@ -1839,8 +1869,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_debug_subsystem.",
     "rule_count": 17
   },
-  "EXCL-UVM-0185": {
-    "id": "EXCL-UVM-0185",
+  "EXCL-UVM-0188": {
+    "id": "EXCL-UVM-0188",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_axi_dma",
@@ -1849,18 +1879,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_axi_dma.",
     "rule_count": 20
   },
-  "EXCL-UVM-0186": {
-    "id": "EXCL-UVM-0186",
+  "EXCL-UVM-0189": {
+    "id": "EXCL-UVM-0189",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mmu_page_table_allocator",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mmu_page_table_allocator under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_page_table_allocator.",
-    "rule_count": 14
+    "rule_count": 12
   },
-  "EXCL-UVM-0187": {
-    "id": "EXCL-UVM-0187",
+  "EXCL-UVM-0190": {
+    "id": "EXCL-UVM-0190",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_if_id_reg",
@@ -1869,18 +1899,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_if_id_reg.",
     "rule_count": 6
   },
-  "EXCL-UVM-0188": {
-    "id": "EXCL-UVM-0188",
+  "EXCL-UVM-0191": {
+    "id": "EXCL-UVM-0191",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_tlb",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_tlb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_tlb.",
-    "rule_count": 641
+    "rule_count": 640
   },
-  "EXCL-UVM-0189": {
-    "id": "EXCL-UVM-0189",
+  "EXCL-UVM-0192": {
+    "id": "EXCL-UVM-0192",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_ddr_behavioral",
@@ -1889,18 +1919,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_ddr_behavioral.",
     "rule_count": 40
   },
-  "EXCL-UVM-0190": {
-    "id": "EXCL-UVM-0190",
+  "EXCL-UVM-0193": {
+    "id": "EXCL-UVM-0193",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_page_table_walker",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_page_table_walker.",
-    "rule_count": 17
+    "rule_count": 22
   },
-  "EXCL-UVM-0191": {
-    "id": "EXCL-UVM-0191",
+  "EXCL-UVM-0194": {
+    "id": "EXCL-UVM-0194",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "uvm",
+    "target": "MODULE: retire_trace_capture",
+    "metric": "tgl",
+    "rationale": "Audited uncovered TGL objects in module retire_trace_capture under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module retire_trace_capture.",
+    "rule_count": 4
+  },
+  "EXCL-UVM-0195": {
+    "id": "EXCL-UVM-0195",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_cmd_behavioral",
@@ -1909,8 +1949,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_cmd_behavioral.",
     "rule_count": 72
   },
-  "EXCL-UVM-0192": {
-    "id": "EXCL-UVM-0192",
+  "EXCL-UVM-0196": {
+    "id": "EXCL-UVM-0196",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: uart_pad_wrapper",
@@ -1919,28 +1959,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module uart_pad_wrapper.",
     "rule_count": 17
   },
-  "EXCL-UVM-0193": {
-    "id": "EXCL-UVM-0193",
+  "EXCL-UVM-0197": {
+    "id": "EXCL-UVM-0197",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_ddr4_controller",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module axi_ddr4_controller under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_ddr4_controller.",
-    "rule_count": 65
+    "rule_count": 69
   },
-  "EXCL-UVM-0194": {
-    "id": "EXCL-UVM-0194",
+  "EXCL-UVM-0198": {
+    "id": "EXCL-UVM-0198",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_mmu_context_status",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module apb_mmu_context_status under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_mmu_context_status.",
-    "rule_count": 32
+    "rule_count": 68
   },
-  "EXCL-UVM-0195": {
-    "id": "EXCL-UVM-0195",
+  "EXCL-UVM-0199": {
+    "id": "EXCL-UVM-0199",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_soc",
@@ -1949,8 +1989,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_soc.",
     "rule_count": 31
   },
-  "EXCL-UVM-0196": {
-    "id": "EXCL-UVM-0196",
+  "EXCL-UVM-0200": {
+    "id": "EXCL-UVM-0200",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_ddr4_status",
@@ -1959,8 +1999,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_ddr4_status.",
     "rule_count": 17
   },
-  "EXCL-UVM-0197": {
-    "id": "EXCL-UVM-0197",
+  "EXCL-UVM-0201": {
+    "id": "EXCL-UVM-0201",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_caching",
@@ -1969,18 +2009,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache_caching.",
     "rule_count": 90
   },
-  "EXCL-UVM-0198": {
-    "id": "EXCL-UVM-0198",
+  "EXCL-UVM-0202": {
+    "id": "EXCL-UVM-0202",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: cpu_scheduler",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module cpu_scheduler under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module cpu_scheduler.",
-    "rule_count": 37
+    "rule_count": 40
   },
-  "EXCL-UVM-0199": {
-    "id": "EXCL-UVM-0199",
+  "EXCL-UVM-0203": {
+    "id": "EXCL-UVM-0203",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_regfile",
@@ -1989,8 +2029,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_regfile.",
     "rule_count": 14
   },
-  "EXCL-UVM-0200": {
-    "id": "EXCL-UVM-0200",
+  "EXCL-UVM-0204": {
+    "id": "EXCL-UVM-0204",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi2apb_bridge",
@@ -1999,8 +2039,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi2apb_bridge.",
     "rule_count": 11
   },
-  "EXCL-UVM-0201": {
-    "id": "EXCL-UVM-0201",
+  "EXCL-UVM-0205": {
+    "id": "EXCL-UVM-0205",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_perf_counters",
@@ -2009,8 +2049,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_perf_counters.",
     "rule_count": 11
   },
-  "EXCL-UVM-0202": {
-    "id": "EXCL-UVM-0202",
+  "EXCL-UVM-0206": {
+    "id": "EXCL-UVM-0206",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_soc_pad_mux",
@@ -2019,8 +2059,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_soc_pad_mux.",
     "rule_count": 17
   },
-  "EXCL-UVM-0203": {
-    "id": "EXCL-UVM-0203",
+  "EXCL-UVM-0207": {
+    "id": "EXCL-UVM-0207",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_apb_integration",
@@ -2029,18 +2069,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_apb_integration.",
     "rule_count": 38
   },
-  "EXCL-UVM-0204": {
-    "id": "EXCL-UVM-0204",
+  "EXCL-UVM-0208": {
+    "id": "EXCL-UVM-0208",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: soc_core_subsystem",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_core_subsystem.",
-    "rule_count": 78
+    "rule_count": 91
   },
-  "EXCL-UVM-0205": {
-    "id": "EXCL-UVM-0205",
+  "EXCL-UVM-0209": {
+    "id": "EXCL-UVM-0209",
     "category": "UNINSTANTIATED_CONFIGURATION",
     "domain": "uvm",
     "target": "MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )",
@@ -2049,8 +2089,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=0,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 ).",
     "rule_count": 214
   },
-  "EXCL-UVM-0206": {
-    "id": "EXCL-UVM-0206",
+  "EXCL-UVM-0210": {
+    "id": "EXCL-UVM-0210",
     "category": "UNINSTANTIATED_CONFIGURATION",
     "domain": "uvm",
     "target": "MODULE: soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 )",
@@ -2059,8 +2099,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_peripheral_subsystem ( parameter ENABLE_APB_FAULT_INJECTOR=1,ENABLE_QSPI_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DUAL_CORE_IPI=0 ).",
     "rule_count": 215
   },
-  "EXCL-UVM-0207": {
-    "id": "EXCL-UVM-0207",
+  "EXCL-UVM-0211": {
+    "id": "EXCL-UVM-0211",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "uvm",
+    "target": "MODULE: mmu_page_frame_allocator",
+    "metric": "tgl",
+    "rationale": "Audited uncovered TGL objects in module mmu_page_frame_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_page_frame_allocator.",
+    "rule_count": 12
+  },
+  "EXCL-UVM-0212": {
+    "id": "EXCL-UVM-0212",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mem_wb_reg",
@@ -2069,8 +2119,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mem_wb_reg.",
     "rule_count": 38
   },
-  "EXCL-UVM-0208": {
-    "id": "EXCL-UVM-0208",
+  "EXCL-UVM-0213": {
+    "id": "EXCL-UVM-0213",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_control",
@@ -2079,18 +2129,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_control.",
     "rule_count": 13
   },
-  "EXCL-UVM-0209": {
-    "id": "EXCL-UVM-0209",
+  "EXCL-UVM-0214": {
+    "id": "EXCL-UVM-0214",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module l2_cache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache.",
-    "rule_count": 10
+    "rule_count": 11
   },
-  "EXCL-UVM-0210": {
-    "id": "EXCL-UVM-0210",
+  "EXCL-UVM-0215": {
+    "id": "EXCL-UVM-0215",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_pad_wrapper",
@@ -2099,38 +2149,38 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_pad_wrapper.",
     "rule_count": 21
   },
-  "EXCL-UVM-0211": {
-    "id": "EXCL-UVM-0211",
+  "EXCL-UVM-0216": {
+    "id": "EXCL-UVM-0216",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: l2_cache_nb",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache_nb.",
-    "rule_count": 116
+    "rule_count": 136
   },
-  "EXCL-UVM-0212": {
-    "id": "EXCL-UVM-0212",
+  "EXCL-UVM-0217": {
+    "id": "EXCL-UVM-0217",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
-    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )",
+    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 )",
     "metric": "tgl",
-    "rationale": "Audited uncovered TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ) under the current RTL verification contract.",
-    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ).",
+    "rationale": "Audited uncovered TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ) under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=0,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ).",
     "rule_count": 226
   },
-  "EXCL-UVM-0213": {
-    "id": "EXCL-UVM-0213",
+  "EXCL-UVM-0218": {
+    "id": "EXCL-UVM-0218",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
-    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 )",
+    "target": "MODULE: soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 )",
     "metric": "tgl",
-    "rationale": "Audited uncovered TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ) under the current RTL verification contract.",
-    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=32768,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0 ).",
+    "rationale": "Audited uncovered TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ) under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_memory_subsystem ( parameter ENABLE_FLASH_IMAGE_MODEL=1,SRAM_DEPTH_WORDS=4194304,SPI_READ_TIMEOUT_CYCLES=512,ENABLE_SHARED_ARB=1,ENABLE_QSPI_QUAD=0,ENABLE_DDR4_STATUS=0,ENABLE_DDR4_STATUS_FATAL=0,DDR_ADDRESS_BASED_INDEX=1,DDR_BASE_ADDR=134217728,DDR_FAST_MODE=1,DDR_DEPTH_WORDS=8388608 ).",
     "rule_count": 209
   },
-  "EXCL-UVM-0214": {
-    "id": "EXCL-UVM-0214",
+  "EXCL-UVM-0219": {
+    "id": "EXCL-UVM-0219",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: ecc_secded_32",
@@ -2139,8 +2189,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module ecc_secded_32.",
     "rule_count": 7
   },
-  "EXCL-UVM-0215": {
-    "id": "EXCL-UVM-0215",
+  "EXCL-UVM-0220": {
+    "id": "EXCL-UVM-0220",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mmu_tlb_shootdown_mailbox",
@@ -2149,8 +2199,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_tlb_shootdown_mailbox.",
     "rule_count": 16
   },
-  "EXCL-UVM-0216": {
-    "id": "EXCL-UVM-0216",
+  "EXCL-UVM-0221": {
+    "id": "EXCL-UVM-0221",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: axi_read_timeout_guard",
@@ -2159,8 +2209,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_read_timeout_guard.",
     "rule_count": 50
   },
-  "EXCL-UVM-0217": {
-    "id": "EXCL-UVM-0217",
+  "EXCL-UVM-0222": {
+    "id": "EXCL-UVM-0222",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_qspi_status",
@@ -2169,8 +2219,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_qspi_status.",
     "rule_count": 16
   },
-  "EXCL-UVM-0218": {
-    "id": "EXCL-UVM-0218",
+  "EXCL-UVM-0223": {
+    "id": "EXCL-UVM-0223",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_mem_stage",
@@ -2179,8 +2229,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mem_stage.",
     "rule_count": 7
   },
-  "EXCL-UVM-0219": {
-    "id": "EXCL-UVM-0219",
+  "EXCL-UVM-0224": {
+    "id": "EXCL-UVM-0224",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: spi_flash_behavioral",
@@ -2189,8 +2239,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module spi_flash_behavioral.",
     "rule_count": 17
   },
-  "EXCL-UVM-0220": {
-    "id": "EXCL-UVM-0220",
+  "EXCL-UVM-0225": {
+    "id": "EXCL-UVM-0225",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_rob",
@@ -2199,8 +2249,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_rob.",
     "rule_count": 4
   },
-  "EXCL-UVM-0221": {
-    "id": "EXCL-UVM-0221",
+  "EXCL-UVM-0226": {
+    "id": "EXCL-UVM-0226",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: qspi_flash_quad_behavioral",
@@ -2209,8 +2259,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_flash_quad_behavioral.",
     "rule_count": 15
   },
-  "EXCL-UVM-0222": {
-    "id": "EXCL-UVM-0222",
+  "EXCL-UVM-0227": {
+    "id": "EXCL-UVM-0227",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_id_ex_reg",
@@ -2219,8 +2269,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_id_ex_reg.",
     "rule_count": 6
   },
-  "EXCL-UVM-0223": {
-    "id": "EXCL-UVM-0223",
+  "EXCL-UVM-0228": {
+    "id": "EXCL-UVM-0228",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: apb_vic",
@@ -2229,8 +2279,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_vic.",
     "rule_count": 10
   },
-  "EXCL-UVM-0224": {
-    "id": "EXCL-UVM-0224",
+  "EXCL-UVM-0229": {
+    "id": "EXCL-UVM-0229",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_perf_counters",
@@ -2239,18 +2289,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_perf_counters.",
     "rule_count": 9
   },
-  "EXCL-UVM-0225": {
-    "id": "EXCL-UVM-0225",
+  "EXCL-UVM-0230": {
+    "id": "EXCL-UVM-0230",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: mips_ex_mem_reg",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_ex_mem_reg under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_ex_mem_reg.",
-    "rule_count": 8
+    "rule_count": 9
   },
-  "EXCL-UVM-0226": {
-    "id": "EXCL-UVM-0226",
+  "EXCL-UVM-0231": {
+    "id": "EXCL-UVM-0231",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "uvm",
     "target": "MODULE: soc_top",
@@ -2297,7 +2347,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_cpu.",
-    "rule_count": 18
+    "rule_count": 30
   },
   "EXCL-PROD-0005": {
     "id": "EXCL-PROD-0005",
@@ -2337,7 +2387,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_cp0.",
-    "rule_count": 15
+    "rule_count": 21
   },
   "EXCL-PROD-0009": {
     "id": "EXCL-PROD-0009",
@@ -2347,7 +2397,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module dcache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module dcache.",
-    "rule_count": 14
+    "rule_count": 26
   },
   "EXCL-PROD-0010": {
     "id": "EXCL-PROD-0010",
@@ -2377,7 +2427,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_fpu.",
-    "rule_count": 6
+    "rule_count": 18
   },
   "EXCL-PROD-0013": {
     "id": "EXCL-PROD-0013",
@@ -2407,7 +2457,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module mips_page_table_walker.",
-    "rule_count": 15
+    "rule_count": 23
   },
   "EXCL-PROD-0016": {
     "id": "EXCL-PROD-0016",
@@ -2477,7 +2527,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module soc_core_subsystem.",
-    "rule_count": 24
+    "rule_count": 63
   },
   "EXCL-PROD-0023": {
     "id": "EXCL-PROD-0023",
@@ -2507,7 +2557,7 @@
     "metric": "branch",
     "rationale": "Audited uncovered BRANCH objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed BRANCH objects in module l2_cache_nb.",
-    "rule_count": 92
+    "rule_count": 115
   },
   "EXCL-PROD-0026": {
     "id": "EXCL-PROD-0026",
@@ -2563,14 +2613,24 @@
     "id": "EXCL-PROD-0031",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
+    "target": "MODULE: mmu_asid_allocator",
+    "metric": "cond",
+    "rationale": "Audited uncovered COND objects in module mmu_asid_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mmu_asid_allocator.",
+    "rule_count": 5
+  },
+  "EXCL-PROD-0032": {
+    "id": "EXCL-PROD-0032",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
     "target": "MODULE: mips_mdu",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_mdu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_mdu.",
-    "rule_count": 26
+    "rule_count": 34
   },
-  "EXCL-PROD-0032": {
-    "id": "EXCL-PROD-0032",
+  "EXCL-PROD-0033": {
+    "id": "EXCL-PROD-0033",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mmu",
@@ -2579,8 +2639,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_mmu.",
     "rule_count": 11
   },
-  "EXCL-PROD-0033": {
-    "id": "EXCL-PROD-0033",
+  "EXCL-PROD-0034": {
+    "id": "EXCL-PROD-0034",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_micro_tlb",
@@ -2589,18 +2649,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_micro_tlb.",
     "rule_count": 78
   },
-  "EXCL-PROD-0034": {
-    "id": "EXCL-PROD-0034",
+  "EXCL-PROD-0035": {
+    "id": "EXCL-PROD-0035",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_id_stage",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_id_stage under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_id_stage.",
-    "rule_count": 62
+    "rule_count": 63
   },
-  "EXCL-PROD-0035": {
-    "id": "EXCL-PROD-0035",
+  "EXCL-PROD-0036": {
+    "id": "EXCL-PROD-0036",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_timer",
@@ -2609,8 +2669,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_timer.",
     "rule_count": 3
   },
-  "EXCL-PROD-0036": {
-    "id": "EXCL-PROD-0036",
+  "EXCL-PROD-0037": {
+    "id": "EXCL-PROD-0037",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_if_stage",
@@ -2619,8 +2679,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_if_stage.",
     "rule_count": 8
   },
-  "EXCL-PROD-0037": {
-    "id": "EXCL-PROD-0037",
+  "EXCL-PROD-0038": {
+    "id": "EXCL-PROD-0038",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_sram",
@@ -2629,18 +2689,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_sram.",
     "rule_count": 21
   },
-  "EXCL-PROD-0038": {
-    "id": "EXCL-PROD-0038",
+  "EXCL-PROD-0039": {
+    "id": "EXCL-PROD-0039",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_cpu",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_cpu.",
-    "rule_count": 527
+    "rule_count": 721
   },
-  "EXCL-PROD-0039": {
-    "id": "EXCL-PROD-0039",
+  "EXCL-PROD-0040": {
+    "id": "EXCL-PROD-0040",
     "category": "OUT_OF_SCOPE_FEATURE",
     "domain": "prod",
     "target": "MODULE: jtag_debug_top",
@@ -2649,8 +2709,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module jtag_debug_top.",
     "rule_count": 8
   },
-  "EXCL-PROD-0040": {
-    "id": "EXCL-PROD-0040",
+  "EXCL-PROD-0041": {
+    "id": "EXCL-PROD-0041",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_uart_16550",
@@ -2659,8 +2719,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_uart_16550.",
     "rule_count": 123
   },
-  "EXCL-PROD-0041": {
-    "id": "EXCL-PROD-0041",
+  "EXCL-PROD-0042": {
+    "id": "EXCL-PROD-0042",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_shared_pin_arbiter",
@@ -2669,48 +2729,48 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module qspi_shared_pin_arbiter.",
     "rule_count": 9
   },
-  "EXCL-PROD-0042": {
-    "id": "EXCL-PROD-0042",
+  "EXCL-PROD-0043": {
+    "id": "EXCL-PROD-0043",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_alu",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_alu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_alu.",
-    "rule_count": 5
+    "rule_count": 1
   },
-  "EXCL-PROD-0043": {
-    "id": "EXCL-PROD-0043",
+  "EXCL-PROD-0044": {
+    "id": "EXCL-PROD-0044",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_cp0",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_cp0.",
-    "rule_count": 73
+    "rule_count": 81
   },
-  "EXCL-PROD-0044": {
-    "id": "EXCL-PROD-0044",
+  "EXCL-PROD-0045": {
+    "id": "EXCL-PROD-0045",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: dcache",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module dcache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module dcache.",
-    "rule_count": 226
+    "rule_count": 241
   },
-  "EXCL-PROD-0045": {
-    "id": "EXCL-PROD-0045",
+  "EXCL-PROD-0046": {
+    "id": "EXCL-PROD-0046",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_wt",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module l2_cache_wt under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module l2_cache_wt.",
-    "rule_count": 40
+    "rule_count": 50
   },
-  "EXCL-PROD-0046": {
-    "id": "EXCL-PROD-0046",
+  "EXCL-PROD-0047": {
+    "id": "EXCL-PROD-0047",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_wdt",
@@ -2719,8 +2779,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_wdt.",
     "rule_count": 10
   },
-  "EXCL-PROD-0047": {
-    "id": "EXCL-PROD-0047",
+  "EXCL-PROD-0048": {
+    "id": "EXCL-PROD-0048",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: icache",
@@ -2729,38 +2789,38 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module icache.",
     "rule_count": 50
   },
-  "EXCL-PROD-0048": {
-    "id": "EXCL-PROD-0048",
+  "EXCL-PROD-0049": {
+    "id": "EXCL-PROD-0049",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_soc_impl",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_soc_impl under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_soc_impl.",
-    "rule_count": 25
+    "rule_count": 42
   },
-  "EXCL-PROD-0049": {
-    "id": "EXCL-PROD-0049",
+  "EXCL-PROD-0050": {
+    "id": "EXCL-PROD-0050",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_crossbar",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module axi_crossbar under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_crossbar.",
-    "rule_count": 217
+    "rule_count": 244
   },
-  "EXCL-PROD-0050": {
-    "id": "EXCL-PROD-0050",
+  "EXCL-PROD-0051": {
+    "id": "EXCL-PROD-0051",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_fpu",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_fpu.",
-    "rule_count": 230
+    "rule_count": 377
   },
-  "EXCL-PROD-0051": {
-    "id": "EXCL-PROD-0051",
+  "EXCL-PROD-0052": {
+    "id": "EXCL-PROD-0052",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_axi_dma",
@@ -2769,28 +2829,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_axi_dma.",
     "rule_count": 37
   },
-  "EXCL-PROD-0052": {
-    "id": "EXCL-PROD-0052",
+  "EXCL-PROD-0053": {
+    "id": "EXCL-PROD-0053",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_tlb",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_tlb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_tlb.",
-    "rule_count": 2122
+    "rule_count": 2124
   },
-  "EXCL-PROD-0053": {
-    "id": "EXCL-PROD-0053",
+  "EXCL-PROD-0054": {
+    "id": "EXCL-PROD-0054",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_page_table_walker",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_page_table_walker.",
-    "rule_count": 30
+    "rule_count": 39
   },
-  "EXCL-PROD-0054": {
-    "id": "EXCL-PROD-0054",
+  "EXCL-PROD-0055": {
+    "id": "EXCL-PROD-0055",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_spi_flash",
@@ -2799,8 +2859,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_spi_flash.",
     "rule_count": 18
   },
-  "EXCL-PROD-0055": {
-    "id": "EXCL-PROD-0055",
+  "EXCL-PROD-0056": {
+    "id": "EXCL-PROD-0056",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_cmd_behavioral",
@@ -2809,8 +2869,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module qspi_cmd_behavioral.",
     "rule_count": 140
   },
-  "EXCL-PROD-0056": {
-    "id": "EXCL-PROD-0056",
+  "EXCL-PROD-0057": {
+    "id": "EXCL-PROD-0057",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: uart_pad_wrapper",
@@ -2819,28 +2879,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module uart_pad_wrapper.",
     "rule_count": 8
   },
-  "EXCL-PROD-0057": {
-    "id": "EXCL-PROD-0057",
+  "EXCL-PROD-0058": {
+    "id": "EXCL-PROD-0058",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_ddr4_controller",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module axi_ddr4_controller under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_ddr4_controller.",
-    "rule_count": 133
+    "rule_count": 136
   },
-  "EXCL-PROD-0058": {
-    "id": "EXCL-PROD-0058",
+  "EXCL-PROD-0059": {
+    "id": "EXCL-PROD-0059",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_mmu_context_status",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module apb_mmu_context_status under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_mmu_context_status.",
-    "rule_count": 21
+    "rule_count": 61
   },
-  "EXCL-PROD-0059": {
-    "id": "EXCL-PROD-0059",
+  "EXCL-PROD-0060": {
+    "id": "EXCL-PROD-0060",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_ddr4_status",
@@ -2849,8 +2909,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_ddr4_status.",
     "rule_count": 22
   },
-  "EXCL-PROD-0060": {
-    "id": "EXCL-PROD-0060",
+  "EXCL-PROD-0061": {
+    "id": "EXCL-PROD-0061",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_caching",
@@ -2859,28 +2919,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module l2_cache_caching.",
     "rule_count": 113
   },
-  "EXCL-PROD-0061": {
-    "id": "EXCL-PROD-0061",
+  "EXCL-PROD-0062": {
+    "id": "EXCL-PROD-0062",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_ddr_model",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module axi_ddr_model under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_ddr_model.",
-    "rule_count": 7
+    "rule_count": 17
   },
-  "EXCL-PROD-0062": {
-    "id": "EXCL-PROD-0062",
+  "EXCL-PROD-0063": {
+    "id": "EXCL-PROD-0063",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: cpu_scheduler",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module cpu_scheduler under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module cpu_scheduler.",
-    "rule_count": 25
+    "rule_count": 30
   },
-  "EXCL-PROD-0063": {
-    "id": "EXCL-PROD-0063",
+  "EXCL-PROD-0064": {
+    "id": "EXCL-PROD-0064",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_regfile",
@@ -2889,8 +2949,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_regfile.",
     "rule_count": 12
   },
-  "EXCL-PROD-0064": {
-    "id": "EXCL-PROD-0064",
+  "EXCL-PROD-0065": {
+    "id": "EXCL-PROD-0065",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi2apb_bridge",
@@ -2899,8 +2959,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi2apb_bridge.",
     "rule_count": 20
   },
-  "EXCL-PROD-0065": {
-    "id": "EXCL-PROD-0065",
+  "EXCL-PROD-0066": {
+    "id": "EXCL-PROD-0066",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_perf_counters",
@@ -2909,8 +2969,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_perf_counters.",
     "rule_count": 3
   },
-  "EXCL-PROD-0066": {
-    "id": "EXCL-PROD-0066",
+  "EXCL-PROD-0067": {
+    "id": "EXCL-PROD-0067",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_soc_pad_mux",
@@ -2919,8 +2979,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module qspi_soc_pad_mux.",
     "rule_count": 9
   },
-  "EXCL-PROD-0067": {
-    "id": "EXCL-PROD-0067",
+  "EXCL-PROD-0068": {
+    "id": "EXCL-PROD-0068",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_apb_integration",
@@ -2929,18 +2989,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module qspi_apb_integration.",
     "rule_count": 31
   },
-  "EXCL-PROD-0068": {
-    "id": "EXCL-PROD-0068",
+  "EXCL-PROD-0069": {
+    "id": "EXCL-PROD-0069",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_core_subsystem",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_core_subsystem.",
-    "rule_count": 20
+    "rule_count": 81
   },
-  "EXCL-PROD-0069": {
-    "id": "EXCL-PROD-0069",
+  "EXCL-PROD-0070": {
+    "id": "EXCL-PROD-0070",
     "category": "UNINSTANTIATED_CONFIGURATION",
     "domain": "prod",
     "target": "MODULE: soc_peripheral_subsystem",
@@ -2949,18 +3009,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_peripheral_subsystem.",
     "rule_count": 48
   },
-  "EXCL-PROD-0070": {
-    "id": "EXCL-PROD-0070",
+  "EXCL-PROD-0071": {
+    "id": "EXCL-PROD-0071",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_control",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module mips_control under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_control.",
-    "rule_count": 158
+    "rule_count": 288
   },
-  "EXCL-PROD-0071": {
-    "id": "EXCL-PROD-0071",
+  "EXCL-PROD-0072": {
+    "id": "EXCL-PROD-0072",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: tb_mips_soc",
@@ -2969,18 +3029,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module tb_mips_soc.",
     "rule_count": 10
   },
-  "EXCL-PROD-0072": {
-    "id": "EXCL-PROD-0072",
+  "EXCL-PROD-0073": {
+    "id": "EXCL-PROD-0073",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_nb",
     "metric": "cond",
     "rationale": "Audited uncovered COND objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module l2_cache_nb.",
-    "rule_count": 140
+    "rule_count": 264
   },
-  "EXCL-PROD-0073": {
-    "id": "EXCL-PROD-0073",
+  "EXCL-PROD-0074": {
+    "id": "EXCL-PROD-0074",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_memory_subsystem",
@@ -2989,8 +3049,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module soc_memory_subsystem.",
     "rule_count": 1
   },
-  "EXCL-PROD-0074": {
-    "id": "EXCL-PROD-0074",
+  "EXCL-PROD-0075": {
+    "id": "EXCL-PROD-0075",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: ecc_secded_32",
@@ -2999,8 +3059,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module ecc_secded_32.",
     "rule_count": 10
   },
-  "EXCL-PROD-0075": {
-    "id": "EXCL-PROD-0075",
+  "EXCL-PROD-0076": {
+    "id": "EXCL-PROD-0076",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_core",
@@ -3009,8 +3069,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_core.",
     "rule_count": 11
   },
-  "EXCL-PROD-0076": {
-    "id": "EXCL-PROD-0076",
+  "EXCL-PROD-0077": {
+    "id": "EXCL-PROD-0077",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mmu_tlb_shootdown_mailbox",
@@ -3019,8 +3079,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mmu_tlb_shootdown_mailbox.",
     "rule_count": 6
   },
-  "EXCL-PROD-0077": {
-    "id": "EXCL-PROD-0077",
+  "EXCL-PROD-0078": {
+    "id": "EXCL-PROD-0078",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_read_timeout_guard",
@@ -3029,8 +3089,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module axi_read_timeout_guard.",
     "rule_count": 19
   },
-  "EXCL-PROD-0078": {
-    "id": "EXCL-PROD-0078",
+  "EXCL-PROD-0079": {
+    "id": "EXCL-PROD-0079",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_qspi_status",
@@ -3039,8 +3099,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_qspi_status.",
     "rule_count": 13
   },
-  "EXCL-PROD-0079": {
-    "id": "EXCL-PROD-0079",
+  "EXCL-PROD-0080": {
+    "id": "EXCL-PROD-0080",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mem_stage",
@@ -3049,8 +3109,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_mem_stage.",
     "rule_count": 11
   },
-  "EXCL-PROD-0080": {
-    "id": "EXCL-PROD-0080",
+  "EXCL-PROD-0081": {
+    "id": "EXCL-PROD-0081",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_vic",
@@ -3059,8 +3119,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module apb_vic.",
     "rule_count": 17
   },
-  "EXCL-PROD-0081": {
-    "id": "EXCL-PROD-0081",
+  "EXCL-PROD-0082": {
+    "id": "EXCL-PROD-0082",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_perf_counters",
@@ -3069,8 +3129,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_perf_counters.",
     "rule_count": 1
   },
-  "EXCL-PROD-0082": {
-    "id": "EXCL-PROD-0082",
+  "EXCL-PROD-0083": {
+    "id": "EXCL-PROD-0083",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_ex_mem_reg",
@@ -3079,8 +3139,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed COND objects in module mips_ex_mem_reg.",
     "rule_count": 20
   },
-  "EXCL-PROD-0083": {
-    "id": "EXCL-PROD-0083",
+  "EXCL-PROD-0084": {
+    "id": "EXCL-PROD-0084",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_sram",
@@ -3089,8 +3149,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed FSM objects in module axi_sram.",
     "rule_count": 7
   },
-  "EXCL-PROD-0084": {
-    "id": "EXCL-PROD-0084",
+  "EXCL-PROD-0085": {
+    "id": "EXCL-PROD-0085",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_caching",
@@ -3099,8 +3159,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed FSM objects in module l2_cache_caching.",
     "rule_count": 56
   },
-  "EXCL-PROD-0085": {
-    "id": "EXCL-PROD-0085",
+  "EXCL-PROD-0086": {
+    "id": "EXCL-PROD-0086",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_nb",
@@ -3109,8 +3169,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed FSM objects in module l2_cache_nb.",
     "rule_count": 26
   },
-  "EXCL-PROD-0086": {
-    "id": "EXCL-PROD-0086",
+  "EXCL-PROD-0087": {
+    "id": "EXCL-PROD-0087",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_boot_status",
@@ -3119,8 +3179,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_boot_status.",
     "rule_count": 10
   },
-  "EXCL-PROD-0087": {
-    "id": "EXCL-PROD-0087",
+  "EXCL-PROD-0088": {
+    "id": "EXCL-PROD-0088",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_boot_rom",
@@ -3129,28 +3189,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_boot_rom.",
     "rule_count": 16
   },
-  "EXCL-PROD-0088": {
-    "id": "EXCL-PROD-0088",
+  "EXCL-PROD-0089": {
+    "id": "EXCL-PROD-0089",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mmu_asid_allocator",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mmu_asid_allocator under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_asid_allocator.",
-    "rule_count": 8
+    "rule_count": 11
   },
-  "EXCL-PROD-0089": {
-    "id": "EXCL-PROD-0089",
+  "EXCL-PROD-0090": {
+    "id": "EXCL-PROD-0090",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mdu",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_mdu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mdu.",
-    "rule_count": 12
+    "rule_count": 30
   },
-  "EXCL-PROD-0090": {
-    "id": "EXCL-PROD-0090",
+  "EXCL-PROD-0091": {
+    "id": "EXCL-PROD-0091",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mmu",
@@ -3159,8 +3219,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mmu.",
     "rule_count": 14
   },
-  "EXCL-PROD-0091": {
-    "id": "EXCL-PROD-0091",
+  "EXCL-PROD-0092": {
+    "id": "EXCL-PROD-0092",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_micro_tlb",
@@ -3169,8 +3229,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_micro_tlb.",
     "rule_count": 22
   },
-  "EXCL-PROD-0092": {
-    "id": "EXCL-PROD-0092",
+  "EXCL-PROD-0093": {
+    "id": "EXCL-PROD-0093",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_id_stage",
@@ -3179,8 +3239,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_id_stage.",
     "rule_count": 1
   },
-  "EXCL-PROD-0093": {
-    "id": "EXCL-PROD-0093",
+  "EXCL-PROD-0094": {
+    "id": "EXCL-PROD-0094",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_timer",
@@ -3189,8 +3249,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_timer.",
     "rule_count": 3
   },
-  "EXCL-PROD-0094": {
-    "id": "EXCL-PROD-0094",
+  "EXCL-PROD-0095": {
+    "id": "EXCL-PROD-0095",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_if_stage",
@@ -3199,8 +3259,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_if_stage.",
     "rule_count": 9
   },
-  "EXCL-PROD-0095": {
-    "id": "EXCL-PROD-0095",
+  "EXCL-PROD-0096": {
+    "id": "EXCL-PROD-0096",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_sram",
@@ -3209,18 +3269,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_sram.",
     "rule_count": 28
   },
-  "EXCL-PROD-0096": {
-    "id": "EXCL-PROD-0096",
+  "EXCL-PROD-0097": {
+    "id": "EXCL-PROD-0097",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_cpu",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_cpu.",
-    "rule_count": 53
+    "rule_count": 74
   },
-  "EXCL-PROD-0097": {
-    "id": "EXCL-PROD-0097",
+  "EXCL-PROD-0098": {
+    "id": "EXCL-PROD-0098",
     "category": "OUT_OF_SCOPE_FEATURE",
     "domain": "prod",
     "target": "MODULE: jtag_debug_top",
@@ -3229,8 +3289,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module jtag_debug_top.",
     "rule_count": 11
   },
-  "EXCL-PROD-0098": {
-    "id": "EXCL-PROD-0098",
+  "EXCL-PROD-0099": {
+    "id": "EXCL-PROD-0099",
     "category": "STATIC_TIEOFF_RESERVED",
     "domain": "prod",
     "target": "MODULE: apb_gpio",
@@ -3239,8 +3299,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_gpio.",
     "rule_count": 3
   },
-  "EXCL-PROD-0099": {
-    "id": "EXCL-PROD-0099",
+  "EXCL-PROD-0100": {
+    "id": "EXCL-PROD-0100",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_uart_16550",
@@ -3249,8 +3309,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_uart_16550.",
     "rule_count": 63
   },
-  "EXCL-PROD-0100": {
-    "id": "EXCL-PROD-0100",
+  "EXCL-PROD-0101": {
+    "id": "EXCL-PROD-0101",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_shared_pin_arbiter",
@@ -3259,38 +3319,38 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module qspi_shared_pin_arbiter.",
     "rule_count": 7
   },
-  "EXCL-PROD-0101": {
-    "id": "EXCL-PROD-0101",
+  "EXCL-PROD-0102": {
+    "id": "EXCL-PROD-0102",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_alu",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_alu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_alu.",
-    "rule_count": 5
+    "rule_count": 12
   },
-  "EXCL-PROD-0102": {
-    "id": "EXCL-PROD-0102",
+  "EXCL-PROD-0103": {
+    "id": "EXCL-PROD-0103",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_cp0",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_cp0.",
-    "rule_count": 60
+    "rule_count": 62
   },
-  "EXCL-PROD-0103": {
-    "id": "EXCL-PROD-0103",
+  "EXCL-PROD-0104": {
+    "id": "EXCL-PROD-0104",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: dcache",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module dcache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module dcache.",
-    "rule_count": 69
+    "rule_count": 62
   },
-  "EXCL-PROD-0104": {
-    "id": "EXCL-PROD-0104",
+  "EXCL-PROD-0105": {
+    "id": "EXCL-PROD-0105",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_wt",
@@ -3299,8 +3359,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module l2_cache_wt.",
     "rule_count": 14
   },
-  "EXCL-PROD-0105": {
-    "id": "EXCL-PROD-0105",
+  "EXCL-PROD-0106": {
+    "id": "EXCL-PROD-0106",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_wdt",
@@ -3309,8 +3369,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_wdt.",
     "rule_count": 20
   },
-  "EXCL-PROD-0106": {
-    "id": "EXCL-PROD-0106",
+  "EXCL-PROD-0107": {
+    "id": "EXCL-PROD-0107",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: icache",
@@ -3319,8 +3379,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module icache.",
     "rule_count": 22
   },
-  "EXCL-PROD-0107": {
-    "id": "EXCL-PROD-0107",
+  "EXCL-PROD-0108": {
+    "id": "EXCL-PROD-0108",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
+    "target": "MODULE: mmu_context_allocator",
+    "metric": "line",
+    "rationale": "Audited uncovered LINE objects in module mmu_context_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_context_allocator.",
+    "rule_count": 11
+  },
+  "EXCL-PROD-0109": {
+    "id": "EXCL-PROD-0109",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_soc_impl",
@@ -3329,28 +3399,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_soc_impl.",
     "rule_count": 1
   },
-  "EXCL-PROD-0108": {
-    "id": "EXCL-PROD-0108",
+  "EXCL-PROD-0110": {
+    "id": "EXCL-PROD-0110",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_crossbar",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module axi_crossbar under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_crossbar.",
-    "rule_count": 28
+    "rule_count": 38
   },
-  "EXCL-PROD-0109": {
-    "id": "EXCL-PROD-0109",
+  "EXCL-PROD-0111": {
+    "id": "EXCL-PROD-0111",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_fpu",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_fpu.",
-    "rule_count": 139
+    "rule_count": 170
   },
-  "EXCL-PROD-0110": {
-    "id": "EXCL-PROD-0110",
+  "EXCL-PROD-0112": {
+    "id": "EXCL-PROD-0112",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_bpu",
@@ -3359,8 +3429,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_bpu.",
     "rule_count": 8
   },
-  "EXCL-PROD-0111": {
-    "id": "EXCL-PROD-0111",
+  "EXCL-PROD-0113": {
+    "id": "EXCL-PROD-0113",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_axi_dma",
@@ -3369,8 +3439,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_axi_dma.",
     "rule_count": 72
   },
-  "EXCL-PROD-0112": {
-    "id": "EXCL-PROD-0112",
+  "EXCL-PROD-0114": {
+    "id": "EXCL-PROD-0114",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
+    "target": "MODULE: mmu_page_table_allocator",
+    "metric": "line",
+    "rationale": "Audited uncovered LINE objects in module mmu_page_table_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_page_table_allocator.",
+    "rule_count": 11
+  },
+  "EXCL-PROD-0115": {
+    "id": "EXCL-PROD-0115",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_tlb",
@@ -3379,8 +3459,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_tlb.",
     "rule_count": 36
   },
-  "EXCL-PROD-0113": {
-    "id": "EXCL-PROD-0113",
+  "EXCL-PROD-0116": {
+    "id": "EXCL-PROD-0116",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_wb_stage",
@@ -3389,18 +3469,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_wb_stage.",
     "rule_count": 1
   },
-  "EXCL-PROD-0114": {
-    "id": "EXCL-PROD-0114",
+  "EXCL-PROD-0117": {
+    "id": "EXCL-PROD-0117",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_page_table_walker",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_page_table_walker.",
-    "rule_count": 34
+    "rule_count": 48
   },
-  "EXCL-PROD-0115": {
-    "id": "EXCL-PROD-0115",
+  "EXCL-PROD-0118": {
+    "id": "EXCL-PROD-0118",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_spi_flash",
@@ -3409,8 +3489,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_spi_flash.",
     "rule_count": 9
   },
-  "EXCL-PROD-0116": {
-    "id": "EXCL-PROD-0116",
+  "EXCL-PROD-0119": {
+    "id": "EXCL-PROD-0119",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_ex_stage",
@@ -3419,8 +3499,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_ex_stage.",
     "rule_count": 1
   },
-  "EXCL-PROD-0117": {
-    "id": "EXCL-PROD-0117",
+  "EXCL-PROD-0120": {
+    "id": "EXCL-PROD-0120",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_cmd_behavioral",
@@ -3429,28 +3509,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module qspi_cmd_behavioral.",
     "rule_count": 109
   },
-  "EXCL-PROD-0118": {
-    "id": "EXCL-PROD-0118",
+  "EXCL-PROD-0121": {
+    "id": "EXCL-PROD-0121",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_ddr4_controller",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module axi_ddr4_controller under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_ddr4_controller.",
-    "rule_count": 51
+    "rule_count": 55
   },
-  "EXCL-PROD-0119": {
-    "id": "EXCL-PROD-0119",
+  "EXCL-PROD-0122": {
+    "id": "EXCL-PROD-0122",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_mmu_context_status",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module apb_mmu_context_status under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_mmu_context_status.",
-    "rule_count": 23
+    "rule_count": 50
   },
-  "EXCL-PROD-0120": {
-    "id": "EXCL-PROD-0120",
+  "EXCL-PROD-0123": {
+    "id": "EXCL-PROD-0123",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_soc",
@@ -3459,8 +3539,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_soc.",
     "rule_count": 1
   },
-  "EXCL-PROD-0121": {
-    "id": "EXCL-PROD-0121",
+  "EXCL-PROD-0124": {
+    "id": "EXCL-PROD-0124",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_ddr4_status",
@@ -3469,8 +3549,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_ddr4_status.",
     "rule_count": 11
   },
-  "EXCL-PROD-0122": {
-    "id": "EXCL-PROD-0122",
+  "EXCL-PROD-0125": {
+    "id": "EXCL-PROD-0125",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_caching",
@@ -3479,28 +3559,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module l2_cache_caching.",
     "rule_count": 123
   },
-  "EXCL-PROD-0123": {
-    "id": "EXCL-PROD-0123",
+  "EXCL-PROD-0126": {
+    "id": "EXCL-PROD-0126",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_ddr_model",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module axi_ddr_model under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_ddr_model.",
-    "rule_count": 8
+    "rule_count": 12
   },
-  "EXCL-PROD-0124": {
-    "id": "EXCL-PROD-0124",
+  "EXCL-PROD-0127": {
+    "id": "EXCL-PROD-0127",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: cpu_scheduler",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module cpu_scheduler under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module cpu_scheduler.",
-    "rule_count": 8
+    "rule_count": 9
   },
-  "EXCL-PROD-0125": {
-    "id": "EXCL-PROD-0125",
+  "EXCL-PROD-0128": {
+    "id": "EXCL-PROD-0128",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_regfile",
@@ -3509,8 +3589,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_regfile.",
     "rule_count": 7
   },
-  "EXCL-PROD-0126": {
-    "id": "EXCL-PROD-0126",
+  "EXCL-PROD-0129": {
+    "id": "EXCL-PROD-0129",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi2apb_bridge",
@@ -3519,8 +3599,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi2apb_bridge.",
     "rule_count": 6
   },
-  "EXCL-PROD-0127": {
-    "id": "EXCL-PROD-0127",
+  "EXCL-PROD-0130": {
+    "id": "EXCL-PROD-0130",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_perf_counters",
@@ -3529,18 +3609,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_perf_counters.",
     "rule_count": 9
   },
-  "EXCL-PROD-0128": {
-    "id": "EXCL-PROD-0128",
+  "EXCL-PROD-0131": {
+    "id": "EXCL-PROD-0131",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_core_subsystem",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module soc_core_subsystem.",
-    "rule_count": 2
+    "rule_count": 9
   },
-  "EXCL-PROD-0129": {
-    "id": "EXCL-PROD-0129",
+  "EXCL-PROD-0132": {
+    "id": "EXCL-PROD-0132",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
+    "target": "MODULE: mmu_page_frame_allocator",
+    "metric": "line",
+    "rationale": "Audited uncovered LINE objects in module mmu_page_frame_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_page_frame_allocator.",
+    "rule_count": 11
+  },
+  "EXCL-PROD-0133": {
+    "id": "EXCL-PROD-0133",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mem_wb_reg",
@@ -3549,18 +3639,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mem_wb_reg.",
     "rule_count": 6
   },
-  "EXCL-PROD-0130": {
-    "id": "EXCL-PROD-0130",
+  "EXCL-PROD-0134": {
+    "id": "EXCL-PROD-0134",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_control",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module mips_control under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_control.",
-    "rule_count": 115
+    "rule_count": 168
   },
-  "EXCL-PROD-0131": {
-    "id": "EXCL-PROD-0131",
+  "EXCL-PROD-0135": {
+    "id": "EXCL-PROD-0135",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: tb_mips_soc",
@@ -3569,18 +3659,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module tb_mips_soc.",
     "rule_count": 300
   },
-  "EXCL-PROD-0132": {
-    "id": "EXCL-PROD-0132",
+  "EXCL-PROD-0136": {
+    "id": "EXCL-PROD-0136",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_nb",
     "metric": "line",
     "rationale": "Audited uncovered LINE objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module l2_cache_nb.",
-    "rule_count": 154
+    "rule_count": 218
   },
-  "EXCL-PROD-0133": {
-    "id": "EXCL-PROD-0133",
+  "EXCL-PROD-0137": {
+    "id": "EXCL-PROD-0137",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_memory_subsystem",
@@ -3589,8 +3679,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module soc_memory_subsystem.",
     "rule_count": 1
   },
-  "EXCL-PROD-0134": {
-    "id": "EXCL-PROD-0134",
+  "EXCL-PROD-0138": {
+    "id": "EXCL-PROD-0138",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: ecc_secded_32",
@@ -3599,8 +3689,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module ecc_secded_32.",
     "rule_count": 10
   },
-  "EXCL-PROD-0135": {
-    "id": "EXCL-PROD-0135",
+  "EXCL-PROD-0139": {
+    "id": "EXCL-PROD-0139",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mmu_tlb_shootdown_mailbox",
@@ -3609,8 +3699,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mmu_tlb_shootdown_mailbox.",
     "rule_count": 12
   },
-  "EXCL-PROD-0136": {
-    "id": "EXCL-PROD-0136",
+  "EXCL-PROD-0140": {
+    "id": "EXCL-PROD-0140",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_read_timeout_guard",
@@ -3619,8 +3709,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module axi_read_timeout_guard.",
     "rule_count": 11
   },
-  "EXCL-PROD-0137": {
-    "id": "EXCL-PROD-0137",
+  "EXCL-PROD-0141": {
+    "id": "EXCL-PROD-0141",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_qspi_status",
@@ -3629,8 +3719,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_qspi_status.",
     "rule_count": 9
   },
-  "EXCL-PROD-0138": {
-    "id": "EXCL-PROD-0138",
+  "EXCL-PROD-0142": {
+    "id": "EXCL-PROD-0142",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mem_stage",
@@ -3639,8 +3729,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_mem_stage.",
     "rule_count": 12
   },
-  "EXCL-PROD-0139": {
-    "id": "EXCL-PROD-0139",
+  "EXCL-PROD-0143": {
+    "id": "EXCL-PROD-0143",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_vic",
@@ -3649,8 +3739,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module apb_vic.",
     "rule_count": 39
   },
-  "EXCL-PROD-0140": {
-    "id": "EXCL-PROD-0140",
+  "EXCL-PROD-0144": {
+    "id": "EXCL-PROD-0144",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_perf_counters",
@@ -3659,8 +3749,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_perf_counters.",
     "rule_count": 10
   },
-  "EXCL-PROD-0141": {
-    "id": "EXCL-PROD-0141",
+  "EXCL-PROD-0145": {
+    "id": "EXCL-PROD-0145",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_ex_mem_reg",
@@ -3669,8 +3759,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed LINE objects in module mips_ex_mem_reg.",
     "rule_count": 1
   },
-  "EXCL-PROD-0142": {
-    "id": "EXCL-PROD-0142",
+  "EXCL-PROD-0146": {
+    "id": "EXCL-PROD-0146",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_boot_status",
@@ -3679,8 +3769,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_boot_status.",
     "rule_count": 10
   },
-  "EXCL-PROD-0143": {
-    "id": "EXCL-PROD-0143",
+  "EXCL-PROD-0147": {
+    "id": "EXCL-PROD-0147",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_boot_rom",
@@ -3689,28 +3779,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_boot_rom.",
     "rule_count": 48
   },
-  "EXCL-PROD-0144": {
-    "id": "EXCL-PROD-0144",
+  "EXCL-PROD-0148": {
+    "id": "EXCL-PROD-0148",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mmu_asid_allocator",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mmu_asid_allocator under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_asid_allocator.",
-    "rule_count": 10
+    "rule_count": 11
   },
-  "EXCL-PROD-0145": {
-    "id": "EXCL-PROD-0145",
+  "EXCL-PROD-0149": {
+    "id": "EXCL-PROD-0149",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mdu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_mdu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mdu.",
-    "rule_count": 4
+    "rule_count": 8
   },
-  "EXCL-PROD-0146": {
-    "id": "EXCL-PROD-0146",
+  "EXCL-PROD-0150": {
+    "id": "EXCL-PROD-0150",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mmu",
@@ -3719,8 +3809,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mmu.",
     "rule_count": 22
   },
-  "EXCL-PROD-0147": {
-    "id": "EXCL-PROD-0147",
+  "EXCL-PROD-0151": {
+    "id": "EXCL-PROD-0151",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_micro_tlb",
@@ -3729,8 +3819,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_micro_tlb.",
     "rule_count": 43
   },
-  "EXCL-PROD-0148": {
-    "id": "EXCL-PROD-0148",
+  "EXCL-PROD-0152": {
+    "id": "EXCL-PROD-0152",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_id_stage",
@@ -3739,8 +3829,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_id_stage.",
     "rule_count": 31
   },
-  "EXCL-PROD-0149": {
-    "id": "EXCL-PROD-0149",
+  "EXCL-PROD-0153": {
+    "id": "EXCL-PROD-0153",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_timer",
@@ -3749,8 +3839,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_timer.",
     "rule_count": 1
   },
-  "EXCL-PROD-0150": {
-    "id": "EXCL-PROD-0150",
+  "EXCL-PROD-0154": {
+    "id": "EXCL-PROD-0154",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_if_stage",
@@ -3759,8 +3849,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_if_stage.",
     "rule_count": 15
   },
-  "EXCL-PROD-0151": {
-    "id": "EXCL-PROD-0151",
+  "EXCL-PROD-0155": {
+    "id": "EXCL-PROD-0155",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_sram",
@@ -3769,18 +3859,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_sram.",
     "rule_count": 42
   },
-  "EXCL-PROD-0152": {
-    "id": "EXCL-PROD-0152",
+  "EXCL-PROD-0156": {
+    "id": "EXCL-PROD-0156",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_cpu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_cpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_cpu.",
-    "rule_count": 235
+    "rule_count": 272
   },
-  "EXCL-PROD-0153": {
-    "id": "EXCL-PROD-0153",
+  "EXCL-PROD-0157": {
+    "id": "EXCL-PROD-0157",
     "category": "OUT_OF_SCOPE_FEATURE",
     "domain": "prod",
     "target": "MODULE: jtag_debug_top",
@@ -3789,8 +3879,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module jtag_debug_top.",
     "rule_count": 21
   },
-  "EXCL-PROD-0154": {
-    "id": "EXCL-PROD-0154",
+  "EXCL-PROD-0158": {
+    "id": "EXCL-PROD-0158",
     "category": "STATIC_TIEOFF_RESERVED",
     "domain": "prod",
     "target": "MODULE: apb_gpio",
@@ -3799,8 +3889,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_gpio.",
     "rule_count": 2
   },
-  "EXCL-PROD-0155": {
-    "id": "EXCL-PROD-0155",
+  "EXCL-PROD-0159": {
+    "id": "EXCL-PROD-0159",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_uart_16550",
@@ -3809,8 +3899,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_uart_16550.",
     "rule_count": 39
   },
-  "EXCL-PROD-0156": {
-    "id": "EXCL-PROD-0156",
+  "EXCL-PROD-0160": {
+    "id": "EXCL-PROD-0160",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_shared_pin_arbiter",
@@ -3819,18 +3909,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_shared_pin_arbiter.",
     "rule_count": 8
   },
-  "EXCL-PROD-0157": {
-    "id": "EXCL-PROD-0157",
+  "EXCL-PROD-0161": {
+    "id": "EXCL-PROD-0161",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_cp0",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_cp0 under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_cp0.",
-    "rule_count": 113
+    "rule_count": 125
   },
-  "EXCL-PROD-0158": {
-    "id": "EXCL-PROD-0158",
+  "EXCL-PROD-0162": {
+    "id": "EXCL-PROD-0162",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: dcache",
@@ -3839,28 +3929,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module dcache.",
     "rule_count": 58
   },
-  "EXCL-PROD-0159": {
-    "id": "EXCL-PROD-0159",
+  "EXCL-PROD-0163": {
+    "id": "EXCL-PROD-0163",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_fabric",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module soc_fabric under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_fabric.",
-    "rule_count": 226
+    "rule_count": 224
   },
-  "EXCL-PROD-0160": {
-    "id": "EXCL-PROD-0160",
+  "EXCL-PROD-0164": {
+    "id": "EXCL-PROD-0164",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_wt",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module l2_cache_wt under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache_wt.",
-    "rule_count": 16
+    "rule_count": 18
   },
-  "EXCL-PROD-0161": {
-    "id": "EXCL-PROD-0161",
+  "EXCL-PROD-0165": {
+    "id": "EXCL-PROD-0165",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_wdt",
@@ -3869,18 +3959,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_wdt.",
     "rule_count": 12
   },
-  "EXCL-PROD-0162": {
-    "id": "EXCL-PROD-0162",
+  "EXCL-PROD-0166": {
+    "id": "EXCL-PROD-0166",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: icache",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module icache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module icache.",
-    "rule_count": 39
+    "rule_count": 38
   },
-  "EXCL-PROD-0163": {
-    "id": "EXCL-PROD-0163",
+  "EXCL-PROD-0167": {
+    "id": "EXCL-PROD-0167",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
+    "target": "MODULE: mmu_context_allocator",
+    "metric": "tgl",
+    "rationale": "Audited uncovered TGL objects in module mmu_context_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_context_allocator.",
+    "rule_count": 13
+  },
+  "EXCL-PROD-0168": {
+    "id": "EXCL-PROD-0168",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_soc_impl",
@@ -3889,8 +3989,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_soc_impl.",
     "rule_count": 342
   },
-  "EXCL-PROD-0164": {
-    "id": "EXCL-PROD-0164",
+  "EXCL-PROD-0169": {
+    "id": "EXCL-PROD-0169",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_crossbar",
@@ -3899,28 +3999,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_crossbar.",
     "rule_count": 30
   },
-  "EXCL-PROD-0165": {
-    "id": "EXCL-PROD-0165",
+  "EXCL-PROD-0170": {
+    "id": "EXCL-PROD-0170",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_fpu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_fpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_fpu.",
-    "rule_count": 14
+    "rule_count": 18
   },
-  "EXCL-PROD-0166": {
-    "id": "EXCL-PROD-0166",
+  "EXCL-PROD-0171": {
+    "id": "EXCL-PROD-0171",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_bpu",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_bpu under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_bpu.",
-    "rule_count": 8
+    "rule_count": 7
   },
-  "EXCL-PROD-0167": {
-    "id": "EXCL-PROD-0167",
+  "EXCL-PROD-0172": {
+    "id": "EXCL-PROD-0172",
     "category": "OUT_OF_SCOPE_FEATURE",
     "domain": "prod",
     "target": "MODULE: soc_debug_subsystem",
@@ -3929,8 +4029,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_debug_subsystem.",
     "rule_count": 18
   },
-  "EXCL-PROD-0168": {
-    "id": "EXCL-PROD-0168",
+  "EXCL-PROD-0173": {
+    "id": "EXCL-PROD-0173",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_axi_dma",
@@ -3939,8 +4039,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_axi_dma.",
     "rule_count": 21
   },
-  "EXCL-PROD-0169": {
-    "id": "EXCL-PROD-0169",
+  "EXCL-PROD-0174": {
+    "id": "EXCL-PROD-0174",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
+    "target": "MODULE: mmu_page_table_allocator",
+    "metric": "tgl",
+    "rationale": "Audited uncovered TGL objects in module mmu_page_table_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_page_table_allocator.",
+    "rule_count": 12
+  },
+  "EXCL-PROD-0175": {
+    "id": "EXCL-PROD-0175",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_if_id_reg",
@@ -3949,28 +4059,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_if_id_reg.",
     "rule_count": 6
   },
-  "EXCL-PROD-0170": {
-    "id": "EXCL-PROD-0170",
+  "EXCL-PROD-0176": {
+    "id": "EXCL-PROD-0176",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_tlb",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_tlb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_tlb.",
-    "rule_count": 643
+    "rule_count": 644
   },
-  "EXCL-PROD-0171": {
-    "id": "EXCL-PROD-0171",
+  "EXCL-PROD-0177": {
+    "id": "EXCL-PROD-0177",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_page_table_walker",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_page_table_walker under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_page_table_walker.",
-    "rule_count": 18
+    "rule_count": 23
   },
-  "EXCL-PROD-0172": {
-    "id": "EXCL-PROD-0172",
+  "EXCL-PROD-0178": {
+    "id": "EXCL-PROD-0178",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_spi_flash",
@@ -3979,8 +4089,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_spi_flash.",
     "rule_count": 32
   },
-  "EXCL-PROD-0173": {
-    "id": "EXCL-PROD-0173",
+  "EXCL-PROD-0179": {
+    "id": "EXCL-PROD-0179",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_cmd_behavioral",
@@ -3989,8 +4099,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_cmd_behavioral.",
     "rule_count": 72
   },
-  "EXCL-PROD-0174": {
-    "id": "EXCL-PROD-0174",
+  "EXCL-PROD-0180": {
+    "id": "EXCL-PROD-0180",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: uart_pad_wrapper",
@@ -3999,28 +4109,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module uart_pad_wrapper.",
     "rule_count": 13
   },
-  "EXCL-PROD-0175": {
-    "id": "EXCL-PROD-0175",
+  "EXCL-PROD-0181": {
+    "id": "EXCL-PROD-0181",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_ddr4_controller",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module axi_ddr4_controller under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_ddr4_controller.",
-    "rule_count": 65
+    "rule_count": 69
   },
-  "EXCL-PROD-0176": {
-    "id": "EXCL-PROD-0176",
+  "EXCL-PROD-0182": {
+    "id": "EXCL-PROD-0182",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_mmu_context_status",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module apb_mmu_context_status under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_mmu_context_status.",
-    "rule_count": 34
+    "rule_count": 70
   },
-  "EXCL-PROD-0177": {
-    "id": "EXCL-PROD-0177",
+  "EXCL-PROD-0183": {
+    "id": "EXCL-PROD-0183",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_soc",
@@ -4029,8 +4139,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_soc.",
     "rule_count": 19
   },
-  "EXCL-PROD-0178": {
-    "id": "EXCL-PROD-0178",
+  "EXCL-PROD-0184": {
+    "id": "EXCL-PROD-0184",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_ddr4_status",
@@ -4039,8 +4149,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_ddr4_status.",
     "rule_count": 17
   },
-  "EXCL-PROD-0179": {
-    "id": "EXCL-PROD-0179",
+  "EXCL-PROD-0185": {
+    "id": "EXCL-PROD-0185",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_caching",
@@ -4049,28 +4159,28 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache_caching.",
     "rule_count": 90
   },
-  "EXCL-PROD-0180": {
-    "id": "EXCL-PROD-0180",
+  "EXCL-PROD-0186": {
+    "id": "EXCL-PROD-0186",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_ddr_model",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module axi_ddr_model under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_ddr_model.",
-    "rule_count": 8
+    "rule_count": 13
   },
-  "EXCL-PROD-0181": {
-    "id": "EXCL-PROD-0181",
+  "EXCL-PROD-0187": {
+    "id": "EXCL-PROD-0187",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: cpu_scheduler",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module cpu_scheduler under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module cpu_scheduler.",
-    "rule_count": 37
+    "rule_count": 40
   },
-  "EXCL-PROD-0182": {
-    "id": "EXCL-PROD-0182",
+  "EXCL-PROD-0188": {
+    "id": "EXCL-PROD-0188",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_regfile",
@@ -4079,8 +4189,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_regfile.",
     "rule_count": 14
   },
-  "EXCL-PROD-0183": {
-    "id": "EXCL-PROD-0183",
+  "EXCL-PROD-0189": {
+    "id": "EXCL-PROD-0189",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi2apb_bridge",
@@ -4089,8 +4199,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi2apb_bridge.",
     "rule_count": 16
   },
-  "EXCL-PROD-0184": {
-    "id": "EXCL-PROD-0184",
+  "EXCL-PROD-0190": {
+    "id": "EXCL-PROD-0190",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_perf_counters",
@@ -4099,8 +4209,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_perf_counters.",
     "rule_count": 11
   },
-  "EXCL-PROD-0185": {
-    "id": "EXCL-PROD-0185",
+  "EXCL-PROD-0191": {
+    "id": "EXCL-PROD-0191",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_soc_pad_mux",
@@ -4109,8 +4219,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_soc_pad_mux.",
     "rule_count": 11
   },
-  "EXCL-PROD-0186": {
-    "id": "EXCL-PROD-0186",
+  "EXCL-PROD-0192": {
+    "id": "EXCL-PROD-0192",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: qspi_apb_integration",
@@ -4119,18 +4229,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module qspi_apb_integration.",
     "rule_count": 38
   },
-  "EXCL-PROD-0187": {
-    "id": "EXCL-PROD-0187",
+  "EXCL-PROD-0193": {
+    "id": "EXCL-PROD-0193",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_core_subsystem",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module soc_core_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_core_subsystem.",
-    "rule_count": 78
+    "rule_count": 91
   },
-  "EXCL-PROD-0188": {
-    "id": "EXCL-PROD-0188",
+  "EXCL-PROD-0194": {
+    "id": "EXCL-PROD-0194",
     "category": "UNINSTANTIATED_CONFIGURATION",
     "domain": "prod",
     "target": "MODULE: soc_peripheral_subsystem",
@@ -4139,8 +4249,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_peripheral_subsystem.",
     "rule_count": 141
   },
-  "EXCL-PROD-0189": {
-    "id": "EXCL-PROD-0189",
+  "EXCL-PROD-0195": {
+    "id": "EXCL-PROD-0195",
+    "category": "UNREACHABLE_CURRENT_CONTRACT",
+    "domain": "prod",
+    "target": "MODULE: mmu_page_frame_allocator",
+    "metric": "tgl",
+    "rationale": "Audited uncovered TGL objects in module mmu_page_frame_allocator under the current RTL verification contract.",
+    "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_page_frame_allocator.",
+    "rule_count": 12
+  },
+  "EXCL-PROD-0196": {
+    "id": "EXCL-PROD-0196",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mem_wb_reg",
@@ -4149,8 +4269,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mem_wb_reg.",
     "rule_count": 38
   },
-  "EXCL-PROD-0190": {
-    "id": "EXCL-PROD-0190",
+  "EXCL-PROD-0197": {
+    "id": "EXCL-PROD-0197",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_control",
@@ -4159,48 +4279,48 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_control.",
     "rule_count": 15
   },
-  "EXCL-PROD-0191": {
-    "id": "EXCL-PROD-0191",
+  "EXCL-PROD-0198": {
+    "id": "EXCL-PROD-0198",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module l2_cache under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache.",
-    "rule_count": 11
+    "rule_count": 12
   },
-  "EXCL-PROD-0192": {
-    "id": "EXCL-PROD-0192",
+  "EXCL-PROD-0199": {
+    "id": "EXCL-PROD-0199",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: tb_mips_soc",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module tb_mips_soc under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module tb_mips_soc.",
-    "rule_count": 7
+    "rule_count": 8
   },
-  "EXCL-PROD-0193": {
-    "id": "EXCL-PROD-0193",
+  "EXCL-PROD-0200": {
+    "id": "EXCL-PROD-0200",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: l2_cache_nb",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module l2_cache_nb under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module l2_cache_nb.",
-    "rule_count": 116
+    "rule_count": 136
   },
-  "EXCL-PROD-0194": {
-    "id": "EXCL-PROD-0194",
+  "EXCL-PROD-0201": {
+    "id": "EXCL-PROD-0201",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_memory_subsystem",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module soc_memory_subsystem under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module soc_memory_subsystem.",
-    "rule_count": 135
+    "rule_count": 138
   },
-  "EXCL-PROD-0195": {
-    "id": "EXCL-PROD-0195",
+  "EXCL-PROD-0202": {
+    "id": "EXCL-PROD-0202",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: ecc_secded_32",
@@ -4209,18 +4329,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module ecc_secded_32.",
     "rule_count": 7
   },
-  "EXCL-PROD-0196": {
-    "id": "EXCL-PROD-0196",
+  "EXCL-PROD-0203": {
+    "id": "EXCL-PROD-0203",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_core",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_core under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_core.",
-    "rule_count": 113
+    "rule_count": 121
   },
-  "EXCL-PROD-0197": {
-    "id": "EXCL-PROD-0197",
+  "EXCL-PROD-0204": {
+    "id": "EXCL-PROD-0204",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mmu_tlb_shootdown_mailbox",
@@ -4229,18 +4349,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mmu_tlb_shootdown_mailbox.",
     "rule_count": 16
   },
-  "EXCL-PROD-0198": {
-    "id": "EXCL-PROD-0198",
+  "EXCL-PROD-0205": {
+    "id": "EXCL-PROD-0205",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: axi_read_timeout_guard",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module axi_read_timeout_guard under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module axi_read_timeout_guard.",
-    "rule_count": 21
+    "rule_count": 20
   },
-  "EXCL-PROD-0199": {
-    "id": "EXCL-PROD-0199",
+  "EXCL-PROD-0206": {
+    "id": "EXCL-PROD-0206",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_qspi_status",
@@ -4249,8 +4369,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_qspi_status.",
     "rule_count": 16
   },
-  "EXCL-PROD-0200": {
-    "id": "EXCL-PROD-0200",
+  "EXCL-PROD-0207": {
+    "id": "EXCL-PROD-0207",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_mem_stage",
@@ -4259,8 +4379,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_mem_stage.",
     "rule_count": 12
   },
-  "EXCL-PROD-0201": {
-    "id": "EXCL-PROD-0201",
+  "EXCL-PROD-0208": {
+    "id": "EXCL-PROD-0208",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_rob",
@@ -4269,8 +4389,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_rob.",
     "rule_count": 4
   },
-  "EXCL-PROD-0202": {
-    "id": "EXCL-PROD-0202",
+  "EXCL-PROD-0209": {
+    "id": "EXCL-PROD-0209",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_id_ex_reg",
@@ -4279,8 +4399,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_id_ex_reg.",
     "rule_count": 10
   },
-  "EXCL-PROD-0203": {
-    "id": "EXCL-PROD-0203",
+  "EXCL-PROD-0210": {
+    "id": "EXCL-PROD-0210",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: apb_vic",
@@ -4289,8 +4409,8 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module apb_vic.",
     "rule_count": 11
   },
-  "EXCL-PROD-0204": {
-    "id": "EXCL-PROD-0204",
+  "EXCL-PROD-0211": {
+    "id": "EXCL-PROD-0211",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_perf_counters",
@@ -4299,18 +4419,18 @@
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_perf_counters.",
     "rule_count": 9
   },
-  "EXCL-PROD-0205": {
-    "id": "EXCL-PROD-0205",
+  "EXCL-PROD-0212": {
+    "id": "EXCL-PROD-0212",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: mips_ex_mem_reg",
     "metric": "tgl",
     "rationale": "Audited uncovered TGL objects in module mips_ex_mem_reg under the current RTL verification contract.",
     "evidence": "Fresh URG exclusion refinement identified the listed TGL objects in module mips_ex_mem_reg.",
-    "rule_count": 13
+    "rule_count": 14
   },
-  "EXCL-PROD-0206": {
-    "id": "EXCL-PROD-0206",
+  "EXCL-PROD-0213": {
+    "id": "EXCL-PROD-0213",
     "category": "UNREACHABLE_CURRENT_CONTRACT",
     "domain": "prod",
     "target": "MODULE: soc_top",

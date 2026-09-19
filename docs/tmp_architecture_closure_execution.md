@@ -1,5 +1,329 @@
 # Architecture Closure Execution Tracking
 
+### 2026-09-20 Generic RTL Linux blocker review and prioritized closure plan
+
+- Reclassified the generic RTL Linux userspace blocker as
+  `BLOCK_VERIFIED / ROOT_CAUSE_OPEN`. The current failure is reproducible in
+  Linux `number()` near `0x88a3897c` and `0x88a38998`; it is no longer
+  accurate to describe the 55M-cycle `WAIT_FUTURE_TIMER` observation as the
+  primary diagnosis.
+- The retained RTL operand trace shows `t9=0x89425ad4`,
+  `a0=0x76bda52b`, and `exout=0xffffffff` for
+  `addu a1,t9,a0`. The result is mathematically correct for those operands,
+  so the ALU itself is not the proven owner.
+- The retained RTL sequence is: cycle `23503117` writes `a0` from
+  `addiu a0,v1,-1`; cycle `23503231` executes the `addu`; cycle `23503234`
+  writes `a1=0xffffffff`; and cycle `23503236` decodes
+  `lbu v0,0(a1)`. This narrows the next proof to the producer/call/flush/replay
+  state boundary.
+- The first observed fault address is `0xc0002020`, while the replay record
+  reports `0xffffffff`. This is an independent precise-exception/replay issue
+  and requires a fault-address token plus a directed regression.
+- The existing QEMU focus plugin records only `r30`; therefore the QEMU side
+  does not yet prove `a0`, `t9`, `t5`, `v0`, or the selected caller state at
+  the same PCs. The QEMU PC sequence and successful generic boot are workload
+  evidence, not first-divergence proof.
+- The prioritized plan is recorded in
+  `docs/rtl_linux_userspace_blocker_review.md`: freeze identical inputs, add
+  focused QEMU GPR capture, add matching RTL architectural-retirement
+  records, classify the first mismatch, close `BadVAddr` replay semantics,
+  then promote the repaired checkpoint into the generic blocking and
+  nonblocking-L1 differential gate.
+- This entry does not claim generic RTL Linux, unrestricted system-mode
+  differential, full ISA/MMU/FPU/OS semantics, or product signoff.
+
+### 2026-09-18 QEMU system architecture closure aggregate
+
+- Reclaimed only obsolete temporary simulation directories under
+  `/data/disk/tmp/mips32-soc`; the official QEMU 9.2.0 source/build and the
+  current aggregate evidence were retained. The final aggregate used the
+  single-threaded QEMU build and VCS resource limits to avoid host OOM and
+  disk exhaustion.
+- `qemu-system-architecture-closure-gate` passes with the current
+  `mips32-soc-ref` machine. The aggregate includes the current peripheral
+  contract, selected ISA/MDU/exception/privileged/FPU/VIC/DMA/MMU/SRS/LLSC
+  and L1/L2 nonblocking retire differentials, plus generic QEMU Linux boot
+  through the userspace VM and fork/wait markers.
+- The selected differential rerun passes all listed child gates, including
+  the FPU rounding/FPE boundary corpus. The earlier aggregate failure was
+  only `ar: No space left on device` while VCS built the FPU rounding DPI
+  archive; the child was rerun after cleanup and passed.
+- The immutable aggregate evidence is under
+  `/data/disk/tmp/mips32-soc/qemu-architecture-closure-20260918/isa_ref/qemu_system_architecture_closure/`.
+  `source_commit.txt` records `3933a9d`; `linux_artifact_sha256.txt` binds the
+  exact kernel, DTB and config inputs.
+- This closes the bounded QEMU architecture integration aggregate only.
+  RTL generic Linux userspace/system differential, unrestricted demand
+  paging and shootdown, complete ISA/privileged/MMU/FPU/OS semantics,
+  formal/CDC/RDC/lint, physical DDR/QSPI timing and product signoff remain
+  open.
+
+### 2026-09-18 Blocking RTL Linux LUI/LW forwarding closure
+
+- Added `make cpu-lui-lw-forward-gate` with independent no-stall and
+  instruction-fetch-backpressure coverage in
+  `tb/unit/cpu_test/tb_mips_cpu_lui_lw_forward.sv`. Both configurations pass
+  and retire the load at `0x88d47620` on the default blocking CPU path.
+- Added `make rtl-linux-forwarding-gate` and
+  `tb/linux_boot/run_rtl_linux_forwarding_gate.sh`. The gate requires the
+  Linux-minimal userspace, GPIO, and mprotect-fault markers, then checks the
+  integrated `LINUX_FORWARD_POST` records for the exact LUI result and the
+  dependent load address. A stale `BadVAddr=0x00007620` fails the gate.
+- The current-source integrated diagnostic replay reached the target sequence
+  around cycles `29,795,520` and `30,129,664`: `ex_out=0x88d40000` is visible
+  to the dependent LW, followed by `ex_out=0x88d47620`. This disproves the
+  original forwarding hypothesis; no RTL change is justified by this trace.
+- The strict gate is newly wired but requires a complete bounded replay for a
+  standalone PASS report. Nonblocking-L1 Linux, generic RTL Linux, full
+  RTL/QEMU system differential, and complete ISA/MMU/FPU/OS semantics remain
+  open.
+
+### 2026-09-16 Same-image L1 nonblocking Linux differential gate
+
+- Added `make l1-nonblocking-linux-differential-gate` and the underlying
+  `tb/linux_boot/run_l1_nonblocking_linux_differential_gate.sh` runner.
+- The runner builds one relocated Linux image, records hashes for the kernel,
+  DTB, Boot ROM and DDR image, verifies them before and after each child run,
+  then runs the real RTL blocking and opt-in L1/CPU-ROB/DDR nonblocking paths.
+- The two 300000-record traces compare with bounded streaming mode and finish
+  with `TRACE_COMPARE_PASS records=300000 mode=stream-limit`.
+- `RETIRE_TRACE_STOP_AT_MAX=1` is opt-in to this fixed-window gate; ordinary
+  retire capture still fails if its resource limit is exceeded.
+- Fresh companion gates pass: `l1-nonblocking-ddr-gate` and
+  `qemu-system-l1-ddr-differential-gate` (`TRACE_COMPARE_PASS records=22`).
+- This closes same-image bounded cache-path differential evidence only. Linux
+  cache ABI beyond the prefix, full ISA/MMU/FPU/OS semantics, coherency,
+  physical DDR timing and product signoff remain open.
+
+### 2026-09-16 Nonblocking-L1 Linux maintenance marker reuse closure
+
+- Fixed the CPU-facing nonblocking-L1 adapter's L2-bypass marker allocation in
+  `rtl/cache/l1_cache_nb_cpu_axi.v`. The marker table is now direct-mapped to
+  the integrated 256-set L1 using `cache_op_addr[12:5]`; an invalidate of a
+  different tag in the same set replaces the older marker instead of blocking
+  forever after a complete index-invalidate sweep.
+- The failure was reproduced at `PC=0x8881eb30` in Linux's
+  `Hit_Writeback_Invalidate_D (0x15)` loop: the request stayed asserted with
+  no completion because the former first-free marker pool was full. After the
+  fix, the same operation issues its writeback at cycle `4734721` and returns
+  `done=1` at cycle `4734722`.
+- Fresh RTL frontend elaboration remains `8/8 PASS`. The real CPU maintenance
+  gate passes with `L1_MAINTENANCE_PATH_PASS issues=8 refills=5` and
+  `REGRESSION_TEST_SUCCESS`. A rebuilt opt-in nonblocking Linux replay passes
+  the former 4.8M-cycle failure point and continues with changing PCs through
+  the 8M-cycle bound; retained evidence is under
+  `/data/disk/tmp/mips32-soc/rtl-linux-nb-maint-20260916`.
+- The complete opt-in CPU/L1 gate also passes under
+  `/data/disk/tmp/mips32-soc/l1-nb-cpu-complete-20260916`, covering
+  compatibility, multi-request, three-seed stress, single/two-response error
+  recovery, reset-in-flight and maintenance.
+- This closes the observed maintenance-table capacity deadlock and proves
+  bounded long-run instruction progress for the opt-in nonblocking L1 path.
+  Linux userspace boot, unrestricted Linux cache ABI behavior, full RTL/QEMU
+  system differential, complete ISA/MMU/FPU/OS semantics and product signoff
+  remain open.
+
+### 2026-09-16 Fresh custom-machine peripheral and verification-foundation gates
+
+- Re-ran `make qemu-system-peripheral-contract-gate` with the official QEMU
+  9.2.0 build and all outputs under
+  `/data/disk/tmp/mips32-soc/qemu-peripheral-20260916`. The
+  `mips32-soc-ref` machine emitted `GPIO_PASS`, `TIMER_PASS`, `DMA_PASS`,
+  `PIC_PASS`, `QSPI_PASS`, and `DDR_PASS`.
+- Re-ran `make verification-foundation-gate` after initializing the module
+  environment with VCS loaded. Static formal asset audit passed with
+  `files=7 modules=7 assertions=16`; all seven real DUT bind/elaboration
+  targets passed (dcache, TLB, VIC, fabric, BPU, reset synchronizer and AXI
+  SRAM).
+- The tool inventory records VCS as available (`1/9` tools). Verilator,
+  Yosys/SBY, lint, CDC/RDC and solver-backed formal engines remain missing in
+  this environment. This evidence therefore closes the reproducible checker
+  asset/elaboration and behavioral reference-peripheral contracts only; it is
+  not formal proof, CDC/RDC/lint signoff, physical DDR/QSPI validation or
+  generic RTL Linux userspace closure.
+
+### 2026-09-16 RTL-minimal userspace reproducible image and strict replay closure
+
+- Fixed `tb/linux_boot/build_linux_boot.sh` to preserve the complete guest ELF
+  required by the RTL userspace contract while compiling through fixed object
+  basenames. GNU ld records the input basename in `.symtab`; the fixed-length
+  names remove the previous isolated-build nondeterminism without stripping
+  the ELF payload.
+- Stabilized the `rtl-minimal` kernel's `CONFIG_INITRAMFS_SOURCE` at
+  `build/linux_boot/rtl-minimal-canonical.initramfs.list`, retaining the
+  relocated kernel contract (`CONFIG_PHYSICAL_START=0x88800000`) and the
+  fixed Linux command line.
+- A fresh script build under
+  `/data/disk/tmp/mips32-soc/rtl-linux-script-repro-20260916` produced
+  unstripped MIPS ELF guests, a 137728-byte initramfs cpio, and a 5349832-byte
+  loadable kernel image. A repeated invocation reproduced the guest ELF,
+  cpio, kernel image, and DDR image hashes.
+- The reused VCS `simv` replay at
+  `/data/disk/tmp/mips32-soc/rtl-linux-script-repro-20260916/strict-userspace-gate-v3`
+  reached the 33000000-cycle bound and emitted
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`, `MIPS32_SOC_LINUX_GPIO_SUCCESS`,
+  `MIPS32_SOC_LINUX_MPROTECT_FAULT_SUCCESS`,
+  `MIPS32_SOC_LINUX_MPROTECT_SUCCESS`, `BRK_SUCCESS`, `SLEEP_SUCCESS`,
+  `MMAP_SUCCESS`, and `YIELD_SUCCESS`. The simulator then completed its
+  two-cycle grace period and called `$finish` without a panic or simulator
+  error.
+- Fixed the progress/marker normalizer to consume exactly eight PC hex digits;
+  an unconstrained hex match could consume the leading `C` of an adjacent
+  `...SUCCESS` marker when UART and progress output interleaved.
+- This closes the reproducible opt-in `rtl-minimal` serial/GPIO/VM userspace
+  contract and its gate infrastructure. Generic RTL Linux, unrestricted
+  post-userspace RTL/QEMU differential, full ISA/privileged/MMU/FPU/OS
+  semantics, formal/CDC/RDC/lint signoff, and physical product signoff remain
+  open.
+
+### 2026-09-16 Current-source default RTL Linux strict recheck
+
+- Replayed the current worktree with the default blocking path and the
+  relocated `rtl-minimal` kernel for `31,000,000` RTL cycles under
+  `/tmp/mips32-soc-current-fixed-userspace-rerun-20260916`. The frontend
+  report for the same source is `build/unit_tb/rtl_frontend_compile/` and is
+  `RTL_FRONTEND_COMPILE_READY` for all `8/8` configurations.
+- The strict runner completed with simulator status `0`, required userspace
+  marker count `1`, and continuous post-reset progress. The raw simulator log
+  contains `MIPS32_SOC_LINUX_BOOT_SUCCESS`; no `BadVA`, `AdEL`, Oops, kernel
+  panic, regression failure or simulator error was observed. The marker
+  normalizer is therefore exercised by the strict runner result rather than
+  by a hand-edited report.
+- The independent WAIT audit remains passing with
+  `LINUX_WAIT_TRACE_PASS waits=2 wakeups=1`, using the retained trace-enabled
+  replay at `/tmp/mips32-soc-timer-trace-20260916/sim_31m_runtime.log`.
+- The same current-source opt-in precision paths also pass under
+  `/data/disk/tmp/mips32-soc/current-delay-optin-recheck-20260916`: the
+  delay-slot gate reports `CPU_CP0_SUMMARY intr=2 ... eret=2`, and the CPU/CP0
+  gate reports `intr=1 syscall=1 ri=2 adel=1 eret=7`; both emit
+  `REGRESSION_TEST_SUCCESS`.
+- This confirms the current default blocking Linux/userspace regression and
+  the gate's interleaved UART/progress matching repair. It does not close
+  GPIO marker coverage for this reused kernel image, nonblocking-L1 Linux,
+  generic post-userspace RTL/QEMU differential, full ISA/MMU/FPU/OS
+  semantics, or product signoff.
+
+### 2026-09-15 WB EI loop removal and default RTL Linux recheck
+
+- Split the interrupt-arbitration EI decode into `wb_ei_candidate` and the
+  final `wb_ei` path in `rtl/cpu/mips_cpu.v`. `interrupt_accept` now depends
+  on the WB bundle candidate and no longer feeds back through
+  `wb_commit_valid`/delay-slot suppression.
+- Kept delay-slot WB rollback explicitly behind
+  `SOC_DELAY_SLOT_ROLLBACK_ENABLE`. The default blocking path therefore
+  retains its established retirement behavior; the focused
+  `cpu-irq-delay-slot-gate` continues to enable rollback explicitly.
+- Fresh VCS evidence passes the directed IRQ gate (`intr=2`, `eret=2`), the
+  eight-configuration RTL frontend elaboration matrix, and the strict
+  `rtl-linux-minimal-userspace-gate` at 50M cycles with
+  `LINUX_REQUIRE_USERSPACE=1`. The RTL Linux run observes
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`, reaches a stable kernel wait loop at
+  `0x88b83568`, and does not reproduce the prior `BadVA=0x2605bb30` panic.
+- The run does not observe `MIPS32_SOC_LINUX_GPIO_SUCCESS`; this closes the
+  WB/default-boot regression boundary only. GPIO userspace, unrestricted
+  Linux, full RTL/QEMU system differential, complete ISA/MMU/FPU/OS
+  semantics, formal/CDC/RDC/lint and physical product signoff remain open.
+
+### 2026-09-13 Post-rollback frontend and Make-entry verification
+
+- Added the explicit `SOC_DELAY_SLOT_ROLLBACK_ENABLE` boundary to the Linux
+  boot README: the project default remains `0`, while the focused CPU/CP0 gate
+  enables the opt-in path with `+define+SOC_DELAY_SLOT_ROLLBACK_ENABLE=1`.
+- `bash -n` and `git diff --check` pass for the changed gate scripts and
+  documentation. A fresh VCS `rtl-frontend-compile` under
+  `/data/disk/tmp/mips32-soc/rtl-frontend-post-rollback-20260913` passes all
+  `8/8` configurations: default, product MMU, micro-TLB, L2/L1 nonblocking,
+  CPU nonblocking, FPU and DDR4 controller.
+- A `make -n rtl-linux-minimal-userspace-gate` audit confirms the Make entry
+  forwards the same strict `rtl-minimal` userspace contract used by the
+  retained 32M-cycle evidence: `console=null`, early 8250 UART, 50M RTL
+  cycles, 600s host timeout and `LINUX_REQUIRE_USERSPACE=1`.
+- No default behavior was switched by this verification. Generic RTL Linux,
+  unrestricted RTL/QEMU system differential, complete ISA/MMU/FPU/OS
+  semantics, formal/CDC/RDC/lint signoff and physical product signoff remain
+  OPEN.
+
+### 2026-09-13 RTL Linux delay-slot WB rollback closure
+
+- Fixed the asynchronous-interrupt retirement boundary in
+  `rtl/cpu/mips_cpu.v`: when an interrupt is accepted for a WB instruction
+  belonging to a branch delay slot, the WB bundle remains available for
+  EPC/BD and exception diagnostics, but `wb_commit_valid` suppresses GPR,
+  CP0, TLB, ERET and shadow-register architectural side effects on that edge.
+  This prevents a delay-slot GPR write from changing the branch condition that
+  ERET replays.
+- The implementation is guarded by `SOC_DELAY_SLOT_ROLLBACK_ENABLE`, which
+  defaults to `0`; only the focused CPU/CP0 directed gate enables it with
+  `+define+SOC_DELAY_SLOT_ROLLBACK_ENABLE=1`.
+- Added a negative-sensitive firmware probe in
+  `tb/soc_test/fw/tests/cpu_irq_delay_slot/main.s`. The target delay slot
+  writes `$v0=10` while the branch tests the pre-slot `$v0=0`; an early commit
+  reaches the failure mailbox after ERET, while correct rollback reaches the
+  pass mailbox. The final VCS gate passed with `intr=2`, `eret=2` and
+  `REGRESSION_TEST_SUCCESS`.
+- The retained directed report is
+  `/data/disk/tmp/mips32-soc/cpu-irq-delay-slot-retire-20260913/sim-final2/`
+  (`sim.log`, `vcs.log` and
+  `cpu_irq_delay_slot_completion_report.md`). The gate script now checks the
+  CPU/CP0 summary and writes this report explicitly.
+- The related `cpu_irq_mem_pending` unit gate passes with
+  `REGRESSION_TEST_SUCCESS mips_cpu_irq_mem_pending retire_count=1` under
+  `/data/disk/tmp/mips32-soc/cpu-irq-mem-pending-20260913`. A fresh
+  `rtl-frontend-compile` also passes all `8/8` configurations under
+  `/data/disk/tmp/mips32-soc/rtl-frontend-delay-rollback-20260913`, including
+  the default, product-MMU, micro-TLB, L1/L2 nonblocking, CPU nonblocking,
+  FPU and DDR4 elaboration paths.
+- A fresh patched RTL Linux replay completed the full 30M-cycle bound under
+  `/data/disk/tmp/mips32-soc/rtl-linux-delay-slot-rollback-20260913-nocov`.
+  The target window around cycle `21507323` records `Cause=0xc0808000`,
+  `BD=1`, `EPC=0x88a3b078`; the delay-slot WB bundle still contains
+  `li v0,10`, while the post-edge architectural state does not take that
+  value before replay. No `BadVA=0x115f4bec`, kernel panic or userspace fault
+  marker occurred through 30M cycles.
+- This closes the observed delay-slot interrupt commit defect and its directed
+  CPU/CP0 regression only. Generic RTL Linux userspace, full RTL/QEMU system
+  differential, complete ISA/MMU/FPU semantics and product signoff remain
+  OPEN.
+
+### 2026-09-13 RTL Linux JR delay-slot interrupt recovery closure
+
+- Fixed the asynchronous interrupt boundary where WB contains a `JR` and MEM
+  contains its architectural delay slot. The recovery logic now recognizes the
+  older control transfer from `wb_is_control_transfer` and validates the
+  relationship `mem_pc == wb_pc + 4`; it passes the MEM PC as the delay-slot
+  exception PC. This avoids losing `Cause.BD` when a JR target has already
+  replaced the sequential fetch path.
+- Directed evidence passes in a fresh VCS run: `cpu-irq-delay-slot-gate` and
+  `cpu-irq-mem-pending-gate`. RTL frontend compile remains `8/8 PASS` in
+  `/data/disk/tmp/mips32-soc/jr-delay-frontend-20260913`.
+- A fresh simulator compiled from the patched RTL and replayed the previous
+  Linux failure window through 14.1M cycles under
+  `/data/disk/tmp/mips32-soc/rtl-linux-jr-delay-postfix-20260913`. At cycle
+  `13892647`, the trace records `Cause=0x40808000` (`BD=1`) and post-edge
+  `EPC=0x881f08fc`; ERET resumes at `0x881f08fc` and executes the expected
+  delay slot at `0x881f0900`. The old `EPC=0x881f0900` and `BadVA=0xadc`
+  failure do not recur in the bounded window.
+- This closes the observed JR/delay-slot interrupt precision defect only. The
+  replay did not reach the Linux userspace marker, so generic RTL Linux
+  userspace, unrestricted RTL/QEMU Linux differential, full ISA/MMU/FPU
+  semantics and product signoff remain OPEN.
+
+### 2026-09-12 RTL-minimal userspace gate log-interleave repair
+
+- The strict `rtl-linux-minimal-userspace-gate` replay reached
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS` and `MIPS32_SOC_LINUX_GPIO_SUCCESS` in the
+  runtime log at about 30M RTL cycles, but concurrent progress/UART output
+  split the marker across lines. The RTL userspace evidence is therefore
+  valid; the original gate matcher was too literal.
+- `tb/linux_boot/run_rtl_linux_progress_gate.sh` now normalizes only progress
+  records while matching/counting the marker, preserves the raw runtime log,
+  and accepts a nonzero host-timeout status only when the required userspace
+  marker is present. Zero-marker handling remains a normal gate failure.
+- `bash -n` passes and the existing runtime evidence normalizes to both boot
+  and GPIO success markers. This closes the gate reliability defect, not
+  generic RTL Linux, L1 nonblocking Linux integration, or full RTL/QEMU
+  system differential. The latter remain OPEN.
+
 ### 2026-09-06 RTL Linux devtmpfs boundary isolation
 
 - `tb/linux_boot/rtl_minimal.config` now disables `CONFIG_DEVTMPFS` and
@@ -6185,6 +6509,82 @@ remain OPEN.
 - The evidence is a bounded relocated-kernel prefix. Linux userspace boot,
   unrestricted RTL/QEMU system differential, full ISA/privileged/MMU/FPU,
   coherency, formal/CDC/RDC/lint and physical product signoff remain OPEN.
+
+### 2026-09-13 VIC CPU differential Cause.BD replay closure
+
+- The selected `qemu-system-vic-cpu-differential-gate` initially exposed a
+  real converter-state bug at retire 345: RTL observed `gpr_data=20000100`,
+  while QEMU replay produced `00000100` after `MFC0 Cause` and `SRL`.
+- The first IRQ enters the general vector with `Cause.BD=1`, then reaches the
+  configured VIC vector through a handler `JAL` delay slot. The converter was
+  incorrectly clearing the recovered BD state when the second vector record
+  had no plugin `bd` field. It now preserves that state across the vector
+  handoff and still allows later ordinary IRQ entries to clear it.
+- Verification: converter unit tests pass; the rebuilt custom QEMU machine
+  and `qemu-system-vic-cpu-differential-gate` pass with
+  `TRACE_COMPARE_PASS records=735` and `REGRESSION_TEST_SUCCESS`.
+- Added a focused converter regression for the general-vector to VIC-vector
+  handoff, including the `MFC0 Cause`/`SRL` data flow that exposed the bug.
+- This closes the bounded VIC CPU replay corpus only. Nested/external timing,
+  unrestricted RTL/QEMU Linux differential, full ISA/privileged/MMU/FPU,
+  generic RTL Linux userspace, coherency and product signoff remain OPEN.
+
+### 2026-09-13 Architecture aggregate environment and replay closure
+
+- Freed stale 2026-09-05 debug/VCS snapshots under `/data/disk` and reused
+  the previously verified Linux kernel/DTB instead of triggering a second
+  full kernel build. This kept the aggregate below the available disk and
+  memory limits.
+- Fixed nested Make path propagation for the QEMU system peripheral, DMA v2,
+  QSPI, DDR, smoke, retire-capture and unaligned RTL targets. Each target now
+  passes the selected `QEMU_BIN` and relocated firmware/run directories
+  explicitly; the aggregate no longer falls back to `build/deps` or checks a
+  stale repository `build/` result.
+- Verification: converter tests, unaligned RTL gate, current-contract gate,
+  selected differential aggregate, and the full
+  `qemu-system-architecture-closure-gate` all pass. The final aggregate
+  includes the Linux userspace marker gate and reports
+  `QEMU system architecture closure gate: PASS`.
+- Scope remains bounded: this does not close unrestricted RTL/QEMU Linux
+  instruction differential, full ISA/privileged/FPU compliance, arbitrary OS
+  demand paging, coherency, formal/CDC/RDC/lint signoff, or physical DDR/QSPI
+  product validation.
+
+### 2026-09-13 RTL Linux userspace and bounded Linux differential recheck
+
+- A fresh `rtl-minimal` userspace run reused the verified kernel and required
+  the userspace marker. At a 32M-cycle bound it observed
+  `MIPS32_SOC_LINUX_BOOT_SUCCESS`, `MIPS32_SOC_LINUX_GPIO_SUCCESS`, and the
+  expected `MPROTECT_FAULT` marker, producing `Result: PASS` with
+  `Marker recovered after host timeout`.
+- The Linux RTL/QEMU retire harness was then run against the relocated kernel
+  and matching DTB at a 500k-cycle RTL bound. QEMU captured 237,035 retire
+  events with a complete `states >= events + 1` post-state window, and the
+  streaming comparator passed the entire prefix.
+- The capture runner now rejects truncated event/state windows explicitly;
+  a state file that reaches the byte limit without its final post-state can no
+  longer be reported as a differential pass.
+- These results close the opt-in minimal userspace contract and a bounded
+  kernel retire differential prefix. They do not claim generic RTL Linux
+  userspace, unrestricted post-userspace system differential, full ISA/FPU/OS
+  semantics, or product signoff.
+
+### 2026-09-13 RTL Linux nonblocking bounded-end response repair
+
+- The 2M-cycle nonblocking RTL Linux progress replay reached its exact cycle
+  bound while accepting the final `LWR` request (`request ID=9`). The next
+  cycle produced `data_ok=1`, response ID `9`, and ROB completion tag `1`; the
+  following cycle showed an empty response FIFO. The L1/CPU path therefore did
+  not lose the final response.
+- The apparent timeout was a testbench boundary race: the watchdog and the
+  cycle-derived trace limit called `$finish` before the same-edge NBA response
+  and retirement became visible. `TB_LINUX_BOOT` now gives the bound two clock
+  cycles plus `#1` for NBA settling, and the trace-limit path uses the same
+  delayed termination rule.
+- The bounded post-reset progress gate passes after this repair. The change is
+  diagnostic/infrastructure-only and does not claim Linux userspace, full
+  nonblocking-cache Linux integration, unrestricted RTL/QEMU differential, or
+  complete ISA/MMU/FPU/OS signoff.
 
 ### 2026-09-06 Opt-in L1 maintenance queue expansion
 

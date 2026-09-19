@@ -236,6 +236,69 @@ module dcache #(
     reg                data_parity_ram [0:WAYS-1][0:SETS-1];
     reg [2:0]          plru_ram [0:SETS-1];   // tree-PLRU: b0=top, b1=left, b2=right
 
+`ifdef DCACHE_ARRAY_TRACE
+    // Diagnostic-only array write attribution.  The trace is deliberately
+    // inside the cache so registered SRAM read snapshots cannot hide which
+    // RTL branch changed a line.  kind: 1=maintenance tag, 2=maintenance
+    // invalidate, 3=uncached coherency merge, 4=COMPARE hit store,
+    // 5=WRITE_MERGE refill install, 6=error invalidate.
+    integer array_trace_enable;
+    integer array_trace_limit;
+    integer array_trace_count;
+    integer array_trace_cycle;
+    integer array_trace_cycle_start;
+    integer array_trace_cycle_end;
+    integer array_trace_word3_only;
+    reg [26:0] array_trace_line;
+
+    initial begin
+        array_trace_enable = 0;
+        array_trace_limit = 1024;
+        array_trace_count = 0;
+        array_trace_cycle = 0;
+        array_trace_cycle_start = 0;
+        array_trace_cycle_end = 0;
+        array_trace_word3_only = 0;
+        array_trace_line = 27'd0;
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE=%d", array_trace_enable)) begin end
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE_LIMIT=%d", array_trace_limit)) begin end
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE_CYCLE_START=%d", array_trace_cycle_start)) begin end
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE_CYCLE_END=%d", array_trace_cycle_end)) begin end
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE_WORD3_ONLY=%d", array_trace_word3_only)) begin end
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE_LINE=%h", array_trace_line)) begin end
+    end
+
+    task automatic trace_array_write;
+        input integer kind;
+        input integer way;
+        input [5:0] index;
+        input [26:0] line;
+        input [TAG_BITS+1:0] old_tag;
+        input [TAG_BITS+1:0] new_tag;
+        input [255:0] old_data;
+        input [255:0] new_data;
+        begin
+            if (array_trace_enable != 0 &&
+                array_trace_count < array_trace_limit &&
+                (array_trace_cycle_start == 0 ||
+                 array_trace_cycle >= array_trace_cycle_start) &&
+                (array_trace_cycle_end == 0 ||
+                 array_trace_cycle <= array_trace_cycle_end) &&
+                (array_trace_line == 27'd0 || line == array_trace_line) &&
+                (!array_trace_word3_only || old_data[127:96] != new_data[127:96])) begin
+                $display("DCACHE_ARRAY_TRACE cycle=%0d kind=%0d way=%0d index=%0d line=%07h oldtag=%07h newtag=%07h olddata=%08h/%08h/%08h/%08h newdata=%08h/%08h/%08h/%08h",
+                         array_trace_cycle, kind, way, index, line,
+                         old_tag, new_tag,
+                         old_data[31:0], old_data[63:32],
+                         old_data[95:64], old_data[127:96],
+                         new_data[31:0], new_data[63:32],
+                         new_data[95:64], new_data[127:96]);
+                array_trace_count = array_trace_count + 1;
+            end
+        end
+    endtask
+`endif
+
     wire coh_snoop_index_hit = tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
                                 ((tag_ram[0][coh_snoop_addr_norm[10:5]][TAG_BITS-1:0] == coh_snoop_addr_norm[31:11]) ||
                                  tag_ram[1][coh_snoop_addr_norm[10:5]][TAG_BITS+1] &&
@@ -493,6 +556,9 @@ module dcache #(
                 end
             end
         end else begin
+`ifdef DCACHE_ARRAY_TRACE
+            array_trace_cycle = array_trace_cycle + 1;
+`endif
             state <= next_state;
             coh_snoop_block <= ENABLE_COHERENCY && coh_snoop_valid;
             if (ENABLE_COHERENCY && coh_snoop_valid) begin
@@ -568,10 +634,30 @@ module dcache #(
                 CACHE_LOOKUP: begin
                     if (!maint_needs_wb) begin
                         if (maint_index_store_tag) begin
+`ifdef DCACHE_ARRAY_TRACE
+                            trace_array_write(1, maint_target_way, lookup_index,
+                                              maint_addr[31:5],
+                                              tag_ram[maint_target_way][lookup_index],
+                                              maint_tag_wdata[22:0],
+                                              data_ram[maint_target_way][lookup_index],
+                                              data_ram[maint_target_way][lookup_index]);
+`endif
                             tag_ram[maint_target_way][lookup_index] <= maint_tag_wdata[22:0];
                             tag_parity_ram[maint_target_way][lookup_index] <= ^maint_tag_wdata[22:0];
                         end else if ((maint_index_wbi || maint_hit_inv || maint_hit_wb_inv || maint_hit_wb) &&
                             maint_target_valid && (maint_clear_valid || maint_clear_dirty)) begin
+`ifdef DCACHE_ARRAY_TRACE
+                            trace_array_write(2, maint_target_way, lookup_index,
+                                              maint_addr[31:5],
+                                              tag_ram[maint_target_way][lookup_index],
+                                              maint_clear_valid ?
+                                              {1'b0, tag_ram[maint_target_way][lookup_index][TAG_BITS:0]} :
+                                              {tag_ram[maint_target_way][lookup_index][TAG_BITS+1],
+                                               1'b0,
+                                               tag_ram[maint_target_way][lookup_index][TAG_BITS-1:0]},
+                                              data_ram[maint_target_way][lookup_index],
+                                              data_ram[maint_target_way][lookup_index]);
+`endif
                             if (maint_clear_valid)
                                 tag_ram[maint_target_way][lookup_index][TAG_BITS+1] <= 1'b0;
                             else if (maint_clear_dirty)
@@ -660,6 +746,17 @@ module dcache #(
                                 if (tag_ram[sw][req_buf_addr[10:5]][TAG_BITS+1] &&
                                     (tag_ram[sw][req_buf_addr[10:5]][TAG_BITS-1:0] ==
                                      normalize_coh_addr(req_buf_addr)[31:11])) begin
+`ifdef DCACHE_ARRAY_TRACE
+                                    trace_array_write(3, sw, req_buf_addr[10:5],
+                                                      normalize_coh_addr(req_buf_addr)[31:5],
+                                                      tag_ram[sw][req_buf_addr[10:5]],
+                                                      {1'b1, 1'b0,
+                                                       normalize_coh_addr(req_buf_addr)[31:11]},
+                                                      data_ram[sw][req_buf_addr[10:5]],
+                                                      merge_coh_word(data_ram[sw][req_buf_addr[10:5]],
+                                                                     req_buf_wdata, req_buf_be,
+                                                                     req_buf_addr[4:2]));
+`endif
                                     data_ram[sw][req_buf_addr[10:5]] <=
                                         merge_coh_word(data_ram[sw][req_buf_addr[10:5]],
                                                        req_buf_wdata, req_buf_be,
@@ -689,6 +786,14 @@ module dcache #(
                         // Update PLRU: accessed (hit) way is MRU
                         plru_ram[lookup_index] <= plru_touch(plru_rdata, hit_way);
                         if (req_buf_we) begin
+`ifdef DCACHE_ARRAY_TRACE
+                            trace_array_write(4, hit_way, lookup_index,
+                                              lookup_addr[31:5],
+                                              tag_ram[hit_way][lookup_index],
+                                              {1'b1, 1'b1, lookup_tag},
+                                              data_ram[hit_way][lookup_index],
+                                              new_line);
+`endif
                             data_ram[hit_way][lookup_index] <= new_line;
                             data_parity_ram[hit_way][lookup_index] <= ^new_line;
                             tag_ram[hit_way][lookup_index]  <= {1'b1, 1'b1, lookup_tag};
@@ -758,6 +863,14 @@ module dcache #(
                 end
                 WRITE_MERGE: begin
                     // Install refilled (optionally write-merged) line into victim way
+`ifdef DCACHE_ARRAY_TRACE
+                    trace_array_write(5, victim_way, lookup_index,
+                                      lookup_addr[31:5],
+                                      tag_ram[victim_way][lookup_index],
+                                      {~coh_refill_collision, req_buf_we, lookup_tag},
+                                      data_ram[victim_way][lookup_index],
+                                      new_line);
+`endif
                     data_ram[victim_way][lookup_index] <= new_line;
                     data_parity_ram[victim_way][lookup_index] <= ^new_line;
                     // A peer store may have arrived after the refill had
@@ -772,6 +885,15 @@ module dcache #(
                     coh_refill_snoop_pending <= 1'b0;
                 end
                 ERROR_RESP: begin
+`ifdef DCACHE_ARRAY_TRACE
+                    if (cache_error_pending)
+                        trace_array_write(6, victim_way, lookup_index,
+                                          {victim_tag_entry[TAG_BITS-1:0], lookup_index},
+                                          tag_ram[victim_way][lookup_index],
+                                          {(TAG_BITS+2){1'b0}},
+                                          data_ram[victim_way][lookup_index],
+                                          data_ram[victim_way][lookup_index]);
+`endif
                     if (cache_error_pending)
                         tag_ram[victim_way][lookup_index] <= {(TAG_BITS+2){1'b0}};
                     req_buf_valid <= 1'b0;

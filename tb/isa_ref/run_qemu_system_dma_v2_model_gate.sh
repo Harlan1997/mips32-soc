@@ -5,6 +5,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_dma_v2_model"}
 FW_DIR=${FW_DIR:-"${ROOT_DIR}/build/firmware/dma_cpu"}
+QEMU_SRC=${QEMU_SRC:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0"}
+QEMU_BUILD=${QEMU_BUILD:-"${QEMU_SRC}/build-mipsel-softmmu"}
+QEMU_BIN=${QEMU_BIN:-"${QEMU_BUILD}/qemu-system-mipsel"}
 mkdir -p "${RUN_DIR}"
 
 make -C "${ROOT_DIR}/tb/soc_test/fw/tests/dma_cpu" \
@@ -12,6 +15,7 @@ make -C "${ROOT_DIR}/tb/soc_test/fw/tests/dma_cpu" \
 
 RUN_DIR="${RUN_DIR}/qemu" \
 FW_ELF="${FW_DIR}/firmware.elf" \
+QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" QEMU_BIN="${QEMU_BIN}" \
 REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=0 \
 "${SCRIPT_DIR}/run_qemu_system_retire_capture_gate.sh" \
     >"${RUN_DIR}/qemu_gate.log" 2>&1

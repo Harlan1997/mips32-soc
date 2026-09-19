@@ -43,6 +43,7 @@ module tb_cp0_timer;
     wire [31:0]  hwrena_out;
     wire [3:0]   srs_current_set_out;
     wire [3:0]   srs_previous_set_out;
+    wire         tlb_inv_applied;
 
     // Phase B.3.c MMU pass-through signals (unused inside this timer/TLB tb but
     // required for `.*` wildcard connectivity to mips_cp0's post-B.3.c ports).

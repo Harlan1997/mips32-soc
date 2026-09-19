@@ -470,12 +470,25 @@ def convert(events, states):
             # vector reached from a translated delay-slot TB is not by
             # itself sufficient evidence for Cause.BD: the RTL can accept a
             # replayed asynchronous IRQ at that boundary with bd=0.
-            replay_bd_pending = bool(event.get("bd", 0))
+            # The plugin does not emit ``bd`` for a replayed external IRQ.
+            # Preserve a BD bit recovered from the preceding general vector
+            # while the handler's branch reaches the configured VIC vector;
+            # a missing/false field must not erase that architectural state.
+            if event.get("bd", 0):
+                replay_bd_pending = True
             replay_cause_pending = True
         elif (vector_pc and not ordinary_vector_branch and index > 0 and
               has_delay_slot(int(events[index - 1]["instr"], 16)) and
               int(event["pc"], 16) ==
               int(events[index - 1]["pc"], 16) + 4):
+            replay_cause_pending = True
+        elif (vector_pc and not ordinary_vector_branch and
+              ((cause_value >> 31) & 1)):
+            # A scheduled RTL IRQ may be accepted while the branch is still
+            # in the pipeline, before QEMU retires its branch/delay-slot
+            # events. In that representation the post-state Cause.BD is the
+            # only producer-independent evidence available at the vector.
+            replay_bd_pending = True
             replay_cause_pending = True
         # MFC0 Cause is normally the first handler instruction that exposes
         # the replayed interrupt state.  Update the post-state register so

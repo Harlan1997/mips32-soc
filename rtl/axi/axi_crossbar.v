@@ -206,8 +206,14 @@ module axi_crossbar #(
                 // earlycon/8250 traffic is silently routed to DDR.
                 decode_slave = 4'd1;                 // S1 APB alias
             else if (((a >= 32'h0002_0000) && (a < 32'h0800_0000)) ||
-                     ((a >= 32'h8002_0000) && (a < 32'h8800_0000)) ||
-                     ((a >= 32'hA002_0000) && (a < 32'hA800_0000)))
+                     // The DDR window starts at physical 0x0800_0000.
+                     // Its kseg0/kseg1 aliases therefore start at
+                     // 0x8800_0000/0xA800_0000; using an exclusive upper
+                     // bound of those start addresses dropped the first
+                     // byte of the Linux kernel's relocated DDR image into
+                     // DECERR.
+                     ((a >= 32'h8800_0000) && (a < 32'h9000_0000)) ||
+                     ((a >= 32'hA800_0000) && (a < 32'hB000_0000)))
                 decode_slave = 4'd3;                 // low-RAM alias to DDR
             else
 `endif
@@ -244,9 +250,9 @@ module axi_crossbar #(
             if (target == 4'd3) begin
                 if ((a >= 32'h0002_0000) && (a < 32'h0800_0000))
                     slave_address = `SOC_DDR_BASE + a;
-                else if ((a >= 32'h8002_0000) && (a < 32'h8800_0000))
+                else if ((a >= 32'h8800_0000) && (a < 32'h9000_0000))
                     slave_address = `SOC_DDR_BASE + (a - 32'h8000_0000);
-                else if ((a >= 32'hA002_0000) && (a < 32'hA800_0000))
+                else if ((a >= 32'hA800_0000) && (a < 32'hB000_0000))
                     slave_address = `SOC_DDR_BASE + (a - 32'hA000_0000);
             end
         end

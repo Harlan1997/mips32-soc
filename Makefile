@@ -2,6 +2,7 @@ ROOT_DIR := $(CURDIR)
 BUILD_DIR ?= $(ROOT_DIR)/build
 HOST_TIMEOUT ?= 180s
 RTL_CYCLE_LIMIT ?= 1000000
+LINUX_TIMEOUT_NS ?=
 # VCS and the Linux build can each consume substantial RAM. Keep the default
 # reproducible on constrained CI/VM hosts; callers may opt into parallelism.
 JOBS ?= 1
@@ -14,6 +15,7 @@ QEMU_BIN ?= $(QEMU_BUILD)/qemu-system-mipsel
 export QEMU_SRC QEMU_BUILD QEMU_BIN
 KERNEL_PHYSICAL_START ?= 0x88800000
 LINUX_PROFILE ?= generic
+LINUX_CMDLINE ?=
 SKIP_LINUX_BUILD ?= 0
 SKIP_COVERAGE ?= 0
 SKIP_URG_EXCLUSION_CHECK ?= 0
@@ -48,10 +50,23 @@ LINUX_DELAY_TRACE_CYCLE_START ?= 0
 LINUX_DELAY_TRACE_CYCLE_END ?= 0
 LINUX_UART_TRACE ?= 0
 LINUX_UART_TRACE_LIMIT ?= 256
+LINUX_UART_TRACE_CYCLE_START ?= 0
+LINUX_UART_TRACE_CYCLE_END ?= 0
+LINUX_UART_TRANSCRIPT ?=
 LINUX_APB_TRACE ?= 0
 LINUX_APB_TRACE_LIMIT ?= 512
+LINUX_APB_TRACE_CYCLE_START ?= 0
+LINUX_APB_TRACE_CYCLE_END ?= 0
 LINUX_APB_SELECT_TRACE ?= 0
 LINUX_APB_SELECT_TRACE_LIMIT ?= 512
+LINUX_APB_SELECT_TRACE_CYCLE_START ?= 0
+LINUX_APB_SELECT_TRACE_CYCLE_END ?= 0
+LINUX_VIC_TRACE_CYCLE_START ?= 0
+LINUX_VIC_TRACE_CYCLE_END ?= 0
+LINUX_VIC_ACCEPT_TRACE ?= 0
+LINUX_VIC_ACCEPT_TRACE_LIMIT ?= 256
+LINUX_VIC_ACCEPT_TRACE_CYCLE_START ?= 0
+LINUX_VIC_ACCEPT_TRACE_CYCLE_END ?= 0
 LINUX_PANIC_TRACE ?= 0
 LINUX_PANIC_TRACE_LIMIT ?= 32
 LINUX_GPR_TRACE ?= 0
@@ -267,17 +282,17 @@ dcache-parity-gate:
 .PHONY: bpu-redirect-gate sva-gate verification-foundation-gate micro-tlb-gate interrupt-priority-gate mdu-flush-gate mips-control-fpu-cond-gate mips-fpu-compare-gate firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate dma-axi-error-gate vic-cpu-gate vic-full-sources-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate l2-end-to-end-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-micro-tlb-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate qspi-vendor-neutral-boot-gate product-manifest-handoff-gate product-manifest-handoff-quad-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate mmu-hardware-walker-soc-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate ecc-secded-gate rtl-frontend-compile rob-fifo-gate soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate page-table-walker-page-sizes-gate cpu-hardware-walker-page-size-gate cpu-hardware-walker-page-sizes-gate coverage-strict-clean-gate linux-boot-fetch-sources linux-boot-dependency-gate qemu-linux-user project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 .PHONY: cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-errors-gate l1-nonblocking-axi-bridge-gate l1-nonblocking-cpu-compat-gate l1-nonblocking-cpu-multi-gate l1-nonblocking-cpu-stress-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-gate l1-nonblocking-cpu-error-reset-gate mmu-ipi-shootdown-pressure-gate fpu-single-gate fpu-double-gate fpu-cu1-exception-gate fpu-fpe-exception-gate fpu-fpe-double-gate fpu-fpe-inexact-gate fpu-fpe-double-inexact-gate fpu-fpe-double-underflow-gate fpu-fpe-invalid-gate fpu-fpe-overflow-gate fpu-fpe-underflow-gate fpu-rounding-gate qemu-system-fpu-single-differential-gate qemu-system-fpu-double-differential-gate qemu-system-fpu-cu1-exception-differential-gate qemu-system-fpu-fpe-inexact-differential-gate qemu-system-fpu-fpe-double-inexact-differential-gate qemu-system-fpu-fpe-double-underflow-differential-gate qemu-system-fpu-fpe-double-differential-gate qemu-system-fpu-fpe-invalid-differential-gate qemu-system-fpu-fpe-overflow-differential-gate qemu-system-fpu-fpe-underflow-differential-gate qemu-system-fpu-fpe-boundary-differential-gate qemu-system-branch-likely-differential-gate cpu-reference-gate cpu-lockstep-gate perf-counters-gate qemu-system-mips32-soc-ref qemu-system-sram-uart-mailbox-gate qemu-system-peripheral-contract-gate qemu-system-qspi-gate qemu-system-ddr-gate qemu-system-current-contract-gate qemu-system-selected-differential-gate qemu-system-retire-capture-gate qemu-system-retire-differential-gate qemu-system-linux-differential-gate qemu-system-isa-r2-differential-gate qemu-system-exception-differential-gate qemu-system-break-differential-gate qemu-system-trap-differential-gate qemu-system-trap-imm-differential-gate qemu-system-di-ei-differential-gate qemu-system-wait-differential-gate qemu-system-bd-exception-differential-gate qemu-system-peripheral-differential-gate qemu-system-vic-differential-gate qemu-system-vic-cpu-differential-gate qemu-system-vic-full-sources-differential-gate qemu-system-mmu-contract-gate qemu-system-mmu-process-pressure-gate qemu-system-mmu-refill-differential-gate qemu-system-dma-v2-model-gate qemu-system-dma-v2-event-contract-gate qemu-system-dma-fault-gate qemu-system-unaligned-gate qemu-system-unaligned-differential-gate qemu-system-uhi-dtb-gate
-.PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate
-.PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
+.PHONY: isa-implementation-audit branch-likely-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate cpu-lui-lw-forward-gate rtl-linux-forwarding-gate
+.PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-linux-differential-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
 .PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
-.PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit
+.PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit qemu-system-cp0-timer-wait-differential-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
 .PHONY: qemu-system-linux-differential-gate
 .PHONY: qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate product-mmu-machine-check-gate dual-core-mmu-shootdown-gate
-.PHONY: linux-boot-build-gate linux-gpio-userspace-gate linux-soc-vic-gate linux-soc-contract-audit rtl-linux-progress-gate rtl-linux-userspace-gate linux-exception-frame-check
+.PHONY: linux-boot-build-gate linux-gpio-userspace-gate linux-soc-vic-gate linux-soc-contract-audit rtl-linux-progress-gate rtl-linux-userspace-gate rtl-linux-minimal-userspace-gate linux-exception-frame-check
 .PHONY: linux-uboot-build-gate
 .PHONY: linux-uboot-custom-machine-probe
 .PHONY: qemu-system-architecture-closure-gate qemu-system-llsc-differential-gate qemu-system-mdu-differential-gate qemu-system-state-converter-test
@@ -672,6 +687,10 @@ cpu-reference-gate:
 cpu-lockstep-gate: qemu-system-mips32-soc-ref
 	RUN_DIR=$(BUILD_DIR)/isa_ref/lockstep tb/isa_ref/run_cpu_lockstep_gate.sh
 
+cpu-lui-lw-forward-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_lui_lw_forward \
+		tb/unit/cpu_test/run_mips_cpu_lui_lw_forward.sh
+
 qemu-system-mips32-soc-ref:
 	scripts/qemu/build_mips32_soc_ref.sh
 
@@ -680,6 +699,8 @@ qemu-linux-user:
 	scripts/qemu/build_mips32_linux_user.sh
 
 qemu-system-sram-uart-mailbox-gate: qemu-system-mips32-soc-ref
+	QEMU_BIN=$(QEMU_BIN) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_smoke \
+	FW_DIR=$(BUILD_DIR)/firmware/qemu_system_smoke \
 	tb/soc_test/run_qemu_system_smoke_gate.sh
 
 qemu-system-uhi-dtb-gate: qemu-system-mips32-soc-ref
@@ -707,8 +728,10 @@ rtl-linux-progress-gate:
 	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh tb/linux_boot/run_rtl_linux_progress_gate.sh
 	RUN_DIR=$(if $(RUN_DIR),$(RUN_DIR),$(RTL_LINUX_PROGRESS_DIR)) \
 	HOST_TIMEOUT=$(HOST_TIMEOUT) RTL_CYCLE_LIMIT=$(RTL_CYCLE_LIMIT) RTL_SIM_SEED=$(RTL_SIM_SEED) \
+	LINUX_TIMEOUT_NS=$(LINUX_TIMEOUT_NS) \
 	JOBS=$(JOBS) KERNEL_PHYSICAL_START=$(KERNEL_PHYSICAL_START) \
 	LINUX_PROFILE=$(LINUX_PROFILE) \
+	LINUX_CMDLINE='$(LINUX_CMDLINE)' \
 	LINUX_VCS_EXTRA_ARGS='$(LINUX_VCS_EXTRA_ARGS)' \
 	KERNEL=$(KERNEL) SKIP_LINUX_BUILD=$(SKIP_LINUX_BUILD) \
 	SKIP_COVERAGE=$(SKIP_COVERAGE) SKIP_URG_EXCLUSION_CHECK=$(SKIP_URG_EXCLUSION_CHECK) \
@@ -720,12 +743,25 @@ rtl-linux-progress-gate:
 	LINUX_DELAY_TRACE_CYCLE_END=$(LINUX_DELAY_TRACE_CYCLE_END) \
 	LINUX_UART_TRACE=$(LINUX_UART_TRACE) \
 	LINUX_UART_TRACE_LIMIT=$(LINUX_UART_TRACE_LIMIT) \
+	LINUX_UART_TRACE_CYCLE_START=$(LINUX_UART_TRACE_CYCLE_START) \
+	LINUX_UART_TRACE_CYCLE_END=$(LINUX_UART_TRACE_CYCLE_END) \
+	LINUX_UART_TRANSCRIPT=$(LINUX_UART_TRANSCRIPT) \
 	LINUX_APB_TRACE=$(LINUX_APB_TRACE) \
 	LINUX_APB_TRACE_LIMIT=$(LINUX_APB_TRACE_LIMIT) \
+	LINUX_APB_TRACE_CYCLE_START=$(LINUX_APB_TRACE_CYCLE_START) \
+	LINUX_APB_TRACE_CYCLE_END=$(LINUX_APB_TRACE_CYCLE_END) \
 	LINUX_APB_SELECT_TRACE=$(LINUX_APB_SELECT_TRACE) \
 	LINUX_APB_SELECT_TRACE_LIMIT=$(LINUX_APB_SELECT_TRACE_LIMIT) \
+	LINUX_APB_SELECT_TRACE_CYCLE_START=$(LINUX_APB_SELECT_TRACE_CYCLE_START) \
+	LINUX_APB_SELECT_TRACE_CYCLE_END=$(LINUX_APB_SELECT_TRACE_CYCLE_END) \
 	LINUX_VIC_TRACE=$(LINUX_VIC_TRACE) \
 	LINUX_VIC_TRACE_LIMIT=$(LINUX_VIC_TRACE_LIMIT) \
+	LINUX_VIC_TRACE_CYCLE_START=$(LINUX_VIC_TRACE_CYCLE_START) \
+	LINUX_VIC_TRACE_CYCLE_END=$(LINUX_VIC_TRACE_CYCLE_END) \
+	LINUX_VIC_ACCEPT_TRACE=$(LINUX_VIC_ACCEPT_TRACE) \
+	LINUX_VIC_ACCEPT_TRACE_LIMIT=$(LINUX_VIC_ACCEPT_TRACE_LIMIT) \
+	LINUX_VIC_ACCEPT_TRACE_CYCLE_START=$(LINUX_VIC_ACCEPT_TRACE_CYCLE_START) \
+	LINUX_VIC_ACCEPT_TRACE_CYCLE_END=$(LINUX_VIC_ACCEPT_TRACE_CYCLE_END) \
 	LINUX_GPR_TRACE=$(LINUX_GPR_TRACE) \
 	LINUX_GPR_TRACE_LIMIT=$(LINUX_GPR_TRACE_LIMIT) \
 	LINUX_GPR_TRACE_REG=$(LINUX_GPR_TRACE_REG) \
@@ -782,9 +818,33 @@ rtl-linux-progress-gate:
 	LINUX_RETIRE_TRACE_MAX_RECORDS=$(LINUX_RETIRE_TRACE_MAX_RECORDS) \
 	tb/linux_boot/run_rtl_linux_progress_gate.sh
 
+# Strict blocking RTL Linux forwarding gate. This keeps the userspace marker
+# contract and the specific LUI/LW dependency proof in one reproducible run.
+rtl-linux-forwarding-gate:
+	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh \
+		tb/linux_boot/run_rtl_linux_progress_gate.sh \
+		tb/linux_boot/run_rtl_linux_forwarding_gate.sh
+	RUN_DIR=$(BUILD_DIR)/linux_boot/rtl_forwarding_gate \
+	LINUX_PROFILE=rtl-minimal \
+	LINUX_CMDLINE='console=null earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init loglevel=0 quiet' \
+	KERNEL=$(KERNEL) RTL_CYCLE_LIMIT=33000000 HOST_TIMEOUT=900s \
+	SKIP_COVERAGE=1 \
+	tb/linux_boot/run_rtl_linux_forwarding_gate.sh
+
 rtl-linux-userspace-gate:
 	$(MAKE) rtl-linux-progress-gate \
 		RTL_LINUX_PROGRESS_DIR=$(BUILD_DIR)/linux_boot/rtl_userspace_gate \
+		LINUX_REQUIRE_USERSPACE=1
+
+# The serial/GPIO Linux userspace contract is intentionally separate from the
+# generic profile: RTL has no model for the disabled device-init paths and its
+# UART throughput requires a longer bounded run with printk disabled.
+rtl-linux-minimal-userspace-gate:
+	$(MAKE) rtl-linux-progress-gate \
+		RTL_LINUX_PROGRESS_DIR=$(BUILD_DIR)/linux_boot/rtl_minimal_userspace_gate \
+		LINUX_PROFILE=rtl-minimal \
+		LINUX_CMDLINE='console=null earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init loglevel=0 quiet' \
+		RTL_CYCLE_LIMIT=50000000 HOST_TIMEOUT=600s \
 		LINUX_REQUIRE_USERSPACE=1
 
 linux-exception-frame-check:
@@ -811,10 +871,14 @@ linux-uboot-custom-machine-probe: qemu-system-mips32-soc-ref
 
 qemu-system-peripheral-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/soc_test/run_qemu_system_peripherals_gate.sh
+	QEMU_BIN=$(QEMU_BIN) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_peripherals \
+	FW_DIR=$(BUILD_DIR)/firmware/qemu_system_peripherals \
 	tb/soc_test/run_qemu_system_peripherals_gate.sh
 
 qemu-system-retire-capture-gate: qemu-system-mips32-soc-ref qemu-system-sram-uart-mailbox-gate
 	chmod +x tb/isa_ref/run_qemu_system_retire_capture_gate.sh
+	QEMU_BIN=$(QEMU_BIN) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_retire \
+	FW_ELF=$(BUILD_DIR)/firmware/qemu_system_smoke/firmware.elf \
 	tb/isa_ref/run_qemu_system_retire_capture_gate.sh
 
 qemu-system-retire-differential-gate: qemu-system-mips32-soc-ref
@@ -840,7 +904,9 @@ qemu-system-dma-sg-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-dma-v2-model-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
-	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_v2_model tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
+	QEMU_BIN=$(QEMU_BIN) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_dma_v2_model \
+	FW_DIR=$(BUILD_DIR)/firmware/dma_cpu \
+	tb/isa_ref/run_qemu_system_dma_v2_model_gate.sh
 
 qemu-system-dma-v2-event-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_dma_v2_event_contract_gate.sh
@@ -863,6 +929,7 @@ qemu-system-wdt-gate: qemu-system-mips32-soc-ref
 qemu-system-unaligned-gate:
 	chmod +x tb/soc_test/run_qemu_system_unaligned_gate.sh
 	RUN_DIR=$(BUILD_DIR)/soc_test/qemu_system_unaligned \
+	FW_DIR=$(BUILD_DIR)/firmware/qemu_system_unaligned \
 		tb/soc_test/run_qemu_system_unaligned_gate.sh
 
 qemu-system-unaligned-differential-gate: qemu-system-mips32-soc-ref
@@ -873,11 +940,15 @@ qemu-system-unaligned-differential-gate: qemu-system-mips32-soc-ref
 
 qemu-system-qspi-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/soc_test/run_qemu_system_qspi_gate.sh
-	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_qspi tb/soc_test/run_qemu_system_qspi_gate.sh
+	QEMU_BIN=$(QEMU_BIN) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_qspi \
+	FW_DIR=$(BUILD_DIR)/firmware/qemu_system_qspi \
+	tb/soc_test/run_qemu_system_qspi_gate.sh
 
 qemu-system-ddr-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/soc_test/run_qemu_system_ddr_gate.sh
-	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_ddr tb/soc_test/run_qemu_system_ddr_gate.sh
+	QEMU_BIN=$(QEMU_BIN) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_ddr \
+	FW_DIR=$(BUILD_DIR)/firmware/qemu_system_ddr \
+	tb/soc_test/run_qemu_system_ddr_gate.sh
 
 qemu-system-current-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_current_contract_gate.sh
@@ -991,6 +1062,13 @@ qemu-system-di-ei-differential-gate: qemu-system-mips32-soc-ref
 qemu-system-wait-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_wait_differential_gate.sh
 	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_wait_differential tb/isa_ref/run_qemu_system_wait_differential_gate.sh
+
+qemu-system-cp0-timer-wait-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=qemu_system_cp0_timer_wait FW_DIR=$(BUILD_DIR)/firmware/qemu_system_cp0_timer_wait \
+		BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_cp0_timer_wait_differential \
+		QEMU_CPU=24Kc QEMU_ICOUNT=shift=0 \
+		RTL_TIMEOUT=180 tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-bd-exception-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_bd_exception_differential_gate.sh
@@ -1371,7 +1449,22 @@ l1-nonblocking-maintenance-cpu-gate:
 l1-nonblocking-ddr-gate:
 	chmod +x tb/soc_test/run_l1_ddr_nonblocking_gate.sh
 	RUN_DIR=$(BUILD_DIR)/soc_test/l1_ddr_nonblocking \
+	FW_DIR=$(BUILD_DIR)/firmware/l1_ddr_nonblocking \
 	tb/soc_test/run_l1_ddr_nonblocking_gate.sh
+
+# Compare the real RTL Linux CPU/D-cache path with and without the opt-in L1
+# nonblocking adapter. The child runs share one immutable image manifest.
+l1-nonblocking-linux-differential-gate:
+	chmod +x tb/linux_boot/build_linux_boot.sh tb/linux_boot/build_rtl_linux_image.sh \
+		tb/linux_boot/run_rtl_linux_progress_gate.sh \
+		tb/linux_boot/run_l1_nonblocking_linux_differential_gate.sh
+	RUN_DIR=$(BUILD_DIR)/linux_boot/l1_nonblocking_differential \
+	LINUX_PROFILE=rtl-minimal \
+	LINUX_CMDLINE='console=null earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init loglevel=0 quiet' \
+	KERNEL=$(KERNEL) RETIRE_COMPARE_RECORDS=300000 \
+	RTL_CYCLE_LIMIT=1100000 HOST_TIMEOUT=$(HOST_TIMEOUT) \
+	SKIP_COVERAGE=1 \
+	tb/linux_boot/run_l1_nonblocking_linux_differential_gate.sh
 
 # Stage-level cache concurrency gate.  Keep this opt-in aggregate separate
 # from current-contract-signoff because it selects the nonblocking CPU/L1/L2

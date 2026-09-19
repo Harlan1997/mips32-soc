@@ -5,6 +5,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/isa_ref/qemu_system_current_contract"}
 BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
+QEMU_SRC=${QEMU_SRC:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0"}
+QEMU_BUILD=${QEMU_BUILD:-"${QEMU_SRC}/build-mipsel-softmmu"}
+QEMU_BIN=${QEMU_BIN:-"${QEMU_BUILD}/qemu-system-mipsel"}
 mkdir -p "${RUN_DIR}"
 
 run_gate() {
@@ -16,21 +19,25 @@ run_gate() {
 
 run_gate qemu_system_peripheral_contract \
     env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_peripherals" \
+    QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" QEMU_BIN="${QEMU_BIN}" \
     make -C "${ROOT_DIR}" qemu-system-peripheral-contract-gate
 run_gate qemu_system_dma_v2_model \
     env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_dma_v2_model" \
+    QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" QEMU_BIN="${QEMU_BIN}" \
     make -C "${ROOT_DIR}" qemu-system-dma-v2-model-gate
 run_gate qemu_system_qspi \
     env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_qspi" \
+    QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" QEMU_BIN="${QEMU_BIN}" \
     make -C "${ROOT_DIR}" qemu-system-qspi-gate
 run_gate qemu_system_ddr \
     env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_ddr" \
+    QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" QEMU_BIN="${QEMU_BIN}" \
     make -C "${ROOT_DIR}" qemu-system-ddr-gate
 run_gate qemu_system_retire_capture \
     env BUILD_DIR="${BUILD_DIR}" RUN_DIR="${BUILD_DIR}/isa_ref/qemu_system_retire" \
+    QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" QEMU_BIN="${QEMU_BIN}" \
     make -C "${ROOT_DIR}" qemu-system-retire-capture-gate
 
-QEMU_BIN=${QEMU_BIN:-"${ROOT_DIR}/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"}
 {
     "${QEMU_BIN}" --version
     sha256sum "${QEMU_BIN}"

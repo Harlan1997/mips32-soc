@@ -11,6 +11,7 @@ module retire_trace_capture (
     integer fd;
     integer retire_count;
     integer max_retire_records;
+    integer stop_at_max_records;
     string trace_path;
     logic [1023:0] fpr_state_d1, fpr_state_d2;
     logic [31:0] fcsr_state_d1, fcsr_state_d2;
@@ -28,6 +29,8 @@ module retire_trace_capture (
             trace_path = "retire_trace.jsonl";
         max_retire_records = 1000000;
         void'($value$plusargs("RETIRE_TRACE_MAX_RECORDS=%d", max_retire_records));
+        stop_at_max_records = 0;
+        void'($value$plusargs("RETIRE_TRACE_STOP_AT_MAX=%d", stop_at_max_records));
         retire_count = 0;
         fd = $fopen(trace_path, "w");
         if (fd == 0) $fatal(1, "cannot open RETIRE_TRACE=%s", trace_path);
@@ -49,9 +52,16 @@ module retire_trace_capture (
             fcsr_state_d1 <= obs_if.retire_fcsr_state;
         end
         if (rst_n && obs_if.retire_valid) begin
-            if (max_retire_records > 0 && retire_count >= max_retire_records)
+            if (max_retire_records > 0 && retire_count >= max_retire_records &&
+                stop_at_max_records != 0) begin
+                // A bounded capture is an intentional verification stop.
+                $display("RETIRE_TRACE_MAX_RECORDS_REACHED path=%s limit=%0d",
+                         trace_path, max_retire_records);
+                $finish;
+            end else if (max_retire_records > 0 && retire_count >= max_retire_records) begin
                 $fatal(2, "RETIRE_TRACE_MAX_RECORDS exceeded: path=%s limit=%0d",
                        trace_path, max_retire_records);
+            end else begin
             $fdisplay(fd,
               "{\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\",\"fpr_state\":\"%0256x\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\",\"mem_be\":\"%x\",\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
               known_int(obs_if.retire_schema), known_int(obs_if.retire_pc),
@@ -71,6 +81,7 @@ module retire_trace_capture (
               known_bit(obs_if.retire_except && obs_if.retire_bd),
               known_bit(obs_if.retire_eret));
             retire_count = retire_count + 1;
+            end
         end
     end
 
