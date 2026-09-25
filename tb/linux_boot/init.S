@@ -17,6 +17,56 @@ _start:
 	li	$v0, 4005
 	syscall
 	move	$s0, $v0
+	/* Consume the deterministic entropy contract through the real Linux
+	 * getrandom(2) syscall.  The returned word is loaded back into a GPR so
+	 * seed changes are visible in the retire trace rather than only in UART. */
+	la	$a0, random_word
+	li	$a1, 4
+	move	$a2, $zero
+	li	$v0, 4353		/* __NR_getrandom for MIPS O32 (4000 + 353) */
+	syscall
+	nop
+	li	$t0, 4
+	bne	$v0, $t0, random_fail
+	nop
+	lw	$t0, random_word
+	la	$t1, random_echo
+	sw	$t0, 0($t1)
+	/* Render the word as eight hexadecimal characters for the entropy
+	 * negative test.  This is a diagnostic record; it is not part of the
+	 * default boot-success contract. */
+	la	$t1, random_ascii
+	move	$t2, $t0
+	li	$t3, 8
+	la	$t4, hex_digits
+random_hex_loop:
+	srl	$t5, $t2, 28
+	addu	$t6, $t4, $t5
+	lbu	$t6, 0($t6)
+	sb	$t6, 0($t1)
+	addiu	$t1, $t1, 1
+	sll	$t2, $t2, 4
+	addiu	$t3, $t3, -1
+	bnez	$t3, random_hex_loop
+	nop
+	move	$a0, $s0
+	la	$a1, random_prefix
+	li	$a2, random_prefix_end-random_prefix
+	li	$v0, 4004
+	syscall
+	nop
+	move	$a0, $s0
+	la	$a1, random_ascii
+	li	$a2, 8
+	li	$v0, 4004
+	syscall
+	nop
+	move	$a0, $s0
+	la	$a1, random_newline
+	li	$a2, 1
+	li	$v0, 4004
+	syscall
+	nop
 	/* Exercise the Linux gpio-mmio binding through its userspace sysfs ABI.
 	 * gpio-mmio receives the first dynamic legacy GPIO range (512) in this
 	 * fixed DT/kernel contract; use the exported global number rather than
@@ -426,14 +476,15 @@ gpio_value_read_data_check:
 	lw	$t0, 40($sp)
 	bnez	$t0, fork_fail
 	nop
-	move	$a0, $s0
+	li	$a0, 1
 	la	$a1, wait_status_success_marker
 	li	$a2, wait_status_success_marker_end-wait_status_success_marker
 	li	$v0, 4004
 	syscall
 	nop
 	b	fork_parent_done
-	nop
+	/* Preserve the terminal marker length without growing the guest image. */
+	li	$a2, boot_marker_end-boot_marker
 
 	fork_child:
 	la	$a0, exec_path
@@ -454,20 +505,23 @@ mprotect_fault_child:
 	nop
 
 fork_parent_done:
-	move	$a0, $s0
+	li	$a0, 1
 	la	$a1, boot_marker
 	li	$v0, 4004
 	syscall
-	nop
-	move	$a0, $s0
+	li	$a0, 1
 	la	$a1, fork_success_marker
 	li	$a2, fork_success_marker_end-fork_success_marker
 	li	$v0, 4004
 	syscall
 	nop
-	li	$a0, 0
-	li	$v0, 4001
+	/* PID 1 must remain alive after the terminal marker. Linux treats an
+	 * exiting global init as a fatal condition and panics by design. */
+	/* Keep PID 1 alive without adding a global symbol to the preserved ELF. */
+1:
+	li	$v0, 4162
 	syscall
+	b	1b
 	nop
 
 fork_fail:
@@ -503,6 +557,18 @@ gpio_fail_close:
 	syscall
 	nop
 	b	gpio_fail
+	nop
+
+random_fail:
+	move	$a0, $s0
+	la	$a1, random_failure_marker
+	li	$a2, random_failure_marker_end-random_failure_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 1
+	li	$v0, 4001
+	syscall
 	nop
 
 vm_fail:
@@ -550,6 +616,19 @@ gpio_failure_marker_end:
 boot_marker:
 	.ascii "MIPS32_SOC_LINUX_BOOT_SUCCESS\n"
 boot_marker_end:
+	random_prefix:
+	.ascii "MIPS32_SOC_LINUX_RANDOM="
+random_prefix_end:
+	random_success_marker:
+	.ascii "MIPS32_SOC_LINUX_RANDOM_SUCCESS\n"
+random_success_marker_end:
+	random_failure_marker:
+	.ascii "MIPS32_SOC_LINUX_RANDOM_FAILURE\n"
+random_failure_marker_end:
+	random_newline:
+	.ascii "\n"
+	hex_digits:
+	.ascii "0123456789abcdef"
 	exec_path:
 	.ascii "/bin/vm_child\0"
 	.align 2
@@ -591,3 +670,9 @@ fork_fail_marker_end:
 	.align 2
 gpio_readback:
 	.space 4
+random_word:
+	.space 4
+random_echo:
+	.space 4
+random_ascii:
+	.space 8

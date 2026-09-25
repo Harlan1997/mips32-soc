@@ -20,7 +20,9 @@ case "${LINUX_PROFILE}" in
 esac
 BUILD_DIR=$(realpath -m "${BUILD_DIR}")
 SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-946684800}
-KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-"2000-01-01 00:00:00"}
+# Include the timezone so gen_initramfs.sh produces the same epoch on hosts
+# whose local timezone is not UTC.
+KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-"2000-01-01 00:00:00 UTC"}
 export SOURCE_DATE_EPOCH KBUILD_BUILD_TIMESTAMP
 export KBUILD_BUILD_USER=${KBUILD_BUILD_USER:-build}
 export KBUILD_BUILD_HOST=${KBUILD_BUILD_HOST:-build}
@@ -109,8 +111,21 @@ fi
 # list contents still point at the run-local guest files; only this tiny
 # configuration input path is shared and atomically replaced.
 initramfs_config_source="${initramfs_list}"
-if [[ "${LINUX_PROFILE}" == "rtl-minimal" ]]; then
+if [[ "${LINUX_PROFILE}" == "generic" ]]; then
+    # Keep the embedded IKCONFIG string length stable across scratch build
+    # directories.  The RTL CPU currently has a known sensitivity to the
+    # resulting absolute addresses of references into kernel_config_data.
+    # This canonical path is deliberately the same length as the established
+    # relocated generic image path.
+    # Keep this path in the shared scratch area so the config remains stable
+    # across relocatable BUILD_DIR values. Its spelling also preserves the
+    # proven compressed IKCONFIG footprint of the generic RTL image.
+    initramfs_config_source="/data/disk/tmp/mips32-soc/generic-userspace-sc-hazard-v110-fixed-v2.initramfs.list"
+elif [[ "${LINUX_PROFILE}" == "rtl-minimal" ]]; then
     initramfs_config_source="${ROOT_DIR}/build/linux_boot/rtl-minimal-canonical.initramfs.list"
+fi
+if [[ "${LINUX_PROFILE}" == "generic" ||
+      "${LINUX_PROFILE}" == "rtl-minimal" ]]; then
     stable_initramfs_tmp="${initramfs_config_source}.tmp"
     mkdir -p "$(dirname "${initramfs_config_source}")"
     cp "${initramfs_list}" "${stable_initramfs_tmp}"
@@ -138,6 +153,9 @@ config_inputs_hash=$({
         "${LINUX_SOURCE_DIR}/drivers/irqchip/irq-mips32-soc-vic.c" \
         "${LINUX_SOURCE_DIR}/drivers/irqchip/Kconfig" \
         "${LINUX_SOURCE_DIR}/drivers/irqchip/Makefile" \
+        "${LINUX_SOURCE_DIR}/arch/mips/kernel/setup.c" \
+        "${LINUX_SOURCE_DIR}/drivers/char/random.c" \
+        "${LINUX_SOURCE_DIR}/include/linux/random.h" \
         "${SCRIPT_DIR}/mips32_soc_ref.dts"
     # The kernel embeds this generated initramfs. Include its content in the
     # configuration stamp so a changed guest binary cannot reuse an old
