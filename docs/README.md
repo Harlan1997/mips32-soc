@@ -33,6 +33,7 @@ Start here:
 - `docs/rtl_linux_differential_fix_plan_v22.md` (superseded execution plan: coupled terminal-marker QEMU/RTL Linux closure)
 - `docs/rtl_linux_differential_fix_plan_v23.md` (current execution plan: standalone compact QEMU terminal closure; RTL differential remains open)
 - `docs/qemu_reference_model.md` (verified custom `mips32-soc-ref` QEMU model identity and closure evidence)
+- `docs/rtl_linux_generic_userspace_closure_20260929.md` (current generic RTL Linux userspace terminal-marker closure)
 
 Module contracts are under `docs/block_specs/`. Historical architecture and
 session notes are under `docs/archive/` and are not signoff authority.

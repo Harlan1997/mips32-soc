@@ -1,15 +1,15 @@
 # QEMU Linux Terminal Closure Plan v23
 
 Plan date: 2026-09-28  
-Status: `QEMU CLOSED / RTL DIFFERENTIAL OPEN`  
+Status: `QEMU CLOSED / RTL DECLARED USERSPACE CLOSED / RTL DIFFERENTIAL OPEN`
 Supersedes: `docs/rtl_linux_differential_fix_plan_v22.md`
 
 This revision changes the immediate execution target from a coupled RTL/QEMU
-terminal run to a standalone, compact QEMU closure. The RTL producer currently
-Oopses in `__d_lookup_unhash` before userspace reaches its terminal marker, so
-it cannot be used as a QEMU acceptance prerequisite. The v22 coupled gate
-remains available as a future differential gate and is not relabeled as a
-pass.
+terminal run to a standalone, compact QEMU closure. The independent current
+RTL generic-userspace gate now reaches the terminal marker, but it has not yet
+been joined to QEMU through a complete architectural comparison. The v22
+coupled gate remains available as a future differential gate and is not
+relabeled as a pass.
 
 ## 1. QEMU closure objective
 
@@ -70,21 +70,22 @@ duplicated terminal markers, and any capture-limit status fail closed.
 
 ## 4. Deferred RTL/differential phase
 
-The following remain open and must not be inferred from QEMU PASS:
+The following remain open and must not be inferred from either standalone gate
+PASS:
 
-- RTL terminal-marker reachability;
 - complete RTL/QEMU architectural retire comparison;
 - equal trace lengths and first-mismatch ownership;
 - blocking versus nonblocking RTL Linux results.
 
-The current RTL blocker is recorded separately: Linux Oops at
-`__d_lookup_unhash+0x7c` with `BadVA: 00000004` during the marker preflight.
-Once that owner is fixed, v22 can be resumed with the same manifest and the
-QEMU compact evidence retained as the reference workload proof.
+The current differential blocker is recorded separately: the standalone RTL
+and QEMU runs do not yet share a complete retired-state stream with a proved
+first-mismatch owner. Once that comparison owner is fixed, v22 can be resumed
+with the same manifest and the QEMU compact evidence retained as the reference
+workload proof.
 
 ## 5. Explicit non-claims
 
-This plan does not close RTL Linux, unrestricted Linux, complete MIPS32/
+This plan does not close unrestricted RTL Linux, unrestricted Linux, complete MIPS32/
 privileged/FPU compliance, SMP shootdown, physical DDR/QSPI/PHY behavior,
 U-Boot board support, CDC/RDC/lint/formal signoff, synthesis timing, or ASIC
 release readiness.

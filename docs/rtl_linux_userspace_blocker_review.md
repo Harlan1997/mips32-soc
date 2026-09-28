@@ -4,6 +4,16 @@ Review date: 2026-09-20
 
 Status: `HISTORICAL DIAGNOSTIC / NOT SIGNOFF`
 
+## Superseding closure update
+
+The current-source generic RTL Linux terminal gate is now closed for its
+declared userspace workload. See
+`docs/rtl_linux_generic_userspace_closure_20260929.md` and the evidence
+registry for the fresh seeded run, marker order, image hashes, and clean
+terminal-stop exit. This supersedes the generic-userspace boundary statements
+below; the older root-cause analysis remains historical, and full
+RTL/QEMU architectural differential and unrestricted Linux remain open.
+
 ## Executive conclusion
 
 The generic RTL Linux system-mode boot failure around `number()` is
@@ -51,7 +61,7 @@ coverage and ownership gates are implemented.
 | --- | --- | --- |
 | QEMU `mips32-soc-ref` system boot | Bounded historical evidence | QEMU has a retained boot log, but plugin lifecycle and exit status require fresh validation. |
 | RTL `rtl-minimal` opt-in userspace contract | Bounded pass | The reduced image has a separate declared marker contract; this is not generic Linux signoff. |
-| Generic RTL Linux boot | Open | The retained RTL run does not prove `ttyS0`, `/init`, or generic userspace completion. |
+| Generic RTL Linux declared userspace workload | Closed | Current-source RTL reaches `/init` and all required process, VM, GPIO, timer, exec, wait, fork, and terminal markers in order with a clean terminal stop. |
 | RTL/QEMU first architectural divergence | Block reduced | A delay-slot diagnosis exists, but strict current-source retire evidence is still required. |
 | Exception `BadVAddr` across fault/replay | Open | Absence of literal `0xffffffff` is not ownership or replay proof. |
 | Full RTL/QEMU system differential | Open | The old gate compared two checkpoints and cannot claim a full differential. |
