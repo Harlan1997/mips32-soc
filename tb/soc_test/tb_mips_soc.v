@@ -93,7 +93,6 @@ module tb_mips_soc;
     integer linux_terminal_progress;
     reg linux_terminal_seen;
     reg linux_terminal_finish_started;
-    reg [8*26-1:0] linux_terminal_marker;
     reg [31:0] linux_retire_count;
     reg linux_trace_limit_finish_started;
     integer linux_refill_trace;
@@ -323,6 +322,44 @@ module tb_mips_soc;
     integer linux_vector_line_trace_limit;
     integer linux_vector_line_trace_count;
     reg [26:0] linux_vector_line;
+
+    // Keep terminal matching byte-oriented.  A packed Verilog string's bit
+    // ordering is easy to get wrong, while the guest UART emits CRLF framing.
+    function [7:0] linux_terminal_expected_byte;
+        input integer index;
+        begin
+            case (index)
+                0:  linux_terminal_expected_byte = 8'h4d; // M
+                1:  linux_terminal_expected_byte = 8'h49; // I
+                2:  linux_terminal_expected_byte = 8'h50; // P
+                3:  linux_terminal_expected_byte = 8'h53; // S
+                4:  linux_terminal_expected_byte = 8'h33; // 3
+                5:  linux_terminal_expected_byte = 8'h32; // 2
+                6:  linux_terminal_expected_byte = 8'h5f; // _
+                7:  linux_terminal_expected_byte = 8'h53; // S
+                8:  linux_terminal_expected_byte = 8'h4f; // O
+                9:  linux_terminal_expected_byte = 8'h43; // C
+                10: linux_terminal_expected_byte = 8'h5f; // _
+                11: linux_terminal_expected_byte = 8'h4c; // L
+                12: linux_terminal_expected_byte = 8'h49; // I
+                13: linux_terminal_expected_byte = 8'h4e; // N
+                14: linux_terminal_expected_byte = 8'h55; // U
+                15: linux_terminal_expected_byte = 8'h58; // X
+                16: linux_terminal_expected_byte = 8'h5f; // _
+                17: linux_terminal_expected_byte = 8'h54; // T
+                18: linux_terminal_expected_byte = 8'h45; // E
+                19: linux_terminal_expected_byte = 8'h52; // R
+                20: linux_terminal_expected_byte = 8'h4d; // M
+                21: linux_terminal_expected_byte = 8'h49; // I
+                22: linux_terminal_expected_byte = 8'h4e; // N
+                23: linux_terminal_expected_byte = 8'h41; // A
+                24: linux_terminal_expected_byte = 8'h4c; // L
+                25: linux_terminal_expected_byte = 8'h0d; // CR
+                26: linux_terminal_expected_byte = 8'h0a; // LF
+                default: linux_terminal_expected_byte = 8'h00;
+            endcase
+        end
+    endfunction
 `endif
     integer cp0_interrupt_count;
     integer cp0_syscall_count;
@@ -468,9 +505,9 @@ module tb_mips_soc;
             if (linux_terminal_stop != 0 && !linux_terminal_seen &&
                 legacy_uart_tx_valid) begin
                 if (legacy_uart_tx_data ==
-                    linux_terminal_marker[8*(25-linux_terminal_progress) +: 8]) begin
+                    linux_terminal_expected_byte(linux_terminal_progress)) begin
                     linux_terminal_progress = linux_terminal_progress + 1;
-                    if (linux_terminal_progress == 26) begin
+                    if (linux_terminal_progress == 27) begin
                         linux_terminal_seen = 1'b1;
                         $display("LINUX_TERMINAL_MARKER_REACHED cycle=%0d retire=%0d",
                                  linux_trace_cycle, linux_retire_count);
@@ -487,7 +524,7 @@ module tb_mips_soc;
                             join_none
                         end
                     end
-                end else if (legacy_uart_tx_data == linux_terminal_marker[8*25 +: 8]) begin
+                end else if (legacy_uart_tx_data == 8'h4d) begin
                     linux_terminal_progress = 1;
                 end else begin
                     linux_terminal_progress = 0;
@@ -2487,7 +2524,6 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_UART_TRACE_CYCLE_END=%d", linux_uart_trace_cycle_end)) begin end
         linux_terminal_stop = 0;
         if (!$value$plusargs("LINUX_TERMINAL_STOP=%d", linux_terminal_stop)) begin end
-        linux_terminal_marker = "MIPS32_SOC_LINUX_TERMINAL\n";
         linux_uart_transcript_fd = 0;
         linux_uart_transcript_enabled = 0;
         linux_uart_transcript_path = {1024{1'b0}};

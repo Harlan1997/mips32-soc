@@ -2,7 +2,7 @@
 
 Plan date: 2026-09-20
 
-Status: `OPEN / EXECUTION REQUIRED`
+Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / FULL DIFFERENTIAL OPEN`
 
 ## 1. Objective and current non-claims
 
@@ -18,7 +18,7 @@ project status is:
 | Capability | Current status | Maximum supported claim |
 | --- | --- | --- |
 | Delay-slot interrupt root cause | `BLOCK_REDUCED` | A plausible fix exists and existing directed gates pass, but the new WB-to-EX and WB-to-ID cases lack direct coverage. |
-| Generic RTL Linux | `OPEN` | The retained run reaches the repaired checkpoint and later output, but does not reach `ttyS0`, `/init`, or a generic userspace success marker. |
+| Generic RTL Linux declared userspace workload | `CLOSED` | The current-source seeded terminal gate reaches `/init` and all declared userspace markers in order with a clean simulator terminal stop. Unrestricted Linux and full RTL/QEMU differential remain separate open contracts. |
 | BadVAddr fault/replay | `OPEN` | Literal `0xffffffff` is absent in one focus window; instruction ownership and replay identity are not proven. |
 | QEMU/RTL focus comparison | `UNTRUSTED` | Two checkpoint comparisons exist, but truncation and unselected-register mutations can falsely pass. |
 | Bounded full retire differential | `OPEN` | Existing bounded differential infrastructure is useful, but this new generic Linux focus gate does not perform a complete architectural comparison. |
