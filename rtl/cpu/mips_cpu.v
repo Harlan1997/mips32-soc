@@ -145,6 +145,8 @@ module mips_cpu #(
     wire        dmem_translation_fault;
     wire        mem_mem_read;
     wire        mem_mem_write;
+    wire [2:0]  mem_mem_op;
+    wire [31:0] mem_ex_out_wb;
     wire        mem_cache_op_valid;
     wire [31:0] mem_inst;
     wire        mem_double_mem = (`SOC_FPU_ENABLE != 0) &&
@@ -227,6 +229,16 @@ module mips_cpu #(
     wire [31:0] ex_pc_plus_8;
     wire [31:0] mem_pc_plus_8;
     wire        id_bd;
+    wire        irq_id_gpr_write;
+    wire        irq_ex_gpr_write;
+    wire [4:0]  irq_id_waddr;
+    wire [4:0]  irq_ex_waddr;
+    wire        irq_mem_gpr_write;
+    wire [4:0]  irq_mem_waddr;
+    wire        irq_wb_gpr_write;
+    wire [4:0]  irq_wb_waddr;
+    wire        wb_bd;
+    wire        linux_irq_restart_hazard;
     wire        mem_is_control_transfer;
     wire        ex_is_control_transfer;
     wire [31:0] id_pc = id_pc_plus_4 - 32'd4;
@@ -332,10 +344,14 @@ module mips_cpu #(
                             // WAIT must reach retirement before a pending
                             // interrupt is accepted.  Otherwise the interrupt
                             // can preempt the instruction in an earlier stage
-                            // and leave WAIT with no wakeup source.
+                            // and leave WAIT with no wakeup source.  After the
+                            // WAIT has retired, wait_state intentionally holds
+                            // its WB bundle while the interrupt request remains
+                            // combinational; reject only the pre-retirement
+                            // WB occurrence so a timer IRQ can wake the core.
                             !(id_is_wait || ex_inst == 32'h42000020 ||
                               mem_inst == 32'h42000020 ||
-                              (wb_valid && wb_arch_valid &&
+                              (!wait_state && wb_valid && wb_arch_valid &&
                                wb_inst == 32'h42000020)) &&
                             // An interrupt sampled while an uncached or
                             // blocking load/store is still in MEM can race
@@ -371,6 +387,32 @@ module mips_cpu #(
                                 id_flush_valid && !mem_is_control_transfer &&
                                 ex_is_control_transfer && id_bd &&
                                 (id_pc == (ex_pc + 32'd4))))) &&
+                            // In the default blocking path, a committed WB
+                            // delay-slot token is the last precise evidence
+                            // that a control transfer is completing.  Its
+                            // producer metadata can already be gone after a
+                            // replay, so accepting the IRQ here would treat
+                            // the slot as a sequential instruction and resume
+                            // at the post-slot address.  Let the branch pair
+                            // retire, then accept the still-pending IRQ on the
+                            // following edge.  The opt-in rollback path keeps
+                            // its explicit delay-slot replay behavior.
+                            !((`SOC_DELAY_SLOT_ROLLBACK_ENABLE == 0) &&
+                              wb_arch_valid && wb_bd) &&
+                            // An asynchronous Linux IRQ must not flush an
+                            // older producer for registers whose restart
+                            // windows are known to be non-replay-safe.  The
+                            // The v0 canary load, a2 argument, and __bzero's
+                            // t1 bound setup all lose architectural state
+                            // when restarted before writeback.
+                            // Defer the IRQ while a known restart-sensitive
+                            // producer is still in flight.  The guard is
+                            // owner-scoped to the valid pipeline bundle and
+                            // only covers the registers whose Linux replay
+                            // windows have been proven unsafe.
+`ifndef SOC_DISABLE_LINUX_IRQ_RESTART_HAZARD
+                            !linux_irq_restart_hazard &&
+`endif
                             !((`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_ROB_FIFO_ENABLE != 0) &&
@@ -523,6 +565,7 @@ module mips_cpu #(
     wire [31:0] if_vaddr;
     wire [31:0] mem_vaddr;
     wire [31:0] mem_access_addr;
+    wire [31:0] mmu_i_pa;
     wire [31:0] mmu_d_pa;
     wire [2:0]  mmu_i_cache_attr;
     wire [2:0]  mmu_d_cache_attr;
@@ -789,6 +832,13 @@ module mips_cpu #(
     wire [4:0]  ex_waddr;
     wire [31:0] ex_out; // from EX stage output
     wire        ex_mem_read;
+    wire        ex_mem_write;
+    wire [2:0]  ex_mem_op;
+
+    assign irq_id_gpr_write = id_reg_write;
+    assign irq_ex_gpr_write = ex_reg_write;
+    assign irq_id_waddr = id_waddr;
+    assign irq_ex_waddr = ex_waddr;
     
     wire        mem_reg_write;
     wire        mem_cp0_we;
@@ -796,6 +846,10 @@ module mips_cpu #(
     wire        mem_except_req;
     wire [4:0]  mem_except_code;
     wire [4:0]  mem_waddr;
+    assign irq_mem_gpr_write = mem_reg_write;
+    assign irq_mem_waddr = mem_waddr;
+    assign irq_wb_gpr_write = wb_reg_write;
+    assign irq_wb_waddr = wb_waddr;
     wire [31:0] mem_ex_out;
     wire [4:0]  mem_cache_op;
     
@@ -808,7 +862,12 @@ module mips_cpu #(
     // valid PC bundle, otherwise an old destination/value can override the
     // register file for an unrelated ID instruction.  WB already uses the
     // architectural commit pulse below, so keep its existing ownership rule.
-    wire        fw_ex_we  = ex_reg_write  && ex_flush_valid;
+    // An SC's EX result is its effective address, not its architectural
+    // success bit.  Do not forward that address to an immediate consumer;
+    // the success bit is only defined once the MEM-side reservation check
+    // completes.
+    wire        fw_ex_we  = ex_reg_write  && ex_flush_valid &&
+                            !(ex_mem_write && (ex_mem_op == 3'b111));
     wire        fw_mem_we = mem_reg_write && mem_flush_valid;
     
     wire        ex_illegal_inst;
@@ -856,7 +915,6 @@ module mips_cpu #(
     wire        mem_bd;
     wire [31:0] mem_delay_slot_next_pc;
     wire [31:0] mem_delay_slot_branch_inst;
-    wire        wb_bd;
     wire [31:0] wb_delay_slot_next_pc;
     wire [31:0] wb_delay_slot_branch_inst;
     wire        ex_cp0_we;
@@ -1239,15 +1297,27 @@ module mips_cpu #(
         .fw_ex_val     (ex_out),
         .fw_mem_we     (fw_mem_we),
         .fw_mem_waddr  (mem_waddr),
-        .fw_mem_val    (mem_mem_read ? mem_rdata_fmt : mem_ex_out),
+        // SC writes its architectural success bit through the same MEM/WB
+        // payload used by retirement. Forward that value to an immediate
+        // consumer instead of forwarding the SC address from EX.
+        .fw_mem_val    (mem_ex_out_wb),
         .fw_wb_we      (rf_we_selected),
         .fw_wb_waddr   (rf_waddr_selected),
         .fw_wb_val     (rf_wdata_selected),
         
         // Hazard detection
-        .ex_mem_read   (ex_mem_read),
+        // SC has a deferred register result just like a load.  Keep a
+        // dependent instruction in ID while SC is in EX, then use the
+        // MEM-side success-bit forwarding once its response is available.
+        .ex_mem_read   (ex_mem_read ||
+                        (ex_mem_write && (ex_mem_op == 3'b111))),
         .ex_waddr      (ex_waddr),
-        .mem_mem_read  (mem_mem_read),
+        // An outstanding SC has a load-like result dependency: its success
+        // bit is unknown until the data response determines reservation
+        // ownership. Hold a dependent consumer until that response arrives.
+        .mem_mem_read  (mem_mem_read ||
+                        (mem_mem_write && (mem_mem_op == 3'b111) &&
+                         !mem_done && !data_data_ok_current)),
         .ex_mem_to_reg (ex_mem_to_reg),
         .mem_mem_to_reg(mem_mem_to_reg),
         .nb_pending_reg(nb_pending_reg),
@@ -1423,8 +1493,39 @@ module mips_cpu #(
     wire        ex_mdu_start;
     wire        ex_sel_mdu_out;
     wire        ex_alu_src;
-    wire        ex_mem_write;
-    wire [2:0]  ex_mem_op;
+    wire linux_irq_restart_hazard_any =
+        (`SOC_LINUX_GUEST_ENABLE != 0) &&
+        ((ex_flush_valid && irq_ex_gpr_write && (irq_ex_waddr != 5'd0)) ||
+         (id_flush_valid && irq_id_gpr_write && (irq_id_waddr != 5'd0)) ||
+         (mem_flush_valid && irq_mem_gpr_write && (irq_mem_waddr != 5'd0)) ||
+         (wb_arch_valid && irq_wb_gpr_write && (irq_wb_waddr != 5'd0)));
+    wire linux_irq_restart_hazard_selected =
+        (`SOC_LINUX_GUEST_ENABLE != 0) &&
+        ((ex_flush_valid && irq_ex_gpr_write &&
+          ((irq_ex_waddr == 5'd2) ||
+           (irq_ex_waddr == 5'd6) ||
+           (irq_ex_waddr == 5'd9) || (irq_ex_waddr == 5'd20))) ||
+        (id_flush_valid && irq_id_gpr_write &&
+          ((irq_id_waddr == 5'd2) ||
+           (irq_id_waddr == 5'd6) ||
+           (irq_id_waddr == 5'd9) || (irq_id_waddr == 5'd20))) ||
+        (mem_flush_valid && irq_mem_gpr_write &&
+          ((irq_mem_waddr == 5'd2) ||
+           (irq_mem_waddr == 5'd6) ||
+           (irq_mem_waddr == 5'd9) || (irq_mem_waddr == 5'd20))) ||
+        (wb_arch_valid && irq_wb_gpr_write &&
+          ((irq_wb_waddr == 5'd2) ||
+           (irq_wb_waddr == 5'd6) ||
+           (irq_wb_waddr == 5'd9) || (irq_wb_waddr == 5'd20))));
+`ifdef SOC_LINUX_IRQ_RESTART_HAZARD_SELECTED
+    assign linux_irq_restart_hazard = linux_irq_restart_hazard_selected;
+`else
+    // Restarting any in-flight register producer across an asynchronous Linux
+    // IRQ can replay a side effect before its architectural writeback.  Keep
+    // the all-register guard as the default; the selected-register mode is
+    // retained only for explicitly scoped comparison runs.
+    assign linux_irq_restart_hazard = linux_irq_restart_hazard_any;
+`endif
     wire        ex_cache_op_valid;
     wire [4:0]  ex_cache_op;
     
@@ -1562,7 +1663,6 @@ module mips_cpu #(
                  ((ex_inst[31:26] == 6'b111101) ||
                   ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h09))) ?
                 fpr[ex_fpu_store_reg] : ex_val_rt;
-    wire [2:0]  mem_mem_op;
     wire [4:0]  mem_rd_addr;
     wire [4:0]  mem_cp0_raddr;
 
@@ -1600,21 +1700,64 @@ module mips_cpu #(
     // remains deferred until the walker returns a latched fault.
     assign dmem_request_blocked = dmem_translation_fault | hw_walker_d_miss;
 
+    wire [4:0] d_fault_capture_code = hw_walker_d_fault ?
+                                      (mem_mem_write ? 5'h03 : 5'h02) :
+                                      (mmu_d_fault_type == 3'b010) ? 5'h03 :
+                                      (mmu_d_fault_type == 3'b011) ? 5'h01 :
+                                      (mmu_d_fault_type == 3'b110) ? 5'h18 :
+                                      (mmu_d_fault_type == 3'b100) ? 5'h04 :
+                                      (mmu_d_fault_type == 3'b101) ? 5'h05 :
+                                                                      5'h02;
+
     // The MEM/WB and ROB control bundles are flushed on the same edge that
     // CP0 consumes a translation exception.  Keep the original virtual
     // address independently of that flush so BadVAddr/EntryHi cannot be
     // replaced by the following bubble (or by a younger instruction).
     reg        d_fault_vaddr_pending_q;
     reg [31:0] d_fault_vaddr_q;
+    // Fault ownership travels with the virtual address.  A pending address
+    // without an instruction identity can be consumed by an unrelated WB
+    // exception after an older flush, which corrupts CP0 BadVAddr.
+    reg [31:0] d_fault_owner_pc_q;
+    reg [31:0] d_fault_owner_inst_q;
+    reg [4:0]  d_fault_owner_code_q;
+    wire d_fault_owner_match = d_fault_vaddr_pending_q &&
+                               wb_except_req && wb_arch_valid &&
+                               wb_except_is_data &&
+                               (wb_pc_plus_8 - 32'd8) == d_fault_owner_pc_q &&
+                               wb_inst == d_fault_owner_inst_q &&
+                               wb_except_code == d_fault_owner_code_q;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             d_fault_vaddr_pending_q <= 1'b0;
             d_fault_vaddr_q         <= 32'd0;
-        end else if (exception_flush) begin
+            d_fault_owner_pc_q      <= 32'd0;
+            d_fault_owner_inst_q    <= 32'd0;
+            d_fault_owner_code_q    <= 5'd0;
+        end else if (d_fault_owner_match) begin
+            // CP0 samples bad_vaddr combinationally before this edge. Clear
+            // the consumed token only after its owning exception commits.
             d_fault_vaddr_pending_q <= 1'b0;
+        end else if ((wb_is_eret && wb_commit_valid) || ctx_restore_req) begin
+            d_fault_vaddr_pending_q <= 1'b0;
+        end else if (exception_flush) begin
+            // Any flush that is not the matching data exception proves that
+            // the pending MEM owner was squashed.  Do not retain its address
+            // for a later instruction.  The matching data exception is
+            // sampled by CP0 through bad_vaddr on this same edge.
+            if (!d_fault_owner_match) begin
+                d_fault_vaddr_pending_q <= 1'b0;
+            end
         end else if (dmem_translation_fault && !d_fault_vaddr_pending_q) begin
+            // Capture only after an older exception/flush has had the chance
+            // to discard a younger MEM fault in this cycle.  Otherwise a
+            // younger address could survive the flush and be consumed by a
+            // later unrelated WB exception.
             d_fault_vaddr_pending_q <= 1'b1;
             d_fault_vaddr_q         <= mem_access_addr;
+            d_fault_owner_pc_q      <= mem_pc;
+            d_fault_owner_inst_q    <= mem_inst;
+            d_fault_owner_code_q    <= d_fault_capture_code;
         end
     end
 
@@ -1638,6 +1781,46 @@ module mips_cpu #(
     endproperty
     assert property (p_blocking_mem_irq_barrier)
         else $error("blocking MEM request was interrupted before response");
+
+    property p_d_fault_owner_stable;
+        @(posedge clk) disable iff (!rst_n)
+            (d_fault_vaddr_pending_q && !exception_flush) |=>
+                d_fault_vaddr_pending_q &&
+                $stable(d_fault_vaddr_q) &&
+                $stable(d_fault_owner_pc_q) &&
+                $stable(d_fault_owner_inst_q) &&
+                $stable(d_fault_owner_code_q);
+    endproperty
+    assert property (p_d_fault_owner_stable)
+        else $error("pending D fault owner changed before commit or squash");
+
+    property p_d_fault_capture_has_owner;
+        @(posedge clk) disable iff (!rst_n)
+            (dmem_translation_fault && !d_fault_vaddr_pending_q) |=>
+                d_fault_vaddr_pending_q &&
+                d_fault_owner_inst_q != 32'd0;
+    endproperty
+    assert property (p_d_fault_capture_has_owner)
+        else $error("D translation fault captured without an instruction owner");
+
+    property p_d_fault_mismatch_is_squashed;
+        @(posedge clk) disable iff (!rst_n)
+            (d_fault_vaddr_pending_q && wb_except_req && wb_arch_valid &&
+             wb_except_is_data && !d_fault_owner_match) |=>
+                !d_fault_vaddr_pending_q;
+    endproperty
+    assert property (p_d_fault_mismatch_is_squashed)
+        else $error("mismatched data exception retained a stale D fault owner");
+
+    property p_d_fault_matching_commit_identity;
+        @(posedge clk) disable iff (!rst_n)
+            d_fault_owner_match |->
+                ((wb_pc_plus_8 - 32'd8) == d_fault_owner_pc_q) &&
+                (wb_inst == d_fault_owner_inst_q) &&
+                (wb_except_code == d_fault_owner_code_q);
+    endproperty
+    assert property (p_d_fault_matching_commit_identity)
+        else $error("matching data exception lost its D fault owner identity");
 `endif
 
     assign fpu_mem_lwc1 = (`SOC_FPU_ENABLE != 0) &&
@@ -1799,7 +1982,7 @@ module mips_cpu #(
     wire sc_reservation_match = ll_reservation_valid &&
                                  (ll_reservation_addr == reservation_data_addr);
     assign data_we = data_we_raw && (!is_sc_mem || sc_reservation_match);
-    wire [31:0] mem_ex_out_wb = is_sc_mem ? {31'd0, sc_reservation_match} : mem_ex_out;
+    assign mem_ex_out_wb = is_sc_mem ? {31'd0, sc_reservation_match} : mem_ex_out;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -2293,10 +2476,11 @@ module mips_cpu #(
     // =========================================================================
 
     wire [31:0] wb_pc  = wb_pc_plus_8 - 32'd8;
-    wire [31:0] wb_next_pc = (wb_except_req && wb_arch_valid) ? exception_vector :
-                             ((wb_is_eret && wb_arch_valid) ? epc_out :
-                              (wb_bd && wb_delay_slot_next_pc != 32'd0 ?
-                               wb_delay_slot_next_pc : wb_pc + 32'd4));
+    // Defined after the retirement-side delay-slot history below.  The
+    // pipeline BD bundle is primarily exception metadata and can be lost
+    // while an I-cache stall holds the delay slot; retire tracing still needs
+    // the architectural next PC in that case.
+    wire [31:0] wb_next_pc;
     
     wire [31:0] oldest_flushed_pc = 
         (mem_pc_plus_8 != 32'd0) ? mem_pc :
@@ -2349,11 +2533,42 @@ module mips_cpu #(
                                          (wb_pc == control_transfer_hist_pc[3] + 32'd4) &&
                                          (mem_pc == control_transfer_hist_target[3]) &&
                                          is_control_transfer_inst(control_transfer_hist_inst[3])));
+    // EX/MEM do not carry the producer PC alongside their delay-slot bundle.
+    // Tie the marker back to the bounded decode history instead of trusting a
+    // stale branch opcode/target left on a replayed pipeline slot.
+    wire mem_delay_slot_history_valid =
+        (control_transfer_hist_valid[0] &&
+         (mem_pc == (control_transfer_hist_pc[0] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[0])) ||
+        (control_transfer_hist_valid[1] &&
+         (mem_pc == (control_transfer_hist_pc[1] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[1])) ||
+        (control_transfer_hist_valid[2] &&
+         (mem_pc == (control_transfer_hist_pc[2] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[2])) ||
+        (control_transfer_hist_valid[3] &&
+         (mem_pc == (control_transfer_hist_pc[3] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[3]));
+    wire ex_delay_slot_history_valid =
+        (control_transfer_hist_valid[0] &&
+         (ex_pc == (control_transfer_hist_pc[0] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[0])) ||
+        (control_transfer_hist_valid[1] &&
+         (ex_pc == (control_transfer_hist_pc[1] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[1])) ||
+        (control_transfer_hist_valid[2] &&
+         (ex_pc == (control_transfer_hist_pc[2] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[2])) ||
+        (control_transfer_hist_valid[3] &&
+         (ex_pc == (control_transfer_hist_pc[3] + 32'd4)) &&
+         is_control_transfer_inst(control_transfer_hist_inst[3]));
     wire mem_delay_slot_valid = mem_bd &&
                                  (mem_delay_slot_next_pc != 32'd0) &&
+                                 mem_delay_slot_history_valid &&
                                  is_control_transfer_inst(mem_delay_slot_branch_inst);
     wire ex_delay_slot_valid  = ex_bd &&
                                 (ex_delay_slot_next_pc != 32'd0) &&
+                                ex_delay_slot_history_valid &&
                                 is_control_transfer_inst(ex_delay_slot_branch_inst);
     wire id_delay_slot_branch_is_control_transfer =
                                    (id_delay_slot_branch_inst[31:26] == 6'b000001) ||
@@ -2453,6 +2668,45 @@ module mips_cpu #(
             prior_wb_delay_slot_valid <= wb_delay_slot_valid;
         end
     end
+
+    // Retire-side direct-jump history is intentionally separate from the
+    // pipeline delay-slot marker.  A direct J/JAL can retire, then leave its
+    // delay slot waiting behind an instruction-cache response.  The slot is
+    // still architecturally followed by the jump target even when wb_bd and
+    // its carried target have been cleared by that stall/replay boundary.
+    reg        retire_direct_jump_pending;
+    reg [31:0] retire_direct_jump_pc;
+    reg [31:0] retire_direct_jump_target;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            retire_direct_jump_pending <= 1'b0;
+            retire_direct_jump_pc      <= 32'd0;
+            retire_direct_jump_target  <= 32'd0;
+        end else if (wb_arch_valid) begin
+            if (retire_direct_jump_pending &&
+                (wb_pc == (retire_direct_jump_pc + 32'd4))) begin
+                retire_direct_jump_pending <= 1'b0;
+            end else if (!wb_except_req &&
+                         ((wb_inst[31:26] == 6'b000010) ||
+                          (wb_inst[31:26] == 6'b000011))) begin
+                retire_direct_jump_pending <= 1'b1;
+                retire_direct_jump_pc      <= wb_pc;
+                retire_direct_jump_target  <= {wb_pc[31:28],
+                                                wb_inst[25:0], 2'b00};
+            end else begin
+                retire_direct_jump_pending <= 1'b0;
+            end
+        end
+    end
+
+    wire wb_direct_jump_delay_slot = wb_arch_valid &&
+                                      retire_direct_jump_pending &&
+                                      (wb_pc == (retire_direct_jump_pc + 32'd4));
+    assign wb_next_pc = (wb_except_req && wb_arch_valid) ? exception_vector :
+                        ((wb_is_eret && wb_arch_valid) ? epc_out :
+                         (wb_direct_jump_delay_slot ? retire_direct_jump_target :
+                          (wb_bd && wb_delay_slot_next_pc != 32'd0 ?
+                           wb_delay_slot_next_pc : wb_pc + 32'd4)));
     wire interrupt_after_prior_wb = interrupt_accept &&
                                     !wb_arch_valid &&
                                     ((prior_wb_arch_valid &&
@@ -2534,6 +2788,15 @@ module mips_cpu #(
                                       (wb_pc_plus_8 != 32'd0) &&
                                       (mem_pc == (wb_pc + 32'd4)) &&
                                       wb_is_control_transfer;
+    // Retain the diagnostic nets expected by tb_mips_soc.  The additional
+    // WB-to-EX/ID recovery paths were removed from interrupt arbitration
+    // because their speculative adjacency can fabricate Cause.BD.
+    wire interrupt_wb_branch_delay_from_ex = interrupt_accept &&
+                                             ex_flush_valid &&
+                                             (wb_pc_plus_8 != 32'd0) &&
+                                             (ex_pc == (wb_pc + 32'd4)) &&
+                                             wb_is_control_transfer;
+    wire interrupt_wb_branch_delay_from_id = 1'b0;
     wire interrupt_prior_wb_branch_delay = interrupt_accept &&
                                            ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
                                             wb_prior_branch_delay_valid :
@@ -2568,9 +2831,9 @@ module mips_cpu #(
                                         mem_flush_valid && mem_is_control_transfer &&
                                         (wb_pc == (mem_pc + 32'd4)));
     wire interrupt_delay_slot = interrupt_wb_branch_delay ||
+                                interrupt_wb_branch_delay_from_ex ||
                                 interrupt_mem_delay_from_ex ||
                                 interrupt_mem_delay_from_id ||
-                                interrupt_ex_delay_from_id ||
                                 interrupt_wb_delay_from_mem ||
                                 // A taken branch can leave its delay slot in
                                 // WB while the redirected target is already
@@ -2590,6 +2853,7 @@ module mips_cpu #(
          interrupt_mem_delay_from_id ? id_pc :
          interrupt_ex_delay_from_id ? id_pc :
          interrupt_wb_branch_delay ? mem_pc :
+         interrupt_wb_branch_delay_from_ex ? ex_pc :
          interrupt_wb_delay_from_mem ? wb_pc :
          // A retained WB branch can have wb_arch_valid=0 after the ROB commit
          // pulse has passed while its architectural delay slot is still
@@ -2597,8 +2861,12 @@ module mips_cpu #(
          // pipeline adjacency has been checked above.
          interrupt_prior_wb_branch_delay ? wb_pc : wb_pc) :
         (interrupt_wb_branch_delay ? mem_pc :
+         interrupt_wb_branch_delay_from_ex ? ex_pc :
          interrupt_mem_delay_from_ex ? ex_pc :
          interrupt_mem_delay_from_id ? id_pc :
+         // Preserve the established blocking-path exception PC contract.
+         // The default CP0 path expects the control-transfer PC here and
+         // applies its existing BD adjustment when recording EPC.
          interrupt_ex_delay_from_id ? ex_pc :
          interrupt_wb_delay_from_mem ? wb_pc : wb_pc);
     wire interrupt_except_bd = interrupt_accept &&
@@ -2612,12 +2880,9 @@ module mips_cpu #(
                                    ex_is_control_transfer &&
                                    (id_pc == ex_pc + 32'd4) &&
                                    (ex_pc == mem_pc + 32'd4))) :
-                                (ex_flush_valid ?
-                                 (interrupt_delay_slot || ex_delay_slot_valid ||
-                                 (id_flush_valid && id_delay_slot_valid &&
-                                   ex_is_control_transfer &&
-                                   (id_pc == ex_pc + 32'd4))) :
-                                 id_delay_slot_valid));
+                                 (ex_flush_valid ?
+                                 (interrupt_delay_slot || ex_delay_slot_valid) :
+                                 (interrupt_delay_slot || id_delay_slot_valid)));
 
     // If an ordinary instruction is retiring in WB on the same edge as an
     // asynchronous interrupt, it has already committed architecturally.
@@ -2625,6 +2890,7 @@ module mips_cpu #(
     // at that completed load and re-execute it with a changed base register.
     wire interrupt_wb_sequential_epc = interrupt_accept &&
                                        wb_arch_valid &&
+                                       !wb_is_control_transfer &&
                                        !wb_delay_slot_valid &&
                                        !interrupt_delay_slot;
     // A delay-slot marker is architectural only when its paired resume target
@@ -2683,10 +2949,11 @@ module mips_cpu #(
                              // passing wb_pc here would subtract twice.
                              (interrupt_accept && interrupt_delay_slot ?
                               interrupt_delay_slot_pc :
-                             ((interrupt_accept &&
-                               ((wb_delay_slot_valid && wb_arch_valid) ||
-                                interrupt_wb_branch_delay)) ?
-                               wb_pc : oldest_flushed_pc))))));
+                              ((interrupt_accept &&
+                                ((wb_delay_slot_valid && wb_arch_valid) ||
+                                interrupt_wb_branch_delay ||
+                                interrupt_wb_branch_delay_from_ex)) ?
+                                wb_pc : oldest_flushed_pc))))));
     // Phase B.3.d: BadVAddr source. A data translation fault can be flushed
     // and replayed before its exception reaches WB; in that case wb_ex_out is
     // not guaranteed to retain the original virtual address. Prefer the
@@ -2699,7 +2966,7 @@ module mips_cpu #(
                                     (wb_except_code == 5'h03) ||
                                     (wb_except_code == 5'h04));
     wire [31:0] bad_vaddr = wb_except_is_data ?
-                            (d_fault_vaddr_pending_q ? d_fault_vaddr_q : wb_ex_out) :
+                            (d_fault_owner_match ? d_fault_vaddr_q : wb_ex_out) :
                             (wb_if_address_exception && if_fault_pending_q ?
                              if_fault_vaddr_q : except_pc);
     mips_cp0 #(.ENABLE_VEIC(ENABLE_VEIC), .CPUNUM(CPUNUM)) u_mips_cp0 (
@@ -2829,7 +3096,7 @@ module mips_cpu #(
         .tlb_lookup_d    (mmu_ilookup_d),
         .tlb_lookup_c    (mmu_ilookup_c),
         .tlb_lookup_pfn  (mmu_ilookup_pfn),
-        .pa              (inst_addr),
+        .pa              (mmu_i_pa),
         .cache_attr      (mmu_i_cache_attr),
         .translation_ok  (mmu_i_ok),
         .fault_type      (mmu_i_fault_type)
@@ -2857,10 +3124,31 @@ module mips_cpu #(
         .fault_type      (mmu_d_fault_type)
     );
 
+    // The Linux bring-up fabric maps the low physical RAM aliases into the
+    // behavioral DDR window by adding SOC_DDR_BASE.  Canonicalize those
+    // aliases before either cache sees them; otherwise 0x008xxxxx and
+    // 0x088xxxxx occupy distinct physically-tagged lines while reaching the
+    // same DDR backing word, allowing a dirty D-cache eviction to overwrite
+    // an instruction fetched through the direct DDR address.  Keep the APB
+    // alias and on-chip SRAM ranges out of this normalization.
+    function [31:0] canonical_linux_phys_addr;
+        input [31:0] addr;
+        begin
+            canonical_linux_phys_addr = addr;
+`ifdef SOC_LINUX_BOOT_ENABLE
+            if (((addr >= 32'h0002_0000) && (addr < 32'h0400_0000)) ||
+                ((addr >= 32'h0401_0000) && (addr < 32'h0800_0000)))
+                canonical_linux_phys_addr = addr + `SOC_DDR_BASE;
+`endif
+        end
+    endfunction
+
+    assign inst_addr = canonical_linux_phys_addr(mmu_i_pa);
+
     // The MMU receives the raw effective VA so page-boundary accesses fault
     // on the correct page.  The external D-cache contract remains word
     // aligned, so discard only the byte offset after translation.
-    assign data_addr = {mmu_d_pa[31:2], 2'b00};
+    assign data_addr = canonical_linux_phys_addr({mmu_d_pa[31:2], 2'b00});
 
     // A fixed integration root remains the compatibility override.  A zero
     // root selects Context.PTEBase so an OS can change the page-table root

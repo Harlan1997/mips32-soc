@@ -40,6 +40,11 @@ static FILE *register_file;
 static char *register_path;
 static FILE *state_file;
 static char *state_path;
+static FILE *status_file;
+static char *status_path;
+static FILE *debug_file;
+static char *debug_path;
+static char *uart_trace_path;
 static char *last_state_line;
 static GPtrArray *state_registers;
 /* A capture must stop at the source.  Post-run guards cannot prevent a
@@ -51,6 +56,141 @@ static uint64_t trace_bytes;
 static uint64_t state_bytes;
 static bool capture_stopped;
 static bool capture_limit_reported;
+static bool terminal_detection_enabled;
+static bool summary_only;
+static bool terminal_marker_seen;
+static bool terminal_record_reported;
+static unsigned int terminal_progress;
+static uint64_t terminal_record;
+static const char terminal_marker[] = "MIPS32_SOC_LINUX_TERMINAL\n";
+
+static bool debug_marker_byte(uint8_t byte)
+{
+    return byte == 'M' || byte == 'I' || byte == 'P' || byte == 'S' ||
+           byte == '3' || byte == '2' || byte == '_' || byte == 'O' ||
+           byte == 'C' || byte == 'L' || byte == 'N' || byte == 'T' ||
+           byte == 'E' || byte == 'R' || byte == 'A' || byte == '\n';
+}
+
+static bool uart_trace_has_terminal_marker(void)
+{
+    FILE *file;
+    char line[512];
+    unsigned int progress = 0;
+
+    if (!uart_trace_path) {
+        return false;
+    }
+    file = fopen(uart_trace_path, "r");
+    if (!file) {
+        return false;
+    }
+    while (fgets(line, sizeof(line), file)) {
+        unsigned int value;
+        const char *data_field;
+        if (!strstr(line, "\"kind\":\"uart\"")) {
+            continue;
+        }
+        data_field = strstr(line, "\"data\":\"0x");
+        if (!data_field || sscanf(data_field,
+                   "\"data\":\"0x%x", &value) != 1) {
+            continue;
+        }
+        /* The modeled UART presents text lines as CRLF even though the guest
+         * marker contract is written with LF. Treat the CR immediately before
+         * the marker newline as transport framing, not marker data. */
+        if ((uint8_t)value == '\r' &&
+            progress == sizeof(terminal_marker) - 2) {
+            continue;
+        }
+        if ((uint8_t)value == (uint8_t)terminal_marker[progress]) {
+            ++progress;
+        } else if ((uint8_t)value == (uint8_t)terminal_marker[0]) {
+            progress = 1;
+        } else {
+            progress = 0;
+        }
+        if (progress == sizeof(terminal_marker) - 1) {
+            fclose(file);
+            return true;
+        }
+    }
+    fclose(file);
+    return false;
+}
+
+static bool is_terminal_uart_tx(uint64_t address)
+{
+    uint32_t addr = (uint32_t)address;
+    uint32_t base = addr & 0xfffff000U;
+
+    /* QEMU's plugin address is virtual for translated accesses on some
+     * targets and physical for others.  The Linux image uses the physical
+     * UART plus its wired/uncached aliases; accept only those explicit
+     * 4-KB windows and the TX register at offset zero. */
+    return (addr & 0xfffU) == 0 &&
+            (base == 0x04000000U || base == 0x04001000U ||
+            base == 0x40000000U || base == 0xa0000000U ||
+            base == 0xa4000000U || base == 0xa4001000U ||
+            base == 0xc0000000U || base == 0xc0001000U);
+}
+
+static void observe_terminal_uart(uint64_t address, uint8_t byte)
+{
+    unsigned int previous_progress = terminal_progress;
+    if (!terminal_detection_enabled || terminal_marker_seen ||
+        !is_terminal_uart_tx(address)) {
+        return;
+    }
+    if (byte == '\r' && terminal_progress == sizeof(terminal_marker) - 2) {
+        return;
+    }
+    if (byte == (uint8_t)terminal_marker[terminal_progress]) {
+        ++terminal_progress;
+    } else if (byte == (uint8_t)terminal_marker[0]) {
+        terminal_progress = 1;
+    } else {
+        terminal_progress = 0;
+    }
+    if (debug_file) {
+        fprintf(debug_file, "term addr=%08" PRIx64 " byte=%02x progress=%u->%u\n",
+                address, byte, previous_progress, terminal_progress);
+        fflush(debug_file);
+    }
+    if (terminal_progress == sizeof(terminal_marker) - 1) {
+        terminal_marker_seen = true;
+        terminal_progress = 0;
+    }
+}
+
+static void report_terminal_record(void)
+{
+    if (terminal_record_reported) {
+        return;
+    }
+    terminal_record_reported = true;
+    terminal_record = record_count ? record_count - 1 : 0;
+    if (status_file) {
+        fprintf(status_file,
+                "terminal_marker=flushed record=%" PRIu64 " uart_marker_bytes=%zu\n",
+                terminal_record, sizeof(terminal_marker) - 1);
+        fflush(status_file);
+    }
+}
+
+static void report_capture_limit(const char *kind)
+{
+    if (capture_limit_reported) {
+        return;
+    }
+    capture_limit_reported = true;
+    qemu_plugin_outs("qemu retire plugin: capture limit reached; stopping record emission\n");
+    if (status_file) {
+        fprintf(status_file, "capture_limit=%s records=%" PRIu64 "\n", kind,
+                record_count);
+        fflush(status_file);
+    }
+}
 
 static bool capture_limit_reached(void)
 {
@@ -58,10 +198,7 @@ static bool capture_limit_reached(void)
         return false;
     }
     capture_stopped = true;
-    if (!capture_limit_reported) {
-        qemu_plugin_outs("qemu retire plugin: capture limit reached; stopping record emission\n");
-        capture_limit_reported = true;
-    }
+    report_capture_limit("records");
     return true;
 }
 
@@ -113,10 +250,7 @@ static void emit_state(unsigned int cpu_index, InsnInfo *insn)
     g_string_append(line, "}}\n");
     if (state_bytes > max_bytes || (uint64_t)line->len > max_bytes - state_bytes) {
         capture_stopped = true;
-        if (!capture_limit_reported) {
-            qemu_plugin_outs("qemu retire plugin: byte limit reached; stopping record emission\n");
-            capture_limit_reported = true;
-        }
+        report_capture_limit("bytes");
         g_string_free(line, true);
         return;
     }
@@ -146,10 +280,7 @@ static void emit_pending(Pending *pending, uint64_t next_pc)
     if (line_len < 0 || (size_t)line_len >= sizeof(line) ||
         trace_bytes > max_bytes || (uint64_t)line_len > max_bytes - trace_bytes) {
         capture_stopped = true;
-        if (!capture_limit_reported) {
-            qemu_plugin_outs("qemu retire plugin: byte limit reached; stopping record emission\n");
-            capture_limit_reported = true;
-        }
+        report_capture_limit("bytes");
         pending->valid = false;
         return;
     }
@@ -178,7 +309,19 @@ static void vcpu_mem(unsigned int cpu_index, qemu_plugin_meminfo_t info,
     case QEMU_PLUGIN_MEM_VALUE_U8: pending->mem_value = value.data.u8; break;
     case QEMU_PLUGIN_MEM_VALUE_U16: pending->mem_value = value.data.u16; break;
     case QEMU_PLUGIN_MEM_VALUE_U32: pending->mem_value = value.data.u32; break;
+    case QEMU_PLUGIN_MEM_VALUE_U64: pending->mem_value = value.data.u64; break;
+    case QEMU_PLUGIN_MEM_VALUE_U128: pending->mem_value = value.data.u128.low; break;
     default: pending->mem_value = 0; break;
+    }
+    if (pending->mem_write) {
+        if (debug_file && debug_marker_byte(pending->mem_value & 0xffU)) {
+            fprintf(debug_file, "addr=%08" PRIx64 " value=%08" PRIx32
+                    " size=%u byte=%02x\n", pending->mem_addr,
+                    pending->mem_value, pending->mem_size,
+                    pending->mem_value & 0xffU);
+            fflush(debug_file);
+        }
+        observe_terminal_uart(vaddr, pending->mem_value & 0xffU);
     }
 }
 
@@ -187,12 +330,28 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
     Pending *pending = &states[cpu_index];
     InsnInfo *insn = userdata;
 
+    if (capture_stopped) {
+        return;
+    }
     if (capture_limit_reached()) {
         return;
     }
-    emit_state(cpu_index, insn);
-    emit_pending(pending, insn->pc);
+    if (!summary_only) {
+        emit_state(cpu_index, insn);
+        emit_pending(pending, insn->pc);
+    }
     ++record_count;
+    if (terminal_marker_seen) {
+        /* The pending record is the instruction that emitted the terminal
+         * newline.  The state above is its flushed post-state boundary. */
+        capture_stopped = true;
+        report_terminal_record();
+        return;
+    }
+    if (record_count >= max_records) {
+        capture_stopped = true;
+        report_capture_limit("records");
+    }
     pending->pc = insn->pc;
     pending->instr = insn->instr;
     pending->valid = true;
@@ -207,6 +366,9 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
 static void vcpu_exit(qemu_plugin_id_t id, unsigned int cpu_index)
 {
     (void)id;
+    if (summary_only) {
+        return;
+    }
     emit_pending(&states[cpu_index], states[cpu_index].pc + 4);
 }
 
@@ -234,7 +396,7 @@ static void plugin_exit(qemu_plugin_id_t id, void *userdata)
     /* A mailbox write can request guest shutdown from its memory callback
      * before QEMU delivers vcpu_exit.  Flush the instruction whose execution
      * callback already ran so the terminal retire event is not lost. */
-    if (states) {
+    if (states && !summary_only) {
         for (unsigned int i = 0; i < state_count; ++i) {
             emit_pending(&states[i], states[i].pc + 4);
             if (last_state_line) {
@@ -246,7 +408,17 @@ static void plugin_exit(qemu_plugin_id_t id, void *userdata)
             }
         }
     }
+    if (terminal_detection_enabled && !terminal_record_reported &&
+        !capture_limit_reported &&
+        (terminal_marker_seen || uart_trace_has_terminal_marker())) {
+        terminal_marker_seen = true;
+        report_terminal_record();
+    }
     fflush(trace_file);
+    if (status_file && !capture_limit_reported && !terminal_record_reported) {
+        fprintf(status_file, "capture_complete records=%" PRIu64 "\n", record_count);
+        fflush(status_file);
+    }
     fclose(trace_file);
     if (register_file) {
         fclose(register_file);
@@ -254,9 +426,18 @@ static void plugin_exit(qemu_plugin_id_t id, void *userdata)
     if (state_file) {
         fclose(state_file);
     }
+    if (status_file) {
+        fclose(status_file);
+    }
     g_free(trace_path);
     g_free(register_path);
     g_free(state_path);
+    g_free(status_path);
+    if (debug_file) {
+        fclose(debug_file);
+    }
+    g_free(debug_path);
+    g_free(uart_trace_path);
     g_free(last_state_line);
     if (state_registers) {
         g_ptr_array_free(state_registers, true);
@@ -289,24 +470,59 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
                 fprintf(stderr, "qemu retire plugin: cannot open state output\n");
                 return -1;
             }
+        } else if (g_strcmp0(tokens[0], "status") == 0 && tokens[1]) {
+            g_free(status_path);
+            status_path = g_strdup(tokens[1]);
+            status_file = fopen(status_path, "w");
+            if (!status_file) {
+                fprintf(stderr, "qemu retire plugin: cannot open status output\n");
+                return -1;
+            }
+        } else if (g_strcmp0(tokens[0], "debug") == 0 && tokens[1]) {
+            g_free(debug_path);
+            debug_path = g_strdup(tokens[1]);
+            debug_file = fopen(debug_path, "w");
+            if (!debug_file) {
+                fprintf(stderr, "qemu retire plugin: cannot open debug output\n");
+                return -1;
+            }
+        } else if (g_strcmp0(tokens[0], "uart-trace") == 0 && tokens[1]) {
+            g_free(uart_trace_path);
+            uart_trace_path = g_strdup(tokens[1]);
+        } else if (g_strcmp0(tokens[0], "terminal-marker") == 0 && tokens[1]) {
+            if (g_strcmp0(tokens[1], "linux") != 0) {
+                fprintf(stderr, "qemu retire plugin: terminal-marker must be linux\n");
+                return -1;
+            }
+            terminal_detection_enabled = true;
         } else if (g_strcmp0(tokens[0], "max-records") == 0 && tokens[1]) {
             char *end = NULL;
             errno = 0;
             max_records = g_ascii_strtoull(tokens[1], &end, 10);
-            if (errno != 0 || end == tokens[1] || *end != '\0' || max_records == 0) {
-                fprintf(stderr, "qemu retire plugin: max-records must be a positive integer\n");
+            if (errno != 0 || end == tokens[1] || *end != '\0') {
+                fprintf(stderr, "qemu retire plugin: max-records must be a non-negative integer\n");
                 return -1;
             }
+            if (max_records == 0)
+                max_records = UINT64_MAX;
         } else if (g_strcmp0(tokens[0], "max-bytes") == 0 && tokens[1]) {
             char *end = NULL;
             errno = 0;
             max_bytes = g_ascii_strtoull(tokens[1], &end, 10);
-            if (errno != 0 || end == tokens[1] || *end != '\0' || max_bytes == 0) {
-                fprintf(stderr, "qemu retire plugin: max-bytes must be a positive integer\n");
+            if (errno != 0 || end == tokens[1] || *end != '\0') {
+                fprintf(stderr, "qemu retire plugin: max-bytes must be a non-negative integer\n");
                 return -1;
             }
+            if (max_bytes == 0)
+                max_bytes = UINT64_MAX;
+        } else if (g_strcmp0(tokens[0], "summary-only") == 0 && tokens[1]) {
+            if (g_strcmp0(tokens[1], "1") != 0) {
+                fprintf(stderr, "qemu retire plugin: summary-only must be 1\n");
+                return -1;
+            }
+            summary_only = true;
         } else {
-            fprintf(stderr, "qemu retire plugin: expected trace=/path, state=/path, max-records=N or max-bytes=N, got %s\n", argv[i]);
+            fprintf(stderr, "qemu retire plugin: expected trace=/path, state=/path, status=/path, debug=/path, uart-trace=/path, terminal-marker=linux, max-records=N, max-bytes=N or summary-only=1, got %s\n", argv[i]);
             return -1;
         }
     }

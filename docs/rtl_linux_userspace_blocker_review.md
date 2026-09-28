@@ -2,44 +2,60 @@
 
 Review date: 2026-09-20
 
-Status: `BLOCK_VERIFIED / ROOT_CAUSE_OPEN`
+Status: `HISTORICAL DIAGNOSTIC / NOT SIGNOFF`
 
 ## Executive conclusion
 
-The largest unresolved capability gap is the generic RTL Linux system-mode
-differential boundary. The current evidence proves a reproducible failure
-around Linux `number()`, but it does not yet identify the first incorrect
-architectural state. The next fix must therefore close the state-observation
-boundary before changing RTL behavior.
+The generic RTL Linux system-mode boot failure around `number()` is
+reproducible and has a plausible delay-slot interrupt diagnosis. The retained
+evidence is not signoff: the old focus runner allowed stale artifacts, masked
+QEMU failures, accepted incomplete traces, and compared only selected
+checkpoint state. Current-source remediation is tracked in
+`docs/rtl_linux_differential_remediation_plan.md`.
 
-The current evidence is precise enough to rule out the original simple
-hypotheses:
+The root cause was an asynchronous timer interrupt firing when a control-transfer
+instruction (`0x88a378d8: jr ra` in `put_dec_trunc8`) was in the Writeback (WB)
+stage while its architectural branch delay slot (`0x88a378dc: sh v1, 0(a0)`)
+was in the Execute (EX) stage separated by an invalid MEM pipeline bubble.
+Because the CPU interrupt decoder previously only inspected the adjacent MEM
+stage (`mem_pc == wb_pc + 4`), it missed the delay slot in EX. Furthermore,
+`interrupt_wb_sequential_epc` erroneously fired (lacking `!wb_is_control_transfer`),
+manufacturing an erroneous resumption at `EPC = 0x88a378dc` with `Cause.BD = 0`.
+Upon `eret`, the CPU resumed sequentially without a jump target, falling
+through into `put_dec_helper4` (`0x88a378e0`) and clobbering `v0` to 0.
+This caused the subsequent `subu v1, v0, t9` at `0x88a38c1c` to compute a negative
+buffer length (`0x76bda52c`), leading to `addu` producing address `0xffffffff`
+and crashing in the following `lbu` loop.
 
-- The RTL `addu` at `0x88a3897c` computes the correct 32-bit result for the
-  operands it receives:
-  `0x89425ad4 + 0x76bda52b = 0xffffffff`.
-- The existing QEMU focus plugin records only `r30`, so it cannot establish
-  whether QEMU has the same `a0`, `t9`, `t5`, and `v0` values at the relevant
-  instructions.
-- The first observed `BadVAddr` and the replayed `BadVAddr` differ, which is a
-  separate precise-exception/replay contract issue even if the register-state
-  divergence is fixed.
+Additionally, `d_fault_vaddr_pending_q` was previously cleared on any generic
+`exception_flush`, allowing intermediate pipeline flushes/interrupts to discard
+a pending data fault virtual address before CP0 could commit it, corrupting
+`BadVAddr` to `0xffffffff`.
 
-The project must not claim generic RTL Linux userspace, unrestricted
-RTL/QEMU differential, or full ISA/MMU/OS closure until both issues have
-direct evidence and passing regressions.
+Candidate repairs were added in `rtl/cpu/mips_cpu.v`:
+1. Delay-slot detection was expanded to inspect EX and ID stages across bubbles
+   (`interrupt_wb_branch_delay_from_ex/id`).
+2. Control-transfer instructions in WB were barred from triggering sequential EPC.
+3. Fault address persistence was qualified so that only committed data exceptions,
+   `ERET`, or context restores clear pending fault metadata.
+
+The retained focus-gate result is bounded historical evidence only. It does
+not prove full trace completeness, current-source freshness, BadVAddr owner
+identity, generic Linux userspace progress, or UART/VIC equivalence. The core
+regressions listed above must be rerun from current source after the directed
+coverage and ownership gates are implemented.
 
 ## Current status by boundary
 
 | Boundary | Status | Evidence-based assessment |
 | --- | --- | --- |
-| QEMU `mips32-soc-ref` system boot | Bounded pass | QEMU reaches serial binding, `/init`, and userspace markers. |
-| RTL `rtl-minimal` opt-in userspace contract | Bounded pass | The reduced image reaches the existing boot, GPIO, VM, and sleep/yield markers. |
-| Generic RTL Linux boot | Open | The generic image reaches a reproducible fault in `gpiolib_sysfs_init`. |
-| RTL/QEMU first architectural divergence | Open, highest priority | QEMU has no focused capture for the registers that determine the failing address. |
-| Exception `BadVAddr` across fault/replay | Open, independent | The recorded address changes from the initial fault to replay. |
-| Full RTL/QEMU system differential | Open | Existing bounded/selected gates do not cover this generic Linux boundary. |
-| UART/VIC model equivalence | Conditional | Still worth testing if the architectural trace reaches the serial probe; it is not the current proven owner. |
+| QEMU `mips32-soc-ref` system boot | Bounded historical evidence | QEMU has a retained boot log, but plugin lifecycle and exit status require fresh validation. |
+| RTL `rtl-minimal` opt-in userspace contract | Bounded pass | The reduced image has a separate declared marker contract; this is not generic Linux signoff. |
+| Generic RTL Linux boot | Open | The retained RTL run does not prove `ttyS0`, `/init`, or generic userspace completion. |
+| RTL/QEMU first architectural divergence | Block reduced | A delay-slot diagnosis exists, but strict current-source retire evidence is still required. |
+| Exception `BadVAddr` across fault/replay | Open | Absence of literal `0xffffffff` is not ownership or replay proof. |
+| Full RTL/QEMU system differential | Open | The old gate compared two checkpoints and cannot claim a full differential. |
+| UART/VIC model equivalence | Open | No transaction-level UART/VIC differential gate is represented here. |
 
 ## Reproduced failure
 

@@ -1,0 +1,82 @@
+diff --git a/target/mips/sysemu/cp0_timer.c b/target/mips/sysemu/cp0_timer.c
+--- a/target/mips/sysemu/cp0_timer.c
++++ b/target/mips/sysemu/cp0_timer.c
+@@ -25,10 +25,26 @@
+ #include "qemu/timer.h"
+ #include "sysemu/kvm.h"
+ #include "internal.h"
++
++/* Project-local deterministic timer hook.  The weak symbols keep ordinary
++ * QEMU targets unchanged; mips32-soc-ref enables the hook by machine
++ * property for bounded QEMU/RTL calibration only. */
++bool qemu_mips32_soc_ref_cp0_retire_clock(void) __attribute__((weak));
++uint32_t qemu_mips32_soc_ref_cp0_retire_ticks(CPUMIPSState *env)
++    __attribute__((weak));
++void qemu_mips32_soc_ref_cp0_retire_store_count(CPUMIPSState *env,
++                                                uint32_t count)
++    __attribute__((weak));
+ 
+ /* MIPS R4K timer */
+ static uint32_t cpu_mips_get_count_val(CPUMIPSState *env)
+ {
++    if (qemu_mips32_soc_ref_cp0_retire_clock &&
++        qemu_mips32_soc_ref_cp0_retire_clock() &&
++        qemu_mips32_soc_ref_cp0_retire_ticks) {
++        return qemu_mips32_soc_ref_cp0_retire_ticks(env);
++    }
+     int64_t now_ns;
+@@ -38,6 +54,11 @@
+     uint64_t now_ns, next_ns;
+     uint32_t wait;
+ 
++    if (qemu_mips32_soc_ref_cp0_retire_clock &&
++        qemu_mips32_soc_ref_cp0_retire_clock()) {
++        return;
++    }
+     now_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+@@ -65,6 +86,17 @@
+     } else {
+         uint64_t now_ns;
+ 
++        if (qemu_mips32_soc_ref_cp0_retire_clock &&
++            qemu_mips32_soc_ref_cp0_retire_clock()) {
++            uint32_t count = cpu_mips_get_count_val(env);
++            if (!(env->CP0_Cause & (1U << CP0Ca_TI)) &&
++                (int32_t)(count - env->CP0_Compare) >= 0) {
++                cpu_mips_timer_expire(env);
++            }
++            return count;
++        }
++
+         now_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+@@ -81,6 +113,15 @@
+ void cpu_mips_store_count(CPUMIPSState *env, uint32_t count)
+ {
++    if (qemu_mips32_soc_ref_cp0_retire_clock &&
++        qemu_mips32_soc_ref_cp0_retire_clock()) {
++        if (qemu_mips32_soc_ref_cp0_retire_store_count) {
++            qemu_mips32_soc_ref_cp0_retire_store_count(env, count);
++        }
++        env->CP0_Count = count;
++        return;
++    }
++
+     /*
+@@ -99,7 +140,9 @@
+ {
+     env->CP0_Compare = value;
+-    if (!(env->CP0_Cause & (1 << CP0Ca_DC))) {
++    if (!(env->CP0_Cause & (1 << CP0Ca_DC)) &&
++        !(qemu_mips32_soc_ref_cp0_retire_clock &&
++          qemu_mips32_soc_ref_cp0_retire_clock())) {
+         cpu_mips_timer_update(env);
+@@ -116,6 +159,11 @@
+ void cpu_mips_stop_count(CPUMIPSState *env)
+ {
+     /* Store the current value */
++    if (qemu_mips32_soc_ref_cp0_retire_clock &&
++        qemu_mips32_soc_ref_cp0_retire_clock()) {
++        env->CP0_Count = cpu_mips_get_count_val(env);
++        return;
++    }
+     env->CP0_Count += (uint32_t)clock_ns_to_ticks(env->count_clock,

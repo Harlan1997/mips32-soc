@@ -63,8 +63,8 @@ module retire_trace_capture (
                        trace_path, max_retire_records);
             end else begin
             $fdisplay(fd,
-              "{\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\",\"fpr_state\":\"%0256x\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\",\"mem_be\":\"%x\",\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
-              known_int(obs_if.retire_schema), known_int(obs_if.retire_pc),
+              "{\"retire_seq\":%0d,\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\",\"fpr_state\":\"%0256x\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\",\"mem_be\":\"%x\",\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
+              retire_count, known_int(obs_if.retire_schema), known_int(obs_if.retire_pc),
               known_int(obs_if.retire_instr), known_int(obs_if.retire_next_pc),
               known_bit(obs_if.retire_gpr_we), known_int(obs_if.retire_gpr_addr),
               known_int(obs_if.retire_gpr_data), known_bit(obs_if.retire_cp0_we),

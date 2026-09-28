@@ -80,12 +80,21 @@ module tb_mips_soc;
     reg [4095:0] firmware_hex;
 `ifdef TB_LINUX_BOOT
     reg [4095:0] ddr_hex;
-    integer linux_timeout_ns;
+    // Cycle-derived Linux bounds can exceed a 32-bit signed integer.  Keep
+    // the delay value wide so long userspace runs do not wrap early in boot.
+    time linux_timeout_ns;
+    integer linux_timeout_cycles;
     integer linux_timeout_grace_cycles;
 `endif
 `ifdef TB_LINUX_BOOT_TRACE
     integer linux_trace_cycle;
     integer linux_trace_limit;
+    integer linux_terminal_stop;
+    integer linux_terminal_progress;
+    reg linux_terminal_seen;
+    reg linux_terminal_finish_started;
+    reg [8*26-1:0] linux_terminal_marker;
+    reg [31:0] linux_retire_count;
     reg linux_trace_limit_finish_started;
     integer linux_refill_trace;
     integer linux_progress_trace;
@@ -136,6 +145,35 @@ module tb_mips_soc;
     integer linux_pc_trace_cycle_end;
     reg [31:0] linux_pc_trace_start;
     reg [31:0] linux_pc_trace_end;
+    integer linux_focus_trace;
+    integer linux_focus_trace_limit;
+    integer linux_focus_trace_count;
+    integer linux_focus_trace_target_only;
+    integer linux_focus_trace_cycle_start;
+    integer linux_focus_trace_cycle_end;
+    reg [31:0] linux_focus_trace_start;
+    reg [31:0] linux_focus_trace_end;
+
+    function automatic [31:0] get_focus_retire_gpr(input [4:0] reg_idx);
+        if (reg_idx == 5'd0)
+            get_focus_retire_gpr = 32'd0;
+        else if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_we_selected &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_waddr_selected == reg_idx)
+            get_focus_retire_gpr = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_wdata_selected;
+        else
+            get_focus_retire_gpr = u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[reg_idx];
+    endfunction
+
+    function automatic bit is_focus_target_pc(input [31:0] pc);
+        is_focus_target_pc = (pc == 32'h88a38c1c) ||
+                             (pc == 32'h88a38c24) ||
+                             (pc == 32'h88a38978) ||
+                             (pc == 32'h88a3897c) ||
+                             (pc == 32'h88a38980) ||
+                             (pc == 32'h88a38984) ||
+                             (pc == 32'h88a3898c) ||
+                             (pc == 32'h88a38998);
+    endfunction
     integer linux_wait_trace;
     integer linux_wait_trace_limit;
     integer linux_wait_trace_count;
@@ -155,6 +193,8 @@ module tb_mips_soc;
     reg [26:0] linux_cacheop_trace_line;
     integer linux_cp0_trace_limit;
     integer linux_cp0_trace_count;
+    integer linux_cp0_read_trace_limit;
+    integer linux_cp0_read_trace_count;
     integer linux_ddr_trace;
     integer linux_ddr_trace_limit;
     integer linux_ddr_trace_count;
@@ -164,10 +204,41 @@ module tb_mips_soc;
     integer linux_ddr_write_trace;
     integer linux_ddr_write_trace_limit;
     integer linux_ddr_write_trace_count;
+    integer linux_ddr_write_trace_handshake_only;
+    integer linux_memory_owner_trace;
+    integer linux_memory_owner_trace_limit;
+    integer linux_memory_owner_trace_count;
     integer linux_target_dside_trace;
     integer linux_target_dside_trace_limit;
     integer linux_target_dside_trace_count;
     reg [26:0] linux_target_trace_line;
+    wire [31:0] linux_target_phys_line = {linux_target_trace_line, 5'd0};
+    wire [31:0] linux_target_ddr_word_index =
+        (linux_target_phys_line - `SOC_DDR_BASE) >> 2;
+    integer linux_ddr_ram_watch;
+    initial begin
+        linux_ddr_ram_watch = 0;
+        if (!$value$plusargs("LINUX_DDR_RAM_WATCH=%d", linux_ddr_ram_watch)) begin end
+    end
+    always @(u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index]) begin
+        if (linux_ddr_ram_watch != 0)
+            $display("LINUX_DDR_RAM_CHANGE cycle=%0d index=%0d words=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
+                linux_trace_cycle,
+                linux_target_ddr_word_index,
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 0],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 1],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 2],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 3],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 4],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 5],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 6],
+                u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 7]);
+    end
+    // The target Linux line is in the DDR slave window.  The separately
+    // instantiated u_axi_sram is the SRAM/L2 slave and is not the owner of
+    // this address.  Keep both indices explicit so diagnostics cannot
+    // silently attribute a DDR transaction to the low-address SRAM array.
+    wire [13:0] linux_target_sram_word_index = linux_target_phys_line[15:2];
     integer linux_target_trace_cycle_start;
     integer linux_target_trace_cycle_end;
     integer linux_delay_trace;
@@ -183,6 +254,8 @@ module tb_mips_soc;
     integer linux_gpr_trace_cycle_start;
     integer linux_gpr_trace_cycle_end;
     reg [4:0] linux_gpr_trace_reg;
+    reg [31:0] linux_gpr_trace_pc_start;
+    reg [31:0] linux_gpr_trace_pc_end;
     reg [31:0] linux_gpr_trace_value;
     reg        linux_gpr_trace_value_valid;
     integer linux_forward_trace;
@@ -257,6 +330,13 @@ module tb_mips_soc;
     integer cp0_adel_count;
     integer cp0_cacheerr_count;
     integer cp0_eret_count;
+    integer irq_wb_delay_ex_count;
+    integer irq_wb_delay_id_count;
+    integer irq_unowned_bd_count;
+    integer irq_delay_bubble_mode;
+    integer irq_delay_bubble_remaining;
+    integer irq_delay_bubble_started;
+    integer irq_delay_force_active;
     integer dual_core_ipi_count;
     integer dual_core_reverse_ipi_count;
     integer dual_core_reset_count;
@@ -310,6 +390,54 @@ module tb_mips_soc;
     end
 `endif
 
+`ifdef TB_MMU_OWNER_TRACE
+    integer d_fault_owner_trace_count;
+    initial d_fault_owner_trace_count = 0;
+    always @(posedge clk) begin
+        if (rst_n &&
+            d_fault_owner_trace_count < 4096) begin
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translation_fault &&
+                !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q) begin
+                $display("D_FAULT_OWNER_CAPTURE cycle=%0d pc=%08h inst=%08h va=%08h code=%0d",
+                    d_fault_owner_trace_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_access_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_capture_code);
+                d_fault_owner_trace_count = d_fault_owner_trace_count + 1;
+            end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match) begin
+                $display("D_FAULT_OWNER_COMMIT cycle=%0d pc=%08h inst=%08h va=%08h code=%0d cp0_bad=%08h match=%b",
+                    d_fault_owner_trace_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.bad_vaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match);
+                d_fault_owner_trace_count = d_fault_owner_trace_count + 1;
+            end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_data &&
+                !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match) begin
+                $display("D_FAULT_OWNER_SQUASH cycle=%0d owner_pc=%08h owner_inst=%08h owner_va=%08h owner_code=%0d wb_pc=%08h wb_inst=%08h wb_code=%0d",
+                    d_fault_owner_trace_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_pc_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_inst_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_code_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code);
+                d_fault_owner_trace_count = d_fault_owner_trace_count + 1;
+            end
+        end
+    end
+`endif
+
 `ifdef TB_LINUX_BOOT_TRACE
     // Keep the Linux diagnostic at the testbench boundary so it cannot alter
     // CPU/cache timing.  The trace is opt-in and samples only the first refill
@@ -317,7 +445,11 @@ module tb_mips_soc;
     always @(posedge clk) begin
         if (!rst_n) begin
             linux_trace_cycle = 0;
+            linux_retire_count = 32'd0;
             linux_trace_limit_finish_started = 1'b0;
+            linux_terminal_progress = 0;
+            linux_terminal_seen = 1'b0;
+            linux_terminal_finish_started = 1'b0;
             linux_wait_task_load_valid = 1'b0;
             linux_wait_task_load_cycle = 32'd0;
             linux_wait_task_load_pc = 32'd0;
@@ -327,10 +459,40 @@ module tb_mips_soc;
             linux_wait_task_load_inst = 32'd0;
         end else begin
             linux_trace_cycle = linux_trace_cycle + 1;
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid)
+                linux_retire_count = linux_retire_count + 32'd1;
             // Keep a raw transcript separate from diagnostic $display output.
             // The transcript is opt-in and therefore has no default log cost.
             if (linux_uart_transcript_enabled != 0 && legacy_uart_tx_valid)
                 $fwrite(linux_uart_transcript_fd, "%c", legacy_uart_tx_data);
+            if (linux_terminal_stop != 0 && !linux_terminal_seen &&
+                legacy_uart_tx_valid) begin
+                if (legacy_uart_tx_data ==
+                    linux_terminal_marker[8*(25-linux_terminal_progress) +: 8]) begin
+                    linux_terminal_progress = linux_terminal_progress + 1;
+                    if (linux_terminal_progress == 26) begin
+                        linux_terminal_seen = 1'b1;
+                        $display("LINUX_TERMINAL_MARKER_REACHED cycle=%0d retire=%0d",
+                                 linux_trace_cycle, linux_retire_count);
+                        if (!linux_terminal_finish_started) begin
+                            linux_terminal_finish_started = 1'b1;
+                            fork
+                                begin
+                                    repeat (2) @(posedge clk);
+                                    #1;
+                                    $display("LINUX_TERMINAL_STOP_COMPLETE cycle=%0d",
+                                             linux_trace_cycle);
+                                    $finish;
+                                end
+                            join_none
+                        end
+                    end
+                end else if (legacy_uart_tx_data == linux_terminal_marker[8*25 +: 8]) begin
+                    linux_terminal_progress = 1;
+                end else begin
+                    linux_terminal_progress = 0;
+                end
+            end
             // Focused forwarding diagnostic for the integrated nonblocking
             // Linux replay.  Keep it opt-in and bounded: this samples the ID
             // operands before the edge, alongside every candidate producer.
@@ -383,7 +545,7 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_ex_out,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_to_reg);
-                $strobe("LINUX_FORWARD_POST cycle=%0d idpc=%08h idinst=%08h idrs=%0d idrt=%0d idvalrs=%08h idvalrt=%08h exvalid=%b expc=%08h exinst=%08h exrs=%08h exrt=%08h exout=%08h aluop=%0d alusrc=%b opa=%08h opb=%08h exwe=%b/%0d memvalid=%b mempc=%08h meminst=%08h memout=%08h memread=%b memdone=%b wbvalid=%b wb=%b/%0d/%08h wbarch=%b stall=%b/%b/%b pending=%08h p2=%0d p3=%0d p4=%0d gpr2=%08h gpr4=%08h loadbusy=%b/%b/%b/%b loadrd=%0d/%0d/%0d/%0d rob=%b/%b/%b/%0d retire=%0d data=%b/%b/%b/%b/%08h memfmt=%08h wbfmt=%08h l1=%b/%h/%08h bridge=%b/%b/%h/%08h/%08h/%08h/%08h",
+                $strobe("LINUX_FORWARD_POST cycle=%0d idpc=%08h idinst=%08h idrs=%0d idrt=%0d idvalrs=%08h idvalrt=%08h exvalid=%b expc=%08h exinst=%08h exrs=%08h exrt=%08h exout=%08h aluop=%0d alusrc=%b opa=%08h opb=%08h exwe=%b/%0d memvalid=%b mempc=%08h meminst=%08h memout=%08h memread=%b memdone=%b wbvalid=%b wb=%b/%0d/%08h wbarch=%b stall=%b/%b/%b pending=%08h p2=%0d p3=%0d p4=%0d gpr2=%08h gpr4=%08h loadbusy=%b/%b/%b/%b loadrd=%0d/%0d/%0d/%0d rob=%b/%b/%b/%0d retire=%0d data=%b/%b/%b/%b/%08h memfmt=%08h wbfmt=%08h l1=%b/%h/%08h bridge=%b/%b/%h/%08h/%08h/%08h/%08h store=%b/%08h/%08h/%h/%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst,
@@ -410,9 +572,9 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_done,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_valid,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_we_selected,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_waddr_selected,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_wdata_selected,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall,
@@ -452,7 +614,12 @@ module tb_mips_soc;
                     `TB_NB_TRACE_RDATA,
                     `TB_NB_TRACE_LINE_RSP_ADDR,
                     `TB_NB_TRACE_MVALID,
-                    `TB_NB_TRACE_MLINE);
+                    `TB_NB_TRACE_MLINE,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_val_rt,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we);
                 linux_forward_trace_count = linux_forward_trace_count + 1;
             end
             if (linux_trace_limit > 0 && linux_trace_cycle >= linux_trace_limit &&
@@ -594,7 +761,7 @@ module tb_mips_soc;
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_pc_trace_start) &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < linux_pc_trace_end))))) begin
-                $display("LINUX_PC_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h gp=%08h t0=%08h s0=%08h s3=%08h s4=%08h",
+                $display("LINUX_PC_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h gp=%08h t0=%08h t1=%08h s0=%08h s3=%08h s4=%08h irqacc=%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
@@ -628,10 +795,48 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[2],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[28],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[8],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[9],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[19],
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[20]);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[20],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept);
                 linux_pc_trace_count = linux_pc_trace_count + 1;
+            end
+            if (linux_focus_trace != 0 &&
+                linux_focus_trace_count < linux_focus_trace_limit &&
+                (linux_focus_trace_cycle_start == 0 ||
+                 linux_trace_cycle >= linux_focus_trace_cycle_start) &&
+                (linux_focus_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_focus_trace_cycle_end) &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                (is_focus_target_pc(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc) ||
+                 (!linux_focus_trace_target_only &&
+                  linux_focus_trace_start != linux_focus_trace_end &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_focus_trace_start &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < linux_focus_trace_end))) begin
+                $display("RTL_FOCUS seq=%0d cycle=%0d phase=retired pc=%08h inst=%08h a0=%08h a1=%08h t5=%08h t9=%08h v0=%08h v1=%08h sp=%08h ra=%08h r30=%08h we=%b/%0d/%08h except=%b/%0d bad=%08h epc=%08h bd=%b",
+                    linux_focus_trace_count,
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    get_focus_retire_gpr(5'd4),
+                    get_focus_retire_gpr(5'd5),
+                    get_focus_retire_gpr(5'd13),
+                    get_focus_retire_gpr(5'd25),
+                    get_focus_retire_gpr(5'd2),
+                    get_focus_retire_gpr(5'd3),
+                    get_focus_retire_gpr(5'd29),
+                    get_focus_retire_gpr(5'd31),
+                    get_focus_retire_gpr(5'd30),
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_badvaddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd);
+                linux_focus_trace_count = linux_focus_trace_count + 1;
             end
             linux_cpu_kernel_prev =
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_kernel_mode;
@@ -1097,6 +1302,10 @@ module tb_mips_soc;
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0 &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr == linux_gpr_trace_reg &&
+                  (linux_gpr_trace_pc_start == 32'd0 ||
+                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_gpr_trace_pc_start &&
+                    (linux_gpr_trace_pc_end == 32'd0 ||
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc <= linux_gpr_trace_pc_end))) &&
                   (!linux_gpr_trace_value_valid ||
                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata == linux_gpr_trace_value)) ||
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_restore_req)) begin
@@ -1272,9 +1481,10 @@ module tb_mips_soc;
                 ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd9) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd11) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd12))) begin
-                $display("LINUX_CP0_TRACE cycle=%0d pc=%08h rd=%0d sel=%0d data=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b",
+                $display("LINUX_CP0_TRACE cycle=%0d pc=%08h retire=%08h rd=%0d sel=%0d data=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    linux_retire_count,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out,
@@ -1284,6 +1494,27 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req);
                 linux_cp0_trace_count = linux_cp0_trace_count + 1;
+            end
+            if (linux_cp0_read_trace_count < linux_cp0_read_trace_limit &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_to_reg == 2'b11) &&
+                ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr == 5'd9) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr == 5'd11))) begin
+                $display("LINUX_CP0_READ_TRACE cycle=%0d pc=%08h retire=%08h cp0rd=%0d sel=%0d gpr=%0d data=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    linux_retire_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req);
+                linux_cp0_read_trace_count = linux_cp0_read_trace_count + 1;
             end
             if (linux_ebase_trace != 0 &&
                 linux_ebase_trace_count < linux_ebase_trace_limit &&
@@ -1541,6 +1772,13 @@ module tb_mips_soc;
             end
             if (linux_ddr_write_trace != 0 &&
                 linux_ddr_write_trace_count < linux_ddr_write_trace_limit &&
+                (!linux_ddr_write_trace_handshake_only ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awvalid &&
+                  u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awready) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wvalid &&
+                  u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wready) ||
+                 (`TB_DCACHE_PATH.awvalid && `TB_DCACHE_PATH.awready) ||
+                 (`TB_DCACHE_PATH.wvalid && `TB_DCACHE_PATH.wready)) &&
                 (linux_target_trace_cycle_start == 0 ||
                  linux_trace_cycle >= linux_target_trace_cycle_start) &&
                 (linux_target_trace_cycle_end == 0 ||
@@ -1593,6 +1831,122 @@ module tb_mips_soc;
                     `TB_DCACHE_PATH.wlast);
                 linux_ddr_write_trace_count = linux_ddr_write_trace_count + 1;
             end
+            // The Linux data path uses u_l2_cache -> u_axi_sram.  The
+            // axi_ddr4_controller instance is a separate status/model path;
+            // do not use it to attribute a Linux load value.
+`ifndef SOC_L2_NONBLOCKING
+`ifndef SOC_L2_WRITEBACK
+            if (linux_memory_owner_trace != 0 &&
+                linux_memory_owner_trace_count < linux_memory_owner_trace_limit &&
+                (linux_target_trace_cycle_start == 0 ||
+                 linux_trace_cycle >= linux_target_trace_cycle_start) &&
+                (linux_target_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_target_trace_cycle_end) &&
+                ((u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awaddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_awaddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_araddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_sram.rd_addr[0][31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_sram.s_awaddr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_memory_subsystem.u_axi_sram.w_addr[31:5] == linux_target_trace_line) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr[31:5] == linux_target_trace_line) ||
+                 (`TB_DCACHE_PATH.req_buf_addr[31:5] == linux_target_trace_line))) begin
+                $display("LINUX_MEMORY_OWNER_L2 cycle=%0d line=%08h state=%0d s_ar=%b/%b/%08h s_r=%b/%b/%08h/%b m_ar=%b/%b/%08h m_r=%b/%b/%08h/%b s_aw=%b/%b/%08h s_w=%b/%b/%08h/%h/%b",
+                    linux_trace_cycle, linux_target_phys_line,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.state,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.m_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_awaddr,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wready,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wdata,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wstrb,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.s_wlast);
+                $display("LINUX_MEMORY_OWNER_L2_ARRAY cycle=%0d line=%08h valid=%b tag=%08h words=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
+                    linux_trace_cycle, linux_target_phys_line,
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.valid_ram[linux_target_trace_line[9:0]],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.tag_ram[linux_target_trace_line[9:0]],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][0],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][1],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][2],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][3],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][4],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][5],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][6],
+                    u_soc.u_impl.u_memory_subsystem.u_l2_cache.u_impl.data_ram[linux_target_trace_line[9:0]][7]);
+                $display("LINUX_MEMORY_OWNER_DDR cycle=%0d line=%08h backend=ddr_controller word_index=%0d cpu_ar=%b/%b/%08h cpu_r=%b/%b/%08h/%h/%b inst_ar=%b/%b/%08h s_ar=%b/%b/%08h read=%0d/%08h/%0d s_r=%b/%b/%08h/%h/%b s_aw=%b/%b/%08h s_w=%b/%b/%08h/%h/%b words=%08h/%08h/%08h/%08h/%08h/%08h/%08h/%08h",
+                    linux_trace_cycle, linux_target_phys_line,
+                    linux_target_ddr_word_index,
+                    u_soc.u_impl.u_core_subsystem.data_arvalid,
+                    u_soc.u_impl.u_core_subsystem.data_arready,
+                    u_soc.u_impl.u_core_subsystem.data_araddr,
+                    u_soc.u_impl.u_core_subsystem.data_rvalid,
+                    u_soc.u_impl.u_core_subsystem.data_rready,
+                    u_soc.u_impl.u_core_subsystem.data_rdata,
+                    u_soc.u_impl.u_core_subsystem.data_rid,
+                    u_soc.u_impl.u_core_subsystem.data_rlast,
+                    u_soc.u_impl.u_core_subsystem.inst_arvalid,
+                    u_soc.u_impl.u_core_subsystem.inst_arready,
+                    u_soc.u_impl.u_core_subsystem.inst_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_arready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_araddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_active,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_addr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.read_left,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rdata,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_rlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_awaddr,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wvalid,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wready,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wdata,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wstrb,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.s_wlast,
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 0],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 1],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 2],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 3],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 4],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 5],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 6],
+                    u_soc.u_impl.u_memory_subsystem.u_axi_ddr4_controller.ram[linux_target_ddr_word_index + 7]);
+                $display("LINUX_MEMORY_OWNER_STORE cycle=%0d line=%08h cpu_req=%b we=%b addr=%08h data=%08h be=%h addr_ok=%b reqbuf=%b/%b/%08h/%08h/%h",
+                    linux_trace_cycle, linux_target_phys_line,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_be,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_addr_ok,
+                    `TB_DCACHE_PATH.req_buf_valid,
+                    `TB_DCACHE_PATH.req_buf_we,
+                    `TB_DCACHE_PATH.req_buf_addr,
+                    `TB_DCACHE_PATH.req_buf_wdata,
+                    `TB_DCACHE_PATH.req_buf_be);
+                linux_memory_owner_trace_count = linux_memory_owner_trace_count + 1;
+            end
+`endif
+`endif
             // Record ownership events for one physical line.  Unlike the
             // broad DDR trace above, these conditions are actual channel
             // handshakes, so a held valid signal cannot manufacture repeated
@@ -1820,15 +2174,17 @@ module tb_mips_soc;
                  (linux_trace_cycle % 100000 == 0) ||
                  (u_soc.u_impl.u_core_subsystem.u_core.u_icache.arvalid &&
                   (u_soc.u_impl.u_core_subsystem.u_core.u_icache.araddr[31:5] == 27'h045062c)))) begin
-                $display("LINUX_PROGRESS_TRACE cycle=%0d pc=%08h", linux_trace_cycle,
-                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc);
+                $display("LINUX_PROGRESS_TRACE cycle=%0d pc=%08h retire=%08h", linux_trace_cycle,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                         linux_retire_count);
             end
             if (linux_timer_heartbeat != 0 &&
                 ((linux_trace_cycle < 20) ||
                  (linux_trace_cycle % 100000 == 0))) begin
-                $display("LINUX_TIMER_HEARTBEAT cycle=%0d pc=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b wait=%b wait_resume=%08h",
+                $display("LINUX_TIMER_HEARTBEAT cycle=%0d pc=%08h retire=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b wait=%b wait_resume=%08h",
                          linux_trace_cycle,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
+                         linux_retire_count,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
                          u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
@@ -2003,6 +2359,21 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_PC_TRACE_START=%h", linux_pc_trace_start)) begin end
         linux_pc_trace_end = 32'd0;
         if (!$value$plusargs("LINUX_PC_TRACE_END=%h", linux_pc_trace_end)) begin end
+        linux_focus_trace = 0;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE=%d", linux_focus_trace)) begin end
+        linux_focus_trace_limit = 16384;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE_LIMIT=%d", linux_focus_trace_limit)) begin end
+        linux_focus_trace_count = 0;
+        linux_focus_trace_target_only = 1;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE_TARGET_ONLY=%d", linux_focus_trace_target_only)) begin end
+        linux_focus_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE_CYCLE_START=%d", linux_focus_trace_cycle_start)) begin end
+        linux_focus_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE_CYCLE_END=%d", linux_focus_trace_cycle_end)) begin end
+        linux_focus_trace_start = 32'h88a3_5000;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE_START=%h", linux_focus_trace_start)) begin end
+        linux_focus_trace_end = 32'h88a4_0000;
+        if (!$value$plusargs("LINUX_FOCUS_TRACE_END=%h", linux_focus_trace_end)) begin end
         linux_wait_trace = 0;
         if (!$value$plusargs("LINUX_WAIT_TRACE=%d", linux_wait_trace)) begin end
         linux_wait_trace_limit = 256;
@@ -2024,6 +2395,9 @@ module tb_mips_soc;
         linux_cp0_trace_limit = 0;
         if (!$value$plusargs("LINUX_CP0_TRACE_LIMIT=%d", linux_cp0_trace_limit)) begin end
         linux_cp0_trace_count = 0;
+        linux_cp0_read_trace_limit = 0;
+        if (!$value$plusargs("LINUX_CP0_READ_TRACE_LIMIT=%d", linux_cp0_read_trace_limit)) begin end
+        linux_cp0_read_trace_count = 0;
         linux_ddr_trace = 0;
         if (!$value$plusargs("LINUX_DDR_TRACE=%d", linux_ddr_trace)) begin end
         linux_ddr_trace_limit = 200;
@@ -2039,6 +2413,13 @@ module tb_mips_soc;
         linux_ddr_write_trace_limit = 240;
         if (!$value$plusargs("LINUX_DDR_WRITE_TRACE_LIMIT=%d", linux_ddr_write_trace_limit)) begin end
         linux_ddr_write_trace_count = 0;
+        linux_ddr_write_trace_handshake_only = 0;
+        if (!$value$plusargs("LINUX_DDR_WRITE_TRACE_HANDSHAKE_ONLY=%d", linux_ddr_write_trace_handshake_only)) begin end
+        linux_memory_owner_trace = 0;
+        if (!$value$plusargs("LINUX_MEMORY_OWNER_TRACE=%d", linux_memory_owner_trace)) begin end
+        linux_memory_owner_trace_limit = 512;
+        if (!$value$plusargs("LINUX_MEMORY_OWNER_TRACE_LIMIT=%d", linux_memory_owner_trace_limit)) begin end
+        linux_memory_owner_trace_count = 0;
         linux_target_dside_trace = 0;
         if (!$value$plusargs("LINUX_TARGET_DSIDE_TRACE=%d", linux_target_dside_trace)) begin end
         linux_target_dside_trace_limit = 160;
@@ -2074,6 +2455,10 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_GPR_TRACE_CYCLE_END=%d", linux_gpr_trace_cycle_end)) begin end
         linux_gpr_trace_reg = 5'd16;
         if (!$value$plusargs("LINUX_GPR_TRACE_REG=%d", linux_gpr_trace_reg)) begin end
+        linux_gpr_trace_pc_start = 32'd0;
+        if (!$value$plusargs("LINUX_GPR_TRACE_PC_START=%h", linux_gpr_trace_pc_start)) begin end
+        linux_gpr_trace_pc_end = 32'd0;
+        if (!$value$plusargs("LINUX_GPR_TRACE_PC_END=%h", linux_gpr_trace_pc_end)) begin end
         linux_gpr_trace_value = 32'd0;
         linux_gpr_trace_value_valid = 1'b0;
         if ($value$plusargs("LINUX_GPR_TRACE_VALUE=%h", linux_gpr_trace_value))
@@ -2100,6 +2485,9 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_UART_TRACE_CYCLE_START=%d", linux_uart_trace_cycle_start)) begin end
         linux_uart_trace_cycle_end = 0;
         if (!$value$plusargs("LINUX_UART_TRACE_CYCLE_END=%d", linux_uart_trace_cycle_end)) begin end
+        linux_terminal_stop = 0;
+        if (!$value$plusargs("LINUX_TERMINAL_STOP=%d", linux_terminal_stop)) begin end
+        linux_terminal_marker = "MIPS32_SOC_LINUX_TERMINAL\n";
         linux_uart_transcript_fd = 0;
         linux_uart_transcript_enabled = 0;
         linux_uart_transcript_path = {1024{1'b0}};
@@ -2672,6 +3060,14 @@ module tb_mips_soc;
         cp0_adel_count = 0;
         cp0_cacheerr_count = 0;
         cp0_eret_count = 0;
+        irq_wb_delay_ex_count = 0;
+        irq_wb_delay_id_count = 0;
+        irq_unowned_bd_count = 0;
+        irq_delay_bubble_mode = 0;
+        irq_delay_bubble_remaining = 0;
+        irq_delay_bubble_started = 0;
+        irq_delay_force_active = 0;
+        if (!$value$plusargs("IRQ_DELAY_BUBBLE_MODE=%d", irq_delay_bubble_mode)) begin end
         dual_core_ipi_count = 0;
         dual_core_reverse_ipi_count = 0;
         dual_core_reset_count = 0;
@@ -2732,6 +3128,73 @@ module tb_mips_soc;
         rst_n = 1;
         
         // We need to wait enough cycles for instruction fetch, cache miss, uncacheable writes
+    end
+
+    // Directed coverage stimulus for the two recovery terms that are only
+    // reachable when a branch delay slot is held behind an ID/EX bubble.  The
+    // stimulus is inert unless the caller supplies IRQ_DELAY_BUBBLE_MODE:
+    // mode 1 inserts one ID hazard (WB branch + EX slot), mode 2 inserts two
+    // hazards (WB branch + ID slot).  The interrupt is forced only after the
+    // requested stage adjacency is visible, so the recovery predicate and the
+    // CP0 EPC/BD path are exercised by the actual pipeline signals.
+    always @(negedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            irq_delay_bubble_remaining = 0;
+            irq_delay_bubble_started = 0;
+            irq_delay_force_active = 0;
+            release u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id;
+            release u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req;
+        end else if (irq_delay_bubble_mode != 0) begin
+            if (irq_delay_force_active != 0) begin
+                release u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req;
+                irq_delay_force_active = 0;
+            end
+            release u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id;
+
+            if (irq_delay_bubble_remaining > 0) begin
+                force u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id = 1'b1;
+                irq_delay_bubble_remaining = irq_delay_bubble_remaining - 1;
+            end else if (!irq_delay_bubble_started &&
+                         !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall &&
+                         !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_if &&
+                         !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_mem &&
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_flush_valid &&
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_flush_valid &&
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_is_control_transfer &&
+                         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc ==
+                          (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc + 32'd4))) begin
+                irq_delay_bubble_started = 1;
+                // The current edge is the first held cycle. The remaining
+                // count therefore adds one more cycle only for WB-to-ID.
+                irq_delay_bubble_remaining = (irq_delay_bubble_mode == 2) ? 1 : 0;
+                force u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id = 1'b1;
+                $display("CPU_DELAY_SLOT_BUBBLE_INJECT mode=%0d branch_pc=%08h slot_pc=%08h",
+                         irq_delay_bubble_mode,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc);
+            end
+
+            if ((irq_delay_bubble_mode == 1 &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc_plus_8 != 32'd0 &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_flush_valid &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_control_transfer &&
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc ==
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc + 32'd4))) ||
+                (irq_delay_bubble_mode == 2 &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc_plus_8 != 32'd0 &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_flush_valid &&
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_control_transfer &&
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc ==
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc + 32'd4)))) begin
+                force u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req = 1'b1;
+                irq_delay_force_active = 1;
+                $display("CPU_DELAY_SLOT_INTERRUPT_INJECT mode=%0d wb_pc=%08h ex_pc=%08h id_pc=%08h",
+                         irq_delay_bubble_mode,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc);
+            end
+        end
     end
 
 `ifdef DMA_EVENT_TRACE
@@ -2863,9 +3326,14 @@ module tb_mips_soc;
         // test. The runner supplies a cycle-derived bound so a bounded
         // userspace gate can finish cleanly instead of relying on SIGTERM
         // from the host timeout.
+        linux_timeout_cycles = 0;
+        if (!$value$plusargs("LINUX_TIMEOUT_CYCLES=%d", linux_timeout_cycles)) begin end
         linux_timeout_ns = 2000000000;
         if (!$value$plusargs("LINUX_TIMEOUT_NS=%d", linux_timeout_ns)) begin end
-        #linux_timeout_ns;
+        if (linux_timeout_cycles > 0)
+            repeat (linux_timeout_cycles) @(posedge clk);
+        else
+            #linux_timeout_ns;
         $display("LINUX_SIMULATION_BOUND_REACHED time=%0t", $time);
         // The bound is derived from a cycle limit and can coincide with a
         // request edge. Give accepted cache/AXI traffic a small NBA and
@@ -3426,8 +3894,10 @@ module tb_mips_soc;
                      u_soc.u_impl.u_memory_subsystem.u_axi_sram.error_injected);
 `endif
         if (legacy_mailbox_valid) begin
-            $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d",
-                     cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count, cp0_eret_count);
+            $display("CPU_CP0_SUMMARY intr=%0d syscall=%0d ri=%0d adel=%0d eret=%0d wb_ex=%0d wb_id=%0d unowned_bd=%0d",
+                     cp0_interrupt_count, cp0_syscall_count, cp0_ri_count, cp0_adel_count,
+                     cp0_eret_count, irq_wb_delay_ex_count, irq_wb_delay_id_count,
+                     irq_unowned_bd_count);
             if (legacy_mailbox_wdata == 32'hdeadbeef) begin
 `ifdef TB_L1_MAINTENANCE
                 if (l1_maintenance_count != 8 ||
@@ -3656,6 +4126,9 @@ module tb_mips_soc;
             cp0_ri_count <= 0;
             cp0_adel_count <= 0;
             cp0_eret_count <= 0;
+            irq_wb_delay_ex_count <= 0;
+            irq_wb_delay_id_count <= 0;
+            irq_unowned_bd_count <= 0;
         end else begin
             if (legacy_cp0_except_req && !legacy_cp0_exl) begin
                 if (legacy_cp0_intr_req) begin
@@ -3672,6 +4145,35 @@ module tb_mips_soc;
 
             if (legacy_cp0_eret) begin
                 cp0_eret_count <= cp0_eret_count + 1;
+            end
+
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_wb_branch_delay_from_ex) begin
+                irq_wb_delay_ex_count <= irq_wb_delay_ex_count + 1;
+                $display("CPU_DELAY_SLOT_RECOVERY source=wb_ex wbpc=%08h delaypc=%08h mem_valid=%b ex_valid=%b id_valid=%b",
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_flush_valid,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_flush_valid,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_flush_valid);
+            end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_wb_branch_delay_from_id) begin
+                irq_wb_delay_id_count <= irq_wb_delay_id_count + 1;
+                $display("CPU_DELAY_SLOT_RECOVERY source=wb_id wbpc=%08h delaypc=%08h mem_valid=%b ex_valid=%b id_valid=%b",
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_flush_valid,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_flush_valid,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_flush_valid);
+            end
+            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_except_bd &&
+                !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_delay_slot) begin
+                irq_unowned_bd_count <= irq_unowned_bd_count + 1;
+                $display("CPU_DELAY_SLOT_BAD_BD wbpc=%08h mempc=%08h expc=%08h idpc=%08h",
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc);
             end
         end
     end

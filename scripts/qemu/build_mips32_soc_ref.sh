@@ -40,7 +40,8 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-sc-consume-reservation.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-round-w-ties-away.patch" |
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-round-w-ties-away.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch" |
         sha256sum | awk '{print $1}'
 }
 
@@ -77,6 +78,14 @@ copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_ref.c" \
     "${QEMU_SRC}/hw/mips/mips32_soc_ref.c"
 copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_core.xml" \
     "${QEMU_SRC}/gdb-xml/mips32_soc_core.xml"
+
+if ! rg -q 'qemu_mips32_soc_ref_cp0_retire_clock' \
+        "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
+    git -C "${QEMU_SRC}" apply --no-index --recount \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch"
+fi
+rg -q 'qemu_mips32_soc_ref_cp0_retire_clock' \
+    "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 
 if ! rg -q "mips32_soc_ref\.c" "${QEMU_SRC}/hw/mips/meson.build"; then
     sed -i "/if 'CONFIG_TCG' in config_all_accel/a\\mips_ss.add(files('mips32_soc_ref.c'))" \

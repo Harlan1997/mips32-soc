@@ -128,6 +128,21 @@ if [ -n "${LINUX_EXTRA_SIM_ARGS:-}" ]; then
     read -r -a linux_extra_sim_args <<< "${LINUX_EXTRA_SIM_ARGS}"
     sim_extra_args+=("${linux_extra_sim_args[@]}")
 fi
+if [ -n "${LINUX_TIMER_HEARTBEAT:-}" ]; then
+    sim_extra_args+=("+LINUX_TIMER_HEARTBEAT=${LINUX_TIMER_HEARTBEAT}")
+fi
+if [ -n "${LINUX_CP0_TRACE_LIMIT:-}" ]; then
+    sim_extra_args+=("+LINUX_CP0_TRACE_LIMIT=${LINUX_CP0_TRACE_LIMIT}")
+fi
+if [ -n "${LINUX_CP0_READ_TRACE_LIMIT:-}" ]; then
+    sim_extra_args+=("+LINUX_CP0_READ_TRACE_LIMIT=${LINUX_CP0_READ_TRACE_LIMIT}")
+fi
+if [ -n "${LINUX_MEMORY_OWNER_TRACE:-}" ]; then
+    sim_extra_args+=("+LINUX_MEMORY_OWNER_TRACE=${LINUX_MEMORY_OWNER_TRACE}")
+fi
+if [ -n "${LINUX_MEMORY_OWNER_TRACE_LIMIT:-}" ]; then
+    sim_extra_args+=("+LINUX_MEMORY_OWNER_TRACE_LIMIT=${LINUX_MEMORY_OWNER_TRACE_LIMIT}")
+fi
 if [ -n "${LINUX_APB_SIM_ARGS:-}" ]; then
     read -r -a linux_apb_sim_args <<< "${LINUX_APB_SIM_ARGS}"
     sim_extra_args+=("${linux_apb_sim_args[@]}")
