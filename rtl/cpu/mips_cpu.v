@@ -2788,15 +2788,22 @@ module mips_cpu #(
                                       (wb_pc_plus_8 != 32'd0) &&
                                       (mem_pc == (wb_pc + 32'd4)) &&
                                       wb_is_control_transfer;
-    // Retain the diagnostic nets expected by tb_mips_soc.  The additional
-    // WB-to-EX/ID recovery paths were removed from interrupt arbitration
-    // because their speculative adjacency can fabricate Cause.BD.
+    // Recover the WB-to-ID boundary only when MEM and EX are bubbles.  This
+    // is the stalled/replayed case where the architectural delay slot really
+    // remains in ID; requiring both empty stages prevents stale speculative
+    // adjacency from fabricating Cause.BD.
     wire interrupt_wb_branch_delay_from_ex = interrupt_accept &&
                                              ex_flush_valid &&
                                              (wb_pc_plus_8 != 32'd0) &&
                                              (ex_pc == (wb_pc + 32'd4)) &&
                                              wb_is_control_transfer;
-    wire interrupt_wb_branch_delay_from_id = 1'b0;
+    wire interrupt_wb_branch_delay_from_id = interrupt_accept &&
+                                             !mem_flush_valid &&
+                                             !ex_flush_valid &&
+                                             id_flush_valid &&
+                                             (wb_pc_plus_8 != 32'd0) &&
+                                             (id_pc == (wb_pc + 32'd4)) &&
+                                             wb_is_control_transfer;
     wire interrupt_prior_wb_branch_delay = interrupt_accept &&
                                            ((`SOC_DELAY_SLOT_ROLLBACK_ENABLE != 0) ?
                                             wb_prior_branch_delay_valid :
@@ -2832,6 +2839,7 @@ module mips_cpu #(
                                         (wb_pc == (mem_pc + 32'd4)));
     wire interrupt_delay_slot = interrupt_wb_branch_delay ||
                                 interrupt_wb_branch_delay_from_ex ||
+                                interrupt_wb_branch_delay_from_id ||
                                 interrupt_mem_delay_from_ex ||
                                 interrupt_mem_delay_from_id ||
                                 interrupt_wb_delay_from_mem ||
@@ -2854,6 +2862,7 @@ module mips_cpu #(
          interrupt_ex_delay_from_id ? id_pc :
          interrupt_wb_branch_delay ? mem_pc :
          interrupt_wb_branch_delay_from_ex ? ex_pc :
+         interrupt_wb_branch_delay_from_id ? id_pc :
          interrupt_wb_delay_from_mem ? wb_pc :
          // A retained WB branch can have wb_arch_valid=0 after the ROB commit
          // pulse has passed while its architectural delay slot is still
@@ -2862,6 +2871,7 @@ module mips_cpu #(
          interrupt_prior_wb_branch_delay ? wb_pc : wb_pc) :
         (interrupt_wb_branch_delay ? mem_pc :
          interrupt_wb_branch_delay_from_ex ? ex_pc :
+         interrupt_wb_branch_delay_from_id ? id_pc :
          interrupt_mem_delay_from_ex ? ex_pc :
          interrupt_mem_delay_from_id ? id_pc :
          // Preserve the established blocking-path exception PC contract.
@@ -2952,7 +2962,8 @@ module mips_cpu #(
                               ((interrupt_accept &&
                                 ((wb_delay_slot_valid && wb_arch_valid) ||
                                 interrupt_wb_branch_delay ||
-                                interrupt_wb_branch_delay_from_ex)) ?
+                                interrupt_wb_branch_delay_from_ex ||
+                                interrupt_wb_branch_delay_from_id)) ?
                                 wb_pc : oldest_flushed_pc))))));
     // Phase B.3.d: BadVAddr source. A data translation fault can be flushed
     // and replayed before its exception reaches WB; in that case wb_ex_out is
