@@ -27,7 +27,8 @@ _start:
     addiu   $a0, $zero, -2
     lui     $a1, %hi(DTB_LOAD_VIRTUAL)
     addiu   $a1, $a1, %lo(DTB_LOAD_VIRTUAL)
-    move    $a2, $zero
+    lui     $a2, %hi(RNG_ENV_LOAD_VIRTUAL)
+    addiu   $a2, $a2, %lo(RNG_ENV_LOAD_VIRTUAL)
     move    $a3, $zero
     lui     $t0, %hi(KERNEL_ENTRY)
     addiu   $t0, $t0, %lo(KERNEL_ENTRY)

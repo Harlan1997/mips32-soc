@@ -9,6 +9,7 @@ RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/linux_boot/rtl_progress_gate"}
 RUN_DIR=$(realpath -m "${RUN_DIR}")
 HOST_TIMEOUT=${HOST_TIMEOUT:-180s}
 RTL_CYCLE_LIMIT=${RTL_CYCLE_LIMIT:-1000000}
+LINUX_TRACE_LIMIT=${LINUX_TRACE_LIMIT:-${RTL_CYCLE_LIMIT}}
 # The testbench clock is 10 ns. Keep the simulation bound aligned with the
 # requested cycle limit so strict userspace gates terminate normally.
 LINUX_TIMEOUT_NS=${LINUX_TIMEOUT_NS:-$((RTL_CYCLE_LIMIT * 10))}
@@ -55,6 +56,7 @@ LINUX_UART_TRACE_LIMIT=${LINUX_UART_TRACE_LIMIT:-256}
 LINUX_UART_TRACE_CYCLE_START=${LINUX_UART_TRACE_CYCLE_START:-0}
 LINUX_UART_TRACE_CYCLE_END=${LINUX_UART_TRACE_CYCLE_END:-0}
 LINUX_UART_TRANSCRIPT=${LINUX_UART_TRANSCRIPT:-}
+LINUX_TERMINAL_STOP=${LINUX_TERMINAL_STOP:-0}
 LINUX_APB_TRACE=${LINUX_APB_TRACE:-0}
 LINUX_APB_TRACE_LIMIT=${LINUX_APB_TRACE_LIMIT:-512}
 LINUX_APB_TRACE_CYCLE_START=${LINUX_APB_TRACE_CYCLE_START:-0}
@@ -343,7 +345,7 @@ fi
 # Pass the cycle bound through the secondary diagnostic argument channel. The
 # testbench prefers this integer bound when the legacy nanosecond plusarg would
 # exceed the Verilog %d range.
-LINUX_OWNER_TRACE_SIM_ARGS="${LINUX_OWNER_TRACE_SIM_ARGS} +LINUX_TIMEOUT_CYCLES=${LINUX_TIMEOUT_CYCLES}"
+LINUX_OWNER_TRACE_SIM_ARGS="${LINUX_OWNER_TRACE_SIM_ARGS} +LINUX_TIMEOUT_CYCLES=${LINUX_TIMEOUT_CYCLES} +LINUX_TRACE_LIMIT=${LINUX_TRACE_LIMIT} +LINUX_TERMINAL_STOP=${LINUX_TERMINAL_STOP}"
 export LINUX_TRACE_WINDOW_ARGS="+LINUX_EXCEPTION_TRACE_CYCLE_START=${LINUX_EXCEPTION_TRACE_CYCLE_START} +LINUX_EXCEPTION_TRACE_CYCLE_END=${LINUX_EXCEPTION_TRACE_CYCLE_END} +LINUX_WB_TRACE_CYCLE_START=${LINUX_WB_TRACE_CYCLE_START} +LINUX_WB_TRACE_CYCLE_END=${LINUX_WB_TRACE_CYCLE_END} +LINUX_MODE_TRACE=${LINUX_MODE_TRACE} +LINUX_MODE_TRACE_LIMIT=${LINUX_MODE_TRACE_LIMIT} +LINUX_MODE_TRACE_CYCLE_START=${LINUX_MODE_TRACE_CYCLE_START} +LINUX_MODE_TRACE_CYCLE_END=${LINUX_MODE_TRACE_CYCLE_END}${linux_gpr_trace_value_arg}"
 export LINUX_TRACE_WINDOW_ARGS="${LINUX_TRACE_WINDOW_ARGS} +LINUX_FORWARD_TRACE=${LINUX_FORWARD_TRACE} +LINUX_FORWARD_TRACE_LIMIT=${LINUX_FORWARD_TRACE_LIMIT} +LINUX_FORWARD_TRACE_START=${LINUX_FORWARD_TRACE_START} +LINUX_FORWARD_TRACE_END=${LINUX_FORWARD_TRACE_END} +LINUX_FORWARD_TRACE_CYCLE_START=${LINUX_FORWARD_TRACE_CYCLE_START} +LINUX_FORWARD_TRACE_CYCLE_END=${LINUX_FORWARD_TRACE_CYCLE_END}"
 
@@ -365,7 +367,25 @@ has_linux_boot_marker() {
     normalize_linux_marker_stream "${log_path}" |
         rg -q 'MIPS32_SOC_LINUX_BOOT_SUCCESS'
 }
+has_linux_terminal_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_TERMINAL'
+}
+has_required_linux_marker() {
+    if [[ "${LINUX_TERMINAL_STOP}" == "1" ]]; then
+        has_linux_terminal_marker "$1"
+    else
+        has_linux_boot_marker "$1"
+    fi
+}
 
+# Terminal-marker mode disables the testbench's cycle-derived finish.  The
+# host timeout and LINUX_TIMEOUT_CYCLES remain watchdogs for deadlock only.
+if [[ "${LINUX_TERMINAL_STOP}" == "1" ]]; then
+    RTL_CYCLE_LIMIT=0
+fi
 set +e
 timeout "${HOST_TIMEOUT}" env \
     RUN_DIR="${sim_dir}" \
@@ -386,8 +406,8 @@ set -e
 if [[ "${status}" -ne 0 &&
       "${LINUX_REQUIRE_USERSPACE}" == "1" &&
       ( -s "${sim_dir}/sim_runtime.log" || -s "${LINUX_UART_TRANSCRIPT}" ) ]] &&
-   ( has_linux_boot_marker "${sim_dir}/sim_runtime.log" ||
-     has_linux_boot_marker "${LINUX_UART_TRANSCRIPT}" ); then
+   ( has_required_linux_marker "${sim_dir}/sim_runtime.log" ||
+     has_required_linux_marker "${LINUX_UART_TRANSCRIPT}" ); then
     cp "${sim_dir}/sim_runtime.log" "${sim_dir}/sim.log"
     marker_recovered=1
     status=0
@@ -426,9 +446,20 @@ marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
         rg -o 'MIPS32_SOC_LINUX_BOOT_SUCCESS' || true
 } | wc -l | tr -d ' ')
+terminal_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_TERMINAL' || true
+} | wc -l | tr -d ' ')
 result="PASS (bounded post-reset progress probe)"
 if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
     result="FAIL (Linux userspace marker not observed)"
+fi
+if [[ "${LINUX_TERMINAL_STOP}" == "1" ]]; then
+    if [[ "${terminal_count}" -ne 1 ]]; then
+        result="FAIL (terminal marker count=${terminal_count}, expected 1)"
+    else
+        result="PASS (terminal-marker full workload)"
+    fi
 fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # RTL Linux Progress Gate
@@ -472,6 +503,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Marker evidence: ${marker_source}
 - Simulator log: ${sim_dir}/sim.log
 - Linux userspace success markers observed: ${marker_count}
+- Linux terminal marker count: ${terminal_count}
 - Marker recovered after host timeout: ${marker_recovered:-0}
 - Scope: relocated Linux image construction, Boot ROM/DDR preload, RTL
   compilation/elaboration and bounded post-reset CPU progress.
@@ -482,6 +514,10 @@ EOF
 
 if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
     echo "RTL Linux progress gate: userspace marker not observed" >&2
+    exit 1
+fi
+if [[ "${LINUX_TERMINAL_STOP}" == "1" && "${terminal_count}" -ne 1 ]]; then
+    echo "RTL Linux progress gate: terminal marker count=${terminal_count}, expected 1" >&2
     exit 1
 fi
 echo "RTL Linux progress gate: PASS (userspace marker count=${marker_count}, simulator status=${status})"

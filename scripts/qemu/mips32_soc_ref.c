@@ -53,6 +53,7 @@ bool qemu_mips32_soc_ref_sc_consume_reservation(void)
 #define SOC_MAILBOX_MAGIC  0xdeadbeefU
 #define SOC_DDR_BASE       0x08000000ULL
 #define SOC_DDR_SIZE       (128 * MiB)
+#define SOC_LINUX_RNG_ENV_BASE 0x09d00000ULL
 #define SOC_LINUX_FDT_BASE 0x09f00000ULL
 #define SOC_FLASH_BASE     0x10000000ULL
 #define SOC_FLASH_SIZE     (256 * MiB)
@@ -118,6 +119,14 @@ typedef struct MIPS32SocRefState {
     uint32_t dma_fault_mode;
     bool dma_reset_injected;
     FILE *dma_event_trace;
+    FILE *peripheral_trace;
+    FILE *cp0_trace;
+    uint32_t cp0_trace_interval;
+    uint32_t trace_pic_raw;
+    uint32_t trace_pic_pending;
+    uint32_t trace_pic_mask;
+    uint32_t trace_pic_active;
+    bool trace_pic_valid;
     uint32_t pic_raw;
     uint32_t pic_mask;
     uint32_t pic_active;
@@ -190,6 +199,8 @@ typedef struct MIPS32SocRefState {
     uint32_t ipi_busy_reads[2];
     MIPSCPU *cpu;
     uint64_t retire_count;
+    uint32_t cp0_retire_count_offset;
+    bool cp0_retire_clock;
     GArray *irq_release_after;
     guint irq_release_index;
     bool irq_replay_enabled;
@@ -207,16 +218,22 @@ typedef struct MIPS32SocRefResetData {
     MIPSCPU *cpu;
     uint64_t vector;
     target_ulong fdt_addr;
+    target_ulong rng_env_addr;
     bool fdt_loaded;
     bool software_mmu_guest;
     bool cpu_has_fpu;
 } MIPS32SocRefResetData;
 
 static char *soc_ref_qspi_image;
+static char *soc_ref_linux_rng_seed;
 static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
 static uint32_t soc_ref_irq_replay_bd_mask;
 static char *soc_ref_dma_event_trace_path;
+static char *soc_ref_peripheral_trace_path;
+static char *soc_ref_cp0_trace_path;
+static uint32_t soc_ref_cp0_trace_interval = 1;
+static bool soc_ref_cp0_retire_clock;
 static uint32_t soc_ref_dma_fault_mode;
 static bool soc_ref_dma_reset_inflight;
 static uint32_t soc_ref_gpio_input;
@@ -234,7 +251,11 @@ static MIPS32SocRefState *soc_ref_active_state;
  */
 bool qemu_mips32_soc_ref_rtl_mmu_guest(void)
 {
-    return soc_ref_software_mmu_guest;
+    /* Linux reads the RTL identity's 64-entry TLB size from Config1 and
+     * legitimately programs indices above the upstream 24K reset depth.
+     * Keep QEMU's backing TLB depth consistent with that advertised contract
+     * whenever the identity property is enabled. */
+    return soc_ref_software_mmu_guest || soc_ref_rtl_cp0_identity;
 }
 
 bool qemu_mips32_soc_ref_bootrom_mmu_guest(void)
@@ -277,6 +298,34 @@ bool qemu_mips32_soc_ref_irq_replay_active(void)
     return soc_ref_active_state && soc_ref_active_state->irq_replay_enabled;
 }
 
+/* Diagnostic-only Count source for deterministic QEMU/RTL calibration.  The
+ * RTL Count increments once per two SoC clocks; the reference machine uses
+ * the same divisor over retired guest instructions in this opt-in mode. */
+bool qemu_mips32_soc_ref_cp0_retire_clock(void)
+{
+    return soc_ref_active_state && soc_ref_active_state->cp0_retire_clock;
+}
+
+uint32_t qemu_mips32_soc_ref_cp0_retire_ticks(CPUMIPSState *env)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    if (!s || !s->cp0_retire_clock || !s->cpu || &s->cpu->env != env) {
+        return 0;
+    }
+    return s->cp0_retire_count_offset + (uint32_t)(s->retire_count >> 1);
+}
+
+void qemu_mips32_soc_ref_cp0_retire_store_count(CPUMIPSState *env,
+                                                uint32_t count)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    if (!s || !s->cp0_retire_clock || !s->cpu || &s->cpu->env != env) {
+        return;
+    }
+    s->cp0_retire_count_offset = count -
+        qemu_mips32_soc_ref_cp0_retire_ticks(env);
+}
+
 bool qemu_mips32_soc_ref_interrupt_bd(void)
 {
     MIPS32SocRefState *s = soc_ref_active_state;
@@ -305,6 +354,30 @@ static void soc_ref_set_qspi_image(Object *obj, const char *value,
     soc_ref_qspi_image = g_strdup(value);
 }
 
+static char *soc_ref_get_linux_rng_seed(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_linux_rng_seed);
+}
+
+static void soc_ref_set_linux_rng_seed(Object *obj, const char *value,
+                                       Error **errp)
+{
+    size_t length = value ? strlen(value) : 0;
+
+    if (length > 1024 || (length & 1)) {
+        error_setg(errp, "linux-rng-seed must be an even-length hex string of at most 512 bytes");
+        return;
+    }
+    for (size_t i = 0; i < length; ++i) {
+        if (!g_ascii_isxdigit(value[i])) {
+            error_setg(errp, "linux-rng-seed contains a non-hex character");
+            return;
+        }
+    }
+    g_free(soc_ref_linux_rng_seed);
+    soc_ref_linux_rng_seed = g_strdup(value);
+}
+
 static bool soc_ref_get_malta_uboot_compat(Object *obj, Error **errp)
 {
     return soc_ref_malta_uboot_compat;
@@ -329,6 +402,17 @@ static void soc_ref_set_linux_guest(Object *obj, bool value, Error **errp)
 static bool soc_ref_get_rtl_cp0_identity(Object *obj, Error **errp)
 {
     return soc_ref_rtl_cp0_identity;
+}
+
+static bool soc_ref_get_cp0_retire_clock(Object *obj, Error **errp)
+{
+    return soc_ref_cp0_retire_clock;
+}
+
+static void soc_ref_set_cp0_retire_clock(Object *obj, bool value,
+                                         Error **errp)
+{
+    soc_ref_cp0_retire_clock = value;
 }
 
 static void soc_ref_set_rtl_cp0_identity(Object *obj, bool value,
@@ -372,6 +456,30 @@ static void soc_ref_set_dma_event_trace(Object *obj, const char *value,
     soc_ref_dma_event_trace_path = g_strdup(value);
 }
 
+static char *soc_ref_get_peripheral_trace(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_peripheral_trace_path);
+}
+
+static void soc_ref_set_peripheral_trace(Object *obj, const char *value,
+                                         Error **errp)
+{
+    g_free(soc_ref_peripheral_trace_path);
+    soc_ref_peripheral_trace_path = g_strdup(value);
+}
+
+static char *soc_ref_get_cp0_trace(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_cp0_trace_path);
+}
+
+static void soc_ref_set_cp0_trace(Object *obj, const char *value,
+                                  Error **errp)
+{
+    g_free(soc_ref_cp0_trace_path);
+    soc_ref_cp0_trace_path = g_strdup(value);
+}
+
 static bool soc_ref_get_software_mmu_guest(Object *obj, Error **errp)
 {
     return soc_ref_software_mmu_guest;
@@ -392,6 +500,41 @@ static void soc_ref_set_software_mmu_bootrom_guest(Object *obj, bool value,
                                                     Error **errp)
 {
     soc_ref_software_mmu_bootrom_guest = value;
+}
+
+static target_ulong soc_ref_write_linux_rng_env(void)
+{
+    uint8_t env[12 + 1024 + 16] = { 0 };
+    size_t first_len;
+    size_t second_offset;
+    size_t env_size;
+    const char *seed = soc_ref_linux_rng_seed;
+    const target_ulong env_virtual =
+        cpu_mips_phys_to_kseg0(NULL, SOC_LINUX_RNG_ENV_BASE);
+
+    if (!seed || !*seed) {
+        stl_le_p(env, 0);
+        env_size = sizeof(uint32_t);
+    } else {
+        first_len = strlen("rngseed=") + strlen(seed) + 1;
+        second_offset = 12 + first_len;
+        memcpy(env + 12, "rngseed=", strlen("rngseed="));
+        memcpy(env + 12 + strlen("rngseed="), seed, strlen(seed));
+        env[12 + first_len - 1] = '\0';
+        memcpy(env + second_offset, "rngdet=1", strlen("rngdet=1") + 1);
+        stl_le_p(env, env_virtual + 12);
+        stl_le_p(env + 4, env_virtual + second_offset);
+        stl_le_p(env + 8, 0);
+        env_size = second_offset + strlen("rngdet=1") + 1;
+    }
+
+    if (address_space_write(&address_space_memory, SOC_LINUX_RNG_ENV_BASE,
+                            MEMTXATTRS_UNSPECIFIED, env, env_size) != MEMTX_OK) {
+        error_report("could not place Linux UHI RNG environment at 0x%" HWADDR_PRIx,
+                     SOC_LINUX_RNG_ENV_BASE);
+        exit(EXIT_FAILURE);
+    }
+    return env_virtual;
 }
 
 static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
@@ -517,6 +660,13 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
 
     if (reg == 0) {
         uint8_t ch = data & 0xff;
+        if (s->peripheral_trace) {
+            fprintf(s->peripheral_trace,
+                    "{\"kind\":\"uart\",\"addr\":\"0x%08" PRIx64
+                    "\",\"data\":\"0x%02x\",\"write\":true,\"width\":1}\n",
+                    SOC_UART_BASE, ch);
+            fflush(s->peripheral_trace);
+        }
         putchar(ch);
         fflush(stdout);
         soc_ref_uart_update_irq(s);
@@ -735,6 +885,34 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
             best_prio = s->pic_priority[i];
         }
     }
+    if (s->peripheral_trace &&
+        (!s->trace_pic_valid || s->trace_pic_raw != s->pic_raw ||
+         s->trace_pic_pending != pending || s->trace_pic_mask != s->pic_mask ||
+         s->trace_pic_active != s->pic_active)) {
+        uint32_t cause = s->cpu ? s->cpu->env.CP0_Cause : 0;
+        uint32_t status = s->cpu ? s->cpu->env.CP0_Status : 0;
+        unsigned vec_id = best_id < 0 ? 0xffU : (unsigned)best_id;
+        bool accepted = best_id >= 0 &&
+                        (!any_active || best_prio > active_prio);
+        fprintf(s->peripheral_trace,
+                "{\"kind\":\"vic\",\"raw\":\"0x%08x\","
+                "\"pending\":\"0x%08x\",\"enable\":\"0x%08x\","
+                "\"active\":\"0x%08x\",\"irq\":%u,\"vec_id\":%u,"
+                "\"vec_prio\":%u,\"uart_irq\":%u,\"uart_rx_irq\":0,"
+                "\"uart_tx_irq\":%u,\"cpu_accept\":%u,"
+                "\"cause\":\"0x%08x\",\"status\":\"0x%08x\"}\n",
+                s->pic_raw, pending, s->pic_mask, s->pic_active,
+                accepted ? 1U : 0U, vec_id, best_prio,
+                (s->pic_raw & (1U << 1)) ? 1U : 0U,
+                (s->pic_raw & (1U << 1)) ? 1U : 0U,
+                accepted ? 1U : 0U, cause, status);
+        fflush(s->peripheral_trace);
+        s->trace_pic_raw = s->pic_raw;
+        s->trace_pic_pending = pending;
+        s->trace_pic_mask = s->pic_mask;
+        s->trace_pic_active = s->pic_active;
+        s->trace_pic_valid = true;
+    }
     if (s->irq_replay_enabled) {
         if (s->irq_replay_armed) {
             /* RTL replay enters through the external hardware IRQ line
@@ -758,10 +936,28 @@ static void soc_ref_instruction_tick(CPUState *cpu)
     MIPS32SocRefState *s = soc_ref_active_state;
     uint64_t release_after;
 
-    if (!s || CPU(s->cpu) != cpu || !s->irq_replay_enabled) {
+    if (!s || CPU(s->cpu) != cpu ||
+        (!s->irq_replay_enabled && !s->cp0_trace && !s->cp0_retire_clock)) {
         return;
     }
     ++s->retire_count;
+    if (s->cp0_trace && s->cp0_trace_interval != 0 &&
+        (s->retire_count % s->cp0_trace_interval) == 0) {
+        fprintf(s->cp0_trace,
+                "{\"seq\":%" PRIu64 ",\"pc\":\"0x%08" PRIx64
+                "\",\"count\":\"0x%08x\",\"compare\":\"0x%08x\","
+                "\"cause\":\"0x%08x\",\"status\":\"0x%08x\"}\n",
+                s->retire_count,
+                (uint64_t)s->cpu->env.active_tc.PC,
+                cpu_mips_get_count(&s->cpu->env),
+                (uint32_t)s->cpu->env.CP0_Compare,
+                (uint32_t)s->cpu->env.CP0_Cause,
+                (uint32_t)s->cpu->env.CP0_Status);
+        fflush(s->cp0_trace);
+    }
+    if (!s->irq_replay_enabled) {
+        return;
+    }
     if (s->irq_replay_wake_pending) {
         s->irq_replay_wake_pending = false;
         /* The RTL records the WAIT wakeup exception against the sequential
@@ -2069,7 +2265,7 @@ static void soc_ref_cpu_reset(void *opaque)
          * a0=-2 identifies UHI and a1 is the kseg0 virtual FDT address. */
         env->active_tc.gpr[4] = (target_ulong)-2;
         env->active_tc.gpr[5] = reset->fdt_addr;
-        env->active_tc.gpr[6] = 0;
+        env->active_tc.gpr[6] = reset->rng_env_addr;
         env->active_tc.gpr[7] = 0;
     }
 
@@ -2141,12 +2337,29 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->gpio_input = soc_ref_gpio_input;
     state->dma_fault_mode = soc_ref_dma_fault_mode;
     state->ddr_fault_mode = soc_ref_ddr_fault_mode;
+    state->cp0_trace_interval = soc_ref_cp0_trace_interval;
+    state->cp0_retire_clock = soc_ref_cp0_retire_clock;
     soc_ref_load_irq_schedule(state);
     soc_ref_active_state = state;
     if (soc_ref_dma_event_trace_path) {
         state->dma_event_trace = fopen(soc_ref_dma_event_trace_path, "w");
         if (!state->dma_event_trace) {
             error_report("could not open DMA event trace '%s'", soc_ref_dma_event_trace_path);
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (soc_ref_peripheral_trace_path) {
+        state->peripheral_trace = fopen(soc_ref_peripheral_trace_path, "w");
+        if (!state->peripheral_trace) {
+            error_report("could not open peripheral trace '%s'",
+                         soc_ref_peripheral_trace_path);
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (soc_ref_cp0_trace_path) {
+        state->cp0_trace = fopen(soc_ref_cp0_trace_path, "w");
+        if (!state->cp0_trace) {
+            error_report("could not open CP0 trace '%s'", soc_ref_cp0_trace_path);
             exit(EXIT_FAILURE);
         }
     }
@@ -2370,6 +2583,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     reset->cpu = cpu;
     reset->fdt_addr = fdt_loaded ?
                       cpu_mips_phys_to_kseg0(NULL, fdt_base) : 0;
+    reset->rng_env_addr = soc_ref_write_linux_rng_env();
     reset->fdt_loaded = fdt_loaded;
     reset->cpu_has_fpu = (cpu->env.CP0_Config1 & (1U << CP0C1_FP)) != 0;
     /* ELF payloads and RTL reset both start in kuseg at the physical entry.
@@ -2398,6 +2612,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_str(OBJECT_CLASS(mc), "qspi-image",
                                   soc_ref_get_qspi_image,
                                   soc_ref_set_qspi_image);
+    object_class_property_add_str(OBJECT_CLASS(mc), "linux-rng-seed",
+                                  soc_ref_get_linux_rng_seed,
+                                  soc_ref_set_linux_rng_seed);
     object_class_property_add_bool(OBJECT_CLASS(mc), "malta-u-boot-compat",
                                    soc_ref_get_malta_uboot_compat,
                                    soc_ref_set_malta_uboot_compat);
@@ -2407,6 +2624,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_bool(OBJECT_CLASS(mc), "rtl-cp0-identity",
                                    soc_ref_get_rtl_cp0_identity,
                                    soc_ref_set_rtl_cp0_identity);
+    object_class_property_add_bool(OBJECT_CLASS(mc), "cp0-retire-clock",
+                                   soc_ref_get_cp0_retire_clock,
+                                   soc_ref_set_cp0_retire_clock);
     object_class_property_add_str(OBJECT_CLASS(mc), "irq-schedule",
                                   soc_ref_get_irq_schedule,
                                   soc_ref_set_irq_schedule);
@@ -2421,6 +2641,15 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_str(OBJECT_CLASS(mc), "dma-event-trace",
                                   soc_ref_get_dma_event_trace,
                                   soc_ref_set_dma_event_trace);
+    object_class_property_add_str(OBJECT_CLASS(mc), "peripheral-trace",
+                                  soc_ref_get_peripheral_trace,
+                                  soc_ref_set_peripheral_trace);
+    object_class_property_add_str(OBJECT_CLASS(mc), "cp0-trace",
+                                  soc_ref_get_cp0_trace,
+                                  soc_ref_set_cp0_trace);
+    object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "cp0-trace-interval",
+                                         &soc_ref_cp0_trace_interval,
+                                         OBJ_PROP_FLAG_WRITE);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "dma-fault-mode",
                                          &soc_ref_dma_fault_mode,
                                          OBJ_PROP_FLAG_WRITE);

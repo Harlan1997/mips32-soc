@@ -515,6 +515,15 @@ fork_parent_done:
 	li	$v0, 4004
 	syscall
 	nop
+	/* Explicit terminal checkpoint for the full Linux differential.  PID 1
+	 * remains alive after this write; the harness stops after the marker is
+	 * flushed and captured. */
+	move	$a0, $s0
+	la	$a1, terminal_marker
+	li	$a2, terminal_marker_end-terminal_marker
+	li	$v0, 4004
+	syscall
+	nop
 	/* PID 1 must remain alive after the terminal marker. Linux treats an
 	 * exiting global init as a fatal condition and panics by design. */
 	/* Keep PID 1 alive without adding a global symbol to the preserved ELF. */
@@ -636,9 +645,12 @@ random_failure_marker_end:
 	.word exec_path, 0
 	exec_env:
 	.word 0
-	fork_success_marker:
+fork_success_marker:
 	.ascii "MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS\n"
 fork_success_marker_end:
+terminal_marker:
+	.ascii "MIPS32_SOC_LINUX_TERMINAL\n"
+terminal_marker_end:
 vm_success_marker:
 	.ascii "MIPS32_SOC_LINUX_MMAP_SUCCESS\n"
 vm_success_marker_end:

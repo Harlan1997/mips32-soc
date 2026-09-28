@@ -249,6 +249,7 @@ module dcache #(
     integer array_trace_cycle_start;
     integer array_trace_cycle_end;
     integer array_trace_word3_only;
+    integer array_trace_word_index;
     reg [26:0] array_trace_line;
 
     initial begin
@@ -259,12 +260,14 @@ module dcache #(
         array_trace_cycle_start = 0;
         array_trace_cycle_end = 0;
         array_trace_word3_only = 0;
+        array_trace_word_index = 3;
         array_trace_line = 27'd0;
         if (!$value$plusargs("DCACHE_ARRAY_TRACE=%d", array_trace_enable)) begin end
         if (!$value$plusargs("DCACHE_ARRAY_TRACE_LIMIT=%d", array_trace_limit)) begin end
         if (!$value$plusargs("DCACHE_ARRAY_TRACE_CYCLE_START=%d", array_trace_cycle_start)) begin end
         if (!$value$plusargs("DCACHE_ARRAY_TRACE_CYCLE_END=%d", array_trace_cycle_end)) begin end
         if (!$value$plusargs("DCACHE_ARRAY_TRACE_WORD3_ONLY=%d", array_trace_word3_only)) begin end
+        if (!$value$plusargs("DCACHE_ARRAY_TRACE_WORD_INDEX=%d", array_trace_word_index)) begin end
         if (!$value$plusargs("DCACHE_ARRAY_TRACE_LINE=%h", array_trace_line)) begin end
     end
 
@@ -285,14 +288,21 @@ module dcache #(
                 (array_trace_cycle_end == 0 ||
                  array_trace_cycle <= array_trace_cycle_end) &&
                 (array_trace_line == 27'd0 || line == array_trace_line) &&
-                (!array_trace_word3_only || old_data[127:96] != new_data[127:96])) begin
-                $display("DCACHE_ARRAY_TRACE cycle=%0d kind=%0d way=%0d index=%0d line=%07h oldtag=%07h newtag=%07h olddata=%08h/%08h/%08h/%08h newdata=%08h/%08h/%08h/%08h",
+                (!array_trace_word3_only ||
+                 old_data[array_trace_word_index*32 +: 32] !=
+                 new_data[array_trace_word_index*32 +: 32])) begin
+                $display("DCACHE_ARRAY_TRACE cycle=%0d kind=%0d way=%0d index=%0d line=%07h word=%0d oldword=%08h newword=%08h oldtag=%07h newtag=%07h olddata=%08h/%08h/%08h/%08h newdata=%08h/%08h/%08h/%08h req=%b/%08h/%08h/%h addr=%08h state=%0d",
                          array_trace_cycle, kind, way, index, line,
+                         array_trace_word_index,
+                         old_data[array_trace_word_index*32 +: 32],
+                         new_data[array_trace_word_index*32 +: 32],
                          old_tag, new_tag,
                          old_data[31:0], old_data[63:32],
                          old_data[95:64], old_data[127:96],
                          new_data[31:0], new_data[63:32],
-                         new_data[95:64], new_data[127:96]);
+                         new_data[95:64], new_data[127:96],
+                         req_buf_we, req_buf_wdata, req_buf_addr, req_buf_be,
+                         lookup_addr, state);
                 array_trace_count = array_trace_count + 1;
             end
         end

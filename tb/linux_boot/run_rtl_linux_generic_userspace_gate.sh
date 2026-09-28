@@ -17,6 +17,7 @@ if [[ "${VALIDATE_EXISTING_RUN}" != "1" ]]; then
         LINUX_IMAGE_DIR="${LINUX_IMAGE_DIR}" SKIP_LINUX_BUILD=1 REUSE_LINUX_IMAGE=1 \
         LINUX_RNG_SEED="${LINUX_RNG_SEED}" \
         LINUX_PROFILE=generic LINUX_REQUIRE_PROGRESS=1 LINUX_REQUIRE_USERSPACE=1 \
+        LINUX_TERMINAL_STOP=1 LINUX_TRACE_LIMIT=0 \
         "${SCRIPT_DIR}/run_rtl_linux_progress_gate.sh" \
         >"${RUN_DIR}/progress_runner.log" 2>&1
     runner_rc=$?
@@ -50,6 +51,7 @@ required_markers=(
     MIPS32_SOC_LINUX_YIELD_SUCCESS
     MIPS32_SOC_LINUX_WAIT_STATUS_SUCCESS
     MIPS32_SOC_LINUX_FORK_WAIT_SUCCESS
+    MIPS32_SOC_LINUX_TERMINAL
 )
 
 # Progress/UART diagnostics are emitted by separate simulator paths and can
@@ -88,6 +90,11 @@ while IFS= read -r marker_line; do
     fi
     previous_line=${marker_line}
 done <<<"${marker_order}"
+terminal_count=$(rg -o 'MIPS32_SOC_LINUX_TERMINAL' "${marker_stream_file}" | wc -l | tr -d ' ')
+if [[ "${terminal_count}" != "1" ]]; then
+    echo "RTL generic userspace gate: terminal marker count=${terminal_count}, expected 1" >&2
+    exit 1
+fi
 if rg -i -q 'Kernel panic|Oops:|BUG:|REGRESSION_TEST_FAILED|SIGABRT|MIPS32_SOC_LINUX_[A-Z0-9_]+_FAILURE' \
     "${SIM_LOG}" "${marker_source}"; then
     echo "RTL generic userspace gate: fatal Linux/simulator diagnostic found" >&2
@@ -97,12 +104,13 @@ fi
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # RTL Linux Generic Userspace Gate
 
-- Result: PASS
+- Result: PASS (terminal-marker full workload)
 - Kernel: ${KERNEL}
 - Image directory: ${LINUX_IMAGE_DIR}
 - Evidence: process/VM, GPIO, timer/sleep, protection-fault, exec, and
   fork/wait guest markers were all observed in order in ${marker_source}.
-- Scope: the declared bounded userspace workload only; arbitrary Linux
-  applications, SMP, and full ISA/MMU compliance remain separate contracts.
+- Scope: the complete declared userspace workload through the terminal marker;
+  arbitrary Linux applications, SMP, and full ISA/MMU compliance remain
+  separate contracts.
 EOF
 echo "RTL Linux generic userspace gate: PASS"

@@ -602,6 +602,7 @@ def main():
     count = 0
     with open(args.output, "w", encoding="ascii") as stream:
         for record in convert(events, states):
+            record["retire_seq"] = count
             json.dump(record, stream, separators=(",", ":"))
             stream.write("\n")
             count += 1

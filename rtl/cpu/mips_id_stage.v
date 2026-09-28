@@ -261,6 +261,16 @@ module mips_id_stage (
     // Direct / Register Jump Resolution
     assign jump_target = (jump_op == 2'b01) ? {pc_plus_4[31:28], inst[25:0], 2'b00} : val_rs;
 
+`ifdef DEBUG_DIRECT_JAL
+    always @(posedge clk) begin
+        if (rst_n && jump_taken &&
+            ((inst[31:26] == 6'b000010) ||
+             (inst[31:26] == 6'b000011)))
+            $display("DIRECT_JAL_ID pc=%08h inst=%08h target=%08h stall_req=%b",
+                     pc_plus_4 - 32'd4, inst, jump_target, stall_req);
+    end
+`endif
+
     wire is_direct_jump = (inst[31:26] == 6'b000010) ||
                           (inst[31:26] == 6'b000011);
     wire is_reg_return  = (inst[31:26] == 6'b000000) &&

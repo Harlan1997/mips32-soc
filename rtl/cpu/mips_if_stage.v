@@ -92,6 +92,18 @@ module mips_if_stage #(
         end
     end
 
+`ifdef DEBUG_DIRECT_JAL
+    // Bounded by the caller's simulator trace controls; this probe is
+    // diagnostic only and does not participate in next-PC generation.
+    always @(posedge clk) begin
+        if (rst_n && jump_taken &&
+            (jump_target !== 32'd0))
+            $display("DIRECT_JAL_IF pc=%08h next=%08h target=%08h stall=%b bpu_pending=%b bpu_target=%08h recover=%b",
+                     pc, next_pc, jump_target, stall, bpu_delay_pending,
+                     bpu_delay_target, bpu_recover);
+    end
+`endif
+
     // PC Register update
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

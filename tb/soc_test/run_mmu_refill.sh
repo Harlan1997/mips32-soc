@@ -54,6 +54,9 @@ echo "Run directory: $RUN_DIR"
 echo "Firmware: $FW_HEX_ABS"
 
 VCS_DEFINES=(+define+SOC_MMU_ENABLE=1 +define+SOC_MMU_BOOTSTRAP_ENABLE=1 +define+TB_SKIP_UART_PIN_CHECK +define+TB_MMU_REFILL)
+if [ "${OWNER_TRACE:-0}" = 1 ]; then
+    VCS_DEFINES+=(+define+TB_MMU_OWNER_TRACE)
+fi
 if [ "${TB_RETIRE_TRACE}" = 1 ]; then
     VCS_DEFINES+=(+define+TB_RETIRE_TRACE)
 fi
@@ -83,6 +86,10 @@ vcs -full64 -sverilog -timescale=1ns/1ps "${VCS_DEFINES[@]}" \
     "${ROOT_DIR}"/tb/soc_test/tb_mips_soc.v -l vcs.log
 
 SIM_ARGS=(+FW_HEX="$FW_HEX_ABS")
+if [ -n "${SIM_EXTRA_ARGS:-}" ]; then
+    read -r -a sim_extra_args <<< "${SIM_EXTRA_ARGS}"
+    SIM_ARGS+=("${sim_extra_args[@]}")
+fi
 if [ -n "${RETIRE_TRACE}" ]; then
     RETIRE_TRACE_ABS=$(realpath -m "${RETIRE_TRACE}")
     mkdir -p "$(dirname "${RETIRE_TRACE_ABS}")"
