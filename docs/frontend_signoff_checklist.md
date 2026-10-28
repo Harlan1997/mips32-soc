@@ -74,9 +74,9 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 | 项 | 状态 | 签核人 | 日期 | 备注 |
 |---|---|---|---|---|
 | A.1 覆盖率 | ⬜ pending | | | |
-| A.2 清理 | ✅ 部分 | Claude | 2026-07-26 | rtl/ 内 patch_*.py 与 simv 待移出 |
+| A.2 清理 | ✅ 部分 |  | 2026-07-26 | rtl/ 内 patch_*.py 与 simv 待移出 |
 | A.3 Lint | ⏸ 延后 | | | 用户暂缓 |
-| A.4 文档 | ✅ 全部 | Claude | 2026-07-26 | |
+| A.4 文档 | ✅ 全部 |  | 2026-07-26 | |
 
 ---
 
@@ -161,12 +161,12 @@ Phase B **CPU 内核商用化** 主体交付完成（core-done 或 partial），
 
 | 项 | 状态 | 签核人 | 日期 | 备注 |
 |---|---|---|---|---|
-| B.1 静态寄存器 | ✅ core done | Claude | 2026-07-26 | 存储/写掩码/读回全套；RDHWR defer B.4.2 |
-| B.2 Timer      | ✅ core done | Claude | 2026-07-26 | Count/Compare/TI/DC/IPTI 全落地；VS 向量化 defer |
-| B.3 MMU/TLB    | ⚠ partial   | Claude | 2026-07-26 | Register+array+lookup+fault path 全套；micro-TLB / PageMask 变尺度 / Linux boot defer |
-| B.4 用户态     | ✅ core done | Claude | 2026-07-26 | KSU/CU0/kseg 保护/CpU 全套；RDHWR defer |
-| B.5 精确异常   | ⚠ partial   | Claude | 2026-07-26 | BD-in-pipeline + ErrorEPC/ERL 落地；EBase-vector defer |
-| B.6 BPU        | ⚠ partial   | Claude | 2026-07-26 | BTB/BHT/RAS 全套；IF 重定向待 speculative fetch |
+| B.1 静态寄存器 | ✅ core done |  | 2026-07-26 | 存储/写掩码/读回全套；RDHWR defer B.4.2 |
+| B.2 Timer      | ✅ core done |  | 2026-07-26 | Count/Compare/TI/DC/IPTI 全落地；VS 向量化 defer |
+| B.3 MMU/TLB    | ⚠ partial   |  | 2026-07-26 | Register+array+lookup+fault path 全套；micro-TLB / PageMask 变尺度 / Linux boot defer |
+| B.4 用户态     | ✅ core done |  | 2026-07-26 | KSU/CU0/kseg 保护/CpU 全套；RDHWR defer |
+| B.5 精确异常   | ⚠ partial   |  | 2026-07-26 | BD-in-pipeline + ErrorEPC/ERL 落地；EBase-vector defer |
+| B.6 BPU        | ⚠ partial   |  | 2026-07-26 | BTB/BHT/RAS 全套；IF 重定向待 speculative fetch |
 | B.7 MDU 多周期 | ⬜ pending   |        |            | 现有 MDU 是简单实现；商用重构未开始 |
 | B.8 FPU CP1    | ⏸ deferred  |        |            | 决策：Phase B 不含 FPU |
 | B.9 综合验证   | ⬜ pending   |        |            | 依赖 Phase F formal 与 CoreMark/Dhrystone/ISA compliance 基础设施 |
