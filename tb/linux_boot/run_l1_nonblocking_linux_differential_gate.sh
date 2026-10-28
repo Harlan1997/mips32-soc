@@ -134,7 +134,9 @@ python3 "${ROOT_DIR}/tb/isa_ref/trace_compare.py" \
     "${blocking_trace}" "${nonblocking_trace}" \
     >"${RUN_DIR}/trace_compare.log" 2>&1
 expected_pass="TRACE_COMPARE_PASS records=${RETIRE_COMPARE_RECORDS} mode=stream-limit"
-grep -qx "${expected_pass}" "${RUN_DIR}/trace_compare.log"
+# The comparator appends consumed/unpaired counters after this stable prefix.
+# Validate the record limit and mode without rejecting those useful counters.
+grep -Eq "^${expected_pass}( |$)" "${RUN_DIR}/trace_compare.log"
 check_image
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF

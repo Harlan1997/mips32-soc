@@ -83,11 +83,17 @@ module tb_mips_soc;
     // Cycle-derived Linux bounds can exceed a 32-bit signed integer.  Keep
     // the delay value wide so long userspace runs do not wrap early in boot.
     time linux_timeout_ns;
-    integer linux_timeout_cycles;
+    // Nonblocking Linux can spend several billion SoC cycles in the declared
+    // workload. Keep the watchdog wide enough that the requested bound does
+    // not wrap through a signed 32-bit integer before simulation starts.
+    longint unsigned linux_timeout_cycles;
     integer linux_timeout_grace_cycles;
 `endif
 `ifdef TB_LINUX_BOOT_TRACE
-    integer linux_trace_cycle;
+    // Keep the trace/schedule clock in the same wide domain as the Linux
+    // watchdog. Nonblocking Linux may cross 2^31 cycles before its terminal
+    // marker, and a wrapped sample would invalidate QEMU peripheral timing.
+    longint unsigned linux_trace_cycle;
     integer linux_trace_limit;
     integer linux_terminal_stop;
     integer linux_terminal_progress;
