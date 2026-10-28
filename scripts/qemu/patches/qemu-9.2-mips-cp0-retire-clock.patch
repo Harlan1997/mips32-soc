@@ -15,6 +15,9 @@ diff --git a/target/mips/sysemu/cp0_timer.c b/target/mips/sysemu/cp0_timer.c
 +void qemu_mips32_soc_ref_cp0_retire_store_count(CPUMIPSState *env,
 +                                                uint32_t count)
 +    __attribute__((weak));
++bool qemu_mips32_soc_ref_cp0_timer_armed(void) __attribute__((weak));
++void qemu_mips32_soc_ref_cp0_compare_write(uint32_t value)
++    __attribute__((weak));
  
  /* MIPS R4K timer */
  static uint32_t cpu_mips_get_count_val(CPUMIPSState *env)
@@ -25,12 +28,17 @@ diff --git a/target/mips/sysemu/cp0_timer.c b/target/mips/sysemu/cp0_timer.c
 +        return qemu_mips32_soc_ref_cp0_retire_ticks(env);
 +    }
      int64_t now_ns;
-@@ -38,6 +54,11 @@
+@@ -38,6 +54,12 @@
      uint64_t now_ns, next_ns;
      uint32_t wait;
  
++    /* SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK */
 +    if (qemu_mips32_soc_ref_cp0_retire_clock &&
 +        qemu_mips32_soc_ref_cp0_retire_clock()) {
++        return;
++    }
++    if (qemu_mips32_soc_ref_cp0_timer_armed &&
++        !qemu_mips32_soc_ref_cp0_timer_armed()) {
 +        return;
 +    }
      now_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
@@ -41,11 +49,18 @@ diff --git a/target/mips/sysemu/cp0_timer.c b/target/mips/sysemu/cp0_timer.c
 +        if (qemu_mips32_soc_ref_cp0_retire_clock &&
 +            qemu_mips32_soc_ref_cp0_retire_clock()) {
 +            uint32_t count = cpu_mips_get_count_val(env);
-+            if (!(env->CP0_Cause & (1U << CP0Ca_TI)) &&
++            if ((!qemu_mips32_soc_ref_cp0_timer_armed ||
++                 qemu_mips32_soc_ref_cp0_timer_armed()) &&
++                !(env->CP0_Cause & (1U << CP0Ca_TI)) && /* SOC_REF_CP0_TIMER_ARM */
 +                (int32_t)(count - env->CP0_Compare) >= 0) {
 +                cpu_mips_timer_expire(env);
 +            }
 +            return count;
++        }
+
++        if (qemu_mips32_soc_ref_cp0_timer_armed &&
++            !qemu_mips32_soc_ref_cp0_timer_armed()) {
++            return cpu_mips_get_count_val(env);
 +        }
 +
          now_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
@@ -65,6 +80,9 @@ diff --git a/target/mips/sysemu/cp0_timer.c b/target/mips/sysemu/cp0_timer.c
 @@ -99,7 +140,9 @@
  {
      env->CP0_Compare = value;
++    if (qemu_mips32_soc_ref_cp0_compare_write) {
++        qemu_mips32_soc_ref_cp0_compare_write(value);
++    }
 -    if (!(env->CP0_Cause & (1 << CP0Ca_DC))) {
 +    if (!(env->CP0_Cause & (1 << CP0Ca_DC)) &&
 +        !(qemu_mips32_soc_ref_cp0_retire_clock &&

@@ -64,6 +64,7 @@ VCS_OPTS = -full64 \
            -kdb \
            -P $(VERDI_HOME)/share/PLI/VCS/linux64/novas.tab $(VERDI_HOME)/share/PLI/VCS/linux64/pli.a \
            -l compile.log \
+           +incdir+$(RTL_DIR) \
            +incdir+$(TB_DIR)
 
 SIM_OPTS = +UVM_NO_RELNOTES \

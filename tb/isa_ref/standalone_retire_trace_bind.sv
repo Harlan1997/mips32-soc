@@ -12,11 +12,21 @@ bind `RETIRE_BIND_TARGET soc_observation_bind u_soc_retire_observation_bind (
     .retire_instr         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst),
     .retire_next_pc       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_next_pc),
     .retire_gpr_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
-                           !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
+                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid &&
+                           !(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
+                             u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid) &&
                            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
     .retire_gpr_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr),
     .retire_gpr_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata),
+    .retire_gpr_state     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_save_gpr),
+    .retire_hilo_state    ({u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu.hi_out,
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu.lo_out}),
+    .retire_mdu_done      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.mdu_done),
+    .retire_mdu_op        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu.op_r),
     .retire_cp0_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
+                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid &&
+                           !(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
+                             u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid) &&
                            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'h10) &&
                            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'h04)),
     .retire_cp0_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr),

@@ -12,6 +12,10 @@ module soc_observation_bind (
     input logic        retire_gpr_we,
     input logic [4:0]  retire_gpr_addr,
     input logic [31:0] retire_gpr_data,
+    input logic [1023:0] retire_gpr_state,
+    input logic [63:0] retire_hilo_state,
+    input logic retire_mdu_done,
+    input logic [3:0] retire_mdu_op,
     input logic        retire_cp0_we,
     input logic [4:0]  retire_cp0_addr,
     input logic [2:0]  retire_cp0_sel,
@@ -51,6 +55,10 @@ module soc_observation_bind (
     assign obs_if.retire_gpr_we      = retire_gpr_we;
     assign obs_if.retire_gpr_addr    = retire_gpr_addr;
     assign obs_if.retire_gpr_data    = retire_gpr_data;
+    assign obs_if.retire_gpr_state   = retire_gpr_state;
+    assign obs_if.retire_hilo_state  = retire_hilo_state;
+    assign obs_if.retire_mdu_done    = retire_mdu_done;
+    assign obs_if.retire_mdu_op      = retire_mdu_op;
     assign obs_if.retire_cp0_we      = retire_cp0_we;
     assign obs_if.retire_cp0_addr    = retire_cp0_addr;
     assign obs_if.retire_cp0_sel     = retire_cp0_sel;

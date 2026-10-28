@@ -338,20 +338,33 @@ module tb_cp0_timer;
         mfc0(5'd0, 3'd0, rd); check("TLBP hit returns Index=5, P=0",
                                      rd == 32'h0000_0005);
 
-        // Changing the software-owned walker root must not retain dynamic
-        // translations learned from the previous root.  Wired entries are
-        // protected by the TLB invalidate floor, but this entry is dynamic.
+        // Ordinary Context writes update the walker root but do not invalidate
+        // architectural TLB entries. Scheduler context restore has a separate
+        // SoC contract that flushes dynamic translations on a root change.
         mtc0(5'd10, 3'd0, 32'h0002_A007);
         mmu_ilookup_va = 32'h0002_A000;
         @(negedge clk);
-        check("dynamic mapping hits before Context root change",
+        check("dynamic mapping hits before Context writes",
               mmu_ilookup_hit == 1'b1);
         // The earlier Random/Wired test leaves Wired=8; make TLB[5] a
         // dynamic entry for this explicit root-flush check.
         mtc0(5'd6, 3'd0, 32'd0);
         mtc0(5'd4, 3'd0, 32'hFF80_0000);
         @(negedge clk);
-        check("dynamic mapping flushed by Context root change",
+        check("same Context root write preserves dynamic mapping",
+              mmu_ilookup_hit == 1'b1);
+        mtc0(5'd4, 3'd0, 32'hFF00_0000);
+        @(negedge clk);
+        check("changed Context root preserves dynamic mapping",
+              mmu_ilookup_hit == 1'b1);
+        ctx_restore_ptebase = 32'hFF80_0000;
+        ctx_restore_ptebase_valid = 1'b1;
+        ctx_restore_req = 1'b1;
+        @(posedge clk);
+        @(negedge clk);
+        ctx_restore_req = 1'b0;
+        ctx_restore_ptebase_valid = 1'b0;
+        check("scheduler root restore flushes dynamic mapping",
               mmu_ilookup_hit == 1'b0);
 
         // 3) TLBP with mismatched ASID and non-global entry

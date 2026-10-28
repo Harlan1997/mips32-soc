@@ -131,8 +131,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Manifest: qemu_terminal_manifest.json
 - Producer evidence: qemu/qemu_gate.log, qemu/qemu_stdout.log,
   qemu/qemu_capture_status.txt, qemu/peripheral.jsonl
-- Scope: QEMU execution of the declared Linux userspace workload. RTL
-  userspace reachability and full RTL/QEMU architectural differential remain
-  open because the current RTL run Oopses before the terminal marker.
+- Scope: QEMU execution of the declared Linux userspace workload. A separate
+  RTL prepass has reached the terminal marker; full RTL/QEMU architectural
+  differential remains open.
 EOF
 echo "QEMU Linux terminal closure: PASS (retired=${summary_records})"

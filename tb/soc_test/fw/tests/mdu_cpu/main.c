@@ -25,6 +25,30 @@ static void get_hilo(uint32_t *hi, uint32_t *lo) {
     asm volatile("mflo %0" : "=r"(*lo));
 }
 
+static int test_load_to_hilo(void) {
+    volatile uint32_t source[2] = {0x13579BDFu, 0x2468ACE0u};
+    uint32_t hi = 0, lo = 0;
+
+    asm volatile(".set push\n"
+                 ".set noreorder\n"
+                 "lw $t8, 0(%2)\n"
+                 "mthi $t8\n"
+                 "mfhi %0\n"
+                 "lw $t8, 4(%2)\n"
+                 "mtlo $t8\n"
+                 "mflo %1\n"
+                 ".set pop"
+                 : "=&r"(hi), "=&r"(lo)
+                 : "r"(source)
+                 : "$t8", "memory");
+    if (hi != source[0] || lo != source[1]) {
+        print_str("FAIL: load-to-HI/LO got HI="); print_hex(hi);
+        print_str(" LO="); print_hex(lo); print_str("\n");
+        return -1;
+    }
+    return 0;
+}
+
 static int test_madd_maddu_msub_msubu(void) {
     uint32_t hi = 0, lo = 0;
 
@@ -159,6 +183,11 @@ static int test_div(void) {
 
 int main(void) {
     print_str("mdu_cpu test: starting\n");
+    if (test_load_to_hilo() != 0) {
+        print_str("mdu_cpu test: FAILED load-to-HI/LO tests\n");
+        mailbox_fail();
+        return 1;
+    }
     if (test_madd_maddu_msub_msubu() != 0) {
         print_str("mdu_cpu test: FAILED accumulate tests\n");
         mailbox_fail();

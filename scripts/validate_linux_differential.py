@@ -26,6 +26,8 @@ TRACE_FIELDS = {
     "mem_addr", "mem_wdata", "mem_be", "mem_rdata", "except",
     "except_code", "bd", "eret",
 }
+TRACE_STATE_FIELDS = {"gpr_state", "hilo_state"}
+SUPPORTED_TRACE_SCHEMAS = {"00010000", "00020000"}
 HEX_FIELDS = {"schema", "pc", "instr", "next_pc", "gpr_data", "cp0_data",
               "mem_addr", "mem_wdata", "mem_rdata"}
 HEX_RE = re.compile(r"^[0-9a-fA-F]{8}$|^x{8}$")
@@ -78,6 +80,9 @@ def validate_manifest(manifest: dict):
         raise ValueError("manifest missing fields: " + ", ".join(missing))
     if manifest["schema_version"] != MANIFEST_SCHEMA:
         raise ValueError(f"unsupported manifest schema: {manifest['schema_version']!r}")
+    trace_schema = manifest.get("trace_schema")
+    if trace_schema is not None and trace_schema not in SUPPORTED_TRACE_SCHEMAS:
+        raise ValueError(f"unsupported trace schema in manifest: {trace_schema!r}")
     for key in REQUIRED_MANIFEST_FIELDS:
         value = manifest[key]
         if not isinstance(value, (str, int)) or value == "":
@@ -138,9 +143,12 @@ def validate_trace(path: str, max_records: int, exact_records: Optional[int]):
                 raise ValueError(f"{path}:{line_number}: invalid JSON: {exc}") from exc
             if not isinstance(record, dict):
                 raise ValueError(f"{path}:{line_number}: record is not an object")
-            missing = sorted(TRACE_FIELDS - set(record))
+            missing = TRACE_FIELDS - set(record)
+            schema = record.get("schema")
+            if isinstance(schema, str) and schema.lower() == "00020000":
+                missing = missing | (TRACE_STATE_FIELDS - set(record))
             if missing:
-                raise ValueError(f"{path}:{line_number}: missing fields: {', '.join(missing)}")
+                raise ValueError(f"{path}:{line_number}: missing fields: {', '.join(sorted(missing))}")
             sequence = record["retire_seq"]
             if not isinstance(sequence, int) or isinstance(sequence, bool):
                 raise ValueError(f"{path}:{line_number}: retire_seq is not an integer")
@@ -150,8 +158,17 @@ def validate_trace(path: str, max_records: int, exact_records: Optional[int]):
                 raise ValueError(f"{path}:{line_number}: first retire_seq must be 0, got {sequence}")
             for field in HEX_FIELDS:
                 validate_hex_field(record, field)
-            if not isinstance(record["schema"], str) or record["schema"].lower() != "00010000":
+            if not isinstance(schema, str) or schema.lower() not in SUPPORTED_TRACE_SCHEMAS:
                 raise ValueError(f"{path}:{line_number}: unsupported trace schema")
+            if schema.lower() == "00020000":
+                gpr_state = record["gpr_state"]
+                hilo_state = record["hilo_state"]
+                if not isinstance(gpr_state, str) or len(gpr_state) != 256 or \
+                        any(char not in "0123456789abcdefABCDEF" for char in gpr_state):
+                    raise ValueError(f"{path}:{line_number}: invalid gpr_state")
+                if not isinstance(hilo_state, str) or len(hilo_state) != 16 or \
+                        any(char not in "0123456789abcdefABCDEF" for char in hilo_state):
+                    raise ValueError(f"{path}:{line_number}: invalid hilo_state")
             count += 1
             previous = sequence
             if count > max_records:

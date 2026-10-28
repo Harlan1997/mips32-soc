@@ -49,10 +49,18 @@ QEMU_STOP_ON_TERMINAL=${QEMU_STOP_ON_TERMINAL:-0}
 QEMU_TERMINAL_MARKER=${QEMU_TERMINAL_MARKER:-}
 QEMU_MARKER_WATCHDOG_SECONDS=${QEMU_MARKER_WATCHDOG_SECONDS:-600}
 QEMU_TERMINAL_DRAIN_SECONDS=${QEMU_TERMINAL_DRAIN_SECONDS:-1}
+QEMU_TERMINAL_WAIT_FOR_EXIT=${QEMU_TERMINAL_WAIT_FOR_EXIT:-0}
+QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS=${QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS:-10}
 QEMU_UNBOUNDED_CAPTURE=${QEMU_UNBOUNDED_CAPTURE:-0}
 QEMU_SUMMARY_ONLY=${QEMU_SUMMARY_ONLY:-0}
+QEMU_STREAM_MODE=${QEMU_STREAM_MODE:-0}
+QEMU_EVENT_STREAM=${QEMU_EVENT_STREAM:-}
+QEMU_STATE_STREAM=${QEMU_STATE_STREAM:-}
+QEMU_RETIRE_STREAM=${QEMU_RETIRE_STREAM:-}
 QEMU_PERIPHERAL_TRACE=${QEMU_PERIPHERAL_TRACE:-}
 QEMU_PLUGIN_UART_TRACE=${QEMU_PLUGIN_UART_TRACE:-${QEMU_PERIPHERAL_TRACE}}
+QEMU_PLUGIN_DEBUG_TRACE=${QEMU_PLUGIN_DEBUG_TRACE:-}
+QEMU_PLUGIN_MDU_TRACE=${QEMU_PLUGIN_MDU_TRACE:-}
 # Bound pathological guests before the Python converter materializes JSONL.
 # Normal current-contract guests are well below these limits; callers can
 # raise them explicitly for a reviewed long-running capture.
@@ -83,10 +91,30 @@ if [[ "${QEMU_STOP_ON_TERMINAL}" == "1" ]]; then
         echo "QEMU system retire capture: QEMU_MARKER_WATCHDOG_SECONDS must be positive" >&2
         exit 2
     }
+    [[ "${QEMU_TERMINAL_WAIT_FOR_EXIT}" =~ ^[01]$ ]] || {
+        echo "QEMU system retire capture: QEMU_TERMINAL_WAIT_FOR_EXIT must be 0 or 1" >&2
+        exit 2
+    }
+    if [[ "${QEMU_TERMINAL_WAIT_FOR_EXIT}" == "1" &&
+          ! "${QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS}" =~ ^[1-9][0-9]*$ ]]; then
+        echo "QEMU system retire capture: QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS must be positive" >&2
+        exit 2
+    fi
 fi
 if [[ "${QEMU_SUMMARY_ONLY}" == "1" && "${QEMU_STOP_ON_TERMINAL}" != "1" ]]; then
     echo "QEMU system retire capture: QEMU_SUMMARY_ONLY=1 requires terminal marker mode" >&2
     exit 2
+fi
+if [[ "${QEMU_STREAM_MODE}" == "1" ]]; then
+    [[ -p "${QEMU_EVENT_STREAM}" && -p "${QEMU_STATE_STREAM}" &&
+       -p "${QEMU_RETIRE_STREAM}" ]] || {
+        echo "QEMU system retire capture: stream mode requires event/state/retire FIFOs" >&2
+        exit 2
+    }
+    [[ "${QEMU_SUMMARY_ONLY}" != "1" ]] || {
+        echo "QEMU system retire capture: stream mode cannot use summary-only mode" >&2
+        exit 2
+    }
 fi
 
 mkdir -p "${RUN_DIR}"
@@ -106,14 +134,28 @@ fi
 # A timed-out QEMU process can leave a complete-looking capture from an older
 # invocation in place.  Remove every run-owned artifact before starting so a
 # retry can never convert stale events/state into a fresh retire trace.
-rm -f "${RUN_DIR}/qemu_instruction_events.jsonl" \
-      "${RUN_DIR}/qemu_state.jsonl" \
-      "${RUN_DIR}/qemu_registers.txt" \
-      "${RUN_DIR}/qemu_capture_status.txt" \
-      "${RUN_DIR}/qemu_retire.jsonl" \
-      "${RUN_DIR}/qemu_trace_capture.log" \
-      "${RUN_DIR}/trace_compare.log" \
-      "${RUN_DIR}/qemu_capture_guard.log"
+if [[ "${QEMU_STREAM_MODE}" == "1" ]]; then
+    rm -f "${RUN_DIR}/qemu_registers.txt" \
+          "${RUN_DIR}/qemu_capture_status.txt" \
+          "${RUN_DIR}/qemu_trace_capture.log" \
+          "${RUN_DIR}/trace_compare.log" \
+          "${RUN_DIR}/qemu_capture_guard.log"
+    event_output=${QEMU_EVENT_STREAM}
+    state_output=${QEMU_STATE_STREAM}
+    retire_output=${QEMU_RETIRE_STREAM}
+else
+    rm -f "${RUN_DIR}/qemu_instruction_events.jsonl" \
+          "${RUN_DIR}/qemu_state.jsonl" \
+          "${RUN_DIR}/qemu_registers.txt" \
+          "${RUN_DIR}/qemu_capture_status.txt" \
+          "${RUN_DIR}/qemu_retire.jsonl" \
+          "${RUN_DIR}/qemu_trace_capture.log" \
+          "${RUN_DIR}/trace_compare.log" \
+          "${RUN_DIR}/qemu_capture_guard.log"
+    event_output="${RUN_DIR}/qemu_instruction_events.jsonl"
+    state_output="${RUN_DIR}/qemu_state.jsonl"
+    retire_output="${RUN_DIR}/qemu_retire.jsonl"
+fi
 
 if [[ -z "${PLUGIN_INCLUDE}" ]]; then
     for candidate in \
@@ -205,9 +247,18 @@ uart_plugin_arg=""
 if [[ -n "${QEMU_PLUGIN_UART_TRACE}" ]]; then
     uart_plugin_arg=",uart-trace=$(realpath -m "${QEMU_PLUGIN_UART_TRACE}")"
 fi
+debug_plugin_arg=""
+if [[ -n "${QEMU_PLUGIN_DEBUG_TRACE}" ]]; then
+    debug_plugin_arg=",debug=$(realpath -m "${QEMU_PLUGIN_DEBUG_TRACE}")"
+fi
+mdu_plugin_arg=""
+if [[ -n "${QEMU_PLUGIN_MDU_TRACE}" ]]; then
+    mdu_plugin_arg=",mdu-trace=$(realpath -m "${QEMU_PLUGIN_MDU_TRACE}")"
+fi
+fpr_plugin_arg=",fpr-state=${QEMU_CAPTURE_FPR_STATE:-0}"
 qemu_cmd=(
     "${QEMU_BIN}"
-    -plugin "file=${PLUGIN},trace=${RUN_DIR}/qemu_instruction_events.jsonl,state=${RUN_DIR}/qemu_state.jsonl,status=${RUN_DIR}/qemu_capture_status.txt,registers=${RUN_DIR}/qemu_registers.txt,max-records=${MAX_QEMU_EVENTS},max-bytes=${MAX_QEMU_CAPTURE_BYTES}${terminal_plugin_arg}${summary_plugin_arg}${uart_plugin_arg}"
+    -plugin "file=${PLUGIN},trace=${event_output},state=${state_output},status=${RUN_DIR}/qemu_capture_status.txt,registers=${RUN_DIR}/qemu_registers.txt,max-records=${MAX_QEMU_EVENTS},max-bytes=${MAX_QEMU_CAPTURE_BYTES}${terminal_plugin_arg}${summary_plugin_arg}${uart_plugin_arg}${debug_plugin_arg}${mdu_plugin_arg}${fpr_plugin_arg}"
     -M "${machine_spec}"
     "${cpu_args[@]}"
     "${accel_args[@]}"
@@ -228,9 +279,38 @@ fi
 printf 'QEMU command:' >"${RUN_DIR}/qemu_command.txt"
 printf ' %q' "${qemu_cmd[@]}" >>"${RUN_DIR}/qemu_command.txt"
 printf '\n' >>"${RUN_DIR}/qemu_command.txt"
+stream_converter_pid=""
+if [[ "${QEMU_STREAM_MODE}" == "1" ]]; then
+    python3 "${SCRIPT_DIR}/qemu_system_state_to_jsonl_stream.py" \
+        "${event_output}" "${state_output}" "${retire_output}" \
+        >"${RUN_DIR}/qemu_trace_capture.log" 2>&1 &
+    stream_converter_pid=$!
+fi
 status=124
 attempts=1
 qemu_exit_note=""
+qemu_pid=""
+qemu_process_is_running() {
+    [[ -n "${qemu_pid}" ]] || return 1
+    local qemu_stat qemu_state
+    if ! { IFS= read -r qemu_stat < "/proc/${qemu_pid}/stat"; } 2>/dev/null; then
+        return 1
+    fi
+    qemu_stat=${qemu_stat##*) }
+    qemu_state=${qemu_stat%% *}
+    [[ -n "${qemu_state}" && "${qemu_state:0:1}" != "Z" &&
+       "${qemu_state:0:1}" != "X" ]]
+}
+cleanup_qemu_process() {
+    if qemu_process_is_running; then
+        kill -TERM -- "-${qemu_pid}" 2>/dev/null || kill -TERM "${qemu_pid}" 2>/dev/null || true
+        sleep 1
+        kill -KILL -- "-${qemu_pid}" 2>/dev/null || kill -KILL "${qemu_pid}" 2>/dev/null || true
+    fi
+}
+trap cleanup_qemu_process EXIT INT TERM
+marker_watchdog_expired=0
+marker_exit_timeout=0
 if [[ "${QEMU_STOP_ON_TERMINAL}" == "1" ]]; then
     # Marker mode owns the process lifecycle. QEMU is stopped only after the
     # complete terminal UART marker is visible; watchdog expiry is a failure.
@@ -239,28 +319,62 @@ if [[ "${QEMU_STOP_ON_TERMINAL}" == "1" ]]; then
     qemu_pid=$!
     marker_seen=0
     marker_deadline=$((SECONDS + QEMU_MARKER_WATCHDOG_SECONDS))
-    while kill -0 "${qemu_pid}" 2>/dev/null; do
+    while qemu_process_is_running; do
         if grep -Fq -- "${QEMU_TERMINAL_MARKER}" "${RUN_DIR}/qemu_stdout.log" 2>/dev/null; then
             marker_seen=1
-            sleep "${QEMU_TERMINAL_DRAIN_SECONDS}"
-            kill -TERM -- "-${qemu_pid}" 2>/dev/null || kill -TERM "${qemu_pid}" 2>/dev/null || true
+            if [[ "${QEMU_TERMINAL_WAIT_FOR_EXIT}" == "1" ]]; then
+                terminal_exit_deadline=$((SECONDS + QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS))
+                while qemu_process_is_running &&
+                      (( SECONDS < terminal_exit_deadline )); do
+                    sleep 0.05
+                done
+                if qemu_process_is_running; then
+                    marker_exit_timeout=1
+                    kill -TERM -- "-${qemu_pid}" 2>/dev/null ||
+                        kill -TERM "${qemu_pid}" 2>/dev/null || true
+                fi
+            else
+                sleep "${QEMU_TERMINAL_DRAIN_SECONDS}"
+                kill -TERM -- "-${qemu_pid}" 2>/dev/null || kill -TERM "${qemu_pid}" 2>/dev/null || true
+            fi
             break
         fi
         if (( SECONDS >= marker_deadline )); then
             kill -KILL -- "-${qemu_pid}" 2>/dev/null || kill -KILL "${qemu_pid}" 2>/dev/null || true
             status=124
+            marker_watchdog_expired=1
             break
         fi
         sleep 0.1
     done
-    wait "${qemu_pid}"
-    child_status=$?
-    if [[ "${marker_seen}" == "1" ]]; then
+    if [[ "${marker_seen}" != "1" ]] &&
+       grep -Fq -- "${QEMU_TERMINAL_MARKER}" "${RUN_DIR}/qemu_stdout.log" 2>/dev/null; then
+        marker_seen=1
+    fi
+    if wait "${qemu_pid}"; then
+        child_status=0
+    else
+        child_status=$?
+    fi
+    if [[ "${marker_seen}" == "1" &&
+          "${QEMU_TERMINAL_WAIT_FOR_EXIT}" == "1" &&
+          "${child_status}" == "0" && "${marker_exit_timeout}" == "0" ]]; then
+        status=0
+        qemu_exit_note="terminal marker guest shutdown (clean exit, attempts 1)"
+        printf 'terminal_process_exit=clean child_status=0\n' \
+            >>"${RUN_DIR}/qemu_capture_status.txt"
+    elif [[ "${marker_seen}" == "1" &&
+            "${QEMU_TERMINAL_WAIT_FOR_EXIT}" == "1" ]]; then
+        status=1
+        qemu_exit_note="terminal marker process did not exit cleanly (child status ${child_status}, attempts 1)"
+    elif [[ "${marker_seen}" == "1" ]]; then
         status=0
         qemu_exit_note="terminal marker stop (child status ${child_status}, attempts 1)"
-    elif [[ "${status:-}" != "124" ]]; then
+    elif [[ "${marker_watchdog_expired}" != "1" ]]; then
         status=${child_status}
         qemu_exit_note="exit before terminal marker (status ${status}, attempts 1)"
+    else
+        qemu_exit_note="terminal marker watchdog expired (child status ${child_status}, attempts 1)"
     fi
 else
     for attempt in 1 2; do
@@ -289,6 +403,17 @@ else
     done
 fi
 set -e
+if [[ -n "${stream_converter_pid}" ]]; then
+    set +e
+    wait "${stream_converter_pid}"
+    converter_status=$?
+    set -e
+    if [[ ${converter_status} -ne 0 ]]; then
+        echo "QEMU system retire capture: streaming converter failed (${converter_status})" >&2
+        cat "${RUN_DIR}/qemu_trace_capture.log" >&2 || true
+        exit "${converter_status}"
+    fi
+fi
 if [[ ${status} -ne 0 ]]; then
     # Some hosts leave QEMU in its terminal idle loop after the completion
     # store, so timeout(1) can report 124 even though the plugin flushed a
@@ -325,6 +450,48 @@ if [[ "${QEMU_STOP_ON_TERMINAL}" == "1" ]]; then
         echo "QEMU system retire capture: terminal marker count=${terminal_marker_count}, expected 1" >&2
         exit 2
     fi
+fi
+if [[ "${QEMU_STREAM_MODE}" == "1" ]]; then
+    # Event/state/retire streams were consumed concurrently.  The comparator
+    # owns the FIFO readers and performs the strict end-of-stream check.
+    retire_events=0
+    if [[ -s "${RUN_DIR}/qemu_trace_capture.log" ]]; then
+        retire_events=$(sed -n 's/^QEMU_SYSTEM_RETIRE_STREAM_PASS records=\([0-9][0-9]*\)$/\1/p' \
+            "${RUN_DIR}/qemu_trace_capture.log")
+    fi
+    [[ -n "${retire_events}" && "${retire_events}" -gt 0 ]] || {
+        echo "QEMU system retire capture: streaming converter produced no records" >&2
+        cat "${RUN_DIR}/qemu_trace_capture.log" >&2 || true
+        exit 2
+    }
+    if [[ "${SKIP_COMPARE:-0}" == "1" ]]; then
+        differential=SKIPPED
+        differential_reason="comparison deferred to the live strict comparator"
+        compare_records=0
+    else
+        differential=STREAMED
+        differential_reason="live strict comparator owns the retire FIFO"
+        compare_records=0
+    fi
+    cat >"${RUN_DIR}/completion_report.md" <<EOF
+# QEMU System Retire Capture
+
+- Capture: PASS (streamed)
+- Machine: mips32-soc-ref
+- Guest kernel/firmware: ${QEMU_KERNEL:-${FW_ELF}}
+- Retired instructions emitted: ${retire_events}
+- QEMU exit: ${qemu_exit_note}
+- Terminal marker mode: ${QEMU_STOP_ON_TERMINAL} (marker=${QEMU_TERMINAL_MARKER:-none})
+- Evidence: qemu_trace_capture.log, qemu_stdout.log, qemu_stderr.log,
+  qemu_capture_status.txt, qemu_build_identity.txt, qemu_command.txt
+- Differential: ${differential}
+- Compared records: ${compare_records}
+- Differential reason: ${differential_reason}
+- Storage: event/state/retire streams were consumed through FIFOs and were not
+  materialized on disk.
+EOF
+    echo "QEMU system retire capture: PASS (streamed records=${retire_events})"
+    exit 0
 fi
 if [[ "${QEMU_SUMMARY_ONLY}" == "1" ]]; then
     [[ -s "${QEMU_PERIPHERAL_TRACE}" ]] || {

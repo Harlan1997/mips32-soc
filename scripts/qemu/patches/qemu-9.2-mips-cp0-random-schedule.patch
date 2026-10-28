@@ -1,0 +1,42 @@
+diff --git a/target/mips/tcg/sysemu/cp0_helper.c b/target/mips/tcg/sysemu/cp0_helper.c
+--- a/target/mips/tcg/sysemu/cp0_helper.c
++++ b/target/mips/tcg/sysemu/cp0_helper.c
+@@ -29,2 +29,6 @@
+ #include "exec/helper-proto.h"
+ #include "exec/exec-all.h"
++/* SOC_REF_CP0_RANDOM_SCHEDULE */
++uint32_t qemu_mips32_soc_ref_cp0_random(CPUMIPSState *env,
++                                       uint32_t fallback, bool is_tlbwr)
++    __attribute__((weak));
+@@ -244,4 +247,8 @@
+ target_ulong helper_mfc0_random(CPUMIPSState *env)
+ {
+-    return (int32_t)cpu_mips_get_random(env);
++    uint32_t value = cpu_mips_get_random(env);
++    if (qemu_mips32_soc_ref_cp0_random) {
++        value = qemu_mips32_soc_ref_cp0_random(env, value, false);
++    }
++    return (int32_t)value;
+ }
+diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_helper.c
+--- a/target/mips/tcg/sysemu/tlb_helper.c
++++ b/target/mips/tcg/sysemu/tlb_helper.c
+@@ -28,1 +28,6 @@
+ #include "exec/helper-proto.h"
++/* SOC_REF_CP0_RANDOM_SCHEDULE */
++uint32_t qemu_mips32_soc_ref_cp0_random(CPUMIPSState *env,
++                                       uint32_t fallback, bool is_tlbwr)
++    __attribute__((weak));
++bool qemu_mips32_soc_ref_rtl_mmu_guest(void) __attribute__((weak));
+@@ -166,7 +170,13 @@
+ static void r4k_helper_tlbwr(CPUMIPSState *env)
+ {
+     int r = cpu_mips_get_random(env);
++    if (qemu_mips32_soc_ref_cp0_random) {
++        r = qemu_mips32_soc_ref_cp0_random(env, r, true);
++    }
+ 
+-    r4k_invalidate_tlb(env, r, 1);
++    r4k_invalidate_tlb(env, r,
++            !(qemu_mips32_soc_ref_rtl_mmu_guest &&
++              qemu_mips32_soc_ref_rtl_mmu_guest())); /* SOC_REF_EXACT_TLBWR_REPLACEMENT */

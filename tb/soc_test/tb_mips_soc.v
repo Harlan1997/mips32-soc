@@ -95,6 +95,18 @@ module tb_mips_soc;
     reg linux_terminal_finish_started;
     reg [31:0] linux_retire_count;
     reg linux_trace_limit_finish_started;
+    integer linux_irq_schedule_fd;
+    reg [4095:0] linux_irq_schedule_path;
+    reg [31:0] linux_irq_schedule_start_pc;
+    reg [31:0] linux_irq_schedule_retire_base;
+    reg linux_irq_schedule_started;
+    integer linux_random_schedule_fd;
+    integer linux_random_schedule_count;
+    reg [4095:0] linux_random_schedule_path;
+    reg [31:0] linux_random_schedule_start_pc;
+    reg [31:0] linux_random_schedule_retire_base;
+    reg linux_random_schedule_started;
+    reg linux_irq_accept_prev;
     integer linux_refill_trace;
     integer linux_progress_trace;
     integer linux_timer_heartbeat;
@@ -192,6 +204,11 @@ module tb_mips_soc;
     reg [26:0] linux_cacheop_trace_line;
     integer linux_cp0_trace_limit;
     integer linux_cp0_trace_count;
+    integer linux_cp0_op_trace;
+    integer linux_cp0_op_trace_limit;
+    integer linux_cp0_op_trace_count;
+    integer linux_cp0_op_trace_cycle_start;
+    integer linux_cp0_op_trace_cycle_end;
     integer linux_cp0_read_trace_limit;
     integer linux_cp0_read_trace_count;
     integer linux_ddr_trace;
@@ -272,6 +289,8 @@ module tb_mips_soc;
     integer linux_uart_transcript_fd;
     integer linux_uart_transcript_enabled;
     reg [1023:0] linux_uart_transcript_path;
+    integer linux_uart_apb_schedule_fd;
+    reg [1023:0] linux_uart_apb_schedule_path;
     integer linux_apb_trace;
     integer linux_apb_trace_limit;
     integer linux_apb_trace_count;
@@ -311,6 +330,7 @@ module tb_mips_soc;
     integer linux_tlb_trace_count;
     integer linux_tlb_trace_cycle_start;
     integer linux_tlb_trace_cycle_end;
+    integer linux_tlb_detail_i;
     integer linux_fault_trace;
     integer linux_fault_trace_limit;
     integer linux_fault_trace_count;
@@ -483,6 +503,12 @@ module tb_mips_soc;
         if (!rst_n) begin
             linux_trace_cycle = 0;
             linux_retire_count = 32'd0;
+            linux_irq_schedule_retire_base = 32'd0;
+            linux_irq_schedule_started = 1'b0;
+            linux_random_schedule_retire_base = 32'd0;
+            linux_random_schedule_started = 1'b0;
+            linux_random_schedule_count = 0;
+            linux_irq_accept_prev = 1'b0;
             linux_trace_limit_finish_started = 1'b0;
             linux_terminal_progress = 0;
             linux_terminal_seen = 1'b0;
@@ -498,6 +524,72 @@ module tb_mips_soc;
             linux_trace_cycle = linux_trace_cycle + 1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid)
                 linux_retire_count = linux_retire_count + 32'd1;
+            if (linux_random_schedule_fd != 0 &&
+                !linux_random_schedule_started &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc ==
+                    linux_random_schedule_start_pc) begin
+                linux_random_schedule_retire_base = linux_retire_count - 32'd1;
+                linux_random_schedule_started = 1'b1;
+            end
+            if (linux_random_schedule_fd != 0 &&
+                linux_random_schedule_started &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid) begin
+                if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'h10 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'd0 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst[15:11] == 5'd1 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst[2:0] == 3'd0) begin
+                    $fdisplay(linux_random_schedule_fd, "%0d mfc0 %08h %08h",
+                        linux_retire_count - linux_random_schedule_retire_base,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata);
+                    $fflush(linux_random_schedule_fd);
+                    linux_random_schedule_count = linux_random_schedule_count + 1;
+                end else if (
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_tlb_op == 3'b011 &&
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.wr_en) begin
+                    $fdisplay(linux_random_schedule_fd, "%0d tlbwr %08h %02h",
+                        linux_retire_count - linux_random_schedule_retire_base,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.tlb_wr_index);
+                    $fflush(linux_random_schedule_fd);
+                    linux_random_schedule_count = linux_random_schedule_count + 1;
+                end
+            end
+            if (linux_irq_schedule_fd != 0 &&
+                !linux_irq_schedule_started &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc ==
+                    linux_irq_schedule_start_pc) begin
+                // QEMU begins at the ELF entry with retire count zero. Use
+                // the pre-entry count so the first shared retire is sequence
+                // one on both producers.
+                linux_irq_schedule_retire_base = linux_retire_count - 32'd1;
+                linux_irq_schedule_started = 1'b1;
+            end
+            if (linux_irq_schedule_fd != 0 &&
+                linux_irq_schedule_started &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept &&
+                !linux_irq_accept_prev) begin
+                // The replay schedule is the completed-retire count at the
+                // IRQ boundary, before the next instruction is fetched.  The
+                // CP0 Cause register is sampled on the pre-NBA side of this
+                // clock edge, so replace its stale BD bit with the precise
+                // exception result that CP0 will latch on this acceptance.
+                // Capture the architectural EPC boundary.  except_pc names
+                // the faulting/delay-slot instruction, while CP0.EPC names
+                // its owning branch when Cause.BD is set.
+                $fdisplay(linux_irq_schedule_fd, "%0d %08h %08h",
+                    linux_retire_count - linux_irq_schedule_retire_base,
+                    {u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_bd,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[30:0]},
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_bd ?
+                        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.except_pc - 32'd4) :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.except_pc);
+                $fflush(linux_irq_schedule_fd);
+            end
+            linux_irq_accept_prev =
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept;
             // Keep a raw transcript separate from diagnostic $display output.
             // The transcript is opt-in and therefore has no default log cost.
             if (linux_uart_transcript_enabled != 0 && legacy_uart_tx_valid)
@@ -712,7 +804,7 @@ module tb_mips_soc;
                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_state) ||
                   (linux_intr_trace_prev !=
                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.intr_req)))) begin
-                $display("LINUX_STALL_TRACE cycle=%0d pc=%08h global=%b if=%b mem=%b mdu=%b rob=%b wait=%b ifok=%b memdone=%b memrd=%b memwr=%b dreq=%b dok=%b icstate=%0d icflush=%b ichit=%b icreqv=%b icreqa=%08h icidx=%0d ictag=%08h icvalid=%b%b%b%b ichitv=%b%b%b%b dcstate=%0d mdu_ready=%b idpc=%08h exp=%b intr=%b status=%08h cause=%08h count=%08h compare=%08h timer_ip=%b ext_int=%b wait_resume=%08h wb_eret=%b wb_arch=%b exc_flush=%b",
+                $display("LINUX_STALL_TRACE cycle=%0d pc=%08h global=%b if=%b mem=%b mdu=%b rob=%b wait=%b ifok=%b memdone=%b memrd=%b memwr=%b dreq=%b dok=%b icstate=%0d icflush=%b ichit=%b icreqv=%b icreqa=%08h icidx=%0d ictag=%08h icvalid=%b%b%b%b ichitv=%b%b%b%b dcstate=%0d mdu_ready=%b idpc=%08h exp=%b intr=%b status=%08h cause=%08h count=%08h compare=%08h timer_ip=%b ext_int=%b wait_resume=%08h wb_eret=%b wb_arch=%b exc_flush=%b irq_hazard=%b dreq_raw=%b mem_active=%b wb_ei=%b wb_bd=%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall,
@@ -756,7 +848,14 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wait_resume_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.linux_irq_restart_hazard,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req_raw,
+                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read ||
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_write ||
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_cache_op_valid),
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ei,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd);
                 linux_stall_trace_count = linux_stall_trace_count + 1;
             end
             if (linux_mode_trace != 0 &&
@@ -890,6 +989,26 @@ module tb_mips_soc;
                          legacy_uart_tx_data);
                 linux_uart_trace_count = linux_uart_trace_count + 1;
             end
+            if (linux_uart_apb_schedule_fd != 0 &&
+                u_soc.u_impl.u_peripheral_subsystem.apb_psel &&
+                u_soc.u_impl.u_peripheral_subsystem.apb_penable &&
+                u_soc.u_impl.u_peripheral_subsystem.apb_pready &&
+                ((u_soc.u_impl.u_peripheral_subsystem.apb_paddr >= 32'h04000000 &&
+                  u_soc.u_impl.u_peripheral_subsystem.apb_paddr <= 32'h0400001c) ||
+                 (u_soc.u_impl.u_peripheral_subsystem.apb_paddr >= 32'h40000000 &&
+                  u_soc.u_impl.u_peripheral_subsystem.apb_paddr <= 32'h4000001c)) &&
+                u_soc.u_impl.u_peripheral_subsystem.apb_paddr[1:0] == 2'b00) begin
+                $fdisplay(linux_uart_apb_schedule_fd, "%0d %0d %08h %08h",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pwrite,
+                    (u_soc.u_impl.u_peripheral_subsystem.apb_paddr >= 32'h40000000) ?
+                        (32'h04000000 |
+                         {27'd0, u_soc.u_impl.u_peripheral_subsystem.apb_paddr[4:0]}) :
+                        u_soc.u_impl.u_peripheral_subsystem.apb_paddr,
+                    u_soc.u_impl.u_peripheral_subsystem.apb_pwrite ?
+                        u_soc.u_impl.u_peripheral_subsystem.apb_pwdata :
+                        u_soc.u_impl.u_peripheral_subsystem.apb_prdata);
+            end
             if (linux_apb_trace != 0 &&
                 linux_apb_trace_count < linux_apb_trace_limit &&
                 (linux_apb_trace_cycle_start == 0 ||
@@ -968,7 +1087,7 @@ module tb_mips_soc;
                 (linux_vic_accept_trace_cycle_end == 0 ||
                  linux_trace_cycle <= linux_vic_accept_trace_cycle_end) &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept) begin
-                $display("LINUX_VIC_ACCEPT_TRACE cycle=%0d pc=%08h epc=%08h wait=%b timer_ip=%b raw=%08h pending=%08h enable=%08h active=%08h vec_id=%02h cause=%08h status=%08h",
+                $display("LINUX_VIC_ACCEPT_TRACE cycle=%0d pc=%08h epc=%08h wait=%b timer_ip=%b raw=%08h pending=%08h enable=%08h active=%08h vec_id=%02h cause=%08h status=%08h irq_hazard=%b stall_mem=%b dreq_raw=%b mem_active=%b wb_bd=%b exception_bd=%b delay_slot=%b except_pc=%08h wb_pc=%08h wb_inst=%08h wb_valid=%b mem_pc=%08h ex_pc=%08h id_pc=%08h s0=%08h s1=%08h s2=%08h sp=%08h ra=%08h",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc,
@@ -980,7 +1099,28 @@ module tb_mips_soc;
                     u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.active_r,
                     u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.vec_id,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.linux_irq_restart_hazard,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_mem,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req_raw,
+                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_read ||
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_write ||
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_cache_op_valid),
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_bd,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_delay_slot,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.except_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[16],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[17],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[18],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[29],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_id_stage.u_mips_regfile.regs[31]);
                 linux_vic_accept_trace_count = linux_vic_accept_trace_count + 1;
             end
             linux_vic_prev_raw = u_soc.u_impl.u_peripheral_subsystem.u_apb_pic.raw;
@@ -1030,6 +1170,9 @@ module tb_mips_soc;
                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'ha8e0_0000) &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < 32'ha8e1_0000) ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'hc006_0000) &&
+                  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < 32'hc006_8000) ||
                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.inst_req &&
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr >= 32'h88e0_0000) &&
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.if_vaddr < 32'h88e1_0000) ||
@@ -1060,6 +1203,60 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_fault_type,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_pfn,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_ilookup_pfn);
+                // Data accesses in the Linux page-table area are useful even
+                // when they are not vector writes.  Capture the complete D
+                // lookup result and the selected architectural entry so a
+                // TLB miss, invalid leaf, ASID mismatch, or dirty-bit fault
+                // can be distinguished without dumping all 64 entries.
+                if ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr >= 32'hc006_0000) &&
+                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr < 32'hc006_8000)) begin
+                    $display("LINUX_TLB_DATA_DETAIL cycle=%0d va=%08h asid=%02h req=%b/%b/%b mmu=%b/%b/%b/%b fault=%0d pfn=%05h idx=%0d hits=%016h valid=%b vpn2=%05h mask=%04h entrylo0=%08h entrylo1=%08h entryasid=%02h g=%b",
+                        linux_trace_cycle,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_vaddr,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translate_req,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_req,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.data_we,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_hit,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_v,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_d,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_multi_hit,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_d_fault_type,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_pfn,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_vec,
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r],
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_vpn2[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r],
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_mask[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r],
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r],
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo1[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r],
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r],
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_g[
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.lookup1_hit_index_r]);
+                    if (!u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mmu_dlookup_hit) begin
+                        for (linux_tlb_detail_i = 0;
+                             linux_tlb_detail_i < `SOC_CP0_TLB_ENTRIES;
+                             linux_tlb_detail_i = linux_tlb_detail_i + 1) begin
+                            if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[linux_tlb_detail_i])
+                                $display("LINUX_TLB_DATA_ENTRY cycle=%0d idx=%0d valid=%b vpn2=%05h mask=%04h entrylo0=%08h entrylo1=%08h entryasid=%02h g=%b",
+                                    linux_trace_cycle,
+                                    linux_tlb_detail_i,
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_valid[linux_tlb_detail_i],
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_vpn2[linux_tlb_detail_i],
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_mask[linux_tlb_detail_i],
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo0[linux_tlb_detail_i],
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_entrylo1[linux_tlb_detail_i],
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_asid[linux_tlb_detail_i],
+                                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.u_mips_tlb.tlb_g[linux_tlb_detail_i]);
+                        end
+                    end
+                end
                 linux_tlb_trace_count = linux_tlb_trace_count + 1;
             end
             // Keep fault/address evidence independent from broad TLB logs:
@@ -1531,6 +1728,37 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req);
                 linux_cp0_trace_count = linux_cp0_trace_count + 1;
+            end
+            if (linux_cp0_op_trace != 0 &&
+                linux_cp0_op_trace_count < linux_cp0_op_trace_limit &&
+                (linux_cp0_op_trace_cycle_start == 0 ||
+                 linux_trace_cycle >= linux_cp0_op_trace_cycle_start) &&
+                (linux_cp0_op_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_cp0_op_trace_cycle_end) &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ei ||
+                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_di ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr == 5'd12 &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel == 3'd0))) begin
+                $display("LINUX_CP0_OP_TRACE cycle=%0d pc=%08h inst=%08h ei=%b di=%b eret=%b cp0we=%b data=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b",
+                    linux_trace_cycle,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ei,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_di,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_is_eret &&
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_status,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req);
+                linux_cp0_op_trace_count = linux_cp0_op_trace_count + 1;
             end
             if (linux_cp0_read_trace_count < linux_cp0_read_trace_limit &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
@@ -2432,6 +2660,15 @@ module tb_mips_soc;
         linux_cp0_trace_limit = 0;
         if (!$value$plusargs("LINUX_CP0_TRACE_LIMIT=%d", linux_cp0_trace_limit)) begin end
         linux_cp0_trace_count = 0;
+        linux_cp0_op_trace = 0;
+        if (!$value$plusargs("LINUX_CP0_OP_TRACE=%d", linux_cp0_op_trace)) begin end
+        linux_cp0_op_trace_limit = 1024;
+        if (!$value$plusargs("LINUX_CP0_OP_TRACE_LIMIT=%d", linux_cp0_op_trace_limit)) begin end
+        linux_cp0_op_trace_count = 0;
+        linux_cp0_op_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_CP0_OP_TRACE_CYCLE_START=%d", linux_cp0_op_trace_cycle_start)) begin end
+        linux_cp0_op_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_CP0_OP_TRACE_CYCLE_END=%d", linux_cp0_op_trace_cycle_end)) begin end
         linux_cp0_read_trace_limit = 0;
         if (!$value$plusargs("LINUX_CP0_READ_TRACE_LIMIT=%d", linux_cp0_read_trace_limit)) begin end
         linux_cp0_read_trace_count = 0;
@@ -2524,6 +2761,34 @@ module tb_mips_soc;
         if (!$value$plusargs("LINUX_UART_TRACE_CYCLE_END=%d", linux_uart_trace_cycle_end)) begin end
         linux_terminal_stop = 0;
         if (!$value$plusargs("LINUX_TERMINAL_STOP=%d", linux_terminal_stop)) begin end
+        linux_irq_schedule_fd = 0;
+        linux_irq_schedule_path = {4096{1'b0}};
+        linux_irq_schedule_start_pc = 32'd0;
+        if ($value$plusargs("LINUX_IRQ_SCHEDULE_PATH=%s", linux_irq_schedule_path)) begin
+            if (!$value$plusargs("LINUX_IRQ_SCHEDULE_START_PC=%h",
+                                 linux_irq_schedule_start_pc))
+                $fatal(1, "LINUX_IRQ_SCHEDULE_START_PC is required with LINUX_IRQ_SCHEDULE_PATH");
+            linux_irq_schedule_fd = $fopen(linux_irq_schedule_path, "w");
+            if (linux_irq_schedule_fd == 0)
+                $fatal(1, "cannot open LINUX_IRQ_SCHEDULE_PATH=%s",
+                       linux_irq_schedule_path);
+        end
+        linux_random_schedule_fd = 0;
+        linux_random_schedule_path = {4096{1'b0}};
+        linux_random_schedule_start_pc = 32'd0;
+        if ($value$plusargs("LINUX_RANDOM_SCHEDULE_PATH=%s",
+                            linux_random_schedule_path)) begin
+            if (!$value$plusargs("LINUX_RANDOM_SCHEDULE_START_PC=%h",
+                                 linux_random_schedule_start_pc))
+                $fatal(1, "LINUX_RANDOM_SCHEDULE_START_PC is required with LINUX_RANDOM_SCHEDULE_PATH");
+            linux_random_schedule_fd = $fopen(linux_random_schedule_path, "w");
+            if (linux_random_schedule_fd == 0)
+                $fatal(1, "cannot open LINUX_RANDOM_SCHEDULE_PATH=%s",
+                       linux_random_schedule_path);
+            $fdisplay(linux_random_schedule_fd,
+                      "# cp0-random-schedule-v1 start_pc=%08h sequence kind pc value",
+                      linux_random_schedule_start_pc);
+        end
         linux_uart_transcript_fd = 0;
         linux_uart_transcript_enabled = 0;
         linux_uart_transcript_path = {1024{1'b0}};
@@ -2533,6 +2798,17 @@ module tb_mips_soc;
                 linux_uart_transcript_enabled = 1;
             else
                 $display("LINUX_UART_TRANSCRIPT_OPEN_FAILED path=%s", linux_uart_transcript_path);
+        end
+        linux_uart_apb_schedule_fd = 0;
+        linux_uart_apb_schedule_path = {1024{1'b0}};
+        if ($value$plusargs("LINUX_UART_APB_SCHEDULE_PATH=%s",
+                            linux_uart_apb_schedule_path)) begin
+            linux_uart_apb_schedule_fd = $fopen(linux_uart_apb_schedule_path, "w");
+            if (linux_uart_apb_schedule_fd == 0)
+                $fatal(1, "cannot open LINUX_UART_APB_SCHEDULE_PATH=%s",
+                       linux_uart_apb_schedule_path);
+            $fdisplay(linux_uart_apb_schedule_fd,
+                      "# uart-apb-schedule-v1 cycle write address data");
         end
         linux_apb_trace = 0;
         if (!$value$plusargs("LINUX_APB_TRACE=%d", linux_apb_trace)) begin end
@@ -3775,6 +4051,15 @@ module tb_mips_soc;
 `ifdef TB_LINUX_BOOT_TRACE
         if (linux_uart_transcript_enabled != 0)
             $fclose(linux_uart_transcript_fd);
+        if (linux_uart_apb_schedule_fd != 0)
+            $fclose(linux_uart_apb_schedule_fd);
+        if (linux_irq_schedule_fd != 0)
+            $fclose(linux_irq_schedule_fd);
+        if (linux_random_schedule_fd != 0) begin
+            $display("LINUX_RANDOM_SCHEDULE_CAPTURE events=%0d",
+                     linux_random_schedule_count);
+            $fclose(linux_random_schedule_fd);
+        end
 `endif
         $finish;
     end
@@ -4691,10 +4976,21 @@ bind tb_mips_soc soc_observation_bind u_soc_retire_observation_bind (
     .retire_instr         (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst),
     .retire_next_pc       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_next_pc),
     .retire_gpr_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
+                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid &&
+                           !(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
+                             u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid) &&
                            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
     .retire_gpr_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr),
     .retire_gpr_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata),
-    .retire_cp0_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we),
+    .retire_gpr_state     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_save_gpr),
+    .retire_hilo_state    ({u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu.hi_out,
+                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu.lo_out}),
+    .retire_mdu_done      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.mdu_done),
+    .retire_mdu_op        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_ex_stage.u_mips_mdu.op_r),
+    .retire_cp0_we        (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_we &&
+                           u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid &&
+                           !(u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
+                             u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid)),
     .retire_cp0_addr      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_rd_addr),
     .retire_cp0_sel       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel),
     .retire_cp0_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out),

@@ -577,6 +577,14 @@ module mips_cpu #(
     wire [2:0]  cp0_config_k0;
     // Phase B.4: effective privilege from CP0 (combinational readback)
     wire        cpu_kernel_mode;
+    // The privilege state is updated at the same edge that accepts an
+    // exception, but the redirected vector is fetched before that edge. Keep
+    // the I-side translation in kernel mode during that redirect cycle; a
+    // user-mode access fault on the vector would feed back into IRQ acceptance.
+    // ERET is excluded because its target is the returning context's PC.
+    wire        mmu_i_kernel_mode = cpu_kernel_mode ||
+                                    (exception_flush &&
+                                     !(wb_is_eret && wb_commit_valid));
     wire        cpu_cu0;
     wire        cpu_cu1;
     wire [31:0] cpu_hwrena;
@@ -1518,13 +1526,16 @@ module mips_cpu #(
            (irq_wb_waddr == 5'd6) ||
            (irq_wb_waddr == 5'd9) || (irq_wb_waddr == 5'd20))));
 `ifdef SOC_LINUX_IRQ_RESTART_HAZARD_SELECTED
-    assign linux_irq_restart_hazard = linux_irq_restart_hazard_selected;
+    assign linux_irq_restart_hazard = !wait_state &&
+                                      linux_irq_restart_hazard_selected;
 `else
     // Restarting any in-flight register producer across an asynchronous Linux
     // IRQ can replay a side effect before its architectural writeback.  Keep
-    // the all-register guard as the default; the selected-register mode is
-    // retained only for explicitly scoped comparison runs.
-    assign linux_irq_restart_hazard = linux_irq_restart_hazard_any;
+    // the all-register guard as the default. Once WAIT has retired, held
+    // pipeline producers are younger than the saved resume PC and are flushed
+    // on wakeup, so they must not suppress the interrupt that wakes the core.
+    assign linux_irq_restart_hazard = !wait_state &&
+                                      linux_irq_restart_hazard_any;
 `endif
     wire        ex_cache_op_valid;
     wire [4:0]  ex_cache_op;
@@ -2088,6 +2099,12 @@ module mips_cpu #(
         else if (data_data_ok_current && mem_mem_read)
             completed_load_data <= mem_rdata_fmt;
     end
+
+    // A blocking response can complete while an unrelated front-end stall
+    // keeps the MEM bundle in place. The cache response is one cycle wide, so
+    // use its captured value when that completed load is eventually allocated.
+    wire [31:0] rob_mem_rdata_fmt = (mem_mem_read && mem_done) ?
+                                    completed_load_data : mem_rdata_fmt;
     
     // In-order-retirement completion buffer (mini-ROB). Stage 2: DEPTH=2,
     // real circular-buffer bookkeeping now runs, but is still a bit-exact
@@ -2355,7 +2372,7 @@ module mips_cpu #(
         .mem_alloc_valid (rob_alloc_valid),
         .mem_ready_at_alloc(rob_ready_at_alloc),
 
-        .mem_rdata_fmt   (mem_rdata_fmt),
+        .mem_rdata_fmt   (rob_mem_rdata_fmt),
         .mem_ex_out      (mem_ex_out_wb),
         .mem_pc_plus_8   (mem_pc_plus_8),
         .mem_inst        (mem_inst),
@@ -2717,15 +2734,6 @@ module mips_cpu #(
                                       !prior2_wb_delay_slot_valid &&
                                       ((prior2_wb_pc + 32'd4 == ex_pc) ||
                                        (prior2_wb_pc + 32'd4 == id_pc))));
-    wire wb_is_control_transfer =
-        (wb_inst[31:26] == 6'b000001) || // REGIMM branches
-        (wb_inst[31:26] == 6'b000010) || // J
-        (wb_inst[31:26] == 6'b000011) || // JAL
-        ((wb_inst[31:26] >= 6'b000100) &&
-         (wb_inst[31:26] <= 6'b000111)) || // conditional branches
-        ((wb_inst[31:26] == 6'b000000) &&
-         ((wb_inst[5:0] == 6'b001000) || // JR/JR.HB
-          (wb_inst[5:0] == 6'b001001)));  // JALR/JALR.HB
     // A control-transfer instruction is retired immediately before its
     // architectural delay slot. This remains observable when a redirected
     // target has already replaced MEM, which is the common JR/JALR case.
@@ -2745,6 +2753,15 @@ module mips_cpu #(
                                                  (prior_wb_inst[31:26] == 6'b000000) &&
                                                  ((prior_wb_inst[5:0] == 6'b001000) ||
                                                   (prior_wb_inst[5:0] == 6'b001001));
+    wire wb_is_control_transfer =
+        (wb_inst[31:26] == 6'b000001) || // REGIMM branches
+        (wb_inst[31:26] == 6'b000010) || // J
+        (wb_inst[31:26] == 6'b000011) || // JAL
+        ((wb_inst[31:26] >= 6'b000100) &&
+         (wb_inst[31:26] <= 6'b000111)) || // conditional branches
+        ((wb_inst[31:26] == 6'b000000) &&
+         ((wb_inst[5:0] == 6'b001000) || // JR/JR.HB
+          (wb_inst[5:0] == 6'b001001)));  // JALR/JALR.HB
     // A stalled/replayed instruction can be present in both WB and MEM on
     // the interrupt edge.  Its carried delay-slot bit belongs to an older
     // pipeline transaction and must not manufacture Cause.BD.  When WB is
@@ -3098,7 +3115,7 @@ module mips_cpu #(
         .req_is_fetch    (1'b1),
         .asid            (cp0_asid),
         .config_k0       (cp0_config_k0),
-        .is_kernel       (cpu_kernel_mode),
+        .is_kernel       (mmu_i_kernel_mode),
         .tlb_lookup_va   (mmu_ilookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_ilookup_hit),

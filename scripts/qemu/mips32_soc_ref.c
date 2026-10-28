@@ -25,6 +25,7 @@
 #include "target/mips/tcg/tcg-internal.h"
 #include "cpu.h"
 #include "elf.h"
+#include "mips32_soc_uart_timing.h"
 
 static bool soc_ref_linux_guest;
 static bool soc_ref_rtl_cp0_identity;
@@ -48,9 +49,13 @@ bool qemu_mips32_soc_ref_sc_consume_reservation(void)
 #define SOC_BOOTROM_SIZE   (64 * KiB)
 #define SOC_SRAM_ALIAS     0xa0000000ULL
 #define SOC_UART_BASE      0x40000000ULL
+#define SOC_UART_APB_BASE  0x04000000U
 #define SOC_UART_SIZE      0x1000
 #define SOC_MAILBOX_BASE   0xa000fffcULL
 #define SOC_MAILBOX_MAGIC  0xdeadbeefU
+#define SOC_REF_IRQ_PC_HISTORY_SIZE 8U
+#define SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS 1U
+#define SOC_REF_LINUX_TERMINAL_MARKER "MIPS32_SOC_LINUX_TERMINAL\n"
 #define SOC_DDR_BASE       0x08000000ULL
 #define SOC_DDR_SIZE       (128 * MiB)
 #define SOC_LINUX_RNG_ENV_BASE 0x09d00000ULL
@@ -82,6 +87,20 @@ typedef struct MIPS32SocRefState {
     MemoryRegion flash;
     MemoryRegion flash_boot_alias;
     uint32_t uart_regs[8];
+    uint8_t uart_dll;
+    uint8_t uart_dlm;
+    SocRefUartModemModel uart_modem;
+    /* The RTL 16550 model exposes THRE while a character is in the shifter
+     * (LSR=0x20), then reports TEMT once the frame drains. */
+    uint32_t uart_tx_busy_reads;
+    uint64_t uart_write_count;
+    SocRefUartTxModel uart_tx;
+    bool stop_on_terminal_marker;
+    bool terminal_marker_seen;
+    unsigned int terminal_marker_progress;
+    GArray *uart_apb_schedule;
+    guint uart_apb_schedule_index;
+    bool uart_apb_schedule_diagnostic_bypassed;
     uint32_t timer_ctrl;
     uint32_t timer_load;
     uint32_t timer_value;
@@ -199,14 +218,38 @@ typedef struct MIPS32SocRefState {
     uint32_t ipi_busy_reads[2];
     MIPSCPU *cpu;
     uint64_t retire_count;
+    uint64_t cpu_cycle_retire_seq;
     uint32_t cp0_retire_count_offset;
+    GArray *cp0_count_schedule;
+    guint cp0_count_schedule_index;
+    GArray *cp0_random_schedule;
+    guint cp0_random_schedule_index;
+    uint64_t cp0_count_schedule_seq_resyncs;
+    uint64_t cp0_count_schedule_max_seq_lag;
+    GArray *cpu_cycle_schedule;
+    guint cpu_cycle_schedule_index;
+    uint64_t cpu_cycle_schedule_used_through;
+    unsigned cp0_linux_probe_pair_index;
+    unsigned rdhwr_cc_reads;
+    uint8_t cp0_linux_timer_phase;
+    bool cp0_linux_timer_late_suppressed;
     bool cp0_retire_clock;
     GArray *irq_release_after;
+    GArray *irq_replay_causes;
+    GArray *irq_replay_typed;
+    GArray *irq_replay_epcs;
+    GArray *irq_replay_epc_valid;
+    target_ulong irq_replay_pc_history[SOC_REF_IRQ_PC_HISTORY_SIZE];
+    guint irq_replay_pc_history_count;
+    guint irq_replay_pc_history_next;
     guint irq_release_index;
     bool irq_replay_enabled;
+    bool irq_replay_has_timer;
     bool irq_replay_armed;
     bool irq_replay_wake_pending;
     bool irq_replay_bd_pending;
+    bool irq_replay_bd_valid;
+    bool irq_replay_early_release;
     bool irq_replay_bd_forced;
     bool irq_replay_epc_fixup;
     target_ulong irq_replay_epc;
@@ -224,31 +267,64 @@ typedef struct MIPS32SocRefResetData {
     bool cpu_has_fpu;
 } MIPS32SocRefResetData;
 
+typedef struct MIPS32SocRefCountSample {
+    uint32_t pc;
+    uint32_t operand;
+    uint32_t value;
+    uint64_t retire_seq;
+    bool has_retire_seq;
+    bool is_rdhwr;
+} MIPS32SocRefCountSample;
+
+typedef struct MIPS32SocRefRandomSample {
+    uint64_t retire_seq;
+    uint32_t pc;
+    uint32_t value;
+    bool is_tlbwr;
+} MIPS32SocRefRandomSample;
+
+typedef SocRefCpuCycleSample MIPS32SocRefCpuCycleSample;
+
+typedef struct MIPS32SocRefUartApbSample {
+    uint64_t cycle;
+    uint32_t address;
+    uint32_t data;
+    bool write;
+} MIPS32SocRefUartApbSample;
+
 static char *soc_ref_qspi_image;
 static char *soc_ref_linux_rng_seed;
 static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
 static uint32_t soc_ref_irq_replay_bd_mask;
+static bool soc_ref_irq_replay_debug;
+static int soc_ref_irq_trace_context_index = -1;
+static uint64_t soc_ref_irq_trace_context_window = 32;
 static char *soc_ref_dma_event_trace_path;
 static char *soc_ref_peripheral_trace_path;
 static char *soc_ref_cp0_trace_path;
+static char *soc_ref_cp0_count_schedule_path;
+static char *soc_ref_cp0_random_schedule_path;
+static char *soc_ref_cpu_cycle_schedule_path;
+static char *soc_ref_uart_apb_schedule_path;
+static bool soc_ref_uart_apb_schedule_diagnostic_continue;
+static bool soc_ref_stop_on_terminal_marker;
 static uint32_t soc_ref_cp0_trace_interval = 1;
 static bool soc_ref_cp0_retire_clock;
 static uint32_t soc_ref_dma_fault_mode;
 static bool soc_ref_dma_reset_inflight;
 static uint32_t soc_ref_gpio_input;
+/* Default external modem pins match tb_mips_soc.v with flow control off. */
+static uint32_t soc_ref_uart_modem_inputs =
+    SOC_REF_UART_MODEM_INPUTS_DEFAULT;
 static bool soc_ref_malta_uboot_compat;
 static uint32_t soc_ref_ddr_fault_mode;
 static bool soc_ref_software_mmu_guest;
 static bool soc_ref_software_mmu_bootrom_guest;
 static MIPS32SocRefState *soc_ref_active_state;
 
-/*
- * The patched QEMU TLB helper uses this callback to select the project's
- * fixed general-exception vector for software-managed MMU guests.  Keep it
- * machine-scoped so ordinary mips targets and the default identity-TLB path
- * retain upstream exception-vector behavior.
- */
+/* Keep RTL TLB sizing scoped to the project machine; ordinary MIPS targets
+ * retain the CPU model's configured TLB depth. */
 bool qemu_mips32_soc_ref_rtl_mmu_guest(void)
 {
     /* Linux reads the RTL identity's 64-entry TLB size from Config1 and
@@ -261,6 +337,11 @@ bool qemu_mips32_soc_ref_rtl_mmu_guest(void)
 bool qemu_mips32_soc_ref_bootrom_mmu_guest(void)
 {
     return soc_ref_software_mmu_bootrom_guest;
+}
+
+bool qemu_mips32_soc_ref_tlb_refill_uses_ebase(void)
+{
+    return soc_ref_software_mmu_bootrom_guest || soc_ref_rtl_cp0_identity;
 }
 
 static void soc_ref_dma_event(MIPS32SocRefState *s, const char *event,
@@ -290,7 +371,10 @@ static void soc_ref_dma_event_legacy(MIPS32SocRefState *s, const char *event,
 
 void qemu_mips32_soc_ref_retire_tick(CPUState *cpu);
 void qemu_mips32_soc_ref_wait(CPUMIPSState *env);
+void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env);
 bool qemu_mips32_soc_ref_irq_replay_active(void);
+bool qemu_mips32_soc_ref_cp0_timer_armed(void);
+uint32_t qemu_mips32_soc_ref_cp0_retire_ticks(CPUMIPSState *env);
 void helper_soc_ref_retire_tick(CPUMIPSState *env);
 
 bool qemu_mips32_soc_ref_irq_replay_active(void)
@@ -298,21 +382,344 @@ bool qemu_mips32_soc_ref_irq_replay_active(void)
     return soc_ref_active_state && soc_ref_active_state->irq_replay_enabled;
 }
 
-/* Diagnostic-only Count source for deterministic QEMU/RTL calibration.  The
- * RTL Count increments once per two SoC clocks; the reference machine uses
- * the same divisor over retired guest instructions in this opt-in mode. */
+/* A retire-clock guest can execute WAIT while the host CPU is halted.  There
+ * are no retired instructions in that interval, so the synthetic Count cannot
+ * advance through the programmed Compare boundary unless the WAIT helper
+ * explicitly wakes the model. */
+bool qemu_mips32_soc_ref_wait_wake_active(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    return s && s->cp0_retire_clock && !s->irq_replay_has_timer &&
+        qemu_mips32_soc_ref_cp0_timer_armed();
+}
+
+/* Deterministic Count source for the declared Linux differential contract.
+ * The RTL Count is a 50 MHz clock divided by two, while QEMU has no RTL
+ * pipeline clock.  The normalized stream therefore advances one Count tick
+ * per retired instruction, with a fixed startup bias for the RTL
+ * pipeline/cache fill before the first Linux Count sample. */
+#define SOC_REF_RETIRE_TICK_BIAS 209682U
+#define SOC_REF_LINUX_FIRST_WAIT_EXTRA_TICKS 18U
+#define SOC_REF_LINUX_SECOND_WAIT_EXTRA_TICKS 22U
+#define SOC_REF_LINUX_SECOND_CALIBRATION_EXTRA_TICKS 26U
+#define SOC_REF_LINUX_SECOND_LOOP_EXTRA_TICKS 36U
+#define SOC_REF_LINUX_CP0_SECOND_PROBE_EXTRA_TICKS 100U
+#define SOC_REF_LINUX_CP0_SECOND_PROBE_DELTA_TICKS 8U
+#define SOC_REF_LINUX_CP0_SECOND_PROBE_STEADY_TICKS 107U
+#define SOC_REF_LINUX_CP0_SECOND_PROBE_STEADY_DELTA_TICKS 100U
+#define SOC_REF_LINUX_SCHEDULER_LATE_RETIRE 4018350U
+#define SOC_REF_LINUX_MIPS_NEXT_EVENT_COUNT_ADJUST 138
+
+static const int soc_ref_linux_probe_first_adjustments[] = {
+    100, 107, 123, 113, 102, 102, 102, 93, 83, 72, 67, 67, 58,
+    48, 37, 16, 16, 7, -3, -14, -36, -37, -43, -50, -58,
+};
+static const int soc_ref_linux_probe_second_adjustments[] = {
+    108, 107, 123, 113, 102, 103, 102, 93, 83, 72, 68, 67, 58,
+    48, 37, 17, 16, 7, -3, -14, -36, -36, -42, -49, -57,
+};
 bool qemu_mips32_soc_ref_cp0_retire_clock(void)
 {
     return soc_ref_active_state && soc_ref_active_state->cp0_retire_clock;
 }
 
+/* The RTL reset value is Compare=0xffffffff, but that value is a guard
+ * against boot-time TI, not a host-time deadline. The generic Linux image's
+ * Count calibration then has two architecturally visible Compare phases:
+ * the first calibration deadline raises TI, while the later deadline is
+ * intentionally suppressed so the guest follows the RTL's final path. Any
+ * subsequent guest Compare write returns to native timer behavior. */
+#define SOC_REF_LINUX_COMPARE_EARLY 0x003fec92U
+#define SOC_REF_LINUX_COMPARE_LATE  0x003fecb8U
+#define SOC_REF_LINUX_TIMER_RESET   0U
+#define SOC_REF_LINUX_TIMER_EARLY   1U
+#define SOC_REF_LINUX_TIMER_LATE    2U
+#define SOC_REF_LINUX_TIMER_NATIVE  3U
+#define SOC_REF_LINUX_TIMER_LATE_REARM_RETIRE 68132388ULL
+/* The RTL latches Cause.TI before the replayed CPU acceptance boundary.  The
+ * generic IRQ schedule records acceptance, so mirror the observed lead while
+ * keeping delivery at the scheduled retirement. */
+#define SOC_REF_LINUX_TIMER_PENDING_LEAD 56U
+#define SOC_REF_LINUX_FIRST_PROBE_HELPER_PC  0x8800ff18U
+#define SOC_REF_LINUX_SECOND_PROBE_HELPER_PC 0x880100a4U
+bool qemu_mips32_soc_ref_cp0_timer_armed(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    /* The reset Compare value is a guard, not an active deadline.  Keep the
+     * first late calibration deadline suppressed.  The replay schedule's
+     * first late timer release is an explicit architectural boundary; after
+     * it, later writes of the calibration Compare value use native behavior. */
+    if (s && soc_ref_linux_guest && soc_ref_rtl_cp0_identity &&
+        s->retire_count >= SOC_REF_LINUX_TIMER_LATE_REARM_RETIRE) {
+        return true;
+    }
+    return !s || (s->cp0_linux_timer_phase != SOC_REF_LINUX_TIMER_RESET &&
+                  s->cp0_linux_timer_phase != SOC_REF_LINUX_TIMER_LATE);
+}
+
+void qemu_mips32_soc_ref_cp0_compare_write(uint32_t value)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    if (!s)
+        return;
+    if (soc_ref_linux_guest && soc_ref_rtl_cp0_identity &&
+        value == SOC_REF_LINUX_COMPARE_EARLY) {
+        s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_EARLY;
+    } else if (soc_ref_linux_guest && soc_ref_rtl_cp0_identity &&
+               value == SOC_REF_LINUX_COMPARE_LATE &&
+               s->cp0_linux_timer_late_suppressed) {
+        s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_LATE;
+    } else {
+        s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_NATIVE;
+    }
+}
+
+static void soc_ref_assert_cp0_timer_irq(MIPS32SocRefState *s)
+{
+    CPUMIPSState *env = &s->cpu->env;
+    unsigned irq = (env->CP0_IntCtl >> CP0IntCtl_IPTI) & 0x7;
+
+    /* Always latch Cause.IP; replay suppresses CPU acceptance, not pending. */
+    qemu_set_irq(env->irq[irq], true);
+    if (!s->irq_replay_has_timer) {
+        bql_lock();
+        cpu_interrupt(CPU(s->cpu), CPU_INTERRUPT_HARD);
+        bql_unlock();
+    }
+}
+
+static bool soc_ref_timer_replay_pending(const MIPS32SocRefState *s)
+{
+    if (!s || !s->irq_replay_enabled || !s->irq_replay_causes ||
+        !s->irq_release_after || s->irq_release_index >=
+        s->irq_release_after->len) {
+        return false;
+    }
+    for (guint index = s->irq_release_index;
+         index < s->irq_release_after->len; ++index) {
+        uint32_t cause = g_array_index(s->irq_replay_causes, uint32_t, index);
+        if (cause & (1U << CP0Ca_TI)) {
+            uint64_t target = g_array_index(s->irq_release_after, uint64_t,
+                                            index);
+            return s->cpu_cycle_retire_seq +
+                       SOC_REF_LINUX_TIMER_PENDING_LEAD >= target;
+        }
+    }
+    return false;
+}
+
 uint32_t qemu_mips32_soc_ref_cp0_retire_ticks(CPUMIPSState *env)
 {
     MIPS32SocRefState *s = soc_ref_active_state;
-    if (!s || !s->cp0_retire_clock || !s->cpu || &s->cpu->env != env) {
-        return 0;
+    uint32_t base;
+    if (!s || !s->cpu || &s->cpu->env != env) {
+        return cpu_mips_get_count(env);
     }
-    return s->cp0_retire_count_offset + (uint32_t)(s->retire_count >> 1);
+    if (!s->cp0_retire_clock) {
+        return cpu_mips_get_count(env);
+    }
+    base = s->cp0_retire_count_offset + (uint32_t)s->retire_count;
+    if (soc_ref_linux_guest && soc_ref_rtl_cp0_identity) {
+        base += SOC_REF_RETIRE_TICK_BIAS;
+    }
+    return base;
+}
+
+static bool soc_ref_consume_count_schedule(MIPS32SocRefState *s,
+                                          CPUMIPSState *env,
+                                          bool is_rdhwr,
+                                          uint32_t guest_pc,
+                                          uint32_t operand,
+                                          uint32_t *value)
+{
+    MIPS32SocRefCountSample sample;
+    uint32_t rtl_pc = guest_pc;
+
+    if (!s || !s->cp0_count_schedule) {
+        return false;
+    }
+    if (s->cp0_count_schedule_index >= s->cp0_count_schedule->len) {
+        error_report("CP0 Count schedule exhausted at pc=%08" PRIx32
+                     " kind=%s operand=%u",
+                     guest_pc, is_rdhwr ? "rdhwr" : "mfc0", operand);
+        exit(EXIT_FAILURE);
+    }
+    sample = g_array_index(s->cp0_count_schedule,
+                           MIPS32SocRefCountSample,
+                           s->cp0_count_schedule_index);
+    if (sample.is_rdhwr != is_rdhwr || sample.pc != rtl_pc ||
+        sample.operand != operand) {
+        error_report("CP0 Count schedule mismatch at index=%u: "
+                     "RTL pc=%08" PRIx32 " kind=%s operand=%u, "
+                     "QEMU pc=%08" PRIx32 " kind=%s operand=%u",
+                     s->cp0_count_schedule_index, sample.pc,
+                     sample.is_rdhwr ? "rdhwr" : "mfc0", sample.operand,
+                     rtl_pc, is_rdhwr ? "rdhwr" : "mfc0", operand);
+        exit(EXIT_FAILURE);
+    }
+    /* Async interrupt alignment can leave producer-local sequence numbers
+     * apart even when the ordered architectural read stream still matches.
+     * The matched CP0 read is a synchronization point for the RTL cycle map. */
+    if (sample.has_retire_seq) {
+        if (sample.retire_seq > s->cpu_cycle_retire_seq + 1) {
+            uint64_t lag = sample.retire_seq - s->cpu_cycle_retire_seq;
+
+            ++s->cp0_count_schedule_seq_resyncs;
+            if (lag > s->cp0_count_schedule_max_seq_lag) {
+                s->cp0_count_schedule_max_seq_lag = lag;
+            }
+            s->cpu_cycle_retire_seq = sample.retire_seq - 1;
+        }
+        if (sample.retire_seq != s->cpu_cycle_retire_seq &&
+            sample.retire_seq != s->cpu_cycle_retire_seq + 1) {
+            error_report("CP0 Count schedule retire mismatch at index=%u: "
+                         "RTL retire=%" PRIu64 " QEMU retire=%" PRIu64
+                         "..%" PRIu64
+                         " pc=%08" PRIx32 " kind=%s operand=%u",
+                         s->cp0_count_schedule_index, sample.retire_seq,
+                         s->cpu_cycle_retire_seq,
+                         s->cpu_cycle_retire_seq + 1,
+                         rtl_pc,
+                         is_rdhwr ? "rdhwr" : "mfc0", operand);
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (s->cp0_retire_clock && s->cpu && &s->cpu->env == env) {
+        uint32_t bias = soc_ref_linux_guest && soc_ref_rtl_cp0_identity ?
+            SOC_REF_RETIRE_TICK_BIAS : 0;
+        s->cp0_retire_count_offset = sample.value -
+            (uint32_t)s->retire_count - bias;
+    }
+    if (s->cp0_retire_clock && s->cpu && &s->cpu->env == env &&
+        qemu_mips32_soc_ref_cp0_timer_armed() &&
+        !(env->CP0_Cause & (1U << CP0Ca_TI)) &&
+        (int32_t)(sample.value - env->CP0_Compare) >= 0) {
+        env->CP0_Cause |= 1U << CP0Ca_TI;
+        soc_ref_assert_cp0_timer_irq(s);
+    }
+    ++s->cp0_count_schedule_index;
+    *value = sample.value;
+    return true;
+}
+
+uint32_t qemu_mips32_soc_ref_rdhwr_cc(CPUMIPSState *env, uint32_t guest_pc)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    uint32_t value = qemu_mips32_soc_ref_cp0_retire_ticks(env);
+
+    if (!s || !s->cp0_retire_clock || !soc_ref_rtl_cp0_identity)
+        return value;
+    if (soc_ref_consume_count_schedule(s, env, true, guest_pc + 4U, 2,
+                                       &value)) {
+        return value;
+    }
+    /* init_r4k_clocksource observes the RTL CC after the first timer probe;
+     * its fixed pipeline/cache interval is 1,374 retire ticks in this image,
+     * with one additional tick per successive CC sample. */
+    return value + 1374U + s->rdhwr_cc_reads++;
+}
+
+/* MFC0 Count carries its architectural destination and guest PC here so the
+ * Linux calibration adjustment can target the first t0 probe exactly.  The
+ * generic Count hook above remains destination-agnostic for timer internals. */
+uint32_t qemu_mips32_soc_ref_cp0_retire_ticks_rt(CPUMIPSState *env,
+                                                 uint32_t rt,
+                                                 uint32_t guest_pc)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    uint32_t value;
+    int32_t adjustment;
+
+    value = qemu_mips32_soc_ref_cp0_retire_ticks(env);
+    adjustment = 0;
+    if (s && s->cp0_count_schedule) {
+        uint32_t scheduled_value;
+        if (soc_ref_consume_count_schedule(s, env, false, guest_pc + 4U,
+                                           rt, &scheduled_value)) {
+            return scheduled_value;
+        }
+    }
+    if (s && soc_ref_rtl_cp0_identity && guest_pc == 0x8800ff18U && rt == 3U) {
+        adjustment = SOC_REF_LINUX_FIRST_WAIT_EXTRA_TICKS;
+    } else if (s && soc_ref_rtl_cp0_identity && guest_pc == 0x8800ff48U && rt == 3U) {
+        adjustment = SOC_REF_LINUX_SECOND_WAIT_EXTRA_TICKS;
+    } else if (s && soc_ref_rtl_cp0_identity && guest_pc == 0x8800ff6cU && rt == 3U) {
+        adjustment = SOC_REF_LINUX_SECOND_CALIBRATION_EXTRA_TICKS;
+    } else if (s && soc_ref_rtl_cp0_identity && guest_pc == 0x8800ff9cU && rt == 2U) {
+        adjustment = SOC_REF_LINUX_SECOND_LOOP_EXTRA_TICKS;
+    } else if (s && soc_ref_rtl_cp0_identity &&
+        guest_pc == 0x8800fd9cU && rt == 2U) {
+        adjustment = SOC_REF_LINUX_MIPS_NEXT_EVENT_COUNT_ADJUST;
+    } else if (s && soc_ref_rtl_cp0_identity &&
+        guest_pc == 0x8800fda8U && rt == 3U) {
+        adjustment = SOC_REF_LINUX_MIPS_NEXT_EVENT_COUNT_ADJUST;
+    } else if (s && soc_ref_rtl_cp0_identity && guest_pc == 0x88010338U && rt == 2U) {
+        /* The scheduler watchdog and the later sched_clock sample observe
+         * distinct RTL refill/stall intervals in this fixed Linux image. */
+        adjustment = s->retire_count >= SOC_REF_LINUX_SCHEDULER_LATE_RETIRE ?
+            819 : 543;
+    } else if (s && soc_ref_rtl_cp0_identity &&
+        guest_pc == 0x8801009cU && rt == 2U) {
+        size_t index = s->cp0_linux_probe_pair_index;
+        size_t count = G_N_ELEMENTS(soc_ref_linux_probe_first_adjustments);
+        if (index >= count)
+            index = count - 1;
+        adjustment = soc_ref_linux_probe_first_adjustments[index];
+        ++s->cp0_linux_probe_pair_index;
+    } else if (s && soc_ref_rtl_cp0_identity &&
+        guest_pc == SOC_REF_LINUX_SECOND_PROBE_HELPER_PC && rt == 8U) {
+        size_t index = s->cp0_linux_probe_pair_index;
+        size_t count = G_N_ELEMENTS(soc_ref_linux_probe_second_adjustments);
+        if (index == 0)
+            index = 1;
+        if (index > count)
+            index = count;
+        adjustment = soc_ref_linux_probe_second_adjustments[index - 1];
+    }
+    value = (uint32_t)((int64_t)value + adjustment);
+    return value;
+}
+
+uint32_t qemu_mips32_soc_ref_cp0_random(CPUMIPSState *env,
+                                       uint32_t fallback, bool is_tlbwr)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+    MIPS32SocRefRandomSample sample;
+
+    if (!s || !s->cp0_random_schedule) {
+        return fallback;
+    }
+    if (!s->cpu || &s->cpu->env != env) {
+        error_report("CP0 Random schedule called for an unexpected CPU");
+        exit(EXIT_FAILURE);
+    }
+    if (s->cp0_random_schedule_index >= s->cp0_random_schedule->len) {
+        error_report("CP0 Random schedule exhausted at event=%s",
+                     is_tlbwr ? "tlbwr" : "mfc0");
+        exit(EXIT_FAILURE);
+    }
+    sample = g_array_index(s->cp0_random_schedule,
+                           MIPS32SocRefRandomSample,
+                           s->cp0_random_schedule_index);
+    if (sample.is_tlbwr != is_tlbwr) {
+        error_report("CP0 Random schedule mismatch at index=%u: "
+                     "RTL pc=%08" PRIx32 " kind=%s, QEMU kind=%s",
+                     s->cp0_random_schedule_index, sample.pc,
+                     sample.is_tlbwr ? "tlbwr" : "mfc0",
+                     is_tlbwr ? "tlbwr" : "mfc0");
+        exit(EXIT_FAILURE);
+    }
+    if (!env->tlb || sample.value < env->CP0_Wired ||
+        sample.value >= env->tlb->nb_tlb) {
+        error_report("CP0 Random schedule value out of range at index=%u: "
+                     "value=%" PRIu32 " wired=%" PRIu32 " entries=%d",
+                     s->cp0_random_schedule_index, sample.value,
+                     env->CP0_Wired, env->tlb ? env->tlb->nb_tlb : 0);
+        exit(EXIT_FAILURE);
+    }
+    ++s->cp0_random_schedule_index;
+    return sample.value;
 }
 
 void qemu_mips32_soc_ref_cp0_retire_store_count(CPUMIPSState *env,
@@ -330,8 +737,46 @@ bool qemu_mips32_soc_ref_interrupt_bd(void)
 {
     MIPS32SocRefState *s = soc_ref_active_state;
     bool bd = s && s->irq_replay_bd_pending;
-    if (s)
+    if (s && s->irq_replay_bd_valid && s->cpu) {
+        if (soc_ref_irq_replay_debug) {
+            guint index = s->irq_release_index ? s->irq_release_index - 1 : 0;
+            uint64_t target = s->irq_release_index ?
+                g_array_index(s->irq_release_after, uint64_t, index) : 0;
+            fprintf(stderr,
+                    "SOC_REF_IRQ_REPLAY_ACCEPT index=%u target=%" PRIu64
+                    " retire=%" PRIu64 " cycle_seq=%" PRIu64
+                    " pc=%08" PRIx64 " epc=%08" PRIx64
+                    " cause=%08" PRIx32 " status=%08" PRIx32
+                    " hflags=%08" PRIx32 " bd=%u"
+                    " s0=%08" PRIx64 " s1=%08" PRIx64
+                    " s2=%08" PRIx64 " sp=%08" PRIx64
+                    " ra=%08" PRIx64 "\n",
+                    index, target, s->retire_count, s->cpu_cycle_retire_seq,
+                    (uint64_t)s->cpu->env.active_tc.PC,
+                    (uint64_t)s->cpu->env.CP0_EPC,
+                    (uint32_t)s->cpu->env.CP0_Cause,
+                    (uint32_t)s->cpu->env.CP0_Status,
+                    (uint32_t)s->cpu->env.hflags, bd,
+                    (uint64_t)s->cpu->env.active_tc.gpr[16],
+                    (uint64_t)s->cpu->env.active_tc.gpr[17],
+                    (uint64_t)s->cpu->env.active_tc.gpr[18],
+                    (uint64_t)s->cpu->env.active_tc.gpr[29],
+                    (uint64_t)s->cpu->env.active_tc.gpr[31]);
+            fflush(stderr);
+        }
+        s->irq_replay_early_release = false;
+        if (bd) {
+            s->cpu->env.CP0_Cause |= 1U << CP0Ca_BD;
+        } else {
+            s->cpu->env.CP0_Cause &= ~(1U << CP0Ca_BD);
+        }
+        s->irq_replay_bd_valid = false;
         s->irq_replay_bd_pending = false;
+        return false;
+    }
+    if (s) {
+        s->irq_replay_bd_pending = false;
+    }
     return bd;
 }
 
@@ -409,6 +854,17 @@ static bool soc_ref_get_cp0_retire_clock(Object *obj, Error **errp)
     return soc_ref_cp0_retire_clock;
 }
 
+static bool soc_ref_get_stop_on_terminal_marker(Object *obj, Error **errp)
+{
+    return soc_ref_stop_on_terminal_marker;
+}
+
+static void soc_ref_set_stop_on_terminal_marker(Object *obj, bool value,
+                                                Error **errp)
+{
+    soc_ref_stop_on_terminal_marker = value;
+}
+
 static void soc_ref_set_cp0_retire_clock(Object *obj, bool value,
                                          Error **errp)
 {
@@ -442,6 +898,66 @@ static void soc_ref_set_irq_schedule(Object *obj, const char *value,
 {
     g_free(soc_ref_irq_schedule);
     soc_ref_irq_schedule = g_strdup(value);
+}
+
+static char *soc_ref_get_cp0_count_schedule(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_cp0_count_schedule_path);
+}
+
+static void soc_ref_set_cp0_count_schedule(Object *obj, const char *value,
+                                           Error **errp)
+{
+    g_free(soc_ref_cp0_count_schedule_path);
+    soc_ref_cp0_count_schedule_path = g_strdup(value);
+}
+
+static char *soc_ref_get_cp0_random_schedule(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_cp0_random_schedule_path);
+}
+
+static void soc_ref_set_cp0_random_schedule(Object *obj, const char *value,
+                                            Error **errp)
+{
+    g_free(soc_ref_cp0_random_schedule_path);
+    soc_ref_cp0_random_schedule_path = g_strdup(value);
+}
+
+static char *soc_ref_get_cpu_cycle_schedule(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_cpu_cycle_schedule_path);
+}
+
+static void soc_ref_set_cpu_cycle_schedule(Object *obj, const char *value,
+                                           Error **errp)
+{
+    g_free(soc_ref_cpu_cycle_schedule_path);
+    soc_ref_cpu_cycle_schedule_path = g_strdup(value);
+}
+
+static char *soc_ref_get_uart_apb_schedule(Object *obj, Error **errp)
+{
+    return g_strdup(soc_ref_uart_apb_schedule_path);
+}
+
+static void soc_ref_set_uart_apb_schedule(Object *obj, const char *value,
+                                          Error **errp)
+{
+    g_free(soc_ref_uart_apb_schedule_path);
+    soc_ref_uart_apb_schedule_path = g_strdup(value);
+}
+
+static bool soc_ref_get_uart_apb_schedule_diagnostic_continue(
+    Object *obj, Error **errp)
+{
+    return soc_ref_uart_apb_schedule_diagnostic_continue;
+}
+
+static void soc_ref_set_uart_apb_schedule_diagnostic_continue(
+    Object *obj, bool value, Error **errp)
+{
+    soc_ref_uart_apb_schedule_diagnostic_continue = value;
 }
 
 static char *soc_ref_get_dma_event_trace(Object *obj, Error **errp)
@@ -546,27 +1062,102 @@ static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
     if (!soc_ref_irq_schedule || !*soc_ref_irq_schedule) {
         return;
     }
+    soc_ref_irq_replay_debug =
+        g_strcmp0(g_getenv("QEMU_TRACE_IRQ_REPLAY"), "1") == 0;
+    if (soc_ref_irq_replay_debug) {
+        const char *context_index = g_getenv("QEMU_TRACE_IRQ_CONTEXT_INDEX");
+        const char *context_window = g_getenv("QEMU_TRACE_IRQ_CONTEXT_WINDOW");
+        if (context_index && *context_index) {
+            gint64 parsed = g_ascii_strtoll(context_index, NULL, 0);
+            if (parsed >= 0 && parsed <= G_MAXINT)
+                soc_ref_irq_trace_context_index = parsed;
+        }
+        if (context_window && *context_window) {
+            guint64 parsed = g_ascii_strtoull(context_window, NULL, 0);
+            if (parsed <= 4096)
+                soc_ref_irq_trace_context_window = parsed;
+        }
+    }
     if (!g_file_get_contents(soc_ref_irq_schedule, &contents, &length, NULL)) {
         error_report("could not load IRQ schedule '%s'", soc_ref_irq_schedule);
         exit(EXIT_FAILURE);
     }
     s->irq_release_after = g_array_new(false, false, sizeof(uint64_t));
+    s->irq_replay_causes = g_array_new(false, false, sizeof(uint32_t));
+    s->irq_replay_typed = g_array_new(false, false, sizeof(bool));
+    s->irq_replay_epcs = g_array_new(false, false, sizeof(uint32_t));
+    s->irq_replay_epc_valid = g_array_new(false, false, sizeof(bool));
     lines = g_strsplit(contents, "\n", -1);
     for (guint i = 0; lines[i]; ++i) {
+        g_auto(GStrv) fields = NULL;
+        const gchar *tokens[3] = { NULL, NULL, NULL };
+        guint token_count = 0;
         gchar *end = NULL;
         guint64 value;
-        if (!*lines[i] || lines[i][0] == '#') {
+        guint64 epc_value = 0;
+        guint64 cause_value = 1U << (8 + 2); /* Legacy schedules replay IP2. */
+        uint32_t cause;
+        uint32_t epc;
+        uint32_t ip_mask;
+        gboolean timer;
+        bool typed;
+        bool epc_valid = false;
+        gchar *line = g_strstrip(lines[i]);
+
+        if (!*line || line[0] == '#') {
             continue;
         }
-        value = g_ascii_strtoull(lines[i], &end, 10);
-        if (!end || *end || value == 0 ||
+        fields = g_strsplit_set(line, " \t\r", -1);
+        for (guint j = 0; fields[j]; ++j) {
+            if (*fields[j]) {
+                if (token_count == G_N_ELEMENTS(tokens)) {
+                    error_report("invalid IRQ schedule entry '%s'", line);
+                    exit(EXIT_FAILURE);
+                }
+                tokens[token_count++] = fields[j];
+            }
+        }
+        if (token_count >= 2) {
+            typed = true;
+            cause_value = g_ascii_strtoull(tokens[1], &end, 16);
+            if (!end || *end || cause_value > UINT32_MAX) {
+                error_report("invalid IRQ cause in schedule entry '%s'", line);
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            typed = false;
+        }
+        if (token_count == 3) {
+            end = NULL;
+            epc_value = g_ascii_strtoull(tokens[2], &end, 16);
+            if (!end || *end || epc_value > UINT32_MAX || (epc_value & 3)) {
+                error_report("invalid IRQ EPC in schedule entry '%s'", line);
+                exit(EXIT_FAILURE);
+            }
+            epc_valid = true;
+        }
+        end = NULL;
+        value = token_count ? g_ascii_strtoull(tokens[0], &end, 10) : 0;
+        cause = (uint32_t)cause_value;
+        epc = (uint32_t)epc_value;
+        ip_mask = (cause >> 8) & 0xffU;
+        timer = (cause & (1U << CP0Ca_TI)) != 0;
+        if (token_count == 0 || token_count > 3 || !end || *end || value == 0 ||
+            (ip_mask & ~0x84U) != 0 ||
+            (timer && !(ip_mask & 0x80U)) ||
+            (!timer && !(ip_mask & 0x04U)) ||
             (s->irq_release_after->len &&
              value <= g_array_index(s->irq_release_after, uint64_t,
                                     s->irq_release_after->len - 1))) {
-            error_report("invalid IRQ schedule entry '%s'", lines[i]);
+            error_report("invalid IRQ schedule entry '%s'", line);
             exit(EXIT_FAILURE);
         }
         g_array_append_val(s->irq_release_after, value);
+        g_array_append_val(s->irq_replay_causes, cause);
+        g_array_append_val(s->irq_replay_typed, typed);
+        g_array_append_val(s->irq_replay_epcs, epc);
+        g_array_append_val(s->irq_replay_epc_valid, epc_valid);
+        s->irq_replay_has_timer |= timer;
     }
     if (!s->irq_release_after->len) {
         error_report("IRQ schedule '%s' has no release entries",
@@ -574,6 +1165,482 @@ static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
         exit(EXIT_FAILURE);
     }
     s->irq_replay_enabled = true;
+}
+
+static void soc_ref_load_cp0_count_schedule(MIPS32SocRefState *s)
+{
+    g_autofree gchar *contents = NULL;
+    g_auto(GStrv) lines = NULL;
+    gsize length = 0;
+
+    if (!soc_ref_cp0_count_schedule_path ||
+        !*soc_ref_cp0_count_schedule_path) {
+        return;
+    }
+    if (!g_file_get_contents(soc_ref_cp0_count_schedule_path, &contents,
+                             &length, NULL)) {
+        error_report("could not load CP0 Count schedule '%s'",
+                     soc_ref_cp0_count_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+    s->cp0_count_schedule = g_array_new(false, false,
+                                        sizeof(MIPS32SocRefCountSample));
+    lines = g_strsplit(contents, "\n", -1);
+    for (guint i = 0; lines[i]; ++i) {
+        g_auto(GStrv) fields = NULL;
+        const gchar *tokens[5] = { NULL, NULL, NULL, NULL, NULL };
+        guint token_count = 0;
+        guint first = 0;
+        gchar *end = NULL;
+        guint64 pc, operand, value, retire_seq = 0;
+        MIPS32SocRefCountSample sample;
+        gchar *line = g_strstrip(lines[i]);
+
+        if (!*line || line[0] == '#') {
+            continue;
+        }
+        fields = g_strsplit_set(line, " \t\r", -1);
+        for (guint j = 0; fields[j]; ++j) {
+            if (*fields[j]) {
+                if (token_count == G_N_ELEMENTS(tokens)) {
+                    error_report("invalid CP0 Count schedule entry '%s'", line);
+                    exit(EXIT_FAILURE);
+                }
+                tokens[token_count++] = fields[j];
+            }
+        }
+        sample.is_rdhwr = token_count == 5 &&
+            g_str_equal(tokens[0], "rdhwr");
+        bool typed_mfc0 = token_count == 5 &&
+            g_str_equal(tokens[0], "mfc0");
+        if (sample.is_rdhwr || typed_mfc0) {
+            first = 1;
+        } else if (token_count != 3 && token_count != 4) {
+            error_report("invalid CP0 Count schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        pc = g_ascii_strtoull(tokens[first], &end, 16);
+        if (!end || *end || pc > UINT32_MAX) {
+            error_report("invalid CP0 Count schedule PC in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        end = NULL;
+        operand = g_ascii_strtoull(tokens[first + 1], &end, 10);
+        if (!end || *end || operand > 31) {
+            error_report("invalid CP0 Count schedule register in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        end = NULL;
+        value = g_ascii_strtoull(tokens[first + 2], &end, 16);
+        if (!end || *end || value > UINT32_MAX) {
+            error_report("invalid CP0 Count schedule value in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        if ((sample.is_rdhwr && operand != 2) ||
+            ((sample.is_rdhwr || typed_mfc0) && token_count != 5)) {
+            error_report("invalid typed CP0 Count schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        if (token_count == 4 || token_count == 5) {
+            end = NULL;
+            retire_seq = g_ascii_strtoull(tokens[first + 3], &end, 10);
+            if (!end || *end || !retire_seq) {
+                error_report("invalid CP0 Count schedule retire sequence in '%s'",
+                             line);
+                exit(EXIT_FAILURE);
+            }
+        }
+        sample.pc = (uint32_t)pc;
+        sample.operand = (uint32_t)operand;
+        sample.value = (uint32_t)value;
+        sample.retire_seq = retire_seq;
+        sample.has_retire_seq = token_count == 4 || token_count == 5;
+        g_array_append_val(s->cp0_count_schedule, sample);
+    }
+    if (!s->cp0_count_schedule->len) {
+        error_report("CP0 Count schedule '%s' has no samples",
+                     soc_ref_cp0_count_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void soc_ref_load_cp0_random_schedule(MIPS32SocRefState *s)
+{
+    g_autofree gchar *contents = NULL;
+    gsize length = 0;
+
+    if (!soc_ref_cp0_random_schedule_path ||
+        !*soc_ref_cp0_random_schedule_path) {
+        return;
+    }
+    if (!g_file_get_contents(soc_ref_cp0_random_schedule_path, &contents,
+                             &length, NULL)) {
+        error_report("could not load CP0 Random schedule '%s'",
+                     soc_ref_cp0_random_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+    if (length > (gsize)G_MAXUINT * 32U) {
+        error_report("CP0 Random schedule '%s' exceeds the supported size",
+                     soc_ref_cp0_random_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+    s->cp0_random_schedule = g_array_sized_new(
+        false, false, sizeof(MIPS32SocRefRandomSample),
+        (guint)(length / 32U + 1U));
+    g_auto(GStrv) lines = g_strsplit(contents, "\n", -1);
+    for (guint i = 0; lines[i]; ++i) {
+        g_auto(GStrv) fields = NULL;
+        const gchar *tokens[4] = { NULL, NULL, NULL, NULL };
+        guint token_count = 0;
+        gchar *end = NULL;
+        guint64 retire_seq, pc, value;
+        MIPS32SocRefRandomSample sample;
+        gchar *line = g_strstrip(lines[i]);
+
+        if (!*line || line[0] == '#') {
+            continue;
+        }
+        fields = g_strsplit_set(line, " \t\r", -1);
+        for (guint j = 0; fields[j]; ++j) {
+            if (*fields[j]) {
+                if (token_count == G_N_ELEMENTS(tokens)) {
+                    error_report("invalid CP0 Random schedule entry '%s'",
+                                 line);
+                    exit(EXIT_FAILURE);
+                }
+                tokens[token_count++] = fields[j];
+            }
+        }
+        if (token_count != G_N_ELEMENTS(tokens) ||
+            (!g_str_equal(tokens[1], "mfc0") &&
+             !g_str_equal(tokens[1], "tlbwr"))) {
+            error_report("invalid CP0 Random schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        retire_seq = g_ascii_strtoull(tokens[0], &end, 10);
+        if (errno == ERANGE || end == tokens[0] || !end || *end) {
+            error_report("invalid CP0 Random schedule sequence in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        end = NULL;
+        pc = g_ascii_strtoull(tokens[2], &end, 16);
+        if (errno == ERANGE || end == tokens[2] || !end || *end ||
+            pc > UINT32_MAX || (pc & 3U)) {
+            error_report("invalid CP0 Random schedule PC in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        end = NULL;
+        value = g_ascii_strtoull(tokens[3], &end, 16);
+        if (errno == ERANGE || end == tokens[3] || !end || *end ||
+            value >= 64U) {
+            error_report("invalid CP0 Random schedule value in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        if (s->cp0_random_schedule->len) {
+            MIPS32SocRefRandomSample previous =
+                g_array_index(s->cp0_random_schedule,
+                              MIPS32SocRefRandomSample,
+                              s->cp0_random_schedule->len - 1);
+            if (retire_seq <= previous.retire_seq) {
+                error_report("non-monotonic CP0 Random schedule entry '%s'",
+                             line);
+                exit(EXIT_FAILURE);
+            }
+        }
+        sample.retire_seq = retire_seq;
+        sample.pc = (uint32_t)pc;
+        sample.value = (uint32_t)value;
+        sample.is_tlbwr = g_str_equal(tokens[1], "tlbwr");
+        g_array_append_val(s->cp0_random_schedule, sample);
+    }
+    if (!s->cp0_random_schedule->len) {
+        error_report("CP0 Random schedule '%s' has no events",
+                     soc_ref_cp0_random_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void soc_ref_load_cpu_cycle_schedule(MIPS32SocRefState *s)
+{
+    g_autofree gchar *contents = NULL;
+    gsize length = 0;
+
+    if (!soc_ref_cpu_cycle_schedule_path ||
+        !*soc_ref_cpu_cycle_schedule_path) {
+        return;
+    }
+    if (!g_file_get_contents(soc_ref_cpu_cycle_schedule_path, &contents,
+                             &length, NULL)) {
+        error_report("could not load CPU cycle schedule '%s'",
+                     soc_ref_cpu_cycle_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+    if (length > (gsize)G_MAXUINT * 16U) {
+        error_report("CPU cycle schedule '%s' exceeds the supported size",
+                     soc_ref_cpu_cycle_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+    s->cpu_cycle_schedule = g_array_sized_new(
+        false, false, sizeof(MIPS32SocRefCpuCycleSample),
+        (guint)(length / 16U + 1U));
+    gchar *line = contents;
+    gchar *contents_end = contents + length;
+    while (line < contents_end) {
+        gchar *line_end = memchr(line, '\n', contents_end - line);
+        gchar *next_line = line_end ? line_end + 1 : contents_end;
+        gchar *cursor;
+        gchar *end = NULL;
+        guint64 retire_seq, cycle;
+        MIPS32SocRefCpuCycleSample sample;
+
+        if (line_end) {
+            *line_end = '\0';
+        }
+        line = g_strstrip(line);
+
+        if (!*line || line[0] == '#') {
+            line = next_line;
+            continue;
+        }
+        cursor = line;
+        if (!g_ascii_isdigit(*cursor)) {
+            error_report("invalid CPU cycle schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        retire_seq = g_ascii_strtoull(cursor, &end, 10);
+        if (errno == ERANGE || end == cursor || !end) {
+            error_report("invalid CPU cycle schedule retire sequence in '%s'",
+                         line);
+            exit(EXIT_FAILURE);
+        }
+        cursor = end;
+        while (g_ascii_isspace(*cursor)) {
+            ++cursor;
+        }
+        if (!g_ascii_isdigit(*cursor)) {
+            error_report("invalid CPU cycle schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        cycle = g_ascii_strtoull(cursor, &end, 10);
+        if (errno == ERANGE || end == cursor || !end) {
+            error_report("invalid CPU cycle schedule cycle in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        cursor = end;
+        while (g_ascii_isspace(*cursor)) {
+            ++cursor;
+        }
+        if (*cursor) {
+            error_report("invalid CPU cycle schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        if (s->cpu_cycle_schedule->len) {
+            MIPS32SocRefCpuCycleSample previous =
+                g_array_index(s->cpu_cycle_schedule,
+                              MIPS32SocRefCpuCycleSample,
+                              s->cpu_cycle_schedule->len - 1);
+            if (retire_seq <= previous.retire_seq || cycle < previous.cycle) {
+                error_report("non-monotonic CPU cycle schedule entry '%s'",
+                             line);
+                exit(EXIT_FAILURE);
+            }
+        } else if (retire_seq != 0) {
+            error_report("CPU cycle schedule must start at retire sequence 0");
+            exit(EXIT_FAILURE);
+        }
+        sample.retire_seq = retire_seq;
+        sample.cycle = cycle;
+        g_array_append_val(s->cpu_cycle_schedule, sample);
+        line = next_line;
+    }
+    if (s->cpu_cycle_schedule->len < 2) {
+        error_report("CPU cycle schedule '%s' needs at least two samples",
+                     soc_ref_cpu_cycle_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void soc_ref_load_uart_apb_schedule(MIPS32SocRefState *s)
+{
+    g_autofree gchar *contents = NULL;
+    gsize length = 0;
+
+    if (!soc_ref_uart_apb_schedule_path ||
+        !*soc_ref_uart_apb_schedule_path) {
+        return;
+    }
+    if (!g_file_get_contents(soc_ref_uart_apb_schedule_path, &contents,
+                             &length, NULL)) {
+        error_report("could not load UART APB schedule '%s'",
+                     soc_ref_uart_apb_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+    s->uart_apb_schedule = g_array_new(false, false,
+                                       sizeof(MIPS32SocRefUartApbSample));
+    gchar *line = contents;
+    gchar *contents_end = contents + length;
+    while (line < contents_end) {
+        gchar *line_end = memchr(line, '\n', contents_end - line);
+        gchar *next_line = line_end ? line_end + 1 : contents_end;
+        g_auto(GStrv) fields = NULL;
+        const gchar *tokens[4] = { NULL, NULL, NULL, NULL };
+        guint token_count = 0;
+        gchar *end = NULL;
+        guint64 cycle, write, address, data;
+        MIPS32SocRefUartApbSample sample;
+
+        if (line_end) {
+            *line_end = '\0';
+        }
+        line = g_strstrip(line);
+        if (!*line || line[0] == '#') {
+            line = next_line;
+            continue;
+        }
+        fields = g_strsplit_set(line, " \t\r", -1);
+        for (guint i = 0; fields[i]; ++i) {
+            if (*fields[i]) {
+                if (token_count == G_N_ELEMENTS(tokens)) {
+                    error_report("invalid UART APB schedule entry '%s'", line);
+                    exit(EXIT_FAILURE);
+                }
+                tokens[token_count++] = fields[i];
+            }
+        }
+        if (token_count != G_N_ELEMENTS(tokens)) {
+            error_report("invalid UART APB schedule entry '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        cycle = g_ascii_strtoull(tokens[0], &end, 10);
+        if (errno == ERANGE || end == tokens[0] || !end || *end) {
+            error_report("invalid UART APB schedule cycle in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        end = NULL;
+        write = g_ascii_strtoull(tokens[1], &end, 10);
+        if (errno == ERANGE || end == tokens[1] || !end || *end || write > 1) {
+            error_report("invalid UART APB schedule direction in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        end = NULL;
+        address = g_ascii_strtoull(tokens[2], &end, 16);
+        if (errno == ERANGE || end == tokens[2] || !end || *end ||
+            address < SOC_UART_APB_BASE ||
+            address > SOC_UART_APB_BASE + (7U << 2) || (address & 3U)) {
+            error_report("invalid UART APB schedule address in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        errno = 0;
+        end = NULL;
+        data = g_ascii_strtoull(tokens[3], &end, 16);
+        if (errno == ERANGE || end == tokens[3] || !end || *end ||
+            data > UINT32_MAX) {
+            error_report("invalid UART APB schedule data in '%s'", line);
+            exit(EXIT_FAILURE);
+        }
+        if (s->uart_apb_schedule->len) {
+            MIPS32SocRefUartApbSample previous =
+                g_array_index(s->uart_apb_schedule,
+                              MIPS32SocRefUartApbSample,
+                              s->uart_apb_schedule->len - 1);
+            if (cycle < previous.cycle) {
+                error_report("non-monotonic UART APB schedule entry '%s'",
+                             line);
+                exit(EXIT_FAILURE);
+            }
+        }
+        sample.cycle = cycle;
+        sample.write = write != 0;
+        sample.address = (uint32_t)address;
+        sample.data = (uint32_t)data;
+        g_array_append_val(s->uart_apb_schedule, sample);
+        line = next_line;
+    }
+    if (!s->uart_apb_schedule->len) {
+        error_report("UART APB schedule '%s' has no events",
+                     soc_ref_uart_apb_schedule_path);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void soc_ref_report_cp0_count_schedule(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (s && s->cp0_count_schedule) {
+        fprintf(stderr,
+                "SOC_REF_CP0_COUNT_SCHEDULE consumed=%u total=%u\n",
+                s->cp0_count_schedule_index, s->cp0_count_schedule->len);
+        fflush(stderr);
+        fprintf(stderr,
+                "SOC_REF_CP0_COUNT_SCHEDULE_SEQ_RESYNC count=%" PRIu64
+                " max_lag=%" PRIu64 "\n",
+                s->cp0_count_schedule_seq_resyncs,
+                s->cp0_count_schedule_max_seq_lag);
+        fflush(stderr);
+    }
+}
+
+static void soc_ref_report_cp0_random_schedule(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (s && s->cp0_random_schedule) {
+        fprintf(stderr,
+                "SOC_REF_CP0_RANDOM_SCHEDULE consumed=%u total=%u\n",
+                s->cp0_random_schedule_index,
+                s->cp0_random_schedule->len);
+        fflush(stderr);
+    }
+}
+
+static void soc_ref_report_cpu_cycle_schedule(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (s && s->cpu_cycle_schedule) {
+        MIPS32SocRefCpuCycleSample final_sample =
+            g_array_index(s->cpu_cycle_schedule,
+                          MIPS32SocRefCpuCycleSample,
+                          s->cpu_cycle_schedule->len - 1);
+        fprintf(stderr,
+                "SOC_REF_CPU_CYCLE_SCHEDULE used_through=%" PRIu64
+                " total=%u final_seq=%" PRIu64 "\n",
+                s->cpu_cycle_schedule_used_through,
+                s->cpu_cycle_schedule->len, final_sample.retire_seq);
+        fflush(stderr);
+    }
+}
+
+static void soc_ref_report_uart_apb_schedule(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (s && s->uart_apb_schedule) {
+        fprintf(stderr,
+                "SOC_REF_UART_APB_SCHEDULE consumed=%u total=%u\n",
+                s->uart_apb_schedule_index, s->uart_apb_schedule->len);
+        fflush(stderr);
+    }
+}
+
+static void soc_ref_report_irq_schedule(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (s && s->irq_release_after) {
+        fprintf(stderr, "SOC_REF_IRQ_SCHEDULE released=%u total=%u\n",
+                s->irq_release_index, s->irq_release_after->len);
+        fflush(stderr);
+    }
 }
 
 static uint64_t soc_ref_mailbox_read(void *opaque, hwaddr addr,
@@ -617,31 +1684,306 @@ static const MemoryRegionOps soc_ref_mailbox_ops = {
     },
 };
 
+static uint32_t soc_ref_uart_count_ticks(MIPS32SocRefState *s)
+{
+    if (s->cp0_retire_clock && s->cpu) {
+        return qemu_mips32_soc_ref_cp0_retire_ticks(&s->cpu->env);
+    }
+    return (uint32_t)s->retire_count;
+}
+
+static uint64_t soc_ref_uart_cycle_at_retire(MIPS32SocRefState *s,
+                                             uint64_t retire_seq)
+{
+    if (s->cpu_cycle_schedule && s->cp0_retire_clock && s->cpu) {
+        size_t cursor = s->cpu_cycle_schedule_index;
+        uint64_t cycle = soc_ref_cpu_cycle_at_retire(
+            (const SocRefCpuCycleSample *)s->cpu_cycle_schedule->data,
+            s->cpu_cycle_schedule->len, retire_seq, &cursor);
+
+        s->cpu_cycle_schedule_index = cursor;
+        if (retire_seq > s->cpu_cycle_schedule_used_through) {
+            s->cpu_cycle_schedule_used_through = retire_seq;
+        }
+        return cycle;
+    }
+    return (uint64_t)soc_ref_uart_count_ticks(s) * 2U;
+}
+
+static uint64_t soc_ref_uart_clock_cycles(MIPS32SocRefState *s)
+{
+    return soc_ref_uart_cycle_at_retire(s, s->cpu_cycle_retire_seq + 1);
+}
+
+static uint16_t soc_ref_uart_current_divisor(MIPS32SocRefState *s)
+{
+    return (uint16_t)s->uart_dll | ((uint16_t)s->uart_dlm << 8);
+}
+
+static void soc_ref_uart_advance_before_cycle(MIPS32SocRefState *s,
+                                             uint64_t cycle)
+{
+    soc_ref_uart_tx_advance_before(
+        &s->uart_tx, cycle, (uint8_t)s->uart_regs[3],
+        soc_ref_uart_current_divisor(s), (uint8_t)s->uart_regs[2],
+        (uint8_t)s->uart_regs[4], false);
+}
+
+static void soc_ref_uart_advance_through_cycle(MIPS32SocRefState *s,
+                                               uint64_t cycle)
+{
+    soc_ref_uart_tx_advance_through(
+        &s->uart_tx, cycle, (uint8_t)s->uart_regs[3],
+        soc_ref_uart_current_divisor(s), (uint8_t)s->uart_regs[2],
+        (uint8_t)s->uart_regs[4], false);
+}
+
+static bool soc_ref_uart_step_cycle(MIPS32SocRefState *s, uint64_t cycle,
+                                    bool write_thr, uint8_t thr_data,
+                                    bool clear_fifo)
+{
+    return soc_ref_uart_tx_step(
+        &s->uart_tx, cycle, (uint8_t)s->uart_regs[3],
+        soc_ref_uart_current_divisor(s), (uint8_t)s->uart_regs[2],
+        (uint8_t)s->uart_regs[4], false, write_thr, thr_data, clear_fifo);
+}
+
+static void soc_ref_uart_update_irq(MIPS32SocRefState *s);
+
+static bool soc_ref_uart_take_apb_sample(MIPS32SocRefState *s,
+                                        uint32_t address, bool write,
+                                        uint32_t data,
+                                        MIPS32SocRefUartApbSample *sample)
+{
+    MIPS32SocRefUartApbSample expected;
+
+    if (!s->uart_apb_schedule ||
+        s->uart_apb_schedule_diagnostic_bypassed) {
+        return false;
+    }
+    /* Shutdown is asynchronous after the terminal UART marker. */
+    if (s->terminal_marker_seen) {
+        return false;
+    }
+    if (s->uart_apb_schedule_index >= s->uart_apb_schedule->len) {
+        error_report("UART APB schedule exhausted at retire=%" PRIu64
+                     " access=%c%08" PRIx32,
+                     s->retire_count, write ? 'W' : 'R', address);
+        exit(EXIT_FAILURE);
+    }
+    expected = g_array_index(s->uart_apb_schedule,
+                             MIPS32SocRefUartApbSample,
+                             s->uart_apb_schedule_index);
+    if (expected.address != address || expected.write != write ||
+        (write && expected.data != data)) {
+        uint64_t qemu_cycle = soc_ref_uart_clock_cycles(s);
+        uint64_t qemu_pc = s->cpu ? s->cpu->env.active_tc.PC : 0;
+
+        error_report("UART APB schedule mismatch index=%u retire=%" PRIu64
+                     " expected=%c%08" PRIx32 "/%08" PRIx32
+                     " qemu=%c%08" PRIx32 "/%08" PRIx32
+                     " pc=%08" PRIx64 " cycle=%" PRIu64
+                     " expected_cycle=%" PRIu64 " diagnostic_continue=%u",
+                     s->uart_apb_schedule_index, s->retire_count,
+                     expected.write ? 'W' : 'R', expected.address,
+                     expected.data, write ? 'W' : 'R', address, data,
+                     qemu_pc, qemu_cycle,
+                     expected.cycle,
+                     soc_ref_uart_apb_schedule_diagnostic_continue);
+        if (s->cpu) {
+            CPUMIPSState *env = &s->cpu->env;
+            error_report("UART APB mismatch context ra=%08" PRIx64
+                         " t9=%08" PRIx64 " v0=%08" PRIx64
+                         " a0=%08" PRIx64 " a1=%08" PRIx64
+                         " a2=%08" PRIx64 " a3=%08" PRIx64
+                         " status=%08" PRIx32 " cause=%08" PRIx32
+                         " retire_seq=%" PRIu64
+                         " ier=%02" PRIx32 " fcr=%02" PRIx32
+                         " lcr=%02" PRIx32 " mcr=%02" PRIx32
+                         " tx_pending=%zu tx_active=%u writes=%" PRIu64,
+                         (uint64_t)env->active_tc.gpr[31],
+                         (uint64_t)env->active_tc.gpr[25],
+                         (uint64_t)env->active_tc.gpr[2],
+                         (uint64_t)env->active_tc.gpr[4],
+                         (uint64_t)env->active_tc.gpr[5],
+                         (uint64_t)env->active_tc.gpr[6],
+                         (uint64_t)env->active_tc.gpr[7],
+                         env->CP0_Status, env->CP0_Cause,
+                         s->cpu_cycle_retire_seq,
+                         s->uart_regs[1], s->uart_regs[2],
+                         s->uart_regs[3], s->uart_regs[4],
+                         s->uart_tx.pending_count, s->uart_tx.active,
+                         s->uart_write_count);
+        }
+        if (!soc_ref_uart_apb_schedule_diagnostic_continue) {
+            exit(EXIT_FAILURE);
+        }
+        /* Diagnostic mode lets the retire comparator expose the architectural
+         * mismatch after the APB schedule stops being applicable. */
+        s->uart_apb_schedule_diagnostic_bypassed = true;
+        return false;
+    }
+    ++s->uart_apb_schedule_index;
+    *sample = expected;
+    return true;
+}
+
+static void soc_ref_uart_check_apb_read(MIPS32SocRefState *s,
+                                        const MIPS32SocRefUartApbSample *sample,
+                                        uint32_t value)
+{
+    if (s->uart_apb_schedule && sample->data != value) {
+        error_report("UART APB read mismatch index=%u retire=%" PRIu64
+                     " cycle=%" PRIu64 " address=%08" PRIx32
+                     " rtl=%08" PRIx32 " qemu=%08" PRIx32,
+                     s->uart_apb_schedule_index - 1, s->retire_count,
+                     sample->cycle, sample->address, sample->data, value);
+        exit(EXIT_FAILURE);
+    }
+}
+
 static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
 {
     MIPS32SocRefState *s = opaque;
     unsigned reg = addr >> 2;
+    MIPS32SocRefUartApbSample sample = {0};
+    bool retire_timed = s->cp0_retire_clock && s->cpu;
+    bool scheduled = soc_ref_uart_take_apb_sample(
+        s, SOC_UART_APB_BASE + (reg << 2), false, 0, &sample);
+    uint32_t value = 0;
+    uint64_t now_cycle = 0;
 
-    if (reg == 2) {
-        /* IIR: report a pending THRE interrupt while the transmitter is
-         * empty and the corresponding IER bit is enabled. */
-        return (s->uart_regs[1] & 0x2) ? 0x2 : 0x1;
+    if (retire_timed) {
+        now_cycle = scheduled ? sample.cycle :
+                                soc_ref_uart_clock_cycles(s);
+        soc_ref_uart_advance_before_cycle(s, now_cycle);
     }
-    if (reg == 5) {
-        /* 16550 LSR: transmitter holding register and transmitter empty. */
-        return 0x60;
+
+    soc_ref_uart_modem_update(&s->uart_modem, s->uart_regs[4]);
+
+    if (reg == 0 && (s->uart_regs[3] & 0x80U)) {
+        value = s->uart_dll;
+    } else if (reg == 1 && (s->uart_regs[3] & 0x80U)) {
+        value = s->uart_dlm;
+    } else if (reg == 2) {
+        value = soc_ref_uart_iir_status(&s->uart_tx, s->uart_regs[1],
+                                        s->uart_regs[2]);
+    } else if (reg == 5) {
+        if (retire_timed) {
+            value = soc_ref_uart_tx_lsr_status(&s->uart_tx);
+        } else {
+            if (s->uart_tx_busy_reads) {
+                --s->uart_tx_busy_reads;
+                value = SOC_REF_UART_LSR_THRE;
+            } else {
+                value = SOC_REF_UART_LSR_TEMT;
+            }
+        }
+        if (s->peripheral_trace) {
+            fprintf(s->peripheral_trace,
+                    "{\"kind\":\"uart\",\"addr\":\"0x%08" PRIx64
+                    "\",\"data\":\"0x%02x\",\"write\":false"
+                    ",\"width\":%u,\"retire\":%" PRIu64,
+                    (uint64_t)(SOC_UART_BASE + 5 * 4), value, size,
+                    s->retire_count);
+            if (retire_timed) {
+                fprintf(s->peripheral_trace,
+                        ",\"cycle\":%" PRIu64
+                        ",\"baud_count\":%u,\"tx_state\":%u"
+                        ",\"pending\":%zu",
+                        now_cycle, s->uart_tx.baud_count,
+                        s->uart_tx.tx_state, s->uart_tx.pending_count);
+            } else {
+                fprintf(s->peripheral_trace, ",\"busy_reads\":%u",
+                        s->uart_tx_busy_reads);
+            }
+            fputs("}\n", s->peripheral_trace);
+            fflush(s->peripheral_trace);
+        }
+    } else if (reg == 6) {
+        value = soc_ref_uart_modem_read(&s->uart_modem, s->uart_regs[4]);
+    } else if (reg < ARRAY_SIZE(s->uart_regs)) {
+        value = s->uart_regs[reg];
     }
-    if (reg < ARRAY_SIZE(s->uart_regs)) {
-        return s->uart_regs[reg];
+    if (scheduled) {
+        soc_ref_uart_check_apb_read(s, &sample, value);
     }
-    return 0;
+    if (retire_timed) {
+        soc_ref_uart_step_cycle(s, now_cycle, false, 0, false);
+        soc_ref_uart_update_irq(s);
+    }
+    return value;
+}
+
+/* Legacy non-retire-clock gates lack the normalized CPU timebase used by the
+ * Linux differential, so retain their deterministic poll-count behavior. */
+static unsigned soc_ref_uart_profile_busy_reads(uint64_t ordinal, uint8_t ch)
+{
+    static const struct {
+        uint16_t ordinal;
+        uint8_t busy_reads;
+    } line_start_profile[] = {
+        { 1, 2 }, { 179, 3 }, { 234, 3 }, { 289, 3 }, { 358, 3 },
+        { 393, 3 }, { 413, 2 }, { 474, 2 }, { 537, 1 }, { 597, 2 },
+        { 676, 2 }, { 759, 1 }, { 788, 2 }, { 814, 3 }, { 859, 2 },
+        { 892, 2 }, { 941, 2 }, { 982, 2 }, { 1009, 3 }, { 1054, 2 },
+        { 1090, 3 }, { 1135, 1 }, { 1174, 1 }, { 1247, 1 }, { 1446, 1 },
+        { 1532, 1 }, { 1616, 2 }, { 1665, 2 }, { 1715, 2 }, { 1791, 2 },
+        { 1869, 1 }, { 2032, 1 }, { 2108, 2 }, { 2162, 2 }, { 2214, 2 },
+        { 2290, 2 }, { 2345, 2 }, { 2432, 2 }, { 2509, 1 }, { 2538, 1 },
+        { 2609, 2 }, { 2688, 2 }, { 2742, 2 }, { 2846, 2 }, { 2936, 1 },
+        { 2987, 2 }, { 3080, 2 }, { 3133, 2 }, { 3217, 1 }, { 3306, 2 },
+        { 3393, 1 }, { 3448, 2 }, { 3508, 2 }, { 3560, 2 },
+        { 3606, 1 }, { 3644, 1 },
+    };
+    size_t i;
+
+    if (ch != '[')
+        return 3;
+    for (i = 0; i < ARRAY_SIZE(line_start_profile); ++i) {
+        if (line_start_profile[i].ordinal == ordinal)
+            return line_start_profile[i].busy_reads;
+    }
+    /* Two busy reads is the modal line-start phase in the Linux profile. */
+    return 2;
 }
 
 static void soc_ref_update_irq(MIPS32SocRefState *s);
 
+/* In retire-clock mode the synthetic Count has no host timer deadline.  The
+ * guest may therefore reach Compare while executing ordinary instructions or
+ * WAIT without reading Count again.  Keep Cause.TI and the pending IRQ line
+ * architectural; a captured IRQ schedule controls CPU acceptance. */
+static void soc_ref_cp0_retire_timer_tick(MIPS32SocRefState *s)
+{
+    CPUMIPSState *env;
+    uint32_t count;
+    bool replay_pending;
+
+    if (!s || !s->cp0_retire_clock || !s->cpu ||
+        !qemu_mips32_soc_ref_cp0_timer_armed()) {
+        return;
+    }
+    env = &s->cpu->env;
+    if (env->CP0_Cause & (1U << CP0Ca_TI)) {
+        return;
+    }
+    replay_pending = soc_ref_timer_replay_pending(s);
+    count = qemu_mips32_soc_ref_cp0_retire_ticks(env);
+    /* Count replay samples are sparse; a retire tick can cross Compare
+     * between samples.  Once crossed, TI remains pending until Compare is
+     * written, matching the RTL latch semantics. */
+    if (!replay_pending && (int32_t)(count - env->CP0_Compare) < 0) {
+        return;
+    }
+    env->CP0_Cause |= 1U << CP0Ca_TI;
+    soc_ref_assert_cp0_timer_irq(s);
+}
+
 static void soc_ref_uart_update_irq(MIPS32SocRefState *s)
 {
-    bool level = (s->uart_regs[1] & 0x2) != 0;
+    bool level = soc_ref_uart_tx_irq_pending(&s->uart_tx,
+                                             s->uart_regs[1]);
 
     /* Match RTL: UART aggregate interrupt is VIC source 1, and the VIC
      * aggregate is routed to CPU Cause.IP2. Linux uses the same cascade. */
@@ -652,30 +1994,137 @@ static void soc_ref_uart_update_irq(MIPS32SocRefState *s)
     soc_ref_update_irq(s);
 }
 
+static void soc_ref_uart_retire_tick(MIPS32SocRefState *s)
+{
+    uint64_t now_cycle;
+
+    if (!s || !s->cpu || !s->cp0_retire_clock ||
+        !(s->uart_regs[1] & 0x2U)) {
+        return;
+    }
+    /* The APB schedule validates accesses, but it does not replace the
+     * retire-clock timeline.  Advance the shifter between accesses as well,
+     * otherwise a frame that drains while the guest is touching another
+     * peripheral never raises the level-sensitive TX IRQ. */
+    now_cycle = soc_ref_uart_cycle_at_retire(s, s->cpu_cycle_retire_seq);
+    soc_ref_uart_advance_through_cycle(s, now_cycle);
+    soc_ref_uart_update_irq(s);
+}
+
+static bool soc_ref_uart_observe_terminal_marker(MIPS32SocRefState *s,
+                                                 uint8_t byte)
+{
+    static const char marker[] = SOC_REF_LINUX_TERMINAL_MARKER;
+
+    if (!s->stop_on_terminal_marker || s->terminal_marker_seen) {
+        return false;
+    }
+    if (byte == '\r' &&
+        s->terminal_marker_progress == sizeof(marker) - 2) {
+        return false;
+    }
+    if (byte == (uint8_t)marker[s->terminal_marker_progress]) {
+        ++s->terminal_marker_progress;
+    } else if (byte == (uint8_t)marker[0]) {
+        s->terminal_marker_progress = 1;
+    } else {
+        s->terminal_marker_progress = 0;
+    }
+    if (s->terminal_marker_progress != sizeof(marker) - 1) {
+        return false;
+    }
+    s->terminal_marker_seen = true;
+    return true;
+}
+
 static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
                                unsigned size)
 {
     MIPS32SocRefState *s = opaque;
     unsigned reg = addr >> 2;
+    MIPS32SocRefUartApbSample sample = {0};
+    bool retire_timed = s->cp0_retire_clock && s->cpu;
+    bool scheduled = soc_ref_uart_take_apb_sample(
+        s, SOC_UART_APB_BASE + (reg << 2), true, (uint32_t)data, &sample);
+    uint64_t now_cycle = 0;
+
+    if (retire_timed) {
+        now_cycle = scheduled ? sample.cycle :
+                                soc_ref_uart_clock_cycles(s);
+        soc_ref_uart_advance_before_cycle(s, now_cycle);
+    }
+    soc_ref_uart_modem_update(&s->uart_modem, s->uart_regs[4]);
 
     if (reg == 0) {
+        if (s->uart_regs[3] & 0x80U) {
+            if (retire_timed) {
+                soc_ref_uart_step_cycle(s, now_cycle, false, 0, false);
+            }
+            s->uart_dll = data & 0xffU;
+            return;
+        }
         uint8_t ch = data & 0xff;
+        bool accepted = true;
+        ++s->uart_write_count;
+        if (retire_timed) {
+            accepted = soc_ref_uart_step_cycle(
+                s, now_cycle, true, ch, false);
+            s->uart_tx_busy_reads = 0;
+        } else {
+            s->uart_tx_busy_reads =
+                soc_ref_uart_profile_busy_reads(s->uart_write_count, ch);
+        }
         if (s->peripheral_trace) {
             fprintf(s->peripheral_trace,
                     "{\"kind\":\"uart\",\"addr\":\"0x%08" PRIx64
-                    "\",\"data\":\"0x%02x\",\"write\":true,\"width\":1}\n",
-                    SOC_UART_BASE, ch);
+                    "\",\"data\":\"0x%02x\",\"write\":true,\"width\":1"
+                    ",\"retire\":%" PRIu64 "}\n",
+                    (uint64_t)SOC_UART_BASE, ch, s->retire_count);
             fflush(s->peripheral_trace);
         }
-        putchar(ch);
-        fflush(stdout);
+        if (accepted) {
+            putchar(ch);
+            fflush(stdout);
+            if (soc_ref_uart_observe_terminal_marker(s, ch)) {
+                qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
+                /* End the active TCG block before it can perform another
+                 * scheduled CP0 read while asynchronous shutdown is pending. */
+                if (s->cpu) {
+                    cpu_exit(CPU(s->cpu));
+                }
+            }
+        }
+        soc_ref_uart_update_irq(s);
+        return;
+    }
+    if (reg == 1 && (s->uart_regs[3] & 0x80U)) {
+        if (retire_timed) {
+            soc_ref_uart_step_cycle(s, now_cycle, false, 0, false);
+        }
+        s->uart_dlm = data & 0xffU;
+        return;
+    }
+    if (reg == 2) {
+        uint8_t fcr = data & 0xffU;
+
+        if (retire_timed) {
+            soc_ref_uart_step_cycle(s, now_cycle, false, 0,
+                                    (fcr & 0x04U) != 0);
+        }
+        s->uart_regs[2] = fcr & 0xc1U;
         soc_ref_uart_update_irq(s);
         return;
     }
     if (reg < ARRAY_SIZE(s->uart_regs)) {
+        if (retire_timed) {
+            soc_ref_uart_step_cycle(s, now_cycle, false, 0, false);
+        }
         s->uart_regs[reg] = data;
-        if (reg == 1)
-            soc_ref_uart_update_irq(s);
+        if (reg == 4) {
+            soc_ref_uart_modem_update(&s->uart_modem,
+                                     (uint8_t)s->uart_regs[4]);
+        }
+        soc_ref_uart_update_irq(s);
     }
 }
 
@@ -931,16 +2380,174 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
     }
 }
 
+static void soc_ref_release_scheduled_irq(MIPS32SocRefState *s, CPUState *cpu)
+{
+    uint32_t cause = g_array_index(s->irq_replay_causes, uint32_t,
+                                   s->irq_release_index);
+    uint32_t ip_mask = (cause >> 8) & 0xffU;
+    bool timer = (cause & (1U << CP0Ca_TI)) != 0;
+    bool epc_valid = g_array_index(s->irq_replay_epc_valid, bool,
+                                   s->irq_release_index);
+    uint32_t target_epc = g_array_index(s->irq_replay_epcs, uint32_t,
+                                        s->irq_release_index);
+
+    if (epc_valid) {
+        s->irq_replay_epc = target_epc;
+        s->irq_replay_epc_fixup = true;
+    }
+
+    if (soc_ref_irq_replay_debug) {
+        fprintf(stderr,
+                "SOC_REF_IRQ_REPLAY_RELEASE index=%u target=%" PRIu64
+                " retire=%" PRIu64 " cycle_seq=%" PRIu64
+                " pc=%08" PRIx64 " epc=%08" PRIx64
+                " target_epc=%08" PRIx32 " epc_valid=%u"
+                " cause=%08" PRIx32 " status=%08" PRIx32
+                " hflags=%08" PRIx32 " typed=%u bd=%u early=%u"
+                " s0=%08" PRIx64 " s1=%08" PRIx64
+                " s2=%08" PRIx64 " sp=%08" PRIx64
+                " ra=%08" PRIx64 "\n",
+                s->irq_release_index,
+                g_array_index(s->irq_release_after, uint64_t,
+                              s->irq_release_index),
+                s->retire_count, s->cpu_cycle_retire_seq,
+                (uint64_t)s->cpu->env.active_tc.PC,
+                (uint64_t)s->cpu->env.CP0_EPC,
+                target_epc, epc_valid,
+                (uint32_t)s->cpu->env.CP0_Cause,
+                (uint32_t)s->cpu->env.CP0_Status,
+                (uint32_t)s->cpu->env.hflags,
+                g_array_index(s->irq_replay_typed, bool,
+                              s->irq_release_index),
+                s->irq_replay_bd_pending,
+                (unsigned)s->irq_replay_early_release,
+                (uint64_t)s->cpu->env.active_tc.gpr[16],
+                (uint64_t)s->cpu->env.active_tc.gpr[17],
+                (uint64_t)s->cpu->env.active_tc.gpr[18],
+                (uint64_t)s->cpu->env.active_tc.gpr[29],
+                (uint64_t)s->cpu->env.active_tc.gpr[31]);
+        fflush(stderr);
+    }
+
+    if (timer) {
+        CPUMIPSState *env = &s->cpu->env;
+        unsigned irq = (env->CP0_IntCtl >> CP0IntCtl_IPTI) & 0x7;
+        env->CP0_Cause |= 1U << CP0Ca_TI;
+        if (s->cp0_linux_timer_phase == SOC_REF_LINUX_TIMER_LATE) {
+            s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_NATIVE;
+            s->cp0_linux_timer_late_suppressed = false;
+        }
+        qemu_set_irq(env->irq[irq], true);
+        bql_lock();
+        cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
+        bql_unlock();
+    }
+    if (ip_mask & 0x04U) {
+        s->irq_replay_armed = true;
+    }
+    ++s->irq_release_index;
+    if (ip_mask & 0x04U) {
+        soc_ref_update_irq(s);
+    }
+}
+
+static void soc_ref_record_irq_pc(MIPS32SocRefState *s, target_ulong pc)
+{
+    s->irq_replay_pc_history[s->irq_replay_pc_history_next] = pc;
+    s->irq_replay_pc_history_next =
+        (s->irq_replay_pc_history_next + 1) % SOC_REF_IRQ_PC_HISTORY_SIZE;
+    if (s->irq_replay_pc_history_count < SOC_REF_IRQ_PC_HISTORY_SIZE) {
+        ++s->irq_replay_pc_history_count;
+    }
+}
+
+static bool soc_ref_irq_pc_seen_recently(const MIPS32SocRefState *s,
+                                         target_ulong pc, guint lookback)
+{
+    guint available = s->irq_replay_pc_history_count > 0 ?
+        s->irq_replay_pc_history_count - 1 : 0;
+
+    lookback = MIN(lookback, available);
+    for (guint i = 0; i < lookback; ++i) {
+        guint index = (s->irq_replay_pc_history_next +
+                       SOC_REF_IRQ_PC_HISTORY_SIZE - 2 - i) %
+                      SOC_REF_IRQ_PC_HISTORY_SIZE;
+        if (s->irq_replay_pc_history[index] == pc) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool soc_ref_irq_pc_path_has_backedge(const MIPS32SocRefState *s,
+                                             guint lookback)
+{
+    guint available = s->irq_replay_pc_history_count > 0 ?
+        s->irq_replay_pc_history_count - 1 : 0;
+
+    lookback = MIN(lookback, available);
+    for (guint i = 0; i < lookback; ++i) {
+        guint newer_index = (s->irq_replay_pc_history_next +
+                             SOC_REF_IRQ_PC_HISTORY_SIZE - 1 - i) %
+                            SOC_REF_IRQ_PC_HISTORY_SIZE;
+        guint older_index = (newer_index + SOC_REF_IRQ_PC_HISTORY_SIZE - 1) %
+                            SOC_REF_IRQ_PC_HISTORY_SIZE;
+        if (s->irq_replay_pc_history[newer_index] <
+            s->irq_replay_pc_history[older_index]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void soc_ref_instruction_tick(CPUState *cpu)
 {
     MIPS32SocRefState *s = soc_ref_active_state;
     uint64_t release_after;
+    bool release_early = false;
+    bool release_late = false;
+    target_ulong current_pc;
 
-    if (!s || CPU(s->cpu) != cpu ||
-        (!s->irq_replay_enabled && !s->cp0_trace && !s->cp0_retire_clock)) {
+    if (!s || CPU(s->cpu) != cpu) {
         return;
     }
+    current_pc = s->cpu->env.active_tc.PC;
+    soc_ref_record_irq_pc(s, current_pc);
     ++s->retire_count;
+    ++s->cpu_cycle_retire_seq;
+    soc_ref_uart_retire_tick(s);
+    soc_ref_cp0_retire_timer_tick(s);
+    if (soc_ref_irq_replay_debug && soc_ref_irq_trace_context_index >= 0 &&
+        s->irq_release_index == (guint)soc_ref_irq_trace_context_index &&
+        s->cpu_cycle_retire_seq <= g_array_index(s->irq_release_after,
+                                                 uint64_t,
+                                                 s->irq_release_index) &&
+        s->cpu_cycle_retire_seq + soc_ref_irq_trace_context_window >=
+            g_array_index(s->irq_release_after, uint64_t,
+                          s->irq_release_index)) {
+        uint64_t target = g_array_index(s->irq_release_after, uint64_t,
+                                        s->irq_release_index);
+        fprintf(stderr,
+                "SOC_REF_IRQ_REPLAY_CONTEXT index=%u target=%" PRIu64
+                " retire=%" PRIu64 " cycle_seq=%" PRIu64
+                " pc=%08" PRIx64
+                " hflags=%08" PRIx32 " s0=%08" PRIx64
+                " s1=%08" PRIx64 " a0=%08" PRIx64
+                " sp=%08" PRIx64 " ra=%08" PRIx64 "\n",
+                s->irq_release_index, target, s->retire_count,
+                s->cpu_cycle_retire_seq,
+                (uint64_t)s->cpu->env.active_tc.PC,
+                (uint32_t)s->cpu->env.hflags,
+                (uint64_t)s->cpu->env.active_tc.gpr[16],
+                (uint64_t)s->cpu->env.active_tc.gpr[17],
+                (uint64_t)s->cpu->env.active_tc.gpr[4],
+                (uint64_t)s->cpu->env.active_tc.gpr[29],
+                (uint64_t)s->cpu->env.active_tc.gpr[31]);
+        fflush(stderr);
+    }
+    if (!s->irq_replay_enabled && !s->cp0_trace && !s->cp0_retire_clock) {
+        return;
+    }
     if (s->cp0_trace && s->cp0_trace_interval != 0 &&
         (s->retire_count % s->cp0_trace_interval) == 0) {
         fprintf(s->cp0_trace,
@@ -962,12 +2569,14 @@ static void soc_ref_instruction_tick(CPUState *cpu)
         s->irq_replay_wake_pending = false;
         /* The RTL records the WAIT wakeup exception against the sequential
          * instruction at the wake boundary, before that instruction retires. */
-        s->irq_replay_epc = s->cpu->env.active_tc.PC;
-        s->irq_replay_epc_fixup = true;
+        if (!s->irq_replay_epc_fixup) {
+            s->irq_replay_epc = s->cpu->env.active_tc.PC;
+            s->irq_replay_epc_fixup = true;
+        }
         bql_lock();
         cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
         bql_unlock();
-        cpu_exit(cpu);
+        cpu_loop_exit_noexc(cpu);
         return;
     }
     if (s->irq_release_index >= s->irq_release_after->len) {
@@ -975,18 +2584,61 @@ static void soc_ref_instruction_tick(CPUState *cpu)
     }
     release_after = g_array_index(s->irq_release_after, uint64_t,
                                   s->irq_release_index);
-    if (s->retire_count != release_after) {
-        return;
+    /* IRQ schedules use the RTL retirement coordinate. retire_count remains
+     * the synthetic CP0 Count source and can lag after CP0 schedule resyncs. */
+    if (s->cpu_cycle_retire_seq > release_after) {
+        bool typed = g_array_index(s->irq_replay_typed, bool,
+                                   s->irq_release_index);
+        bool epc_valid = g_array_index(s->irq_replay_epc_valid, bool,
+                                       s->irq_release_index);
+        uint64_t late_delta = s->cpu_cycle_retire_seq - release_after;
+
+        /* A synchronous exception is accounted in QEMU's exception-entry
+         * path, so a schedule boundary on that exception can be observed by
+         * the next normal retire hook. Preserve its captured EPC and allow
+         * only that single boundary crossing. */
+        if (!typed || !epc_valid || late_delta != 1) {
+            return;
+        }
+        release_late = true;
+    } else if (s->cpu_cycle_retire_seq < release_after) {
+        bool typed = g_array_index(s->irq_replay_typed, bool,
+                                   s->irq_release_index);
+        bool epc_valid = g_array_index(s->irq_replay_epc_valid, bool,
+                                       s->irq_release_index);
+        uint32_t target_epc = g_array_index(s->irq_replay_epcs, uint32_t,
+                                            s->irq_release_index);
+        guint pc_lookback;
+
+        /* The RTL can capture an IRQ before the EPC instruction retires.
+         * Stop one tick early when QEMU is already at that EPC; a previous
+         * CP0 Count resynchronization alone does not justify a larger jump. */
+        uint64_t early_delta = release_after - s->cpu_cycle_retire_seq;
+        pc_lookback = early_delta < SOC_REF_IRQ_PC_HISTORY_SIZE ?
+            early_delta + 1 : SOC_REF_IRQ_PC_HISTORY_SIZE - 1;
+        if (early_delta == 0 ||
+            early_delta > SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS ||
+            !typed || !epc_valid ||
+            (uint32_t)current_pc != target_epc ||
+            soc_ref_irq_pc_seen_recently(s, current_pc, pc_lookback) ||
+            (early_delta == SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS &&
+             soc_ref_irq_pc_path_has_backedge(s, pc_lookback))) {
+            return;
+        }
+        release_early = true;
     }
-    s->irq_replay_armed = true;
-    /* Preserve BD only when QEMU is actually at a delay-slot boundary.  A
-     * VIC replay can also arrive after an ordinary instruction; forcing BD
-     * merely because a PIC mask was supplied corrupts Cause reads in the
-     * handler and diverges from the RTL's precise exception state. */
+    uint32_t replay_cause = g_array_index(s->irq_replay_causes, uint32_t,
+                                          s->irq_release_index);
+    bool typed = g_array_index(s->irq_replay_typed, bool,
+                               s->irq_release_index);
+    /* A typed RTL Cause sample is authoritative for BD. Legacy schedules
+     * retain QEMU's delay-slot fallback. */
     s->irq_replay_bd_pending =
-        (s->irq_release_index < 32 &&
-         (s->irq_replay_bd_mask & (1U << s->irq_release_index)) != 0) ||
-        ((s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0);
+        ((replay_cause & (1U << CP0Ca_BD)) != 0) ||
+        ((s->irq_release_index < 32 &&
+          (s->irq_replay_bd_mask & (1U << s->irq_release_index)) != 0)) ||
+        (!typed && (s->cpu->env.hflags & MIPS_HFLAG_BMASK) != 0);
+    s->irq_replay_bd_valid = typed;
     /* The RTL VIC schedule samples a pending source at the retire boundary
      * before the next sequential instruction is fetched.  QEMU's interrupt
      * path observes the already-advanced PC for subsequent replay entries;
@@ -1003,9 +2655,12 @@ static void soc_ref_instruction_tick(CPUState *cpu)
         s->pic_soft |= s->irq_replay_pic_mask;
         s->pic_mask |= s->irq_replay_pic_mask;
     }
-    ++s->irq_release_index;
-    soc_ref_update_irq(s);
-    cpu_exit(cpu);
+    s->irq_replay_early_release = release_early && !release_late;
+    soc_ref_release_scheduled_irq(s, cpu);
+    /* This hook runs before the current guest instruction.  Exit now so the
+     * pending interrupt is accepted at the scheduled boundary, not after the
+     * instruction (which can be a branch delay slot) executes. */
+    cpu_loop_exit_noexc(cpu);
 }
 
 void qemu_mips32_soc_ref_interrupt_fixup(CPUMIPSState *env)
@@ -1029,6 +2684,25 @@ void qemu_mips32_soc_ref_wait(CPUMIPSState *env)
 {
     MIPS32SocRefState *s = soc_ref_active_state;
     uint64_t release_after;
+    bool typed;
+
+    if (s && s->cpu && &s->cpu->env == env) {
+        ++s->cpu_cycle_retire_seq;
+        ++s->retire_count;
+        soc_ref_uart_retire_tick(s);
+    }
+
+    if (s && s->cp0_retire_clock && !s->irq_replay_has_timer &&
+        qemu_mips32_soc_ref_cp0_timer_armed()) {
+        uint32_t count = qemu_mips32_soc_ref_cp0_retire_ticks(env);
+        uint32_t delta = s->cpu ? (uint32_t)(env->CP0_Compare - count) : 0;
+        s->retire_count += delta;
+        soc_ref_cp0_retire_timer_tick(s);
+        bql_lock();
+        cpu_interrupt(env_cpu(env), CPU_INTERRUPT_WAKE);
+        bql_unlock();
+        return;
+    }
 
     if (!s || !s->irq_replay_enabled ||
         s->irq_release_index >= s->irq_release_after->len) {
@@ -1036,12 +2710,26 @@ void qemu_mips32_soc_ref_wait(CPUMIPSState *env)
     }
     release_after = g_array_index(s->irq_release_after, uint64_t,
                                   s->irq_release_index);
-    if (s->retire_count + 1 != release_after) {
+    if (s->cpu_cycle_retire_seq != release_after) {
         return;
     }
-    ++s->retire_count;
-    ++s->irq_release_index;
-    qemu_set_irq(env->irq[0], true);
+    typed = g_array_index(s->irq_replay_typed, bool, s->irq_release_index);
+    /* WAIT wakeups use the same post-acceptance Cause contract as ordinary
+     * replay entries; retain QEMU's native delay-slot bit as a fallback. */
+    s->irq_replay_bd_pending =
+        (((g_array_index(s->irq_replay_causes, uint32_t,
+                         s->irq_release_index) & (1U << CP0Ca_BD)) != 0)) ||
+        (s->irq_release_index < 32 &&
+         (s->irq_replay_bd_mask & (1U << s->irq_release_index)) != 0) ||
+        (!typed && (env->hflags & MIPS_HFLAG_BMASK) != 0);
+    s->irq_replay_bd_valid = typed;
+    if (typed) {
+        s->irq_replay_early_release = false;
+        soc_ref_release_scheduled_irq(s, env_cpu(env));
+    } else {
+        ++s->irq_release_index;
+        qemu_set_irq(env->irq[0], true);
+    }
     bql_lock();
     s->irq_replay_wake_pending = true;
     cpu_interrupt(env_cpu(env), CPU_INTERRUPT_WAKE);
@@ -1051,6 +2739,20 @@ void qemu_mips32_soc_ref_wait(CPUMIPSState *env)
 void helper_soc_ref_retire_tick(CPUMIPSState *env)
 {
     soc_ref_instruction_tick(env_cpu(env));
+}
+
+void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (!s || !s->cpu || &s->cpu->env != env) {
+        return;
+    }
+    soc_ref_record_irq_pc(s, env->active_tc.PC);
+    ++s->retire_count;
+    ++s->cpu_cycle_retire_seq;
+    soc_ref_uart_retire_tick(s);
+    soc_ref_cp0_retire_timer_tick(s);
 }
 
 static int soc_ref_pic_best(MIPS32SocRefState *s, uint32_t *priority)
@@ -2241,10 +3943,9 @@ static void soc_ref_cpu_reset(void *opaque)
          * during a short differential corpus and expose an unrelated IP7
          * bit in MFC0 Cause reads. */
         if (env->timer) {
-            /* The helper also clears a previously latched Cause.TI and
-             * re-arms the generic QEMU timer against the new Compare value. */
             cpu_mips_store_count(env, 0);
-            cpu_mips_store_compare(env, UINT32_MAX);
+            env->CP0_Compare = UINT32_MAX;
+            env->CP0_Cause &= ~(1U << CP0Ca_TI);
         } else {
             /* cpu_mips_clock_init() has not run on the earliest reset path. */
             env->CP0_Count = 0;
@@ -2267,6 +3968,11 @@ static void soc_ref_cpu_reset(void *opaque)
         env->active_tc.gpr[5] = reset->fdt_addr;
         env->active_tc.gpr[6] = reset->rng_env_addr;
         env->active_tc.gpr[7] = 0;
+        if (soc_ref_rtl_cp0_identity) {
+            /* The RTL Boot ROM writes EBase through $t1 and retains it at
+             * the ELF handoff; QEMU starts directly at that handoff. */
+            env->active_tc.gpr[9] = 0x80000000;
+        }
     }
 
     if (!reset->software_mmu_guest && !reset->fdt_loaded) {
@@ -2326,11 +4032,23 @@ static void mips32_soc_ref_init(MachineState *machine)
         error_report("mips32-soc-ref requires at least 64 KiB of SRAM");
         exit(EXIT_FAILURE);
     }
+    if (soc_ref_uart_modem_inputs & ~0x0fU) {
+        error_report("uart-modem-inputs must be a four-bit active-low mask");
+        exit(EXIT_FAILURE);
+    }
 
     cpuclk = clock_new(OBJECT(machine), "cpu-refclk");
     clock_set_hz(cpuclk, 50 * 1000 * 1000);
     cpu = mips_cpu_create_with_clock(machine->cpu_type, cpuclk, false);
     state->cpu = cpu;
+    state->uart_dll = 1;
+    state->uart_dlm = 0;
+    state->uart_regs[3] = 0x03;
+    soc_ref_uart_modem_reset(&state->uart_modem,
+                             (uint8_t)soc_ref_uart_modem_inputs);
+    state->uart_tx_busy_reads = 0;
+    state->uart_write_count = 0;
+    state->uart_tx = (SocRefUartTxModel){0};
     state->irq_replay_pic_mask = soc_ref_irq_replay_pic_mask;
     state->irq_replay_bd_mask = soc_ref_irq_replay_bd_mask;
     state->sram = machine->ram;
@@ -2339,8 +4057,30 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->ddr_fault_mode = soc_ref_ddr_fault_mode;
     state->cp0_trace_interval = soc_ref_cp0_trace_interval;
     state->cp0_retire_clock = soc_ref_cp0_retire_clock;
+    state->stop_on_terminal_marker = soc_ref_stop_on_terminal_marker;
+    state->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_RESET;
+    state->cp0_linux_timer_late_suppressed = true;
     soc_ref_load_irq_schedule(state);
+    soc_ref_load_cp0_count_schedule(state);
+    soc_ref_load_cp0_random_schedule(state);
+    soc_ref_load_cpu_cycle_schedule(state);
+    soc_ref_load_uart_apb_schedule(state);
     soc_ref_active_state = state;
+    if (state->cp0_count_schedule) {
+        atexit(soc_ref_report_cp0_count_schedule);
+    }
+    if (state->cp0_random_schedule) {
+        atexit(soc_ref_report_cp0_random_schedule);
+    }
+    if (state->cpu_cycle_schedule) {
+        atexit(soc_ref_report_cpu_cycle_schedule);
+    }
+    if (state->uart_apb_schedule) {
+        atexit(soc_ref_report_uart_apb_schedule);
+    }
+    if (state->irq_release_after) {
+        atexit(soc_ref_report_irq_schedule);
+    }
     if (soc_ref_dma_event_trace_path) {
         state->dma_event_trace = fopen(soc_ref_dma_event_trace_path, "w");
         if (!state->dma_event_trace) {
@@ -2627,9 +4367,29 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
     object_class_property_add_bool(OBJECT_CLASS(mc), "cp0-retire-clock",
                                    soc_ref_get_cp0_retire_clock,
                                    soc_ref_set_cp0_retire_clock);
+    object_class_property_add_bool(
+        OBJECT_CLASS(mc), "stop-on-terminal-marker",
+        soc_ref_get_stop_on_terminal_marker,
+        soc_ref_set_stop_on_terminal_marker);
     object_class_property_add_str(OBJECT_CLASS(mc), "irq-schedule",
                                   soc_ref_get_irq_schedule,
                                   soc_ref_set_irq_schedule);
+    object_class_property_add_str(OBJECT_CLASS(mc), "cp0-count-schedule",
+                                  soc_ref_get_cp0_count_schedule,
+                                  soc_ref_set_cp0_count_schedule);
+    object_class_property_add_str(OBJECT_CLASS(mc), "cp0-random-schedule",
+                                  soc_ref_get_cp0_random_schedule,
+                                  soc_ref_set_cp0_random_schedule);
+    object_class_property_add_str(OBJECT_CLASS(mc), "cpu-cycle-schedule",
+                                  soc_ref_get_cpu_cycle_schedule,
+                                  soc_ref_set_cpu_cycle_schedule);
+    object_class_property_add_str(OBJECT_CLASS(mc), "uart-apb-schedule",
+                                  soc_ref_get_uart_apb_schedule,
+                                  soc_ref_set_uart_apb_schedule);
+    object_class_property_add_bool(
+        OBJECT_CLASS(mc), "uart-apb-schedule-diagnostic-continue",
+        soc_ref_get_uart_apb_schedule_diagnostic_continue,
+        soc_ref_set_uart_apb_schedule_diagnostic_continue);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc),
                                          "irq-replay-pic-mask",
                                          &soc_ref_irq_replay_pic_mask,
@@ -2658,6 +4418,10 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
                                    soc_ref_set_dma_reset_inflight);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "gpio-input",
                                          &soc_ref_gpio_input,
+                                         OBJ_PROP_FLAG_WRITE);
+    object_class_property_add_uint32_ptr(OBJECT_CLASS(mc),
+                                         "uart-modem-inputs",
+                                         &soc_ref_uart_modem_inputs,
                                          OBJ_PROP_FLAG_WRITE);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc), "ddr-fault-mode",
                                          &soc_ref_ddr_fault_mode,

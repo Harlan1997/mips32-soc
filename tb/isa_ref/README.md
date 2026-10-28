@@ -93,6 +93,34 @@ This prevents the previous multi-gigabyte RSS failure on a 2M-cycle capture:
 the 606 MB RTL trace and roughly 200 MB QEMU state trace previously drove
 Python to about 3 GB RSS and exit 137. The streaming path passed the 2M-cycle
 bounded gate with `143248` compared retire records and about 10 MB maximum RSS.
+The full Linux closure gate additionally places the RTL, QEMU, comparator, and
+model build in one user-systemd cgroup, defaulting to 2 GiB RAM and 512 MiB
+swap; it refuses to start if that cgroup manager is unavailable. It also
+requires 2 GiB free on both the run and temporary-file filesystems before
+creating outputs; its default `TMPDIR` is under `/data/disk/tmp/mips32-soc`.
+When the RTL trace destination is a FIFO, the Linux progress gate enables
+per-record flushing so the live comparator only sees complete JSONL records;
+regular-file and `/dev/null` captures remain buffered.
+The full Linux gate rebases its IRQ and Count-read schedules at the ELF entry
+retire, because QEMU starts there directly while RTL executes its Boot ROM
+first. The ordered Count-read schedule records both `mfc0 Count` and `rdhwr
+CC` accesses, including PC, operand, value, and the zero-based sequence of the
+current retire record. QEMU validates and consumes each read in order; this
+keeps cycle-driven counter reads aligned without relaxing the retire comparator.
+CP0's synthetic retire clock is not a
+hardware cycle counter, so the gate also captures a sparse RTL
+cycle-versus-retirement schedule (every 8 retirements by default) during
+preflight and replays its interpolated clock for UART timing. The UART model
+derives frame length from programmed LCR/divisor
+state and asserts TEMT after that many SoC clocks, including time spent in
+interrupt handlers. It models the 16550 TX holding/FIFO queue separately from
+the active shifter, so LSR THRE/TEMT, IIR, and the TX-empty interrupt follow
+FIFO occupancy; reset LCR matches the RTL's 8N1 value. Its index is
+architectural retire sequence, separate from QEMU's synthetic Count timeline
+across WAIT intervals. The cycle schedule is hashed into the differential
+manifest. `make qemu-system-uart-timing-test` checks cycle interpolation,
+frame boundaries, and queued-byte status; it is focused evidence, not a
+substitute for the full strict run.
 This is a resource-safety and bounded-prefix result; it does not change the
 complete Linux/system-mode signoff boundary below.
 
@@ -143,6 +171,12 @@ through vector entry, `VEC_ID`, `ACK`, `SOFT_CLR`, and `ERET`. It remains an
 RTL prototype reference machine, not a PHY/JEDEC product model; command/FIFO
 QSPI, quad electrical behavior, external interrupt replay, VEIC, and full
 `vic_cpu` firmware differential behavior remain separate closure work.
+
+System-mode retire records carry double-store data in two little-endian words:
+`mem_wdata` is the word at the effective address and `mem_wdata_hi` is the
+word at address plus four. The streaming and list comparators require both
+words for `SDC1` and COP1X `SDC1` records; double-load results are compared
+through architectural FPR state.
 
 Example:
 

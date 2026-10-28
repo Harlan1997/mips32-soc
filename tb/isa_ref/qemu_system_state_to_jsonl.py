@@ -2,30 +2,8 @@
 """Convert QEMU system-mode plugin state/event streams to retire JSONL."""
 import argparse
 import json
+import os
 import sys
-
-CP0_REGS = {
-    "index": (0, 0),
-    "pagemask": (5, 0),
-    "entryhi": (10, 0),
-    "status": (12, 0),
-    "cause": (13, 0),
-    "epc": (14, 0),
-}
-
-
-def load_jsonl(path):
-    values = []
-    with open(path, encoding="ascii") as stream:
-        for number, line in enumerate(stream, 1):
-            if not line.strip():
-                continue
-            try:
-                values.append(json.loads(line))
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"{path}:{number}: invalid JSON: {exc}") from exc
-    return values
-
 
 def iter_jsonl(path):
     """Yield JSONL records without retaining the capture in memory."""
@@ -115,8 +93,31 @@ def hex32(value):
     return f"{int(value, 16) & 0xffffffff:08x}"
 
 
+def effective_address(instr, before):
+    rs = (instr >> 21) & 0x1f
+    imm = instr & 0xffff
+    if imm & 0x8000:
+        imm -= 0x10000
+    return (int(before[f"r{rs}"], 16) + imm) & 0xffffffff
+
+
+COMPACT_FPR = os.environ.get("QEMU_COMPACT_FPR") == "1"
+MDU_TRACE_START = int(os.environ.get("QEMU_MDU_TRACE_START", "-1"))
+MDU_TRACE_END = int(os.environ.get("QEMU_MDU_TRACE_END", "-1"))
+SUPPORTED_TRACE_SCHEMAS = {"00010000", "00020000"}
+
+
+def configured_trace_schema():
+    schema = os.environ.get("QEMU_TRACE_SCHEMA", "00010000").lower()
+    if schema not in SUPPORTED_TRACE_SCHEMAS:
+        raise ValueError(f"unsupported QEMU_TRACE_SCHEMA={schema!r}")
+    return schema
+
+
 def fpr_state(regs):
     """Serialize FPR0..FPR31 in the same high-to-low order as RTL ctx_save_fpr."""
+    if COMPACT_FPR:
+        return "0"
     return "".join(hex32(regs.get(f"fpr{index}", "00000000"))
                    for index in range(31, -1, -1))
 
@@ -293,19 +294,85 @@ def is_direct_branch_to_next_pc(events, index):
         return False
     instr = int(events[index - 1]["instr"], 16)
     opcode = (instr >> 26) & 0x3f
+    branch_pc = int(events[index - 1]["pc"], 16)
+    if opcode in (0x02, 0x03):
+        target = ((branch_pc + 4) & 0xf0000000) | ((instr & 0x03ffffff) << 2)
+        return target == int(events[index]["next_pc"], 16)
     if opcode not in (0x01, 0x04, 0x05, 0x06, 0x07,
                       0x14, 0x15, 0x16, 0x17):
         return False
     offset = instr & 0xffff
     if offset & 0x8000:
         offset -= 0x10000
-    branch_pc = int(events[index - 1]["pc"], 16)
     target = (branch_pc + 4 + (offset << 2)) & 0xffffffff
     return target == int(events[index]["next_pc"], 16)
 
 
 def signed32(value):
     return value if value < 0x80000000 else value - 0x100000000
+
+
+def mdu_hilo_update(instr, before, hilo):
+    """Replay HI/LO values for MDU operations with defined results.
+
+    SPECIAL2 MUL leaves HI/LO unpredictable. Invalidate the synthetic pair
+    and retain QEMU's own state instead of assigning an architectural value.
+    """
+    opcode = (instr >> 26) & 0x3f
+    funct = instr & 0x3f
+    rs = (instr >> 21) & 0x1f
+    rt = (instr >> 16) & 0x1f
+    if opcode == 0 and funct in (0x10, 0x12):
+        return hilo
+    if opcode == 0 and funct == 0x11:
+        if hilo is not None:
+            return int(before[f"r{rs}"], 16), hilo[1]
+        return None
+    if opcode == 0 and funct == 0x13:
+        if hilo is not None:
+            return hilo[0], int(before[f"r{rs}"], 16)
+        return None
+    if opcode == 0x1c and funct in (0x00, 0x01, 0x02, 0x04, 0x05):
+        if funct == 0x02:
+            return None
+        lhs = int(before[f"r{rs}"], 16)
+        rhs = int(before[f"r{rt}"], 16)
+        if hilo is None:
+            return None
+        product = ((lhs * rhs) if funct in (0x01, 0x05) else
+                   (signed32(lhs) * signed32(rhs))) & 0xffffffffffffffff
+        accumulator = (hilo[0] << 32) | hilo[1]
+        if funct in (0x04, 0x05):
+            accumulator = (accumulator - product) & 0xffffffffffffffff
+        else:
+            accumulator = (accumulator + product) & 0xffffffffffffffff
+        return accumulator >> 32, accumulator & 0xffffffff
+    if opcode == 0 and funct in (0x18, 0x19, 0x1a, 0x1b):
+        lhs = int(before[f"r{rs}"], 16)
+        rhs = int(before[f"r{rt}"], 16)
+        if funct == 0x18:
+            product = (signed32(lhs) * signed32(rhs)) & 0xffffffffffffffff
+            return product >> 32, product & 0xffffffff
+        if funct == 0x19:
+            product = (lhs * rhs) & 0xffffffffffffffff
+            return product >> 32, product & 0xffffffff
+        if rhs == 0:
+            return lhs, 0xffffffff
+        if funct == 0x1a:
+            quotient = int(signed32(lhs) / signed32(rhs))
+            remainder = signed32(lhs) - quotient * signed32(rhs)
+        else:
+            quotient, remainder = divmod(lhs, rhs)
+        return remainder & 0xffffffff, quotient & 0xffffffff
+    return hilo
+
+
+def is_mdu_hilo_instruction(instr):
+    opcode = (instr >> 26) & 0x3f
+    funct = instr & 0x3f
+    return ((opcode == 0 and funct in
+             (0x10, 0x11, 0x12, 0x13, 0x18, 0x19, 0x1a, 0x1b)) or
+            (opcode == 0x1c and funct in (0x00, 0x01, 0x02, 0x04, 0x05)))
 
 
 def architectural_next_pc(instr, pc, regs, fallback):
@@ -356,16 +423,48 @@ def architectural_next_pc(instr, pc, regs, fallback):
     return fallback
 
 
-def changed_cp0(before, after):
-    changes = [(name, address, sel) for name, (address, sel) in CP0_REGS.items()
-               if before.get(name) != after.get(name)]
-    if len(changes) != 1:
-        return 0, 0, 0, "00000000"
-    name, address, sel = changes[0]
-    return 1, address, sel, hex32(after[name])
+def is_control_transfer_to_next_pc(events, states, index):
+    """Recognize the normal target reported after a branch delay slot."""
+    if index == 0:
+        return False
+    branch = events[index - 1]
+    branch_instr = int(branch["instr"], 16)
+    branch_pc = int(branch["pc"], 16)
+    if (not has_delay_slot(branch_instr) or
+            int(events[index]["pc"], 16) != branch_pc + 4):
+        return False
+    fallback = (branch_pc + 8) & 0xffffffff
+    target = architectural_next_pc(
+        branch_instr, branch_pc, states[index - 1]["regs"], fallback)
+    return target == int(events[index]["next_pc"], 16)
+
+
+def faulting_memory_access(instr, before):
+    """Reconstruct a memory access when QEMU aborts before its mem callback."""
+    opcode = (instr >> 26) & 0x3f
+    loads = {
+        0x20: 1, 0x21: 2, 0x22: 4, 0x23: 4, 0x24: 1, 0x25: 2,
+        0x26: 4, 0x27: 4, 0x30: 4, 0x31: 4, 0x35: 8, 0x37: 8,
+        0x1a: 8, 0x1b: 8,
+    }
+    stores = {
+        0x28: 1, 0x29: 2, 0x2a: 4, 0x2b: 4, 0x2c: 8, 0x2d: 8,
+        0x2e: 4, 0x38: 4, 0x39: 4, 0x3d: 8,
+    }
+    size = loads.get(opcode) or stores.get(opcode)
+    if size is None:
+        return None
+    rt = (instr >> 16) & 0x1f
+    address = effective_address(instr, before)
+    is_write = opcode in stores
+    value = "00000000"
+    if is_write and opcode not in (0x39, 0x3d):
+        value = hex32(before[f"r{rt}"])
+    return is_write, address, size, value
 
 
 def convert(events, states):
+    trace_schema = configured_trace_schema()
     if (not getattr(states, "streaming", False) and
             len(states) < len(events) + 1):
         raise ValueError(f"state records {len(states)} < events + post-state {len(events) + 1}")
@@ -380,6 +479,8 @@ def convert(events, states):
     replay_bd_seen = False
     replay_cause_pending = False
     replay_gpr_overrides = {}
+    replay_mdu_hilo = None
+    replay_memory_bytes = {}
     for index, event in enumerate(events):
         if is_annulled_likely(events, states, index):
             continue
@@ -389,6 +490,19 @@ def convert(events, states):
         if int(event["pc"], 16) != int(states[index]["pc"], 16):
             raise ValueError(f"retire {index}: event/state PC misalignment")
         instr = int(event["instr"], 16)
+        opcode = (instr >> 26) & 0x3f
+        is_merge_memory = opcode in (0x22, 0x26, 0x2a, 0x2e)
+        is_merge_store_access = opcode in (0x2a, 0x2e)
+        is_double_store = (opcode == 0x3d or
+                           (opcode == 0x13 and (instr & 0x3f) == 0x09))
+        mdu_funct = instr & 0x3f
+        mdu_read = ((instr >> 26) & 0x3f) == 0 and mdu_funct in (0x10, 0x12)
+        if replay_mdu_hilo is not None and mdu_read:
+            destination_reg = (instr >> 11) & 0x1f
+            if destination_reg:
+                value = replay_mdu_hilo[0 if mdu_funct == 0x10 else 1]
+                after[f"r{destination_reg}"] = hex32(value)
+                replay_gpr_overrides[f"r{destination_reg}"] = hex32(value)
         # The RTL retire observation currently commits the COP1 branch
         # control through the normal delay-slot path but does not expose the
         # branch instruction as a WB record. Keep its architectural effect in
@@ -409,22 +523,28 @@ def convert(events, states):
         cp0_write = cp0_destination(instr)
         if cp0_write:
             cp0_addr, cp0_sel = cp0_write
-            cp0_names = {0: "index", 2: "entrylo0", 3: "entrylo1",
-                         5: "pagemask", 10: "entryhi", 12: "status",
-                         13: "cause", 14: "epc"}
-            cp0_name = cp0_names.get(cp0_addr)
-            cp0_we = int(cp0_name is not None)
-            # An asynchronous interrupt can be accepted immediately after an
-            # MTC0.  The post-state then includes EXL/IP side effects, while
-            # the retire payload is the source GPR value actually written.
             rt = (instr >> 16) & 0x1f
-            cp0_data = hex32(before[f"r{rt}"]) if cp0_name else "00000000"
+            cp0_we = 1
+            cp0_data = hex32(before[f"r{rt}"])
         else:
             cp0_we, cp0_addr, cp0_sel, cp0_data = 0, 0, 0, "00000000"
         mem_valid = int(bool(event.get("mem_valid")))
         mem_addr = int(event.get("mem_addr", "0"), 16)
         mem_size = int(event.get("mem_size", 0))
         mem_be = ((1 << mem_size) - 1) << (mem_addr & 3) if mem_valid else 0xF
+        load_rdata = event.get("mem_value", "00000000")
+        replayed_memory_load = False
+        if event.get("mem_read") and destination and mem_size:
+            load_bytes = [replay_memory_bytes.get(mem_addr + offset)
+                          for offset in range(mem_size)]
+            if all(value is not None for value in load_bytes):
+                load_value = sum(value << (8 * offset)
+                                 for offset, value in enumerate(load_bytes))
+                load_rdata = hex32(load_value)
+                after[f"r{destination}"] = load_rdata
+                gpr_data = load_rdata
+                replay_gpr_overrides[f"r{destination}"] = load_rdata
+                replayed_memory_load = True
         # QEMU's atomic callback reports the old memory value for a failed
         # SC, whereas the RTL retire contract reports the attempted store.
         # Reconstruct the latter from the SC source register pre-state.
@@ -441,6 +561,33 @@ def convert(events, states):
             mem_addr = (int(before[f"r{rs}"], 16) + imm) & 0xffffffff
             mem_size = 4
             mem_be = 0xF
+        store_wdata = event.get("mem_value", "00000000")
+        store_opcode = (instr >> 26) & 0x3f
+        if event.get("mem_write") and store_opcode in (0x28, 0x29, 0x2a, 0x2b):
+            store_rt = (instr >> 16) & 0x1f
+            store_value = int(before[f"r{store_rt}"], 16)
+            if store_opcode == 0x28:
+                store_wdata = f"{store_value & 0xff:08x}"
+            elif store_opcode == 0x29:
+                store_wdata = f"{store_value & 0xffff:08x}"
+            else:
+                store_wdata = hex32(store_value)
+        store_rt_key = f"r{(instr >> 16) & 0x1f}"
+        if event.get("mem_write"):
+            replay_store_size = (1 if store_opcode == 0x28 else
+                                 2 if store_opcode == 0x29 else
+                                 mem_size or 4)
+            if store_rt_key in replay_gpr_overrides:
+                replay_store = int(sc_store_data or store_wdata, 16)
+                for offset in range(replay_store_size):
+                    replay_memory_bytes[mem_addr + offset] = \
+                        (replay_store >> (8 * offset)) & 0xff
+            else:
+                # A real QEMU store supersedes any synthetic value retained
+                # for the same bytes, even though the plugin reports the old
+                # memory value for that store.
+                for offset in range(replay_store_size):
+                    replay_memory_bytes.pop(mem_addr + offset, None)
         # Cause is sticky across exception entry.  Comparing before/after
         # Cause therefore misses a second synchronous exception (for example
         # a trap after the handler has returned).  The retire event's next PC
@@ -448,19 +595,38 @@ def convert(events, states):
         # the general exception vector; decode the latched Cause from the
         # post-state for the exception payload.
         event_next_pc = int(event["next_pc"], 16)
+        sequential_next_pc = (int(event["pc"], 16) + 4) & 0xffffffff
         # Software-managed boot-ROM guests use the physical BFC00200 vector,
-        # while the normal system differential uses the conventional 0x180
-        # vector. Both are architectural exception boundaries.
-        entered_general_vector = ((event_next_pc & 0x1fffffff) == 0x180 or
-                                  event_next_pc == 0xbfc00200)
+        # while Linux programs EBase to a nonzero 4-KiB-aligned address and
+        # enters EBase+0x180. Use the aligned low-12-bit offset so the latter
+        # is recognized without requiring EBase in the compact plugin state.
+        entered_general_vector = (event_next_pc != sequential_next_pc and
+                                  ((event_next_pc & 0x1fffffff) == 0x180 or
+                                   (event_next_pc & 0xfff) == 0x180 or
+                                   event_next_pc == 0xbfc00200))
         cause_value = int(after.get("cause", "0"), 16)
+        cause_code = (cause_value >> 2) & 0x1f
         # Include the project's bounded IP-based/VIC vectors.  The normal
         # general vector is 0x180; the vic_cpu corpus uses EBase+0x1f0,
         # represented as 0x370 after the firmware's configured EBase.
-        vector_offset = event_next_pc & 0x1fffffff
-        vector_pc = (vector_offset in (0x180, 0x200, 0x300, 0x370, 0x380) or
-                     event_next_pc == 0xbfc00200)
-        ordinary_vector_branch = is_direct_branch_to_next_pc(events, index)
+        vector_offset = event_next_pc & 0xfff
+        vector_pc = (event_next_pc != sequential_next_pc and
+                     (vector_offset in (0x180, 0x200, 0x300, 0x370, 0x380) or
+                      event_next_pc == 0xbfc00200))
+        ordinary_vector_branch = (
+            is_direct_branch_to_next_pc(events, index) or
+            is_control_transfer_to_next_pc(events, states, index))
+        interrupt_pending = bool(cause_value & (0xff << 8) or
+                                 cause_value & (1 << 30))
+        # The SoC's vectored interrupt slot is EBase+0x200.  TI/IP bits
+        # identify that asynchronous boundary even if other Cause bits are
+        # retained from an earlier exception in the RTL-visible state.
+        vectored_async_interrupt = (
+            vector_pc and not ordinary_vector_branch and interrupt_pending and
+            (cause_code == 0 or vector_offset == 0x200))
+        if vectored_async_interrupt:
+            # BD replay is scoped to one interrupt's first Cause read.
+            replay_bd_seen = False
         if (vector_pc and not ordinary_vector_branch and index > 0 and
                 has_delay_slot(int(events[index - 1]["instr"], 16)) and
                 int(event["pc"], 16) ==
@@ -474,13 +640,14 @@ def convert(events, states):
             # Preserve a BD bit recovered from the preceding general vector
             # while the handler's branch reaches the configured VIC vector;
             # a missing/false field must not erase that architectural state.
-            if event.get("bd", 0):
+            if event.get("bd", 0) or ((cause_value >> 31) & 1):
                 replay_bd_pending = True
             replay_cause_pending = True
         elif (vector_pc and not ordinary_vector_branch and index > 0 and
               has_delay_slot(int(events[index - 1]["instr"], 16)) and
               int(event["pc"], 16) ==
               int(events[index - 1]["pc"], 16) + 4):
+            replay_bd_pending = bool(cause_value & (1 << 31))
             replay_cause_pending = True
         elif (vector_pc and not ordinary_vector_branch and
               ((cause_value >> 31) & 1)):
@@ -537,20 +704,80 @@ def convert(events, states):
                 replay_gpr_overrides[f"r{rd}"] = hex32(shifted)
                 if destination == rd:
                     gpr_data = hex32(shifted)
-        exception_taken = int(entered_general_vector and
-                              ((cause_value >> 2) & 0x1f) != 0)
-        exception_code = ((cause_value >> 2) & 0x1f) if exception_taken else 0
+        previous_mdu_hilo = replay_mdu_hilo
+        replay_mdu_hilo = mdu_hilo_update(instr, before, replay_mdu_hilo)
+        if (MDU_TRACE_START >= 0 and MDU_TRACE_END >= MDU_TRACE_START and
+                MDU_TRACE_START <= index <= MDU_TRACE_END and
+                is_mdu_hilo_instruction(instr)):
+            rs = (instr >> 21) & 0x1f
+            rt = (instr >> 16) & 0x1f
+            print(
+                "QEMU_MDU_TRACE "
+                f"index={index} pc={event['pc']} instr={event['instr']} "
+                f"rs=r{rs}:{before[f'r{rs}']} rt=r{rt}:{before[f'r{rt}']} "
+                f"synthetic_before={previous_mdu_hilo} "
+                f"synthetic_after={replay_mdu_hilo} "
+                f"qemu_before={before.get('hi')}:{before.get('lo')} "
+                f"qemu_after={after.get('hi')}:{after.get('lo')}",
+                file=sys.stderr,
+            )
+        # A refill uses EBase+0x000 rather than the general EBase+0x180
+        # vector.  QEMU's compact state stream does not retain the Cause code
+        # for this pre-memory-callback boundary, but the non-branch redirect
+        # and decoded access identify it unambiguously.
+        entered_tlb_refill = ((event_next_pc & 0xfff) == 0 and
+                              not ordinary_vector_branch and
+                              instr != 0x42000018 and
+                              event_next_pc != ((int(event["pc"], 16) + 4) &
+                                                0xffffffff))
+        synchronous_exception_taken = int(
+            ((entered_general_vector and not ordinary_vector_branch) and
+             cause_code != 0) or entered_tlb_refill)
+        exception_taken = int(synchronous_exception_taken or
+                              vectored_async_interrupt)
+        exception_code = (cause_code if entered_general_vector and
+                          not ordinary_vector_branch else 0)
+        if entered_tlb_refill:
+            access = faulting_memory_access(instr, before)
+            exception_code = 3 if access and access[0] else 2
+            if access and not mem_valid:
+                mem_write, mem_addr, mem_size, mem_value = access
+                mem_valid = 1
+                mem_read = int(not mem_write)
+                mem_be = ((1 << mem_size) - 1) << (mem_addr & 3)
+                event["mem_value"] = mem_value
+                event["mem_read"] = mem_read
+                event["mem_write"] = int(mem_write)
+                if mem_write:
+                    store_wdata = mem_value
+        if synchronous_exception_taken and not mem_valid:
+            access = faulting_memory_access(instr, before)
+            if access and access[2] <= 4:
+                mem_write, mem_addr, mem_size, mem_value = access
+                mem_valid = 1
+                mem_read = int(not mem_write)
+                mem_be = ((1 << mem_size) - 1) << (mem_addr & 3)
+                event["mem_value"] = mem_value
+                event["mem_read"] = mem_read
+                event["mem_write"] = int(mem_write)
+                if mem_write:
+                    store_wdata = mem_value
+        if not exception_taken:
+            exception_code = 0
         exception_bd = ((cause_value >> 31) & 1) if exception_taken else 0
         # A synchronous exception is taken instead of committing the
         # faulting instruction. QEMU's post-state snapshot can still expose
         # a transient register delta, so it must not become a retire write.
-        if exception_taken:
+        if synchronous_exception_taken:
             gpr_we, gpr_addr, gpr_data = 0, 0, "00000000"
+            cp0_we = 0
         # A Cause replay override models only the value flowing through the
         # bounded interrupt handler.  Once an ordinary architectural write
         # commits the same GPR, the override must be retired as well; keeping
         # it alive would corrupt a later source operand (notably MTC0 data).
-        if destination and not exception_taken and not is_mfc0_cause:
+        if (destination and not synchronous_exception_taken and
+                not is_mfc0_cause and not mdu_read and
+                not replayed_memory_load):
             replay_gpr_overrides.pop(f"r{destination}", None)
         # The event stream's next_pc is the immediate post-instruction PC.
         # For a control transfer this is the delay-slot PC; the comparator
@@ -561,11 +788,39 @@ def convert(events, states):
             # has restored the precise EPC.  The post-state is authoritative
             # for the architectural return boundary.
             event_next_pc = int(after["epc"], 16)
-        yield {
-            "schema": "00010000",
+        trace_mem_valid = mem_valid
+        trace_mem_read = (mem_read if is_sc else
+                          int(bool(event.get("mem_read"))))
+        trace_mem_write = (mem_write if is_sc else
+                           int(bool(event.get("mem_write"))))
+        trace_mem_addr = mem_addr
+        trace_mem_wdata = (sc_store_data if sc_store_data is not None else
+                           store_wdata) if trace_mem_write else "00000000"
+        trace_mem_wdata_hi = "00000000"
+        if trace_mem_write and is_double_store:
+            if mem_size != 8 or "mem_value_hi" not in event:
+                raise ValueError(
+                    f"retire {index}: double store lacks a complete 64-bit "
+                    "QEMU memory value")
+            trace_mem_wdata_hi = hex32(event["mem_value_hi"])
+        if is_merge_memory:
+            # QEMU lowers merge operations into helper byte callbacks. Report
+            # the original architectural effective address instead of the
+            # final aligned/byte callback address.
+            trace_mem_valid = 1
+            trace_mem_addr = effective_address(instr, before)
+            trace_mem_read = int(opcode in (0x22, 0x26))
+            trace_mem_write = int(is_merge_store_access)
+            if is_merge_store_access:
+                rt = (instr >> 16) & 0x1f
+                trace_mem_wdata = hex32(before[f"r{rt}"])
+        record = {
+            "schema": trace_schema,
             "pc": hex32(event["pc"]),
             "instr": hex32(event["instr"]),
             "next_pc": hex32(event_next_pc),
+            "qemu_cause": hex32(before.get("cause", "00000000")),
+            "qemu_epc": hex32(before.get("epc", "00000000")),
             "gpr_we": gpr_we,
             "gpr_addr": gpr_addr,
             "gpr_data": gpr_data,
@@ -575,20 +830,36 @@ def convert(events, states):
             "cp0_data": cp0_data,
             "fpr_state": fpr_state(after),
             "fcsr_state": hex32(after.get("fcsr", "00000000")),
-            "mem_valid": mem_valid,
-            "mem_read": mem_read if is_sc else int(bool(event.get("mem_read"))),
-            "mem_write": mem_write if is_sc else int(bool(event.get("mem_write"))),
-            "mem_addr": hex32(mem_addr),
-            "mem_wdata": (sc_store_data if sc_store_data is not None else
-                          event.get("mem_value", "00000000")) if
-                         (is_sc or event.get("mem_write")) else "00000000",
+            "mem_valid": trace_mem_valid,
+            "mem_read": trace_mem_read,
+            "mem_write": trace_mem_write,
+            "mem_addr": hex32(trace_mem_addr),
+            "mem_wdata": trace_mem_wdata,
+            "mem_wdata_hi": trace_mem_wdata_hi,
             "mem_be": f"{mem_be:x}",
-            "mem_rdata": event.get("mem_value", "00000000") if event.get("mem_read") else "xxxxxxxx",
+            "mem_rdata": ("00000000" if synchronous_exception_taken else
+                          (load_rdata if event.get("mem_read") else
+                           "xxxxxxxx")),
             "except": exception_taken,
             "except_code": exception_code,
             "bd": exception_bd,
             "eret": int(instr == 0x42000018),
         }
+        if trace_schema == "00020000":
+            architectural_gprs = dict(after)
+            architectural_gprs.update(replay_gpr_overrides)
+            architectural_gprs["r0"] = "00000000"
+            record["gpr_state"] = "".join(
+                hex32(architectural_gprs[f"r{reg}"])
+                for reg in range(31, -1, -1))
+            if replay_mdu_hilo is None:
+                hilo_hi = hex32(after.get("hi", "00000000"))
+                hilo_lo = hex32(after.get("lo", "00000000"))
+            else:
+                hilo_hi, hilo_lo = (hex32(replay_mdu_hilo[0]),
+                                    hex32(replay_mdu_hilo[1]))
+            record["hilo_state"] = hilo_hi + hilo_lo
+        yield record
 
 
 def main():

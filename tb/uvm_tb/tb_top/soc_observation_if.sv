@@ -10,6 +10,10 @@ interface soc_observation_if(input logic clk, input logic rst_n);
     logic        retire_gpr_we;
     logic [4:0]  retire_gpr_addr;
     logic [31:0] retire_gpr_data;
+    logic [1023:0] retire_gpr_state;
+    logic [63:0] retire_hilo_state;
+    logic        retire_mdu_done;
+    logic [3:0]  retire_mdu_op;
     logic        retire_cp0_we;
     logic [4:0]  retire_cp0_addr;
     logic [2:0]  retire_cp0_sel;
@@ -38,6 +42,8 @@ interface soc_observation_if(input logic clk, input logic rst_n);
         output retire_schema, output retire_valid, output retire_pc,
         output retire_instr, output retire_next_pc, output retire_gpr_we,
         output retire_gpr_addr, output retire_gpr_data, output retire_cp0_we,
+        output retire_gpr_state, output retire_hilo_state,
+        output retire_mdu_done, output retire_mdu_op,
         output retire_cp0_addr, output retire_cp0_sel, output retire_cp0_data,
         output retire_fpr_state, output retire_fcsr_state,
         output retire_mem_valid, output retire_mem_read, output retire_mem_write,
@@ -61,6 +67,8 @@ interface soc_observation_if(input logic clk, input logic rst_n);
         input retire_schema, input retire_valid, input retire_pc,
         input retire_instr, input retire_next_pc, input retire_gpr_we,
         input retire_gpr_addr, input retire_gpr_data, input retire_cp0_we,
+        input retire_gpr_state, input retire_hilo_state,
+        input retire_mdu_done, input retire_mdu_op,
         input retire_cp0_addr, input retire_cp0_sel, input retire_cp0_data,
         input retire_fpr_state, input retire_fcsr_state,
         input retire_mem_valid, input retire_mem_read, input retire_mem_write,

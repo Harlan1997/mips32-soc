@@ -290,7 +290,8 @@ dcache-parity-gate:
 .PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
 .PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit qemu-system-cp0-timer-wait-differential-gate linux-timer-clock-comparison-test
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
-.PHONY: qemu-system-linux-differential-gate qemu-system-linux-full-closure-gate qemu-system-linux-terminal-closure-gate linux-memory-owner-trace-checker-test linux-image-identity-test
+.PHONY: qemu-system-linux-differential-gate qemu-system-linux-full-closure-gate qemu-system-linux-terminal-closure-gate qemu-system-linux-full-differential-gate linux-memory-owner-trace-checker-test linux-image-identity-test
+.PHONY: qemu-system-uart-timing-test
 
 linux-memory-owner-trace-checker-test:
 	python3 scripts/test_linux_memory_owner_trace.py
@@ -309,7 +310,7 @@ linux-image-identity-test:
 .PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate perf-benchmark-baseline-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
-.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-badvaddr-owner-gate mmu-page-frame-allocator-gate
+.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate mmu-page-frame-allocator-gate
 .PHONY: mem-stage-gate
 .PHONY: formal-static-audit
 .PHONY: formal-bind-compile-gate
@@ -934,6 +935,11 @@ qemu-system-linux-full-closure-gate: qemu-system-mips32-soc-ref
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_linux_full_closure \
 	tb/isa_ref/run_qemu_linux_terminal_closure_gate.sh
 
+qemu-system-linux-full-differential-gate:
+	QEMU_BIN=$(QEMU_BIN) QEMU_SRC=$(QEMU_SRC) QEMU_BUILD=$(QEMU_BUILD) \
+	KERNEL=$(KERNEL) LINUX_IMAGE_DIR=$(LINUX_IMAGE_DIR) RUN_DIR=$(RUN_DIR) \
+	bash tb/isa_ref/run_qemu_linux_full_closure_gate.sh
+
 qemu-system-linux-terminal-closure-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_linux_terminal_closure_gate.sh
 	QEMU_BIN=$(QEMU_BIN) QEMU_SRC=$(QEMU_SRC) QEMU_BUILD=$(QEMU_BUILD) \
@@ -1016,6 +1022,13 @@ qemu-system-llsc-differential-gate: qemu-system-mips32-soc-ref
 qemu-system-state-converter-test:
 	python3 -m py_compile tb/isa_ref/qemu_system_state_to_jsonl.py tb/isa_ref/test_qemu_system_state_to_jsonl.py
 	python3 tb/isa_ref/test_qemu_system_state_to_jsonl.py
+
+qemu-system-uart-timing-test:
+	@set -eu; test_bin=$$(mktemp /tmp/mips32-soc-uart-timing.XXXXXX); \
+	trap 'rm -f "$$test_bin"' EXIT; \
+	$(CC) -std=c11 -Wall -Wextra -Werror scripts/qemu/test_mips32_soc_uart_timing.c -o "$$test_bin"; \
+	if [ -n "$${UART_APB_SCHEDULE:-}" ]; then "$$test_bin" "$${UART_APB_SCHEDULE}"; \
+	else "$$test_bin"; fi
 
 qemu-system-mdu-differential-gate: qemu-system-mips32-soc-ref qemu-system-state-converter-test
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -1346,6 +1359,11 @@ cpu-irq-mem-pending-gate:
 	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_irq_mem_pending \
 		tb/unit/cpu_test/run_mips_cpu_irq_mem_pending.sh
 
+cpu-wait-irq-wakeup-gate:
+	chmod +x tb/unit/cpu_test/run_mips_cpu_wait_irq_wakeup.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_wait_irq_wakeup \
+		tb/unit/cpu_test/run_mips_cpu_wait_irq_wakeup.sh
+
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
 
@@ -1547,6 +1565,10 @@ peripheral-differential-checker-test:
 linux-timer-clock-comparison-test:
 	python3 -m py_compile scripts/compare_linux_timer_clock.py scripts/test_compare_linux_timer_clock.py
 	python3 scripts/test_compare_linux_timer_clock.py
+
+.PHONY: trace-compare-stream-test
+trace-compare-stream-test:
+	python3 tb/isa_ref/test_trace_compare_stream.py
 
 
 # Stage-level cache concurrency gate.  Keep this opt-in aggregate separate

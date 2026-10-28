@@ -870,20 +870,18 @@ module mips_cp0 #(
     wire        tlb_wr_en_sw  = tlb_wr_en_raw && tlb_wr_gate;
     assign hw_tlb_wr_ready = !tlb_wr_en_sw;
     wire        tlb_wr_en     = tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready);
-    wire        context_root_write = we && (waddr == 5'd4) &&
-                                     (wsel == 3'd0);
     wire        context_restore_root_flush = ctx_restore_req &&
                                              (ctx_restore_ptebase_valid === 1'b1) &&
                                              (ctx_restore_ptebase[31:23] != cp0_context_ptebase);
-    wire        context_root_flush = context_root_write || context_restore_root_flush;
+    wire        context_root_flush = context_restore_root_flush;
     wire        micro_tlb_context_flush = (we &&
                                            ((waddr == 5'd4) ||
                                             (waddr == 5'd5) ||
                                             (waddr == 5'd10))) ||
                                           ctx_restore_req;
-    // A walker root change invalidates translations populated from the old
-    // root.  Keep wired entries intact; the main TLB's dynamic invalidate
-    // scope is specifically defined for this purpose.
+    // Scheduler context restore is a SoC-level address-space switch and
+    // invalidates dynamic translations. An ordinary MTC0 Context only changes
+    // the walker root; it is not itself a TLB operation.
     wire        tlb_inv_effective_en = tlb_inv_en || context_root_flush;
     wire [1:0]  tlb_inv_effective_scope = context_root_flush ? 2'd2 : tlb_inv_scope;
     wire [5:0]  tlb_inv_effective_floor = context_root_flush ? cp0_wired :

@@ -24,9 +24,15 @@ MAX_TRACE_RECORDS=${MAX_TRACE_RECORDS:-1000000}
 # list-based path because their architectural state comparison uses a bounded
 # observation window that the streaming path deliberately does not emulate.
 TRACE_COMPARE_STREAM=${TRACE_COMPARE_STREAM:-}
+QEMU_CAPTURE_FPR_STATE=${QEMU_CAPTURE_FPR_STATE:-0}
+case "${FW_TEST}" in
+    fpu_*|qemu_system_fpu_*) QEMU_CAPTURE_FPR_STATE=1 ;;
+esac
 if [[ -z "${TRACE_COMPARE_STREAM}" ]]; then
     case "${FW_TEST}" in
-        fpu_*|qemu_system_fpu_*) TRACE_COMPARE_STREAM=0 ;;
+        fpu_*|qemu_system_fpu_*)
+            TRACE_COMPARE_STREAM=0
+            ;;
         *) TRACE_COMPARE_STREAM=1 ;;
     esac
 fi
@@ -105,6 +111,7 @@ if [[ "${QEMU_CAPTURE_TMPDIR}" == "1" ]]; then
     qemu_run_dir="${qemu_tmp_dir}"
 fi
 env RUN_DIR="${qemu_run_dir}" FW_ELF="${FW_ELF}" RTL_TRACE="${RTL_TRACE}" QEMU_CPU="${QEMU_CPU}" \
+QEMU_CAPTURE_FPR_STATE="${QEMU_CAPTURE_FPR_STATE}" \
 REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=1 QSPI_IMAGE="${QEMU_QSPI_IMAGE}" \
 TRACE_COMPARE_STREAM="${TRACE_COMPARE_STREAM}" \
 "${irq_replay_args[@]}" \

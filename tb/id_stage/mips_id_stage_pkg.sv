@@ -442,6 +442,8 @@ package mips_id_stage_pkg;
                 6'b100001: begin alu_op = 4'b0001; alu_src = 1; reg_write = 1; reg_dst = 2'b00; mem_read = 1; mem_op = 3'b010; mem_to_reg = 2'b01; imm_signed = 1; end // LH
                 6'b100101: begin alu_op = 4'b0001; alu_src = 1; reg_write = 1; reg_dst = 2'b00; mem_read = 1; mem_op = 3'b011; mem_to_reg = 2'b01; imm_signed = 1; end // LHU
                 6'b101011: begin alu_op = 4'b0001; alu_src = 1; mem_write = 1; mem_op = 3'b100; imm_signed = 1; end // SW
+                6'b101010: begin alu_op = 4'b0001; alu_src = 1; mem_write = 1; mem_op = 3'b101; imm_signed = 1; end // SWL
+                6'b101110: begin alu_op = 4'b0001; alu_src = 1; mem_write = 1; mem_op = 3'b110; imm_signed = 1; end // SWR
                 6'b101000: begin alu_op = 4'b0001; alu_src = 1; mem_write = 1; mem_op = 3'b000; imm_signed = 1; end // SB
                 6'b101001: begin alu_op = 4'b0001; alu_src = 1; mem_write = 1; mem_op = 3'b010; imm_signed = 1; end // SH
                 6'b000010: begin jump_op = 2'b01; end // J
@@ -551,7 +553,7 @@ package mips_id_stage_pkg;
                            (item.inst[31:26] != 6'b000010 && item.inst[31:26] != 6'b000011 && item.inst[31:26] != 6'b001111);
 
             exp_reads_rt = (item.inst[31:26] == 6'b000000) ? (item.inst[5:0] != 6'b001000 && item.inst[5:0] != 6'b001001 && item.inst[5:0] != 6'b010000 && item.inst[5:0] != 6'b010001 && item.inst[5:0] != 6'b010010 && item.inst[5:0] != 6'b010011) :
-                           (item.inst[31:26] == 6'b101011 || item.inst[31:26] == 6'b101001 || item.inst[31:26] == 6'b101000 || item.inst[31:26] == 6'b000100 || item.inst[31:26] == 6'b000101);
+                           (item.inst[31:26] == 6'b101011 || item.inst[31:26] == 6'b101010 || item.inst[31:26] == 6'b101110 || item.inst[31:26] == 6'b101001 || item.inst[31:26] == 6'b101000 || item.inst[31:26] == 6'b000100 || item.inst[31:26] == 6'b000101);
 
             exp_stall_req = item.ex_mem_read && (item.ex_waddr != 0) &&
                             ((exp_reads_rs && (item.ex_waddr == item.rs_addr)) ||
@@ -700,6 +702,29 @@ package mips_id_stage_pkg;
         endtask
     endclass
 
+    class id_merge_store_hazard_seq extends mips_id_stage_base_seq;
+        `uvm_object_utils(id_merge_store_hazard_seq)
+
+        function new(string name = "id_merge_store_hazard_seq");
+            super.new(name);
+        endfunction
+
+        virtual task body();
+            bit [5:0] opcodes[4] = '{6'b101010, 6'b101010, 6'b101110, 6'b101110};
+            bit [4:0] producers[4] = '{5'd5, 5'd4, 5'd5, 5'd4};
+
+            foreach (opcodes[i]) begin
+                req = mips_id_stage_item::type_id::create($sformatf("merge_store_%0d", i));
+                start_item(req);
+                req.inst = {opcodes[i], 5'd3, 5'd5, 16'h0003};
+                req.pc_plus_4 = 32'h8000_0004 + (i * 4);
+                req.ex_mem_read = 1'b1;
+                req.ex_waddr = producers[i];
+                finish_item(req);
+            end
+        endtask
+    endclass
+
     // =========================================================================
     // 8. Test Cases
     // =========================================================================
@@ -731,9 +756,26 @@ package mips_id_stage_pkg;
         endfunction
 
         virtual task run_phase(uvm_phase phase);
+            id_merge_store_hazard_seq hazard_seq = id_merge_store_hazard_seq::type_id::create("hazard_seq");
             id_rand_seq seq = id_rand_seq::type_id::create("seq");
             phase.raise_objection(this);
+            hazard_seq.start(env.agent.sequencer);
             seq.start(env.agent.sequencer);
+            phase.drop_objection(this);
+        endtask
+    endclass
+
+    class id_merge_store_hazard_test extends mips_id_stage_base_test;
+        `uvm_component_utils(id_merge_store_hazard_test)
+
+        function new(string name = "id_merge_store_hazard_test", uvm_component parent = null);
+            super.new(name, parent);
+        endfunction
+
+        virtual task run_phase(uvm_phase phase);
+            id_merge_store_hazard_seq hazard_seq = id_merge_store_hazard_seq::type_id::create("hazard_seq");
+            phase.raise_objection(this);
+            hazard_seq.start(env.agent.sequencer);
             phase.drop_objection(this);
         endtask
     endclass
