@@ -458,10 +458,23 @@ module apb_uart_16550 #(
         end
     end
 
+    // The Linux blocking/nonblocking differential compares architectural
+    // retirement, while the two cache paths can reach the same APB poll at
+    // different SoC cycles. Keep the TX-empty LSR bits deterministic for that
+    // explicitly selected contract; the normal UART model retains frame-drain
+    // timing.
+`ifdef TB_LINUX_DIFF_UART_TIMING
+    wire       lsr_thre = 1'b1;
+    wire       lsr_temt = 1'b1;
+`else
+    wire       lsr_thre = tx_empty;
+    wire       lsr_temt = tx_empty && (tx_state == TX_IDLE);
+`endif
+
     // LSR bits
     wire [7:0] lsr = { rx_fifo_has_err,                        // 7: RFE
-                       tx_empty && (tx_state == TX_IDLE),       // 6: TEMT
-                       tx_empty,                               // 5: THRE
+                       lsr_temt,                             // 6: TEMT
+                       lsr_thre,                             // 5: THRE
                        rx_head_brk,                            // 4: BI
                        rx_head_fram,                           // 3: FE
                        rx_head_par,                            // 2: PE

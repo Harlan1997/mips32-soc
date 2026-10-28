@@ -18,7 +18,10 @@ RTL_CYCLE_LIMIT=${RTL_CYCLE_LIMIT:-1100000}
 LINUX_TIMEOUT_NS=${LINUX_TIMEOUT_NS:-$((RTL_CYCLE_LIMIT * 10))}
 HOST_TIMEOUT=${HOST_TIMEOUT:-600s}
 LINUX_COMMON_VCS_EXTRA_ARGS=${LINUX_COMMON_VCS_EXTRA_ARGS:-${LINUX_VCS_EXTRA_ARGS:-}}
-NONBLOCKING_DEFINES="+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1"
+# Both cache paths use the same deterministic UART status contract so a
+# cache-dependent APB arrival cycle cannot change Linux's polling branch.
+DIFFERENTIAL_DEFINES="+define+TB_LINUX_DIFF_UART_TIMING=1"
+NONBLOCKING_DEFINES="+define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 ${DIFFERENTIAL_DEFINES}"
 
 if ! [[ "${RETIRE_COMPARE_RECORDS}" =~ ^[1-9][0-9]*$ ]]; then
     echo "L1 Linux differential: RETIRE_COMPARE_RECORDS must be positive" >&2
@@ -124,7 +127,7 @@ run_rtl_mode() {
     fi
 }
 
-run_rtl_mode blocking ""
+run_rtl_mode blocking "${DIFFERENTIAL_DEFINES}"
 run_rtl_mode nonblocking "${NONBLOCKING_DEFINES}"
 
 blocking_trace="${RUN_DIR}/blocking/sim/rtl_retire.jsonl"
