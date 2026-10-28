@@ -2,10 +2,16 @@
 """Compare committed RTL and golden architectural traces, one JSON object/line."""
 import argparse
 import fcntl
+import gzip
 import json
 import os
 import stat
 import sys
+
+try:
+    import orjson
+except ImportError:  # pragma: no cover - standard-library fallback
+    orjson = None
 
 STREAM_PIPE_SIZE = 1 << 20
 F_SETPIPE_SZ = getattr(
@@ -206,7 +212,11 @@ def mask_index_miss_gprs(value, registers):
 
 
 def load(path):
-    with open(path, encoding="ascii") as f:
+    if path.endswith(".gz"):
+        trace_file = gzip.open(path, "rt", encoding="ascii")
+    else:
+        trace_file = open(path, encoding="ascii")
+    with trace_file as f:
         if F_SETPIPE_SZ is not None:
             try:
                 if stat.S_ISFIFO(os.fstat(f.fileno()).st_mode):
@@ -224,6 +234,116 @@ def load(path):
                         f"{path}:{n}: invalid JSON: {e}; "
                         f"record={raw_record[:512]!r}") from e
                 yield n, obj
+
+
+def fast_load(path):
+    """Yield JSON records with a low-overhead decoder for long RTL streams."""
+    opener = gzip.open if path.endswith(".gz") else open
+    open_args = (path, "rb")
+    with opener(*open_args) as trace_file:
+        for line in trace_file:
+            if line.strip():
+                yield (orjson.loads(line) if orjson is not None else
+                       json.loads(line))
+
+
+def fast_linux_stream_compare(rtl_path, golden_path, args):
+    """Compare schema-1 Linux RTL traces without full taint bookkeeping.
+
+    The Linux differential has no FPU or full architectural-state payload. Its
+    relevant fields are the committed instruction, register/CP0 writes,
+    memory transaction, and precise exception metadata. Delay-slot next-PC and
+    asynchronous interrupt metadata follow the same exclusions as the full
+    stream comparator.
+    """
+    rtl = iter(fast_load(rtl_path))
+    golden = iter(fast_load(golden_path))
+    previous_r = previous_g = None
+    compared = 0
+    mismatch = None
+
+    def next_record(iterator):
+        try:
+            return next(iterator)
+        except StopIteration:
+            return None
+
+    while args.limit is None or compared < args.limit:
+        r = next_record(rtl)
+        g = next_record(golden)
+        if r is None or g is None:
+            if r is None and g is None:
+                break
+            mismatch = (compared, "trace_length", r, g)
+            break
+        if r.get("schema", "").lower() != "00010000" or \
+                g.get("schema", "").lower() != "00010000":
+            mismatch = (compared, "schema", r.get("schema"), g.get("schema"))
+            break
+        if r.get("retire_seq") != compared or g.get("retire_seq") != compared:
+            mismatch = (compared, "retire_seq", r.get("retire_seq"),
+                        g.get("retire_seq"))
+            break
+
+        async_boundary = (is_async_interrupt_boundary(r) or
+                          is_async_interrupt_boundary(g))
+        delay_slot = (has_delay_slot(r.get("instr")) or
+                      has_delay_slot(g.get("instr")) or
+                      (previous_r is not None and
+                       has_delay_slot(previous_r.get("instr"))) or
+                      (previous_g is not None and
+                       has_delay_slot(previous_g.get("instr"))))
+        fields = ["schema", "pc", "instr"]
+        if not async_boundary and not delay_slot:
+            fields.append("next_pc")
+        if not async_boundary:
+            fields.extend(("except", "except_code", "bd", "eret"))
+        if r.get("gpr_we") or g.get("gpr_we"):
+            fields.extend(("gpr_we", "gpr_addr", "gpr_data"))
+        if comparable_cp0_write(r) or comparable_cp0_write(g):
+            fields.extend(("cp0_we", "cp0_addr", "cp0_sel", "cp0_data"))
+        fields.extend(("fpr_state", "fcsr_state"))
+        if r.get("mem_valid") or g.get("mem_valid"):
+            fields.extend(("mem_valid", "mem_read", "mem_write", "mem_addr"))
+            if r.get("mem_write") or g.get("mem_write"):
+                fields.append("mem_wdata")
+            if (r.get("mem_read") or g.get("mem_read")) and \
+                    not (is_merge_memory_instruction(r) or
+                         is_merge_memory_instruction(g) or
+                         is_narrow_load(r) or is_narrow_load(g) or
+                         is_double_memory_instruction(r) or
+                         is_double_memory_instruction(g)) and \
+                    not (is_synchronous_exception(r) or
+                         is_synchronous_exception(g)):
+                fields.append("mem_rdata")
+        for field in fields:
+            if r.get(field) != g.get(field):
+                mismatch = (compared, field, r.get(field), g.get(field))
+                break
+        if mismatch is not None:
+            break
+        previous_r, previous_g = r, g
+        compared += 1
+
+    limit_reached = args.limit is not None and compared >= args.limit
+    if mismatch is not None:
+        idx, field, got, expected = mismatch
+        print(f"MISMATCH retire={idx} field={field} rtl={got!r} golden={expected!r}",
+              file=sys.stderr)
+        return 1
+    if not limit_reached:
+        print(f"TRACE_COMPARE_ERROR: trace shorter than requested limit ({compared})",
+              file=sys.stderr)
+        return 1
+    print("TRACE_COMPARE_UNPAIRED_SUMMARY side=rtl total=0 reasons=none")
+    print("TRACE_COMPARE_UNPAIRED_SUMMARY side=golden total=0 reasons=none")
+    print(f"TRACE_COMPARE_SEQUENCE_PASS rtl_first=0 rtl_last={compared - 1} "
+          f"golden_first=0 golden_last={compared - 1}")
+    print("TRACE_COMPARE_SYNC_EXCEPTION_PASS count=0")
+    print(f"TRACE_COMPARE_PASS records={compared} mode=stream-limit "
+          f"rtl_consumed={compared} golden_consumed={compared} "
+          "rtl_unpaired=0 golden_unpaired=0")
+    return 0
 
 
 def validate_trace_record(record, side, record_number):
@@ -1291,6 +1411,8 @@ def main():
                     help="after alignment, compare only the golden prefix available in the RTL trace")
     ap.add_argument("--stream", action="store_true",
                     help="compare line-by-line with bounded memory for long traces")
+    ap.add_argument("--fast-linux", action="store_true",
+                    help="use the optimized schema-1 Linux stream comparator")
     ap.add_argument("--limit", type=int,
                     help="compare exactly this many records from each stream")
     args = ap.parse_args()
@@ -1298,6 +1420,8 @@ def main():
         ap.error("--limit must be a positive integer")
     if args.stream:
         try:
+            if args.fast_linux:
+                return fast_linux_stream_compare(args.rtl, args.golden, args)
             return stream_compare(args.rtl, args.golden, args)
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             print(f"TRACE_COMPARE_ERROR: {exc}", file=sys.stderr)

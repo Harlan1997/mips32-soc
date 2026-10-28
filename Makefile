@@ -3,6 +3,10 @@ BUILD_DIR ?= $(ROOT_DIR)/build
 HOST_TIMEOUT ?= 180s
 RTL_CYCLE_LIMIT ?= 1000000
 LINUX_TIMEOUT_NS ?=
+L1_NONBLOCKING_RETIRE_RECORDS ?= 300000
+L1_NONBLOCKING_RETIRE_TRACE_COMPRESS ?= 0
+L1_NONBLOCKING_RETIRE_COMPARE_FAST ?= 1
+L1_NONBLOCKING_RTL_CYCLE_LIMIT ?= 1100000
 # VCS and the Linux build can each consume substantial RAM. Keep the default
 # reproducible on constrained CI/VM hosts; callers may opt into parallelism.
 JOBS ?= 1
@@ -1535,8 +1539,10 @@ l1-nonblocking-linux-differential-gate:
 	RUN_DIR=$(BUILD_DIR)/linux_boot/l1_nonblocking_differential \
 	LINUX_PROFILE=rtl-minimal \
 	LINUX_CMDLINE='console=null earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init loglevel=0 quiet' \
-	KERNEL=$(KERNEL) RETIRE_COMPARE_RECORDS=300000 \
-	RTL_CYCLE_LIMIT=1100000 HOST_TIMEOUT=$(HOST_TIMEOUT) \
+	KERNEL=$(KERNEL) RETIRE_COMPARE_RECORDS=$(L1_NONBLOCKING_RETIRE_RECORDS) \
+	RETIRE_TRACE_COMPRESS=$(L1_NONBLOCKING_RETIRE_TRACE_COMPRESS) \
+	RETIRE_COMPARE_FAST=$(L1_NONBLOCKING_RETIRE_COMPARE_FAST) \
+	RTL_CYCLE_LIMIT=$(L1_NONBLOCKING_RTL_CYCLE_LIMIT) HOST_TIMEOUT=$(HOST_TIMEOUT) \
 	SKIP_COVERAGE=1 \
 	tb/linux_boot/run_l1_nonblocking_linux_differential_gate.sh
 

@@ -3021,6 +3021,7 @@ module mips_cpu #(
         .eret         (wb_is_eret && wb_commit_valid),
         .di           (wb_di),
         .ei           (wb_ei),
+        .retire_event (wb_arch_valid),
         .bad_vaddr    (bad_vaddr),
         .lladdr_in    (lladdr_visible),
         .ctx_save_req (ctx_save_req),

@@ -89,6 +89,9 @@ module mips_cp0 #(
     // read path and atomically update Status.IE after the old value is read.
     input  wire        di,
     input  wire        ei,
+    // Architectural commit pulse used by the opt-in differential Count
+    // contract. The default Count implementation ignores this input.
+    input  wire        retire_event,
     // Phase B.3.d: faulting virtual address for BadVAddr / Context.BadVPN2
     // Latched only when except_code is address-related (1/2/3/4/5).
     input  wire [31:0] bad_vaddr,
@@ -600,7 +603,8 @@ module mips_cp0 #(
             if (we && ({waddr, wsel} == {5'd9, 3'd0})) begin
                 cp0_count           <= wdata;
                 cp0_count_prescale  <= 4'd0;
-            end else if (!cp0_cause[27]) begin
+            end else if (!cp0_cause[27] &&
+                         ((`SOC_CP0_RETIRE_COUNT_ENABLE == 0) || retire_event)) begin
                 if (cp0_count_prescale == (`SOC_CP0_COUNT_DIV - 1)) begin
                     cp0_count_prescale <= 4'd0;
                     cp0_count          <= cp0_count + 32'd1;

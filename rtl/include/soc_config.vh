@@ -268,6 +268,14 @@
 // be a positive integer; 1 = every cycle.
 `define SOC_CP0_COUNT_DIV          2
 
+// Differential-only Count contract. When enabled, Count advances on the
+// architectural retire event rather than elapsed CPU cycles. This makes the
+// timer state comparable across blocking and non-blocking cache paths whose
+// microarchitectural latency differs. The default remains cycle based.
+`ifndef SOC_CP0_RETIRE_COUNT_ENABLE
+`define SOC_CP0_RETIRE_COUNT_ENABLE 0
+`endif
+
 // Compare reset value. Spec leaves this UNDEFINED at reset. Reset to all-1s so
 // that TI (Cause[30]) is NOT asserted immediately after Count=0 boot; existing
 // firmware that never writes Compare must not see a spurious timer IRQ latched.
