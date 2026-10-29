@@ -159,3 +159,22 @@ make phase3-complete
 make current-contract-signoff
 ```
 `make current-contract-signoff` 将依次运行 Phase 2、Phase 3A、Phase 3B、Phase 3C 门限与多 Seed UVM Stress 回归，自动合并覆盖率数据库并校验 15 个功能覆盖率 Group (100.00%) 及模块代码覆盖率门限，最终在 `build/signoff/current_contract/current_contract_signoff_report.md` 生成完整 Sign-off 报告。
+
+### QEMU 参考模型
+
+项目使用固定版本 QEMU 9.2.0 构建 `mips32-soc-ref` system-mode 参考模型，
+同时提供 ISA 差分使用的 linux-user `qemu-mipsel`。源码获取、主机依赖、
+编译、验证和跨服务器运行要求见
+[`docs/qemu_reference_model.md`](docs/qemu_reference_model.md)。
+
+```bash
+# 构建 system-mode mips32-soc-ref 参考模型
+QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0" \
+QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-softmmu" \
+make qemu-system-mips32-soc-ref
+
+# 构建 linux-user ISA 参考模型
+QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0" \
+QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-linux-user" \
+make qemu-linux-user
+```

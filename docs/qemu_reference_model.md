@@ -19,6 +19,134 @@ it is not a production hardware model.
 The capture library `libqemu_retire.so` is an evidence plugin. It is not the
 reference model itself.
 
+## Source Acquisition and Rebuild
+
+The project is pinned to QEMU 9.2.0. Use the official QEMU distribution page
+or upstream repository for source provenance:
+
+- [QEMU downloads](https://www.qemu.org/download/)
+- [QEMU upstream repository](https://gitlab.com/qemu-project/qemu)
+- [QEMU 9.2.0 source archive](https://download.qemu.org/qemu-9.2.0.tar.xz)
+- [QEMU 9.2.0 archive signature](https://download.qemu.org/qemu-9.2.0.tar.xz.sig)
+
+The build scripts apply project-local source changes to the QEMU tree. Start
+with a fresh extraction when changing QEMU versions or recovering from a
+partially interrupted build. The archive is the reproducible source input;
+record its local digest before building:
+
+```bash
+mkdir -p build/deps/src
+curl -fL \
+  -o build/deps/qemu-9.2.0.tar.xz \
+  https://download.qemu.org/qemu-9.2.0.tar.xz
+curl -fL \
+  -o build/deps/qemu-9.2.0.tar.xz.sig \
+  https://download.qemu.org/qemu-9.2.0.tar.xz.sig
+sha256sum build/deps/qemu-9.2.0.tar.xz
+tar -xf build/deps/qemu-9.2.0.tar.xz -C build/deps/src
+```
+
+The signature is supplied for optional GPG verification using the QEMU
+release-key instructions. The project does not embed an independently
+verified archive checksum here; do not substitute a locally observed digest
+for an upstream release record.
+
+### Host Prerequisites
+
+The host must provide a C toolchain and the normal QEMU build tools: Python 3,
+Meson, Ninja, `pkg-config`, and the GLib development headers. The repository
+scripts additionally use `git`, `ripgrep`, Perl, `sed`, `flock`, `sha256sum`,
+`install`, `curl`, and `tar`. On Debian/Ubuntu, these are commonly supplied
+by packages such as `build-essential`, `ninja-build`, `meson`, `pkg-config`,
+`python3`, `libglib2.0-dev`, `libpixman-1-dev`, `zlib1g-dev`, `git`, `ripgrep`,
+and `perl`; package names vary by distribution. `--enable-fdt=disabled` is
+intentional in the project build, so libfdt is not required for these targets.
+
+### System-Mode Build
+
+Build the custom `mips32-soc-ref` machine and its QEMU system executable from
+the repository root:
+
+```bash
+QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0" \
+QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-softmmu" \
+QEMU_BUILD_JOBS="$(nproc)" \
+make qemu-system-mips32-soc-ref
+```
+
+The result is:
+
+```text
+build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel
+```
+
+The script copies the project machine, UART timing header, and GDB XML into
+the QEMU source tree and applies the patches under
+[`scripts/qemu/patches`](../scripts/qemu/patches). It configures QEMU with
+`mipsel-softmmu`, plugins enabled, `--disable-werror`, and FDT disabled.
+
+### Linux-User Build
+
+For the user-mode ISA reference harness, use a separate build directory:
+
+```bash
+QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0" \
+QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-linux-user" \
+make qemu-linux-user
+```
+
+The result is:
+
+```text
+build/deps/src/qemu-9.2.0/build-mipsel-linux-user/qemu-mipsel
+```
+
+This target configures `mipsel-linux-user` and applies the Linux-user
+compatibility adjustments required by the project. It is a separate binary
+from the system-mode `qemu-system-mipsel`.
+
+### Build Verification
+
+Check the executable version and confirm that the custom machine was linked:
+
+```bash
+build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel --version
+build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel \
+  -M help | grep mips32-soc-ref
+build/deps/src/qemu-9.2.0/build-mipsel-linux-user/qemu-mipsel --version
+```
+
+These commands verify build readiness only. A differential or Linux closure
+run still needs the matching guest ELF/kernel, DTB, image directory, RTL
+build, traces, and (where used) a freshly built capture plugin.
+
+### Running on Another Server
+
+Rebuilding on the destination server from the same repository commit and the
+same QEMU 9.2.0 archive is the recommended portable workflow. The custom
+machine is not part of an unmodified upstream QEMU binary, so copying only
+`qemu-system-mipsel` is not a complete reproducibility package. A copied
+binary may also fail when the destination has a different host architecture,
+libc, or required shared libraries.
+
+For a gate run, provide destination-local paths explicitly, for example:
+
+```bash
+QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0" \
+QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-softmmu" \
+QEMU_BIN="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel" \
+KERNEL="$PWD/path/to/vmlinux" \
+LINUX_IMAGE_DIR="$PWD/path/to/image-dir" \
+make qemu-system-linux-full-closure-gate
+```
+
+The kernel, DTB, rootfs/image manifest, boot ROM or firmware, and any QSPI
+image must be transferred or rebuilt as matching artifacts. Differential
+gates also generate or require their project-local plugin and trace outputs;
+those outputs are workload- and commit-specific, not supplied by QEMU itself.
+Some older focused runner defaults still contain the historical `/data/disk`
+path, so set `QEMU_BIN` explicitly when using those runners on another host.
+
 ## Verified Configuration
 
 The passing run used:
