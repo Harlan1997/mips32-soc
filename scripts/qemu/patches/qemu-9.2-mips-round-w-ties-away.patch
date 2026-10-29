@@ -31,4 +31,3 @@ index 0000000..0000000 100644
 +    set_float_rounding_mode(float_round_ties_away,
                              &env->active_fpu.fp_status);
      wt2 = float32_to_int32(fst0, &env->active_fpu.fp_status);
-

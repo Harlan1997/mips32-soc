@@ -1,7 +1,7 @@
 diff --git a/target/mips/helper.h b/target/mips/helper.h
 --- a/target/mips/helper.h
 +++ b/target/mips/helper.h
-@@ -358,7 +358,7 @@ DEF_HELPER_1(rdhwr_cpunum, tl, env)
+@@ -358,3 +358,3 @@ DEF_HELPER_1(rdhwr_cpunum, tl, env)
  DEF_HELPER_1(rdhwr_synci_step, tl, env)
 -DEF_HELPER_1(rdhwr_cc, tl, env)
 +DEF_HELPER_2(rdhwr_cc, tl, env, i32)
@@ -16,10 +16,11 @@ diff --git a/target/mips/tcg/op_helper.c b/target/mips/tcg/op_helper.c
 +uint32_t qemu_mips32_soc_ref_rdhwr_cc(CPUMIPSState *env, uint32_t guest_pc)
 +    __attribute__((weak));
 +
+-target_ulong helper_rdhwr_cc(CPUMIPSState *env)
 +target_ulong helper_rdhwr_cc(CPUMIPSState *env, uint32_t guest_pc)
  {
      check_hwrena(env, 2, GETPC());
-@@ -209,6 +212,9 @@ target_ulong helper_rdhwr_cc(CPUMIPSState *env)
+@@ -209,5 +212,8 @@ target_ulong helper_rdhwr_cc(CPUMIPSState *env)
      return env->CP0_Count;
  #else
 +    if (qemu_mips32_soc_ref_rdhwr_cc) {
@@ -31,7 +32,7 @@ diff --git a/target/mips/tcg/op_helper.c b/target/mips/tcg/op_helper.c
 diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 --- a/target/mips/tcg/translate.c
 +++ b/target/mips/tcg/translate.c
-@@ -10895,7 +10895,8 @@ void gen_rdhwr(DisasContext *ctx, int rt, int rd, int sel)
+@@ -10895,4 +10895,5 @@ void gen_rdhwr(DisasContext *ctx, int rt, int rd, int sel)
      case 2:
          translator_io_start(&ctx->base);
 -        gen_helper_rdhwr_cc(t0, tcg_env);

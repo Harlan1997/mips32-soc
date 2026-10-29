@@ -9,7 +9,7 @@ diff --git a/target/mips/tcg/sysemu_helper.h.inc b/target/mips/tcg/sysemu_helper
 diff --git a/target/mips/tcg/sysemu/cp0_helper.c b/target/mips/tcg/sysemu/cp0_helper.c
 --- a/target/mips/tcg/sysemu/cp0_helper.c
 +++ b/target/mips/tcg/sysemu/cp0_helper.c
-@@ -366,6 +366,20 @@
+@@ -366,6 +366,17 @@
  }
  
 -target_ulong helper_mfc0_count(CPUMIPSState *env)
@@ -31,13 +31,13 @@ diff --git a/target/mips/tcg/sysemu/cp0_helper.c b/target/mips/tcg/sysemu/cp0_he
 diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 --- a/target/mips/tcg/translate.c
 +++ b/target/mips/tcg/translate.c
-@@ -5458,7 +5458,10 @@
+@@ -5458,1 +5458,4 @@
 -            gen_helper_mfc0_count(arg, tcg_env);
 +            gen_helper_mfc0_count(arg, tcg_env,
 +                                  tcg_constant_i32(extract32(ctx->opcode,
 +                                                             16, 5)),
 +                                  tcg_constant_i32((uint32_t)(ctx->base.pc_next - 4)));
-@@ -6941,7 +6941,10 @@
+@@ -6941,1 +6941,4 @@
 -            gen_helper_mfc0_count(arg, tcg_env);
 +            gen_helper_mfc0_count(arg, tcg_env,
 +                                  tcg_constant_i32(extract32(ctx->opcode,

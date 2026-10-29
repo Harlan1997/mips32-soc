@@ -1,7 +1,7 @@
 diff --git a/target/mips/cpu.h b/target/mips/cpu.h
 --- a/target/mips/cpu.h
 +++ b/target/mips/cpu.h
-@@ -461,6 +461,8 @@ struct TCState {
+@@ -461,3 +461,5 @@ struct TCState {
  struct TCState {
      target_ulong gpr[32];
 +    /* Project mips32-soc-ref shadow register sets (SRS 0..15). */
@@ -10,7 +10,7 @@ diff --git a/target/mips/cpu.h b/target/mips/cpu.h
 diff --git a/target/mips/internal.h b/target/mips/internal.h
 --- a/target/mips/internal.h
 +++ b/target/mips/internal.h
-@@ -208,6 +208,8 @@ void cpu_mips_start_count(CPUMIPSState *env);
+@@ -208,2 +208,4 @@ void cpu_mips_start_count(CPUMIPSState *env);
  void cpu_mips_stop_count(CPUMIPSState *env);
  void cpu_mips_store_compare(CPUMIPSState *env, uint32_t value);
 +void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt);
@@ -18,7 +18,7 @@ diff --git a/target/mips/internal.h b/target/mips/internal.h
 diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 --- a/target/mips/tcg/translate.c
 +++ b/target/mips/tcg/translate.c
-@@ -1241,7 +1241,8 @@ static inline void gen_load_srsgpr(int from, int to)
+@@ -1241,6 +1241,7 @@ static inline void gen_load_srsgpr(int from, int to)
          tcg_gen_andi_i32(t2, t2, 0xf);
          tcg_gen_muli_i32(t2, t2, sizeof(target_ulong) * 32);
          tcg_gen_ext_i32_ptr(addr, t2);
@@ -26,7 +26,7 @@ diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 +        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));
  
          tcg_gen_ld_tl(t0, addr, sizeof(target_ulong) * from);
-@@ -1258,7 +1259,8 @@ static inline void gen_store_srsgpr(int from, int to)
+@@ -1258,6 +1259,7 @@ static inline void gen_store_srsgpr(int from, int to)
          tcg_gen_andi_i32(t2, t2, 0xf);
          tcg_gen_muli_i32(t2, t2, sizeof(target_ulong) * 32);
          tcg_gen_ext_i32_ptr(addr, t2);
@@ -37,7 +37,7 @@ diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_helper.c
 --- a/target/mips/tcg/sysemu/tlb_helper.c
 +++ b/target/mips/tcg/sysemu/tlb_helper.c
-@@ -1027,6 +1027,40 @@ static void set_hflags_for_handler(CPUMIPSState *env)
+@@ -1027,2 +1027,53 @@ static void set_hflags_for_handler(CPUMIPSState *env)
      }
  }
 +
@@ -91,16 +91,16 @@ diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_he
 +    env->active_tc.gpr[0] = 0;
 +    env->CP0_SRSCtl = deposit32(env->CP0_SRSCtl, CP0SRSCtl_CSS, 4, pss);
 +}
-@@ -1350,6 +1384,7 @@ set_EPC:
+@@ -1350,3 +1384,5 @@ set_EPC:
              env->hflags &= ~(MIPS_HFLAG_KSU);
          }
 +        mips_srs_exception_entry(env,
 +                                 cs->exception_index == EXCP_EXT_INTERRUPT);
          env->hflags &= ~MIPS_HFLAG_BMASK;
- diff --git a/target/mips/tcg/sysemu/special_helper.c b/target/mips/tcg/sysemu/special_helper.c
+diff --git a/target/mips/tcg/sysemu/special_helper.c b/target/mips/tcg/sysemu/special_helper.c
 --- a/target/mips/tcg/sysemu/special_helper.c
 +++ b/target/mips/tcg/sysemu/special_helper.c
-@@ -111,6 +111,7 @@ static inline void exception_return(CPUMIPSState *env)
+@@ -111,4 +111,5 @@ static inline void exception_return(CPUMIPSState *env)
          mips_env_set_pc(env, env->CP0_EPC);
          env->CP0_Status &= ~(1 << CP0St_EXL);
      }
@@ -109,14 +109,14 @@ diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_he
 diff --git a/target/mips/helper.h b/target/mips/helper.h
 --- a/target/mips/helper.h
 +++ b/target/mips/helper.h
-@@ -1,3 +1,5 @@
+@@ -1,1 +1,3 @@
  DEF_HELPER_1(raise_exception_debug, noreturn, env)
 +DEF_HELPER_2(rdpgpr, tl, env, i32)
 +DEF_HELPER_3(wrpgpr, void, env, tl, i32)
 diff --git a/target/mips/tcg/sysemu/special_helper.c b/target/mips/tcg/sysemu/special_helper.c
 --- a/target/mips/tcg/sysemu/special_helper.c
 +++ b/target/mips/tcg/sysemu/special_helper.c
-@@ -45,6 +45,20 @@ target_ulong helper_ei(CPUMIPSState *env)
+@@ -45,2 +45,18 @@ target_ulong helper_ei(CPUMIPSState *env)
      return t0;
  }
 +
@@ -138,7 +138,7 @@ diff --git a/target/mips/tcg/sysemu/special_helper.c b/target/mips/tcg/sysemu/sp
 diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 --- a/target/mips/tcg/translate.c
 +++ b/target/mips/tcg/translate.c
-@@ -1231,42 +1231,16 @@ static inline void gen_load_srsgpr(int from, int to)
+@@ -1231,9 +1231,13 @@ static inline void gen_load_srsgpr(int from, int to)
  static inline void gen_load_srsgpr(int from, int to)
  {
      TCGv t0 = tcg_temp_new();
@@ -155,7 +155,7 @@ diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 diff --git a/hw/mips/mips32_soc_ref.c b/hw/mips/mips32_soc_ref.c
 --- a/hw/mips/mips32_soc_ref.c
 +++ b/hw/mips/mips32_soc_ref.c
-@@ -1070,6 +1070,9 @@ static void soc_ref_cpu_reset(void *opaque)
+@@ -1070,3 +1070,6 @@ static void soc_ref_cpu_reset(void *opaque)
      CPUMIPSState *env = &reset->cpu->env;
  
      cpu_reset(CPU(reset->cpu));

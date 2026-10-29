@@ -1,7 +1,7 @@
 diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
 --- a/target/mips/tcg/fpu_helper.c
 +++ b/target/mips/tcg/fpu_helper.c
-@@ -199,6 +199,30 @@ static inline int ieee_to_mips_xcpt(int ieee_xcpt)
+@@ -199,4 +199,40 @@ static inline int ieee_to_mips_xcpt(int ieee_xcpt)
      return mips_xcpt;
  }
 +
@@ -42,7 +42,7 @@ diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
 +}
  
  static inline void update_fcr31(CPUMIPSState *env, uintptr_t pc)
-@@ -1294,6 +1318,10 @@ uint64_t helper_float_mul_d(CPUMIPSState *env,
+@@ -1294,6 +1318,9 @@ uint64_t helper_float_mul_d(CPUMIPSState *env,
      uint64_t dt2;
  
 +    if (soc_ref_double_mul_underflow(fdt0, fdt1)) {

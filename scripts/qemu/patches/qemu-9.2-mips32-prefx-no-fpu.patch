@@ -1,7 +1,7 @@
 diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 --- a/target/mips/tcg/translate.c
 +++ b/target/mips/tcg/translate.c
-@@ -14842,10 +14842,18 @@ static void gen_intermediate_code_internal(DisasContext *ctx,
+@@ -14842,6 +14842,12 @@ static void gen_intermediate_code_internal(DisasContext *ctx,
  
      case OPC_CP3:
 +        op1 = MASK_CP3(ctx->opcode);

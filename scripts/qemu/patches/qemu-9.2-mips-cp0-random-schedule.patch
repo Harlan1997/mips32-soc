@@ -28,7 +28,7 @@ diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_he
 +                                       uint32_t fallback, bool is_tlbwr)
 +    __attribute__((weak));
 +bool qemu_mips32_soc_ref_rtl_mmu_guest(void) __attribute__((weak));
-@@ -166,7 +170,13 @@
+@@ -166,5 +170,10 @@
  static void r4k_helper_tlbwr(CPUMIPSState *env)
  {
      int r = cpu_mips_get_random(env);

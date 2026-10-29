@@ -1,11 +1,11 @@
 diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
 --- a/target/mips/tcg/translate.c
 +++ b/target/mips/tcg/translate.c
-@@ -456,6 +456,7 @@ enum {
+@@ -456,2 +456,3 @@ enum {
      OPC_WSBH      = (0x02 << 6) | OPC_BSHFL,
 +    OPC_WSBW      = (0x06 << 6) | OPC_BSHFL,
      OPC_SEB       = (0x10 << 6) | OPC_BSHFL,
-@@ -4683,6 +4684,18 @@ static void gen_bshfl(DisasContext *ctx, uint32_t op2, int rt, int rd)
+@@ -4683,4 +4684,16 @@ static void gen_bshfl(DisasContext *ctx, uint32_t op2, int rt, int rd)
              tcg_gen_ext32s_tl(cpu_gpr[rd], t0);
          }
          break;

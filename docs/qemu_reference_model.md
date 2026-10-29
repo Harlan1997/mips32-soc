@@ -51,6 +51,29 @@ release-key instructions. The project does not embed an independently
 verified archive checksum here; do not substitute a locally observed digest
 for an upstream release record.
 
+### Patch Format and Recovery
+
+The project patches are Git/GNU unified diffs. The optional text after the
+second `@@` in a hunk header is a section heading and is valid diff syntax:
+
+```text
+@@ -old_start,old_count +new_start,new_count @@ optional section heading
+```
+
+Every hunk body line must start with a space, `+`, or `-` (apart from the
+standard `\ No newline at end of file` marker), and the declared counts must
+match the body. The QEMU build helper checks and applies each project patch
+with `git apply --check --no-index --recount` followed by the same apply
+operation. `--recount` recalculates stale hunk counts; it cannot repair a
+missing line prefix, incorrect context, or a patch applied to the wrong QEMU
+version.
+
+If a patch check fails, stop using that QEMU source tree. It may contain a
+partial patch from an interrupted build or changes from the other QEMU target.
+Re-extract the official 9.2.0 archive and retry. Do not mix system-mode and
+linux-user modifications in one source tree. A fresh source tree is the
+recovery boundary; a fresh build directory alone is not sufficient.
+
 ### Host Prerequisites
 
 The host must provide a C toolchain and the normal QEMU build tools: Python 3,
@@ -87,18 +110,25 @@ the QEMU source tree and applies the patches under
 
 ### Linux-User Build
 
-For the user-mode ISA reference harness, use a separate build directory:
+For the user-mode ISA reference harness, use a separate fresh source tree and
+build directory. The linux-user script adds target-specific compatibility
+guards to the QEMU source, so sharing only the source tree while separating
+build directories is not sufficient:
 
 ```bash
-QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0" \
-QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0/build-mipsel-linux-user" \
+mkdir -p build/deps/src/qemu-9.2.0-linux-user
+tar --strip-components=1 \
+  -xf build/deps/qemu-9.2.0.tar.xz \
+  -C build/deps/src/qemu-9.2.0-linux-user
+QEMU_SRC="$PWD/build/deps/src/qemu-9.2.0-linux-user" \
+QEMU_BUILD="$PWD/build/deps/src/qemu-9.2.0-linux-user/build-mipsel-linux-user" \
 make qemu-linux-user
 ```
 
 The result is:
 
 ```text
-build/deps/src/qemu-9.2.0/build-mipsel-linux-user/qemu-mipsel
+build/deps/src/qemu-9.2.0-linux-user/build-mipsel-linux-user/qemu-mipsel
 ```
 
 This target configures `mipsel-linux-user` and applies the Linux-user
@@ -113,7 +143,8 @@ Check the executable version and confirm that the custom machine was linked:
 build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel --version
 build/deps/src/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel \
   -M help | grep mips32-soc-ref
-build/deps/src/qemu-9.2.0/build-mipsel-linux-user/qemu-mipsel --version
+build/deps/src/qemu-9.2.0-linux-user/build-mipsel-linux-user/qemu-mipsel \
+  --version
 ```
 
 These commands verify build readiness only. A differential or Linux closure
@@ -123,9 +154,10 @@ build, traces, and (where used) a freshly built capture plugin.
 ### Running on Another Server
 
 Rebuilding on the destination server from the same repository commit and the
-same QEMU 9.2.0 archive is the recommended portable workflow. The custom
-machine is not part of an unmodified upstream QEMU binary, so copying only
-`qemu-system-mipsel` is not a complete reproducibility package. A copied
+same QEMU 9.2.0 archive is the recommended portable workflow. Extract a new
+source tree for each target (`mipsel-softmmu` and `mipsel-linux-user`). The
+custom machine is not part of an unmodified upstream QEMU binary, so copying
+only `qemu-system-mipsel` is not a complete reproducibility package. A copied
 binary may also fail when the destination has a different host architecture,
 libc, or required shared libraries.
 

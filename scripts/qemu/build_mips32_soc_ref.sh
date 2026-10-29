@@ -79,6 +79,18 @@ copy_if_changed() {
     fi
 }
 
+apply_project_patch() {
+    local patch_file=$1
+    shift
+    if ! git -C "${QEMU_SRC}" apply --check --no-index --recount "$@" \
+            "${patch_file}"; then
+        echo "QEMU project patch does not apply: ${patch_file}" >&2
+        echo "Use a fresh official QEMU 9.2.0 source tree for QEMU_SRC." >&2
+        exit 2
+    fi
+    git -C "${QEMU_SRC}" apply --no-index --recount "$@" "${patch_file}"
+}
+
 copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_ref.c" \
     "${QEMU_SRC}/hw/mips/mips32_soc_ref.c"
 copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_uart_timing.h" \
@@ -88,7 +100,7 @@ copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_core.xml" \
 
 if ! rg -q 'qemu_mips32_soc_ref_cp0_retire_clock' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
+    apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch"
 fi
 rg -q 'qemu_mips32_soc_ref_cp0_retire_clock' \
@@ -133,14 +145,16 @@ rg -q 'qemu_mips32_soc_ref_cp0_random\(env, r, true\)' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 if ! rg -q 'DEF_HELPER_3\(mfc0_count, tl, env, i32, i32\)' \
         "${QEMU_SRC}/target/mips/tcg/sysemu_helper.h.inc"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount --unidiff-zero \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-count-destination.patch"
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-count-destination.patch" \
+        --unidiff-zero
 fi
 rg -q 'DEF_HELPER_3\(mfc0_count, tl, env, i32, i32\)' \
     "${QEMU_SRC}/target/mips/tcg/sysemu_helper.h.inc"
 if ! rg -q 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount --unidiff-zero \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rdhwr-count.patch"
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rdhwr-count.patch" \
+        --unidiff-zero
 fi
 rg -q 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"
 if ! rg -q 'qemu_mips32_soc_ref_cp0_timer_armed' \
@@ -400,7 +414,7 @@ fi
 
 if ! rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
+    apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch"
 fi
 rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
@@ -421,7 +435,7 @@ if ! rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
 fi
 
 if ! rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
+    apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-wsbw-r2.patch"
     sed -i '/OPC_WSBW      =/a\    /* SOC_REF_WSBW_R2 */' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
@@ -447,13 +461,13 @@ rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
 if ! rg -q 'SOC_REF_FPU_DOUBLE_UNDERFLOW' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
+    apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch"
 fi
 
 if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\) \{\n            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
+    apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch"
     sed -i '/if (GET_FP_ENABLE(env->active_fpu.fcr31) \& mips_exception_flags) {/a\
             /* SOC_REF_FPU_FPE_STICKY_FLAGS */\
@@ -462,7 +476,7 @@ if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\
 fi
 
 if ! rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
-    git -C "${QEMU_SRC}" apply --no-index --recount \
+    apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch"
 fi
 

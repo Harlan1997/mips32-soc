@@ -45,7 +45,7 @@ if ! rg -q 'SOC_LINUX_USER_SRS_TRANSLATOR_COMPAT' "${QEMU_SRC}/target/mips/tcg/t
         "${QEMU_SRC}/target/mips/tcg/translate.c"
     sed -i '/^        case OPC_RDPGPR:$/i\#ifndef CONFIG_USER_ONLY\n        /* SOC_LINUX_USER_SRS_TRANSLATOR_COMPAT */' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
-    sed -i '/^        case OPC_WRPGPR:/,$!b; /^        default:/i\#endif /* !CONFIG_USER_ONLY */' \
+    sed -i '/^            MIPS_INVAL("cp0");$/i\#endif /* !CONFIG_USER_ONLY */' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 if ! rg -q 'SOC_LINUX_USER_SRS_FUNCTION_COMPAT' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
