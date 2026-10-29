@@ -94,10 +94,10 @@ tb/soc_test/textReportFinal/
 __pycache__/
 *.pyc
 
-# Agent locks
-.agent/run.lock
-.agent/result.json
-.agent/test_report.md
+# Local agent instructions and workspaces
+.agent/
+.agents/
+/AGENTS.md
 
 # Claude Code session state (not part of the repo)
 .claude/
