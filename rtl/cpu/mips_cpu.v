@@ -1505,8 +1505,7 @@ module mips_cpu #(
         (`SOC_LINUX_GUEST_ENABLE != 0) &&
         ((ex_flush_valid && irq_ex_gpr_write && (irq_ex_waddr != 5'd0)) ||
          (id_flush_valid && irq_id_gpr_write && (irq_id_waddr != 5'd0)) ||
-         (mem_flush_valid && irq_mem_gpr_write && (irq_mem_waddr != 5'd0)) ||
-         (wb_arch_valid && irq_wb_gpr_write && (irq_wb_waddr != 5'd0)));
+         (mem_flush_valid && irq_mem_gpr_write && (irq_mem_waddr != 5'd0)));
     wire linux_irq_restart_hazard_selected =
         (`SOC_LINUX_GUEST_ENABLE != 0) &&
         ((ex_flush_valid && irq_ex_gpr_write &&
@@ -1520,18 +1519,16 @@ module mips_cpu #(
         (mem_flush_valid && irq_mem_gpr_write &&
           ((irq_mem_waddr == 5'd2) ||
            (irq_mem_waddr == 5'd6) ||
-           (irq_mem_waddr == 5'd9) || (irq_mem_waddr == 5'd20))) ||
-        (wb_arch_valid && irq_wb_gpr_write &&
-          ((irq_wb_waddr == 5'd2) ||
-           (irq_wb_waddr == 5'd6) ||
-           (irq_wb_waddr == 5'd9) || (irq_wb_waddr == 5'd20))));
+           (irq_mem_waddr == 5'd9) || (irq_mem_waddr == 5'd20))));
 `ifdef SOC_LINUX_IRQ_RESTART_HAZARD_SELECTED
     assign linux_irq_restart_hazard = !wait_state &&
                                       linux_irq_restart_hazard_selected;
 `else
     // Restarting any in-flight register producer across an asynchronous Linux
     // IRQ can replay a side effect before its architectural writeback.  Keep
-    // the all-register guard as the default. Once WAIT has retired, held
+    // the all-register guard for EX/ID/MEM as the default. WB is already
+    // architecturally committed; including it would let a retiring polling
+    // load suppress a timer IRQ indefinitely. Once WAIT has retired, held
     // pipeline producers are younger than the saved resume PC and are flushed
     // on wakeup, so they must not suppress the interrupt that wakes the core.
     assign linux_irq_restart_hazard = !wait_state &&

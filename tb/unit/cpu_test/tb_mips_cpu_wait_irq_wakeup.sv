@@ -78,6 +78,19 @@ module tb_mips_cpu_wait_irq_wakeup;
                 eret_seen <= 1'b1;
             if (u_cpu.wb_arch_valid && (u_cpu.wb_pc == 32'h0000_0044))
                 resume_seen <= 1'b1;
+
+            // A committed WB producer is already architectural.  It must not
+            // hold the Linux IRQ restart guard high after the younger pipeline
+            // stages are empty, or a polling load can starve timer delivery.
+            if (!u_cpu.wait_state && u_cpu.wb_arch_valid &&
+                u_cpu.irq_wb_gpr_write &&
+                !(u_cpu.ex_flush_valid && u_cpu.irq_ex_gpr_write) &&
+                !(u_cpu.id_flush_valid && u_cpu.irq_id_gpr_write) &&
+                !(u_cpu.mem_flush_valid && u_cpu.irq_mem_gpr_write) &&
+                u_cpu.linux_irq_restart_hazard) begin
+                $display("WAIT_IRQ_TEST_FAIL WB-only restart hazard");
+                $finish;
+            end
         end
     end
 
