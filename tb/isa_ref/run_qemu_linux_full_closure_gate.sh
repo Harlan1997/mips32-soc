@@ -77,6 +77,17 @@ CP0_RANDOM_SCHEDULE=${RUN_DIR}/rtl_cp0_random_schedule.txt
 CPU_CYCLE_SCHEDULE=${RUN_DIR}/rtl_cpu_cycle_schedule.txt
 UART_APB_SCHEDULE=${RUN_DIR}/rtl_uart_apb_schedule.txt
 
+# Full Linux closure must use the architectural cycle-based CP0 Count.  The
+# retire-count differential mode intentionally freezes Count while the CPU is
+# in WAIT, so Compare can never wake the idle kernel and the terminal marker is
+# unreachable.  Keep that opt-in mode limited to the bounded differential gate.
+case " ${LINUX_VCS_EXTRA_ARGS} " in
+    *" +define+SOC_CP0_RETIRE_COUNT_ENABLE=1 "*)
+        echo "full QEMU closure: SOC_CP0_RETIRE_COUNT_ENABLE=1 is incompatible with Linux WAIT/timer progress; remove it from LINUX_VCS_EXTRA_ARGS" >&2
+        exit 2
+        ;;
+esac
+
 [[ -n "${KERNEL}" && -s "${KERNEL}" ]] || {
     echo "full QEMU closure: KERNEL=/path/to/marker-bearing/vmlinux is required" >&2
     exit 2
