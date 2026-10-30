@@ -32,6 +32,8 @@ module mips_cpu #(
     output wire [31:0] data_wdata,
     output wire [3:0]  data_be,
     output wire        data_uncacheable,
+    // LL/SC must retain the blocking cache's reservation/response ordering.
+    output wire        data_atomic,
     output wire        data_cache_op_valid,
     output wire [4:0]  data_cache_op,
     output wire [31:0] data_cache_op_addr,
@@ -1505,7 +1507,13 @@ module mips_cpu #(
         (`SOC_LINUX_GUEST_ENABLE != 0) &&
         ((ex_flush_valid && irq_ex_gpr_write && (irq_ex_waddr != 5'd0)) ||
          (id_flush_valid && irq_id_gpr_write && (irq_id_waddr != 5'd0)) ||
-         (mem_flush_valid && irq_mem_gpr_write && (irq_mem_waddr != 5'd0)));
+         (mem_flush_valid && irq_mem_gpr_write && (irq_mem_waddr != 5'd0)) ||
+         // A committed load has already produced its architectural value and
+         // is safe to interrupt.  Other WB producers still need the restart
+         // guard: CP0 reads, ALU/link writes, and control-delay-slot writes
+         // can be replay-sensitive at this pipeline boundary.
+         (wb_arch_valid && irq_wb_gpr_write && (irq_wb_waddr != 5'd0) &&
+          (wb_mem_to_reg != 2'b01)));
     wire linux_irq_restart_hazard_selected =
         (`SOC_LINUX_GUEST_ENABLE != 0) &&
         ((ex_flush_valid && irq_ex_gpr_write &&
@@ -1520,9 +1528,17 @@ module mips_cpu #(
           ((irq_mem_waddr == 5'd2) ||
            (irq_mem_waddr == 5'd6) ||
            (irq_mem_waddr == 5'd9) || (irq_mem_waddr == 5'd20))));
+    wire linux_irq_restart_hazard_wb_selected =
+        (`SOC_LINUX_GUEST_ENABLE != 0) && wb_arch_valid &&
+        irq_wb_gpr_write && (irq_wb_waddr != 5'd0) &&
+        (wb_mem_to_reg != 2'b01) &&
+        ((irq_wb_waddr == 5'd2) ||
+         (irq_wb_waddr == 5'd6) ||
+         (irq_wb_waddr == 5'd9) || (irq_wb_waddr == 5'd20));
 `ifdef SOC_LINUX_IRQ_RESTART_HAZARD_SELECTED
     assign linux_irq_restart_hazard = !wait_state &&
-                                      linux_irq_restart_hazard_selected;
+                                      (linux_irq_restart_hazard_selected ||
+                                       linux_irq_restart_hazard_wb_selected);
 `else
     // Restarting any in-flight register producer across an asynchronous Linux
     // IRQ can replay a side effect before its architectural writeback.  Keep
@@ -1975,6 +1991,7 @@ module mips_cpu #(
 
     wire is_ll_mem = mem_mem_read  && (mem_mem_op == 3'b111);
     wire is_sc_mem = mem_mem_write && (mem_mem_op == 3'b111);
+    assign data_atomic = is_ll_mem || is_sc_mem;
     // Coherency producers normally emit physical addresses, but the legacy
     // kseg1 test/integration path may emit its uncached virtual alias.
     function [31:0] normalize_ll_snoop_addr;

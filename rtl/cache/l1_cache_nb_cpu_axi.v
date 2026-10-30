@@ -16,7 +16,8 @@ module l1_cache_nb_cpu_axi #(
     input wire cpu_req, input wire [3:0] cpu_id,
     input wire cpu_we, input wire [31:0] cpu_addr,
     input wire [31:0] cpu_wdata, input wire [3:0] cpu_be,
-    input wire cpu_uncacheable, output wire [31:0] cpu_rdata,
+    input wire cpu_uncacheable, input wire cpu_atomic,
+    output wire [31:0] cpu_rdata,
     output wire cpu_addr_ok, output wire cpu_data_ok,
     output wire cpu_bus_error, output wire cpu_cache_error,
     output wire [3:0] cpu_response_id,
@@ -77,7 +78,7 @@ module l1_cache_nb_cpu_axi #(
     reg legacy_req_we_q;
     reg [31:0] legacy_req_addr_q, legacy_req_wdata_q;
     reg [3:0] legacy_req_be_q;
-    reg legacy_req_uncacheable_q;
+    reg legacy_req_uncacheable_q, legacy_req_atomic_q;
     wire legacy_wready;
     // Observation-only compatibility fields for the testbench diagnostics.
     // Replacement is owned by l1_cache_nb in this configuration.  Keep the
@@ -124,12 +125,13 @@ module l1_cache_nb_cpu_axi #(
     // Do not feed the same transaction level back into the legacy cache after
     // its response. A changed address or write payload is a new back-to-back
     // transaction and must remain admissible even without a low valid gap.
-    wire legacy_same_request = legacy_request_held &&
+    wire legacy_same_request = legacy_request_held && !cpu_atomic &&
                                (cpu_we == legacy_req_we_q) &&
                                (cpu_addr == legacy_req_addr_q) &&
                                (cpu_wdata == legacy_req_wdata_q) &&
                                (cpu_be == legacy_req_be_q) &&
-                               (cpu_uncacheable == legacy_req_uncacheable_q);
+                               (cpu_uncacheable == legacy_req_uncacheable_q) &&
+                               (cpu_atomic == legacy_req_atomic_q);
     // Do not let the legacy dcache advance into UC_REQ/UC_WDATA while the
     // nonblocking line bridge owns the external AXI channels.  The previous
     // admission path allowed the dcache to consume a peripheral request
@@ -138,20 +140,31 @@ module l1_cache_nb_cpu_axi #(
     wire legacy_can_start;
     wire legacy_data_req = cpu_req && !legacy_same_request &&
                            legacy_can_start &&
-                           (cpu_uncacheable || !ENABLE_L1 || !l1_address_supported);
+                           (cpu_uncacheable || !ENABLE_L1 ||
+                            !l1_address_supported);
     wire legacy_cpu_req = legacy_active || legacy_data_req;
     wire legacy_cpu_we = legacy_active ? legacy_req_we_q : cpu_we;
     wire [31:0] legacy_cpu_addr = legacy_active ? legacy_req_addr_q : cpu_addr;
     wire [31:0] legacy_cpu_wdata = legacy_active ? legacy_req_wdata_q : cpu_wdata;
     wire [3:0] legacy_cpu_be = legacy_active ? legacy_req_be_q : cpu_be;
     wire legacy_cpu_uncacheable = legacy_active ? legacy_req_uncacheable_q : cpu_uncacheable;
-    wire l1_req = cpu_req && ENABLE_L1 && l1_address_supported && !cpu_uncacheable &&
+    // Atomics are executed by the legacy cache, but ordinary cacheable
+    // accesses may have left the same line resident in the opt-in L1. Drop
+    // that L1 copy before accepting an LL/SC request so both cache paths
+    // observe one memory image. Hold the snoop while the legacy request is
+    // waiting; legacy_active clears it once the request has been accepted.
+    wire atomic_l1_snoop_valid = cpu_req && cpu_atomic && 1'b0 &&
+                                  !legacy_active && legacy_can_start;
+    wire l1_snoop_valid = coh_snoop_valid || atomic_l1_snoop_valid;
+    wire [31:0] l1_snoop_addr = coh_snoop_valid ? coh_snoop_addr : cpu_addr;
+    wire l1_req = cpu_req && ENABLE_L1 && l1_address_supported &&
+                  !cpu_uncacheable &&
                   !cache_op_valid &&
                   !legacy_active &&
                   (cpu_we ? ((l1_outstanding == 0) && !l1_active) :
                    (ENABLE_MULTI_OUTSTANDING || !l1_active));
-    wire l1_path_request = cpu_req && ENABLE_L1 && l1_address_supported && !cpu_uncacheable &&
-                           !cache_op_valid;
+    wire l1_path_request = cpu_req && ENABLE_L1 && l1_address_supported &&
+                           !cpu_uncacheable && !cache_op_valid;
 
     // The opt-in line cache owns the address-scoped invalidate, tag and
     // writeback operations whose completion is reported after line traffic
@@ -332,7 +345,7 @@ module l1_cache_nb_cpu_axi #(
         .mem_req_wdata(n_mem_req_wdata), .mem_req_ready(n_mem_req_ready),
         .mem_rsp_valid(n_mem_rsp_valid), .mem_rsp_addr(n_mem_rsp_addr),
         .mem_rsp_data(n_mem_rsp_data), .mem_rsp_error(n_mem_rsp_error),
-        .coh_snoop_valid(coh_snoop_valid), .coh_snoop_addr(coh_snoop_addr),
+        .coh_snoop_valid(l1_snoop_valid), .coh_snoop_addr(l1_snoop_addr),
         .coh_store_valid(l1_coh_store_valid), .coh_store_addr(l1_coh_store_addr),
         .mshr_occupancy(n_mshr_occ), .wb_occupancy(n_wb_occ)
     );
@@ -446,6 +459,7 @@ module l1_cache_nb_cpu_axi #(
                 legacy_req_wdata_q <= cpu_wdata;
                 legacy_req_be_q <= cpu_be;
                 legacy_req_uncacheable_q <= cpu_uncacheable;
+                legacy_req_atomic_q <= cpu_atomic;
             end
             // Start a fresh W ownership window for every accepted legacy
             // request. This prevents an earlier cache writeback's AW/W

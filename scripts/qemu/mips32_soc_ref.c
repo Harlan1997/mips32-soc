@@ -90,6 +90,8 @@ typedef struct MIPS32SocRefState {
     uint8_t uart_dll;
     uint8_t uart_dlm;
     SocRefUartModemModel uart_modem;
+    /* Mirrors the RTL-only TB_LINUX_DIFF_UART_TIMING contract. */
+    bool uart_diff_timing;
     /* The RTL 16550 model exposes THRE while a character is in the shifter
      * (LSR=0x20), then reports TEMT once the frame drains. */
     uint32_t uart_tx_busy_reads;
@@ -308,6 +310,7 @@ static char *soc_ref_cp0_random_schedule_path;
 static char *soc_ref_cpu_cycle_schedule_path;
 static char *soc_ref_uart_apb_schedule_path;
 static bool soc_ref_uart_apb_schedule_diagnostic_continue;
+static bool soc_ref_uart_diff_timing;
 static bool soc_ref_stop_on_terminal_marker;
 static uint32_t soc_ref_cp0_trace_interval = 1;
 static bool soc_ref_cp0_retire_clock;
@@ -958,6 +961,17 @@ static void soc_ref_set_uart_apb_schedule_diagnostic_continue(
     Object *obj, bool value, Error **errp)
 {
     soc_ref_uart_apb_schedule_diagnostic_continue = value;
+}
+
+static bool soc_ref_get_uart_diff_timing(Object *obj, Error **errp)
+{
+    return soc_ref_uart_diff_timing;
+}
+
+static void soc_ref_set_uart_diff_timing(Object *obj, bool value,
+                                         Error **errp)
+{
+    soc_ref_uart_diff_timing = value;
 }
 
 static char *soc_ref_get_dma_event_trace(Object *obj, Error **errp)
@@ -1869,7 +1883,11 @@ static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
         value = soc_ref_uart_iir_status(&s->uart_tx, s->uart_regs[1],
                                         s->uart_regs[2]);
     } else if (reg == 5) {
-        if (retire_timed) {
+        if (s->uart_diff_timing) {
+            /* The nonblocking Linux differential deliberately removes
+             * cache-dependent TX drain timing from the polling contract. */
+            value = SOC_REF_UART_LSR_TEMT;
+        } else if (retire_timed) {
             value = soc_ref_uart_tx_lsr_status(&s->uart_tx);
         } else {
             if (s->uart_tx_busy_reads) {
@@ -4043,6 +4061,7 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->cpu = cpu;
     state->uart_dll = 1;
     state->uart_dlm = 0;
+    state->uart_diff_timing = soc_ref_uart_diff_timing;
     state->uart_regs[3] = 0x03;
     soc_ref_uart_modem_reset(&state->uart_modem,
                              (uint8_t)soc_ref_uart_modem_inputs);
@@ -4390,6 +4409,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
         OBJECT_CLASS(mc), "uart-apb-schedule-diagnostic-continue",
         soc_ref_get_uart_apb_schedule_diagnostic_continue,
         soc_ref_set_uart_apb_schedule_diagnostic_continue);
+    object_class_property_add_bool(OBJECT_CLASS(mc), "uart-diff-timing",
+                                   soc_ref_get_uart_diff_timing,
+                                   soc_ref_set_uart_diff_timing);
     object_class_property_add_uint32_ptr(OBJECT_CLASS(mc),
                                          "irq-replay-pic-mask",
                                          &soc_ref_irq_replay_pic_mask,

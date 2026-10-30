@@ -213,6 +213,18 @@ image_dir=$(realpath -m "${image_dir}")
 identity_args=(--image-dir "${image_dir}" --kernel "${KERNEL}")
 python3 "${ROOT_DIR}/scripts/validate_linux_image_identity.py" \
     "${identity_args[@]}" >"${RUN_DIR}/image_identity.log"
+expected_rng_seed_id=$(printf '%s' "${LINUX_RNG_SEED}" | sha256sum | awk '{print $1}')
+image_rng_seed_id=$(sed -n 's/^RNG_SEED_ID=//p' "${image_dir}/image_manifest.txt")
+if [[ -z "${image_rng_seed_id}" ]]; then
+    echo "full QEMU closure: image manifest is missing RNG_SEED_ID" >&2
+    exit 2
+fi
+if [[ "${image_rng_seed_id}" != "${expected_rng_seed_id}" ]]; then
+    echo "full QEMU closure: image RNG seed identity mismatch" >&2
+    echo "expected=${expected_rng_seed_id} actual=${image_rng_seed_id}" >&2
+    echo "rebuild the RTL image with LINUX_RNG_SEED=${LINUX_RNG_SEED}" >&2
+    exit 2
+fi
 DTB=$(sed -n 's/.* dtb=\([^ ]*\).*/\1/p' "${RUN_DIR}/image_identity.log")
 [[ -s "${DTB}" ]]
 ALIGN_FIRST_PC=$(readelf -h "${KERNEL}" |
@@ -348,7 +360,11 @@ cpu_cycle_schedule_start_pc=$(sed -n \
 [[ "${cpu_cycle_schedule_start_pc,,}" == "${ALIGN_FIRST_PC,,}" ]]
 cpu_cycle_schedule_final_seq=$(tail -n 1 "${CPU_CYCLE_SCHEDULE}" | awk '{print $1}')
 [[ "${cpu_cycle_schedule_final_seq}" =~ ^[0-9]+$ ]]
-qemu_machine_properties="${QEMU_MACHINE_PROPERTIES},stop-on-terminal-marker=on,cp0-count-schedule=${CP0_COUNT_SCHEDULE},cp0-random-schedule=${CP0_RANDOM_SCHEDULE},cpu-cycle-schedule=${CPU_CYCLE_SCHEDULE},uart-apb-schedule=${UART_APB_SCHEDULE}"
+uart_diff_timing_property=""
+if [[ " ${LINUX_VCS_EXTRA_ARGS} " == *" +define+TB_LINUX_DIFF_UART_TIMING=1 "* ]]; then
+    uart_diff_timing_property=",uart-diff-timing=on"
+fi
+qemu_machine_properties="${QEMU_MACHINE_PROPERTIES}${uart_diff_timing_property},stop-on-terminal-marker=on,cp0-count-schedule=${CP0_COUNT_SCHEDULE},cp0-random-schedule=${CP0_RANDOM_SCHEDULE},cpu-cycle-schedule=${CPU_CYCLE_SCHEDULE},uart-apb-schedule=${UART_APB_SCHEDULE}"
 
 echo "full QEMU closure: starting strict FIFO differential with ${irq_schedule_entries} scheduled IRQs" >&2
 compare_log="${RUN_DIR}/trace_compare.log"
