@@ -11,6 +11,12 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 QEMU_CLOSURE_MEMORY_MAX=${QEMU_CLOSURE_MEMORY_MAX:-2G}
 QEMU_CLOSURE_SWAP_MAX=${QEMU_CLOSURE_SWAP_MAX:-512M}
 QEMU_CLOSURE_MIN_FREE_KIB=${QEMU_CLOSURE_MIN_FREE_KIB:-2097152}
+QEMU_CLOSURE_CPU_AFFINITY=${QEMU_CLOSURE_CPU_AFFINITY:-}
+QEMU_CLOSURE_PRODUCER_NICE=${QEMU_CLOSURE_PRODUCER_NICE:-0}
+# The RTL retire trace is written to a named pipe during full closure.  VCS
+# may expose partial/interleaved string output when its FIFO buffer is not
+# flushed at each record, so synchronous flushing is the safe default.
+LINUX_RETIRE_TRACE_FLUSH=${LINUX_RETIRE_TRACE_FLUSH:-1}
 if [[ "${QEMU_FULL_CLOSURE_CGROUP_ACTIVE:-0}" != "1" ]]; then
     if ! systemctl --user show-environment >/dev/null 2>&1; then
         echo "full QEMU closure: user systemd cgroup unavailable; refusing an unbounded RTL/QEMU run" >&2
@@ -23,6 +29,13 @@ if [[ "${QEMU_FULL_CLOSURE_CGROUP_ACTIVE:-0}" != "1" ]]; then
         --property="MemorySwapMax=${QEMU_CLOSURE_SWAP_MAX}" \
         env QEMU_FULL_CLOSURE_CGROUP_ACTIVE=1 bash "${script_path}" "$@"
 fi
+if [[ -n "${QEMU_CLOSURE_CPU_AFFINITY}" ]]; then
+    taskset -pc "${QEMU_CLOSURE_CPU_AFFINITY}" "$$" >/dev/null
+fi
+[[ "${QEMU_CLOSURE_PRODUCER_NICE}" =~ ^[0-9]+$ ]] || {
+    echo "full QEMU closure: QEMU_CLOSURE_PRODUCER_NICE must be a non-negative integer" >&2
+    exit 2
+}
 RUN_DIR=$(realpath -m "${RUN_DIR:-/data/disk/tmp/mips32-soc/full-qemu-closure-$(date +%Y%m%d-%H%M%S)}")
 TMPDIR=$(realpath -m "${TMPDIR:-/data/disk/tmp/mips32-soc/tmp}")
 [[ "${QEMU_CLOSURE_MIN_FREE_KIB}" =~ ^[1-9][0-9]*$ ]] || {
@@ -62,6 +75,9 @@ QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-rtl-cp0-identity=on,linux-gue
 HOST_TIMEOUT=${HOST_TIMEOUT:-6h}
 QEMU_MARKER_WATCHDOG_SECONDS=${QEMU_MARKER_WATCHDOG_SECONDS:-21600}
 QEMU_TERMINAL_DRAIN_SECONDS=${QEMU_TERMINAL_DRAIN_SECONDS:-1}
+# The RTL terminal marker is followed by two retirements before tb_mips_soc
+# completes its terminal stop; QEMU must drain the same boundary.
+QEMU_TERMINAL_DRAIN_RECORDS=${QEMU_TERMINAL_DRAIN_RECORDS:-42}
 RTL_WATCHDOG_CYCLES=${RTL_WATCHDOG_CYCLES:-1000000000}
 LINUX_VCS_EXTRA_ARGS=${LINUX_VCS_EXTRA_ARGS:-}
 CPU_CYCLE_SCHEDULE_INTERVAL=${CPU_CYCLE_SCHEDULE_INTERVAL:-8}
@@ -100,8 +116,16 @@ esac
     echo "full QEMU closure: CPU_CYCLE_SCHEDULE_INTERVAL must be a positive integer" >&2
     exit 2
 }
+[[ "${LINUX_RETIRE_TRACE_FLUSH}" == 0 || "${LINUX_RETIRE_TRACE_FLUSH}" == 1 ]] || {
+    echo "full QEMU closure: LINUX_RETIRE_TRACE_FLUSH must be 0 or 1" >&2
+    exit 2
+}
 [[ "${QEMU_TERMINAL_DRAIN_SECONDS}" =~ ^[0-9]+$ ]] || {
     echo "full QEMU closure: QEMU_TERMINAL_DRAIN_SECONDS must be a non-negative integer" >&2
+    exit 2
+}
+[[ "${QEMU_TERMINAL_DRAIN_RECORDS}" =~ ^[0-9]+$ ]] || {
+    echo "full QEMU closure: QEMU_TERMINAL_DRAIN_RECORDS must be non-negative" >&2
     exit 2
 }
 if [[ "${QEMU_MACHINE_PROPERTIES}" == *cp0-count-schedule=* ]]; then
@@ -261,6 +285,7 @@ rtl_env=(
     LINUX_RETIRE_TRACE_MAX_RECORDS=0
     LINUX_RETIRE_TRACE_STOP_AT_MAX=0
     LINUX_OWNER_TRACE_SIM_ARGS="+RETIRE_TRACE_COMPACT_FPR=1 +RETIRE_TRACE_SCHEMA=00020000"
+    LINUX_RETIRE_TRACE_FLUSH="${LINUX_RETIRE_TRACE_FLUSH}"
 )
 capture_required=0
 [[ -n "${REUSE_IRQ_SCHEDULE}" ]] || capture_required=1
@@ -375,7 +400,7 @@ uart_diff_timing_property=""
 if [[ " ${LINUX_VCS_EXTRA_ARGS} " == *" +define+TB_LINUX_DIFF_UART_TIMING=1 "* ]]; then
     uart_diff_timing_property=",uart-diff-timing=on"
 fi
-qemu_machine_properties="${QEMU_MACHINE_PROPERTIES}${uart_diff_timing_property},stop-on-terminal-marker=on,cp0-count-schedule=${CP0_COUNT_SCHEDULE},cp0-random-schedule=${CP0_RANDOM_SCHEDULE},cpu-cycle-schedule=${CPU_CYCLE_SCHEDULE},uart-apb-schedule=${UART_APB_SCHEDULE}"
+qemu_machine_properties="${QEMU_MACHINE_PROPERTIES}${uart_diff_timing_property},stop-on-terminal-marker=on,terminal-drain-retire=${QEMU_TERMINAL_DRAIN_RECORDS},cp0-count-schedule=${CP0_COUNT_SCHEDULE},cp0-random-schedule=${CP0_RANDOM_SCHEDULE},cpu-cycle-schedule=${CPU_CYCLE_SCHEDULE},uart-apb-schedule=${UART_APB_SCHEDULE}"
 
 echo "full QEMU closure: starting strict FIFO differential with ${irq_schedule_entries} scheduled IRQs" >&2
 compare_log="${RUN_DIR}/trace_compare.log"
@@ -385,7 +410,7 @@ python3 "${SCRIPT_DIR}/trace_compare.py" --stream \
     "${stream_dir}/rtl_retire" "${stream_dir}/qemu_retire" \
     >"${compare_log}" 2>&1 &
 compare_pid=$!
-env RUN_DIR="${RUN_DIR}/qemu" \
+nice -n "${QEMU_CLOSURE_PRODUCER_NICE}" env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_BIN="${QEMU_BIN}" QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" \
     IRQ_SCHEDULE="${IRQ_SCHEDULE}" \
     QEMU_KERNEL="${KERNEL}" QEMU_DTB="${DTB}" QEMU_MEMORY="${QEMU_MEMORY}" \
@@ -394,6 +419,7 @@ env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_STOP_ON_TERMINAL=1 QEMU_TERMINAL_MARKER="${TERMINAL_MARKER}" \
     QEMU_MARKER_WATCHDOG_SECONDS="${QEMU_MARKER_WATCHDOG_SECONDS}" \
     QEMU_TERMINAL_DRAIN_SECONDS="${QEMU_TERMINAL_DRAIN_SECONDS}" \
+    QEMU_TERMINAL_DRAIN_RECORDS="${QEMU_TERMINAL_DRAIN_RECORDS}" \
     QEMU_TERMINAL_WAIT_FOR_EXIT=1 \
     QEMU_UNBOUNDED_CAPTURE=1 \
     QEMU_STREAM_MODE=1 \
@@ -411,7 +437,7 @@ env RUN_DIR="${RUN_DIR}/qemu" \
     "${SCRIPT_DIR}/run_qemu_system_retire_capture_gate.sh" \
     >"${RUN_DIR}/qemu_gate.log" 2>&1 &
 qemu_pid=$!
-setsid env "${rtl_env[@]}" RUN_DIR="${RUN_DIR}/rtl" \
+setsid nice -n "${QEMU_CLOSURE_PRODUCER_NICE}" env "${rtl_env[@]}" RUN_DIR="${RUN_DIR}/rtl" \
     LINUX_RETIRE_TRACE=1 \
     LINUX_RETIRE_TRACE_PATH="${stream_dir}/rtl_retire" \
     bash "${ROOT_DIR}/tb/linux_boot/run_rtl_linux_progress_gate.sh" \
@@ -428,6 +454,39 @@ rtl_status=0
 qemu_status_code=0
 compare_status=0
 failure=0
+collect_process_tree() {
+    local root=$1
+    local child
+    printf '%s\n' "${root}"
+    while read -r child; do
+        [[ -n "${child}" ]] || continue
+        collect_process_tree "${child}"
+    done < <(pgrep -P "${root}" 2>/dev/null || true)
+}
+kill_process_tree() {
+    local root=$1
+    local signal=$2
+    local root_pgid
+    local pid
+    local pgid
+    local -a pids=()
+    local -a pgids=()
+    mapfile -t pids < <(collect_process_tree "${root}")
+    root_pgid=$(ps -o pgid= -p "${root}" 2>/dev/null | tr -d ' ' || true)
+    for pid in "${pids[@]}"; do
+        pgid=$(ps -o pgid= -p "${pid}" 2>/dev/null | tr -d ' ' || true)
+        [[ -n "${pgid}" && "${pgid}" != "${root_pgid}" ]] || continue
+        if [[ ! " ${pgids[*]} " == *" ${pgid} "* ]]; then
+            pgids+=("${pgid}")
+        fi
+    done
+    for pgid in "${pgids[@]}"; do
+        kill "-${signal}" -- "-${pgid}" 2>/dev/null || true
+    done
+    for pid in "${pids[@]}"; do
+        kill "-${signal}" "${pid}" 2>/dev/null || true
+    done
+}
 while (( !rtl_done || !qemu_done || !compare_done )); do
     wait_targets=()
     (( rtl_done )) || wait_targets+=("${rtl_pid}")
@@ -463,23 +522,23 @@ done
 
 if [[ ${failure} -ne 0 ]]; then
     if [[ ${rtl_done} -eq 0 ]]; then
-        kill -TERM -- "-${rtl_pid}" 2>/dev/null || kill -TERM "${rtl_pid}" 2>/dev/null || true
+        kill_process_tree "${rtl_pid}" TERM
     fi
     if [[ ${qemu_done} -eq 0 ]]; then
-        kill -TERM "${qemu_pid}" 2>/dev/null || true
+        kill_process_tree "${qemu_pid}" TERM
     fi
     if [[ ${compare_done} -eq 0 ]]; then
-        kill -TERM "${compare_pid}" 2>/dev/null || true
+        kill_process_tree "${compare_pid}" TERM
     fi
     sleep 1
     if [[ ${rtl_done} -eq 0 ]]; then
-        kill -KILL -- "-${rtl_pid}" 2>/dev/null || kill -KILL "${rtl_pid}" 2>/dev/null || true
+        kill_process_tree "${rtl_pid}" KILL
     fi
     if [[ ${qemu_done} -eq 0 ]]; then
-        kill -KILL "${qemu_pid}" 2>/dev/null || true
+        kill_process_tree "${qemu_pid}" KILL
     fi
     if [[ ${compare_done} -eq 0 ]]; then
-        kill -KILL "${compare_pid}" 2>/dev/null || true
+        kill_process_tree "${compare_pid}" KILL
     fi
     set +e
     if [[ ${rtl_done} -eq 0 ]]; then wait "${rtl_pid}"; rtl_status=$?; fi
@@ -592,7 +651,7 @@ validate_alignment_summary() {
         count=${BASH_REMATCH[2]}
         (( count > 0 )) || return 1
         case "${side}:${reason}" in
-            rtl:first_pc_prefix|rtl:rtl_sync_exception_redirect) ;;
+            rtl:first_pc_prefix|rtl:rtl_sync_exception_redirect|rtl:rtl_delay_slot_before_async_boundary|golden:golden_async_interrupt_boundary) ;;
             *) return 1 ;;
         esac
     done
@@ -601,7 +660,7 @@ validate_alignment_summary rtl "${rtl_alignment_summary}" || {
     echo "full QEMU closure: unreviewed RTL alignment reasons: ${rtl_alignment_summary}" >&2
     exit 1
 }
-[[ "${qemu_alignment_summary}" == "none" ]] || {
+validate_alignment_summary golden "${qemu_alignment_summary}" || {
     echo "full QEMU closure: unreviewed QEMU alignment reasons: ${qemu_alignment_summary}" >&2
     exit 1
 }
@@ -659,6 +718,9 @@ python3 "${validator}" create --output "${RUN_DIR}/differential_manifest.json" \
     --set memory_scope=systemd-user-cgroup \
     --set memory_max="${QEMU_CLOSURE_MEMORY_MAX}" \
     --set memory_swap_max="${QEMU_CLOSURE_SWAP_MAX}" \
+    --set cpu_affinity="${QEMU_CLOSURE_CPU_AFFINITY:-all}" \
+    --set producer_nice="${QEMU_CLOSURE_PRODUCER_NICE}" \
+    --set retire_trace_flush="${LINUX_RETIRE_TRACE_FLUSH}" \
     --set min_free_kib="${QEMU_CLOSURE_MIN_FREE_KIB}" \
     --set tmpdir="${TMPDIR}" \
     --set cp0_identity="rtl-cp0-identity=on,linux-guest=on,cp0-retire-clock=on" \
@@ -717,6 +779,8 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Trace transport: live FIFOs (no unbounded JSONL materialization)
 - Comparator: strict streaming (`trace_schema=00020000`, full GPR and HI/LO state)
 - Memory envelope: systemd user cgroup, RAM=${QEMU_CLOSURE_MEMORY_MAX}, swap=${QEMU_CLOSURE_SWAP_MAX}
+- CPU scheduling: affinity=${QEMU_CLOSURE_CPU_AFFINITY:-all}, producer nice=${QEMU_CLOSURE_PRODUCER_NICE}
+- RTL FIFO trace flush: ${LINUX_RETIRE_TRACE_FLUSH}
 - Minimum free space: ${QEMU_CLOSURE_MIN_FREE_KIB} KiB on the run and TMPDIR filesystems
 - Temporary build directory: ${TMPDIR}
 - Interrupt replay schedule entries: ${irq_schedule_entries}

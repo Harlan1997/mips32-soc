@@ -233,6 +233,38 @@ def main():
                          stream=False)
         assert result.returncode == 0, result.stdout
 
+        # QEMU may attach the accepted IRQ to the JR itself, while RTL emits
+        # the JR delay slot before fetching the same vector.
+        async_jr_rtl = dict(irq_handoff_jr, next_pc="88a43b98")
+        async_jr_qemu = dict(async_jr_rtl, **{
+            "except": 1, "next_pc": "88e08200"})
+        async_delay = record(2, "88a43b98", "00000000", "00000000")
+        async_delay.update({"gpr_we": 0, "gpr_addr": 0})
+        async_rtl = [irq_handoff_prefix, async_jr_rtl, async_delay,
+                     dict(irq_vector, retire_seq=3),
+                     dict(irq_handler, retire_seq=4)]
+        async_qemu = [irq_handoff_prefix, async_jr_qemu,
+                      dict(irq_vector, retire_seq=2),
+                      dict(irq_handler, retire_seq=3)]
+        result = compare(root, async_rtl, async_qemu)
+        assert result.returncode == 0, result.stdout
+        assert "TRACE_COMPARE_PASS records=4 mode=stream " \
+               "rtl_consumed=5 golden_consumed=4 " \
+               "rtl_unpaired=1 golden_unpaired=0" in result.stdout
+        assert "rtl_delay_slot_before_async_boundary:1" in result.stdout
+        result = compare(root, async_rtl, async_qemu, stream=False)
+        assert result.returncode == 0, result.stdout
+
+        side_effecting_delay = dict(async_delay, gpr_we=1,
+                                    gpr_addr=2, gpr_data="00000001")
+        result = compare(root, [irq_handoff_prefix, async_jr_rtl,
+                                side_effecting_delay,
+                                dict(irq_vector, retire_seq=3),
+                                dict(irq_handler, retire_seq=4)],
+                         async_qemu)
+        assert result.returncode == 1, result.stdout
+        assert "field=pc" in result.stdout, result.stdout
+
         side_effecting_jr = dict(irq_handoff_jr, gpr_we=1, gpr_addr=31,
                                  gpr_data="88a43b98")
         result = compare(root, rtl_irq_handoff,

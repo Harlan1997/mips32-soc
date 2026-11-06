@@ -97,6 +97,26 @@ static int test_madd_maddu_msub_msubu(void) {
 static int test_mul(void) {
     uint32_t rd = 0;
 
+    // Keep a cacheable load immediately ahead of MUL. This is the pipeline
+    // boundary exercised by the Linux differential failure: the load may be
+    // owned by the nonblocking retirement FIFO while MUL is held in EX.
+    volatile uint32_t loaded_operands[2] = {0x00002000u, 0x00000064u};
+    uint32_t loaded_a = 0, loaded_b = 0;
+    asm volatile(".set push\n"
+                 ".set noreorder\n"
+                 "lw %0, 0(%2)\n"
+                 "lw %1, 4(%2)\n"
+                 ".set pop"
+                 : "=&r"(loaded_a), "=&r"(loaded_b)
+                 : "r"(loaded_operands)
+                 : "memory");
+    asm volatile(".set push; .set mips32r2; mul %0, %1, %2; .set pop"
+                 : "=r"(rd) : "r"(loaded_a), "r"(loaded_b));
+    if (rd != 0x000C8000u) {
+        print_str("FAIL: MUL after loads got "); print_hex(rd); print_str("\n");
+        return -1;
+    }
+
     // 1. Positive MUL: 7 * 8 = 56
     uint32_t a = 7, b = 8;
     asm volatile(".set push; .set mips32r2; mul %0, %1, %2; .set pop" : "=r"(rd) : "r"(a), "r"(b));

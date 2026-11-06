@@ -70,7 +70,9 @@ static bool terminal_marker_seen;
 static bool terminal_record_reported;
 static unsigned int terminal_progress;
 static uint64_t terminal_record;
-static const char terminal_marker[] = "MIPS32_SOC_LINUX_TERMINAL\n";
+static uint64_t terminal_drain_records;
+static uint64_t terminal_stop_record;
+static const char terminal_marker[] = "MIPS32_SOC_LINUX_TERMINAL\r\n";
 /* QEMU may invoke plugin callbacks from more than one vCPU thread even when
  * the guest is configured with a single active CPU.  Serialize FIFO writes so
  * a complete JSON record can never be interleaved with another callback. */
@@ -195,13 +197,6 @@ static bool uart_trace_has_terminal_marker(void)
                    "\"data\":\"0x%x", &value) != 1) {
             continue;
         }
-        /* The modeled UART presents text lines as CRLF even though the guest
-         * marker contract is written with LF. Treat the CR immediately before
-         * the marker newline as transport framing, not marker data. */
-        if ((uint8_t)value == '\r' &&
-            progress == sizeof(terminal_marker) - 2) {
-            continue;
-        }
         if ((uint8_t)value == (uint8_t)terminal_marker[progress]) {
             ++progress;
         } else if ((uint8_t)value == (uint8_t)terminal_marker[0]) {
@@ -309,7 +304,13 @@ static void observe_terminal_uart(uint64_t address, uint8_t byte)
         !is_terminal_uart_tx(address)) {
         return;
     }
-    if (byte == '\r' && terminal_progress == sizeof(terminal_marker) - 2) {
+    /* The RTL terminal FIFO ends when the CR is written.  The following LF
+     * remains an ordinary UART transfer and is drained with the configured
+     * post-marker retire window. */
+    if (byte == '\r' && terminal_progress == sizeof(terminal_marker) - 3) {
+        terminal_marker_seen = true;
+        terminal_stop_record = record_count + terminal_drain_records + 1;
+        terminal_progress = 0;
         return;
     }
     if (byte == (uint8_t)terminal_marker[terminal_progress]) {
@@ -326,6 +327,7 @@ static void observe_terminal_uart(uint64_t address, uint8_t byte)
     }
     if (terminal_progress == sizeof(terminal_marker) - 1) {
         terminal_marker_seen = true;
+        terminal_stop_record = record_count + terminal_drain_records + 1;
         terminal_progress = 0;
     }
 }
@@ -542,7 +544,7 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
         emit_pending(pending, insn->pc);
     }
     ++record_count;
-    if (terminal_marker_seen) {
+    if (terminal_marker_seen && record_count >= terminal_stop_record) {
         /* The pending record is the instruction that emitted the terminal
          * newline.  The state above is its flushed post-state boundary. */
         capture_stopped = true;
@@ -728,6 +730,14 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
                 return -1;
             }
             terminal_detection_enabled = true;
+        } else if (g_strcmp0(tokens[0], "terminal-drain-records") == 0 && tokens[1]) {
+            char *end = NULL;
+            errno = 0;
+            terminal_drain_records = g_ascii_strtoull(tokens[1], &end, 10);
+            if (errno != 0 || end == tokens[1] || *end != '\0') {
+                fprintf(stderr, "qemu retire plugin: terminal-drain-records must be a non-negative integer\n");
+                return -1;
+            }
         } else if (g_strcmp0(tokens[0], "max-records") == 0 && tokens[1]) {
             char *end = NULL;
             errno = 0;
@@ -755,7 +765,7 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
             }
             summary_only = true;
         } else {
-            fprintf(stderr, "qemu retire plugin: expected trace=/path, state=/path, status=/path, debug=/path, mdu-trace=/path, fpr-state=0|1, uart-trace=/path, terminal-marker=linux, max-records=N, max-bytes=N or summary-only=1, got %s\n", argv[i]);
+            fprintf(stderr, "qemu retire plugin: expected trace=/path, state=/path, status=/path, debug=/path, mdu-trace=/path, fpr-state=0|1, uart-trace=/path, terminal-marker=linux, terminal-drain-records=N, max-records=N, max-bytes=N or summary-only=1, got %s\n", argv[i]);
             return -1;
         }
     }

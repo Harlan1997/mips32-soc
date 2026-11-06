@@ -54,6 +54,7 @@ module mips_ex_stage (
     // updated.
     // ------------------------------------------------------------------
     wire mdu_busy, mdu_done;
+    wire [31:0] mdu_mul_out;
     mips_mdu u_mips_mdu (
         .clk        (clk),
         .rst_n      (rst_n),
@@ -64,6 +65,7 @@ module mips_ex_stage (
         .rt_val     (op_b),
         .hi_out     (hi_val),
         .lo_out     (lo_val),
+        .mul_out    (mdu_mul_out),
         .busy       (mdu_busy),
         .done_pulse (mdu_done)
     );
@@ -73,7 +75,7 @@ module mips_ex_stage (
         case (mdu_op)
             4'd4:    mdu_out_r = hi_val; // MFHI
             4'd5:    mdu_out_r = lo_val; // MFLO
-            4'd12:   mdu_out_r = lo_val; // MUL (low 32 bits)
+            4'd12:   mdu_out_r = mdu_mul_out; // MUL (low 32 bits)
             default: mdu_out_r = 32'd0;
         endcase
     end

@@ -173,6 +173,14 @@ if ! rg -q 'SOC_REF_CP0_TIMER_ARM' \
     perl -0pi -e 's/            if \(!\(env->CP0_Cause & \(1U << CP0Ca_TI\)\) &&\n/            if \(\(!qemu_mips32_soc_ref_cp0_timer_armed ||\n                 qemu_mips32_soc_ref_cp0_timer_armed\(\)\) &&\n                !\(env->CP0_Cause & \(1U << CP0Ca_TI\)\) && \/\* SOC_REF_CP0_TIMER_ARM \*\/\n/' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 fi
+if ! rg -q 'SOC_REF_CP0_COMPARE_ARMED' \
+        "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
+    sed -i '/bool qemu_mips32_soc_ref_cp0_timer_armed(void) __attribute__((weak));/a\bool qemu_mips32_soc_ref_cp0_compare_armed(void) __attribute__((weak));' \
+        "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
+    sed -i '/                !(env->CP0_Cause & (1U << CP0Ca_TI))/i\                (!qemu_mips32_soc_ref_cp0_compare_armed ||\
+                 qemu_mips32_soc_ref_cp0_compare_armed()) && /* SOC_REF_CP0_COMPARE_ARMED */' \
+        "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
+fi
 rg -q 'qemu_mips32_soc_ref_cp0_timer_armed' \
     "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 if ! rg -q 'SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK' \

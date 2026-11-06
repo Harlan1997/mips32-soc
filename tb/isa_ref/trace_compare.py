@@ -5,8 +5,10 @@ import fcntl
 import gzip
 import json
 import os
+import queue
 import stat
 import sys
+import threading
 
 try:
     import orjson
@@ -26,7 +28,17 @@ TRACE_FIELDS = {
     "except_code", "bd", "eret",
 }
 TRACE_STATE_FIELDS = {"gpr_state", "hilo_state"}
+# These fields are either producer-specific (mem_be) or emitted only for
+# double stores by the compact RTL FIFO transport.  Double-store presence is
+# checked explicitly at the comparison boundary below.
+OPTIONAL_TRACE_FIELDS = {"mem_be", "mem_wdata_hi"}
 SUPPORTED_TRACE_SCHEMAS = {"00010000", "00020000"}
+FIFO_SPOOL_CHUNK_SIZE = 4 << 20
+# Release live FIFO data to the comparator in small chunks so the producer is
+# not held behind a large initial spool write. Four chunks per input keep the
+# temporary disk backlog bounded while still absorbing short scheduling gaps.
+FIFO_SPOOL_QUEUE_SIZE = 4
+FIFO_END = object()
 
 def comparable_cp0_write(obj):
     """Return true when either producer reports a committed CP0 write."""
@@ -211,11 +223,121 @@ def mask_index_miss_gprs(value, registers):
     return normalized
 
 
+def _decode_trace_line(path, number, line):
+    if not line.strip():
+        return None
+    try:
+        return (orjson.loads(line) if orjson is not None else
+                json.loads(line))
+    except json.JSONDecodeError as e:
+        raw_record = line.rstrip(b"\r\n").decode(
+            "ascii", errors="replace")
+        raise ValueError(
+            f"{path}:{number}: invalid JSON: {e}; "
+            f"record={raw_record[:2048]!r}") from e
+
+
+def _fifo_spool_reader(path, chunks, spool_dir):
+    fd = None
+    chunk_file = None
+    chunk_path = None
+    chunk_size = 0
+    chunk_index = 0
+    try:
+        os.makedirs(spool_dir, exist_ok=True)
+        fd = os.open(path, os.O_RDONLY)
+        if F_SETPIPE_SZ is not None:
+            try:
+                fcntl.fcntl(fd, F_SETPIPE_SZ, STREAM_PIPE_SIZE)
+            except OSError:
+                pass
+        with os.fdopen(fd, "rb", closefd=False) as trace_file:
+            for number, line in enumerate(trace_file, 1):
+                if not line.strip():
+                    continue
+                if (chunk_file is None or
+                        chunk_size + len(line) > FIFO_SPOOL_CHUNK_SIZE):
+                    if chunk_file is not None:
+                        chunk_file.close()
+                        chunks.put(chunk_path)
+                    chunk_path = os.path.join(
+                        spool_dir, f"{chunk_index:08d}.jsonl")
+                    chunk_index += 1
+                    chunk_file = open(chunk_path, "wb")
+                    chunk_size = 0
+                chunk_file.write(line)
+                chunk_size += len(line)
+            if chunk_file is not None:
+                chunk_file.close()
+                chunks.put(chunk_path)
+    except BaseException as exc:
+        if chunk_file is not None:
+            chunk_file.close()
+        chunks.put(exc)
+    finally:
+        chunks.put(FIFO_END)
+        if fd is not None:
+            os.close(fd)
+
+
+def _load_fifo(path):
+    """Drain a live FIFO into rotating disk chunks before comparing it."""
+    spool_dir = f"{path}.spool"
+    chunks = queue.Queue(maxsize=FIFO_SPOOL_QUEUE_SIZE)
+    reader = threading.Thread(
+        target=_fifo_spool_reader, args=(path, chunks, spool_dir), daemon=True)
+    reader.start()
+    record_number = 0
+    try:
+        while True:
+            item = chunks.get()
+            if item is FIFO_END:
+                reader.join()
+                return
+            if isinstance(item, BaseException):
+                raise item
+            try:
+                with open(item, "rb") as trace_file:
+                    for line in trace_file:
+                        if not line.strip():
+                            continue
+                        record_number += 1
+                        record = _decode_trace_line(
+                            path, record_number, line)
+                        if record is not None:
+                            yield record_number, record
+            finally:
+                try:
+                    os.unlink(item)
+                except OSError:
+                    pass
+    finally:
+        # On normal completion the reader has already sent FIFO_END.  On a
+        # comparator error it is a daemon and the parent gate will stop the
+        # producer; leave no completed chunks behind in either case.
+        if not reader.is_alive():
+            try:
+                for name in os.listdir(spool_dir):
+                    try:
+                        os.unlink(os.path.join(spool_dir, name))
+                    except OSError:
+                        pass
+                os.rmdir(spool_dir)
+            except OSError:
+                pass
+
+
 def load(path):
+    try:
+        if stat.S_ISFIFO(os.stat(path).st_mode):
+            yield from _load_fifo(path)
+            return
+    except OSError:
+        pass
     if path.endswith(".gz"):
-        trace_file = gzip.open(path, "rt", encoding="ascii")
+        trace_file = gzip.open(path, "rb")
     else:
-        trace_file = open(path, encoding="ascii")
+        trace_file = open(path, "rb")
     with trace_file as f:
         if F_SETPIPE_SZ is not None:
             try:
@@ -225,14 +347,8 @@ def load(path):
             except OSError:
                 pass
         for n, line in enumerate(f, 1):
-            if line.strip():
-                try:
-                    obj = json.loads(line)
-                except json.JSONDecodeError as e:
-                    raw_record = line.rstrip("\r\n")
-                    raise ValueError(
-                        f"{path}:{n}: invalid JSON: {e}; "
-                        f"record={raw_record[:512]!r}") from e
+            obj = _decode_trace_line(path, n, line)
+            if obj is not None:
                 yield n, obj
 
 
@@ -352,7 +468,7 @@ def validate_trace_record(record, side, record_number):
     schema = record.get("schema")
     if not isinstance(schema, str) or schema.lower() not in SUPPORTED_TRACE_SCHEMAS:
         raise ValueError(f"{side} record {record_number} has unsupported schema: {schema!r}")
-    missing = TRACE_FIELDS.difference(record)
+    missing = TRACE_FIELDS.difference(record) - OPTIONAL_TRACE_FIELDS
     if schema.lower() == "00020000":
         missing.update(TRACE_STATE_FIELDS.difference(record))
     if missing:
@@ -599,6 +715,29 @@ def stream_compare(rtl_path, golden_path, args):
         if sync_exception_reaches(g, rtl_pc):
             note_unpaired(golden.pop(), "golden",
                           "golden_sync_exception_redirect", r_item)
+            continue
+        # QEMU can attach an accepted async IRQ to a control transfer while
+        # RTL emits that transfer's side-effect-free delay slot before the
+        # vector.  Drop only that one RTL delay-slot record so the vector
+        # remains paired on both streams.
+        if (previous_g is not None and previous_r is not None and
+                is_async_interrupt_boundary(previous_g) and
+                normalize_direct_map(previous_g.get("next_pc")) == golden_pc and
+                normalize_direct_map(previous_r.get("pc")) ==
+                normalize_direct_map(previous_g.get("pc")) and
+                has_delay_slot(previous_r.get("instr")) and
+                normalize_direct_map(r.get("pc")) ==
+                normalize_direct_map(
+                    f"{(int(previous_r.get('pc'), 16) + 4) & 0xffffffff:08x}") and
+                not r.get("gpr_we") and
+                not comparable_cp0_write(r) and
+                not r.get("mem_valid") and
+                not r.get("except") and
+                not r.get("eret") and
+                r_next is not None and
+                normalize_direct_map(r_next.get("pc")) == golden_pc):
+            note_unpaired(rtl.pop(), "rtl",
+                          "rtl_delay_slot_before_async_boundary", g_item)
             continue
         if (g_next is not None and
                 async_boundary_reaches(g_next, rtl_pc) and
@@ -1219,6 +1358,15 @@ def is_side_effect_free_control_transfer(obj):
             not comparable_cp0_write(obj) and
             not obj.get("mem_valid"))
 
+
+def is_side_effect_free_record(obj):
+    """Check a producer record that can be an unpaired delay slot."""
+    return (not obj.get("gpr_we") and
+            not comparable_cp0_write(obj) and
+            not obj.get("mem_valid") and
+            not obj.get("except") and
+            not obj.get("eret"))
+
 def follows_delay_slot(records, index):
     return index > 0 and has_delay_slot(records[index - 1][1].get("instr"))
 
@@ -1270,6 +1418,20 @@ def align_async_vector_window(rtl, golden):
         if (ri + 1 < len(rtl) and
                 async_boundary_reaches(rtl[ri + 1][1], golden_pc) and
                 is_side_effect_free_control_transfer(rtl[ri][1])):
+            ri += 1
+            continue
+        if (ri > 0 and gi > 0 and ri + 1 < len(rtl) and
+                is_async_interrupt_boundary(golden[gi - 1][1]) and
+                async_boundary_reaches(golden[gi - 1][1], golden_pc) and
+                normalize_direct_map(rtl[ri - 1][1].get("pc")) ==
+                normalize_direct_map(golden[gi - 1][1].get("pc")) and
+                has_delay_slot(rtl[ri - 1][1].get("instr")) and
+                normalize_direct_map(rtl[ri][1].get("pc")) ==
+                normalize_direct_map(
+                    f"{(int(rtl[ri - 1][1].get('pc'), 16) + 4) & 0xffffffff:08x}") and
+                is_side_effect_free_record(rtl[ri][1]) and
+                normalize_direct_map(rtl[ri + 1][1].get("pc")) ==
+                golden_pc):
             ri += 1
             continue
         if async_boundary_reaches(golden[gi][1], rtl_pc):

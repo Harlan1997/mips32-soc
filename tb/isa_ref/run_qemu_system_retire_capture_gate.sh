@@ -51,6 +51,7 @@ QEMU_MARKER_WATCHDOG_SECONDS=${QEMU_MARKER_WATCHDOG_SECONDS:-600}
 QEMU_TERMINAL_DRAIN_SECONDS=${QEMU_TERMINAL_DRAIN_SECONDS:-1}
 QEMU_TERMINAL_WAIT_FOR_EXIT=${QEMU_TERMINAL_WAIT_FOR_EXIT:-0}
 QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS=${QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS:-10}
+QEMU_TERMINAL_DRAIN_RECORDS=${QEMU_TERMINAL_DRAIN_RECORDS:-0}
 QEMU_UNBOUNDED_CAPTURE=${QEMU_UNBOUNDED_CAPTURE:-0}
 QEMU_SUMMARY_ONLY=${QEMU_SUMMARY_ONLY:-0}
 QEMU_STREAM_MODE=${QEMU_STREAM_MODE:-0}
@@ -100,6 +101,10 @@ if [[ "${QEMU_STOP_ON_TERMINAL}" == "1" ]]; then
         echo "QEMU system retire capture: QEMU_TERMINAL_EXIT_TIMEOUT_SECONDS must be positive" >&2
         exit 2
     fi
+    [[ "${QEMU_TERMINAL_DRAIN_RECORDS}" =~ ^[0-9]+$ ]] || {
+        echo "QEMU system retire capture: QEMU_TERMINAL_DRAIN_RECORDS must be non-negative" >&2
+        exit 2
+    }
 fi
 if [[ "${QEMU_SUMMARY_ONLY}" == "1" && "${QEMU_STOP_ON_TERMINAL}" != "1" ]]; then
     echo "QEMU system retire capture: QEMU_SUMMARY_ONLY=1 requires terminal marker mode" >&2
@@ -237,7 +242,7 @@ set +e
 # timeout status; semantic failures and other exit codes remain failures.
 terminal_plugin_arg=""
 if [[ "${QEMU_STOP_ON_TERMINAL}" == "1" ]]; then
-    terminal_plugin_arg=",terminal-marker=linux"
+    terminal_plugin_arg=",terminal-marker=linux,terminal-drain-records=${QEMU_TERMINAL_DRAIN_RECORDS}"
 fi
 summary_plugin_arg=""
 if [[ "${QEMU_SUMMARY_ONLY}" == "1" ]]; then

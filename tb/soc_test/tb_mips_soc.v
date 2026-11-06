@@ -4,7 +4,11 @@
 // Author:    Antigravity
 // =============================================================================
 
+`ifdef SOC_FAST_SIM
+`timescale 1ps/1ps
+`else
 `timescale 1ns/1ps
+`endif
 `include "soc_legacy_observation_if.sv"
 `ifdef TB_RETIRE_TRACE
 `include "../uvm_tb/tb_top/soc_observation_if.sv"
@@ -3366,7 +3370,13 @@ module tb_mips_soc;
 `endif
     initial begin
         clk = 0;
+`ifdef SOC_FAST_SIM
+        // Keep the cycle sequence identical while making long Linux replays
+        // practical for bounded diagnostics. The default clock remains 10 ns.
         forever #5 clk = ~clk;
+`else
+        forever #5 clk = ~clk;
+`endif
     end
     
     // Test Sequence

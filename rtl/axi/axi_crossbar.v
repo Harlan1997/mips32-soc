@@ -552,7 +552,16 @@ module axi_crossbar #(
             for (s=0;s<S_ALL;s=s+1) begin
                 // AR grant lock: assert when a grant is presented but not yet
                 // accepted; clear on accept. Holds AR payload stable.
-                if (rd_grant_v[s] && !ar_accept[s]) begin
+                // A master may withdraw an address request while it is being
+                // flushed (for example, an instruction-cache request across
+                // an exception redirect).  Do not retain an AR lock for a
+                // master that is no longer presenting that request: doing so
+                // leaves the slave with no valid grant and can starve every
+                // later requester indefinitely.
+                if (rd_lock[s] &&
+                    (!m_enable[rd_lock_m[s]] || !m_arvalid[rd_lock_m[s]])) begin
+                    rd_lock[s] <= 1'b0;
+                end else if (rd_grant_v[s] && !ar_accept[s]) begin
                     rd_lock[s]   <= 1'b1;
                     rd_lock_m[s] <= rd_grant[s];
                 end else if (ar_accept[s]) begin

@@ -54,6 +54,10 @@ module mips_mdu (
 
     output wire [31:0] hi_out,
     output wire [31:0] lo_out,
+    // Completed low product for SPECIAL2 MUL writeback.  MUL's HI/LO state
+    // is implementation-defined, so its GPR result must not depend on the
+    // common HI/LO commit register timing.
+    output wire [31:0] mul_out,
     output wire        busy,
     output reg         done_pulse
 );
@@ -107,6 +111,7 @@ module mips_mdu (
     reg  [2:0]  mul_ctr;     // four radix-4 chunks: 0..3
     reg         mul_short;
     reg         mul_commit_pending;
+    assign mul_out = mul_prod[31:0];
 
     // ---- Divider state ----
     reg  [31:0] div_divisor;

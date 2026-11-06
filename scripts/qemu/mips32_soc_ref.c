@@ -55,7 +55,7 @@ bool qemu_mips32_soc_ref_sc_consume_reservation(void)
 #define SOC_MAILBOX_MAGIC  0xdeadbeefU
 #define SOC_REF_IRQ_PC_HISTORY_SIZE 8U
 #define SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS 1U
-#define SOC_REF_LINUX_TERMINAL_MARKER "MIPS32_SOC_LINUX_TERMINAL\n"
+#define SOC_REF_LINUX_TERMINAL_MARKER "MIPS32_SOC_LINUX_TERMINAL\r\n"
 #define SOC_DDR_BASE       0x08000000ULL
 #define SOC_DDR_SIZE       (128 * MiB)
 #define SOC_LINUX_RNG_ENV_BASE 0x09d00000ULL
@@ -99,6 +99,8 @@ typedef struct MIPS32SocRefState {
     SocRefUartTxModel uart_tx;
     bool stop_on_terminal_marker;
     bool terminal_marker_seen;
+    bool terminal_shutdown_pending;
+    uint64_t terminal_shutdown_after_retire;
     unsigned int terminal_marker_progress;
     GArray *uart_apb_schedule;
     guint uart_apb_schedule_index;
@@ -235,6 +237,7 @@ typedef struct MIPS32SocRefState {
     unsigned rdhwr_cc_reads;
     uint8_t cp0_linux_timer_phase;
     bool cp0_linux_timer_late_suppressed;
+    bool cp0_compare_armed;
     bool cp0_retire_clock;
     GArray *irq_release_after;
     GArray *irq_replay_causes;
@@ -312,6 +315,7 @@ static char *soc_ref_uart_apb_schedule_path;
 static bool soc_ref_uart_apb_schedule_diagnostic_continue;
 static bool soc_ref_uart_diff_timing;
 static bool soc_ref_stop_on_terminal_marker;
+static uint32_t soc_ref_terminal_drain_retire;
 static uint32_t soc_ref_cp0_trace_interval = 1;
 static bool soc_ref_cp0_retire_clock;
 static uint32_t soc_ref_dma_fault_mode;
@@ -439,10 +443,10 @@ bool qemu_mips32_soc_ref_cp0_retire_clock(void)
 #define SOC_REF_LINUX_TIMER_LATE    2U
 #define SOC_REF_LINUX_TIMER_NATIVE  3U
 #define SOC_REF_LINUX_TIMER_LATE_REARM_RETIRE 68132388ULL
-/* The RTL latches Cause.TI before the replayed CPU acceptance boundary.  The
- * generic IRQ schedule records acceptance, so mirror the observed lead while
- * keeping delivery at the scheduled retirement. */
-#define SOC_REF_LINUX_TIMER_PENDING_LEAD 56U
+/* The replay schedule records the architectural timer boundary.  Keep TI
+ * pending until that boundary so a sparse Count sample cannot expose it
+ * early in QEMU relative to RTL. */
+#define SOC_REF_LINUX_TIMER_PENDING_LEAD 0U
 #define SOC_REF_LINUX_FIRST_PROBE_HELPER_PC  0x8800ff18U
 #define SOC_REF_LINUX_SECOND_PROBE_HELPER_PC 0x880100a4U
 bool qemu_mips32_soc_ref_cp0_timer_armed(void)
@@ -461,11 +465,27 @@ bool qemu_mips32_soc_ref_cp0_timer_armed(void)
                   s->cp0_linux_timer_phase != SOC_REF_LINUX_TIMER_LATE);
 }
 
+bool qemu_mips32_soc_ref_cp0_compare_armed(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    /* Keep ordinary QEMU targets unchanged when the project machine is absent. */
+    return !s || s->cp0_compare_armed;
+}
+
 void qemu_mips32_soc_ref_cp0_compare_write(uint32_t value)
 {
     MIPS32SocRefState *s = soc_ref_active_state;
+    uint32_t count = 0;
     if (!s)
         return;
+    if (s->cp0_retire_clock && s->cpu) {
+        count = qemu_mips32_soc_ref_cp0_retire_ticks(&s->cpu->env);
+    }
+    /* A Compare write clears TI.  RTL can only set it again if the new
+     * deadline is strictly ahead of the current Count; a value already behind
+     * Count is skipped rather than treated as an immediate hit. */
+    s->cp0_compare_armed = (int32_t)(value - count) > 0;
     if (soc_ref_linux_guest && soc_ref_rtl_cp0_identity &&
         value == SOC_REF_LINUX_COMPARE_EARLY) {
         s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_EARLY;
@@ -596,7 +616,11 @@ static bool soc_ref_consume_count_schedule(MIPS32SocRefState *s,
     }
     if (s->cp0_retire_clock && s->cpu && &s->cpu->env == env &&
         qemu_mips32_soc_ref_cp0_timer_armed() &&
+        s->cp0_compare_armed &&
         !(env->CP0_Cause & (1U << CP0Ca_TI)) &&
+        (!s->irq_replay_has_timer ||
+         s->retire_count < SOC_REF_LINUX_SCHEDULER_LATE_RETIRE ||
+         soc_ref_timer_replay_pending(s)) &&
         (int32_t)(sample.value - env->CP0_Compare) >= 0) {
         env->CP0_Cause |= 1U << CP0Ca_TI;
         soc_ref_assert_cp0_timer_irq(s);
@@ -866,6 +890,19 @@ static void soc_ref_set_stop_on_terminal_marker(Object *obj, bool value,
                                                 Error **errp)
 {
     soc_ref_stop_on_terminal_marker = value;
+}
+
+static void soc_ref_terminal_shutdown_tick(MIPS32SocRefState *s)
+{
+    if (!s || !s->terminal_shutdown_pending ||
+        s->cpu_cycle_retire_seq < s->terminal_shutdown_after_retire) {
+        return;
+    }
+    s->terminal_shutdown_pending = false;
+    qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
+    if (s->cpu) {
+        cpu_exit(CPU(s->cpu));
+    }
 }
 
 static void soc_ref_set_cp0_retire_clock(Object *obj, bool value,
@@ -1988,10 +2025,17 @@ static void soc_ref_cp0_retire_timer_tick(MIPS32SocRefState *s)
     }
     replay_pending = soc_ref_timer_replay_pending(s);
     count = qemu_mips32_soc_ref_cp0_retire_ticks(env);
-    /* Count replay samples are sparse; a retire tick can cross Compare
-     * between samples.  Once crossed, TI remains pending until Compare is
-     * written, matching the RTL latch semantics. */
-    if (!replay_pending && (int32_t)(count - env->CP0_Compare) < 0) {
+    /* A sparse replay sample may skip over a future Compare value.  Treat that
+     * crossing as the equality event, but never re-arm a deadline that was
+     * already behind Count when Linux wrote Compare. */
+    if (s->irq_replay_has_timer) {
+        /* The replay schedule is the architectural timer boundary for the
+         * differential run.  Do not let a sparse Count sample raise TI early
+         * merely because synthetic Count crossed Compare first. */
+        if (!replay_pending)
+            return;
+    } else if (!s->cp0_compare_armed ||
+               (int32_t)(count - env->CP0_Compare) < 0) {
         return;
     }
     env->CP0_Cause |= 1U << CP0Ca_TI;
@@ -2037,9 +2081,13 @@ static bool soc_ref_uart_observe_terminal_marker(MIPS32SocRefState *s,
     if (!s->stop_on_terminal_marker || s->terminal_marker_seen) {
         return false;
     }
+    /* The RTL terminal FIFO ends when the CR is written.  The following LF
+     * remains an ordinary UART transfer and is drained with the configured
+     * post-marker retire window. */
     if (byte == '\r' &&
-        s->terminal_marker_progress == sizeof(marker) - 2) {
-        return false;
+        s->terminal_marker_progress == sizeof(marker) - 3) {
+        s->terminal_marker_seen = true;
+        return true;
     }
     if (byte == (uint8_t)marker[s->terminal_marker_progress]) {
         ++s->terminal_marker_progress;
@@ -2103,13 +2151,16 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
         if (accepted) {
             putchar(ch);
             fflush(stdout);
-            if (soc_ref_uart_observe_terminal_marker(s, ch)) {
-                qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
-                /* End the active TCG block before it can perform another
-                 * scheduled CP0 read while asynchronous shutdown is pending. */
-                if (s->cpu) {
-                    cpu_exit(CPU(s->cpu));
-                }
+        }
+        /* The RTL terminal monitor and the plugin observe the APB write even
+         * when the final byte is rejected by the modeled shifter. */
+        if (soc_ref_uart_observe_terminal_marker(s, ch)) {
+            if (soc_ref_terminal_drain_retire != 0) {
+                s->terminal_shutdown_pending = true;
+                s->terminal_shutdown_after_retire =
+                    s->cpu_cycle_retire_seq + soc_ref_terminal_drain_retire;
+            } else {
+                soc_ref_terminal_shutdown_tick(s);
             }
         }
         soc_ref_uart_update_irq(s);
@@ -2534,6 +2585,7 @@ static void soc_ref_instruction_tick(CPUState *cpu)
     ++s->retire_count;
     ++s->cpu_cycle_retire_seq;
     soc_ref_uart_retire_tick(s);
+    soc_ref_terminal_shutdown_tick(s);
     soc_ref_cp0_retire_timer_tick(s);
     if (soc_ref_irq_replay_debug && soc_ref_irq_trace_context_index >= 0 &&
         s->irq_release_index == (guint)soc_ref_irq_trace_context_index &&
@@ -2708,6 +2760,7 @@ void qemu_mips32_soc_ref_wait(CPUMIPSState *env)
         ++s->cpu_cycle_retire_seq;
         ++s->retire_count;
         soc_ref_uart_retire_tick(s);
+        soc_ref_terminal_shutdown_tick(s);
     }
 
     if (s && s->cp0_retire_clock && !s->irq_replay_has_timer &&
@@ -2770,6 +2823,7 @@ void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env)
     ++s->retire_count;
     ++s->cpu_cycle_retire_seq;
     soc_ref_uart_retire_tick(s);
+    soc_ref_terminal_shutdown_tick(s);
     soc_ref_cp0_retire_timer_tick(s);
 }
 
@@ -4390,6 +4444,9 @@ static void mips32_soc_ref_machine_init(MachineClass *mc)
         OBJECT_CLASS(mc), "stop-on-terminal-marker",
         soc_ref_get_stop_on_terminal_marker,
         soc_ref_set_stop_on_terminal_marker);
+    object_class_property_add_uint32_ptr(
+        OBJECT_CLASS(mc), "terminal-drain-retire",
+        &soc_ref_terminal_drain_retire, OBJ_PROP_FLAG_WRITE);
     object_class_property_add_str(OBJECT_CLASS(mc), "irq-schedule",
                                   soc_ref_get_irq_schedule,
                                   soc_ref_set_irq_schedule);

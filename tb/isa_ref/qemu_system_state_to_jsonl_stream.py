@@ -16,6 +16,11 @@ import threading
 
 from qemu_system_state_to_jsonl import convert
 
+try:
+    import orjson
+except ImportError:  # pragma: no cover - standard-library fallback
+    orjson = None
+
 
 # The QEMU plugin emits small atomic records, but the state records are larger
 # and the converter can be briefly CPU-bound.  Keep more bounded data in the
@@ -60,7 +65,8 @@ class FifoLines:
                 for line_number, raw in enumerate(stream, 1):
                     if raw.strip():
                         try:
-                            value = json.loads(raw.decode("ascii"))
+                            value = (orjson.loads(raw) if orjson is not None else
+                                     json.loads(raw.decode("ascii")))
                         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
                             preview = raw[:1024].decode("ascii", errors="replace")
                             raise ValueError(
@@ -262,7 +268,10 @@ def main():
             # Batch only complete JSON lines. A large buffered text stream can
             # be interrupted while flushing and leave a partial line for the
             # strict comparator during peer shutdown.
-            payload = (json.dumps(record, separators=(",", ":")) + "\n").encode("ascii")
+            payload = (orjson.dumps(record, option=orjson.OPT_APPEND_NEWLINE)
+                       if orjson is not None else
+                       (json.dumps(record, separators=(",", ":")) + "\n")
+                       .encode("ascii"))
             if len(payload) > 4096:
                 flush_pending()
                 pending.extend(payload)

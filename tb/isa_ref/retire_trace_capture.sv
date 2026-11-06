@@ -33,6 +33,8 @@ module retire_trace_capture (
     string count_schedule_path;
     string cycle_schedule_path;
     string fpr_text;
+    string trace_line;
+    string mem_wdata_hi_field;
     logic [1023:0] fpr_state_d1, fpr_state_d2;
     logic [31:0] fcsr_state_d1, fcsr_state_d2;
     logic [1023:0] gpr_state_post;
@@ -86,6 +88,17 @@ module retire_trace_capture (
                 fpr_index = (fpr_index == 31) ? 0 : fpr_index + 1;
                 double_store_high_word = fpr_state[fpr_index*32 +: 32];
             end
+        end
+    endfunction
+
+    function automatic logic is_double_store_instruction(
+        input logic [31:0] instruction
+    );
+        begin
+            is_double_store_instruction =
+                instruction[31:26] == 6'b111101 ||
+                (instruction[31:26] == 6'b010011 &&
+                 instruction[5:0] == 6'h09);
         end
     endfunction
 
@@ -267,8 +280,19 @@ module retire_trace_capture (
             end else begin
                 state_fields = "";
             end
-            $fdisplay(fd,
-              "{\"retire_seq\":%0d,\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\"%s,\"fpr_state\":\"%s\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\",\"mem_wdata_hi\":\"%08x\",\"mem_be\":\"%x\",\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
+            // mem_be is producer-specific and is excluded by the comparator.
+            // Keep the optional high word only when a double store needs it;
+            // the compact ordinary record stays below VCS's FIFO write
+            // fragment size under sustained backpressure.
+            if (is_double_store_instruction(obs_if.retire_instr)) begin
+                mem_wdata_hi_field = $sformatf(
+                    ",\"mem_wdata_hi\":\"%08x\"",
+                    double_store_high_word(obs_if.retire_instr, fpr_state_d2));
+            end else begin
+                mem_wdata_hi_field = "";
+            end
+            trace_line = $sformatf(
+              "{\"retire_seq\":%0d,\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\"%s,\"fpr_state\":\"%s\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\"%s,\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
               retire_count,
               trace_schema_override != 0 ? configured_trace_schema :
                                            known_int(obs_if.retire_schema),
@@ -281,14 +305,17 @@ module retire_trace_capture (
               known_int(fcsr_state_d2), known_bit(obs_if.retire_mem_valid),
               known_bit(obs_if.retire_mem_read), known_bit(obs_if.retire_mem_write),
               obs_if.retire_mem_addr, obs_if.retire_mem_wdata,
-              double_store_high_word(obs_if.retire_instr, fpr_state_d2),
-              obs_if.retire_mem_be, obs_if.retire_mem_rdata,
+              mem_wdata_hi_field, obs_if.retire_mem_rdata,
               known_bit(obs_if.retire_except), known_int(obs_if.retire_except_code),
               // `retire_bd` is also used internally as the pipeline delay-slot
               // marker.  The trace schema reserves BD for an architectural
               // exception payload, so suppress it on ordinary retire records.
               known_bit(obs_if.retire_except && obs_if.retire_bd),
               known_bit(obs_if.retire_eret));
+            // Format the complete record before writing it.  VCS can split a
+            // many-argument $fdisplay across writes to a backpressured FIFO;
+            // one completed string keeps each JSON line intact.
+            $fwrite(fd, "%s\n", trace_line);
             // FIFO consumers must never observe a buffered partial JSON line.
             if (flush_records != 0)
                 $fflush(fd);

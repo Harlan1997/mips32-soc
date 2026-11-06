@@ -355,7 +355,7 @@ module l1_cache_nb_cpu_axi #(
         .mshr_occupancy(n_mshr_occ), .wb_occupancy(n_wb_occ)
     );
 
-    l1_cache_nb_axi_bridge u_bridge (
+    l1_cache_nb_axi_bridge #(.AXI_ID_BASE(4'h8)) u_bridge (
         .clk(clk), .rst_n(rst_n), .line_req_valid(n_mem_req_valid),
         .line_req_we(n_mem_req_we), .line_req_addr(n_mem_req_addr),
         .line_req_wdata(n_mem_req_wdata), .line_req_ready(n_mem_req_ready),
@@ -412,7 +412,10 @@ module l1_cache_nb_cpu_axi #(
     assign wlast   = legacy_sel ? l_wlast : n_wlast;
     assign wvalid  = legacy_sel ? (legacy_aw_seen && l_wvalid) :
                      (l1_sel ? n_wvalid : 1'b0);
-    assign bready  = legacy_sel ? l_bready : (l1_sel ? n_bready : 1'b0);
+    // Legacy and nonblocking line traffic share this adapter's AXI response
+    // channel. Their IDs are disjoint, so route each response independently
+    // instead of stalling an APB response behind an unrelated line response.
+    assign bready  = bid[3] ? n_bready : l_bready;
     assign arid    = legacy_sel ? l_arid : n_arid;
     assign araddr  = legacy_sel ? l_araddr : n_araddr;
     assign arlen   = legacy_sel ? l_arlen : n_arlen;
@@ -422,7 +425,7 @@ module l1_cache_nb_cpu_axi #(
     assign arcache = legacy_sel ? l_arcache : n_arcache;
     assign arprot  = legacy_sel ? l_arprot : n_arprot;
     assign arvalid = legacy_sel ? l_arvalid : (l1_sel ? n_arvalid : 1'b0);
-    assign rready  = legacy_sel ? l_rready : (l1_sel ? n_rready : 1'b0);
+    assign rready  = rid[3] ? n_rready : l_rready;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

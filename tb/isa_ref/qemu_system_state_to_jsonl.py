@@ -775,8 +775,11 @@ def convert(events, states):
         # bounded interrupt handler.  Once an ordinary architectural write
         # commits the same GPR, the override must be retired as well; keeping
         # it alive would corrupt a later source operand (notably MTC0 data).
+        # MFHI/MFLO may consume a synthetic HI/LO replay value; only that
+        # active synthetic path is allowed to retain the override.
         if (destination and not synchronous_exception_taken and
-                not is_mfc0_cause and not mdu_read and
+                not is_mfc0_cause and
+                (not mdu_read or replay_mdu_hilo is None) and
                 not replayed_memory_load):
             replay_gpr_overrides.pop(f"r{destination}", None)
         # The event stream's next_pc is the immediate post-instruction PC.

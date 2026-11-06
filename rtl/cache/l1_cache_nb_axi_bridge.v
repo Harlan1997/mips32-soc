@@ -5,7 +5,11 @@
 // Writeback remains single-entry and is drained before a refill, preserving
 // the line-cache ordering contract.
 module l1_cache_nb_axi_bridge #(
-    parameter READ_SLOTS = 2
+    parameter READ_SLOTS = 2,
+    // The standalone bridge uses IDs 0/1. The CPU adapter can reserve a
+    // separate ID range so its line traffic can share one AXI R/B channel
+    // with the legacy dcache without response ownership ambiguity.
+    parameter AXI_ID_BASE = 0
 ) (
     input wire clk, input wire rst_n,
     input wire line_req_valid, input wire line_req_we,
@@ -68,11 +72,12 @@ module l1_cache_nb_axi_bridge #(
             if (rd_active[i] && !rd_issued[i] && ar_sel < 0) ar_sel = i;
         r_sel = -1;
         for (i = 0; i < READ_SLOTS; i = i + 1)
-            if (rd_active[i] && rd_issued[i] && (rid == i[3:0]) && r_sel < 0)
+            if (rd_active[i] && rd_issued[i] &&
+                (rid == (i + AXI_ID_BASE)) && r_sel < 0)
                 r_sel = i;
     end
 
-    assign arid = (ar_sel < 0) ? 4'd0 : ar_sel[3:0];
+    assign arid = (ar_sel < 0) ? AXI_ID_BASE : (ar_sel + AXI_ID_BASE);
     assign araddr = (ar_sel < 0) ? 32'd0 : rd_addr_q[ar_sel];
     assign arlen = 8'd7;
     assign arsize = 3'b010;
@@ -83,7 +88,7 @@ module l1_cache_nb_axi_bridge #(
     assign arvalid = (ar_sel >= 0);
     assign rready = (r_sel >= 0);
 
-    assign awid = 4'd0;
+    assign awid = AXI_ID_BASE;
     assign awaddr = wr_addr_q;
     assign awlen = 8'd7;
     assign awsize = 3'b010;

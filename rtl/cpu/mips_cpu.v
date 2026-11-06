@@ -1886,7 +1886,12 @@ module mips_cpu #(
         // Advance EX/MEM on a nonblocking address handshake, not merely on
         // a cache-ready level. Otherwise a held load can be transferred and
         // allocated repeatedly while the cache remains ready.
-        .dmem_addr_ok    (data_addr_ok_effective && data_req),
+        // A nonblocking load may normally advance EX/MEM on its address
+        // handshake even while the front end is stalled.  Do not use that
+        // bypass while the EX instruction is launching or waiting on the
+        // multi-cycle MDU: otherwise a MUL can be captured with the previous
+        // product before its completion edge.
+        .dmem_addr_ok    (data_addr_ok_effective && data_req && mdu_ready),
         .dmem_data_ok    (data_data_ok_current),
         .enable_nonblocking_load(mem_enable_nb_load),
         .cache_op_done   (data_cache_op_done),
