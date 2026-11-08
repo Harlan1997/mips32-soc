@@ -4,6 +4,8 @@ module tb_mips_fpu_rounding;
     localparam OP_ADD = 5'd0;
     localparam OP_SUB = 5'd1;
     localparam OP_MUL = 5'd2;
+    localparam OP_DIV = 5'd3;
+    localparam OP_SQRT = 5'd4;
     localparam OP_CVT_S_D = 5'd15;
     localparam OP_CVT_W_D = 5'd18;
 
@@ -177,6 +179,55 @@ module tb_mips_fpu_rounding;
         end
     endtask
 
+    task automatic check_double_div;
+        input [1:0] mode;
+        input [63:0] lhs;
+        input [63:0] rhs;
+        input [63:0] expected;
+        input [127:0] name;
+        begin
+            op = OP_DIV;
+            a = 32'd0;
+            b = 32'd0;
+            c = 32'd0;
+            fmt_double = 1'b1;
+            rounding_mode = mode;
+            a_double = lhs;
+            b_double = rhs;
+            c_double = 64'd0;
+            #1;
+            if (result_double !== expected || exception_flags[0] !== 1'b1) begin
+                $display("FPU_DOUBLE_DIV_ROUND_FAIL %0s got=%016h flags=%02h expected=%016h",
+                         name, result_double, exception_flags, expected);
+                failures = failures + 1;
+            end
+        end
+    endtask
+
+    task automatic check_double_sqrt;
+        input [1:0] mode;
+        input [63:0] value;
+        input [63:0] expected;
+        input [127:0] name;
+        begin
+            op = OP_SQRT;
+            a = 32'd0;
+            b = 32'd0;
+            c = 32'd0;
+            fmt_double = 1'b1;
+            rounding_mode = mode;
+            a_double = value;
+            b_double = 64'd0;
+            c_double = 64'd0;
+            #1;
+            if (result_double !== expected || exception_flags[0] !== 1'b1) begin
+                $display("FPU_DOUBLE_SQRT_ROUND_FAIL %0s got=%016h flags=%02h expected=%016h",
+                         name, result_double, exception_flags, expected);
+                failures = failures + 1;
+            end
+        end
+    endtask
+
     initial begin
         failures = 0;
         compare_condition = 4'd0;
@@ -256,9 +307,29 @@ module tb_mips_fpu_rounding;
         check_double_mul(2'b11, 64'h3ff0000000000001,
                          64'h3ff0000000000001,
                          64'h3ff0000000000002, "mul_d_toward_minus_inf");
+        check_double_div(2'b00, 64'h3ff0000000000000,
+                         64'h4008000000000000,
+                         64'h3fd5555555555555, "div_d_nearest");
+        check_double_div(2'b01, 64'h3ff0000000000000,
+                         64'h4008000000000000,
+                         64'h3fd5555555555555, "div_d_toward_zero");
+        check_double_div(2'b10, 64'h3ff0000000000000,
+                         64'h4008000000000000,
+                         64'h3fd5555555555556, "div_d_toward_plus_inf");
+        check_double_div(2'b11, 64'h3ff0000000000000,
+                         64'h4008000000000000,
+                         64'h3fd5555555555555, "div_d_toward_minus_inf");
+        check_double_sqrt(2'b00, 64'h4000000000000000,
+                          64'h3ff6a09e667f3bcd, "sqrt_d_nearest");
+        check_double_sqrt(2'b01, 64'h4000000000000000,
+                          64'h3ff6a09e667f3bcc, "sqrt_d_toward_zero");
+        check_double_sqrt(2'b10, 64'h4000000000000000,
+                          64'h3ff6a09e667f3bcd, "sqrt_d_toward_plus_inf");
+        check_double_sqrt(2'b11, 64'h4000000000000000,
+                          64'h3ff6a09e667f3bcc, "sqrt_d_toward_minus_inf");
 
         if (failures == 0)
-            $display("REGRESSION_TEST_SUCCESS mips_fpu_rounding arithmetic=8 cvt_s_d=8 double_add_sub=6 double_mul=4");
+            $display("REGRESSION_TEST_SUCCESS mips_fpu_rounding arithmetic=8 cvt_s_d=8 double_add_sub=6 double_mul=4 double_div_sqrt=8");
         else
             $display("REGRESSION_TEST_FAIL mips_fpu_rounding failures=%0d", failures);
         $finish;

@@ -413,6 +413,132 @@ module mips_fpu (
         end
     endfunction
 
+    // Compare an exact finite binary64 quotient with a candidate.  The
+    // quotient is compared by cross multiplying integer significands after
+    // aligning their binary exponents; no host floating-point status is used.
+    function automatic [1:0] compare_double_div_exact;
+        input [63:0] lhs;
+        input [63:0] rhs;
+        input [63:0] candidate;
+        reg [52:0] lhs_mant;
+        reg [52:0] rhs_mant;
+        reg [52:0] candidate_mant;
+        reg [105:0] lhs_ext;
+        reg [105:0] rhs_ext;
+        reg [105:0] candidate_ext;
+        reg [105:0] rhs_product;
+        integer lhs_exp;
+        integer rhs_exp;
+        integer quotient_exp;
+        integer candidate_exp;
+        integer common_exp;
+        integer quotient_shift;
+        integer candidate_shift;
+        reg signed [8191:0] quotient_term;
+        reg signed [8191:0] candidate_term;
+        begin
+            compare_double_div_exact = 2'b00;
+            lhs_mant = (lhs[62:52] == 0) ? {1'b0, lhs[51:0]} :
+                       {1'b1, lhs[51:0]};
+            rhs_mant = (rhs[62:52] == 0) ? {1'b0, rhs[51:0]} :
+                       {1'b1, rhs[51:0]};
+            lhs_exp = (lhs[62:52] == 0) ? -1074 : lhs[62:52] - 1023 - 52;
+            rhs_exp = (rhs[62:52] == 0) ? -1074 : rhs[62:52] - 1023 - 52;
+            lhs_ext = 106'd0;
+            rhs_ext = 106'd0;
+            lhs_ext[52:0] = lhs_mant;
+            rhs_ext[52:0] = rhs_mant;
+
+            if (candidate[62:52] == 11'h7ff && candidate[51:0] == 0) begin
+                if (candidate[63] == (lhs[63] ^ rhs[63]))
+                    compare_double_div_exact = candidate[63] ? 2'b10 : 2'b01;
+            end else begin
+                candidate_mant = (candidate[62:52] == 0) ?
+                                 {1'b0, candidate[51:0]} :
+                                 {1'b1, candidate[51:0]};
+                candidate_exp = (candidate[62:52] == 0) ? -1074 :
+                                candidate[62:52] - 1023 - 52;
+                quotient_exp = lhs_exp - rhs_exp;
+                common_exp = (quotient_exp < candidate_exp) ?
+                             quotient_exp : candidate_exp;
+                quotient_shift = quotient_exp - common_exp;
+                candidate_shift = candidate_exp - common_exp;
+                candidate_ext = 106'd0;
+                candidate_ext[52:0] = candidate_mant;
+                rhs_product = candidate_ext * rhs_ext;
+                quotient_term = 8192'sd0;
+                candidate_term = 8192'sd0;
+                quotient_term[52:0] = lhs_mant;
+                candidate_term[105:0] = rhs_product;
+                quotient_term = quotient_term <<< quotient_shift;
+                candidate_term = candidate_term <<< candidate_shift;
+                if (lhs[63] ^ rhs[63]) quotient_term = -quotient_term;
+                if (candidate[63]) candidate_term = -candidate_term;
+                if (quotient_term < candidate_term)
+                    compare_double_div_exact = 2'b01;
+                else if (quotient_term > candidate_term)
+                    compare_double_div_exact = 2'b10;
+            end
+        end
+    endfunction
+
+    // Compare sqrt(candidate) with the exact positive square root by comparing
+    // candidate^2 directly with the finite operand.  The relation returned is
+    // exact<candidate (01), exact>candidate (10), or equal (00).
+    function automatic [1:0] compare_double_sqrt_exact;
+        input [63:0] operand;
+        input [63:0] candidate;
+        reg [52:0] operand_mant;
+        reg [52:0] candidate_mant;
+        reg [105:0] operand_ext;
+        reg [105:0] candidate_ext;
+        reg [105:0] candidate_square;
+        integer operand_exp;
+        integer candidate_exp;
+        integer square_exp;
+        integer common_exp;
+        integer operand_shift;
+        integer square_shift;
+        reg signed [8191:0] operand_term;
+        reg signed [8191:0] square_term;
+        begin
+            compare_double_sqrt_exact = 2'b00;
+            operand_mant = (operand[62:52] == 0) ? {1'b0, operand[51:0]} :
+                           {1'b1, operand[51:0]};
+            operand_exp = (operand[62:52] == 0) ? -1074 :
+                          operand[62:52] - 1023 - 52;
+            if (candidate[62:52] == 11'h7ff && candidate[51:0] == 0) begin
+                compare_double_sqrt_exact = 2'b01;
+            end else begin
+                candidate_mant = (candidate[62:52] == 0) ?
+                                 {1'b0, candidate[51:0]} :
+                                 {1'b1, candidate[51:0]};
+                candidate_exp = (candidate[62:52] == 0) ? -1074 :
+                                candidate[62:52] - 1023 - 52;
+                square_exp = candidate_exp * 2;
+                common_exp = (square_exp < operand_exp) ?
+                             square_exp : operand_exp;
+                square_shift = square_exp - common_exp;
+                operand_shift = operand_exp - common_exp;
+                operand_ext = 106'd0;
+                candidate_ext = 106'd0;
+                operand_ext[52:0] = operand_mant;
+                candidate_ext[52:0] = candidate_mant;
+                candidate_square = candidate_ext * candidate_ext;
+                operand_term = 8192'sd0;
+                square_term = 8192'sd0;
+                operand_term[52:0] = operand_mant;
+                square_term[105:0] = candidate_square;
+                operand_term = operand_term <<< operand_shift;
+                square_term = square_term <<< square_shift;
+                if (square_term > operand_term)
+                    compare_double_sqrt_exact = 2'b01;
+                else if (square_term < operand_term)
+                    compare_double_sqrt_exact = 2'b10;
+            end
+        end
+    endfunction
+
     shortreal ar, br, rr;
     real ar_real, br_real, c_real;
     real ar_double, br_double, cr_double, rr_double, exact_single,
@@ -425,6 +551,8 @@ module mips_fpu (
     reg double_exact_valid;
     reg double_exact_inexact;
     reg [1:0] double_mul_relation;
+    reg [1:0] double_div_relation;
+    reg [1:0] double_sqrt_relation;
     always @(*) begin
         ar = $bitstoshortreal(a);
         br = $bitstoshortreal(b);
@@ -453,6 +581,8 @@ module mips_fpu (
         double_exact_valid = 1'b0;
         double_exact_inexact = 1'b0;
         double_mul_relation = 2'b00;
+        double_div_relation = 2'b00;
+        double_sqrt_relation = 2'b00;
         exact_double = 0.0;
         exact_arithmetic = 0.0;
         if (fmt_double) begin
@@ -857,6 +987,57 @@ module mips_fpu (
                     2'b10: if (double_mul_relation == 2'b10)
                                result_double = double_next_up(result_double);
                     2'b11: if (double_mul_relation == 2'b01)
+                               result_double = double_next_down(result_double);
+                    default: begin end
+                endcase
+            end
+        end
+
+        if (fmt_double && !a_nan && !b_nan &&
+            a_double[62:52] != 11'h7ff && b_double[62:52] != 11'h7ff &&
+            !(b_double[62:52] == 0 && b_double[51:0] == 0) &&
+            op == OP_DIV) begin
+            double_div_relation = compare_double_div_exact(
+                a_double, b_double, result_double);
+            if (double_div_relation != 2'b00) begin
+                exception_flags[0] = 1'b1;
+                if (result_double[62:52] == 11'h7ff &&
+                    result_double[51:0] == 0)
+                    exception_flags[2] = 1'b1;
+                if (result_double[62:52] == 0)
+                    exception_flags[1] = 1'b1;
+                case (rounding_mode)
+                    2'b01: begin
+                        if (a_double[63] ^ b_double[63]) begin
+                            if (double_div_relation == 2'b10)
+                                result_double = double_next_up(result_double);
+                        end else if (double_div_relation == 2'b01) begin
+                            result_double = double_next_down(result_double);
+                        end
+                    end
+                    2'b10: if (double_div_relation == 2'b10)
+                               result_double = double_next_up(result_double);
+                    2'b11: if (double_div_relation == 2'b01)
+                               result_double = double_next_down(result_double);
+                    default: begin end
+                endcase
+            end
+        end
+
+        if (fmt_double && !a_nan && !a_double[63] &&
+            a_double[62:52] != 11'h7ff && op == OP_SQRT) begin
+            double_sqrt_relation = compare_double_sqrt_exact(
+                a_double, result_double);
+            if (double_sqrt_relation != 2'b00) begin
+                exception_flags[0] = 1'b1;
+                if (result_double[62:52] == 0)
+                    exception_flags[1] = 1'b1;
+                case (rounding_mode)
+                    2'b01: if (double_sqrt_relation == 2'b01)
+                               result_double = double_next_down(result_double);
+                    2'b10: if (double_sqrt_relation == 2'b10)
+                               result_double = double_next_up(result_double);
+                    2'b11: if (double_sqrt_relation == 2'b01)
                                result_double = double_next_down(result_double);
                     default: begin end
                 endcase
