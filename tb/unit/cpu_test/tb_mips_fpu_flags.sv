@@ -52,6 +52,117 @@ module tb_mips_fpu_flags;
         b_double = 64'h3fe0000000000000;
         check_flags(5'b00010, "double_subnormal_underflow");
 
+        // Arithmetic distinguishes legacy-MIPS quiet and signaling NaNs.
+        // Quiet payloads propagate without Invalid; signaling operands use
+        // the architectural default NaN and set Invalid.
+        fmt_double = 1'b0;
+        op = 5'd0; // ADD.S
+        a = 32'h7fa00001;
+        b = 32'h3f800000;
+        #1;
+        if (result !== 32'h7fa00001 || exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL single quiet NaN add result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+        a = 32'h7fc00001;
+        #1;
+        if (result !== 32'h7fbfffff || exception_flags !== 5'b10000) begin
+            $display("FPU_FLAGS_FAIL single signaling NaN add result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+        op = OP_DIV;
+        a = 32'h7fa00001;
+        b = 32'h00000000;
+        #1;
+        if (result !== 32'h7fa00001 || exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL single NaN divide-zero result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+        op = 5'd16; // CVT.D.S
+        a = 32'h7fa12345;
+        #1;
+        if (result_double !== 64'h7ff42468a0000000 ||
+            exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL single quiet NaN conversion result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        a = 32'h7fc12345;
+        #1;
+        if (result_double !== 64'h7ff7ffffffffffff ||
+            exception_flags !== 5'b10000) begin
+            $display("FPU_FLAGS_FAIL single signaling NaN conversion result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+
+        fmt_double = 1'b1;
+        op = 5'd0; // ADD.D
+        a_double = 64'h7ff4000000000001;
+        b_double = 64'h3ff0000000000000;
+        #1;
+        if (result_double !== 64'h7ff4000000000001 ||
+            exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL double quiet NaN add result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        a_double = 64'h7ff8000000000001;
+        #1;
+        if (result_double !== 64'h7ff7ffffffffffff ||
+            exception_flags !== 5'b10000) begin
+            $display("FPU_FLAGS_FAIL double signaling NaN add result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        op = OP_DIV;
+        a_double = 64'h7ff4000000000001;
+        b_double = 64'h0000000000000000;
+        #1;
+        if (result_double !== 64'h7ff4000000000001 ||
+            exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL double NaN divide-zero result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        op = 5'd15; // CVT.S.D
+        a_double = 64'h7ff4000000000001;
+        #1;
+        if (result !== 32'h7fa00000 || exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL double quiet NaN conversion result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+        a_double = 64'h7ff8000000000001;
+        #1;
+        if (result !== 32'h7fbfffff || exception_flags !== 5'b10000) begin
+            $display("FPU_FLAGS_FAIL double signaling NaN conversion result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+        op = 5'd25; // MADD.D, quiet NaN addend
+        a_double = 64'h3ff0000000000000;
+        b_double = 64'h3ff0000000000000;
+        c_double = 64'h7ff4000000000001;
+        #1;
+        if (result_double !== 64'h7ff4000000000001 ||
+            exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL double quiet NaN FMA result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        c_double = 64'h7ff8000000000001;
+        #1;
+        if (result_double !== 64'h7ff7ffffffffffff ||
+            exception_flags !== 5'b10000) begin
+            $display("FPU_FLAGS_FAIL double signaling NaN FMA result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+
         // FCSR.FS flushes arithmetic subnormal outputs to signed zero while
         // leaving the five MIPS exception flags clear.  Bitwise moves still
         // preserve the subnormal payload.

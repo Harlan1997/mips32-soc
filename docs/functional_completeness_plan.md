@@ -1,5 +1,18 @@
 # SoC 功能完整性计划
 
+### 2026-11-09 Legacy-MIPS NaN arithmetic and conversion slice
+
+The opt-in FPU now distinguishes the pre-NAN2008 MIPS signaling-NaN encoding
+(fraction MSB set) from quiet NaNs in both precision paths. Quiet NaNs used by
+arithmetic, reciprocal/square-root and fused operations propagate the first
+used payload without setting Invalid; signaling NaNs and invalid finite
+combinations return the MIPS default NaN and set Invalid. `CVT.D.S` and
+`CVT.S.D` preserve quiet payload information and canonicalize signaling inputs.
+Focused primitive vectors, real CPU `fpu-single-gate`/`fpu-double-gate`, and
+strict QEMU system retire differentials pass (`1435` single records and `451`
+double records). Complete IEEE-754/NAN2008 behavior, full range/tininess
+policy, precise FPE delivery, and Linux FPU ABI/context semantics remain open.
+
 ### 2026-11-09 FCSR.FS output flush-to-zero closure slice
 
 The opt-in FPU now consumes FCSR bit 24 (`FS`). For arithmetic and conversion
