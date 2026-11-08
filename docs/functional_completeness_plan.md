@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-11-09 LL/SC word-alignment fault-policy closure
+
+The MEM stage now applies the MIPS word-alignment rule to `mem_op=3'b111`,
+which is shared by `LL` and `SC`. Misaligned LL reports AdEL and suppresses
+the data request; misaligned SC reports AdES and suppresses the write. A
+focused VCS regression covers both aligned and misaligned cases plus an
+unaligned LWL control, and the existing randomized MEM scoreboard passes all
+2,009 transactions after its reference predicate was updated. This closes the
+alignment and request-suppression slice only; cross-page LL/SC ordering, SMP
+atomicity and reservation policy remain open.
+
 ### 2026-11-09 ID-stage LL/SC and COP1X indexed-source hazard closure
 
 `mips_id_stage` now classifies the `SC` conditional store value, the COP1X

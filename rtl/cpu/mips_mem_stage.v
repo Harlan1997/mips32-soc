@@ -224,7 +224,12 @@ module mips_mem_stage (
     
     // Alignment Exception Checking
     wire bad_align_h = (mem_op == 3'b010 || mem_op == 3'b011) && (addr_align[0] != 1'b0);
-    wire bad_align_w = (mem_op == 3'b100) && (addr_align != 2'b00);
+    // LL and SC use the word datapath encoding 3'b111 and retain the
+    // architectural word-alignment requirement of LW/SW.  Let the read/write
+    // qualifier below classify the same predicate as AdEL for LL and AdES for
+    // SC.
+    wire bad_align_w = ((mem_op == 3'b100) || (mem_op == 3'b111)) &&
+                       (addr_align != 2'b00);
     
     wire bad_align = bad_align_h | bad_align_w;
     

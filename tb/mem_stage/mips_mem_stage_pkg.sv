@@ -294,8 +294,10 @@ package mips_mem_stage_pkg;
                 endcase
             end
 
-            exp_adel = tr.mem_read & ((tr.mem_op inside {3'b010, 3'b011} & align[0]) | (tr.mem_op == 3'b100 & align != 2'b00));
-            exp_ades = tr.mem_write & ((tr.mem_op inside {3'b010, 3'b011} & align[0]) | (tr.mem_op == 3'b100 & align != 2'b00));
+            exp_adel = tr.mem_read & ((tr.mem_op inside {3'b010, 3'b011} & align[0]) |
+                                      (tr.mem_op inside {3'b100, 3'b111} & align != 2'b00));
+            exp_ades = tr.mem_write & ((tr.mem_op inside {3'b010, 3'b011} & align[0]) |
+                                       (tr.mem_op inside {3'b100, 3'b111} & align != 2'b00));
             exp_dmem_en = (tr.mem_read | tr.mem_write) & !exp_adel & !exp_ades &
                           !tr.translation_fault & !tr.mem_done;
 

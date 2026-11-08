@@ -314,7 +314,7 @@ linux-image-identity-test:
 .PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate perf-benchmark-baseline-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
-.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate mmu-page-frame-allocator-gate mips-id-stage-llsc-hazard-gate
+.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate mmu-page-frame-allocator-gate mips-id-stage-llsc-hazard-gate mips-mem-stage-llsc-alignment-gate
 .PHONY: mem-stage-gate
 .PHONY: formal-static-audit
 .PHONY: formal-bind-compile-gate
@@ -1372,6 +1372,11 @@ mips-id-stage-llsc-hazard-gate:
 	chmod +x tb/unit/cpu_test/run_mips_id_stage_llsc_hazard.sh
 	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_id_stage_llsc_hazard \
 		tb/unit/cpu_test/run_mips_id_stage_llsc_hazard.sh
+
+mips-mem-stage-llsc-alignment-gate:
+	chmod +x tb/unit/cpu_test/run_mips_mem_stage_llsc_alignment.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/mips_mem_stage_llsc_alignment \
+		tb/unit/cpu_test/run_mips_mem_stage_llsc_alignment.sh
 
 cpu-mmu-complete:
 	RUN_ROOT=$(BUILD_DIR)/cpu_mmu_complete tb/soc_test/run_cpu_mmu_complete.sh
