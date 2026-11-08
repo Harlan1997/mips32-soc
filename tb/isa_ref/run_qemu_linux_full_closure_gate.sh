@@ -75,8 +75,10 @@ QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-rtl-cp0-identity=on,linux-gue
 HOST_TIMEOUT=${HOST_TIMEOUT:-6h}
 QEMU_MARKER_WATCHDOG_SECONDS=${QEMU_MARKER_WATCHDOG_SECONDS:-21600}
 QEMU_TERMINAL_DRAIN_SECONDS=${QEMU_TERMINAL_DRAIN_SECONDS:-1}
-# The RTL terminal marker is followed by two retirements before tb_mips_soc
-# completes its terminal stop; QEMU must drain the same boundary.
+# QEMU observes the terminal marker before its producer-local shutdown tail.
+# Forty-two retirements retain the scheduled UART boundary while matching the
+# RTL stream after the comparator's reviewed alignment records are accounted
+# for.
 QEMU_TERMINAL_DRAIN_RECORDS=${QEMU_TERMINAL_DRAIN_RECORDS:-42}
 RTL_WATCHDOG_CYCLES=${RTL_WATCHDOG_CYCLES:-1000000000}
 LINUX_VCS_EXTRA_ARGS=${LINUX_VCS_EXTRA_ARGS:-}

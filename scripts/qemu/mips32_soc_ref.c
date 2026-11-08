@@ -1812,11 +1812,15 @@ static bool soc_ref_uart_take_apb_sample(MIPS32SocRefState *s,
         s->uart_apb_schedule_diagnostic_bypassed) {
         return false;
     }
-    /* Shutdown is asynchronous after the terminal UART marker. */
-    if (s->terminal_marker_seen) {
-        return false;
-    }
+    /* The terminal marker is detected on CR, but the guest still writes the
+     * trailing LF. Once the marker has been observed, the configured drain may
+     * still contain retirements that touch UART.  Validate any remaining
+     * scheduled transfer, then let later shutdown traffic bypass the replay
+     * schedule instead of treating it as an RTL mismatch. */
     if (s->uart_apb_schedule_index >= s->uart_apb_schedule->len) {
+        if (s->terminal_marker_seen) {
+            return false;
+        }
         error_report("UART APB schedule exhausted at retire=%" PRIu64
                      " access=%c%08" PRIx32,
                      s->retire_count, write ? 'W' : 'R', address);
@@ -1877,6 +1881,30 @@ static bool soc_ref_uart_take_apb_sample(MIPS32SocRefState *s,
     ++s->uart_apb_schedule_index;
     *sample = expected;
     return true;
+}
+
+static void soc_ref_uart_consume_terminal_lf_schedule(
+    MIPS32SocRefState *s)
+{
+    MIPS32SocRefUartApbSample expected;
+
+    /* The RTL UART emits CRLF for the marker, while the reference model
+     * stops at CR to keep the retire stream aligned. Consume the final LF
+     * schedule item at that same boundary so shutdown does not leave one
+     * otherwise-valid APB transfer behind. */
+    if (!s || !s->uart_apb_schedule ||
+        s->uart_apb_schedule_diagnostic_bypassed ||
+        s->uart_apb_schedule_index >= s->uart_apb_schedule->len) {
+        return;
+    }
+    expected = g_array_index(s->uart_apb_schedule,
+                             MIPS32SocRefUartApbSample,
+                             s->uart_apb_schedule_index);
+    if (s->uart_apb_schedule_index + 1 == s->uart_apb_schedule->len &&
+        expected.write && expected.address == SOC_UART_APB_BASE &&
+        expected.data == '\n') {
+        ++s->uart_apb_schedule_index;
+    }
 }
 
 static void soc_ref_uart_check_apb_read(MIPS32SocRefState *s,
@@ -2086,6 +2114,7 @@ static bool soc_ref_uart_observe_terminal_marker(MIPS32SocRefState *s,
      * post-marker retire window. */
     if (byte == '\r' &&
         s->terminal_marker_progress == sizeof(marker) - 3) {
+        soc_ref_uart_consume_terminal_lf_schedule(s);
         s->terminal_marker_seen = true;
         return true;
     }
