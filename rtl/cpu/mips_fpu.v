@@ -720,7 +720,8 @@ module mips_fpu (
     real ar_real, br_real, c_real;
     real ar_double, br_double, cr_double, rr_double, exact_single,
          exact_double, exact_arithmetic;
-    reg a_nan, b_nan, a_snan, b_snan, unordered;
+    reg a_nan, b_nan, c_nan, a_snan, b_snan, unordered;
+    reg fma_product_inf, fma_add_inf, fma_product_sign, fma_add_sign;
     reg single_bits_override_valid, double_bits_override_valid;
     reg [31:0] single_bits_override;
     reg [63:0] double_bits_override;
@@ -749,9 +750,14 @@ module mips_fpu (
         exception_flags = 5'd0;
         a_nan = 1'b0;
         b_nan = 1'b0;
+        c_nan = 1'b0;
         a_snan = 1'b0;
         b_snan = 1'b0;
         unordered = 1'b0;
+        fma_product_inf = 1'b0;
+        fma_add_inf = 1'b0;
+        fma_product_sign = 1'b0;
+        fma_add_sign = 1'b0;
         single_bits_override_valid = 1'b0;
         double_bits_override_valid = 1'b0;
         single_bits_override = 32'd0;
@@ -769,6 +775,7 @@ module mips_fpu (
         if (fmt_double) begin
             a_nan = (a_double[62:52] == 11'h7ff && a_double[51:0] != 0);
             b_nan = (b_double[62:52] == 11'h7ff && b_double[51:0] != 0);
+            c_nan = (c_double[62:52] == 11'h7ff && c_double[51:0] != 0);
             // 24Kf uses the pre-NAN2008 MIPS encoding: fraction MSB one
             // denotes signaling NaN, while zero denotes quiet NaN.
             a_snan = a_nan && a_double[51];
@@ -777,9 +784,29 @@ module mips_fpu (
             // MOV/ABS/NEG are bitwise operations.  A NaN operand is not an
             // invalid arithmetic operation for these instructions; preserve
             // the payload without changing FCSR sticky Invalid.
-            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG &&
+            if ((unordered || ((op == OP_MADD || op == OP_MSUB ||
+                                op == OP_NMADD || op == OP_NMSUB) && c_nan)) &&
+                op != OP_ABS && op != OP_MOV && op != OP_NEG &&
                 (op != OP_CMP || a_snan || b_snan || compare_condition[3]))
                 exception_flags[4] = 1'b1;
+            if (op == OP_MADD || op == OP_MSUB ||
+                op == OP_NMADD || op == OP_NMSUB) begin
+                fma_product_inf =
+                    ((a_double[62:52] == 11'h7ff) && (a_double[51:0] == 0) &&
+                     !((b_double[62:52] == 0) && (b_double[51:0] == 0))) ||
+                    ((b_double[62:52] == 11'h7ff) && (b_double[51:0] == 0) &&
+                     !((a_double[62:52] == 0) && (a_double[51:0] == 0)));
+                fma_add_inf = (c_double[62:52] == 11'h7ff) &&
+                              (c_double[51:0] == 0);
+                fma_product_sign = a_double[63] ^ b_double[63];
+                fma_add_sign = c_double[63];
+                if (op == OP_MSUB || op == OP_NMSUB)
+                    fma_add_sign = !fma_add_sign;
+                if (op == OP_NMADD || op == OP_NMSUB) begin
+                    fma_product_sign = !fma_product_sign;
+                    fma_add_sign = !fma_add_sign;
+                end
+            end
             if (op == OP_DIV && b_double[62:52] == 0 &&
                 b_double[51:0] == 0) begin
                 if ((a_double[62:52] == 0 && a_double[51:0] == 0) ||
@@ -942,6 +969,7 @@ module mips_fpu (
         end else begin
             a_nan = (a[30:23] == 8'hff && a[22:0] != 0);
             b_nan = (b[30:23] == 8'hff && b[22:0] != 0);
+            c_nan = (c[30:23] == 8'hff && c[22:0] != 0);
             // Legacy MIPS NaN encoding is opposite the IEEE-754 quiet-bit
             // convention used by the raw bit pattern.
             a_snan = a_nan && a[22];
@@ -949,7 +977,9 @@ module mips_fpu (
             unordered = a_nan || b_nan;
             // The sign/move operations above are non-arithmetic and must not
             // raise Invalid merely because their operand is a NaN.
-            if (unordered && op != OP_ABS && op != OP_MOV && op != OP_NEG &&
+            if ((unordered || ((op == OP_MADD || op == OP_MSUB ||
+                                op == OP_NMADD || op == OP_NMSUB) && c_nan)) &&
+                op != OP_ABS && op != OP_MOV && op != OP_NEG &&
                 (op != OP_CMP || a_snan || b_snan || compare_condition[3]))
                 exception_flags[4] = 1'b1;
             if (op == OP_DIV && b[30:23] == 0 && b[22:0] == 0) begin
@@ -1242,11 +1272,41 @@ module mips_fpu (
             double_fma_valid = 1'b1;
         end
 
+        // Fused operations with non-finite operands are handled from their
+        // architectural signs. This avoids inheriting simulator-specific NaN
+        // payloads and prevents an infinity operand from being misclassified
+        // as an overflow of a finite operation.
+        if (fmt_double &&
+            (op == OP_MADD || op == OP_MSUB ||
+             op == OP_NMADD || op == OP_NMSUB) &&
+            (a_nan || b_nan || c_nan ||
+             (fma_product_inf &&
+              (((a_double[62:52] == 0) && (a_double[51:0] == 0)) ||
+               ((b_double[62:52] == 0) && (b_double[51:0] == 0)) )) ||
+             (fma_product_inf && fma_add_inf &&
+              (fma_product_sign != fma_add_sign)))) begin
+            exception_flags[4] = 1'b1;
+            double_bits_override_valid = 1'b1;
+            double_bits_override = 64'h7ff7_ffff_ffff_ffff;
+        end else if (fmt_double &&
+                     (op == OP_MADD || op == OP_MSUB ||
+                      op == OP_NMADD || op == OP_NMSUB) &&
+                     !a_nan && !b_nan && !c_nan &&
+                     (fma_product_inf || fma_add_inf)) begin
+            double_bits_override_valid = 1'b1;
+            if (fma_product_inf)
+                double_bits_override = {fma_product_sign, 11'h7ff, 52'd0};
+            else
+                double_bits_override = {fma_add_sign, 11'h7ff, 52'd0};
+        end
+
         // Arithmetic uses the exact real intermediate and then applies the
         // target-format rounding selected by FCSR.RM. Invalid and divide by
         // zero cases keep their NaN/Inf result and are excluded here.
         if (!fmt_double && !exception_flags[4] && !exception_flags[3] &&
-            a[30:23] != 8'hff &&
+            a[30:23] != 8'hff && b[30:23] != 8'hff &&
+            ((op != OP_MADD && op != OP_MSUB && op != OP_NMADD &&
+              op != OP_NMSUB) || c[30:23] != 8'hff) &&
             ((op == OP_SQRT) || (b[30:23] != 8'hff)) &&
             ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
              (op == OP_DIV) || (op == OP_SQRT) || (op == OP_MADD) ||
@@ -1367,6 +1427,9 @@ module mips_fpu (
         end
         if (fmt_double && result_double[62:52] == 11'h7ff &&
             result_double[51:0] == 0 && a_double[62:52] != 11'h7ff &&
+            b_double[62:52] != 11'h7ff &&
+            ((op != OP_MADD && op != OP_MSUB && op != OP_NMADD &&
+              op != OP_NMSUB) || c_double[62:52] != 11'h7ff) &&
             ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
              (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) ||
              (op == OP_NMADD) || (op == OP_NMSUB)) &&

@@ -14,7 +14,10 @@ the real CPU gates `fpu-single-gate`, `fpu-double-gate`, and
 This closes the tested single-destination, finite ADD.D/SUB.D/MUL.D/DIV.D/
 SQRT.D, and four finite binary64 fused directed-rounding vectors. The fused
 path now uses an exact integer significand accumulator for those finite
-operations. NaN/Inf combinations, complete IEEE-754 arithmetic,
+operations. Five directed special-value vectors now cover FMA zero-times-
+infinity, opposite-sign infinity cancellation, infinity propagation/sign, and
+NaN addends with the architectural default NaN. Broader NaN/Inf combinations,
+complete IEEE-754 arithmetic,
 range/tininess policy, broader randomized coverage, FPE delivery and Linux
 FPU ABI remain open.
 
