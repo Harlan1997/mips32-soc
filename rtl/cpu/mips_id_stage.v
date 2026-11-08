@@ -317,11 +317,19 @@ module mips_id_stage (
                              (func == 6'b000000 || func == 6'b000001 ||
                               func == 6'b000010 || func == 6'b000100 ||
                               func == 6'b000101);
-    // LWL/LWR merge the fetched word with the prior value of rt, while
-    // SWL/SWR use rt as store data.  All four consume rt and must participate
-    // in load-use hazard detection.
+    // COP1X indexed memory operations and PREFX form an address from GPR
+    // rs+rt.  The arithmetic COP1X forms use those fields as FPR selectors,
+    // so only the indexed-memory encodings consume the integer rt source.
+    wire cop1x_indexed_reads_rt = (opcode == 6'b010011) &&
+                                  (func == 6'h00 || func == 6'h01 ||
+                                   func == 6'h08 || func == 6'h09 ||
+                                   func == 6'h0f);
+    // LWL/LWR merge the fetched word with the prior value of rt, SWL/SWR use
+    // rt as store data, and SC uses rt as the conditional store value.  Each
+    // instruction consumes rt and must participate in load-use hazard
+    // detection.
     wire reads_rt = (opcode == 6'b000000) ? (func != 6'b001000 && func != 6'b001001 && func != 6'b010000 && func != 6'b010001 && func != 6'b010010 && func != 6'b010011) :
-                    (special2_reads_rt || opcode == 6'b100010 || opcode == 6'b100110 || opcode == 6'b101011 || opcode == 6'b101010 || opcode == 6'b101110 || opcode == 6'b111001 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101 ||
+                    (special2_reads_rt || cop1x_indexed_reads_rt || opcode == 6'b100010 || opcode == 6'b100110 || opcode == 6'b101011 || opcode == 6'b101010 || opcode == 6'b101110 || opcode == 6'b111000 || opcode == 6'b111001 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101 ||
                      ((opcode == 6'b011111) && (func == 6'b000100 || func == 6'b100000)) ||
                      (opcode == 6'b010000 && inst[25:21] == 5'b00100));
 

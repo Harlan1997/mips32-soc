@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-11-09 ID-stage LL/SC and COP1X indexed-source hazard closure
+
+`mips_id_stage` now classifies the `SC` conditional store value and the
+COP1X indexed-memory/`PREFX` integer index in `reads_rt`. A load or an
+admitted nonblocking result for that register therefore stalls the consumer;
+COP1X fused arithmetic remains classified as FPR-selector traffic and does
+not receive an unnecessary integer hazard. The focused VCS gate
+`mips-id-stage-llsc-hazard-gate` passes all positive and negative cases, and
+`isa-implementation-audit` reports 20 well-formed matrix rows. This is a
+pipeline source-hazard slice and does not close full LL/SC ordering, COP1/FPU
+semantics, or the Linux ABI.
+
 ### 2026-09-06 System-mode RTL/QEMU retire lockstep entry point
 
 将原来仅作为 QEMU reference alias 的 `cpu-lockstep-gate` 改为真实的
