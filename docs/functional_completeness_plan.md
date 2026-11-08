@@ -8,13 +8,14 @@ also routes finite binary64 ADD.D, SUB.D, MUL.D, DIV.D and SQRT.D through
 exact integer significand comparison/rounding logic, preserving the low bits
 needed for directed rounding at halfway boundaries. The focused VCS gate
 reports
-`REGRESSION_TEST_SUCCESS mips_fpu_rounding arithmetic=8 cvt_s_d=8 double_add_sub=6 double_mul=4 double_div_sqrt=8`;
+`REGRESSION_TEST_SUCCESS mips_fpu_rounding arithmetic=8 cvt_s_d=8 double_add_sub=6 double_mul=4 double_div_sqrt=8 double_fma=4`;
 the real CPU gates `fpu-single-gate`, `fpu-double-gate`, and
 `fpu-rounding-gate`, plus the current-source QEMU rounding differential, pass.
-This closes the tested single-destination and finite ADD.D/SUB.D/MUL.D/DIV.D/
-SQRT.D rounding slices only. Double fused arithmetic still uses the host
-binary64 intermediate and does not yet provide exact FCSR.RM-directed rounding;
-complete IEEE-754 arithmetic, range/tininess policy, FPE delivery and Linux
+This closes the tested single-destination, finite ADD.D/SUB.D/MUL.D/DIV.D/
+SQRT.D, and four finite binary64 fused directed-rounding vectors. The fused
+path now uses an exact integer significand accumulator for those finite
+operations. NaN/Inf combinations, complete IEEE-754 arithmetic,
+range/tininess policy, broader randomized coverage, FPE delivery and Linux
 FPU ABI remain open.
 
 ### 2026-11-09 LL/SC word-alignment fault-policy closure

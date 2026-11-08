@@ -6,6 +6,10 @@ module tb_mips_fpu_rounding;
     localparam OP_MUL = 5'd2;
     localparam OP_DIV = 5'd3;
     localparam OP_SQRT = 5'd4;
+    localparam OP_MADD = 5'd25;
+    localparam OP_MSUB = 5'd26;
+    localparam OP_NMADD = 5'd27;
+    localparam OP_NMSUB = 5'd28;
     localparam OP_CVT_S_D = 5'd15;
     localparam OP_CVT_W_D = 5'd18;
 
@@ -228,6 +232,33 @@ module tb_mips_fpu_rounding;
         end
     endtask
 
+    task automatic check_double_fma;
+        input [4:0] fma_op;
+        input [1:0] mode;
+        input [63:0] lhs;
+        input [63:0] rhs;
+        input [63:0] addend;
+        input [63:0] expected;
+        input [127:0] name;
+        begin
+            op = fma_op;
+            a = 32'd0;
+            b = 32'd0;
+            c = 32'd0;
+            fmt_double = 1'b1;
+            rounding_mode = mode;
+            a_double = lhs;
+            b_double = rhs;
+            c_double = addend;
+            #1;
+            if (result_double !== expected || exception_flags[0] !== 1'b1) begin
+                $display("FPU_DOUBLE_FMA_ROUND_FAIL %0s got=%016h flags=%02h expected=%016h",
+                         name, result_double, exception_flags, expected);
+                failures = failures + 1;
+            end
+        end
+    endtask
+
     initial begin
         failures = 0;
         compare_condition = 4'd0;
@@ -327,9 +358,21 @@ module tb_mips_fpu_rounding;
                           64'h3ff6a09e667f3bcd, "sqrt_d_toward_plus_inf");
         check_double_sqrt(2'b11, 64'h4000000000000000,
                           64'h3ff6a09e667f3bcc, "sqrt_d_toward_minus_inf");
+        check_double_fma(OP_MADD, 2'b10, 64'h3ff0000000000000,
+                         64'h3ff0000000000000, 64'h3ca0000000000000,
+                         64'h3ff0000000000001, "madd_d_toward_plus_inf");
+        check_double_fma(OP_MSUB, 2'b11, 64'h3ff0000000000000,
+                         64'h3ff0000000000000, 64'h3c90000000000000,
+                         64'h3fefffffffffffff, "msub_d_toward_minus_inf");
+        check_double_fma(OP_NMADD, 2'b11, 64'h3ff0000000000000,
+                         64'h3ff0000000000000, 64'h3ca0000000000000,
+                         64'hbff0000000000001, "nmadd_d_toward_minus_inf");
+        check_double_fma(OP_NMSUB, 2'b10, 64'h3ff0000000000000,
+                         64'h3ff0000000000000, 64'h3c90000000000000,
+                         64'hbfefffffffffffff, "nmsub_d_toward_plus_inf");
 
         if (failures == 0)
-            $display("REGRESSION_TEST_SUCCESS mips_fpu_rounding arithmetic=8 cvt_s_d=8 double_add_sub=6 double_mul=4 double_div_sqrt=8");
+            $display("REGRESSION_TEST_SUCCESS mips_fpu_rounding arithmetic=8 cvt_s_d=8 double_add_sub=6 double_mul=4 double_div_sqrt=8 double_fma=4");
         else
             $display("REGRESSION_TEST_FAIL mips_fpu_rounding failures=%0d", failures);
         $finish;

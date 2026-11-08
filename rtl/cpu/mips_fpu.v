@@ -311,6 +311,183 @@ module mips_fpu (
         end
     endfunction
 
+    // Exact binary64 fused multiply-add/subtract.  The product and addend
+    // share the same wide signed accumulator, so the intermediate product is
+    // never rounded before the final destination rounding.
+    // Return {overflow, underflow, inexact, result_bits}.
+    function automatic [66:0] round_double_fma_exact;
+        input [63:0] lhs;
+        input [63:0] rhs;
+        input [63:0] addend;
+        input [1:0] mode;
+        input [1:0] variant; // 0=MADD, 1=MSUB, 2=NMADD, 3=NMSUB
+        reg [52:0] lhs_mant;
+        reg [52:0] rhs_mant;
+        reg [52:0] add_mant;
+        reg [105:0] lhs_ext;
+        reg [105:0] rhs_ext;
+        reg [105:0] product;
+        integer lhs_exp;
+        integer rhs_exp;
+        integer add_exp;
+        integer product_exp;
+        integer common_exp;
+        integer product_shift;
+        integer add_shift;
+        reg signed [4095:0] product_term;
+        reg signed [4095:0] add_term;
+        reg signed [4095:0] exact_sum;
+        reg [4095:0] magnitude;
+        integer i;
+        integer highest;
+        integer exact_exp;
+        integer discard_shift;
+        integer subnormal_shift;
+        reg [53:0] significand;
+        reg [4095:0] subnormal_value;
+        reg guard_bit;
+        reg sticky_bit;
+        reg discarded;
+        reg round_up;
+        reg product_sign;
+        reg add_sign;
+        reg result_sign;
+        integer packed_exp;
+        reg [10:0] exponent_field;
+        reg [63:0] packed_result;
+        reg overflow_result;
+        reg underflow_result;
+        reg inexact_result;
+        begin
+            packed_result = 64'd0;
+            overflow_result = 1'b0;
+            underflow_result = 1'b0;
+            inexact_result = 1'b0;
+            lhs_mant = (lhs[62:52] == 0) ? {1'b0, lhs[51:0]} :
+                       {1'b1, lhs[51:0]};
+            rhs_mant = (rhs[62:52] == 0) ? {1'b0, rhs[51:0]} :
+                       {1'b1, rhs[51:0]};
+            add_mant = (addend[62:52] == 0) ? {1'b0, addend[51:0]} :
+                       {1'b1, addend[51:0]};
+            lhs_exp = (lhs[62:52] == 0) ? -1074 : lhs[62:52] - 1023 - 52;
+            rhs_exp = (rhs[62:52] == 0) ? -1074 : rhs[62:52] - 1023 - 52;
+            add_exp = (addend[62:52] == 0) ? -1074 :
+                      addend[62:52] - 1023 - 52;
+            lhs_ext = 106'd0;
+            rhs_ext = 106'd0;
+            lhs_ext[52:0] = lhs_mant;
+            rhs_ext[52:0] = rhs_mant;
+            product = lhs_ext * rhs_ext;
+            product_exp = lhs_exp + rhs_exp;
+            common_exp = (product_exp < add_exp) ? product_exp : add_exp;
+            product_shift = product_exp - common_exp;
+            add_shift = add_exp - common_exp;
+            product_term = 4096'sd0;
+            add_term = 4096'sd0;
+            product_term[105:0] = product;
+            add_term[52:0] = add_mant;
+            product_term = product_term <<< product_shift;
+            add_term = add_term <<< add_shift;
+            product_sign = lhs[63] ^ rhs[63];
+            add_sign = addend[63];
+            if (variant == 2 || variant == 3) begin
+                product_sign = !product_sign;
+                add_sign = !add_sign;
+            end
+            if (variant == 1 || variant == 3)
+                add_sign = !add_sign;
+            if (product_sign) product_term = -product_term;
+            if (add_sign) add_term = -add_term;
+            exact_sum = product_term + add_term;
+
+            if (exact_sum == 0) begin
+                packed_result = {(mode == 2'b11), 63'd0};
+            end else begin
+                result_sign = (exact_sum < 0);
+                magnitude = result_sign ? -exact_sum : exact_sum;
+                highest = -1;
+                for (i = 4095; i >= 0; i = i - 1)
+                    if (highest == -1 && magnitude[i]) highest = i;
+                exact_exp = common_exp + highest;
+                if (exact_exp >= -1022) begin
+                    discard_shift = highest - 52;
+                    significand = 54'd0;
+                    guard_bit = 1'b0;
+                    sticky_bit = 1'b0;
+                    if (discard_shift > 0) begin
+                        significand = magnitude >> discard_shift;
+                        guard_bit = magnitude[discard_shift - 1];
+                        for (i = 0; i < discard_shift - 1; i = i + 1)
+                            if (magnitude[i]) sticky_bit = 1'b1;
+                    end else begin
+                        significand = magnitude << (-discard_shift);
+                    end
+                    discarded = guard_bit | sticky_bit;
+                    case (mode)
+                        2'b01: round_up = 1'b0;
+                        2'b10: round_up = !result_sign && discarded;
+                        2'b11: round_up = result_sign && discarded;
+                        default: round_up = guard_bit &&
+                                             (sticky_bit || significand[0]);
+                    endcase
+                    if (round_up) significand = significand + 1'b1;
+                    packed_exp = exact_exp;
+                    if (significand[53]) begin
+                        significand = significand >> 1;
+                        packed_exp = packed_exp + 1;
+                    end
+                    if (packed_exp > 1023) begin
+                        overflow_result = 1'b1;
+                        inexact_result = 1'b1;
+                        if (mode == 2'b00 ||
+                            (mode == 2'b10 && !result_sign) ||
+                            (mode == 2'b11 && result_sign))
+                            packed_result = {result_sign, 11'h7ff, 52'd0};
+                        else
+                            packed_result = {result_sign, 11'h7fe, 52'hf_ffff_ffff_ffff};
+                    end else begin
+                        inexact_result = discarded;
+                        exponent_field = packed_exp + 1023;
+                        packed_result = {result_sign, exponent_field,
+                                         significand[51:0]};
+                    end
+                end else begin
+                    subnormal_shift = common_exp + 1074;
+                    subnormal_value = 4096'd0;
+                    guard_bit = 1'b0;
+                    sticky_bit = 1'b0;
+                    if (subnormal_shift >= 0) begin
+                        subnormal_value = magnitude << subnormal_shift;
+                    end else begin
+                        subnormal_shift = -subnormal_shift;
+                        subnormal_value = magnitude >> subnormal_shift;
+                        guard_bit = magnitude[subnormal_shift - 1];
+                        for (i = 0; i < subnormal_shift - 1; i = i + 1)
+                            if (magnitude[i]) sticky_bit = 1'b1;
+                    end
+                    discarded = guard_bit | sticky_bit;
+                    case (mode)
+                        2'b01: round_up = 1'b0;
+                        2'b10: round_up = !result_sign && discarded;
+                        2'b11: round_up = result_sign && discarded;
+                        default: round_up = guard_bit &&
+                                             (sticky_bit || subnormal_value[0]);
+                    endcase
+                    if (round_up) subnormal_value = subnormal_value + 1'b1;
+                    inexact_result = discarded;
+                    underflow_result = (subnormal_value != 0);
+                    if (subnormal_value[52])
+                        packed_result = {result_sign, 11'd1, 52'd0};
+                    else
+                        packed_result = {result_sign, 11'd0,
+                                         subnormal_value[51:0]};
+                end
+            end
+            round_double_fma_exact = {overflow_result, underflow_result,
+                                      inexact_result, packed_result};
+        end
+    endfunction
+
     function automatic [63:0] double_next_up;
         input [63:0] bits;
         begin
@@ -553,6 +730,8 @@ module mips_fpu (
     reg [1:0] double_mul_relation;
     reg [1:0] double_div_relation;
     reg [1:0] double_sqrt_relation;
+    reg [66:0] double_fma_pack;
+    reg double_fma_valid;
     always @(*) begin
         ar = $bitstoshortreal(a);
         br = $bitstoshortreal(b);
@@ -583,6 +762,8 @@ module mips_fpu (
         double_mul_relation = 2'b00;
         double_div_relation = 2'b00;
         double_sqrt_relation = 2'b00;
+        double_fma_pack = 67'd0;
+        double_fma_valid = 1'b0;
         exact_double = 0.0;
         exact_arithmetic = 0.0;
         if (fmt_double) begin
@@ -1042,6 +1223,23 @@ module mips_fpu (
                     default: begin end
                 endcase
             end
+        end
+
+        if (fmt_double && !a_nan && !b_nan &&
+            a_double[62:52] != 11'h7ff && b_double[62:52] != 11'h7ff &&
+            c_double[62:52] != 11'h7ff &&
+            (op == OP_MADD || op == OP_MSUB ||
+             op == OP_NMADD || op == OP_NMSUB)) begin
+            double_fma_pack = round_double_fma_exact(
+                a_double, b_double, c_double, rounding_mode,
+                (op == OP_MADD) ? 2'd0 :
+                (op == OP_MSUB) ? 2'd1 :
+                (op == OP_NMADD) ? 2'd2 : 2'd3);
+            result_double = double_fma_pack[63:0];
+            exception_flags[2] = double_fma_pack[66];
+            exception_flags[1] = double_fma_pack[65];
+            exception_flags[0] = double_fma_pack[64];
+            double_fma_valid = 1'b1;
         end
 
         // Arithmetic uses the exact real intermediate and then applies the
