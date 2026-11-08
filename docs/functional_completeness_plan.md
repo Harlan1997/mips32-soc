@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-11-09 MMU OS-pressure aggregate revalidation
+
+The current-source `mmu-os-pressure-complete-gate` passes with explicit QEMU
+9.2 paths. Its four system differentials cover software-managed 4KB refill,
+PageMask 4KB/16KB/64KB/256KB programming, ASID-specific eight-task pressure,
+wired-entry retention, dynamic shootdown acknowledgement, root/ASID lease
+reuse and post-shootdown refill. The compared retire streams contain 5,776,
+276, 559 and 7,488 records. This is a bounded single-core MMU contract;
+Linux VM/page-table allocator policy, multicore IPI ownership, larger page
+sizes and complete privileged/MMU compliance remain open.
+
 ### 2026-11-09 FPU single and selected double directed-rounding slice
 
 The opt-in FPU primitive now applies FCSR.RM to single-precision ADD, SUB,
