@@ -8,6 +8,7 @@ module tb_mips_fpu_flags;
     reg [3:0] compare_condition;
     reg fmt_double;
     reg [1:0] rounding_mode;
+    reg flush_subnormals;
     reg [63:0] a_double, b_double, c_double;
     wire [31:0] result;
     wire compare_true;
@@ -33,6 +34,7 @@ module tb_mips_fpu_flags;
 
     initial begin
         failures = 0;
+        flush_subnormals = 1'b0;
         op = OP_DIV; a = 0; b = 0; c = 0; compare_condition = 0;
         fmt_double = 1; rounding_mode = 0;
         a_double = 64'h7ff0000000000000;
@@ -49,6 +51,49 @@ module tb_mips_fpu_flags;
         a_double = 64'h0010000000000000;
         b_double = 64'h3fe0000000000000;
         check_flags(5'b00010, "double_subnormal_underflow");
+
+        // FCSR.FS flushes arithmetic subnormal outputs to signed zero while
+        // leaving the five MIPS exception flags clear.  Bitwise moves still
+        // preserve the subnormal payload.
+        flush_subnormals = 1'b1;
+        fmt_double = 1'b0;
+        op = OP_MUL;
+        a = 32'h007fffff; // largest single subnormal
+        b = 32'h3f800000; // * 1.0
+        #1;
+        if (result !== 32'h00000000 || exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL single FS flush result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+        op = 5'd6; // MOV.S
+        #1;
+        if (result !== 32'h007fffff || exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL single FS move result=%08h flags=%02h",
+                     result, exception_flags);
+            failures = failures + 1;
+        end
+
+        fmt_double = 1'b1;
+        op = OP_MUL;
+        a_double = 64'h000fffffffffffff; // largest double subnormal
+        b_double = 64'h3ff0000000000000; // * 1.0
+        #1;
+        if (result_double !== 64'h0000000000000000 ||
+            exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL double FS flush result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        op = 5'd6; // MOV.D
+        #1;
+        if (result_double !== 64'h000fffffffffffff ||
+            exception_flags !== 5'b00000) begin
+            $display("FPU_FLAGS_FAIL double FS move result=%016h flags=%02h",
+                     result_double, exception_flags);
+            failures = failures + 1;
+        end
+        flush_subnormals = 1'b0;
 
         fmt_double = 0;
         op = OP_SUB;

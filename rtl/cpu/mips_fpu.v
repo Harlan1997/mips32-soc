@@ -13,6 +13,9 @@ module mips_fpu (
     // FCSR.RM: 00 nearest-even, 01 toward-zero, 10 toward +inf,
     // 11 toward -inf. Fixed ROUND/TRUNC/CEIL/FLOOR opcodes override it.
     input wire [1:0] rounding_mode,
+    // FCSR.FS (bit 24): flush arithmetic results that would be encoded as
+    // subnormal to a signed zero. MIPS moves remain bit-preserving.
+    input wire flush_subnormals,
     input wire [63:0] a_double, input wire [63:0] b_double,
     input wire [31:0] c, input wire [63:0] c_double,
     output reg [63:0] result_double,
@@ -1511,6 +1514,41 @@ module mips_fpu (
              ((b_double[62:52] == 11'd1) && (b_double[51:0] == 0) &&
               (a_double[62:52] < 11'h3ff)))) begin
             exception_flags[1] = 1'b1;
+        end
+
+        // MIPS FCSR.FS is an output flush mode.  QEMU's MIPS softfloat path
+        // leaves subnormal inputs intact, but converts a subnormal result from
+        // an arithmetic/conversion operation to a signed zero and reports the
+        // output-denormal condition separately from the five MIPS flags.  Do
+        // not apply this to MOV/ABS/NEG: those instructions are bitwise and
+        // must preserve subnormal payloads exactly.
+        if (flush_subnormals && !exception_flags[4] &&
+            !exception_flags[3]) begin
+            if (!fmt_double &&
+                ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
+                 (op == OP_DIV) || (op == OP_SQRT) ||
+                 (op == OP_RECIP) || (op == OP_RSQRT) ||
+                 (op == OP_MADD) || (op == OP_MSUB) ||
+                 (op == OP_NMADD) || (op == OP_NMSUB)) &&
+                result[30:23] == 0 && result[22:0] != 0) begin
+                result = {result[31], 31'd0};
+                exception_flags[1:0] = 2'b00;
+            end
+            if (fmt_double &&
+                ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
+                 (op == OP_DIV) || (op == OP_SQRT) ||
+                 (op == OP_RECIP) || (op == OP_RSQRT) ||
+                 (op == OP_MADD) || (op == OP_MSUB) ||
+                 (op == OP_NMADD) || (op == OP_NMSUB)) &&
+                result_double[62:52] == 0 && result_double[51:0] != 0) begin
+                result_double = {result_double[63], 63'd0};
+                exception_flags[1:0] = 2'b00;
+            end
+            if (fmt_double && op == OP_CVT_S_D &&
+                result[30:23] == 0 && result[22:0] != 0) begin
+                result = {result[31], 31'd0};
+                exception_flags[1:0] = 2'b00;
+            end
         end
         // Apply overrides after all host-result classification has completed.
         // This ordering is required because invalid arithmetic is discovered

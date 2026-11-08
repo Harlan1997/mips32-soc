@@ -2834,7 +2834,8 @@ RTL/QEMU Linux differential remain open.
   mips-control-fpu-cond-gate` also checks non-zero condition selectors,
   malformed reserved fields and protects the existing `MTHI` encoding.
 - FCC1..FCC7 are now decoded and stored using the architectural FCSR
-  positions `[25:31]` (FCC0 remains `[23]`, `[24]` remains reserved). The
+  positions `[25:31]` (FCC0 remains `[23]`; `[24]` is the FS
+  flush-subnormals mode). The
   controller gate covers FCC1/FCC7 and the real FPU firmware gate exercises
   compare plus `MOVT cc=3`; this extends the selected COP1 condition-code
   slice, but does not close IEEE-754 traps/rounding or full COP1 compliance.

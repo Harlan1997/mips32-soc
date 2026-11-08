@@ -62,7 +62,7 @@ main:
     nop
 
     /* Non-zero FCC coverage: C.EQ.S writes FCC3 (FCSR[27]), and MOVT
-     * consumes the same selector.  FCSR[24] remains reserved. */
+     * consumes the same selector.  FCSR[24] is the FS mode. */
     lui     $t5, 0x0000
     ctc1    $t5, $31
     nop
@@ -256,6 +256,40 @@ main:
     check_compare 15, 1
 
     /* Restore both operands for the arithmetic and memory checks below. */
+    mtc1    $t0, $f0
+    mtc1    $t1, $f2
+
+    /* FCSR.FS (bit 24) flushes a subnormal arithmetic result to signed zero,
+     * while MOV.S remains a bit-preserving operation. */
+    lui     $t4, 0x007f          /* largest positive single subnormal */
+    ori     $t4, $t4, 0xffff
+    lui     $t5, 0x3f80          /* 1.0 */
+    ori     $t5, $t5, 0x0000
+    mtc1    $t4, $f0
+    mtc1    $t5, $f2
+    lui     $t6, 0x0100          /* FCSR.FS = 1 */
+    ctc1    $t6, $31
+    nop
+    nop
+    nop
+    mul.s   $f8, $f0, $f2
+    mfc1    $t7, $f8
+    bne     $t7, $zero, fail
+    nop
+    mov.s   $f8, $f0
+    mfc1    $t7, $f8
+    bne     $t7, $t4, fail
+    nop
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+
+    /* Restore normal operands after the FS boundary check. */
+    lui     $t0, 0x3f80
+    ori     $t0, $t0, 0x0000
+    lui     $t1, 0x4000
+    ori     $t1, $t1, 0x0000
     mtc1    $t0, $f0
     mtc1    $t1, $f2
 

@@ -1,5 +1,19 @@
 # SoC 功能完整性计划
 
+### 2026-11-09 FCSR.FS output flush-to-zero closure slice
+
+The opt-in FPU now consumes FCSR bit 24 (`FS`). For arithmetic and conversion
+results, a subnormal destination is converted to a signed zero and the five
+MIPS exception flags remain clear, matching the MIPS QEMU softfloat output-
+denormal behavior. `MOV.S`, `MOV.D`, `ABS.*` and `NEG.*` remain bit-preserving;
+subnormal inputs are not flushed by this mode. Focused primitive vectors pass
+for single and double precision, and the real CPU `fpu-single-gate` and
+`fpu-double-gate` both pass. Current-source RTL/QEMU retire differentials also
+pass for the extended firmware (`TRACE_COMPARE_PASS records=1435` for single
+and `451` for double). This closes the tested FS output-mode slice; complete
+IEEE-754 tininess/range policy, broader FPU edge cases, precise FPE behavior,
+and Linux FPU ABI/context semantics remain open.
+
 ### 2026-11-09 MMU OS-pressure aggregate revalidation
 
 The current-source `mmu-os-pressure-complete-gate` passes with explicit QEMU

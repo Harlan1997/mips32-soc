@@ -27,6 +27,46 @@ main:
     ori     $t0, $t0, 0
     .word   0x44882800       /* mtc1 $t0,$f5 */
 
+    /* FCSR.FS flushes a double subnormal arithmetic result to signed zero;
+     * MOV.D still preserves both words of the subnormal payload. */
+    lui     $t0, 0xffff
+    ori     $t0, $t0, 0xffff
+    mtc1    $t0, $f6
+    lui     $t0, 0x000f
+    ori     $t0, $t0, 0xffff
+    .word   0x44883800       /* mtc1 $t0,$f7: max double subnormal */
+    mtc1    $zero, $f8
+    lui     $t0, 0x3ff0
+    ori     $t0, $t0, 0x0000
+    .word   0x44884800       /* mtc1 $t0,$f9: high word of 1.0 */
+    lui     $t0, 0x0100       /* FCSR.FS = 1 */
+    ctc1    $t0, $31
+    nop
+    nop
+    nop
+    mul.d   $f10, $f6, $f8
+    mfc1    $t2, $f10
+    bne     $t2, $zero, fail
+    nop
+    .word   0x440b5800       /* mfc1 $t3,$f11 */
+    bne     $t3, $zero, fail
+    nop
+    mov.d   $f10, $f6
+    lui     $t4, 0xffff
+    ori     $t4, $t4, 0xffff
+    mfc1    $t2, $f10
+    bne     $t2, $t4, fail
+    nop
+    .word   0x440b5800       /* mfc1 $t3,$f11 */
+    lui     $t4, 0x000f
+    ori     $t4, $t4, 0xffff
+    bne     $t3, $t4, fail
+    nop
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+
     /* COP1 MOVF/MOVT.D (funct=0x11) use FCC0 and copy an even FPR pair.
      * First clear the destination, then exercise both predicate outcomes. */
     mtc1    $zero, $f12

@@ -183,7 +183,7 @@ def gpr_destination(instr, before=None):
             return None
         return rd
     # MOVF/MOVT share SPECIAL funct=0x01.  FCC0 is FCSR[23]; FCC1..FCC7
-    # occupy FCSR[25..31] (FCSR[24] is reserved) in the MIPS32 layout.
+    # occupy FCSR[25..31]; FCSR[24] is the flush-subnormals mode.
     if op == 0x00 and funct == 0x01 and (rt & 0x2) == 0:
         cc = (rt >> 2) & 0x7
         fcsr = int(before.get("fcsr", "0"), 16)

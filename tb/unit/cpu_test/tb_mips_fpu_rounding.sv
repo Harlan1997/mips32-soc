@@ -18,6 +18,7 @@ module tb_mips_fpu_rounding;
     reg [3:0] compare_condition;
     reg fmt_double;
     reg [1:0] rounding_mode;
+    reg flush_subnormals;
     reg [63:0] a_double, b_double, c_double;
     wire [31:0] result;
     wire compare_true;
@@ -30,6 +31,7 @@ module tb_mips_fpu_rounding;
         .op(op), .a(a), .b(b), .result(result),
         .compare_true(compare_true), .compare_condition(compare_condition),
         .fmt_double(fmt_double), .rounding_mode(rounding_mode),
+        .flush_subnormals(flush_subnormals),
         .a_double(a_double), .b_double(b_double), .c(c),
         .c_double(c_double), .result_double(result_double),
         .result_word(result_word), .exception_flags(exception_flags)
@@ -286,6 +288,7 @@ module tb_mips_fpu_rounding;
 
     initial begin
         failures = 0;
+        flush_subnormals = 1'b0;
         compare_condition = 4'd0;
 
         // 1.0 + 2^-24 is exactly halfway between two single values.

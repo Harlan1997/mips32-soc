@@ -5,6 +5,7 @@ module tb_mips_fpu_recip;
     reg [31:0] a, b, c;
     reg fmt_double;
     reg [1:0] rounding_mode;
+    reg flush_subnormals;
     reg [63:0] a_double, b_double, c_double;
     wire [31:0] result;
     wire [63:0] result_double;
@@ -17,6 +18,7 @@ module tb_mips_fpu_recip;
         .op(op), .a(a), .b(b), .result(result), .compare_true(compare_true),
         .compare_condition(4'd0), .fmt_double(fmt_double),
         .rounding_mode(rounding_mode),
+        .flush_subnormals(flush_subnormals),
         .a_double(a_double), .b_double(b_double), .c(c), .c_double(c_double),
         .result_double(result_double), .result_word(result_word),
         .exception_flags(exception_flags)
@@ -82,6 +84,7 @@ module tb_mips_fpu_recip;
 
     initial begin
         failures = 0;
+        flush_subnormals = 1'b0;
         rounding_mode = 2'b00;
         check_single(5'd23, 32'h40800000, 32'h3e800000);
         check_single(5'd24, 32'h40800000, 32'h3f000000);

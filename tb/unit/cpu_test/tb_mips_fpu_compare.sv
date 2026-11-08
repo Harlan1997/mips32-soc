@@ -6,6 +6,7 @@ module tb_mips_fpu_compare;
     reg [31:0] a, b;
     reg fmt_double;
     reg [1:0] rounding_mode;
+    reg flush_subnormals;
     reg [63:0] a_double, b_double;
     wire [31:0] result;
     wire compare_true;
@@ -19,6 +20,7 @@ module tb_mips_fpu_compare;
         .op(op), .a(a), .b(b), .result(result),
         .compare_true(compare_true), .compare_condition(condition),
         .fmt_double(fmt_double), .rounding_mode(rounding_mode),
+        .flush_subnormals(flush_subnormals),
         .a_double(a_double), .b_double(b_double),
         .result_double(result_double), .result_word(result_word),
         .exception_flags(exception_flags)
@@ -82,6 +84,7 @@ module tb_mips_fpu_compare;
 
     initial begin
         failures = 0;
+        flush_subnormals = 1'b0;
         rounding_mode = 2'b00;
         op = 5'h8;
         // 1.0 < 2.0: ordered less predicates and their unordered-inclusive

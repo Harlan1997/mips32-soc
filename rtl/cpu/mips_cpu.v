@@ -942,7 +942,7 @@ module mips_cpu #(
                                (fpu_id_cop1 || fpu_id_cop1x);
     reg [31:0] fcsr;
     // FCSR condition-code layout: FCC0 is bit 23; FCC1..FCC7 are bits
-    // 25..31, with bit 24 reserved.
+    // 25..31; bit 24 is the FS flush-subnormals mode.
     wire [7:0] fpu_conditions = {fcsr[31:25], fcsr[23]};
     wire        fpu_mem_id_valid = (`SOC_FPU_ENABLE != 0) &&
                                    ((id_inst[31:26] == 6'b110001) ||
@@ -1057,8 +1057,9 @@ module mips_cpu #(
                                   (ex_fpu_load_hazard || mem_fpu_load_hazard);
     reg [31:0]  fpr [0:31];
     // FCSR condition-code layout: FCC0 is bit 23, FCC1..FCC7 are bits
-    // 25..31 (bit 24 is reserved) in this vector order.  Keep the architectural selector local to
-    // the decoder so all COP1 consumers use the same mapping.
+    // 25..31 (bit 24 is the FS mode) in this vector order. Keep the
+    // architectural selector local to the decoder so all COP1 consumers use
+    // the same mapping.
     reg [31:0]  fpu_double_low;
     integer     fpu_i;
     wire [4:0]  fpu_op = (fpu_id_cop1x &&
@@ -1128,6 +1129,7 @@ module mips_cpu #(
         .compare_condition(fpu_compare_condition),
         .fmt_double   (fpu_id_double),
         .rounding_mode(fcsr[1:0]),
+        .flush_subnormals(fcsr[24]),
         .a_double     (fpu_a_double),
         .b_double     (fpu_b_double),
         .c            (fpu_c),
