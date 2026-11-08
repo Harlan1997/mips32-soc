@@ -129,6 +129,38 @@ module tb_mips_id_stage_llsc_hazard;
             failures = failures + 1;
         end
 
+        // COP1 transfers and MOVZ/MOVN use rt as a GPR source/condition.
+        inst = {6'b010001, 5'b00100, 5'd2, 5'd3, 5'd0, 6'h00}; // MTC1
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL MTC1 load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010001, 5'b00110, 5'd2, 5'd31, 5'd0, 6'h00}; // CTC1
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL CTC1 load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010001, 5'b00111, 5'd2, 5'd3, 5'd0, 6'h00}; // MTHC1
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL MTHC1 load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010001, 5'b10000, 5'd2, 5'd3, 5'd0, 6'h12}; // MOVZ.S
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL MOVZ.S load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010001, 5'b10000, 5'd2, 5'd3, 5'd0, 6'h00}; // ADD.S
+        #1;
+        if (stall_req !== 1'b0) begin
+            $display("FAIL COP1 arithmetic falsely stalled on GPR rt: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_id_stage_llsc_hazard");
         else
