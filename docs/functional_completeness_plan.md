@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-11-13 CP0 nested delay-slot exception ownership
+
+Nested synchronous exceptions now preserve the original EPC when `EXL=1`,
+including faults reported from a branch delay slot. The CP0 regression drives
+both ordinary and delay-slot nested faults and verifies that Cause and
+BadVAddr refresh while EPC/EXL remain owned by the first exception. Complete
+privileged dispatch and Linux context semantics remain open.
+
 ### 2026-11-13 CP0 Status.RP state transfer
 
 `Status.RP` (bit 27) now survives MTC0 write/readback and the scheduler-style

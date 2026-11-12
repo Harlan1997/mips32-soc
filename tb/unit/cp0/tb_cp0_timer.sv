@@ -479,6 +479,22 @@ module tb_cp0_timer;
         mfc0(5'd12, 3'd0, rd);
         check("Nested exception preserves EXL",    rd[1] == 1'b1);
 
+        // A nested exception reported from a delay slot must preserve the
+        // original EPC just like a non-delay-slot nested exception.
+        except_code <= 5'h05;                  // AdES
+        except_pc   <= 32'h0000_3004;          // nested delay-slot PC
+        bad_vaddr   <= 32'hCAFE_BABE;
+        except_bd   <= 1'b1;
+        except_req  <= 1'b1;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        except_bd   <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd14, 3'd0, rd);
+        check("Nested BD exception preserves EPC", rd == 32'h0000_1000);
+        mfc0(5'd13, 3'd0, rd);
+        check("Nested BD exception refreshes Cause", rd[6:2] == 5'h05 && rd[31] == 1'b1);
+
         // Non-BD exception: EPC = exact fault PC
         mtc0(5'd12, 3'd0, 32'd0);              // clear EXL
         @(posedge clk);

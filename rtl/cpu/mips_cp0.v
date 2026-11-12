@@ -702,7 +702,10 @@ module mips_cp0 #(
                 // Branch-delay EPC applies to both ordinary and cache-error
                 // entries, but ErrorEPC is the architectural return register
                 // for CacheErr.
-                if (except_bd) begin
+                // A nested exception must not replace the saved return
+                // context.  This includes a fault reported from a delay slot:
+                // only the first exception while EXL=0 owns EPC.
+                if (except_bd && !cp0_status[1]) begin
                     if (except_code == 5'h1E) begin
                         if (!cp0_errorepc_valid) begin
                             cp0_errorepc <= except_pc - 32'd4;
