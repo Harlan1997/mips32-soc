@@ -161,6 +161,79 @@ module tb_mips_id_stage_llsc_hazard;
             failures = failures + 1;
         end
 
+        // JR/JALR consume rs as an indirect control-flow target.  A load or
+        // nonblocking producer for that register must hold the jump in ID;
+        // otherwise the branch resolver can redirect with stale state.
+        nb_pending_reg = 32'd0;
+        inst = {6'b000000, 5'd2, 5'd0, 5'd0, 5'd0, 6'b001000}; // JR $2
+        ex_waddr = 5'd2;
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL JR load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b000000, 5'd2, 5'd0, 5'd31, 5'd0, 6'b001001}; // JALR $31,$2
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL JALR load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        ex_waddr = 5'd3;
+        #1;
+        if (stall_req !== 1'b0) begin
+            $display("FAIL unrelated producer stalled indirect jump: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+
+        // WRPGPR reads the current-set GPR named by rt before committing it
+        // into SRSCtl.PSS.  It is therefore a GPR source hazard; RDPGPR is
+        // intentionally different because its rt source is the shadow bank.
+        inst = {6'b010000, 5'b01110, 5'd2, 5'd0, 5'd0, 6'd0}; // WRPGPR $0,$2
+        ex_waddr = 5'd2;
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL WRPGPR load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010000, 5'b01010, 5'd2, 5'd0, 5'd0, 6'd0}; // RDPGPR $0,$2
+        #1;
+        if (stall_req !== 1'b0) begin
+            $display("FAIL RDPGPR falsely stalled on ordinary GPR producer: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+
+        // Operation fields in COP0/COP1 and COP1X arithmetic are not GPR
+        // sources.  A producer whose number matches those fields must not
+        // introduce a false stall.
+        inst = {6'b010000, 5'b00100, 5'd2, 5'd3, 5'd0, 6'd0}; // MTC0
+        ex_waddr = 5'd4; // COP0 rs field, not a source register
+        #1;
+        if (stall_req !== 1'b0) begin
+            $display("FAIL MTC0 falsely stalled on COP0 operation field: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010001, 5'b00100, 5'd2, 5'd3, 5'd4, 6'd0}; // MTC1
+        ex_waddr = 5'd4; // COP1 rs field, not a source register
+        #1;
+        if (stall_req !== 1'b0) begin
+            $display("FAIL MTC1 falsely stalled on COP1 operation field: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b010011, 5'd16, 5'd2, 5'd3, 5'd0, 6'h20}; // MADD.S
+        ex_waddr = 5'd16; // FPR selector, not a GPR source
+        #1;
+        if (stall_req !== 1'b0) begin
+            $display("FAIL COP1X arithmetic falsely stalled on FPR selector: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+        inst = {6'b100010, 5'd1, 5'd2, 16'd0}; // LWL $2,0($1)
+        ex_waddr = 5'd2; // merged destination is also an input
+        #1;
+        if (stall_req !== 1'b1) begin
+            $display("FAIL LWL merge load/use hazard was not detected: stall=%b", stall_req);
+            failures = failures + 1;
+        end
+
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_id_stage_llsc_hazard");
         else

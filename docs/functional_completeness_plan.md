@@ -1,5 +1,228 @@
 # SoC 功能完整性计划
 
+### 2026-11-13 CP0 Status.RP state transfer
+
+`Status.RP` (bit 27) now survives MTC0 write/readback and the scheduler-style
+CP0 context save/restore path. The CP0 timer/privilege regression passes the
+direct checks; RP remains a software power-management hint without a direct
+clock-gating side effect. Broader privileged CP0 and Linux OS semantics remain
+open.
+
+### 2026-11-13 COP1 FCR0/FIR capability register
+
+`CFC1 fs=0` now exposes the QEMU 24Kf-compatible FCR0 value `0x00739300`,
+advertising F64/L/W and S/D support. `CTC1 fs=0` is accepted as a read-only
+no-op. The decoder gate, real CPU/SoC FPU firmware, and strict RTL/QEMU single-
+precision differential pass. Complete COP1, IEEE-754 range/tininess, and Linux
+FPU ABI semantics remain open.
+
+### 2026-11-13 FR=1 FPR high-word context transfer
+
+The FR=1 FPU register image now carries all 32 high words alongside the
+existing low-word image. CPU context save/restore, the scheduler context bank,
+and the core wiring preserve odd-register high halves across a task switch;
+FR=0 explicitly clears the high-word image. The real CPU scheduler integration
+regression restores two 64-bit FPR values and passes. Retire JSONL now carries
+the high-word image, and the strict double-precision RTL/QEMU differential
+passes 566 records with that field enabled. Linux signal-frame and lazy-FPU
+ownership semantics, and full COP1 ABI compliance, remain open.
+
+### 2026-11-13 CP0 Status.FR state transfer
+
+`Status.FR` (bit 26) now has architectural readback, MTC0 write behavior,
+context save/restore, and a CPU-facing CP0 export. FPU-enabled and
+FPU-disabled CP0 regressions pass, and the complete RTL frontend matrix passes
+8/8 configurations. The FR-dependent 32/64-bit FPR register mapping and Linux
+FPU ABI/context behavior remain open.
+
+### 2026-11-13 COP1 FCSR alias registers
+
+`CFC1` and `CTC1` now implement the architectural FCCR (fs=25), FEXR
+(fs=26), and FENR (fs=28) aliases in addition to FCSR (fs=31). FCCR bit 0
+maps to FCSR.FCC0 at bit 23, FEXR exposes Cause/Flags, and FENR exposes
+Enable/RM/FS while preserving fields owned by the other aliases. Integrated
+single-precision, strict RTL/QEMU differential, and COP1 decoder gates pass.
+Complete COP1, IEEE-754 range/tininess, and Linux FPU ABI/context semantics
+remain open.
+
+### 2026-11-13 FCSR architectural writable-mask slice
+
+`CTC1` and scheduler context restore now apply the MIPS32 FCSR writable mask
+`0xff83ffff`; reserved bits `[22:18]` remain zero when read by `CFC1`, saved in
+the context image, or emitted in the retire state. The integrated single-
+precision firmware checks reserved-bit suppression, while the dedicated FPE
+firmware verifies that an enabled Cause written by `CTC1` traps immediately
+with the masked FCSR image. Focused RTL/QEMU differentials pass. Full
+IEEE-754 range/tininess policy, Linux FPU ABI/context semantics, and complete
+COP1 compliance remain open.
+
+### 2026-11-13 FPU signed-word conversion post-rounding range
+
+The COP1 `CVT.W.{S,D}`, `ROUND.W.{S,D}`, `TRUNC.W.{S,D}`,
+`CEIL.W.{S,D}`, and `FLOOR.W.{S,D}` paths now classify the rounded integer
+before committing the result. Values such as `+2^31-0.5` therefore raise
+Invalid under nearest-even, nearest-away, or toward-positive-infinity while
+remaining valid under toward-zero and toward-negative-infinity. The negative
+boundary `-2^31-0.5` is covered for nearest-even, truncation, ceiling, and
+floor. The focused primitive regression, real CPU `fpu-rounding-gate`, and
+strict RTL/QEMU rounding differential all pass. Broader IEEE-754 range and
+tininess policy, precise FPE delivery, and Linux FPU ABI semantics remain open.
+
+### 2026-11-13 Nonblocking Linux differential and User-mode DI/EI privilege
+
+The current-source nonblocking Linux configuration completed the declared
+generic Linux workload and strict RTL/QEMU retire comparison. The comparator
+passed `TRACE_COMPARE_PASS records=66876536`; RTL produced 66,876,577 records,
+QEMU produced 66,876,536, all 1,429 interrupt schedule entries and the
+terminal marker were consumed, and QEMU exited cleanly. Evidence is retained
+under `/data/disk/tmp/mips32-soc/full-qemu-nb-current-src-20261111-r3/`.
+This is bounded generic Linux differential evidence, not unrestricted Linux or
+complete ISA/privileged/FPU/MMU/OS signoff.
+
+The User-mode privilege gate now includes MFMC0 `DI` and `EI` in the CU0
+check. A current-source VCS regression reports
+`DI_EI_USER_PRIVILEGE_PASS di_exc=0x0b ei_exc=0x0b ie_unchanged=1`, proving
+that neither instruction changes `Status.IE` before the Coprocessor Unusable
+exception. Complete privileged context and Linux OS semantics remain open.
+
+### 2026-11-11 RECIP.S/RSQRT.S directed rounding integration
+
+Finite single-precision `RECIP.S` and `RSQRT.S` now use one final binary32
+conversion under `FCSR.RM` in both the RTL and the patched
+`mips32-soc-ref` model. The real firmware checks `1/3` and `1/sqrt(2)` for
+all four rounding modes and sticky Inexact. The primitive gate, integrated
+CPU gate, and strict system differential pass; the latter reports
+`TRACE_COMPARE_PASS records=834` through the success mailbox. The QEMU
+reference keeps the reciprocal-square-root intermediate at binary64 precision
+to avoid double-rounding across directed modes. Broader IEEE-754 range,
+precise FPE delivery, and Linux FPU ABI semantics remain open.
+
+### 2026-11-11 FPU infinity-over-zero divide classification
+
+The COP1 single- and double-precision divide paths now raise
+Divide-by-Zero only for a finite, non-zero numerator divided by zero.
+`+/-Inf / +/-0` produces the signed infinity result without the flag, while
+zero-over-zero and signaling-NaN cases retain Invalid behavior. The focused
+`mips-fpu-flags-gate` passes the new single and double vectors. Broader IEEE-754
+range/tininess policy, complete FPE delivery, and Linux FPU ABI semantics
+remain open.
+
+### 2026-11-10 Exact finite binary32 fused rounding
+
+Finite single-precision `MADD.S`, `MSUB.S`, `NMADD.S`, and `NMSUB.S` now use
+an exact integer accumulator for result bits and exception classification. The
+focused FPU gate passes 24 added vectors covering minimum-subnormal addends
+for all four operations and FCSR rounding modes, plus positive and negative
+fused overflow. The real CPU rounding firmware checks `MADD.S` with a
+minimum-subnormal accumulator in all four rounding modes; its strict QEMU retire
+differential passes with 672 records. The broader single-precision CPU gate
+and differential also pass (`TRACE_COMPARE_PASS records=1552`). Complete
+IEEE-754 edge behavior, precise FPE policy, Linux FPU context/ABI, and full
+COP1 compliance remain open.
+
+### 2026-11-10 Exact single-precision ADD/SUB rounding
+
+Finite binary32 `ADD.S` and `SUB.S` now use the exact integer-significand
+accumulator for result bits and Inexact/Overflow classification, so operands
+below host-real precision still affect directed rounding. The focused primitive
+gate covers halfway and minimum-subnormal additions, positive and negative
+subtractions, and signed maximum-finite overflow in all four FCSR rounding
+modes. The real CPU rounding firmware checks minimum-subnormal boundaries and
+FCSR Inexact/Overflow; its strict QEMU retire differential passes with 580
+records. The broader single-precision CPU
+gate and differential also pass (`TRACE_COMPARE_PASS records=1552`). Complete
+IEEE-754 edge behavior, precise FPE policy, Linux FPU context/ABI, and full
+COP1 compliance remain open.
+
+### 2026-11-10 CP0 FPU presence reporting
+
+`Config1.FP` now follows `SOC_FPU_ENABLE`, so an opt-in FPU is visible to
+firmware and an FPU-disabled build continues to report no FPU. The CP0 block
+gate passes with the feature enabled and disabled; it checks the FP bit and
+that context restore sets CU1 only when the FPU is present. This closes the
+CP0 capability-reporting slice. The extended real CPU FPU firmware and 24Kf
+QEMU differential also pass with `TRACE_COMPARE_PASS records=1552`, including
+the MFC0 Config1 probe. Full IEEE-754, FPE, Linux lazy-FPU, and signal-frame
+ABI behavior remain open.
+
+### 2026-11-10 Integrated Supervisor privilege and segment-fault slice
+
+The CPU-level privilege gate now checks both sides of the privilege boundary.
+With `SOC_SRS_ENABLE=1`, User mode takes precise Coprocessor Unusable on
+`RDPGPR`; after a scheduler-style context restore to Supervisor mode, `MFC0`
+executes, an `LW` from sseg reaches the data port at `0xc0000000`, and an `LW`
+from kseg3 raises precise AdEL at `0xe0000000` without issuing a data request.
+The current-source VCS gate passes. TLB translated Supervisor access remains
+covered by the separate active-MMU block test;
+complete privileged ISA, Linux context semantics, and Linux VM ownership
+remain open.
+
+### 2026-11-09 CP0 CU1 context-restore slice
+
+The CP0 context-restore path now restores `Status.CU1` when the opt-in FPU is
+enabled and forces it clear when FPU support is disabled. The direct CP0 test
+verified both a task restore with CU1 set and a task restore with CU1 clear; the
+real scheduler/CPU integration also verified the enabled-task restore through
+the context-bank path. Linux lazy-FPU ownership, signal-frame/ABI behavior,
+complete privileged context semantics, and full COP1 compliance remain open.
+
+### 2026-11-09 CP0 UserLocal scheduler context slice
+
+The scheduler context bank now carries CP0 `UserLocal` alongside Status, ASID,
+Context.PTEBase, SRS state, GPRs, and FPR/FCSR state. Direct CP0 checks restore
+two distinct thread-local values, and the real CPU scheduler integration restores
+task-1 UserLocal through the complete context path. The RTL frontend compile
+matrix remains green (`8/8`). Full Linux lazy-FPU/signal-frame ABI, scheduler
+policy, and complete privileged context semantics remain open.
+
+### 2026-11-09 Supervisor-mode MMU contract evidence
+
+The CP0/MMU path now treats `KSU=01` as a distinct Supervisor mode. It keeps
+the privileged instruction gate used by Kernel mode, translates `kuseg` and
+`sseg` through the TLB, and rejects `kseg0`, `kseg1`, and `kseg3` with AdEL or
+AdES. The default and MMU-active tests both pass, and the current-source RTL
+frontend compile gate remains green. This closes the Supervisor segment and
+privilege boundary slice; complete privileged/MMU/Linux VM semantics remain
+open.
+
+### 2026-11-09 CP0 timer/WAIT focused differential
+
+The current QEMU reference build and RTL compare equal for the focused
+`qemu_system_cp0_timer_wait` workload. The run compared 19 retire records and
+QEMU exited cleanly; the streaming comparator accepted one RTL pre-exception
+vector record and reported `TRACE_COMPARE_PASS`. This validates the current
+timer replay boundary after suppressing duplicate Count-sample `TI` injection.
+It is focused evidence only and does not close full interrupt replay, Linux
+userspace, or complete privileged/OS semantics.
+
+### 2026-11-09 Indirect jump source-hazard closure
+
+The ID-stage dependency classifier now treats `JR` and `JALR` as consumers of
+their `rs` GPR. A load or an admitted nonblocking result for that register
+therefore stalls the indirect jump before target resolution; `MFHI`/`MFLO`
+remain excluded because they read the HI/LO pair. The focused
+`mips-id-stage-llsc-hazard-gate` now covers both jump forms, their unrelated
+producer negative case, the existing LL/SC/COP1 source cases, and precise
+source classification for COP0/COP1 operation fields and LWL/LWR merge data.
+This closes the indirect-jump and ID source-classification slices; complete
+control-transfer replay, memory ordering, and full ISA compliance remain
+separate contracts.
+
+The same regression also covers the opt-in SRS `WRPGPR` source: a producer for
+its ordinary `rt` GPR stalls the instruction, while `RDPGPR` remains
+independent because it reads the shadow bank. This closes the SRS source-hazard
+slice in addition to the indirect-jump cases.
+
+### 2026-11-09 SRS user-mode privilege boundary
+
+The CPU now includes the opt-in `RDPGPR` and `WRPGPR` encodings in the
+`Status.CU0`/kernel-mode privileged-instruction check. A focused current-source
+VCS gate restores `KSU=User`, executes `RDPGPR`, and observes precise
+`ExcCode=11` with `EXL=1`; the existing SRS firmware and differential gates
+continue to cover the kernel-mode shadow-bank path. This closes the user-mode
+privilege boundary for the implemented SRS subset. It does not close complete
+privileged ISA, external EIC/VEIC policy, or Linux SRS ABI semantics.
+
 ### 2026-11-09 Legacy-MIPS NaN arithmetic and conversion slice
 
 The opt-in FPU now distinguishes the pre-NAN2008 MIPS signaling-NaN encoding
@@ -2261,3 +2484,20 @@ system differential、MMU/FPU/LLSC 子 gate 以及 generic Linux userspace marke
 本项闭合 architecture aggregate 的可重复接线，不改变功能范围：RTL Linux
 userspace differential、完整 ISA/IEEE-754/OS VM、全 coherency、formal/CDC/RDC/lint
 和物理产品 signoff 仍保持 OPEN。
+
+### 2026-11-13 MMU page-table refill adapter optional A/D ownership (TASK-MMU-OS)
+
+The reusable refill adapter `mips_page_table_tlb_refill` now supports optional Accessed/Dirty
+writeback sideband maintenance via the `ENABLE_AD_UPDATE` parameter (defaulting to 0):
+1. Default behavior is preserved exactly: when disabled (`ENABLE_AD_UPDATE = 0`), no PTE
+   writeback requests are emitted, and the existing TLB refill transaction operates unchanged.
+2. With `ENABLE_AD_UPDATE = 1`, the adapter exposes walker `pte_update_valid`, address,
+   data, ready, and error signals, holds the writeback payload stable under backpressure until
+   `pte_update_ready`, propagates write errors as `FAULT_BUS` without emitting a TLB write,
+   and emits the TLB write only after successful walker completion, ensuring non-duplication
+   under permanently ready TLB conditions.
+3. Focused gate `tb/unit/mmu/run_page_table_tlb_refill.sh` passes both disabled and enabled
+   modes covering accessed-only updates, store dirty updates, backpressure stability,
+   write-error faults, and even/odd entry selection with output under `/data/disk/tmp/mips32-soc`.
+This closes the reusable refill adapter A/D ownership slice only; Linux VM, unrestricted
+demand paging, and full MMU compliance remain open.

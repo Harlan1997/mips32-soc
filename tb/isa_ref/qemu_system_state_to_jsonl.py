@@ -122,6 +122,26 @@ def fpr_state(regs):
                    for index in range(31, -1, -1))
 
 
+def fpr_hi_state(regs):
+    """Serialize the upper word of each FR=1 FPR, or zeros in FR=0 mode."""
+    if COMPACT_FPR:
+        return "0"
+    try:
+        status = int(regs.get("status", "0"), 16)
+    except (TypeError, ValueError):
+        status = 0
+    if not (status & (1 << 26)):
+        return "0" * 256
+    words = []
+    for index in range(31, -1, -1):
+        try:
+            value = int(regs.get(f"fpr{index}", "0"), 16)
+        except (TypeError, ValueError):
+            value = 0
+        words.append(f"{(value >> 32) & 0xffffffff:08x}")
+    return "".join(words)
+
+
 def changed_gpr(before, after):
     changes = [index for index in range(1, 32)
                if before[f"r{index}"] != after[f"r{index}"]]
@@ -832,6 +852,7 @@ def convert(events, states):
             "cp0_sel": cp0_sel,
             "cp0_data": cp0_data,
             "fpr_state": fpr_state(after),
+            "fpr_hi_state": fpr_hi_state(after),
             "fcsr_state": hex32(after.get("fcsr", "00000000")),
             "mem_valid": trace_mem_valid,
             "mem_read": trace_mem_read,

@@ -8,6 +8,7 @@ module tb_mips_mmu_active;
     reg [7:0] asid = 8'h12;
     reg [2:0] config_k0 = 3'b011;
     reg is_kernel = 1'b1;
+    reg is_supervisor = 1'b0;
     reg tlb_lookup_hit = 1'b1;
     reg tlb_lookup_multi_hit = 1'b0;
     reg tlb_lookup_v = 1'b1;
@@ -64,6 +65,18 @@ module tb_mips_mmu_active;
         req_is_store = 1'b0;
         #1;
         check("kseg3 clean load still succeeds", translation_ok && pa == 32'h12345_000);
+
+        // Supervisor mode may translate sseg but cannot access kseg3.
+        is_kernel = 1'b0;
+        is_supervisor = 1'b1;
+        req_is_store = 1'b0;
+        tlb_lookup_v = 1'b1;
+        req_va = 32'hC123_4000;
+        #1;
+        check("supervisor sseg hit translates", translation_ok && pa == 32'h12345_000);
+        req_va = 32'hE123_4000;
+        #1;
+        check("supervisor kseg3 load rejected", !translation_ok && fault_type == 3'b100);
 
         // Lookup sideband remains visible for the translated request.
         check("lookup VA sideband", tlb_lookup_va == req_va);

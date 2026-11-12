@@ -208,11 +208,30 @@ static void test_uart_tx_edges(void)
     assert(soc_ref_uart_tx_lsr_status(&tx) == SOC_REF_UART_LSR_THRE);
 }
 
+static void test_uart_diff_transcript_when_fifo_is_full(void)
+{
+    SocRefUartTxModel tx = {0};
+
+    for (uint64_t cycle = 1; cycle <= SOC_REF_UART_TX_FIFO_DEPTH + 1;
+         ++cycle) {
+        soc_ref_uart_tx_step(&tx, cycle, 0x03, 0xffff, 0x01, 0, false,
+                             true, (uint8_t)cycle, false);
+    }
+
+    assert(tx.pending_count == SOC_REF_UART_TX_FIFO_DEPTH);
+    assert(!soc_ref_uart_tx_step(&tx, SOC_REF_UART_TX_FIFO_DEPTH + 2,
+                                 0x03, 0xffff, 0x01, 0, false,
+                                 true, 0x5a, false));
+    assert(!soc_ref_uart_console_write_visible(false, false));
+    assert(soc_ref_uart_console_write_visible(false, true));
+}
+
 int main(int argc, char **argv)
 {
     test_cycle_interpolation();
     test_uart_tx_edges();
     test_uart_modem_status();
+    test_uart_diff_transcript_when_fifo_is_full();
     puts("MIPS32_SOC_UART_TIMING_TEST_PASS");
     if (argc == 2) {
         run_schedule(argv[1]);

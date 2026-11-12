@@ -8,6 +8,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../../.." && pwd)
 RUN_DIR=${RUN_DIR:-"${ROOT_DIR}/build/unit/cp0"}
+SOC_FPU_ENABLE=${SOC_FPU_ENABLE:-1}
 mkdir -p "$RUN_DIR"
 cd "$RUN_DIR"
 
@@ -18,6 +19,7 @@ module load vcs
 
 vcs -full64 -sverilog -timescale=1ns/1ps \
     +incdir+"${ROOT_DIR}/rtl/include" \
+    +define+SOC_FPU_ENABLE=${SOC_FPU_ENABLE} \
     ${SRS_MAP_TEST:++define+SOC_SRS_ENABLE=1} \
     ${SRS_MAP_TEST:++define+SRS_MAP_TEST} \
     "${ROOT_DIR}/rtl/cpu/mips_cp0.v" \

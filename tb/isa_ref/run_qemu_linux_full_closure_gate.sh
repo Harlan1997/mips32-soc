@@ -90,7 +90,10 @@ REUSE_CPU_CYCLE_SCHEDULE=${REUSE_CPU_CYCLE_SCHEDULE:-}
 REUSE_UART_APB_SCHEDULE=${REUSE_UART_APB_SCHEDULE:-}
 TERMINAL_MARKER=MIPS32_SOC_LINUX_TERMINAL
 IRQ_SCHEDULE=${RUN_DIR}/rtl_irq_schedule.txt
+IRQ_REPLAY_SCHEDULE=${RUN_DIR}/rtl_irq_replay_schedule.txt
 CP0_COUNT_SCHEDULE=${RUN_DIR}/rtl_cp0_count_schedule.txt
+CP0_TI_PENDING_SCHEDULE=${RUN_DIR}/rtl_cp0_ti_pending_schedule.txt
+CP0_TIMER_TRACE=${RUN_DIR}/rtl_cp0_timer_edges.txt
 CP0_RANDOM_SCHEDULE=${RUN_DIR}/rtl_cp0_random_schedule.txt
 CPU_CYCLE_SCHEDULE=${RUN_DIR}/rtl_cpu_cycle_schedule.txt
 UART_APB_SCHEDULE=${RUN_DIR}/rtl_uart_apb_schedule.txt
@@ -134,6 +137,10 @@ if [[ "${QEMU_MACHINE_PROPERTIES}" == *cp0-count-schedule=* ]]; then
     echo "full QEMU closure: CP0 Count schedule is managed by this gate" >&2
     exit 2
 fi
+if [[ "${QEMU_MACHINE_PROPERTIES}" == *irq-schedule=* ]]; then
+    echo "full QEMU closure: IRQ replay schedule is managed by this gate" >&2
+    exit 2
+fi
 if [[ "${QEMU_MACHINE_PROPERTIES}" == *cp0-random-schedule=* ]]; then
     echo "full QEMU closure: CP0 Random schedule is managed by this gate" >&2
     exit 2
@@ -147,6 +154,8 @@ rm -f "${RUN_DIR}/rtl_irq_schedule_capture.log" "${RUN_DIR}/rtl_cp0_count_schedu
 rm -f "${RUN_DIR}/rtl_cpu_cycle_schedule_capture.log"
 rm -f "${RUN_DIR}/rtl_uart_apb_schedule_capture.log"
 rm -f "${RUN_DIR}/rtl_cp0_random_schedule_capture.log"
+rm -f "${IRQ_REPLAY_SCHEDULE}" "${IRQ_REPLAY_SCHEDULE}.unsorted"
+rm -f "${CP0_TI_PENDING_SCHEDULE}" "${CP0_TIMER_TRACE}"
 expected_qemu_bin=$(realpath -m "${QEMU_BUILD}/qemu-system-mipsel")
 actual_qemu_bin=$(realpath -m "${QEMU_BIN}")
 [[ "${actual_qemu_bin}" == "${expected_qemu_bin}" ]] || {
@@ -239,11 +248,16 @@ fi
 # These FIFOs carry every producer record directly into the bounded-memory
 # converter/comparator; only compact logs and manifests remain on disk.
 stream_dir="${RUN_DIR}/streams"
-mkdir -p "${stream_dir}"
+mkdir -p -m 0700 "${stream_dir}"
 for stream in rtl_retire qemu_events qemu_states qemu_retire; do
     rm -f "${stream_dir}/${stream}"
-    mkfifo "${stream_dir}/${stream}"
+    mkfifo -m 0600 "${stream_dir}/${stream}"
 done
+cat > "${stream_dir}/README_DO_NOT_READ_FIFOS.txt" << 'EOF'
+WARNING: Named pipes in this directory are single-reader streaming FIFOs.
+Do NOT run wc, tail, cat, or head on them. Direct reads steal bytes from
+the kernel pipe buffer and corrupt the comparator trace.
+EOF
 
 image_dir=${LINUX_IMAGE_DIR:-${RUN_DIR}/rtl/image}
 image_dir=$(realpath -m "${image_dir}")
@@ -289,7 +303,7 @@ rtl_env=(
     LINUX_OWNER_TRACE_SIM_ARGS="+RETIRE_TRACE_COMPACT_FPR=1 +RETIRE_TRACE_SCHEMA=00020000"
     LINUX_RETIRE_TRACE_FLUSH="${LINUX_RETIRE_TRACE_FLUSH}"
 )
-capture_required=0
+capture_required=1
 [[ -n "${REUSE_IRQ_SCHEDULE}" ]] || capture_required=1
 [[ -n "${REUSE_CP0_COUNT_SCHEDULE}" ]] || capture_required=1
 [[ -n "${REUSE_CP0_RANDOM_SCHEDULE}" ]] || capture_required=1
@@ -299,6 +313,9 @@ if (( capture_required )); then
     echo "full QEMU closure: capturing RTL schedules, Count/RDHWR reads, cycle timebase, and UART APB events" >&2
     capture_env=("${rtl_env[@]}")
     capture_log="${RUN_DIR}/rtl_cp0_count_schedule_capture.log"
+    capture_env+=(LINUX_TIMER_PENDING_SCHEDULE_PATH="${CP0_TI_PENDING_SCHEDULE}")
+    capture_env+=(LINUX_TIMER_PENDING_SCHEDULE_START_PC="${ALIGN_FIRST_PC}")
+    capture_env+=(LINUX_TIMER_TRACE_PATH="${CP0_TIMER_TRACE}")
     if [[ -z "${REUSE_CP0_COUNT_SCHEDULE}" ]]; then
         capture_env+=(
             LINUX_RETIRE_TRACE=1
@@ -347,7 +364,8 @@ if (( capture_required )); then
        { [[ -z "${REUSE_CP0_COUNT_SCHEDULE}" ]] && [[ ! -s "${CP0_COUNT_SCHEDULE}" ]]; } ||
        { [[ -z "${REUSE_CPU_CYCLE_SCHEDULE}" ]] && [[ ! -s "${CPU_CYCLE_SCHEDULE}" ]]; } ||
        { [[ -z "${REUSE_UART_APB_SCHEDULE}" ]] && [[ ! -s "${UART_APB_SCHEDULE}" ]]; } ||
-       { [[ -z "${REUSE_CP0_RANDOM_SCHEDULE}" ]] && [[ ! -s "${CP0_RANDOM_SCHEDULE}" ]]; }; then
+       { [[ -z "${REUSE_CP0_RANDOM_SCHEDULE}" ]] && [[ ! -s "${CP0_RANDOM_SCHEDULE}" ]]; } ||
+       [[ ! -s "${CP0_TI_PENDING_SCHEDULE}" ]] || [[ ! -s "${CP0_TIMER_TRACE}" ]]; then
         tail -100 "${capture_log}" >&2 || true
         echo "full QEMU closure: RTL schedule capture failed" >&2
         exit 1
@@ -355,6 +373,16 @@ if (( capture_required )); then
 else
     echo "full QEMU closure: reusing IRQ, CP0 Count/Random, CPU cycle, and UART APB schedules" >&2
 fi
+
+# QEMU uses one ordered event stream for timer pending and CPU IRQ acceptance.
+# RTL records TI after the edge that retires the sequence; QEMU checks replay
+# before the next instruction, so the builder places TI at sequence + 1. At a
+# shared replay sequence, TI sorts before IRQ acceptance.
+python3 "${SCRIPT_DIR}/merge_irq_replay_schedule.py" \
+    --irq-schedule "${IRQ_SCHEDULE}" \
+    --timer-schedule "${CP0_TI_PENDING_SCHEDULE}" \
+    --output "${IRQ_REPLAY_SCHEDULE}"
+
 irq_schedule_entries=$(wc -l <"${IRQ_SCHEDULE}" | tr -d ' ')
 [[ "${irq_schedule_entries}" -gt 0 ]]
 irq_schedule_precise_entries=$(awk 'NF == 3 { count++ } END { print count + 0 }' \
@@ -388,6 +416,19 @@ cpu_cycle_schedule_entries=$(awk '$1 ~ /^[0-9]+$/ { count++ } END { print count 
 uart_apb_schedule_entries=$(awk '$1 ~ /^[0-9]+$/ { count++ } END { print count + 0 }' \
     "${UART_APB_SCHEDULE}")
 [[ "${uart_apb_schedule_entries}" -gt 0 ]]
+cp0_ti_pending_schedule_entries=$(awk 'NF == 2 && $1 ~ /^[0-9]+$/ { count++ } END { print count + 0 }' \
+    "${CP0_TI_PENDING_SCHEDULE}")
+cp0_ti_pending_schedule_noncomment_entries=$(awk 'NF && $1 !~ /^#/ { count++ } END { print count + 0 }' \
+    "${CP0_TI_PENDING_SCHEDULE}")
+cp0_ti_pending_schedule_start_pc=$(sed -n \
+    's/^# cp0-ti-pending-schedule-v1 start_pc=\([0-9a-fA-F]\{8\}\) sequence pc$/\1/p' \
+    "${CP0_TI_PENDING_SCHEDULE}" | head -n 1)
+[[ "${cp0_ti_pending_schedule_entries}" -gt 0 &&
+   "${cp0_ti_pending_schedule_entries}" == "${cp0_ti_pending_schedule_noncomment_entries}" &&
+   "${cp0_ti_pending_schedule_start_pc,,}" == "${ALIGN_FIRST_PC,,}" ]]
+irq_replay_schedule_entries=$(awk '($2 == "ti" && NF == 3) || ($2 == "irq" && NF == 4) { count++ } END { print count + 0 }' \
+    "${IRQ_REPLAY_SCHEDULE}")
+[[ "${irq_replay_schedule_entries}" -eq $((irq_schedule_entries + cp0_ti_pending_schedule_entries)) ]]
 cpu_cycle_schedule_file_interval=$(sed -n \
     's/^# cpu-cycle-schedule-v1 interval=\([1-9][0-9]*\) start_pc=.*/\1/p' \
     "${CPU_CYCLE_SCHEDULE}" | head -n 1)
@@ -402,7 +443,7 @@ uart_diff_timing_property=""
 if [[ " ${LINUX_VCS_EXTRA_ARGS} " == *" +define+TB_LINUX_DIFF_UART_TIMING=1 "* ]]; then
     uart_diff_timing_property=",uart-diff-timing=on"
 fi
-qemu_machine_properties="${QEMU_MACHINE_PROPERTIES}${uart_diff_timing_property},stop-on-terminal-marker=on,terminal-drain-retire=${QEMU_TERMINAL_DRAIN_RECORDS},cp0-count-schedule=${CP0_COUNT_SCHEDULE},cp0-random-schedule=${CP0_RANDOM_SCHEDULE},cpu-cycle-schedule=${CPU_CYCLE_SCHEDULE},uart-apb-schedule=${UART_APB_SCHEDULE}"
+qemu_machine_properties="${QEMU_MACHINE_PROPERTIES}${uart_diff_timing_property},stop-on-terminal-marker=on,terminal-drain-retire=${QEMU_TERMINAL_DRAIN_RECORDS},irq-schedule=${IRQ_REPLAY_SCHEDULE},cp0-count-schedule=${CP0_COUNT_SCHEDULE},cp0-random-schedule=${CP0_RANDOM_SCHEDULE},cpu-cycle-schedule=${CPU_CYCLE_SCHEDULE},uart-apb-schedule=${UART_APB_SCHEDULE}"
 
 echo "full QEMU closure: starting strict FIFO differential with ${irq_schedule_entries} scheduled IRQs" >&2
 compare_log="${RUN_DIR}/trace_compare.log"
@@ -414,7 +455,7 @@ python3 "${SCRIPT_DIR}/trace_compare.py" --stream \
 compare_pid=$!
 nice -n "${QEMU_CLOSURE_PRODUCER_NICE}" env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_BIN="${QEMU_BIN}" QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" \
-    IRQ_SCHEDULE="${IRQ_SCHEDULE}" \
+    IRQ_SCHEDULE="" \
     QEMU_KERNEL="${KERNEL}" QEMU_DTB="${DTB}" QEMU_MEMORY="${QEMU_MEMORY}" \
     QEMU_APPEND="${QEMU_APPEND}" QEMU_MACHINE_PROPERTIES="${qemu_machine_properties}" \
     QEMU_LINUX_RNG_SEED="${LINUX_RNG_SEED}" QEMU_ACCEL=tcg,thread=single \
@@ -430,6 +471,7 @@ nice -n "${QEMU_CLOSURE_PRODUCER_NICE}" env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_EVENT_STREAM="${stream_dir}/qemu_events" \
     QEMU_STATE_STREAM="${stream_dir}/qemu_states" \
     QEMU_RETIRE_STREAM="${stream_dir}/qemu_retire" \
+    QEMU_STREAM_STATUS="${RUN_DIR}/qemu/qemu_stream_status.json" \
     MAX_QEMU_EVENTS=0 MAX_QEMU_STATES=0 MAX_QEMU_CAPTURE_BYTES=0 \
     REQUIRE_SMOKE_OUTPUT=0 SKIP_COMPARE=1 \
     TRACE_COMPARE_ALLOW_GOLDEN_PREFIX=0 TRACE_COMPARE_GOLDEN_TO_RTL=0 \
@@ -446,6 +488,115 @@ setsid nice -n "${QEMU_CLOSURE_PRODUCER_NICE}" env "${rtl_env[@]}" RUN_DIR="${RU
     >"${RUN_DIR}/rtl_gate.log" 2>&1 &
 rtl_pid=$!
 set -e
+
+fifo_ownership_log="${RUN_DIR}/fifo_process_ownership.log"
+rm -f "${fifo_ownership_log}"
+record_fifo_ownership() {
+    local phase="$1"
+    {
+        echo "=== FIFO ownership check [${phase}] at $(date) ==="
+        for stream in rtl_retire qemu_events qemu_states qemu_retire; do
+            local fifo_path="${stream_dir}/${stream}"
+            echo "--- FIFO: ${stream} (${fifo_path}) ---"
+            if [[ -p "${fifo_path}" ]]; then
+                lsof "${fifo_path}" 2>/dev/null || fuser -v "${fifo_path}" 2>/dev/null || echo "No active processes open on ${stream}"
+            else
+                echo "FIFO missing: ${fifo_path}"
+            fi
+        done
+        echo "--- processes referencing RUN_DIR ---"
+        ps -eo pid,ppid,pgid,stat,comm,args --forest 2>/dev/null |
+            awk -v needle="${RUN_DIR}" 'index($0, needle) { print }' || true
+        for pid in $(pgrep -f "${RUN_DIR}" 2>/dev/null || true); do
+            [[ -d "/proc/${pid}/fd" ]] || continue
+            echo "--- open stream descriptors pid=${pid} ---"
+            for fd in /proc/${pid}/fd/*; do
+                target=$(readlink "${fd}" 2>/dev/null || true)
+                case "${target}" in
+                    *"${stream_dir}"*) echo "${fd##*/} -> ${target}" ;;
+                esac
+            done
+        done
+        echo ""
+    } >> "${fifo_ownership_log}" 2>&1
+}
+
+record_producer_consumer_counts() {
+    local counts_log="${RUN_DIR}/producer_consumer_counts.log"
+    local rtl_produced=""
+    local qemu_produced=""
+    local rtl_consumed=""
+    local golden_consumed=""
+    local qemu_stream_status="${RUN_DIR}/qemu/qemu_stream_status.json"
+
+    # Read RTL producer count from nested VCS runtime logs
+    for rtl_log in \
+        "${RUN_DIR}/rtl/sim/sim_runtime.log" \
+        "${RUN_DIR}/rtl/sim/sim.log" \
+        "${RUN_DIR}/rtl/sim.log" \
+        "${RUN_DIR}/rtl_gate.log"; do
+        if [[ -s "${rtl_log}" ]]; then
+            rtl_produced=$(sed -n 's/.*RETIRE_TRACE_CAPTURE_FINAL.*retire_count=\([0-9]\+\).*/\1/p' "${rtl_log}" | tail -n 1)
+            [[ -n "${rtl_produced}" ]] && break
+        fi
+    done
+    if [[ -z "${rtl_produced}" && -s "${RUN_DIR}/rtl/completion_report.md" ]]; then
+        rtl_produced=$(sed -n 's/.*Retire instructions:[[:space:]]*\([0-9]\+\).*/\1/p' "${RUN_DIR}/rtl/completion_report.md" | tail -n 1)
+    fi
+
+    # Read QEMU producer count from stream-converter summary when available
+    if [[ -s "${RUN_DIR}/qemu/qemu_trace_capture.log" ]]; then
+        qemu_produced=$(sed -n 's/.*QEMU_SYSTEM_RETIRE_STREAM_PASS records=\([0-9]\+\).*/\1/p' "${RUN_DIR}/qemu/qemu_trace_capture.log" | tail -n 1)
+    fi
+    # Documented fallback for an interrupted stream: read terminal status from retire plugin status
+    if [[ -z "${qemu_produced}" && -s "${RUN_DIR}/qemu/qemu_capture_status.txt" ]]; then
+        local qemu_status_file="${RUN_DIR}/qemu/qemu_capture_status.txt"
+        local complete_records
+        complete_records=$(sed -n 's/^capture_complete records=\([0-9]\+\).*/\1/p' "${qemu_status_file}" | tail -n 1)
+        if [[ -n "${complete_records}" ]]; then
+            qemu_produced="${complete_records}"
+        else
+            local terminal_record
+            terminal_record=$(sed -n 's/^terminal_marker=flushed record=\([0-9]\+\).*/\1/p' "${qemu_status_file}" | tail -n 1)
+            if [[ -n "${terminal_record}" ]]; then
+                # Fallback for interrupted stream: plugin flushes terminal marker at 0-based record index terminal_record,
+                # corresponding to terminal_record + 1 total retired records up to the marker.
+                qemu_produced="$((terminal_record + 1)) (terminal_marker index=${terminal_record}, stream interrupted)"
+            else
+                local limit_records
+                limit_records=$(sed -n 's/^capture_limit=.* records=\([0-9]\+\).*/\1/p' "${qemu_status_file}" | tail -n 1)
+                if [[ -n "${limit_records}" ]]; then
+                    qemu_produced="${limit_records}"
+                fi
+            fi
+        fi
+    fi
+
+    if [[ -s "${compare_log}" ]]; then
+        rtl_consumed=$(sed -n 's/.*rtl_consumed=\([0-9]\+\).*/\1/p' "${compare_log}" | tail -n 1)
+        golden_consumed=$(sed -n 's/.*golden_consumed=\([0-9]\+\).*/\1/p' "${compare_log}" | tail -n 1)
+    fi
+
+    {
+        echo "=== Producer vs Consumer Record Counts at $(date) ==="
+        echo "RTL produced:      ${rtl_produced:-unknown}"
+        echo "QEMU produced:     ${qemu_produced:-unknown}"
+        echo "RTL consumed:      ${rtl_consumed:-unknown}"
+        echo "Golden consumed:   ${golden_consumed:-unknown}"
+        if [[ -s "${qemu_stream_status}" ]]; then
+            echo "QEMU stream status:"
+            cat "${qemu_stream_status}"
+        else
+            echo "QEMU stream status: unavailable"
+        fi
+    } | tee -a "${counts_log}" >&2
+}
+
+# Sample FIFO ownership during active streaming
+(
+    sleep 2
+    record_fifo_ownership "active_streaming_startup"
+) &
 
 # A failed producer or comparator must stop its peers. Waiting only for the
 # comparator can deadlock when a producer fails before opening its FIFO.
@@ -522,6 +673,8 @@ while (( !rtl_done || !qemu_done || !compare_done )); do
     fi
 done
 
+record_fifo_ownership "termination_pre_kill"
+
 if [[ ${failure} -ne 0 ]]; then
     if [[ ${rtl_done} -eq 0 ]]; then
         kill_process_tree "${rtl_pid}" TERM
@@ -548,6 +701,9 @@ if [[ ${failure} -ne 0 ]]; then
     if [[ ${compare_done} -eq 0 ]]; then wait "${compare_pid}"; compare_status=$?; fi
     set -e
 fi
+
+record_fifo_ownership "post_execution"
+record_producer_consumer_counts
 if [[ ${rtl_status} -ne 0 || ${qemu_status_code} -ne 0 ||
       ${compare_status} -ne 0 || ${failure} -ne 0 ]]; then
     tail -100 "${RUN_DIR}/rtl_gate.log" >&2 || true
@@ -572,8 +728,9 @@ if grep -q '^qemu-system-mipsel: UART APB schedule exhausted at retire=' \
     tail -20 "${RUN_DIR}/qemu/qemu_stderr.log" >&2
     exit 1
 fi
-grep -q "^SOC_REF_IRQ_SCHEDULE released=${irq_schedule_entries} total=${irq_schedule_entries}$" \
-    "${RUN_DIR}/qemu/qemu_stderr.log"
+irq_schedule_report=$(rg '^SOC_REF_IRQ_SCHEDULE ' "${RUN_DIR}/qemu/qemu_stderr.log")
+grep -q "^SOC_REF_IRQ_SCHEDULE released=${irq_replay_schedule_entries} total=${irq_replay_schedule_entries} irq_released=${irq_schedule_entries} irq_total=${irq_schedule_entries} timer_pending_replayed=${cp0_ti_pending_schedule_entries} timer_pending_total=${cp0_ti_pending_schedule_entries}$" \
+    <<<"${irq_schedule_report}"
 grep -q "^SOC_REF_CP0_COUNT_SCHEDULE consumed=${cp0_count_schedule_entries} total=${cp0_count_schedule_entries}$" \
     "${RUN_DIR}/qemu/qemu_stderr.log"
 grep -q "^SOC_REF_CP0_RANDOM_SCHEDULE consumed=${cp0_random_schedule_entries} total=${cp0_random_schedule_entries}$" \
@@ -690,13 +847,18 @@ python3 "${validator}" create --output "${RUN_DIR}/differential_manifest.json" \
     --file qemu_model_build_log_sha256="${RUN_DIR}/qemu_model_build.log" \
     --file qemu_plugin_sha256="${RUN_DIR}/qemu/libqemu_retire.so" \
     --file qemu_stream_converter_sha256="${SCRIPT_DIR}/qemu_system_state_to_jsonl_stream.py" \
+    --file qemu_stream_status_sha256="${RUN_DIR}/qemu/qemu_stream_status.json" \
     --file qemu_state_converter_sha256="${SCRIPT_DIR}/qemu_system_state_to_jsonl.py" \
     --file trace_comparator_sha256="${SCRIPT_DIR}/trace_compare.py" \
     --file rtl_retire_capture_sha256="${SCRIPT_DIR}/retire_trace_capture.sv" \
     --file rtl_retire_binding_sha256="${ROOT_DIR}/tb/soc_test/tb_mips_soc.v" \
     --file full_closure_gate_sha256="${SCRIPT_DIR}/run_qemu_linux_full_closure_gate.sh" \
+    --file irq_replay_schedule_builder_sha256="${SCRIPT_DIR}/merge_irq_replay_schedule.py" \
     --file irq_schedule_sha256="${IRQ_SCHEDULE}" \
+    --file irq_replay_schedule_sha256="${IRQ_REPLAY_SCHEDULE}" \
     --file cp0_count_schedule_sha256="${CP0_COUNT_SCHEDULE}" \
+    --file cp0_ti_pending_schedule_sha256="${CP0_TI_PENDING_SCHEDULE}" \
+    --file cp0_timer_edge_trace_sha256="${CP0_TIMER_TRACE}" \
     --file cp0_random_schedule_sha256="${CP0_RANDOM_SCHEDULE}" \
     --file cpu_cycle_schedule_sha256="${CPU_CYCLE_SCHEDULE}" \
     --file uart_apb_schedule_sha256="${UART_APB_SCHEDULE}" \
@@ -729,6 +891,12 @@ python3 "${validator}" create --output "${RUN_DIR}/differential_manifest.json" \
     --set cp0_count_contract="rtl-mfc0-rdhwr-count-replay-v2" \
     --set cp0_count_schedule_entries="${cp0_count_schedule_entries}" \
     --set rdhwr_count_schedule_entries="${rdhwr_count_schedule_entries}" \
+    --set cp0_ti_pending_schedule_contract=rtl-cause-ti-rising-next-instruction-boundary-v2 \
+    --set cp0_ti_pending_schedule_entries="${cp0_ti_pending_schedule_entries}" \
+    --set cp0_ti_pending_schedule_consumed="${cp0_ti_pending_schedule_entries}" \
+    --set irq_replay_schedule_contract=rtl-ti-pending-next-instruction-and-irq-acceptance-v2 \
+    --set irq_replay_schedule_entries="${irq_replay_schedule_entries}" \
+    --set irq_replay_schedule_consumed="${irq_replay_schedule_entries}" \
     --set cp0_random_schedule_contract="rtl-mfc0-random-tlbwr-retire-v1" \
     --set cp0_random_schedule_entries="${cp0_random_schedule_entries}" \
     --set cp0_random_schedule_consumed="${cp0_random_schedule_entries}" \
@@ -788,7 +956,11 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Interrupt replay schedule entries: ${irq_schedule_entries}
 - Interrupt replay contract: RTL retire boundary, Cause, and precise EPC (v2)
 - QEMU interrupt replay entries released: ${irq_schedule_entries}
+- Combined timer/IRQ replay entries consumed: ${irq_replay_schedule_entries}
+- Timer pending replay boundary: captured RTL completed-retire sequence + 1
 - RTL CP0 Count reads replayed: ${cp0_count_schedule_entries} (${rdhwr_count_schedule_entries} via RDHWR)
+- RTL Cause.TI rising boundaries replayed: ${cp0_ti_pending_schedule_entries}
+- CP0 Count/Compare/Cause pre/post edge evidence: ${CP0_TIMER_TRACE}
 - RTL CP0 Random reads/TLBWR replacement indices replayed: ${cp0_random_schedule_entries}
 - QEMU CP0 Random schedule events consumed: ${cp0_random_schedule_entries}
 - RTL cycle-time samples replayed for peripheral timing: ${cpu_cycle_schedule_entries}

@@ -62,6 +62,14 @@ QEMU_PERIPHERAL_TRACE=${QEMU_PERIPHERAL_TRACE:-}
 QEMU_PLUGIN_UART_TRACE=${QEMU_PLUGIN_UART_TRACE:-${QEMU_PERIPHERAL_TRACE}}
 QEMU_PLUGIN_DEBUG_TRACE=${QEMU_PLUGIN_DEBUG_TRACE:-}
 QEMU_PLUGIN_MDU_TRACE=${QEMU_PLUGIN_MDU_TRACE:-}
+machine_irq_schedule=0
+if [[ ",${QEMU_MACHINE_PROPERTIES}," == *",irq-schedule="* ]]; then
+    machine_irq_schedule=1
+fi
+if [[ -n "${IRQ_SCHEDULE}" && "${machine_irq_schedule}" == "1" ]]; then
+    echo "QEMU system retire capture: specify irq-schedule through either IRQ_SCHEDULE or QEMU_MACHINE_PROPERTIES, not both" >&2
+    exit 2
+fi
 # Bound pathological guests before the Python converter materializes JSONL.
 # Normal current-contract guests are well below these limits; callers can
 # raise them explicitly for a reviewed long-running capture.
@@ -213,11 +221,17 @@ fi
 if [[ -n "${IRQ_SCHEDULE}" ]]; then
     [[ -s "${IRQ_SCHEDULE}" ]]
     machine_spec+=" ,irq-schedule=$(realpath "${IRQ_SCHEDULE}")"
+    machine_irq_schedule=1
+fi
+if [[ "${machine_irq_schedule}" == "1" ]]; then
     if [[ -n "${QSPI_IMAGE}" ]]; then
         :
     fi
     if [[ -n "${QEMU_ACCEL}" ]]; then
-        accel_args=(-accel "${QEMU_ACCEL},one-insn-per-tb=on")
+        case ",${QEMU_ACCEL}," in
+            *,one-insn-per-tb=on,*) accel_args=(-accel "${QEMU_ACCEL}") ;;
+            *) accel_args=(-accel "${QEMU_ACCEL},one-insn-per-tb=on") ;;
+        esac
     else
         accel_args=(-accel tcg,one-insn-per-tb=on)
     fi

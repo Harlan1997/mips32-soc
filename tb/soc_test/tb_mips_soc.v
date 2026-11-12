@@ -110,6 +110,25 @@ module tb_mips_soc;
     reg [31:0] linux_irq_schedule_start_pc;
     reg [31:0] linux_irq_schedule_retire_base;
     reg linux_irq_schedule_started;
+    integer linux_timer_pending_schedule_fd;
+    reg [4095:0] linux_timer_pending_schedule_path;
+    reg [31:0] linux_timer_pending_schedule_start_pc;
+    reg [31:0] linux_timer_pending_schedule_retire_base;
+    reg linux_timer_pending_schedule_started;
+    integer linux_timer_trace_fd;
+    reg [4095:0] linux_timer_trace_path;
+    reg linux_timer_event_pending;
+    reg linux_timer_event_is_compare_write;
+    reg [63:0] linux_timer_event_cycle;
+    reg [31:0] linux_timer_event_retire_seq;
+    reg [31:0] linux_timer_event_pc;
+    reg [31:0] linux_timer_event_pre_count;
+    reg [31:0] linux_timer_event_pre_compare;
+    reg [31:0] linux_timer_event_pre_cause;
+    reg linux_timer_event_pre_cnt_eq_cmp;
+    reg [31:0] linux_timer_event_pre_compare_wdata;
+    reg linux_timer_event_pre_intr_req;
+    reg linux_timer_event_pre_interrupt_accept;
     integer linux_random_schedule_fd;
     integer linux_random_schedule_count;
     reg [4095:0] linux_random_schedule_path;
@@ -485,17 +504,22 @@ module tb_mips_soc;
                 d_fault_owner_trace_count = d_fault_owner_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_req &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
-                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_is_data &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translation_fault &&
                 !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match) begin
                 $display("D_FAULT_OWNER_SQUASH cycle=%0d owner_pc=%08h owner_inst=%08h owner_va=%08h owner_code=%0d wb_pc=%08h wb_inst=%08h wb_code=%0d",
                     d_fault_owner_trace_count,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_pc_q,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_inst_q,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_q,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_code_q,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_pc_q :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_inst_q :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_q :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_access_addr,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_code_q :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_capture_code,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code);
@@ -515,6 +539,9 @@ module tb_mips_soc;
             linux_retire_count = 32'd0;
             linux_irq_schedule_retire_base = 32'd0;
             linux_irq_schedule_started = 1'b0;
+            linux_timer_pending_schedule_retire_base = 32'd0;
+            linux_timer_pending_schedule_started = 1'b0;
+            linux_timer_event_pending = 1'b0;
             linux_random_schedule_retire_base = 32'd0;
             linux_random_schedule_started = 1'b0;
             linux_random_schedule_count = 0;
@@ -534,6 +561,52 @@ module tb_mips_soc;
             linux_trace_cycle = linux_trace_cycle + 1;
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid)
                 linux_retire_count = linux_retire_count + 32'd1;
+            if ((linux_timer_pending_schedule_fd != 0 ||
+                 linux_timer_trace_fd != 0) &&
+                !linux_timer_pending_schedule_started &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
+                u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc ==
+                    linux_timer_pending_schedule_start_pc) begin
+                linux_timer_pending_schedule_retire_base =
+                    linux_retire_count - 32'd1;
+                linux_timer_pending_schedule_started = 1'b1;
+            end
+            if (linux_timer_pending_schedule_started &&
+                !linux_timer_event_pending &&
+                (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.we &&
+                 {u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.waddr,
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.wsel} ==
+                    {5'd11, 3'd0} ||
+                 (!u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[30] &&
+                  u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cnt_eq_cmp))) begin
+                linux_timer_event_pending = 1'b1;
+                linux_timer_event_is_compare_write =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.we &&
+                    {u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.waddr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.wsel} ==
+                        {5'd11, 3'd0};
+                linux_timer_event_cycle = linux_trace_cycle;
+                linux_timer_event_retire_seq =
+                    linux_retire_count - linux_timer_pending_schedule_retire_base;
+                linux_timer_event_pc =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc;
+                linux_timer_event_pre_count =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count;
+                linux_timer_event_pre_compare =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare;
+                linux_timer_event_pre_cause =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause;
+                linux_timer_event_pre_cnt_eq_cmp =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cnt_eq_cmp;
+                linux_timer_event_pre_compare_wdata =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.wdata;
+                linux_timer_event_pre_intr_req =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req;
+                linux_timer_event_pre_interrupt_accept =
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept;
+            end
             if (linux_random_schedule_fd != 0 &&
                 !linux_random_schedule_started &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
@@ -617,7 +690,10 @@ module tb_mips_soc;
                             linux_terminal_finish_started = 1'b1;
                             fork
                                 begin
-                                    repeat (2) @(posedge clk);
+                                    // Stop after the marker retirement has
+                                    // flushed; one additional cycle emits a
+                                    // producer-only post-marker record.
+                                    repeat (1) @(posedge clk);
                                     #1;
                                     $display("LINUX_TERMINAL_STOP_COMPLETE cycle=%0d",
                                              linux_trace_cycle);
@@ -907,8 +983,10 @@ module tb_mips_soc;
                   (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_pc_trace_start) &&
                    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < linux_pc_trace_end))))) begin
-                $display("LINUX_PC_TRACE cycle=%0d ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h gp=%08h t0=%08h t1=%08h s0=%08h s3=%08h s4=%08h irqacc=%b",
+                $display("LINUX_PC_TRACE cycle=%0d retire_seq=%0d commit=%b ifpc=%08h wbpc=%08h wbinst=%08h wbarch=%b wbreg=%b/%0d/%08h mem=%b/%08h/%08h llsc=%b/%b/%b/%b/%08h/%08h/%08h data=%b/%b/%b/%08h/%08h status=%08h cause=%08h epc=%08h sp=%08h ra=%08h a0=%08h a1=%08h v0=%08h gp=%08h t0=%08h t1=%08h s0=%08h s3=%08h s4=%08h irqacc=%b",
                     linux_trace_cycle,
+                    linux_retire_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_commit_valid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_if_stage.pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
@@ -2550,6 +2628,44 @@ module tb_mips_soc;
         end
     end
 
+    always @(negedge clk) begin
+        if (rst_n && linux_timer_event_pending) begin
+            if (!linux_timer_event_is_compare_write &&
+                !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[30])
+                $fatal(1, "Cause.TI match was not latched after the CP0 edge");
+            if (linux_timer_trace_fd != 0) begin
+                $fdisplay(linux_timer_trace_fd,
+                    "%0d %0d %s %08h %08h %08h %08h %b %b %08h %08h %08h %b %b %b %b %b %b",
+                    linux_timer_event_cycle,
+                    linux_timer_event_retire_seq,
+                    linux_timer_event_is_compare_write ? "compare" : "ti",
+                    linux_timer_event_pc,
+                    linux_timer_event_pre_count,
+                    linux_timer_event_pre_compare,
+                    linux_timer_event_pre_cause,
+                    linux_timer_event_pre_cnt_eq_cmp,
+                    linux_timer_event_is_compare_write,
+                    linux_timer_event_pre_compare_wdata,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_count,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_compare,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_cause[30],
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cnt_eq_cmp,
+                    linux_timer_event_pre_intr_req,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.intr_req,
+                    linux_timer_event_pre_interrupt_accept,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.interrupt_accept);
+                $fflush(linux_timer_trace_fd);
+            end
+            if (!linux_timer_event_is_compare_write &&
+                linux_timer_pending_schedule_fd != 0) begin
+                $fdisplay(linux_timer_pending_schedule_fd, "%0d %08h",
+                    linux_timer_event_retire_seq, linux_timer_event_pc);
+                $fflush(linux_timer_pending_schedule_fd);
+            end
+            linux_timer_event_pending = 1'b0;
+        end
+    end
+
     initial begin
         linux_trace_limit = 0;
         if (!$value$plusargs("LINUX_TRACE_LIMIT=%d", linux_trace_limit)) begin end
@@ -2782,6 +2898,38 @@ module tb_mips_soc;
             if (linux_irq_schedule_fd == 0)
                 $fatal(1, "cannot open LINUX_IRQ_SCHEDULE_PATH=%s",
                        linux_irq_schedule_path);
+        end
+        linux_timer_pending_schedule_fd = 0;
+        linux_timer_pending_schedule_path = {4096{1'b0}};
+        linux_timer_pending_schedule_start_pc = 32'd0;
+        linux_timer_trace_fd = 0;
+        linux_timer_trace_path = {4096{1'b0}};
+        linux_timer_event_pending = 1'b0;
+        linux_timer_event_is_compare_write = 1'b0;
+        if ($value$plusargs("LINUX_TIMER_PENDING_SCHEDULE_PATH=%s",
+                            linux_timer_pending_schedule_path)) begin
+            if (!$value$plusargs("LINUX_TIMER_PENDING_SCHEDULE_START_PC=%h",
+                                 linux_timer_pending_schedule_start_pc))
+                $fatal(1, "LINUX_TIMER_PENDING_SCHEDULE_START_PC is required with timer schedule capture");
+            linux_timer_pending_schedule_fd =
+                $fopen(linux_timer_pending_schedule_path, "w");
+            if (linux_timer_pending_schedule_fd == 0)
+                $fatal(1, "cannot open LINUX_TIMER_PENDING_SCHEDULE_PATH=%s",
+                       linux_timer_pending_schedule_path);
+            $fdisplay(linux_timer_pending_schedule_fd,
+                "# cp0-ti-pending-schedule-v1 start_pc=%08h sequence pc",
+                linux_timer_pending_schedule_start_pc);
+        end
+        if ($value$plusargs("LINUX_TIMER_TRACE_PATH=%s", linux_timer_trace_path)) begin
+            if (!$value$plusargs("LINUX_TIMER_PENDING_SCHEDULE_START_PC=%h",
+                                 linux_timer_pending_schedule_start_pc))
+                $fatal(1, "LINUX_TIMER_PENDING_SCHEDULE_START_PC is required with timer edge trace");
+            linux_timer_trace_fd = $fopen(linux_timer_trace_path, "w");
+            if (linux_timer_trace_fd == 0)
+                $fatal(1, "cannot open LINUX_TIMER_TRACE_PATH=%s",
+                       linux_timer_trace_path);
+            $fdisplay(linux_timer_trace_fd,
+                "# cycle sequence event pc count_pre compare_pre cause_pre cnt_eq_cmp_pre compare_write compare_wdata count_post compare_post ti_post cnt_eq_cmp_post intr_req_pre intr_req_post interrupt_accept_pre interrupt_accept_post");
         end
         linux_random_schedule_fd = 0;
         linux_random_schedule_path = {4096{1'b0}};
@@ -3134,6 +3282,7 @@ module tb_mips_soc;
             l1_trace_count = l1_trace_count + 1;
         end
     end
+
 `endif
 
 */
@@ -4071,6 +4220,10 @@ module tb_mips_soc;
             $fclose(linux_uart_apb_schedule_fd);
         if (linux_irq_schedule_fd != 0)
             $fclose(linux_irq_schedule_fd);
+        if (linux_timer_pending_schedule_fd != 0)
+            $fclose(linux_timer_pending_schedule_fd);
+        if (linux_timer_trace_fd != 0)
+            $fclose(linux_timer_trace_fd);
         if (linux_random_schedule_fd != 0) begin
             $display("LINUX_RANDOM_SCHEDULE_CAPTURE events=%0d",
                      linux_random_schedule_count);
@@ -5011,6 +5164,7 @@ bind tb_mips_soc soc_observation_bind u_soc_retire_observation_bind (
     .retire_cp0_sel       (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_sel),
     .retire_cp0_data      (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_ex_out),
     .retire_fpr_state     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_save_fpr),
+    .retire_fpr_hi_state  (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_save_fpr_hi),
     .retire_fcsr_state    (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ctx_save_fcsr),
     .retire_mem_valid     (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace ||
                            u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),

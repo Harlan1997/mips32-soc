@@ -117,6 +117,7 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
     .retire_cp0_sel       (u_dut.u_core_subsystem.u_core.u_cpu.wb_cp0_sel),
     .retire_cp0_data      (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
     .retire_fpr_state     (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fpr),
+    .retire_fpr_hi_state  (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fpr_hi),
     .retire_fcsr_state    (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fcsr),
     .retire_mem_valid     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace ||
                            u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),

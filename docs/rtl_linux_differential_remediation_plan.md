@@ -2,7 +2,59 @@
 
 Plan date: 2026-09-20
 
-Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / FULL DIFFERENTIAL OPEN`
+Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / NONBLOCKING FULL DIFFERENTIAL BOUNDED PASS`
+
+### 2026-11-11 Nonblocking Linux terminal differential closure
+
+The current-source nonblocking configuration completed the declared generic
+Linux workload through the terminal userspace marker and compared the complete
+retire stream with the replayed QEMU reference. The strict streaming comparator
+passed `66,876,536` aligned records; RTL produced `66,876,577` records with 41
+documented producer-specific prefix/synchronous-exception records. All 1,429
+interrupt schedule entries, 1,397 timer boundaries, 129 CP0 Random events,
+8,359,571 cycle samples, and 16,700 UART APB transfers were consumed. QEMU
+flushed the terminal marker and exited with child status 0. The run is retained
+under `/data/disk/tmp/mips32-soc/full-qemu-nb-current-src-20261111-r3/`.
+
+This is a bounded pass for the declared generic Linux image and nonblocking
+configuration. It does not establish unrestricted Linux runtime, full ISA
+compliance, complete privileged/MMU/FPU/OS semantics, or product signoff.
+
+### 2026-11-10 CP0 timer replay boundary diagnosis
+
+The current timer mismatch is owned by CP0 timer replay. The narrow RTL
+capture records `MFC0 Cause` at `PC=0x88016468`, retire sequence
+`66,758,870`, returning `0x00800020`. The CP0 edge capture records the next
+`Cause.TI` rising edge at cycle `291,208,895`; after accounting for the timer
+schedule's 23-retirement epoch offset, it is the same completed-retirement
+boundary. QEMU's translated retire helper checks replay before executing the
+instruction at that sequence, so replaying the captured TI sequence directly
+asserts TI too early for the Cause read.
+
+The full-closure schedule builder now releases TI at the captured sequence
+plus one, while preserving the captured IRQ-acceptance sequence and placing TI
+before IRQ acceptance when both share a boundary. A focused schedule test
+passes. The corrected QEMU replay was run against the exact Cause read at
+`PC=0x88016468`, instruction `0x40036800`: QEMU returned `0x00800020`, matching
+the RTL value. The focused run then exited nonzero when its bounded CP0 Count
+schedule was exhausted at `PC=0x8801033c`, before the Linux terminal marker.
+This closes the local Cause-read diagnosis only; the full differential remains
+`OPEN`, and the result is not closure evidence. The run and inputs are recorded
+under `/data/disk/tmp/mips32-soc/timer-cause-focused-replay-20261110-r2/`.
+
+The replay runner also had an option-precedence defect: the full-closure gate
+put the merged timer/IRQ schedule in `QEMU_MACHINE_PROPERTIES` and separately
+passed the raw IRQ schedule through `IRQ_SCHEDULE`. The QEMU 9.2 machine-option
+parser keeps the last duplicate key, so the wrapper appended a second
+`irq-schedule` property and replaced the merged schedule with the IRQ-only
+schedule. The full-closure invocation now supplies the combined schedule once,
+and the generic capture wrapper rejects both sources being set together while
+retaining `one-insn-per-tb=on` for schedule-driven replay. Shell syntax checks,
+the duplicate-source rejection check, both schedule merge tests, and a fresh
+QEMU smoke capture with one schedule property and single-instruction TCG pass.
+The focused replay confirms the exact `MFC0 Cause` value, but it is not a full
+replay: QEMU later exhausts the bounded CP0 Count schedule before reaching the
+Linux terminal marker. No full differential closure is claimed.
 
 ## 1. Objective and current non-claims
 
@@ -19,9 +71,9 @@ project status is:
 | --- | --- | --- |
 | Delay-slot interrupt root cause | `BLOCK_REDUCED` | A plausible fix exists and existing directed gates pass, but the new WB-to-EX and WB-to-ID cases lack direct coverage. |
 | Generic RTL Linux declared userspace workload | `CLOSED` | The current-source seeded terminal gate reaches `/init` and all declared userspace markers in order with a clean simulator terminal stop. Unrestricted Linux and full RTL/QEMU differential remain separate open contracts. |
-| BadVAddr fault/replay | `OPEN` | Literal `0xffffffff` is absent in one focus window; instruction ownership and replay identity are not proven. |
+| BadVAddr fault/replay | `BOUNDED_PASS` | Current-source `cpu-badvaddr-owner-gate` proves PC/instruction/address/code identity for 14 owner commits and observes one older-syscall/younger-load squash. Reset, interrupt-coincident, ERET/context-restore, and broader replay pressure remain open. |
 | QEMU/RTL focus comparison | `UNTRUSTED` | Two checkpoint comparisons exist, but truncation and unselected-register mutations can falsely pass. |
-| Bounded full retire differential | `OPEN` | Existing bounded differential infrastructure is useful, but this new generic Linux focus gate does not perform a complete architectural comparison. |
+| Bounded full retire differential | `BOUNDED_PASS` | Current-source nonblocking generic Linux run compares the complete declared retire stream through the terminal marker with strict streaming state comparison. Unrestricted Linux and broader ISA/OS contracts remain separate. |
 | UART/VIC equivalence | `OPEN` | The focus gate does not compare UART or VIC transactions. |
 | Minimal RTL userspace profile | `BOUNDED_PASS` | Only the existing opt-in minimal image and its declared marker contract are covered. |
 
@@ -35,19 +87,20 @@ The remediation starts from branch `product-boot-expansion`, base commit
 not represented by the base commit, retained artifacts that identify only
 `f899620` are stale for signoff purposes.
 
-Known defects in the current implementation and gate are:
+Known defects and residual gaps in the current implementation and gate are:
 
-1. `d_fault_vaddr_pending_q` can outlive a younger fault that was squashed by
-   an older exception, allowing unrelated later exceptions to consume stale
-   fault state.
+1. The current owner token and squash clear are implemented and pass the
+   directed older-syscall/younger-load case; reset, interrupt-coincident,
+   ERET/context-restore, and broader back-to-back owner coverage remain.
 2. The focus runner reuses old logs and a precompiled nonblocking simulator by
    default, and rebuilds its plugin only when the shared object is absent.
 3. The comparator accepts unequal trace lengths and checkpoint mode compares
    only a subset of the selected GPRs.
 4. The QEMU plugin reads vCPU registers from its exit callback, where no current
    vCPU is guaranteed; QEMU can assert in `plugins/api.c`.
-5. BadVAddr validation rejects only one literal value and does not pair a fault
-   with the owning instruction and replay.
+5. The owner gate now pairs faults with PC, instruction, address, and exception
+   code, but the Linux focus validator still needs the complete ownership fields
+   and current-source replay comparison required for full closure.
 6. The RTL focus monitor bypasses WB data based on architectural-valid and
    register-write intent rather than actual commit, so an excepting or squashed
    write can be reported as retired state.

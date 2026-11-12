@@ -37,6 +37,9 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-fpu-int32-indefinite.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-nan.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-snan-default.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rsqrt-single-rounding.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-sc-consume-reservation.patch" \
@@ -45,7 +48,8 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-random-schedule.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-count-destination.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rdhwr-count.patch" |
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rdhwr-count.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-wait-reserved-fields.patch" |
         sha256sum | awk '{print $1}'
 }
 
@@ -62,10 +66,14 @@ if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   rg -q 'SOC_REF_FPU_LEGACY_NAN' "${QEMU_SRC}/target/mips/fpu_helper.h" &&
+   rg -q 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' "${QEMU_SRC}/fpu/softfloat-specialize.c.inc" &&
+   rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
    rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_RTL_TLB_VECTOR_V2' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
+   rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    [[ "$(<"${INPUT_STAMP}")" == "${PROJECT_INPUTS_HASH}" ]]; then
     echo "QEMU mips32-soc-ref build is up to date: ${QEMU_BUILD}/qemu-system-mipsel"
     exit 0
@@ -157,6 +165,13 @@ if ! rg -q 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper
         --unidiff-zero
 fi
 rg -q 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"
+if ! rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-wait-reserved-fields.patch"
+fi
+rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' \
+    "${QEMU_SRC}/target/mips/tcg/translate.c"
 if ! rg -q 'qemu_mips32_soc_ref_cp0_timer_armed' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
     perl -0pi -e 's/(void qemu_mips32_soc_ref_cp0_retire_store_count\(CPUMIPSState \*env,\n                                                uint32_t count\)\n    __attribute__\(\(weak\)\);\n)/$1bool qemu_mips32_soc_ref_cp0_timer_armed(void) __attribute__((weak));\nvoid qemu_mips32_soc_ref_cp0_compare_write(uint32_t value)\n    __attribute__((weak));\n/s' \
@@ -473,6 +488,32 @@ if ! rg -q 'SOC_REF_FPU_DOUBLE_UNDERFLOW' \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch"
 fi
 
+if ! rg -q 'SOC_REF_FPU_LEGACY_NAN' \
+        "${QEMU_SRC}/target/mips/fpu_helper.h"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-nan.patch"
+    sed -i '/set_default_nan_mode(false, &env->active_fpu.fp_status);/a\    /* SOC_REF_FPU_LEGACY_NAN */' \
+        "${QEMU_SRC}/target/mips/fpu_helper.h"
+fi
+rg -q 'SOC_REF_FPU_LEGACY_NAN' \
+    "${QEMU_SRC}/target/mips/fpu_helper.h"
+
+if ! rg -q 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' \
+        "${QEMU_SRC}/fpu/softfloat-specialize.c.inc"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-snan-default.patch"
+fi
+rg -q 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' \
+    "${QEMU_SRC}/fpu/softfloat-specialize.c.inc"
+
+if ! rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
+        "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rsqrt-single-rounding.patch"
+fi
+rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
+    "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+
 if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\) \{\n            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     apply_project_patch \
@@ -482,6 +523,11 @@ if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\
             UPDATE_FP_FLAGS(env->active_fpu.fcr31, mips_exception_flags);' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 fi
+
+# Older cached trees may contain the sticky-flag update twice. Keep the
+# project-local hook idempotent and ensure one architectural update per FPE.
+perl -0pi -e 's{(            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/\n            UPDATE_FP_FLAGS\(env->active_fpu\.fcr31, mips_exception_flags\);\n)            UPDATE_FP_FLAGS\(env->active_fpu\.fcr31, mips_exception_flags\);}{$1}s' \
+    "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
 if ! rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     apply_project_patch \

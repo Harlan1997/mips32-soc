@@ -4,12 +4,22 @@
     .section .text.init, "ax"
     .globl _start
 _start:
-    /* Enable CP0 and CU1, then enable only the Divide-by-zero FPE. */
+    /* Enable CP0 and CU1. First verify that CTC1 itself raises FPE when the
+     * newly written Cause and Enable fields overlap, while reserved FCSR
+     * bits are still masked. */
     lui     $t0, 0x3000
     mtc0    $t0, $12
     nop
     nop
     nop
+    lui     $t0, 0xffff
+    ori     $t0, $t0, 0xffff
+    ctc1    $t0, $31
+    nop
+    nop
+
+ctc1_resume:
+    /* Now enable only Divide-by-zero for the arithmetic FPE check. */
     lui     $t0, 0x0000
     ori     $t0, $t0, 0x0400       /* FCSR Enable[div0] = bit 10 */
     ctc1    $t0, $31
@@ -41,10 +51,27 @@ _except_handler:
     bne     $k0, $k1, fail_cause
     nop
 
-    /* Cause[16:12] must report div0 (flag index 3), Flags[6:2] sticky. */
+    /* The first FPE is caused by CTC1's newly written Cause/Enable overlap.
+     * It must expose the masked all-ones image and leave EPC at CTC1. */
     cfc1    $k0, $31
     nop
     nop
+    lui     $k1, 0xff83
+    ori     $k1, $k1, 0xffff
+    bne     $k0, $k1, arithmetic_fpe_handler
+    nop
+    lui     $k0, 0x0000
+    ori     $k0, $k0, 0x0000
+    ctc1    $k0, $31
+    nop
+    nop
+    la      $k0, ctc1_resume
+    mtc0    $k0, $14
+    eret
+    nop
+
+arithmetic_fpe_handler:
+    /* Cause[16:12] must report div0 (flag index 3), Flags[6:2] sticky. */
     srl     $k1, $k0, 12
     andi    $k1, $k1, 0x1f
     addiu   $t0, $zero, 8

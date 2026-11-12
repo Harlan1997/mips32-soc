@@ -16,7 +16,7 @@ COMMIT = re.compile(
     r"va=(?P<va>[0-9a-fA-F]{8})\s+code=(?P<code>\d+)\s+"
     r"cp0_bad=(?P<bad>[0-9a-fA-F]{8})\s+match=(?P<match>[01])$"
 )
-SQUASH = re.compile(r"^D_FAULT_OWNER_SQUASH\s+")
+SQUASH = re.compile(r"^D_FAULT_OWNER_SQUASH\s+.*$")
 
 
 def check(path):
@@ -45,6 +45,8 @@ def check(path):
         raise ValueError("no D-fault owner captures found")
     if not commits:
         raise ValueError("no D-fault owner commits found")
+    if not squashes:
+        raise ValueError("no older-exception/younger-fault squash observed")
     for commit in commits:
         if commit["match"] != "1":
             raise ValueError("owner commit was not marked as a match")

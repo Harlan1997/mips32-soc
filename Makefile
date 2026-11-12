@@ -288,13 +288,13 @@ dcache-parity-gate:
 .PHONY: bpu-redirect-gate sva-gate verification-foundation-gate micro-tlb-gate interrupt-priority-gate mdu-flush-gate mips-control-fpu-cond-gate mips-fpu-compare-gate firmware firmwares uvm uvm-regression uvm-directed-regression regression phase2-regression phase2-complete phase3-regression phase3-complete phase3b-regression phase3b-complete phase3c-regression current-contract-signoff soc-smoke cpu-cp0-gate cpu-mmu-complete p1-current-complete dual-core-frontend-compile dual-core-soc-gate dcache-coherency-gate coherency-stress-gate mdu-cpu-gate dma-cpu-gate dma-axi-error-gate vic-cpu-gate vic-full-sources-gate uart-cpu-gate uart-external-rx-gate uart-external-rx-soc-gate uart-cts-soc-gate l2-cpu-gate l2-end-to-end-gate llsc-gate llsc-coherency-gate product-mmu-boot-gate product-mmu-micro-tlb-gate product-mmu-ebase-modified-gate product-mmu-asid-context-gate product-mmu-process-pressure-gate product-mmu-pagemask-gate product-vectored-interrupt-gate spi-flash-unit-gate xip-read-timeout-unit-gate qspi-status-integration-gate qspi-cmd-behavioral-gate qspi-flash-behavioral-gate qspi-pad-wrapper-gate qspi-axi-xip-gate qspi-axi-xip-quad-gate qspi-soc-memory-quad-xip-gate qspi-shared-pin-arbiter-gate qspi-soc-pad-mux-gate qspi-soc-quad-gate qspi-vendor-neutral-boot-gate product-manifest-handoff-gate product-manifest-handoff-quad-gate product-kseg0-runtime-gate product-kseg0-runtime-depth-gate product-kseg0-runtime-layout-gate product-kseg0-runtime-abi-gate product-kseg0-runtime-multi-gate product-kernel-boot-gate tlb-asid-policy-gate tlb-os-context-gate tlb-invalidate-gate mmu-active-gate mmu-hardware-walker-soc-gate wdt-unit-gate wdt-peripheral-gate boot-status-unit-gate wdt-boot-failure-gate product-wdt-boot-failure-gate cpu-cache-error-gate cpu-cache-op-gate cpu-cache-tag-gate cpu-icache-exec-gate cpu-icache-error-gate cpu-icache-product-error-gate cpu-icache-stress-gate cpu-icache-tag-gate product-cacheerr-gate ddr-contract-entry-audit ddr4-phy-behavioral-gate ddr4-status-gate ddr4-pic-integration-gate ddr4-controller-gate ddr4-controller-stress-gate ddr4-complete-gate ecc-secded-gate rtl-frontend-compile rob-fifo-gate soc-random-regression stage-sim dut-block-unit-gate cpu-dside-hardware-walker-gate page-table-walker-page-sizes-gate cpu-hardware-walker-page-size-gate cpu-hardware-walker-page-sizes-gate coverage-strict-clean-gate linux-boot-fetch-sources linux-boot-dependency-gate qemu-linux-user project-tree clean-firmware clean-build clean-legacy-artifacts clean
 
 .PHONY: cache-concurrency-gate l1-nonblocking-gate l1-nonblocking-errors-gate l1-nonblocking-axi-bridge-gate l1-nonblocking-cpu-compat-gate l1-nonblocking-cpu-multi-gate l1-nonblocking-cpu-stress-gate l1-nonblocking-cpu-error-gate l1-nonblocking-cpu-two-error-gate l1-nonblocking-cpu-error-reset-gate mmu-ipi-shootdown-pressure-gate fpu-single-gate fpu-double-gate fpu-cu1-exception-gate fpu-fpe-exception-gate fpu-fpe-double-gate fpu-fpe-inexact-gate fpu-fpe-double-inexact-gate fpu-fpe-double-underflow-gate fpu-fpe-invalid-gate fpu-fpe-overflow-gate fpu-fpe-underflow-gate fpu-rounding-gate qemu-system-fpu-single-differential-gate qemu-system-fpu-double-differential-gate qemu-system-fpu-cu1-exception-differential-gate qemu-system-fpu-fpe-inexact-differential-gate qemu-system-fpu-fpe-double-inexact-differential-gate qemu-system-fpu-fpe-double-underflow-differential-gate qemu-system-fpu-fpe-double-differential-gate qemu-system-fpu-fpe-invalid-differential-gate qemu-system-fpu-fpe-overflow-differential-gate qemu-system-fpu-fpe-underflow-differential-gate qemu-system-fpu-fpe-boundary-differential-gate qemu-system-branch-likely-differential-gate cpu-reference-gate cpu-lockstep-gate perf-counters-gate qemu-system-mips32-soc-ref qemu-system-sram-uart-mailbox-gate qemu-system-peripheral-contract-gate qemu-system-qspi-gate qemu-system-ddr-gate qemu-system-current-contract-gate qemu-system-selected-differential-gate qemu-system-retire-capture-gate qemu-system-retire-differential-gate qemu-system-linux-differential-gate qemu-system-isa-r2-differential-gate qemu-system-exception-differential-gate qemu-system-break-differential-gate qemu-system-trap-differential-gate qemu-system-trap-imm-differential-gate qemu-system-di-ei-differential-gate qemu-system-wait-differential-gate qemu-system-bd-exception-differential-gate qemu-system-peripheral-differential-gate qemu-system-vic-differential-gate qemu-system-vic-cpu-differential-gate qemu-system-vic-full-sources-differential-gate qemu-system-mmu-contract-gate qemu-system-mmu-process-pressure-gate qemu-system-mmu-refill-differential-gate qemu-system-dma-v2-model-gate qemu-system-dma-v2-event-contract-gate qemu-system-dma-fault-gate qemu-system-unaligned-gate qemu-system-unaligned-differential-gate qemu-system-uhi-dtb-gate
-.PHONY: isa-implementation-audit branch-likely-gate direct-jal-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-fpu-rounding-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate cpu-lui-lw-forward-gate rtl-linux-forwarding-gate rtl-linux-focus-differential-gate
+.PHONY: isa-implementation-audit branch-likely-gate direct-jal-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-fpu-rounding-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate srs-privilege-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate cpu-lui-lw-forward-gate rtl-linux-forwarding-gate rtl-linux-focus-differential-gate
 .PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-linux-differential-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
 .PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
-.PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit qemu-system-cp0-timer-wait-differential-gate linux-timer-clock-comparison-test
+.PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit qemu-system-cp0-timer-wait-differential-gate linux-timer-clock-comparison-test retire-trace-fifo-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
-.PHONY: qemu-system-linux-differential-gate qemu-system-linux-full-closure-gate qemu-system-linux-terminal-closure-gate qemu-system-linux-full-differential-gate linux-memory-owner-trace-checker-test linux-image-identity-test
+.PHONY: qemu-system-linux-differential-gate qemu-system-linux-full-closure-gate qemu-system-linux-terminal-closure-gate qemu-system-linux-full-differential-gate qemu-system-irq-replay-schedule-test linux-memory-owner-trace-checker-test linux-image-identity-test
 .PHONY: qemu-system-uart-timing-test
 
 linux-memory-owner-trace-checker-test:
@@ -302,7 +302,7 @@ linux-memory-owner-trace-checker-test:
 
 linux-image-identity-test:
 	python3 scripts/test_validate_linux_image_identity.py
-.PHONY: qemu-system-fpu-fpe-underflow-differential-gate
+.PHONY: qemu-system-fpu-fpe-exception-differential-gate qemu-system-fpu-fpe-underflow-differential-gate
 .PHONY: l1-nonblocking-cpu-two-error-reset-gate
 .PHONY: mmu-os-pressure-complete-gate qemu-system-mmu-os-pressure-gate qemu-system-mmu-ipi-contract-gate qemu-system-gpio-input-gate qemu-system-ddr-fault-gate product-mmu-machine-check-gate dual-core-mmu-shootdown-gate
 .PHONY: linux-boot-build-gate linux-gpio-userspace-gate linux-soc-vic-gate linux-soc-contract-audit rtl-linux-progress-gate rtl-linux-userspace-gate rtl-linux-minimal-userspace-gate linux-exception-frame-check
@@ -936,14 +936,18 @@ qemu-system-linux-differential-gate: qemu-system-mips32-soc-ref
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_linux_differential \
 		tb/isa_ref/run_qemu_linux_differential_gate.sh
 
-qemu-system-linux-full-closure-gate: qemu-system-mips32-soc-ref
+qemu-system-irq-replay-schedule-test:
+	python3 -m py_compile tb/isa_ref/merge_irq_replay_schedule.py tb/isa_ref/test_merge_irq_replay_schedule.py
+	python3 tb/isa_ref/test_merge_irq_replay_schedule.py
+
+qemu-system-linux-full-closure-gate: qemu-system-mips32-soc-ref qemu-system-irq-replay-schedule-test
 	chmod +x tb/isa_ref/run_qemu_linux_terminal_closure_gate.sh
 	QEMU_BIN=$(QEMU_BIN) QEMU_SRC=$(QEMU_SRC) QEMU_BUILD=$(QEMU_BUILD) \
 	KERNEL=$(KERNEL) LINUX_IMAGE_DIR=$(LINUX_IMAGE_DIR) \
 	RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_linux_full_closure \
 	tb/isa_ref/run_qemu_linux_terminal_closure_gate.sh
 
-qemu-system-linux-full-differential-gate:
+qemu-system-linux-full-differential-gate: qemu-system-irq-replay-schedule-test
 	QEMU_BIN=$(QEMU_BIN) QEMU_SRC=$(QEMU_SRC) QEMU_BUILD=$(QEMU_BUILD) \
 	KERNEL=$(KERNEL) LINUX_IMAGE_DIR=$(LINUX_IMAGE_DIR) RUN_DIR=$(RUN_DIR) \
 	bash tb/isa_ref/run_qemu_linux_full_closure_gate.sh
@@ -1073,6 +1077,10 @@ qemu-system-fpu-cu1-exception-differential-gate: qemu-system-mips32-soc-ref
 qemu-system-fpu-fpe-inexact-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=fpu_fpe_inexact FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_inexact QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_inexact_differential_v2 RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK' tb/isa_ref/run_qemu_system_differential_gate.sh
+
+qemu-system-fpu-fpe-exception-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_fpe_exception FW_DIR=$(BUILD_DIR)/firmware/fpu_fpe_exception QEMU_CPU=24Kf QEMU_CAPTURE_TMPDIR=1 RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_fpe_exception_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS +define+TB_SKIP_UART_PIN_CHECK +define+TB_FPU_FPE_DEBUG' tb/isa_ref/run_qemu_system_differential_gate.sh
 
 qemu-system-fpu-fpe-double-inexact-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -1299,6 +1307,9 @@ qemu-system-srs-map-differential-gate: qemu-system-mips32-soc-ref
 
 srs-scheduler-context-gate:
 	VCS_EXTRA_ARGS='+define+SOC_SRS_ENABLE=1 +define+SRS_CONTEXT_TEST' RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_scheduler_srs tb/unit/cpu_test/run_cpu_scheduler_integration.sh
+
+srs-privilege-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_srs_privilege tb/unit/cpu_test/run_mips_cpu_srs_privilege.sh
 
 firmwares:
 	$(MAKE) -C tb/soc_test/fw all-firmwares OUT_DIR=$(BUILD_DIR)/firmware
@@ -1783,6 +1794,10 @@ soc-random-regression:
 
 stage-sim:
 	$(MAKE) -C sim STAGE=$(STAGE) BUILD_DIR=$(BUILD_DIR) all
+
+retire-trace-fifo-gate:
+	chmod +x tb/isa_ref/run_retire_trace_fifo_gate.sh
+	tb/isa_ref/run_retire_trace_fifo_gate.sh
 
 mem-stage-gate:
 	$(MAKE) -C sim STAGE=mem BUILD_DIR=$(BUILD_DIR) all

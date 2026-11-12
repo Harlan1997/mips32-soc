@@ -10,6 +10,12 @@
 #define SOC_REF_UART_TX_FIFO_DEPTH 16U
 #define SOC_REF_UART_MODEM_INPUTS_DEFAULT 0x08U
 
+static inline bool soc_ref_uart_console_write_visible(bool tx_accepted,
+                                                      bool diff_timing)
+{
+    return tx_accepted || diff_timing;
+}
+
 typedef struct SocRefUartModemModel {
     uint8_t input_n;
     uint8_t previous_n;

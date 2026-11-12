@@ -1,0 +1,12 @@
+diff --git a/target/mips/fpu_helper.h b/target/mips/fpu_helper.h
+--- a/target/mips/fpu_helper.h
++++ b/target/mips/fpu_helper.h
+@@ -33,5 +33,5 @@ static inline void restore_snan_bit_mode(CPUMIPSState *env)
+     /*
+      * With nan2008, SNaNs are silenced in the usual way.
+      * Before that, SNaNs are not silenced; default nans are produced.
+      */
+     set_snan_bit_is_one(!nan2008, &env->active_fpu.fp_status);
+-    set_default_nan_mode(!nan2008, &env->active_fpu.fp_status);
++    set_default_nan_mode(false, &env->active_fpu.fp_status);
+ }

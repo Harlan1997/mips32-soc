@@ -67,6 +67,131 @@ main:
     nop
     nop
 
+    /* Legacy-MIPS NaN arithmetic and conversion boundaries.  The clear
+     * fraction MSB is quiet; the set MSB is signaling for the 24Kf contract. */
+    lui     $t0, 0x0000
+    ori     $t0, $t0, 0x0001
+    mtc1    $t0, $f6
+    lui     $t0, 0x7ff4
+    ori     $t0, $t0, 0x0000
+    .word   0x44883800       /* mtc1 $t0,$f7 */
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    add.d   $f10, $f6, $f0
+    .word   0x440b5000       /* mfc1 $t3,$f10: low word */
+    addiu   $t5, $zero, 1
+    bne     $t3, $t5, fail_conv
+    nop
+    .word   0x440c5800       /* mfc1 $t4,$f11: high word */
+    lui     $t5, 0x7ff4
+    bne     $t4, $t5, fail_conv
+    nop
+    cfc1    $t6, $31
+    srl     $t6, $t6, 2
+    andi    $t6, $t6, 0x001f
+    bne     $t6, $zero, fail_conv
+    nop
+
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    mtc1    $zero, $f6
+    lui     $t0, 0x7ff8
+    ori     $t0, $t0, 0x0000
+    .word   0x44883800       /* mtc1 $t0,$f7 */
+    add.d   $f10, $f6, $f0
+    .word   0x440b5000       /* mfc1 $t3,$f10: low word */
+    lui     $t5, 0xffff
+    ori     $t5, $t5, 0xffff
+    bne     $t3, $t5, fail_conv
+    nop
+    .word   0x440c5800       /* mfc1 $t4,$f11: high word */
+    lui     $t5, 0x7ff7
+    ori     $t5, $t5, 0xffff
+    bne     $t4, $t5, fail_conv
+    nop
+    cfc1    $t6, $31
+    srl     $t6, $t6, 2
+    andi    $t6, $t6, 0x001f
+    addiu   $t5, $zero, 0x0010
+    bne     $t6, $t5, fail_conv
+    nop
+
+    /* NaN over zero must not raise Divide-by-zero, and CVT.S.D uses the
+     * destination single payload/default-NaN rules. */
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    mtc1    $zero, $f6
+    lui     $t0, 0x7ff4
+    ori     $t0, $t0, 0x0000
+    .word   0x44883800
+    mtc1    $zero, $f8
+    .word   0x44804800       /* zero high word in f9 */
+    div.d   $f10, $f6, $f8  /* quiet NaN / zero must remain a quiet NaN */
+    .word   0x440b5000       /* mfc1 $t3,$f10 */
+    addiu   $t5, $zero, 0
+    bne     $t3, $t5, fail_conv
+    nop
+    .word   0x440c5800       /* mfc1 $t4,$f11 */
+    lui     $t5, 0x7ff4
+    bne     $t4, $t5, fail_conv
+    nop
+    cfc1    $t6, $31
+    srl     $t6, $t6, 2
+    andi    $t6, $t6, 0x001f
+    bne     $t6, $zero, fail_conv
+    nop
+
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    mtc1    $zero, $f6
+    lui     $t0, 0x7ff4
+    ori     $t0, $t0, 0x0000
+    .word   0x44883800
+    cvt.s.d $f10, $f6
+    mfc1    $t3, $f10
+    lui     $t5, 0x7fa0
+    ori     $t5, $t5, 0x0000
+    bne     $t3, $t5, fail_conv
+    nop
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    mtc1    $zero, $f6
+    lui     $t0, 0x7ff8
+    ori     $t0, $t0, 0x0000
+    .word   0x44883800
+    cvt.s.d $f10, $f6
+    mfc1    $t3, $f10
+    lui     $t5, 0x7fbf
+    ori     $t5, $t5, 0xffff
+    bne     $t3, $t5, fail_conv
+    nop
+    cfc1    $t6, $31
+    srl     $t6, $t6, 2
+    andi    $t6, $t6, 0x001f
+    addiu   $t5, $zero, 0x0010
+    bne     $t6, $t5, fail_conv
+    nop
+
+    /* Restore the subnormal source before the remaining checks. */
+    mtc1    $zero, $f6
+    lui     $t0, 0x000f
+    ori     $t0, $t0, 0xffff
+    .word   0x44883800
+    mtc1    $zero, $f8
+    lui     $t0, 0x3ff0
+    ori     $t0, $t0, 0x0000
+    .word   0x44884800
+
     /* COP1 MOVF/MOVT.D (funct=0x11) use FCC0 and copy an even FPR pair.
      * First clear the destination, then exercise both predicate outcomes. */
     mtc1    $zero, $f12

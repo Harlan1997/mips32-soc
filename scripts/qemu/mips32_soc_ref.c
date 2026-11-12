@@ -244,10 +244,14 @@ typedef struct MIPS32SocRefState {
     GArray *irq_replay_typed;
     GArray *irq_replay_epcs;
     GArray *irq_replay_epc_valid;
+    GArray *irq_replay_timer_pending;
+    GArray *irq_replay_timer_pcs;
     target_ulong irq_replay_pc_history[SOC_REF_IRQ_PC_HISTORY_SIZE];
     guint irq_replay_pc_history_count;
     guint irq_replay_pc_history_next;
     guint irq_release_index;
+    guint irq_timer_pending_events;
+    guint irq_timer_pending_consumed;
     bool irq_replay_enabled;
     bool irq_replay_has_timer;
     bool irq_replay_armed;
@@ -303,6 +307,7 @@ static char *soc_ref_irq_schedule;
 static uint32_t soc_ref_irq_replay_pic_mask;
 static uint32_t soc_ref_irq_replay_bd_mask;
 static bool soc_ref_irq_replay_debug;
+static bool soc_ref_timer_replay_debug;
 static int soc_ref_irq_trace_context_index = -1;
 static uint64_t soc_ref_irq_trace_context_window = 32;
 static char *soc_ref_dma_event_trace_path;
@@ -446,7 +451,6 @@ bool qemu_mips32_soc_ref_cp0_retire_clock(void)
 /* The replay schedule records the architectural timer boundary.  Keep TI
  * pending until that boundary so a sparse Count sample cannot expose it
  * early in QEMU relative to RTL. */
-#define SOC_REF_LINUX_TIMER_PENDING_LEAD 0U
 #define SOC_REF_LINUX_FIRST_PROBE_HELPER_PC  0x8800ff18U
 #define SOC_REF_LINUX_SECOND_PROBE_HELPER_PC 0x880100a4U
 bool qemu_mips32_soc_ref_cp0_timer_armed(void)
@@ -510,26 +514,6 @@ static void soc_ref_assert_cp0_timer_irq(MIPS32SocRefState *s)
         cpu_interrupt(CPU(s->cpu), CPU_INTERRUPT_HARD);
         bql_unlock();
     }
-}
-
-static bool soc_ref_timer_replay_pending(const MIPS32SocRefState *s)
-{
-    if (!s || !s->irq_replay_enabled || !s->irq_replay_causes ||
-        !s->irq_release_after || s->irq_release_index >=
-        s->irq_release_after->len) {
-        return false;
-    }
-    for (guint index = s->irq_release_index;
-         index < s->irq_release_after->len; ++index) {
-        uint32_t cause = g_array_index(s->irq_replay_causes, uint32_t, index);
-        if (cause & (1U << CP0Ca_TI)) {
-            uint64_t target = g_array_index(s->irq_release_after, uint64_t,
-                                            index);
-            return s->cpu_cycle_retire_seq +
-                       SOC_REF_LINUX_TIMER_PENDING_LEAD >= target;
-        }
-    }
-    return false;
 }
 
 uint32_t qemu_mips32_soc_ref_cp0_retire_ticks(CPUMIPSState *env)
@@ -618,9 +602,11 @@ static bool soc_ref_consume_count_schedule(MIPS32SocRefState *s,
         qemu_mips32_soc_ref_cp0_timer_armed() &&
         s->cp0_compare_armed &&
         !(env->CP0_Cause & (1U << CP0Ca_TI)) &&
-        (!s->irq_replay_has_timer ||
-         s->retire_count < SOC_REF_LINUX_SCHEDULER_LATE_RETIRE ||
-         soc_ref_timer_replay_pending(s)) &&
+        /* When an RTL IRQ schedule is active, its timer entry is the
+         * architectural boundary. A sparse Count sample must not create a
+         * second, earlier TI event merely because synthetic Count crossed
+         * Compare between scheduled retire points. */
+        !s->irq_replay_has_timer &&
         (int32_t)(sample.value - env->CP0_Compare) >= 0) {
         env->CP0_Cause |= 1U << CP0Ca_TI;
         soc_ref_assert_cp0_timer_irq(s);
@@ -1115,6 +1101,8 @@ static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
     }
     soc_ref_irq_replay_debug =
         g_strcmp0(g_getenv("QEMU_TRACE_IRQ_REPLAY"), "1") == 0;
+    soc_ref_timer_replay_debug =
+        g_strcmp0(g_getenv("QEMU_TRACE_CP0_TIMER_REPLAY"), "1") == 0;
     if (soc_ref_irq_replay_debug) {
         const char *context_index = g_getenv("QEMU_TRACE_IRQ_CONTEXT_INDEX");
         const char *context_window = g_getenv("QEMU_TRACE_IRQ_CONTEXT_WINDOW");
@@ -1138,19 +1126,24 @@ static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
     s->irq_replay_typed = g_array_new(false, false, sizeof(bool));
     s->irq_replay_epcs = g_array_new(false, false, sizeof(uint32_t));
     s->irq_replay_epc_valid = g_array_new(false, false, sizeof(bool));
+    s->irq_replay_timer_pending = g_array_new(false, false, sizeof(bool));
+    s->irq_replay_timer_pcs = g_array_new(false, false, sizeof(uint32_t));
     lines = g_strsplit(contents, "\n", -1);
     for (guint i = 0; lines[i]; ++i) {
         g_auto(GStrv) fields = NULL;
-        const gchar *tokens[3] = { NULL, NULL, NULL };
+        const gchar *tokens[4] = { NULL, NULL, NULL, NULL };
         guint token_count = 0;
         gchar *end = NULL;
-        guint64 value;
+        guint64 value = 0;
         guint64 epc_value = 0;
         guint64 cause_value = 1U << (8 + 2); /* Legacy schedules replay IP2. */
+        guint64 timer_pc_value = 0;
         uint32_t cause;
         uint32_t epc;
+        uint32_t timer_pc;
         uint32_t ip_mask;
         gboolean timer;
+        bool timer_pending_event = false;
         bool typed;
         bool epc_valid = false;
         gchar *line = g_strstrip(lines[i]);
@@ -1168,38 +1161,87 @@ static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
                 tokens[token_count++] = fields[j];
             }
         }
-        if (token_count >= 2) {
-            typed = true;
-            cause_value = g_ascii_strtoull(tokens[1], &end, 16);
+        if (token_count == 3 && g_strcmp0(tokens[1], "ti") == 0) {
+            end = NULL;
+            value = g_ascii_strtoull(tokens[0], &end, 10);
+            if (!end || *end || !value) {
+                error_report("invalid timer boundary sequence in '%s'", line);
+                exit(EXIT_FAILURE);
+            }
+            end = NULL;
+            timer_pc_value = g_ascii_strtoull(tokens[2], &end, 16);
+            if (!end || *end || timer_pc_value > UINT32_MAX ||
+                (timer_pc_value & 3)) {
+                error_report("invalid timer boundary PC in '%s'", line);
+                exit(EXIT_FAILURE);
+            }
+            timer_pending_event = true;
+            typed = false;
+        } else if (token_count == 4 && g_strcmp0(tokens[1], "irq") == 0) {
+            end = NULL;
+            value = g_ascii_strtoull(tokens[0], &end, 10);
+            if (!end || *end || !value) {
+                error_report("invalid IRQ schedule sequence in '%s'", line);
+                exit(EXIT_FAILURE);
+            }
+            end = NULL;
+            cause_value = g_ascii_strtoull(tokens[2], &end, 16);
             if (!end || *end || cause_value > UINT32_MAX) {
                 error_report("invalid IRQ cause in schedule entry '%s'", line);
                 exit(EXIT_FAILURE);
             }
-        } else {
-            typed = false;
-        }
-        if (token_count == 3) {
             end = NULL;
-            epc_value = g_ascii_strtoull(tokens[2], &end, 16);
+            epc_value = g_ascii_strtoull(tokens[3], &end, 16);
             if (!end || *end || epc_value > UINT32_MAX || (epc_value & 3)) {
                 error_report("invalid IRQ EPC in schedule entry '%s'", line);
                 exit(EXIT_FAILURE);
             }
+            typed = true;
             epc_valid = true;
+        } else {
+            if (token_count >= 2) {
+                typed = true;
+                cause_value = g_ascii_strtoull(tokens[1], &end, 16);
+                if (!end || *end || cause_value > UINT32_MAX) {
+                    error_report("invalid IRQ cause in schedule entry '%s'", line);
+                    exit(EXIT_FAILURE);
+                }
+            } else {
+                typed = false;
+            }
+            if (token_count == 3) {
+                end = NULL;
+                epc_value = g_ascii_strtoull(tokens[2], &end, 16);
+                if (!end || *end || epc_value > UINT32_MAX || (epc_value & 3)) {
+                    error_report("invalid IRQ EPC in schedule entry '%s'", line);
+                    exit(EXIT_FAILURE);
+                }
+                epc_valid = true;
+            }
+            end = NULL;
+            value = token_count ? g_ascii_strtoull(tokens[0], &end, 10) : 0;
+            if (token_count == 0 || token_count > 3 || !end || *end || !value) {
+                error_report("invalid IRQ schedule entry '%s'", line);
+                exit(EXIT_FAILURE);
+            }
         }
-        end = NULL;
-        value = token_count ? g_ascii_strtoull(tokens[0], &end, 10) : 0;
         cause = (uint32_t)cause_value;
         epc = (uint32_t)epc_value;
+        timer_pc = (uint32_t)timer_pc_value;
         ip_mask = (cause >> 8) & 0xffU;
         timer = (cause & (1U << CP0Ca_TI)) != 0;
-        if (token_count == 0 || token_count > 3 || !end || *end || value == 0 ||
-            (ip_mask & ~0x84U) != 0 ||
-            (timer && !(ip_mask & 0x80U)) ||
-            (!timer && !(ip_mask & 0x04U)) ||
+        if ((!timer_pending_event &&
+             ((ip_mask & ~0x84U) != 0 ||
+              (timer && !(ip_mask & 0x80U)) ||
+              (!timer && !(ip_mask & 0x04U)))) ||
             (s->irq_release_after->len &&
-             value <= g_array_index(s->irq_release_after, uint64_t,
-                                    s->irq_release_after->len - 1))) {
+             (value < g_array_index(s->irq_release_after, uint64_t,
+                                    s->irq_release_after->len - 1) ||
+              (value == g_array_index(s->irq_release_after, uint64_t,
+                                      s->irq_release_after->len - 1) &&
+               (!g_array_index(s->irq_replay_timer_pending, bool,
+                               s->irq_replay_timer_pending->len - 1) ||
+                timer_pending_event))))) {
             error_report("invalid IRQ schedule entry '%s'", line);
             exit(EXIT_FAILURE);
         }
@@ -1208,7 +1250,12 @@ static void soc_ref_load_irq_schedule(MIPS32SocRefState *s)
         g_array_append_val(s->irq_replay_typed, typed);
         g_array_append_val(s->irq_replay_epcs, epc);
         g_array_append_val(s->irq_replay_epc_valid, epc_valid);
-        s->irq_replay_has_timer |= timer;
+        g_array_append_val(s->irq_replay_timer_pending, timer_pending_event);
+        g_array_append_val(s->irq_replay_timer_pcs, timer_pc);
+        if (timer_pending_event) {
+            ++s->irq_timer_pending_events;
+        }
+        s->irq_replay_has_timer |= timer || timer_pending_event;
     }
     if (!s->irq_release_after->len) {
         error_report("IRQ schedule '%s' has no release entries",
@@ -1688,8 +1735,18 @@ static void soc_ref_report_irq_schedule(void)
     MIPS32SocRefState *s = soc_ref_active_state;
 
     if (s && s->irq_release_after) {
-        fprintf(stderr, "SOC_REF_IRQ_SCHEDULE released=%u total=%u\n",
-                s->irq_release_index, s->irq_release_after->len);
+        guint irq_total = s->irq_release_after->len -
+            s->irq_timer_pending_events;
+        guint irq_released = s->irq_release_index -
+            s->irq_timer_pending_consumed;
+        fprintf(stderr,
+                "SOC_REF_IRQ_SCHEDULE released=%u total=%u "
+                "irq_released=%u irq_total=%u "
+                "timer_pending_replayed=%u timer_pending_total=%u\n",
+                s->irq_release_index, s->irq_release_after->len,
+                irq_released, irq_total,
+                s->irq_timer_pending_consumed,
+                s->irq_timer_pending_events);
         fflush(stderr);
     }
 }
@@ -2041,29 +2098,88 @@ static void soc_ref_cp0_retire_timer_tick(MIPS32SocRefState *s)
 {
     CPUMIPSState *env;
     uint32_t count;
-    bool replay_pending;
 
-    if (!s || !s->cp0_retire_clock || !s->cpu ||
-        !qemu_mips32_soc_ref_cp0_timer_armed()) {
+    if (!s || !s->cp0_retire_clock || !s->cpu) {
         return;
     }
     env = &s->cpu->env;
+    if (s->irq_replay_enabled &&
+        s->irq_release_index < s->irq_release_after->len &&
+        g_array_index(s->irq_replay_timer_pending, bool,
+                      s->irq_release_index)) {
+        uint64_t target = g_array_index(s->irq_release_after, uint64_t,
+                                        s->irq_release_index);
+        uint32_t rtl_pc = g_array_index(s->irq_replay_timer_pcs, uint32_t,
+                                        s->irq_release_index);
+
+        if (s->cpu_cycle_retire_seq > target) {
+            error_report("IRQ timer boundary missed index=%u: "
+                         "target=%" PRIu64 " current=%" PRIu64
+                         " rtl_pc=%08" PRIx32 " qemu_pc=%08" PRIx64,
+                         s->irq_release_index, target,
+                         s->cpu_cycle_retire_seq, rtl_pc,
+                         (uint64_t)env->active_tc.PC);
+            exit(EXIT_FAILURE);
+        }
+        if (s->cpu_cycle_retire_seq == target) {
+            uint32_t cause_pre;
+
+            if (!qemu_mips32_soc_ref_cp0_timer_armed() ||
+                !s->cp0_compare_armed) {
+                error_report("IRQ timer boundary is disarmed at index=%u "
+                             "retire=%" PRIu64 " rtl_pc=%08" PRIx32
+                             " count=%08" PRIx32 " compare=%08" PRIx32,
+                             s->irq_release_index, target, rtl_pc,
+                             qemu_mips32_soc_ref_cp0_retire_ticks(env),
+                             (uint32_t)env->CP0_Compare);
+                exit(EXIT_FAILURE);
+            }
+            count = qemu_mips32_soc_ref_cp0_retire_ticks(env);
+            cause_pre = (uint32_t)env->CP0_Cause;
+            if (env->CP0_Cause & (1U << CP0Ca_TI)) {
+                error_report("IRQ timer boundary already asserted at "
+                             "index=%u retire=%" PRIu64 " rtl_pc=%08" PRIx32,
+                             s->irq_release_index, target, rtl_pc);
+                exit(EXIT_FAILURE);
+            }
+            env->CP0_Cause |= 1U << CP0Ca_TI;
+            soc_ref_assert_cp0_timer_irq(s);
+            if (soc_ref_timer_replay_debug) {
+                fprintf(stderr,
+                        "SOC_REF_CP0_TIMER_REPLAY seq=%" PRIu64
+                        " rtl_pc=%08" PRIx32 " qemu_pc=%08" PRIx64
+                        " count=%08" PRIx32 " compare=%08" PRIx32
+                        " armed=%u status=%08" PRIx32
+                        " cause_pre=%08" PRIx32 " cause_post=%08" PRIx32
+                        " ipti=%u\n",
+                        target, rtl_pc, (uint64_t)env->active_tc.PC,
+                        count, (uint32_t)env->CP0_Compare,
+                        (unsigned)s->cp0_compare_armed,
+                        (uint32_t)env->CP0_Status, cause_pre,
+                        (uint32_t)env->CP0_Cause,
+                        (unsigned)((env->CP0_IntCtl >> CP0IntCtl_IPTI) & 0x7));
+                fflush(stderr);
+            }
+            ++s->irq_release_index;
+            ++s->irq_timer_pending_consumed;
+        }
+        return;
+    }
+    if (!qemu_mips32_soc_ref_cp0_timer_armed()) {
+        return;
+    }
     if (env->CP0_Cause & (1U << CP0Ca_TI)) {
         return;
     }
-    replay_pending = soc_ref_timer_replay_pending(s);
+    if (s->irq_replay_has_timer) {
+        return;
+    }
     count = qemu_mips32_soc_ref_cp0_retire_ticks(env);
     /* A sparse replay sample may skip over a future Compare value.  Treat that
      * crossing as the equality event, but never re-arm a deadline that was
      * already behind Count when Linux wrote Compare. */
-    if (s->irq_replay_has_timer) {
-        /* The replay schedule is the architectural timer boundary for the
-         * differential run.  Do not let a sparse Count sample raise TI early
-         * merely because synthetic Count crossed Compare first. */
-        if (!replay_pending)
-            return;
-    } else if (!s->cp0_compare_armed ||
-               (int32_t)(count - env->CP0_Compare) < 0) {
+    if (!s->cp0_compare_armed ||
+        (int32_t)(count - env->CP0_Compare) < 0) {
         return;
     }
     env->CP0_Cause |= 1U << CP0Ca_TI;
@@ -2177,7 +2293,8 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
                     (uint64_t)SOC_UART_BASE, ch, s->retire_count);
             fflush(s->peripheral_trace);
         }
-        if (accepted) {
+        if (soc_ref_uart_console_write_visible(accepted,
+                                               s->uart_diff_timing)) {
             putchar(ch);
             fflush(stdout);
         }
@@ -2461,12 +2578,13 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
         s->trace_pic_valid = true;
     }
     if (s->irq_replay_enabled) {
+        bool irq_level = best_id >= 0 &&
+                         (!any_active || best_prio > active_prio);
+
+        /* Keep Cause.IP2 current while replay suppresses natural acceptance.
+         * The retire schedule still controls when the CPU takes the IRQ. */
+        qemu_set_irq(s->cpu->env.irq[2], irq_level || s->irq_replay_armed);
         if (s->irq_replay_armed) {
-            /* RTL replay enters through the external hardware IRQ line
-             * (Status.IM2), while the source identity is supplied by the
-             * mirrored VIC state above.  Pulse the line and force the CPU to
-             * observe the boundary without leaving a level-triggered IRQ. */
-            qemu_set_irq(s->cpu->env.irq[2], true);
             s->irq_replay_armed = false;
             bql_lock();
             cpu_interrupt(CPU(s->cpu), CPU_INTERRUPT_HARD);
@@ -2529,16 +2647,33 @@ static void soc_ref_release_scheduled_irq(MIPS32SocRefState *s, CPUState *cpu)
 
     if (timer) {
         CPUMIPSState *env = &s->cpu->env;
-        unsigned irq = (env->CP0_IntCtl >> CP0IntCtl_IPTI) & 0x7;
-        env->CP0_Cause |= 1U << CP0Ca_TI;
-        if (s->cp0_linux_timer_phase == SOC_REF_LINUX_TIMER_LATE) {
-            s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_NATIVE;
-            s->cp0_linux_timer_late_suppressed = false;
+        if (s->irq_timer_pending_events) {
+            if (!(env->CP0_Cause & (1U << CP0Ca_TI))) {
+                error_report("IRQ acceptance expects Cause.TI before its "
+                             "scheduled timer boundary: index=%u retire=%" PRIu64
+                             " pc=%08" PRIx64 " cause=%08" PRIx32,
+                             s->irq_release_index, s->cpu_cycle_retire_seq,
+                             (uint64_t)env->active_tc.PC,
+                             (uint32_t)env->CP0_Cause);
+                exit(EXIT_FAILURE);
+            }
+            /* The IRQ callback suppresses automatic CPU acceptance during
+             * replay. Deliver the pending timer at its scheduled boundary. */
+            bql_lock();
+            cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
+            bql_unlock();
+        } else {
+            unsigned irq = (env->CP0_IntCtl >> CP0IntCtl_IPTI) & 0x7;
+            env->CP0_Cause |= 1U << CP0Ca_TI;
+            if (s->cp0_linux_timer_phase == SOC_REF_LINUX_TIMER_LATE) {
+                s->cp0_linux_timer_phase = SOC_REF_LINUX_TIMER_NATIVE;
+                s->cp0_linux_timer_late_suppressed = false;
+            }
+            qemu_set_irq(env->irq[irq], true);
+            bql_lock();
+            cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
+            bql_unlock();
         }
-        qemu_set_irq(env->irq[irq], true);
-        bql_lock();
-        cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
-        bql_unlock();
     }
     if (ip_mask & 0x04U) {
         s->irq_replay_armed = true;
@@ -2681,6 +2816,10 @@ static void soc_ref_instruction_tick(CPUState *cpu)
     if (s->irq_release_index >= s->irq_release_after->len) {
         return;
     }
+    if (g_array_index(s->irq_replay_timer_pending, bool,
+                      s->irq_release_index)) {
+        return;
+    }
     release_after = g_array_index(s->irq_release_after, uint64_t,
                                   s->irq_release_index);
     /* IRQ schedules use the RTL retirement coordinate. retire_count remains
@@ -2790,6 +2929,18 @@ void qemu_mips32_soc_ref_wait(CPUMIPSState *env)
         ++s->retire_count;
         soc_ref_uart_retire_tick(s);
         soc_ref_terminal_shutdown_tick(s);
+    }
+
+    if (s && s->cpu && &s->cpu->env == env && s->cp0_retire_clock &&
+        s->irq_replay_has_timer) {
+        guint timer_events_before = s->irq_timer_pending_consumed;
+
+        soc_ref_cp0_retire_timer_tick(s);
+        if (s->irq_timer_pending_consumed != timer_events_before) {
+            bql_lock();
+            cpu_interrupt(env_cpu(env), CPU_INTERRUPT_WAKE);
+            bql_unlock();
+        }
     }
 
     if (s && s->cp0_retire_clock && !s->irq_replay_has_timer &&

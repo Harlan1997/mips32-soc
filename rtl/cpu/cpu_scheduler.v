@@ -24,9 +24,12 @@ module cpu_scheduler #(
     input wire [31:0] ctx_save_status, input wire [7:0] ctx_save_asid,
     input wire [31:0] ctx_save_ptebase,
     input wire [31:0] ctx_save_srsctl,
+    input wire [31:0] ctx_save_userlocal,
     input wire [1023:0] ctx_save_gpr,
     input wire [16383:0] ctx_save_srs_gpr,
-    input wire [1023:0] ctx_save_fpr, input wire [31:0] ctx_save_fcsr,
+    input wire [1023:0] ctx_save_fpr,
+    input wire [1023:0] ctx_save_fpr_hi,
+    input wire [31:0] ctx_save_fcsr,
     output wire ctx_restore_req,
     output wire [7:0] ctx_restore_task,
     input wire ctx_restore_ack,
@@ -35,9 +38,12 @@ module cpu_scheduler #(
     output wire [31:0] ctx_restore_ptebase,
     output wire ctx_restore_ptebase_valid,
     output wire [31:0] ctx_restore_srsctl,
+    output wire [31:0] ctx_restore_userlocal,
     output wire [1023:0] ctx_restore_gpr,
     output wire [16383:0] ctx_restore_srs_gpr,
-    output wire [1023:0] ctx_restore_fpr, output wire [31:0] ctx_restore_fcsr
+    output wire [1023:0] ctx_restore_fpr,
+    output wire [1023:0] ctx_restore_fpr_hi,
+    output wire [31:0] ctx_restore_fcsr
 );
     localparam ST_RUN = 2'd0, ST_SAVE = 2'd1, ST_RESTORE = 2'd2;
     reg [1:0] state;
@@ -53,9 +59,11 @@ module cpu_scheduler #(
     reg [7:0] asid_bank [0:TASKS-1];
     reg [31:0] ptebase_bank [0:TASKS-1];
     reg [31:0] srsctl_bank [0:TASKS-1];
+    reg [31:0] userlocal_bank [0:TASKS-1];
     reg [1023:0] gpr_bank [0:TASKS-1];
     reg [16383:0] srs_gpr_bank [0:TASKS-1];
     reg [1023:0] fpr_bank [0:TASKS-1];
+    reg [1023:0] fpr_hi_bank [0:TASKS-1];
     reg [31:0] fcsr_bank [0:TASKS-1];
     integer k;
 
@@ -88,9 +96,11 @@ module cpu_scheduler #(
     assign ctx_restore_ptebase = ptebase_bank[next_r];
     assign ctx_restore_ptebase_valid = (state == ST_RESTORE);
     assign ctx_restore_srsctl = srsctl_bank[next_r];
+    assign ctx_restore_userlocal = userlocal_bank[next_r];
     assign ctx_restore_gpr = gpr_bank[next_r];
     assign ctx_restore_srs_gpr = srs_gpr_bank[next_r];
     assign ctx_restore_fpr = fpr_bank[next_r];
+    assign ctx_restore_fpr_hi = fpr_hi_bank[next_r];
     assign ctx_restore_fcsr = fcsr_bank[next_r];
 
     always @(posedge clk or negedge rst_n) begin
@@ -100,8 +110,9 @@ module cpu_scheduler #(
                 pc_bank[k] <= 0; sp_bank[k] <= 0; status_bank[k] <= 0; asid_bank[k] <= 0;
                 ptebase_bank[k] <= 0;
                 srsctl_bank[k] <= 0;
+                userlocal_bank[k] <= 0;
                 gpr_bank[k] <= 0; srs_gpr_bank[k] <= 0;
-                fpr_bank[k] <= 0; fcsr_bank[k] <= 0;
+                fpr_bank[k] <= 0; fpr_hi_bank[k] <= 0; fcsr_bank[k] <= 0;
             end
         end else begin
             case (state)
@@ -126,9 +137,11 @@ module cpu_scheduler #(
                     asid_bank[current_r] <= ctx_save_asid;
                     ptebase_bank[current_r] <= ctx_save_ptebase;
                     srsctl_bank[current_r] <= ctx_save_srsctl;
+                    userlocal_bank[current_r] <= ctx_save_userlocal;
                     gpr_bank[current_r] <= ctx_save_gpr;
                     srs_gpr_bank[current_r] <= ctx_save_srs_gpr;
                     fpr_bank[current_r] <= ctx_save_fpr;
+                    fpr_hi_bank[current_r] <= ctx_save_fpr_hi;
                     fcsr_bank[current_r] <= ctx_save_fcsr;
                     state <= ST_RESTORE;
                 end

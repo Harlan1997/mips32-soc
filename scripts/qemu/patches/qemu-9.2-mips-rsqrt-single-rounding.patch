@@ -1,0 +1,42 @@
+diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
+--- a/target/mips/tcg/fpu_helper.c
++++ b/target/mips/tcg/fpu_helper.c
+@@ -1084,11 +1084,20 @@ uint64_t helper_float_rsqrt_d(CPUMIPSState *env, uint64_t fdt0)
+ 
+ uint32_t helper_float_rsqrt_s(CPUMIPSState *env, uint32_t fst0)
+ {
+     uint32_t fst2;
++    uint64_t fdt0;
++    uint64_t fdt2;
+ 
+-    fst2 = float32_sqrt(fst0, &env->active_fpu.fp_status);
+-    fst2 = float32_div(float32_one, fst2, &env->active_fpu.fp_status);
++    /* Keep the intermediate above binary32 precision.  Rounding sqrt(x)
++     * before taking its reciprocal can double-round across FCSR.RM. */
++    fdt0 = float32_to_float64(fst0, &env->active_fpu.fp_status);
++    fdt2 = float64_sqrt(fdt0, &env->active_fpu.fp_status);
++    fdt2 = float64_div(float64_one, fdt2, &env->active_fpu.fp_status);
++    fst2 = float64_to_float32(fdt2, &env->active_fpu.fp_status);
++    /* SOC_REF_FPU_RSQRT_SINGLE_ROUND */
+     update_fcr31(env, GETPC());
+     return fst2;
+ }
+@@ -1133,11 +1142,20 @@ uint64_t helper_float_rsqrt1_d(CPUMIPSState *env, uint64_t fdt0)
+ 
+ uint32_t helper_float_rsqrt1_s(CPUMIPSState *env, uint32_t fst0)
+ {
+     uint32_t fst2;
++    uint64_t fdt0;
++    uint64_t fdt2;
+ 
+-    fst2 = float32_sqrt(fst0, &env->active_fpu.fp_status);
+-    fst2 = float32_div(float32_one, fst2, &env->active_fpu.fp_status);
++    /* Match RSQRT.S: use one final binary32 conversion for FCSR.RM. */
++    fdt0 = float32_to_float64(fst0, &env->active_fpu.fp_status);
++    fdt2 = float64_sqrt(fdt0, &env->active_fpu.fp_status);
++    fdt2 = float64_div(float64_one, fdt2, &env->active_fpu.fp_status);
++    fst2 = float64_to_float32(fdt2, &env->active_fpu.fp_status);
++    /* SOC_REF_FPU_RSQRT_SINGLE_ROUND */
+     update_fcr31(env, GETPC());
+     return fst2;
+ }

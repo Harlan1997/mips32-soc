@@ -7,9 +7,11 @@ module tb_cpu_scheduler_integration;
   wire [31:0] save_pc, save_status, restore_pc, restore_status;
   wire [7:0] save_asid, restore_asid;
   wire [31:0] save_srsctl, restore_srsctl;
+  wire [31:0] save_userlocal, restore_userlocal;
   wire [1023:0] save_gpr, restore_gpr;
   wire [16383:0] save_srs_gpr, restore_srs_gpr;
   wire [1023:0] save_fpr, restore_fpr;
+  wire [1023:0] save_fpr_hi, restore_fpr_hi;
   wire [31:0] save_fcsr, restore_fcsr;
   wire [31:0] save_ptebase, restore_ptebase;
   wire restore_ptebase_valid;
@@ -28,7 +30,9 @@ module tb_cpu_scheduler_integration;
     .ctx_save_status(save_status), .ctx_save_asid(save_asid),
     .ctx_save_ptebase(save_ptebase),
     .ctx_save_srsctl(save_srsctl), .ctx_save_srs_gpr(save_srs_gpr),
-    .ctx_save_gpr(save_gpr), .ctx_save_fpr(save_fpr), .ctx_save_fcsr(save_fcsr),
+    .ctx_save_userlocal(save_userlocal),
+    .ctx_save_gpr(save_gpr), .ctx_save_fpr(save_fpr),
+    .ctx_save_fpr_hi(save_fpr_hi), .ctx_save_fcsr(save_fcsr),
     .ctx_restore_req(restore_req),
     .ctx_restore_task(restore_task), .ctx_restore_ack(restore_ack),
     .ctx_restore_pc(restore_pc), .ctx_restore_sp(),
@@ -36,7 +40,9 @@ module tb_cpu_scheduler_integration;
     .ctx_restore_ptebase(restore_ptebase),
     .ctx_restore_ptebase_valid(restore_ptebase_valid),
     .ctx_restore_srsctl(restore_srsctl), .ctx_restore_srs_gpr(restore_srs_gpr),
+    .ctx_restore_userlocal(restore_userlocal),
     .ctx_restore_gpr(restore_gpr), .ctx_restore_fpr(restore_fpr),
+    .ctx_restore_fpr_hi(restore_fpr_hi),
     .ctx_restore_fcsr(restore_fcsr)
   );
 
@@ -60,7 +66,9 @@ module tb_cpu_scheduler_integration;
     .ctx_save_status(save_status), .ctx_save_asid(save_asid),
     .ctx_save_ptebase(save_ptebase),
     .ctx_save_srsctl(save_srsctl), .ctx_save_srs_gpr(save_srs_gpr),
-    .ctx_save_gpr(save_gpr), .ctx_save_fpr(save_fpr), .ctx_save_fcsr(save_fcsr),
+    .ctx_save_userlocal(save_userlocal),
+    .ctx_save_gpr(save_gpr), .ctx_save_fpr(save_fpr),
+    .ctx_save_fpr_hi(save_fpr_hi), .ctx_save_fcsr(save_fcsr),
     .ctx_restore_req(restore_req),
     .ctx_restore_pc(restore_pc), .ctx_restore_status(restore_status),
     .ctx_restore_asid(restore_asid), .ctx_restore_srsctl(restore_srsctl),
@@ -68,7 +76,9 @@ module tb_cpu_scheduler_integration;
     .ctx_restore_ptebase_valid(restore_ptebase_valid),
     .ctx_restore_gpr(restore_gpr), .ctx_restore_srs_gpr(restore_srs_gpr),
     .ctx_restore_set(restore_srsctl[3:0]),
-    .ctx_restore_fpr(restore_fpr), .ctx_restore_fcsr(restore_fcsr),
+    .ctx_restore_userlocal(restore_userlocal),
+    .ctx_restore_fpr(restore_fpr), .ctx_restore_fpr_hi(restore_fpr_hi),
+    .ctx_restore_fcsr(restore_fcsr),
     .ctx_restore_ack(restore_ack), .hardware_walker_enable(1'b0),
     .hardware_walker_ptbr(32'd0), .ptw_mem_ready(1'b0),
     .ptw_mem_rdata(ptw_rdata), .ptw_mem_error(1'b0)
@@ -83,6 +93,9 @@ module tb_cpu_scheduler_integration;
 `endif
     u_cpu.fpr[1] = 32'h1111_f001;
     u_cpu.fpr[2] = 32'h1111_f002;
+    u_cpu.fpr_hi[1] = 32'h1111_8001;
+    u_cpu.fpr_hi[2] = 32'h1111_8002;
+    u_cpu.u_mips_cp0.cp0_status[26] = 1'b0; // current task starts in FR=0
     u_cpu.fcsr = 32'h1111_fc01;
     u_cpu.ll_reservation_valid = 1'b1;
     u_cpu.ll_reservation_addr = 32'h0000_1200;
@@ -102,7 +115,8 @@ module tb_cpu_scheduler_integration;
     $finish;
 `else
     u_sched.pc_bank[1] = 32'h0000_0200;
-    u_sched.status_bank[1] = 32'h0000_0001;
+    u_sched.status_bank[1] = 32'h2400_0001; // IE + Status.CU1 + FR
+    u_sched.userlocal_bank[1] = 32'hCAFE_0002;
     u_sched.asid_bank[1] = 8'h2a;
     u_sched.ptebase_bank[1] = 32'h4000_0000;
     u_sched.gpr_bank[1] = 1024'd0;
@@ -114,9 +128,12 @@ module tb_cpu_scheduler_integration;
 `endif
     u_sched.fpr_bank[1][32 +: 32] = 32'h2222_f002;
     u_sched.fpr_bank[1][64 +: 32] = 32'h2222_f003;
+    u_sched.fpr_hi_bank[1][32 +: 32] = 32'h2222_8002;
+    u_sched.fpr_hi_bank[1][64 +: 32] = 32'h2222_8003;
     u_sched.fcsr_bank[1] = 32'h2222_fc02;
     yield_req = 1'b1;
     @(posedge clk);
+    #1;
     yield_req = 1'b0;
     while (!restore_req && cycles < 100) begin @(posedge clk); cycles=cycles+1; end
     if (!restore_req) errors = errors + 1;
@@ -136,6 +153,9 @@ module tb_cpu_scheduler_integration;
     if (u_cpu.u_mips_cp0.cp0_entryhi_asid !== 8'h2a) errors = errors + 1;
     if (u_cpu.u_mips_cp0.cp0_context_ptebase !== 9'h080) errors = errors + 1;
     if (u_cpu.u_mips_cp0.cp0_status[0] !== 1'b1) errors = errors + 1;
+    if (u_cpu.u_mips_cp0.cp0_status[29] !== 1'b1 ||
+        u_cpu.u_mips_cp0.cu1_enable !== 1'b1) errors = errors + 1;
+    if (u_cpu.u_mips_cp0.cp0_userlocal !== 32'hCAFE_0002) errors = errors + 1;
 `ifdef SRS_CONTEXT_TEST
     if (u_cpu.u_mips_cp0.cp0_srs_css !== 4'h1 ||
         u_cpu.u_mips_cp0.cp0_srs_ess !== 4'h1) errors = errors + 1;
@@ -146,11 +166,38 @@ module tb_cpu_scheduler_integration;
 `endif
     if (u_sched.fpr_bank[0][32 +: 32] !== 32'h1111_f001) errors = errors + 1;
     if (u_sched.fpr_bank[0][64 +: 32] !== 32'h1111_f002) errors = errors + 1;
-    if (u_sched.fcsr_bank[0] !== 32'h1111_fc01) errors = errors + 1;
+    if (u_sched.fpr_hi_bank[0][32 +: 32] !== 32'h0000_0000) errors = errors + 1;
+    if (u_sched.fpr_hi_bank[0][64 +: 32] !== 32'h0000_0000) errors = errors + 1;
+    // FCSR[22:18] are reserved and must not cross the architectural context
+    // boundary, even when the source CPU image contains arbitrary values.
+    if (u_sched.fcsr_bank[0] !== 32'h1101_fc01) errors = errors + 1;
     if (u_cpu.fpr[1] !== 32'h2222_f002 || u_cpu.fpr[2] !== 32'h2222_f003)
       errors = errors + 1;
-    if (u_cpu.fcsr !== 32'h2222_fc02) errors = errors + 1;
+    if (u_cpu.fpr_hi[1] !== 32'h2222_8002 || u_cpu.fpr_hi[2] !== 32'h2222_8003)
+      errors = errors + 1;
+    if (u_cpu.fcsr !== 32'h2202_fc02) errors = errors + 1;
     if (u_cpu.ll_reservation_valid !== 1'b0) errors = errors + 1;
+
+    // Switch back to the FR=0 task.  This both proves the incoming FR bit
+    // clears the high-word image and proves the FR=1 task's high words are
+    // captured when it is saved.
+    cycles = 0;
+    yield_req = 1'b1;
+    @(posedge clk);
+    #1;
+    yield_req = 1'b0;
+    while (!restore_req && cycles < 100) begin @(posedge clk); cycles=cycles+1; end
+    if (!restore_req || restore_task !== 8'd0) errors = errors + 1;
+    @(posedge clk);
+    #1;
+    if (u_sched.fpr_hi_bank[1][32 +: 32] !== 32'h2222_8002 ||
+        u_sched.fpr_hi_bank[1][64 +: 32] !== 32'h2222_8003)
+      errors = errors + 1;
+    if (u_cpu.fpr_hi[1] !== 32'h0000_0000 ||
+        u_cpu.fpr_hi[2] !== 32'h0000_0000 ||
+        u_cpu.u_mips_cp0.cp0_status[26] !== 1'b0)
+      errors = errors + 1;
+
     if (errors == 0) $display("REGRESSION_TEST_SUCCESS cpu_scheduler_integration");
     else $display("REGRESSION_TEST_FAILED cpu_scheduler_integration errors=%0d", errors);
     $finish;

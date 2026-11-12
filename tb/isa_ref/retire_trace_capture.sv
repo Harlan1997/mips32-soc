@@ -36,6 +36,7 @@ module retire_trace_capture (
     string trace_line;
     string mem_wdata_hi_field;
     logic [1023:0] fpr_state_d1, fpr_state_d2;
+    logic [1023:0] fpr_hi_state_d1, fpr_hi_state_d2;
     logic [31:0] fcsr_state_d1, fcsr_state_d2;
     logic [1023:0] gpr_state_post;
     logic [63:0] retired_hilo_state;
@@ -165,6 +166,8 @@ module retire_trace_capture (
         if (!rst_n) begin
             fpr_state_d1 <= 1024'd0;
             fpr_state_d2 <= 1024'd0;
+            fpr_hi_state_d1 <= 1024'd0;
+            fpr_hi_state_d2 <= 1024'd0;
             fcsr_state_d1 <= 32'd0;
             fcsr_state_d2 <= 32'd0;
             cycle_count <= 0;
@@ -175,6 +178,8 @@ module retire_trace_capture (
         end else begin
             fpr_state_d2 <= fpr_state_d1;
             fpr_state_d1 <= obs_if.retire_fpr_state;
+            fpr_hi_state_d2 <= fpr_hi_state_d1;
+            fpr_hi_state_d1 <= obs_if.retire_fpr_hi_state;
             fcsr_state_d2 <= fcsr_state_d1;
             fcsr_state_d1 <= obs_if.retire_fcsr_state;
             cycle_count <= cycle_count + 1;
@@ -292,7 +297,7 @@ module retire_trace_capture (
                 mem_wdata_hi_field = "";
             end
             trace_line = $sformatf(
-              "{\"retire_seq\":%0d,\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\"%s,\"fpr_state\":\"%s\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\"%s,\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
+              "{\"retire_seq\":%0d,\"schema\":\"%08x\",\"pc\":\"%08x\",\"instr\":\"%08x\",\"next_pc\":\"%08x\",\"gpr_we\":%0d,\"gpr_addr\":%0d,\"gpr_data\":\"%08x\",\"cp0_we\":%0d,\"cp0_addr\":%0d,\"cp0_sel\":%0d,\"cp0_data\":\"%08x\"%s,\"fpr_state\":\"%s\",\"fpr_hi_state\":\"%s\",\"fcsr_state\":\"%08x\",\"mem_valid\":%0d,\"mem_read\":%0d,\"mem_write\":%0d,\"mem_addr\":\"%08x\",\"mem_wdata\":\"%08x\"%s,\"mem_rdata\":\"%08x\",\"except\":%0d,\"except_code\":%0d,\"bd\":%0d,\"eret\":%0d}",
               retire_count,
               trace_schema_override != 0 ? configured_trace_schema :
                                            known_int(obs_if.retire_schema),
@@ -302,6 +307,7 @@ module retire_trace_capture (
               known_int(obs_if.retire_gpr_data), known_bit(obs_if.retire_cp0_we),
               known_int(obs_if.retire_cp0_addr), known_int(obs_if.retire_cp0_sel),
               known_int(obs_if.retire_cp0_data), state_fields, fpr_text,
+              compact_fpr != 0 ? "0" : $sformatf("%0256x", fpr_hi_state_d2),
               known_int(fcsr_state_d2), known_bit(obs_if.retire_mem_valid),
               known_bit(obs_if.retire_mem_read), known_bit(obs_if.retire_mem_write),
               obs_if.retire_mem_addr, obs_if.retire_mem_wdata,
@@ -325,6 +331,8 @@ module retire_trace_capture (
     end
 
     final begin
+        $display("RETIRE_TRACE_CAPTURE_FINAL path=%s retire_count=%0d",
+                 trace_path, retire_count);
         if (cycle_fd != 0) begin
             if (cycle_schedule_started &&
                 (retire_count - cycle_schedule_retire_base) >

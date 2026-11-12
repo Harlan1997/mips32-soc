@@ -1,0 +1,16 @@
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -8685,6 +8685,12 @@ static void gen_cp0(CPUMIPSState *env, DisasContext *ctx, uint32_t opc,
+     case OPC_WAIT:
+         opn = "wait";
+         check_insn(ctx, ISA_MIPS3 | ISA_MIPS_R1);
++        /* MIPS32 WAIT has no code operand: bits [24:6] are reserved. */
++        if (ctx->opcode & 0x01ffffc0) {
++            MIPS_INVAL(opn);
++            gen_reserved_instruction(ctx);
++            break;
++        } /* SOC_REF_WAIT_RESERVED_FIELDS */
+         if ((ctx->insn_flags & ISA_MIPS_R6) &&
+             (ctx->hflags & MIPS_HFLAG_BMASK)) {
+             goto die;

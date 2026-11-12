@@ -47,6 +47,18 @@ module tb_mips_fpu_flags;
         b_double = 64'h7ff0000000000000;
         check_flags(5'b10000, "double_zero_mul_inf_invalid");
 
+        // Divide-by-zero is only signaled for a finite non-zero numerator;
+        // infinity divided by zero remains infinity without the flag.
+        op = OP_DIV;
+        a_double = 64'h7ff0000000000000;
+        b_double = 64'h0000000000000000;
+        check_flags(5'b00000, "double_inf_div_zero_no_divzero");
+        #1;
+        if (result_double !== 64'h7ff0000000000000) begin
+            $display("FPU_FLAGS_FAIL double inf/zero result=%016h", result_double);
+            failures = failures + 1;
+        end
+
         op = OP_MUL;
         a_double = 64'h0010000000000000;
         b_double = 64'h3fe0000000000000;
@@ -79,6 +91,14 @@ module tb_mips_fpu_flags;
         if (result !== 32'h7fa00001 || exception_flags !== 5'b00000) begin
             $display("FPU_FLAGS_FAIL single NaN divide-zero result=%08h flags=%02h",
                      result, exception_flags);
+            failures = failures + 1;
+        end
+        a = 32'h7f800000;
+        b = 32'h00000000;
+        check_flags(5'b00000, "single_inf_div_zero_no_divzero");
+        #1;
+        if (result !== 32'h7f800000) begin
+            $display("FPU_FLAGS_FAIL single inf/zero result=%08h", result);
             failures = failures + 1;
         end
         op = 5'd16; // CVT.D.S

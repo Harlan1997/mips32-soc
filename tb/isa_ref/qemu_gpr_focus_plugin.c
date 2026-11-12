@@ -50,6 +50,7 @@ typedef struct {
 
 typedef struct {
     uint64_t pc;
+    uint64_t plugin_seq;
     uint32_t instr;
     FocusGPRs before_gprs;
     FocusCP0 before_cp0;
@@ -64,6 +65,7 @@ static struct qemu_plugin_register *cause_handle;
 static struct qemu_plugin_register *epc_handle;
 static struct qemu_plugin_register *badvaddr_handle;
 static PreviousInsn previous;
+static uint64_t executed_insns;
 static uint32_t focus_value = 0x89508405U;
 static uint32_t focus_start = 0x88a35000U;
 static uint32_t focus_end = 0x88a40000U;
@@ -72,6 +74,10 @@ static uint64_t max_records = 16384;
 static bool entry_only;
 static bool target_only;
 static bool default_targets_enabled = true;
+static bool epc_filter_enabled;
+static uint32_t epc_filter;
+static uint64_t min_plugin_seq;
+static uint64_t max_plugin_seq = UINT64_MAX;
 
 /* Default discrete target PCs from architectural blocker review */
 static const uint32_t default_target_pcs[] = {
@@ -266,6 +272,13 @@ static void emit_previous(const FocusGPRs *current_gprs,
     if (!previous.valid || !out || records >= max_records) {
         return;
     }
+    if (previous.plugin_seq < min_plugin_seq ||
+        previous.plugin_seq > max_plugin_seq) {
+        return;
+    }
+    if (epc_filter_enabled && current_cp0->epc != epc_filter) {
+        return;
+    }
     interesting = ((!entry_only && pc_in_focus(previous.pc)) ||
                    (entry_only && previous.pc == focus_start)) ||
                   (may_write_r30(previous.instr) &&
@@ -301,6 +314,10 @@ static void emit_previous(const FocusGPRs *current_gprs,
             "QEMU_GPR_FOCUS pc=%08" PRIx64 " instr=%08" PRIx32
             " r30_before=%08" PRIx32 " r30_after=%08" PRIx32 "\n",
             previous.pc, previous.instr, previous.before_gprs.r30, current_gprs->r30);
+    fprintf(out,
+            "QEMU_PLUGIN_EXEC seq=%" PRIu64 " plugin_seq=%" PRIu64
+            " pc=%08" PRIx64 "\n",
+            records, previous.plugin_seq, previous.pc);
 
     fflush(out);
     ++records;
@@ -363,6 +380,7 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
     FocusCP0 current_cp0;
     uint32_t *encoded = userdata;
     uint64_t current_pc = encoded[0];
+    uint64_t current_plugin_seq = executed_insns++;
     bool need_current_regs;
     bool have_current_regs = false;
     (void)cpu_index;
@@ -393,6 +411,7 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
     }
 
     previous.pc = current_pc;
+    previous.plugin_seq = current_plugin_seq;
     previous.instr = encoded[1];
     if (have_current_regs) {
         previous.before_gprs = current_gprs;
@@ -452,7 +471,13 @@ static void plugin_exit(qemu_plugin_id_t id, void *userdata)
      * the trace checker rather than guessed at shutdown.
      */
     if (out) {
-        fprintf(out, "QEMU_FOCUS_SUMMARY records=%" PRIu64 " final_record=deferred\n", records);
+        fprintf(out,
+                "QEMU_FOCUS_SUMMARY records=%" PRIu64
+                " executed_insns=%" PRIu64 " final_record=deferred\n",
+                records, executed_insns);
+        if (epc_filter_enabled) {
+            fprintf(out, "QEMU_FOCUS_FILTER epc=%08" PRIx32 "\n", epc_filter);
+        }
         fflush(out);
         fclose(out);
         out = NULL;
@@ -487,6 +512,13 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
                                         g_strcmp0(tokens[1], "0") == 0);
         } else if (g_strcmp0(tokens[0], "pc-list") == 0 && tokens[1]) {
             parse_pc_list(tokens[1]);
+        } else if (g_strcmp0(tokens[0], "epc-filter") == 0 && tokens[1]) {
+            epc_filter = parse_hex(tokens[1], "epc-filter");
+            epc_filter_enabled = true;
+        } else if (g_strcmp0(tokens[0], "min-plugin-seq") == 0 && tokens[1]) {
+            min_plugin_seq = parse_decimal(tokens[1], "min-plugin-seq");
+        } else if (g_strcmp0(tokens[0], "max-plugin-seq") == 0 && tokens[1]) {
+            max_plugin_seq = parse_decimal(tokens[1], "max-plugin-seq");
         } else {
             fprintf(stderr, "qemu gpr focus: unknown argument %s\n", argv[i]);
             return -1;
@@ -494,6 +526,10 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
     }
     if (!out) {
         fprintf(stderr, "qemu gpr focus: out=/path is required\n");
+        return -1;
+    }
+    if (min_plugin_seq > max_plugin_seq) {
+        fprintf(stderr, "qemu gpr focus: min-plugin-seq exceeds max-plugin-seq\n");
         return -1;
     }
     qemu_plugin_register_vcpu_init_cb(id, vcpu_init);

@@ -108,9 +108,11 @@ module mips_cp0 #(
     output wire        vint_enabled_out, // Cause.IV permits BEV=0 vector selection
     output wire [31:0] vint_offset_out,  // 0x200 + highest enabled IP * (VS * 32)
     // Phase B.4: effective privilege exports
-    output wire        kernel_mode,  // 1 = current instruction executes in kernel mode
+    output wire        kernel_mode,  // 1 = current instruction is privileged (K/S)
+    output wire        supervisor_mode, // 1 = KSU=Supervisor outside EXL/ERL
     output wire        cu0_enable,   // Status.CU0 (allows user-mode CP0 access)
     output wire        cu1_enable,   // Status.CU1 (allows opt-in COP1 access)
+    output wire        fpu_fr_enable, // Status.FR (32/64-bit FPR mode)
     output wire        exl_out,      // Status.EXL for CPU-side exception gating
 
     // Phase B.3.c: MMU translation pass-through. Two TLB lookup ports (I / D)
@@ -157,12 +159,14 @@ module mips_cp0 #(
     output wire [7:0]  ctx_save_asid,
     output wire [31:0] ctx_save_ptebase,
     output wire [31:0] ctx_save_srsctl,
+    output wire [31:0] ctx_save_userlocal,
     input wire        ctx_restore_req,
     input wire [31:0] ctx_restore_status,
     input wire [7:0]  ctx_restore_asid,
     input wire [31:0] ctx_restore_ptebase,
     input wire        ctx_restore_ptebase_valid,
     input wire [31:0] ctx_restore_srsctl,
+    input wire [31:0] ctx_restore_userlocal,
     output wire       ctx_restore_done
     ,input wire [3:0] interrupt_srs_set
     ,input wire       interrupt_accept_in
@@ -194,7 +198,8 @@ module mips_cp0 #(
     //   9    0    Count      Free-running counter (Phase B.2)
     //   10   0    EntryHi    [31:13]=VPN2, [7:0]=ASID                 (Phase B.3.a)
     //   11   0    Compare    Timer match value (Phase B.2)
-    //   12   0    Status     [22]=BEV, [21]=TS, [15:8]=IM, [1]=EXL, [0]=IE
+    //   12   0    Status     [29]=CU1, [28]=CU0, [27]=RP, [26]=FR, [22]=BEV,
+    //                         [21]=TS, [15:8]=IM, [4:3]=KSU, [1]=EXL, [0]=IE
     //   12   1    IntCtl     [31:29]=IPTI, [9:5]=VS
     //   13   0    Cause      [31]=BD, [30]=TI, [27]=DC, [23]=IV, [15:8]=IP, [6:2]=ExcCode
     //   14   0    EPC
@@ -312,7 +317,7 @@ module mips_cp0 #(
     // Config1 (16,1): M=1 (Config2 follows), MMUSize = TLB_ENTRIES - 1,
     //                 IS/IL/IA/DS/DL/DA from geometry macros,
     //                 C2=0, MD=0, PC=0 (perf ctr deferred),
-    //                 WR=0, CA=0, EP=0, FP=0
+    //                 WR=0, CA=0, EP=0, FP follows the opt-in COP1 block.
     wire [5:0]  mmu_size = `SOC_CP0_TLB_ENTRIES - 1;
 `ifdef SOC_LINUX_BOOT_ENABLE
     // Linux derives its cache maintenance loops from Config1.  The RTL L1
@@ -343,7 +348,7 @@ module mips_cp0 #(
                                 1'b0,                      // WR (watch)
                                 1'b0,                      // CA (code compression)
                                 1'b0,                      // EP (EJTAG)
-                                1'b0                       // FP
+                                (`SOC_FPU_ENABLE != 0)      // FP
                               };
 
     // Config2 (16,2): M=1 (Config3 follows), everything else 0 (no L2/L3 yet)
@@ -385,7 +390,7 @@ module mips_cp0 #(
     //         [21]=TS (MCheck sticky), [20:16]=5b (SR/NMI/impl), [15:8]=IM,
     //         [7:5]=3b, [4:3]=KSU,
     //         [2]=ERL, [1]=EXL, [0]=IE.
-    // Phase B.4: KSU[4:3] and CU0[28] added to the writable set.  CU1 is
+    // Phase B.4: KSU[4:3] and CU0[28] added to the writable set.  CU1 and FR are
     // a real state bit in the opt-in FPU configuration: reset leaves COP1
     // disabled and software enables it with mtc0, matching MIPS/QEMU reset
     // behavior and making the COP1 unusable trap architecturally observable.
@@ -393,7 +398,7 @@ module mips_cp0 #(
                                ((`SOC_FPU_ENABLE != 0) ? cp0_status[29] : 1'b0),
                                                        // [31:29] CU3..CU1
                                cp0_status[28],        // [28] CU0
-                               5'b0,                  // [27:23]
+                               {cp0_status[27], cp0_status[26], 3'b0}, // [27:23], RP/FR
                                cp0_status[22],        // [22] BEV
                                cp0_status[21],        // [21] TS (sticky MCheck)
                                5'b0,                  // [20:16]
@@ -408,11 +413,16 @@ module mips_cp0 #(
                                2'b0, cp0_srs_pss, 2'b0, cp0_srs_css} : 32'd0;
     wire [31:0] srsmap_val = (`SOC_SRS_ENABLE != 0) ? cp0_srs_map : 32'd0;
 
-    // Phase B.4: effective privilege mode. Kernel iff ERL, EXL, or KSU != 2'b10
-    // (10 = user). Supervisor (01) currently folds into kernel per B.1 note.
+    // Phase B.4: effective privilege mode. The existing kernel_mode output is
+    // retained as the CPU privilege gate (both kernel and supervisor are
+    // privileged there). MMU segment checks also need to distinguish the
+    // supervisor state from true kernel mode.
     assign kernel_mode = cp0_status[2] | cp0_status[1] | (cp0_status[4:3] != 2'b10);
+    assign supervisor_mode = !cp0_status[2] && !cp0_status[1] &&
+                             (cp0_status[4:3] == 2'b01);
     assign cu0_enable  = cp0_status[28];
     assign cu1_enable  = (`SOC_FPU_ENABLE != 0) && cp0_status[29];
+    assign fpu_fr_enable = (`SOC_FPU_ENABLE != 0) && cp0_status[26];
     assign exl_out     = cp0_status[1];
 
     // -------------------------------------------------------------------------
@@ -486,6 +496,7 @@ module mips_cp0 #(
     assign ctx_save_asid = cp0_entryhi_asid;
     assign ctx_save_ptebase = {cp0_context_ptebase, 23'b0};
     assign ctx_save_srsctl = srsctl_val;
+    assign ctx_save_userlocal = cp0_userlocal;
     assign ctx_restore_done = ctx_restore_req;
 
     // -------------------------------------------------------------------------
@@ -629,20 +640,29 @@ module mips_cp0 #(
                 cp0_taglo <= cache_tag_rdata;
 
             if (ctx_restore_req) begin
+                cp0_status[29]   <= (`SOC_FPU_ENABLE != 0) ?
+                                     ctx_restore_status[29] : 1'b0;
                 cp0_status[28]   <= ctx_restore_status[28];
+                cp0_status[27]   <= ctx_restore_status[27];
+                cp0_status[26]   <= (`SOC_FPU_ENABLE != 0) ?
+                                     ctx_restore_status[26] : 1'b0;
                 cp0_status[22]   <= ctx_restore_status[22];
                 cp0_status[15:8] <= ctx_restore_status[15:8];
                 cp0_status[4:0]  <= ctx_restore_status[4:0];
                 cp0_entryhi_asid <= ctx_restore_asid;
                 if (ctx_restore_ptebase_valid === 1'b1)
                     cp0_context_ptebase <= ctx_restore_ptebase[31:23];
+                cp0_userlocal <= ctx_restore_userlocal;
                 if (`SOC_SRS_ENABLE != 0) begin
                     cp0_srs_css <= ctx_restore_srsctl[3:0];
                     cp0_srs_pss <= ctx_restore_srsctl[9:6];
                     cp0_srs_ess <= ctx_restore_srsctl[15:12];
                 end
-            end else if (except_req && !cp0_status[1]) begin
-                // Take exception (only if not already in exception level)
+            end else if (except_req) begin
+                // Every accepted exception updates Cause and any address-fault
+                // state.  EXL only suppresses replacement of the saved return
+                // context: a nested synchronous fault must preserve EPC/EXL
+                // while still identifying the new fault to the handler.
                 // synopsys translate_off
 `ifdef SIMULATION
                 $display("[%0t] EXCEPTION TAKEN! cause=%h epc=%h intr_req=%b hw_int=%b",
@@ -653,21 +673,23 @@ module mips_cp0 #(
                 // leave EXL clear so ERET returns through the error path.
                 // All other synchronous exceptions retain the ordinary EPC/
                 // EXL contract used by the existing CPU pipeline.
-                if (except_code == 5'h1E) begin
-                    cp0_status[2] <= 1'b1;       // Set ERL
-                    if (!cp0_errorepc_valid) begin
-                        cp0_errorepc <= except_bd ? (except_pc - 32'd4) : except_pc;
-                        cp0_errorepc_valid <= 1'b1;
+                if (!cp0_status[1]) begin
+                    if (except_code == 5'h1E) begin
+                        cp0_status[2] <= 1'b1;       // Set ERL
+                        if (!cp0_errorepc_valid) begin
+                            cp0_errorepc <= except_bd ? (except_pc - 32'd4) : except_pc;
+                            cp0_errorepc_valid <= 1'b1;
+                        end
+                    end else begin
+                        cp0_status[1] <= 1'b1;        // Set EXL
+                        cp0_epc       <= except_pc;
                     end
-                end else begin
-                    cp0_status[1] <= 1'b1;        // Set EXL
-                    cp0_epc       <= except_pc;
                 end
                 // Opt-in shadow register set exception policy.  The current
                 // set is preserved in PSS and the software-selected ESS is
                 // made current for the handler.  The !EXL guard above keeps
                 // a nested fault from overwriting the saved set.
-                if (`SOC_SRS_ENABLE != 0) begin
+                if (`SOC_SRS_ENABLE != 0 && !cp0_status[1]) begin
                     cp0_srs_pss <= cp0_srs_css;
                     cp0_srs_css <= interrupt_accept_in ? interrupt_srs_set : cp0_srs_ess;
                 end
@@ -790,7 +812,10 @@ module mips_cp0 #(
                     {5'd12, 3'd0}: begin
                         if (`SOC_FPU_ENABLE != 0)
                             cp0_status[29] <= wdata[29];  // CU1 (opt-in FPU)
+                        if (`SOC_FPU_ENABLE != 0)
+                            cp0_status[26] <= wdata[26];  // FR (opt-in FPU)
                         cp0_status[28]   <= wdata[28];    // CU0 (Phase B.4)
+                        cp0_status[27]   <= wdata[27];    // RP (reduced-power hint)
                         cp0_status[22]   <= wdata[22];    // BEV
                         cp0_status[15:8] <= wdata[15:8];  // IM
                         cp0_status[4:3]  <= wdata[4:3];   // KSU (Phase B.4)

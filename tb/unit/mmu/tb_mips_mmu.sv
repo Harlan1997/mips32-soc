@@ -21,11 +21,13 @@ module tb_mips_mmu;
     reg  [7:0]  asid         = 8'h42;
     reg  [2:0]  config_k0    = 3'b011;
     reg         is_kernel    = 1'b1;  // tests target kseg0/1/2/3, all kernel-only
+    reg         is_supervisor = 1'b0;
 
     wire [31:0] tlb_lookup_va;
     wire [7:0]  tlb_lookup_asid;
     // TLB stub — always hit so we can peek the identity vs kseg paths.
     reg         tlb_lookup_hit = 1'b1;
+    reg         tlb_lookup_multi_hit = 1'b0;
     reg         tlb_lookup_v   = 1'b1;
     reg         tlb_lookup_d   = 1'b1;
     reg  [2:0]  tlb_lookup_c   = 3'b011;
@@ -121,6 +123,25 @@ module tb_mips_mmu;
         req_is_store = 1'b1;
         #1;
         check("user kseg1 store rejected", !translation_ok && fault_type == 3'b101);
+
+        // Supervisor mode may use kuseg and sseg, but kernel-only segments
+        // remain inaccessible. This is distinct from the CPU's privileged
+        // instruction gate, which still treats supervisor mode as privileged.
+        is_kernel = 1'b0;
+        is_supervisor = 1'b1;
+        req_is_store = 1'b0;
+        req_va = 32'hC000_1000;
+        #1;
+        check("supervisor sseg load allowed", translation_ok && fault_type == 3'b000);
+        req_va = 32'h8000_1000;
+        #1;
+        check("supervisor kseg0 load rejected", !translation_ok && fault_type == 3'b100);
+        req_va = 32'hA000_1000;
+        #1;
+        check("supervisor kseg1 load rejected", !translation_ok && fault_type == 3'b100);
+        req_va = 32'hE000_1000;
+        #1;
+        check("supervisor kseg3 load rejected", !translation_ok && fault_type == 3'b100);
 
         // Summary
         if (errors == 0) $display("TB PASS (0 errors)");

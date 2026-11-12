@@ -1,7 +1,6 @@
-// Opt-in COP1 execution primitive.  Single precision is the original path;
-// the double-precision path is a behavioral register-pair extension used by
-// the development contract.  Synthesis, exact trap policy, and OS ABI remain
-// separate contracts.
+// Opt-in COP1 execution primitive. Single and double precision share the
+// arithmetic/flag path; FR-dependent register mapping is owned by mips_cpu.
+// Synthesis, complete trap policy, and OS ABI remain separate contracts.
 module mips_fpu (
     input wire [4:0] op, input wire [31:0] a, input wire [31:0] b,
     output reg [31:0] result, output reg compare_true,
@@ -75,6 +74,63 @@ module mips_fpu (
         end
     endfunction
 
+    // Conversion to a signed 32-bit word is invalid when the *rounded*
+    // result is outside the representable interval.  Checking only the input
+    // range is insufficient: for example, 0x1.fffffep+30 plus a fractional
+    // part can round to 2^31 under round-to-nearest or toward +Inf.  Keep the
+    // calculation in real space and call this before $rtoi so an out-of-range
+    // host conversion cannot introduce simulator-dependent results.
+    // kind: 0=CVT.W (FCSR.RM), 1=ROUND.W (nearest, ties away),
+    //       2=TRUNC.W, 3=CEIL.W, 4=FLOOR.W.
+    function automatic word_conversion_invalid;
+        input real value;
+        input [1:0] mode;
+        input [2:0] kind;
+        real rounded;
+        real lower;
+        real fraction;
+        real magnitude;
+        begin
+            rounded = value;
+            case (kind)
+                3'd0: begin
+                    case (mode)
+                        2'b01: rounded = (value < 0.0) ? $ceil(value) : $floor(value);
+                        2'b10: rounded = $ceil(value);
+                        2'b11: rounded = $floor(value);
+                        default: begin
+                            lower = $floor(value);
+                            fraction = value - lower;
+                            rounded = lower;
+                            // The only tie below the signed range that can
+                            // round back into range is -2^31-0.5, whose lower
+                            // integer is odd. Avoid $rtoi on that out-of-range
+                            // intermediate; all smaller values remain invalid.
+                            if ((fraction > 0.5) ||
+                                ((fraction == 0.5) &&
+                                 (((lower >= -2147483648.0) &&
+                                   (lower <= 2147483647.0) &&
+                                   (($rtoi(lower) & 1) != 0)) ||
+                                  (lower == -2147483649.0))))
+                                rounded = lower + 1.0;
+                        end
+                    endcase
+                end
+                3'd1: begin
+                    magnitude = (value < 0.0) ? -value : value;
+                    rounded = $floor(magnitude + 0.5);
+                    if (value < 0.0)
+                        rounded = -rounded;
+                end
+                3'd2: rounded = (value < 0.0) ? $ceil(value) : $floor(value);
+                3'd3: rounded = $ceil(value);
+                default: rounded = $floor(value);
+            endcase
+            word_conversion_invalid = (rounded >= 2147483648.0) ||
+                                       (rounded < -2147483648.0);
+        end
+    endfunction
+
     // Return the adjacent single-precision value in numeric order. These
     // encoded operations keep directed rounding deterministic when a host
     // simulator flushes subnormals during real/shortreal conversion.
@@ -145,6 +201,337 @@ module mips_fpu (
                 endcase
             end
             round_single_real = rounded_bits;
+        end
+    endfunction
+
+    // Exact binary32 addition/subtraction. The common exponent span is at
+    // most 253 bits, so the accumulator retains even a minimum-subnormal
+    // operand beside a maximum-normal operand for directed rounding and
+    // Inexact classification.
+    // Return {overflow, inexact, result_bits}.
+    function automatic [33:0] round_single_add_exact;
+        input [31:0] lhs;
+        input [31:0] rhs;
+        input [1:0] mode;
+        reg [23:0] lhs_mant;
+        reg [23:0] rhs_mant;
+        integer lhs_exp;
+        integer rhs_exp;
+        integer common_exp;
+        integer lhs_shift;
+        integer rhs_shift;
+        reg signed [319:0] lhs_term;
+        reg signed [319:0] rhs_term;
+        reg signed [319:0] exact_sum;
+        reg [319:0] magnitude;
+        integer i;
+        integer highest;
+        integer exact_exp;
+        integer discard_shift;
+        integer packed_exp;
+        integer subnormal_shift;
+        reg [24:0] significand;
+        reg [7:0] exponent_field;
+        reg [319:0] subnormal_value;
+        reg guard_bit;
+        reg sticky_bit;
+        reg discarded;
+        reg round_up;
+        reg result_sign;
+        reg overflow_result;
+        reg inexact_result;
+        reg [31:0] packed_result;
+        begin
+            packed_result = 32'd0;
+            overflow_result = 1'b0;
+            inexact_result = 1'b0;
+            lhs_mant = 24'd0;
+            rhs_mant = 24'd0;
+            lhs_exp = -149;
+            rhs_exp = -149;
+
+            if (lhs[30:0] == 0 && rhs[30:0] == 0) begin
+                if (lhs[31] == rhs[31])
+                    packed_result = {lhs[31], 31'd0};
+                else
+                    packed_result = {(mode == 2'b11), 31'd0};
+            end else begin
+                if (lhs[30:23] == 0) begin
+                    lhs_mant = {1'b0, lhs[22:0]};
+                    lhs_exp = -149;
+                end else begin
+                    lhs_mant = {1'b1, lhs[22:0]};
+                    lhs_exp = $signed({1'b0, lhs[30:23]}) - 32'sd150;
+                end
+                if (rhs[30:23] == 0) begin
+                    rhs_mant = {1'b0, rhs[22:0]};
+                    rhs_exp = -149;
+                end else begin
+                    rhs_mant = {1'b1, rhs[22:0]};
+                    rhs_exp = $signed({1'b0, rhs[30:23]}) - 32'sd150;
+                end
+
+                common_exp = (lhs_exp < rhs_exp) ? lhs_exp : rhs_exp;
+                lhs_shift = lhs_exp - common_exp;
+                rhs_shift = rhs_exp - common_exp;
+                lhs_term = 320'sd0;
+                rhs_term = 320'sd0;
+                lhs_term[23:0] = lhs_mant;
+                rhs_term[23:0] = rhs_mant;
+                lhs_term = lhs_term <<< lhs_shift;
+                rhs_term = rhs_term <<< rhs_shift;
+                if (lhs[31]) lhs_term = -lhs_term;
+                if (rhs[31]) rhs_term = -rhs_term;
+                exact_sum = lhs_term + rhs_term;
+
+                if (exact_sum == 0) begin
+                    packed_result = {(mode == 2'b11), 31'd0};
+                end else begin
+                    result_sign = exact_sum[319];
+                    magnitude = result_sign ? -exact_sum : exact_sum;
+                    highest = -1;
+                    for (i = 319; i >= 0; i = i - 1)
+                        if (highest == -1 && magnitude[i]) highest = i;
+                    exact_exp = common_exp + highest;
+
+                    if (exact_exp >= -126) begin
+                        discard_shift = highest - 23;
+                        significand = 25'd0;
+                        guard_bit = 1'b0;
+                        sticky_bit = 1'b0;
+                        if (discard_shift > 0) begin
+                            significand = magnitude >> discard_shift;
+                            guard_bit = magnitude[discard_shift - 1];
+                            for (i = 0; i < discard_shift - 1; i = i + 1)
+                                if (magnitude[i]) sticky_bit = 1'b1;
+                        end else begin
+                            significand = magnitude << (-discard_shift);
+                        end
+                        discarded = guard_bit | sticky_bit;
+                        case (mode)
+                            2'b01: round_up = 1'b0;
+                            2'b10: round_up = !result_sign && discarded;
+                            2'b11: round_up = result_sign && discarded;
+                            default: round_up = guard_bit &&
+                                                 (sticky_bit || significand[0]);
+                        endcase
+                        if (round_up) significand = significand + 1'b1;
+                        packed_exp = exact_exp;
+                        if (significand[24]) begin
+                            significand = significand >> 1;
+                            packed_exp = packed_exp + 1;
+                        end
+                        if (packed_exp > 127) begin
+                            overflow_result = 1'b1;
+                            inexact_result = 1'b1;
+                            if (mode == 2'b00 ||
+                                (mode == 2'b10 && !result_sign) ||
+                                (mode == 2'b11 && result_sign))
+                                packed_result = {result_sign, 8'hff, 23'd0};
+                            else
+                                packed_result = {result_sign, 8'hfe, 23'h7fffff};
+                        end else begin
+                            inexact_result = discarded;
+                            exponent_field = packed_exp + 127;
+                            packed_result = {result_sign, exponent_field,
+                                             significand[22:0]};
+                        end
+                    end else begin
+                        // Input values are multiples of 2^-149, so an exact
+                        // subnormal sum has no discarded bits.
+                        subnormal_shift = common_exp + 149;
+                        subnormal_value = magnitude << subnormal_shift;
+                        if (subnormal_value[23])
+                            packed_result = {result_sign, 8'd1, 23'd0};
+                        else
+                            packed_result = {result_sign, 8'd0,
+                                             subnormal_value[22:0]};
+                    end
+                end
+            end
+            round_single_add_exact = {overflow_result, inexact_result,
+                                      packed_result};
+        end
+    endfunction
+
+    // Exact binary32 fused multiply-add family. The product and accumulator
+    // are aligned at their least-significant represented bit so a tiny addend
+    // remains visible beside a large product.
+    // Return {overflow, underflow, inexact, result_bits}.
+    function automatic [34:0] round_single_fma_exact;
+        input [31:0] lhs;
+        input [31:0] rhs;
+        input [31:0] addend;
+        input [1:0] mode;
+        input [1:0] variant; // 0=MADD, 1=MSUB, 2=NMADD, 3=NMSUB
+        reg [23:0] lhs_mant;
+        reg [23:0] rhs_mant;
+        reg [23:0] add_mant;
+        reg [47:0] product;
+        integer lhs_exp;
+        integer rhs_exp;
+        integer add_exp;
+        integer product_exp;
+        integer common_exp;
+        integer product_shift;
+        integer add_shift;
+        reg signed [639:0] product_term;
+        reg signed [639:0] add_term;
+        reg signed [639:0] exact_sum;
+        reg [639:0] magnitude;
+        integer i;
+        integer highest;
+        integer exact_exp;
+        integer discard_shift;
+        integer packed_exp;
+        integer subnormal_shift;
+        reg [24:0] significand;
+        reg [639:0] subnormal_value;
+        reg guard_bit;
+        reg sticky_bit;
+        reg discarded;
+        reg round_up;
+        reg product_sign;
+        reg add_sign;
+        reg result_sign;
+        reg [7:0] exponent_field;
+        reg [31:0] packed_result;
+        reg overflow_result;
+        reg underflow_result;
+        reg inexact_result;
+        begin
+            packed_result = 32'd0;
+            overflow_result = 1'b0;
+            underflow_result = 1'b0;
+            inexact_result = 1'b0;
+
+            lhs_mant = (lhs[30:23] == 0) ? {1'b0, lhs[22:0]} :
+                       {1'b1, lhs[22:0]};
+            rhs_mant = (rhs[30:23] == 0) ? {1'b0, rhs[22:0]} :
+                       {1'b1, rhs[22:0]};
+            add_mant = (addend[30:23] == 0) ? {1'b0, addend[22:0]} :
+                       {1'b1, addend[22:0]};
+            lhs_exp = (lhs[30:23] == 0) ? -149 :
+                      $signed({1'b0, lhs[30:23]}) - 32'sd150;
+            rhs_exp = (rhs[30:23] == 0) ? -149 :
+                      $signed({1'b0, rhs[30:23]}) - 32'sd150;
+            add_exp = (addend[30:23] == 0) ? -149 :
+                      $signed({1'b0, addend[30:23]}) - 32'sd150;
+            product = lhs_mant * rhs_mant;
+            product_exp = lhs_exp + rhs_exp;
+            common_exp = (product_exp < add_exp) ? product_exp : add_exp;
+            product_shift = product_exp - common_exp;
+            add_shift = add_exp - common_exp;
+
+            product_term = 640'sd0;
+            add_term = 640'sd0;
+            product_term[47:0] = product;
+            add_term[23:0] = add_mant;
+            product_term = product_term <<< product_shift;
+            add_term = add_term <<< add_shift;
+
+            product_sign = lhs[31] ^ rhs[31];
+            add_sign = addend[31];
+            if (variant[1]) begin
+                product_sign = !product_sign;
+                add_sign = !add_sign;
+            end
+            if (variant[0])
+                add_sign = !add_sign;
+            if (product_sign) product_term = -product_term;
+            if (add_sign) add_term = -add_term;
+            exact_sum = product_term + add_term;
+
+            if (exact_sum == 0) begin
+                if (product == 0 && add_mant == 0 &&
+                    product_sign == add_sign)
+                    packed_result = {product_sign, 31'd0};
+                else
+                    packed_result = {(mode == 2'b11), 31'd0};
+            end else begin
+                result_sign = exact_sum[639];
+                magnitude = result_sign ? -exact_sum : exact_sum;
+                highest = -1;
+                for (i = 639; i >= 0; i = i - 1)
+                    if (highest == -1 && magnitude[i]) highest = i;
+                exact_exp = common_exp + highest;
+
+                if (exact_exp >= -126) begin
+                    discard_shift = highest - 23;
+                    significand = 25'd0;
+                    guard_bit = 1'b0;
+                    sticky_bit = 1'b0;
+                    if (discard_shift > 0) begin
+                        significand = magnitude >> discard_shift;
+                        guard_bit = magnitude[discard_shift - 1];
+                        for (i = 0; i < discard_shift - 1; i = i + 1)
+                            if (magnitude[i]) sticky_bit = 1'b1;
+                    end else begin
+                        significand = magnitude << (-discard_shift);
+                    end
+                    discarded = guard_bit | sticky_bit;
+                    case (mode)
+                        2'b01: round_up = 1'b0;
+                        2'b10: round_up = !result_sign && discarded;
+                        2'b11: round_up = result_sign && discarded;
+                        default: round_up = guard_bit &&
+                                             (sticky_bit || significand[0]);
+                    endcase
+                    if (round_up) significand = significand + 1'b1;
+                    packed_exp = exact_exp;
+                    if (significand[24]) begin
+                        significand = significand >> 1;
+                        packed_exp = packed_exp + 1;
+                    end
+                    if (packed_exp > 127) begin
+                        overflow_result = 1'b1;
+                        inexact_result = 1'b1;
+                        if (mode == 2'b00 ||
+                            (mode == 2'b10 && !result_sign) ||
+                            (mode == 2'b11 && result_sign))
+                            packed_result = {result_sign, 8'hff, 23'd0};
+                        else
+                            packed_result = {result_sign, 8'hfe, 23'h7fffff};
+                    end else begin
+                        inexact_result = discarded;
+                        exponent_field = packed_exp + 127;
+                        packed_result = {result_sign, exponent_field,
+                                         significand[22:0]};
+                    end
+                end else begin
+                    subnormal_shift = common_exp + 149;
+                    subnormal_value = 640'd0;
+                    guard_bit = 1'b0;
+                    sticky_bit = 1'b0;
+                    if (subnormal_shift >= 0) begin
+                        subnormal_value = magnitude << subnormal_shift;
+                    end else begin
+                        subnormal_shift = -subnormal_shift;
+                        subnormal_value = magnitude >> subnormal_shift;
+                        guard_bit = magnitude[subnormal_shift - 1];
+                        for (i = 0; i < subnormal_shift - 1; i = i + 1)
+                            if (magnitude[i]) sticky_bit = 1'b1;
+                    end
+                    discarded = guard_bit | sticky_bit;
+                    case (mode)
+                        2'b01: round_up = 1'b0;
+                        2'b10: round_up = !result_sign && discarded;
+                        2'b11: round_up = result_sign && discarded;
+                        default: round_up = guard_bit &&
+                                             (sticky_bit || subnormal_value[0]);
+                    endcase
+                    if (round_up) subnormal_value = subnormal_value + 1'b1;
+                    inexact_result = discarded;
+                    underflow_result = 1'b1;
+                    if (subnormal_value[23])
+                        packed_result = {result_sign, 8'd1, 23'd0};
+                    else
+                        packed_result = {result_sign, 8'd0,
+                                         subnormal_value[22:0]};
+                end
+            end
+            round_single_fma_exact = {overflow_result, underflow_result,
+                                      inexact_result, packed_result};
         end
     endfunction
 
@@ -731,6 +1118,8 @@ module mips_fpu (
     reg [64:0] double_exact_pack;
     reg double_exact_valid;
     reg double_exact_inexact;
+    reg [33:0] single_exact_add_pack;
+    reg [34:0] single_exact_fma_pack;
     reg [1:0] double_mul_relation;
     reg [1:0] double_div_relation;
     reg [1:0] double_sqrt_relation;
@@ -769,6 +1158,8 @@ module mips_fpu (
         double_exact_pack = 65'd0;
         double_exact_valid = 1'b0;
         double_exact_inexact = 1'b0;
+        single_exact_add_pack = 34'd0;
+        single_exact_fma_pack = 35'd0;
         double_mul_relation = 2'b00;
         double_div_relation = 2'b00;
         double_sqrt_relation = 2'b00;
@@ -859,7 +1250,10 @@ module mips_fpu (
                 if ((a_double[62:52] == 0 && a_double[51:0] == 0) ||
                     a_snan)
                     exception_flags[4] = 1'b1;
-                else if (!a_nan)
+                // IEEE-754 divide-by-zero is raised for a finite, non-zero
+                // numerator divided by zero.  Infinity / zero is already an
+                // infinite result and does not raise Divide-by-zero.
+                else if (!a_nan && a_double[62:52] != 11'h7ff)
                     exception_flags[3] = 1'b1;
             end
             case (op)
@@ -965,8 +1359,11 @@ module mips_fpu (
                     // host $rtoi: its out-of-range result is simulator
                     // dependent and would make FCSR behavior nondeterministic.
                     if (a_nan || a_double[62:52] == 11'h7ff ||
-                        ar_double >= 2147483648.0 ||
-                        ar_double < -2147483648.0) begin
+                        word_conversion_invalid(ar_double, rounding_mode,
+                                                (op == OP_CVT_W_D) ? 3'd0 :
+                                                (op == OP_ROUND_W_D) ? 3'd1 :
+                                                (op == OP_TRUNC_W_D) ? 3'd2 :
+                                                (op == OP_CEIL_W_D) ? 3'd3 : 3'd4)) begin
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
@@ -1068,7 +1465,9 @@ module mips_fpu (
                 if ((a[30:23] == 0 && a[22:0] == 0) ||
                     a_snan)
                     exception_flags[4] = 1'b1;
-                else if (!a_nan)
+                // As in the double path, infinity / zero is not the finite
+                // divide-by-zero condition.
+                else if (!a_nan && a[30:23] != 8'hff)
                     exception_flags[3] = 1'b1;
             end
             case (op)
@@ -1171,7 +1570,11 @@ module mips_fpu (
                 OP_CVT_D_W: rr_double = $itor($signed(a));
                 OP_CVT_W_S: begin
                     if (a_nan || a[30:23] == 8'hff ||
-                        ar >= 2147483648.0 || ar < -2147483648.0) begin
+                        word_conversion_invalid(ar, rounding_mode,
+                                                (op == OP_CVT_W_S) ? 3'd0 :
+                                                (op == OP_ROUND_W) ? 3'd1 :
+                                                (op == OP_TRUNC_W) ? 3'd2 :
+                                                (op == OP_CEIL_W) ? 3'd3 : 3'd4)) begin
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
@@ -1182,7 +1585,7 @@ module mips_fpu (
                 end
                 OP_ROUND_W: begin
                     if (a_nan || a[30:23] == 8'hff ||
-                        ar >= 2147483648.0 || ar < -2147483648.0) begin
+                        word_conversion_invalid(ar, rounding_mode, 3'd1)) begin
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
@@ -1193,7 +1596,7 @@ module mips_fpu (
                 end
                 OP_TRUNC_W: begin
                     if (a_nan || a[30:23] == 8'hff ||
-                        ar >= 2147483648.0 || ar < -2147483648.0) begin
+                        word_conversion_invalid(ar, rounding_mode, 3'd2)) begin
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
@@ -1204,7 +1607,7 @@ module mips_fpu (
                 end
                 OP_CEIL_W: begin
                     if (a_nan || a[30:23] == 8'hff ||
-                        ar >= 2147483648.0 || ar < -2147483648.0) begin
+                        word_conversion_invalid(ar, rounding_mode, 3'd3)) begin
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
@@ -1215,7 +1618,7 @@ module mips_fpu (
                 end
                 OP_FLOOR_W: begin
                     if (a_nan || a[30:23] == 8'hff ||
-                        ar >= 2147483648.0 || ar < -2147483648.0) begin
+                        word_conversion_invalid(ar, rounding_mode, 3'd4)) begin
                         result_word = 32'h80000000;
                         exception_flags[4] = 1'b1;
                     end else begin
@@ -1434,6 +1837,32 @@ module mips_fpu (
             a_double[62:52] != 11'h7ff)
             result = round_single_real(ar_double, rounding_mode);
 
+        // RECIP.S and RSQRT.S have a single-precision destination, so their
+        // finite results must obey FCSR.RM just like DIV.S and SQRT.S.  The
+        // host real intermediate has enough precision to compare a binary32
+        // result against the exact reciprocal for all finite single inputs;
+        // use the encoded rounding helper rather than relying on the
+        // simulator's implicit shortreal conversion.
+        if (!fmt_double && !a_nan && a[30:23] != 8'hff &&
+            ((op == OP_RECIP) ||
+             ((op == OP_RSQRT) && !a[31])) &&
+            !(a[30:23] == 0 && a[22:0] == 0)) begin
+            if (op == OP_RECIP)
+                exact_single = 1.0 / ar_real;
+            else
+                exact_single = 1.0 / $sqrt(ar_real);
+            result = round_single_real(exact_single, rounding_mode);
+            if (result[30:23] == 8'hff && result[22:0] == 0) begin
+                exception_flags[2] = 1'b1;
+                exception_flags[0] = 1'b1;
+            end else begin
+                if ($bitstoshortreal(result) != exact_single)
+                    exception_flags[0] = 1'b1;
+                if (result[30:23] == 0 && result[22:0] != 0)
+                    exception_flags[1] = 1'b1;
+            end
+        end
+
         // Compare the rounded single result against a real-precision
         // intermediate for arithmetic operations. This gives deterministic
         // behavioral inexact/underflow classification without depending on
@@ -1615,6 +2044,37 @@ module mips_fpu (
              ((b_double[62:52] == 11'd1) && (b_double[51:0] == 0) &&
               (a_double[62:52] < 11'h3ff)))) begin
             exception_flags[1] = 1'b1;
+        end
+
+        // Binary32 ADD/SUB must retain operand bits below host-real precision.
+        // The exact path also supplies Inexact/Overflow and preserves the
+        // existing tininess-after-rounding policy for subnormal results.
+        if (!fmt_double && (op == OP_ADD || op == OP_SUB) &&
+            a[30:23] != 8'hff && b[30:23] != 8'hff) begin
+            single_exact_add_pack = round_single_add_exact(
+                a,
+                (op == OP_SUB) ? (b ^ 32'h8000_0000) : b,
+                rounding_mode);
+            result = single_exact_add_pack[31:0];
+            exception_flags[2] = single_exact_add_pack[33];
+            exception_flags[1] = (result[30:23] == 0 && result[22:0] != 0);
+            exception_flags[0] = single_exact_add_pack[32];
+        end
+
+        if (!fmt_double &&
+            (op == OP_MADD || op == OP_MSUB ||
+             op == OP_NMADD || op == OP_NMSUB) &&
+            a[30:23] != 8'hff && b[30:23] != 8'hff &&
+            c[30:23] != 8'hff) begin
+            single_exact_fma_pack = round_single_fma_exact(
+                a, b, c, rounding_mode,
+                (op == OP_MADD) ? 2'd0 :
+                (op == OP_MSUB) ? 2'd1 :
+                (op == OP_NMADD) ? 2'd2 : 2'd3);
+            result = single_exact_fma_pack[31:0];
+            exception_flags[2] = single_exact_fma_pack[34];
+            exception_flags[1] = single_exact_fma_pack[33];
+            exception_flags[0] = single_exact_fma_pack[32];
         end
 
         // MIPS FCSR.FS is an output flush mode.  QEMU's MIPS softfloat path

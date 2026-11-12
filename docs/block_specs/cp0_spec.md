@@ -93,7 +93,7 @@ slice.
 | 30 | CU2 | RW | CP2 使能（Phase B tie 0，为未来加速器预留）|
 | 29 | CU1 | RW | CP1/FPU 使能。无 FPU 时写忽略，读回 0 |
 | 28 | CU0 | RW | CP0 用户态使能 |
-| 27 | RP  | RW | Reduced Power (软件 hint，不改硬件行为)|
+| 27 | RP  | RW | Reduced Power (software hint; retained across context save/restore, no direct clock-gating behavior)|
 | 26 | FR  | RW | 64-bit FP register file (无 FPU 时 tie 0) |
 | 25 | RE  | RW | Reverse Endian in user mode (tie 0：不支持) |
 | 24 | MX  | RES | MDMX ASE (tie 0) |
@@ -106,14 +106,19 @@ slice.
 | 17:16 | Impl | RES | 实现相关 (tie 0) |
 | 15:8 | IM7:IM0 | RW | 8 位中断掩码（IM7 与 Compare 联动）|
 | 7:5 | 0 | RES | |
-| 4:3 | KSU | RW | 00=Kernel 01=Supervisor 10=User 11=RES。本 phase 只实现 Kernel/User (00/10)，Supervisor tie 到 Kernel |
+| 4:3 | KSU | RW | 00=Kernel 01=Supervisor 10=User 11=RES。Supervisor 保留内核指令特权，但只允许 kuseg 与 sseg 地址段 |
 | 2  | ERL | RW | Error Level（Reset/NMI/CacheErr 置位）|
 | 1  | EXL | RW | Exception Level（一般异常置位）|
 | 0  | IE  | RW | 全局中断使能 |
 
 **中断裁决**：`IE && !EXL && !ERL && ((Cause.IP & Status.IM) != 0)` 时接受中断。
 
-**模式**：有效模式 = ERL||EXL||KSU==0 ? Kernel : KSU==2 ? User : Kernel。
+**模式**：有效模式 = ERL||EXL||KSU==0 ? Kernel : KSU==1 ? Supervisor : KSU==2 ? User : Kernel。
+
+Supervisor mode is distinct from Kernel mode in the current RTL. It may execute
+privileged instructions through the existing kernel privilege gate, but the MMU
+rejects kseg0, kseg1, and kseg3 accesses; kuseg and sseg remain translated by
+the TLB. EXL/ERL still force Kernel mode.
 
 ---
 
@@ -322,7 +327,7 @@ Phase B: `M=1, AR=001, MT=010, K0=011` → `32'h8004_4283` 之类。K0 软件可
 Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1。
 - I-cache 8KB 4-way 32B: IS = log2(64/64)=0, IL=log2(32/2)+1=5, IA=3 → `000_101_011`
 - D-cache 8KB 4-way 32B: DS=0, DL=5, DA=3
-- WR=1 (Watch)、CA=1 (Code compression? 0), MD=0, PC=1 (perf ctr present, Phase F 前 tie 0), FP=0 (Phase B 无 FPU)
+- WR=0 (Watch)、CA=0 (Code compression)、MD=0、PC=0、FP=`SOC_FPU_ENABLE`。FP 清零表示 FPU 未集成；opt-in COP1 配置会报告 FP=1。
 
 **Config2 (16,2)**：L2/L3 cache 报告；Phase B L2 未做，`M=1` (指向 Config3) 其余 0。
 
@@ -404,3 +409,5 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v1.0 (2026-08-07)：`cp0_sweep` 使用专用 linker script 固定 `.tdata`/`.tbss`，由 `__tls_start`/`__tbss_start` 导出 TLS 布局；SoC gate 验证初始化槽、清零槽和用户态 TLS store。完整 TLS relocation/model 仍 deferred。
 - v1.1 (2026-08-07)：ID-stage hazard decode 将 COP0/MTC0 的 `rt` 标记为真实源操作数，复用 EX/MEM/WB GPR forwarding；RTL frontend、CP0 firmware、ASID allocator 和 MMU context contract 均通过。
 - v1.2 (2026-08-07)：`cp0_sweep` 增加无显式 `nop` 的连续 UserLocal A->B->A MTC0/RDHWR context-switch 检查并通过；当前 CPU/CP0 contract 已闭合，完整 scheduler 保存/恢复 ABI 仍 deferred。
+- v1.3 (2026-11-09)：scheduler context bank 增加 UserLocal 保存/恢复；直接 CP0 与真实 CPU scheduler integration 均验证两个线程值的切换，Linux lazy-FPU/signal-frame ABI 和完整 scheduler policy 仍 deferred。
+- v1.4 (2026-11-13)：FR=1 FPU context image 增加独立的 32 个 high-word 保存/恢复字段；FR=0 清除该字段。真实 CPU scheduler integration 验证 odd FPR high-word 跨 task switch 保持，Linux signal-frame/lazy-FPU ABI 仍 deferred。

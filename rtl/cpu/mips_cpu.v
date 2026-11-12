@@ -73,9 +73,13 @@ module mips_cpu #(
     output wire [7:0]  ctx_save_asid,
     output wire [31:0] ctx_save_ptebase,
     output wire [31:0] ctx_save_srsctl,
+    output wire [31:0] ctx_save_userlocal,
     output wire [1023:0] ctx_save_gpr,
     output wire [16383:0] ctx_save_srs_gpr,
     output wire [1023:0] ctx_save_fpr,
+    // FR=1 exposes one 64-bit architectural register per index.  Keep the
+    // upper words in the context image so a task switch cannot lose them.
+    output wire [1023:0] ctx_save_fpr_hi,
     output wire [31:0] ctx_save_fcsr,
     input  wire        ctx_restore_req,
     input  wire [31:0] ctx_restore_pc,
@@ -84,10 +88,12 @@ module mips_cpu #(
     input  wire [31:0] ctx_restore_ptebase,
     input  wire        ctx_restore_ptebase_valid,
     input  wire [31:0] ctx_restore_srsctl,
+    input  wire [31:0] ctx_restore_userlocal,
     input  wire [1023:0] ctx_restore_gpr,
     input  wire [16383:0] ctx_restore_srs_gpr,
     input  wire [3:0]  ctx_restore_set,
     input  wire [1023:0] ctx_restore_fpr,
+    input  wire [1023:0] ctx_restore_fpr_hi,
     input  wire [31:0] ctx_restore_fcsr,
     output wire        ctx_restore_ack,
 
@@ -579,6 +585,7 @@ module mips_cpu #(
     wire [2:0]  cp0_config_k0;
     // Phase B.4: effective privilege from CP0 (combinational readback)
     wire        cpu_kernel_mode;
+    wire        cpu_supervisor_mode;
     // The privilege state is updated at the same edge that accepts an
     // exception, but the redirected vector is fetched before that edge. Keep
     // the I-side translation in kernel mode during that redirect cycle; a
@@ -587,8 +594,10 @@ module mips_cpu #(
     wire        mmu_i_kernel_mode = cpu_kernel_mode ||
                                     (exception_flush &&
                                      !(wb_is_eret && wb_commit_valid));
+    wire        mmu_i_supervisor_mode = cpu_supervisor_mode && !exception_flush;
     wire        cpu_cu0;
     wire        cpu_cu1;
+    wire        cpu_fpu_fr;
     wire [31:0] cpu_hwrena;
     wire [31:0] mmu_ilookup_va;
     wire        mmu_ilookup_hit;
@@ -940,7 +949,57 @@ module mips_cpu #(
     wire        fpu_id_cop1 = (id_inst[31:26] == 6'b010001);
     wire        fpu_id_valid = (`SOC_FPU_ENABLE != 0) &&
                                (fpu_id_cop1 || fpu_id_cop1x);
+    // MIPS32 FCSR bits 22:18 are reserved and read as zero. CTC1 writes
+    // every other architectural field, including the Cause field; keeping
+    // the mask in one place also prevents a scheduler restore from exposing
+    // non-architectural state through CFC1 or the retire trace.
+    localparam [31:0] FCSR_RW_MASK = 32'hff83ffff;
+    // Match the QEMU 24Kf capability contract used by the opt-in system
+    // differential: F64/L/W plus S/D formats and implementation ID 0x93.
+    // FCR0 is read-only; CTC1 to fs=0 is accepted as an ignored write.
+    localparam [31:0] FCR0_VALUE = 32'h0073_9300;
     reg [31:0] fcsr;
+
+    // MIPS32 exposes three compact FCSR aliases in addition to FCR31:
+    // FCCR (25), FEXR (26), and FENR (28). Keep the projections explicit so
+    // CFC1/CTC1 preserve unrelated FCSR fields and reserved bits exactly as
+    // the architectural register definitions require.
+    function automatic [31:0] fcsr_alias_read;
+        input [31:0] value;
+        input [4:0]  sel;
+        begin
+            case (sel)
+                5'd0:  fcsr_alias_read = FCR0_VALUE;
+                5'd25: fcsr_alias_read = ((value >> 24) & 32'h000000fe) |
+                                         ((value >> 23) & 32'h00000001);
+                5'd26: fcsr_alias_read = value & 32'h0003f07c;
+                5'd28: fcsr_alias_read = (value & 32'h00000f83) |
+                                         ((value >> 22) & 32'h00000004);
+                default: fcsr_alias_read = value & FCSR_RW_MASK;
+            endcase
+        end
+    endfunction
+
+    function automatic [31:0] fcsr_alias_write;
+        input [31:0] current;
+        input [31:0] value;
+        input [4:0]  sel;
+        reg [31:0] next_value;
+        begin
+            case (sel)
+                5'd25: next_value = (current & 32'h017fffff) |
+                                    ((value & 32'h000000fe) << 24) |
+                                    ((value & 32'h00000001) << 23);
+                5'd26: next_value = (current & 32'hfffc0f83) |
+                                    (value & 32'h0003f07c);
+                5'd28: next_value = (current & 32'hfefff07c) |
+                                    (value & 32'h00000f83) |
+                                    ((value & 32'h00000004) << 22);
+                default: next_value = value;
+            endcase
+            fcsr_alias_write = next_value & FCSR_RW_MASK;
+        end
+    endfunction
     // FCSR condition-code layout: FCC0 is bit 23; FCC1..FCC7 are bits
     // 25..31; bit 24 is the FS flush-subnormals mode.
     wire [7:0] fpu_conditions = {fcsr[31:25], fcsr[23]};
@@ -955,10 +1014,19 @@ module mips_cpu #(
                                       id_inst[5:0] == 6'h08 ||
                                       id_inst[5:0] == 6'h09)));
     wire        fpu_id_mfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00000);
-    wire        fpu_id_cfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00010);
+    wire        fpu_id_fcr0 = (id_inst[15:11] == 5'd0);
+    wire        fpu_id_fcsr_alias = (id_inst[15:11] == 5'd25) ||
+                                    (id_inst[15:11] == 5'd26) ||
+                                    (id_inst[15:11] == 5'd28) ||
+                                    (id_inst[15:11] == 5'd31);
+    wire        fpu_id_cfc1 = fpu_id_cop1 &&
+                              (id_inst[25:21] == 5'b00010) &&
+                              (fpu_id_fcr0 || fpu_id_fcsr_alias);
     wire        fpu_id_mfhc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00011);
     wire        fpu_id_mtc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00100);
-    wire        fpu_id_ctc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00110);
+    wire        fpu_id_ctc1 = fpu_id_cop1 &&
+                              (id_inst[25:21] == 5'b00110) &&
+                              fpu_id_fcsr_alias;
     wire        fpu_id_mthc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00111);
     wire        fpu_id_cop1x_arith = fpu_id_cop1x &&
                                ((id_inst[5:0] == 6'h20) ||
@@ -1009,12 +1077,22 @@ module mips_cpu #(
     // FCSR Enables[11:7] correspond to the primitive flag order
     // {invalid, div0, overflow, underflow, inexact}.  An enabled flag is a
     // precise FPE exception: the FPU result must not commit and CP0 receives
-    // ExcCode 15 through the normal exception pipeline.
+    // ExcCode 15 through the normal exception pipeline. CTC1 also checks the
+    // newly written Cause/Enable fields immediately; Cause.Unimplemented is
+    // unconditionally enabled by the architecture.
     wire [4:0]  fpu_exception_flags;
     wire [4:0] fpu_enabled_flags = fpu_exception_flags & fcsr[11:7];
+    wire [31:0] fpu_ctc1_next = fcsr_alias_write(fcsr, id_val_rt,
+                                                  id_inst[15:11]);
+    wire [4:0] fpu_ctc1_cause = fpu_ctc1_next[16:12];
+    wire [4:0] fpu_ctc1_enable = fpu_ctc1_next[11:7];
+    wire       fpu_ctc1_exception = fpu_id_ctc1 &&
+                                    (fpu_ctc1_next[17] ||
+                                     (|(fpu_ctc1_cause & fpu_ctc1_enable)));
     wire       id_fpu_exception = (`SOC_FPU_ENABLE != 0) &&
                                   fpu_id_valid && !id_fpu_unusable &&
-                                  (|fpu_enabled_flags);
+                                  (fpu_ctc1_exception ||
+                                   (|fpu_enabled_flags));
     // LWC1 completes through the ordinary MEM response edge, while COP1
     // consumers read the FPR array combinationally in ID. Hold a dependent
     // COP1 instruction until the load has committed to avoid observing the
@@ -1056,12 +1134,22 @@ module mips_cpu #(
     wire        fpu_lwc1_hazard = fpu_id_valid &&
                                   (ex_fpu_load_hazard || mem_fpu_load_hazard);
     reg [31:0]  fpr [0:31];
+    // FR=1 gives each FPR its own high word. FR=0 retains the architectural
+    // even/odd pair view used by the legacy 24Kf path.
+    reg [31:0]  fpr_hi [0:31];
     // FCSR condition-code layout: FCC0 is bit 23, FCC1..FCC7 are bits
     // 25..31 (bit 24 is the FS mode) in this vector order. Keep the
     // architectural selector local to the decoder so all COP1 consumers use
     // the same mapping.
     reg [31:0]  fpu_double_low;
     integer     fpu_i;
+    function automatic [31:0] fpu_double_high_word;
+        input [4:0] index;
+        begin
+            fpu_double_high_word = cpu_fpu_fr ? fpr_hi[index] :
+                                   fpr[index + 1'b1];
+        end
+    endfunction
     wire [4:0]  fpu_op = (fpu_id_cop1x &&
                           (id_inst[5:0] == 6'h20 || id_inst[5:0] == 6'h21)) ? 5'd25 :
                          (fpu_id_cop1x &&
@@ -1116,10 +1204,13 @@ module mips_cpu #(
     wire [4:0] fpu_a_index = id_inst[15:11];
     wire [4:0] fpu_b_index = id_inst[20:16];
     wire [4:0] fpu_c_index = fpu_id_cop1x ? id_inst[25:21] : id_inst[10:6];
-    wire [63:0] fpu_a_double = {fpr[fpu_a_index + 1], fpr[fpu_a_index]};
-    wire [63:0] fpu_b_double = {fpr[fpu_b_index + 1], fpr[fpu_b_index]};
+    wire [63:0] fpu_a_double = {fpu_double_high_word(fpu_a_index),
+                                 fpr[fpu_a_index]};
+    wire [63:0] fpu_b_double = {fpu_double_high_word(fpu_b_index),
+                                 fpr[fpu_b_index]};
     wire [31:0] fpu_c = fpr[fpu_c_index];
-    wire [63:0] fpu_c_double = {fpr[fpu_c_index + 1], fpr[fpu_c_index]};
+    wire [63:0] fpu_c_double = {fpu_double_high_word(fpu_c_index),
+                                fpr[fpu_c_index]};
     mips_fpu u_mips_fpu (
         .op           (fpu_op),
         .a            (fpr[fpu_a_index]),
@@ -1148,13 +1239,19 @@ module mips_cpu #(
         if (!rst_n) begin
             fcsr <= 32'd0;
             fpu_double_low <= 32'd0;
-            for (fpu_i = 0; fpu_i < 32; fpu_i = fpu_i + 1)
+            for (fpu_i = 0; fpu_i < 32; fpu_i = fpu_i + 1) begin
                 fpr[fpu_i] <= 32'd0;
+                fpr_hi[fpu_i] <= 32'd0;
+            end
         end else if (ctx_restore_req) begin
-            fcsr <= ctx_restore_fcsr;
+            fcsr <= ctx_restore_fcsr & FCSR_RW_MASK;
             fpu_double_low <= 32'd0;
-            for (fpu_i = 0; fpu_i < 32; fpu_i = fpu_i + 1)
+            for (fpu_i = 0; fpu_i < 32; fpu_i = fpu_i + 1) begin
                 fpr[fpu_i] <= ctx_restore_fpr[fpu_i*32 +: 32];
+                fpr_hi[fpu_i] <= ((`SOC_FPU_ENABLE != 0) &&
+                                  (ctx_restore_status[26] === 1'b1)) ?
+                                  ctx_restore_fpr_hi[fpu_i*32 +: 32] : 32'd0;
+            end
         end else if (mem_double_mem &&
                      ((mem_inst[31:26] == 6'b110101) ||
                       ((mem_inst[31:26] == 6'b010011) &&
@@ -1170,26 +1267,42 @@ module mips_cpu #(
             fpr[mem_fpu_reg] <= mem_rdata_fmt;
         end else if (fpu_mem_ldc1_commit) begin
             fpr[mem_fpu_reg] <= fpu_double_low;
-            fpr[mem_fpu_reg + 1'b1] <= mem_rdata_fmt;
+            if (cpu_fpu_fr)
+                fpr_hi[mem_fpu_reg] <= mem_rdata_fmt;
+            else
+                fpr[mem_fpu_reg + 1'b1] <= mem_rdata_fmt;
         end else if (id_fpu_exception && fpu_id_valid && !global_stall &&
                      !stall_req_id && !exception_flush && !ctx_restore_req) begin
-            // The operation is trapped before architectural FPR commit, but
-            // the sticky flag and most-recent Cause field are still visible
-            // to the FPE handler through CFC1.
-            fcsr[6:2] <= fcsr[6:2] | fpu_exception_flags;
-            fcsr[16:12] <= fpu_exception_flags;
+            if (fpu_id_ctc1) begin
+                // CTC1 commits its masked control image before the enabled
+                // Cause condition raises FPE, matching the CP1 helper path.
+                fcsr <= fpu_ctc1_next;
+            end else begin
+                // Arithmetic is trapped before architectural FPR commit, but
+                // the sticky flag and most-recent Cause field are still
+                // visible to the FPE handler through CFC1.
+                fcsr[6:2] <= fcsr[6:2] | fpu_exception_flags;
+                fcsr[16:12] <= fpu_exception_flags;
+            end
         end else if (fpu_id_commit) begin
             if (fpu_id_mtc1)
                 fpr[id_inst[15:11]] <= id_val_rt;
-            else if (fpu_id_mthc1)
+            else if (fpu_id_mthc1) begin
                 // MTHC1 writes the high word of the selected 64-bit FPR.
-                // The RTL stores a double as low=fpr[even], high=fpr[odd].
-                fpr[id_inst[15:11] + 1'b1] <= id_val_rt;
+                if (cpu_fpu_fr)
+                    fpr_hi[id_inst[15:11]] <= id_val_rt;
+                else
+                    fpr[id_inst[15:11] + 1'b1] <= id_val_rt;
+            end
             else if (fpu_id_ctc1)
-                fcsr <= id_val_rt;
+                fcsr <= fpu_ctc1_next;
             else if (fpu_id_fpr_cond_move) begin
-                if (fpu_id_double)
-                    fpr[id_inst[10:6] + 1'b1] <= fpr[id_inst[15:11] + 1'b1];
+                if (fpu_id_double) begin
+                    if (cpu_fpu_fr)
+                        fpr_hi[id_inst[10:6]] <= fpr_hi[id_inst[15:11]];
+                    else
+                        fpr[id_inst[10:6] + 1'b1] <= fpr[id_inst[15:11] + 1'b1];
+                end
                 fpr[id_inst[10:6]] <= fpr[id_inst[15:11]];
             end
             else if (fpu_id_arith) begin
@@ -1207,7 +1320,10 @@ module mips_cpu #(
                 end
                 else if (fpu_id_double_result) begin
                     fpr[id_inst[10:6]] <= fpu_result_double[31:0];
-                    fpr[id_inst[10:6] + 1] <= fpu_result_double[63:32];
+                    if (cpu_fpu_fr)
+                        fpr_hi[id_inst[10:6]] <= fpu_result_double[63:32];
+                    else
+                        fpr[id_inst[10:6] + 1] <= fpu_result_double[63:32];
                 end else if ((fpu_op >= 5'd10 && fpu_op <= 5'd14) ||
                              (fpu_op >= 5'd18 && fpu_op <= 5'd22))
                     fpr[id_inst[10:6]] <= fpu_result_word;
@@ -1223,10 +1339,17 @@ module mips_cpu #(
         end
     end
 
-    wire [4:0]  rf_waddr_selected = fpu_id_gpr_write ? id_inst[20:16] : wb_waddr;
-    wire [31:0] rf_wdata_selected = fpu_id_mfc1 ? fpr[id_inst[15:11]] :
-                                    fpu_id_mfhc1 ? fpr[id_inst[15:11] + 1'b1] :
-                                    fpu_id_cfc1 ? fcsr : wb_wdata;
+    // The architectural GPR write port is shared by the ID-stage COP1
+    // transfers and the ordinary WB stage.  WB has priority when both are
+    // active; selecting the FPU destination while accepting an older WB
+    // write would redirect that older write into the COP1 transfer's `rt`.
+    wire        fpu_id_gpr_write_port = fpu_id_gpr_write && !wb_reg_write;
+    wire [4:0]  rf_waddr_selected = fpu_id_gpr_write_port ? id_inst[20:16] : wb_waddr;
+    wire [31:0] rf_wdata_selected = fpu_id_gpr_write_port && fpu_id_mfc1 ? fpr[id_inst[15:11]] :
+                                    fpu_id_gpr_write_port && fpu_id_mfhc1 ?
+                                    fpu_double_high_word(id_inst[15:11]) :
+                                    fpu_id_gpr_write_port && fpu_id_cfc1 ?
+                                    fcsr_alias_read(fcsr, id_inst[15:11]) : wb_wdata;
     // The nonblocking retirement FIFO keeps its control bundle registered,
     // while wb_valid is the one-cycle commit pulse.  Gate GPR writes with
     // that pulse or an older load/store control word will be replayed into
@@ -1236,6 +1359,37 @@ module mips_cpu #(
                                   !exception_flush && !ctx_restore_req) :
                                  (wb_reg_write && wb_commit_valid &&
                                   !(wb_except_req && wb_arch_valid));
+
+    // MFC1/MFHC1/CFC1 write the integer register file directly from ID.
+    // A following branch or ALU instruction can already be in ID when that
+    // edge occurs, so retain one cycle of the transfer and expose it through
+    // the ordinary WB forwarding path.  Without this bypass the consumer
+    // sees the pre-transfer GPR value and can redirect control flow using
+    // stale state.
+    reg        fpu_gpr_bypass_valid;
+    reg [4:0]  fpu_gpr_bypass_addr;
+    reg [31:0] fpu_gpr_bypass_data;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            fpu_gpr_bypass_valid <= 1'b0;
+            fpu_gpr_bypass_addr <= 5'd0;
+            fpu_gpr_bypass_data <= 32'd0;
+        end else begin
+            fpu_gpr_bypass_valid <= 1'b0;
+            if (rf_we_selected && fpu_id_gpr_write_port &&
+                (rf_waddr_selected != 5'd0)) begin
+                fpu_gpr_bypass_valid <= 1'b1;
+                fpu_gpr_bypass_addr <= rf_waddr_selected;
+                fpu_gpr_bypass_data <= rf_wdata_selected;
+            end
+        end
+    end
+
+    wire        fw_wb_we_selected = fpu_gpr_bypass_valid || rf_we_selected;
+    wire [4:0]  fw_wb_waddr_selected = fpu_gpr_bypass_valid ?
+                                       fpu_gpr_bypass_addr : rf_waddr_selected;
+    wire [31:0] fw_wb_val_selected = fpu_gpr_bypass_valid ?
+                                      fpu_gpr_bypass_data : rf_wdata_selected;
 
     wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
                        (id_inst[25:21] == 5'b00000) &&
@@ -1280,6 +1434,7 @@ module mips_cpu #(
         .rst_n         (rst_n),
         .fpu_condition (fpu_conditions),
         .fpu_branch_invert (id_fpu_branch_invert),
+        .fpu_fr_enable (cpu_fpu_fr),
         .inst          (id_inst),
         .pc_plus_4     (id_pc_plus_4),
         
@@ -1313,9 +1468,9 @@ module mips_cpu #(
         // payload used by retirement. Forward that value to an immediate
         // consumer instead of forwarding the SC address from EX.
         .fw_mem_val    (mem_ex_out_wb),
-        .fw_wb_we      (rf_we_selected),
-        .fw_wb_waddr   (rf_waddr_selected),
-        .fw_wb_val     (rf_wdata_selected),
+        .fw_wb_we      (fw_wb_we_selected),
+        .fw_wb_waddr   (fw_wb_waddr_selected),
+        .fw_wb_val     (fw_wb_val_selected),
         
         // Hazard detection
         // SC has a deferred register result just like a load.  Keep a
@@ -1388,9 +1543,28 @@ module mips_cpu #(
     );
 
     // Phase B.4: privileged instruction detection + CU0 gate. If the current
-    // ID instruction is MTC0/MFC0/ERET/TLB* and the effective mode is user-mode
-    // without Status.CU0 override, raise Coprocessor Unusable (ExcCode 11).
-    wire id_is_priv     = id_cp0_we | id_is_mfc0 | id_is_eret | id_is_wait | (|id_tlb_op);
+    // ID instruction is MTC0/MFC0/ERET/TLB* or an opt-in shadow-register-set
+    // operation and the effective mode is user-mode without Status.CU0
+    // override, raise Coprocessor Unusable (ExcCode 11).  RDPGPR/WRPGPR are
+    // decoded inside mips_id_stage for their architectural side effects, so
+    // detect their fixed encodings here as well; otherwise enabling SRS would
+    // accidentally make those privileged operations executable in user mode.
+    wire id_is_rdpgpr = (`SOC_SRS_ENABLE != 0) &&
+                        (id_inst[31:26] == 6'b010000) &&
+                        (id_inst[25:21] == 5'b01010) &&
+                        (id_inst[10:6] == 5'd0) &&
+                        (id_inst[5:0] == 6'd0);
+    wire id_is_wrpgpr = (`SOC_SRS_ENABLE != 0) &&
+                        (id_inst[31:26] == 6'b010000) &&
+                        (id_inst[25:21] == 5'b01110) &&
+                        (id_inst[10:6] == 5'd0) &&
+                        (id_inst[5:0] == 6'd0);
+    // MFMC0 DI/EI also access Status atomically and are privileged in User
+    // mode. Keep them behind the same CU0/kernel gate as MFC0/MTC0 so a
+    // userspace instruction cannot change interrupt state before trapping.
+    wire id_is_priv     = id_cp0_we | id_is_mfc0 | id_is_di | id_is_ei |
+                          id_is_eret | id_is_wait | (|id_tlb_op) |
+                          id_is_rdpgpr | id_is_wrpgpr;
     wire id_rdhwr_allowed = id_is_rdhwr && cpu_hwrena[id_inst[15:11]];
     wire id_cpu_unusable = id_is_priv & ~cpu_kernel_mode & ~cpu_cu0 &
                            ~id_rdhwr_allowed;
@@ -1877,7 +2051,7 @@ module mips_cpu #(
                                  ((mem_inst[31:26] == 6'b111101) ||
                                   ((mem_inst[31:26] == 6'b010011) &&
                                    mem_inst[5:0] == 6'h09)) ?
-                                 (mem_double_phase ? fpr[mem_fpu_reg + 1'b1] :
+                                 (mem_double_phase ? fpu_double_high_word(mem_fpu_reg) :
                                                       fpr[mem_fpu_reg]) : mem_val_rt);
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
@@ -3051,12 +3225,14 @@ module mips_cpu #(
         .ctx_save_asid(ctx_save_asid),
         .ctx_save_ptebase(ctx_save_ptebase),
         .ctx_save_srsctl(ctx_save_srsctl),
+        .ctx_save_userlocal(ctx_save_userlocal),
         .ctx_restore_req(ctx_restore_req),
         .ctx_restore_status(ctx_restore_status),
         .ctx_restore_asid(ctx_restore_asid),
         .ctx_restore_ptebase(ctx_restore_ptebase),
         .ctx_restore_ptebase_valid(ctx_restore_ptebase_valid),
         .ctx_restore_srsctl(ctx_restore_srsctl),
+        .ctx_restore_userlocal(ctx_restore_userlocal),
         .ctx_restore_done(),
         .interrupt_srs_set(cp0_vint_srs_set),
         .interrupt_accept_in(interrupt_accept),
@@ -3082,8 +3258,10 @@ module mips_cpu #(
         .vint_offset_out  (cp0_vint_offset),
         .vint_srs_set_out (cp0_vint_srs_set),
         .kernel_mode  (cpu_kernel_mode),
+        .supervisor_mode(cpu_supervisor_mode),
         .cu0_enable   (cpu_cu0),
         .cu1_enable   (cpu_cu1),
+        .fpu_fr_enable(cpu_fpu_fr),
         .exl_out      (cp0_exl),
         .hwrena_out   (cpu_hwrena),
 
@@ -3118,9 +3296,12 @@ module mips_cpu #(
     generate
         for (fpu_ctx_i = 0; fpu_ctx_i < 32; fpu_ctx_i = fpu_ctx_i + 1) begin : gen_fpu_context
             assign ctx_save_fpr[fpu_ctx_i*32 +: 32] = fpr[fpu_ctx_i];
+            assign ctx_save_fpr_hi[fpu_ctx_i*32 +: 32] = cpu_fpu_fr ?
+                                                         fpr_hi[fpu_ctx_i] :
+                                                         32'd0;
         end
     endgenerate
-    assign ctx_save_fcsr = fcsr;
+    assign ctx_save_fcsr = fcsr & FCSR_RW_MASK;
 
     // -------------------------------------------------------------------------
     // Phase B.3.c: address translation for I-fetch and D-load/store.
@@ -3138,6 +3319,7 @@ module mips_cpu #(
         .asid            (cp0_asid),
         .config_k0       (cp0_config_k0),
         .is_kernel       (mmu_i_kernel_mode),
+        .is_supervisor   (mmu_i_supervisor_mode),
         .tlb_lookup_va   (mmu_ilookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_ilookup_hit),
@@ -3160,6 +3342,7 @@ module mips_cpu #(
         .asid            (cp0_asid),
         .config_k0       (cp0_config_k0),
         .is_kernel       (cpu_kernel_mode),
+        .is_supervisor   (cpu_supervisor_mode),
         .tlb_lookup_va   (mmu_dlookup_va),
         .tlb_lookup_asid (),                 // driven internally by CP0 (asid)
         .tlb_lookup_hit  (mmu_dlookup_hit),
@@ -3185,11 +3368,10 @@ module mips_cpu #(
         input [31:0] addr;
         begin
             canonical_linux_phys_addr = addr;
-`ifdef SOC_LINUX_BOOT_ENABLE
-            if (((addr >= 32'h0002_0000) && (addr < 32'h0400_0000)) ||
-                ((addr >= 32'h0401_0000) && (addr < 32'h0800_0000)))
+            if ((`SOC_LINUX_BOOT_ENABLE != 0) &&
+                (((addr >= 32'h0002_0000) && (addr < 32'h0400_0000)) ||
+                ((addr >= 32'h0401_0000) && (addr < 32'h0800_0000))))
                 canonical_linux_phys_addr = addr + `SOC_DDR_BASE;
-`endif
         end
     endfunction
 

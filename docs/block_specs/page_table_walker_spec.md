@@ -7,7 +7,7 @@ CPU permission-fault integration gate 已通过。
 permission matrix）、`make page-table-tlb-refill-gate` 和
 `make mmu-page-table-allocator-gate`、`make cpu-dside-hardware-walker-gate` 通过。CPU D-side gate
 覆盖真实 load/store retry、PA completion、permission fault latch 和 request suppression；refill gate 覆盖 walker leaf PTE
-到 MIPS EntryLo、VPN2/ASID 传递、D/V 权限映射和 TLB write ready 握手；
+到 MIPS EntryLo、VPN2/ASID 传递、D/V 权限映射、TLB write ready 握手以及可选 Accessed/Dirty (`ENABLE_AD_UPDATE`) 维护与 writeback error 传递（该切片不代表完整 Linux VM 或任意 demand paging）；
 allocator gate 覆盖 bounded root lease/generation contract。
 
 SoC opt-in evidence：`make mmu-hardware-walker-soc-gate` 通过。该 gate 将

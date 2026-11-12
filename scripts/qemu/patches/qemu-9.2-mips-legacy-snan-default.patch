@@ -1,0 +1,19 @@
+diff --git a/fpu/softfloat-specialize.c.inc b/fpu/softfloat-specialize.c.inc
+--- a/fpu/softfloat-specialize.c.inc
++++ b/fpu/softfloat-specialize.c.inc
+@@ -200,10 +200,15 @@ static uint64_t parts_silence_nan_frac(uint64_t frac, float_status *status)
+     g_assert(!no_signaling_nans(status));
+ 
+     /* The only snan_bit_is_one target without default_nan_mode is HPPA. */
+     if (snan_bit_is_one(status)) {
++#if defined(TARGET_MIPS)
++        /* SOC_REF_FPU_LEGACY_SNAN_DEFAULT: legacy MIPS canonical SNaN. */
++        return (1ULL << (DECOMPOSED_BINARY_POINT - 1)) - 1;
++#else
+         frac &= ~(1ULL << (DECOMPOSED_BINARY_POINT - 1));
+         frac |= 1ULL << (DECOMPOSED_BINARY_POINT - 2);
++#endif
+     } else {
+         frac |= 1ULL << (DECOMPOSED_BINARY_POINT - 1);
+     }
+     return frac;

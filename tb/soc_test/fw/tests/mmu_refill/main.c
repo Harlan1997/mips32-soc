@@ -39,6 +39,8 @@ static volatile unsigned int cross_page_active = 0;
 static volatile unsigned int cross_page_store_active = 0;
 static volatile unsigned int cross_page_faults = 0;
 static volatile unsigned int cross_page_read_faults = 0;
+static volatile unsigned int squash_probe_active = 0;
+static volatile unsigned int squash_probe_syscalls = 0;
 
 #ifdef SOC_HW_WALKER
 /* Root index 0 -> L2 table at physical 0x2000.  The two leaf entries cover
@@ -255,6 +257,19 @@ void c_interrupt_handler(void) {
     asm volatile("mfc0 %0, $13, 0" : "=r"(cause));
     exc_code = CAUSE_EXCCODE(cause);
     asm volatile("mfc0 %0, $8, 0" : "=r"(bad_vaddr));
+
+    /* The owner gate deliberately places a younger unmapped load behind an
+     * older syscall.  The load must be flushed with the syscall and then
+     * replayed after ERET; it is not an unexpected architectural exception. */
+    if (exc_code == 8u && squash_probe_active) {
+        squash_probe_syscalls++;
+        squash_probe_active = 0;
+        asm volatile("mfc0 %0, $14, 0" : "=r"(epc));
+        epc += 4;
+        asm volatile("mtc0 %0, $14, 0" :: "r"(epc));
+        return;
+    }
+
 #ifdef SOC_HW_WALKER
     if (bad_vaddr == 0x00022000u && exc_code == EXC_MOD) {
         hw_permission_faults++;
@@ -477,6 +492,32 @@ int main(void) {
         } else p[0] = 0xA5A50000u + i;
     }
 
+#ifndef SOC_HW_WALKER
+    /* Force an older WB syscall and a younger MEM translation fault to share
+     * one exception boundary.  The first load is discarded by the syscall;
+     * the same instruction then replays and commits through the normal refill
+     * path.  This proves that no stale BadVAddr token can survive the squash. */
+    {
+        volatile unsigned int *squash_probe = (volatile unsigned int *)0x00020000u;
+        unsigned int probe_value = 0;
+        for (i = 0; i < 32; i++)
+            asm volatile("nop");
+        invalidate_page_pair(0x00020000u, 0u);
+        squash_probe_active = 1;
+        asm volatile(".set noreorder\n\t"
+                     "syscall\n\t"
+                     "lw %0, 0(%1)\n\t"
+                     "nop\n\t"
+                     ".set reorder\n\t"
+                     : "=r"(probe_value)
+                     : "r"(squash_probe)
+                     : "memory");
+        squash_probe_active = 0;
+        if (probe_value != 0xA5A50000u || squash_probe_syscalls != 1u)
+            ok = 0;
+    }
+#endif
+
     /* LWL/LWR are separate architectural instructions.  Keep the odd
      * (second) page resident, invalidate the pair, and then execute a pair
      * whose LWL reaches 0x21000 while its LWR faults at 0x20ffd.  The first
@@ -592,7 +633,7 @@ int main(void) {
     print_str("mmu_refill: ro_initial=");
     print_hex(ro_initial);
 
-    if (ok && demand_fault_count == 10 && page_alloc_count == 4 &&
+    if (ok && demand_fault_count == 12 && page_alloc_count == 4 &&
         permission_fault_count == 1 && permission_badvaddr_ok == 1 &&
         unexpected_exc == 0) {
         print_str("mmu_refill: PASS\n");

@@ -77,7 +77,10 @@ module mips_control (
     output reg         is_wrpgpr,
     // MIPS32 COP1 condition-code selector.  MOVF/MOVT encode cc in rt[4:2],
     // keep rt[1] reserved, and encode polarity in rt[0].
-    output reg  [2:0]  fpu_condition_code
+    output reg  [2:0]  fpu_condition_code,
+    // Status.FR selects the 32 x 64-bit FPR view.  Unconnected legacy unit
+    // tests are treated as FR=0 so odd double selectors remain reserved.
+    input  wire        fpu_fr_enable
 );
 
     wire [5:0] opcode = inst[31:26];
@@ -478,8 +481,9 @@ module mips_control (
                     imm_signed = 1'b1;
                 end
             end
-            6'b110101: begin // LDC1 (double precision, opt-in; even FPR pair)
-                if (`SOC_FPU_ENABLE == 0 || rt[0]) begin
+            6'b110101: begin // LDC1 (double precision, opt-in)
+                if (`SOC_FPU_ENABLE == 0 ||
+                    ((fpu_fr_enable !== 1'b1) && rt[0])) begin
                     illegal_inst = 1'b1;
                 end else begin
                     alu_op    = 5'b00001;
@@ -578,8 +582,9 @@ module mips_control (
                     imm_signed = 1'b1;
                 end
             end
-            6'b111101: begin // SDC1 (double precision, opt-in; even FPR pair)
-                if (`SOC_FPU_ENABLE == 0 || rt[0]) begin
+            6'b111101: begin // SDC1 (double precision, opt-in)
+                if (`SOC_FPU_ENABLE == 0 ||
+                    ((fpu_fr_enable !== 1'b1) && rt[0])) begin
                     illegal_inst = 1'b1;
                 end else begin
                     alu_op    = 5'b00001;
@@ -1069,9 +1074,11 @@ module mips_control (
                              func == 6'h08 || func == 6'h09) begin
                     // LWXC1/LDXC1 and SWXC1/SDXC1 use GPR[rs]+GPR[rt]
                     // as an indexed address and rd as the FPR selector.
-                    // Double transfers require an even FPR pair.
+                    // Double transfers require an even FPR pair in FR=0;
+                    // FR=1 names one independently addressable 64-bit FPR.
                     if (`SOC_FPU_ENABLE == 0 ||
-                        ((func == 6'h01 || func == 6'h09) && rd[0])) begin
+                        ((fpu_fr_enable !== 1'b1) &&
+                         (func == 6'h01 || func == 6'h09) && rd[0])) begin
                         illegal_inst = 1'b1;
                     end else begin
                         alu_op    = 5'b00001;
@@ -1094,7 +1101,7 @@ module mips_control (
                             // COP1X uses rs=fr, rt=ft, rd=fs, sa=fd.
                             // Odd function encodings are the D forms, where
                             // every selector names the first word of a pair.
-                            if (func[0] &&
+                            if ((fpu_fr_enable !== 1'b1) && func[0] &&
                                 (rs[0] || rt[0] || rd[0] || sa[0]))
                                 illegal_inst = 1'b1;
                         end
@@ -1124,10 +1131,15 @@ module mips_control (
                             // MFC1/CFC1/MFHC1/MTC1/CTC1/MTHC1 side effects
                             // are committed by the opt-in CP1 state block.
                             // The low eleven bits are reserved for transfers;
-                            // CFC1/CTC1 expose FCSR only (fs=$31).
+                            // CFC1/CTC1 expose FCSR or its architectural
+                            // FCCR/FEXR/FENR aliases.
                             if (inst[10:0] != 11'd0 ||
                                 ((rs == 5'b00010 || rs == 5'b00110) &&
-                                 inst[15:11] != 5'd31))
+                                 !(inst[15:11] == 5'd0 ||
+                                   inst[15:11] == 5'd25 ||
+                                   inst[15:11] == 5'd26 ||
+                                   inst[15:11] == 5'd28 ||
+                                   inst[15:11] == 5'd31)))
                                 illegal_inst = 1'b1;
                         end
                         5'b10000, 5'b10001, 5'b10100: begin
@@ -1152,7 +1164,8 @@ module mips_control (
                             // condition, not as the D-format ft FPR.  Only
                             // ordinary D operations require all three FPR
                             // selectors to be even.
-                            if ((rs == 5'b10001) &&
+                            if ((fpu_fr_enable !== 1'b1) &&
+                                (rs == 5'b10001) &&
                                 (inst[6] || inst[11] ||
                                  ((func == 6'h11) ? inst[17] :
                                   ((func != 6'h12 && func != 6'h13) &&

@@ -3,7 +3,8 @@
 // the CP0/TLB side grants it. The normal CP0 TLBWI/TLBWR path remains the other
 // owner and must be arbitrated externally with this request.
 module mips_page_table_tlb_refill #(
-    parameter [15:0] PAGE_MASK = 16'h0000
+    parameter [15:0] PAGE_MASK = 16'h0000,
+    parameter ENABLE_AD_UPDATE = 1'b0
 ) (
     input wire clk, input wire rst_n,
     input wire miss_valid, output wire miss_ready,
@@ -17,26 +18,40 @@ module mips_page_table_tlb_refill #(
     output wire [18:0] tlb_wr_vpn2, output wire [7:0] tlb_wr_asid,
     input wire [7:0] miss_asid,
     output wire [15:0] tlb_wr_mask,
-    output wire [31:0] tlb_wr_entrylo0, output wire [31:0] tlb_wr_entrylo1
+    output wire [31:0] tlb_wr_entrylo0, output wire [31:0] tlb_wr_entrylo1,
+    output wire pte_update_valid,
+    output wire [31:0] pte_update_addr,
+    output wire [31:0] pte_update_data,
+    input wire pte_update_ready,
+    input wire pte_update_error
 );
     wire req_ready, resp_valid, fault_valid;
     wire [31:0] pa, leaf_pte;
     wire [2:0] fault_code;
+    wire walker_pte_update_valid;
+    wire [31:0] walker_pte_update_addr;
+    wire [31:0] walker_pte_update_data;
     reg refill_pending;
     reg resp_seen;
     reg grant_seen;
     reg [31:0] va_q;
     reg [7:0] asid_q;
 
-    mips_page_table_walker #(.PAGE_MASK(PAGE_MASK)) u_walker (
+    mips_page_table_walker #(
+        .PAGE_MASK(PAGE_MASK),
+        .ENABLE_AD_UPDATE(ENABLE_AD_UPDATE)
+    ) u_walker (
         .clk(clk), .rst_n(rst_n), .req_valid(miss_valid && miss_ready),
         .req_ready(req_ready), .ptbr(ptbr), .va(miss_va), .access(miss_access),
         .user_mode(miss_user), .mem_valid(mem_valid), .mem_addr(mem_addr),
         .mem_ready(mem_ready), .mem_rdata(mem_rdata), .mem_error(mem_error),
         .resp_valid(resp_valid), .pa(pa), .fault_valid(fault_valid),
         .fault_code(fault_code), .leaf_pte(leaf_pte),
-        .pte_update_valid(), .pte_update_addr(), .pte_update_data(),
-        .pte_update_ready(1'b0), .pte_update_error(1'b0)
+        .pte_update_valid(walker_pte_update_valid),
+        .pte_update_addr(walker_pte_update_addr),
+        .pte_update_data(walker_pte_update_data),
+        .pte_update_ready(ENABLE_AD_UPDATE ? pte_update_ready : 1'b0),
+        .pte_update_error(ENABLE_AD_UPDATE ? pte_update_error : 1'b0)
     );
 
     assign miss_ready = req_ready && !refill_pending;
@@ -48,6 +63,9 @@ module mips_page_table_tlb_refill #(
     assign tlb_wr_vpn2 = va_q[31:13];
     assign tlb_wr_asid = asid_q;
     assign tlb_wr_mask = PAGE_MASK;
+    assign pte_update_valid = ENABLE_AD_UPDATE ? walker_pte_update_valid : 1'b0;
+    assign pte_update_addr  = ENABLE_AD_UPDATE ? walker_pte_update_addr  : 32'd0;
+    assign pte_update_data  = ENABLE_AD_UPDATE ? walker_pte_update_data  : 32'd0;
     // MIPS EntryLo: PFN[29:6], C=3, D follows PTE.W, V follows PTE.V,
     // global remains software-owned and is zero for hardware refills.  The
     // walker resolves one 4KB leaf, so leave the other half invalid instead

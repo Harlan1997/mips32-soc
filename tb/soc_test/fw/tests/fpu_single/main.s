@@ -35,6 +35,102 @@ main:
     nop
     nop
     nop
+    mfc0    $t8, $16, 1        /* Config1.FP advertises the enabled COP1 unit */
+    andi    $t8, $t8, 1
+    beq     $t8, $zero, fail
+    nop
+
+    /* FCR0/FIR is the read-only FPU capability register.  The 24Kf-compatible
+     * opt-in model advertises F64/L/W and S/D formats with implementation ID
+     * 0x93; CTC1 to fs=0 must not alter it. */
+    cfc1    $t6, $f0
+    nop
+    nop
+    nop
+    lui     $t7, 0x0073
+    ori     $t7, $t7, 0x9300
+    bne     $t6, $t7, fail
+    nop
+    lui     $t5, 0xffff
+    ori     $t5, $t5, 0xffff
+    ctc1    $t5, $f0
+    nop
+    nop
+    cfc1    $t6, $f0
+    nop
+    nop
+    bne     $t6, $t7, fail
+    nop
+
+    /* CTC1 ignores reserved FCSR[22:18] bits while retaining RM[1:0].
+     * Keep this probe non-trapping; the enabled Cause-on-CTC1 path is tested
+     * by the dedicated FPE firmware. */
+    lui     $t5, 0x007c
+    ori     $t5, $t5, 0x0003
+    ctc1    $t5, $31
+    nop
+    nop
+    nop
+    cfc1    $t6, $31
+    nop
+    nop
+    nop
+    lui     $t7, 0x0000
+    ori     $t7, $t7, 0x0003
+    bne     $t6, $t7, fail
+    nop
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+
+    /* Exercise the architectural FCSR aliases. FCCR (25) carries the eight
+     * condition bits, FENR (28) carries Enables/RM/FS, and FEXR (26) carries
+     * Cause/Flags. Each write must preserve the fields owned by the others. */
+    addiu   $t5, $zero, 0x00a5
+    ctc1    $t5, $25
+    nop
+    nop
+    nop
+    cfc1    $t6, $25
+    nop
+    nop
+    nop
+    bne     $t6, $t5, fail
+    nop
+    addiu   $t5, $zero, 0x0f87  /* Enables=all, FS=1, RM=3 */
+    ctc1    $t5, $28
+    nop
+    nop
+    nop
+    cfc1    $t6, $28
+    nop
+    nop
+    nop
+    bne     $t6, $t5, fail
+    nop
+    addiu   $t5, $zero, 0x0014  /* FEXR Flags: Invalid and Inexact */
+    ctc1    $t5, $26
+    nop
+    nop
+    nop
+    cfc1    $t6, $26
+    nop
+    nop
+    nop
+    bne     $t6, $t5, fail
+    nop
+    addiu   $t5, $zero, 0x00a5
+    cfc1    $t6, $25
+    nop
+    nop
+    nop
+    bne     $t6, $t5, fail
+    nop
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
 
     /* COP1 conditional moves use FCSR condition code 0 (FCSR[23]). */
     lui     $t0, 0x1111
@@ -254,6 +350,128 @@ main:
     check_compare 13, 1
     check_compare 14, 0
     check_compare 15, 1
+
+    /* Legacy-MIPS NaN arithmetic and conversion boundaries.  The clear
+     * fraction MSB is quiet; the set MSB is signaling for the 24Kf contract. */
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    lui     $t4, 0x7fa0
+    ori     $t4, $t4, 0x0001
+    mtc1    $t4, $f0
+    add.s   $f8, $f0, $f2
+    mfc1    $t5, $f8
+    nop
+    nop
+    nop
+    bne     $t5, $t4, fail
+    nop
+    cfc1    $t6, $31
+    srl     $t6, $t6, 2
+    andi    $t6, $t6, 0x001f
+    bne     $t6, $zero, fail
+    nop
+
+    ctc1    $zero, $31
+    nop
+    nop
+    lui     $t4, 0x7fc0
+    ori     $t4, $t4, 0x0001
+    mtc1    $t4, $f0
+    add.s   $f8, $f0, $f2
+    mfc1    $t5, $f8
+    nop
+    nop
+    nop
+    lui     $t6, 0x7fbf
+    ori     $t6, $t6, 0xffff
+    bne     $t5, $t6, fail
+    nop
+    cfc1    $t7, $31
+    srl     $t7, $t7, 2
+    andi    $t7, $t7, 0x001f
+    addiu   $t6, $zero, 0x0010
+    bne     $t7, $t6, fail
+    nop
+
+    /* A quiet NaN numerator must not acquire Divide-by-zero from a zero
+     * denominator. */
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    lui     $t4, 0x7fa0
+    ori     $t4, $t4, 0x0001
+    mtc1    $t4, $f0
+    mtc1    $zero, $f2
+    div.s   $f8, $f0, $f2
+    mfc1    $t5, $f8
+    nop
+    nop
+    nop
+    bne     $t5, $t4, fail
+    nop
+    cfc1    $t6, $31
+    srl     $t6, $t6, 2
+    andi    $t6, $t6, 0x001f
+    bne     $t6, $zero, fail
+    nop
+
+    /* CVT.D.S preserves a quiet payload and canonicalizes a signaling input. */
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    lui     $t4, 0x7fa0
+    ori     $t4, $t4, 0x0001
+    mtc1    $t4, $f0
+    cvt.d.s $f8, $f0
+    .word   0x440d4800       /* mfc1 $t5,$f9: high word */
+    nop
+    nop
+    nop
+    lui     $t6, 0x7ff4
+    bne     $t5, $t6, fail
+    nop
+    .word   0x440e4000       /* mfc1 $t6,$f8: low word */
+    nop
+    nop
+    nop
+    lui     $t7, 0x2000
+    ori     $t7, $t7, 0x0000
+    bne     $t6, $t7, fail
+    nop
+    ctc1    $zero, $31
+    nop
+    nop
+    nop
+    lui     $t4, 0x7fc0
+    ori     $t4, $t4, 0x0001
+    mtc1    $t4, $f0
+    cvt.d.s $f8, $f0
+    .word   0x440d4800       /* mfc1 $t5,$f9: high word */
+    nop
+    nop
+    nop
+    lui     $t6, 0x7ff7
+    ori     $t6, $t6, 0xffff
+    bne     $t5, $t6, fail
+    nop
+    .word   0x440e4000       /* mfc1 $t6,$f8: low word */
+    nop
+    nop
+    nop
+    lui     $t7, 0xffff
+    ori     $t7, $t7, 0xffff
+    bne     $t6, $t7, fail
+    nop
+    cfc1    $t7, $31
+    srl     $t7, $t7, 2
+    andi    $t7, $t7, 0x001f
+    addiu   $t6, $zero, 0x0010
+    bne     $t7, $t6, fail
+    nop
 
     /* Restore both operands for the arithmetic and memory checks below. */
     mtc1    $t0, $f0

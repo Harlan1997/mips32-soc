@@ -51,6 +51,8 @@ class FifoLines:
         self.items = queue.Queue(maxsize=STREAM_QUEUE_SIZE)
         self.error = None
         self.done = threading.Event()
+        self.records_read = 0
+        self.bytes_read = 0
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.thread.start()
 
@@ -61,9 +63,15 @@ class FifoLines:
             # worker lets the event and state streams open simultaneously.
             fd = os.open(self.path, os.O_RDONLY)
             enlarge_pipe(fd)
+            try:
+                os.unlink(self.path)
+            except OSError:
+                pass
             with os.fdopen(fd, "rb", closefd=False) as stream:
                 for line_number, raw in enumerate(stream, 1):
+                    self.bytes_read += len(raw)
                     if raw.strip():
+                        self.records_read += 1
                         try:
                             value = (orjson.loads(raw) if orjson is not None else
                                      json.loads(raw.decode("ascii")))
@@ -93,6 +101,31 @@ class FifoLines:
                 raise self.error
             raise StopIteration
         return value
+
+
+def write_status(path, status, events, states, records_emitted,
+                 records_written, error=None):
+    """Persist producer/consumer evidence even when conversion fails."""
+    if not path:
+        return
+    payload = {
+        "status": status,
+        "event_records_read": events.records_read,
+        "event_bytes_read": events.bytes_read,
+        "state_records_read": states.records_read,
+        "state_bytes_read": states.bytes_read,
+        "retire_records_emitted": records_emitted,
+        "retire_records_written": records_written,
+    }
+    if error is not None:
+        payload["error"] = str(error)
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
+    temporary = f"{path}.tmp.{os.getpid()}"
+    with open(temporary, "w", encoding="utf-8") as status_file:
+        json.dump(payload, status_file, sort_keys=True)
+        status_file.write("\n")
+    os.replace(temporary, path)
 
 
 class StateWindow:
@@ -236,33 +269,41 @@ def main():
     parser.add_argument("states")
     parser.add_argument("output")
     args = parser.parse_args()
+    status_path = os.environ.get("QEMU_STREAM_STATUS", "")
 
     events = FifoLines(args.events)
     states = FifoLines(args.states)
-    state_window = StateWindow(states)
-    event_window = EventWindow(events, state_window)
     count = 0
-    output_fd = os.open(args.output, os.O_WRONLY)
-    enlarge_pipe(output_fd)
+    written = 0
+    output_fd = None
     pending = bytearray()
+    pending_records = 0
+
+    write_status(status_path, "running", events, states, count, written)
 
     def flush_pending():
         """Write complete JSON lines without exceeding FIFO atomicity."""
-        nonlocal pending
+        nonlocal pending, pending_records, written
         if not pending:
             return
         offset = 0
         while offset < len(pending):
             try:
-                written = os.write(output_fd, pending[offset:])
+                bytes_written = os.write(output_fd, pending[offset:])
             except InterruptedError:
                 continue
-            if written <= 0:
+            if bytes_written <= 0:
                 raise OSError("retire FIFO write returned no progress")
-            offset += written
+            offset += bytes_written
         pending.clear()
+        written += pending_records
+        pending_records = 0
 
     try:
+        state_window = StateWindow(states)
+        event_window = EventWindow(events, state_window)
+        output_fd = os.open(args.output, os.O_WRONLY)
+        enlarge_pipe(output_fd)
         for record in convert(event_window, state_window):
             record["retire_seq"] = count
             # Batch only complete JSON lines. A large buffered text stream can
@@ -275,18 +316,25 @@ def main():
             if len(payload) > 4096:
                 flush_pending()
                 pending.extend(payload)
+                pending_records += 1
                 flush_pending()
             else:
                 if pending and len(pending) + len(payload) > 4096:
                     flush_pending()
                 pending.extend(payload)
+                pending_records += 1
             count += 1
         flush_pending()
+        events.thread.join()
+        states.thread.join()
+        write_status(status_path, "pass", events, states, count, written)
+        print(f"QEMU_SYSTEM_RETIRE_STREAM_PASS records={count}")
+    except BaseException as exc:
+        write_status(status_path, "error", events, states, count, written, exc)
+        raise
     finally:
-        os.close(output_fd)
-    events.thread.join()
-    states.thread.join()
-    print(f"QEMU_SYSTEM_RETIRE_STREAM_PASS records={count}")
+        if output_fd is not None:
+            os.close(output_fd)
 
 
 if __name__ == "__main__":

@@ -160,6 +160,8 @@ module tb_mips_control_cp0;
         expect_reserved(cop0(5'b10000, 5'd0, 5'd0, 5'd1, 6'b000110));
         expect_reserved(cop0(5'b10000, 5'd0, 5'd0, 5'd1, 6'b001000));
         expect_reserved(cop0(5'b10000, 5'd0, 5'd0, 5'd1, 6'b100000));
+        // WAIT has no architectural code operand: bits [24:6] are reserved.
+        expect_reserved(cop0(5'b10000, 5'd1, 5'd0, 5'd0, 6'b100000));
         expect_reserved(cop0(5'b10000, 5'd0, 5'd0, 5'd0, 6'b000011));
         expect_reserved(cop0(5'b01011, 5'd2, 5'd11, 5'd0, 6'b000000));
         expect_reserved(cop0(5'b01011, 5'd2, 5'd12, 5'd1, 6'b000000));

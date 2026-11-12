@@ -23,7 +23,7 @@ BASE_FIELDS = ("schema", "pc", "instr", "next_pc", "except", "except_code", "bd"
 TRACE_FIELDS = {
     "retire_seq", "schema", "pc", "instr", "next_pc", "gpr_we",
     "gpr_addr", "gpr_data", "cp0_we", "cp0_addr", "cp0_sel", "cp0_data",
-    "fpr_state", "fcsr_state", "mem_valid", "mem_read", "mem_write",
+    "fpr_state", "fpr_hi_state", "fcsr_state", "mem_valid", "mem_read", "mem_write",
     "mem_addr", "mem_wdata", "mem_be", "mem_rdata", "except",
     "except_code", "bd", "eret",
 }
@@ -31,7 +31,7 @@ TRACE_STATE_FIELDS = {"gpr_state", "hilo_state"}
 # These fields are either producer-specific (mem_be) or emitted only for
 # double stores by the compact RTL FIFO transport.  Double-store presence is
 # checked explicitly at the comparison boundary below.
-OPTIONAL_TRACE_FIELDS = {"mem_be", "mem_wdata_hi"}
+OPTIONAL_TRACE_FIELDS = {"mem_be", "mem_wdata_hi", "fpr_hi_state"}
 SUPPORTED_TRACE_SCHEMAS = {"00010000", "00020000"}
 FIFO_SPOOL_CHUNK_SIZE = 4 << 20
 # Release live FIFO data to the comparator in small chunks so the producer is
@@ -39,6 +39,19 @@ FIFO_SPOOL_CHUNK_SIZE = 4 << 20
 # temporary disk backlog bounded while still absorbing short scheduling gaps.
 FIFO_SPOOL_QUEUE_SIZE = 4
 FIFO_END = object()
+
+
+class TraceSequenceError(ValueError):
+    """Raised when retire sequence continuity or format is violated."""
+
+    def __init__(self, message, side=None, expected=None, got=None,
+                 rtl_consumed=0, golden_consumed=0):
+        super().__init__(message)
+        self.side = side
+        self.expected = expected
+        self.got = got
+        self.rtl_consumed = rtl_consumed
+        self.golden_consumed = golden_consumed
 
 def comparable_cp0_write(obj):
     """Return true when either producer reports a committed CP0 write."""
@@ -419,6 +432,8 @@ def fast_linux_stream_compare(rtl_path, golden_path, args):
         if comparable_cp0_write(r) or comparable_cp0_write(g):
             fields.extend(("cp0_we", "cp0_addr", "cp0_sel", "cp0_data"))
         fields.extend(("fpr_state", "fcsr_state"))
+        if r.get("fpr_hi_state") is not None and g.get("fpr_hi_state") is not None:
+            fields.append("fpr_hi_state")
         if r.get("mem_valid") or g.get("mem_valid"):
             fields.extend(("mem_valid", "mem_read", "mem_write", "mem_addr"))
             if r.get("mem_write") or g.get("mem_write"):
@@ -445,6 +460,9 @@ def fast_linux_stream_compare(rtl_path, golden_path, args):
     if mismatch is not None:
         idx, field, got, expected = mismatch
         print(f"MISMATCH retire={idx} field={field} rtl={got!r} golden={expected!r}",
+              file=sys.stderr)
+        print(f"TRACE_COMPARE_FAILURE mismatches=1 "
+              f"rtl_consumed={compared} golden_consumed={compared}",
               file=sys.stderr)
         return 1
     if not limit_reached:
@@ -544,6 +562,8 @@ def stream_fields(r, g, previous_r, previous_g, next_r, next_g, args):
         fields += ["cp0_we", "cp0_addr", "cp0_sel", "cp0_data"]
     if r.get("fpr_state") is not None or g.get("fpr_state") is not None:
         fields += ["fpr_state", "fcsr_state"]
+        if r.get("fpr_hi_state") is not None and g.get("fpr_hi_state") is not None:
+            fields.append("fpr_hi_state")
     if r.get("schema", "").lower() == "00020000" or \
             g.get("schema", "").lower() == "00020000":
         fields += ["gpr_state", "hilo_state"]
@@ -582,8 +602,8 @@ def stream_compare(rtl_path, golden_path, args):
     rtl = Peekable(load(rtl_path))
     golden = Peekable(load(golden_path))
     sequence_state = {
-        "rtl": {"first": None, "previous": None, "last": None},
-        "golden": {"first": None, "previous": None, "last": None},
+        "rtl": {"first": None, "previous": None, "last": None, "consumed": 0},
+        "golden": {"first": None, "previous": None, "last": None, "consumed": 0},
     }
     unpaired_records = {"rtl": 0, "golden": 0}
     unpaired_reasons = {"rtl": {}, "golden": {}}
@@ -600,17 +620,25 @@ def stream_compare(rtl_path, golden_path, args):
             return
         value = item[1].get("retire_seq")
         validate_trace_record(item[1], side, item[0])
-        if not isinstance(value, int) or isinstance(value, bool):
-            raise ValueError(f"{side} retire_seq is not an integer: {value!r}")
         state = sequence_state[side]
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise TraceSequenceError(
+                f"{side} retire_seq is not an integer: {value!r}",
+                side=side, expected="integer", got=value,
+                rtl_consumed=sequence_state["rtl"]["consumed"],
+                golden_consumed=sequence_state["golden"]["consumed"])
         if state["first"] is None:
             state["first"] = value
         elif value != state["previous"] + 1:
-            raise ValueError(
+            raise TraceSequenceError(
                 f"{side} retire_seq is not contiguous: expected "
-                f"{state['previous'] + 1}, got {value}")
+                f"{state['previous'] + 1}, got {value}",
+                side=side, expected=state["previous"] + 1, got=value,
+                rtl_consumed=sequence_state["rtl"]["consumed"],
+                golden_consumed=sequence_state["golden"]["consumed"])
         state["previous"] = value
         state["last"] = value
+        state["consumed"] += 1
         if gpr_taint_before is None:
             gpr_taint_before = hilo_gpr_taint[side]
         hilo_valid_mask[side] = mips32_hilo_valid_mask_after(
@@ -923,13 +951,20 @@ def stream_compare(rtl_path, golden_path, args):
                         f"rtl_next={json.dumps(rtl_next, sort_keys=True, separators=(',', ':'))} "
                         f"golden_next={json.dumps(golden_next, sort_keys=True, separators=(',', ':'))}",
                         file=sys.stderr)
+        rtl_consumed = sequence_state["rtl"]["consumed"]
+        golden_consumed = sequence_state["golden"]["consumed"]
+        print(f"TRACE_COMPARE_FAILURE mismatches={len(mismatches)} "
+              f"rtl_consumed={rtl_consumed} golden_consumed={golden_consumed}",
+              file=sys.stderr)
         return 1
     if (sequence_state["golden"]["first"] != 0 or
             sequence_state["rtl"]["first"] is None):
-        raise ValueError(
+        raise TraceSequenceError(
             "retire sequence origin invalid: "
             f"rtl_first={sequence_state['rtl']['first']} "
-            f"golden_first={sequence_state['golden']['first']}")
+            f"golden_first={sequence_state['golden']['first']}",
+            rtl_consumed=sequence_state["rtl"]["consumed"],
+            golden_consumed=sequence_state["golden"]["consumed"])
     rtl_consumed = (sequence_state["rtl"]["last"] -
                     sequence_state["rtl"]["first"] + 1)
     golden_consumed = (sequence_state["golden"]["last"] -
@@ -1549,7 +1584,7 @@ def fpu_state_matches_window(rtl, golden, index, field, radius=12):
     if field == "fcsr_state":
         return any(rtl[candidate][1].get(field) == expected
                    for candidate in range(start, stop))
-    if field != "fpr_state" or len(expected) != 256:
+    if field not in ("fpr_state", "fpr_hi_state") or len(expected) != 256:
         return any(rtl[candidate][1].get(field) == expected
                    for candidate in range(start, stop))
     for lane_start in range(0, 256, 8):
@@ -1585,6 +1620,16 @@ def main():
             if args.fast_linux:
                 return fast_linux_stream_compare(args.rtl, args.golden, args)
             return stream_compare(args.rtl, args.golden, args)
+        except TraceSequenceError as exc:
+            print(f"TRACE_COMPARE_ERROR: {exc} "
+                  f"rtl_consumed={exc.rtl_consumed} "
+                  f"golden_consumed={exc.golden_consumed}", file=sys.stderr)
+            if exc.side is not None and exc.expected is not None:
+                print(f"TRACE_COMPARE_DISCONTINUITY side={exc.side} "
+                      f"expected={exc.expected} got={exc.got} "
+                      f"rtl_consumed={exc.rtl_consumed} "
+                      f"golden_consumed={exc.golden_consumed}", file=sys.stderr)
+            return 2
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             print(f"TRACE_COMPARE_ERROR: {exc}", file=sys.stderr)
             return 2
@@ -1687,6 +1732,8 @@ def main():
             fields += ["cp0_we", "cp0_addr", "cp0_sel", "cp0_data"]
         if r[1].get("fpr_state") is not None or g[1].get("fpr_state") is not None:
             fields += ["fpr_state", "fcsr_state"]
+            if r[1].get("fpr_hi_state") is not None and g[1].get("fpr_hi_state") is not None:
+                fields.append("fpr_hi_state")
         if r[1].get("schema", "").lower() == "00020000" or \
                 g[1].get("schema", "").lower() == "00020000":
             fields += ["gpr_state", "hilo_state"]
@@ -1770,7 +1817,7 @@ def main():
             if field == "hilo_state":
                 got = mask_hilo_state(got, comparable_hilo_valid)
                 expected = mask_hilo_state(expected, comparable_hilo_valid)
-            if field in ("fpr_state", "fcsr_state"):
+            if field in ("fpr_state", "fpr_hi_state", "fcsr_state"):
                 if fpu_state_matches_window(rtl, golden, idx, field):
                     continue
             if got != expected:

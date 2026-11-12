@@ -207,9 +207,11 @@ module mips_core #(
     wire [7:0] sched_save_asid;
     wire [31:0] sched_save_ptebase;
     wire [31:0] sched_save_srsctl;
+    wire [31:0] sched_save_userlocal;
     wire [1023:0] sched_save_gpr;
     wire [16383:0] sched_save_srs_gpr;
     wire [1023:0] sched_save_fpr;
+    wire [1023:0] sched_save_fpr_hi;
     wire [31:0] sched_save_fcsr;
     wire sched_restore_req, sched_restore_ack;
     wire [7:0] sched_restore_task;
@@ -218,9 +220,11 @@ module mips_core #(
     wire [31:0] sched_restore_ptebase;
     wire sched_restore_ptebase_valid;
     wire [31:0] sched_restore_srsctl;
+    wire [31:0] sched_restore_userlocal;
     wire [1023:0] sched_restore_gpr;
     wire [16383:0] sched_restore_srs_gpr;
     wire [1023:0] sched_restore_fpr;
+    wire [1023:0] sched_restore_fpr_hi;
     wire [31:0] sched_restore_fcsr;
     wire sched_unused_ack;
 
@@ -240,19 +244,24 @@ module mips_core #(
         .ctx_save_done(sched_save_done), .ctx_save_pc(sched_save_pc),
         .ctx_save_sp(sched_save_sp), .ctx_save_status(sched_save_status),
         .ctx_save_asid(sched_save_asid), .ctx_save_srsctl(sched_save_srsctl),
+        .ctx_save_userlocal(sched_save_userlocal),
         .ctx_save_ptebase(sched_save_ptebase),
         .ctx_save_gpr(sched_save_gpr),
         .ctx_save_srs_gpr(sched_save_srs_gpr),
-        .ctx_save_fpr(sched_save_fpr), .ctx_save_fcsr(sched_save_fcsr),
+        .ctx_save_fpr(sched_save_fpr), .ctx_save_fpr_hi(sched_save_fpr_hi),
+        .ctx_save_fcsr(sched_save_fcsr),
         .ctx_restore_req(sched_restore_req), .ctx_restore_task(sched_restore_task),
         .ctx_restore_ack(sched_restore_ack), .ctx_restore_pc(sched_restore_pc),
         .ctx_restore_sp(sched_restore_sp), .ctx_restore_status(sched_restore_status),
         .ctx_restore_asid(sched_restore_asid), .ctx_restore_srsctl(sched_restore_srsctl),
+        .ctx_restore_userlocal(sched_restore_userlocal),
         .ctx_restore_ptebase(sched_restore_ptebase),
         .ctx_restore_ptebase_valid(sched_restore_ptebase_valid),
         .ctx_restore_gpr(sched_restore_gpr),
         .ctx_restore_srs_gpr(sched_restore_srs_gpr),
-        .ctx_restore_fpr(sched_restore_fpr), .ctx_restore_fcsr(sched_restore_fcsr)
+        .ctx_restore_fpr(sched_restore_fpr),
+        .ctx_restore_fpr_hi(sched_restore_fpr_hi),
+        .ctx_restore_fcsr(sched_restore_fcsr)
     );
     
     // Instantiating the CPU Pipeline
@@ -286,18 +295,22 @@ module mips_core #(
         .ctx_save_req(sched_save_req), .ctx_save_done(sched_save_done),
         .ctx_save_pc(sched_save_pc), .ctx_save_status(sched_save_status),
         .ctx_save_asid(sched_save_asid), .ctx_save_srsctl(sched_save_srsctl),
+        .ctx_save_userlocal(sched_save_userlocal),
         .ctx_save_ptebase(sched_save_ptebase),
         .ctx_save_gpr(sched_save_gpr),
         .ctx_save_srs_gpr(sched_save_srs_gpr),
-        .ctx_save_fpr(sched_save_fpr), .ctx_save_fcsr(sched_save_fcsr),
+        .ctx_save_fpr(sched_save_fpr), .ctx_save_fpr_hi(sched_save_fpr_hi),
+        .ctx_save_fcsr(sched_save_fcsr),
         .ctx_restore_req(sched_restore_req), .ctx_restore_pc(sched_restore_pc),
         .ctx_restore_status(sched_restore_status), .ctx_restore_asid(sched_restore_asid),
         .ctx_restore_ptebase(sched_restore_ptebase),
         .ctx_restore_ptebase_valid(sched_restore_ptebase_valid),
         .ctx_restore_srsctl(sched_restore_srsctl),
+        .ctx_restore_userlocal(sched_restore_userlocal),
         .ctx_restore_gpr(sched_restore_gpr), .ctx_restore_srs_gpr(sched_restore_srs_gpr),
         .ctx_restore_set(sched_restore_srsctl[3:0]),
         .ctx_restore_fpr(sched_restore_fpr),
+        .ctx_restore_fpr_hi(sched_restore_fpr_hi),
         .ctx_restore_fcsr(sched_restore_fcsr), .ctx_restore_ack(sched_restore_ack),
         .hardware_walker_enable(hardware_walker_enable),
         .hardware_walker_ptbr(hardware_walker_ptbr),

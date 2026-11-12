@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 
 
 COMPARATOR = Path(__file__).with_name("trace_compare.py")
@@ -19,6 +20,7 @@ CONVERTER_SPEC = importlib.util.spec_from_file_location(
 CONVERTER = importlib.util.module_from_spec(CONVERTER_SPEC)
 assert CONVERTER_SPEC.loader is not None
 CONVERTER_SPEC.loader.exec_module(CONVERTER)
+_fifo_compare_count = 0
 
 
 def record(seq, pc, instr, gpr_data):
@@ -72,9 +74,12 @@ def compare(root, rtl_records, qemu_records, stream=True):
         check=False)
 
 
-def compare_fifos(root, rtl_records, qemu_records):
-    rtl_path = root / "rtl.fifo"
-    qemu_path = root / "qemu.fifo"
+def compare_fifos(root, rtl_records, qemu_records, expect_error=False,
+                  writer_delay=0.0):
+    global _fifo_compare_count
+    _fifo_compare_count += 1
+    rtl_path = root / f"rtl-{_fifo_compare_count}.fifo"
+    qemu_path = root / f"qemu-{_fifo_compare_count}.fifo"
     os.mkfifo(rtl_path)
     os.mkfifo(qemu_path)
     command = [sys.executable, str(COMPARATOR), "--stream",
@@ -83,21 +88,32 @@ def compare_fifos(root, rtl_records, qemu_records):
         command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     writer_error = []
 
-    def write_streams():
+    def write_stream(path, records):
         try:
-            for path, records in ((rtl_path, rtl_records),
-                                  (qemu_path, qemu_records)):
-                with path.open("w", encoding="ascii") as stream:
-                    stream.write("".join(
-                        json.dumps(item) + "\n" for item in records))
+            with path.open("w", encoding="ascii") as stream:
+                for item in records:
+                    stream.write(json.dumps(item) + "\n")
+                    if writer_delay > 0:
+                        stream.flush()
+                        time.sleep(writer_delay)
+        except BrokenPipeError:
+            if not expect_error:
+                writer_error.append(sys.exc_info()[1])
         except BaseException as exc:
             writer_error.append(exc)
 
-    writer = threading.Thread(target=write_streams, daemon=True)
-    writer.start()
+    writers = [
+        threading.Thread(target=write_stream,
+                         args=(path, records), daemon=True)
+        for path, records in ((rtl_path, rtl_records),
+                              (qemu_path, qemu_records))
+    ]
+    for writer in writers:
+        writer.start()
     stdout, _ = process.communicate(timeout=30)
-    writer.join(timeout=1)
-    if writer.is_alive():
+    for writer in writers:
+        writer.join(timeout=1)
+    if any(writer.is_alive() for writer in writers):
         raise AssertionError(
             f"FIFO writer did not complete; comparator status="
             f"{process.returncode}; output={stdout!r}")
@@ -147,6 +163,84 @@ def main():
                                [count_read, arithmetic])
         assert result.returncode == 0, result.stdout
         assert "TRACE_COMPARE_PASS records=2 mode=stream" in result.stdout
+
+        fifo_chunk_records = [
+            record(seq, f"{0x88001000 + 4 * seq:08x}",
+                   "24420001", "00000001")
+            for seq in range(16000)
+        ]
+        result = compare_fifos(root, fifo_chunk_records, fifo_chunk_records)
+        assert result.returncode == 0, result.stdout
+        assert "TRACE_COMPARE_PASS records=16000 mode=stream" in result.stdout
+
+        # Verify strict retire sequence continuity enforcement under stream mode:
+        # 1. Lost record (gap) reproduces missing records from external drain
+        result = compare_fifos(
+            root, [fifo_chunk_records[0], fifo_chunk_records[2]],
+            [fifo_chunk_records[0], fifo_chunk_records[2]], expect_error=True)
+        assert result.returncode == 2, result.stdout
+        assert "rtl retire_seq is not contiguous: expected 1, got 2" in result.stdout
+        assert "rtl_consumed=1" in result.stdout
+        assert "golden_consumed=1" in result.stdout
+        assert "TRACE_COMPARE_DISCONTINUITY side=rtl expected=1 got=2" in result.stdout
+
+        # 2. Duplicate record
+        result = compare_fifos(
+            root, [fifo_chunk_records[0], fifo_chunk_records[0]],
+            [fifo_chunk_records[0], fifo_chunk_records[0]], expect_error=True)
+        assert result.returncode == 2, result.stdout
+        assert "rtl retire_seq is not contiguous: expected 1, got 0" in result.stdout
+        assert "rtl_consumed=1" in result.stdout
+        assert "golden_consumed=1" in result.stdout
+        assert "TRACE_COMPARE_DISCONTINUITY side=rtl expected=1 got=0" in result.stdout
+
+        # 3. Reordered records
+        result = compare_fifos(
+            root, [fifo_chunk_records[0], fifo_chunk_records[2],
+                   fifo_chunk_records[1]],
+            [fifo_chunk_records[0], fifo_chunk_records[2],
+             fifo_chunk_records[1]], expect_error=True)
+        assert result.returncode == 2, result.stdout
+        assert "rtl retire_seq is not contiguous: expected 1, got 2" in result.stdout
+        assert "rtl_consumed=1" in result.stdout
+        assert "golden_consumed=1" in result.stdout
+
+        # 4. Malformed retire_seq
+        malformed = dict(fifo_chunk_records[0], retire_seq="bad_seq")
+        result = compare_fifos(root, [malformed], [malformed], expect_error=True)
+        assert result.returncode == 2, result.stdout
+        assert "retire_seq is not an integer" in result.stdout
+        assert "rtl_consumed=0" in result.stdout
+        assert "golden_consumed=0" in result.stdout
+
+        # 5. Golden side sequence discontinuity
+        golden_gap_records = [
+            fifo_chunk_records[0],
+            dict(fifo_chunk_records[1], retire_seq=2)
+        ]
+        result = compare_fifos(
+            root, [fifo_chunk_records[0], fifo_chunk_records[1]],
+            golden_gap_records, expect_error=True)
+        assert result.returncode == 2, result.stdout
+        assert "golden retire_seq is not contiguous: expected 1, got 2" in result.stdout
+        assert "rtl_consumed=2" in result.stdout
+        assert "golden_consumed=1" in result.stdout
+        assert "TRACE_COMPARE_DISCONTINUITY side=golden expected=1 got=2" in result.stdout
+
+        # 6. Backpressure with delayed streaming
+        result = compare_fifos(
+            root, fifo_chunk_records[:50], fifo_chunk_records[:50],
+            writer_delay=0.001)
+        assert result.returncode == 0, result.stdout
+        assert "TRACE_COMPARE_PASS records=50 mode=stream" in result.stdout
+
+        # 7. Mismatch failure reports per-side consumed counts
+        mismatch_rtl = [fifo_chunk_records[0], fifo_chunk_records[1]]
+        mismatch_golden = [fifo_chunk_records[0], dict(fifo_chunk_records[1], instr="00000000")]
+        result = compare_fifos(root, mismatch_rtl, mismatch_golden, expect_error=True)
+        assert result.returncode == 1, result.stdout
+        assert "MISMATCH retire=1 field=instr" in result.stdout
+        assert "TRACE_COMPARE_FAILURE mismatches=1 rtl_consumed=2 golden_consumed=2" in result.stdout
 
         sync_fault = record(0, "00400374", "02231821", "00000000")
         sync_fault.update({"gpr_we": 0, "gpr_addr": 0, "except": 1,

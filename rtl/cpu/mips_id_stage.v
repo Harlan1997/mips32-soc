@@ -15,6 +15,7 @@ module mips_id_stage (
     input  wire        rst_n,
     input  wire [7:0]  fpu_condition,
     input  wire        fpu_branch_invert,
+    input  wire        fpu_fr_enable,
     
     // Instruction and PC from IF/ID Pipeline Register
     input  wire [31:0] inst,
@@ -219,7 +220,8 @@ module mips_id_stage (
         .is_movt     (cond_move_is_movt),
         .is_rdpgpr   (is_rdpgpr),
         .is_wrpgpr   (is_wrpgpr),
-        .fpu_condition_code(fpu_condition_code)
+        .fpu_condition_code(fpu_condition_code),
+        .fpu_fr_enable(fpu_fr_enable)
     );
 
     // Forwarding logic to resolve raw dependencies for ID-stage branch comparator
@@ -310,38 +312,97 @@ module mips_id_stage (
     wire [5:0] opcode = inst[31:26];
     wire [5:0] func   = inst[5:0];
 
-    wire reads_rs = (opcode == 6'b000000) ? (func != 6'b000000 && func != 6'b000010 && func != 6'b000011 && func != 6'b010000 && func != 6'b010010) :
-                    (opcode != 6'b000010 && opcode != 6'b000011 && opcode != 6'b001111);
-
-    wire special2_reads_rt = (opcode == 6'b011100) &&
-                             (func == 6'b000000 || func == 6'b000001 ||
-                              func == 6'b000010 || func == 6'b000100 ||
-                              func == 6'b000101);
-    // COP1X indexed memory operations and PREFX form an address from GPR
-    // rs+rt.  The arithmetic COP1X forms use those fields as FPR selectors,
-    // so only the indexed-memory encodings consume the integer rt source.
-    wire cop1x_indexed_reads_rt = (opcode == 6'b010011) &&
-                                  (func == 6'h00 || func == 6'h01 ||
-                                   func == 6'h08 || func == 6'h09 ||
-                                   func == 6'h0f);
-    // COP1 transfers use rt as the integer source.  MOVZ/MOVN use the same
-    // field as their GPR condition, while ordinary COP1 arithmetic uses it
-    // as an FPR selector and must not be stalled by an integer producer.
-    wire cop1_reads_rt = (opcode == 6'b010001) &&
-                         ((inst[25:21] == 5'b00100) ||
-                          (inst[25:21] == 5'b00110) ||
-                          (inst[25:21] == 5'b00111) ||
-                          (((inst[25:21] == 5'b10000) ||
-                            (inst[25:21] == 5'b10001)) &&
-                           (func == 6'h12 || func == 6'h13)));
-    // LWL/LWR merge the fetched word with the prior value of rt, SWL/SWR use
-    // rt as store data, and SC uses rt as the conditional store value.  Each
-    // instruction consumes rt and must participate in load-use hazard
-    // detection.
-    wire reads_rt = (opcode == 6'b000000) ? (func != 6'b001000 && func != 6'b001001 && func != 6'b010000 && func != 6'b010001 && func != 6'b010010 && func != 6'b010011) :
-                    (special2_reads_rt || cop1x_indexed_reads_rt || cop1_reads_rt || opcode == 6'b100010 || opcode == 6'b100110 || opcode == 6'b101011 || opcode == 6'b101010 || opcode == 6'b101110 || opcode == 6'b111000 || opcode == 6'b111001 || opcode == 6'b101001 || opcode == 6'b101000 || opcode == 6'b000100 || opcode == 6'b000101 ||
-                     ((opcode == 6'b011111) && (func == 6'b000100 || func == 6'b100000)) ||
-                     (opcode == 6'b010000 && inst[25:21] == 5'b00100));
+    // Decode the actual GPR sources for hazard tracking.  The instruction
+    // fields are reused as FPR selectors, CP0 operation codes, and shadow-bank
+    // selectors in several MIPS encodings, so a broad opcode-level default
+    // creates false stalls while a narrow omission can redirect control flow
+    // with stale data.
+    reg reads_rs_dec;
+    reg reads_rt_dec;
+    always @(*) begin
+        reads_rs_dec = 1'b0;
+        reads_rt_dec = 1'b0;
+        case (opcode)
+            6'b000000: begin // SPECIAL
+                case (func)
+                    6'b000000, 6'b000010, 6'b000011: reads_rt_dec = 1'b1; // shifts
+                    6'b001000, 6'b001001: reads_rs_dec = 1'b1; // JR/JALR
+                    6'b010000, 6'b010010: begin end // MFHI/MFLO
+                    6'b010001, 6'b010011: reads_rs_dec = 1'b1; // MTHI/MTLO
+                    6'b001100, 6'b001101, 6'b001111: begin end // SYSCALL/BREAK/SYNC
+                    6'b000001: reads_rs_dec = 1'b1; // MOVF/MOVT
+                    default: begin
+                        reads_rs_dec = 1'b1;
+                        reads_rt_dec = 1'b1;
+                    end
+                endcase
+            end
+            6'b000001: reads_rs_dec = 1'b1; // REGIMM, including SYNCI/traps
+            6'b000010, 6'b000011: begin end // J/JAL
+            6'b000100, 6'b000101, 6'b010100, 6'b010101: begin
+                reads_rs_dec = 1'b1;
+                reads_rt_dec = 1'b1;
+            end // BEQ/BNE and likely forms
+            6'b000110, 6'b000111, 6'b010110, 6'b010111: reads_rs_dec = 1'b1; // BLEZ/BGTZ
+            6'b011100: begin // SPECIAL2
+                reads_rs_dec = 1'b1;
+                reads_rt_dec = (func == 6'b000000 || func == 6'b000001 ||
+                                func == 6'b000010 || func == 6'b000100 ||
+                                func == 6'b000101);
+            end
+            6'b011111: begin // SPECIAL3
+                if (func == 6'b000000) begin // EXT
+                    reads_rs_dec = 1'b1;
+                end else if (func == 6'b000100) begin // INS
+                    reads_rs_dec = 1'b1;
+                    reads_rt_dec = 1'b1;
+                end else if (func == 6'b100000) begin // BSHFL
+                    if (inst[10:6] >= 5'b01000 && inst[10:6] <= 5'b01011)
+                        reads_rs_dec = 1'b1; // ALIGN
+                    reads_rt_dec = 1'b1;
+                end
+            end
+            6'b010000: begin // COP0
+                // MTC0 and WRPGPR consume the ordinary GPR in rt. RDPGPR
+                // reads the shadow bank and is intentionally excluded.
+                reads_rt_dec = (inst[25:21] == 5'b00100 ||
+                                inst[25:21] == 5'b01110);
+            end
+            6'b010001: begin // COP1
+                reads_rt_dec = (inst[25:21] == 5'b00100 || // MTC1
+                                inst[25:21] == 5'b00110 || // CTC1
+                                inst[25:21] == 5'b00111 || // MTHC1
+                                ((inst[25:21] == 5'b10000 ||
+                                  inst[25:21] == 5'b10001) &&
+                                 (func == 6'h12 || func == 6'h13))); // MOVZ/N
+            end
+            6'b010011: begin // COP1X
+                reads_rs_dec = (func == 6'h00 || func == 6'h01 ||
+                                func == 6'h08 || func == 6'h09 ||
+                                func == 6'h0f);
+                reads_rt_dec = reads_rs_dec;
+            end
+            6'b101111, 6'b110011: reads_rs_dec = 1'b1; // CACHE/PREF
+            6'b100011, 6'b110001, 6'b110101, 6'b110000,
+            6'b100000, 6'b100100, 6'b100001, 6'b100101,
+            6'b100010, 6'b100110: begin // loads
+                reads_rs_dec = 1'b1;
+                // LWL/LWR merge the fetched word into the prior rt value.
+                reads_rt_dec = (opcode == 6'b100010 || opcode == 6'b100110);
+            end
+            6'b101011, 6'b111001, 6'b111101, 6'b111000,
+            6'b101000, 6'b101001, 6'b101010, 6'b101110: begin
+                reads_rs_dec = 1'b1;
+                reads_rt_dec = (opcode == 6'b101011 || opcode == 6'b111000 ||
+                                opcode == 6'b101000 || opcode == 6'b101001 ||
+                                opcode == 6'b101010 || opcode == 6'b101110);
+            end // stores; COP1 stores use FPR rt, not a GPR source
+            6'b001111: begin end // LUI
+            default: reads_rs_dec = 1'b1; // immediate ALU operations
+        endcase
+    end
+    wire reads_rs = reads_rs_dec;
+    wire reads_rt = reads_rt_dec;
 
 
     wire load_use_hazard = ((ex_mem_read || ex_mem_to_reg == 2'b11) && (ex_waddr != 5'd0) && 

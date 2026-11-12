@@ -10,6 +10,7 @@
 // =============================================================================
 
 `timescale 1ns/1ps
+`include "soc_config.vh"
 
 module tb_cp0_timer;
     reg         clk = 0;
@@ -31,14 +32,17 @@ module tb_cp0_timer;
     reg         eret = 0;
     reg         di = 0;
     reg         ei = 0;
+    reg         retire_event = 0;
     reg  [31:0] bad_vaddr = 0;
     reg  [31:0] lladdr_in = 0;
 
     // Phase B.4 CP0 privilege exports (unused checks in this timer/TLB tb but
     // required for `.*` wildcard connectivity).
     wire        kernel_mode;
+    wire        supervisor_mode;
     wire        cu0_enable;
     wire        cu1_enable;
+    wire        fpu_fr_enable;
     wire        exl_out;
     wire [31:0]  hwrena_out;
     wire [3:0]   srs_current_set_out;
@@ -87,12 +91,14 @@ module tb_cp0_timer;
     wire [7:0]  ctx_save_asid;
     wire [31:0] ctx_save_ptebase;
     wire [31:0] ctx_save_srsctl;
+    wire [31:0] ctx_save_userlocal;
     reg         ctx_restore_req = 1'b0;
     reg  [31:0] ctx_restore_status = 32'd0;
     reg  [7:0]  ctx_restore_asid = 8'd0;
     reg  [31:0] ctx_restore_ptebase = 32'd0;
     reg         ctx_restore_ptebase_valid = 1'b0;
     reg  [31:0] ctx_restore_srsctl = 32'd0;
+    reg  [31:0] ctx_restore_userlocal = 32'd0;
     wire        ctx_restore_done;
     reg  [3:0]  interrupt_srs_set = 4'd0;
     reg         interrupt_accept_in = 1'b0;
@@ -453,6 +459,26 @@ module tb_cp0_timer;
         mfc0(5'd13, 3'd0, rd); check("Cause.BD=1 latched",       rd[31] == 1'b1);
         mfc0(5'd14, 3'd0, rd); check("EPC = delay-slot PC - 4",  rd == 32'h0000_1000);
 
+        // A synchronous exception can occur while EXL is already set (for
+        // example, a fault in an exception handler).  Preserve the original
+        // EPC/EXL return context, but refresh Cause and address-fault state.
+        except_code <= 5'h04;                  // AdEL
+        except_pc   <= 32'h0000_2004;
+        bad_vaddr   <= 32'hDEAD_BEEF;
+        except_bd   <= 1'b0;
+        except_req  <= 1'b1;
+        @(posedge clk);
+        except_req  <= 1'b0;
+        @(posedge clk);
+        mfc0(5'd13, 3'd0, rd);
+        check("Nested exception refreshes Cause", rd[6:2] == 5'h04);
+        mfc0(5'd14, 3'd0, rd);
+        check("Nested exception preserves EPC",   rd == 32'h0000_1000);
+        mfc0(5'd8, 3'd0, rd);
+        check("Nested exception updates BadVAddr", rd == 32'hDEAD_BEEF);
+        mfc0(5'd12, 3'd0, rd);
+        check("Nested exception preserves EXL",    rd[1] == 1'b1);
+
         // Non-BD exception: EPC = exact fault PC
         mtc0(5'd12, 3'd0, 32'd0);              // clear EXL
         @(posedge clk);
@@ -524,6 +550,45 @@ module tb_cp0_timer;
         check("CU0 readback = 1",            cu0_enable  == 1'b1);
         check("User mode with CU0=1",        kernel_mode == 1'b0);
 
+        // Status.RP is architecturally writable state even though this
+        // implementation treats it as a power-management hint. It must
+        // survive readback and a scheduler-style context transfer.
+        mtc0(5'd12, 3'd0, 32'h0800_0010);   // RP=1, KSU=User
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("Status.RP readback",          rd[27] == 1'b1);
+        ctx_save_req = 1'b1;
+        #1;
+        check("Status.RP context save",      ctx_save_status[27] == 1'b1);
+        ctx_save_req = 1'b0;
+        ctx_restore_status = 32'h0800_0001;
+        ctx_restore_req = 1'b1;
+        @(posedge clk);
+        ctx_restore_req = 1'b0;
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("Status.RP context restore",   rd[27] == 1'b1);
+
+        // Status.FR is the architectural FPU register-mode bit. It must
+        // survive Status read/write and scheduler-style context transfer,
+        // while remaining forced clear when the opt-in FPU is absent.
+        mtc0(5'd12, 3'd0, 32'h0400_0010);   // FR=1, CU0=1, KSU=User
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("Status.FR readback",           rd[26] == (`SOC_FPU_ENABLE != 0));
+        check("Status.FR output",              fpu_fr_enable == (`SOC_FPU_ENABLE != 0));
+        ctx_save_req = 1'b1;
+        #1;
+        check("Status.FR context save",       ctx_save_status[26] == (`SOC_FPU_ENABLE != 0));
+        ctx_save_req = 1'b0;
+        ctx_restore_status = 32'h0400_0001;
+        ctx_restore_req = 1'b1;
+        @(posedge clk);
+        ctx_restore_req = 1'b0;
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("Status.FR context restore",     rd[26] == (`SOC_FPU_ENABLE != 0));
+
         // UserLocal (CP0 4,2) is the kernel-managed TLS pointer.  It must
         // reset to zero, retain a software-written value, and be independent
         // of the Context (4,0) BadVPN2/PTEBase state.
@@ -533,13 +598,38 @@ module tb_cp0_timer;
         @(posedge clk);
         mfc0(5'd4, 3'd2, rd);
         check("UserLocal write/read",         rd == 32'h8123_4567);
+        ctx_save_req = 1'b1;
+        #1;
+        check("UserLocal context save",        ctx_save_userlocal == 32'h8123_4567);
+        ctx_save_req = 1'b0;
         mfc0(5'd4, 3'd0, rd);
         check("Context remains independent",  rd[31:23] == 9'h1FF);
         mfc0(5'd16, 3'd3, rd);
         check("Config3 advertises UserLocal", rd[13] == 1'b1);
+        mfc0(5'd16, 3'd1, rd);
+        check("Config1 FP reports opt-in FPU", rd[0] == (`SOC_FPU_ENABLE != 0));
 
         // Restore kernel mode for subsequent state
         mtc0(5'd12, 3'd0, 32'd0);
+
+        // Context restore must carry the opt-in FPU enable bit and must also
+        // clear it when the restored task has COP1 disabled.
+        ctx_restore_status = 32'h2000_0001; // IE + CU1
+        ctx_restore_userlocal = 32'hCAFE_0001;
+        ctx_restore_req = 1'b1;
+        @(posedge clk);
+        ctx_restore_req = 1'b0;
+        @(posedge clk);
+        check("Context restore follows FPU presence", cu1_enable == (`SOC_FPU_ENABLE != 0));
+        check("Context restore sets UserLocal", dut.cp0_userlocal == 32'hCAFE_0001);
+        ctx_restore_status = 32'h0000_0001; // IE, CU1 cleared
+        ctx_restore_userlocal = 32'hCAFE_0002;
+        ctx_restore_req = 1'b1;
+        @(posedge clk);
+        ctx_restore_req = 1'b0;
+        @(posedge clk);
+        check("Context restore clears CU1", cu1_enable == 1'b0);
+        check("Context restore updates UserLocal", dut.cp0_userlocal == 32'hCAFE_0002);
 
         // MCheck/TLB-shutdown contract: CP0 Status.TS is hardware-sticky.
         // A software Status write may change ordinary writable bits but must
