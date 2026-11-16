@@ -315,7 +315,7 @@ linux-image-identity-test:
 .PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate perf-benchmark-baseline-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
-.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate cpu-badvaddr-owner-context-gate mmu-page-frame-allocator-gate mips-id-stage-llsc-hazard-gate mips-mem-stage-llsc-alignment-gate
+.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate cpu-badvaddr-owner-context-gate cpu-cop1x-fault-boundary-gate mmu-page-frame-allocator-gate mips-id-stage-llsc-hazard-gate mips-mem-stage-llsc-alignment-gate
 .PHONY: mem-stage-gate
 .PHONY: formal-static-audit
 .PHONY: formal-bind-compile-gate
@@ -1389,6 +1389,11 @@ cpu-badvaddr-owner-context-gate:
 	chmod +x tb/unit/cpu_test/run_mips_cpu_badvaddr_owner_context.sh
 	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_badvaddr_owner_context \
 		tb/unit/cpu_test/run_mips_cpu_badvaddr_owner_context.sh
+
+cpu-cop1x-fault-boundary-gate:
+	chmod +x tb/unit/cpu_test/run_mips_cpu_cop1x_fault_boundary.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_cop1x_fault_boundary \
+		tb/unit/cpu_test/run_mips_cpu_cop1x_fault_boundary.sh
 
 cpu-load-return-gate:
 	tb/soc_test/run_cpu_load_return_gate.sh

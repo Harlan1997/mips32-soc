@@ -29,7 +29,8 @@ indexed `LUXC1` path. A fresh `fpu-double-gate` passes, and the matching
 patched-QEMU system differential passes `TRACE_COMPARE_PASS records=640`
 from 642 captured QEMU events. This closes the selected aligned two-beat
 FPU memory slice. COP1X reverse-endian-specific and fault-boundary evidence
-remain separate open coverage.
+remain separate open coverage for the aligned LDC1/SDC1 contract; the
+selected indexed boundary is covered separately below.
 
 ### 2026-11-17 COP1X unaligned doubleword implementation slice
 
@@ -41,8 +42,21 @@ base and `base + 4`. Loads retain the first beat and commit the assembled
 two complete beats. Retire conversion and comparison classify the forms as
 64-bit memory operations. The FR=1 RTL/QEMU differential passes 168 compared
 records, and the FR=0 RTL-only boundary gate passes. Reverse-endian and
-fault-boundary evidence remain separate open coverage for this partial COP1X
-contract.
+broader cross-page fault behavior remain separate open coverage for this
+partial COP1X contract; the selected first/second-beat boundary is covered by
+the focused gate below.
+
+### 2026-11-17 COP1X first/second beat fault boundary
+
+The focused `cpu-cop1x-fault-boundary-gate` drives the two-beat MEM handshake
+directly. A fault on the first beat leaves the destination FPR unchanged; a
+clean first beat is retained only in the reconstruction buffer; and a fault on
+the second beat discards the buffered low word without committing either FPR
+word. The paired `SUXC1` check confirms both clean beats are complete aligned
+word stores and that a faulting second beat suppresses its external store
+request. This closes the selected atomic commit/request boundary only;
+cross-page MMU ownership, reverse-endian behavior, and unrestricted COP1X
+semantics remain open.
 
 ### 2026-11-16 Focus differential complete-GPR checker hardening
 
