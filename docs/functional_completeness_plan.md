@@ -10,9 +10,13 @@ nonblocking RTL comparisons. The adversarial checker covers selected and
 unselected GPR mutations, changed PC/instruction, phase and sequence errors,
 missing or trailing records, missing checkpoints, complete-snapshot omission,
 and RTL writeback/exception/BadVAddr/EPC/BD mutations. The checker gate and
-Python/C syntax checks pass. A fresh integrated focus run is still required;
-the QEMU/RTL focus capability remains `UNTRUSTED` until the two-checkpoint
-gate is replaced or supplemented with full trace evidence.
+Python/C syntax checks pass. The gate now compares the full focused stream,
+uses one record limit for QEMU and RTL, and rejects an empty RTL capture.
+A current-source attempt verified the image manifest and QEMU's 5,000-record
+trace, then exposed that the legacy 23.4M-cycle RTL window captured zero
+records for the newer image; no differential pass is claimed. The QEMU/RTL
+focus capability remains `UNTRUSTED` pending a matching current-source cycle
+window and fresh integrated run.
 
 ### 2026-11-16 BadVAddr owner context identity
 

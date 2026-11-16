@@ -50,6 +50,7 @@ REUSE_IDENTITY="${REUSE_IDENTITY:-${FROZEN_DIR}/focus_reuse_identity.txt}"
 RTL_CYCLE_START="${RTL_CYCLE_START:-23400000}"
 RTL_CYCLE_LIMIT="${RTL_CYCLE_LIMIT:-23510000}"
 RTL_TIMEOUT_NS="${RTL_TIMEOUT_NS:-$((RTL_CYCLE_LIMIT * 10))}"
+FOCUS_RECORD_LIMIT="${FOCUS_RECORD_LIMIT:-16384}"
 HOST_TIMEOUT="${HOST_TIMEOUT:-600s}"
 LINUX_RNG_SEED="${LINUX_RNG_SEED:-}"
 
@@ -79,8 +80,8 @@ CURRENT_IDENTITY="${RUN_DIR}/current_source_identity.txt"
     printf 'GIT_STATUS_BEGIN\n'
     git -C "${ROOT_DIR}" status --short --untracked-files=all
     printf 'GIT_STATUS_END\n'
-    printf 'RTL_CYCLE_START=%s\nRTL_CYCLE_LIMIT=%s\nQEMU_TIMEOUT=%s\n' \
-        "${RTL_CYCLE_START}" "${RTL_CYCLE_LIMIT}" "${QEMU_TIMEOUT}"
+    printf 'RTL_CYCLE_START=%s\nRTL_CYCLE_LIMIT=%s\nFOCUS_RECORD_LIMIT=%s\nQEMU_TIMEOUT=%s\n' \
+        "${RTL_CYCLE_START}" "${RTL_CYCLE_LIMIT}" "${FOCUS_RECORD_LIMIT}" "${QEMU_TIMEOUT}"
     printf 'LINUX_RNG_SEED_ID='
     printf '%s' "${LINUX_RNG_SEED}" | sha256sum | awk '{print $1}'
     printf 'QEMU_CMDLINE=console=ttyS0,115200 earlycon=uart8250,mmio32,0x04000000 lpj=624128 rdinit=/init console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init initcall_debug loglevel=8\n'
@@ -173,7 +174,7 @@ fi
 # timeout is accepted only as the declared bounded-run termination mode.
 set +e
 timeout --foreground "${QEMU_TIMEOUT}" "${QEMU_BIN}" \
-    -plugin "file=${QEMU_PLUGIN_SO},out=${QEMU_FOCUS_LOG},target-only=1,max-records=5000" \
+    -plugin "file=${QEMU_PLUGIN_SO},out=${QEMU_FOCUS_LOG},target-only=1,max-records=${FOCUS_RECORD_LIMIT}" \
     -M "${QEMU_MACHINE}" \
     -cpu 24Kc \
     -accel tcg,thread=single \
@@ -185,7 +186,9 @@ timeout --foreground "${QEMU_TIMEOUT}" "${QEMU_BIN}" \
 qemu_rc=$?
 set -e
 
-if grep -Eiq 'assertion failed|qemu_plugin_read_register|SIGABRT|SIGSEGV|Segmentation fault|core dumped' "${RUN_DIR}/qemu_run.log"; then
+# The guest mprotect probe intentionally logs SIGSEGV.  Only classify an
+# explicitly QEMU/host-prefixed fatal diagnostic as a plugin/process failure.
+if grep -Eiq 'qemu_plugin_read_register|qemu-system[^:]*:.*(assertion failed|SIGABRT|SIGSEGV|Segmentation fault|core dumped)|^(Assertion|Aborted|Segmentation fault)' "${RUN_DIR}/qemu_run.log"; then
     echo "ERROR: QEMU/plugin fatal diagnostic found in qemu_run.log" >&2
     cat "${RUN_DIR}/qemu_run.log" >&2
     exit 1
@@ -218,7 +221,7 @@ else
         FW_HEX="${BOOT_ROM}" \
         LINUX_RNG_SEED="${LINUX_RNG_SEED}" \
         VCS_EXTRA_ARGS="+define+SOC_LINUX_BOOT_ENABLE=1 +define+SOC_LINUX_GUEST_ENABLE=1 +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1 +define+TB_LINUX_BOOT +define+TB_LINUX_BOOT_TRACE +define+DISABLE_QSPI_DUAL_FLASH_WARNING +define+TB_SKIP_UART_PIN_CHECK" \
-        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=16384 +LINUX_FOCUS_TRACE_TARGET_ONLY=1 +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
+        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=${FOCUS_RECORD_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=1 +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
         "${ROOT_DIR}/tb/soc_test/run.sh" >"${BLOCKING_DIR}/run.log" 2>&1
     cp "${BLOCKING_DIR}/sim_runtime.log" "${BLOCKING_LOG}"
 fi
@@ -226,6 +229,10 @@ fi
 grep "^RTL_FOCUS" "${BLOCKING_LOG}" > "${BLOCKING_DIR}/rtl_focus.log" || true
 blocking_records=$(wc -l < "${BLOCKING_DIR}/rtl_focus.log")
 echo "RTL Blocking run completed with ${blocking_records} focus records."
+if [[ ${blocking_records} -eq 0 ]]; then
+    echo "ERROR: blocking RTL produced no focus records; cycle window or target image is invalid." >&2
+    exit 2
+fi
 
 echo "=== [4/5] Running RTL Nonblocking-L1 Simulation ==="
 NB_DIR="${RUN_DIR}/nonblocking"
@@ -245,7 +252,7 @@ elif [[ "${REUSE_ALLOWED}" == "1" && -s "${FROZEN_DIR}/nb_compile_test/simv" ]];
         +LINUX_TRACE_LIMIT="${RTL_CYCLE_LIMIT}" \
         +LINUX_PROGRESS_TRACE=0 \
         +LINUX_FOCUS_TRACE=1 \
-        +LINUX_FOCUS_TRACE_LIMIT=16384 \
+        +LINUX_FOCUS_TRACE_LIMIT="${FOCUS_RECORD_LIMIT}" \
         +LINUX_FOCUS_TRACE_TARGET_ONLY=1 \
         +LINUX_FOCUS_TRACE_CYCLE_START="${RTL_CYCLE_START}" \
         -l "${NB_LOG}" >/dev/null 2>&1
@@ -255,7 +262,7 @@ else
         FW_HEX="${BOOT_ROM}" \
         LINUX_RNG_SEED="${LINUX_RNG_SEED}" \
         VCS_EXTRA_ARGS="+define+SOC_LINUX_BOOT_ENABLE=1 +define+SOC_LINUX_GUEST_ENABLE=1 +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1 +define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 +define+TB_L1_NONBLOCKING +define+TB_LINUX_BOOT +define+TB_LINUX_BOOT_TRACE +define+DISABLE_QSPI_DUAL_FLASH_WARNING +define+TB_SKIP_UART_PIN_CHECK" \
-        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=16384 +LINUX_FOCUS_TRACE_TARGET_ONLY=1 +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
+        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=${FOCUS_RECORD_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=1 +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
         "${ROOT_DIR}/tb/soc_test/run.sh" >"${NB_DIR}/run.log" 2>&1
     cp "${NB_DIR}/sim_runtime.log" "${NB_LOG}"
 fi
@@ -263,6 +270,10 @@ fi
 grep "^RTL_FOCUS" "${NB_LOG}" > "${NB_DIR}/rtl_focus.log" || true
 nb_records=$(wc -l < "${NB_DIR}/rtl_focus.log")
 echo "RTL Nonblocking run completed with ${nb_records} focus records."
+if [[ ${nb_records} -eq 0 ]]; then
+    echo "ERROR: nonblocking RTL produced no focus records; cycle window or target image is invalid." >&2
+    exit 2
+fi
 
 echo "=== [5/5] Differential Verification & Signoff ==="
 DIFF_LOG_RTL="${RUN_DIR}/diff_blocking_vs_nonblocking.log"
