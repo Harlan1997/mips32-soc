@@ -4,6 +4,31 @@ Plan date: 2026-09-20
 
 Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / NONBLOCKING FULL DIFFERENTIAL BOUNDED PASS`
 
+### 2026-11-16 Retire FIFO producer root cause and current-source recheck
+
+The earlier discontinuity in
+`/data/disk/tmp/mips32-soc/full-qemu-nb-closure-current-20261110`
+(`expected 46248219, got 46248236`) was owned by the VCS retire producer. The
+capture module used a many-argument `$fdisplay` directly on a backpressured
+FIFO, allowing a JSON record to be split across writes. Commit `5ad2826`
+formats each record first and emits it with one `$fwrite`; configured flushes
+remain explicit.
+
+The focused VCS/FIFO regression passes 50,000 contiguous records under
+deliberate consumer backpressure, including strict negative gap checks. A
+fresh exact-manifest current-source run at
+`/data/disk/tmp/mips32-soc/full-qemu-nb-current-src-20261115-r11` then passes
+`TRACE_COMPARE_PASS records=66911669`: RTL produced and consumed 66,911,710
+records, QEMU produced and consumed 66,911,669, and the 41 RTL-only records
+are limited to the documented boot-prefix and synchronous-exception redirect
+records. All IRQ, timer-pending, Count, Random, and UART APB schedules were
+consumed, the terminal marker was flushed once, and QEMU exited cleanly.
+
+This closes the current-source declared Linux terminal differential and its
+retire transport blocker. It remains a bounded workload result; unrestricted
+Linux semantics, complete ISA/privileged/FPU/MMU/OS semantics, and product
+signoff remain separate open contracts.
+
 ### 2026-11-11 Nonblocking Linux terminal differential closure
 
 The current-source nonblocking configuration completed the declared generic
