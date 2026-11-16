@@ -21,6 +21,16 @@ worktree. This closes the declared generic Linux nonblocking terminal
 workload only; unrestricted Linux, complete ISA/privileged/FPU/MMU/OS
 semantics, and product signoff remain separate scope.
 
+### 2026-11-17 Delay-slot WB-to-EX/WB-to-ID placement coverage
+
+The current-source `cpu-irq-delay-slot-gate` passes both explicit bubble modes.
+The WB-to-EX case reports `wb_ex=1`, the WB-to-ID case reports `wb_id=1`, and
+both report two interrupt entries, two ERET returns, zero unowned `Cause.BD`
+events, and `REGRESSION_TEST_SUCCESS`. The opt-in rollback firmware verifies
+that ERET replays the branch using the pre-delay-slot register value. This is a
+bounded positive placement contract; branch-class expansion, negative
+adjacency, stale-stage replay, and older-exception priority remain open.
+
 ### 2026-11-17 Aligned LDC1 high-word commit and double differential
 
 The double-memory commit path now selects the second response word for an

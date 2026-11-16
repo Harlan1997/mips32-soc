@@ -4,6 +4,19 @@ Plan date: 2026-09-20
 
 Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / NONBLOCKING FULL DIFFERENTIAL BOUNDED PASS`
 
+### 2026-11-17 Delay-slot WB-to-EX/WB-to-ID current-source recheck
+
+The fresh `cpu-irq-delay-slot-gate` run uses the repository's explicit bubble
+stimulus and observes both recovery terms from current source. Mode 1 places
+the branch in WB and its delay slot in EX, reporting
+`CPU_CP0_SUMMARY intr=2 ... eret=2 wb_ex=1 wb_id=0 unowned_bd=0`; mode 2 places
+the delay slot in ID and reports
+`CPU_CP0_SUMMARY intr=2 ... eret=2 wb_ex=0 wb_id=1 unowned_bd=0`. Both runs
+reach `REGRESSION_TEST_SUCCESS` and retain the pre-slot register value across
+ERET. This closes the two required positive placement terms for the bounded
+firmware contract. Taken/not-taken branch-class expansion, negative adjacency,
+stale-stage replay, and older-synchronous-exception priority remain open.
+
 ### 2026-11-16 BadVAddr owner context identity recheck
 
 The D-side fault token now includes store/load direction and the CP0 ASID at
@@ -114,7 +127,7 @@ project status is:
 
 | Capability | Current status | Maximum supported claim |
 | --- | --- | --- |
-| Delay-slot interrupt root cause | `BLOCK_REDUCED` | A plausible fix exists and existing directed gates pass, but the new WB-to-EX and WB-to-ID cases lack direct coverage. |
+| Delay-slot interrupt root cause | `BOUNDED_PASS` | Current-source directed coverage observes both WB-to-EX and WB-to-ID recovery terms with precise interrupt/ERET behavior. Broader branch classes, negative adjacency, stale-stage replay, and older-synchronous-exception priority remain open. |
 | Generic RTL Linux declared userspace workload | `CLOSED` | The current-source seeded terminal gate reaches `/init` and all declared userspace markers in order with a clean simulator terminal stop. Unrestricted Linux and full RTL/QEMU differential remain separate open contracts. |
 | BadVAddr fault/replay | `BOUNDED_PASS` | Current-source integration and unit gates prove PC/instruction/address/code/store/ASID identity, one older-exception/younger-fault squash, and token clearing at reset, interrupt flush, ERET, and context restore. Arbitrary replay pressure and Linux VM ownership remain open. |
 | QEMU/RTL focus comparison | `UNTRUSTED` | Two checkpoint comparisons exist, but truncation and unselected-register mutations can falsely pass. |
