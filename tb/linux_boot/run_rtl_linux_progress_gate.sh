@@ -21,6 +21,21 @@ RTL_SIM_SEED=${RTL_SIM_SEED:-}
 JOBS=${JOBS:-1}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88800000}
 LINUX_PROFILE=${LINUX_PROFILE:-generic}
+LINUX_GUEST_CPPFLAGS=${LINUX_GUEST_CPPFLAGS:-}
+# Optional guest probes must contribute a required marker to the gate. Keep
+# the generic profile unchanged unless the FPU ABI probe was explicitly built.
+LINUX_FPU_ABI_REQUIRED=0
+if [[ " ${LINUX_GUEST_CPPFLAGS} " == *"SOC_LINUX_FPU_ABI"* ]]; then
+    LINUX_FPU_ABI_REQUIRED=1
+fi
+LINUX_FPU_SIGNAL_ABI_REQUIRED=0
+if [[ " ${LINUX_GUEST_CPPFLAGS} " == *"SOC_LINUX_FPU_SIGNAL_ABI"* ]]; then
+    LINUX_FPU_SIGNAL_ABI_REQUIRED=1
+fi
+LINUX_FPU_LEGACY_SIGNAL_ABI_REQUIRED=0
+if [[ " ${LINUX_GUEST_CPPFLAGS} " == *"SOC_LINUX_FPU_LEGACY_SIGNAL_ABI"* ]]; then
+    LINUX_FPU_LEGACY_SIGNAL_ABI_REQUIRED=1
+fi
 LINUX_VCS_EXTRA_ARGS=${LINUX_VCS_EXTRA_ARGS:-}
 LINUX_DELAY_TRACE=${LINUX_DELAY_TRACE:-0}
 LINUX_DELAY_TRACE_LIMIT=${LINUX_DELAY_TRACE_LIMIT:-256}
@@ -157,6 +172,8 @@ LINUX_CACHEOP_TRACE_LIMIT=${LINUX_CACHEOP_TRACE_LIMIT:-0}
 LINUX_CACHEOP_TRACE_LINE=${LINUX_CACHEOP_TRACE_LINE:-}
 LINUX_CP0_TRACE_LIMIT=${LINUX_CP0_TRACE_LIMIT:-0}
 LINUX_CP0_READ_TRACE_LIMIT=${LINUX_CP0_READ_TRACE_LIMIT:-0}
+LINUX_CP0_READ_TRACE_CYCLE_START=${LINUX_CP0_READ_TRACE_CYCLE_START:-0}
+LINUX_CP0_READ_TRACE_CYCLE_END=${LINUX_CP0_READ_TRACE_CYCLE_END:-0}
 export LINUX_TIMER_HEARTBEAT LINUX_CP0_TRACE_LIMIT
 LINUX_VECTOR_LINE_TRACE=${LINUX_VECTOR_LINE_TRACE:-0}
 LINUX_VECTOR_LINE_TRACE_LIMIT=${LINUX_VECTOR_LINE_TRACE_LIMIT:-256}
@@ -226,8 +243,32 @@ if [[ "${SKIP_LINUX_BUILD}" == "1" || -n "${KERNEL_INPUT}" ]]; then
 else
     BUILD_DIR="${RUN_DIR}" JOBS="${JOBS}" KERNEL_PHYSICAL_START="${KERNEL_PHYSICAL_START}" \
         LINUX_PROFILE="${LINUX_PROFILE}" \
+        LINUX_GUEST_CPPFLAGS="${LINUX_GUEST_CPPFLAGS}" \
         "${SCRIPT_DIR}/build_linux_boot.sh" >"${RUN_DIR}/build.log" 2>&1
     KERNEL_PATH="${RUN_DIR}/kernel/vmlinux"
+fi
+
+# A supplied kernel must match the RTL DDR relocation selected for this run.
+# Without this check a generic/QEMU image linked at 0x88000000 is accepted by
+# the RTL runner, and low-memory Linux metadata can alias the kernel text at
+# the first DDR window.  That failure appears later as instruction corruption
+# and obscures the image-precondition error.
+command -v "${CROSS_COMPILE}readelf" >/dev/null || {
+    echo "RTL Linux progress gate: missing ${CROSS_COMPILE}readelf" >&2
+    exit 2
+}
+kernel_load_virtual=$(${CROSS_COMPILE}readelf -l "${KERNEL_PATH}" |
+    awk '$1 == "LOAD" {print $3; exit}')
+test -n "${kernel_load_virtual}" || {
+    echo "RTL Linux progress gate: cannot determine kernel load address" >&2
+    exit 2
+}
+expected_kernel_virtual=$((KERNEL_PHYSICAL_START))
+kernel_load_value=$((kernel_load_virtual))
+if (( kernel_load_value != expected_kernel_virtual )); then
+    printf 'RTL Linux progress gate: kernel/image relocation mismatch: load=0x%08x expected=0x%08x\n' \
+        "${kernel_load_value}" "${expected_kernel_virtual}" >&2
+    exit 2
 fi
 
 # The kernel symbol layout changes with relocation and configuration. Resolve
@@ -316,6 +357,24 @@ if [[ ! -s "${image_dir}/bootrom.hex" ||
     exit 1
 fi
 if [[ -s "${image_dir}/image_manifest.txt" ]]; then
+    manifest_kernel_virtual=$(sed -n 's/^KERNEL_LOAD_VIRTUAL=//p' "${image_dir}/image_manifest.txt")
+    manifest_kernel_offset=$(sed -n 's/^KERNEL_IMAGE_OFFSET=//p' "${image_dir}/image_manifest.txt")
+    if [[ -z "${manifest_kernel_virtual}" || -z "${manifest_kernel_offset}" ]]; then
+        echo "RTL Linux progress gate: image manifest is missing kernel relocation fields" >&2
+        exit 2
+    fi
+    manifest_kernel_value=$((manifest_kernel_virtual))
+    # The image offset is relative to the KSEG0 alias plus the RTL DDR base:
+    # 0x80000000 + 0x08000000 = 0x88000000.
+    expected_kernel_offset=$((expected_kernel_virtual - 0x88000000))
+    manifest_kernel_offset_value=$((manifest_kernel_offset))
+    if (( manifest_kernel_value != expected_kernel_virtual ||
+          manifest_kernel_offset_value != expected_kernel_offset )); then
+        printf 'RTL Linux progress gate: image manifest relocation mismatch: load=0x%08x offset=0x%08x expected_load=0x%08x expected_offset=0x%08x\n' \
+            "${manifest_kernel_value}" "${manifest_kernel_offset_value}" \
+            "${expected_kernel_virtual}" "${expected_kernel_offset}" >&2
+        exit 2
+    fi
     expected_rng_seed_id=$(printf '%s' "${LINUX_RNG_SEED}" | sha256sum | awk '{print $1}')
     image_rng_seed_id=$(sed -n 's/^RNG_SEED_ID=//p' "${image_dir}/image_manifest.txt")
     if [[ "${image_rng_seed_id}" != "${expected_rng_seed_id}" ]]; then
@@ -482,11 +541,65 @@ has_linux_terminal_marker() {
     normalize_linux_marker_stream "${log_path}" |
         rg -q 'MIPS32_SOC_LINUX_TERMINAL'
 }
+has_linux_fpu_abi_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_FPU_ABI_SUCCESS'
+}
+has_linux_fpu_abi_failure_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_FPU_ABI_FAILURE'
+}
+has_linux_fpu_signal_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS'
+}
+has_linux_fpu_signal_failure_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_FPU_SIGNAL_FAILURE'
+}
+has_linux_fpu_legacy_signal_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS'
+}
+has_linux_fpu_legacy_signal_failure_marker() {
+    local log_path=$1
+    [[ -s "${log_path}" ]] || return 1
+    normalize_linux_marker_stream "${log_path}" |
+        rg -q 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE'
+}
 has_required_linux_marker() {
     if [[ "${LINUX_TERMINAL_STOP}" == "1" ]]; then
-        has_linux_terminal_marker "$1"
+        has_linux_terminal_marker "$1" || return 1
     else
-        has_linux_boot_marker "$1"
+        has_linux_boot_marker "$1" || return 1
+    fi
+    if [[ "${LINUX_FPU_ABI_REQUIRED}" == "1" ]]; then
+        has_linux_fpu_abi_marker "$1" || return 1
+        if has_linux_fpu_abi_failure_marker "$1"; then
+            return 1
+        fi
+    fi
+    if [[ "${LINUX_FPU_SIGNAL_ABI_REQUIRED}" == "1" ]]; then
+        has_linux_fpu_signal_marker "$1" || return 1
+        if has_linux_fpu_signal_failure_marker "$1"; then
+            return 1
+        fi
+    fi
+    if [[ "${LINUX_FPU_LEGACY_SIGNAL_ABI_REQUIRED}" == "1" ]]; then
+        has_linux_fpu_legacy_signal_marker "$1" || return 1
+        if has_linux_fpu_legacy_signal_failure_marker "$1"; then
+            return 1
+        fi
     fi
 }
 
@@ -502,7 +615,7 @@ timeout "${HOST_TIMEOUT}" env \
     SKIP_COVERAGE="${SKIP_COVERAGE:-0}" \
     VCS_EXTRA_ARGS="+define+SOC_LINUX_BOOT_ENABLE=1 +define+SOC_LINUX_GUEST_ENABLE=1 +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1 +define+TB_LINUX_BOOT +define+TB_LINUX_BOOT_TRACE${linux_retire_define}${linux_l1_observation_define} ${LINUX_VCS_EXTRA_ARGS}" \
     "${linux_retire_env[@]}" \
-    SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${RUN_DIR}/image/bootrom.hex +DDR_HEX=${RUN_DIR}/image/ddr.hex +LINUX_TIMEOUT_NS=${LINUX_TIMEOUT_NS} +LINUX_TIMEOUT_GRACE_CYCLES=${LINUX_TIMEOUT_GRACE_CYCLES} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_REFILL_TRACE=${LINUX_REFILL_TRACE} +LINUX_PROGRESS_TRACE=${LINUX_PROGRESS_TRACE} +LINUX_EXCEPTION_TRACE=${LINUX_EXCEPTION_TRACE} +LINUX_EBASE_TRACE=${LINUX_EBASE_TRACE} +LINUX_EBASE_TRACE_LIMIT=${LINUX_EBASE_TRACE_LIMIT} +LINUX_WB_TRACE=${LINUX_WB_TRACE} +LINUX_WB_TRACE_LIMIT=${LINUX_WB_TRACE_LIMIT} +LINUX_WAIT_TRACE=${LINUX_WAIT_TRACE} +LINUX_WAIT_TRACE_LIMIT=${LINUX_WAIT_TRACE_LIMIT} +LINUX_TLB_TRACE=${LINUX_TLB_TRACE} +LINUX_TLB_TRACE_LIMIT=${LINUX_TLB_TRACE_LIMIT} +LINUX_TLB_TRACE_CYCLE_START=${LINUX_TLB_TRACE_CYCLE_START} +LINUX_TLB_TRACE_CYCLE_END=${LINUX_TLB_TRACE_CYCLE_END} +LINUX_VECTOR_TRACE=${LINUX_VECTOR_TRACE} +LINUX_VECTOR_TRACE_LIMIT=${LINUX_VECTOR_TRACE_LIMIT} +LINUX_CACHEOP_TRACE_LIMIT=${LINUX_CACHEOP_TRACE_LIMIT} +LINUX_CACHEOP_TRACE_LINE=${LINUX_CACHEOP_TRACE_LINE} +LINUX_CP0_TRACE_LIMIT=${LINUX_CP0_TRACE_LIMIT} +LINUX_CP0_READ_TRACE_LIMIT=${LINUX_CP0_READ_TRACE_LIMIT} +LINUX_VECTOR_LINE_TRACE=${LINUX_VECTOR_LINE_TRACE} +LINUX_VECTOR_LINE_TRACE_LIMIT=${LINUX_VECTOR_LINE_TRACE_LIMIT} +LINUX_VECTOR_LINE=${LINUX_VECTOR_LINE} +LINUX_DELAY_TRACE=${LINUX_DELAY_TRACE} +LINUX_DELAY_TRACE_LIMIT=${LINUX_DELAY_TRACE_LIMIT} +LINUX_DELAY_TRACE_START=${LINUX_DELAY_TRACE_START} +LINUX_DELAY_TRACE_END=${LINUX_DELAY_TRACE_END} +LINUX_DELAY_TRACE_CYCLE_START=${LINUX_DELAY_TRACE_CYCLE_START} +LINUX_DELAY_TRACE_CYCLE_END=${LINUX_DELAY_TRACE_CYCLE_END} +LINUX_TARGET_DSIDE_TRACE=${LINUX_TARGET_DSIDE_TRACE} +LINUX_TARGET_DSIDE_TRACE_LIMIT=${LINUX_TARGET_DSIDE_TRACE_LIMIT} +LINUX_TARGET_TRACE_LINE=${LINUX_TARGET_TRACE_LINE} +LINUX_TARGET_TRACE_CYCLE_START=${LINUX_TARGET_TRACE_CYCLE_START} +LINUX_TARGET_TRACE_CYCLE_END=${LINUX_TARGET_TRACE_CYCLE_END} +LINUX_UART_TRACE=${LINUX_UART_TRACE} +LINUX_UART_TRACE_LIMIT=${LINUX_UART_TRACE_LIMIT} +LINUX_VIC_TRACE=${LINUX_VIC_TRACE} +LINUX_VIC_TRACE_LIMIT=${LINUX_VIC_TRACE_LIMIT} +LINUX_PANIC_TRACE=${LINUX_PANIC_TRACE} +LINUX_PANIC_TRACE_LIMIT=${LINUX_PANIC_TRACE_LIMIT} +LINUX_PANIC_TRACE_START=${LINUX_PANIC_TRACE_START} +LINUX_PANIC_TRACE_END=${LINUX_PANIC_TRACE_END}" \
+    SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${RUN_DIR}/image/bootrom.hex +DDR_HEX=${RUN_DIR}/image/ddr.hex +LINUX_TIMEOUT_NS=${LINUX_TIMEOUT_NS} +LINUX_TIMEOUT_GRACE_CYCLES=${LINUX_TIMEOUT_GRACE_CYCLES} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_REFILL_TRACE=${LINUX_REFILL_TRACE} +LINUX_PROGRESS_TRACE=${LINUX_PROGRESS_TRACE} +LINUX_EXCEPTION_TRACE=${LINUX_EXCEPTION_TRACE} +LINUX_EBASE_TRACE=${LINUX_EBASE_TRACE} +LINUX_EBASE_TRACE_LIMIT=${LINUX_EBASE_TRACE_LIMIT} +LINUX_WB_TRACE=${LINUX_WB_TRACE} +LINUX_WB_TRACE_LIMIT=${LINUX_WB_TRACE_LIMIT} +LINUX_WAIT_TRACE=${LINUX_WAIT_TRACE} +LINUX_WAIT_TRACE_LIMIT=${LINUX_WAIT_TRACE_LIMIT} +LINUX_TLB_TRACE=${LINUX_TLB_TRACE} +LINUX_TLB_TRACE_LIMIT=${LINUX_TLB_TRACE_LIMIT} +LINUX_TLB_TRACE_CYCLE_START=${LINUX_TLB_TRACE_CYCLE_START} +LINUX_TLB_TRACE_CYCLE_END=${LINUX_TLB_TRACE_CYCLE_END} +LINUX_VECTOR_TRACE=${LINUX_VECTOR_TRACE} +LINUX_VECTOR_TRACE_LIMIT=${LINUX_VECTOR_TRACE_LIMIT} +LINUX_CACHEOP_TRACE_LIMIT=${LINUX_CACHEOP_TRACE_LIMIT} +LINUX_CACHEOP_TRACE_LINE=${LINUX_CACHEOP_TRACE_LINE} +LINUX_CP0_TRACE_LIMIT=${LINUX_CP0_TRACE_LIMIT} +LINUX_CP0_READ_TRACE_LIMIT=${LINUX_CP0_READ_TRACE_LIMIT} +LINUX_CP0_READ_TRACE_CYCLE_START=${LINUX_CP0_READ_TRACE_CYCLE_START} +LINUX_CP0_READ_TRACE_CYCLE_END=${LINUX_CP0_READ_TRACE_CYCLE_END} +LINUX_VECTOR_LINE_TRACE=${LINUX_VECTOR_LINE_TRACE} +LINUX_VECTOR_LINE_TRACE_LIMIT=${LINUX_VECTOR_LINE_TRACE_LIMIT} +LINUX_VECTOR_LINE=${LINUX_VECTOR_LINE} +LINUX_DELAY_TRACE=${LINUX_DELAY_TRACE} +LINUX_DELAY_TRACE_LIMIT=${LINUX_DELAY_TRACE_LIMIT} +LINUX_DELAY_TRACE_START=${LINUX_DELAY_TRACE_START} +LINUX_DELAY_TRACE_END=${LINUX_DELAY_TRACE_END} +LINUX_DELAY_TRACE_CYCLE_START=${LINUX_DELAY_TRACE_CYCLE_START} +LINUX_DELAY_TRACE_CYCLE_END=${LINUX_DELAY_TRACE_CYCLE_END} +LINUX_TARGET_DSIDE_TRACE=${LINUX_TARGET_DSIDE_TRACE} +LINUX_TARGET_DSIDE_TRACE_LIMIT=${LINUX_TARGET_DSIDE_TRACE_LIMIT} +LINUX_TARGET_TRACE_LINE=${LINUX_TARGET_TRACE_LINE} +LINUX_TARGET_TRACE_CYCLE_START=${LINUX_TARGET_TRACE_CYCLE_START} +LINUX_TARGET_TRACE_CYCLE_END=${LINUX_TARGET_TRACE_CYCLE_END} +LINUX_UART_TRACE=${LINUX_UART_TRACE} +LINUX_UART_TRACE_LIMIT=${LINUX_UART_TRACE_LIMIT} +LINUX_VIC_TRACE=${LINUX_VIC_TRACE} +LINUX_VIC_TRACE_LIMIT=${LINUX_VIC_TRACE_LIMIT} +LINUX_PANIC_TRACE=${LINUX_PANIC_TRACE} +LINUX_PANIC_TRACE_LIMIT=${LINUX_PANIC_TRACE_LIMIT} +LINUX_PANIC_TRACE_START=${LINUX_PANIC_TRACE_START} +LINUX_PANIC_TRACE_END=${LINUX_PANIC_TRACE_END}" \
         LINUX_EXTRA_SIM_ARGS="+LINUX_FOCUS_TRACE=${LINUX_FOCUS_TRACE} +LINUX_FOCUS_TRACE_LIMIT=${LINUX_FOCUS_TRACE_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=${LINUX_FOCUS_TRACE_TARGET_ONLY} +LINUX_FOCUS_TRACE_CYCLE_START=${LINUX_FOCUS_TRACE_CYCLE_START} +LINUX_FOCUS_TRACE_CYCLE_END=${LINUX_FOCUS_TRACE_CYCLE_END} +LINUX_FOCUS_TRACE_START=${LINUX_FOCUS_TRACE_START} +LINUX_FOCUS_TRACE_END=${LINUX_FOCUS_TRACE_END} +LINUX_GPR_TRACE=${LINUX_GPR_TRACE} +LINUX_GPR_TRACE_LIMIT=${LINUX_GPR_TRACE_LIMIT} +LINUX_GPR_TRACE_REG=${LINUX_GPR_TRACE_REG} +LINUX_GPR_TRACE_CYCLE_START=${LINUX_GPR_TRACE_CYCLE_START} +LINUX_GPR_TRACE_CYCLE_END=${LINUX_GPR_TRACE_CYCLE_END} +LINUX_CACHE_OWNER_TRACE=${LINUX_CACHE_OWNER_TRACE} +LINUX_CACHE_OWNER_TRACE_LIMIT=${LINUX_CACHE_OWNER_TRACE_LIMIT} +LINUX_EXCEPTION_TRACE_LIMIT=${LINUX_EXCEPTION_TRACE_LIMIT} +LINUX_EXCEPTION_FRAME_TRACE=${LINUX_EXCEPTION_FRAME_TRACE} +LINUX_EXCEPTION_FRAME_TRACE_LIMIT=${LINUX_EXCEPTION_FRAME_TRACE_LIMIT} +LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START=${LINUX_EXCEPTION_FRAME_TRACE_CYCLE_START} +LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END=${LINUX_EXCEPTION_FRAME_TRACE_CYCLE_END} +LINUX_FAULT_TRACE=${LINUX_FAULT_TRACE} +LINUX_FAULT_TRACE_LIMIT=${LINUX_FAULT_TRACE_LIMIT} +LINUX_FAULT_TRACE_START=${LINUX_FAULT_TRACE_START} +LINUX_FAULT_TRACE_END=${LINUX_FAULT_TRACE_END} +LINUX_FAULT_TRACE_CYCLE_START=${LINUX_FAULT_TRACE_CYCLE_START} +LINUX_FAULT_TRACE_CYCLE_END=${LINUX_FAULT_TRACE_CYCLE_END} +LINUX_EBASE_TRACE=${LINUX_EBASE_TRACE} +LINUX_EBASE_TRACE_LIMIT=${LINUX_EBASE_TRACE_LIMIT} +LINUX_WB_TRACE=${LINUX_WB_TRACE} +LINUX_WB_TRACE_LIMIT=${LINUX_WB_TRACE_LIMIT} +LINUX_VECTOR_TRACE=${LINUX_VECTOR_TRACE} +LINUX_PANIC_TRACE_START=${LINUX_PANIC_TRACE_START} +LINUX_MODE_TRACE=${LINUX_MODE_TRACE} +LINUX_MODE_TRACE_LIMIT=${LINUX_MODE_TRACE_LIMIT} +LINUX_PC_TRACE=${LINUX_PC_TRACE} +LINUX_PC_TRACE_LIMIT=${LINUX_PC_TRACE_LIMIT} +LINUX_PC_TRACE_RETIRE_ONLY=${LINUX_PC_TRACE_RETIRE_ONLY} +LINUX_PC_TRACE_SYMBOL=${LINUX_PC_TRACE_SYMBOL} +LINUX_PC_TRACE_START=${LINUX_PC_TRACE_START} +LINUX_PC_TRACE_END=${LINUX_PC_TRACE_END} +RETIRE_TRACE_MAX_RECORDS=${LINUX_RETIRE_TRACE_MAX_RECORDS} +LINUX_PC_TRACE_CYCLE_START=${LINUX_PC_TRACE_CYCLE_START} +LINUX_PC_TRACE_CYCLE_END=${LINUX_PC_TRACE_CYCLE_END} +LINUX_STALL_TRACE=${LINUX_STALL_TRACE} +LINUX_STALL_TRACE_LIMIT=${LINUX_STALL_TRACE_LIMIT} +LINUX_STALL_TRACE_CYCLE_START=${LINUX_STALL_TRACE_CYCLE_START} +LINUX_STALL_TRACE_PC=${LINUX_STALL_TRACE_PC} ${LINUX_OWNER_TRACE_SIM_ARGS}${linux_seed_arg}" \
     LINUX_APB_SIM_ARGS="+LINUX_APB_TRACE=${LINUX_APB_TRACE} +LINUX_APB_TRACE_LIMIT=${LINUX_APB_TRACE_LIMIT} +LINUX_APB_TRACE_CYCLE_START=${LINUX_APB_TRACE_CYCLE_START} +LINUX_APB_TRACE_CYCLE_END=${LINUX_APB_TRACE_CYCLE_END} +LINUX_APB_SELECT_TRACE=${LINUX_APB_SELECT_TRACE} +LINUX_APB_SELECT_TRACE_LIMIT=${LINUX_APB_SELECT_TRACE_LIMIT} +LINUX_APB_SELECT_TRACE_CYCLE_START=${LINUX_APB_SELECT_TRACE_CYCLE_START} +LINUX_APB_SELECT_TRACE_CYCLE_END=${LINUX_APB_SELECT_TRACE_CYCLE_END} +LINUX_UART_TRACE_CYCLE_START=${LINUX_UART_TRACE_CYCLE_START} +LINUX_UART_TRACE_CYCLE_END=${LINUX_UART_TRACE_CYCLE_END} +LINUX_VIC_TRACE_CYCLE_START=${LINUX_VIC_TRACE_CYCLE_START} +LINUX_VIC_TRACE_CYCLE_END=${LINUX_VIC_TRACE_CYCLE_END} +LINUX_VIC_ACCEPT_TRACE=${LINUX_VIC_ACCEPT_TRACE} +LINUX_VIC_ACCEPT_TRACE_LIMIT=${LINUX_VIC_ACCEPT_TRACE_LIMIT} +LINUX_VIC_ACCEPT_TRACE_CYCLE_START=${LINUX_VIC_ACCEPT_TRACE_CYCLE_START} +LINUX_VIC_ACCEPT_TRACE_CYCLE_END=${LINUX_VIC_ACCEPT_TRACE_CYCLE_END}${linux_uart_transcript_arg}${linux_uart_apb_schedule_arg}" \
     "${ROOT_DIR}/tb/soc_test/run.sh" >"${RUN_DIR}/sim.log" 2>&1
@@ -559,9 +672,45 @@ terminal_count=$({
     normalize_linux_marker_stream "${marker_source}" |
         rg -o 'MIPS32_SOC_LINUX_TERMINAL' || true
 } | wc -l | tr -d ' ')
+fpu_abi_marker_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_FPU_ABI_SUCCESS' || true
+} | wc -l | tr -d ' ')
+fpu_abi_failure_marker_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_FPU_ABI_FAILURE' || true
+} | wc -l | tr -d ' ')
+fpu_signal_marker_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS' || true
+} | wc -l | tr -d ' ')
+fpu_signal_failure_marker_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_FPU_SIGNAL_FAILURE' || true
+} | wc -l | tr -d ' ')
+fpu_legacy_signal_marker_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS' || true
+} | wc -l | tr -d ' ')
+fpu_legacy_signal_failure_marker_count=$({
+    normalize_linux_marker_stream "${marker_source}" |
+        rg -o 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE' || true
+} | wc -l | tr -d ' ')
 result="PASS (bounded post-reset progress probe)"
 if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
     result="FAIL (Linux userspace marker not observed)"
+fi
+if [[ "${LINUX_FPU_ABI_REQUIRED}" == "1" &&
+      ( "${fpu_abi_marker_count}" -ne 1 || "${fpu_abi_failure_marker_count}" -ne 0 ) ]]; then
+    result="FAIL (Linux FPU ABI success=${fpu_abi_marker_count}, failure=${fpu_abi_failure_marker_count})"
+fi
+if [[ "${LINUX_FPU_SIGNAL_ABI_REQUIRED}" == "1" &&
+      ( "${fpu_signal_marker_count}" -ne 1 || "${fpu_signal_failure_marker_count}" -ne 0 ) ]]; then
+    result="FAIL (Linux FPU signal ABI success=${fpu_signal_marker_count}, failure=${fpu_signal_failure_marker_count})"
+fi
+if [[ "${LINUX_FPU_LEGACY_SIGNAL_ABI_REQUIRED}" == "1" &&
+      ( "${fpu_legacy_signal_marker_count}" -ne 1 || "${fpu_legacy_signal_failure_marker_count}" -ne 0 ) ]]; then
+    result="FAIL (Linux FPU legacy signal ABI success=${fpu_legacy_signal_marker_count}, failure=${fpu_legacy_signal_failure_marker_count})"
 fi
 if [[ "${LINUX_TERMINAL_STOP}" == "1" ]]; then
     if [[ "${terminal_count}" -ne 1 ]]; then
@@ -580,6 +729,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Linux simulation grace cycles: ${LINUX_TIMEOUT_GRACE_CYCLES}
 - RTL simulation seed: ${RTL_SIM_SEED:-default}
 - Linux profile: ${LINUX_PROFILE}
+- Linux guest CPPFLAGS: ${LINUX_GUEST_CPPFLAGS:-none}
 - Delay trace: ${LINUX_DELAY_TRACE} (limit=${LINUX_DELAY_TRACE_LIMIT}, window=${LINUX_DELAY_TRACE_START}..${LINUX_DELAY_TRACE_END})
 - UART trace: ${LINUX_UART_TRACE} (limit=${LINUX_UART_TRACE_LIMIT}, cycles=${LINUX_UART_TRACE_CYCLE_START}..${LINUX_UART_TRACE_CYCLE_END})
 - UART transcript: ${LINUX_UART_TRANSCRIPT}
@@ -620,6 +770,15 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Marker evidence: ${marker_source}
 - Simulator log: ${sim_dir}/sim.log
 - Linux userspace success markers observed: ${marker_count}
+- Linux FPU ABI marker required: ${LINUX_FPU_ABI_REQUIRED}
+- Linux FPU ABI success markers observed: ${fpu_abi_marker_count}
+- Linux FPU ABI failure markers observed: ${fpu_abi_failure_marker_count}
+- Linux FPU signal ABI marker required: ${LINUX_FPU_SIGNAL_ABI_REQUIRED}
+- Linux FPU signal ABI success markers observed: ${fpu_signal_marker_count}
+- Linux FPU signal ABI failure markers observed: ${fpu_signal_failure_marker_count}
+- Linux FPU legacy signal ABI marker required: ${LINUX_FPU_LEGACY_SIGNAL_ABI_REQUIRED}
+- Linux FPU legacy signal ABI success markers observed: ${fpu_legacy_signal_marker_count}
+- Linux FPU legacy signal ABI failure markers observed: ${fpu_legacy_signal_failure_marker_count}
 - Linux terminal marker count: ${terminal_count}
 - Marker recovered after host timeout: ${marker_recovered:-0}
 - Scope: relocated Linux image construction, Boot ROM/DDR preload, RTL
@@ -631,6 +790,21 @@ EOF
 
 if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
     echo "RTL Linux progress gate: userspace marker not observed" >&2
+    exit 1
+fi
+if [[ "${LINUX_FPU_ABI_REQUIRED}" == "1" &&
+      ( "${fpu_abi_marker_count}" -ne 1 || "${fpu_abi_failure_marker_count}" -ne 0 ) ]]; then
+    echo "RTL Linux progress gate: invalid FPU ABI marker result (success=${fpu_abi_marker_count}, failure=${fpu_abi_failure_marker_count})" >&2
+    exit 1
+fi
+if [[ "${LINUX_FPU_SIGNAL_ABI_REQUIRED}" == "1" &&
+      ( "${fpu_signal_marker_count}" -ne 1 || "${fpu_signal_failure_marker_count}" -ne 0 ) ]]; then
+    echo "RTL Linux progress gate: invalid FPU signal ABI marker result (success=${fpu_signal_marker_count}, failure=${fpu_signal_failure_marker_count})" >&2
+    exit 1
+fi
+if [[ "${LINUX_FPU_LEGACY_SIGNAL_ABI_REQUIRED}" == "1" &&
+      ( "${fpu_legacy_signal_marker_count}" -ne 1 || "${fpu_legacy_signal_failure_marker_count}" -ne 0 ) ]]; then
+    echo "RTL Linux progress gate: invalid FPU legacy signal ABI marker result (success=${fpu_legacy_signal_marker_count}, failure=${fpu_legacy_signal_failure_marker_count})" >&2
     exit 1
 fi
 if [[ "${LINUX_TERMINAL_STOP}" == "1" && "${terminal_count}" -ne 1 ]]; then

@@ -137,6 +137,12 @@ fi
 if [ -n "${LINUX_CP0_READ_TRACE_LIMIT:-}" ]; then
     sim_extra_args+=("+LINUX_CP0_READ_TRACE_LIMIT=${LINUX_CP0_READ_TRACE_LIMIT}")
 fi
+if [ -n "${LINUX_CP0_READ_TRACE_CYCLE_START:-}" ]; then
+    sim_extra_args+=("+LINUX_CP0_READ_TRACE_CYCLE_START=${LINUX_CP0_READ_TRACE_CYCLE_START}")
+fi
+if [ -n "${LINUX_CP0_READ_TRACE_CYCLE_END:-}" ]; then
+    sim_extra_args+=("+LINUX_CP0_READ_TRACE_CYCLE_END=${LINUX_CP0_READ_TRACE_CYCLE_END}")
+fi
 if [ -n "${LINUX_MEMORY_OWNER_TRACE:-}" ]; then
     sim_extra_args+=("+LINUX_MEMORY_OWNER_TRACE=${LINUX_MEMORY_OWNER_TRACE}")
 fi
@@ -162,9 +168,12 @@ fi
 # redirection.  Some long-running gates invoke this script as `run.sh
 # >sim.log`; writing sim.log here as well would give two writers ownership of
 # the same file and can truncate or interleave diagnostics.  Publish the
-# complete VCS log only after simulation has exited.
+# complete VCS log only after simulation has exited.  VCS may otherwise
+# re-execute a long simulation after the terminal marker while disabling its
+# save/restore support for ASLR, which duplicates the workload and truncates
+# schedule/FIFO evidence owned by the caller.
 set +e
-"${EDA_RUNNER}" ./simv "${sim_args[@]}" -l sim_runtime.log
+"${EDA_RUNNER}" ./simv -no_save "${sim_args[@]}" -l sim_runtime.log
 sim_status=$?
 set -e
 cp sim_runtime.log sim.log

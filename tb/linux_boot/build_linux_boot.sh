@@ -8,6 +8,7 @@ BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build/linux_boot/real"}
 CROSS_COMPILE=${CROSS_COMPILE:-mips64-linux-gnu-}
 # Linux kernel and initramfs builds are memory-heavy in this environment.
 JOBS=${JOBS:-1}
+LINUX_GUEST_CPPFLAGS=${LINUX_GUEST_CPPFLAGS:-}
 KERNEL_PHYSICAL_START=${KERNEL_PHYSICAL_START:-0x88000000}
 LINUX_CMDLINE=${LINUX_CMDLINE:-"console=ttyS0,115200 earlycon=uart8250,mmio32,0x40000000 lpj=624128 rdinit=/init"}
 LINUX_PROFILE=${LINUX_PROFILE:-generic}
@@ -59,10 +60,12 @@ build_guest_binary() {
     input_hash=$({
         sha256sum "${source}" "${SCRIPT_DIR}/init.ld"
         printf 'guest_binary_format=preserve-elf-v3-fixed-object-layout\n'
+        printf 'LINUX_GUEST_CPPFLAGS=%s\n' "${LINUX_GUEST_CPPFLAGS}"
     } | sha256sum | awk '{print $1}')
     if [[ ! -s "${output}" || ! -s "${stamp}" || "$(<"${stamp}")" != "${input_hash}" ]]; then
         "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
             -nostdlib -nostartfiles -nodefaultlibs -static -c \
+            ${LINUX_GUEST_CPPFLAGS} \
             -o "${object_output}" "${source}"
         "${CROSS_COMPILE}gcc" -EL -mabi=32 -march=mips32r2 -mno-abicalls -fno-pic \
             -nostdlib -nostartfiles -nodefaultlibs -static \

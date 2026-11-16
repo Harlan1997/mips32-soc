@@ -240,6 +240,8 @@ module tb_mips_soc;
     integer linux_cp0_op_trace_cycle_end;
     integer linux_cp0_read_trace_limit;
     integer linux_cp0_read_trace_count;
+    integer linux_cp0_read_trace_cycle_start;
+    integer linux_cp0_read_trace_cycle_end;
     integer linux_ddr_trace;
     integer linux_ddr_trace_limit;
     integer linux_ddr_trace_count;
@@ -1849,11 +1851,16 @@ module tb_mips_soc;
                 linux_cp0_op_trace_count = linux_cp0_op_trace_count + 1;
             end
             if (linux_cp0_read_trace_count < linux_cp0_read_trace_limit &&
+                (linux_cp0_read_trace_cycle_start == 0 ||
+                 linux_trace_cycle >= linux_cp0_read_trace_cycle_start) &&
+                (linux_cp0_read_trace_cycle_end == 0 ||
+                 linux_trace_cycle <= linux_cp0_read_trace_cycle_end) &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_arch_valid &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write &&
                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_to_reg == 2'b11) &&
                 ((u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr == 5'd9) ||
-                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr == 5'd11))) begin
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr == 5'd11) ||
+                 (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_cp0_raddr == 5'd13))) begin
                 $display("LINUX_CP0_READ_TRACE cycle=%0d pc=%08h retire=%08h cp0rd=%0d sel=%0d gpr=%0d data=%08h count=%08h compare=%08h cause=%08h status=%08h intr=%b",
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
@@ -2798,6 +2805,10 @@ module tb_mips_soc;
         linux_cp0_read_trace_limit = 0;
         if (!$value$plusargs("LINUX_CP0_READ_TRACE_LIMIT=%d", linux_cp0_read_trace_limit)) begin end
         linux_cp0_read_trace_count = 0;
+        linux_cp0_read_trace_cycle_start = 0;
+        if (!$value$plusargs("LINUX_CP0_READ_TRACE_CYCLE_START=%d", linux_cp0_read_trace_cycle_start)) begin end
+        linux_cp0_read_trace_cycle_end = 0;
+        if (!$value$plusargs("LINUX_CP0_READ_TRACE_CYCLE_END=%d", linux_cp0_read_trace_cycle_end)) begin end
         linux_ddr_trace = 0;
         if (!$value$plusargs("LINUX_DDR_TRACE=%d", linux_ddr_trace)) begin end
         linux_ddr_trace_limit = 200;
@@ -4369,6 +4380,46 @@ module tb_mips_soc;
                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req,
                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_code,
                      u_soc.u_impl.u_core_subsystem.u_core.u_cpu.u_mips_cp0.cp0_epc);
+`endif
+`ifdef TB_LINUX_FPU_TRACE
+        // Keep the Linux ABI probe diagnostic bounded to the guest's first
+        // user-mode COP1 sequence.  The opt-in trace records the ID-side FPR
+        // operands and commit controls alongside the direct MFC1 GPR port so
+        // a failed probe can distinguish bad arithmetic from a transfer
+        // hazard without producing a full Linux trace.
+        if (rst_n &&
+            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc >= 32'h00400030) &&
+            (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc <  32'h00400084))
+            $display("LINUX_FPU_TRACE cycle=%0d pc=%08h inst=%08h cu1=%b fr=%b fcsr=%08h fpr0=%08h fpr2=%08h fpr4=%08h idrs=%08h idrt=%08h result=%08h op=%0d commit=%b unusable=%b exc=%b stall=%b/%b gprxfer=%b/%b gpraddr=%0d gprdata=%08h rfwe=%b rfaddr=%0d rfdata=%08h expc=%08h exinst=%08h mempc=%08h meminst=%08h",
+                     linux_trace_cycle,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_inst,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_cu1,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cpu_fpu_fr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fcsr,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpr[0],
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpr[2],
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpr[4],
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_val_rs,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_val_rt,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_result,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_op,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_id_commit,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_fpu_unusable,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.id_fpu_exception,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.stall_req_id,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.global_stall,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_id_gpr_write_port,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.fpu_id_gpr_write,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_waddr_selected,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_wdata_selected,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_we_selected,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_waddr_selected,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.rf_wdata_selected,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.ex_inst,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
+                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst);
 `endif
 `ifdef TB_L1_AXI_ERROR
         if (rst_n && u_soc.u_impl.u_core_subsystem.u_core.u_cpu.effective_except_req)

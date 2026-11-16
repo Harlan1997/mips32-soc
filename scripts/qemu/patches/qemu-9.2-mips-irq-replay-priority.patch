@@ -1,0 +1,31 @@
+diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_helper.c
+--- a/target/mips/tcg/sysemu/tlb_helper.c
++++ b/target/mips/tcg/sysemu/tlb_helper.c
+@@ -1073,6 +1073,8 @@ void mips_cpu_do_interrupt(CPUState *cs)
+     bool update_badinstr = 0;
+     target_ulong offset;
+     int cause = -1;
++    extern bool qemu_mips32_soc_ref_irq_replay_pending(CPUMIPSState *env)
++        __attribute__((weak));
+     extern void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env)
+         __attribute__((weak));
++    extern bool qemu_mips32_soc_ref_irq_replay_accept(void)
++        __attribute__((weak));
++    if (cs->exception_index != EXCP_EXT_INTERRUPT &&
++        cs->exception_index != EXCP_SEMIHOST &&
++        cs->exception_index != EXCP_HLT &&
++        cs->exception_index != EXCP_DSS &&
++        qemu_mips32_soc_ref_irq_replay_pending &&
++        qemu_mips32_soc_ref_irq_replay_pending(env) &&
++        cpu_mips_hw_interrupts_enabled(env) &&
++        cpu_mips_hw_interrupts_pending(env) &&
++        qemu_mips32_soc_ref_irq_replay_accept &&
++        qemu_mips32_soc_ref_irq_replay_accept()) {
++        /* SOC_REF_IRQ_REPLAY_PRIORITY: RTL accepts a scheduled IRQ at this boundary before the pending
++         * synchronous translation fault reaches exception entry. */
++        cs->exception_index = EXCP_EXT_INTERRUPT;
++        env->error_code = 0;
++    }
+     if (cs->exception_index != EXCP_EXT_INTERRUPT &&
+         cs->exception_index != EXCP_SEMIHOST &&
+         cs->exception_index != EXCP_HLT &&

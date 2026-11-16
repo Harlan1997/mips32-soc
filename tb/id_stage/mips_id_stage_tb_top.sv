@@ -53,6 +53,7 @@ module mips_id_stage_tb_top;
         .fw_wb_we     (u_if.fw_wb_we),
         .fw_wb_waddr  (u_if.fw_wb_waddr),
         .fw_wb_val    (u_if.fw_wb_val),
+        .fpu_gpr_pending_reg(32'd0),
         .ex_mem_read  (u_if.ex_mem_read),
         .ex_waddr     (u_if.ex_waddr),
         .stall_req    (u_if.stall_req),

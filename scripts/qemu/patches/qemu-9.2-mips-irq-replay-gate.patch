@@ -1,0 +1,23 @@
+diff --git a/target/mips/tcg/sysemu/tlb_helper.c b/target/mips/tcg/sysemu/tlb_helper.c
+--- a/target/mips/tcg/sysemu/tlb_helper.c
++++ b/target/mips/tcg/sysemu/tlb_helper.c
+@@ -1410,10 +1410,17 @@ void mips_cpu_do_interrupt(CPUState *cs)
+ bool mips_cpu_exec_interrupt(CPUState *cs, int interrupt_request)
+ {
+     if (interrupt_request & CPU_INTERRUPT_HARD) {
+         CPUMIPSState *env = cpu_env(cs);
++        extern bool qemu_mips32_soc_ref_irq_replay_accept(void)
++            __attribute__((weak));
+
+         if (cpu_mips_hw_interrupts_enabled(env) &&
+             cpu_mips_hw_interrupts_pending(env)) {
++            /* Replay may leave CPU_INTERRUPT_HARD latched after an earlier
++             * exception.  Accept only the one token released by the replay
++             * scheduler; ordinary QEMU targets do not provide this hook. */
++            if (qemu_mips32_soc_ref_irq_replay_accept &&
++                !qemu_mips32_soc_ref_irq_replay_accept()) {
++                return false; /* SOC_REF_IRQ_REPLAY_GATE */
++            }
+             /* Raise it */
+             cs->exception_index = EXCP_EXT_INTERRUPT;
+             env->error_code = 0;

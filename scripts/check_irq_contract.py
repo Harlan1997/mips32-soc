@@ -15,6 +15,23 @@ dts_paths = (
 
 errors = []
 
+
+def extract_function(text, name):
+    """Return one C function body without being confused by nested blocks."""
+    match = re.search(rf'\b{re.escape(name)}\s*\([^;]*\)\s*\{{', text, re.S)
+    if not match:
+        return None
+    open_brace = text.find("{", match.start(), match.end())
+    depth = 0
+    for index in range(open_brace, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[match.start():index + 1]
+    return None
+
 if not re.search(
     r'irq_sources\s*=\s*\{26\'d0,\s*ddr4_ecc_irq,\s*qspi_irq,\s*dma_int,\s*'
     r'timer_int,\s*uart_tx_int,\s*uart_rx_int\}',
@@ -25,13 +42,11 @@ if not re.search(r'\.ext_int\s*\(\{5\'d0,\s*cpu_int\}\)',
                  (ROOT / "rtl/soc_core_subsystem.v").read_text()):
     errors.append("RTL VIC aggregate is not connected to CPU ext_int[0]/IP2")
 
-uart_fn = re.search(
-    r'static void soc_ref_uart_update_irq\(.*?\n\}', qemu, re.S
-)
+uart_fn = extract_function(qemu, "soc_ref_uart_update_irq")
 if not uart_fn:
     errors.append("QEMU UART IRQ update function is missing")
 else:
-    body = uart_fn.group(0)
+    body = uart_fn
     if "pic_raw |= 1U << 1" not in body or "pic_raw &= ~(1U << 1)" not in body:
         errors.append("QEMU UART does not drive mirrored VIC source 1")
     if "env->irq[4]" in body:

@@ -93,6 +93,24 @@ cycles. A successful run must contain both
 not generic Linux, a Linux APB-timer-driver gate, or full RTL/QEMU
 system-mode differential signoff.
 
+The opt-in Linux FPU signal-frame probe uses
+`LINUX_GUEST_CPPFLAGS=-DSOC_LINUX_FPU_SIGNAL_ABI` together with
+`LINUX_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1'`. It registers an O32
+`SA_SIGINFO` handler, changes an FPR and FCSR in the handler, and requires one
+`MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS` marker after `rt_sigreturn` restores the
+parent context. This is a selected signal-frame slice; it does not claim full
+COP1/IEEE-754 or unrestricted Linux FPU ABI compliance.
+
+The separate opt-in legacy signal-frame probe uses
+`LINUX_GUEST_CPPFLAGS=-DSOC_LINUX_FPU_LEGACY_SIGNAL_ABI` with the same FPU VCS
+define. It registers a handler through O32 `rt_sigaction` with `sa_flags=0`
+(the legacy frame layout; the old O32 `signal(2)` syscall is unavailable on
+this kernel), changes an FPR and FCSR, and requires one
+`MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS` marker after the legacy
+`sigreturn` path restores the parent context. This covers the alternate O32
+frame layout only; lazy-FPU ownership and unrestricted Linux FPU ABI behavior
+remain separate scope.
+
 The precise WB delay-slot rollback path is controlled by
 `SOC_DELAY_SLOT_ROLLBACK_ENABLE` and defaults to `0`, preserving the established
 Linux bring-up pipeline. The focused CPU/CP0 delay-slot regression enables it

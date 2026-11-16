@@ -54,7 +54,14 @@ bool qemu_mips32_soc_ref_sc_consume_reservation(void)
 #define SOC_MAILBOX_BASE   0xa000fffcULL
 #define SOC_MAILBOX_MAGIC  0xdeadbeefU
 #define SOC_REF_IRQ_PC_HISTORY_SIZE 8U
-#define SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS 1U
+/* The RTL acceptance coordinate counts completed writeback instructions,
+ * while QEMU replays at the instruction PC.  Paired focus traces show both
+ * one-tick and wider EPC crossings; the current first mismatch reaches its
+ * captured EPC three replay ticks before the recorded acceptance boundary.
+ * Keep the exact-PC/history guards below so these measured offsets cannot
+ * release on a stale loop visit. */
+#define SOC_REF_IRQ_EARLY_RELEASE_EPC_TICKS 3U
+#define SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS 5U
 #define SOC_REF_LINUX_TERMINAL_MARKER "MIPS32_SOC_LINUX_TERMINAL\r\n"
 #define SOC_DDR_BASE       0x08000000ULL
 #define SOC_DDR_SIZE       (128 * MiB)
@@ -255,6 +262,7 @@ typedef struct MIPS32SocRefState {
     bool irq_replay_enabled;
     bool irq_replay_has_timer;
     bool irq_replay_armed;
+    bool irq_replay_accept_pending;
     bool irq_replay_wake_pending;
     bool irq_replay_bd_pending;
     bool irq_replay_bd_valid;
@@ -385,6 +393,7 @@ void qemu_mips32_soc_ref_retire_tick(CPUState *cpu);
 void qemu_mips32_soc_ref_wait(CPUMIPSState *env);
 void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env);
 bool qemu_mips32_soc_ref_irq_replay_active(void);
+bool qemu_mips32_soc_ref_irq_replay_accept(void);
 bool qemu_mips32_soc_ref_cp0_timer_armed(void);
 uint32_t qemu_mips32_soc_ref_cp0_retire_ticks(CPUMIPSState *env);
 void helper_soc_ref_retire_tick(CPUMIPSState *env);
@@ -392,6 +401,31 @@ void helper_soc_ref_retire_tick(CPUMIPSState *env);
 bool qemu_mips32_soc_ref_irq_replay_active(void)
 {
     return soc_ref_active_state && soc_ref_active_state->irq_replay_enabled;
+}
+
+bool qemu_mips32_soc_ref_irq_replay_accept(void)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    if (!s || !s->irq_replay_enabled) {
+        return true;
+    }
+    if (!s->irq_replay_accept_pending) {
+        /* Replay owns the acceptance boundary.  Cause.TI may remain latched
+         * across ERET, but its level must not create an unscheduled second
+         * interrupt between two captured replay entries. */
+        return false;
+    }
+    s->irq_replay_accept_pending = false;
+    return true;
+}
+
+bool qemu_mips32_soc_ref_irq_replay_pending(CPUMIPSState *env)
+{
+    MIPS32SocRefState *s = soc_ref_active_state;
+
+    return s && s->irq_replay_enabled && s->cpu && &s->cpu->env == env &&
+        s->irq_replay_accept_pending;
 }
 
 /* A retire-clock guest can execute WAIT while the host CPU is halted.  There
@@ -510,6 +544,7 @@ static void soc_ref_assert_cp0_timer_irq(MIPS32SocRefState *s)
     /* Always latch Cause.IP; replay suppresses CPU acceptance, not pending. */
     qemu_set_irq(env->irq[irq], true);
     if (!s->irq_replay_has_timer) {
+        s->irq_replay_accept_pending = true;
         bql_lock();
         cpu_interrupt(CPU(s->cpu), CPU_INTERRUPT_HARD);
         bql_unlock();
@@ -563,6 +598,30 @@ static bool soc_ref_consume_count_schedule(MIPS32SocRefState *s,
                      s->cp0_count_schedule_index, sample.pc,
                      sample.is_rdhwr ? "rdhwr" : "mfc0", sample.operand,
                      rtl_pc, is_rdhwr ? "rdhwr" : "mfc0", operand);
+        if (s->irq_replay_enabled) {
+            const char *next_event = "none";
+            uint64_t next_target = 0;
+            if (s->irq_release_index < s->irq_release_after->len) {
+                next_target = g_array_index(s->irq_release_after, uint64_t,
+                                            s->irq_release_index);
+                next_event = g_array_index(s->irq_replay_timer_pending, bool,
+                                           s->irq_release_index) ? "ti" : "irq";
+            }
+            error_report("CP0 Count mismatch state: cycle_seq=%" PRIu64
+                         " retire=%" PRIu64 " next_event=%s"
+                         " next_target=%" PRIu64 " pc=%08" PRIx64
+                         " hflags=%08" PRIx32 " cause=%08" PRIx32
+                         " status=%08" PRIx32 " count=%08" PRIx32
+                         " compare=%08" PRIx32,
+                         s->cpu_cycle_retire_seq, s->retire_count,
+                         next_event, next_target,
+                         (uint64_t)env->active_tc.PC,
+                         (uint32_t)env->hflags,
+                         (uint32_t)env->CP0_Cause,
+                         (uint32_t)env->CP0_Status,
+                         qemu_mips32_soc_ref_cp0_retire_ticks(env),
+                         (uint32_t)env->CP0_Compare);
+        }
         exit(EXIT_FAILURE);
     }
     /* Async interrupt alignment can leave producer-local sequence numbers
@@ -2586,6 +2645,7 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
         qemu_set_irq(s->cpu->env.irq[2], irq_level || s->irq_replay_armed);
         if (s->irq_replay_armed) {
             s->irq_replay_armed = false;
+            s->irq_replay_accept_pending = true;
             bql_lock();
             cpu_interrupt(CPU(s->cpu), CPU_INTERRUPT_HARD);
             bql_unlock();
@@ -2657,8 +2717,13 @@ static void soc_ref_release_scheduled_irq(MIPS32SocRefState *s, CPUState *cpu)
                              (uint32_t)env->CP0_Cause);
                 exit(EXIT_FAILURE);
             }
-            /* The IRQ callback suppresses automatic CPU acceptance during
-             * replay. Deliver the pending timer at its scheduled boundary. */
+            /* The Count/IRQ replay edge already latched Cause.TI, but the
+             * replay path bypassed the native timer callback.  Reassert the
+             * timer input here so QEMU's hardware-pending predicate can
+             * accept the scheduled interrupt at this boundary. */
+            unsigned irq = (env->CP0_IntCtl >> CP0IntCtl_IPTI) & 0x7;
+            qemu_set_irq(env->irq[irq], true);
+            s->irq_replay_accept_pending = true;
             bql_lock();
             cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
             bql_unlock();
@@ -2670,6 +2735,7 @@ static void soc_ref_release_scheduled_irq(MIPS32SocRefState *s, CPUState *cpu)
                 s->cp0_linux_timer_late_suppressed = false;
             }
             qemu_set_irq(env->irq[irq], true);
+            s->irq_replay_accept_pending = true;
             bql_lock();
             cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
             bql_unlock();
@@ -2807,6 +2873,7 @@ static void soc_ref_instruction_tick(CPUState *cpu)
             s->irq_replay_epc = s->cpu->env.active_tc.PC;
             s->irq_replay_epc_fixup = true;
         }
+        s->irq_replay_accept_pending = true;
         bql_lock();
         cpu_interrupt(cpu, CPU_INTERRUPT_HARD);
         bql_unlock();
@@ -2854,12 +2921,19 @@ static void soc_ref_instruction_tick(CPUState *cpu)
         uint64_t early_delta = release_after - s->cpu_cycle_retire_seq;
         pc_lookback = early_delta < SOC_REF_IRQ_PC_HISTORY_SIZE ?
             early_delta + 1 : SOC_REF_IRQ_PC_HISTORY_SIZE - 1;
+        /* A one-tick crossing is the established synchronous-exception
+         * alignment.  Paired RTL/QEMU traces also show measured three- and
+         * five-tick EPC crossings.  Intermediate two-tick crossings were
+         * observed at older replay entries and release the IRQ too early. */
         if (early_delta == 0 ||
-            early_delta > SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS ||
+            (early_delta != 1 &&
+             early_delta != SOC_REF_IRQ_EARLY_RELEASE_EPC_TICKS &&
+             early_delta != SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS) ||
             !typed || !epc_valid ||
             (uint32_t)current_pc != target_epc ||
             soc_ref_irq_pc_seen_recently(s, current_pc, pc_lookback) ||
-            (early_delta == SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS &&
+            ((early_delta == SOC_REF_IRQ_EARLY_RELEASE_EPC_TICKS ||
+              early_delta == SOC_REF_IRQ_EARLY_RELEASE_MAX_TICKS) &&
              soc_ref_irq_pc_path_has_backedge(s, pc_lookback))) {
             return;
         }
@@ -3001,6 +3075,9 @@ void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env)
     }
     soc_ref_record_irq_pc(s, env->active_tc.PC);
     ++s->retire_count;
+    /* The exception record is part of the producer's architectural stream.
+     * Keep the replay coordinate aligned with that record; otherwise every
+     * synchronous exception permanently delays subsequent IRQ boundaries. */
     ++s->cpu_cycle_retire_seq;
     soc_ref_uart_retire_tick(s);
     soc_ref_terminal_shutdown_tick(s);

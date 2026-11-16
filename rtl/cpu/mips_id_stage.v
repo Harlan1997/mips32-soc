@@ -65,6 +65,10 @@ module mips_id_stage (
     // dependent instruction must wait for the corresponding architectural
     // retire edge.
     input  wire [31:0] nb_pending_reg,
+    // Integer destinations of COP1 transfer instructions are written from
+    // the ID-side FPU port.  Keep an immediately following integer consumer
+    // in ID until that direct write is visible in the register file.
+    input  wire [31:0] fpu_gpr_pending_reg,
     
     // Outputs to Pipeline Control / Hazard Unit
     output wire        stall_req,    // Stall request due to load-use hazard
@@ -425,7 +429,14 @@ module mips_id_stage (
                               ((reads_rs && (rs_addr != 5'd0) && nb_pending_reg[rs_addr]) ||
                                (reads_rt && (rt_addr != 5'd0) && nb_pending_reg[rt_addr]));
 
-    assign stall_req = load_use_hazard || wb_use_hazard || nb_pending_hazard;
+    wire fpu_gpr_pending_hazard =
+                              ((reads_rs && (rs_addr != 5'd0) &&
+                                fpu_gpr_pending_reg[rs_addr]) ||
+                               (reads_rt && (rt_addr != 5'd0) &&
+                                fpu_gpr_pending_reg[rt_addr]));
+
+    assign stall_req = load_use_hazard || wb_use_hazard || nb_pending_hazard ||
+                       fpu_gpr_pending_hazard;
     
     // MFC0 carries CP0 reg/sel in rd/low bits. RDHWR is SPECIAL3 rs=0,
     // funct=0x3b; hwreg selector is rd. UserLocal (29) maps to CP0 (4,2),

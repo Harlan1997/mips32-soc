@@ -77,8 +77,11 @@ QEMU_MARKER_WATCHDOG_SECONDS=${QEMU_MARKER_WATCHDOG_SECONDS:-21600}
 QEMU_TERMINAL_DRAIN_SECONDS=${QEMU_TERMINAL_DRAIN_SECONDS:-1}
 # QEMU observes the terminal marker before its producer-local shutdown tail.
 # Forty-two retirements retain the scheduled UART boundary while matching the
-# RTL stream after the comparator's reviewed alignment records are accounted
-# for.
+# current RTL stream after the comparator's reviewed alignment records are
+# accounted for.
+# The RTL terminal monitor emits one producer-only retire record on the
+# cycle after the marker write.  Keep QEMU through that same post-marker
+# boundary so the strict FIFO comparison has a peer for the final RTL record.
 QEMU_TERMINAL_DRAIN_RECORDS=${QEMU_TERMINAL_DRAIN_RECORDS:-42}
 RTL_WATCHDOG_CYCLES=${RTL_WATCHDOG_CYCLES:-1000000000}
 LINUX_VCS_EXTRA_ARGS=${LINUX_VCS_EXTRA_ARGS:-}
@@ -88,6 +91,8 @@ REUSE_CP0_COUNT_SCHEDULE=${REUSE_CP0_COUNT_SCHEDULE:-}
 REUSE_CP0_RANDOM_SCHEDULE=${REUSE_CP0_RANDOM_SCHEDULE:-}
 REUSE_CPU_CYCLE_SCHEDULE=${REUSE_CPU_CYCLE_SCHEDULE:-}
 REUSE_UART_APB_SCHEDULE=${REUSE_UART_APB_SCHEDULE:-}
+REUSE_CP0_TI_PENDING_SCHEDULE=${REUSE_CP0_TI_PENDING_SCHEDULE:-}
+REUSE_CP0_TIMER_TRACE=${REUSE_CP0_TIMER_TRACE:-}
 TERMINAL_MARKER=MIPS32_SOC_LINUX_TERMINAL
 IRQ_SCHEDULE=${RUN_DIR}/rtl_irq_schedule.txt
 IRQ_REPLAY_SCHEDULE=${RUN_DIR}/rtl_irq_replay_schedule.txt
@@ -243,6 +248,34 @@ if [[ -n "${REUSE_UART_APB_SCHEDULE}" ]]; then
 else
     rm -f "${UART_APB_SCHEDULE}"
 fi
+if [[ -n "${REUSE_CP0_TI_PENDING_SCHEDULE}" ]]; then
+    REUSE_CP0_TI_PENDING_SCHEDULE=$(realpath "${REUSE_CP0_TI_PENDING_SCHEDULE}")
+    [[ -s "${REUSE_CP0_TI_PENDING_SCHEDULE}" ]] || {
+        echo "full QEMU closure: reused TI pending schedule is empty or missing" >&2
+        exit 2
+    }
+    [[ "${REUSE_CP0_TI_PENDING_SCHEDULE}" != "${CP0_TI_PENDING_SCHEDULE}" ]] || {
+        echo "full QEMU closure: reused TI pending schedule must be outside RUN_DIR" >&2
+        exit 2
+    }
+    cp -- "${REUSE_CP0_TI_PENDING_SCHEDULE}" "${CP0_TI_PENDING_SCHEDULE}"
+else
+    rm -f "${CP0_TI_PENDING_SCHEDULE}"
+fi
+if [[ -n "${REUSE_CP0_TIMER_TRACE}" ]]; then
+    REUSE_CP0_TIMER_TRACE=$(realpath "${REUSE_CP0_TIMER_TRACE}")
+    [[ -s "${REUSE_CP0_TIMER_TRACE}" ]] || {
+        echo "full QEMU closure: reused CP0 timer trace is empty or missing" >&2
+        exit 2
+    }
+    [[ "${REUSE_CP0_TIMER_TRACE}" != "${CP0_TIMER_TRACE}" ]] || {
+        echo "full QEMU closure: reused CP0 timer trace must be outside RUN_DIR" >&2
+        exit 2
+    }
+    cp -- "${REUSE_CP0_TIMER_TRACE}" "${CP0_TIMER_TRACE}"
+else
+    rm -f "${CP0_TIMER_TRACE}"
+fi
 
 # The complete workload is too large for JSONL files on the available disk.
 # These FIFOs carry every producer record directly into the bounded-memory
@@ -303,19 +336,27 @@ rtl_env=(
     LINUX_OWNER_TRACE_SIM_ARGS="+RETIRE_TRACE_COMPACT_FPR=1 +RETIRE_TRACE_SCHEMA=00020000"
     LINUX_RETIRE_TRACE_FLUSH="${LINUX_RETIRE_TRACE_FLUSH}"
 )
-capture_required=1
-[[ -n "${REUSE_IRQ_SCHEDULE}" ]] || capture_required=1
-[[ -n "${REUSE_CP0_COUNT_SCHEDULE}" ]] || capture_required=1
-[[ -n "${REUSE_CP0_RANDOM_SCHEDULE}" ]] || capture_required=1
-[[ -n "${REUSE_CPU_CYCLE_SCHEDULE}" ]] || capture_required=1
-[[ -n "${REUSE_UART_APB_SCHEDULE}" ]] || capture_required=1
+capture_required=0
+if [[ -z "${REUSE_IRQ_SCHEDULE}" ||
+      -z "${REUSE_CP0_COUNT_SCHEDULE}" ||
+      -z "${REUSE_CP0_RANDOM_SCHEDULE}" ||
+      -z "${REUSE_CPU_CYCLE_SCHEDULE}" ||
+      -z "${REUSE_UART_APB_SCHEDULE}" ||
+      -z "${REUSE_CP0_TI_PENDING_SCHEDULE}" ||
+      -z "${REUSE_CP0_TIMER_TRACE}" ]]; then
+    capture_required=1
+fi
 if (( capture_required )); then
     echo "full QEMU closure: capturing RTL schedules, Count/RDHWR reads, cycle timebase, and UART APB events" >&2
     capture_env=("${rtl_env[@]}")
     capture_log="${RUN_DIR}/rtl_cp0_count_schedule_capture.log"
-    capture_env+=(LINUX_TIMER_PENDING_SCHEDULE_PATH="${CP0_TI_PENDING_SCHEDULE}")
-    capture_env+=(LINUX_TIMER_PENDING_SCHEDULE_START_PC="${ALIGN_FIRST_PC}")
-    capture_env+=(LINUX_TIMER_TRACE_PATH="${CP0_TIMER_TRACE}")
+    if [[ -z "${REUSE_CP0_TI_PENDING_SCHEDULE}" ]]; then
+        capture_env+=(LINUX_TIMER_PENDING_SCHEDULE_PATH="${CP0_TI_PENDING_SCHEDULE}")
+        capture_env+=(LINUX_TIMER_PENDING_SCHEDULE_START_PC="${ALIGN_FIRST_PC}")
+    fi
+    if [[ -z "${REUSE_CP0_TIMER_TRACE}" ]]; then
+        capture_env+=(LINUX_TIMER_TRACE_PATH="${CP0_TIMER_TRACE}")
+    fi
     if [[ -z "${REUSE_CP0_COUNT_SCHEDULE}" ]]; then
         capture_env+=(
             LINUX_RETIRE_TRACE=1

@@ -837,6 +837,8 @@ module mips_cpu #(
     wire [4:0]  id_rt_addr;
     wire [4:0]  id_rd_addr;
     wire [4:0]  id_cp0_raddr;
+    wire [4:0]  ex_cp0_raddr;
+    wire [4:0]  mem_cp0_raddr;
     wire [2:0]  id_cp0_sel;
     wire [2:0]  ex_cp0_sel;
     wire [2:0]  mem_cp0_sel;
@@ -1391,6 +1393,39 @@ module mips_cpu #(
     wire [31:0] fw_wb_val_selected = fpu_gpr_bypass_valid ?
                                       fpu_gpr_bypass_data : rf_wdata_selected;
 
+    // MFC1/MFHC1/CFC1 write the integer register file directly from ID, so
+    // they do not carry an ordinary GPR-write bit through the EX/MEM/WB
+    // registers.  Mark their valid in-flight destinations explicitly for the
+    // next ID instruction.  This closes the branch/ALU consumer window while
+    // retaining the precise exception and FPR-selector decode rules.
+    wire ex_fpu_gpr_transfer = (`SOC_FPU_ENABLE != 0) && ex_flush_valid &&
+                                !ex_except_req &&
+                                (ex_inst[31:26] == 6'b010001) &&
+                                ((ex_inst[25:21] == 5'b00000) ||
+                                 (ex_inst[25:21] == 5'b00011) ||
+                                 ((ex_inst[25:21] == 5'b00010) &&
+                                  ((ex_inst[15:11] == 5'd0) ||
+                                   (ex_inst[15:11] == 5'd25) ||
+                                   (ex_inst[15:11] == 5'd26) ||
+                                   (ex_inst[15:11] == 5'd28) ||
+                                   (ex_inst[15:11] == 5'd31))));
+    wire mem_fpu_gpr_transfer = (`SOC_FPU_ENABLE != 0) && mem_flush_valid &&
+                                 !mem_except_req &&
+                                 (mem_inst[31:26] == 6'b010001) &&
+                                 ((mem_inst[25:21] == 5'b00000) ||
+                                  (mem_inst[25:21] == 5'b00011) ||
+                                  ((mem_inst[25:21] == 5'b00010) &&
+                                   ((mem_inst[15:11] == 5'd0) ||
+                                    (mem_inst[15:11] == 5'd25) ||
+                                    (mem_inst[15:11] == 5'd26) ||
+                                    (mem_inst[15:11] == 5'd28) ||
+                                    (mem_inst[15:11] == 5'd31))));
+    wire [31:0] fpu_gpr_pending_reg =
+        (ex_fpu_gpr_transfer && (ex_inst[20:16] != 5'd0) ?
+         (32'b1 << ex_inst[20:16]) : 32'd0) |
+        (mem_fpu_gpr_transfer && (mem_inst[20:16] != 5'd0) ?
+         (32'b1 << mem_inst[20:16]) : 32'd0);
+
     wire id_is_rdhwr = (id_inst[31:26] == 6'b011111) &&
                        (id_inst[25:21] == 5'b00000) &&
                        ((id_inst[15:11] == 5'd0) || (id_inst[15:11] == 5'd1) ||
@@ -1405,6 +1440,35 @@ module mips_cpu #(
                            ((ex_mem_to_reg == 2'b11) ||
                             (mem_mem_to_reg == 2'b11) ||
                             (wb_mem_to_reg == 2'b11));
+    // COP1 instructions read CU1/FR combinationally from CP0 in ID.  A
+    // preceding MTC0 Status is still in flight while it occupies EX/MEM/WB,
+    // so decoding COP1 in that window would sample the old CU1/FR value and
+    // either raise a false Coprocessor Unusable exception or use the wrong
+    // FPR mode.  Use the stage validity tokens rather than the retained
+    // control bundles; an empty or squashed slot must not stall unrelated
+    // COP1 work.  CP0 writes that already carry an exception cannot commit
+    // and therefore are not hazards for this purpose.
+    wire ex_cp0_status_write = ex_flush_valid && ex_cp0_we &&
+                               !ex_except_req &&
+                               (ex_cp0_raddr == 5'd12) &&
+                               (ex_cp0_sel == 3'd0);
+    wire mem_cp0_status_write = mem_flush_valid && mem_cp0_we &&
+                                !mem_except_req &&
+                                (mem_cp0_raddr == 5'd12) &&
+                                (mem_cp0_sel == 3'd0);
+    wire wb_cp0_status_write = wb_arch_valid && wb_cp0_we &&
+                               !(wb_except_req && wb_arch_valid) &&
+                               (wb_cp0_raddr == 5'd12) &&
+                               (wb_cp0_sel == 3'd0);
+    // The memory forms are decoded separately from ordinary COP1 arithmetic,
+    // but they consume the same CU1 and FR state in ID/EX.  Include them so a
+    // Status write cannot let LWC1/LDC1/SWC1/SDC1 or indexed COP1X memory
+    // observe the pre-write privilege or register-pair mode.
+    wire fpu_cp0_status_hazard = (fpu_id_valid || fpu_mem_id_valid) &&
+                                 id_flush_valid &&
+                                 (ex_cp0_status_write ||
+                                  mem_cp0_status_write ||
+                                  wb_cp0_status_write);
     // A tagged load can leave EX/MEM before its data reaches architectural
     // WB.  Its consumer is not limited to a branch/jump: ordinary ALU,
     // address-generation, store, and CP0-source instructions must also wait
@@ -1427,6 +1491,7 @@ module mips_cpu #(
     assign stall_req_id = stall_req_id_raw | fpu_rf_conflict |
                           fpu_lwc1_hazard |
                           cp0_read_hazard |
+                          fpu_cp0_status_hazard |
                           nb_load_use_hazard;
     
     mips_id_stage u_mips_id_stage (
@@ -1488,6 +1553,7 @@ module mips_cpu #(
         .ex_mem_to_reg (ex_mem_to_reg),
         .mem_mem_to_reg(mem_mem_to_reg),
         .nb_pending_reg(nb_pending_reg),
+        .fpu_gpr_pending_reg(fpu_gpr_pending_reg),
         .stall_req     (stall_req_id_raw),
         
         // Branch & Jump
@@ -1671,7 +1737,6 @@ module mips_cpu #(
     wire [31:0] ex_val_rt;
     wire [31:0] ex_imm_ext;
     wire [4:0]  ex_rd_addr;
-    wire [4:0]  ex_cp0_raddr;
     wire [4:0]  ex_sa;
     
     wire [4:0]  ex_alu_op;
@@ -1864,8 +1929,6 @@ module mips_cpu #(
                   ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h09))) ?
                 fpr[ex_fpu_store_reg] : ex_val_rt;
     wire [4:0]  mem_rd_addr;
-    wire [4:0]  mem_cp0_raddr;
-
     // Only ordinary cacheable loads use the decoupled issue path.  MMU
     // faults, uncached accesses, stores, CACHE operations, and LL/SC remain
     // blocking: the atomic pair needs the established reservation/response

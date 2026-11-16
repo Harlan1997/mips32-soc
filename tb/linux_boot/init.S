@@ -17,6 +17,189 @@ _start:
 	li	$v0, 4005
 	syscall
 	move	$s0, $v0
+	/* Optional user-mode COP1 ABI probe. The default generic image leaves
+	 * this disabled because the baseline RTL profile has no FPU. */
+#if defined(SOC_LINUX_FPU_ABI) || defined(SOC_LINUX_FPU_SIGNAL_ABI) || defined(SOC_LINUX_FPU_LEGACY_SIGNAL_ABI)
+	li	$t0, 0x3f800000		/* 1.0f */
+	mtc1	$t0, $f0
+	li	$t0, 0x40000000		/* 2.0f */
+	mtc1	$t0, $f2
+	add.s	$f4, $f0, $f2
+	/* The opt-in FPU has a three-cycle result latency in this in-order
+	 * pipeline; keep the probe independent of the implementation's FPR
+	 * forwarding schedule. */
+	nop
+	nop
+	nop
+	mfc1	$t1, $f4
+	li	$t2, 0x40400000		/* 3.0f */
+	bne	$t1, $t2, fpu_abi_fail
+	nop
+	/* A syscall and scheduler yield force the kernel to cross the user/kernel
+	 * boundary while the live FPR image remains architecturally observable. */
+	li	$v0, 4162			/* sched_yield */
+	syscall
+	nop
+	/* $t0-$t9 are caller-saved across a syscall. Reload the expected
+	 * result before checking that the kernel preserved the live FPR image. */
+	li	$t2, 0x40400000		/* 3.0f */
+	mfc1	$t1, $f4
+	bne	$t1, $t2, fpu_abi_fail
+	nop
+#endif
+#ifdef SOC_LINUX_FPU_SIGNAL_ABI
+	/* Register a real SA_SIGINFO handler, deliver SIGUSR1 to this task, and
+	 * verify that Linux saves and restores the complete O32 MIPS FP context.
+	 * The handler deliberately changes both an FPR and FCSR; only the
+	 * rt_sigreturn restore path can make the parent values visible again. */
+	la	$t0, fpu_signal_action
+	li	$t1, 8				/* SA_SIGINFO */
+	sw	$t1, 0($t0)
+	la	$t1, fpu_signal_handler
+	sw	$t1, 4($t0)
+	sw	$zero, 8($t0)
+	sw	$zero, 12($t0)
+	sw	$zero, 16($t0)
+	sw	$zero, 20($t0)
+	li	$a0, 16			/* SIGUSR1 */
+	move	$a1, $t0
+	move	$a2, $zero
+	li	$a3, 16			/* sizeof(sigset_t) for MIPS O32 */
+	li	$v0, 4194			/* __NR_rt_sigaction */
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, fpu_abi_fail
+	nop
+	/* Establish parent values that the signal frame must preserve. */
+	li	$t0, 1				/* FCSR.RM = toward zero */
+	ctc1	$t0, $31
+	nop
+	nop
+	nop
+	li	$t0, 0x40400000		/* 3.0f */
+	mtc1	$t0, $f4
+	la	$t1, fpu_signal_seen
+	sw	$zero, 0($t1)
+	la	$t1, fpu_signal_value
+	sw	$zero, 0($t1)
+	la	$t1, fpu_signal_fcsr
+	sw	$zero, 0($t1)
+	li	$v0, 4020			/* __NR_getpid */
+	syscall
+	nop
+	move	$a0, $v0
+	li	$a1, 16			/* SIGUSR1 */
+	li	$v0, 4037			/* __NR_kill */
+	syscall
+	nop
+	la	$t1, fpu_signal_seen
+	lw	$t0, 0($t1)
+	li	$t2, 1
+	bne	$t0, $t2, fpu_abi_fail
+	nop
+	la	$t1, fpu_signal_value
+	lw	$t0, 0($t1)
+	li	$t2, 0x41000000		/* handler observed 8.0f */
+	bne	$t0, $t2, fpu_abi_fail
+	nop
+	la	$t1, fpu_signal_fcsr
+	lw	$t0, 0($t1)
+	li	$t2, 2				/* handler set RM = toward +infinity */
+	bne	$t0, $t2, fpu_abi_fail
+	nop
+	mfc1	$t0, $f4
+	li	$t2, 0x40400000		/* rt_sigreturn restored parent 3.0f */
+	bne	$t0, $t2, fpu_abi_fail
+	nop
+	cfc1	$t0, $31
+	li	$t2, 1				/* rt_sigreturn restored parent FCSR */
+	bne	$t0, $t2, fpu_abi_fail
+	nop
+	li	$a0, 1
+	la	$a1, fpu_signal_success_marker
+	li	$a2, fpu_signal_success_marker_end-fpu_signal_success_marker
+	li	$v0, 4004
+	syscall
+	nop
+#endif
+#ifdef SOC_LINUX_FPU_LEGACY_SIGNAL_ABI
+	/* Request the pre-rt signal frame and sigreturn trampoline through
+	 * rt_sigaction with SA_SIGINFO clear.  Keep this separate from the
+	 * SA_SIGINFO probe so both frame layouts are exercised independently; the
+	 * old O32 signal(2) syscall is unavailable on this kernel. */
+	la	$t0, fpu_legacy_signal_action
+	sw	$zero, 0($t0)			/* sa_flags: legacy frame */
+	la	$t1, fpu_legacy_signal_handler
+	sw	$t1, 4($t0)			/* sa_handler */
+	sw	$zero, 8($t0)
+	sw	$zero, 12($t0)
+	sw	$zero, 16($t0)
+	sw	$zero, 20($t0)			/* compat sigset_t */
+	li	$a0, 17				/* SIGUSR2 */
+	move	$a1, $t0
+	move	$a2, $zero
+	li	$a3, 16				/* sizeof(sigset_t) for MIPS O32 */
+	li	$v0, 4194			/* __NR_rt_sigaction */
+	syscall
+	nop
+	slt	$t1, $v0, $zero
+	bnez	$t1, fpu_legacy_signal_fail
+	nop
+	li	$t0, 1				/* FCSR.RM = toward zero */
+	ctc1	$t0, $31
+	nop
+	nop
+	nop
+	li	$t0, 0x40400000		/* parent 3.0f */
+	mtc1	$t0, $f6
+	nop
+	nop
+	nop
+	la	$t1, fpu_legacy_signal_seen
+	sw	$zero, 0($t1)
+	la	$t1, fpu_legacy_signal_value
+	sw	$zero, 0($t1)
+	la	$t1, fpu_legacy_signal_fcsr
+	sw	$zero, 0($t1)
+	li	$v0, 4020			/* __NR_getpid */
+	syscall
+	nop
+	move	$a0, $v0
+	li	$a1, 17				/* SIGUSR2 */
+	li	$v0, 4037			/* __NR_kill */
+	syscall
+	nop
+	la	$t1, fpu_legacy_signal_seen
+	lw	$t0, 0($t1)
+	li	$t2, 1
+	bne	$t0, $t2, fpu_legacy_signal_fail
+	nop
+	la	$t1, fpu_legacy_signal_value
+	lw	$t0, 0($t1)
+	li	$t2, 0x41000000		/* handler observed 8.0f */
+	bne	$t0, $t2, fpu_legacy_signal_fail
+	nop
+	la	$t1, fpu_legacy_signal_fcsr
+	lw	$t0, 0($t1)
+	li	$t2, 2				/* handler set RM = toward +infinity */
+	bne	$t0, $t2, fpu_legacy_signal_fail
+	nop
+	mfc1	$t0, $f6
+	li	$t2, 0x40400000		/* legacy sigreturn restored parent 3.0f */
+	bne	$t0, $t2, fpu_legacy_signal_fail
+	nop
+	cfc1	$t0, $31
+	li	$t2, 1				/* legacy sigreturn restored parent FCSR */
+	bne	$t0, $t2, fpu_legacy_signal_fail
+	nop
+	li	$a0, 1
+	la	$a1, fpu_legacy_signal_success_marker
+	li	$a2, fpu_legacy_signal_success_marker_end-fpu_legacy_signal_success_marker
+	li	$v0, 4004
+	syscall
+	nop
+#endif
 	/* Consume the deterministic entropy contract through the real Linux
 	 * getrandom(2) syscall.  The returned word is loaded back into a GPR so
 	 * seed changes are visible in the retire trace rather than only in UART. */
@@ -288,6 +471,14 @@ gpio_value_read_data_check:
 	nop
 
 	mprotect_wait_done:
+#ifdef SOC_LINUX_FPU_ABI
+	/* The protected-page child necessarily runs on a separate task context.
+	 * Confirm that returning from wait4 restored PID 1's live FPR image. */
+	mfc1	$t1, $f4
+	li	$t2, 0x40400000		/* 3.0f */
+	bne	$t1, $t2, fpu_abi_fail
+	nop
+#endif
 	move	$a0, $s3
 	li	$a1, 0x5000
 	li	$a2, 3
@@ -476,6 +667,25 @@ gpio_value_read_data_check:
 	lw	$t0, 40($sp)
 	bnez	$t0, fork_fail
 	nop
+#ifdef SOC_LINUX_FPU_ABI
+	/* Both children changed f4 before exec.  A stale shared FPU image would
+	 * leave 8.0f here instead of restoring the parent's 3.0f. */
+	mfc1	$t1, $f4
+	li	$t2, 0x40400000		/* 3.0f */
+	bne	$t1, $t2, fpu_abi_fail
+	nop
+#endif
+#ifdef SOC_LINUX_FPU_ABI
+	/* Emit the ABI success marker only after the parent has reaped both
+	 * children and verified that its live FPR image survived every tested
+	 * scheduler/context boundary. */
+	li	$a0, 1
+	la	$a1, fpu_abi_success_marker
+	li	$a2, fpu_abi_success_marker_end-fpu_abi_success_marker
+	li	$v0, 4004
+	syscall
+	nop
+#endif
 	li	$a0, 1
 	la	$a1, wait_status_success_marker
 	li	$a2, wait_status_success_marker_end-wait_status_success_marker
@@ -487,6 +697,20 @@ gpio_value_read_data_check:
 	li	$a2, boot_marker_end-boot_marker
 
 	fork_child:
+#ifdef SOC_LINUX_FPU_ABI
+	/* Exercise lazy FPU ownership across a real child schedule before exec.
+	 * The parent must retain 3.0f after both children are reaped below. */
+	li	$t0, 0x40800000		/* 4.0f */
+	mtc1	$t0, $f4
+	add.s	$f4, $f4, $f4
+	nop
+	nop
+	nop
+	mfc1	$t1, $f4
+	li	$t2, 0x41000000		/* 8.0f */
+	bne	$t1, $t2, fpu_abi_fail
+	nop
+#endif
 	la	$a0, exec_path
 	la	$a1, exec_argv
 	la	$a2, exec_env
@@ -580,6 +804,90 @@ random_fail:
 	syscall
 	nop
 
+#if defined(SOC_LINUX_FPU_ABI) || defined(SOC_LINUX_FPU_SIGNAL_ABI) || defined(SOC_LINUX_FPU_LEGACY_SIGNAL_ABI)
+fpu_abi_fail:
+	/* Use stdout for the ABI result so a failure in the optional console
+	 * descriptor cannot hide the FPU diagnosis before the generic userspace
+	 * contract begins. */
+	li	$a0, 1
+	la	$a1, fpu_abi_failure_marker
+	li	$a2, fpu_abi_failure_marker_end-fpu_abi_failure_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 1
+	li	$v0, 4001
+	syscall
+	nop
+#endif
+
+#ifdef SOC_LINUX_FPU_SIGNAL_ABI
+	fpu_signal_handler:
+	/* Signal entry supplies a kernel-built frame and a VDSO return address in
+	 * ra.  Change both FP state components, record what the handler observed,
+	 * and return through the kernel's rt_sigreturn trampoline. */
+	li	$t0, 0x41000000		/* 8.0f */
+	mtc1	$t0, $f4
+	nop
+	nop
+	nop
+	mfc1	$t1, $f4
+	la	$t2, fpu_signal_value
+	sw	$t1, 0($t2)
+	li	$t0, 2				/* FCSR.RM = toward +infinity */
+	ctc1	$t0, $31
+	nop
+	nop
+	nop
+	cfc1	$t1, $31
+	la	$t2, fpu_signal_fcsr
+	sw	$t1, 0($t2)
+	li	$t1, 1
+	la	$t2, fpu_signal_seen
+	sw	$t1, 0($t2)
+	jr	$ra
+	nop
+#endif
+
+#ifdef SOC_LINUX_FPU_LEGACY_SIGNAL_ABI
+	fpu_legacy_signal_handler:
+	/* Legacy signal entry returns through the kernel-provided sigreturn
+	 * trampoline in ra.  Mutate both FP state components before returning. */
+	li	$t0, 0x41000000		/* 8.0f */
+	mtc1	$t0, $f6
+	nop
+	nop
+	nop
+	mfc1	$t1, $f6
+	la	$t2, fpu_legacy_signal_value
+	sw	$t1, 0($t2)
+	li	$t0, 2				/* FCSR.RM = toward +infinity */
+	ctc1	$t0, $31
+	nop
+	nop
+	nop
+	cfc1	$t1, $31
+	la	$t2, fpu_legacy_signal_fcsr
+	sw	$t1, 0($t2)
+	li	$t1, 1
+	la	$t2, fpu_legacy_signal_seen
+	sw	$t1, 0($t2)
+	jr	$ra
+	nop
+
+	fpu_legacy_signal_fail:
+	li	$a0, 1
+	la	$a1, fpu_legacy_signal_failure_marker
+	li	$a2, fpu_legacy_signal_failure_marker_end-fpu_legacy_signal_failure_marker
+	li	$v0, 4004
+	syscall
+	nop
+	li	$a0, 1
+	li	$v0, 4001
+	syscall
+	nop
+#endif
+
 vm_fail:
 	move	$a0, $s0
 	la	$a1, vm_fail_marker
@@ -634,6 +942,27 @@ random_success_marker_end:
 	random_failure_marker:
 	.ascii "MIPS32_SOC_LINUX_RANDOM_FAILURE\n"
 random_failure_marker_end:
+#if defined(SOC_LINUX_FPU_ABI) || defined(SOC_LINUX_FPU_SIGNAL_ABI) || defined(SOC_LINUX_FPU_LEGACY_SIGNAL_ABI)
+	fpu_abi_success_marker:
+	.ascii "MIPS32_SOC_LINUX_FPU_ABI_SUCCESS\n"
+	fpu_abi_success_marker_end:
+	fpu_abi_failure_marker:
+	.ascii "MIPS32_SOC_LINUX_FPU_ABI_FAILURE\n"
+	fpu_abi_failure_marker_end:
+#endif
+#ifdef SOC_LINUX_FPU_SIGNAL_ABI
+	fpu_signal_success_marker:
+	.ascii "MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS\n"
+	fpu_signal_success_marker_end:
+#endif
+#ifdef SOC_LINUX_FPU_LEGACY_SIGNAL_ABI
+	fpu_legacy_signal_success_marker:
+	.ascii "MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS\n"
+	fpu_legacy_signal_success_marker_end:
+	fpu_legacy_signal_failure_marker:
+	.ascii "MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE\n"
+	fpu_legacy_signal_failure_marker_end:
+#endif
 	random_newline:
 	.ascii "\n"
 	hex_digits:
@@ -682,6 +1011,29 @@ fork_fail_marker_end:
 	.align 2
 gpio_readback:
 	.space 4
+#ifdef SOC_LINUX_FPU_SIGNAL_ABI
+	.align 2
+fpu_signal_action:
+	.space 24
+fpu_signal_seen:
+	.space 4
+fpu_signal_value:
+	.space 4
+fpu_signal_fcsr:
+	.space 4
+#endif
+#ifdef SOC_LINUX_FPU_LEGACY_SIGNAL_ABI
+	.align 2
+fpu_legacy_signal_action:
+	.space 24
+	.align 2
+fpu_legacy_signal_seen:
+	.space 4
+fpu_legacy_signal_value:
+	.space 4
+fpu_legacy_signal_fcsr:
+	.space 4
+#endif
 random_word:
 	.space 4
 random_echo:

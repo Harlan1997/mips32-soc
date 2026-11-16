@@ -35,6 +35,154 @@ main:
     nop
     nop
     nop
+    /* CP0 Status is consumed combinationally by COP1 memory decode.  Exercise
+     * each memory form across a CU1/FR transition so the instruction cannot
+     * observe the previous Status image while MTC0 is still in flight. */
+    lui     $t0, 0x3f80
+    ori     $t0, $t0, 0x0000       /* 1.0f */
+    lui     $t1, 0x4000
+    ori     $t1, $t1, 0x0000       /* 2.0f */
+    lui     $t8, 0x0000
+    ori     $t8, $t8, 0x8000       /* behavioral DDR window */
+    sw      $t0, 0($t8)
+    sw      $t1, 4($t8)
+    sw      $t0, 8($t8)
+    sw      $t1, 12($t8)
+    sw      $t0, 32($t8)
+    sw      $t1, 36($t8)
+
+    mfc0    $t9, $12
+    lui     $t7, 0x2000
+    or      $t9, $t9, $t7         /* CU1=1, FR=0 */
+    lui     $t7, 0xdfff
+    and     $t6, $t9, $t7         /* CU1=0, FR=0 */
+    lui     $t7, 0x2400
+    or      $t5, $t6, $t7         /* CU1=1, FR=1 */
+    or      $t3, $t9, $zero        /* preserve CU1=1, FR=0 across index setup */
+
+    /* CU1 transition immediately before LWC1. */
+    mtc0    $t3, $12
+    lwc1    $f10, 0($t8)
+    mfc1    $t4, $f10
+    addiu   $s0, $zero, 1
+    bne     $t4, $t0, fail
+    nop
+
+    /* FR=1 transition immediately before LDC1.  In FR=1 the high word is
+     * stored in fpr_hi[12], leaving the odd FPR 13 unchanged. */
+    sw      $t0, 8($t8)
+    sw      $t1, 12($t8)
+    mtc0    $t6, $12
+    nop
+    nop
+    nop
+    mtc0    $t5, $12
+    ldc1    $f12, 0($t8)
+    mfc1    $t4, $f12
+    addiu   $s0, $zero, 2
+    bne     $t4, $t0, fail
+    nop
+    .word   0x440c6800             /* mfc1 $t4,$f13 */
+    addiu   $s0, $zero, 3
+    bne     $t4, $zero, fail
+    nop
+
+    /* Change the source high word while FR=1, then transition to FR=0 before
+     * SDC1.  Correct FR handling selects odd FPR 13; stale FR would select the
+     * zero high half in fpr_hi[12]. */
+    .word   0x44e06000             /* mthc1 $zero,$f12 */
+    mtc0    $t3, $12
+    .word   0x44896800             /* mtc1 $t1,$f13 */
+    sdc1    $f12, 16($t8)
+    lw      $t4, 16($t8)
+    addiu   $s0, $zero, 4
+    bne     $t4, $t0, fail
+    nop
+    lw      $t4, 20($t8)
+    addiu   $s0, $zero, 5
+    bne     $t4, $t1, fail
+    nop
+
+    /* SWC1 and the indexed COP1X memory forms each cross a disabled-to-enabled
+     * CU1 transition. */
+    .word   0x44891000             /* mtc1 $t1,$f2 */
+    mtc0    $t6, $12
+    nop
+    nop
+    nop
+    mtc0    $t3, $12
+    swc1    $f2, 24($t8)
+    lw      $t4, 24($t8)
+    addiu   $s0, $zero, 6
+    bne     $t4, $t1, fail
+    nop
+
+    addiu   $t9, $zero, 32         /* indexed offset */
+    mtc0    $t6, $12
+    nop
+    nop
+    nop
+    mtc0    $t3, $12
+    .word   0x4f197000             /* lwxc1  $f14,$t9($t8) */
+    mfc1    $t4, $f14
+    addiu   $s0, $zero, 7
+    bne     $t4, $t0, fail
+    nop
+
+    mtc0    $t6, $12
+    nop
+    nop
+    nop
+    mtc0    $t3, $12
+    .word   0x4f198001             /* ldxc1  $f16,$t9($t8) */
+    mfc1    $t4, $f16
+    addiu   $s0, $zero, 8
+    bne     $t4, $t0, fail
+    nop
+    .word   0x440c8800             /* mfc1 $t4,$f17 */
+    addiu   $s0, $zero, 9
+    bne     $t4, $t1, fail
+    nop
+
+    mtc0    $t6, $12
+    nop
+    nop
+    nop
+    mtc0    $t3, $12
+    .word   0x4f191008             /* swxc1  $f2,$t9($t8) */
+    lw      $t4, 32($t8)
+    addiu   $s0, $zero, 10
+    bne     $t4, $t1, fail
+    nop
+
+    mtc0    $t6, $12
+    nop
+    nop
+    nop
+    sw      $t0, 8($t8)
+    sw      $t1, 12($t8)
+    mtc0    $t3, $12
+    addiu   $t9, $zero, 8          /* use a known initialized word pair */
+    .word   0x440c6800             /* mfc1 $t4,$f13 */
+    addiu   $s0, $zero, 13
+    bne     $t4, $t1, fail
+    nop
+    .word   0x4f196009             /* sdxc1  $f12,$t9($t8) */
+    lw      $t4, 8($t8)
+    addiu   $s0, $zero, 11
+    bne     $t4, $t0, fail
+    nop
+    lw      $t4, 12($t8)
+    addiu   $s0, $zero, 12
+    bne     $t4, $t1, fail
+    nop
+
+    /* Return to the original CU1=1, FR=0 state before the existing corpus. */
+    mtc0    $t3, $12
+    nop
+    nop
+    nop
+
     mfc0    $t8, $16, 1        /* Config1.FP advertises the enabled COP1 unit */
     andi    $t8, $t8, 1
     beq     $t8, $zero, fail
@@ -163,6 +311,10 @@ main:
     ctc1    $t5, $31
     nop
     nop
+    /* Use equal operands so C.EQ.S must set the selected non-zero FCC. */
+    lui     $t1, 0x4000
+    ori     $t1, $t1, 0x0000
+    mtc1    $t1, $f0
     .word   0x46020332       /* c.eq.s cc=3, $f0, $f2 */
     addu    $t3, $zero, $zero
     .word   0x012d5801       /* movt $t3,$t1,cc=3 (rt=cc<<2|tf) */
@@ -789,6 +941,16 @@ main:
     nop
 
 fail:
+    move    $s1, $t4
+    la      $a0, fpu_status_mem_fail_msg
+    jal     print_str
+    nop
+    move    $a0, $s0
+    jal     print_hex
+    nop
+    move    $a0, $s1
+    jal     print_hex
+    nop
     lui     $t7, 0xa000
     ori     $t7, $t7, 0xfffc
     lui     $t6, 0xbad0
@@ -846,6 +1008,8 @@ fpu_pass_msg:
     .asciz "FPU PASS\n"
 fpu_fail_msg:
     .asciz "FPU FAIL\n"
+fpu_status_mem_fail_msg:
+    .asciz "FPU STATUS MEM FAIL code="
 fpu_conversion_fail_msg:
     .asciz "FPU CONV FAIL\n"
 fpu_conversion_result_fail_msg:

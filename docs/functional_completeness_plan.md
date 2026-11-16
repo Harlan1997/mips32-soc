@@ -1,5 +1,103 @@
 # SoC 功能完整性计划
 
+### 2026-11-16 RTL/QEMU Linux legacy FPU signal-frame restore slice
+
+The opt-in `SOC_LINUX_FPU_LEGACY_SIGNAL_ABI` guest probe now registers an O32
+handler through `rt_sigaction` with `sa_flags=0`, which selects the legacy
+signal-frame layout on this kernel because the old O32 `signal(2)` syscall is
+unavailable. The handler changes an FPR and FCSR, and the guest verifies that
+the legacy `sigreturn` path restores both parent values. The corrected
+RTL-minimal image passed the reference QEMU terminal closure with exactly one
+`MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS` marker and one terminal marker.
+The matching RTL gate passed its 50,000,000-cycle bound with exactly one legacy
+success marker, zero legacy failure markers, and one terminal marker. Evidence
+is retained under
+`/data/disk/tmp/mips32-soc/fpu-legacy-signal-rtl-minimal-20261116/{qemu,rtl-v3}/`.
+This closes the selected legacy O32 signal-frame restore probe only; alternate
+signal frames, complete lazy-FPU ownership, full COP1/IEEE-754 compliance, and
+unrestricted Linux ABI semantics remain open.
+
+### 2026-11-16 RTL/QEMU Linux FPU signal-frame restore slice
+
+The opt-in `SOC_LINUX_FPU_SIGNAL_ABI` guest probe now registers an O32
+`SA_SIGINFO` handler, delivers `SIGUSR1` through `rt_sigaction`/`kill`, changes
+an FPR and FCSR inside the handler, and verifies that the kernel's
+`rt_sigreturn` path restores both parent values. The same relocated kernel and
+image passed the reference QEMU terminal workload with exactly one
+`MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS` marker. The RTL gate passed the 50,000,000
+cycle bound with exactly one signal success marker, zero signal failure
+markers, and a clean terminal marker. Evidence is retained under
+`/data/disk/tmp/mips32-soc/fpu-signal-abi-qemu-relocated-20261116/` and
+`/data/disk/tmp/mips32-soc/fpu-signal-abi-rtl-20261116/`. This closes the
+selected O32 signal-frame FPU restore probe only; alternate signal frames,
+complete lazy-FPU policy, full COP1/IEEE-754 compliance, and unrestricted
+Linux ABI semantics remain open.
+
+### 2026-11-16 RTL Linux FPU ABI scheduler/context slice
+
+The opt-in `SOC_LINUX_FPU_ABI` guest probe now emits its success marker only
+after completing the live-FPR checks across `sched_yield`, the protected-page
+`wait4` path, and the two-child fork/exec/reap path. The current-source RTL
+gate passed 50,000,000 cycles with one Linux boot marker, one
+`MIPS32_SOC_LINUX_FPU_ABI_SUCCESS` marker, and no FPU failure marker. Evidence
+is retained under
+`/data/disk/tmp/mips32-soc/fpu-linux-abi-current-20261116-r5/`. This closes
+the selected Linux FPU scheduler/context probe only; signal-frame ownership,
+complete lazy-FPU policy, full COP1 compliance, and unrestricted IEEE-754
+coverage remain open.
+
+### 2026-11-16 Current-source nonblocking Linux RTL/QEMU terminal closure
+
+The clean current-source nonblocking run completed the declared Linux
+userspace workload through `MIPS32_SOC_LINUX_TERMINAL` and passed the strict
+streaming RTL/QEMU comparator. Evidence is retained under
+`/data/disk/tmp/mips32-soc/full-qemu-nb-current-src-20261115-r11/`.
+`TRACE_COMPARE_PASS records=66911669` compared 66,911,669 QEMU records;
+RTL produced 66,911,710 records, with the documented 23 boot-prefix and 18
+synchronous-exception redirect RTL-only records. QEMU exited cleanly and all
+1,440 IRQ, 1,408 timer-pending, 12,647 Count, 125 Random, and 16,702 UART APB
+schedule entries were consumed. This closes the declared generic Linux
+nonblocking terminal workload. Unrestricted Linux semantics and complete
+ISA/privileged/FPU/MMU/OS product signoff remain separate scope.
+
+### 2026-11-14 Current-source QEMU Linux terminal closure
+
+The current-source QEMU 9.2 reference machine completed the declared Linux
+workload through the terminal marker with 66,158,773 retired instructions.
+Validation found all 12 required markers, exactly one terminal marker, and
+8,649 UART bytes. Evidence is retained under
+`/data/disk/tmp/mips32-soc/qemu-terminal-current-20261114-r1/`. This is QEMU
+terminal evidence only; the current-source RTL/QEMU nonblocking differential
+and unrestricted Linux semantics remain open.
+
+### 2026-11-14 CP0 privilege, exception, delay-slot, and WAIT slice
+
+The current source passes the direct CP0 timer/Status regression, 13-valid and
+22-reserved COP0 decoder checks, comprehensive CPU/CP0 firmware, user-mode
+DI/EI, WAIT wakeup, integer overflow/exception, and branch-delay exception
+RTL/QEMU differentials. This is a bounded privileged slice. The full
+privileged instruction matrix, Linux context ownership, and unrestricted
+interrupt/replay semantics remain open.
+
+### 2026-11-14 ISA-MEM LL/SC, CACHE/SYNCI, and WAIT boundary slice
+
+The current source passes the LL/SC firmware and strict RTL/QEMU comparison
+(320 records), CACHE/SYNC/PREF decoder and maintenance gates, I-cache tag and
+SYNCI behavior, and the CP0 timer/WAIT differential (19 compared records with
+one documented RTL pre-vector record). This is a bounded memory and ordering
+slice. Full arbitrary outstanding-order policy, all merge/replay faults,
+physical interrupt ordering, and Linux memory ABI semantics remain open.
+
+### 2026-11-14 FPU CU1/FR memory and transfer hazard slice
+
+The current CPU hazard guards now cover direct MFC1/MFHC1/CFC1 GPR consumers
+and COP1 memory decode while Status.CU1/FR writes are in flight. The real
+`fpu-single` firmware gate reports `FPU PASS`; strict current-source
+RTL/QEMU retire differentials pass for the single (1,762 records), double
+(570), directed-rounding (955), and CU1 exception (23) workloads. This is a
+bounded FPU integration slice. Linux lazy-FPU/signal-frame ABI, complete COP1
+compliance, and unrestricted IEEE-754 coverage remain open.
+
 ### 2026-11-13 CP0 nested delay-slot exception ownership
 
 Nested synchronous exceptions now preserve the original EPC when `EXL=1`,

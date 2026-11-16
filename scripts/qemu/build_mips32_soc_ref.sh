@@ -49,7 +49,9 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-random-schedule.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-count-destination.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rdhwr-count.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-wait-reserved-fields.patch" |
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-wait-reserved-fields.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-irq-replay-gate.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-irq-replay-priority.patch" |
         sha256sum | awk '{print $1}'
 }
 
@@ -276,6 +278,22 @@ bool qemu_mips32_soc_ref_irq_replay_active(void) __attribute__((weak));' \
             return;\
         }' "${QEMU_SRC}/hw/mips/mips_int.c"
 fi
+
+if ! rg -q 'SOC_REF_IRQ_REPLAY_GATE' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-irq-replay-gate.patch"
+fi
+rg -q 'SOC_REF_IRQ_REPLAY_GATE' \
+    "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
+
+if ! rg -q 'SOC_REF_IRQ_REPLAY_PRIORITY' \
+        "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-irq-replay-priority.patch"
+fi
+rg -q 'SOC_REF_IRQ_REPLAY_PRIORITY' \
+    "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 
 if ! rg -q 'qemu_mips32_soc_ref_interrupt_fixup' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/#include "exec\/helper-proto.h"/a\
