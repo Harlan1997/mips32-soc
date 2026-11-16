@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-11-16 BadVAddr owner context identity
+
+The D-side translation-fault owner token now carries the access direction and
+the CP0 ASID captured with the fault. A WB exception must match PC,
+instruction, virtual address, exception code, store/load direction, and ASID
+before its address can update CP0 BadVAddr. Scheduler context restore clears
+the token before WB matching, preventing a stale fault from crossing an
+address-space switch. The fresh `cpu-badvaddr-owner-gate` reports
+`BADVADDR_OWNER_TRACE_PASS captures=15 commits=14 squashes=1`; the CPU/CP0
+firmware gate also passes. Reset, interrupt-coincident, ERET, and broad replay
+pressure remain outside this bounded owner slice.
+
 ### 2026-11-16 CP0 nested TLB write ownership
 
 `TLBWI` and `TLBWR` now suppress their TLB-array write whenever the same

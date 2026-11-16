@@ -4,6 +4,17 @@ Plan date: 2026-09-20
 
 Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / NONBLOCKING FULL DIFFERENTIAL BOUNDED PASS`
 
+### 2026-11-16 BadVAddr owner context identity recheck
+
+The D-side fault token now includes store/load direction and the CP0 ASID at
+capture. The WB commit match requires those fields alongside PC, instruction,
+virtual address, and exception code. A scheduler context restore clears the
+token before matching, so a fault cannot cross an address-space switch. The
+fresh owner gate passes with `captures=15 commits=14 squashes=1`, and the
+CPU/CP0 firmware gate passes. This advances Phase 1 owner identity for the
+bounded refill workload; reset, interrupt-coincident, ERET, and broad replay
+pressure are still outside the closure claim.
+
 ### 2026-11-16 Retire FIFO producer root cause and current-source recheck
 
 The earlier discontinuity in

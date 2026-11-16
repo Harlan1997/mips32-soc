@@ -8,13 +8,15 @@ import sys
 CAPTURE = re.compile(
     r"^D_FAULT_OWNER_CAPTURE\s+cycle=(?P<cycle>\d+)\s+"
     r"pc=(?P<pc>[0-9a-fA-F]{8})\s+inst=(?P<inst>[0-9a-fA-F]{8})\s+"
-    r"va=(?P<va>[0-9a-fA-F]{8})\s+code=(?P<code>\d+)$"
+    r"va=(?P<va>[0-9a-fA-F]{8})\s+code=(?P<code>\d+)\s+"
+    r"write=(?P<write>[01])\s+asid=(?P<asid>[0-9a-fA-F]{2})$"
 )
 COMMIT = re.compile(
     r"^D_FAULT_OWNER_COMMIT\s+cycle=(?P<cycle>\d+)\s+"
     r"pc=(?P<pc>[0-9a-fA-F]{8})\s+inst=(?P<inst>[0-9a-fA-F]{8})\s+"
     r"va=(?P<va>[0-9a-fA-F]{8})\s+code=(?P<code>\d+)\s+"
-    r"cp0_bad=(?P<bad>[0-9a-fA-F]{8})\s+match=(?P<match>[01])$"
+    r"cp0_bad=(?P<bad>[0-9a-fA-F]{8})\s+match=(?P<match>[01])\s+"
+    r"write=(?P<write>[01])\s+asid=(?P<asid>[0-9a-fA-F]{2})$"
 )
 SQUASH = re.compile(r"^D_FAULT_OWNER_SQUASH\s+.*$")
 
@@ -54,6 +56,12 @@ def check(path):
             raise ValueError(
                 f"CP0 BadVAddr mismatch: owner VA {commit['va']} vs CP0 {commit['bad']}"
             )
+        identity = tuple(commit[field].lower() for field in
+                         ("pc", "inst", "va", "code", "write", "asid"))
+        if not any(tuple(c[field].lower() for field in
+                        ("pc", "inst", "va", "code", "write", "asid")) == identity
+                   for c in captures):
+            raise ValueError("owner commit identity did not match a captured fault")
     print(
         f"BADVADDR_OWNER_TRACE_PASS captures={len(captures)} "
         f"commits={len(commits)} squashes={squashes}"

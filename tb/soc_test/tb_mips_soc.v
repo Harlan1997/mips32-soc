@@ -486,29 +486,33 @@ module tb_mips_soc;
             d_fault_owner_trace_count < 4096) begin
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translation_fault &&
                 !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q) begin
-                $display("D_FAULT_OWNER_CAPTURE cycle=%0d pc=%08h inst=%08h va=%08h code=%0d",
+                $display("D_FAULT_OWNER_CAPTURE cycle=%0d pc=%08h inst=%08h va=%08h code=%0d write=%b asid=%02h",
                     d_fault_owner_trace_count,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_inst,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_access_addr,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_capture_code);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_capture_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid);
                 d_fault_owner_trace_count = d_fault_owner_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match) begin
-                $display("D_FAULT_OWNER_COMMIT cycle=%0d pc=%08h inst=%08h va=%08h code=%0d cp0_bad=%08h match=%b",
+                $display("D_FAULT_OWNER_COMMIT cycle=%0d pc=%08h inst=%08h va=%08h code=%0d cp0_bad=%08h match=%b write=%b asid=%02h",
                     d_fault_owner_trace_count,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_q,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.bad_vaddr,
-                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match);
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid);
                 d_fault_owner_trace_count = d_fault_owner_trace_count + 1;
             end
             if (u_soc.u_impl.u_core_subsystem.u_core.u_cpu.exception_flush &&
                 u_soc.u_impl.u_core_subsystem.u_core.u_cpu.dmem_translation_fault &&
                 !u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_match) begin
-                $display("D_FAULT_OWNER_SQUASH cycle=%0d owner_pc=%08h owner_inst=%08h owner_va=%08h owner_code=%0d wb_pc=%08h wb_inst=%08h wb_code=%0d",
+                $display("D_FAULT_OWNER_SQUASH cycle=%0d owner_pc=%08h owner_inst=%08h owner_va=%08h owner_code=%0d owner_write=%b owner_asid=%02h wb_pc=%08h wb_inst=%08h wb_code=%0d",
                     d_fault_owner_trace_count,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_pc_q :
@@ -522,6 +526,12 @@ module tb_mips_soc;
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_code_q :
                         u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_capture_code,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_write_q :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.mem_mem_write,
+                    u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_vaddr_pending_q ?
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.d_fault_owner_asid_q :
+                        u_soc.u_impl.u_core_subsystem.u_core.u_cpu.cp0_asid,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_inst,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_except_code);

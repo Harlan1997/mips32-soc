@@ -157,6 +157,10 @@ module mips_cpu #(
     wire [31:0] mem_ex_out_wb;
     wire        mem_cache_op_valid;
     wire [31:0] mem_inst;
+    // WB memory metadata is also part of the D-fault owner identity. Declare
+    // it with the other forward references because the owner token is formed
+    // before the retirement-buffer wiring below.
+    wire        wb_mem_write_trace;
     wire        mem_double_mem = (`SOC_FPU_ENABLE != 0) &&
                                  ((mem_inst[31:26] == 6'b110101) ||
                                   (mem_inst[31:26] == 6'b111101) ||
@@ -1985,12 +1989,16 @@ module mips_cpu #(
     reg [31:0] d_fault_owner_pc_q;
     reg [31:0] d_fault_owner_inst_q;
     reg [4:0]  d_fault_owner_code_q;
+    reg        d_fault_owner_write_q;
+    reg [7:0]  d_fault_owner_asid_q;
     wire d_fault_owner_match = d_fault_vaddr_pending_q &&
                                wb_except_req && wb_arch_valid &&
                                wb_except_is_data &&
                                (wb_pc_plus_8 - 32'd8) == d_fault_owner_pc_q &&
                                wb_inst == d_fault_owner_inst_q &&
-                               wb_except_code == d_fault_owner_code_q;
+                               wb_except_code == d_fault_owner_code_q &&
+                               wb_mem_write_trace == d_fault_owner_write_q &&
+                               cp0_asid == d_fault_owner_asid_q;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             d_fault_vaddr_pending_q <= 1'b0;
@@ -1998,11 +2006,19 @@ module mips_cpu #(
             d_fault_owner_pc_q      <= 32'd0;
             d_fault_owner_inst_q    <= 32'd0;
             d_fault_owner_code_q    <= 5'd0;
+            d_fault_owner_write_q   <= 1'b0;
+            d_fault_owner_asid_q    <= 8'd0;
+        end else if (ctx_restore_req) begin
+            // A scheduler restore changes the architectural address space and
+            // flushes all in-flight instructions. Clear the token before
+            // evaluating a coincident WB bundle so the incoming task cannot
+            // consume stale fault metadata.
+            d_fault_vaddr_pending_q <= 1'b0;
         end else if (d_fault_owner_match) begin
             // CP0 samples bad_vaddr combinationally before this edge. Clear
             // the consumed token only after its owning exception commits.
             d_fault_vaddr_pending_q <= 1'b0;
-        end else if ((wb_is_eret && wb_commit_valid) || ctx_restore_req) begin
+        end else if (wb_is_eret && wb_commit_valid) begin
             d_fault_vaddr_pending_q <= 1'b0;
         end else if (exception_flush) begin
             // Any flush that is not the matching data exception proves that
@@ -2022,6 +2038,8 @@ module mips_cpu #(
             d_fault_owner_pc_q      <= mem_pc;
             d_fault_owner_inst_q    <= mem_inst;
             d_fault_owner_code_q    <= d_fault_capture_code;
+            d_fault_owner_write_q   <= mem_mem_write;
+            d_fault_owner_asid_q    <= cp0_asid;
         end
     end
 
@@ -2048,15 +2066,25 @@ module mips_cpu #(
 
     property p_d_fault_owner_stable;
         @(posedge clk) disable iff (!rst_n)
-            (d_fault_vaddr_pending_q && !exception_flush) |=>
+            (d_fault_vaddr_pending_q && !exception_flush &&
+             !ctx_restore_req) |=>
                 d_fault_vaddr_pending_q &&
                 $stable(d_fault_vaddr_q) &&
                 $stable(d_fault_owner_pc_q) &&
                 $stable(d_fault_owner_inst_q) &&
-                $stable(d_fault_owner_code_q);
+                $stable(d_fault_owner_code_q) &&
+                $stable(d_fault_owner_write_q) &&
+                $stable(d_fault_owner_asid_q);
     endproperty
     assert property (p_d_fault_owner_stable)
         else $error("pending D fault owner changed before commit or squash");
+
+    property p_d_fault_context_restore_clear;
+        @(posedge clk) disable iff (!rst_n)
+            (ctx_restore_req && d_fault_vaddr_pending_q) |=> !d_fault_vaddr_pending_q;
+    endproperty
+    assert property (p_d_fault_context_restore_clear)
+        else $error("context restore retained a stale D fault owner");
 
     property p_d_fault_capture_has_owner;
         @(posedge clk) disable iff (!rst_n)
@@ -2081,7 +2109,9 @@ module mips_cpu #(
             d_fault_owner_match |->
                 ((wb_pc_plus_8 - 32'd8) == d_fault_owner_pc_q) &&
                 (wb_inst == d_fault_owner_inst_q) &&
-                (wb_except_code == d_fault_owner_code_q);
+                (wb_except_code == d_fault_owner_code_q) &&
+                (wb_mem_write_trace == d_fault_owner_write_q) &&
+                (cp0_asid == d_fault_owner_asid_q);
     endproperty
     assert property (p_d_fault_matching_commit_identity)
         else $error("matching data exception lost its D fault owner identity");
@@ -2349,7 +2379,6 @@ module mips_cpu #(
     wire [31:0] wb_rdata_fmt;
     wire [31:0] wb_ex_out;
     wire        wb_mem_read_trace;
-    wire        wb_mem_write_trace;
     wire [2:0]  wb_mem_op_trace;
     reg  [31:0] completed_load_data;
 
