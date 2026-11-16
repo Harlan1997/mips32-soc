@@ -131,8 +131,8 @@ module tb_mips_cpu_badvaddr_owner_context;
 
     task automatic capture_unaligned_owner;
         begin
-            // The MMU sees the second aligned word beat, while BadVAddr must
-            // retain the byte address that the LUXC1/SUXC1 instruction formed.
+            // The MMU sees an aligned word beat, and LUXC1/SUXC1 ignore the
+            // low three effective-address bits before forming that access.
             force u_cpu.dmem_translation_fault = 1'b1;
             force u_cpu.exception_flush = 1'b0;
             force u_cpu.wb_except_req = 1'b0;
@@ -149,8 +149,8 @@ module tb_mips_cpu_badvaddr_owner_context;
             #1;
             if (!u_cpu.d_fault_vaddr_pending_q)
                 fail("unaligned fault owner was not captured");
-            if (u_cpu.d_fault_vaddr_q !== 32'h0040_2041)
-                fail("unaligned fault captured the aligned beat instead of the effective address");
+            if (u_cpu.d_fault_vaddr_q !== 32'h0040_2040)
+                fail("COP1X fault owner did not retain the aligned effective address");
             release u_cpu.dmem_translation_fault;
             release u_cpu.exception_flush;
             release u_cpu.wb_except_req;
