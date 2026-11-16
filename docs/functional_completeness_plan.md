@@ -56,6 +56,17 @@ broader cross-page fault behavior remain separate open coverage for this
 partial COP1X contract; the selected first/second-beat boundary is covered by
 the focused gate below.
 
+### 2026-11-17 COP1X reverse-endian beat ordering and fault boundary
+
+The COP1X doubleword path now keeps the original virtual beat address for MMU
+translation and toggles physical address bit 2 after translation when
+Status.RE is effective. This swaps the two aligned word beats for LUXC1,
+SUXC1, LDXC1, and SDXC1 without changing TLB ownership or BadVAddr. The
+focused CPU gate checks native and reverse-endian beat addresses, and
+continues to pass the first/second-beat atomicity checks below. This is
+RTL-only evidence because the project QEMU reference does not model the
+project-specific user reverse-endian COP1X contract.
+
 ### 2026-11-17 COP1X first/second beat fault boundary
 
 The focused `cpu-cop1x-fault-boundary-gate` drives the two-beat MEM handshake
@@ -65,8 +76,7 @@ the second beat discards the buffered low word without committing either FPR
 word. The paired `SUXC1` check confirms both clean beats are complete aligned
 word stores and that a faulting second beat suppresses its external store
 request. This closes the selected atomic commit/request boundary only;
-cross-page MMU ownership, reverse-endian behavior, and unrestricted COP1X
-semantics remain open.
+ cross-page MMU ownership and unrestricted COP1X semantics remain open.
 
 ### 2026-11-16 Focus differential complete-GPR checker hardening
 

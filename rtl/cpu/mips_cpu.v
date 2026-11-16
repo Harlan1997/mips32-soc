@@ -3553,10 +3553,15 @@ module mips_cpu #(
 
     assign inst_addr = canonical_linux_phys_addr(mmu_i_pa);
 
-    // The MMU receives the raw effective VA so page-boundary accesses fault
-    // on the correct page.  The external D-cache contract remains word
-    // aligned, so discard only the byte offset after translation.
-    assign data_addr = canonical_linux_phys_addr({mmu_d_pa[31:2], 2'b00});
+    // The MMU receives the original effective VA so page-boundary accesses
+    // fault on the correct page.  Reverse-endian doubleword references swap
+    // the two translated word beats by toggling physical address bit 2;
+    // applying the toggle after translation keeps TLB ownership and BadVAddr
+    // tied to the architectural virtual address.
+    wire [31:0] data_phys_word_addr = {mmu_d_pa[31:2], 2'b00} ^
+                                      ((cpu_reverse_endian && mem_double_mem) ?
+                                       32'd4 : 32'd0);
+    assign data_addr = canonical_linux_phys_addr(data_phys_word_addr);
 
     // A fixed integration root remains the compatibility override.  A zero
     // root selects Context.PTEBase so an OS can change the page-table root

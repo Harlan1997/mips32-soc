@@ -149,6 +149,49 @@ module tb_mips_cpu_cop1x_fault_boundary;
         end
     endtask
 
+    task automatic check_reverse_endian_beats;
+        begin
+            // Status.RE changes the physical word beat order only after the
+            // original virtual address has been translated.  Keep the MMU
+            // result fixed and check the externally visible D-side address.
+            force u_cpu.mem_inst = 32'h4f19_4005; // LUXC1 $f8, index($t8)
+            force u_cpu.mem_mem_read = 1'b1;
+            force u_cpu.mem_mem_write = 1'b0;
+            force u_cpu.mem_mem_op = 3'b100;
+            force u_cpu.mmu_d_pa = 32'h0040_2040;
+            force u_cpu.cpu_reverse_endian = 1'b0;
+            force u_cpu.mem_double_phase = 2'd0;
+            #1;
+            if (u_cpu.data_addr !== 32'h0040_2040)
+                fail("native-endian first COP1X beat address changed");
+            force u_cpu.mmu_d_pa = 32'h0040_2044;
+            force u_cpu.mem_double_phase = 2'd1;
+            #1;
+            if (u_cpu.data_addr !== 32'h0040_2044)
+                fail("native-endian second COP1X beat address changed");
+
+            force u_cpu.cpu_reverse_endian = 1'b1;
+            force u_cpu.mmu_d_pa = 32'h0040_2040;
+            force u_cpu.mem_double_phase = 2'd0;
+            #1;
+            if (u_cpu.data_addr !== 32'h0040_2044)
+                fail("reverse-endian first COP1X beat did not swap bit 2");
+            force u_cpu.mmu_d_pa = 32'h0040_2044;
+            force u_cpu.mem_double_phase = 2'd1;
+            #1;
+            if (u_cpu.data_addr !== 32'h0040_2040)
+                fail("reverse-endian second COP1X beat did not swap bit 2");
+
+            release u_cpu.mem_inst;
+            release u_cpu.mem_mem_read;
+            release u_cpu.mem_mem_write;
+            release u_cpu.mem_mem_op;
+            release u_cpu.mmu_d_pa;
+            release u_cpu.cpu_reverse_endian;
+            release u_cpu.mem_double_phase;
+        end
+    endtask
+
     task automatic check_fpr(input [31:0] low, input [31:0] high,
                              input [1023:0] reason);
         begin
@@ -219,6 +262,8 @@ module tb_mips_cpu_cop1x_fault_boundary;
         release u_cpu.mem_double_phase;
         release_cpu_mem();
 
+        check_reverse_endian_beats();
+
         // SUXC1 store request: both clean beats are full words, and a fault on
         // beat 1 suppresses that request entirely.
         #1;
@@ -237,7 +282,7 @@ module tb_mips_cpu_cop1x_fault_boundary;
             fail("faulting SUXC1 beat still issued a store request");
 
         if (failures == 0)
-            $display("COP1X_FAULT_BOUNDARY_PASS first_fault=1 second_fault=1 fpr_atomic=1 store_blocked=1");
+            $display("COP1X_FAULT_BOUNDARY_PASS first_fault=1 second_fault=1 fpr_atomic=1 store_blocked=1 reverse_endian=1");
         else
             $display("COP1X_FAULT_BOUNDARY_FAIL failures=%0d", failures);
         $finish;

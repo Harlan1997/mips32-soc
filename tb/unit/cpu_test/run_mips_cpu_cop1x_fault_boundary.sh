@@ -27,6 +27,6 @@ cat > "${RUN_DIR}/cop1x_fault_boundary_completion_report.md" <<EOF
 - Simulation log: \`${RUN_DIR}/sim.log\`
 - Contract: first and second aligned LUXC1 faults do not partially commit the
   FPR, and a faulting SUXC1 second beat does not issue a store request.
-- Evidence: \`COP1X_FAULT_BOUNDARY_PASS first_fault=1 second_fault=1 fpr_atomic=1 store_blocked=1\`
+- Evidence: \`COP1X_FAULT_BOUNDARY_PASS first_fault=1 second_fault=1 fpr_atomic=1 store_blocked=1 reverse_endian=1\`
 EOF
 echo "COP1X fault boundary gate: PASS"
