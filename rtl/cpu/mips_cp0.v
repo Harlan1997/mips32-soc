@@ -902,10 +902,10 @@ module mips_cp0 #(
     // TLBR / TLBP outputs are combinational; consumed by the always-block above
     // to schedule CP0 register updates. TLBWI / TLBWR drive wr_en synchronously.
     wire        tlb_wr_en_raw = (tlb_op == 3'b010) || (tlb_op == 3'b011);
-    // Gate TLB writes with the same conditions that inhibit MTC0: exception on
-    // the same instruction (not taken here because tlb_op traps to RI in user
-    // mode when B.4 lands) or ERET must not commit a partial TLB write.
-    wire        tlb_wr_gate   = !(except_req && !cp0_status[1]) && !eret;
+    // A TLB instruction cannot commit when its instruction is being discarded
+    // by any synchronous exception. EXL only controls whether the exception
+    // replaces EPC; it does not make the faulting TLB write architectural.
+    wire        tlb_wr_gate   = !except_req && !eret;
     wire        tlb_wr_en_sw  = tlb_wr_en_raw && tlb_wr_gate;
     assign hw_tlb_wr_ready = !tlb_wr_en_sw;
     wire        tlb_wr_en     = tlb_wr_en_sw || (hw_tlb_wr_en && hw_tlb_wr_ready);

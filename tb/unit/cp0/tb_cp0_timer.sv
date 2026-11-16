@@ -335,6 +335,37 @@ module tb_cp0_timer;
         mfc0(5'd5,  3'd0, rd); check("TLBR PageMask readback = 0",
                                      rd == 32'd0);
 
+        // A nested exception must suppress a simultaneous TLBWI even though
+        // EXL is already set. The exception refreshes Cause, but the TLB
+        // contents remain owned by the last successful TLB instruction.
+        mtc0(5'd12, 3'd0, 32'h0000_0002);          // enter EXL
+        mtc0(5'd10, 3'd0, 32'h0012_3007);
+        mtc0(5'd2,  3'd0, 32'h0000_0207);
+        mtc0(5'd3,  3'd0, 32'h0000_0307);
+        mtc0(5'd5, 3'd0, 32'h0000_0000);
+        mtc0(5'd0, 3'd0, 32'h0000_0005);
+        @(posedge clk);
+        tlb_op <= 3'b010;
+        except_req <= 1'b1;
+        except_code <= 5'h08;
+        except_pc <= 32'h0000_5000;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        except_req <= 1'b0;
+        @(posedge clk);
+        // Re-arm the index and read the entry back; it must be the original.
+        mtc0(5'd0, 3'd0, 32'h0000_0005);
+        @(posedge clk);
+        tlb_op <= 3'b001;
+        @(posedge clk);
+        tlb_op <= 3'b000;
+        @(posedge clk);
+        mfc0(5'd10, 3'd0, rd);
+        check("Nested exception suppresses TLBWI", rd == {19'h00015, 5'b0, 8'h07});
+        mfc0(5'd2, 3'd0, rd);
+        check("Suppressed TLBWI keeps EntryLo0", rd == 32'h0000_0007);
+        mtc0(5'd12, 3'd0, 32'd0);                  // leave EXL
+
         // 2) TLBP with matching EntryHi
         mtc0(5'd10, 3'd0, 32'h0002_A007);            // Same VPN2/ASID as written
         @(posedge clk);

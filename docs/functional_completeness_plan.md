@@ -1,5 +1,13 @@
 # SoC 功能完整性计划
 
+### 2026-11-16 CP0 nested TLB write ownership
+
+`TLBWI` and `TLBWR` now suppress their TLB-array write whenever the same
+instruction is discarded by a synchronous exception, including nested faults
+while `EXL=1`. The CP0 regression verifies that Cause still refreshes and the
+previous TLB entry remains unchanged. Broader privileged exception dispatch
+and Linux context semantics remain open.
+
 ### 2026-11-16 Status.RE reverse-endian memory slice
 
 `Status.RE` (bit 25) now has architectural MFC0 readback, MTC0 write behavior,
