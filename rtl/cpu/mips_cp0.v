@@ -113,6 +113,7 @@ module mips_cp0 #(
     output wire        cu0_enable,   // Status.CU0 (allows user-mode CP0 access)
     output wire        cu1_enable,   // Status.CU1 (allows opt-in COP1 access)
     output wire        fpu_fr_enable, // Status.FR (32/64-bit FPR mode)
+    output wire        reverse_endian_out, // Effective user-mode Status.RE
     output wire        exl_out,      // Status.EXL for CPU-side exception gating
 
     // Phase B.3.c: MMU translation pass-through. Two TLB lookup ports (I / D)
@@ -198,7 +199,7 @@ module mips_cp0 #(
     //   9    0    Count      Free-running counter (Phase B.2)
     //   10   0    EntryHi    [31:13]=VPN2, [7:0]=ASID                 (Phase B.3.a)
     //   11   0    Compare    Timer match value (Phase B.2)
-    //   12   0    Status     [29]=CU1, [28]=CU0, [27]=RP, [26]=FR, [22]=BEV,
+    //   12   0    Status     [29]=CU1, [28]=CU0, [27]=RP, [26]=FR, [25]=RE, [22]=BEV,
     //                         [21]=TS, [15:8]=IM, [4:3]=KSU, [1]=EXL, [0]=IE
     //   12   1    IntCtl     [31:29]=IPTI, [9:5]=VS
     //   13   0    Cause      [31]=BD, [30]=TI, [27]=DC, [23]=IV, [15:8]=IP, [6:2]=ExcCode
@@ -398,7 +399,7 @@ module mips_cp0 #(
                                ((`SOC_FPU_ENABLE != 0) ? cp0_status[29] : 1'b0),
                                                        // [31:29] CU3..CU1
                                cp0_status[28],        // [28] CU0
-                               {cp0_status[27], cp0_status[26], 3'b0}, // [27:23], RP/FR
+                               {cp0_status[27], cp0_status[26], cp0_status[25], 2'b0}, // [27:23], RP/FR/RE
                                cp0_status[22],        // [22] BEV
                                cp0_status[21],        // [21] TS (sticky MCheck)
                                5'b0,                  // [20:16]
@@ -423,6 +424,10 @@ module mips_cp0 #(
     assign cu0_enable  = cp0_status[28];
     assign cu1_enable  = (`SOC_FPU_ENABLE != 0) && cp0_status[29];
     assign fpu_fr_enable = (`SOC_FPU_ENABLE != 0) && cp0_status[26];
+    // Status.RE reverses data-reference endianness only in User mode.  EXL
+    // and ERL force the privileged exception context back to native endian.
+    assign reverse_endian_out = cp0_status[25] && !cp0_status[2] &&
+                                !cp0_status[1] && (cp0_status[4:3] == 2'b10);
     assign exl_out     = cp0_status[1];
 
     // -------------------------------------------------------------------------
@@ -646,6 +651,7 @@ module mips_cp0 #(
                 cp0_status[27]   <= ctx_restore_status[27];
                 cp0_status[26]   <= (`SOC_FPU_ENABLE != 0) ?
                                      ctx_restore_status[26] : 1'b0;
+                cp0_status[25]   <= ctx_restore_status[25];
                 cp0_status[22]   <= ctx_restore_status[22];
                 cp0_status[15:8] <= ctx_restore_status[15:8];
                 cp0_status[4:0]  <= ctx_restore_status[4:0];
@@ -817,6 +823,7 @@ module mips_cp0 #(
                             cp0_status[29] <= wdata[29];  // CU1 (opt-in FPU)
                         if (`SOC_FPU_ENABLE != 0)
                             cp0_status[26] <= wdata[26];  // FR (opt-in FPU)
+                        cp0_status[25]   <= wdata[25];    // RE (user reverse endian)
                         cp0_status[28]   <= wdata[28];    // CU0 (Phase B.4)
                         cp0_status[27]   <= wdata[27];    // RP (reduced-power hint)
                         cp0_status[22]   <= wdata[22];    // BEV

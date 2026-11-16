@@ -1,5 +1,18 @@
 # SoC 功能完整性计划
 
+### 2026-11-16 Status.RE reverse-endian memory slice
+
+`Status.RE` (bit 25) now has architectural MFC0 readback, MTC0 write behavior,
+and scheduler context restore. CP0 exports an effective reverse-endian signal
+only for User mode; EXL and ERL suppress it while an exception handler runs.
+The MEM stage applies the MIPS reverse-endian byte/halfword lane mapping and
+big-endian LWL/LWR/SWL/SWR merge forms while preserving the native little-endian
+default path. The focused CP0 timer regression and MEM-stage gate pass, the
+CPU/CP0 firmware gate passes, the randomized UVM MEM-stage scoreboard passes
+2,009 transactions in both native and reverse-endian modes, and the RTL
+frontend matrix passes 8/8 configurations. Full privileged/MMU/Linux context
+semantics remain open.
+
 ### 2026-11-16 RTL/QEMU Linux legacy FPU signal-frame restore slice
 
 The opt-in `SOC_LINUX_FPU_LEGACY_SIGNAL_ABI` guest probe now registers an O32

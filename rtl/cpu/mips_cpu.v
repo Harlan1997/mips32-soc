@@ -598,6 +598,7 @@ module mips_cpu #(
     wire        cpu_cu0;
     wire        cpu_cu1;
     wire        cpu_fpu_fr;
+    wire        cpu_reverse_endian;
     wire [31:0] cpu_hwrena;
     wire [31:0] mmu_ilookup_va;
     wire        mmu_ilookup_hit;
@@ -2207,6 +2208,7 @@ module mips_cpu #(
         .mem_op          (mem_mem_op),
         .mem_done        (mem_done),
         .enable_nonblocking_load(mem_enable_nb_load),
+        .reverse_endian  (cpu_reverse_endian),
         .mem_cache_op_valid(mem_cache_op_valid),
         .mem_cache_op    (mem_cache_op),
         
@@ -3325,6 +3327,7 @@ module mips_cpu #(
         .cu0_enable   (cpu_cu0),
         .cu1_enable   (cpu_cu1),
         .fpu_fr_enable(cpu_fpu_fr),
+        .reverse_endian_out(cpu_reverse_endian),
         .exl_out      (cp0_exl),
         .hwrena_out   (cpu_hwrena),
 

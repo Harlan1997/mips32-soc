@@ -16,6 +16,7 @@ package mips_mem_stage_pkg;
         rand logic [2:0]  mem_op;
         rand logic [31:0] dmem_rdata;
         rand logic        mem_done;
+        rand logic        reverse_endian;
         rand logic        translation_fault;
 
         logic [31:0] dmem_addr;
@@ -57,6 +58,7 @@ package mips_mem_stage_pkg;
             `uvm_field_int(mem_op, UVM_ALL_ON)
             `uvm_field_int(dmem_rdata, UVM_ALL_ON)
             `uvm_field_int(mem_done, UVM_ALL_ON)
+            `uvm_field_int(reverse_endian, UVM_ALL_ON)
             `uvm_field_int(translation_fault, UVM_ALL_ON)
             `uvm_field_int(dmem_addr, UVM_ALL_ON)
             `uvm_field_int(dmem_wdata, UVM_ALL_ON)
@@ -108,6 +110,7 @@ package mips_mem_stage_pkg;
             vif.dmem_rdata = 0;
             vif.mem_done = 0;
             vif.enable_nonblocking_load = 0;
+            vif.reverse_endian = 0;
             vif.mem_cache_op_valid = 0;
             vif.mem_cache_op = 0;
             vif.dmem_addr_ok = 0;
@@ -126,6 +129,7 @@ package mips_mem_stage_pkg;
                 vif.mem_op     = req.mem_op;
                 vif.dmem_rdata = req.dmem_rdata;
                 vif.mem_done = req.mem_done;
+                vif.reverse_endian = req.reverse_endian;
                 vif.translation_fault = req.translation_fault;
                 #1; // wait for comb logic
                 seq_item_port.item_done();
@@ -160,6 +164,7 @@ package mips_mem_stage_pkg;
                 tr.mem_op = vif.mem_op;
                 tr.dmem_rdata = vif.dmem_rdata;
                 tr.mem_done = vif.mem_done;
+                tr.reverse_endian = vif.reverse_endian;
                 tr.translation_fault = vif.translation_fault;
                 tr.dmem_addr = vif.dmem_addr;
                 tr.dmem_wdata = vif.dmem_wdata;
@@ -195,6 +200,8 @@ package mips_mem_stage_pkg;
             logic        exp_adel;
             logic        exp_ades;
             logic [1:0]  align = tr.mem_ex_out[1:0];
+            logic [1:0]  byte_lane = tr.reverse_endian ? (2'b11 - align) : align;
+            logic        half_lane = tr.reverse_endian ? ~align[1] : align[1];
 
             exp_dmem_addr = {tr.mem_ex_out[31:2], 2'b00};
             exp_dmem_en = tr.mem_read | tr.mem_write;
@@ -207,7 +214,7 @@ package mips_mem_stage_pkg;
                 case (tr.mem_op)
                     3'b000: begin // SB
                         exp_dmem_wdata = {4{tr.mem_val_rt[7:0]}};
-                        case (align)
+                        case (byte_lane)
                             2'b00: exp_dmem_be = 4'b0001;
                             2'b01: exp_dmem_be = 4'b0010;
                             2'b10: exp_dmem_be = 4'b0100;
@@ -216,7 +223,7 @@ package mips_mem_stage_pkg;
                     end
                     3'b010: begin // SH
                         exp_dmem_wdata = {2{tr.mem_val_rt[15:0]}};
-                        case (align[1])
+                        case (half_lane)
                             1'b0: exp_dmem_be = 4'b0011;
                             1'b1: exp_dmem_be = 4'b1100;
                         endcase
@@ -226,7 +233,14 @@ package mips_mem_stage_pkg;
                         exp_dmem_be = 4'b1111;
                     end
                     3'b101: begin // SWL, little endian
-                        case (align)
+                        if (tr.reverse_endian) begin
+                            case (align)
+                                2'b00: begin exp_dmem_be = 4'b1111; exp_dmem_wdata = tr.mem_val_rt; end
+                                2'b01: begin exp_dmem_be = 4'b1110; exp_dmem_wdata = {tr.mem_val_rt[23:0], 8'd0}; end
+                                2'b10: begin exp_dmem_be = 4'b1100; exp_dmem_wdata = {tr.mem_val_rt[15:0], 16'd0}; end
+                                2'b11: begin exp_dmem_be = 4'b1000; exp_dmem_wdata = {tr.mem_val_rt[7:0], 24'd0}; end
+                            endcase
+                        end else case (align)
                             2'b00: begin exp_dmem_be = 4'b0001; exp_dmem_wdata = {24'd0, tr.mem_val_rt[31:24]}; end
                             2'b01: begin exp_dmem_be = 4'b0011; exp_dmem_wdata = {16'd0, tr.mem_val_rt[31:16]}; end
                             2'b10: begin exp_dmem_be = 4'b0111; exp_dmem_wdata = {8'd0, tr.mem_val_rt[31:8]}; end
@@ -234,7 +248,14 @@ package mips_mem_stage_pkg;
                         endcase
                     end
                     3'b110: begin // SWR, little endian
-                        case (align)
+                        if (tr.reverse_endian) begin
+                            case (align)
+                                2'b00: begin exp_dmem_be = 4'b0001; exp_dmem_wdata = {24'd0, tr.mem_val_rt[31:24]}; end
+                                2'b01: begin exp_dmem_be = 4'b0011; exp_dmem_wdata = {16'd0, tr.mem_val_rt[31:16]}; end
+                                2'b10: begin exp_dmem_be = 4'b0111; exp_dmem_wdata = {8'd0, tr.mem_val_rt[31:8]}; end
+                                2'b11: begin exp_dmem_be = 4'b1111; exp_dmem_wdata = tr.mem_val_rt; end
+                            endcase
+                        end else case (align)
                             2'b00: begin exp_dmem_be = 4'b1111; exp_dmem_wdata = tr.mem_val_rt; end
                             2'b01: begin exp_dmem_be = 4'b1110; exp_dmem_wdata = {tr.mem_val_rt[23:0], 8'd0}; end
                             2'b10: begin exp_dmem_be = 4'b1100; exp_dmem_wdata = {tr.mem_val_rt[15:0], 16'd0}; end
@@ -247,7 +268,7 @@ package mips_mem_stage_pkg;
             if (tr.mem_read) begin
                 case (tr.mem_op)
                     3'b000: begin // LB
-                        case (align)
+                        case (byte_lane)
                             2'b00: exp_mem_rdata_ext = { {24{tr.dmem_rdata[7]}}, tr.dmem_rdata[7:0] };
                             2'b01: exp_mem_rdata_ext = { {24{tr.dmem_rdata[15]}}, tr.dmem_rdata[15:8] };
                             2'b10: exp_mem_rdata_ext = { {24{tr.dmem_rdata[23]}}, tr.dmem_rdata[23:16] };
@@ -255,7 +276,7 @@ package mips_mem_stage_pkg;
                         endcase
                     end
                     3'b001: begin // LBU
-                        case (align)
+                        case (byte_lane)
                             2'b00: exp_mem_rdata_ext = { 24'd0, tr.dmem_rdata[7:0] };
                             2'b01: exp_mem_rdata_ext = { 24'd0, tr.dmem_rdata[15:8] };
                             2'b10: exp_mem_rdata_ext = { 24'd0, tr.dmem_rdata[23:16] };
@@ -263,28 +284,42 @@ package mips_mem_stage_pkg;
                         endcase
                     end
                     3'b010: begin // LH
-                        case (align[1])
+                        case (half_lane)
                             1'b0: exp_mem_rdata_ext = { {16{tr.dmem_rdata[15]}}, tr.dmem_rdata[15:0] };
                             1'b1: exp_mem_rdata_ext = { {16{tr.dmem_rdata[31]}}, tr.dmem_rdata[31:16] };
                         endcase
                     end
                     3'b011: begin // LHU
-                        case (align[1])
+                        case (half_lane)
                             1'b0: exp_mem_rdata_ext = { 16'd0, tr.dmem_rdata[15:0] };
                             1'b1: exp_mem_rdata_ext = { 16'd0, tr.dmem_rdata[31:16] };
                         endcase
                     end
                     3'b100, 3'b111: exp_mem_rdata_ext = tr.dmem_rdata;
-                    3'b101: begin // LWL, little endian
-                        case (align)
+                    3'b101: begin // LWL
+                        if (tr.reverse_endian) begin
+                            case (align)
+                                2'b00: exp_mem_rdata_ext = tr.dmem_rdata;
+                                2'b01: exp_mem_rdata_ext = {tr.dmem_rdata[23:0], tr.mem_val_rt[7:0]};
+                                2'b10: exp_mem_rdata_ext = {tr.dmem_rdata[15:0], tr.mem_val_rt[15:0]};
+                                2'b11: exp_mem_rdata_ext = {tr.dmem_rdata[7:0], tr.mem_val_rt[23:0]};
+                            endcase
+                        end else case (align)
                             2'b00: exp_mem_rdata_ext = {tr.dmem_rdata[7:0], tr.mem_val_rt[23:0]};
                             2'b01: exp_mem_rdata_ext = {tr.dmem_rdata[15:0], tr.mem_val_rt[15:0]};
                             2'b10: exp_mem_rdata_ext = {tr.dmem_rdata[23:0], tr.mem_val_rt[7:0]};
                             2'b11: exp_mem_rdata_ext = tr.dmem_rdata;
                         endcase
                     end
-                    3'b110: begin // LWR, little endian
-                        case (align)
+                    3'b110: begin // LWR
+                        if (tr.reverse_endian) begin
+                            case (align)
+                                2'b00: exp_mem_rdata_ext = {tr.mem_val_rt[31:8], tr.dmem_rdata[31:24]};
+                                2'b01: exp_mem_rdata_ext = {tr.mem_val_rt[31:16], tr.dmem_rdata[31:16]};
+                                2'b10: exp_mem_rdata_ext = {tr.mem_val_rt[31:24], tr.dmem_rdata[31:8]};
+                                2'b11: exp_mem_rdata_ext = tr.dmem_rdata;
+                            endcase
+                        end else case (align)
                             2'b00: exp_mem_rdata_ext = tr.dmem_rdata;
                             2'b01: exp_mem_rdata_ext = {tr.mem_val_rt[31:24], tr.dmem_rdata[31:8]};
                             2'b10: exp_mem_rdata_ext = {tr.mem_val_rt[31:16], tr.dmem_rdata[31:16]};

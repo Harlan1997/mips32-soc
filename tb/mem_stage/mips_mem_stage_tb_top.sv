@@ -33,6 +33,7 @@ module mips_mem_stage_tb_top;
         .mem_op         (vif.mem_op),
         .mem_done       (vif.mem_done),
         .enable_nonblocking_load(vif.enable_nonblocking_load),
+        .reverse_endian (vif.reverse_endian),
         .mem_cache_op_valid(vif.mem_cache_op_valid),
         .mem_cache_op   (vif.mem_cache_op),
         .dmem_rdata     (vif.dmem_rdata),

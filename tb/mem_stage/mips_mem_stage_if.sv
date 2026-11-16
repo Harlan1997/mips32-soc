@@ -14,6 +14,7 @@ interface mips_mem_stage_if(input logic clk, input logic rst_n);
     logic [31:0] dmem_rdata;
     logic        mem_done;
     logic        enable_nonblocking_load;
+    logic        reverse_endian;
     logic        mem_cache_op_valid;
     logic [4:0]  mem_cache_op;
     logic        dmem_addr_ok;

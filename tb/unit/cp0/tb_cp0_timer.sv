@@ -43,6 +43,7 @@ module tb_cp0_timer;
     wire        cu0_enable;
     wire        cu1_enable;
     wire        fpu_fr_enable;
+    wire        reverse_endian_out;
     wire        exl_out;
     wire [31:0]  hwrena_out;
     wire [3:0]   srs_current_set_out;
@@ -584,6 +585,27 @@ module tb_cp0_timer;
         @(posedge clk);
         mfc0(5'd12, 3'd0, rd);
         check("Status.RP context restore",   rd[27] == 1'b1);
+
+        // Status.RE is writable architectural state, but it takes effect on
+        // data references only while the restored context is User mode.
+        mtc0(5'd12, 3'd0, 32'h0200_0010);   // RE=1, KSU=User
+        @(posedge clk);
+        mfc0(5'd12, 3'd0, rd);
+        check("Status.RE readback",          rd[25] == 1'b1);
+        check("Status.RE enables user reverse endian", reverse_endian_out == 1'b1);
+        mtc0(5'd12, 3'd0, 32'h0200_0012);   // RE=1, User, EXL=1
+        @(posedge clk);
+        check("Status.RE suppressed in EXL", reverse_endian_out == 1'b0);
+        ctx_save_req = 1'b1;
+        #1;
+        check("Status.RE context save",      ctx_save_status[25] == 1'b1);
+        ctx_save_req = 1'b0;
+        ctx_restore_status = 32'h0200_0010;
+        ctx_restore_req = 1'b1;
+        repeat (2) @(posedge clk);
+        ctx_restore_req = 1'b0;
+        @(posedge clk);
+        check("Status.RE context restore",   reverse_endian_out == 1'b1);
 
         // Status.FR is the architectural FPU register-mode bit. It must
         // survive Status read/write and scheduler-style context transfer,

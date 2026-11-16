@@ -95,7 +95,7 @@ slice.
 | 28 | CU0 | RW | CP0 用户态使能 |
 | 27 | RP  | RW | Reduced Power (software hint; retained across context save/restore, no direct clock-gating behavior)|
 | 26 | FR  | RW | 64-bit FP register file (无 FPU 时 tie 0) |
-| 25 | RE  | RW | Reverse Endian in user mode (tie 0：不支持) |
+| 25 | RE  | RW | Reverse Endian in user-mode data references; suppressed while EXL/ERL is active |
 | 24 | MX  | RES | MDMX ASE (tie 0) |
 | 23 | PX  | RES | 64-bit ops in 32-bit mode (tie 0) |
 | 22 | BEV | RW | Bootstrap Exception Vector：1 → `0xBFC0_0200`；0 → EBase |
@@ -411,3 +411,4 @@ Cache 编码：IS/DS = log2(sets/64)、IL/DL = log2(line/2)+1、IA/DA = ways-1�
 - v1.2 (2026-08-07)：`cp0_sweep` 增加无显式 `nop` 的连续 UserLocal A->B->A MTC0/RDHWR context-switch 检查并通过；当前 CPU/CP0 contract 已闭合，完整 scheduler 保存/恢复 ABI 仍 deferred。
 - v1.3 (2026-11-09)：scheduler context bank 增加 UserLocal 保存/恢复；直接 CP0 与真实 CPU scheduler integration 均验证两个线程值的切换，Linux lazy-FPU/signal-frame ABI 和完整 scheduler policy 仍 deferred。
 - v1.4 (2026-11-13)：FR=1 FPU context image 增加独立的 32 个 high-word 保存/恢复字段；FR=0 清除该字段。真实 CPU scheduler integration 验证 odd FPR high-word 跨 task switch 保持，Linux signal-frame/lazy-FPU ABI 仍 deferred。
+- v1.5 (2026-11-16)：Status.RE now has architectural readback, MTC0/context-restore state transfer, and user-mode data-reference lane reversal for byte/halfword/word and LWL/LWR/SWL/SWR accesses; EXL/ERL suppress the effective reverse-endian signal. CP0, MEM-stage, CPU/CP0 firmware, and 8/8 RTL frontend gates pass.
