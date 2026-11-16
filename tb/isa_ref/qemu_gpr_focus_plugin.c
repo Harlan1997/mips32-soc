@@ -1,8 +1,10 @@
 /*
  * QEMU focus plugin for Linux RTL bring-up diagnostics.
  *
- * Records architectural state transitions for target GPRs (a0, a1, t5, t9,
- * v0, v1, sp, ra, r30) at discrete checkpoint PCs and configurable PC windows.
+ * Records architectural state transitions for all 32 GPRs at discrete
+ * checkpoint PCs and configurable PC windows.  The named focus registers are
+ * retained in each line for compatibility, while gprs= carries the complete
+ * architectural snapshot so an unselected-register mutation cannot pass.
  * Register values are sampled at instruction boundaries; values in retired
  * records represent the committed architectural state after the instruction
  * has completed execution.
@@ -21,15 +23,7 @@
 QEMU_PLUGIN_EXPORT int qemu_plugin_version = QEMU_PLUGIN_VERSION;
 
 typedef struct {
-    uint32_t v0;  /* r2  */
-    uint32_t v1;  /* r3  */
-    uint32_t a0;  /* r4  */
-    uint32_t a1;  /* r5  */
-    uint32_t t5;  /* r13 */
-    uint32_t t9;  /* r25 */
-    uint32_t sp;  /* r29 */
-    uint32_t r30; /* r30 */
-    uint32_t ra;  /* r31 */
+    uint32_t r[32];
 } FocusGPRs;
 
 typedef struct {
@@ -243,15 +237,9 @@ static bool read_named_reg(struct qemu_plugin_register *handle, uint32_t *value)
 static bool read_focus_gprs(FocusGPRs *gprs)
 {
     bool ok = true;
-    ok &= read_reg(2, &gprs->v0);
-    ok &= read_reg(3, &gprs->v1);
-    ok &= read_reg(4, &gprs->a0);
-    ok &= read_reg(5, &gprs->a1);
-    ok &= read_reg(13, &gprs->t5);
-    ok &= read_reg(25, &gprs->t9);
-    ok &= read_reg(29, &gprs->sp);
-    ok &= read_reg(30, &gprs->r30);
-    ok &= read_reg(31, &gprs->ra);
+    for (int reg_num = 0; reg_num < 32; ++reg_num) {
+        ok &= read_reg(reg_num, &gprs->r[reg_num]);
+    }
     return ok;
 }
 
@@ -282,8 +270,8 @@ static void emit_previous(const FocusGPRs *current_gprs,
     interesting = ((!entry_only && pc_in_focus(previous.pc)) ||
                    (entry_only && previous.pc == focus_start)) ||
                   (may_write_r30(previous.instr) &&
-                   (previous.before_gprs.r30 == focus_value ||
-                    current_gprs->r30 == focus_value));
+                   (previous.before_gprs.r[30] == focus_value ||
+                    current_gprs->r[30] == focus_value));
     if (!interesting) {
         return;
     }
@@ -294,13 +282,17 @@ static void emit_previous(const FocusGPRs *current_gprs,
             "QEMU_FOCUS seq=%" PRIu64 " phase=retired pc=%08" PRIx64 " instr=%08" PRIx32
             " a0=%08" PRIx32 " a1=%08" PRIx32 " t5=%08" PRIx32 " t9=%08" PRIx32
             " v0=%08" PRIx32 " v1=%08" PRIx32 " sp=%08" PRIx32 " ra=%08" PRIx32
-            " r30=%08" PRIx32 " mem=%u/%u/%u/%08" PRIx64 "/%08" PRIx32 "/%u\n",
+            " r30=%08" PRIx32 " gprs=",
             records, previous.pc, previous.instr,
-            current_gprs->a0, current_gprs->a1, current_gprs->t5, current_gprs->t9,
-            current_gprs->v0, current_gprs->v1, current_gprs->sp, current_gprs->ra,
-            current_gprs->r30, previous.mem.valid, previous.mem.read,
-            previous.mem.write, previous.mem.addr, previous.mem.value,
-            previous.mem.size);
+            current_gprs->r[4], current_gprs->r[5], current_gprs->r[13],
+            current_gprs->r[25], current_gprs->r[2], current_gprs->r[3],
+            current_gprs->r[29], current_gprs->r[31], current_gprs->r[30]);
+    for (int reg_num = 0; reg_num < 32; ++reg_num) {
+        fprintf(out, "%08" PRIx32, current_gprs->r[reg_num]);
+    }
+    fprintf(out, " mem=%u/%u/%u/%08" PRIx64 "/%08" PRIx32 "/%u\n",
+            previous.mem.valid, previous.mem.read, previous.mem.write,
+            previous.mem.addr, previous.mem.value, previous.mem.size);
 
     fprintf(out,
             "QEMU_FOCUS_EVENT seq=%" PRIu64 " pc=%08" PRIx64
@@ -313,7 +305,7 @@ static void emit_previous(const FocusGPRs *current_gprs,
     fprintf(out,
             "QEMU_GPR_FOCUS pc=%08" PRIx64 " instr=%08" PRIx32
             " r30_before=%08" PRIx32 " r30_after=%08" PRIx32 "\n",
-            previous.pc, previous.instr, previous.before_gprs.r30, current_gprs->r30);
+            previous.pc, previous.instr, previous.before_gprs.r[30], current_gprs->r[30]);
     fprintf(out,
             "QEMU_PLUGIN_EXEC seq=%" PRIu64 " plugin_seq=%" PRIu64
             " pc=%08" PRIx64 "\n",
@@ -404,8 +396,8 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
         if (previous.valid &&
             (pc_in_focus(previous.pc) ||
              (may_write_r30(previous.instr) &&
-              (previous.before_gprs.r30 == focus_value ||
-               current_gprs.r30 == focus_value)))) {
+             (previous.before_gprs.r[30] == focus_value ||
+               current_gprs.r[30] == focus_value)))) {
             emit_previous(&current_gprs, &current_cp0, current_pc);
         }
     }

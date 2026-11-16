@@ -14,7 +14,7 @@ from collections import Counter
 
 GPRS = ["a0", "a1", "t5", "t9", "v0", "v1", "sp", "ra", "r30"]
 RTL_META = ["we", "exc", "bad", "epc", "bd"]
-COMMON_FIELDS = ["pc", "instr", "phase", "occurrence"] + GPRS
+COMMON_FIELDS = ["pc", "instr", "phase", "occurrence"] + GPRS + ["gprs"]
 
 QEMU_RE = re.compile(
     r"^QEMU_FOCUS\s+"
@@ -25,6 +25,7 @@ QEMU_RE = re.compile(
     r"v0=(?P<v0>[0-9a-fA-F]{8})\s+v1=(?P<v1>[0-9a-fA-F]{8})\s+"
     r"sp=(?P<sp>[0-9a-fA-F]{8})\s+ra=(?P<ra>[0-9a-fA-F]{8})\s+"
     r"r30=(?P<r30>[0-9a-fA-F]{8})"
+    r"(?:\s+gprs=(?P<gprs>[0-9a-fA-F]{256}))?"
     r"(?:\s+mem=(?P<mem>[0-9]+/[0-9]+/[0-9]+/[0-9a-fA-F]{8}/[0-9a-fA-F]{8}/[0-9]+))?"
     r"(?:\s+occ=(?P<occurrence>\d+))?$"
 )
@@ -38,6 +39,7 @@ RTL_RE = re.compile(
     r"v0=(?P<v0>[0-9a-fA-F]{8})\s+v1=(?P<v1>[0-9a-fA-F]{8})\s+"
     r"sp=(?P<sp>[0-9a-fA-F]{8})\s+ra=(?P<ra>[0-9a-fA-F]{8})\s+"
     r"r30=(?P<r30>[0-9a-fA-F]{8})\s+"
+    r"(?:gprs=(?P<gprs>[0-9a-fA-F]{256})\s+)?"
     r"we=(?P<we>[01]/[0-9]+/[0-9a-fA-F]{8})\s+"
     r"except=(?P<exc>[01]/[0-9]+)\s+bad=(?P<bad>[0-9a-fA-F]{8})\s+"
     r"epc=(?P<epc>[0-9a-fA-F]{8})\s+bd=(?P<bd>[01])"
@@ -50,7 +52,7 @@ class TraceError(ValueError):
 
 
 def _normalise(record, trace_type, line_no):
-    for key in ["pc", "instr", *GPRS, "bad", "epc"]:
+    for key in ["pc", "instr", *GPRS, "gprs", "bad", "epc"]:
         if key in record and record[key] is not None:
             record[key] = record[key].lower()
     record["seq"] = int(record["seq"])
@@ -61,7 +63,7 @@ def _normalise(record, trace_type, line_no):
     return record
 
 
-def parse_trace(path):
+def parse_trace(path, require_all_gprs=False):
     records = []
     trace_type = None
     with open(path, "r", encoding="utf-8", errors="replace") as stream:
@@ -86,6 +88,15 @@ def parse_trace(path):
 
     if not records:
         raise TraceError(f"no focus records found in {path}")
+
+    if require_all_gprs:
+        missing = [record["line_no"] for record in records
+                   if not record.get("gprs")]
+        if missing:
+            raise TraceError(
+                f"complete GPR snapshot is required in {path}; "
+                f"missing gprs field at line(s) {missing}"
+            )
 
     expected_seq = 0
     seen_seq = set()
@@ -132,6 +143,15 @@ def classify_mismatch(field, ref, dut):
         return "a1 differs after an operand divergence"
     if field == "bad":
         return f"BadVAddr mismatch at PC 0x{pc}: translation fault/replay ownership error"
+    if field == "gprs":
+        ref_gprs = ref.get("gprs") or ""
+        dut_gprs = dut.get("gprs") or ""
+        for index in range(min(len(ref_gprs), len(dut_gprs)) // 8):
+            start = index * 8
+            if ref_gprs[start:start + 8] != dut_gprs[start:start + 8]:
+                return (f"r{index} divergence at PC 0x{pc}: complete GPR "
+                        "snapshot mismatch")
+        return f"complete GPR snapshot divergence at PC 0x{pc}"
     if field in ("epc", "bd", "exc"):
         return f"exception metadata mismatch at PC 0x{pc}: precise exception or delay-slot attribution error"
     return f"{field} divergence at PC 0x{pc}"
@@ -164,6 +184,8 @@ def _print_mismatch(index, ref, dut, field, compare_rtl_meta):
     for key in GPRS:
         state = "MATCH" if ref[key] == dut[key] else "MISMATCH"
         print(f"  {key:>3}: REF=0x{ref[key]} DUT=0x{dut[key]} [{state}]")
+    if field == "gprs":
+        print(f"  gprs: REF={ref.get('gprs')} DUT={dut.get('gprs')} [MISMATCH]")
     if compare_rtl_meta:
         for key in RTL_META:
             state = "MATCH" if ref.get(key) == dut.get(key) else "MISMATCH"
@@ -171,10 +193,11 @@ def _print_mismatch(index, ref, dut, field, compare_rtl_meta):
     print("=======================================================\n")
 
 
-def compare_traces(ref_path, dut_path, max_compare=None, allow_subsequence=False):
+def compare_traces(ref_path, dut_path, max_compare=None, allow_subsequence=False,
+                   require_all_gprs=False):
     try:
-        ref_records, ref_type = parse_trace(ref_path)
-        dut_records, dut_type = parse_trace(dut_path)
+        ref_records, ref_type = parse_trace(ref_path, require_all_gprs)
+        dut_records, dut_type = parse_trace(dut_path, require_all_gprs)
     except (OSError, TraceError) as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 2
@@ -255,10 +278,11 @@ def _select_occurrence(records, pc, selector):
     return selected[0]
 
 
-def compare_checkpoint(ref_path, dut_path, checkpoint_pc, expected_v1=None, occurrence=None):
+def compare_checkpoint(ref_path, dut_path, checkpoint_pc, expected_v1=None,
+                        occurrence=None, require_all_gprs=False):
     try:
-        ref_records, ref_type = parse_trace(ref_path)
-        dut_records, dut_type = parse_trace(dut_path)
+        ref_records, ref_type = parse_trace(ref_path, require_all_gprs)
+        dut_records, dut_type = parse_trace(dut_path, require_all_gprs)
         pc = checkpoint_pc.lower().replace("0x", "").zfill(8)
         if occurrence is None:
             ref_matches = [record for record in ref_records if record["pc"] == pc]
@@ -311,6 +335,10 @@ def main():
     parser.add_argument("--checkpoint", help="checkpoint PC")
     parser.add_argument("--occurrence", help="checkpoint occurrence number or 'last'")
     parser.add_argument("--expected-v1", help="optional expected v1 value")
+    parser.add_argument(
+        "--require-all-gprs", action="store_true",
+        help="require a complete 32-register snapshot in every record",
+    )
     args = parser.parse_args()
 
     ref = args.ref or args.qemu
@@ -322,11 +350,14 @@ def main():
 
     if args.checkpoint:
         result = compare_checkpoint(
-            ref, dut, args.checkpoint, args.expected_v1, args.occurrence
+            ref, dut, args.checkpoint, args.expected_v1, args.occurrence,
+            args.require_all_gprs
         )
     else:
         result = compare_traces(
-            ref, dut, max_compare=args.max_compare, allow_subsequence=args.subsequence
+            ref, dut, max_compare=args.max_compare,
+            allow_subsequence=args.subsequence,
+            require_all_gprs=args.require_all_gprs,
         )
     sys.exit(result)
 

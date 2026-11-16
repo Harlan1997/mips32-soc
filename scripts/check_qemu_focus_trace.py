@@ -23,6 +23,7 @@ LINE_RE = re.compile(
     r'sp=(?P<sp>[0-9a-fA-F]{8})\s+'
     r'ra=(?P<ra>[0-9a-fA-F]{8})\s+'
     r'r30=(?P<r30>[0-9a-fA-F]{8})'
+    r'(?:\s+gprs=(?P<gprs>[0-9a-fA-F]{256}))?'
     r'(?:\s+mem=(?P<mem>[0-9]+/[0-9]+/[0-9]+/[0-9a-fA-F]{8}/[0-9a-fA-F]{8}/[0-9]+))?$'
 )
 
@@ -32,7 +33,7 @@ MANDATORY_PCS = [
     "88a3898c", "88a38998"
 ]
 
-def check_trace(log_path, require_mandatory_pcs=True):
+def check_trace(log_path, require_mandatory_pcs=True, require_all_gprs=False):
     seen_seqs = set()
     observed_pcs = set()
     expected_seq = 0
@@ -54,6 +55,9 @@ def check_trace(log_path, require_mandatory_pcs=True):
 
             if phase != "retired":
                 print(f"ERROR: ambiguous or unexpected phase='{phase}' at {log_path}:{line_num}", file=sys.stderr)
+                return 1
+            if require_all_gprs and not m.group("gprs"):
+                print(f"ERROR: complete GPR snapshot missing at {log_path}:{line_num}", file=sys.stderr)
                 return 1
 
             if seq in seen_seqs:
@@ -86,9 +90,14 @@ def main():
     parser = argparse.ArgumentParser(description="Check QEMU focus trace format and completeness")
     parser.add_argument("log", help="Path to QEMU focus log")
     parser.add_argument("--no-require-mandatory", action="store_true", help="Do not require all mandatory checkpoint PCs")
+    parser.add_argument("--require-all-gprs", action="store_true", help="Require a complete 32-register snapshot")
     args = parser.parse_args()
 
-    ret = check_trace(args.log, require_mandatory_pcs=not args.no_require_mandatory)
+    ret = check_trace(
+        args.log,
+        require_mandatory_pcs=not args.no_require_mandatory,
+        require_all_gprs=args.require_all_gprs,
+    )
     sys.exit(ret)
 
 if __name__ == "__main__":

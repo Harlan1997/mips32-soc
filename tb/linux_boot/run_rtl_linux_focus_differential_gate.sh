@@ -9,7 +9,8 @@
 #    - RTL blocking baseline
 #    - RTL nonblocking-L1 configuration
 # 3. Compares focus traces using scripts/compare_focus_differential.py to prove
-#    exact zero divergence across PC, instruction word, GPRs (a0, a1, t5, t9, v0, v1, sp, ra, r30),
+#    exact zero divergence across PC, instruction word, all 32 GPRs (with the
+#    named focus registers retained as readable aliases),
 #    writeback semantics, BadVAddr, EPC, and Cause.BD.
 # 4. Validates BadVAddr / Exception fault and replay semantic stability.
 # 5. Generates completion_report.md for signoff.
@@ -199,7 +200,7 @@ fi
 test -s "${QEMU_FOCUS_LOG}"
 qemu_records=$(grep -c "^QEMU_FOCUS " "${QEMU_FOCUS_LOG}" || true)
 echo "QEMU Focus run completed with ${qemu_records} records."
-python3 "${TRACE_CHECKER}" "${QEMU_FOCUS_LOG}"
+python3 "${TRACE_CHECKER}" "${QEMU_FOCUS_LOG}" --require-all-gprs
 
 echo "=== [3/5] Running RTL Blocking Simulation ==="
 BLOCKING_DIR="${RUN_DIR}/blocking"
@@ -267,6 +268,7 @@ DIFF_LOG_RTL="${RUN_DIR}/diff_blocking_vs_nonblocking.log"
 if python3 "${COMPARATOR}" \
     --ref "${BLOCKING_DIR}/rtl_focus.log" \
     --dut "${NB_DIR}/rtl_focus.log" \
+    --require-all-gprs \
     >"${DIFF_LOG_RTL}" 2>&1; then
     diff_rtl_rc=0
 else
@@ -297,6 +299,7 @@ if python3 "${COMPARATOR}" \
     --dut "${BLOCKING_DIR}/rtl_focus.log" \
     --checkpoint 0x88a38c1c \
     --occurrence last \
+    --require-all-gprs \
     --expected-v1 0x6 \
     >"${DIFF_LOG_QEMU}" 2>&1; then
     diff_qemu_rc=0
@@ -317,6 +320,7 @@ if python3 "${COMPARATOR}" \
     --dut "${BLOCKING_DIR}/rtl_focus.log" \
     --checkpoint 0x88a38c24 \
     --occurrence last \
+    --require-all-gprs \
     >>"${DIFF_LOG_QEMU}" 2>&1; then
     diff_qemu_rc2=0
 else

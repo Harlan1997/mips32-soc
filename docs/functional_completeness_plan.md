@@ -1,5 +1,19 @@
 # SoC 功能完整性计划
 
+### 2026-11-16 Focus differential complete-GPR checker hardening
+
+The QEMU and RTL focus record producers now emit a complete 32-register
+snapshot in `gprs=` alongside the existing named fields. The comparator can
+require that field for every record and reports the first differing register;
+the focus gate enables this requirement for QEMU, blocking RTL, and
+nonblocking RTL comparisons. The adversarial checker covers selected and
+unselected GPR mutations, changed PC/instruction, phase and sequence errors,
+missing or trailing records, missing checkpoints, complete-snapshot omission,
+and RTL writeback/exception/BadVAddr/EPC/BD mutations. The checker gate and
+Python/C syntax checks pass. A fresh integrated focus run is still required;
+the QEMU/RTL focus capability remains `UNTRUSTED` until the two-checkpoint
+gate is replaced or supplemented with full trace evidence.
+
 ### 2026-11-16 BadVAddr owner context identity
 
 The D-side translation-fault owner token now carries the access direction and

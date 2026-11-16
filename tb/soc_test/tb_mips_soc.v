@@ -193,6 +193,8 @@ module tb_mips_soc;
     integer linux_focus_trace_cycle_end;
     reg [31:0] linux_focus_trace_start;
     reg [31:0] linux_focus_trace_end;
+    reg [1023:0] linux_focus_gprs;
+    integer linux_focus_gpr_idx;
 
     function automatic [31:0] get_focus_retire_gpr(input [4:0] reg_idx);
         if (reg_idx == 5'd0)
@@ -1050,7 +1052,10 @@ module tb_mips_soc;
                   linux_focus_trace_start != linux_focus_trace_end &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc >= linux_focus_trace_start &&
                   u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc < linux_focus_trace_end))) begin
-                $display("RTL_FOCUS seq=%0d cycle=%0d phase=retired pc=%08h inst=%08h a0=%08h a1=%08h t5=%08h t9=%08h v0=%08h v1=%08h sp=%08h ra=%08h r30=%08h we=%b/%0d/%08h except=%b/%0d bad=%08h epc=%08h bd=%b",
+                for (linux_focus_gpr_idx = 0; linux_focus_gpr_idx < 32; linux_focus_gpr_idx = linux_focus_gpr_idx + 1)
+                    linux_focus_gprs[(31 - linux_focus_gpr_idx) * 32 +: 32] =
+                        get_focus_retire_gpr(linux_focus_gpr_idx[4:0]);
+                $display("RTL_FOCUS seq=%0d cycle=%0d phase=retired pc=%08h inst=%08h a0=%08h a1=%08h t5=%08h t9=%08h v0=%08h v1=%08h sp=%08h ra=%08h r30=%08h gprs=%h we=%b/%0d/%08h except=%b/%0d bad=%08h epc=%08h bd=%b",
                     linux_focus_trace_count,
                     linux_trace_cycle,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_pc,
@@ -1064,6 +1069,7 @@ module tb_mips_soc;
                     get_focus_retire_gpr(5'd29),
                     get_focus_retire_gpr(5'd31),
                     get_focus_retire_gpr(5'd30),
+                    linux_focus_gprs,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_reg_write,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_waddr,
                     u_soc.u_impl.u_core_subsystem.u_core.u_cpu.wb_wdata,
