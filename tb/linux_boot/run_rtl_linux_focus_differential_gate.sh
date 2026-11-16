@@ -8,9 +8,10 @@
 #    - QEMU system-mode reference
 #    - RTL blocking baseline
 #    - RTL nonblocking-L1 configuration
-# 3. Compares focus traces using scripts/compare_focus_differential.py to prove
-#    exact zero divergence across PC, instruction word, all 32 GPRs (with the
-#    named focus registers retained as readable aliases),
+# 3. Compares the complete focused retirement stream using
+#    scripts/compare_focus_differential.py to prove exact zero divergence
+#    across PC, instruction word, all 32 GPRs (with the named focus registers
+#    retained as readable aliases),
 #    writeback semantics, BadVAddr, EPC, and Cause.BD.
 # 4. Validates BadVAddr / Exception fault and replay semantic stability.
 # 5. Generates completion_report.md for signoff.
@@ -282,6 +283,27 @@ if [[ ${diff_rtl_rc} -ne 0 ]]; then
 fi
 echo "Blocking vs Nonblocking RTL Differential: PASS (Exact Match across all records, GPRs, BadVAddr, EPC, BD)"
 
+# The QEMU and blocking RTL streams use the same target-PC filter and sequence
+# contract. Compare the complete stream before the two repaired checkpoints so
+# a later target-PC divergence cannot be hidden by checkpoint-only evidence.
+DIFF_LOG_QEMU_FULL="${RUN_DIR}/diff_qemu_vs_rtl_full.log"
+if python3 "${COMPARATOR}" \
+    --ref "${QEMU_FOCUS_LOG}" \
+    --dut "${BLOCKING_DIR}/rtl_focus.log" \
+    --require-all-gprs \
+    >"${DIFF_LOG_QEMU_FULL}" 2>&1; then
+    diff_qemu_full_rc=0
+else
+    diff_qemu_full_rc=$?
+fi
+
+if [[ ${diff_qemu_full_rc} -ne 0 ]]; then
+    echo "ERROR: QEMU vs RTL full focused-stream differential mismatch!"
+    cat "${DIFF_LOG_QEMU_FULL}"
+    exit 1
+fi
+echo "QEMU vs Blocking RTL Full Focus Differential: PASS (all focused records match)"
+
 # Verify target checkpoint at 0x88a38c1c across QEMU and RTL
 checkpoint_blocking_pc=$(grep "pc=88a38c1c" "${BLOCKING_DIR}/rtl_focus.log" | tail -n 1)
 test -n "${checkpoint_blocking_pc}"
@@ -352,6 +374,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - **QEMU Exit Status**: ${qemu_rc} (timeout accepted=${QEMU_EXPECT_TIMEOUT})
 - **Blocking RTL Records**: ${blocking_records} focus records captured
 - **Nonblocking-L1 RTL Records**: ${nb_records} focus records captured
+- **QEMU vs Blocking RTL**: complete focused retirement stream compared with all 32 GPRs
 - **Repaired Checkpoint**: \`0x88a38c1c\` retired with \`v1=0x00000006\`, string output timestamp formatted correctly.
 - **BadVAddr & Exception Stability**:
   - \`Cause.BD\` accurately retained across pipeline bubbles.
