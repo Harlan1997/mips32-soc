@@ -12,6 +12,16 @@ address-space switch. The fresh `cpu-badvaddr-owner-gate` reports
 firmware gate also passes. Reset, interrupt-coincident, ERET, and broad replay
 pressure remain outside this bounded owner slice.
 
+### 2026-11-16 BadVAddr owner clear-boundary gate
+
+The direct CPU owner-context gate now captures a live D-side translation-fault
+token and verifies that scheduler context restore, ERET, interrupt flush, and
+reset each clear it before a later WB bundle can consume stale metadata. Fresh
+VCS evidence reports
+`BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1`. This closes the
+four clear-boundary behaviors in the unit contract; arbitrary replay pressure,
+multi-process Linux VM ownership, and complete MMU semantics remain open.
+
 ### 2026-11-16 CP0 nested TLB write ownership
 
 `TLBWI` and `TLBWR` now suppress their TLB-array write whenever the same

@@ -315,7 +315,7 @@ linux-image-identity-test:
 .PHONY: perf-cpu-gate perf-workloads-gate perf-coremark-gate perf-dhrystone-gate perf-benchmark-baseline-gate vic-nested-gate
 .PHONY: fpu-context-gate
 .PHONY: dcache-parity-gate
-.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate mmu-page-frame-allocator-gate mips-id-stage-llsc-hazard-gate mips-mem-stage-llsc-alignment-gate
+.PHONY: cpu-irq-delay-slot-gate cpu-irq-mem-pending-gate cpu-wait-irq-wakeup-gate cpu-badvaddr-owner-gate cpu-badvaddr-owner-context-gate mmu-page-frame-allocator-gate mips-id-stage-llsc-hazard-gate mips-mem-stage-llsc-alignment-gate
 .PHONY: mem-stage-gate
 .PHONY: formal-static-audit
 .PHONY: formal-bind-compile-gate
@@ -1380,6 +1380,11 @@ cpu-badvaddr-owner-gate:
 	chmod +x tb/soc_test/run_cpu_badvaddr_owner_gate.sh scripts/check_badvaddr_owner_trace.py
 	RUN_DIR=$(BUILD_DIR)/soc_test/cpu_badvaddr_owner \
 		tb/soc_test/run_cpu_badvaddr_owner_gate.sh
+
+cpu-badvaddr-owner-context-gate:
+	chmod +x tb/unit/cpu_test/run_mips_cpu_badvaddr_owner_context.sh
+	RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_badvaddr_owner_context \
+		tb/unit/cpu_test/run_mips_cpu_badvaddr_owner_context.sh
 
 cpu-load-return-gate:
 	tb/soc_test/run_cpu_load_return_gate.sh

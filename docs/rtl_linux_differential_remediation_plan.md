@@ -15,6 +15,15 @@ CPU/CP0 firmware gate passes. This advances Phase 1 owner identity for the
 bounded refill workload; reset, interrupt-coincident, ERET, and broad replay
 pressure are still outside the closure claim.
 
+### 2026-11-16 BadVAddr owner clear-boundary gate
+
+The direct CPU owner-context gate captures a live D-side translation-fault
+token and proves that context restore, ERET, interrupt flush, and reset clear
+the token before a later WB bundle can consume it. Fresh evidence reports
+`BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1`. This closes the
+four invalidation boundaries in the unit contract; arbitrary replay pressure
+and Linux VM ownership remain open.
+
 ### 2026-11-16 Retire FIFO producer root cause and current-source recheck
 
 The earlier discontinuity in
@@ -107,7 +116,7 @@ project status is:
 | --- | --- | --- |
 | Delay-slot interrupt root cause | `BLOCK_REDUCED` | A plausible fix exists and existing directed gates pass, but the new WB-to-EX and WB-to-ID cases lack direct coverage. |
 | Generic RTL Linux declared userspace workload | `CLOSED` | The current-source seeded terminal gate reaches `/init` and all declared userspace markers in order with a clean simulator terminal stop. Unrestricted Linux and full RTL/QEMU differential remain separate open contracts. |
-| BadVAddr fault/replay | `BOUNDED_PASS` | Current-source `cpu-badvaddr-owner-gate` proves PC/instruction/address/code identity for 14 owner commits and observes one older-syscall/younger-load squash. Reset, interrupt-coincident, ERET/context-restore, and broader replay pressure remain open. |
+| BadVAddr fault/replay | `BOUNDED_PASS` | Current-source integration and unit gates prove PC/instruction/address/code/store/ASID identity, one older-exception/younger-fault squash, and token clearing at reset, interrupt flush, ERET, and context restore. Arbitrary replay pressure and Linux VM ownership remain open. |
 | QEMU/RTL focus comparison | `UNTRUSTED` | Two checkpoint comparisons exist, but truncation and unselected-register mutations can falsely pass. |
 | Bounded full retire differential | `BOUNDED_PASS` | Current-source nonblocking generic Linux run compares the complete declared retire stream through the terminal marker with strict streaming state comparison. Unrestricted Linux and broader ISA/OS contracts remain separate. |
 | UART/VIC equivalence | `OPEN` | The focus gate does not compare UART or VIC transactions. |
@@ -453,6 +462,7 @@ make rtl-frontend-compile
 make cpu-cp0-gate
 make cpu-irq-delay-slot-gate
 make cpu-badvaddr-owner-gate
+make cpu-badvaddr-owner-context-gate
 make focus-differential-checker-test
 make rtl-linux-root-cause-checkpoint-gate
 make rtl-linux-generic-init-gate
