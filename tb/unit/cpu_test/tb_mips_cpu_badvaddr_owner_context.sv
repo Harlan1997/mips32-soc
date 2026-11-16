@@ -129,6 +129,49 @@ module tb_mips_cpu_badvaddr_owner_context;
         end
     endtask
 
+    task automatic capture_unaligned_owner;
+        begin
+            // The MMU sees the second aligned word beat, while BadVAddr must
+            // retain the byte address that the LUXC1/SUXC1 instruction formed.
+            force u_cpu.dmem_translation_fault = 1'b1;
+            force u_cpu.exception_flush = 1'b0;
+            force u_cpu.wb_except_req = 1'b0;
+            force u_cpu.wb_arch_valid = 1'b0;
+            force u_cpu.mem_pc = 32'h8000_2000;
+            force u_cpu.mem_inst = 32'h4c83_0005; // COP1X LUXC1-shaped word
+            force u_cpu.mem_unaligned_double_mem = 1'b1;
+            force u_cpu.mem_ex_out = 32'h0040_2041;
+            force u_cpu.mem_access_addr = 32'h0040_2048;
+            force u_cpu.d_fault_capture_code = 5'h02;
+            force u_cpu.mem_mem_write = 1'b0;
+            force u_cpu.cp0_asid = 8'h2b;
+            @(posedge clk);
+            #1;
+            if (!u_cpu.d_fault_vaddr_pending_q)
+                fail("unaligned fault owner was not captured");
+            if (u_cpu.d_fault_vaddr_q !== 32'h0040_2041)
+                fail("unaligned fault captured the aligned beat instead of the effective address");
+            release u_cpu.dmem_translation_fault;
+            release u_cpu.exception_flush;
+            release u_cpu.wb_except_req;
+            release u_cpu.wb_arch_valid;
+            release u_cpu.mem_pc;
+            release u_cpu.mem_inst;
+            release u_cpu.mem_unaligned_double_mem;
+            release u_cpu.mem_ex_out;
+            release u_cpu.mem_access_addr;
+            release u_cpu.d_fault_capture_code;
+            release u_cpu.mem_mem_write;
+            release u_cpu.cp0_asid;
+            ctx_restore_req = 1'b1;
+            repeat (2) @(posedge clk);
+            #1;
+            if (u_cpu.d_fault_vaddr_pending_q !== 1'b0)
+                fail("unaligned owner survived cleanup");
+            ctx_restore_req = 1'b0;
+        end
+    endtask
+
     initial begin
         clk = 1'b0;
         rst_n = 1'b0;
@@ -177,8 +220,10 @@ module tb_mips_cpu_badvaddr_owner_context;
         require_clear("reset retained a stale owner");
         rst_n = 1'b1;
 
+        capture_unaligned_owner();
+
         if (failures == 0)
-            $display("BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1");
+            $display("BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1 unaligned_ea=1");
         else
             $display("BADVADDR_OWNER_CONTEXT_FAIL failures=%0d", failures);
         $finish;

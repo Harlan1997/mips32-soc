@@ -382,7 +382,8 @@ module mips_id_stage (
             end
             6'b010011: begin // COP1X
                 reads_rs_dec = (func == 6'h00 || func == 6'h01 ||
-                                func == 6'h08 || func == 6'h09 ||
+                                func == 6'h05 || func == 6'h08 ||
+                                func == 6'h09 || func == 6'h0d ||
                                 func == 6'h0f);
                 reads_rt_dec = reads_rs_dec;
             end

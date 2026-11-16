@@ -81,14 +81,23 @@ module mips_ex_mem_reg (
     output reg         mem_cache_op_valid,
     output reg  [4:0]  mem_cache_op,
     output reg         mem_done,
-    output reg         mem_double_phase
+    output reg  [1:0]  mem_double_phase
 );
 
+    wire mem_is_unaligned_double_mem =
+                              (mem_inst[31:26] == 6'b010011) &&
+                              (mem_inst[5:0] == 6'h05 ||
+                               mem_inst[5:0] == 6'h0d);
     wire mem_is_double_mem = (mem_inst[31:26] == 6'b110101) ||
                               (mem_inst[31:26] == 6'b111101) ||
                               ((mem_inst[31:26] == 6'b010011) &&
                                (mem_inst[5:0] == 6'h01 ||
-                                mem_inst[5:0] == 6'h09));
+                                mem_inst[5:0] == 6'h09)) ||
+                              mem_is_unaligned_double_mem;
+    // LUXC1/SUXC1 clear EffectiveAddress[2:0] before issuing the access.
+    // Every indexed doubleword therefore has exactly two aligned word beats,
+    // regardless of the original low address bits.
+    wire [1:0] mem_last_double_phase = 2'd1;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -119,7 +128,7 @@ module mips_ex_mem_reg (
             mem_delay_slot_next_pc <= 32'd0;
             mem_delay_slot_branch_inst <= 32'd0;
             mem_done       <= 1'b0;
-            mem_double_phase <= 1'b0;
+            mem_double_phase <= 2'd0;
         end else if (flush) begin
             mem_ex_out     <= 32'd0;
             mem_val_rt     <= 32'd0;
@@ -148,7 +157,7 @@ module mips_ex_mem_reg (
             mem_delay_slot_next_pc <= 32'd0;
             mem_delay_slot_branch_inst <= 32'd0;
             mem_done       <= 1'b0;
-            mem_double_phase <= 1'b0;
+            mem_double_phase <= 2'd0;
         end else if ((!stall ||
                      (enable_nonblocking_load && mem_mem_read && !mem_done &&
                       dmem_addr_ok)) &&
@@ -188,15 +197,15 @@ module mips_ex_mem_reg (
             mem_cache_op_valid <= ex_cache_op_valid;
             mem_cache_op   <= ex_cache_op;
             mem_done       <= 1'b0;
-            mem_double_phase <= 1'b0;
+            mem_double_phase <= 2'd0;
         end else if (((!enable_nonblocking_load || !mem_mem_read) && dmem_data_ok) ||
                      (cache_op_done === 1'b1)) begin
-            // LDC1/SDC1 use two ordered word beats.  Keep the instruction in
-            // EX/MEM after beat zero so the second beat can be issued at
-            // address+4; only beat one retires the memory operation.
+            // Doubleword COP1 memory forms stay in EX/MEM until their final
+            // aligned word beat.  All supported forms use two beats.
             if (mem_is_double_mem &&
-                !mem_double_phase && dmem_data_ok) begin
-                mem_double_phase <= 1'b1;
+                (mem_double_phase < mem_last_double_phase) &&
+                dmem_data_ok) begin
+                mem_double_phase <= mem_double_phase + 2'd1;
             end else begin
                 mem_done <= 1'b1;
             end

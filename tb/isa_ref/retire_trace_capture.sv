@@ -37,6 +37,7 @@ module retire_trace_capture (
     string mem_wdata_hi_field;
     logic [1023:0] fpr_state_d1, fpr_state_d2;
     logic [1023:0] fpr_hi_state_d1, fpr_hi_state_d2;
+    logic          fpr_fr_d1, fpr_fr_d2;
     logic [31:0] fcsr_state_d1, fcsr_state_d2;
     logic [1023:0] gpr_state_post;
     logic [63:0] retired_hilo_state;
@@ -74,20 +75,27 @@ module retire_trace_capture (
 
     function automatic logic [31:0] double_store_high_word(
         input logic [31:0] instruction,
-        input logic [1023:0] fpr_state
+        input logic [1023:0] fpr_state,
+        input logic [1023:0] fpr_hi_state,
+        input logic          fpr_fr
     );
         integer fpr_index;
         begin
             double_store_high_word = 32'd0;
-            // This RTL stores a double's low word in the even FPR and high
-            // word in the following odd FPR; fpr_state keeps FPR0 at bit 0.
+            // FR=1 stores each double's high word in the selected FPR high
+            // image. FR=0 uses the legacy even/odd low-word pair.
             if (instruction[31:26] == 6'b111101 ||
                 (instruction[31:26] == 6'b010011 &&
-                 instruction[5:0] == 6'h09)) begin
+                 (instruction[5:0] == 6'h09 ||
+                  instruction[5:0] == 6'h0d))) begin
                 fpr_index = (instruction[31:26] == 6'b010011) ?
                             instruction[15:11] : instruction[20:16];
-                fpr_index = (fpr_index == 31) ? 0 : fpr_index + 1;
-                double_store_high_word = fpr_state[fpr_index*32 +: 32];
+                if (fpr_fr === 1'b1)
+                    double_store_high_word = fpr_hi_state[fpr_index*32 +: 32];
+                else begin
+                    fpr_index = (fpr_index == 31) ? 0 : fpr_index + 1;
+                    double_store_high_word = fpr_state[fpr_index*32 +: 32];
+                end
             end
         end
     endfunction
@@ -99,7 +107,8 @@ module retire_trace_capture (
             is_double_store_instruction =
                 instruction[31:26] == 6'b111101 ||
                 (instruction[31:26] == 6'b010011 &&
-                 instruction[5:0] == 6'h09);
+                 (instruction[5:0] == 6'h09 ||
+                  instruction[5:0] == 6'h0d));
         end
     endfunction
 
@@ -168,6 +177,8 @@ module retire_trace_capture (
             fpr_state_d2 <= 1024'd0;
             fpr_hi_state_d1 <= 1024'd0;
             fpr_hi_state_d2 <= 1024'd0;
+            fpr_fr_d1 <= 1'b0;
+            fpr_fr_d2 <= 1'b0;
             fcsr_state_d1 <= 32'd0;
             fcsr_state_d2 <= 32'd0;
             cycle_count <= 0;
@@ -180,6 +191,8 @@ module retire_trace_capture (
             fpr_state_d1 <= obs_if.retire_fpr_state;
             fpr_hi_state_d2 <= fpr_hi_state_d1;
             fpr_hi_state_d1 <= obs_if.retire_fpr_hi_state;
+            fpr_fr_d2 <= fpr_fr_d1;
+            fpr_fr_d1 <= obs_if.retire_fpr_fr;
             fcsr_state_d2 <= fcsr_state_d1;
             fcsr_state_d1 <= obs_if.retire_fcsr_state;
             cycle_count <= cycle_count + 1;
@@ -292,7 +305,8 @@ module retire_trace_capture (
             if (is_double_store_instruction(obs_if.retire_instr)) begin
                 mem_wdata_hi_field = $sformatf(
                     ",\"mem_wdata_hi\":\"%08x\"",
-                    double_store_high_word(obs_if.retire_instr, fpr_state_d2));
+                    double_store_high_word(obs_if.retire_instr, fpr_state_d2,
+                                           fpr_hi_state_d2, fpr_fr_d2));
             end else begin
                 mem_wdata_hi_field = "";
             end

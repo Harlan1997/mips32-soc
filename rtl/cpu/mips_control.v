@@ -1071,21 +1071,26 @@ module mips_control (
                     if (sa != 5'd0)
                         illegal_inst = 1'b1;
                 end else if (func == 6'h00 || func == 6'h01 ||
-                             func == 6'h08 || func == 6'h09) begin
-                    // LWXC1/LDXC1 and SWXC1/SDXC1 use GPR[rs]+GPR[rt]
-                    // as an indexed address and rd as the FPR selector.
+                             func == 6'h05 || func == 6'h08 ||
+                             func == 6'h09 || func == 6'h0d) begin
+                    // LWXC1/LDXC1/LUXC1 and SWXC1/SDXC1/SUXC1 use
+                    // GPR[rs]+GPR[rt] as an indexed address and rd as the
+                    // FPR selector.  LUXC1/SUXC1 are the unaligned 64-bit
+                    // forms; the MEM stage owns their aligned two-beat
+                    // word decomposition.
                     // Double transfers require an even FPR pair in FR=0;
                     // FR=1 names one independently addressable 64-bit FPR.
                     if (`SOC_FPU_ENABLE == 0 ||
                         ((fpu_fr_enable !== 1'b1) &&
-                         (func == 6'h01 || func == 6'h09) && rd[0])) begin
+                         (func == 6'h01 || func == 6'h05 ||
+                          func == 6'h09 || func == 6'h0d) && rd[0])) begin
                         illegal_inst = 1'b1;
                     end else begin
                         alu_op    = 5'b00001;
                         alu_src   = 1'b0;
                         mem_op    = 3'b100;
                         imm_signed = 1'b1;
-                        if (func == 6'h00 || func == 6'h01) begin
+                        if (func == 6'h00 || func == 6'h01 || func == 6'h05) begin
                             mem_read  = 1'b1;
                             mem_to_reg = 2'b01;
                         end else begin

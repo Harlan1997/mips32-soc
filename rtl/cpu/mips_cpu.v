@@ -161,13 +161,18 @@ module mips_cpu #(
     // it with the other forward references because the owner token is formed
     // before the retirement-buffer wiring below.
     wire        wb_mem_write_trace;
+    wire        mem_unaligned_double_mem = (`SOC_FPU_ENABLE != 0) &&
+                                           (mem_inst[31:26] == 6'b010011) &&
+                                           (mem_inst[5:0] == 6'h05 ||
+                                            mem_inst[5:0] == 6'h0d);
     wire        mem_double_mem = (`SOC_FPU_ENABLE != 0) &&
                                  ((mem_inst[31:26] == 6'b110101) ||
                                   (mem_inst[31:26] == 6'b111101) ||
                                   ((mem_inst[31:26] == 6'b010011) &&
                                    (mem_inst[5:0] == 6'h01 ||
-                                    mem_inst[5:0] == 6'h09)));
-    wire        mem_double_phase;
+                                    mem_inst[5:0] == 6'h09)) ||
+                                  mem_unaligned_double_mem);
+    wire [1:0]  mem_double_phase;
     wire        mem_done;
     wire        dmem_request_blocked;
     wire        id_is_wait;
@@ -909,6 +914,7 @@ module mips_cpu #(
     wire        fpu_mem_lwc1_commit;
     wire        fpu_mem_ldc1_commit;
     wire [31:0] mem_fpu_store_data;
+    wire [31:0] mem_fpu_store_data_hi;
     wire [4:0]  mem_fpu_reg = (mem_inst[31:26] == 6'b010011) ?
                                mem_inst[15:11] : mem_inst[20:16];
     // Phase B.5: delay-slot marker propagated with each instruction so an
@@ -1018,8 +1024,10 @@ module mips_cpu #(
                                     ((id_inst[31:26] == 6'b010011) &&
                                      (id_inst[5:0] == 6'h00 ||
                                       id_inst[5:0] == 6'h01 ||
+                                      id_inst[5:0] == 6'h05 ||
                                       id_inst[5:0] == 6'h08 ||
-                                      id_inst[5:0] == 6'h09)));
+                                      id_inst[5:0] == 6'h09 ||
+                                      id_inst[5:0] == 6'h0d)));
     wire        fpu_id_mfc1 = fpu_id_cop1 && (id_inst[25:21] == 5'b00000);
     wire        fpu_id_fcr0 = (id_inst[15:11] == 5'd0);
     wire        fpu_id_fcsr_alias = (id_inst[15:11] == 5'd25) ||
@@ -1119,22 +1127,26 @@ module mips_cpu #(
                                     (ex_inst[31:26] == 6'b110101) ||
                                     ((ex_inst[31:26] == 6'b010011) &&
                                      (ex_inst[5:0] == 6'h00 ||
-                                      ex_inst[5:0] == 6'h01));
+                                      ex_inst[5:0] == 6'h01 ||
+                                      ex_inst[5:0] == 6'h05));
     wire        mem_fpu_word_load = (mem_inst[31:26] == 6'b110001) ||
                                      (mem_inst[31:26] == 6'b110101) ||
                                      ((mem_inst[31:26] == 6'b010011) &&
                                       (mem_inst[5:0] == 6'h00 ||
-                                       mem_inst[5:0] == 6'h01));
+                                       mem_inst[5:0] == 6'h01 ||
+                                       mem_inst[5:0] == 6'h05));
     wire [4:0]  ex_fpu_load_reg = (ex_inst[31:26] == 6'b010011) ?
                                    ex_inst[15:11] : ex_inst[20:16];
     wire [4:0]  mem_fpu_load_reg = (mem_inst[31:26] == 6'b010011) ?
                                     mem_inst[15:11] : mem_inst[20:16];
     wire        ex_fpu_load_double = (ex_inst[31:26] == 6'b110101) ||
                                      ((ex_inst[31:26] == 6'b010011) &&
-                                      ex_inst[5:0] == 6'h01);
+                                      (ex_inst[5:0] == 6'h01 ||
+                                       ex_inst[5:0] == 6'h05));
     wire        mem_fpu_load_double = (mem_inst[31:26] == 6'b110101) ||
                                       ((mem_inst[31:26] == 6'b010011) &&
-                                       mem_inst[5:0] == 6'h01);
+                                       (mem_inst[5:0] == 6'h01 ||
+                                        mem_inst[5:0] == 6'h05));
     wire ex_fpu_load_hazard = ex_fpu_word_load &&
                               ((ex_fpu_load_reg == id_inst[15:11]) ||
                                (ex_fpu_load_double &&
@@ -1168,6 +1180,11 @@ module mips_cpu #(
                                    fpr[index + 1'b1];
         end
     endfunction
+    // LUXC1 uses the same ordered two-word commit as aligned doubleword loads.
+    // Its effective address is aligned down before the first beat is issued;
+    // the architectural low address bits are ignored rather than merged.
+    wire [31:0] fpu_mem_low_commit = fpu_double_low;
+    wire [31:0] fpu_mem_high_commit = mem_rdata_fmt;
     wire [5:0]  fpu_op = (fpu_id_cop1x &&
                           (id_inst[5:0] == 6'h20 || id_inst[5:0] == 6'h21)) ? 6'd25 :
                          (fpu_id_cop1x &&
@@ -1297,8 +1314,10 @@ module mips_cpu #(
         end else if (mem_double_mem &&
                      ((mem_inst[31:26] == 6'b110101) ||
                       ((mem_inst[31:26] == 6'b010011) &&
-                       mem_inst[5:0] == 6'h01)) &&
-                     !mem_double_phase && data_data_ok_current &&
+                       (mem_inst[5:0] == 6'h01 ||
+                        mem_inst[5:0] == 6'h05))) &&
+                     mem_mem_read &&
+                     (mem_double_phase == 2'd0) && data_data_ok_current &&
                      !(data_bus_error_current === 1'b1) &&
                      !(data_cache_error_current === 1'b1) &&
                      !dmem_request_blocked) begin
@@ -1308,11 +1327,11 @@ module mips_cpu #(
             // destination is the FPR named by rt, not the GPR file.
             fpr[mem_fpu_reg] <= mem_rdata_fmt;
         end else if (fpu_mem_ldc1_commit) begin
-            fpr[mem_fpu_reg] <= fpu_double_low;
+            fpr[mem_fpu_reg] <= fpu_mem_low_commit;
             if (cpu_fpu_fr)
-                fpr_hi[mem_fpu_reg] <= mem_rdata_fmt;
+                fpr_hi[mem_fpu_reg] <= fpu_mem_high_commit;
             else
-                fpr[mem_fpu_reg + 1'b1] <= mem_rdata_fmt;
+                fpr[mem_fpu_reg + 1'b1] <= fpu_mem_high_commit;
         end else if (id_fpu_exception && fpu_id_valid && !global_stall &&
                      !stall_req_id && !exception_flush && !ctx_restore_req) begin
             if (fpu_id_ctc1) begin
@@ -1966,15 +1985,25 @@ module mips_cpu #(
                 fpr[ex_fpu_store_reg] :
                 ((`SOC_FPU_ENABLE != 0) &&
                  ((ex_inst[31:26] == 6'b111101) ||
-                  ((ex_inst[31:26] == 6'b010011) && ex_inst[5:0] == 6'h09))) ?
+                  ((ex_inst[31:26] == 6'b010011) &&
+                   (ex_inst[5:0] == 6'h09 || ex_inst[5:0] == 6'h0d)))) ?
                 fpr[ex_fpu_store_reg] : ex_val_rt;
     wire [4:0]  mem_rd_addr;
     // Only ordinary cacheable loads use the decoupled issue path.  MMU
     // faults, uncached accesses, stores, CACHE operations, and LL/SC remain
     // blocking: the atomic pair needs the established reservation/response
     // ordering and must not be reduced to an ordinary tagged load.
-    assign mem_access_addr = mem_ex_out + (mem_double_phase ? 32'd4 : 32'd0);
-    wire mem_double_align_fault = mem_double_mem && (mem_ex_out[2:0] != 3'b000);
+    // LUXC1/SUXC1 ignore EffectiveAddress[2:0], so every doubleword form
+    // consists of exactly two aligned word beats.
+    wire [1:0] mem_last_double_phase = 2'd1;
+    wire [31:0] mem_double_base_addr = mem_unaligned_double_mem ?
+                                       {mem_ex_out[31:3], 3'b000} :
+                                       mem_ex_out;
+    assign mem_access_addr = mem_double_base_addr +
+                             {28'd0, mem_double_phase, 2'b00};
+    wire mem_double_align_fault = mem_double_mem &&
+                                  !mem_unaligned_double_mem &&
+                                  (mem_ex_out[2:0] != 3'b000);
     wire mem_enable_nb_load = (`SOC_CPU_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_L1_NONBLOCKING_ENABLE != 0) &&
                               (`SOC_ROB_FIFO_ENABLE != 0) &&
@@ -2011,6 +2040,12 @@ module mips_cpu #(
                                       (mmu_d_fault_type == 3'b100) ? 5'h04 :
                                       (mmu_d_fault_type == 3'b101) ? 5'h05 :
                                                                       5'h02;
+    // Translation and the external data port operate on the current aligned
+    // beat (`mem_access_addr`).  COP1X unaligned doubleword operations define
+    // their effective address after clearing the low three bits, so retain the
+    // architectural address used for translation rather than the raw GPR sum.
+    wire [31:0] d_fault_capture_vaddr = mem_unaligned_double_mem ?
+                                         mem_double_base_addr : mem_access_addr;
 
     // The MEM/WB and ROB control bundles are flushed on the same edge that
     // CP0 consumes a translation exception.  Keep the original virtual
@@ -2069,7 +2104,7 @@ module mips_cpu #(
             // younger address could survive the flush and be consumed by a
             // later unrelated WB exception.
             d_fault_vaddr_pending_q <= 1'b1;
-            d_fault_vaddr_q         <= mem_access_addr;
+            d_fault_vaddr_q         <= d_fault_capture_vaddr;
             d_fault_owner_pc_q      <= mem_pc;
             d_fault_owner_inst_q    <= mem_inst;
             d_fault_owner_code_q    <= d_fault_capture_code;
@@ -2161,7 +2196,8 @@ module mips_cpu #(
                           mem_mem_write &&
                           ((mem_inst[31:26] == 6'b111001) ||
                            ((mem_inst[31:26] == 6'b010011) &&
-                            mem_inst[5:0] == 6'h08));
+                            (mem_inst[5:0] == 6'h08 ||
+                             mem_inst[5:0] == 6'h0d)));
     assign fpu_mem_lwc1_commit = fpu_mem_lwc1 && data_data_ok_current &&
                                  !(data_bus_error_current === 1'b1) &&
                                  !(data_cache_error_current === 1'b1) &&
@@ -2169,8 +2205,11 @@ module mips_cpu #(
     assign fpu_mem_ldc1_commit = mem_double_mem &&
                                  ((mem_inst[31:26] == 6'b110101) ||
                                   ((mem_inst[31:26] == 6'b010011) &&
-                                   mem_inst[5:0] == 6'h01)) &&
-                                 mem_double_phase && data_data_ok_current &&
+                                   (mem_inst[5:0] == 6'h01 ||
+                                    mem_inst[5:0] == 6'h05))) &&
+                                 mem_mem_read &&
+                                 (mem_double_phase == mem_last_double_phase) &&
+                                 data_data_ok_current &&
                                  !(data_bus_error_current === 1'b1) &&
                                  !(data_cache_error_current === 1'b1) &&
                                  !dmem_request_blocked;
@@ -2179,9 +2218,12 @@ module mips_cpu #(
                                 (mem_double_mem &&
                                  ((mem_inst[31:26] == 6'b111101) ||
                                   ((mem_inst[31:26] == 6'b010011) &&
-                                   mem_inst[5:0] == 6'h09)) ?
-                                 (mem_double_phase ? fpu_double_high_word(mem_fpu_reg) :
+                                   (mem_inst[5:0] == 6'h09 ||
+                                    mem_inst[5:0] == 6'h0d))) ?
+                                 (mem_double_phase != 2'd0 ? fpu_double_high_word(mem_fpu_reg) :
                                                       fpr[mem_fpu_reg]) : mem_val_rt);
+    assign mem_fpu_store_data_hi = (mem_double_mem && mem_mem_write) ?
+                                   fpu_double_high_word(mem_fpu_reg) : 32'd0;
     
     mips_ex_mem_reg u_mips_ex_mem_reg (
         .clk             (clk),
@@ -2272,6 +2314,10 @@ module mips_cpu #(
         .mem_write       (mem_mem_write),
         .mem_op          (mem_mem_op),
         .mem_done        (mem_done),
+        .mem_unaligned_double(mem_unaligned_double_mem),
+        .mem_double_phase(mem_double_phase),
+        .mem_double_store_low(fpr[mem_fpu_reg]),
+        .mem_double_store_high(mem_fpu_store_data_hi),
         .enable_nonblocking_load(mem_enable_nb_load),
         .reverse_endian  (cpu_reverse_endian),
         .mem_cache_op_valid(mem_cache_op_valid),

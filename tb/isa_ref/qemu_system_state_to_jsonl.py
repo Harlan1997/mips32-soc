@@ -122,8 +122,8 @@ def fpr_state(regs):
                    for index in range(31, -1, -1))
 
 
-def fpr_hi_state(regs):
-    """Serialize the upper word of each FR=1 FPR, or zeros in FR=0 mode."""
+def fpr_hi_state(regs, shadow=None):
+    """Serialize FR=1 FPR high words, using the converter's architectural shadow."""
     if COMPACT_FPR:
         return "0"
     try:
@@ -132,6 +132,8 @@ def fpr_hi_state(regs):
         status = 0
     if not (status & (1 << 26)):
         return "0" * 256
+    if shadow is not None:
+        return "".join(hex32(shadow[index]) for index in range(31, -1, -1))
     words = []
     for index in range(31, -1, -1):
         try:
@@ -164,7 +166,7 @@ def gpr_destination(instr, before=None):
     # MFC1/CFC1 are the COP1 transfers that do write the integer register
     # file; the remaining COP1 arithmetic and control operations do not.
     if op == 0x11:
-        return rt if rs in (0, 2) else None
+        return rt if rs in (0, 2, 3) else None
     # LDC1/SDC1 are double-word memory operations; their rt field names an
     # even FPR pair and must never be interpreted as an integer destination.
     if op in (0x35, 0x3d):
@@ -471,6 +473,13 @@ def faulting_memory_access(instr, before):
         0x28: 1, 0x29: 2, 0x2a: 4, 0x2b: 4, 0x2c: 8, 0x2d: 8,
         0x2e: 4, 0x38: 4, 0x39: 4, 0x3d: 8,
     }
+    cop1x_funct = instr & 0x3f
+    if opcode == 0x13 and cop1x_funct in (0x05, 0x0d):
+        # LUXC1/SUXC1 are indexed 64-bit accesses.  The FPR payload is
+        # recovered from the architectural state by the normal event path;
+        # this fallback only needs the access direction and size.
+        address = effective_address(instr, before)
+        return cop1x_funct == 0x0d, address, 8, "00000000"
     size = loads.get(opcode) or stores.get(opcode)
     if size is None:
         return None
@@ -501,6 +510,10 @@ def convert(events, states):
     replay_gpr_overrides = {}
     replay_mdu_hilo = None
     replay_memory_bytes = {}
+    # The QEMU plugin exposes MIPS FPRs as 32-bit register descriptors even
+    # in FR=1 mode. Reconstruct the architectural high words from instructions
+    # and the 64-bit memory payloads carried by the retire events.
+    fpr_hi_shadow = [0] * 32
     for index, event in enumerate(events):
         if is_annulled_likely(events, states, index):
             continue
@@ -514,7 +527,8 @@ def convert(events, states):
         is_merge_memory = opcode in (0x22, 0x26, 0x2a, 0x2e)
         is_merge_store_access = opcode in (0x2a, 0x2e)
         is_double_store = (opcode == 0x3d or
-                           (opcode == 0x13 and (instr & 0x3f) == 0x09))
+                           (opcode == 0x13 and
+                            (instr & 0x3f) in (0x09, 0x0d)))
         mdu_funct = instr & 0x3f
         mdu_read = ((instr >> 26) & 0x3f) == 0 and mdu_funct in (0x10, 0x12)
         if replay_mdu_hilo is not None and mdu_read:
@@ -791,6 +805,22 @@ def convert(events, states):
         if synchronous_exception_taken:
             gpr_we, gpr_addr, gpr_data = 0, 0, "00000000"
             cp0_we = 0
+        status_after = int(after.get("status", "0"), 16)
+        if not (status_after & (1 << 26)):
+            fpr_hi_shadow = [0] * 32
+        elif not synchronous_exception_taken:
+            cop1_rs = (instr >> 21) & 0x1f
+            cop1_fs = (instr >> 11) & 0x1f
+            cop1x_funct = instr & 0x3f
+            if opcode == 0x11 and cop1_rs == 0x07:
+                # MTHC1 rt, fs writes the high word of the named FR=1 FPR.
+                fpr_hi_shadow[cop1_fs] = int(before[f"r{(instr >> 16) & 0x1f}"], 16)
+            elif (opcode == 0x13 and cop1x_funct == 0x05 and
+                  event.get("mem_read") and event.get("mem_value_hi") is not None):
+                fpr_hi_shadow[cop1_fs] = int(event["mem_value_hi"], 16)
+            elif (opcode == 0x35 and event.get("mem_read") and
+                  event.get("mem_value_hi") is not None):
+                fpr_hi_shadow[(instr >> 16) & 0x1f] = int(event["mem_value_hi"], 16)
         # A Cause replay override models only the value flowing through the
         # bounded interrupt handler.  Once an ordinary architectural write
         # commits the same GPR, the override must be retired as well; keeping
@@ -852,7 +882,7 @@ def convert(events, states):
             "cp0_sel": cp0_sel,
             "cp0_data": cp0_data,
             "fpr_state": fpr_state(after),
-            "fpr_hi_state": fpr_hi_state(after),
+            "fpr_hi_state": fpr_hi_state(after, fpr_hi_shadow),
             "fcsr_state": hex32(after.get("fcsr", "00000000")),
             "mem_valid": trace_mem_valid,
             "mem_read": trace_mem_read,

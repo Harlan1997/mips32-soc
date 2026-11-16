@@ -21,6 +21,29 @@ worktree. This closes the declared generic Linux nonblocking terminal
 workload only; unrestricted Linux, complete ISA/privileged/FPU/MMU/OS
 semantics, and product signoff remain separate scope.
 
+### 2026-11-17 Aligned LDC1 high-word commit and double differential
+
+The double-memory commit path now selects the second response word for an
+aligned `LDC1`; the unaligned reconstruction buffer is used only by the
+indexed `LUXC1` path. A fresh `fpu-double-gate` passes, and the matching
+patched-QEMU system differential passes `TRACE_COMPARE_PASS records=640`
+from 642 captured QEMU events. This closes the selected aligned two-beat
+FPU memory slice. COP1X reverse-endian-specific and fault-boundary evidence
+remain separate open coverage.
+
+### 2026-11-17 COP1X unaligned doubleword implementation slice
+
+The COP1X decoder and CPU memory path now accept `LUXC1` (funct `0x05`) and
+`SUXC1` (funct `0x0d`). The effective address ignores its low three bits and
+each indexed access issues exactly two aligned 32-bit beats at the aligned
+base and `base + 4`. Loads retain the first beat and commit the assembled
+64-bit FPR on the second response; stores present the low and high words as
+two complete beats. Retire conversion and comparison classify the forms as
+64-bit memory operations. The FR=1 RTL/QEMU differential passes 168 compared
+records, and the FR=0 RTL-only boundary gate passes. Reverse-endian and
+fault-boundary evidence remain separate open coverage for this partial COP1X
+contract.
+
 ### 2026-11-16 Focus differential complete-GPR checker hardening
 
 The QEMU and RTL focus record producers now emit a complete 32-register

@@ -15,6 +15,10 @@ module mips_mem_stage (
     input  wire        mem_write,
     input  wire [2:0]  mem_op,         // 000:B, 001:BU, 010:H, 011:HU, 100:W
     input  wire        mem_done,
+    input  wire        mem_unaligned_double,
+    input  wire [1:0]  mem_double_phase,
+    input  wire [31:0] mem_double_store_low,
+    input  wire [31:0] mem_double_store_high,
     input  wire        enable_nonblocking_load,
     input  wire        reverse_endian,
     input  wire        mem_cache_op_valid,
@@ -90,7 +94,24 @@ module mips_mem_stage (
         wdata_aligned = 32'd0;
         we_aligned    = 4'b0000;
         
-        if (mem_write) begin
+        if (mem_write && mem_unaligned_double) begin
+            // SUXC1 ignores EffectiveAddress[2:0] and writes the aligned
+            // doubleword as two complete little-endian word beats.
+            case (mem_double_phase)
+                2'd0: begin
+                    wdata_aligned = mem_double_store_low;
+                    we_aligned    = 4'b1111;
+                end
+                2'd1: begin
+                    wdata_aligned = mem_double_store_high;
+                    we_aligned    = 4'b1111;
+                end
+                default: begin
+                    wdata_aligned = 32'd0;
+                    we_aligned    = 4'b0000;
+                end
+            endcase
+        end else if (mem_write) begin
             case (mem_op)
                 3'b000: begin // SB: Store Byte
                     wdata_aligned = {4{mem_val_rt[7:0]}}; // Duplicate across all bytes

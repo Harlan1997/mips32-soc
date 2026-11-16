@@ -1007,9 +1007,10 @@ def is_double_memory_instruction(obj):
     opcode = (word >> 26) & 0x3f
     if opcode in (0x35, 0x3d):
         return True
-    # COP1X indexed double accesses use funct 0x01/0x09.  The plugin reports
-    # one 64-bit access while RTL exposes two word beats, just like LDC1/SDC1.
-    return opcode == 0x13 and (word & 0x3f) in (0x01, 0x09)
+    # COP1X indexed double accesses use funct 0x01/0x05/0x09/0x0d.  The plugin reports
+    # one 64-bit access while RTL exposes the two aligned word beats, just like
+    # LDC1/SDC1.
+    return opcode == 0x13 and (word & 0x3f) in (0x01, 0x05, 0x09, 0x0d)
 
 
 def is_double_store_instruction(obj):
@@ -1019,7 +1020,7 @@ def is_double_store_instruction(obj):
     except (TypeError, ValueError):
         return False
     opcode = (word >> 26) & 0x3f
-    return opcode == 0x3d or (opcode == 0x13 and (word & 0x3f) == 0x09)
+    return opcode == 0x3d or (opcode == 0x13 and (word & 0x3f) in (0x09, 0x0d))
 
 
 def hilo_gpr_word(record, register):

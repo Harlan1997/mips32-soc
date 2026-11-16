@@ -49,6 +49,7 @@ module tb_retire_trace_fifo;
         obs_if.retire_cp0_data = 32'd0;
         obs_if.retire_fpr_state = 1024'd0;
         obs_if.retire_fpr_hi_state = 1024'd0;
+        obs_if.retire_fpr_fr = 1'b0;
         obs_if.retire_fcsr_state = 32'd0;
         obs_if.retire_mem_valid = 0;
         obs_if.retire_mem_read = 0;

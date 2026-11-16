@@ -102,7 +102,8 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
                            ((`SOC_FPU_ENABLE != 0) &&
                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b010001) &&
                             ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00000) ||
-                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00010)))) &&
+                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00010) ||
+                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[25:21] == 5'b00011)))) &&
                            !u_dut.u_core_subsystem.u_core.u_cpu.wb_except_req &&
                            (u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr != 5'd0)),
     .retire_gpr_addr      (u_dut.u_core_subsystem.u_core.u_cpu.wb_waddr),
@@ -118,6 +119,7 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
     .retire_cp0_data      (u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
     .retire_fpr_state     (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fpr),
     .retire_fpr_hi_state  (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fpr_hi),
+    .retire_fpr_fr        (u_dut.u_core_subsystem.u_core.u_cpu.cpu_fpu_fr),
     .retire_fcsr_state    (u_dut.u_core_subsystem.u_core.u_cpu.ctx_save_fcsr),
     .retire_mem_valid     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_read_trace ||
                            u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
@@ -125,6 +127,10 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
     .retire_mem_write     (u_dut.u_core_subsystem.u_core.u_cpu.wb_mem_write_trace),
     .retire_mem_addr      (((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b111000)) ?
                            u_dut.u_core_subsystem.u_core.u_cpu.sc_trace_addr :
+                           ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b010011) &&
+                            ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[5:0] == 6'h05) ||
+                             (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[5:0] == 6'h0d))) ?
+                           {u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out[31:3], 3'b000} :
                            u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
     .retire_mem_wdata     (u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt),
     // Derive the observed byte lanes from the retired opcode.  This keeps
