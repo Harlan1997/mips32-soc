@@ -1,0 +1,124 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] target/mips: allow long conversions in FR=0 pair mode
+
+The MIPS32 SoC RTL exposes the architectural even/odd FPR pair view when
+Status.FR is zero. QEMU's long conversion translators used the broader
+64-bit-FPU check, which rejected otherwise valid even-register pair operands
+with Reserved Instruction. Keep the FR=0 parity checks and allow the same
+pair form for the L conversion and fixed-rounding operations.
+
+---
+ target/mips/tcg/translate.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -9403,7 +9403,7 @@
+         }
+         break;
+     case OPC_ROUND_L_S:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i32 fp32 = tcg_temp_new_i32();
+             TCGv_i64 fp64 = tcg_temp_new_i64();
+@@ -9418,7 +9418,7 @@
+         }
+         break;
+     case OPC_TRUNC_L_S:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i32 fp32 = tcg_temp_new_i32();
+             TCGv_i64 fp64 = tcg_temp_new_i64();
+@@ -9433,7 +9433,7 @@
+         }
+         break;
+     case OPC_CEIL_L_S:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i32 fp32 = tcg_temp_new_i32();
+             TCGv_i64 fp64 = tcg_temp_new_i64();
+@@ -9448,7 +9448,7 @@
+         }
+         break;
+     case OPC_FLOOR_L_S:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i32 fp32 = tcg_temp_new_i32();
+             TCGv_i64 fp64 = tcg_temp_new_i64();
+@@ -9737,7 +9737,7 @@
+         }
+         break;
+     case OPC_CVT_L_S:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i32 fp32 = tcg_temp_new_i32();
+             TCGv_i64 fp64 = tcg_temp_new_i64();
+@@ -9883,7 +9883,8 @@
+         }
+         break;
+     case OPC_ROUND_L_D:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+@@ -9897,7 +9898,8 @@
+         }
+         break;
+     case OPC_TRUNC_L_D:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+@@ -9911,7 +9913,8 @@
+         }
+         break;
+     case OPC_CEIL_L_D:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+@@ -9925,7 +9928,8 @@
+         }
+         break;
+     case OPC_FLOOR_L_D:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+@@ -10246,7 +10250,8 @@
+         }
+         break;
+     case OPC_CVT_L_D:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+@@ -10280,7 +10285,7 @@
+         }
+         break;
+     case OPC_CVT_S_L:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i32 fp32 = tcg_temp_new_i32();
+             TCGv_i64 fp64 = tcg_temp_new_i64();
+@@ -10291,7 +10296,8 @@
+         }
+         break;
+     case OPC_CVT_D_L:
+-        check_cp1_64bitmode(ctx);
++        check_cp1_registers(ctx, fs);
++        check_cp1_registers(ctx, fd); /* SOC_REF_FPU_FR0_LONG */
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();

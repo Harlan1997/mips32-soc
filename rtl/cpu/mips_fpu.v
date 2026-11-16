@@ -2,7 +2,7 @@
 // arithmetic/flag path; FR-dependent register mapping is owned by mips_cpu.
 // Synthesis, complete trap policy, and OS ABI remain separate contracts.
 module mips_fpu (
-    input wire [4:0] op, input wire [31:0] a, input wire [31:0] b,
+    input wire [5:0] op, input wire [31:0] a, input wire [31:0] b,
     output reg [31:0] result, output reg compare_true,
     // COP1 compare condition, matching funct[3:0] for C.* (0x30..0x3f).
     // 0=F, 1=UN, 2=EQ, 3=UEQ, 4=OLT, 5=ULT, 6=OLE, 7=ULE,
@@ -33,7 +33,13 @@ module mips_fpu (
                OP_CEIL_W_D=5'd21, OP_FLOOR_W_D=5'd22,
                OP_RECIP=5'd23, OP_RSQRT=5'd24,
                OP_MADD=5'd25, OP_MSUB=5'd26,
-               OP_NMADD=5'd27, OP_NMSUB=5'd28;
+               OP_NMADD=5'd27, OP_NMSUB=5'd28,
+               OP_CVT_S_L=6'd29, OP_CVT_D_L=6'd30,
+               OP_CVT_L_S=6'd31, OP_CVT_L_D=6'd32,
+               OP_ROUND_L_S=6'd33, OP_TRUNC_L_S=6'd34,
+               OP_CEIL_L_S=6'd35, OP_FLOOR_L_S=6'd36,
+               OP_ROUND_L_D=6'd37, OP_TRUNC_L_D=6'd38,
+               OP_CEIL_L_D=6'd39, OP_FLOOR_L_D=6'd40;
 
     function automatic signed [31:0] round_real_to_word;
         input real value;
@@ -128,6 +134,155 @@ module mips_fpu (
             endcase
             word_conversion_invalid = (rounded >= 2147483648.0) ||
                                        (rounded < -2147483648.0);
+        end
+    endfunction
+
+    // The L conversion family uses the same five rounding policies as the W
+    // family, but returns a signed 64-bit two's-complement value.  Keep the
+    // range check separate from the host integer conversion: $rtoi is only a
+    // 32-bit result and silently becomes simulator-dependent above 2^31.
+    // kind: 0=CVT.L (FCSR.RM), 1=ROUND.L, 2=TRUNC.L, 3=CEIL.L,
+    //       4=FLOOR.L.
+    function automatic long_conversion_invalid;
+        input real value;
+        input [1:0] mode;
+        input [2:0] kind;
+        real rounded;
+        real lower;
+        real fraction;
+        real magnitude;
+        begin
+            rounded = value;
+            case (kind)
+                3'd0: begin
+                    case (mode)
+                        2'b01: rounded = (value < 0.0) ? $ceil(value) : $floor(value);
+                        2'b10: rounded = $ceil(value);
+                        2'b11: rounded = $floor(value);
+                        default: begin
+                            lower = $floor(value);
+                            fraction = value - lower;
+                            rounded = lower;
+                            if ((fraction > 0.5) ||
+                                ((fraction == 0.5) &&
+                                 ((lower >= -9223372036854775808.0) &&
+                                  (lower <= 9223372036854775807.0) &&
+                                  ($floor(lower / 2.0) * 2.0 != lower))))
+                                rounded = lower + 1.0;
+                        end
+                    endcase
+                end
+                3'd1: begin
+                    magnitude = (value < 0.0) ? -value : value;
+                    rounded = $floor(magnitude + 0.5);
+                    if (value < 0.0)
+                        rounded = -rounded;
+                end
+                3'd2: rounded = (value < 0.0) ? $ceil(value) : $floor(value);
+                3'd3: rounded = $ceil(value);
+                default: rounded = $floor(value);
+            endcase
+            long_conversion_invalid = (rounded >= 9223372036854775808.0) ||
+                                       (rounded < -9223372036854775808.0);
+        end
+    endfunction
+
+    // Convert a finite real integer to signed 64-bit two's complement without
+    // passing through a 32-bit simulator integer.  The loop is deliberately
+    // bit based so the exact signed boundary -2^63 remains representable.
+    function automatic [63:0] real_to_long_bits;
+        input real value;
+        input [1:0] mode;
+        input [2:0] kind;
+        real rounded;
+        real lower;
+        real fraction;
+        real magnitude;
+        real weight;
+        reg [63:0] magnitude_bits;
+        integer i;
+        begin
+            case (kind)
+                3'd0: begin
+                    case (mode)
+                        2'b01: rounded = (value < 0.0) ? $ceil(value) : $floor(value);
+                        2'b10: rounded = $ceil(value);
+                        2'b11: rounded = $floor(value);
+                        default: begin
+                            lower = $floor(value);
+                            fraction = value - lower;
+                            rounded = lower;
+                            if ((fraction > 0.5) ||
+                                ((fraction == 0.5) &&
+                                 ((lower >= -9223372036854775808.0) &&
+                                  (lower <= 9223372036854775807.0) &&
+                                  ($floor(lower / 2.0) * 2.0 != lower))))
+                                rounded = lower + 1.0;
+                        end
+                    endcase
+                end
+                3'd1: begin
+                    magnitude = (value < 0.0) ? -value : value;
+                    rounded = $floor(magnitude + 0.5);
+                    if (value < 0.0)
+                        rounded = -rounded;
+                end
+                3'd2: rounded = (value < 0.0) ? $ceil(value) : $floor(value);
+                3'd3: rounded = $ceil(value);
+                default: rounded = $floor(value);
+            endcase
+            magnitude = (rounded < 0.0) ? -rounded : rounded;
+            magnitude_bits = 64'd0;
+            weight = 9223372036854775808.0;
+            for (i = 63; i >= 0; i = i - 1) begin
+                if (magnitude >= weight) begin
+                    magnitude_bits[i] = 1'b1;
+                    magnitude = magnitude - weight;
+                end
+                weight = weight / 2.0;
+            end
+            real_to_long_bits = (rounded < 0.0) ?
+                                (~magnitude_bits + 64'd1) : magnitude_bits;
+        end
+    endfunction
+
+    function automatic real long_bits_to_real;
+        input [63:0] bits;
+        reg [63:0] magnitude_bits;
+        real value;
+        real weight;
+        integer i;
+        begin
+            magnitude_bits = bits[63] ? (~bits + 64'd1) : bits;
+            value = 0.0;
+            weight = 1.0;
+            for (i = 0; i < 63; i = i + 1) begin
+                if (magnitude_bits[i])
+                    value = value + weight;
+                weight = weight * 2.0;
+            end
+            if (magnitude_bits[63])
+                value = value + 9223372036854775808.0;
+            long_bits_to_real = bits[63] ? -value : value;
+        end
+    endfunction
+
+    function automatic long_to_float_inexact;
+        input [63:0] bits;
+        input integer precision;
+        reg [63:0] magnitude_bits;
+        integer highest;
+        integer i;
+        begin
+            magnitude_bits = bits[63] ? (~bits + 64'd1) : bits;
+            highest = -1;
+            for (i = 63; i >= 0; i = i - 1)
+                if (highest == -1 && magnitude_bits[i]) highest = i;
+            long_to_float_inexact = 1'b0;
+            if (highest >= precision) begin
+                for (i = 0; i < highest - precision + 1; i = i + 1)
+                    if (magnitude_bits[i]) long_to_float_inexact = 1'b1;
+            end
         end
     endfunction
 
@@ -910,6 +1065,40 @@ module mips_fpu (
         end
     endfunction
 
+    function automatic [63:0] round_double_real;
+        input real exact_value;
+        input [1:0] mode;
+        reg [63:0] nearest_bits;
+        reg [63:0] rounded_bits;
+        real nearest_value;
+        begin
+            nearest_bits = $realtobits(exact_value);
+            rounded_bits = nearest_bits;
+            nearest_value = $bitstoreal(nearest_bits);
+            if (mode != 2'b00 && nearest_value != exact_value) begin
+                case (mode)
+                    2'b01: begin // toward zero
+                        if (exact_value >= 0.0) begin
+                            if (nearest_value > exact_value)
+                                rounded_bits = double_next_down(nearest_bits);
+                        end else if (nearest_value < exact_value) begin
+                            rounded_bits = double_next_up(nearest_bits);
+                        end
+                    end
+                    2'b10: begin // toward +infinity
+                        if (nearest_value < exact_value)
+                            rounded_bits = double_next_up(nearest_bits);
+                    end
+                    default: begin // toward -infinity
+                        if (nearest_value > exact_value)
+                            rounded_bits = double_next_down(nearest_bits);
+                    end
+                endcase
+            end
+            round_double_real = rounded_bits;
+        end
+    endfunction
+
     // Compare an exact finite binary64 product with a candidate result.  The
     // return value is 01 when exact<candidate, 10 when exact>candidate and 00
     // when they are equal.  The product is retained at full 106-bit precision
@@ -1186,7 +1375,9 @@ module mips_fpu (
                 exception_flags[4] = 1'b1;
             else if ((op == OP_CVT_W_D || op == OP_ROUND_W_D ||
                       op == OP_TRUNC_W_D || op == OP_CEIL_W_D ||
-                      op == OP_FLOOR_W_D) && a_nan)
+                      op == OP_FLOOR_W_D || op == OP_CVT_L_D ||
+                      op == OP_ROUND_L_D || op == OP_TRUNC_L_D ||
+                      op == OP_CEIL_L_D || op == OP_FLOOR_L_D) && a_nan)
                 exception_flags[4] = 1'b1;
             else if (op == OP_CVT_S_D && a_snan)
                 exception_flags[4] = 1'b1;
@@ -1351,6 +1542,29 @@ module mips_fpu (
                             exception_flags[0] = 1'b1;
                     end
                 end
+                OP_CVT_L_D, OP_ROUND_L_D, OP_TRUNC_L_D,
+                OP_CEIL_L_D, OP_FLOOR_L_D: begin
+                    if (a_nan || a_double[62:52] == 11'h7ff ||
+                        long_conversion_invalid(ar_double, rounding_mode,
+                            (op == OP_CVT_L_D) ? 3'd0 :
+                            (op == OP_ROUND_L_D) ? 3'd1 :
+                            (op == OP_TRUNC_L_D) ? 3'd2 :
+                            (op == OP_CEIL_L_D) ? 3'd3 : 3'd4)) begin
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = 64'h8000_0000_0000_0000;
+                        exception_flags[4] = 1'b1;
+                    end else begin
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = real_to_long_bits(
+                            ar_double, rounding_mode,
+                            (op == OP_CVT_L_D) ? 3'd0 :
+                            (op == OP_ROUND_L_D) ? 3'd1 :
+                            (op == OP_TRUNC_L_D) ? 3'd2 :
+                            (op == OP_CEIL_L_D) ? 3'd3 : 3'd4);
+                        if (ar_double != $floor(ar_double))
+                            exception_flags[0] = 1'b1;
+                    end
+                end
                 OP_CVT_W_D, OP_ROUND_W_D, OP_TRUNC_W_D,
                 OP_CEIL_W_D, OP_FLOOR_W_D: begin
                     // MIPS conversion to a 32-bit signed integer raises
@@ -1432,7 +1646,9 @@ module mips_fpu (
                 exception_flags[4] = 1'b1;
             else if ((op == OP_CVT_W_S || op == OP_ROUND_W ||
                       op == OP_TRUNC_W || op == OP_CEIL_W ||
-                      op == OP_FLOOR_W) && a_nan)
+                      op == OP_FLOOR_W || op == OP_CVT_L_S ||
+                      op == OP_ROUND_L_S || op == OP_TRUNC_L_S ||
+                      op == OP_CEIL_L_S || op == OP_FLOOR_L_S) && a_nan)
                 exception_flags[4] = 1'b1;
             else if ((((op == OP_ADD || op == OP_SUB || op == OP_MUL ||
                         op == OP_DIV) && (a_snan || b_snan)) ||
@@ -1568,6 +1784,40 @@ module mips_fpu (
                     end
                 end
                 OP_CVT_D_W: rr_double = $itor($signed(a));
+                OP_CVT_S_L: begin
+                    rr = long_bits_to_real(a_double);
+                    rr = $bitstoshortreal(round_single_real(rr, rounding_mode));
+                    exception_flags[0] = long_to_float_inexact(a_double, 24);
+                end
+                OP_CVT_D_L: begin
+                    rr_double = long_bits_to_real(a_double);
+                    double_bits_override_valid = 1'b1;
+                    double_bits_override = round_double_real(rr_double, rounding_mode);
+                    exception_flags[0] = long_to_float_inexact(a_double, 53);
+                end
+                OP_CVT_L_S, OP_ROUND_L_S, OP_TRUNC_L_S,
+                OP_CEIL_L_S, OP_FLOOR_L_S: begin
+                    if (a_nan || a[30:23] == 8'hff ||
+                        long_conversion_invalid(ar, rounding_mode,
+                            (op == OP_CVT_L_S) ? 3'd0 :
+                            (op == OP_ROUND_L_S) ? 3'd1 :
+                            (op == OP_TRUNC_L_S) ? 3'd2 :
+                            (op == OP_CEIL_L_S) ? 3'd3 : 3'd4)) begin
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = 64'h8000_0000_0000_0000;
+                        exception_flags[4] = 1'b1;
+                    end else begin
+                        double_bits_override_valid = 1'b1;
+                        double_bits_override = real_to_long_bits(
+                            ar, rounding_mode,
+                            (op == OP_CVT_L_S) ? 3'd0 :
+                            (op == OP_ROUND_L_S) ? 3'd1 :
+                            (op == OP_TRUNC_L_S) ? 3'd2 :
+                            (op == OP_CEIL_L_S) ? 3'd3 : 3'd4);
+                        if (ar != $floor(ar))
+                            exception_flags[0] = 1'b1;
+                    end
+                end
                 OP_CVT_W_S: begin
                     if (a_nan || a[30:23] == 8'hff ||
                         word_conversion_invalid(ar, rounding_mode,

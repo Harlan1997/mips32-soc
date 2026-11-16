@@ -35,11 +35,13 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-bitswap-r2.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-wsbw-r2.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-fpu-int32-indefinite.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpu-int64-indefinite.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-nan.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-snan-default.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rsqrt-single-rounding.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpu-fr0-long.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-sc-consume-reservation.patch" \
@@ -487,6 +489,14 @@ if ! rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helpe
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 fi
 
+if ! rg -q 'SOC_REF_FPU_INT64_INDEFINITE' \
+        "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpu-int64-indefinite.patch"
+fi
+rg -q 'SOC_REF_FPU_INT64_INDEFINITE' \
+    "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+
 if ! rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     # The vendored QEMU tree is not a git checkout. Apply the small source
     # change by function body so this remains deterministic for extracted
@@ -531,6 +541,14 @@ if ! rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
 fi
 rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
     "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+
+if ! rg -q 'SOC_REF_FPU_FR0_LONG' \
+        "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpu-fr0-long.patch"
+fi
+rg -q 'SOC_REF_FPU_FR0_LONG' \
+    "${QEMU_SRC}/target/mips/tcg/translate.c"
 
 if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\) \{\n            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then

@@ -1,9 +1,12 @@
 `timescale 1ns/1ps
 
 module tb_mips_fpu_flags;
-    localparam OP_MUL = 5'd2, OP_DIV = 5'd3, OP_SUB = 5'd1,
-               OP_SQRT = 5'd4;
-    reg [4:0] op;
+    localparam OP_MUL = 6'd2, OP_DIV = 6'd3, OP_SUB = 6'd1,
+               OP_SQRT = 6'd4,
+               OP_CVT_S_L = 6'd29, OP_CVT_D_L = 6'd30,
+               OP_CVT_L_S = 6'd31, OP_CVT_L_D = 6'd32,
+               OP_ROUND_L_S = 6'd33;
+    reg [5:0] op;
     reg [31:0] a, b, c;
     reg [3:0] compare_condition;
     reg fmt_double;
@@ -307,6 +310,53 @@ module tb_mips_fpu_flags;
         fmt_double = 1;
         a_double = 64'h4000000000000000; // 2.0d
         check_flags(5'b00001, "double_sqrt_inexact");
+
+        // The MIPS32 L conversion family returns a 64-bit signed result and
+        // must classify the rounded value before committing it.  Exercise
+        // both source formats, long-to-float conversions, fixed ROUND.L, and
+        // the +2^63 indefinite boundary.
+        fmt_double = 0;
+        rounding_mode = 2'b00;
+        op = OP_CVT_L_S;
+        a = 32'h3fc00000; // 1.5f -> nearest-even 2
+        check_flags(5'b00001, "single_cvt_l_inexact");
+        #1;
+        if (result_double !== 64'd2) begin
+            $display("FPU_FLAGS_FAIL single CVT.L result=%016h", result_double);
+            failures = failures + 1;
+        end
+        op = OP_ROUND_L_S;
+        check_flags(5'b00001, "single_round_l_inexact");
+        #1;
+        if (result_double !== 64'd2) begin
+            $display("FPU_FLAGS_FAIL single ROUND.L result=%016h", result_double);
+            failures = failures + 1;
+        end
+        op = OP_CVT_S_L;
+        a_double = 64'd3;
+        check_flags(5'b00000, "long_to_single_exact");
+        #1;
+        if (result !== 32'h40400000) begin
+            $display("FPU_FLAGS_FAIL CVT.S.L result=%08h", result);
+            failures = failures + 1;
+        end
+        op = OP_CVT_D_L;
+        a_double = 64'hffff_ffff_ffff_fffc; // -4
+        check_flags(5'b00000, "long_to_double_exact");
+        #1;
+        if (result_double !== 64'hc010_0000_0000_0000) begin
+            $display("FPU_FLAGS_FAIL CVT.D.L result=%016h", result_double);
+            failures = failures + 1;
+        end
+        fmt_double = 1;
+        op = OP_CVT_L_D;
+        a_double = 64'h43e0_0000_0000_0000; // +2^63, invalid
+        check_flags(5'b10000, "double_cvt_l_out_of_range");
+        #1;
+        if (result_double !== 64'h8000_0000_0000_0000) begin
+            $display("FPU_FLAGS_FAIL double CVT.L indefinite=%016h", result_double);
+            failures = failures + 1;
+        end
 
         if (failures == 0)
             $display("REGRESSION_TEST_SUCCESS mips_fpu_flags invalid=7 underflow=1 conversion=1");

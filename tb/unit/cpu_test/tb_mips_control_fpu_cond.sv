@@ -63,6 +63,17 @@ module tb_mips_control_fpu_cond;
         end
     endfunction
 
+    function automatic [31:0] fpu_convert;
+        input [4:0] fmt;
+        input [4:0] ft;
+        input [4:0] fs;
+        input [4:0] fd;
+        input [5:0] funct;
+        begin
+            fpu_convert = {6'b010001, fmt, ft, fs, fd, funct};
+        end
+    endfunction
+
     function automatic [31:0] fpu_cop1x;
         input [4:0] fr;
         input [4:0] ft;
@@ -192,6 +203,42 @@ module tb_mips_control_fpu_cond;
         end
         expect_reserved(fpu_cop1x(5'd2, 5'd4, 5'd1, 5'd2, 6'h39));
         expect_reserved(fpu_cond_move(5'b10000, 5'd0, 5'd4, 5'd2, 6'h18));
+
+        // Long conversions use a 64-bit destination or source pair in FR=0.
+        // Single-format sources/destinations may remain odd; double and long
+        // operands must select even fs/fd pairs.  The pair bit is bit 11 for
+        // fs and bit 6 for fd, while bit 15 is the high bit of fs and carries
+        // no parity meaning.
+        inst = fpu_convert(5'b10000, 5'd0, 5'd3, 5'd4, 6'h25); // CVT.L.S
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL CVT.L.S rejected valid single source");
+            failures = failures + 1;
+        end
+        expect_reserved(fpu_convert(5'b10000, 5'd0, 5'd3, 5'd5, 6'h25));
+        inst = fpu_convert(5'b10001, 5'd0, 5'd2, 5'd4, 6'h25); // CVT.L.D
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL CVT.L.D rejected even source/destination");
+            failures = failures + 1;
+        end
+        expect_reserved(fpu_convert(5'b10001, 5'd0, 5'd3, 5'd4, 6'h25));
+        expect_reserved(fpu_convert(5'b10001, 5'd0, 5'd2, 5'd5, 6'h25));
+        inst = fpu_convert(5'b10101, 5'd0, 5'd2, 5'd5, 6'h20); // CVT.S.L
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL CVT.S.L rejected valid long source");
+            failures = failures + 1;
+        end
+        expect_reserved(fpu_convert(5'b10101, 5'd0, 5'd3, 5'd5, 6'h20));
+        inst = fpu_convert(5'b10101, 5'd0, 5'd2, 5'd4, 6'h21); // CVT.D.L
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL CVT.D.L rejected even source/destination");
+            failures = failures + 1;
+        end
+        expect_reserved(fpu_convert(5'b10101, 5'd0, 5'd3, 5'd4, 6'h21));
+        expect_reserved(fpu_convert(5'b10101, 5'd0, 5'd2, 5'd5, 6'h21));
 
         // MOVT must not consume the existing MTHI encoding (funct=0x11).
         inst = {6'b000000, 5'd8, 5'd0, 5'd0, 5'd0, 6'b010001};

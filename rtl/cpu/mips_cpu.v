@@ -1048,7 +1048,8 @@ module mips_cpu #(
                                (fpu_id_cop1 &&
                                ((id_inst[25:21] == 5'b10000) ||
                                 (id_inst[25:21] == 5'b10001) ||
-                                (id_inst[25:21] == 5'b10100)));
+                                (id_inst[25:21] == 5'b10100) ||
+                                (id_inst[25:21] == 5'b10101)));
     wire        fpu_id_cond_move = fpu_id_cop1 &&
                                    (id_inst[5:0] == 6'h12 ||
                                     id_inst[5:0] == 6'h13);
@@ -1067,6 +1068,8 @@ module mips_cpu #(
     wire        fpu_id_double = (fpu_id_cop1 &&
                                 (id_inst[25:21] == 5'b10001)) ||
                                 (fpu_id_cop1x && id_inst[0]);
+    wire        fpu_id_long = fpu_id_cop1 &&
+                              (id_inst[25:21] == 5'b10101);
     wire        fpu_id_double_result =
                          (fpu_id_cop1x && id_inst[0]) ||
                          (fpu_id_double && (id_inst[5:0] <= 6'h07)) ||
@@ -1077,7 +1080,15 @@ module mips_cpu #(
                                ((fpu_id_cop1 &&
                                  (id_inst[25:21] == 5'b10000 ||
                                  id_inst[25:21] == 5'b10100) &&
-                                id_inst[5:0] == 6'h21));
+                                id_inst[5:0] == 6'h21)) ||
+                               (fpu_id_cop1 &&
+                                ((id_inst[5:0] == 6'h25) ||
+                                 (id_inst[5:0] >= 6'h08 &&
+                                  id_inst[5:0] <= 6'h0b)) &&
+                                (id_inst[25:21] == 5'b10000 ||
+                                 id_inst[25:21] == 5'b10001)) ||
+                               (fpu_id_cop1 && fpu_id_long &&
+                                id_inst[5:0] == 6'h21);
     wire        fpu_id_gpr_write = fpu_id_mfc1 | fpu_id_cfc1 | fpu_id_mfhc1;
     wire        fpu_rf_conflict = fpu_id_gpr_write && wb_reg_write;
     wire        id_fpu_unusable = (fpu_id_valid || fpu_mem_id_valid) && !cpu_cu1;
@@ -1157,50 +1168,74 @@ module mips_cpu #(
                                    fpr[index + 1'b1];
         end
     endfunction
-    wire [4:0]  fpu_op = (fpu_id_cop1x &&
-                          (id_inst[5:0] == 6'h20 || id_inst[5:0] == 6'h21)) ? 5'd25 :
+    wire [5:0]  fpu_op = (fpu_id_cop1x &&
+                          (id_inst[5:0] == 6'h20 || id_inst[5:0] == 6'h21)) ? 6'd25 :
                          (fpu_id_cop1x &&
-                          (id_inst[5:0] == 6'h28 || id_inst[5:0] == 6'h29)) ? 5'd26 :
+                          (id_inst[5:0] == 6'h28 || id_inst[5:0] == 6'h29)) ? 6'd26 :
                          (fpu_id_cop1x &&
-                          (id_inst[5:0] == 6'h30 || id_inst[5:0] == 6'h31)) ? 5'd27 :
+                          (id_inst[5:0] == 6'h30 || id_inst[5:0] == 6'h31)) ? 6'd27 :
                          (fpu_id_cop1x &&
-                          (id_inst[5:0] == 6'h38 || id_inst[5:0] == 6'h39)) ? 5'd28 :
+                          (id_inst[5:0] == 6'h38 || id_inst[5:0] == 6'h39)) ? 6'd28 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10101 &&
+                          id_inst[5:0] == 6'h20) ? 6'd29 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10101 &&
+                          id_inst[5:0] == 6'h21) ? 6'd30 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10000 &&
+                          id_inst[5:0] == 6'h25) ? 6'd31 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10001 &&
+                          id_inst[5:0] == 6'h25) ? 6'd32 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10000 &&
+                          id_inst[5:0] == 6'h08) ? 6'd33 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10000 &&
+                          id_inst[5:0] == 6'h09) ? 6'd34 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10000 &&
+                          id_inst[5:0] == 6'h0a) ? 6'd35 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10000 &&
+                          id_inst[5:0] == 6'h0b) ? 6'd36 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10001 &&
+                          id_inst[5:0] == 6'h08) ? 6'd37 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10001 &&
+                          id_inst[5:0] == 6'h09) ? 6'd38 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10001 &&
+                          id_inst[5:0] == 6'h0a) ? 6'd39 :
+                         (fpu_id_cop1 && id_inst[25:21] == 5'b10001 &&
+                          id_inst[5:0] == 6'h0b) ? 6'd40 :
                          (id_inst[25:21] == 5'b10100 &&
-                         id_inst[5:0] == 6'h20) ? 5'd9 :
+                         id_inst[5:0] == 6'h20) ? 6'd9 :
                          (id_inst[25:21] == 5'b10001 &&
-                          id_inst[5:0] == 6'h20) ? 5'd15 :
+                          id_inst[5:0] == 6'h20) ? 6'd15 :
                          (id_inst[25:21] == 5'b10000 &&
-                          id_inst[5:0] == 6'h21) ? 5'd16 :
+                          id_inst[5:0] == 6'h21) ? 6'd16 :
                          (id_inst[25:21] == 5'b10100 &&
-                          id_inst[5:0] == 6'h21) ? 5'd17 :
+                          id_inst[5:0] == 6'h21) ? 6'd17 :
                          (id_inst[25:21] == 5'b10001 &&
-                          id_inst[5:0] == 6'h24) ? 5'd18 :
+                          id_inst[5:0] == 6'h24) ? 6'd18 :
                          (id_inst[25:21] == 5'b10001 &&
-                          id_inst[5:0] == 6'h0c) ? 5'd19 :
+                          id_inst[5:0] == 6'h0c) ? 6'd19 :
                          (id_inst[25:21] == 5'b10001 &&
-                          id_inst[5:0] == 6'h0d) ? 5'd20 :
+                          id_inst[5:0] == 6'h0d) ? 6'd20 :
                          (id_inst[25:21] == 5'b10001 &&
-                          id_inst[5:0] == 6'h0e) ? 5'd21 :
+                          id_inst[5:0] == 6'h0e) ? 6'd21 :
                          (id_inst[25:21] == 5'b10001 &&
-                          id_inst[5:0] == 6'h0f) ? 5'd22 :
-                         (id_inst[5:0] == 6'h15) ? 5'd23 :
-                         (id_inst[5:0] == 6'h16) ? 5'd24 :
+                          id_inst[5:0] == 6'h0f) ? 6'd22 :
+                         (id_inst[5:0] == 6'h15) ? 6'd23 :
+                         (id_inst[5:0] == 6'h16) ? 6'd24 :
                          ((id_inst[25:21] == 5'b10000 ||
                            id_inst[25:21] == 5'b10001) &&
                           (id_inst[5:0] == 6'h12 ||
-                           id_inst[5:0] == 6'h13)) ? 5'd6 :
+                           id_inst[5:0] == 6'h13)) ? 6'd6 :
                          (id_inst[25:21] == 5'b10000 &&
-                          id_inst[5:0] == 6'h24) ? 5'd10 :
+                          id_inst[5:0] == 6'h24) ? 6'd10 :
                          (id_inst[25:21] == 5'b10000 &&
-                          id_inst[5:0] == 6'h0c) ? 5'd11 :
+                          id_inst[5:0] == 6'h0c) ? 6'd11 :
                          (id_inst[25:21] == 5'b10000 &&
-                          id_inst[5:0] == 6'h0d) ? 5'd12 :
+                          id_inst[5:0] == 6'h0d) ? 6'd12 :
                          (id_inst[25:21] == 5'b10000 &&
-                          id_inst[5:0] == 6'h0e) ? 5'd13 :
+                          id_inst[5:0] == 6'h0e) ? 6'd13 :
                          (id_inst[25:21] == 5'b10000 &&
-                          id_inst[5:0] == 6'h0f) ? 5'd14 :
-                         (id_inst[5:0] <= 6'h07) ? {1'b0, id_inst[3:0]} :
-                         ((fpu_id_cop1 && id_inst[5:0] >= 6'h30) ? 5'd8 : 5'd31);
+                          id_inst[5:0] == 6'h0f) ? 6'd14 :
+                         (id_inst[5:0] <= 6'h07) ? {2'b0, id_inst[3:0]} :
+                         ((fpu_id_cop1 && id_inst[5:0] >= 6'h30) ? 6'd8 : 6'd63);
     wire [31:0] fpu_result;
     wire [63:0] fpu_result_double;
     wire [31:0] fpu_result_word;

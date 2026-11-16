@@ -1142,15 +1142,16 @@ module mips_control (
                                    inst[15:11] == 5'd31)))
                                 illegal_inst = 1'b1;
                         end
-                        5'b10000, 5'b10001, 5'b10100: begin
+                        5'b10000, 5'b10001, 5'b10100, 5'b10101: begin
                             case (func)
                                 6'h00, 6'h01, 6'h02, 6'h03, 6'h04,
                                 6'h05, 6'h06, 6'h07,
+                                6'h08, 6'h09, 6'h0a, 6'h0b,
                                 6'h0c, 6'h0d, 6'h0e, 6'h0f,
                                 6'h11,
                                 6'h15, 6'h16,
                                 6'h12, 6'h13,
-                                6'h20, 6'h21, 6'h24,
+                                6'h20, 6'h21, 6'h24, 6'h25,
                                 6'h30, 6'h31, 6'h32, 6'h33,
                                 6'h34, 6'h35, 6'h36, 6'h37,
                                 6'h38, 6'h39, 6'h3a, 6'h3b,
@@ -1173,6 +1174,23 @@ module mips_control (
                                 illegal_inst = 1'b1;
                             if ((rs == 5'b10100 &&
                                  func != 6'h20 && func != 6'h21))
+                                illegal_inst = 1'b1;
+                            if ((rs == 5'b10101 &&
+                                 func != 6'h20 && func != 6'h21))
+                                illegal_inst = 1'b1;
+                            // 64-bit source or destination operands name an
+                            // even pair in FR=0 mode.  This applies to the
+                            // long-format conversions as well as the existing
+                            // double arithmetic/conversion subset.
+                            if ((fpu_fr_enable !== 1'b1) &&
+                                ((rs == 5'b10101 &&
+                                  (inst[11] ||
+                                   ((func == 6'h21) && inst[6]))) ||
+                                 ((rs == 5'b10000 || rs == 5'b10001) &&
+                                  ((func == 6'h25 ||
+                                    (func >= 6'h08 && func <= 6'h0b)) &&
+                                   (inst[6] ||
+                                    ((rs == 5'b10001) && inst[11]))))))
                                 illegal_inst = 1'b1;
                             if ((rs == 5'b10000 && func == 6'h20) ||
                                 (rs == 5'b10001 && func == 6'h21))

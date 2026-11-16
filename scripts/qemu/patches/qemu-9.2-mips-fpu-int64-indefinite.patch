@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] target/mips: use MIPS indefinite result for invalid L conversions
+
+MIPS CVT.L and fixed-rounding L conversions return the signed 64-bit
+indefinite value on Invalid. QEMU's generic helper constant is INT64_MAX,
+which is not the architectural result used by the RTL reference contract.
+
+---
+ target/mips/tcg/fpu_helper.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/target/mips/tcg/fpu_helper.c b/target/mips/tcg/fpu_helper.c
+--- a/target/mips/tcg/fpu_helper.c
++++ b/target/mips/tcg/fpu_helper.c
+@@ -37,3 +37,4 @@
+ /* SOC_REF_FPU_INT32_INDEFINITE: MIPS invalid W conversion result. */
+ #define FP_TO_INT32_OVERFLOW 0x80000000
+-#define FP_TO_INT64_OVERFLOW 0x7fffffffffffffffULL
++/* SOC_REF_FPU_INT64_INDEFINITE: MIPS invalid L conversion result. */
++#define FP_TO_INT64_OVERFLOW 0x8000000000000000ULL

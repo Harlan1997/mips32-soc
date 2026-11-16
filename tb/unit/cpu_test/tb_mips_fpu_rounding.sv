@@ -1,25 +1,25 @@
 `timescale 1ns/1ps
 
 module tb_mips_fpu_rounding;
-    localparam OP_ADD = 5'd0;
-    localparam OP_SUB = 5'd1;
-    localparam OP_MUL = 5'd2;
-    localparam OP_DIV = 5'd3;
-    localparam OP_SQRT = 5'd4;
-    localparam OP_MADD = 5'd25;
-    localparam OP_MSUB = 5'd26;
-    localparam OP_NMADD = 5'd27;
-    localparam OP_NMSUB = 5'd28;
-    localparam OP_RECIP = 5'd23;
-    localparam OP_RSQRT = 5'd24;
-    localparam OP_CVT_S_D = 5'd15;
-    localparam OP_CVT_W_D = 5'd18;
-    localparam OP_ROUND_W_D = 5'd19;
-    localparam OP_TRUNC_W_D = 5'd20;
-    localparam OP_CEIL_W_D = 5'd21;
-    localparam OP_FLOOR_W_D = 5'd22;
+    localparam OP_ADD = 6'd0;
+    localparam OP_SUB = 6'd1;
+    localparam OP_MUL = 6'd2;
+    localparam OP_DIV = 6'd3;
+    localparam OP_SQRT = 6'd4;
+    localparam OP_MADD = 6'd25;
+    localparam OP_MSUB = 6'd26;
+    localparam OP_NMADD = 6'd27;
+    localparam OP_NMSUB = 6'd28;
+    localparam OP_RECIP = 6'd23;
+    localparam OP_RSQRT = 6'd24;
+    localparam OP_CVT_S_D = 6'd15;
+    localparam OP_CVT_W_D = 6'd18;
+    localparam OP_ROUND_W_D = 6'd19;
+    localparam OP_TRUNC_W_D = 6'd20;
+    localparam OP_CEIL_W_D = 6'd21;
+    localparam OP_FLOOR_W_D = 6'd22;
 
-    reg [4:0] op;
+    reg [5:0] op;
     reg [31:0] a, b, c;
     reg [3:0] compare_condition;
     reg fmt_double;
@@ -69,7 +69,7 @@ module tb_mips_fpu_rounding;
     endtask
 
     task automatic check_single_addsub;
-        input [4:0] arithmetic_op;
+        input [5:0] arithmetic_op;
         input [1:0] mode;
         input [31:0] lhs;
         input [31:0] rhs;
@@ -96,7 +96,7 @@ module tb_mips_fpu_rounding;
     endtask
 
     task automatic check_single_unary_round;
-        input [4:0] unary_op;
+        input [5:0] unary_op;
         input [1:0] mode;
         input [31:0] operand;
         input [31:0] expected;
@@ -122,7 +122,7 @@ module tb_mips_fpu_rounding;
     endtask
 
     task automatic check_single_fma;
-        input [4:0] fma_op;
+        input [5:0] fma_op;
         input [1:0] mode;
         input [31:0] lhs;
         input [31:0] rhs;
@@ -174,7 +174,7 @@ module tb_mips_fpu_rounding;
     endtask
 
     task automatic check_cvt_w_d;
-        input [4:0] conversion_op;
+        input [5:0] conversion_op;
         input [1:0] mode;
         input [63:0] value;
         input [31:0] expected;
@@ -324,7 +324,7 @@ module tb_mips_fpu_rounding;
     endtask
 
     task automatic check_double_fma;
-        input [4:0] fma_op;
+        input [5:0] fma_op;
         input [1:0] mode;
         input [63:0] lhs;
         input [63:0] rhs;
@@ -351,7 +351,7 @@ module tb_mips_fpu_rounding;
     endtask
 
     task automatic check_double_fma_special;
-        input [4:0] fma_op;
+        input [5:0] fma_op;
         input [63:0] lhs;
         input [63:0] rhs;
         input [63:0] addend;

@@ -1,5 +1,26 @@
 # SoC 功能完整性计划
 
+### 2026-11-17 Current-source nonblocking Linux full differential closure
+
+The exact-source nonblocking RTL/QEMU terminal workload passed the strict
+streaming comparator. Evidence is retained under
+`/data/disk/tmp/mips32-soc/full-qemu-nb-current-head-20261116-r2/`.
+The run compared `66,914,265` records with full GPR and HI/LO state;
+RTL produced `66,914,306` records, including the documented 23 boot-prefix
+and 18 synchronous-exception redirect records, while QEMU had zero unpaired
+records. The manifest validator passed with SHA-256
+`78b40c7da3ad5119ff587f00e870f4d850eac45fa8fd933af5fe72505f1a4677`.
+All 1,440 IRQ entries, 1,408 timer-pending entries, 12,675 Count reads,
+125 Random reads, 8,364,287 cycle samples, and 16,702 UART APB entries were
+consumed. QEMU flushed the terminal marker and exited with status 0; RTL
+stopped at cycle `293,930,532` with one terminal marker. The source identity
+for this evidence is
+`6c23a9bdf277728b6e0373e25ab28be4bba07c1256852630be8af293ecfb593b` from
+commit `3aff627c8788147b1913eda897b2679d0e8075fc` plus its recorded dirty
+worktree. This closes the declared generic Linux nonblocking terminal
+workload only; unrestricted Linux, complete ISA/privileged/FPU/MMU/OS
+semantics, and product signoff remain separate scope.
+
 ### 2026-11-16 Focus differential complete-GPR checker hardening
 
 The QEMU and RTL focus record producers now emit a complete 32-register

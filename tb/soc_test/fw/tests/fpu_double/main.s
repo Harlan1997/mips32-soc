@@ -594,6 +594,88 @@ main:
     bne     $t2, $t4, fail_conv
     nop
 
+    /* Keep these vectors encoded explicitly because some cross toolchains do
+     * not accept the newer CVT.L/ROUND.L mnemonics. */
+    mtc1    $zero, $f0
+    lui     $t0, 0x3fc0
+    ori     $t0, $t0, 0
+    mtc1    $t0, $f0             /* 1.5f */
+    .word   0x460000a5           /* cvt.l.s $f2,$f0 -> 2 */
+    nop
+    nop
+    nop
+    mfc1    $t1, $f2
+    addiu   $t2, $zero, 2
+    bne     $t1, $t2, fail_conv
+    nop
+    .word   0x440b1800           /* mfc1 $t3,$f3: high word must be zero */
+    bne     $t3, $zero, fail_conv
+    nop
+
+    .word   0x46a01121           /* cvt.d.l $f4,$f2 -> 2.0d */
+    nop
+    nop
+    nop
+    .word   0x440d2000           /* mfc1 $t5,$f4: low word */
+    bne     $t5, $zero, fail_conv
+    nop
+    .word   0x440d2800           /* mfc1 $t5,$f5: high word */
+    lui     $t2, 0x4000
+    ori     $t2, $t2, 0
+    bne     $t5, $t2, fail_conv
+    nop
+
+    .word   0x46a011a0           /* cvt.s.l $f6,$f2 -> 2.0f */
+    nop
+    nop
+    nop
+    mfc1    $t1, $f6
+    lui     $t2, 0x4000
+    ori     $t2, $t2, 0
+    bne     $t1, $t2, fail_conv
+    nop
+
+    addiu   $t2, $zero, 2
+    .word   0x46202225           /* cvt.l.d $f8,$f4 -> 2 */
+    nop
+    nop
+    nop
+    mfc1    $t1, $f8
+    bne     $t1, $t2, fail_conv
+    nop
+    .word   0x440a4800           /* mfc1 $t2,$f9: high word must be zero */
+    bne     $t2, $zero, fail_conv
+    nop
+
+    .word   0x46000288           /* round.l.s $f10,$f0 -> 2 */
+    nop
+    nop
+    nop
+    mfc1    $t1, $f10
+    addiu   $t2, $zero, 2
+    bne     $t1, $t2, fail_conv
+    nop
+    .word   0x440b5800           /* mfc1 $t3,$f11: high word must be zero */
+    bne     $t3, $zero, fail_conv
+    nop
+
+    mtc1    $zero, $f12
+    lui     $t0, 0x43e0
+    ori     $t0, $t0, 0
+    .word   0x44886800           /* mtc1 $t0,$f13: +2^63 as a double */
+    .word   0x46206225           /* cvt.l.d $f8,$f12: invalid indefinite */
+    nop
+    nop
+    nop
+    mfc1    $t1, $f8
+    bne     $t1, $zero, fail_conv
+    nop
+    .word   0x440b4800           /* mfc1 $t3,$f9: high word is 0x80000000 */
+    lui     $t2, 0x8000
+    ori     $t2, $t2, 0
+    bne     $t3, $t2, fail_conv
+    nop
+
     /* FCSR sticky flags: 1.5/0.0 sets Divide-by-zero (bit 5),
      * and 0.0/0.0 sets Invalid (bit 6). */
     mtc1    $zero, $f12
