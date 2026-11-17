@@ -163,6 +163,49 @@ module tb_mips_cpu_badvaddr_owner_context;
             release u_cpu.d_fault_capture_code;
             release u_cpu.mem_mem_write;
             release u_cpu.cp0_asid;
+
+            // Clear the first token before starting the independent phase-1
+            // fault case.
+            ctx_restore_req = 1'b1;
+            @(posedge clk);
+            #1;
+            ctx_restore_req = 1'b0;
+
+            // A fault on the second aligned COP1X beat belongs to the next
+            // virtual page.  BadVAddr must follow the phase-specific address
+            // used by the MMU rather than the operation's aligned base.
+            force u_cpu.dmem_translation_fault = 1'b1;
+            force u_cpu.exception_flush = 1'b0;
+            force u_cpu.wb_except_req = 1'b0;
+            force u_cpu.wb_arch_valid = 1'b0;
+            force u_cpu.mem_pc = 32'h8000_2000;
+            force u_cpu.mem_inst = 32'h4c83_0005;
+            force u_cpu.mem_unaligned_double_mem = 1'b1;
+            force u_cpu.mem_double_phase = 2'd1;
+            force u_cpu.mem_double_base_addr = 32'h0040_2ffc;
+            force u_cpu.mem_access_addr = 32'h0040_3000;
+            force u_cpu.d_fault_capture_code = 5'h02;
+            force u_cpu.mem_mem_write = 1'b0;
+            force u_cpu.cp0_asid = 8'h2b;
+            @(posedge clk);
+            #1;
+            if (!u_cpu.d_fault_vaddr_pending_q)
+                fail("second-beat COP1X fault owner was not captured");
+            if (u_cpu.d_fault_vaddr_q !== 32'h0040_3000)
+                fail("COP1X second-beat fault owner did not retain phase address");
+            release u_cpu.dmem_translation_fault;
+            release u_cpu.exception_flush;
+            release u_cpu.wb_except_req;
+            release u_cpu.wb_arch_valid;
+            release u_cpu.mem_pc;
+            release u_cpu.mem_inst;
+            release u_cpu.mem_unaligned_double_mem;
+            release u_cpu.mem_double_phase;
+            release u_cpu.mem_double_base_addr;
+            release u_cpu.mem_access_addr;
+            release u_cpu.d_fault_capture_code;
+            release u_cpu.mem_mem_write;
+            release u_cpu.cp0_asid;
             ctx_restore_req = 1'b1;
             repeat (2) @(posedge clk);
             #1;

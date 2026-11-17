@@ -1,5 +1,17 @@
 # SoC 功能完整性计划
 
+### 2026-11-17 COP1X phase-specific BadVAddr owner
+
+The D-side fault owner now records the aligned COP1X base for phase 0 and the
+current aligned beat address for phase 1. This preserves the virtual address
+of the page that actually faults when the second beat crosses a page boundary.
+The focused owner-context gate passes the existing restore/ERET/interrupt/reset
+clear checks plus the second-beat case:
+`BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1 unaligned_ea=1`.
+Evidence is retained under
+`/data/disk/tmp/mips32-soc/badvaddr-owner-context-current-20261117/`.
+Cross-page replay ownership beyond this directed phase case remains open.
+
 ### 2026-11-17 Current-source nonblocking Linux full closure rerun
 
 The current worktree completed the full nonblocking RTL/QEMU terminal

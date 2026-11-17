@@ -2044,10 +2044,13 @@ module mips_cpu #(
                                                                       5'h02;
     // Translation and the external data port operate on the current aligned
     // beat (`mem_access_addr`).  COP1X unaligned doubleword operations define
-    // their effective address after clearing the low three bits, so retain the
-    // architectural address used for translation rather than the raw GPR sum.
+    // their effective address after clearing the low three bits.  Keep that
+    // aligned base for beat 0, but preserve the phase-1 beat address when the
+    // second page faults so BadVAddr identifies the page that actually failed.
     wire [31:0] d_fault_capture_vaddr = mem_unaligned_double_mem ?
-                                         mem_double_base_addr : mem_access_addr;
+                                         ((mem_double_phase == 2'd0) ?
+                                          mem_double_base_addr : mem_access_addr) :
+                                         mem_access_addr;
 
     // The MEM/WB and ROB control bundles are flushed on the same edge that
     // CP0 consumes a translation exception.  Keep the original virtual
