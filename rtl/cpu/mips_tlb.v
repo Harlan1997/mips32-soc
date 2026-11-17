@@ -189,6 +189,7 @@ module mips_tlb #(
                 16'h03ff: page_odd_bit_index = 6'd22;
                 16'h0fff: page_odd_bit_index = 6'd24;
                 16'h3fff: page_odd_bit_index = 6'd26;
+                16'hffff: page_odd_bit_index = 6'd28;
                 default:  page_odd_bit_index = 6'd12;
             endcase
         end
@@ -212,6 +213,7 @@ module mips_tlb #(
                 16'h03ff: effective_pfn = {pfn[19:10], va[21:12]};
                 16'h0fff: effective_pfn = {pfn[19:12], va[23:12]};
                 16'h3fff: effective_pfn = {pfn[19:14], va[25:12]};
+                16'hffff: effective_pfn = {pfn[19:16], va[27:12]};
                 default:  effective_pfn = pfn;
             endcase
         end

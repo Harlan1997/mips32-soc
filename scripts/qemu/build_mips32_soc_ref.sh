@@ -46,7 +46,7 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-sc-consume-reservation.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x-beats.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-round-w-ties-away.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-random-schedule.patch" \
@@ -468,7 +468,7 @@ rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
 
 if ! rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"; then
     apply_project_patch \
-        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x.patch"
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x-beats.patch"
 fi
 rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"
 rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c"

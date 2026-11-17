@@ -3,7 +3,7 @@
 // entries, PFN[31:12]. One read is outstanding at a time.  PAGE_MASK changes
 // the leaf-page offset and L2 index while retaining the existing 10-bit L1
 // directory geometry.  This supports the contract page sizes 4 KiB, 16 KiB,
-// 64 KiB, 256 KiB, 1 MiB, 4 MiB and 16 MiB without changing the read-path
+// 64 KiB, 256 KiB, 1 MiB, 4 MiB, 16 MiB, 64 MiB and 256 MiB without changing the read-path
 // interface.  The optional A/D sideband is described below.
 module mips_page_table_walker #(
     parameter [15:0] PAGE_MASK = 16'h0000,
@@ -64,7 +64,9 @@ module mips_page_table_walker #(
                 16'h003f: l2_index_offset = {30'd0, v[21:18], 2'd0};
                 16'h00ff: l2_index_offset = {30'd0, v[21:20], 2'd0};
                 16'h03ff,
-                16'h0fff: l2_index_offset = 32'd0;
+                16'h0fff,
+                16'h3fff,
+                16'hffff: l2_index_offset = 32'd0;
                 default:  l2_index_offset = {20'd0, v[21:12], 2'd0};
             endcase
         end
@@ -82,6 +84,8 @@ module mips_page_table_walker #(
                 16'h00ff: leaf_format_valid = (pte[19:12] == 8'b00000000);
                 16'h03ff: leaf_format_valid = (pte[21:12] == 10'b0000000000);
                 16'h0fff: leaf_format_valid = (pte[23:12] == 12'b000000000000);
+                16'h3fff: leaf_format_valid = (pte[25:12] == 14'b00000000000000);
+                16'hffff: leaf_format_valid = (pte[27:12] == 16'b0000000000000000);
                 default:  leaf_format_valid = 1'b1;
             endcase
         end
@@ -98,6 +102,8 @@ module mips_page_table_walker #(
                 16'h00ff: leaf_pa = {pte[31:20], v[19:0]};
                 16'h03ff: leaf_pa = {pte[31:22], v[21:0]};
                 16'h0fff: leaf_pa = {pte[31:24], v[23:0]};
+                16'h3fff: leaf_pa = {pte[31:26], v[25:0]};
+                16'hffff: leaf_pa = {pte[31:28], v[27:0]};
                 default:  leaf_pa = {pte[31:12], v[11:0]};
             endcase
         end

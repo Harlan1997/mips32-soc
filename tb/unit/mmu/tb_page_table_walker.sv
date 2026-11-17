@@ -11,6 +11,10 @@
   `define TEST_PAGE_MASK 16'h03ff
 `elsif WALKER_16M
   `define TEST_PAGE_MASK 16'h0fff
+`elsif WALKER_64M
+  `define TEST_PAGE_MASK 16'h3fff
+`elsif WALKER_256M
+  `define TEST_PAGE_MASK 16'hffff
 `else
   `define TEST_PAGE_MASK 16'h0000
 `endif
@@ -97,6 +101,8 @@ module tb_page_table_walker;
       16'h00ff: mem[2048]=32'h0010_000f;
       16'h03ff: mem[2048]=32'h0040_000f;
       16'h0fff: mem[2048]=32'h0100_000f;
+      16'h3fff: mem[2048]=32'h0400_000f;
+      16'hffff: mem[2048]=32'h1000_000f;
       default:  mem[2048]=32'h0000_300f;
     endcase
     /* The common 4KB matrix below remains the detailed permission corpus. */
@@ -111,6 +117,8 @@ module tb_page_table_walker;
         16'h00ff: if (fault_valid || pa !== 32'h0010_0123) errors=errors+1;
         16'h03ff: if (fault_valid || pa !== 32'h0040_0123) errors=errors+1;
         16'h0fff: if (fault_valid || pa !== 32'h0100_0123) errors=errors+1;
+        16'h3fff: if (fault_valid || pa !== 32'h0400_0123) errors=errors+1;
+        16'hffff: if (fault_valid || pa !== 32'h1000_0123) errors=errors+1;
         default:  if (fault_valid || pa !== 32'h0000_3123) errors=errors+1;
       endcase
 
@@ -142,6 +150,14 @@ module tb_page_table_walker;
           mem[2048]=32'h0200_000f;
           va=32'h0001_0008;
         end
+        16'h3fff: begin
+          mem[2048]=32'h0800_000f;
+          va=32'h0010_0008;
+        end
+        16'hffff: begin
+          mem[2048]=32'h2000_000f;
+          va=32'h0010_0008;
+        end
         default: begin
           mem[2049]=32'h0000_300f;
           va=32'h0000_1000;
@@ -157,6 +173,8 @@ module tb_page_table_walker;
         16'h00ff: if (fault_valid || pa !== 32'h0020_0000) errors=errors+1;
         16'h03ff: if (fault_valid || pa !== 32'h0080_4004) errors=errors+1;
         16'h0fff: if (fault_valid || pa !== 32'h0201_0008) errors=errors+1;
+        16'h3fff: if (fault_valid || pa !== 32'h0810_0008) errors=errors+1;
+        16'hffff: if (fault_valid || pa !== 32'h2010_0008) errors=errors+1;
         default:  if (fault_valid || pa !== 32'h0000_3000) errors=errors+1;
       endcase
     end

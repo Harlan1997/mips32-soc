@@ -376,6 +376,22 @@ module tb_tlb_asid_policy;
         check("64MiB odd half and offset", tlb_hit && translation_ok &&
               pa == {20'h63fff, 12'h1004});
 
+        // 256 MiB pair: VA[28] selects the half; VA[27:12] is offset.
+        // VPN2[15:0] is masked by PageMask=0xffff, while the upper VPN2
+        // bits remain part of the architectural match.
+        write_entry_mask(2'd2, 19'h10000, 8'h9e, 16'hffff,
+                         make_lo(20'h70000, 3'b011, 1'b1, 1'b1, 1'b0),
+                         make_lo(20'hb0000, 3'b011, 1'b1, 1'b1, 1'b0));
+        asid   = 8'h9e;
+        req_va = 32'h2012_3304; // VA[28]=0, VA[27:12]=0x0123
+        #1;
+        check("256MiB even half and offset", tlb_hit && translation_ok &&
+              pa == {20'h70123, 12'h0304});
+        req_va = 32'h3012_3304; // VA[28]=1, same page offset
+        #1;
+        check("256MiB odd half and offset", tlb_hit && translation_ok &&
+              pa == {20'hb0123, 12'h0304});
+
         // Repeated identical valid entries are still architecturally
         // overlapping and must raise MCheck rather than being hidden by the
         // priority encoder.

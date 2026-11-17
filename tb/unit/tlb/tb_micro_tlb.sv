@@ -152,6 +152,9 @@ module tb_micro_tlb;
         fill_i_mask(32'h0003_f004, 20'h34000, 16'h003f, 1'b1);
         check("256KB page translation", i_hit && i_pfn == 20'h3403f);
         flush = 1'b1; @(posedge clk); #1; flush = 1'b0;
+        fill_i_mask(32'h2012_3304, 20'h70000, 16'hffff, 1'b1);
+        check("256MB page translation", i_hit && i_pfn == 20'h70123);
+        flush = 1'b1; @(posedge clk); #1; flush = 1'b0;
         fill_i_mask(32'h0006_0004, 20'h35000, 16'h0000, 1'b0);
         check("invalid permission is preserved", i_hit && !i_v);
 

@@ -292,6 +292,7 @@ dcache-parity-gate:
 .PHONY: isa-implementation-audit branch-likely-gate direct-jal-gate bitswap-gate fpu-branch-gate qemu-system-fpu-branch-differential-gate mips-fpu-recip-gate mips-fpu-flags-gate mips-fpu-rounding-gate mips-regfile-srs-gate mips-control-srs-gate mips-control-special2-gate srs-map-gate srs-firmware srs-gate srs-exception-firmware srs-exception-gate srs-nested-firmware srs-nested-gate srs-scheduler-context-gate srs-privilege-gate qemu-system-srs-exception-differential-gate qemu-system-srs-nested-differential-gate qemu-system-srs-map-differential-gate llsc-interrupt-boundary-gate cpu-irq-delay-slot-gate cpu-lui-lw-forward-gate rtl-linux-forwarding-gate rtl-linux-focus-differential-gate rtl-linux-fpu-abi-gate
 .PHONY: l1-nonblocking-cpu-complete-gate l1-nonblocking-maintenance-compat-gate l1-nonblocking-maintenance-cpu-gate l1-nonblocking-ddr-gate l1-nonblocking-linux-differential-gate l1-nonblocking-sync-gate l1-l2-nonblocking-complete-gate qemu-system-l1-ddr-differential-gate qemu-system-l1-l2-nonblocking-differential-gate qemu-system-fpu-rounding-differential-gate
 .PHONY: l2-nonblocking-end-to-end-gate
+.PHONY: fpu-cop1x-reverse-endian-gate qemu-system-fpu-cop1x-reverse-endian-differential-gate
 .PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
 .PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit qemu-system-cp0-timer-wait-differential-gate linux-timer-clock-comparison-test retire-trace-fifo-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
@@ -1087,6 +1088,10 @@ qemu-system-fpu-cop1x-unaligned-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=fpu_cop1x_unaligned FW_DIR=$(BUILD_DIR)/firmware/fpu_cop1x_unaligned QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_cop1x_unaligned_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
 
+qemu-system-fpu-cop1x-reverse-endian-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
+	FW_TEST=fpu_cop1x_reverse_endian FW_DIR=$(BUILD_DIR)/firmware/fpu_cop1x_reverse_endian QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_cop1x_reverse_endian_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
+
 qemu-system-fpu-rounding-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=fpu_rounding FW_DIR=$(BUILD_DIR)/firmware/fpu_rounding QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_rounding_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -1687,6 +1692,13 @@ fpu-cop1x-unaligned-fr0-gate:
 	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
 	tb/soc_test/run.sh
 
+fpu-cop1x-reverse-endian-gate:
+	$(MAKE) -C tb/soc_test/fw/tests/fpu_cop1x_reverse_endian OUT_DIR=$(BUILD_DIR)/firmware/fpu_cop1x_reverse_endian FW_BASE=firmware all
+	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_cop1x_reverse_endian FW_DIR=$(BUILD_DIR)/firmware/fpu_cop1x_reverse_endian \
+	FW_HEX=$(BUILD_DIR)/firmware/fpu_cop1x_reverse_endian/firmware.hex \
+	VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' \
+	tb/soc_test/run.sh
+
 fpu-single-gate:
 	$(MAKE) -C tb/soc_test/fw/tests/fpu_single OUT_DIR=$(BUILD_DIR)/firmware/fpu_single FW_BASE=firmware all
 	RUN_DIR=$(BUILD_DIR)/soc_test/fpu_single FW_DIR=$(BUILD_DIR)/firmware/fpu_single \
@@ -1775,7 +1787,7 @@ page-table-walker-gate:
 
 page-table-walker-page-sizes-gate:
 	@set -e; \
-	for spec in "4K:" "16K:WALKER_16K" "64K:WALKER_64K" "256K:WALKER_256K" "1M:WALKER_1M" "4M:WALKER_4M" "16M:WALKER_16M"; do \
+	for spec in "4K:" "16K:WALKER_16K" "64K:WALKER_64K" "256K:WALKER_256K" "1M:WALKER_1M" "4M:WALKER_4M" "16M:WALKER_16M" "64M:WALKER_64M" "256M:WALKER_256M"; do \
 		name=$${spec%%:*}; define=$${spec#*:}; \
 		dir=$(BUILD_DIR)/unit_tb/page_table_walker_pages/$${name}; \
 		if [ -n "$${define}" ]; then VCS_DEFINES="+define+$${define}" RUN_DIR="$${dir}" tb/unit/mmu/run_page_table_walker.sh; \
@@ -1795,7 +1807,7 @@ cpu-hardware-walker-page-size-gate:
 
 cpu-hardware-walker-page-sizes-gate:
 	@set -e; \
-	for spec in "16K:16'h0003" "64K:16'h000f" "256K:16'h003f" "1M:16'h00ff" "4M:16'h03ff" "16M:16'h0fff"; do \
+	for spec in "16K:16'h0003" "64K:16'h000f" "256K:16'h003f" "1M:16'h00ff" "4M:16'h03ff" "16M:16'h0fff" "64M:16'h3fff" "256M:16'hffff"; do \
 		name=$${spec%%:*}; mask=$${spec#*:}; \
 		VCS_DEFINES="+define+SOC_HARDWARE_WALKER_PAGE_MASK=$${mask}" \
 		RUN_DIR=$(BUILD_DIR)/unit_tb/cpu_hardware_walker_$${name} \
@@ -1846,9 +1858,9 @@ retire-trace-fifo-gate:
 
 mem-stage-gate:
 	$(MAKE) -C sim STAGE=mem BUILD_DIR=$(BUILD_DIR) all
-	@test -s "$(BUILD_DIR)/stage/mem/sim.log"
-	@grep -q 'SCB_PASS' "$(BUILD_DIR)/stage/mem/sim.log"
-	@! grep -q 'SCB_FAIL' "$(BUILD_DIR)/stage/mem/sim.log"
+	@test -s "$(BUILD_DIR)/mem-stage/sim.log"
+	@grep -q 'SCB_PASS' "$(BUILD_DIR)/mem-stage/sim.log"
+	@! grep -q 'SCB_FAIL' "$(BUILD_DIR)/mem-stage/sim.log"
 	@echo "MEM-stage merge/load-store gate: PASS"
 
 project-tree:

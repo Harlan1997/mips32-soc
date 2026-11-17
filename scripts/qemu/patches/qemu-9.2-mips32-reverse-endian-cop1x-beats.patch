@@ -1,0 +1,135 @@
+diff --git a/target/mips/internal.h b/target/mips/internal.h
+--- a/target/mips/internal.h
++++ b/target/mips/internal.h
+@@ -316,6 +316,14 @@
+         env->hflags |= (env->CP0_Status >> CP0St_KSU) &
+                        MIPS_HFLAG_KSU;
+     }
++    /* SOC_REF_RE_COP1X: the project RTL applies Status.RE only in user
++     * mode, and exception/error level always returns to native ordering. */
++    if (!(env->CP0_Status & (1 << CP0St_EXL)) &&
++        !(env->CP0_Status & (1 << CP0St_ERL)) &&
++        ((env->hflags & MIPS_HFLAG_KSU) == MIPS_HFLAG_UM) &&
++        (env->CP0_Status & (1 << CP0St_RE))) {
++        env->hflags |= MIPS_HFLAG_RE;
++    }
+ #if defined(TARGET_MIPS64)
+     if ((env->insn_flags & ISA_MIPS3) &&
+         (((env->hflags & MIPS_HFLAG_KSU) != MIPS_HFLAG_UM) ||
+diff --git a/target/mips/tcg/translate.c b/target/mips/tcg/translate.c
+--- a/target/mips/tcg/translate.c
++++ b/target/mips/tcg/translate.c
+@@ -10595,6 +10595,7 @@
+                           int fd, int fs, int base, int index)
+ {
+     TCGv t0 = tcg_temp_new();
++    bool reverse_endian = (ctx->hflags & MIPS_HFLAG_RE) != 0; /* SOC_REF_RE_COP1X */
+ 
+     if (base == 0) {
+         gen_load_gpr(t0, index);
+@@ -10623,7 +10624,24 @@
+         check_cp1_registers(ctx, fd);
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+-            tcg_gen_qemu_ld_i64(fp0, t0, ctx->mem_idx, mo_endian(ctx) | MO_UQ);
++            if (reverse_endian) {
++                TCGv low = tcg_temp_new();
++                TCGv high = tcg_temp_new();
++                TCGv addr_low = tcg_temp_new();
++                TCGv addr_high = tcg_temp_new();
++                tcg_gen_mov_tl(addr_low, t0);
++                tcg_gen_xori_tl(addr_low, addr_low, 4);
++                tcg_gen_addi_tl(addr_high, t0, 4);
++                tcg_gen_xori_tl(addr_high, addr_high, 4);
++                tcg_gen_qemu_ld_tl(low, addr_low, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++                tcg_gen_qemu_ld_tl(high, addr_high, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++                tcg_gen_concat_tl_i64(fp0, low, high);
++            } else {
++                tcg_gen_qemu_ld_i64(fp0, t0, ctx->mem_idx,
++                                    mo_endian(ctx) | MO_UQ);
++            }
+             gen_store_fpr64(ctx, fp0, fd);
+         }
+         break;
+@@ -10632,7 +10650,24 @@
+         tcg_gen_andi_tl(t0, t0, ~0x7);
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+-            tcg_gen_qemu_ld_i64(fp0, t0, ctx->mem_idx, mo_endian(ctx) | MO_UQ);
++            if (reverse_endian) {
++                TCGv low = tcg_temp_new();
++                TCGv high = tcg_temp_new();
++                TCGv addr_low = tcg_temp_new();
++                TCGv addr_high = tcg_temp_new();
++                tcg_gen_mov_tl(addr_low, t0);
++                tcg_gen_xori_tl(addr_low, addr_low, 4);
++                tcg_gen_addi_tl(addr_high, t0, 4);
++                tcg_gen_xori_tl(addr_high, addr_high, 4);
++                tcg_gen_qemu_ld_tl(low, addr_low, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++                tcg_gen_qemu_ld_tl(high, addr_high, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++                tcg_gen_concat_tl_i64(fp0, low, high);
++            } else {
++                tcg_gen_qemu_ld_i64(fp0, t0, ctx->mem_idx,
++                                    mo_endian(ctx) | MO_UQ);
++            }
+             gen_store_fpr64(ctx, fp0, fd);
+         }
+         break;
+@@ -10650,7 +10685,25 @@
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+             gen_load_fpr64(ctx, fp0, fs);
+-            tcg_gen_qemu_st_i64(fp0, t0, ctx->mem_idx, mo_endian(ctx) | MO_UQ);
++            if (reverse_endian) {
++                TCGv low = tcg_temp_new();
++                TCGv high = tcg_temp_new();
++                TCGv addr_low = tcg_temp_new();
++                TCGv addr_high = tcg_temp_new();
++                tcg_gen_extrl_i64_i32(low, fp0);
++                tcg_gen_extrh_i64_i32(high, fp0);
++                tcg_gen_mov_tl(addr_low, t0);
++                tcg_gen_xori_tl(addr_low, addr_low, 4);
++                tcg_gen_addi_tl(addr_high, t0, 4);
++                tcg_gen_xori_tl(addr_high, addr_high, 4);
++                tcg_gen_qemu_st_tl(low, addr_low, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++                tcg_gen_qemu_st_tl(high, addr_high, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++            } else {
++                tcg_gen_qemu_st_i64(fp0, t0, ctx->mem_idx,
++                                    mo_endian(ctx) | MO_UQ);
++            }
+         }
+         break;
+     case OPC_SUXC1:
+@@ -10659,7 +10712,25 @@
+         {
+             TCGv_i64 fp0 = tcg_temp_new_i64();
+             gen_load_fpr64(ctx, fp0, fs);
+-            tcg_gen_qemu_st_i64(fp0, t0, ctx->mem_idx, mo_endian(ctx) | MO_UQ);
++            if (reverse_endian) {
++                TCGv low = tcg_temp_new();
++                TCGv high = tcg_temp_new();
++                TCGv addr_low = tcg_temp_new();
++                TCGv addr_high = tcg_temp_new();
++                tcg_gen_extrl_i64_i32(low, fp0);
++                tcg_gen_extrh_i64_i32(high, fp0);
++                tcg_gen_mov_tl(addr_low, t0);
++                tcg_gen_xori_tl(addr_low, addr_low, 4);
++                tcg_gen_addi_tl(addr_high, t0, 4);
++                tcg_gen_xori_tl(addr_high, addr_high, 4);
++                tcg_gen_qemu_st_tl(low, addr_low, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++                tcg_gen_qemu_st_tl(high, addr_high, ctx->mem_idx,
++                                   mo_endian(ctx) | MO_UL);
++            } else {
++                tcg_gen_qemu_st_i64(fp0, t0, ctx->mem_idx,
++                                    mo_endian(ctx) | MO_UQ);
++            }
+         }
+         break;
+     }

@@ -12,7 +12,7 @@
 
 - **软件管理** TLB（refill 由异常处理程序完成，非硬件 walker）。
 - **64 entries**、fully-associative、双页 (each entry = even/odd VPN pair)。
-- **可变页尺度**：4KB / 16KB / 64KB / 256KB / 1MB / 4MB / 16MB（用 PageMask 编码）。
+- **可变页尺度**：4KB / 16KB / 64KB / 256KB / 1MB / 4MB / 16MB / 256MB（用 PageMask 编码）。
 - **ASID** 8 位，256 个进程域。
 - **G (Global)** 位跨 ASID 匹配（内核代码用）。
 - **精确异常**：TLB Refill / TLB Invalid / TLB Modified / TLB Machine Check（重复命中）。
@@ -68,7 +68,7 @@ MIPS32 硬编码 4 段：
 | `PABITS` | 32 | 物理地址宽度 (PFN 20 位 = 32 bit PA @ 4KB) |
 | `ASID_BITS` | 8 | ASID 宽度 |
 | `MIN_PAGE_LOG2` | 12 | 最小页 = 4KB |
-| `MAX_PAGE_LOG2` | 24 | 最大页 = 16MB |
+| `MAX_PAGE_LOG2` | 28 | 最大页 = 256MB |
 
 ---
 
@@ -81,7 +81,7 @@ MIPS32 硬编码 4 段：
    - `MATCH_VPN_i = (VA[31:13] & ~MASK_i[28:13]) == (VPN2_i & ~MASK_i[28:13])`
    - `MATCH_ASID_i = G_i || (ASID_i == ASID_curr)`
    - `HIT_i = Valid_i && MATCH_VPN_i && MATCH_ASID_i`
-2. **奇偶选择位** = 页偏移范围以上的 VA 位：PageMask `0x0000/0x0003/0x000F/0x003F/0x00FF/0x03FF/0x0FFF/0x3FFF` 分别使用 `VA[12/14/16/18/20/22/24/26]`（等效于按页尺度将 entry 分成偶奇两半）。RTL 对非法/非连续 mask 回退到 4 KiB 选择位。硬件 walker 的 opt-in 页尺度矩阵覆盖其中 4KB 至 16MB 的七种编码。
+2. **奇偶选择位** = 页偏移范围以上的 VA 位：PageMask `0x0000/0x0003/0x000F/0x003F/0x00FF/0x03FF/0x0FFF/0x3FFF/0xFFFF` 分别使用 `VA[12/14/16/18/20/22/24/26/28]`（等效于按页尺度将 entry 分成偶奇两半）。RTL 对非法/非连续 mask 回退到 4 KiB 选择位。硬件 walker 的 opt-in 页尺度矩阵现覆盖 4KB 至 256MB，主 TLB 和 micro-TLB 也覆盖 256MB 的 `0xffff` 编码。
    - 若选择位 = 0 → 用 `Lo0`（PFN0/C0/D0/V0）
     - 若选择位 = 1 → 用 `Lo1`
    - PA 由现有 `{PFN, VA[11:0]}` MMU 接口形成；RTL 在大 PageMask 下将 `VA[13:12]` 等额外页内偏移位折入 PFN 低位，保持完整物理页内偏移。

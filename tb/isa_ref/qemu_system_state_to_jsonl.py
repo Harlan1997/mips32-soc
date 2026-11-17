@@ -815,9 +815,17 @@ def convert(events, states):
             if opcode == 0x11 and cop1_rs == 0x07:
                 # MTHC1 rt, fs writes the high word of the named FR=1 FPR.
                 fpr_hi_shadow[cop1_fs] = int(before[f"r{(instr >> 16) & 0x1f}"], 16)
-            elif (opcode == 0x13 and cop1x_funct == 0x05 and
+            elif (opcode == 0x13 and cop1x_funct in (0x01, 0x05) and
                   event.get("mem_read") and event.get("mem_value_hi") is not None):
-                fpr_hi_shadow[cop1_fs] = int(event["mem_value_hi"], 16)
+                low_word = int(event["mem_value"], 16)
+                high_word = int(event["mem_value_hi"], 16)
+                loaded_low = int(after.get(f"fpr{cop1_fs}", "0"), 16)
+                # Reverse-endian COP1X swaps the translated beat order: the
+                # word at effective-address+4 becomes the FPR low word. Use
+                # the architectural post-load value to choose the matching
+                # memory word for the FPR high-word shadow.
+                fpr_hi_shadow[cop1_fs] = (low_word if loaded_low == high_word
+                                          else high_word)
             elif (opcode == 0x35 and event.get("mem_read") and
                   event.get("mem_value_hi") is not None):
                 fpr_hi_shadow[(instr >> 16) & 0x1f] = int(event["mem_value_hi"], 16)
@@ -856,6 +864,15 @@ def convert(events, states):
                     f"retire {index}: double store lacks a complete 64-bit "
                     "QEMU memory value")
             trace_mem_wdata_hi = hex32(event["mem_value_hi"])
+            if opcode == 0x13 and (instr & 0x3f) in (0x09, 0x0d):
+                # The reverse-endian COP1X reference path reports physical
+                # beat order, while the architectural retire contract carries
+                # the FPR pair in low/high order at the effective address.
+                cop1x_fs = (instr >> 11) & 0x1f
+                fpr_low = before.get(f"fpr{cop1x_fs}")
+                if fpr_low is not None:
+                    trace_mem_wdata = hex32(fpr_low)
+                    trace_mem_wdata_hi = hex32(fpr_hi_shadow[cop1x_fs])
         if is_merge_memory:
             # QEMU lowers merge operations into helper byte callbacks. Report
             # the original architectural effective address instead of the

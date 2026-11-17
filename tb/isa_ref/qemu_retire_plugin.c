@@ -24,6 +24,9 @@ typedef struct {
     uint32_t mem_value;
     uint32_t mem_value_hi;
     unsigned int mem_size;
+    unsigned int mem_beat_count;
+    uint64_t mem_first_addr;
+    uint32_t mem_first_value;
 } Pending;
 
 typedef struct {
@@ -468,6 +471,19 @@ static void emit_pending(Pending *pending, uint64_t next_pc)
     pending->valid = false;
 }
 
+static bool is_split_cop1x_double(uint32_t instr)
+{
+    uint32_t opcode = instr >> 26;
+    uint32_t funct = instr & 0x3f;
+
+    /* The reverse-endian reference path lowers these indexed double accesses
+     * to two 32-bit translated operations.  Aggregate those callbacks back
+     * into the architectural 64-bit event expected by the retire schema. */
+    return opcode == 0x13 &&
+           (funct == 0x01 || funct == 0x05 ||
+            funct == 0x09 || funct == 0x0d);
+}
+
 static void vcpu_mem(unsigned int cpu_index, qemu_plugin_meminfo_t info,
                      uint64_t vaddr, void *userdata)
 {
@@ -479,29 +495,58 @@ static void vcpu_mem(unsigned int cpu_index, qemu_plugin_meminfo_t info,
     qemu_plugin_mem_value value = qemu_plugin_mem_get_value(info);
     struct qemu_plugin_hwaddr *hwaddr = qemu_plugin_get_hwaddr(info, vaddr);
     uint64_t device_addr = vaddr;
+    unsigned int mem_size = 1u << qemu_plugin_mem_size_shift(info);
+    uint32_t mem_value = 0;
 
     if (hwaddr && qemu_plugin_hwaddr_is_io(hwaddr)) {
         device_addr = qemu_plugin_hwaddr_phys_addr(hwaddr);
     }
 
-    pending->mem_valid = true;
-    pending->mem_read = !qemu_plugin_mem_is_store(info);
-    pending->mem_write = qemu_plugin_mem_is_store(info);
-    pending->mem_addr = vaddr;
-    pending->mem_size = 1u << qemu_plugin_mem_size_shift(info);
     switch (value.type) {
-    case QEMU_PLUGIN_MEM_VALUE_U8: pending->mem_value = value.data.u8; break;
-    case QEMU_PLUGIN_MEM_VALUE_U16: pending->mem_value = value.data.u16; break;
-    case QEMU_PLUGIN_MEM_VALUE_U32: pending->mem_value = value.data.u32; break;
+    case QEMU_PLUGIN_MEM_VALUE_U8: mem_value = value.data.u8; break;
+    case QEMU_PLUGIN_MEM_VALUE_U16: mem_value = value.data.u16; break;
+    case QEMU_PLUGIN_MEM_VALUE_U32: mem_value = value.data.u32; break;
     case QEMU_PLUGIN_MEM_VALUE_U64:
-        pending->mem_value = (uint32_t)value.data.u64;
+        mem_value = (uint32_t)value.data.u64;
         pending->mem_value_hi = (uint32_t)(value.data.u64 >> 32);
         break;
     case QEMU_PLUGIN_MEM_VALUE_U128:
-        pending->mem_value = (uint32_t)value.data.u128.low;
+        mem_value = (uint32_t)value.data.u128.low;
         pending->mem_value_hi = (uint32_t)(value.data.u128.low >> 32);
         break;
-    default: pending->mem_value = 0; break;
+    default: mem_value = 0; break;
+    }
+
+    pending->mem_read = !qemu_plugin_mem_is_store(info);
+    pending->mem_write = qemu_plugin_mem_is_store(info);
+    if (is_split_cop1x_double(pending->instr) && mem_size == 4) {
+        if (!pending->mem_valid) {
+            pending->mem_valid = true;
+            pending->mem_addr = vaddr;
+            pending->mem_value = mem_value;
+            pending->mem_value_hi = 0;
+            pending->mem_size = 4;
+            pending->mem_beat_count = 1;
+            pending->mem_first_addr = vaddr;
+            pending->mem_first_value = mem_value;
+        } else if (pending->mem_beat_count == 1) {
+            uint64_t low_addr = MIN(pending->mem_first_addr, vaddr);
+            uint64_t high_addr = MAX(pending->mem_first_addr, vaddr);
+
+            pending->mem_addr = low_addr;
+            pending->mem_value = pending->mem_first_addr == low_addr ?
+                                 pending->mem_first_value : mem_value;
+            pending->mem_value_hi = pending->mem_first_addr == high_addr ?
+                                    pending->mem_first_value : mem_value;
+            pending->mem_size = 8;
+            pending->mem_beat_count = 2;
+        }
+    } else {
+        pending->mem_valid = true;
+        pending->mem_addr = vaddr;
+        pending->mem_value = mem_value;
+        pending->mem_size = mem_size;
+        pending->mem_beat_count = 0;
     }
     if (debug_file && pending->mem_read &&
         is_uart_register(device_addr, 5 * 4)) {
@@ -565,6 +610,9 @@ static void vcpu_insn_exec(unsigned int cpu_index, void *userdata)
     pending->mem_value = 0;
     pending->mem_value_hi = 0;
     pending->mem_size = 0;
+    pending->mem_beat_count = 0;
+    pending->mem_first_addr = 0;
+    pending->mem_first_value = 0;
 }
 
 static void vcpu_exit(qemu_plugin_id_t id, unsigned int cpu_index)

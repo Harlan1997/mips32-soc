@@ -1,6 +1,48 @@
 # SoC 功能完整性计划
 
-### 2026-11-17 Current-source nonblocking Linux full differential closure
+### 2026-11-17 Current-source nonblocking Linux full closure rerun
+
+The current worktree completed the full nonblocking RTL/QEMU terminal
+closure with the strict live-FIFO comparator. Evidence is retained under
+`/data/disk/tmp/mips32-soc/full-qemu-nb-current-head-20261117-r2/`.
+The comparator passed `TRACE_COMPARE_PASS records=66914265` with full GPR
+and HI/LO state; RTL produced `66914306` records, including the documented
+23 boot-prefix and 18 synchronous-exception redirect records, while QEMU had
+zero unpaired records. Manifest validation passed with SHA-256
+`17d197f8038b51cd96f44a14330bc46fd688e0ae82e1956f5d0bae6b04976a51`.
+All 1,440 IRQ entries, 1,408 Cause.TI rising boundaries, 12,675 Count reads,
+125 Random reads, 8,364,287 cycle samples, and 16,702 UART APB entries were
+consumed. QEMU flushed the terminal marker and exited cleanly; RTL stopped at
+cycle `293,930,532` with one terminal marker. This closes the declared current
+generic Linux nonblocking terminal workload; unrestricted Linux, complete
+ISA/privileged/FPU/MMU/OS semantics, and product signoff remain separate
+scope.
+
+### 2026-11-17 Hardware walker 64 MiB and 256 MiB PageMask extension
+
+The opt-in two-level hardware page-table walker now accepts the remaining
+architectural `PageMask` encodings `0x3fff` (64 MiB leaves) and `0xffff`
+(256 MiB leaves). L2 lookup stays at the single leaf entry for these sizes,
+the PTE alignment checks cover the expanded PFN width, physical address
+assembly preserves the complete page offset, and the CPU refill selector uses
+`VA[26]`/`VA[28]` for the even/odd TLB half. The focused
+`page-table-walker-page-sizes-gate` passes all nine configurations from 4 KiB
+through 256 MiB. This closes the walker page-size matrix only; OS page-table
+ownership, unrestricted demand paging, Linux VM policy, and full privileged/MMU
+compliance remain open.
+
+### 2026-11-17 MMU 256 MiB PageMask translation closure slice
+
+The main TLB and opt-in micro-TLB now recognize the architectural `PageMask`
+encoding `0xffff` instead of silently falling back to 4 KiB behavior. The
+translation path selects `VA[28]` for the even/odd half and folds
+`VA[27:12]` into the low PFN bits, preserving the full 256 MiB page offset.
+Fresh `tlb_asid_policy` and `micro_tlb` unit gates pass the 256 MiB even and
+odd translations, including ASID and permission behavior. This closes the
+largest supported PageMask encoding slice; Linux page-table policy, full
+privileged/MMU compliance, and unrestricted VM stress remain open.
+
+### 2026-11-17 Historical current-source nonblocking Linux full differential closure
 
 The exact-source nonblocking RTL/QEMU terminal workload passed the strict
 streaming comparator. Evidence is retained under
@@ -64,9 +106,11 @@ Status.RE is effective. This swaps the two aligned word beats for LUXC1,
 SUXC1, LDXC1, and SDXC1 without changing TLB ownership or BadVAddr. The
 focused CPU gate checks native and reverse-endian beat addresses, and
 continues to pass the first/second-beat atomicity checks below. The project
-QEMU reference now models the same user-mode Status.RE beat swap and has been
-rebuilt with the project patch, but no dedicated user-mode/MMU reverse-endian
-COP1X differential has been run yet; this remains RTL-only evidence.
+QEMU reference now models the same user-mode Status.RE beat swap. The
+dedicated user-mode RTL/QEMU differential passes 149 compared records from 151
+captured records with a clean QEMU exit. This closes the selected aligned
+user-mode beat-order slice; cross-page MMU ownership, fault replay, and
+unrestricted COP1X semantics remain open.
 
 ### 2026-11-17 COP1X first/second beat fault boundary
 

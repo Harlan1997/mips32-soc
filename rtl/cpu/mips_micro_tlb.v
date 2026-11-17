@@ -72,6 +72,7 @@ module mips_micro_tlb #(
                 16'h03ff: odd_bit = 6'd22;
                 16'h0fff: odd_bit = 6'd24;
                 16'h3fff: odd_bit = 6'd26;
+                16'hffff: odd_bit = 6'd28;
                 default:  odd_bit = 6'd12;
             endcase
         end
@@ -90,6 +91,7 @@ module mips_micro_tlb #(
                 16'h03ff: adjusted_pfn = {pfn[19:10], va[21:12]};
                 16'h0fff: adjusted_pfn = {pfn[19:12], va[23:12]};
                 16'h3fff: adjusted_pfn = {pfn[19:14], va[25:12]};
+                16'hffff: adjusted_pfn = {pfn[19:16], va[27:12]};
                 default:  adjusted_pfn = pfn;
             endcase
         end

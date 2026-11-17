@@ -256,7 +256,7 @@ def test_double_store_preserves_both_words():
     before["r2"] = after["r2"] = "88002000"
     states = [{"pc": "80001000", "regs": before},
               {"pc": "80001004", "regs": after}]
-    for instr in ("f4430000", "4c441809"):
+    for instr in ("f4430000", "4c441809", "4f19500d"):
         event = {"pc": "80001000", "instr": instr,
                  "next_pc": "80001004", "mem_valid": 1, "mem_write": 1,
                  "mem_addr": "88002000", "mem_value": "55667788",

@@ -494,6 +494,16 @@ python3 "${SCRIPT_DIR}/trace_compare.py" --stream \
     "${stream_dir}/rtl_retire" "${stream_dir}/qemu_retire" \
     >"${compare_log}" 2>&1 &
 compare_pid=$!
+fifo_guard_status="${RUN_DIR}/fifo_reader_guard.status"
+rm -f "${fifo_guard_status}"
+python3 "${SCRIPT_DIR}/guard_fifo_readers.py" \
+    --fifo "${stream_dir}/rtl_retire" \
+    --fifo "${stream_dir}/qemu_retire" \
+    --expected-reader "${compare_pid}" \
+    --until-pid "${compare_pid}" \
+    --status-path "${fifo_guard_status}" \
+    >"${RUN_DIR}/fifo_reader_guard.log" 2>&1 &
+fifo_guard_pid=$!
 nice -n "${QEMU_CLOSURE_PRODUCER_NICE}" env RUN_DIR="${RUN_DIR}/qemu" \
     QEMU_BIN="${QEMU_BIN}" QEMU_SRC="${QEMU_SRC}" QEMU_BUILD="${QEMU_BUILD}" \
     IRQ_SCHEDULE="" \
@@ -644,9 +654,11 @@ record_producer_consumer_counts() {
 rtl_done=0
 qemu_done=0
 compare_done=0
+fifo_guard_done=0
 rtl_status=0
 qemu_status_code=0
 compare_status=0
+fifo_guard_status_code=0
 failure=0
 collect_process_tree() {
     local root=$1
@@ -681,11 +693,12 @@ kill_process_tree() {
         kill "-${signal}" "${pid}" 2>/dev/null || true
     done
 }
-while (( !rtl_done || !qemu_done || !compare_done )); do
+while (( !rtl_done || !qemu_done || !compare_done || !fifo_guard_done )); do
     wait_targets=()
     (( rtl_done )) || wait_targets+=("${rtl_pid}")
     (( qemu_done )) || wait_targets+=("${qemu_pid}")
     (( compare_done )) || wait_targets+=("${compare_pid}")
+    (( fifo_guard_done )) || wait_targets+=("${fifo_guard_pid}")
 
     finished_pid=
     set +e
@@ -701,6 +714,7 @@ while (( !rtl_done || !qemu_done || !compare_done )); do
         "${rtl_pid}") rtl_done=1; rtl_status=${child_status}; child_name=RTL ;;
         "${qemu_pid}") qemu_done=1; qemu_status_code=${child_status}; child_name=QEMU ;;
         "${compare_pid}") compare_done=1; compare_status=${child_status}; child_name=comparator ;;
+        "${fifo_guard_pid}") fifo_guard_done=1; fifo_guard_status_code=${child_status}; child_name=FIFO-reader-guard ;;
         *)
             echo "full QEMU closure: reaped unexpected child ${finished_pid}" >&2
             failure=1
@@ -726,6 +740,9 @@ if [[ ${failure} -ne 0 ]]; then
     if [[ ${compare_done} -eq 0 ]]; then
         kill_process_tree "${compare_pid}" TERM
     fi
+    if [[ ${fifo_guard_done} -eq 0 ]]; then
+        kill_process_tree "${fifo_guard_pid}" TERM
+    fi
     sleep 1
     if [[ ${rtl_done} -eq 0 ]]; then
         kill_process_tree "${rtl_pid}" KILL
@@ -736,20 +753,26 @@ if [[ ${failure} -ne 0 ]]; then
     if [[ ${compare_done} -eq 0 ]]; then
         kill_process_tree "${compare_pid}" KILL
     fi
+    if [[ ${fifo_guard_done} -eq 0 ]]; then
+        kill_process_tree "${fifo_guard_pid}" KILL
+    fi
     set +e
     if [[ ${rtl_done} -eq 0 ]]; then wait "${rtl_pid}"; rtl_status=$?; fi
     if [[ ${qemu_done} -eq 0 ]]; then wait "${qemu_pid}"; qemu_status_code=$?; fi
     if [[ ${compare_done} -eq 0 ]]; then wait "${compare_pid}"; compare_status=$?; fi
+    if [[ ${fifo_guard_done} -eq 0 ]]; then wait "${fifo_guard_pid}"; fifo_guard_status_code=$?; fi
     set -e
 fi
 
 record_fifo_ownership "post_execution"
 record_producer_consumer_counts
 if [[ ${rtl_status} -ne 0 || ${qemu_status_code} -ne 0 ||
-      ${compare_status} -ne 0 || ${failure} -ne 0 ]]; then
+      ${compare_status} -ne 0 || ${fifo_guard_status_code} -ne 0 ||
+      ${failure} -ne 0 ]]; then
     tail -100 "${RUN_DIR}/rtl_gate.log" >&2 || true
     tail -100 "${RUN_DIR}/qemu_gate.log" >&2 || true
     cat "${compare_log}" >&2 || true
+    cat "${RUN_DIR}/fifo_reader_guard.log" >&2 || true
     echo "full QEMU closure: strict FIFO differential failed" >&2
     exit 1
 fi
@@ -891,6 +914,7 @@ python3 "${validator}" create --output "${RUN_DIR}/differential_manifest.json" \
     --file qemu_stream_status_sha256="${RUN_DIR}/qemu/qemu_stream_status.json" \
     --file qemu_state_converter_sha256="${SCRIPT_DIR}/qemu_system_state_to_jsonl.py" \
     --file trace_comparator_sha256="${SCRIPT_DIR}/trace_compare.py" \
+    --file fifo_reader_guard_sha256="${SCRIPT_DIR}/guard_fifo_readers.py" \
     --file rtl_retire_capture_sha256="${SCRIPT_DIR}/retire_trace_capture.sv" \
     --file rtl_retire_binding_sha256="${ROOT_DIR}/tb/soc_test/tb_mips_soc.v" \
     --file full_closure_gate_sha256="${SCRIPT_DIR}/run_qemu_linux_full_closure_gate.sh" \
@@ -920,6 +944,7 @@ python3 "${validator}" create --output "${RUN_DIR}/differential_manifest.json" \
     --set trace_schema=00020000 \
     --set trace_state_contract=full-gpr-hilo-v1 \
     --set comparator_mode=strict-stream \
+    --set fifo_reader_guard=single-reader-enforced-v1 \
     --set memory_scope=systemd-user-cgroup \
     --set memory_max="${QEMU_CLOSURE_MEMORY_MAX}" \
     --set memory_swap_max="${QEMU_CLOSURE_SWAP_MAX}" \
@@ -988,6 +1013,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Producer-specific aligned records: RTL=${rtl_unpaired_records}, QEMU=${qemu_unpaired_records}
 - Alignment reasons: RTL=${rtl_alignment_summary}, QEMU=${qemu_alignment_summary}
 - Trace transport: live FIFOs (no unbounded JSONL materialization)
+- FIFO reader guard: single-reader enforcement (`${SCRIPT_DIR}/guard_fifo_readers.py`)
 - Comparator: strict streaming (`trace_schema=00020000`, full GPR and HI/LO state)
 - Memory envelope: systemd user cgroup, RAM=${QEMU_CLOSURE_MEMORY_MAX}, swap=${QEMU_CLOSURE_SWAP_MAX}
 - CPU scheduling: affinity=${QEMU_CLOSURE_CPU_AFFINITY:-all}, producer nice=${QEMU_CLOSURE_PRODUCER_NICE}

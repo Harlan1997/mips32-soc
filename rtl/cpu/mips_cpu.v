@@ -677,6 +677,8 @@ module mips_cpu #(
                 16'h00ff: hw_page_odd_bit = 6'd20;
                 16'h03ff: hw_page_odd_bit = 6'd22;
                 16'h0fff: hw_page_odd_bit = 6'd24;
+                16'h3fff: hw_page_odd_bit = 6'd26;
+                16'hffff: hw_page_odd_bit = 6'd28;
                 default:  hw_page_odd_bit = 6'd12;
             endcase
         end
