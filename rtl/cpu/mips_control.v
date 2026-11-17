@@ -1136,15 +1136,13 @@ module mips_control (
                 end else begin
                     case (rs)
                         5'b01000: begin // BC1F/BC1T and branch-likely forms
-                            if (!(rt == 5'd0 || rt == 5'd1 ||
-                                  rt == 5'd2 || rt == 5'd3)) begin
-                                illegal_inst = 1'b1;
-                            end else begin
-                                branch_op = 3'b111;
-                                branch_likely = rt[1];
-                                fpu_branch_invert = ~rt[0];
-                                fpu_condition_code = inst[20:18];
-                            end
+                            // rt[4:2] selects FCC0..FCC7; rt[1:0] selects
+                            // F/T and their likely forms. All eight condition
+                            // selectors use the same four branch modes.
+                            branch_op = 3'b111;
+                            branch_likely = rt[1];
+                            fpu_branch_invert = ~rt[0];
+                            fpu_condition_code = rt[4:2];
                         end
                         5'b00000, 5'b00010, 5'b00011,
                         5'b00100, 5'b00110, 5'b00111: begin

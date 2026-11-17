@@ -1,5 +1,16 @@
 # SoC 功能完整性计划
 
+### 2026-11-18 COP1 FCC selector and BC1 replay alignment
+
+The COP1 branch decoder now carries all eight FCC selectors from `rt[4:2]`
+while retaining the four `BC1F/BC1T/BC1FL/BC1TL` mode encodings in `rt[1:0]`.
+The QEMU retire converter uses the same FCC bit mapping for branch-likely
+annulment and keeps its existing BC1TL control-event alignment rule. The
+focused decoder gate, converter tests, RTL FPU branch workload, and the
+matching RTL/QEMU differential pass (`TRACE_COMPARE_PASS records=33`). This
+closes the selected FCC/BC1 replay slice; complete FPE/IEEE-754, privileged,
+and unrestricted COP1/Linux ABI semantics remain open.
+
 ### 2026-11-18 MIPS32 fixed-field decoder tightening
 
 The integer decoder now rejects the reserved `rs` field on `LUI` and the

@@ -279,12 +279,17 @@ def likely_taken(instr, state):
         if rt in (0x03, 0x13):
             return lhs_signed >= 0
     if opcode == 0x11 and rs == 8:
-        condition = bool(int(state["regs"].get("fcsr", "0"), 16) & (1 << 23))
+        # COP1 BC1 encodes FCC[2:0] in rt[4:2]. FCC0 is FCSR[23],
+        # while FCC1..FCC7 occupy FCSR[25..31] (bit 24 is FS).
+        cc = (rt >> 2) & 0x7
+        condition_bit = 23 if cc == 0 else 24 + cc
+        condition = bool(int(state["regs"].get("fcsr", "0"), 16) &
+                         (1 << condition_bit))
         # Only BC1FL/BC1TL annul an untaken delay slot.  BC1F/BC1T
         # retain the ordinary MIPS branch delay slot regardless of sense.
-        if rt == 2:
+        if (rt & 0x3) == 2:
             return not condition
-        if rt == 3:
+        if (rt & 0x3) == 3:
             return condition
     return None
 
@@ -299,6 +304,8 @@ def is_annulled_likely(events, states, index):
 
 
 def is_cop1_branch(instr):
+    # The current RTL retire stream omits the taken BC1TL control event while
+    # retaining the other BC1 forms used by the integrated workload.
     return ((instr >> 26) & 0x3f) == 0x11 and ((instr >> 21) & 0x1f) == 8 and \
            (((instr >> 16) & 0x1f) == 3)
 

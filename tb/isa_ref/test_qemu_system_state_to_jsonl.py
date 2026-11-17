@@ -22,6 +22,28 @@ def encode_special2(rs, rt, rd, funct, sa=0):
     return (0x1C << 26) | (rs << 21) | (rt << 16) | (rd << 11) | (sa << 6) | funct
 
 
+def encode_bc1(rt, offset=1):
+    return (0x11 << 26) | (8 << 21) | (rt << 16) | (offset & 0xffff)
+
+
+def state_with_fcsr(value):
+    regs = {f"r{index}": "00000000" for index in range(32)}
+    regs.update({f"fpr{index}": "00000000" for index in range(32)})
+    regs.update({"fcsr": f"{value:08x}"})
+    return {"regs": regs}
+
+
+def test_bc1_branch_likely_uses_nonzero_fcc_selector():
+    # FCC7 is FCSR[31]. BC1FL cc=7 is taken when that bit is clear and
+    # annulled when it is set; BC1TL cc=7 has the opposite sense.
+    bc1fl_cc7 = encode_bc1((7 << 2) | 2)
+    bc1tl_cc7 = encode_bc1((7 << 2) | 3)
+    assert MODULE.likely_taken(bc1fl_cc7, state_with_fcsr(0)) is True
+    assert MODULE.likely_taken(bc1fl_cc7, state_with_fcsr(1 << 31)) is False
+    assert MODULE.likely_taken(bc1tl_cc7, state_with_fcsr(0)) is False
+    assert MODULE.likely_taken(bc1tl_cc7, state_with_fcsr(1 << 31)) is True
+
+
 def test_special2_accumulate_has_no_gpr_destination():
     for funct in (0x00, 0x01, 0x04, 0x05):
         assert MODULE.gpr_destination(encode_special2(3, 4, 0, funct)) is None

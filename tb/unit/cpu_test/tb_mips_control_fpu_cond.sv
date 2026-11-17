@@ -88,6 +88,14 @@ module tb_mips_control_fpu_cond;
         end
     endfunction
 
+    function automatic [31:0] fpu_branch;
+        input [4:0] rt;
+        input [15:0] offset;
+        begin
+            fpu_branch = {6'b010001, 5'b01000, rt, offset};
+        end
+    endfunction
+
     function automatic [31:0] fpu_cop1x;
         input [4:0] fr;
         input [4:0] ft;
@@ -271,6 +279,27 @@ module tb_mips_control_fpu_cond;
         expect_reserved(fpu_compare(5'b10100, 5'd0, 5'd2, 3'd0, 2'b00, 6'h3c));
         expect_reserved(fpu_compare(5'b10101, 5'd0, 5'd2, 3'd0, 2'b00, 6'h3c));
         expect_reserved(fpu_compare(5'b10000, 5'd0, 5'd2, 3'd0, 2'b01, 6'h3c));
+
+        // BC1 encodes FCC7 in rt[4:2], with rt[1:0] retaining the branch
+        // sense/likely mode. The decoder must not reject the nonzero selector.
+        inst = fpu_branch(5'b11101, 16'h0001); // BC1T cc=7
+        #1;
+        if (illegal_inst || branch_op != 3'b111 || branch_likely ||
+            fpu_branch_invert || fpu_condition_code != 3'd7) begin
+            $display("FAIL BC1T cc=7 illegal=%b branch=%b likely=%b invert=%b cc=%0d",
+                     illegal_inst, branch_op, branch_likely,
+                     fpu_branch_invert, fpu_condition_code);
+            failures = failures + 1;
+        end
+        inst = fpu_branch(5'b11110, 16'h0001); // BC1FL cc=7
+        #1;
+        if (illegal_inst || branch_op != 3'b111 || !branch_likely ||
+            !fpu_branch_invert || fpu_condition_code != 3'd7) begin
+            $display("FAIL BC1FL cc=7 illegal=%b branch=%b likely=%b invert=%b cc=%0d",
+                     illegal_inst, branch_op, branch_likely,
+                     fpu_branch_invert, fpu_condition_code);
+            failures = failures + 1;
+        end
 
         // MOVT must not consume the existing MTHI encoding (funct=0x11).
         inst = {6'b000000, 5'd8, 5'd0, 5'd0, 5'd0, 6'b010001};
