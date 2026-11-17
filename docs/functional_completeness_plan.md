@@ -63,9 +63,10 @@ translation and toggles physical address bit 2 after translation when
 Status.RE is effective. This swaps the two aligned word beats for LUXC1,
 SUXC1, LDXC1, and SDXC1 without changing TLB ownership or BadVAddr. The
 focused CPU gate checks native and reverse-endian beat addresses, and
-continues to pass the first/second-beat atomicity checks below. This is
-RTL-only evidence because the project QEMU reference does not model the
-project-specific user reverse-endian COP1X contract.
+continues to pass the first/second-beat atomicity checks below. The project
+QEMU reference now models the same user-mode Status.RE beat swap and has been
+rebuilt with the project patch, but no dedicated user-mode/MMU reverse-endian
+COP1X differential has been run yet; this remains RTL-only evidence.
 
 ### 2026-11-17 COP1X first/second beat fault boundary
 

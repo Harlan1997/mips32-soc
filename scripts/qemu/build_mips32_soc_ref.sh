@@ -46,6 +46,7 @@ project_inputs_hash() {
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-lladdr-virtual.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-sc-consume-reservation.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch" \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-round-w-ties-away.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch" \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-random-schedule.patch" \
@@ -75,6 +76,8 @@ if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
    rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
    rg -q 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
    rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h" &&
+   rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    rg -q 'SOC_REF_RTL_TLB_VECTOR_V2' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
    rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
@@ -462,6 +465,13 @@ if ! rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
 fi
 rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
+
+if ! rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"; then
+    apply_project_patch \
+        "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x.patch"
+fi
+rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"
+rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c"
 
 if ! rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{(    case OPC_BSHFL:\n        op2 = MASK_BSHFL\(ctx->opcode\);\n        switch \(op2\) \{\n        case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n)            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);}{$1            check_insn(ctx, ISA_MIPS_R2); /* SOC_REF_ALIGN_R2 */\n            gen_align(ctx, 32, rd, rs, rt, sa \& 3);}' \
