@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-11-18 MIPS32 fixed-field decoder tightening
+
+The integer decoder now rejects the reserved `rs` field on `LUI` and the
+reserved `sa` field on `RDHWR`, while preserving the legal encodings. The
+focused `mips-control-cp0-gate` and `mips-control-special3-gate` pass, including
+the malformed encodings with no register, memory, cache, CP0, branch, or jump
+side effects. This closes two fixed-field cases in the implemented ISA slice;
+complete ISA compliance and the remaining privileged/FPU/MMU/OS semantics
+remain open.
+
 ### 2026-11-17 COP1X phase-specific BadVAddr owner
 
 The D-side fault owner now records the aligned COP1X base for phase 0 and the

@@ -453,11 +453,17 @@ module mips_control (
                 imm_signed = 1'b0; // Zero extended
             end
             6'b001111: begin // LUI
-                alu_op    = 5'b01101;
-                alu_src    = 1'b1;
-                reg_write  = 1'b1;
-                reg_dst    = 2'b00;
-                imm_signed = 1'b0;
+                // MIPS32 fixes rs to zero for LUI.  Treat a nonzero rs as
+                // Reserved Instruction instead of silently discarding it.
+                if (rs != 5'd0) begin
+                    illegal_inst = 1'b1;
+                end else begin
+                    alu_op    = 5'b01101;
+                    alu_src    = 1'b1;
+                    reg_write  = 1'b1;
+                    reg_dst    = 2'b00;
+                    imm_signed = 1'b0;
+                end
             end
             6'b100011: begin // LW
                 alu_op    = 5'b00001; // address = rs + sign_extend(offset)
@@ -896,6 +902,7 @@ module mips_control (
                     end
                     6'b111011: begin  // RDHWR rt, rd (SYNCI_Step=1, Count=2, UserLocal=29)
                         if (rs == 5'b00000 &&
+                            inst[10:6] == 5'b00000 &&
                             ((inst[15:11] == 5'd0) || (inst[15:11] == 5'd1) ||
                              (inst[15:11] == 5'd2) || (inst[15:11] == 5'd3) ||
                              (inst[15:11] == 5'd29))) begin

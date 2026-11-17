@@ -138,6 +138,19 @@ module tb_mips_control_cp0;
 
     initial begin
         failures = 0;
+        // LUI has no source register: rs is a fixed zero field.  Preserve
+        // the legal encoding and reject a nonzero reserved rs without any
+        // writeback side effect.
+        inst = 32'h3c02_1234; // lui $v0,0x1234
+        #1;
+        if (illegal_inst || !reg_write || alu_op != 5'b01101 ||
+            !alu_src || mem_read || mem_write) begin
+            $display("FAIL LUI valid inst=%08h illegal=%b reg=%b alu=%02h src=%b",
+                     inst, illegal_inst, reg_write, alu_op, alu_src);
+            failures = failures + 1;
+        end
+        expect_reserved(32'h3c22_1234); // nonzero rs is Reserved Instruction
+
         // MFC0/MTC0 and the five supported CO operations.
         expect_valid(cop0(5'b00000, 5'd2, 5'd12, 5'd0, 6'b000000), 3'b000);
         expect_valid(cop0(5'b00000, 5'd2, 5'd16, 5'd0, 6'b000001), 3'b000); // MFC0 Config1

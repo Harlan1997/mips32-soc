@@ -107,6 +107,9 @@ module tb_mips_control_special3;
         expect_reserved(special3(5'd1, 5'd2, 5'd0, 5'd0, 6'b000001));
         expect_reserved(special3(5'd2, 5'd2, 5'd0, 5'd0, 6'b111011));
         expect_reserved(special3(5'd3, 5'd2, 5'd28, 5'd0, 6'b111011));
+        // RDHWR reserves the sa field; a valid hardware-register selector
+        // with nonzero sa must not be accepted as a normal read.
+        expect_reserved(special3(5'd0, 5'd2, 5'd2, 5'd1, 6'b111011));
         expect_reserved(special3(5'd0, 5'd2, 5'd0, 5'b00001, 6'b100000));
         expect_reserved(special3(5'd0, 5'd2, 5'd0, 5'b00100, 6'b100000));
         expect_reserved(special3(5'd0, 5'd2, 5'd0, 5'b00010, 6'b111111));
@@ -126,7 +129,7 @@ module tb_mips_control_special3;
         expect_reserved(special3(5'd1, 5'd2, 5'd3, 5'b00010, 6'b100000));
 
         if (failures == 0)
-            $display("REGRESSION_TEST_SUCCESS mips_control_special3 reserved=37");
+            $display("REGRESSION_TEST_SUCCESS mips_control_special3 reserved=38");
         else
             $display("REGRESSION_TEST_FAIL mips_control_special3 failures=%0d", failures);
         $finish;
