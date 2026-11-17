@@ -16,6 +16,9 @@ module icache (
     // CPU Instruction Fetch Interface
     input  wire        cpu_req,
     input  wire [31:0] cpu_addr,
+    // MIPS C=2 instruction references are single-word, uncached accesses.
+    // An omitted legacy connection is treated as disabled below.
+    input  wire        cpu_uncacheable,
     output reg  [31:0] cpu_rdata,
     output wire        cpu_addr_ok,
     output wire        cpu_data_ok,
@@ -72,11 +75,9 @@ module icache (
     // ID through the slave interface; a dedicated I-side value makes the
     // ownership visible and avoids ambiguity during concurrent refills.
     assign arid    = 4'd1;
-    assign arlen   = 8'd7;     // 8 transfers of 4 bytes
     assign arsize  = 3'b010;   // 4 bytes per transfer
     assign arburst = 2'b01;    // INCR
     assign arlock  = 2'd0;
-    assign arcache = 4'b0010;
     assign arprot  = 3'b100;   // Instruction access
 
     // Cache parameters
@@ -87,15 +88,21 @@ module icache (
     localparam TAG_BITS = 21;
 
     // State Machine
-    localparam IDLE    = 3'd0;
-    localparam LOOKUP  = 3'd1;
-    localparam MISS    = 3'd2;
-    localparam REFILL  = 3'd3;
-    localparam ERROR   = 3'd4;
-    localparam CACHE_LOOKUP = 3'd5;
-    localparam CACHE_DONE   = 3'd6;
+    localparam IDLE    = 4'd0;
+    localparam LOOKUP  = 4'd1;
+    localparam MISS    = 4'd2;
+    localparam REFILL  = 4'd3;
+    localparam ERROR   = 4'd4;
+    localparam CACHE_LOOKUP = 4'd5;
+    localparam CACHE_DONE   = 4'd6;
+    localparam UC_REQ  = 4'd7;
+    localparam UC_RDATA = 4'd8;
+    localparam UC_DRAIN = 4'd9;
 
-    reg [2:0] state, next_state;
+    reg [3:0] state, next_state;
+
+    assign arlen   = (state == UC_REQ) ? 8'd0 : 8'd7; // one word vs line
+    assign arcache = (state == UC_REQ) ? 4'b0000 : 4'b0010;
 
     // Request buffer
     reg        req_buf_valid;
@@ -157,7 +164,8 @@ module icache (
     end
 
     // Synchronous read for SRAM (fan out across 4 ways)
-    wire sram_read_en  = (state == IDLE && (cpu_req || maint_req)) ||
+    wire sram_read_en  = (state == IDLE &&
+                          ((cpu_req && (cpu_uncacheable !== 1'b1)) || maint_req)) ||
                          (state == LOOKUP && cpu_req && cpu_addr_ok);
     wire sram_write_en = (state == REFILL && rvalid && rlast &&
                           !(refill_error || (rresp != 2'b00)));
@@ -246,8 +254,14 @@ module icache (
     // CPU interface logic
     assign cpu_addr_ok = (state == IDLE && !maint_req) ||
                          (state == LOOKUP && cache_hit);
-    assign cpu_data_ok = (state == LOOKUP && cache_hit) || (state == ERROR);
-    assign cpu_bus_error = (state == ERROR);
+    assign cpu_data_ok = (state == LOOKUP && cache_hit) ||
+                         (state == ERROR) ||
+                         ((state == UC_RDATA) && rvalid);
+    assign cpu_bus_error = (state == ERROR) ||
+                           ((state == UC_RDATA) && rvalid &&
+                            (rresp != 2'b00));
+    // An uncached instruction response is an ordinary IBE. CacheErr is only
+    // raised for a failed cached line refill or parity error.
     assign cpu_cache_error = (state == ERROR);
     assign cache_op_ready = (state == IDLE) && !cpu_req;
     assign cache_op_done = (state == CACHE_DONE);
@@ -262,7 +276,8 @@ module icache (
         next_state = state;
         case (state)
             IDLE:   begin
-                if (cpu_req) next_state = LOOKUP;
+                if (cpu_req)
+                    next_state = (cpu_uncacheable === 1'b1) ? UC_REQ : LOOKUP;
                 else if (maint_req) next_state = CACHE_LOOKUP;
             end
             LOOKUP: begin
@@ -275,6 +290,11 @@ module icache (
             MISS:   if (arready && arvalid) next_state = REFILL;
             REFILL: if (rvalid && rlast)
                         next_state = (refill_error || (rresp != 2'b00)) ? ERROR : IDLE;
+            UC_REQ: if (arready && arvalid) next_state = UC_RDATA;
+            UC_RDATA: if (rvalid && rready) next_state = IDLE;
+            // A redirected fetch may leave a single uncached response in
+            // flight. Drain it without presenting stale data to the CPU.
+            UC_DRAIN: if (rvalid && rready) next_state = IDLE;
             ERROR:  next_state = IDLE;
             CACHE_LOOKUP: next_state = CACHE_DONE;
             CACHE_DONE:   next_state = IDLE;
@@ -300,9 +320,37 @@ module icache (
                     data_parity_ram[sw][si] <= 1'b0;
                 end
             end
+        end else if (flush_active && state == UC_REQ && arvalid && arready) begin
+            // The AR handshake won the same edge as a redirect. Preserve the
+            // response obligation and discard the stale instruction later.
+            state <= UC_DRAIN;
+            req_buf_valid <= 1'b0;
+            arvalid <= 1'b0;
+            rready <= 1'b1;
+        end else if (flush_active && state == UC_RDATA) begin
+            // Keep RREADY asserted until the already accepted request is
+            // consumed; a response arriving on this edge is discarded too.
+            req_buf_valid <= 1'b0;
+            rready <= 1'b1;
+            if (rvalid && rready) begin
+                state <= IDLE;
+                rready <= 1'b0;
+            end else begin
+                state <= UC_DRAIN;
+            end
+        end else if (flush_active && state == UC_DRAIN) begin
+            req_buf_valid <= 1'b0;
+            rready <= 1'b1;
+            if (rvalid && rready) begin
+                state <= IDLE;
+                rready <= 1'b0;
+            end
         end else if (flush_active &&
                      !(state == REFILL) &&
-                     !(state == MISS && arvalid && arready)) begin
+                     !(state == MISS && arvalid && arready) &&
+                     !(state == UC_REQ && arvalid && arready) &&
+                     !(state == UC_RDATA) &&
+                     !(state == UC_DRAIN)) begin
             // No downstream response is outstanding in these states. Clear
             // the request so the redirected address is sampled from IDLE.
             state <= IDLE;
@@ -325,6 +373,10 @@ module icache (
                     end else if (cpu_req) begin
                         req_buf_valid <= 1'b1;
                         req_buf_addr  <= cpu_addr;
+                        if (cpu_uncacheable === 1'b1) begin
+                            araddr  <= {cpu_addr[31:2], 2'b00};
+                            arvalid <= 1'b1;
+                        end
                     end
                 end
                 LOOKUP: begin
@@ -343,6 +395,20 @@ module icache (
                         arvalid <= 1'b0; rready <= 1'b1; refill_word_cnt <= 3'd0;
                         refill_error <= 1'b0;
                     end
+                end
+                UC_REQ: begin
+                    if (arready && arvalid) begin
+                        arvalid <= 1'b0;
+                        rready  <= 1'b1;
+                    end
+                end
+                UC_RDATA: begin
+                    if (rvalid && rready)
+                        rready <= 1'b0;
+                end
+                UC_DRAIN: begin
+                    if (rvalid && rready)
+                        rready <= 1'b0;
                 end
                 REFILL: begin
                     if (rvalid && rready) begin
@@ -387,6 +453,8 @@ module icache (
         cpu_rdata = 32'd0;
         if (state == LOOKUP && cache_hit)
             cpu_rdata = data_rdata[hit_way][lookup_word*32 +: 32];
+        else if (state == UC_RDATA)
+            cpu_rdata = rdata;
     end
 
     // Assemble full refilled line (last beat merges combinationally)

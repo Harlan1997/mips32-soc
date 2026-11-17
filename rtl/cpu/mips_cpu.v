@@ -17,6 +17,8 @@ module mips_cpu #(
     // Instruction Cache Interface (to be connected to icache)
     output wire        inst_req,
     output wire [31:0] inst_addr,
+    // MIPS C=2 instruction references bypass the line-filling I-cache.
+    output wire        inst_uncacheable,
     input  wire        inst_addr_ok,
     input  wire        inst_data_ok,
     input  wire        inst_bus_error,
@@ -3557,6 +3559,7 @@ module mips_cpu #(
     endfunction
 
     assign inst_addr = canonical_linux_phys_addr(mmu_i_pa);
+    assign inst_uncacheable = (mmu_i_cache_attr == 3'b010);
 
     // The MMU receives the original effective VA so page-boundary accesses
     // fault on the correct page.  Reverse-endian doubleword references swap

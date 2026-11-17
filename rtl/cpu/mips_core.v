@@ -145,6 +145,7 @@ module mips_core #(
     // CPU to I-Cache Interface
     wire        cpu_inst_req;
     wire [31:0] cpu_inst_addr;
+    wire        cpu_inst_uncacheable;
     wire        cpu_inst_addr_ok;
     wire        cpu_inst_data_ok;
     wire        cpu_inst_bus_error;
@@ -272,6 +273,7 @@ module mips_core #(
         
         .inst_req        (cpu_inst_req),
         .inst_addr       (cpu_inst_addr),
+        .inst_uncacheable(cpu_inst_uncacheable),
         .inst_addr_ok    (cpu_inst_addr_ok),
         .inst_data_ok    (cpu_inst_data_ok),
         .inst_bus_error  (cpu_inst_bus_error),
@@ -380,6 +382,7 @@ module mips_core #(
         
         .cpu_req      (icache_cpu_req),
         .cpu_addr     (cpu_inst_addr),
+        .cpu_uncacheable(cpu_inst_uncacheable),
         .cpu_rdata    (cpu_inst_rdata),
         .cpu_addr_ok  (cpu_inst_addr_ok),
         .cpu_data_ok  (cpu_inst_data_ok),

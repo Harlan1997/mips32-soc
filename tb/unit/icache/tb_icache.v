@@ -13,6 +13,8 @@ module tb_icache;
 
     reg         cpu_req;
     reg  [31:0] cpu_addr;
+    reg         cpu_uncacheable;
+    reg         flush;
     wire [31:0] cpu_rdata;
     wire        cpu_addr_ok, cpu_data_ok, cpu_bus_error, cpu_cache_error;
 
@@ -29,6 +31,8 @@ module tb_icache;
     icache dut (
         .clk(clk),.rst_n(rst_n),
         .cpu_req(cpu_req),.cpu_addr(cpu_addr),.cpu_rdata(cpu_rdata),
+        .cpu_uncacheable(cpu_uncacheable),
+        .flush(flush),
         .cpu_addr_ok(cpu_addr_ok),.cpu_data_ok(cpu_data_ok),.cpu_bus_error(cpu_bus_error),.cpu_cache_error(cpu_cache_error),
         .sim_parity_inject_valid(sim_parity_inject_valid),.sim_parity_inject_tag(sim_parity_inject_tag),
         .sim_parity_inject_data(sim_parity_inject_data),.sim_parity_inject_way(sim_parity_inject_way),
@@ -47,7 +51,8 @@ module tb_icache;
     endfunction
 
     integer ar_count;
-    reg [31:0] ar_addr_l; reg [7:0] ar_beat; reg ar_active;
+    reg [31:0] ar_addr_l; reg [7:0] ar_len_l; reg [7:0] ar_beat; reg ar_active;
+    reg [7:0] observed_arlen; reg [3:0] observed_arcache; reg [31:0] observed_araddr;
     reg r_arready, r_rvalid, r_rlast, inject_read_error; reg [31:0] r_rdata; reg [3:0] r_rid;
     assign arready=r_arready; assign rvalid=r_rvalid; assign rlast=r_rlast;
     assign rdata=r_rdata; assign rresp=inject_read_error ? 2'b10 : 2'b00; assign rid=r_rid;
@@ -58,12 +63,15 @@ module tb_icache;
             ar_count<=0; r_rid<=0; r_rdata<=0;
         end else begin
             if (arvalid && r_arready && !ar_active) begin
-                ar_addr_l<=araddr; ar_active<=1; ar_beat<=0; r_arready<=0; ar_count<=ar_count+1;
+                ar_addr_l<=araddr; ar_len_l<=arlen; ar_active<=1; ar_beat<=0;
+                observed_arlen<=arlen; observed_arcache<=arcache; observed_araddr<=araddr;
+                r_arready<=0; ar_count<=ar_count+1;
             end
             if (ar_active && !r_rvalid) begin
                 r_rvalid<=1; r_rid<=arid;
-                r_rdata<=memval(((ar_addr_l & ~32'h1F) + (ar_beat<<2)));
-                r_rlast<=(ar_beat==arlen);
+                r_rdata<=memval((ar_len_l == 0) ? ar_addr_l :
+                                ((ar_addr_l & ~32'h1F) + (ar_beat<<2)));
+                r_rlast<=(ar_beat==ar_len_l);
             end
             if (r_rvalid && rready) begin
                 if (r_rlast) begin ar_active<=0; r_rlast<=0; r_arready<=1; end
@@ -127,7 +135,7 @@ module tb_icache;
     localparam [31:0] WSTEP = 32'h0000_0800; // 2KB: same set, next tag
 
     initial begin
-        cpu_req=0; cpu_addr=0; inject_read_error=0;
+        cpu_req=0; cpu_addr=0; cpu_uncacheable=0; flush=0; inject_read_error=0;
         sim_parity_inject_valid=0; sim_parity_inject_tag=0; sim_parity_inject_data=0;
         sim_parity_inject_way=0; sim_parity_inject_index=0;
         #23 rst_n=1; @(negedge clk);
@@ -202,6 +210,59 @@ module tb_icache;
             sim_parity_inject_tag = 1'b0;
             check(32'h0000_7000);
         end
+
+        // T7: an uncached instruction reference is a single AXI word and
+        // must not allocate or hit in the line-filling I-cache. The request
+        // address and AXI cache attribute remain visible at the boundary.
+        cpu_uncacheable = 1'b1;
+        c_ar = ar_count;
+        ifetch(32'hA000_0124, got);
+        if (got !== memval(32'hA000_0124)) begin
+            $display("FAIL T7 uncached data got=%h exp=%h", got,
+                     memval(32'hA000_0124)); errs=errs+1;
+        end
+        if (ar_count !== c_ar + 1 || observed_arlen !== 8'd0 ||
+            observed_arcache !== 4'b0000 || observed_araddr !== 32'hA000_0124) begin
+            $display("FAIL T7 uncached AXI shape ar_count=%0d addr=%h len=%0d cache=%b",
+                     ar_count-c_ar, observed_araddr, observed_arlen, observed_arcache); errs=errs+1;
+        end
+        c_ar = ar_count;
+        ifetch(32'hA000_0124, got);
+        if (ar_count !== c_ar + 1)
+            begin $display("FAIL T7 uncached reference was allocated in I-cache"); errs=errs+1; end
+        cpu_uncacheable = 1'b0;
+
+        // T8: a redirect on the same edge as an uncached AR handshake must
+        // drain the stale response before the redirected fetch can issue.
+        cpu_uncacheable = 1'b1;
+        cpu_addr = 32'hA000_0220;
+        cpu_req = 1'b1;
+        @(posedge clk);              // enter UC_REQ and present AR
+        @(negedge clk);
+        if (!arvalid || !arready) begin
+            $display("FAIL T8 uncached AR was not ready for flush race"); errs=errs+1;
+        end
+        flush = 1'b1;
+        @(posedge clk);              // AR handshake coincides with redirect
+        @(negedge clk);
+        flush = 1'b0;
+        cpu_req = 1'b0;
+        repeat (4) begin
+            @(negedge clk);
+            if (cpu_data_ok) begin
+                $display("FAIL T8 stale uncached response reached CPU"); errs=errs+1;
+            end
+        end
+        c_ar = ar_count;
+        ifetch(32'hA000_0224, got);
+        if (got !== memval(32'hA000_0224)) begin
+            $display("FAIL T8 redirected uncached fetch got=%h exp=%h", got,
+                     memval(32'hA000_0224)); errs=errs+1;
+        end
+        if (ar_count !== c_ar + 1) begin
+            $display("FAIL T8 redirected fetch did not issue after drain"); errs=errs+1;
+        end
+        cpu_uncacheable = 1'b0;
 
         #50;
         if (errs==0) $display("REGRESSION_TEST_SUCCESS icache");

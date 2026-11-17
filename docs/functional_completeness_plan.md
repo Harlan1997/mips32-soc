@@ -1,5 +1,23 @@
 # SoC 功能完整性计划
 
+### 2026-11-18 C=2 uncached instruction-fetch and redirect-drain closure
+
+The instruction cache now treats MIPS C=2 instruction references as uncached
+single-word AXI reads (`ARLEN=0`, `ARCACHE=0000`) and does not allocate those
+references into the line-filling cache. A redirect that coincides with the
+uncached address handshake now retains and drains the stale response before
+the exception-vector fetch proceeds; uncached read errors remain ordinary IBE
+responses while cached refill errors retain CacheErr behavior. The focused
+I-cache regression passes with `REGRESSION_TEST_SUCCESS icache`, the DUT block
+aggregate passes `10/10`, the RTL frontend matrix passes `8/8`, and the product
+XIP timeout path reaches `REGRESSION_TEST_SUCCESS
+product_manifest_handoff_xip_timeout`. Evidence is retained under
+`/data/disk/tmp/mips32-soc/uncached-icache-unit-final-20261118/`,
+`/data/disk/tmp/mips32-soc/uncached-icache-dut-final2-20261118/`, and
+`/data/disk/tmp/mips32-soc/uncached-icache-frontend-final-20261118/`.
+This closes the tested C=2 fetch/AXI ownership boundary; broader I-cache
+coherency, ordering, and full Linux XIP coverage remain open.
+
 ### 2026-11-18 Real dual-core LL/SC peer-store invalidation
 
 The coherency stress firmware now establishes a live core-0 LL reservation,
