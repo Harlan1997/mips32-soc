@@ -73,6 +73,20 @@ module tb_mips_control_cache;
         inst = 32'h0000000f; #1;
         if (illegal_inst || reg_write || mem_read || mem_write ||
             !cache_op_valid || cache_op != 5'h1e) failures = failures + 1;
+        // rs/rt/rd are fixed zero fields; stype (sa) is the only variable
+        // field in the implemented barrier contract.
+        inst = {6'b000000, 5'd1, 5'd0, 5'd0, 5'd0, 6'h0f}; #1;
+        if (!illegal_inst || cache_op_valid || reg_write || mem_read || mem_write)
+            failures = failures + 1;
+        inst = {6'b000000, 5'd0, 5'd1, 5'd0, 5'd0, 6'h0f}; #1;
+        if (!illegal_inst || cache_op_valid || reg_write || mem_read || mem_write)
+            failures = failures + 1;
+        inst = {6'b000000, 5'd0, 5'd0, 5'd1, 5'd0, 6'h0f}; #1;
+        if (!illegal_inst || cache_op_valid || reg_write || mem_read || mem_write)
+            failures = failures + 1;
+        inst = {6'b000000, 5'd0, 5'd0, 5'd0, 5'h1f, 6'h0f}; #1;
+        if (illegal_inst || !cache_op_valid || cache_op != 5'h1e)
+            failures = failures + 1;
         inst = 32'hcc200000; #1; // PREF 0, 0($1)
         if (illegal_inst || reg_write || mem_read || mem_write ||
             cache_op_valid) failures = failures + 1;

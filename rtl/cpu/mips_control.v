@@ -226,11 +226,19 @@ module mips_control (
                         is_trap = 1'b1; trap_op = 4'd5;
                     end
                     6'b001111: begin // SYNC
-                        // The pipeline is already in-order and the memory
-                        // stage blocks until the preceding request completes.
-                        // Route SYNC through the private cache barrier opcode.
-                        cache_op_valid = 1'b1;
-                        cache_op       = 5'b11110;
+                        // SYNC fixes rs, rt, and rd to zero.  The stype field
+                        // in sa remains available to the implementation, but
+                        // malformed register fields must raise RI rather than
+                        // silently executing a barrier.
+                        if (rs != 5'd0 || rt != 5'd0 || rd != 5'd0) begin
+                            illegal_inst = 1'b1;
+                        end else begin
+                            // The pipeline is already in-order and the memory
+                            // stage blocks until the preceding request completes.
+                            // Route SYNC through the private cache barrier opcode.
+                            cache_op_valid = 1'b1;
+                            cache_op       = 5'b11110;
+                        end
                     end
                     6'b001010: begin // MOVZ rd, rs, rt (R2)
                         if (sa != 5'd0) illegal_inst = 1'b1;

@@ -10,6 +10,15 @@ side effects. This closes two fixed-field cases in the implemented ISA slice;
 complete ISA compliance and the remaining privileged/FPU/MMU/OS semantics
 remain open.
 
+### 2026-11-18 SYNC fixed-field decoder tightening
+
+The `SYNC` decoder now requires the architectural fixed-zero `rs`, `rt`, and
+`rd` fields. The implementation continues to route every `stype` value through
+the existing ordered-cache barrier, while malformed register fields raise
+Reserved Instruction without cache or memory side effects. The cache decoder
+gate covers the legal `stype=31` form and all three malformed register-field
+forms. Full memory-ordering and Linux cache ABI semantics remain open.
+
 ### 2026-11-17 COP1X phase-specific BadVAddr owner
 
 The D-side fault owner now records the aligned COP1X base for phase 0 and the
