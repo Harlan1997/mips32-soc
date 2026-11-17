@@ -1,5 +1,15 @@
 # SoC 功能完整性计划
 
+### 2026-11-18 COP1 nonzero-FCC branch workload expansion
+
+The FPU branch firmware now drives FCC3 through FCC7 with ordinary and
+likely `BC1` forms, including taken delay slots and an annulled not-taken
+delay slot. The current RTL workload passes, and the matching relocated
+`mips32-soc-ref` differential passes `TRACE_COMPARE_PASS records=58` with a
+clean terminal result. This closes the selected nonzero-FCC branch and
+delay-slot corpus; complete FPE/IEEE-754 policy and unrestricted COP1/Linux
+ABI semantics remain open.
+
 ### 2026-11-18 COP1 FCC selector and BC1 replay alignment
 
 The COP1 branch decoder now carries all eight FCC selectors from `rt[4:2]`
