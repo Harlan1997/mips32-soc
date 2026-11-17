@@ -1,5 +1,19 @@
 # SoC 功能完整性计划
 
+### 2026-11-18 Real dual-core LL/SC peer-store invalidation
+
+The coherency stress firmware now establishes a live core-0 LL reservation,
+waits for core 1 to perform a real store to the same uncached line, and then
+checks that core 0's SC returns zero without changing the peer-written value.
+The testbench publishes the result from the shared mailbox/memory state so the
+two UART streams cannot turn an interleaved string into false evidence. The
+fresh `coherency-stress-gate` passes with
+`COH_STRESS_LLSC_PEER_PASS peer_store=87654321 sc_suppressed=1` and
+`REGRESSION_TEST_SUCCESS` under
+`/data/disk/tmp/mips32-soc/coh-llsc-peer-current-20261118-r2/`. This closes the
+selected real peer-store reservation boundary; full MIPS memory ordering,
+arbitrary SMP interleavings, and MESI/directory coherency remain open.
+
 ### 2026-11-18 COP1 nonzero-FCC branch workload expansion
 
 The FPU branch firmware now drives FCC3 through FCC7 with ordinary and

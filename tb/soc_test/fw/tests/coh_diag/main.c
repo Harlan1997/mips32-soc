@@ -19,6 +19,9 @@
 #define FAIL_CODE U32(0xA0002118u)
 #define CORE0_SEEN U32(0xA0002120u)
 #define CORE1_SEEN U32(0xA0002124u)
+#define LLSC_START U32(0xA0002130u)
+#define LLSC_DONE  U32(0xA0002134u)
+#define LLSC_PASS  U32(0xA0002138u)
 
 #define ITERATIONS 8u
 
@@ -36,6 +39,24 @@ static void wait_for_bus_quiet(void)
         "bnez $t0, 1b\n\t"
         "nop\n\t"
         : : : "$8");
+}
+
+static uint32_t ll_word(volatile uint32_t *addr)
+{
+    uint32_t value;
+    __asm__ volatile("ll %0, 0(%1)" : "=r"(value) : "r"(addr) : "memory");
+    return value;
+}
+
+static uint32_t sc_word(volatile uint32_t *addr, uint32_t value)
+{
+    uint32_t result;
+    __asm__ volatile("sc %0, 0(%1)\n\t"
+                     "nop\n\t"
+                     "nop\n\t"
+                     "nop"
+                     : "=r"(result) : "r"(addr), "0"(value) : "memory");
+    return result;
 }
 
 static uint32_t read_cpunum(void)
@@ -101,6 +122,16 @@ void core1_test(void)
         ACK_PART = i;
     }
 
+    /* A real peer store must invalidate a live reservation.  The testbench
+     * keeps core 1 running the same image, so this exercises the actual
+     * write-invalidate broadcast and CPU reservation state rather than a
+     * forced snoop pulse. */
+    wait_equal(&LLSC_START, 1u, 0x270u);
+    wait_for_bus_quiet();
+    *UWORD0 = 0x87654321u;
+    sync_barrier();
+    LLSC_DONE = 1u;
+
     DONE = 1u;
     print_str("COH_STRESS_CORE1_DONE iterations=");
     print_hex(ITERATIONS);
@@ -132,6 +163,9 @@ static void core0_test(void)
     ACK_PART = 0u;
     DONE = 0u;
     FAIL_CODE = 0u;
+    LLSC_START = 0u;
+    LLSC_DONE = 0u;
+    LLSC_PASS = 0u;
     CORE0_SEEN = 1u;
     *UWORD0 = 0u;
     *UWORD1 = 0u;
@@ -165,6 +199,22 @@ static void core0_test(void)
         value = *CWORD2;
         if (value != merged2) fail(0x250u + i, value);
     }
+
+    /* Set the rendezvous before LL so no post-LL store can accidentally clear
+     * the reservation.  Core 1 waits a bounded register-only interval after
+     * observing it, then performs the peer store. */
+    *UWORD0 = 0x12345678u;
+    sync_barrier();
+    LLSC_START = 1u;
+    sync_barrier();
+    if (ll_word(UWORD0) != 0x12345678u)
+        fail(0x271u, *UWORD0);
+    wait_equal(&LLSC_DONE, 1u, 0x272u);
+    value = sc_word(UWORD0, 0xCAFED00Du);
+    if (value != 0u || *UWORD0 != 0x87654321u)
+        fail(0x273u, (value << 31) | (*UWORD0 & 0x7fffffffu));
+    LLSC_PASS = 1u;
+    print_str("COH_STRESS_LLSC_PEER_PASS\n");
 
     wait_equal(&DONE, 1u, 0x260u);
     print_str("COH_STRESS_CORE0_DONE iterations=");

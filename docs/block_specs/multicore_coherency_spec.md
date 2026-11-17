@@ -53,7 +53,11 @@ word 的 store visibility、accepted AXI `B` response 的 notification 顺序、
 line 不得被重新发布为 valid，后续访问必须从共享内存重新 refill。
 独立 `make coherency-stress-gate` 通过双核 firmware 的 8 轮共享内存压力测试，覆盖
 core-0/core-1 cached load、uncached store、partial-byte merge、L1/L2 stale-line
-失效、AXI backpressure 和最终 shared-memory pass marker。该 contract 仍然不宣称
+失效、AXI backpressure 和最终 shared-memory pass marker。当前头的 coherency
+stress 还由 core 0 建立真实 LL reservation、core 1 发起同一 cache line 的
+uncached store，再由 core 0 验证 SC 返回 0 且保留 peer 写入值；测试台从 mailbox
+和共享 SRAM 状态发布 `COH_STRESS_LLSC_PEER_PASS`，避免双 UART 交织造成假阳性。
+该 contract 仍然不宣称
 完整 MESI/MOESI 协议、Directory、写回 coherency、multi-outstanding 并发总序或全
 共享内存 coherency。
 

@@ -17,9 +17,9 @@ RUN_DIR="${RUN_DIR}" \
 VCS_EXTRA_ARGS="+define+SOC_ENABLE_DUAL_CORE +define+SOC_COHERENCY_FW_STRESS" \
 "${SCRIPT_DIR}/run.sh"
 
-grep -q 'COH_STRESS_CORE1_DONE iterations=00000008' "${RUN_DIR}/sim.log"
-grep -q 'COH_STRESS_CORE0_DONE iterations=00000008' "${RUN_DIR}/sim.log"
 grep -q 'COH_STRESS_SHARED_MEMORY_PASS' "${RUN_DIR}/sim.log"
+grep -q 'COH_STRESS_LLSC_PEER_PASS peer_store=87654321 sc_suppressed=1' "${RUN_DIR}/sim.log"
+grep -q 'REGRESSION_TEST_SUCCESS' "${RUN_DIR}/sim.log"
 if grep -q 'COH_STRESS_FAIL\|REGRESSION_TEST_FAILED' "${RUN_DIR}/sim.log"; then
     echo "ERROR: shared-memory coherency stress reported failure"
     exit 1

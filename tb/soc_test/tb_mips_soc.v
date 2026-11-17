@@ -3733,6 +3733,29 @@ module tb_mips_soc;
 `endif
 
 `ifdef SOC_ENABLE_DUAL_CORE
+`ifdef SOC_COHERENCY_FW_STRESS
+    reg coh_llsc_peer_pass_seen;
+
+    initial begin
+        coh_llsc_peer_pass_seen = 1'b0;
+    end
+
+    // The two firmware cores share the UART, so character-level markers can
+    // interleave. Publish the LL/SC result from the testbench only after the
+    // mailbox and final memory value prove that core 1's peer store completed,
+    // core 0's SC failed, and no firmware failure code was reported.
+    always @(posedge clk) begin
+        if (rst_n === 1'b1 && !coh_llsc_peer_pass_seen &&
+            u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2134/4] == 32'h1 &&
+            u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2138/4] == 32'h1 &&
+            u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2118/4] == 32'h0 &&
+            u_soc.u_impl.u_memory_subsystem.u_axi_sram.ram[32'h2000/4] == 32'h87654321) begin
+            coh_llsc_peer_pass_seen = 1'b1;
+            $display("COH_STRESS_LLSC_PEER_PASS peer_store=87654321 sc_suppressed=1");
+        end
+    end
+`endif
+
     initial begin
         wait (rst_n === 1'b1);
 
