@@ -19,6 +19,15 @@ Reserved Instruction without cache or memory side effects. The cache decoder
 gate covers the legal `stype=31` form and all three malformed register-field
 forms. Full memory-ordering and Linux cache ABI semantics remain open.
 
+### 2026-11-18 COP1 compare-format decoder tightening
+
+COP1 compare functions now accept only the architectural single and double
+formats. The compare encoding's low two `fd` bits (`[7:6]`) must also remain
+zero while `fd[4:2]` carries the FCC selector. W-format/L-format compares and
+malformed reserved-bit encodings now raise Reserved Instruction before any FPU
+state can commit. Complete IEEE-754 compare/exception and COP1 ABI semantics
+remain open.
+
 ### 2026-11-17 COP1X phase-specific BadVAddr owner
 
 The D-side fault owner now records the aligned COP1X base for phase 0 and the

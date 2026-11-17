@@ -74,6 +74,20 @@ module tb_mips_control_fpu_cond;
         end
     endfunction
 
+    function automatic [31:0] fpu_compare;
+        input [4:0] fmt;
+        input [4:0] ft;
+        input [4:0] fs;
+        input [2:0] cc;
+        input [1:0] reserved;
+        input [5:0] funct;
+        begin
+            // C.cond uses fd[4:2] as cc and reserves fd[1:0].
+            fpu_compare = {6'b010001, fmt, ft, fs,
+                           {cc, reserved}, funct};
+        end
+    endfunction
+
     function automatic [31:0] fpu_cop1x;
         input [4:0] fr;
         input [4:0] ft;
@@ -239,6 +253,24 @@ module tb_mips_control_fpu_cond;
         end
         expect_reserved(fpu_convert(5'b10101, 5'd0, 5'd3, 5'd4, 6'h21));
         expect_reserved(fpu_convert(5'b10101, 5'd0, 5'd2, 5'd5, 6'h21));
+
+        // COP1 comparisons are defined for S/D only. The fd field carries
+        // the FCC selector, while bits [7:6] are fixed zero.
+        inst = fpu_compare(5'b10000, 5'd0, 5'd2, 3'd3, 2'b00, 6'h3c);
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL C.cond.S rejected");
+            failures = failures + 1;
+        end
+        inst = fpu_compare(5'b10001, 5'd0, 5'd2, 3'd3, 2'b00, 6'h3c);
+        #1;
+        if (illegal_inst) begin
+            $display("FAIL C.cond.D rejected");
+            failures = failures + 1;
+        end
+        expect_reserved(fpu_compare(5'b10100, 5'd0, 5'd2, 3'd0, 2'b00, 6'h3c));
+        expect_reserved(fpu_compare(5'b10101, 5'd0, 5'd2, 3'd0, 2'b00, 6'h3c));
+        expect_reserved(fpu_compare(5'b10000, 5'd0, 5'd2, 3'd0, 2'b01, 6'h3c));
 
         // MOVT must not consume the existing MTHI encoding (funct=0x11).
         inst = {6'b000000, 5'd8, 5'd0, 5'd0, 5'd0, 6'b010001};

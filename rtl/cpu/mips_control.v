@@ -1178,6 +1178,15 @@ module mips_control (
                                 6'h3c, 6'h3d, 6'h3e, 6'h3f: begin end
                                 default: illegal_inst = 1'b1;
                             endcase
+                            // C.cond is defined only for single/double
+                            // formats. Its fd field is repurposed as cc,
+                            // with bits [7:6] fixed zero; accepting W/L or
+                            // nonzero reserved bits would execute a malformed
+                            // compare using the single-format datapath.
+                            if (func >= 6'h30 && func <= 6'h3f &&
+                                ((rs != 5'b10000 && rs != 5'b10001) ||
+                                 inst[7:6] != 2'b00))
+                                illegal_inst = 1'b1;
                             // fmt=D uses an even-numbered register pair for
                             // fd/fs/ft.  Reject odd or malformed encodings at
                             // decode so no partial FPR state can commit.
