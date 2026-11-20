@@ -35,15 +35,29 @@ for seed in ${SEEDS}; do
     python3 "${ROOT_DIR}/tb/soc_test/fw/common/elf2hex.py" \
         "${fw_dir}/firmware.bin" "${fw_dir}/firmware.hex"
 
-    # Run RTL retire capture
+    # Run RTL retire capture (reuse compiled simv from first seed when available)
     rtl_dir="${seed_dir}/rtl"
     rtl_trace="${rtl_dir}/rtl_retire.jsonl"
     mkdir -p "${rtl_dir}"
-    timeout "${RTL_TIMEOUT:-120}" env \
-        FW_HEX="${fw_dir}/firmware.hex" TESTNAME=soc_base_test SEED=1 \
-        RUN_DIR="${rtl_dir}" RETIRE_TRACE="${rtl_trace}" \
-        SIM_EXTRA_ARGS="+RETIRE_TRACE_MAX_RECORDS=20000" \
-        "${ROOT_DIR}/tb/uvm_tb/run_uvm.sh" >"${seed_dir}/rtl_gate.log" 2>&1
+    if [[ -n "${shared_simv:-}" && -x "${shared_simv}" ]]; then
+        (
+            cd "$(dirname "${shared_simv}")"
+            timeout "${RTL_TIMEOUT:-120}" ./simv -no_save \
+                +UVM_TESTNAME=soc_base_test +UVM_VERBOSITY=UVM_LOW \
+                +ntb_random_seed=1 \
+                +FW_HEX="${fw_dir}/firmware.hex" \
+                +RETIRE_TRACE="${rtl_trace}" \
+                +RETIRE_TRACE_MAX_RECORDS=20000 \
+                -l "${rtl_dir}/vcs_uvm.log"
+        ) >"${seed_dir}/rtl_gate.log" 2>&1
+    else
+        timeout "${RTL_TIMEOUT:-120}" env \
+            FW_HEX="${fw_dir}/firmware.hex" TESTNAME=soc_base_test SEED=1 \
+            RUN_DIR="${rtl_dir}" RETIRE_TRACE="${rtl_trace}" \
+            SIM_EXTRA_ARGS="+RETIRE_TRACE_MAX_RECORDS=20000" \
+            "${ROOT_DIR}/tb/uvm_tb/run_uvm.sh" >"${seed_dir}/rtl_gate.log" 2>&1
+        shared_simv="${rtl_dir}/simv"
+    fi
     test -s "${rtl_trace}"
 
     # Run QEMU retire capture + strict comparison against RTL

@@ -744,7 +744,10 @@ def convert(events, states):
                 if (instr & 0x3f) == 0x00:
                     shifted = (source << sa) & 0xffffffff
                 elif (instr & 0x3f) == 0x02:
-                    shifted = source >> sa
+                    if ((instr >> 21) & 0x1f) == 1 and sa != 0:
+                        shifted = ((source >> sa) | (source << (32 - sa))) & 0xffffffff
+                    else:
+                        shifted = source >> sa
                 else:
                     signed = source if source < 0x80000000 else source - 0x100000000
                     shifted = (signed >> sa) & 0xffffffff
