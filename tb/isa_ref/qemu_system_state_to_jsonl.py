@@ -719,6 +719,13 @@ def convert(events, states):
             replay_bd_pending = False
             replay_bd_seen = True
             replay_cause_pending = False
+        elif is_mfc0_cause:
+            # A normal Cause read is an architectural write even when no
+            # replay boundary is pending. Retire any synthetic value left by
+            # an earlier handler so schema-v2 state follows the real write.
+            destination_reg = (instr >> 16) & 0x1f
+            if destination_reg:
+                replay_gpr_overrides.pop(f"r{destination_reg}", None)
         # Propagate a corrected Cause value through the bounded VIC handler's
         # immediate shift/logic sequence.  The plugin snapshot is QEMU's
         # unmodified architectural state, so without this small data-flow

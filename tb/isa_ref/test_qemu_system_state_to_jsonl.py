@@ -405,6 +405,52 @@ def test_replay_bd_is_scoped_to_each_interrupt():
     assert result[4]["gpr_data"] == "c0808000"
 
 
+def test_ordinary_mfc0_cause_retires_stale_replay_destination():
+    def regs(**updates):
+        value = {f"r{index}": "00000000" for index in range(32)}
+        value.update({f"fpr{index}": "00000000" for index in range(32)})
+        value.update({"cause": "00000000", "epc": "00000000",
+                      "index": "00000000", "pagemask": "00000000",
+                      "entryhi": "00000000", "status": "00000000"})
+        value.update(updates)
+        return value
+
+    # The first MFC0 is associated with a replayed VIC vector and installs a
+    # synthetic r2 value. The immediately following ordinary Cause read must
+    # use its post-state value instead of retaining that override.
+    events = [
+        {"pc": "00000100", "instr": "00000000", "next_pc": "00000104"},
+        {"pc": "00000104", "instr": "00000000", "next_pc": "80000180"},
+        {"pc": "80000180", "instr": "0c0000dc", "next_pc": "80000184"},
+        {"pc": "80000184", "instr": "afa20004", "next_pc": "80000370"},
+        {"pc": "80000370", "instr": "40026800", "next_pc": "80000374"},
+        {"pc": "80000374", "instr": "40026800", "next_pc": "80000378"},
+    ]
+    states = [
+        {"pc": "00000100", "regs": regs()},
+        {"pc": "00000104", "regs": regs()},
+        {"pc": "80000180", "regs": regs(cause="80000400")},
+        {"pc": "80000184", "regs": regs(cause="80000400")},
+        {"pc": "80000370", "regs": regs(cause="80000400")},
+        {"pc": "80000374", "regs": regs(cause="40808000", r2="40808000")},
+        {"pc": "80000378", "regs": regs(cause="40808000", r2="40808000")},
+    ]
+
+    previous_schema = os.environ.get("QEMU_TRACE_SCHEMA")
+    os.environ["QEMU_TRACE_SCHEMA"] = "00020000"
+    try:
+        result = list(MODULE.convert(events, states))
+    finally:
+        if previous_schema is None:
+            os.environ.pop("QEMU_TRACE_SCHEMA", None)
+        else:
+            os.environ["QEMU_TRACE_SCHEMA"] = previous_schema
+
+    assert result[4]["gpr_data"] == "c0808000"
+    assert result[5]["gpr_data"] == "40808000"
+    assert result[5]["gpr_state"][-3 * 8:-2 * 8] == "40808000"
+
+
 def test_direct_jal_target_is_not_tlb_refill():
     events = [
         {"pc": "88d16368", "instr": "0e345800", "next_pc": "88d1636c"},
@@ -533,6 +579,7 @@ if __name__ == "__main__":
     test_vectored_timer_interrupt_marks_async_boundary()
     test_async_irq_boundary_aligns_to_vectored_entry()
     test_replay_bd_is_scoped_to_each_interrupt()
+    test_ordinary_mfc0_cause_retires_stale_replay_destination()
     test_direct_jal_target_is_not_tlb_refill()
     test_jr_delay_slot_page_aligned_target_is_not_tlb_refill()
     test_eret_page_aligned_target_is_not_tlb_refill()

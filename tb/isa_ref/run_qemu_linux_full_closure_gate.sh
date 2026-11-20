@@ -75,6 +75,7 @@ QEMU_MACHINE_PROPERTIES=${QEMU_MACHINE_PROPERTIES:-rtl-cp0-identity=on,linux-gue
 HOST_TIMEOUT=${HOST_TIMEOUT:-6h}
 QEMU_MARKER_WATCHDOG_SECONDS=${QEMU_MARKER_WATCHDOG_SECONDS:-21600}
 QEMU_TERMINAL_DRAIN_SECONDS=${QEMU_TERMINAL_DRAIN_SECONDS:-1}
+RTL_SIM_SEED=${RTL_SIM_SEED:-}
 # QEMU observes the terminal marker before its producer-local shutdown tail.
 # Forty-two retirements retain the scheduled UART boundary while matching the
 # current RTL stream after the comparator's reviewed alignment records are
@@ -94,6 +95,11 @@ REUSE_UART_APB_SCHEDULE=${REUSE_UART_APB_SCHEDULE:-}
 REUSE_CP0_TI_PENDING_SCHEDULE=${REUSE_CP0_TI_PENDING_SCHEDULE:-}
 REUSE_CP0_TIMER_TRACE=${REUSE_CP0_TIMER_TRACE:-}
 TERMINAL_MARKER=MIPS32_SOC_LINUX_TERMINAL
+
+[[ "${RTL_SIM_SEED}" =~ ^[1-9][0-9]*$ ]] || {
+    echo "full QEMU closure: RTL_SIM_SEED must be a positive integer" >&2
+    exit 2
+}
 IRQ_SCHEDULE=${RUN_DIR}/rtl_irq_schedule.txt
 IRQ_REPLAY_SCHEDULE=${RUN_DIR}/rtl_irq_replay_schedule.txt
 CP0_COUNT_SCHEDULE=${RUN_DIR}/rtl_cp0_count_schedule.txt
@@ -323,6 +329,7 @@ rtl_env=(
     LINUX_IMAGE_DIR="${LINUX_IMAGE_DIR}"
     REUSE_LINUX_IMAGE="${REUSE_LINUX_IMAGE}"
     LINUX_RNG_SEED="${LINUX_RNG_SEED}"
+    RTL_SIM_SEED="${RTL_SIM_SEED}"
     HOST_TIMEOUT="${HOST_TIMEOUT}"
     RTL_CYCLE_LIMIT="${RTL_WATCHDOG_CYCLES}"
     LINUX_TIMEOUT_CYCLES="${RTL_WATCHDOG_CYCLES}"
@@ -938,6 +945,7 @@ python3 "${validator}" create --output "${RUN_DIR}/differential_manifest.json" \
     --set entropy_seed_id="${seed_id}" \
     --set entropy_seed_width="$(( ${#LINUX_RNG_SEED} * 4 ))" \
     --set entropy_contract_version=uhi-rng-v1 \
+    --set rtl_sim_seed="${RTL_SIM_SEED}" \
     --set qemu_machine=mips32-soc-ref \
     --set qemu_machine_properties="${qemu_machine_properties}" \
     --set qemu_memory="${QEMU_MEMORY}" \
@@ -1006,6 +1014,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - Result: PASS (terminal-marker full workload)
 - Kernel/DTB/image: ${KERNEL} / ${DTB} / ${image_dir}
 - Deterministic entropy seed id: ${seed_id}
+- RTL simulation seed: ${RTL_SIM_SEED}
 - QEMU model build log: ${RUN_DIR}/qemu_model_build.log
 - RTL trace records: ${rtl_records}
 - QEMU trace records: ${qemu_records}
