@@ -2884,3 +2884,18 @@ writeback sideband maintenance via the `ENABLE_AD_UPDATE` parameter (defaulting 
    write-error faults, and even/odd entry selection with output under `/data/disk/tmp/mips32-soc`.
 This closes the reusable refill adapter A/D ownership slice only; Linux VM, unrestricted
 demand paging, and full MMU compliance remain open.
+
+### 2026-11-21 Industry Verification & Tapeout Readiness Roadmap
+
+To align with commercial CPU/SoC signoff practice beyond bounded RTL simulation:
+
+1. **Constrained-Random ISA Step-and-Compare (`qemu-system-random-isa-differential-gate`)**:
+   - Added `scripts/gen_random_mips_isa_test.py` and `tb/isa_ref/run_qemu_system_random_isa_differential_gate.sh` (`SEEDS="1 2 3 4 5"`, `1,550` compared records).
+   - **Next**: Extend random generation to COP1 FPU, MMU/TLB fault injection, and asynchronous interrupt/exception storms, and close the remaining 13 `partial` ISA clusters in `docs/isa_implementation_matrix.md` (including SMP coherency and full IEEE-754/lazy-FPU Linux ABI).
+2. **RTL Synthesis & Lint Hygiene (`rtl-lint-hygiene-gate`)**:
+   - Added `tb/unit/run_rtl_synth_hygiene_audit.sh` (`0` unguarded `$finish`/`$stop` in synthesizable RTL; clean `soc_top` `+lint=TFIPC-L` compile with `TFIPC warnings=0`).
+   - **Next**: Move behavioral simulation models (`*_behavioral.v`, `axi_ddr_model.v`, `axi_flash_image_model.v`) out of `rtl/perips/` and integrate real vendor DDR4 PHY/DFI and I/O pads.
+3. **Coverage & Formal Closure**:
+   - Close `make current-contract-signoff` from `~60–62%` code coverage to `>=99%` with audited waivers (`make coverage-strict-clean-gate`), and upgrade `tb/sva/` assertions to formal proofs.
+4. **Emulation / FPGA OS Soak & Physical Signoff**:
+   - Move unrestricted Linux/SMP/driver soak testing (without `linux-guest=on` or `TB_LINUX_DIFF_UART_TIMING` workarounds) onto FPGA/hardware emulation, and execute CDC/RDC, Synthesis, Multi-Corner STA, LEC, DFT/ATPG, and SDF Gate-Level Simulation.
