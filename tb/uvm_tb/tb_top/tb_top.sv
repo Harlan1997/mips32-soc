@@ -132,7 +132,11 @@ bind soc_verif_top soc_observation_bind u_soc_observation_bind (
                              (u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[5:0] == 6'h0d))) ?
                            {u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out[31:3], 3'b000} :
                            u_dut.u_core_subsystem.u_core.u_cpu.wb_ex_out),
-    .retire_mem_wdata     (u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt),
+    .retire_mem_wdata     ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b101000) ?
+                           {24'd0, u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt[7:0]} :
+                           ((u_dut.u_core_subsystem.u_core.u_cpu.wb_inst[31:26] == 6'b101001) ?
+                            {16'd0, u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt[15:0]} :
+                            u_dut.u_core_subsystem.u_core.u_cpu.wb_val_rt)),
     // Derive the observed byte lanes from the retired opcode.  This keeps
     // the trace contract tied to the architectural access size even when a
     // future internal mem_op encoding is added or reused.

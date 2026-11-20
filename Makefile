@@ -1076,6 +1076,10 @@ qemu-system-isa-r2-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=isa_r2_sweep FW_DIR=$(BUILD_DIR)/firmware/isa_r2_sweep RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_isa_r2_differential tb/isa_ref/run_qemu_system_differential_gate.sh
 
+qemu-system-random-isa-differential-gate:
+	chmod +x tb/isa_ref/run_qemu_system_random_isa_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_random_isa_differential tb/isa_ref/run_qemu_system_random_isa_differential_gate.sh
+
 qemu-system-fpu-single-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_differential_gate.sh
 	FW_TEST=fpu_single FW_DIR=$(BUILD_DIR)/firmware/fpu_single QEMU_CPU=24Kf RTL_TIMEOUT=120 RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_fpu_single_differential RTL_VCS_EXTRA_ARGS='+define+SOC_FPU_ENABLE=1 +define+TB_SKIP_JTAG_RESET_STRESS' tb/isa_ref/run_qemu_system_differential_gate.sh
@@ -1298,6 +1302,9 @@ vic-full-sources-gate:
 
 rtl-frontend-compile:
 	RUN_ROOT=$(BUILD_DIR)/unit_tb/rtl_frontend_compile tb/unit/run_rtl_frontend_compile.sh
+
+rtl-lint-hygiene-gate:
+	RUN_DIR=$(BUILD_DIR)/unit_tb/rtl_lint_hygiene tb/unit/run_rtl_synth_hygiene_audit.sh
 
 dut-block-unit-gate:
 	RUN_ROOT=$(DUT_BLOCK_UNIT_DIR) tb/unit/run_dut_block_unit_gate.sh
