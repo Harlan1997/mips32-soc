@@ -26,15 +26,17 @@ run_case() {
         echo "ERROR: CPU/CP0 summary missing from delay-slot mode ${mode}" >&2
         exit 1
     fi
-    local intr_count eret_count wb_ex_count wb_id_count unowned_bd_count
+    local intr_count syscall_count eret_count wb_ex_count wb_id_count unowned_bd_count
     intr_count=$(sed -n 's/.* intr=\([0-9][0-9]*\) .*/\1/p' <<<"${summary}")
+    syscall_count=$(sed -n 's/.* syscall=\([0-9][0-9]*\) .*/\1/p' <<<"${summary}")
     eret_count=$(sed -n 's/.* eret=\([0-9][0-9]*\).*/\1/p' <<<"${summary}")
     wb_ex_count=$(sed -n 's/.* wb_ex=\([0-9][0-9]*\) .*/\1/p' <<<"${summary}")
     wb_id_count=$(sed -n 's/.* wb_id=\([0-9][0-9]*\) .*/\1/p' <<<"${summary}")
     unowned_bd_count=$(sed -n 's/.* unowned_bd=\([0-9][0-9]*\).*/\1/p' <<<"${summary}")
     if [[ -z "${intr_count}" || "${intr_count}" -lt 1 ||
+          -z "${syscall_count}" || "${syscall_count}" -lt 1 ||
           -z "${eret_count}" || "${eret_count}" -lt 1 ]]; then
-        echo "ERROR: mode ${mode} did not observe interrupt/ERET: ${summary}" >&2
+        echo "ERROR: mode ${mode} did not observe interrupt/syscall/ERET: ${summary}" >&2
         exit 1
     fi
     if [[ "${mode}" -eq 1 && ( -z "${wb_ex_count}" || "${wb_ex_count}" -lt 1 ) ]]; then
