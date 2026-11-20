@@ -12,6 +12,11 @@ module tb_tlb_shootdown_mailbox;
   @(negedge clk);target_ack=1;@(posedge clk);#1;if(!done||busy)fail("page acknowledgement");
   @(negedge clk);target_ack=0;req_scope=1;req_valid=1;@(posedge clk);@(negedge clk);req_valid=1;@(posedge clk);#1;if(!rejected)fail("busy request rejected");@(negedge clk);req_valid=0;target_ack=1;@(posedge clk);target_ack=0;
   @(negedge clk);rst_n=0;@(posedge clk);rst_n=1;target_present=0;req_scope=2;req_valid=1;@(posedge clk);#1;if(!timeout||busy)fail("no-target timeout");@(negedge clk);req_valid=0;
+  // Stale target_ack while idle must not pulse done or corrupt the next request.
+  @(negedge clk);target_present=1;target_ack=1;@(posedge clk);#1;if(done||busy)fail("idle stale ack");
+  @(negedge clk);target_ack=0;req_asid=8'h5a;req_vpn=20'h54321;req_scope=0;req_valid=1;@(posedge clk);@(negedge clk);req_valid=0;
+  @(posedge clk);#1;if(!invalidate_valid||!busy||done||invalidate_asid!==8'h5a)fail("post-stale-ack request");
+  @(negedge clk);target_ack=1;@(posedge clk);#1;if(!done||busy)fail("post-stale-ack completion");
   $display("REGRESSION_TEST_SUCCESS tlb_shootdown_mailbox");$finish;
  end
 endmodule
