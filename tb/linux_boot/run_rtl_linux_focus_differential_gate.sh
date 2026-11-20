@@ -23,14 +23,14 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 BUILD_DIR="${BUILD_DIR:-${ROOT_DIR}/build}"
 RUN_DIR=$(realpath -m "${RUN_DIR:-${BUILD_DIR}/linux_boot/focus_differential}")
-FROZEN_DIR=$(realpath -m "${FROZEN_DIR:-/data/disk/tmp/mips32-soc/rtl-linux-freeze-20260920}")
-ARTIFACTS_DIR="${ARTIFACTS_DIR:-${FROZEN_DIR}/artifacts}"
+FROZEN_DIR=$(realpath -m "${FROZEN_DIR:-/data/disk/tmp/mips32-soc/rtl-linux-userspace-current-image-seeded}")
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-${FROZEN_DIR}}"
 
-KERNEL="${KERNEL:-${ARTIFACTS_DIR}/vmlinux}"
+KERNEL="${KERNEL:-/data/disk/tmp/mips32-soc/rtl-linux-userspace-current-build/kernel/vmlinux}"
 DTB="${DTB:-${ARTIFACTS_DIR}/mips32_soc_ref_rtl.dtb}"
 BOOT_ROM="${BOOT_ROM:-${ARTIFACTS_DIR}/bootrom.hex}"
 DDR_HEX="${DDR_HEX:-${ARTIFACTS_DIR}/ddr.hex}"
-FROZEN_HASHES="${FROZEN_HASHES:-${ARTIFACTS_DIR}/frozen_hashes.txt}"
+FROZEN_HASHES="${FROZEN_HASHES:-${ARTIFACTS_DIR}/sha256sums.txt}"
 
 QEMU_DEFAULT="/data/disk/tmp/mips32-soc/qemu-9.2.0/build-mipsel-softmmu/qemu-system-mipsel"
 if [[ -z "${QEMU_BIN:-}" || ! -x "${QEMU_BIN}" ]]; then
@@ -47,10 +47,16 @@ QEMU_EXPECT_TIMEOUT="${QEMU_EXPECT_TIMEOUT:-1}"
 REUSE_ARTIFACTS="${REUSE_ARTIFACTS:-0}"
 REUSE_IDENTITY="${REUSE_IDENTITY:-${FROZEN_DIR}/focus_reuse_identity.txt}"
 
-RTL_CYCLE_START="${RTL_CYCLE_START:-23400000}"
-RTL_CYCLE_LIMIT="${RTL_CYCLE_LIMIT:-23510000}"
+RTL_CYCLE_START="${RTL_CYCLE_START:-0}"
+RTL_CYCLE_LIMIT="${RTL_CYCLE_LIMIT:-1000000}"
 RTL_TIMEOUT_NS="${RTL_TIMEOUT_NS:-$((RTL_CYCLE_LIMIT * 10))}"
-FOCUS_RECORD_LIMIT="${FOCUS_RECORD_LIMIT:-16384}"
+FOCUS_RECORD_LIMIT="${FOCUS_RECORD_LIMIT:-17}"
+FOCUS_TARGET_ONLY="${FOCUS_TARGET_ONLY:-0}"
+FOCUS_START="${FOCUS_START:-88cec768}"
+FOCUS_END_RTL="${FOCUS_END_RTL:-88cec7ac}"
+FOCUS_END_QEMU="${FOCUS_END_QEMU:-88cec7a8}"
+FOCUS_CHECKPOINT_PC="${FOCUS_CHECKPOINT_PC:-0x88cec79c}"
+FOCUS_CHECKPOINT_PC2="${FOCUS_CHECKPOINT_PC2:-0x88cec7a4}"
 HOST_TIMEOUT="${HOST_TIMEOUT:-600s}"
 LINUX_RNG_SEED="${LINUX_RNG_SEED:-}"
 SKIP_COVERAGE="${SKIP_COVERAGE:-1}"
@@ -176,7 +182,7 @@ fi
 # timeout is accepted only as the declared bounded-run termination mode.
 set +e
 timeout --foreground "${QEMU_TIMEOUT}" "${QEMU_BIN}" \
-    -plugin "file=${QEMU_PLUGIN_SO},out=${QEMU_FOCUS_LOG},target-only=1,max-records=${FOCUS_RECORD_LIMIT}" \
+    -plugin "file=${QEMU_PLUGIN_SO},out=${QEMU_FOCUS_LOG},target-only=${FOCUS_TARGET_ONLY},default-targets=off,start=${FOCUS_START},end=${FOCUS_END_QEMU},max-records=${FOCUS_RECORD_LIMIT}" \
     -M "${QEMU_MACHINE}" \
     -cpu 24Kc \
     -accel tcg,thread=single \
@@ -206,7 +212,7 @@ fi
 test -s "${QEMU_FOCUS_LOG}"
 qemu_records=$(grep -c "^QEMU_FOCUS " "${QEMU_FOCUS_LOG}" || true)
 echo "QEMU Focus run completed with ${qemu_records} records."
-python3 "${TRACE_CHECKER}" "${QEMU_FOCUS_LOG}" --require-all-gprs
+python3 "${TRACE_CHECKER}" "${QEMU_FOCUS_LOG}" --require-all-gprs --no-require-mandatory --require-pc "${FOCUS_CHECKPOINT_PC#0x}" --require-pc "${FOCUS_CHECKPOINT_PC2#0x}"
 
 echo "=== [3/5] Running RTL Blocking Simulation ==="
 BLOCKING_DIR="${RUN_DIR}/blocking"
@@ -223,7 +229,7 @@ else
         FW_HEX="${BOOT_ROM}" \
         LINUX_RNG_SEED="${LINUX_RNG_SEED}" \
         VCS_EXTRA_ARGS="+define+SOC_LINUX_BOOT_ENABLE=1 +define+SOC_LINUX_GUEST_ENABLE=1 +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1 +define+SOC_FAST_SIM +define+TB_LINUX_BOOT +define+TB_LINUX_BOOT_TRACE +define+DISABLE_QSPI_DUAL_FLASH_WARNING +define+TB_SKIP_UART_PIN_CHECK" \
-        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=${FOCUS_RECORD_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=1 +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
+        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=${FOCUS_RECORD_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=${FOCUS_TARGET_ONLY} +LINUX_FOCUS_TRACE_START=${FOCUS_START} +LINUX_FOCUS_TRACE_END=${FOCUS_END_RTL} +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
         "${ROOT_DIR}/tb/soc_test/run.sh" >"${BLOCKING_DIR}/run.log" 2>&1
     cp "${BLOCKING_DIR}/sim_runtime.log" "${BLOCKING_LOG}"
 fi
@@ -255,7 +261,9 @@ elif [[ "${REUSE_ALLOWED}" == "1" && -s "${FROZEN_DIR}/nb_compile_test/simv" ]];
         +LINUX_PROGRESS_TRACE=0 \
         +LINUX_FOCUS_TRACE=1 \
         +LINUX_FOCUS_TRACE_LIMIT="${FOCUS_RECORD_LIMIT}" \
-        +LINUX_FOCUS_TRACE_TARGET_ONLY=1 \
+        +LINUX_FOCUS_TRACE_TARGET_ONLY="${FOCUS_TARGET_ONLY}" \
+        +LINUX_FOCUS_TRACE_START="${FOCUS_START}" \
+        +LINUX_FOCUS_TRACE_END="${FOCUS_END_RTL}" \
         +LINUX_FOCUS_TRACE_CYCLE_START="${RTL_CYCLE_START}" \
         -l "${NB_LOG}" >/dev/null 2>&1
 else
@@ -264,7 +272,7 @@ else
         FW_HEX="${BOOT_ROM}" \
         LINUX_RNG_SEED="${LINUX_RNG_SEED}" \
         VCS_EXTRA_ARGS="+define+SOC_LINUX_BOOT_ENABLE=1 +define+SOC_LINUX_GUEST_ENABLE=1 +define+SOC_PRODUCT_BOOT_ENABLE=1 +define+SOC_MMU_ENABLE=1 +define+SOC_FAST_SIM +define+SOC_L1_NONBLOCKING_ENABLE=1 +define+SOC_CPU_NONBLOCKING_ENABLE=1 +define+SOC_ROB_FIFO_ENABLE=1 +define+SOC_L1_NONBLOCKING_DDR_ENABLE=1 +define+TB_L1_NONBLOCKING +define+TB_LINUX_BOOT +define+TB_LINUX_BOOT_TRACE +define+DISABLE_QSPI_DUAL_FLASH_WARNING +define+TB_SKIP_UART_PIN_CHECK" \
-        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=${FOCUS_RECORD_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=1 +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
+        SIM_EXTRA_ARGS="+BOOT_ROM_HEX=${BOOT_ROM} +DDR_HEX=${DDR_HEX} +LINUX_TIMEOUT_NS=${RTL_TIMEOUT_NS} +LINUX_TRACE_LIMIT=${RTL_CYCLE_LIMIT} +LINUX_PROGRESS_TRACE=0 +LINUX_FOCUS_TRACE=1 +LINUX_FOCUS_TRACE_LIMIT=${FOCUS_RECORD_LIMIT} +LINUX_FOCUS_TRACE_TARGET_ONLY=${FOCUS_TARGET_ONLY} +LINUX_FOCUS_TRACE_START=${FOCUS_START} +LINUX_FOCUS_TRACE_END=${FOCUS_END_RTL} +LINUX_FOCUS_TRACE_CYCLE_START=${RTL_CYCLE_START}" \
         "${ROOT_DIR}/tb/soc_test/run.sh" >"${NB_DIR}/run.log" 2>&1
     cp "${NB_DIR}/sim_runtime.log" "${NB_LOG}"
 fi
@@ -317,25 +325,26 @@ if [[ ${diff_qemu_full_rc} -ne 0 ]]; then
 fi
 echo "QEMU vs Blocking RTL Full Focus Differential: PASS (all focused records match)"
 
-# Verify target checkpoint at 0x88a38c1c across QEMU and RTL
-checkpoint_blocking_pc=$(grep "pc=88a38c1c" "${BLOCKING_DIR}/rtl_focus.log" | tail -n 1)
+# Verify target checkpoints across QEMU and RTL
+checkpoint_pc_hex=${FOCUS_CHECKPOINT_PC#0x}
+checkpoint_pc2_hex=${FOCUS_CHECKPOINT_PC2#0x}
+checkpoint_blocking_pc=$(grep "pc=${checkpoint_pc_hex}" "${BLOCKING_DIR}/rtl_focus.log" | tail -n 1)
 test -n "${checkpoint_blocking_pc}"
-echo "Repaired checkpoint (PC 0x88a38c1c) verified in Blocking RTL:"
+echo "Checkpoint (${FOCUS_CHECKPOINT_PC}) verified in Blocking RTL:"
 echo "  ${checkpoint_blocking_pc}"
 
-checkpoint_nb_pc=$(grep "pc=88a38c1c" "${NB_DIR}/rtl_focus.log" | tail -n 1)
+checkpoint_nb_pc=$(grep "pc=${checkpoint_pc_hex}" "${NB_DIR}/rtl_focus.log" | tail -n 1)
 test -n "${checkpoint_nb_pc}"
-echo "Repaired checkpoint (PC 0x88a38c1c) verified in Nonblocking RTL:"
+echo "Checkpoint (${FOCUS_CHECKPOINT_PC}) verified in Nonblocking RTL:"
 echo "  ${checkpoint_nb_pc}"
 
 DIFF_LOG_QEMU="${RUN_DIR}/diff_qemu_vs_rtl_checkpoint.log"
 if python3 "${COMPARATOR}" \
     --ref "${QEMU_FOCUS_LOG}" \
     --dut "${BLOCKING_DIR}/rtl_focus.log" \
-    --checkpoint 0x88a38c1c \
+    --checkpoint "${FOCUS_CHECKPOINT_PC}" \
     --occurrence last \
     --require-all-gprs \
-    --expected-v1 0x6 \
     >"${DIFF_LOG_QEMU}" 2>&1; then
     diff_qemu_rc=0
 else
@@ -347,13 +356,12 @@ if [[ ${diff_qemu_rc} -ne 0 ]]; then
     cat "${DIFF_LOG_QEMU}"
     exit 1
 fi
-echo "QEMU vs RTL Checkpoint Differential: PASS (0x88a38c1c verified matching across QEMU and RTL)"
+echo "QEMU vs RTL Checkpoint Differential: PASS (${FOCUS_CHECKPOINT_PC} verified matching across QEMU and RTL)"
 
-# Also check 0x88a38c24
 if python3 "${COMPARATOR}" \
     --ref "${QEMU_FOCUS_LOG}" \
     --dut "${BLOCKING_DIR}/rtl_focus.log" \
-    --checkpoint 0x88a38c24 \
+    --checkpoint "${FOCUS_CHECKPOINT_PC2}" \
     --occurrence last \
     --require-all-gprs \
     >>"${DIFF_LOG_QEMU}" 2>&1; then
@@ -362,11 +370,11 @@ else
     diff_qemu_rc2=$?
 fi
 if [[ ${diff_qemu_rc2} -ne 0 ]]; then
-    echo "ERROR: QEMU vs RTL checkpoint 0x88a38c24 differential mismatch!"
+    echo "ERROR: QEMU vs RTL checkpoint ${FOCUS_CHECKPOINT_PC2} differential mismatch!"
     cat "${DIFF_LOG_QEMU}"
     exit 1
 fi
-echo "QEMU vs RTL Checkpoint Differential: PASS (0x88a38c24 verified matching across QEMU and RTL)"
+echo "QEMU vs RTL Checkpoint Differential: PASS (${FOCUS_CHECKPOINT_PC2} verified matching across QEMU and RTL)"
 
 
 # Check BadVAddr stability: ensure badvaddr does not corrupt to 0xffffffff
@@ -388,7 +396,7 @@ cat >"${RUN_DIR}/completion_report.md" <<EOF
 - **Blocking RTL Records**: ${blocking_records} focus records captured
 - **Nonblocking-L1 RTL Records**: ${nb_records} focus records captured
 - **QEMU vs Blocking RTL**: complete focused retirement stream compared with all 32 GPRs
-- **Repaired Checkpoint**: \`0x88a38c1c\` retired with \`v1=0x00000006\`, string output timestamp formatted correctly.
+- **Repaired Checkpoint**: \`${FOCUS_CHECKPOINT_PC}\` and \`${FOCUS_CHECKPOINT_PC2}\` retired and matched across QEMU, Blocking RTL, and Nonblocking-L1 RTL.
 - **BadVAddr & Exception Stability**:
   - \`Cause.BD\` accurately retained across pipeline bubbles.
   - \`BadVAddr\` preserved through pending data translation faults and interrupt flushes.

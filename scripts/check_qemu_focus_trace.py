@@ -33,7 +33,7 @@ MANDATORY_PCS = [
     "88a3898c", "88a38998"
 ]
 
-def check_trace(log_path, require_mandatory_pcs=True, require_all_gprs=False):
+def check_trace(log_path, require_mandatory_pcs=True, require_all_gprs=False, required_pcs=None):
     seen_seqs = set()
     observed_pcs = set()
     expected_seq = 0
@@ -82,6 +82,11 @@ def check_trace(log_path, require_mandatory_pcs=True, require_all_gprs=False):
         if missing:
             print(f"ERROR: missing mandatory target PCs in {log_path}: {missing}", file=sys.stderr)
             return 1
+    if required_pcs:
+        missing_req = [pc.lower().lstrip("0x").zfill(8) for pc in required_pcs if pc.lower().lstrip("0x").zfill(8) not in observed_pcs]
+        if missing_req:
+            print(f"ERROR: missing required target PCs in {log_path}: {missing_req}", file=sys.stderr)
+            return 1
 
     print(f"QEMU focus trace check PASS: {records} valid records, {len(observed_pcs)} distinct PCs")
     return 0
@@ -90,6 +95,7 @@ def main():
     parser = argparse.ArgumentParser(description="Check QEMU focus trace format and completeness")
     parser.add_argument("log", help="Path to QEMU focus log")
     parser.add_argument("--no-require-mandatory", action="store_true", help="Do not require all mandatory checkpoint PCs")
+    parser.add_argument("--require-pc", action="append", default=[], help="Require a specific 8-hex-digit PC in the trace")
     parser.add_argument("--require-all-gprs", action="store_true", help="Require a complete 32-register snapshot")
     args = parser.parse_args()
 
@@ -97,6 +103,7 @@ def main():
         args.log,
         require_mandatory_pcs=not args.no_require_mandatory,
         require_all_gprs=args.require_all_gprs,
+        required_pcs=args.require_pc,
     )
     sys.exit(ret)
 
