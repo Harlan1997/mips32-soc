@@ -573,7 +573,7 @@ if (( (MAX_QEMU_EVENTS > 0 && events > MAX_QEMU_EVENTS) ||
     exit 2
 fi
 if [[ "${STOP_AFTER_MAILBOX:-0}" == "1" ]] &&
-   ! rg -q '"mem_addr":"a000fffc".*"mem_value":"deadbeef"' \
+   ! grep -q '"mem_addr":"a000fffc".*"mem_value":"deadbeef"' \
        "${RUN_DIR}/qemu_instruction_events.jsonl"; then
     {
         echo "QEMU system retire capture: completion mailbox was not observed"

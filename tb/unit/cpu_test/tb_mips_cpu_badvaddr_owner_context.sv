@@ -265,8 +265,68 @@ module tb_mips_cpu_badvaddr_owner_context;
 
         capture_unaligned_owner();
 
+        // 1. A younger MEM translation fault must not overwrite a live older owner.
+        capture_owner();
+        force u_cpu.dmem_translation_fault = 1'b1;
+        force u_cpu.exception_flush = 1'b0;
+        force u_cpu.wb_except_req = 1'b0;
+        force u_cpu.wb_arch_valid = 1'b0;
+        force u_cpu.mem_pc = 32'h8000_3000;
+        force u_cpu.mem_inst = 32'h8c23_0080;
+        force u_cpu.mem_access_addr = 32'h0040_9990;
+        force u_cpu.d_fault_capture_code = 5'h03;
+        force u_cpu.mem_mem_write = 1'b1;
+        force u_cpu.cp0_asid = 8'h33;
+        @(posedge clk);
+        #1;
+        if (!u_cpu.d_fault_vaddr_pending_q ||
+            u_cpu.d_fault_owner_pc_q !== 32'h8000_1000 ||
+            u_cpu.d_fault_vaddr_q !== 32'h0040_2040)
+            fail("younger fault overwrote live older owner");
+        release u_cpu.dmem_translation_fault;
+        release u_cpu.exception_flush;
+        release u_cpu.wb_except_req;
+        release u_cpu.wb_arch_valid;
+        release u_cpu.mem_pc;
+        release u_cpu.mem_inst;
+        release u_cpu.mem_access_addr;
+        release u_cpu.d_fault_capture_code;
+        release u_cpu.mem_mem_write;
+        release u_cpu.cp0_asid;
+        ctx_restore_req = 1'b1;
+        @(posedge clk);
+        require_clear("cleanup after younger-overwrite check failed");
+        ctx_restore_req = 1'b0;
+
+        // 2. An interrupt/exception flush coincident with dmem_translation_fault
+        // must prevent the flushed fault from being captured.
+        force u_cpu.dmem_translation_fault = 1'b1;
+        force u_cpu.interrupt_accept = 1'b1;
+        force u_cpu.exception_flush = 1'b1;
+        force u_cpu.wb_except_req = 1'b0;
+        force u_cpu.wb_arch_valid = 1'b0;
+        force u_cpu.mem_pc = 32'h8000_4000;
+        force u_cpu.mem_inst = 32'h8c24_0010;
+        force u_cpu.mem_access_addr = 32'h0040_4010;
+        force u_cpu.d_fault_capture_code = 5'h02;
+        force u_cpu.mem_mem_write = 1'b0;
+        force u_cpu.cp0_asid = 8'h2a;
+        @(posedge clk);
+        require_clear("interrupt-coincident D-fault was captured");
+        release u_cpu.dmem_translation_fault;
+        release u_cpu.interrupt_accept;
+        release u_cpu.exception_flush;
+        release u_cpu.wb_except_req;
+        release u_cpu.wb_arch_valid;
+        release u_cpu.mem_pc;
+        release u_cpu.mem_inst;
+        release u_cpu.mem_access_addr;
+        release u_cpu.d_fault_capture_code;
+        release u_cpu.mem_mem_write;
+        release u_cpu.cp0_asid;
+
         if (failures == 0)
-            $display("BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1 unaligned_ea=1");
+            $display("BADVADDR_OWNER_CONTEXT_PASS restore=1 eret=1 irq=1 reset=1 unaligned_ea=1 no_overwrite=1 irq_coincident=1");
         else
             $display("BADVADDR_OWNER_CONTEXT_FAIL failures=%0d", failures);
         $finish;

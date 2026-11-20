@@ -37,7 +37,7 @@ REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=1 SKIP_COMPARE=1 \
 test -s "${RTL_UART}"
 test -s "${RTL_TRACE}"
 test -s "${QEMU_TRACE}"
-rg 'LINUX_VIC_TRACE ' "${RTL_TRACE}" >"${RTL_VIC_TRACE}"
+grep 'LINUX_VIC_TRACE ' "${RTL_TRACE}" >"${RTL_VIC_TRACE}"
 test -s "${RTL_VIC_TRACE}"
 python3 "${ROOT_DIR}/scripts/compare_peripheral_transactions.py" \
     --kind uart --ref "${QEMU_TRACE}" --dut "${RTL_UART}" \
@@ -61,8 +61,8 @@ print(sum(1 for line in open(sys.argv[1])
 PY
 )
 (( uart_records == 3 && vic_records == 6 ))
-rg -q '^PERIPHERAL_DIFF_PASS kind=uart records=3$' "${RUN_DIR}/uart_transaction_compare.log"
-rg -q '^PERIPHERAL_DIFF_PASS kind=vic records=6$' "${RUN_DIR}/vic_transaction_compare.log"
+grep -q '^PERIPHERAL_DIFF_PASS kind=uart records=3$' "${RUN_DIR}/uart_transaction_compare.log"
+grep -q '^PERIPHERAL_DIFF_PASS kind=vic records=6$' "${RUN_DIR}/vic_transaction_compare.log"
 
 cat >"${RUN_DIR}/completion_report.md" <<EOF
 # QEMU System UART/VIC Transaction Differential
