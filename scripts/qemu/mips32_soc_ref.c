@@ -2037,6 +2037,24 @@ static void soc_ref_uart_check_apb_read(MIPS32SocRefState *s,
     }
 }
 
+/* Emit the same normalized APB address space used by the RTL UART schedule.
+ * Keeping reads and writes in one stream makes the peripheral differential
+ * independent of the retire trace and exposes polling/side-effect errors. */
+static void soc_ref_trace_uart_apb(MIPS32SocRefState *s, hwaddr addr,
+                                   uint32_t data, bool write, unsigned size)
+{
+    if (!s || !s->peripheral_trace) {
+        return;
+    }
+    fprintf(s->peripheral_trace,
+            "{\"kind\":\"uart\",\"addr\":\"0x%08" PRIx64
+            "\",\"data\":\"0x%08" PRIx32
+            "\",\"write\":%s,\"width\":%u,\"retire\":%" PRIu64 "}\n",
+            (uint64_t)(SOC_UART_APB_BASE + addr), data,
+            write ? "true" : "false", size, s->retire_count);
+    fflush(s->peripheral_trace);
+}
+
 static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
 {
     MIPS32SocRefState *s = opaque;
@@ -2078,27 +2096,6 @@ static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
                 value = SOC_REF_UART_LSR_TEMT;
             }
         }
-        if (s->peripheral_trace) {
-            fprintf(s->peripheral_trace,
-                    "{\"kind\":\"uart\",\"addr\":\"0x%08" PRIx64
-                    "\",\"data\":\"0x%02x\",\"write\":false"
-                    ",\"width\":%u,\"retire\":%" PRIu64,
-                    (uint64_t)(SOC_UART_BASE + 5 * 4), value, size,
-                    s->retire_count);
-            if (retire_timed) {
-                fprintf(s->peripheral_trace,
-                        ",\"cycle\":%" PRIu64
-                        ",\"baud_count\":%u,\"tx_state\":%u"
-                        ",\"pending\":%zu",
-                        now_cycle, s->uart_tx.baud_count,
-                        s->uart_tx.tx_state, s->uart_tx.pending_count);
-            } else {
-                fprintf(s->peripheral_trace, ",\"busy_reads\":%u",
-                        s->uart_tx_busy_reads);
-            }
-            fputs("}\n", s->peripheral_trace);
-            fflush(s->peripheral_trace);
-        }
     } else if (reg == 6) {
         value = soc_ref_uart_modem_read(&s->uart_modem, s->uart_regs[4]);
     } else if (reg < ARRAY_SIZE(s->uart_regs)) {
@@ -2107,6 +2104,7 @@ static uint64_t soc_ref_uart_read(void *opaque, hwaddr addr, unsigned size)
     if (scheduled) {
         soc_ref_uart_check_apb_read(s, &sample, value);
     }
+    soc_ref_trace_uart_apb(s, addr, value, false, size);
     if (retire_timed) {
         soc_ref_uart_step_cycle(s, now_cycle, false, 0, false);
         soc_ref_uart_update_irq(s);
@@ -2318,6 +2316,8 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
         s, SOC_UART_APB_BASE + (reg << 2), true, (uint32_t)data, &sample);
     uint64_t now_cycle = 0;
 
+    soc_ref_trace_uart_apb(s, addr, (uint32_t)data, true, size);
+
     if (retire_timed) {
         now_cycle = scheduled ? sample.cycle :
                                 soc_ref_uart_clock_cycles(s);
@@ -2343,14 +2343,6 @@ static void soc_ref_uart_write(void *opaque, hwaddr addr, uint64_t data,
         } else {
             s->uart_tx_busy_reads =
                 soc_ref_uart_profile_busy_reads(s->uart_write_count, ch);
-        }
-        if (s->peripheral_trace) {
-            fprintf(s->peripheral_trace,
-                    "{\"kind\":\"uart\",\"addr\":\"0x%08" PRIx64
-                    "\",\"data\":\"0x%02x\",\"write\":true,\"width\":1"
-                    ",\"retire\":%" PRIu64 "}\n",
-                    (uint64_t)SOC_UART_BASE, ch, s->retire_count);
-            fflush(s->peripheral_trace);
         }
         if (soc_ref_uart_console_write_visible(accepted,
                                                s->uart_diff_timing)) {
@@ -2596,6 +2588,10 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
     uint32_t best_prio = 0;
     int best_id = -1;
     bool any_active = false;
+    uint32_t raw = s->pic_raw | s->pic_soft;
+    uint32_t cause = s->cpu ? s->cpu->env.CP0_Cause : 0;
+    uint32_t status = s->cpu ? s->cpu->env.CP0_Status : 0;
+    bool irq_level;
     for (int i = 0; i < 32; ++i) {
         if (s->pic_active & (1U << i)) {
             any_active = true;
@@ -2608,15 +2604,21 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
             best_prio = s->pic_priority[i];
         }
     }
+    irq_level = best_id >= 0 && (!any_active || best_prio > active_prio);
     if (s->peripheral_trace &&
-        (!s->trace_pic_valid || s->trace_pic_raw != s->pic_raw ||
+        (!s->trace_pic_valid || s->trace_pic_raw != raw ||
          s->trace_pic_pending != pending || s->trace_pic_mask != s->pic_mask ||
          s->trace_pic_active != s->pic_active)) {
-        uint32_t cause = s->cpu ? s->cpu->env.CP0_Cause : 0;
-        uint32_t status = s->cpu ? s->cpu->env.CP0_Status : 0;
         unsigned vec_id = best_id < 0 ? 0xffU : (unsigned)best_id;
         bool accepted = best_id >= 0 &&
                         (!any_active || best_prio > active_prio);
+        bool cpu_accept = accepted && (status & 1U) &&
+                          !(status & 0x6U) && (status & (1U << (8 + 2)));
+        uint32_t cause_trace = cause;
+        if (irq_level)
+            cause_trace |= 1U << (8 + 2);
+        else
+            cause_trace &= ~(1U << (8 + 2));
         fprintf(s->peripheral_trace,
                 "{\"kind\":\"vic\",\"raw\":\"0x%08x\","
                 "\"pending\":\"0x%08x\",\"enable\":\"0x%08x\","
@@ -2624,22 +2626,19 @@ static void soc_ref_update_irq(MIPS32SocRefState *s)
                 "\"vec_prio\":%u,\"uart_irq\":%u,\"uart_rx_irq\":0,"
                 "\"uart_tx_irq\":%u,\"cpu_accept\":%u,"
                 "\"cause\":\"0x%08x\",\"status\":\"0x%08x\"}\n",
-                s->pic_raw, pending, s->pic_mask, s->pic_active,
+                raw, pending, s->pic_mask, s->pic_active,
                 accepted ? 1U : 0U, vec_id, best_prio,
                 (s->pic_raw & (1U << 1)) ? 1U : 0U,
                 (s->pic_raw & (1U << 1)) ? 1U : 0U,
-                accepted ? 1U : 0U, cause, status);
+                cpu_accept ? 1U : 0U, cause_trace, status);
         fflush(s->peripheral_trace);
-        s->trace_pic_raw = s->pic_raw;
+        s->trace_pic_raw = raw;
         s->trace_pic_pending = pending;
         s->trace_pic_mask = s->pic_mask;
         s->trace_pic_active = s->pic_active;
         s->trace_pic_valid = true;
     }
     if (s->irq_replay_enabled) {
-        bool irq_level = best_id >= 0 &&
-                         (!any_active || best_prio > active_prio);
-
         /* Keep Cause.IP2 current while replay suppresses natural acceptance.
          * The retire schedule still controls when the CPU takes the IRQ. */
         qemu_set_irq(s->cpu->env.irq[2], irq_level || s->irq_replay_armed);
@@ -4379,6 +4378,10 @@ static void mips32_soc_ref_init(MachineState *machine)
     state->uart_tx_busy_reads = 0;
     state->uart_write_count = 0;
     state->uart_tx = (SocRefUartTxModel){0};
+    /* The RTL VIC diagnostic starts with a valid all-zero previous sample and
+     * emits only state changes.  Seed the QEMU trace baseline the same way so
+     * the first unrelated UART access does not create a synthetic VIC event. */
+    state->trace_pic_valid = true;
     state->irq_replay_pic_mask = soc_ref_irq_replay_pic_mask;
     state->irq_replay_bd_mask = soc_ref_irq_replay_bd_mask;
     state->sram = machine->ram;

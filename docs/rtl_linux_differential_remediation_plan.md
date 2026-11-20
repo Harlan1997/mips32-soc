@@ -4,6 +4,19 @@ Plan date: 2026-09-20
 
 Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / NONBLOCKING FULL DIFFERENTIAL BOUNDED PASS`
 
+### 2026-11-20 UART/VIC transaction differential recheck
+
+The fresh deterministic firmware run compares all three UART APB accesses
+(including the LSR read) and all six VIC state transitions between current RTL
+and the rebuilt `mips32-soc-ref` model. The strict normalized comparators pass
+under `/data/disk/tmp/mips32-soc/uart-vic-transaction-current-20261120-r2/`.
+The first RTL VIC record shares its console line with a UART byte, so the trace
+extractor and parser now retain a prefixed VIC record. The comparator no longer
+discards an unmatched initial VIC state, and the gate requires the exact
+deterministic counts. This closes only the selected UART APB and two-source
+software-VIC transaction workload; it does not establish all UART modes,
+physical interrupt timing, or unrestricted peripheral equivalence.
+
 ### 2026-11-17 Delay-slot WB-to-EX/WB-to-ID current-source recheck
 
 The fresh `cpu-irq-delay-slot-gate` run uses the repository's explicit bubble
@@ -132,7 +145,7 @@ project status is:
 | BadVAddr fault/replay | `BOUNDED_PASS` | Current-source integration and unit gates prove PC/instruction/address/code/store/ASID identity, one older-exception/younger-fault squash, and token clearing at reset, interrupt flush, ERET, and context restore. Arbitrary replay pressure and Linux VM ownership remain open. |
 | QEMU/RTL focus comparison | `UNTRUSTED` | Two checkpoint comparisons exist, but truncation and unselected-register mutations can falsely pass. |
 | Bounded full retire differential | `BOUNDED_PASS` | Current-source nonblocking generic Linux run compares the complete declared retire stream through the terminal marker with strict streaming state comparison. Unrestricted Linux and broader ISA/OS contracts remain separate. |
-| UART/VIC equivalence | `OPEN` | The focus gate does not compare UART or VIC transactions. |
+| UART/VIC equivalence | `BOUNDED_PASS` | Fresh strict current-source comparison checks all three UART APB accesses and all six VIC state transitions in `qemu-system-uart-vic-transaction-differential-gate`. Other UART modes, physical timing, and unrestricted peripheral equivalence remain open. |
 | Minimal RTL userspace profile | `BOUNDED_PASS` | Only the existing opt-in minimal image and its declared marker contract are covered. |
 
 Passing a bounded gate must not be described as unrestricted Linux, complete

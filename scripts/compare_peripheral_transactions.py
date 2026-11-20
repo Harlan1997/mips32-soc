@@ -21,6 +21,9 @@ class TraceError(Exception):
 
 
 UART_RE = re.compile(r"LINUX_UART_TRACE\s+cycle=(\d+)\s+paddr=([0-9a-fA-F]+)\s+data=([0-9a-fA-F]+)")
+UART_APB_RE = re.compile(
+    r"^(\d+)\s+([01])\s+([0-9a-fA-F]+)\s+([0-9a-fA-F]+)$"
+)
 VIC_RE = re.compile(
     r"LINUX_VIC_TRACE\s+cycle=(\d+)\s+raw=([0-9a-fA-F]+)\s+"
     r"pending=([0-9a-fA-F]+)\s+enable=([0-9a-fA-F]+)\s+active=([0-9a-fA-F]+)\s+"
@@ -29,30 +32,43 @@ VIC_RE = re.compile(
     r"cpu_accept=(\d+)\s+cause=([0-9a-fA-F]+)\s+status=([0-9a-fA-F]+)"
 )
 
+VIC_HEX_FIELDS = {
+    "raw", "pending", "enable", "active", "vec_id", "vec_prio",
+}
+
+VIC_FIELDS = (
+    "raw", "pending", "enable", "active", "irq", "vec_id", "vec_prio",
+    "uart_irq", "uart_rx_irq", "uart_tx_irq",
+)
+
+
+def parse_int(value: object, *, bare_hex: bool = False) -> int:
+    if not isinstance(value, str):
+        return int(value)
+    if bare_hex and not value.lower().startswith(("0x", "+0x", "-0x")):
+        return int(value, 16)
+    return int(value, 0)
+
 
 def parse_record(obj: object, kind: str, source: str, line_no: int) -> dict:
     if not isinstance(obj, dict):
         raise TraceError(f"{source}:{line_no}: record is not an object")
     expected = {
         "uart": ("addr", "data", "write", "width"),
-        "vic": (
-            "raw", "pending", "enable", "active", "irq", "vec_id", "vec_prio",
-            "uart_irq", "uart_rx_irq", "uart_tx_irq", "cpu_accept", "cause", "status",
-        ),
+        "vic": VIC_FIELDS,
     }[kind]
     missing = [key for key in expected if key not in obj]
     if missing:
         raise TraceError(f"{source}:{line_no}: missing {','.join(missing)}")
     normalized = {key: obj[key] for key in expected}
     if kind == "uart":
-        normalized["addr"] = int(normalized["addr"], 0) if isinstance(normalized["addr"], str) else int(normalized["addr"])
-        normalized["data"] = int(normalized["data"], 0) if isinstance(normalized["data"], str) else int(normalized["data"])
+        normalized["addr"] = parse_int(normalized["addr"])
+        normalized["data"] = parse_int(normalized["data"])
         normalized["write"] = bool(normalized["write"])
-        normalized["width"] = int(normalized["width"])
+        normalized["width"] = parse_int(normalized["width"])
     else:
         for key in expected:
-            value = normalized[key]
-            normalized[key] = int(value, 0) if isinstance(value, str) else int(value)
+            normalized[key] = parse_int(normalized[key], bare_hex=key in VIC_HEX_FIELDS)
     return normalized
 
 
@@ -62,6 +78,23 @@ def read_records(path: Path, kind: str) -> list[dict]:
         line = raw.strip()
         if not line:
             continue
+        # RTL's UART APB schedule is intentionally cycle-free at the
+        # comparison boundary, but retains cycle/write/address/data columns
+        # for diagnostics.  Parse it here so the same strict comparator can
+        # compare complete UART accesses, including reads.
+        if kind == "uart" and not line.startswith("{") and not line.startswith("LINUX_"):
+            match = UART_APB_RE.fullmatch(line)
+            if match:
+                records.append(parse_record({
+                    "addr": "0x" + match.group(3),
+                    "data": "0x" + match.group(4),
+                    "write": match.group(2) == "1",
+                    "width": 4,
+                }, kind, str(path), line_no))
+                continue
+            if line.startswith("#"):
+                continue
+            raise TraceError(f"{path}:{line_no}: malformed UART APB schedule")
         if line.startswith("LINUX_UART_TRACE "):
             match = UART_RE.search(line)
             if not match:
@@ -72,7 +105,7 @@ def read_records(path: Path, kind: str) -> list[dict]:
                     "write": True, "width": 1,
                 }, kind, str(path), line_no))
             continue
-        if line.startswith("LINUX_VIC_TRACE "):
+        if "LINUX_VIC_TRACE " in line:
             match = VIC_RE.search(line)
             if not match:
                 raise TraceError(f"{path}:{line_no}: malformed VIC trace")
@@ -80,6 +113,10 @@ def read_records(path: Path, kind: str) -> list[dict]:
                 fields = ["raw", "pending", "enable", "active", "irq", "vec_id", "vec_prio",
                           "uart_irq", "uart_rx_irq", "uart_tx_irq", "cpu_accept", "cause", "status"]
                 records.append(parse_record(dict(zip(fields, match.groups()[1:])), kind, str(path), line_no))
+            continue
+        if line.startswith("LINUX_"):
+            # A combined RTL diagnostic log may contain the other peripheral
+            # kind; only the requested normalized stream is comparable here.
             continue
         try:
             obj = json.loads(line)

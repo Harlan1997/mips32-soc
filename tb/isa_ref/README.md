@@ -164,6 +164,7 @@ make qemu-system-exception-differential-gate
 make qemu-system-bd-exception-differential-gate
 make qemu-system-peripheral-differential-gate
 make qemu-system-vic-differential-gate
+make qemu-system-uart-vic-transaction-differential-gate
 ```
 
 The VIC gate compares a deterministic two-source software interrupt sequence
@@ -171,6 +172,11 @@ through vector entry, `VEC_ID`, `ACK`, `SOFT_CLR`, and `ERET`. It remains an
 RTL prototype reference machine, not a PHY/JEDEC product model; command/FIFO
 QSPI, quad electrical behavior, external interrupt replay, VEIC, and full
 `vic_cpu` firmware differential behavior remain separate closure work.
+
+The UART/VIC transaction gate adds an independent normalized transaction
+comparison. It compares complete UART APB accesses, including reads, against
+the QEMU peripheral trace and compares VIC state transitions separately from
+the retire stream. Simulation cycle numbers are retained only for diagnosis.
 
 System-mode retire records carry double-store data in two little-endian words:
 `mem_wdata` is the word at the effective address and `mem_wdata_hi` is the

@@ -296,7 +296,7 @@ dcache-parity-gate:
 .PHONY: mdu-radix4-gate mdu-cpu-radix4-gate
 .PHONY: qemu-system-mdu-radix4-differential-gate linux-delay-trace-audit linux-wait-trace-audit qemu-system-cp0-timer-wait-differential-gate linux-timer-clock-comparison-test retire-trace-fifo-gate
 .PHONY: qemu-system-dma-sg-data-gate qemu-system-dma-sg-differential-gate
-.PHONY: qemu-system-linux-differential-gate qemu-system-linux-full-closure-gate qemu-system-linux-terminal-closure-gate qemu-system-linux-full-differential-gate qemu-system-irq-replay-schedule-test linux-memory-owner-trace-checker-test linux-image-identity-test
+.PHONY: qemu-system-linux-differential-gate qemu-system-linux-full-closure-gate qemu-system-linux-terminal-closure-gate qemu-system-linux-full-differential-gate qemu-system-irq-replay-schedule-test linux-memory-owner-trace-checker-test linux-image-identity-test qemu-system-uart-vic-transaction-differential-gate
 .PHONY: qemu-system-uart-timing-test
 
 linux-memory-owner-trace-checker-test:
@@ -1196,6 +1196,11 @@ qemu-system-vic-full-sources-differential-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_vic_full_sources_differential_gate.sh
 	BUILD_DIR=$(BUILD_DIR) FW_TEST=vic_full_sources FW_DIR=$(BUILD_DIR)/firmware/vic_full_sources RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_vic_full_sources_differential \
 		tb/isa_ref/run_qemu_system_vic_full_sources_differential_gate.sh
+
+qemu-system-uart-vic-transaction-differential-gate: qemu-system-mips32-soc-ref
+	chmod +x tb/isa_ref/run_qemu_system_uart_vic_transaction_differential_gate.sh
+	BUILD_DIR=$(BUILD_DIR) RUN_DIR=$(BUILD_DIR)/isa_ref/qemu_system_uart_vic_transaction_differential \
+		tb/isa_ref/run_qemu_system_uart_vic_transaction_differential_gate.sh
 
 qemu-system-mmu-contract-gate: qemu-system-mips32-soc-ref
 	chmod +x tb/isa_ref/run_qemu_system_mmu_contract_gate.sh
