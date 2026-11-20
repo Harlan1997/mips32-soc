@@ -910,6 +910,7 @@ module mips_cpu #(
     wire [4:0]  ex_except_code;
     wire        ex_except_is_data;    // Phase B.3.d
     wire        mem_except_is_data;
+    wire        mem_except_req_out;
     wire        wb_except_is_data;
     wire        ex_except_is_tlb_refill;
     wire        mem_except_is_tlb_refill;
@@ -1954,6 +1955,13 @@ module mips_cpu #(
     wire ex_overflow_exception = ex_overflow && ex_reg_write && ex_signed_arith;
     wire ex_except_req_out = ex_except_req | ex_overflow_exception;
     wire [4:0] ex_except_code_out = ex_except_req ? ex_except_code : 5'h0C;
+    // Do not start a speculative MDU operation in EX when an older
+    // instruction in MEM/WB already carries an exception or flush: ~mdu_ready
+    // would otherwise stall the faulting instruction in MEM until MDU commits
+    // HI/LO (e.g. ST_ACC on MSUB/MADD), causing double execution after ERET.
+    wire ex_mdu_issue_valid = ex_mdu_start && !ex_except_req &&
+                              !mem_except_req_out && !exception_flush &&
+                              !ctx_restore_req;
     
     mips_ex_stage u_mips_ex_stage (
         .clk         (clk),
@@ -1965,7 +1973,7 @@ module mips_cpu #(
         .msbd        (ex_rd_addr),
         .alu_op      (ex_alu_op),
         .mdu_op      (ex_mdu_op),
-        .mdu_start   (ex_mdu_start),
+        .mdu_start   (ex_mdu_issue_valid),
         .sel_mdu_out (ex_sel_mdu_out),
         
         .ex_out      (ex_out),
@@ -2444,9 +2452,9 @@ module mips_cpu #(
     wire mem_cache_op_fault_seen = mem_cache_op_fault |
                                    (data_cache_op_valid & data_cache_op_done &
                                     (data_cache_op_error === 1'b1));
-    wire mem_except_req_out  = mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault |
-                               mem_cache_op_fault_seen | mem_bus_fault
-                             | mem_adel_exception | mem_ades_exception;
+    assign mem_except_req_out = mem_except_req | mem_mmu_fault | mem_double_align_fault | mem_cache_fault |
+                                mem_cache_op_fault_seen | mem_bus_fault
+                              | mem_adel_exception | mem_ades_exception;
     wire [4:0] mem_except_code_out = mem_except_req      ? mem_except_code
                                    : mem_mmu_fault       ? mem_mmu_fault_code
                                    : mem_double_align_fault ? (mem_mem_write ? 5'h05 : 5'h04)

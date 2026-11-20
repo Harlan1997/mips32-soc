@@ -18,6 +18,16 @@ _start:
     nop
     tnei    $t0, 8
     nop
+    # Verify a trap immediately followed by a multi-cycle MDU op (msub) does
+    # not speculatively commit HI/LO before the trap flushes the pipeline.
+    mtlo    $zero
+    mthi    $zero
+    addiu   $t3, $zero, 3
+    addiu   $t4, $zero, 5
+    tltiu   $t0, 8
+    msub    $t3, $t4
+    mflo    $t5
+    mfhi    $t6
 
     lui     $t1, 0xa000
     ori     $t1, $t1, 0xfffc
