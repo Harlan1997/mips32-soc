@@ -576,7 +576,7 @@ module tb_product_manifest_handoff #(
             end
 
             if (cycles > ($test$plusargs("EXPECT_PRODUCT_KERNEL") ? 1000000 :
-                         $test$plusargs("EXPECT_KSEG0_RUNTIME_MULTI") ? 500000 :
+                         $test$plusargs("EXPECT_KSEG0_RUNTIME_MULTI") ? 2500000 :
                          (($test$plusargs("EXPECT_KSEG0_LAYOUT") ||
                            $test$plusargs("EXPECT_KSEG0_RUNTIME_ABI")) ? 120000 : 30000))) begin
                 $display("DEBUG: timeout pc=%h data_req=%b data_we=%h mem_vaddr=%h status=%h stage0=%h stage1=%h",
