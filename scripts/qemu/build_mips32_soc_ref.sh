@@ -60,27 +60,27 @@ project_inputs_hash() {
 
 PROJECT_INPUTS_HASH=$(project_inputs_hash)
 if [[ -s "${INPUT_STAMP}" && -x "${QEMU_BUILD}/qemu-system-mipsel" ]] &&
-   ! strings "${QEMU_BUILD}/qemu-system-mipsel" | rg -q 'SOC_REF_SC_POLICY' &&
-   rg -q '^void mips_srs_exception_entry' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
-   rg -q '^target_ulong helper_rdpgpr' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c" &&
-   rg -q 'mips_srs_exception_return\(env\)' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c" &&
-   rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
-   rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
-   rg -q 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
-   rg -q 'SOC_REF_FPU_LEGACY_NAN' "${QEMU_SRC}/target/mips/fpu_helper.h" &&
-   rg -q 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' "${QEMU_SRC}/fpu/softfloat-specialize.c.inc" &&
-   rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
-   rg -q 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
-   rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h" &&
-   rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
-   rg -q 'SOC_REF_RTL_TLB_VECTOR_V2' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
-   rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   ! strings "${QEMU_BUILD}/qemu-system-mipsel" | grep -Eq 'SOC_REF_SC_POLICY' &&
+   grep -Eq '^void mips_srs_exception_entry' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
+   grep -Eq '^target_ulong helper_rdpgpr' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c" &&
+   grep -Eq 'mips_srs_exception_return\(env\)' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c" &&
+   grep -Eq 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   grep -Eq 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   grep -Eq 'SOC_REF_FPU_FPE_STICKY_FLAGS' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   grep -Eq 'SOC_REF_FPU_LEGACY_NAN' "${QEMU_SRC}/target/mips/fpu_helper.h" &&
+   grep -Eq 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' "${QEMU_SRC}/fpu/softfloat-specialize.c.inc" &&
+   grep -Eq 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c" &&
+   grep -Eq 'SOC_REF_LLADDR_VIRTUAL' "${QEMU_SRC}/target/mips/tcg/ldst_helper.c" &&
+   grep -Eq 'SOC_REF_SC_CONSUMES_RESERVATION' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h" &&
+   grep -Eq 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'qemu_mips32_soc_ref_sc_consume_reservation' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
+   grep -Eq 'SOC_REF_RTL_TLB_VECTOR_V2' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
+   grep -Eq 'SOC_REF_WAIT_RESERVED_FIELDS' "${QEMU_SRC}/target/mips/tcg/translate.c" &&
    [[ "$(<"${INPUT_STAMP}")" == "${PROJECT_INPUTS_HASH}" ]]; then
     echo "QEMU mips32-soc-ref build is up to date: ${QEMU_BUILD}/qemu-system-mipsel"
     exit 0
@@ -113,29 +113,29 @@ copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_uart_timing.h" \
 copy_if_changed "${ROOT_DIR}/scripts/qemu/mips32_soc_core.xml" \
     "${QEMU_SRC}/gdb-xml/mips32_soc_core.xml"
 
-if ! rg -q 'qemu_mips32_soc_ref_cp0_retire_clock' \
+if ! grep -Eq 'qemu_mips32_soc_ref_cp0_retire_clock' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-retire-clock.patch"
 fi
-rg -q 'qemu_mips32_soc_ref_cp0_retire_clock' \
+grep -Eq 'qemu_mips32_soc_ref_cp0_retire_clock' \
     "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
-if ! rg -q 'SOC_REF_CP0_RANDOM_SCHEDULE' \
+if ! grep -Eq 'SOC_REF_CP0_RANDOM_SCHEDULE' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/cp0_helper.c"; then
     perl -0pi -e 's~(#include "exec/helper-proto.h"\n)~$1/* SOC_REF_CP0_RANDOM_SCHEDULE */\nuint32_t qemu_mips32_soc_ref_cp0_random(CPUMIPSState *env,\n                                       uint32_t fallback, bool is_tlbwr)\n    __attribute__((weak));\n~s or die "could not declare the CP0 Random hook\n"' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/cp0_helper.c"
 fi
-if ! rg -q 'qemu_mips32_soc_ref_cp0_random\(env, value, false\)' \
+if ! grep -Eq 'qemu_mips32_soc_ref_cp0_random\(env, value, false\)' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/cp0_helper.c"; then
     perl -0pi -e 's~target_ulong helper_mfc0_random\(CPUMIPSState \*env\)\n\{\n    return \(int32_t\)cpu_mips_get_random\(env\);\n\}~target_ulong helper_mfc0_random(CPUMIPSState *env)\n{\n    uint32_t value = cpu_mips_get_random(env);\n    if (qemu_mips32_soc_ref_cp0_random) {\n        value = qemu_mips32_soc_ref_cp0_random(env, value, false);\n    }\n    return (int32_t)value;\n}~s or die "could not add the CP0 Random read hook\n"' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/cp0_helper.c"
 fi
-if ! rg -q 'SOC_REF_CP0_RANDOM_SCHEDULE' \
+if ! grep -Eq 'SOC_REF_CP0_RANDOM_SCHEDULE' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's~(#include "exec/helper-proto.h"\n)~$1/* SOC_REF_CP0_RANDOM_SCHEDULE */\nuint32_t qemu_mips32_soc_ref_cp0_random(CPUMIPSState *env,\n                                       uint32_t fallback, bool is_tlbwr)\n    __attribute__((weak));\n~s or die "could not declare the CP0 Random hook\n"' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q 'qemu_mips32_soc_ref_cp0_random\(env, r, true\)' \
+if ! grep -Eq 'qemu_mips32_soc_ref_cp0_random\(env, r, true\)' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's~(static void r4k_helper_tlbwr\(CPUMIPSState \*env\)\n\{\n    int r = cpu_mips_get_random\(env\);\n)~$1    if (qemu_mips32_soc_ref_cp0_random) {\n        r = qemu_mips32_soc_ref_cp0_random(env, r, true);\n    }\n~s or die "could not add the TLBWR Random hook\n"' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
@@ -143,43 +143,43 @@ fi
 # QEMU's shadow translations can outlive a TLBWR replacement. They are useful
 # for ordinary emulation, but an RTL-MMU guest must observe the exact hardware
 # TLB contents and miss after an entry is evicted.
-if ! rg -q 'SOC_REF_EXACT_TLBWR_REPLACEMENT' \
+if ! grep -Eq 'SOC_REF_EXACT_TLBWR_REPLACEMENT' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's~r4k_invalidate_tlb\(env, r, 1\);~r4k_invalidate_tlb(env, r,\n            !(qemu_mips32_soc_ref_rtl_mmu_guest &&\n              qemu_mips32_soc_ref_rtl_mmu_guest())); /* SOC_REF_EXACT_TLBWR_REPLACEMENT */~s or die "could not disable shadow TLB entries for the RTL-MMU guest\n"' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-rg -q 'SOC_REF_EXACT_TLBWR_REPLACEMENT' \
+grep -Eq 'SOC_REF_EXACT_TLBWR_REPLACEMENT' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
-rg -q 'SOC_REF_CP0_RANDOM_SCHEDULE' \
+grep -Eq 'SOC_REF_CP0_RANDOM_SCHEDULE' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/cp0_helper.c"
-rg -q 'SOC_REF_CP0_RANDOM_SCHEDULE' \
+grep -Eq 'SOC_REF_CP0_RANDOM_SCHEDULE' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
-rg -q 'qemu_mips32_soc_ref_cp0_random\(env, value, false\)' \
+grep -Eq 'qemu_mips32_soc_ref_cp0_random\(env, value, false\)' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/cp0_helper.c"
-rg -q 'qemu_mips32_soc_ref_cp0_random\(env, r, true\)' \
+grep -Eq 'qemu_mips32_soc_ref_cp0_random\(env, r, true\)' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
-if ! rg -q 'DEF_HELPER_3\(mfc0_count, tl, env, i32, i32\)' \
+if ! grep -Eq 'DEF_HELPER_3\(mfc0_count, tl, env, i32, i32\)' \
         "${QEMU_SRC}/target/mips/tcg/sysemu_helper.h.inc"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-cp0-count-destination.patch" \
         --unidiff-zero
 fi
-rg -q 'DEF_HELPER_3\(mfc0_count, tl, env, i32, i32\)' \
+grep -Eq 'DEF_HELPER_3\(mfc0_count, tl, env, i32, i32\)' \
     "${QEMU_SRC}/target/mips/tcg/sysemu_helper.h.inc"
-if ! rg -q 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"; then
+if ! grep -Eq 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rdhwr-count.patch" \
         --unidiff-zero
 fi
-rg -q 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"
-if ! rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' \
+grep -Eq 'qemu_mips32_soc_ref_rdhwr_cc' "${QEMU_SRC}/target/mips/tcg/op_helper.c"
+if ! grep -Eq 'SOC_REF_WAIT_RESERVED_FIELDS' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-wait-reserved-fields.patch"
 fi
-rg -q 'SOC_REF_WAIT_RESERVED_FIELDS' \
+grep -Eq 'SOC_REF_WAIT_RESERVED_FIELDS' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
-if ! rg -q 'qemu_mips32_soc_ref_cp0_timer_armed' \
+if ! grep -Eq 'qemu_mips32_soc_ref_cp0_timer_armed' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
     perl -0pi -e 's/(void qemu_mips32_soc_ref_cp0_retire_store_count\(CPUMIPSState \*env,\n                                                uint32_t count\)\n    __attribute__\(\(weak\)\);\n)/$1bool qemu_mips32_soc_ref_cp0_timer_armed(void) __attribute__((weak));\nvoid qemu_mips32_soc_ref_cp0_compare_write(uint32_t value)\n    __attribute__((weak));\n/s' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
@@ -190,12 +190,12 @@ if ! rg -q 'qemu_mips32_soc_ref_cp0_timer_armed' \
     perl -0pi -e 's/(    env->CP0_Compare = value;\n)/$1    if (qemu_mips32_soc_ref_cp0_compare_write) {\n        qemu_mips32_soc_ref_cp0_compare_write(value);\n    }\n/s' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 fi
-if ! rg -q 'SOC_REF_CP0_TIMER_ARM' \
+if ! grep -Eq 'SOC_REF_CP0_TIMER_ARM' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
     perl -0pi -e 's/            if \(!\(env->CP0_Cause & \(1U << CP0Ca_TI\)\) &&\n/            if \(\(!qemu_mips32_soc_ref_cp0_timer_armed ||\n                 qemu_mips32_soc_ref_cp0_timer_armed\(\)\) &&\n                !\(env->CP0_Cause & \(1U << CP0Ca_TI\)\) && \/\* SOC_REF_CP0_TIMER_ARM \*\/\n/' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 fi
-if ! rg -q 'SOC_REF_CP0_COMPARE_ARMED' \
+if ! grep -Eq 'SOC_REF_CP0_COMPARE_ARMED' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
     sed -i '/bool qemu_mips32_soc_ref_cp0_timer_armed(void) __attribute__((weak));/a\bool qemu_mips32_soc_ref_cp0_compare_armed(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
@@ -203,27 +203,27 @@ if ! rg -q 'SOC_REF_CP0_COMPARE_ARMED' \
                  qemu_mips32_soc_ref_cp0_compare_armed()) && /* SOC_REF_CP0_COMPARE_ARMED */' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 fi
-rg -q 'qemu_mips32_soc_ref_cp0_timer_armed' \
+grep -Eq 'qemu_mips32_soc_ref_cp0_timer_armed' \
     "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
-if ! rg -q 'SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK' \
+if ! grep -Eq 'SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"; then
     perl -0pi -e 's/(static void cpu_mips_timer_update\(CPUMIPSState \*env\)\n\{\n)/$1    \/\* SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK \*\/\n    if (qemu_mips32_soc_ref_cp0_retire_clock &&\n        qemu_mips32_soc_ref_cp0_retire_clock()) {\n        return;\n    }\n/s or die "could not add retire-clock timer guard\\n";' \
         "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 fi
-rg -q 'SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK' \
+grep -Eq 'SOC_REF_CP0_TIMER_UPDATE_RETIRE_CLOCK' \
     "${QEMU_SRC}/target/mips/sysemu/cp0_timer.c"
 
-if ! rg -q "mips32_soc_ref\.c" "${QEMU_SRC}/hw/mips/meson.build"; then
+if ! grep -Eq "mips32_soc_ref\.c" "${QEMU_SRC}/hw/mips/meson.build"; then
     sed -i "/if 'CONFIG_TCG' in config_all_accel/a\\mips_ss.add(files('mips32_soc_ref.c'))" \
         "${QEMU_SRC}/hw/mips/meson.build"
 fi
 
-if ! rg -q "mips32_soc_core.xml" "${QEMU_SRC}/configs/targets/mipsel-softmmu.mak"; then
+if ! grep -Eq "mips32_soc_core.xml" "${QEMU_SRC}/configs/targets/mipsel-softmmu.mak"; then
     printf '\nTARGET_XML_FILES=gdb-xml/mips32_soc_core.xml\n' \
         >>"${QEMU_SRC}/configs/targets/mipsel-softmmu.mak"
 fi
 
-if ! rg -q 'gdb_core_xml_file = "mips32_soc_core.xml"' "${QEMU_SRC}/target/mips/cpu.c"; then
+if ! grep -Eq 'gdb_core_xml_file = "mips32_soc_core.xml"' "${QEMU_SRC}/target/mips/cpu.c"; then
     sed -i '/cc->gdb_num_core_regs = 73;/a\    cc->gdb_core_xml_file = "mips32_soc_core.xml";\n    cc->gdb_num_core_regs = 77;' \
         "${QEMU_SRC}/target/mips/cpu.c"
     sed -i '/cc->gdb_num_core_regs = 73;/d' "${QEMU_SRC}/target/mips/cpu.c"
@@ -232,14 +232,14 @@ fi
 # The project source tree tracks the target patch separately because upstream
 # QEMU 9.2 does not publish a MIPS core XML feature list for plugin register
 # access. Apply it idempotently with exact context rather than line ranges.
-if ! rg -q 'case 73: return gdb_get_regl\(mem_buf, env->CP0_EPC\)' "${QEMU_SRC}/target/mips/gdbstub.c"; then
+if ! grep -Eq 'case 73: return gdb_get_regl\(mem_buf, env->CP0_EPC\)' "${QEMU_SRC}/target/mips/gdbstub.c"; then
     sed -i '/^[[:space:]]*case 72:$/i\    case 73: return gdb_get_regl(mem_buf, env->CP0_EPC);\n    case 74: return gdb_get_regl(mem_buf, env->CP0_Index);\n    case 75: return gdb_get_regl(mem_buf, env->CP0_EntryHi);\n    case 76: return gdb_get_regl(mem_buf, env->CP0_PageMask);' \
         "${QEMU_SRC}/target/mips/gdbstub.c"
     sed -i '/^[[:space:]]*case 72: \/\* fp, ignored \*\/$/i\    case 73: env->CP0_EPC = tmp; break;\n    case 74: env->CP0_Index = tmp; break;\n    case 75: env->CP0_EntryHi = tmp; break;\n    case 76: env->CP0_PageMask = tmp; break;' \
         "${QEMU_SRC}/target/mips/gdbstub.c"
 fi
 
-if ! rg -q 'qemu_mips32_soc_ref_retire_tick' "${QEMU_SRC}/accel/tcg/cpu-exec.c"; then
+if ! grep -Eq 'qemu_mips32_soc_ref_retire_tick' "${QEMU_SRC}/accel/tcg/cpu-exec.c"; then
     sed -i '/#include "internal-target.h"/a\
 \
 #ifndef CONFIG_USER_ONLY\
@@ -254,17 +254,17 @@ void qemu_mips32_soc_ref_retire_tick(CPUState *cpu) __attribute__((weak));\
 #endif' "${QEMU_SRC}/accel/tcg/cpu-exec.c"
 fi
 
-if ! rg -q 'qemu_mips32_soc_ref_wait' "${QEMU_SRC}/target/mips/tcg/exception.c"; then
+if ! grep -Eq 'qemu_mips32_soc_ref_wait' "${QEMU_SRC}/target/mips/tcg/exception.c"; then
     perl -0pi -e 's/(void helper_wait\(CPUMIPSState \*env\)\n\{\n    CPUState \*cs = env_cpu\(env\);\n)/$1\n    extern void qemu_mips32_soc_ref_wait(CPUMIPSState *env) __attribute__((weak));\n    extern bool qemu_mips32_soc_ref_irq_replay_active(void) __attribute__((weak));\n    if (qemu_mips32_soc_ref_wait) {\n        qemu_mips32_soc_ref_wait(env);\n    }\n/s' \
         "${QEMU_SRC}/target/mips/tcg/exception.c"
 fi
-if ! rg -q 'qemu_mips32_soc_ref_wait_wake_active' \
+if ! grep -Eq 'qemu_mips32_soc_ref_wait_wake_active' \
         "${QEMU_SRC}/target/mips/tcg/exception.c"; then
     sed -i '/extern bool qemu_mips32_soc_ref_irq_replay_active/a\    extern bool qemu_mips32_soc_ref_wait_wake_active(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/exception.c"
 fi
 
-if ! rg -q 'extern bool qemu_mips32_soc_ref_irq_replay_active\(void\)' \
+if ! grep -Eq 'extern bool qemu_mips32_soc_ref_irq_replay_active\(void\)' \
         "${QEMU_SRC}/target/mips/tcg/exception.c"; then
     sed -i '/extern void qemu_mips32_soc_ref_wait/a\    extern bool qemu_mips32_soc_ref_irq_replay_active(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/exception.c"
@@ -272,7 +272,7 @@ fi
 perl -0pi -e 's{^[[:space:]]*cs->halted = .*?;\n}{    cs->halted = !((qemu_mips32_soc_ref_irq_replay_active && qemu_mips32_soc_ref_irq_replay_active()) ||\n                   (qemu_mips32_soc_ref_wait_wake_active && qemu_mips32_soc_ref_wait_wake_active()));\n}ms' \
     "${QEMU_SRC}/target/mips/tcg/exception.c"
 
-if ! rg -q 'qemu_mips32_soc_ref_irq_replay_active' "${QEMU_SRC}/hw/mips/mips_int.c"; then
+if ! grep -Eq 'qemu_mips32_soc_ref_irq_replay_active' "${QEMU_SRC}/hw/mips/mips_int.c"; then
     sed -i '/#include "kvm_mips.h"/a\
 \
 bool qemu_mips32_soc_ref_irq_replay_active(void) __attribute__((weak));' \
@@ -284,23 +284,23 @@ bool qemu_mips32_soc_ref_irq_replay_active(void) __attribute__((weak));' \
         }' "${QEMU_SRC}/hw/mips/mips_int.c"
 fi
 
-if ! rg -q 'SOC_REF_IRQ_REPLAY_GATE' \
+if ! grep -Eq 'SOC_REF_IRQ_REPLAY_GATE' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-irq-replay-gate.patch"
 fi
-rg -q 'SOC_REF_IRQ_REPLAY_GATE' \
+grep -Eq 'SOC_REF_IRQ_REPLAY_GATE' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 
-if ! rg -q 'SOC_REF_IRQ_REPLAY_PRIORITY' \
+if ! grep -Eq 'SOC_REF_IRQ_REPLAY_PRIORITY' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-irq-replay-priority.patch"
 fi
-rg -q 'SOC_REF_IRQ_REPLAY_PRIORITY' \
+grep -Eq 'SOC_REF_IRQ_REPLAY_PRIORITY' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 
-if ! rg -q 'qemu_mips32_soc_ref_interrupt_fixup' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq 'qemu_mips32_soc_ref_interrupt_fixup' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/#include "exec\/helper-proto.h"/a\
 void qemu_mips32_soc_ref_interrupt_fixup(CPUMIPSState *env) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
@@ -311,14 +311,14 @@ void qemu_mips32_soc_ref_interrupt_fixup(CPUMIPSState *env) __attribute__((weak)
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
 
-if ! rg -q 'SOC_REF_INTERRUPT_BD_HOOK' \
+if ! grep -Eq 'SOC_REF_INTERRUPT_BD_HOOK' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/void qemu_mips32_soc_ref_interrupt_fixup/a\bool qemu_mips32_soc_ref_interrupt_bd(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
     perl -0pi -e 's{(            if \(env->hflags & MIPS_HFLAG_BMASK\) \{\n                env->CP0_Cause \|= \(1U << CP0Ca_BD\);\n            \} else \{\n                env->CP0_Cause &= ~\(1U << CP0Ca_BD\);\n            \}\n)}{$1            /* SOC_REF_INTERRUPT_BD_HOOK */\n            if (qemu_mips32_soc_ref_interrupt_bd &&\n                qemu_mips32_soc_ref_interrupt_bd()) {\n                env->CP0_Cause |= (1U << CP0Ca_BD);\n            }\n}s' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q 'SOC_REF_INTERRUPT_FORCE_BD' \
+if ! grep -Eq 'SOC_REF_INTERRUPT_FORCE_BD' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/void qemu_mips32_soc_ref_interrupt_fixup/a\bool qemu_mips32_soc_ref_interrupt_force_bd(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
@@ -328,23 +328,23 @@ fi
 # Normalize an interrupted, previously partially patched source tree to the
 # single hook block above.  This repair is idempotent and runs before the
 # marker check on subsequent invocations.
-if rg -q 'qemu_mips32_soc_ref_interrupt_bd &&' \
+if grep -Eq 'qemu_mips32_soc_ref_interrupt_bd &&' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c" &&
-   ! rg -q 'SOC_REF_INTERRUPT_BD_HOOK' \
+   ! grep -Eq 'SOC_REF_INTERRUPT_BD_HOOK' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's{\n\s*if \(qemu_mips32_soc_ref_interrupt_bd &&\n\s*qemu_mips32_soc_ref_interrupt_bd\(\)\) \{\n\s*env->CP0_Cause \|= \(1U << CP0Ca_BD\);\n\s*\}\n}{}g' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
 
-if ! rg -q 'qemu_mips32_soc_ref_bootrom_mmu_guest' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq 'qemu_mips32_soc_ref_bootrom_mmu_guest' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/#include "exec\/helper-proto.h"/a\bool qemu_mips32_soc_ref_bootrom_mmu_guest(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q '^bool qemu_mips32_soc_ref_rtl_mmu_guest\(void\)' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq '^bool qemu_mips32_soc_ref_rtl_mmu_guest\(void\)' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/#include "exec\/helper-proto.h"/a\bool qemu_mips32_soc_ref_rtl_mmu_guest(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q '^bool qemu_mips32_soc_ref_tlb_refill_uses_ebase\(void\)' \
+if ! grep -Eq '^bool qemu_mips32_soc_ref_tlb_refill_uses_ebase\(void\)' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/#include "exec\/helper-proto.h"/a\bool qemu_mips32_soc_ref_tlb_refill_uses_ebase(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
@@ -354,39 +354,39 @@ fi
 # Boot-ROM and RTL CP0-identity guests use refill offset zero.  The SRAM
 # software-MMU bootstrap uses the RTL general handler at EBase+0x180.  Patch
 # both TLBL/TLBS assignments, since QEMU overwrites the initial default.
-if ! rg -q 'SOC_REF_RTL_TLB_VECTOR' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq 'SOC_REF_RTL_TLB_VECTOR' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's/                offset = 0x000;\n|                offset = \(qemu_mips32_soc_ref_bootrom_mmu_guest && qemu_mips32_soc_ref_bootrom_mmu_guest\(\)\) \? 0x000 : 0x180; \/\* SOC_REF_BOOTROM_TLB_VECTOR \*\/\n/                offset = ((qemu_mips32_soc_ref_bootrom_mmu_guest && qemu_mips32_soc_ref_bootrom_mmu_guest()) || (qemu_mips32_soc_ref_rtl_mmu_guest && qemu_mips32_soc_ref_rtl_mmu_guest())) ? 0x000 : 0x180; \/\* SOC_REF_RTL_TLB_VECTOR *\/\n/g' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q 'SOC_REF_RTL_TLB_VECTOR_V2' \
+if ! grep -Eq 'SOC_REF_RTL_TLB_VECTOR_V2' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's/offset = \(\(qemu_mips32_soc_ref_bootrom_mmu_guest && qemu_mips32_soc_ref_bootrom_mmu_guest\(\)\) \|\| \(qemu_mips32_soc_ref_rtl_mmu_guest && qemu_mips32_soc_ref_rtl_mmu_guest\(\)\)\) \? 0x000 : 0x180; \/\* SOC_REF_RTL_TLB_VECTOR \*\//offset = (qemu_mips32_soc_ref_tlb_refill_uses_ebase \&\& qemu_mips32_soc_ref_tlb_refill_uses_ebase()) ? 0x000 : 0x180; \/\* SOC_REF_RTL_TLB_VECTOR_V2 *\//g or die "could not separate the RTL-MMU refill vector from TLB sizing\n";' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-rg -q 'SOC_REF_RTL_TLB_VECTOR_V2' \
+grep -Eq 'SOC_REF_RTL_TLB_VECTOR_V2' \
     "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 
 # QEMU 9.2 unconditionally writes the link register for BLTZALL/BGEZALL
 # before resolving the likely condition. MIPS32 links only when taken.
-if ! rg -q 'SOC_REF_FIX_BLIKELY_LINK' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+if ! grep -Eq 'SOC_REF_FIX_BLIKELY_LINK' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{(        case OPC_BGEZALL:\n            tcg_gen_setcondi_tl\(TCG_COND_GE, bcond, t0, 0\);)\n            blink = 31;\n            goto likely;}{$1\n            /* SOC_REF_FIX_BLIKELY_LINK: link only on the taken path. */\n            tcg_gen_movcond_tl(TCG_COND_NE, cpu_gpr[31], bcond,\n                               tcg_constant_tl(0),\n                               tcg_constant_tl(ctx->base.pc_next + 8),\n                               cpu_gpr[31]);\n            goto likely;}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
     perl -0pi -e 's{(        case OPC_BLTZALL:\n            tcg_gen_setcondi_tl\(TCG_COND_LT, bcond, t0, 0\);)\n            blink = 31;\n        likely:}{$1\n            /* SOC_REF_FIX_BLIKELY_LINK: link only on the taken path. */\n            tcg_gen_movcond_tl(TCG_COND_NE, cpu_gpr[31], bcond,\n                               tcg_constant_tl(0),\n                               tcg_constant_tl(ctx->base.pc_next + 8),\n                               cpu_gpr[31]);\n        likely:}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
-if ! rg -q 'srs_gpr\[16\]\[32\]' "${QEMU_SRC}/target/mips/cpu.h"; then
+if ! grep -Eq 'srs_gpr\[16\]\[32\]' "${QEMU_SRC}/target/mips/cpu.h"; then
     sed -i '/^[[:space:]]*target_ulong gpr\[32\];$/a\    target_ulong srs_gpr[16][32];' \
         "${QEMU_SRC}/target/mips/cpu.h"
 fi
 
-if ! rg -q 'DEF_HELPER_2\(rdpgpr, tl, env, i32\)' \
+if ! grep -Eq 'DEF_HELPER_2\(rdpgpr, tl, env, i32\)' \
         "${QEMU_SRC}/target/mips/helper.h"; then
     sed -i '/^DEF_HELPER_1(raise_exception_debug/a\DEF_HELPER_2(rdpgpr, tl, env, i32)\nDEF_HELPER_3(wrpgpr, void, env, tl, i32)' \
         "${QEMU_SRC}/target/mips/helper.h"
 fi
 
-if ! rg -q 'offsetof\(CPUMIPSState, active_tc\.srs_gpr\)' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+if ! grep -Eq 'offsetof\(CPUMIPSState, active_tc\.srs_gpr\)' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     sed -i '/static inline void gen_load_srsgpr/,/gen_store_gpr(t0, to);/ s/tcg_gen_add_ptr(addr, tcg_env, addr);/tcg_gen_add_ptr(addr, tcg_env, addr);\n        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));/' "${QEMU_SRC}/target/mips/tcg/translate.c"
     sed -i '/static inline void gen_store_srsgpr/,/tcg_gen_st_tl(t0, addr, sizeof(target_ulong) \* to);/ s/tcg_gen_add_ptr(addr, tcg_env, addr);/tcg_gen_add_ptr(addr, tcg_env, addr);\n        tcg_gen_addi_ptr(addr, addr, offsetof(CPUMIPSState, active_tc.srs_gpr));/' "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
@@ -395,7 +395,7 @@ fi
 # hunks applied while omitting the exception and helper hunks. Repair that
 # partial state before compiling, and keep the repair idempotent for extracted
 # upstream archives as well as the shared build tree.
-if ! rg -q '^void mips_srs_exception_entry' \
+if ! grep -Eq '^void mips_srs_exception_entry' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/^void mips_cpu_do_interrupt(CPUState \*cs)$/i\
 void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt) {\
@@ -429,12 +429,12 @@ void mips_srs_exception_return(CPUMIPSState *env) {\
 }\
 ' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q 'mips_srs_exception_entry\(env,' \
+if ! grep -Eq 'mips_srs_exception_entry\(env,' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/^[[:space:]]*env->CP0_Status |= (1 << CP0St_EXL);$/i\            mips_srs_exception_entry(env, cs->exception_index == EXCP_EXT_INTERRUPT);' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q '^target_ulong helper_rdpgpr' \
+if ! grep -Eq '^target_ulong helper_rdpgpr' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"; then
     sed -i '/^static void debug_pre_eret/i\
 target_ulong helper_rdpgpr(CPUMIPSState *env, uint32_t reg) {\
@@ -448,37 +448,37 @@ void helper_wrpgpr(CPUMIPSState *env, target_ulong value, uint32_t reg) {\
 }\
 ' "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"
 fi
-if ! rg -q 'mips_srs_exception_return\(env\)' \
+if ! grep -Eq 'mips_srs_exception_return\(env\)' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"; then
     sed -i '/^[[:space:]]*compute_hflags(env);$/i\    mips_srs_exception_return(env);' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/special_helper.c"
 fi
-if ! rg -q 'void mips_srs_exception_entry' "${QEMU_SRC}/target/mips/internal.h"; then
+if ! grep -Eq 'void mips_srs_exception_entry' "${QEMU_SRC}/target/mips/internal.h"; then
     sed -i '/^void cpu_mips_stop_count/a\void mips_srs_exception_entry(CPUMIPSState *env, bool interrupt);\nvoid mips_srs_exception_return(CPUMIPSState *env);' \
         "${QEMU_SRC}/target/mips/internal.h"
 fi
 
-if ! rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
+if ! grep -Eq 'SOC_REF_COP1X_MEMORY_FIELDS' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-cop1x-memory-fields.patch"
 fi
-rg -q 'SOC_REF_COP1X_MEMORY_FIELDS' \
+grep -Eq 'SOC_REF_COP1X_MEMORY_FIELDS' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 
-if ! rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"; then
+if ! grep -Eq 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-reverse-endian-cop1x-beats.patch"
 fi
-rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"
-rg -q 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c"
+grep -Eq 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/internal.h"
+grep -Eq 'SOC_REF_RE_COP1X' "${QEMU_SRC}/target/mips/tcg/translate.c"
 
-if ! rg -q 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+if ! grep -Eq 'SOC_REF_ALIGN_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{(    case OPC_BSHFL:\n        op2 = MASK_BSHFL\(ctx->opcode\);\n        switch \(op2\) \{\n        case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n)            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);}{$1            check_insn(ctx, ISA_MIPS_R2); /* SOC_REF_ALIGN_R2 */\n            gen_align(ctx, 32, rd, rs, rt, sa \& 3);}' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
-if ! rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+if ! grep -Eq 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n        case OPC_BITSWAP:\n            check_insn\(ctx, ISA_MIPS_R6\);\n            decode_opc_special3_r6\(env, ctx\);\n            break;}{case OPC_ALIGN:\n        case OPC_ALIGN_1:\n        case OPC_ALIGN_2:\n        case OPC_ALIGN_3:\n            check_insn(ctx, ISA_MIPS_R6);\n            decode_opc_special3_r6(env, ctx);\n            break;\n        case OPC_BITSWAP:\n            /* SOC_REF_BITSWAP_R2: legacy MIPS32 R2 encoding. */\n            check_insn(ctx, ISA_MIPS_R2);\n            gen_bitswap(ctx, op2, rd, rt);\n            break;}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
     # ALIGN is applied first above, so a clean upstream tree reaches this
@@ -487,27 +487,27 @@ if ! rg -q 'SOC_REF_BITSWAP_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
-if ! rg -q 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+if ! grep -Eq 'SOC_REF_WSBW_R2' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-wsbw-r2.patch"
     sed -i '/OPC_WSBW      =/a\    /* SOC_REF_WSBW_R2 */' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
-if ! rg -q 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
+if ! grep -Eq 'SOC_REF_FPU_INT32_INDEFINITE' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     sed -i 's/^#define FP_TO_INT32_OVERFLOW 0x7fffffff$/\/\* SOC_REF_FPU_INT32_INDEFINITE: MIPS invalid W conversion result. \*\/\n#define FP_TO_INT32_OVERFLOW 0x80000000/' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 fi
 
-if ! rg -q 'SOC_REF_FPU_INT64_INDEFINITE' \
+if ! grep -Eq 'SOC_REF_FPU_INT64_INDEFINITE' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpu-int64-indefinite.patch"
 fi
-rg -q 'SOC_REF_FPU_INT64_INDEFINITE' \
+grep -Eq 'SOC_REF_FPU_INT64_INDEFINITE' \
     "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
-if ! rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
+if ! grep -Eq 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     # The vendored QEMU tree is not a git checkout. Apply the small source
     # change by function body so this remains deterministic for extracted
     # release archives as well as git worktrees.
@@ -518,49 +518,49 @@ if ! rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_help
     sed -i '/set_float_rounding_mode(float_round_ties_away,/a\    /* SOC_REF_FPU_ROUND_W_TIES_AWAY */' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 fi
-rg -q 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
+grep -Eq 'SOC_REF_FPU_ROUND_W_TIES_AWAY' "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
-if ! rg -q 'SOC_REF_FPU_DOUBLE_UNDERFLOW' \
+if ! grep -Eq 'SOC_REF_FPU_DOUBLE_UNDERFLOW' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-double-underflow.patch"
 fi
 
-if ! rg -q 'SOC_REF_FPU_LEGACY_NAN' \
+if ! grep -Eq 'SOC_REF_FPU_LEGACY_NAN' \
         "${QEMU_SRC}/target/mips/fpu_helper.h"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-nan.patch"
     sed -i '/set_default_nan_mode(false, &env->active_fpu.fp_status);/a\    /* SOC_REF_FPU_LEGACY_NAN */' \
         "${QEMU_SRC}/target/mips/fpu_helper.h"
 fi
-rg -q 'SOC_REF_FPU_LEGACY_NAN' \
+grep -Eq 'SOC_REF_FPU_LEGACY_NAN' \
     "${QEMU_SRC}/target/mips/fpu_helper.h"
 
-if ! rg -q 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' \
+if ! grep -Eq 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' \
         "${QEMU_SRC}/fpu/softfloat-specialize.c.inc"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-legacy-snan-default.patch"
 fi
-rg -q 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' \
+grep -Eq 'SOC_REF_FPU_LEGACY_SNAN_DEFAULT' \
     "${QEMU_SRC}/fpu/softfloat-specialize.c.inc"
 
-if ! rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
+if ! grep -Eq 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-rsqrt-single-rounding.patch"
 fi
-rg -q 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
+grep -Eq 'SOC_REF_FPU_RSQRT_SINGLE_ROUND' \
     "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
-if ! rg -q 'SOC_REF_FPU_FR0_LONG' \
+if ! grep -Eq 'SOC_REF_FPU_FR0_LONG' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpu-fr0-long.patch"
 fi
-rg -q 'SOC_REF_FPU_FR0_LONG' \
+grep -Eq 'SOC_REF_FPU_FR0_LONG' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 
-if ! rg -Uq 'if \(GET_FP_ENABLE\(env->active_fpu.fcr31\) & mips_exception_flags\) \{\n            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/' \
+if ! grep -Fq 'SOC_REF_FPU_FPE_STICKY_FLAGS' \
         "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips-fpe-sticky-flags.patch"
@@ -575,14 +575,14 @@ fi
 perl -0pi -e 's{(            /\* SOC_REF_FPU_FPE_STICKY_FLAGS \*/\n            UPDATE_FP_FLAGS\(env->active_fpu\.fcr31, mips_exception_flags\);\n)            UPDATE_FP_FLAGS\(env->active_fpu\.fcr31, mips_exception_flags\);}{$1}s' \
     "${QEMU_SRC}/target/mips/tcg/fpu_helper.c"
 
-if ! rg -q 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
+if ! grep -Eq 'SOC_REF_PREFX_NO_FPU' "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     apply_project_patch \
         "${ROOT_DIR}/scripts/qemu/patches/qemu-9.2-mips32-prefx-no-fpu.patch"
 fi
 
-if ! rg -q 'SOC_REF_LLADDR_VIRTUAL' \
+if ! grep -Eq 'SOC_REF_LLADDR_VIRTUAL' \
         "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"; then
-    if ! rg -q 'qemu_mips32_soc_ref_lladdr_virtual' \
+    if ! grep -Eq 'qemu_mips32_soc_ref_lladdr_virtual' \
             "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"; then
         sed -i '/#include "internal.h"/a\
 bool qemu_mips32_soc_ref_lladdr_virtual(void) __attribute__((weak));' \
@@ -591,16 +591,16 @@ bool qemu_mips32_soc_ref_lladdr_virtual(void) __attribute__((weak));' \
     perl -0pi -e 's{(    env->lladdr = arg;)}{    if (qemu_mips32_soc_ref_lladdr_virtual &&\\\n        qemu_mips32_soc_ref_lladdr_virtual()) {\\\n        /* RTL exposes the aligned virtual LL address through MFC0. */\\\n        env->CP0_LLAddr = (uint64_t)arg << env->CP0_LLAddr_shift;\\\n    } /* SOC_REF_LLADDR_VIRTUAL */\\\n$1}s' \
         "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"
 fi
-rg -q 'SOC_REF_LLADDR_VIRTUAL' \
+grep -Eq 'SOC_REF_LLADDR_VIRTUAL' \
     "${QEMU_SRC}/target/mips/tcg/ldst_helper.c"
 
-if ! rg -q '^extern bool qemu_mips32_soc_ref_sc_consume_reservation' \
+if ! grep -Eq '^extern bool qemu_mips32_soc_ref_sc_consume_reservation' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{(/\* Store conditional \*/)}{extern bool qemu_mips32_soc_ref_sc_consume_reservation(void) __attribute__((weak));\n$1}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
 
-if ! rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
+if ! grep -Eq 'SOC_REF_SC_CONSUMES_RESERVATION' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{(    gen_store_gpr\(tcg_constant_tl\(0\), rt\);\n)(    tcg_gen_br\(done\);)}{$1    /* MIPS32 SoC contract: every completed SC attempt consumes LL state. */\n    if (!qemu_mips32_soc_ref_sc_consume_reservation || qemu_mips32_soc_ref_sc_consume_reservation()) {\n        tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n    }\n$2}s' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
@@ -609,14 +609,14 @@ if ! rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
 fi
 # Normalize the earlier all-or-nothing hook. Linux guest mode retains a
 # reservation after failed SC, but successful SC always consumes it.
-if rg -q 'Successful and failed compare-exchange attempts both consume LL' \
+if grep -Eq 'Successful and failed compare-exchange attempts both consume LL' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{    /\* Successful and failed compare-exchange attempts both consume LL\. \*/\n    if \(!qemu_mips32_soc_ref_sc_consume_reservation \|\| qemu_mips32_soc_ref_sc_consume_reservation\(\)\) \{\n        tcg_gen_movi_tl\(cpu_lladdr, -1\); /\* SOC_REF_SC_CONSUMES_RESERVATION \*/\n    \}}{    /* A successful compare-exchange always consumes LL state, including\n     * in Linux guest mode. */\n    tcg_gen_movi_tl(cpu_lladdr, -1); /* SOC_REF_SC_CONSUMES_RESERVATION */\n}x' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
-rg -q 'SOC_REF_SC_CONSUMES_RESERVATION' \
+grep -Eq 'SOC_REF_SC_CONSUMES_RESERVATION' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
-rg -q 'qemu_mips32_soc_ref_sc_consume_reservation' \
+grep -Eq 'qemu_mips32_soc_ref_sc_consume_reservation' \
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 
 # Keep the opt-in custom-machine PREFX contract correct even when an older
@@ -625,7 +625,7 @@ perl -0pi -e 's{(case OPC_PREFX:\n\s*(?:/\*[^\n]*\*/\n\s*)?)check_insn\(ctx, ISA
     "${QEMU_SRC}/target/mips/tcg/translate.c"
 # Older partially patched trees can retain the inner case without the outer
 # COP1-disabled dispatch. Add that dispatch idempotently before rebuilding.
-if ! rg -q 'SOC_REF_PREFX_NO_FPU: PREFX is legal without COP1' \
+if ! grep -Eq 'SOC_REF_PREFX_NO_FPU: PREFX is legal without COP1' \
         "${QEMU_SRC}/target/mips/tcg/translate.c"; then
     perl -0pi -e 's{(    case OPC_CP3:\n)(        if \(ctx->CP0_Config1 & \(1 << CP0C1_FP\)\) \{\n\s*check_cp1_enabled\(ctx\);\n\s*op1 = MASK_CP3\(ctx->opcode\);\n)}{$1        op1 = MASK_CP3(ctx->opcode);\n        /* SOC_REF_PREFX_NO_FPU: PREFX is legal without COP1. */\n        if (op1 == OPC_PREFX) {\n            check_insn(ctx, ISA_MIPS_R2);\n            break;\n        }\n$2}s' "${QEMU_SRC}/target/mips/tcg/translate.c"
 fi
@@ -633,7 +633,7 @@ fi
 # Keep the SRS reference model aligned with the RTL nested-exception policy:
 # only the outer exception changes CSS/PSS; an EXL-held nested fault preserves
 # that context while still redirecting to the handler.
-if ! rg -q 'SOC_REF_SRS_NESTED_POLICY' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq 'SOC_REF_SRS_NESTED_POLICY' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/^[[:space:]]*mips_srs_exception_entry(env);$/d' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
     sed -i '/^[[:space:]]*mips_srs_exception_entry(env,/i\            /* SOC_REF_SRS_NESTED_POLICY */' \
@@ -644,22 +644,22 @@ fi
 # the compact 24Kc model normally exposes only 16.  The backing QEMU TLB
 # array is larger than both limits, so widen only the opt-in custom-machine
 # MMU guest path.  Default QEMU CPU behavior remains unchanged.
-if ! rg -q '^bool qemu_mips32_soc_ref_rtl_mmu_guest\(void\)' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq '^bool qemu_mips32_soc_ref_rtl_mmu_guest\(void\)' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/#include "exec\/helper-proto.h"/a\bool qemu_mips32_soc_ref_rtl_mmu_guest(void) __attribute__((weak));' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
-if ! rg -q 'SOC_REF_SOFTWARE_TLB_64' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
+if ! grep -Eq 'SOC_REF_SOFTWARE_TLB_64' "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     sed -i '/env->tlb->nb_tlb = 1 + ((def->CP0_Config1 >> CP0C1_MMU) \& 63);/c\    env->tlb->nb_tlb = (qemu_mips32_soc_ref_rtl_mmu_guest && qemu_mips32_soc_ref_rtl_mmu_guest()) ? 64 : 1 + ((def->CP0_Config1 >> CP0C1_MMU) \& 63); /* SOC_REF_SOFTWARE_TLB_64 */' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
 fi
 
 sed -i '0,/^DEF_HELPER_1(soc_ref_retire_tick, void, env)$/!{/^DEF_HELPER_1(soc_ref_retire_tick, void, env)$/d;}' \
     "${QEMU_SRC}/target/mips/helper.h"
-if rg -q '^DEF_HELPER_1\(soc_ref_retire_tick, void, env\)$' "${QEMU_SRC}/target/mips/helper.h"; then
+if grep -Eq '^DEF_HELPER_1\(soc_ref_retire_tick, void, env\)$' "${QEMU_SRC}/target/mips/helper.h"; then
     perl -0pi -e 's/^DEF_HELPER_1\(soc_ref_retire_tick, void, env\)$/#ifndef CONFIG_USER_ONLY\nDEF_HELPER_1(soc_ref_retire_tick, void, env)\n#endif/m' \
         "${QEMU_SRC}/target/mips/helper.h"
 fi
-if ! rg -Fq 'DEF_HELPER_1(soc_ref_retire_tick, void, env)' "${QEMU_SRC}/target/mips/helper.h"; then
+if ! grep -Fq 'DEF_HELPER_1(soc_ref_retire_tick, void, env)' "${QEMU_SRC}/target/mips/helper.h"; then
     sed -i '/DEF_HELPER_1(raise_exception_debug, noreturn, env)/a\
 \#ifndef CONFIG_USER_ONLY\
 DEF_HELPER_1(soc_ref_retire_tick, void, env)\
@@ -690,7 +690,7 @@ perl -0pi -e '
         or die "could not place the system-mode retire hook\\n";
 ' "${TRANSLATE_SOURCE}"
 
-if ! rg -q 'qemu_mips32_soc_ref_sync_exception' \
+if ! grep -Eq 'qemu_mips32_soc_ref_sync_exception' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"; then
     perl -0pi -e 's/(    int cause = -1;\n)/$1    extern void qemu_mips32_soc_ref_sync_exception(CPUMIPSState *env)\n        __attribute__((weak));\n    if (cs->exception_index != EXCP_EXT_INTERRUPT &&\n        cs->exception_index != EXCP_SEMIHOST &&\n        cs->exception_index != EXCP_HLT &&\n        cs->exception_index != EXCP_DSS &&\n        qemu_mips32_soc_ref_sync_exception) {\n        qemu_mips32_soc_ref_sync_exception(env);\n    }\n/s or die "could not add the synchronous exception retire hook\n"' \
         "${QEMU_SRC}/target/mips/tcg/sysemu/tlb_helper.c"
