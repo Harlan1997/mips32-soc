@@ -93,10 +93,10 @@ Evidence is retained under
 `/data/disk/tmp/mips32-soc/badvaddr-owner-context-current-20261117/`.
 Cross-page replay ownership beyond this directed phase case remains open.
 
-### 2026-11-17 Current-source nonblocking Linux full closure rerun
+### 2026-11-17 Nonblocking Linux full closure rerun (commit `ff76b15`)
 
-The current worktree completed the full nonblocking RTL/QEMU terminal
-closure with the strict live-FIFO comparator. Evidence is retained under
+The `ff76b15` worktree completed the historical full nonblocking RTL/QEMU
+terminal closure with the strict live-FIFO comparator. Evidence is retained under
 `/data/disk/tmp/mips32-soc/full-qemu-nb-current-head-20261117-r2/`.
 The comparator passed `TRACE_COMPARE_PASS records=66914265` with full GPR
 and HI/LO state; RTL produced `66914306` records, including the documented
@@ -106,10 +106,11 @@ zero unpaired records. Manifest validation passed with SHA-256
 All 1,440 IRQ entries, 1,408 Cause.TI rising boundaries, 12,675 Count reads,
 125 Random reads, 8,364,287 cycle samples, and 16,702 UART APB entries were
 consumed. QEMU flushed the terminal marker and exited cleanly; RTL stopped at
-cycle `293,930,532` with one terminal marker. This closes the declared current
-generic Linux nonblocking terminal workload; unrestricted Linux, complete
-ISA/privileged/FPU/MMU/OS semantics, and product signoff remain separate
-scope.
+cycle `293,930,532` with one terminal marker. This closed the declared generic
+Linux nonblocking terminal workload at `ff76b15`; both blocking and nonblocking
+full terminal differentials require re-verification on current `HEAD` (`502dfb3`
+after subsequent MDU/FPU fixes), and unrestricted Linux, complete
+ISA/privileged/FPU/MMU/OS semantics, and product signoff remain separate scope.
 
 ### 2026-11-17 Hardware walker 64 MiB and 256 MiB PageMask extension
 

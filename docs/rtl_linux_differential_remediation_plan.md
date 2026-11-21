@@ -2,7 +2,12 @@
 
 Plan date: 2026-09-20
 
-Status: `GENERIC RTL LINUX DECLARED USERSPACE CLOSED / NONBLOCKING FULL DIFFERENTIAL BOUNDED PASS`
+Status:
+- Historical blocking bounded terminal differential (`4074659`, 2026-10-25): `PASS` (`70,056,146` compared records)
+- Historical nonblocking bounded terminal differential (`ff76b15`, 2026-11-17): `PASS` (`66,914,265` compared records, `41` classified RTL alignment records)
+- Current `HEAD` (`502dfb3`) `start_kernel` focus differential (2026-11-21): `PASS` (`17` records, 3-way QEMU / blocking / nonblocking)
+- Current `HEAD` (`502dfb3`) full blocking & nonblocking Linux differentials: `PENDING RE-VERIFICATION` (subsequent MDU/FPU fixes landed after `ff76b15`)
+- Current `HEAD` (`502dfb3`) random ISA ISG (`SEEDS=1..15`, `INSN_COUNT=250`): `PASS` (`15/15` non-FPU `6,287` records; `15/15` FPU `6,651` records; `fpu_single` `sdxc1` `mem_wdata_hi` open)
 
 ### 2026-11-20 UART/VIC transaction differential recheck
 
@@ -520,7 +525,8 @@ The remediation is complete only when all of the following are true:
   separately reported gates.
 - UART/VIC transaction equivalence passes independently.
 - Blocking and nonblocking bounded retire streams compare strictly through the
-  predeclared terminal marker with equal complete-record counts.
+  predeclared terminal marker with equal compared records (allowing the 41
+  classified boot-prefix and synchronous-exception alignment records).
 - All reports, logs, coverage, manifests, and residual risks are retained under
   one run root.
 
