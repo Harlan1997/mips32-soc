@@ -787,7 +787,7 @@ fi
 grep -q 'PASS (terminal-marker full workload)' "${RUN_DIR}/rtl/completion_report.md"
 rtl_uart="${RUN_DIR}/rtl/sim/uart.transcript"
 [[ -s "${rtl_uart}" ]]
-rtl_terminal_count=$(rg -o "${TERMINAL_MARKER}" "${rtl_uart}" | wc -l | tr -d ' ')
+rtl_terminal_count=$(grep -o "${TERMINAL_MARKER}" "${rtl_uart}" | wc -l | tr -d ' ')
 [[ "${rtl_terminal_count}" == "1" ]]
 qemu_status="${RUN_DIR}/qemu/qemu_capture_status.txt"
 [[ -s "${qemu_status}" ]]
@@ -799,7 +799,7 @@ if grep -q '^qemu-system-mipsel: UART APB schedule exhausted at retire=' \
     tail -20 "${RUN_DIR}/qemu/qemu_stderr.log" >&2
     exit 1
 fi
-irq_schedule_report=$(rg '^SOC_REF_IRQ_SCHEDULE ' "${RUN_DIR}/qemu/qemu_stderr.log")
+irq_schedule_report=$(grep -E '^SOC_REF_IRQ_SCHEDULE ' "${RUN_DIR}/qemu/qemu_stderr.log")
 grep -q "^SOC_REF_IRQ_SCHEDULE released=${irq_replay_schedule_entries} total=${irq_replay_schedule_entries} irq_released=${irq_schedule_entries} irq_total=${irq_schedule_entries} timer_pending_replayed=${cp0_ti_pending_schedule_entries} timer_pending_total=${cp0_ti_pending_schedule_entries}$" \
     <<<"${irq_schedule_report}"
 grep -q "^SOC_REF_CP0_COUNT_SCHEDULE consumed=${cp0_count_schedule_entries} total=${cp0_count_schedule_entries}$" \
@@ -810,7 +810,7 @@ grep -q '^SOC_REF_CPU_CYCLE_SCHEDULE .*total=' \
     "${RUN_DIR}/qemu/qemu_stderr.log"
 grep -q '^SOC_REF_UART_APB_SCHEDULE consumed=' \
     "${RUN_DIR}/qemu/qemu_stderr.log"
-cpu_cycle_schedule_report=$(rg '^SOC_REF_CPU_CYCLE_SCHEDULE ' \
+cpu_cycle_schedule_report=$(grep -E '^SOC_REF_CPU_CYCLE_SCHEDULE ' \
     "${RUN_DIR}/qemu/qemu_stderr.log")
 cpu_cycle_schedule_used=$(sed -n 's/.* used_through=\([0-9][0-9]*\).*/\1/p' \
     <<<"${cpu_cycle_schedule_report}")
@@ -818,7 +818,7 @@ cpu_cycle_schedule_report_total=$(sed -n 's/.* total=\([0-9][0-9]*\).*/\1/p' \
     <<<"${cpu_cycle_schedule_report}")
 (( cpu_cycle_schedule_report_total == cpu_cycle_schedule_entries ))
 (( cpu_cycle_schedule_used + CPU_CYCLE_SCHEDULE_INTERVAL >= cpu_cycle_schedule_final_seq ))
-uart_apb_schedule_report=$(rg '^SOC_REF_UART_APB_SCHEDULE ' \
+uart_apb_schedule_report=$(grep -E '^SOC_REF_UART_APB_SCHEDULE ' \
     "${RUN_DIR}/qemu/qemu_stderr.log")
 uart_apb_schedule_used=$(sed -n 's/.* consumed=\([0-9][0-9]*\).*/\1/p' \
     <<<"${uart_apb_schedule_report}")

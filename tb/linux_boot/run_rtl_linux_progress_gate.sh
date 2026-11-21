@@ -537,49 +537,49 @@ has_linux_boot_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_BOOT_SUCCESS'
+        grep -q 'MIPS32_SOC_LINUX_BOOT_SUCCESS'
 }
 has_linux_terminal_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_TERMINAL'
+        grep -q 'MIPS32_SOC_LINUX_TERMINAL'
 }
 has_linux_fpu_abi_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_FPU_ABI_SUCCESS'
+        grep -q 'MIPS32_SOC_LINUX_FPU_ABI_SUCCESS'
 }
 has_linux_fpu_abi_failure_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_FPU_ABI_FAILURE'
+        grep -q 'MIPS32_SOC_LINUX_FPU_ABI_FAILURE'
 }
 has_linux_fpu_signal_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS'
+        grep -q 'MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS'
 }
 has_linux_fpu_signal_failure_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_FPU_SIGNAL_FAILURE'
+        grep -q 'MIPS32_SOC_LINUX_FPU_SIGNAL_FAILURE'
 }
 has_linux_fpu_legacy_signal_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS'
+        grep -q 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS'
 }
 has_linux_fpu_legacy_signal_failure_marker() {
     local log_path=$1
     [[ -s "${log_path}" ]] || return 1
     normalize_linux_marker_stream "${log_path}" |
-        rg -q 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE'
+        grep -q 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE'
 }
 has_required_linux_marker() {
     if [[ "${LINUX_TERMINAL_STOP}" == "1" ]]; then
@@ -654,12 +654,12 @@ test -s "${sim_dir}/sim.log" || {
 # progress.  It is deliberately not a boot gate: userspace and its success
 # marker are checked by the future RTL Linux boot gate.
 if [[ "${LINUX_REQUIRE_PROGRESS}" == "1" ]] &&
-   ! rg -q 'LINUX_PROGRESS_TRACE cycle=[1-9][0-9]* pc=(?!bfc00000)' \
-        --pcre2 "${sim_dir}/sim.log"; then
+   ! grep -Pq 'LINUX_PROGRESS_TRACE cycle=[1-9][0-9]* pc=(?!bfc00000)' \
+        "${sim_dir}/sim.log"; then
     echo "RTL Linux progress gate: no post-reset CPU progress observed (status ${status})" >&2
     exit 1
 fi
-if rg -q 'REGRESSION_TEST_FAILED|Comprehensive SoC Test Failed|tb_mips_soc: ERROR' \
+if grep -Eq 'REGRESSION_TEST_FAILED|Comprehensive SoC Test Failed|tb_mips_soc: ERROR' \
         "${sim_dir}/sim.log"; then
     echo "RTL Linux progress gate: simulator reported a regression failure" >&2
     exit 1
@@ -671,35 +671,35 @@ if [[ -s "${LINUX_UART_TRANSCRIPT}" ]]; then
 fi
 marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_BOOT_SUCCESS' || true
+        grep -o 'MIPS32_SOC_LINUX_BOOT_SUCCESS' || true
 } | wc -l | tr -d ' ')
 terminal_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_TERMINAL' || true
+        grep -o 'MIPS32_SOC_LINUX_TERMINAL' || true
 } | wc -l | tr -d ' ')
 fpu_abi_marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_FPU_ABI_SUCCESS' || true
+        grep -o 'MIPS32_SOC_LINUX_FPU_ABI_SUCCESS' || true
 } | wc -l | tr -d ' ')
 fpu_abi_failure_marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_FPU_ABI_FAILURE' || true
+        grep -o 'MIPS32_SOC_LINUX_FPU_ABI_FAILURE' || true
 } | wc -l | tr -d ' ')
 fpu_signal_marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS' || true
+        grep -o 'MIPS32_SOC_LINUX_FPU_SIGNAL_SUCCESS' || true
 } | wc -l | tr -d ' ')
 fpu_signal_failure_marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_FPU_SIGNAL_FAILURE' || true
+        grep -o 'MIPS32_SOC_LINUX_FPU_SIGNAL_FAILURE' || true
 } | wc -l | tr -d ' ')
 fpu_legacy_signal_marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS' || true
+        grep -o 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_SUCCESS' || true
 } | wc -l | tr -d ' ')
 fpu_legacy_signal_failure_marker_count=$({
     normalize_linux_marker_stream "${marker_source}" |
-        rg -o 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE' || true
+        grep -o 'MIPS32_SOC_LINUX_FPU_LEGACY_SIGNAL_FAILURE' || true
 } | wc -l | tr -d ' ')
 result="PASS (bounded post-reset progress probe)"
 if [[ "${LINUX_REQUIRE_USERSPACE}" == "1" && "${marker_count}" -eq 0 ]]; then
