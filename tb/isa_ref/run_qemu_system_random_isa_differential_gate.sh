@@ -12,6 +12,20 @@ BUILD_DIR=${BUILD_DIR:-"${ROOT_DIR}/build"}
 RUN_DIR=${RUN_DIR:-"${BUILD_DIR}/isa_ref/qemu_system_random_isa_differential"}
 SEEDS=${SEEDS:-"1 2 3"}
 INSN_COUNT=${INSN_COUNT:-200}
+ENABLE_FPU=${ENABLE_FPU:-0}
+
+gen_extra_args=()
+qemu_cpu="24Kc"
+vcs_fpu_define=""
+qemu_capture_fpr_state=0
+trace_compare_stream=1
+if [[ "${ENABLE_FPU}" == "1" ]]; then
+    gen_extra_args+=(--enable-fpu)
+    qemu_cpu="24Kf"
+    vcs_fpu_define="+define+SOC_FPU_ENABLE=1"
+    qemu_capture_fpr_state=1
+    trace_compare_stream=0
+fi
 
 mkdir -p "${RUN_DIR}"
 rm -f "${RUN_DIR}/completion_report.md"
@@ -24,6 +38,7 @@ for seed in ${SEEDS}; do
 
     python3 "${ROOT_DIR}/scripts/gen_random_mips_isa_test.py" \
         --seed "${seed}" --count "${INSN_COUNT}" \
+        "${gen_extra_args[@]}" \
         --out "${seed_dir}/main.s"
 
     # Build using the shared bare-metal firmware toolchain rules
@@ -54,6 +69,7 @@ for seed in ${SEEDS}; do
         timeout "${RTL_TIMEOUT:-120}" env \
             FW_HEX="${fw_dir}/firmware.hex" TESTNAME=soc_base_test SEED=1 \
             RUN_DIR="${rtl_dir}" RETIRE_TRACE="${rtl_trace}" \
+            VCS_EXTRA_ARGS="${VCS_EXTRA_ARGS:-} ${vcs_fpu_define}" \
             SIM_EXTRA_ARGS="+RETIRE_TRACE_MAX_RECORDS=20000" \
             "${ROOT_DIR}/tb/uvm_tb/run_uvm.sh" >"${seed_dir}/rtl_gate.log" 2>&1
         shared_simv="${rtl_dir}/simv"
@@ -69,8 +85,9 @@ for seed in ${SEEDS}; do
         FW_ELF="${fw_dir}/firmware.elf" \
         RTL_TRACE="${rtl_trace}" \
         PLUGIN_INCLUDE="${plugin_inc}" \
-        QEMU_CPU=24Kc QEMU_TIMEOUT=30 REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=1 \
-        TRACE_COMPARE_STREAM=1 \
+        QEMU_CPU="${qemu_cpu}" QEMU_CAPTURE_FPR_STATE="${qemu_capture_fpr_state}" \
+        QEMU_TIMEOUT=30 REQUIRE_SMOKE_OUTPUT=0 STOP_AFTER_MAILBOX=1 \
+        TRACE_COMPARE_STREAM="${trace_compare_stream}" \
         "${SCRIPT_DIR}/run_qemu_system_retire_capture_gate.sh" \
         >"${seed_dir}/qemu_gate.log" 2>&1
 

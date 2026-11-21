@@ -2102,7 +2102,9 @@ module mips_fpu (
             else
                 exact_single = 1.0 / $sqrt(ar_real);
             result = round_single_real(exact_single, rounding_mode);
-            if (result[30:23] == 8'hff && result[22:0] == 0) begin
+            if ((result[30:23] == 8'hff && result[22:0] == 0) ||
+                ((result == 32'h7f7f_ffff || result == 32'hff7f_ffff) &&
+                 (($shortrealtobits(exact_single) & 32'h7fff_ffff) == 32'h7f80_0000))) begin
                 exception_flags[2] = 1'b1;
                 exception_flags[0] = 1'b1;
             end else begin
@@ -2184,16 +2186,21 @@ module mips_fpu (
         // classification for the common subnormal-times-less-than-one case
         // directly from the IEEE-754 fields.
         if (!fmt_double && op == OP_MUL &&
-            ((a[30:23] == 0 && a[22:0] != 0) ||
-             (b[30:23] == 0 && b[22:0] != 0)) &&
-            ((b[30:23] < 8'h7f) || (a[30:23] < 8'h7f))) begin
+            a[30:0] != 0 && b[30:0] != 0 &&
+            a[30:23] != 8'hff && b[30:23] != 8'hff &&
+            result[30:0] == 0 &&
+            ((a[30:23] == 0 && b[30:23] < 8'h7f) ||
+             (b[30:23] == 0 && a[30:23] < 8'h7f))) begin
             exception_flags[1] = 1'b1;
             exception_flags[0] = 1'b1;
         end
         // The host arithmetic is already rounded to the target format.  An
         // infinity produced from finite operands therefore represents the
         // IEEE overflow condition (division by zero is classified above).
-        if (!fmt_double && result[30:23] == 8'hff && result[22:0] == 0 &&
+        if (!fmt_double &&
+            ((result[30:23] == 8'hff && result[22:0] == 0) ||
+             ((result == 32'h7f7f_ffff || result == 32'hff7f_ffff) &&
+              (($shortrealtobits(exact_single) & 32'h7fff_ffff) == 32'h7f80_0000))) &&
             a[30:23] != 8'hff &&
             ((op == OP_ADD) || (op == OP_SUB) || (op == OP_MUL) ||
              (op == OP_DIV) || (op == OP_MADD) || (op == OP_MSUB) ||
@@ -2277,10 +2284,11 @@ module mips_fpu (
         // classification for a subnormal multiplied by a factor below one
         // directly from the operand fields.
         if (fmt_double && op == OP_MUL &&
-            ((a_double[62:52] == 0 && a_double[51:0] != 0) ||
-             (b_double[62:52] == 0 && b_double[51:0] != 0)) &&
-            ((a_double[62:52] < 11'h3ff) ||
-             (b_double[62:52] < 11'h3ff))) begin
+            a_double[62:0] != 0 && b_double[62:0] != 0 &&
+            a_double[62:52] != 11'h7ff && b_double[62:52] != 11'h7ff &&
+            result_double[62:0] == 0 &&
+            ((a_double[62:52] == 0 && b_double[62:52] < 11'h3ff) ||
+             (b_double[62:52] == 0 && a_double[62:52] < 11'h3ff))) begin
             exception_flags[1] = 1'b1;
             exception_flags[0] = 1'b1;
         end

@@ -907,6 +907,7 @@ module mips_cpu #(
     
     wire        ex_illegal_inst;
     wire        ex_except_req;
+    wire        ex_except_req_out;
     wire [4:0]  ex_except_code;
     wire        ex_except_is_data;    // Phase B.3.d
     wire        mem_except_is_data;
@@ -1112,7 +1113,13 @@ module mips_cpu #(
     // newly written Cause/Enable fields immediately; Cause.Unimplemented is
     // unconditionally enabled by the architecture.
     wire [4:0]  fpu_exception_flags;
-    wire [4:0] fpu_enabled_flags = fpu_exception_flags & fcsr[11:7];
+    // IEEE 754 / MIPS32: when the Underflow trap enable (FCSR[8]) is clear,
+    // Underflow is raised only when the tiny result also loses accuracy
+    // (Inexact=1).  When Underflow trap is enabled, tininess alone triggers it.
+    wire [4:0] fpu_arch_flags = {fpu_exception_flags[4:2],
+                                 fpu_exception_flags[1] & (fcsr[8] | fpu_exception_flags[0]),
+                                 fpu_exception_flags[0]};
+    wire [4:0] fpu_enabled_flags = fpu_arch_flags & fcsr[11:7];
     wire [31:0] fpu_ctc1_next = fcsr_alias_write(fcsr, id_val_rt,
                                                   id_inst[15:11]);
     wire [4:0] fpu_ctc1_cause = fpu_ctc1_next[16:12];
@@ -1158,14 +1165,20 @@ module mips_cpu #(
                                 (ex_fpu_load_reg + 1'b1 == id_inst[15:11])) ||
                                (ex_fpu_load_reg == id_inst[20:16]) ||
                                (ex_fpu_load_double &&
-                                (ex_fpu_load_reg + 1'b1 == id_inst[20:16])));
+                                (ex_fpu_load_reg + 1'b1 == id_inst[20:16])) ||
+                               (ex_fpu_load_reg == id_inst[10:6]) ||
+                               (ex_fpu_load_double &&
+                                (ex_fpu_load_reg + 1'b1 == id_inst[10:6])));
     wire mem_fpu_load_hazard = mem_fpu_word_load &&
                                ((mem_fpu_load_reg == id_inst[15:11]) ||
                                 (mem_fpu_load_double &&
                                  (mem_fpu_load_reg + 1'b1 == id_inst[15:11])) ||
                                 (mem_fpu_load_reg == id_inst[20:16]) ||
                                 (mem_fpu_load_double &&
-                                 (mem_fpu_load_reg + 1'b1 == id_inst[20:16])));
+                                 (mem_fpu_load_reg + 1'b1 == id_inst[20:16])) ||
+                                (mem_fpu_load_reg == id_inst[10:6]) ||
+                                (mem_fpu_load_double &&
+                                 (mem_fpu_load_reg + 1'b1 == id_inst[10:6])));
     wire        fpu_lwc1_hazard = fpu_id_valid &&
                                   (ex_fpu_load_hazard || mem_fpu_load_hazard);
     reg [31:0]  fpr [0:31];
@@ -1293,8 +1306,10 @@ module mips_cpu #(
         .result_word  (fpu_result_word),
         .exception_flags(fpu_exception_flags)
     );
+    wire older_except_pending = ex_except_req_out || mem_except_req_out ||
+                                exception_flush || ctx_restore_req;
     wire fpu_id_commit = fpu_id_valid && !global_stall && !stall_req_id &&
-                         !exception_flush && !ctx_restore_req &&
+                         !older_except_pending &&
                          !id_fpu_unusable && !id_illegal_inst &&
                          !id_fpu_exception &&
                          fpu_id_cond_move_ok && fpu_id_fpr_cond_move_ok;
@@ -1316,41 +1331,47 @@ module mips_cpu #(
                                   (ctx_restore_status[26] === 1'b1)) ?
                                   ctx_restore_fpr_hi[fpu_i*32 +: 32] : 32'd0;
             end
-        end else if (mem_double_mem &&
-                     ((mem_inst[31:26] == 6'b110101) ||
-                      ((mem_inst[31:26] == 6'b010011) &&
-                       (mem_inst[5:0] == 6'h01 ||
-                        mem_inst[5:0] == 6'h05))) &&
-                     mem_mem_read &&
-                     (mem_double_phase == 2'd0) && data_data_ok_current &&
-                     !(data_bus_error_current === 1'b1) &&
-                     !(data_cache_error_current === 1'b1) &&
-                     !dmem_request_blocked) begin
-            fpu_double_low <= mem_rdata_fmt;
-        end else if (fpu_mem_lwc1_commit) begin
-            // LWC1 is a normal word memory transaction; its architectural
-            // destination is the FPR named by rt, not the GPR file.
-            fpr[mem_fpu_reg] <= mem_rdata_fmt;
-        end else if (fpu_mem_ldc1_commit) begin
-            fpr[mem_fpu_reg] <= fpu_mem_low_commit;
-            if (cpu_fpu_fr)
-                fpr_hi[mem_fpu_reg] <= fpu_mem_high_commit;
-            else
-                fpr[mem_fpu_reg + 1'b1] <= fpu_mem_high_commit;
-        end else if (id_fpu_exception && fpu_id_valid && !global_stall &&
-                     !stall_req_id && !exception_flush && !ctx_restore_req) begin
-            if (fpu_id_ctc1) begin
-                // CTC1 commits its masked control image before the enabled
-                // Cause condition raises FPE, matching the CP1 helper path.
-                fcsr <= fpu_ctc1_next;
-            end else begin
-                // Arithmetic is trapped before architectural FPR commit, but
-                // the sticky flag and most-recent Cause field are still
-                // visible to the FPE handler through CFC1.
-                fcsr[6:2] <= fcsr[6:2] | fpu_exception_flags;
-                fcsr[16:12] <= fpu_exception_flags;
+        end else begin
+            // MEM-stage FPU load commits and ID-stage FPU execution can target
+            // disjoint registers in the same cycle; keep them independent so
+            // an in-flight LWC1/LDC1 never drops an unrelated ID FPU commit.
+            if (mem_double_mem &&
+                ((mem_inst[31:26] == 6'b110101) ||
+                 ((mem_inst[31:26] == 6'b010011) &&
+                  (mem_inst[5:0] == 6'h01 ||
+                   mem_inst[5:0] == 6'h05))) &&
+                mem_mem_read &&
+                (mem_double_phase == 2'd0) && data_data_ok_current &&
+                !(data_bus_error_current === 1'b1) &&
+                !(data_cache_error_current === 1'b1) &&
+                !dmem_request_blocked) begin
+                fpu_double_low <= mem_rdata_fmt;
+            end else if (fpu_mem_lwc1_commit) begin
+                // LWC1 is a normal word memory transaction; its architectural
+                // destination is the FPR named by rt, not the GPR file.
+                fpr[mem_fpu_reg] <= mem_rdata_fmt;
+            end else if (fpu_mem_ldc1_commit) begin
+                fpr[mem_fpu_reg] <= fpu_mem_low_commit;
+                if (cpu_fpu_fr)
+                    fpr_hi[mem_fpu_reg] <= fpu_mem_high_commit;
+                else
+                    fpr[mem_fpu_reg + 1'b1] <= fpu_mem_high_commit;
             end
-        end else if (fpu_id_commit) begin
+
+            if (id_fpu_exception && fpu_id_valid && !global_stall &&
+                !stall_req_id && !older_except_pending) begin
+                if (fpu_id_ctc1) begin
+                    // CTC1 commits its masked control image before the enabled
+                    // Cause condition raises FPE, matching the CP1 helper path.
+                    fcsr <= fpu_ctc1_next;
+                end else begin
+                    // Arithmetic is trapped before architectural FPR commit, but
+                    // the sticky flag and most-recent Cause field are still
+                    // visible to the FPE handler through CFC1.
+                    fcsr[6:2] <= fcsr[6:2] | fpu_arch_flags;
+                    fcsr[16:12] <= fpu_arch_flags;
+                end
+            end else if (fpu_id_commit) begin
             if (fpu_id_mtc1)
                 fpr[id_inst[15:11]] <= id_val_rt;
             else if (fpu_id_mthc1) begin
@@ -1396,11 +1417,13 @@ module mips_cpu #(
                 else
                     fpr[id_inst[10:6]] <= fpu_result;
                 // FCSR Flags[6:2] are sticky; Cause[16:12] describes the
-                // exception from the most recent completed operation.
-                // Precise FPE trap delivery, enable masking, and rounding
-                // remain separate contracts.
-                fcsr[6:2] <= fcsr[6:2] | fpu_exception_flags;
-                fcsr[16:12] <= fpu_exception_flags;
+                // exception from the most recent completed arithmetic operation.
+                // Bitwise moves (ABS/MOV/NEG) do not update FCSR Cause/Flags.
+                if (fpu_op != 5'd5 && fpu_op != 5'd6 && fpu_op != 5'd7) begin
+                    fcsr[6:2] <= fcsr[6:2] | fpu_arch_flags;
+                    fcsr[16:12] <= fpu_arch_flags;
+                end
+            end
             end
         end
     end
@@ -1422,7 +1445,7 @@ module mips_cpu #(
     // later instructions after the FIFO goes empty.
     wire        rf_we_selected = (fpu_id_gpr_write && !wb_reg_write) ?
                                  (!global_stall && !stall_req_id &&
-                                  !exception_flush && !ctx_restore_req) :
+                                  !older_except_pending) :
                                  (wb_reg_write && wb_commit_valid &&
                                   !(wb_except_req && wb_arch_valid));
 
@@ -1953,7 +1976,7 @@ module mips_cpu #(
                             ((ex_inst[5:0] == 6'b100000) ||
                              (ex_inst[5:0] == 6'b100010)));
     wire ex_overflow_exception = ex_overflow && ex_reg_write && ex_signed_arith;
-    wire ex_except_req_out = ex_except_req | ex_overflow_exception;
+    assign ex_except_req_out = ex_except_req | ex_overflow_exception;
     wire [4:0] ex_except_code_out = ex_except_req ? ex_except_code : 5'h0C;
     // Do not start a speculative MDU operation in EX when an older
     // instruction in MEM/WB already carries an exception or flush: ~mdu_ready

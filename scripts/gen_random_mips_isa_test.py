@@ -95,6 +95,7 @@ def generate_program(seed: int, count: int, enable_exceptions: bool = True, enab
         weights.append(16)
 
     lbl_id = 0
+    hilo_valid = True
     for _ in range(count):
         kind = rng.choices(kinds, weights=weights)[0]
         rd, rs, rt = reg(rng), reg(rng), reg(rng)
@@ -127,12 +128,17 @@ def generate_program(seed: int, count: int, enable_exceptions: bool = True, enab
                 size = rng.randint(1, 32 - pos)
                 lines.append(f"    {sub:<6s} {rd}, {rs}, {pos}, {size}")
         elif kind == "mdu":
-            op = rng.choice(["mult", "multu", "madd", "msub", "mul"])
+            choices = ["mult", "multu", "mul"]
+            if hilo_valid:
+                choices.extend(["madd", "msub"])
+            op = rng.choice(choices)
             if op == "mul":
                 lines.append(f"    mul    {rd}, {rs}, {rt}")
+                hilo_valid = False
             else:
                 lines.append(f"    {op:<6s} {rs}, {rt}")
                 lines.append(f"    {rng.choice(['mfhi', 'mflo']):<6s} {rd}")
+                hilo_valid = True
         elif kind == "branch":
             lbl = f"br_skip_{lbl_id}"
             lbl_id += 1
